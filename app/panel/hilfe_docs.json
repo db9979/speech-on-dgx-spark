@@ -5549,6 +5549,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: größerer Katalog aus dem SRD (V01.0.980, Thread „DnDAppFiles für den Dungeon-Master“, Dominik 2026-10-23 „1-6“): Aus dem Repo DnDAppFiles wurde nichts übernommen (keine Lizenz, wörtlich aus den geschützten Büchern abgeschrieben). Die Daten stammen aus dem System Reference Document 5.1 (SRD 5.1) von Wizards of the Coast, das unter CC-BY-4.0 steht. Sie sind gekürzt, auf die Werte des Spiels umgerechnet und ins Deutsche übertragen. Dazu kommen eigene Einträge für Horror, Sci-Fi und Piraten. Alles liegt als feste Datei app/panel/dungeon_srd.json im Repo, zur Laufzeit wird nichts nachgeladen. Die Grundregeln bestehen auch allein: was die fünf alten Klassen und ihre Gegenstände aus dem SRD dazubekommen (Waffen, Zauber je Grad, neue Klassen), steht als dazu in der SRD-Datei. Das Panel legt sie als Schicht zwischen dungeon_regeln.json und die Regeln des Admins (Funktionen → KI-Dungeon-Master → Regeln anpassen); der Admin ändert oder entfernt jeden Eintrag wie bisher über seine id (\"aus\": true). Inhalt: 162 Gegner (142 aus dem SRD, 20 eigene) mit Stufe (Herausforderungsgrad), Leben, Rüstungsklasse, Trefferbonus, Schadenswürfeln, sechs Werten, Erfahrung, Größe, Welten und "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "den Zuständen, die sie auslösen; 254 Gegenstände (47 Waffen, darunter magische wie Flammenzunge oder Vorpalschwert mit fester Seltenheit, Steinschlosspistole und Muskete nur bei Piraten, Laserwaffen nur bei Sci-Fi; 18 Rüstungen, 23 Schmuckstücke mit festem Wert wie Handschuhe der Ogerkraft, 19 Tränke, 85 Zauber vom Zaubertrick bis Grad 5 mit Klassen, 24 Werkzeuge mit Stichworten für den Bonus bei passenden Proben, 38 Edelsteine und Kunstgegenstände zum Verkaufen); 17 Zustände (blind, bezaubert, taub, verängstigt, gepackt, kampfunfähig, unsichtbar, gelähmt, versteinert, vergiftet, liegend, festgesetzt, betäubt, bewusstlos, erschöpft, brennend, blutend) mit festen Wirkungen und Runden; die Schwierigkeiten sehr leicht 5, leicht 10, mittel 15, schwer 20, sehr schwer 25, fast unmöglich 30; 15 Hintergründe (etwa Soldat, Gelehrter, Matrose, Schmuggler, Raumfahrer, Ermittler) mit Bonus und Startgegenstand; 4 Völker (Drachenblütiger, Gnom, Halbelf, Tiefling) und 7 Klassen (Barbar, Barde, Druide, Mönch, Paladin, Zauberer, Hexenmeister) mit je sechs Fähigkeiten. Kräfte nur, wenn man sie kann (Dominik 2026-10-23 „1-3“): Jede der zwölf Klassen hat 1 bis 2 Startfähigkeiten (start_faehigkeiten, e"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "twa Dieb: Hinterhalt und Schlösser knacken, Paladin: Göttlicher Sinn und Handauflegen); die zauberkundigen Klassen (Magier, Zauberer, Hexenmeister, Heiler, Druide, Barde, Paladin, Waldläufer) haben eine Zauberliste je Grad (zauber, Grad 0 bis 5, jeder Zauber trägt seinen grad), Krieger, Dieb, Barbar und Mönch keine. Zaubertricks (Grad 0) gehen beliebig oft, ab Grad 1 zählen Ladungen je Kapitel nach Stufe (ladungen, Stufe 1: zwei Ladungen Grad 1, Stufe 10: 4/3/3/3/2 wie die D&D-Tabelle). Die Daten sind nur Daten: Würfe, Schaden und Beute entscheidet weiter das Panel nach seinen Regeln, das Modell erzählt nur. Selbsttest test_dungeon_srd: Namensnennung in der Datei und in der Doku, keine Adresse außer der Lizenz, keine id doppelt mit den Grundregeln, check_rules auf dem zusammengeführten Stand leer, jede Waffe gehört zu einer Klasse, jeder Zustand und jede Startausrüstung existiert, jede Welt hat mindestens 15 Gegner von schwach bis stark. Namensnennung: *This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creati"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ve Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
 },
 {
@@ -17758,6 +17790,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "can be made again). Live: pieces, MB, full fields, making now, waiting fields, made and failed today. Log: dungeon: musik | … with fixed words and numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: bigger catalog from the SRD (V01.0.980, thread \"DnDAppFiles für den Dungeon-Master\", Dominik 2026-10-23 \"1-6\"): Nothing was taken from the DnDAppFiles repo (no licence, copied word for word from the protected books). The data comes from the System Reference Document 5.1 (SRD 5.1) by Wizards of the Coast, licensed under CC-BY-4.0. It is shortened, converted to the game's values and translated into German. Own entries for horror, sci-fi and pirates come on top. Everything lives as the fixed file app/panel/dungeon_srd.json in the repo, nothing is loaded at runtime. The base rules stand on their own: what the five old classes and their items get from the SRD (weapons, spells per level, new classes) is a dazu entry in the SRD file. The panel puts it as a layer between dungeon_regeln.json and the admin's rules (Features → AI Dungeon Master → Adjust rules); the admin changes or removes any entry by its id as before (\"aus\": true). Contents: 162 foes (142 from the SRD, 20 own) with level (challenge rating), life, armour class, attack bonus, damage dice, six values, experience, size, worlds and the conditions they cause; 254 items (47 weapons, among them magic ones like Fl"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ame tongue or Vorpal sword with a fixed rarity, flintlock pistol and musket only for pirates, laser weapons only for sci-fi; 18 armours, 23 jewellery pieces with a fixed value like Gauntlets of ogre power, 19 potions, 85 spells from cantrip to level 5 with classes, 24 tools with keywords for the bonus on fitting checks, 38 gems and art objects to sell); 17 conditions (blinded, charmed, deafened, frightened, grappled, incapacitated, invisible, paralysed, petrified, poisoned, prone, restrained, stunned, unconscious, exhausted, burning, bleeding) with fixed effects and rounds; the difficulties very easy 5, easy 10, medium 15, hard 20, very hard 25, nearly impossible 30; 15 backgrounds (such as soldier, sage, sailor, smuggler, spacer, investigator) with a bonus and a starting item; 4 peoples (dragonborn, gnome, half-elf, tiefling) and 7 classes (barbarian, bard, druid, monk, paladin, sorcerer, warlock) with six abilities each. Powers only when you have them (Dominik 2026-10-23 \"1-3\"): each of the twelve classes has 1 to 2 starting abilities (start_faehigkeiten, e.g. rogue: ambush and picking locks, paladin: divine sense and lay on hands); the spellcasting classes (mage, sorcerer, warlo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ck, healer, druid, bard, paladin, ranger) have a spell list per level (zauber, level 0 to 5, every spell carries its grad), warrior, rogue, barbarian and monk have none. Cantrips (level 0) work any number of times, from level 1 on charges per chapter by hero level count (ladungen, level 1: two charges of level 1, level 10: 4/3/3/3/2 as in the D&D table). The data is only data: rolls, damage and loot are still decided by the panel by its rules, the model only narrates. Self-test test_dungeon_srd: attribution in the file and in the docs, no address except the licence, no id shared with the base rules, check_rules on the merged rules empty, every weapon belongs to a class, every condition and starting item exists, every world has at least 15 foes from weak to strong. Attribution: *This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
 },
 {
 "lang": "en",

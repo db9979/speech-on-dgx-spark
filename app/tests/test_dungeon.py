@@ -2219,7 +2219,9 @@ class SrdLayer(Base):
         self.assertEqual(dungeon.check_rules(r), [])
         m = dungeon._by(r, "klassen")["magier"]
         self.assertEqual(m["waffen"], mag["waffen"] + [x for x in ["schwert"] if x not in mag["waffen"]])
-        self.assertEqual(m["zauber"], {"1": ["srdzauber"]})
+        want = copy.deepcopy(mag.get("zauber") or {})
+        want["1"] = want.get("1", []) + ["srdzauber"]
+        self.assertEqual(m["zauber"], want)                       # appended per grade, the shipped ones stay
         self.assertNotIn("fehlt", dungeon._by(r, "klassen"))     # „dazu“ on a missing id adds nothing
         self.assertEqual(m["faehigkeiten"], mag["faehigkeiten"])  # the rest of the entry stays
         heroes = [dungeon.new_hero(r, dict(HERO), rng=random.Random(3))]
@@ -2267,8 +2269,8 @@ class Powers(Base):
         kr = dungeon._by(base, "klassen")["krieger"]
         own = {"gegenstaende": [dict(dungeon._by(base, "gegenstaende")["lichtzauber"], grad=0),
                                 dict(dungeon._by(base, "gegenstaende")["heilende_haende"], grad=1),
-                                dict(dungeon._by(base, "gegenstaende")["feuerball"], grad=2)],
-               "klassen": [dict(mag, zauber={"0": ["lichtzauber"], "1": ["heilende_haende"], "2": ["feuerball"]}),
+                                dict(dungeon._by(base, "gegenstaende")["feuerball"], grad=3)],     # its grade in the data
+               "klassen": [dict(mag, zauber={"0": ["lichtzauber"], "1": ["heilende_haende"], "3": ["feuerball"]}),
                            dict(kr, start_faehigkeiten=["rundumschlag"])],
                "ladungen": [[2, 0, 0, 0, 0], [3, 1, 0, 0, 0]] + [[4, 2, 0, 0, 0]] * 8}
         r = dungeon.merge(base, own)

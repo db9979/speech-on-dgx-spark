@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.980** AI Dungeon Master: big catalog from the SRD 5.1 (CC-BY-4.0): 162 foes, 254 items with 85 spells, tools and treasure, 17 conditions, difficulties, 15 backgrounds, 4 peoples, 7 new classes; starting powers and spell lists per class with charges per level
 - **V01.0.979** AI Dungeon Master: spells and powers only when the hero has them: starting powers per class, spells per grade with charges per chapter, "What I can do" on the sheet, the panel refuses the unknown with a line just for that seat
 - **V01.0.978** AI Dungeon Master: room for the SRD data: a second rules file dungeon_srd.json, checked lists for foes, conditions, backgrounds, difficulties, spell charges and starting powers, treasure to sell, fixed rarity, items only in their worlds, up to 500 entries per list
 - **V01.0.977** AI Dungeon Master: items and values explained (tools +2, break on a 1), throw your own die with a check bar, sparks on a 20 and result sounds, own voices for the narrator per story and every NPC, every refusal as a clear sentence
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.973** AI Dungeon Master map readable and with pictures: text at screen size, names without overlap, the place as a line instead of a sign; pictures per kind of place and room in the night run and an own picture per visited place (checked, day limit, only for its own round), the sign until then
 - **V01.0.972** Document search finds rows in PDF tables: each row stays one line with its cells (pdfium reads lines, boxes and columns), long tables are cut only between rows with the head row in every piece, older PDFs with a kept original are read again in quiet minutes; "Look locally first" shows the part with the search words instead of the first 500 characters
 - **V01.0.971** AI Dungeon Master: better stories with a hidden world truth (people, groups, secrets), open threads, a running summary every 5 turns, one rewrite by fixed rules (too short, hero missing, repeating), style examples per world, more varied narration and 👍/👎 per narration; big windows for hero sheet, merchant and map, a tap on a thing shows its picture, description and values
-- **V01.0.970** AI Dungeon Master with music, sounds and dice: many pieces per world and mood from the own music model, made ahead for the next act and at night, a quiet loop that fades over; sounds and a rolling d20 in the browser (Features → AI Dungeon Master → Adjust rules → Music at the table, off by default)
 
 
 

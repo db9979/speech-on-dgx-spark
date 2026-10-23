@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.980** KI-Dungeon-Master: großer Katalog aus dem SRD 5.1 (CC-BY-4.0): 162 Gegner, 254 Gegenstände mit 85 Zaubern, Werkzeugen und Schätzen, 17 Zustände, Schwierigkeiten, 15 Hintergründe, 4 Völker, 7 neue Klassen; Startkräfte und Zauberlisten je Klasse mit Ladungen je Stufe
 - **V01.0.979** KI-Dungeon-Master: Zauber und Kräfte nur, wenn der Held sie kann: Startkräfte je Klasse, Zauber je Grad mit Ladungen je Kapitel, „Das kann ich“ im Bogen, das Panel weist Unbekanntes mit einer Zeile nur für diesen Platz ab
 - **V01.0.978** KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste
 - **V01.0.977** KI-Dungeon-Master: Gegenstände und Werte erklärt (Werkzeuge +2, zerbrechen bei einer 1), Würfel selbst werfen mit Proben-Leiste, Funken bei 20 und Ergebnis-Geräuschen, eigene Stimmen für Erzähler je Geschichte und jeden NSC, jede Ablehnung als klarer Satz
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.973** KI-Dungeon-Master-Karte lesbar und mit Bildern: Schrift in Bildschirmgröße, Namen ohne Überlagerung, Standort als Zeile statt Schild; Bilder je Ortsart und Raumart im nächtlichen Lauf und ein eigenes Bild je besuchtem Ort (geprüft, Tageslimit, nur für die eigene Runde), das Zeichen bis dahin
 - **V01.0.972** Dokumentsuche trifft Tabellen in PDFs: jede Zeile bleibt eine Zeile mit ihren Zellen (pdfium liest Linien, Kästen und Spalten), lange Tabellen werden nur zwischen Zeilen geteilt mit Kopfzeile in jedem Stück, alte PDFs mit Original werden in ruhigen Minuten neu gelesen; „Erst lokal suchen“ zeigt das Stück mit den Suchwörtern statt der ersten 500 Zeichen
 - **V01.0.971** KI-Dungeon-Master: bessere Geschichten mit verborgener Welt-Wahrheit (Personen, Gruppen, Geheimnisse), offenen Fäden, laufender Zusammenfassung alle 5 Züge, einmal Nachbessern nach festen Regeln (zu kurz, Held fehlt, Wiederholung), Stilbeispielen je Welt, abwechslungsreicherer Erzählung und 👍/👎 je Erzählung; große Fenster für Heldenbogen, Händler und Karte, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte
-- **V01.0.970** KI-Dungeon-Master mit Musik, Geräuschen und Würfeln: viele Stücke je Welt und Stimmung vom eigenen Musikmodell, im Voraus für den nächsten Akt und nachts gemacht, leise Schleife mit Überblendung; Geräusche und rollender d20 im Browser (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch, Standard aus)
 
 
 
