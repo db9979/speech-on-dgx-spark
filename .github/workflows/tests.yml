@@ -25,7 +25,7 @@ jobs:
   test:
     name: Teil ${{ matrix.part }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45   # 30 was cut off twice on 2026-10-12 (V01.0.459, .461: slow runner, still in test_wissen), 20 before
+    timeout-minutes: 60   # 45 was cut off by a slow Azure mirror on the 94 MB ffmpeg download (V01.0.951, 2026-10-23); 30 twice on 2026-10-12 (V01.0.459, .461), 20 before
     strategy:
       fail-fast: false    # every part runs to its end, so a red run shows all failures at once
       matrix:
@@ -44,19 +44,18 @@ jobs:
           # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
           python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
           python -m pip install -q playwright==1.55.0
-          # A hosted runner often still runs unattended-upgrades at job start, holding the dpkg lock. Then
-          # "playwright install --with-deps" (which calls apt-get) and our own apt-get fail at once with
-          # "Could not get lock /var/lib/dpkg/lock-frontend ... exited with code: 100" (seen on V01.0.950,
-          # run rot). So let every apt wait up to five minutes for the lock instead of failing on the flake.
-          echo 'DPkg::Lock::Timeout "300";' | sudo tee /etc/apt/apt.conf.d/99lock-timeout >/dev/null
-          # The browser and the apt packages also come over the network and are not cached. On some runners
-          # that stalled for 35-42 min (while a good runner needs under three), and the job hit the 45-min cap
-          # with the tests never run. So each network step runs under a timeout (room for the lock wait) with
-          # three tries: a stalled or locked runner starts over in minutes instead of burning to the cap, and
-          # three real failures end the job red and visible rather than hanging. No test is touched or weakened.
-          netz() { for i in 1 2 3; do timeout "$1" bash -c "$2" && return 0; echo "::warning::\"$2\" fehlgeschlagen oder Timeout nach $1 s (Versuch $i/3), neu ..."; sleep 10; done; echo "::error::\"$2\" dreimal fehlgeschlagen"; return 1; }
-          netz 480 "python -m playwright install --with-deps chromium"
-          netz 360 "sudo apt-get -o Acquire::Retries=3 install -y -q ffmpeg"
+          # apt on a hosted runner has two flaky spots. At job start unattended-upgrades still holds the dpkg
+          # lock, so "playwright install --with-deps" (it calls apt-get) and our apt-get died at once with
+          # "Could not get lock /var/lib/dpkg/lock-frontend ... code: 100" (V01.0.950/.951 rot). And the Azure
+          # mirror sometimes trickles the 94 MB of ffmpeg deps so slowly that a short step timeout killed a
+          # download that was still making progress (V01.0.951 rot after three tries). So configure apt itself
+          # to wait for the lock, and to abort only a *stalled* connection (60 s, then retry) while a slow but
+          # progressing download runs on. Each network step then runs once under a generous cap that only a
+          # true hang reaches (the job limit above was raised to 60 min to match). No test is touched or weakened.
+          printf '%s\n' 'DPkg::Lock::Timeout "300";' 'Acquire::Retries "5";' 'Acquire::http::Timeout "60";' 'Acquire::https::Timeout "60";' | sudo tee /etc/apt/apt.conf.d/99ci >/dev/null
+          netz() { timeout "$1" bash -c "$2" && return 0; echo "::error::\"$2\" nach $1 s nicht fertig (Timeout oder echter Fehler)"; return 1; }
+          netz 900 "python -m playwright install --with-deps chromium"
+          netz 1500 "sudo apt-get install -y -q ffmpeg"
       - name: Self-tests
         working-directory: app
         # a failed test gets one second try (selftest.py); green only then is a warning in the summary

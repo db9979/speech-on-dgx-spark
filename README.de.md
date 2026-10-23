@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.952** ROT-FIX: apt bricht jetzt nur eine hängende Verbindung ab und wiederholt sie, ein langsamer ffmpeg-Download läuft weiter; Netz-Schritte unter großzügigem Deckel, Job-Limit auf 60 min
 - **V01.0.951** ROT-FIX: jedes apt wartet jetzt per DPkg::Lock::Timeout auf die dpkg-Sperre, damit der Install nicht an unattended-upgrades („Could not get lock … code 100“) rot fällt
 - **V01.0.950** Tests-Workflow robuster: Install-Netzschritte mit Timeout und drei Versuchen, damit hängende Runner nicht ins 45-min-Limit laufen
 - **V01.0.949** KI-Dungeon-Master (Schalter, aus): Rollenspiel für bis zu fünf, auch Gäste per Link; Beute, Stufen, Tauschen und Helden zum Mitnehmen, Regeln vom Admin anpassbar
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.945** Spielprofile „Nur Krisenspiel“: Mitspieler ohne Assistent
 - **V01.0.944** Ins Wort fallen: erst anhalten auch in der iPhone-App: ein „mhm“ pausiert die Antwort nur, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 s läuft sie weiter
 - **V01.0.943** IT-Krisenspiel (Paket 9): Kampagnen über mehrere Spieltage, Folgen wirken ins nächste Kapitel
-- **V01.0.942** Ins Wort fallen: erst anhalten (Schalter, aus): ein „mhm“, Husten oder die eigene Stimme hält die Antwort nur an und sie läuft weiter, „Stopp“ beendet sie, ein echter Satz wird die neue Frage; feste Wörter im Panel, nie das Modell; Browser und Android, iPhone folgt
 
 
 

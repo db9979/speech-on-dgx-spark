@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.952** Red fix: apt now aborts only a stalled connection and retries it so a slow ffmpeg download keeps going; network steps under a generous cap, job limit raised to 60 min
 - **V01.0.951** Red fix: every apt now waits for the dpkg lock via DPkg::Lock::Timeout so Install no longer fails red on unattended-upgrades ("Could not get lock ... code 100")
 - **V01.0.950** Tests workflow more robust: install network steps with a timeout and three tries so stalled runners no longer hit the 45-min cap
 - **V01.0.949** AI Dungeon Master (switch, off): role-playing game for up to five, guests by link too; loot, levels, trading and heroes to take along, rules adjustable by the admin
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.945** Game profiles "Crisis game only": players without the assistant
 - **V01.0.944** Barge-in: pause first in the iPhone app too: a "mhm" only pauses the answer, "stop" ends it, a sentence becomes the new question; without a decision after 4 s it plays on
 - **V01.0.943** IT crisis game (package 9): campaigns over several game days, consequences carry into the next chapter
-- **V01.0.942** Barge-in: pause first (switch, off): a "mhm", a cough or the own voice only pauses the answer and it plays on, "stop" ends it, a real sentence becomes the new question; fixed words in the panel, never the model; browser and Android, iPhone follows
 
 
 
