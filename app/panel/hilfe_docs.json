@@ -5165,7 +5165,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "TIMMEN_S); „▶ Probe“ spricht einen festen Satz in dieser Stimme (je Stimme einmal erzeugt und behalten, eigenes Rate-Limit dungeonprobe). Ist Vorlesen an, spricht die Stimme nur, was der Held in Anführungszeichen sagt („…“, \"…\", »…«, höchstens 200 Zeichen, says), vor der Erzählung und in derselben Tonspur des Zugs, nacheinander statt gleichzeitig; eine Zeile mit einem Wort, das Ton, „nie“ oder die Tabus der Geschichte ablehnen, wird nicht gesprochen. Gewählt werden kann nur eine Stimme aus der Liste; ohne Stimme liest wie bisher nur der Erzähler. Eine Stimme aus einer Beschreibung (1b) folgt, sobald geprüft ist, ob die Sprachausgabe auf dem Modell-Rechner das kann."
+"text": "TIMMEN_S); „▶ Probe“ spricht einen festen Satz in dieser Stimme (je Stimme einmal erzeugt und behalten, eigenes Rate-Limit dungeonprobe). Ist Vorlesen an, spricht die Stimme nur, was der Held in Anführungszeichen sagt („…“, \"…\", »…«, höchstens 200 Zeichen, says), vor der Erzählung und in derselben Tonspur des Zugs, nacheinander statt gleichzeitig; eine Zeile mit einem Wort, das Ton, „nie“ oder die Tabus der Geschichte ablehnen, wird nicht gesprochen. Gewählt werden kann nur eine Stimme aus der Liste; ohne Stimme liest wie bisher nur der Erzähler. Stimme aus einer Beschreibung (V01.0.959, Dominik „dann 1b gucken, ob das funktioniert und dann auch 1b umsetzen“): Ist unter Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“ an (eine zweite Engine auf dem Modell-Rechner mit noch einmal demselben Speicher; /v1/voices meldet voicedesign), steht unter der Stimmenwahl ein Feld „oder beschreiben“, etwa „tiefe, raue Zwergenstimme“. Erlaubt sind nur Buchstaben, Ziffern, Leerzeichen, Komma, Punkt und Bindestrich, 3 bis 80 Zeichen (KLANG), kein Wort, das Ton, „nie“ oder Tabus ablehnen; die Beschreibung geht als task_type: VoiceDesign mit instructions an die Sprachausgabe und gi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "lt vor der gewählten Stimme. Die Stimme entsteht bei jeder Zeile neu und klingt daher ähnlich, nicht immer ganz gleich. Ist VoiceDesign aus, spricht wieder die gewählte Stimme oder der Erzähler."
 },
 {
 "lang": "de",
@@ -16957,7 +16965,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "e per voice and kept, own rate limit dungeonprobe). When reading aloud is on, the voice speaks only what the hero says in quotes (\"…\", „…“, »…«, at most 200 characters, says), before the narration and in the same sound track of the turn, one after another rather than at once; a line with a word the tone, \"nie\" or the story's taboos refuse is not spoken. Only a voice from the list can be picked; without a voice only the narrator reads as before. A voice from a description (1b) follows once it is checked whether the speech output on the model computer can do that."
+"text": "e per voice and kept, own rate limit dungeonprobe). When reading aloud is on, the voice speaks only what the hero says in quotes (\"…\", „…“, »…«, at most 200 characters, says), before the narration and in the same sound track of the turn, one after another rather than at once; a line with a word the tone, \"nie\" or the story's taboos refuse is not spoken. Only a voice from the list can be picked; without a voice only the narrator reads as before. Voice from a description (V01.0.959, Dominik \"dann 1b gucken, ob das funktioniert und dann auch 1b umsetzen\"): when Settings → Speech output \"Also serve VoiceDesign\" is on (a second engine on the model computer with the same memory again; /v1/voices reports voicedesign), a field \"or describe it\" stands under the voice choice, for example \"deep, rough dwarf voice\". Only letters, digits, spaces, comma, full stop and hyphen are allowed, 3 to 80 characters (KLANG), no word the tone, \"nie\" or taboos refuse; the description goes to the speech output as task_type: VoiceDesign with instructions and counts before the picked voice. The voice is made anew for every line, so it sounds alike, not always exactly the same. With VoiceDesign off the picked v"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "oice or the narrator speaks again."
 },
 {
 "lang": "en",

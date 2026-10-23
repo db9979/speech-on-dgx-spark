@@ -123,6 +123,7 @@ GAESTE_MAX = 4            # heroes of guests a campaign keeps for the next chapt
 TON_ZUEGE = 3             # turns read aloud a round keeps
 TON_ZEICHEN = 1800        # characters of one turn read aloud
 SAGT_MAX = 200            # characters of one hero's spoken line (what stands in quotes in the action)
+KLANG = re.compile(r"[A-Za-zÄÖÜäöüß0-9 ,.\-]{3,80}")   # a hero's voice described in words (VoiceDesign), nothing else
 STIMMEN_S = 600           # seconds the speech output's voice list is kept before it is asked again
 TON_BYTES = 32 * 1024 * 1024
 HOER_BYTES = 1024 * 1024  # one recording (16 kHz mono WAV: about 30 s)
@@ -196,7 +197,7 @@ _running = set()          # rounds whose Dungeon Master is answering right now
 _summing = set()          # campaigns whose „Bisher geschah“ is being written right now
 _speaking = set()         # rounds whose last turn is being read aloud right now
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
-_stimmen = {"t": 0.0, "v": [], "laeuft": False}   # the speech output's voices a hero may take (STIMMEN_S)
+_stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0)
 
@@ -513,6 +514,7 @@ def fix_hero(r, h):
     h["stufe"] = max(1, min(int(h.get("stufe") or 1), r["grenzen"]["stufe_max"]))
     six(r, h)
     h["stimme"] = h["stimme"] if isinstance(h.get("stimme"), str) and _VOICE.fullmatch(h["stimme"]) else ""
+    h["klang"] = h["klang"] if isinstance(h.get("klang"), str) and KLANG.fullmatch(h["klang"]) else ""
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
@@ -604,7 +606,7 @@ def hero_view(r, h, lang, full=True):
     out.update(satz=h.get("satz", ""), ep=h["ep"], ep_naechste=nxt, gold=h["gold"], punkte=h["punkte"],
                werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
-               wert_max=WERT_MAX, stimme=h.get("stimme", ""),
+               wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""),
                schutz=schutz(r, h), slots={s: item_view(r, h[s], lang) if h.get(s) else None for s in SLOTS},
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
@@ -1880,13 +1882,16 @@ def voices(r):
     return {k: str(s.get(k) or "") for k in STIMMEN}
 
 
-async def ask_tts(text, voice):
-    """One part spoken by the Spark's speech output as 16-bit mono PCM (tests replace this)."""
+async def ask_tts(text, voice, klang=""):
+    """One part spoken by the Spark's speech output as 16-bit mono PCM; with klang a voice made from that description
+    (VoiceDesign) instead of a named one (tests replace this)."""
     import httpx
     from core import api_headers
     cfg = load_config()
     body = {"input": text, "response_format": "pcm"}
-    if voice:
+    if klang:
+        body.update(task_type="VoiceDesign", instructions=klang)
+    elif voice:
         body["voice"] = voice
     out = bytearray()
     async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S * 2, connect=5)) as c:
@@ -1940,9 +1945,9 @@ def hero_lines(r, rd, turn):
     out = []
     for e in rd["log"]:
         h = (rd["plaetze"].get(e.get("pid")) or {}).get("held") if e["art"] == "aktion" and e.get("n") == turn else None
-        line = says(e["text"]) if h and h.get("stimme") else ""
+        line = says(e["text"]) if h and (h.get("stimme") or h.get("klang")) else ""
         if line and not bad_words(r, rd, line):
-            out.append((h["stimme"], line))
+            out.append((h.get("stimme", ""), line, h.get("klang", "") if _stimmen["design"] else ""))
     return out
 
 
@@ -1950,12 +1955,12 @@ def speak_parts(r, story_text, npc, helden=()):
     """What a turn reads aloud: first what the heroes said in their own voices, then the narration in the narrator's
     voice, then each NPC in the NPC voice."""
     v = voices(r)
-    parts = list(helden) + [(v["erzaehler"], story_text)] + [(v["npc"], f"{n['name']}: {n['sagt']}") for n in npc]
+    parts = list(helden) + [(v["erzaehler"], story_text, "")] + [(v["npc"], f"{n['name']}: {n['sagt']}", "") for n in npc]
     out, n = [], 0
-    for voice, text in parts:
+    for voice, text, klang in parts:
         if n + len(text) > TON_ZEICHEN:
             break
-        out.append((voice, text))
+        out.append((voice, text, klang))
         n += len(text)
     return out
 
@@ -1975,8 +1980,8 @@ async def speak_turn(rid, n, parts):
             return
         async with _tts_lock():
             pcm = bytearray()
-            for voice, text in parts:
-                pcm += _pcm(await asyncio.wait_for(ask_tts(text, voice), DM_S * 2))
+            for voice, text, klang in parts:
+                pcm += _pcm(await asyncio.wait_for(ask_tts(text, voice, klang), DM_S * 2))
                 pcm += b"\0" * 14400        # 0.3 s between the voices
                 if len(pcm) > TON_BYTES:
                     raise RuntimeError("tts")
@@ -2015,6 +2020,7 @@ async def hero_voices():
         import admin
         v = await admin.tts_voices()
         _stimmen["v"] = [x for x in v.get("voices") or [] if isinstance(x, str) and x and _VOICE.fullmatch(x)][:60]
+        _stimmen["design"] = v.get("voicedesign") is True
     except Exception:
         pass
     finally:
@@ -2024,18 +2030,19 @@ async def hero_voices():
 PROBE = ("Ich bin bereit. Wohin führt uns der Weg?", "I am ready. Where does the road lead us?")
 
 
-async def probe(voice, lang):
-    """A short fixed sentence in one of the heroes' voices, as WAV; kept per voice so trying it again costs nothing."""
-    if voice not in _stimmen["v"]:
+async def probe(voice, lang, klang=""):
+    """A short fixed sentence in one of the heroes' voices (or one made from klang), as WAV; kept per voice so
+    trying it again costs nothing."""
+    if klang and not (_stimmen["design"] and KLANG.fullmatch(klang)) or not klang and voice not in _stimmen["v"]:
         raise ValueError("stimme")
     li = 1 if lang == "en" else 0
-    f = os.path.join(TON_DIR, "probe-" + hashlib.sha256(f"{voice}|{li}".encode()).hexdigest()[:16] + ".wav")
+    f = os.path.join(TON_DIR, "probe-" + hashlib.sha256(f"{voice}|{klang}|{li}".encode()).hexdigest()[:16] + ".wav")
     if os.path.exists(f):
         with open(f, "rb") as x:
             return x.read()
     import begleiter
     async with _tts_lock():
-        wav = begleiter.wav_of(_pcm(await asyncio.wait_for(ask_tts(PROBE[li], voice), DM_S)))
+        wav = begleiter.wav_of(_pcm(await asyncio.wait_for(ask_tts(PROBE[li], voice, klang), DM_S)))
 
     def keep():
         os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
@@ -2144,7 +2151,7 @@ def view(rid, pid, now=None):
             "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
-            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]),
+            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
@@ -2224,9 +2231,11 @@ def hero_act(rid, pid, b):
                 was_max, h["leben_max"] = h["leben_max"], life(r, h)
                 h["leben"] = max(1, min(h["leben_max"], h["leben"] + h["leben_max"] - was_max))
         elif was == "stimme":
-            if b.get("stimme") not in [""] + _stimmen["v"]:
+            klang = re.sub(r"\s+", " ", str(b.get("klang") or "")).strip()
+            if b.get("stimme") not in [""] + _stimmen["v"] or klang and not (_stimmen["design"] and KLANG.fullmatch(klang)) \
+                    or klang and bad_words(r, rd, klang):
                 raise ValueError("stimme")
-            h["stimme"] = b["stimme"]
+            h["stimme"], h["klang"] = b["stimme"], klang
         elif was == "faehigkeit":
             if b.get("id") not in h["wahl"]:
                 raise ValueError("faehigkeit")
@@ -2661,14 +2670,14 @@ async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
 
 
 @router.get("/api/profile/dungeon/{rid}/probe", dependencies=[Depends(assistant)])
-async def stimm_probe(rid: str, stimme: str, request: Request, prof=Depends(own_profile)):
+async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str = "", prof=Depends(own_profile)):
     """A fixed sentence in a voice the own hero at this table may take, as WAV."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeonprobe", uid)
     try:
         await asyncio.to_thread(_seat_uid, rid, uid)
-        wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de")
+        wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de", klang[:100])
     except KNOWN as e:
         raise _http(e)
     except (RuntimeError, asyncio.TimeoutError):
@@ -2937,7 +2946,7 @@ async def gast_probe(request: Request):
     b, rid, pid = await _guest(request)
     guard.limit(request, "dungeonprobe")
     try:
-        wav = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"))
+        wav = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"), str(b.get("klang") or ""))
     except KNOWN as e:
         raise _http(e)
     except (RuntimeError, asyncio.TimeoutError):

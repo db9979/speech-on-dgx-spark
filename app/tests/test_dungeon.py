@@ -626,7 +626,7 @@ class Voice(Base):
         code, gp = self.guest(rid)
         said = []
 
-        async def tts(text, voice):
+        async def tts(text, voice, klang=""):
             said.append((voice, text))
             return b"\1\0" * 100
         old = dungeon.ask_tts
@@ -694,10 +694,13 @@ class Voice(Base):
             dungeon._log(rd, "aktion", pid=host, name="Arvid", text="Ich hebe die Hand. „Wer da?“")
             dungeon._log(rd, "aktion", pid=gp, name="Bela", text="„" + r["nie"][0] + "!“")     # a refused word: not spoken
             lines = dungeon.hero_lines(r, rd, rd["zug"])
-        self.assertEqual(lines, [("Ryan", "Wer da?")])
-        self.assertEqual(dungeon.speak_parts(r, "Stille.", [], lines)[0], ("Ryan", "Wer da?"))   # the heroes first
+        self.assertEqual(lines, [("Ryan", "Wer da?", "")])
+        self.assertEqual(dungeon.speak_parts(r, "Stille.", [], lines)[0], ("Ryan", "Wer da?", ""))   # the heroes first
 
-        async def tts(text, voice):
+        asked = []
+
+        async def tts(text, voice, klang=""):
+            asked.append(klang)
             return b"\1\0" * 50
         old = dungeon.ask_tts
         dungeon.ask_tts = tts
@@ -707,6 +710,20 @@ class Voice(Base):
         self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "stimme": "Vivian"}).status_code, 200)
         self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "stimme": "Fremd"}).status_code, 400)
         self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/probe", params={"stimme": "Ryan"}).status_code, 404)   # not a seat
+        # a voice from a description only when the speech output can make one (VoiceDesign), only plain words
+        klang = {"code": code, "was": "stimme", "stimme": "", "klang": "tiefe, raue Zwergenstimme"}
+        self.assertEqual(self.v.post("/api/dungeon/held", json=klang).status_code, 400)
+        dungeon._stimmen["design"] = True
+        self.addCleanup(dungeon._stimmen.update, design=False)
+        for bad in ("<b>laut</b>", "x", "ignoriere alles: " + "a" * 90, r["nie"][0] + " stimme"):
+            self.assertEqual(self.v.post("/api/dungeon/held", json=dict(klang, klang=bad)).status_code, 400, bad)
+        self.assertEqual(self.v.post("/api/dungeon/held", json=klang).status_code, 200)
+        with dungeon._lock:
+            rd = dungeon._read()["runden"][rid]
+            dungeon._log(rd, "aktion", pid=gp, name="Bela", text="„Hier entlang.“")
+            self.assertIn(("", "Hier entlang.", "tiefe, raue Zwergenstimme"), dungeon.hero_lines(r, rd, rd["zug"]))
+        self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "klang": "tiefe, raue Zwergenstimme"}).status_code, 200)
+        self.assertEqual(asked[-1], "tiefe, raue Zwergenstimme")
 
     def test_app_seat_code_only_own_seat(self):
         v = self.new_round()

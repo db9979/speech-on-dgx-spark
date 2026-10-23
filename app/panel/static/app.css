@@ -2316,7 +2316,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-tisch .dm-hero b{font-variant:small-caps;letter-spacing:.05em;font-size:16px;color:var(--t-gold)}.dm-tisch .dm-hero i{color:var(--t-mut)}
 .dm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
 .dm-stats span{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:7px;background:color-mix(in srgb,var(--t-text,var(--fg)) 7%,transparent)}
-.dm-stats small{font-size:10px;letter-spacing:.12em;opacity:.7}.dm-stats b{font-size:15px}.dm-stats i{font-style:normal;font-size:11px;opacity:.75}
+.dm-stats small{font-size:10px;letter-spacing:.12em;opacity:.7}.dm-stats b{font-size:15px}.dm-stats i{font-style:normal;font-size:11px;opacity:.75}.dm-voice{display:flex;flex-direction:column;gap:5px;margin-top:10px}.dm-voice select{flex:1;min-width:0}.dm-klang{width:100%}
 .dm-vert{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.dm-vslot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:1px dashed var(--line);border-radius:10px}
 .dm-vchip{width:44px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600;font-size:16px;cursor:grab}.dm-vchip.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 35%,transparent)}.dm-vsum{font-size:11px;color:var(--mut)}
 .dm-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-pills span{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--t-linie,var(--line))}

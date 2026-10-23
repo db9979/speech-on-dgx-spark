@@ -2788,6 +2788,13 @@
 "titel": "Dungeon-Master: Heldenstimmen",
 "text": "A: Runde mit Vorlesen, im eigenen Bogen unter „Stimme deines Helden“ eine Stimme wählen, „▶ Probe“ spricht einen Satz. B: Als Gast ebenso eine andere Stimme. C: Aktion mit „Halt, wer da?“ in Anführungszeichen: beim Vorlesen spricht zuerst die Heldenstimme nur diese Worte, dann der Erzähler. D: Aktion ohne Anführungszeichen: nur der Erzähler.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P423",
+"v": 959,
+"titel": "Dungeon-Master: Stimme aus einer Beschreibung",
+"text": "A: Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ an, warten bis die zweite Engine bereit ist. B: Am Tisch im eigenen Bogen „oder beschreiben“: „tiefe, raue Zwergenstimme“, „▶ Probe“ spricht in dieser Stimme. C: Aktion mit wörtlicher Rede: beim Vorlesen spricht die beschriebene Stimme. D: VoiceDesign wieder aus: die gewählte Stimme oder der Erzähler spricht.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

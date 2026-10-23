@@ -135,7 +135,7 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';const others=v.plaetze.filte
     <div class="dm-line"><span>${esc(t('Stufe','Level'))} ${h.stufe}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></div>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}
     <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></div>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}
     <div class="dm-werte">${h.werte.map(x=>`<span title="${esc(x.name+': '+x.wert+t(', Bonus für Würfe ',', bonus for rolls ')+dmSign(x.gesamt))}">${esc(x.kurz)} <b>${x.wert}</b> <small class="mut">${dmSign(x.gesamt)}</small>${h.punkte&&x.wert<h.wert_max?`<button type="button" class="b dm-plus" data-dmhero="punkt" data-wert="${esc(x.id)}" title="${esc(t('Wertpunkt hierhin','Value point here'))}">+1</button>`:''}</span>`).join('')}<span>${esc(t('Schutz','Protection'))} <b>${h.schutz}</b></span><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span></div>
-    ${(v.stimmen||[]).length?`<div class="dm-voice"><label>${esc(t('Stimme deines Helden','Your hero\'s voice'))}</label><div class="dm-inp"><select data-dmvoice="1" aria-label="${esc(t('Stimme deines Helden','Your hero\'s voice'))}"><option value="">${esc(t('Keine, nur der Erzähler','None, only the narrator'))}</option>${[...new Set([h.stimme,...v.stimmen].filter(Boolean))].map(x=>`<option${x===h.stimme?' selected':''}>${esc(x)}</option>`).join('')}</select><button type="button" class="b" data-dmprobe="1"${h.stimme?'':' disabled'}>${esc('▶ '+t('Probe','Sample'))}</button></div><small class="mut">${esc(t('Ist Vorlesen an, spricht diese Stimme, was dein Held in Anführungszeichen sagt: „Halt, wer da?“','When reading aloud is on, this voice speaks what your hero says in quotes: "Halt, who goes there?"'))}</small></div>`:''}
+    ${(v.stimmen||[]).length?`<div class="dm-voice"><label>${esc(t('Stimme deines Helden','Your hero\'s voice'))}</label><div class="dm-inp"><select data-dmvoice="1" aria-label="${esc(t('Stimme deines Helden','Your hero\'s voice'))}"><option value="">${esc(t('Keine, nur der Erzähler','None, only the narrator'))}</option>${[...new Set([h.stimme,...v.stimmen].filter(Boolean))].map(x=>`<option${x===h.stimme?' selected':''}>${esc(x)}</option>`).join('')}</select><button type="button" class="b" data-dmprobe="1"${h.stimme||h.klang?'':' disabled'}>${esc('▶ '+t('Probe','Sample'))}</button></div>${v.stimme_design?`<input class="dm-klang" data-dmvoice="1" maxlength="80" value="${esc(h.klang||'')}" placeholder="${esc(t('oder beschreiben: tiefe, raue Zwergenstimme','or describe it: deep, rough dwarf voice'))}" aria-label="${esc(t('Stimme beschreiben','Describe the voice'))}">`:''}<small class="mut">${esc(t('Ist Vorlesen an, spricht diese Stimme, was dein Held in Anführungszeichen sagt: „Halt, wer da?“','When reading aloud is on, this voice speaks what your hero says in quotes: "Halt, who goes there?"'))}</small></div>`:''}
     ${(h.segen||[]).length?`<div class="dm-segen">${h.segen.map(x=>`<span class="pill ok">${esc(x.wert)} +${x.bonus} · ${esc(x.zuege===1?t('noch 1 Zug','1 turn left'):t('noch '+x.zuege+' Züge',x.zuege+' turns left'))}${x.name?' · '+esc(x.name):''}</span>`).join(' ')}</div>`:''}
     ${h.punkte?`<div class="dm-hint">${esc(t('Neue Stufe: verteile '+h.punkte+' Wertpunkt'+(h.punkte>1?'e':'')+'.','New level: spend '+h.punkte+' value point'+(h.punkte>1?'s':'')+'.'))}</div>`:''}
     ${h.wahl.length?`<div class="dm-hint">${esc(t('Neue Fähigkeit wählen:','Pick a new ability:'))}</div>${h.wahl.map(f=>`<button type="button" class="b dm-fa" data-dmhero="faehigkeit" data-id="${esc(f.id)}"><b>${esc(f.name)}</b><small>${esc(f.satz)}</small></button>`).join('')}`:''}
@@ -266,7 +266,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(B.dmhear){dmPlay('p');return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dmDraw();return}
-  if(B.dmprobe){dmProbe('p',(DM.v&&DM.v.ich||{}).stimme);return}
+  if(B.dmprobe){dmProbe('p',DM.v&&DM.v.ich||{});return}
   if(B.dmmic){dmMic('p');return}
   if(B.dmkedit!==undefined){DM.edit=B.dmkedit;dmDraw();return}
   if(B.dmksave||B.dmkneu||B.dmkdel){const kid=B.dmksave||B.dmkneu||B.dmkdel;
@@ -292,13 +292,13 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     const x=await dmSend(`/api/profile/dungeon/${rid}`,null,DM);if(x){DM.data=x;DM.rid='';DM.v=null;DM.made=null;dmDraw()}return}
   if(d){DM.v=d;DM.at=Date.now()}dmDraw()});
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmvoice],#dgcard [data-dmvoice]');if(!s)return;
-  const body={was:'stimme',stimme:s.value};
+  const box=s.closest('.dm-voice'),body={was:'stimme',stimme:(box.querySelector('select[data-dmvoice]')||{}).value||'',klang:((box.querySelector('.dm-klang')||{}).value||'').trim()};
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
   else await dgAct('/api/dungeon/held',body)});
 // a fixed sentence in the hero's voice, fetched when asked (the same playback as the turn read aloud)
-async function dmProbe(mode,voice){const A=DMA[mode];if(!voice)return;
-  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&lang=${L==='en'?'en':'de'}`);
-    else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,stimme:voice})});
+async function dmProbe(mode,h){const A=DMA[mode],voice=h.stimme||'',klang=h.klang||'';if(!voice&&!klang)return;
+  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&klang=${encodeURIComponent(klang)}&lang=${L==='en'?'en':'de'}`);
+    else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,stimme:voice,klang})});
     if(!r.ok){dmSay(mode==='p'?DM:DG,t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'),1);return}
     if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(e){}}
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmgive],#dgcard [data-dmgive]');if(!s||!s.value)return;
@@ -352,7 +352,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
   if(B.dmhear){dmPlay('g');return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dgDraw();return}
-  if(B.dmprobe){dmProbe('g',(DG.v&&DG.v.ich||{}).stimme);return}
+  if(B.dmprobe){dmProbe('g',DG.v&&DG.v.ich||{});return}
   if(B.dmmic){dmMic('g');return}
   if(B.dgwie){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
     box.querySelector('.dgf-body').innerHTML=dmHeroForm(DG.info.wahl,B.dgwie==='p'&&DM.data?DM.data.helden:[],'dgf-');return}
