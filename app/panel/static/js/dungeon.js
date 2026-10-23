@@ -11,7 +11,7 @@ const DMA={p:{n:0,el:null,url:''},g:{n:0,el:null,url:''},rec:null,parts:[],mode:
 // the short guide for players at the table: opens by itself once on this device, then by its button
 const DMHILFE=[['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
   ['Wann es weitergeht','When it goes on','Alle schreiben gleichzeitig. Haben alle gehandelt oder ist die Zugzeit um, erzählt der Dungeon-Master. „Warten auf“ zeigt, wer noch fehlt; bis dahin kannst du deine Aktion ändern.','Everyone writes at the same time. Once all have acted or the turn time is up, the Dungeon Master narrates. "Waiting for" shows who is still missing; until then you can change your action.'],
-  ['Würfeln','Dice','Würfeln musst du nicht, das macht das Panel: ein W20 plus dein Wert gegen eine Schwierigkeit. Bei Vorteil würfelt es zweimal und nimmt den besseren Wurf, bei Nachteil den schlechteren.','You never roll yourself, the panel does: a d20 plus your value against a difficulty. With advantage it rolls twice and keeps the better roll, with disadvantage the worse.'],
+  ['Würfeln','Dice','Würfeln musst du nicht, das macht das Panel: ein W20 plus der Bonus deines Werts (16 gibt +3) gegen eine Schwierigkeit. Bei Vorteil würfelt es zweimal und nimmt den besseren Wurf, bei Nachteil den schlechteren.','You never roll yourself, the panel does: a d20 plus your value\'s bonus (16 gives +3) against a difficulty. With advantage it rolls twice and keeps the better roll, with disadvantage the worse.'],
   ['Leben, Beute, Tauschen','Life, loot, trading','Der Balken zeigt dein Leben. Beute landet in deiner Tasche (bis 12 Dinge); Tränke und Zauber nutzt du dort. Tauschen geht per Angebot: erst wenn der andere annimmt, tauscht das Panel.','The bar shows your life. Loot lands in your bag (up to 12 things); you use potions and spells from there. Trading works by offer: only when the other one accepts does the panel swap.'],
   ['Hören und Sprechen','Listen and speak','„🔊 Hören“ liest die Erzählung vor. Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','"🔊 Listen" reads the narration aloud. With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
   ['Als Gast','As a guest','Am Ende bekommst du einen Figur-Code. Damit spielt dein Held beim nächsten Mal weiter, auch in einem eigenen Profil. Schreib ihn dir auf.','At the end you get a hero code. With it your hero plays on next time, also in a profile of your own. Write it down.']];
@@ -67,9 +67,32 @@ function dmHeroForm(w,heroes,pre){const opt=(a)=>a.map(x=>`<option value="${esc(
   return `${heroes&&heroes.length?`<label>${esc(t('Held','Hero'))}</label><select class="${pre}held"><option value="">${esc(t('Neuer Held …','New hero …'))}</option>${heroes.map(h=>`<option value="${esc(h.hid)}">${esc(h.name)} · ${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</option>`).join('')}</select>`:''}
     <div class="${pre}neu dm-neu"><label>${esc(t('Name deiner Figur','Name of your character'))}</label><input class="${pre}name" maxlength="24" autocomplete="off">
     <div class="dm-two"><div><label>${esc(t('Volk','People'))}</label><select class="${pre}volk">${opt(w.voelker)}</select></div><div><label>${esc(t('Klasse','Class'))}</label><select class="${pre}klasse">${opt(w.klassen)}</select></div></div>
+    <label>${esc(t('Werte','Values'))}</label><small class="mut">${esc(t('Die Zahlen 15, 14, 13, 12, 10 und 8 verteilen: ziehen oder zwei antippen tauscht sie. Dahinter das Volk, der Wert und der Bonus für Würfe.','Lay out 15, 14, 13, 12, 10 and 8: drag, or tap two to swap them. After it the people\'s bonus, the value and the bonus for rolls.'))}</small>
+    <div class="${pre}vert dm-vert">${w.verteilung?dmVert(w,w.klassen[0].id,w.voelker[0].id):''}</div>
     <label>${esc(t('Ein Satz zu deiner Figur (frei)','One sentence about your character (optional)'))}</label><input class="${pre}satz" maxlength="120" autocomplete="off"></div>`}
 function dmHeroBody(box,pre){const sel=box.querySelector('.'+pre+'held');if(sel&&sel.value)return sel.value;
-  const v=c=>(box.querySelector('.'+pre+c)||{}).value||'';return {name:v('name').trim(),volk:v('volk'),klasse:v('klasse'),satz:v('satz').trim()}}
+  const v=c=>(box.querySelector('.'+pre+c)||{}).value||'';const vt=box.querySelector('.'+pre+'vert');return {name:v('name').trim(),volk:v('volk'),klasse:v('klasse'),satz:v('satz').trim(),verteilung:vt?dmVertOf(vt):undefined}}
+// the six values of a new hero: the fixed row (15 14 13 12 10 8) laid out by the class, the player drags or taps two numbers to swap them
+const dmSign=m=>(m<0?'−':'+')+Math.abs(m);
+function dmVert(w,kid,vid,cur){const k=w.klassen.find(x=>x.id===kid)||w.klassen[0],vo=w.voelker.find(x=>x.id===vid)||w.voelker[0];
+  const val=cur||Object.fromEntries(k.reihe.map((id,i)=>[id,w.verteilung[i]])),md=s=>dmSign(Math.floor((s-10)/2));
+  return w.werte.map(x=>{const v=val[x.id],b=(vo.werte||{})[x.id]||0;
+    return `<div class="dm-vslot" data-w="${esc(x.id)}" title="${esc(x.name)}"><small>${esc(x.kurz)}</small><button type="button" class="dm-vchip" draggable="true" data-dmv="${esc(x.id)}" aria-label="${esc(x.name+' '+v)}">${v}</button><small class="dm-vsum">${b?'+'+b+' ':''}= <b>${v+b}</b> · ${md(v+b)}</small></div>`}).join('')}
+function dmVertOf(box){const o={};box.querySelectorAll('.dm-vchip').forEach(c=>o[c.dataset.dmv]=+c.textContent);return o}
+function dmVertWahl(box){return box.closest('#dgcard')?DG.info&&DG.info.wahl:DM.data&&DM.data.wahl}
+function dmVertDraw(f,keep){const w=dmVertWahl(f),pre=f.querySelector('.dmf-vert')?'dmf-':'dgf-',v=f.querySelector('.'+pre+'vert');if(!w||!v)return;
+  v.innerHTML=dmVert(w,(f.querySelector('.'+pre+'klasse')||{}).value,(f.querySelector('.'+pre+'volk')||{}).value,keep?dmVertOf(v):null)}
+function dmVertSwap(v,a,b){if(a===b)return;const o=dmVertOf(v);[o[a],o[b]]=[o[b],o[a]];const f=v.closest('.dm-neu');
+  v.innerHTML=dmVert(dmVertWahl(v),(f.querySelector('.dmf-klasse,.dgf-klasse')||{}).value,(f.querySelector('.dmf-volk,.dgf-volk')||{}).value,o);
+  const c=v.querySelector(`[data-dmv="${CSS.escape(b)}"]`);if(c)c.focus({preventScroll:true})}
+document.body.addEventListener('change',e=>{const s=e.target.closest('.dm-neu .dmf-klasse,.dm-neu .dgf-klasse,.dm-neu .dmf-volk,.dm-neu .dgf-volk');if(!s)return;
+  dmVertDraw(s.closest('.dm-neu'),/volk$/.test(s.className))});
+document.body.addEventListener('click',e=>{const c=e.target.closest('.dm-vchip');if(!c)return;const v=c.closest('.dm-vert'),on=v.querySelector('.dm-vchip.on');
+  if(on&&on!==c){dmVertSwap(v,on.dataset.dmv,c.dataset.dmv);return}c.classList.toggle('on')});
+document.body.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('.dm-vchip');if(c){e.dataTransfer.setData('text/plain',c.dataset.dmv);e.dataTransfer.effectAllowed='move'}});
+document.body.addEventListener('dragover',e=>{if(e.target.closest&&e.target.closest('.dm-vslot'))e.preventDefault()});
+document.body.addEventListener('drop',e=>{const s=e.target.closest&&e.target.closest('.dm-vslot');if(!s)return;e.preventDefault();
+  const a=e.dataTransfer.getData('text/plain');if(a)dmVertSwap(s.closest('.dm-vert'),a,s.dataset.w)});
 function dmNew(D){const w=D.wahl;if(D.runden.filter(x=>x.gastgeber&&x.status!=='ende').length>=D.runden_max)return `<div class="ic-note"><div class="ic-mid"><b>${esc(t('Du leitest schon '+D.runden_max+' Runden.','You host '+D.runden_max+' rounds already.'))}</b><span>${esc(t('Beende eine, um eine neue anzulegen.','End one to start a new one.'))}</span></div></div>`;
   const min=s=>s>=3600?Math.round(s/3600)+' h':s>=60?Math.round(s/60)+' min':s+' s';
   return `<h3 class="sec">${esc(t('Neue Runde','New round'))}</h3><div class="dm-form">
@@ -111,7 +134,8 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';const others=v.plaetze.filte
   return `<div class="dm-me"><h4>${esc(h.name)} · ${esc(h.volk)} ${esc(h.klasse)}</h4>${h.satz?`<small class="mut">${esc(h.satz)}</small>`:''}
     <div class="dm-line"><span>${esc(t('Stufe','Level'))} ${h.stufe}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></div>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}
     <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></div>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}
-    <div class="dm-werte">${h.werte.map(x=>`<span>${esc(x.name)} <b>${x.gesamt}</b>${h.punkte?`<button type="button" class="b dm-plus" data-dmhero="punkt" data-wert="${esc(x.id)}" title="${esc(t('Wertpunkt hierhin','Value point here'))}">+1</button>`:''}</span>`).join('')}<span>${esc(t('Schutz','Protection'))} <b>${h.schutz}</b></span><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span></div>
+    <div class="dm-werte">${h.werte.map(x=>`<span title="${esc(x.name+': '+x.wert+t(', Bonus für Würfe ',', bonus for rolls ')+dmSign(x.gesamt))}">${esc(x.kurz)} <b>${x.wert}</b> <small class="mut">${dmSign(x.gesamt)}</small>${h.punkte&&x.wert<h.wert_max?`<button type="button" class="b dm-plus" data-dmhero="punkt" data-wert="${esc(x.id)}" title="${esc(t('Wertpunkt hierhin','Value point here'))}">+1</button>`:''}</span>`).join('')}<span>${esc(t('Schutz','Protection'))} <b>${h.schutz}</b></span><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span></div>
+    ${(v.stimmen||[]).length?`<div class="dm-voice"><label>${esc(t('Stimme deines Helden','Your hero\'s voice'))}</label><div class="dm-inp"><select data-dmvoice="1" aria-label="${esc(t('Stimme deines Helden','Your hero\'s voice'))}"><option value="">${esc(t('Keine, nur der Erzähler','None, only the narrator'))}</option>${[...new Set([h.stimme,...v.stimmen].filter(Boolean))].map(x=>`<option${x===h.stimme?' selected':''}>${esc(x)}</option>`).join('')}</select><button type="button" class="b" data-dmprobe="1"${h.stimme?'':' disabled'}>${esc('▶ '+t('Probe','Sample'))}</button></div><small class="mut">${esc(t('Ist Vorlesen an, spricht diese Stimme, was dein Held in Anführungszeichen sagt: „Halt, wer da?“','When reading aloud is on, this voice speaks what your hero says in quotes: "Halt, who goes there?"'))}</small></div>`:''}
     ${(h.segen||[]).length?`<div class="dm-segen">${h.segen.map(x=>`<span class="pill ok">${esc(x.wert)} +${x.bonus} · ${esc(x.zuege===1?t('noch 1 Zug','1 turn left'):t('noch '+x.zuege+' Züge',x.zuege+' turns left'))}${x.name?' · '+esc(x.name):''}</span>`).join(' ')}</div>`:''}
     ${h.punkte?`<div class="dm-hint">${esc(t('Neue Stufe: verteile '+h.punkte+' Wertpunkt'+(h.punkte>1?'e':'')+'.','New level: spend '+h.punkte+' value point'+(h.punkte>1?'s':'')+'.'))}</div>`:''}
     ${h.wahl.length?`<div class="dm-hint">${esc(t('Neue Fähigkeit wählen:','Pick a new ability:'))}</div>${h.wahl.map(f=>`<button type="button" class="b dm-fa" data-dmhero="faehigkeit" data-id="${esc(f.id)}"><b>${esc(f.name)}</b><small>${esc(f.satz)}</small></button>`).join('')}`:''}
@@ -157,7 +181,7 @@ function dmTable(w,v,mode){const keep=w.querySelector('.dm-in'),kv=keep?keep.val
   const group=v.plaetze.map(p=>p.frei?`<div class="dm-seat free"><span class="dm-av">+</span><div><b>${esc(t('Platz frei','Free seat'))}</b><small class="mut">${esc(t('Link verschickt ','Link sent '))}${esc(dmWhen(p.made))}</small></div><button type="button" class="b" data-dmseatdel="${esc(p.pid)}">${esc(t('Zurücknehmen','Take back'))}</button></div>`
     :`<div class="dm-seat dm-hero${p.ich?' me':''}"><div class="dm-hhead"><span class="dm-av" data-c="${col(p.pid)}">${esc((p.name||'?').slice(0,1).toUpperCase())}</span><div><b>${esc(p.name)}</b> <i>${esc(p.volk)} ${esc(p.klasse)}</i><small class="mut">${esc(t('Stufe','Level'))} ${p.stufe}${p.gastgeber?' · '+esc(t('leitet','hosts')):p.gast?' · '+esc(t('Gast','guest')):''}</small></div>${mode==='p'&&v.gastgeber&&!p.gastgeber?`<button type="button" class="ic-ib" data-dmseatdel="${esc(p.pid)}" title="${esc(t('Platz zurücknehmen','Take the seat back'))}" aria-label="${esc(t('Platz zurücknehmen','Take the seat back'))}">×</button>`:''}</div>
       <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${p.leben} / ${p.leben_max}</span></div>${dmBar(p.leben,p.leben_max,p.leben*3<p.leben_max?'low':'')}
-      ${p.karte?`<div class="dm-stats">${p.karte.werte.map(x=>`<span title="${esc(x.name)}"><small>${esc(x.kurz)}</small><b>${x.wert}</b></span>`).join('')}<span title="${esc(t('Schutz','Protection'))}"><small>${esc(t('SCH','PRO'))}</small><b>${p.karte.schutz}</b></span></div>
+      ${p.karte?`<div class="dm-stats">${p.karte.werte.map(x=>`<span title="${esc(x.name)}"><small>${esc(x.kurz)}</small><b>${x.wert}</b><i>${dmSign(x.mod)}</i></span>`).join('')}<span title="${esc(t('Schutz','Protection'))}"><small>${esc(t('SCH','PRO'))}</small><b>${p.karte.schutz}</b></span></div>
       ${p.karte.dinge.length?`<div class="dm-pills">${p.karte.dinge.map(n=>`<span>${esc(n)}</span>`).join('')}</div>`:''}`:''}
       <small class="dm-state ${p.gehandelt?'ok':p.online?'':'away'}">${esc(p.gehandelt?t('hat gehandelt','acted'):p.online?t('denkt nach','thinking'):t('nicht da','away'))}</small></div>`).join('');
   const sc=v.szene&&(v.szene.ort||v.szene.stimmung)?`<div class="dm-scene"><i>${esc(t('Ort:','Place:'))}</i> ${esc([v.szene.ort,v.szene.stimmung].filter(Boolean).join(' · '))}</div>`:'';
@@ -226,7 +250,7 @@ async function dmSend(path,b,S,x){if(S.busy)return null;S.busy=true;
   const o=x?xjson(x.method,Object.assign({lang:dmLang()},x.body||{})):b===null?{method:'DELETE'}:xjson('POST',Object.assign({lang:dmLang()},b||{}));const {r,d}=await apiTry(path,o);S.busy=false;
   if(!r.ok){dmSay(S,errSay(r.status,d.detail,''),true);return null}S.msg='';S.err=false;return d}
 // ---------------------------------------------------------------- clicks of the own page
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel]');
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel]');
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));return}
   if(B.dmopen){DM.rid=B.dmopen;DM.made=null;DM.ende=false;DMA.p.n=0;await dmRound();return}
@@ -242,6 +266,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(B.dmhear){dmPlay('p');return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dmDraw();return}
+  if(B.dmprobe){dmProbe('p',(DM.v&&DM.v.ich||{}).stimme);return}
   if(B.dmmic){dmMic('p');return}
   if(B.dmkedit!==undefined){DM.edit=B.dmkedit;dmDraw();return}
   if(B.dmksave||B.dmkneu||B.dmkdel){const kid=B.dmksave||B.dmkneu||B.dmkdel;
@@ -266,6 +291,16 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   else if(B.dmend){if(!DM.ende){DM.ende=true;dmDraw();return}DM.ende=false;
     const x=await dmSend(`/api/profile/dungeon/${rid}`,null,DM);if(x){DM.data=x;DM.rid='';DM.v=null;DM.made=null;dmDraw()}return}
   if(d){DM.v=d;DM.at=Date.now()}dmDraw()});
+document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmvoice],#dgcard [data-dmvoice]');if(!s)return;
+  const body={was:'stimme',stimme:s.value};
+  if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
+  else await dgAct('/api/dungeon/held',body)});
+// a fixed sentence in the hero's voice, fetched when asked (the same playback as the turn read aloud)
+async function dmProbe(mode,voice){const A=DMA[mode];if(!voice)return;
+  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&lang=${L==='en'?'en':'de'}`);
+    else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,stimme:voice})});
+    if(!r.ok){dmSay(mode==='p'?DM:DG,t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'),1);return}
+    if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(e){}}
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmgive],#dgcard [data-dmgive]');if(!s||!s.value)return;
   const body={was:'schenken',i:s.dataset.dmgive,an:s.value};
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
@@ -311,12 +346,13 @@ function dgForm(){const I=DG.info,box=dgBox(),w=I.wahl;let name='';try{name=loca
 function dgDraw(){const box=dgBox();if(!DG.v)return;let w=box.querySelector('.dm');if(!w){box.innerHTML=DGHEAD+'<div class="dm"></div>';w=box.querySelector('.dm')}dmTable(w,DG.v,'g')}
 async function dgAct(path,b){if(DG.busy)return;DG.busy=true;
   try{DG.v=await dgPub(path,Object.assign({code:DG.code},b));DG.at=Date.now();DG.msg='';DG.err=false;dgDraw()}catch(e){dmSay(DG,dgErr(e),true)}DG.busy=false}
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmmic]');if(!b)return;
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmprobe],#dgcard [data-dmmic]');if(!b)return;
   const B=b.dataset,box=$('dgcard');
   if(B.dgleave){DG.v=null;$('dgmodal').style.display='none';return}
   if(B.dmhear){dmPlay('g');return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dgDraw();return}
+  if(B.dmprobe){dmProbe('g',(DG.v&&DG.v.ich||{}).stimme);return}
   if(B.dmmic){dmMic('g');return}
   if(B.dgwie){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
     box.querySelector('.dgf-body').innerHTML=dmHeroForm(DG.info.wahl,B.dgwie==='p'&&DM.data?DM.data.helden:[],'dgf-');return}

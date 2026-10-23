@@ -5133,7 +5133,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Nur der Spieltisch hat ein eigenes Aussehen, Formulare, Heldenliste und Admin bleiben im Panel-Stil: dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den drei Werten und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett; der Admin ändert sie unter „Regeln anpas"
+"text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Nur der Spieltisch hat ein eigenes Aussehen, Formulare, Heldenliste und Admin bleiben im Panel-Stil: dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den sechs Werten (mit dem Bonus für Würfe) und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett; der Admin änd"
 },
 {
 "lang": "de",
@@ -5141,7 +5141,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "sen“. Vollbild (Dominik „können wir den auch rauslösen in fullscreen?“): „⛶ Vollbild“ in der Kopfzeile, auch für Gäste, zeigt nur den Tisch über den ganzen Bildschirm (Vollbild des Browsers; wo es das nicht gibt, wie im iPhone-Browser, füllt der Tisch das Fenster); der Knopf, Esc oder das Verlassen des Browser-Vollbilds beenden es. So spielst du (Dominik „haben wir auch eine Anleitung für die Spieler?“): „❔ So spielst du“ öffnet über dem Tisch ein kurzes Blatt für Spieler und Gäste (was man schreibt, wann es weitergeht, wie das Panel würfelt, Leben, Beute und Tauschen, Hören und Sprechen, der Figur-Code); beim ersten Platznehmen auf einem Gerät klappt es einmal von selbst auf (gemerkt nur im Browser)."
+"text": "ert sie unter „Regeln anpassen“. Vollbild (Dominik „können wir den auch rauslösen in fullscreen?“): „⛶ Vollbild“ in der Kopfzeile, auch für Gäste, zeigt nur den Tisch über den ganzen Bildschirm (Vollbild des Browsers; wo es das nicht gibt, wie im iPhone-Browser, füllt der Tisch das Fenster); der Knopf, Esc oder das Verlassen des Browser-Vollbilds beenden es. So spielst du (Dominik „haben wir auch eine Anleitung für die Spieler?“): „❔ So spielst du“ öffnet über dem Tisch ein kurzes Blatt für Spieler und Gäste (was man schreibt, wann es weitergeht, wie das Panel würfelt, Leben, Beute und Tauschen, Hören und Sprechen, der Figur-Code); beim ersten Platznehmen auf einem Gerät klappt es einmal von selbst auf (gemerkt nur im Browser)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: sechs Werte wie bei D&D (V01.0.958, Dominik 2026-10-23 „die werte der helden können wir diese erweitern wie bei dungeon and dragons“, „ok“ = Empfehlungen 2a und 3a): Statt Stärke, Geschick und Verstand hat jeder Held Stärke, Geschick, Konstitution, Intelligenz, Weisheit und Charisma (werte, genau sechs, konstitution muss dabei sein). Jeder Wert ist eine Zahl wie bei D&D, der Bonus für Würfe folgt daraus: (Wert − 10) / 2 abgerundet, also 8 gibt −1, 10 gibt 0, 16 gibt +3 (mod). Das Panel würfelt W20 plus diesen Bonus plus Ausrüstung, Fähigkeiten und Segen. Beim Anlegen verteilt der Spieler die feste Reihe 15, 14, 13, 12, 10 und 8 (verteilung) auf die sechs Werte: Zahlen ziehen oder zwei antippen tauscht sie, vorbelegt nach der reihe der Klasse (Krieger zuerst Stärke, Magier Intelligenz, Dieb Geschick, Heiler Weisheit, Waldläufer Geschick); das Panel nimmt nur genau diese Reihe an, sonst gilt die Reihe der Klasse. Das Volk gibt +1 oder +2 dazu (Mensch überall +1, Zwerg Konstitution +2 und Weisheit +1, Elf Geschick +2 und Intelligenz +1, Halbling Geschick +2 und Charisma +1, Ork Stärke +2 und Konstitution +1, je 0 bis 2). Konstitution gibt Leben: Start der Klasse plu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "s Bonus, je Stufe leben_plus plus Bonus (mindestens 1); steigt der Bonus durch einen Wertpunkt, wächst das Leben für jede Stufe nach. Jede Stufe bringt einen Wertpunkt (+1 auf einen Wert, höchstens 20, WERT_MAX). Alte Helden werden beim Lesen umgestellt (six): Werte neu nach der Reihe der Klasse plus Volk, jeder Punkt kommt zum neuen Verteilen zurück, Leben passend zur Stufe, Gegenstände und Segen auf Verstand zählen für Intelligenz; Log „dungeon: held umgestellt | sechs werte“. Eigene Regeln des Admins von vorher gelten weiter (_alt): „verstand“ wird „intelligenz“, die alten werte einer Klasse werden ihre reihe. Fähigkeiten, Effekte und Gegenstände sind auf die sechs Werte verteilt (etwa Kampfschrei auf Charisma, Eisenhaut auf Konstitution, Heiler auf Weisheit). Heldenkarte am Tisch und eigener Bogen zeigen Wert und Bonus. Heldenstimmen (Dominik „Die einzelnen Spieler, können die auch sich eine Stimme generieren und dann quasi mit der Stimme antworten?“, „ja, nach Empfehlung umsetzen“ = 1a und 2a): Im eigenen Bogen wählt jeder Spieler, auch ein Gast, unter „Stimme deines Helden“ eine Stimme der Sprachausgabe (Liste von /v1/voices, höchstens alle 10 Minuten im Hintergrund geholt, S"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "TIMMEN_S); „▶ Probe“ spricht einen festen Satz in dieser Stimme (je Stimme einmal erzeugt und behalten, eigenes Rate-Limit dungeonprobe). Ist Vorlesen an, spricht die Stimme nur, was der Held in Anführungszeichen sagt („…“, \"…\", »…«, höchstens 200 Zeichen, says), vor der Erzählung und in derselben Tonspur des Zugs, nacheinander statt gleichzeitig; eine Zeile mit einem Wort, das Ton, „nie“ oder die Tabus der Geschichte ablehnen, wird nicht gesprochen. Gewählt werden kann nur eine Stimme aus der Liste; ohne Stimme liest wie bisher nur der Erzähler. Eine Stimme aus einer Beschreibung (1b) folgt, sobald geprüft ist, ob die Sprachausgabe auf dem Modell-Rechner das kann."
 },
 {
 "lang": "de",
@@ -16901,7 +16925,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: table theme (V01.0.957, Dominik 2026-10-23 \"mir gefällt dieses layout ganz gut … können wir das verbessern?\", \"ok\" = recommendations 1a to 5): only the table has a look of its own, forms, hero list and admin keep the panel style: dark ground, a serif font of the system (nothing is loaded), the narration as a parchment card with an initial and \"Turn n\", actions as speech bubbles with the avatar in the seat's colour, rolls as a slim line, act lines in gold. On the left hero cards of all players with life bar, the three values and protection as a grid, equipped items as small tags and the state (acted, thinking, away), the own one framed in gold; the head shows the title in small caps and the current place; under the narration \"Waiting for: …\", the input, the microphone and Act. On a phone story, group and own sheet come one below the other. Colours per world (welten[].farben with grund, karte, pergament, tinte, gold, only #rrggbb, checked by check_rules): fantasy parchment and gold, horror blood red, science fiction blue, pirates turquoise, own world violet; the admin changes them under \"Adjust rules\". Full screen (Dominik \"can we pop it out into full screen?\"): \"⛶"
+"text": "AI Dungeon Master: table theme (V01.0.957, Dominik 2026-10-23 \"mir gefällt dieses layout ganz gut … können wir das verbessern?\", \"ok\" = recommendations 1a to 5): only the table has a look of its own, forms, hero list and admin keep the panel style: dark ground, a serif font of the system (nothing is loaded), the narration as a parchment card with an initial and \"Turn n\", actions as speech bubbles with the avatar in the seat's colour, rolls as a slim line, act lines in gold. On the left hero cards of all players with life bar, the six values (with the bonus for rolls) and protection as a grid, equipped items as small tags and the state (acted, thinking, away), the own one framed in gold; the head shows the title in small caps and the current place; under the narration \"Waiting for: …\", the input, the microphone and Act. On a phone story, group and own sheet come one below the other. Colours per world (welten[].farben with grund, karte, pergament, tinte, gold, only #rrggbb, checked by check_rules): fantasy parchment and gold, horror blood red, science fiction blue, pirates turquoise, own world violet; the admin changes them under \"Adjust rules\". Full screen (Dominik \"can we pop it ou"
 },
 {
 "lang": "en",
@@ -16909,7 +16933,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " Full screen\" in the header, also for guests, shows only the table across the whole screen (the browser's full screen; where there is none, as in the iPhone browser, the table fills the window); the button, Esc or leaving the browser's full screen end it. How to play (Dominik \"do we also have a guide for the players?\"): \"❔ How to play\" opens a short sheet above the table for players and guests (what you write, when it goes on, how the panel rolls, life, loot and trading, listening and speaking, the hero code); the first time you take a seat on a device it opens once by itself (remembered only in the browser)."
+"text": "t into full screen?\"): \"⛶ Full screen\" in the header, also for guests, shows only the table across the whole screen (the browser's full screen; where there is none, as in the iPhone browser, the table fills the window); the button, Esc or leaving the browser's full screen end it. How to play (Dominik \"do we also have a guide for the players?\"): \"❔ How to play\" opens a short sheet above the table for players and guests (what you write, when it goes on, how the panel rolls, life, loot and trading, listening and speaking, the hero code); the first time you take a seat on a device it opens once by itself (remembered only in the browser)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: six values as in D&D (V01.0.958, Dominik 2026-10-23 \"die werte der helden können wir diese erweitern wie bei dungeon and dragons\", \"ok\" = recommendations 2a and 3a): instead of strength, dexterity and wits every hero has Strength, Dexterity, Constitution, Intelligence, Wisdom and Charisma (werte, exactly six, konstitution among them). Each value is a score as in D&D, the bonus for rolls follows from it: (score − 10) / 2 rounded down, so 8 gives −1, 10 gives 0, 16 gives +3 (mod). The panel rolls d20 plus that bonus plus equipment, abilities and blessings. When creating a hero the player lays out the fixed row 15, 14, 13, 12, 10 and 8 (verteilung) on the six values: drag numbers, or tap two to swap them, preset by the class's reihe (warrior strength first, mage intelligence, rogue dexterity, healer wisdom, ranger dexterity); the panel takes only exactly that row, otherwise the class's order counts. The people add +1 or +2 (human +1 everywhere, dwarf constitution +2 and wisdom +1, elf dexterity +2 and intelligence +1, halfling dexterity +2 and charisma +1, orc strength +2 and constitution +1, each 0 to 2). Constitution gives life: the class's start plus the bonus, p"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "er level leben_plus plus the bonus (at least 1); when a value point raises the bonus, life grows for every level. Every level brings a value point (+1 on a value, at most 20, WERT_MAX). Older heroes are carried over when read (six): values anew by the class's order plus the people, every point comes back to spend again, life fitting the level, items and blessings on wits count for intelligence; log \"dungeon: held umgestellt | sechs werte\". The admin's own rules from before keep working (_alt): \"verstand\" becomes \"intelligenz\", a class's old werte become its reihe. Abilities, effects and items are spread over the six values (battle cry on charisma, iron skin on constitution, the healer on wisdom). The hero card at the table and the own sheet show score and bonus. Hero voices (Dominik \"Die einzelnen Spieler, können die auch sich eine Stimme generieren und dann quasi mit der Stimme antworten?\", \"ja, nach Empfehlung umsetzen\" = 1a and 2a): on the own sheet every player, a guest too, picks a voice of the speech output under \"Your hero's voice\" (list from /v1/voices, fetched in the background at most every 10 minutes, STIMMEN_S); \"▶ Sample\" speaks a fixed sentence in that voice (made onc"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e per voice and kept, own rate limit dungeonprobe). When reading aloud is on, the voice speaks only what the hero says in quotes (\"…\", „…“, »…«, at most 200 characters, says), before the narration and in the same sound track of the turn, one after another rather than at once; a line with a word the tone, \"nie\" or the story's taboos refuse is not spoken. Only a voice from the list can be picked; without a voice only the narrator reads as before. A voice from a description (1b) follows once it is checked whether the speech output on the model computer can do that."
 },
 {
 "lang": "en",

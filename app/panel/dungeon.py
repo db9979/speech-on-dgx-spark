@@ -122,6 +122,8 @@ QUELLE_MAX = 12           # narrations of a chapter its summary is written from
 GAESTE_MAX = 4            # heroes of guests a campaign keeps for the next chapter
 TON_ZUEGE = 3             # turns read aloud a round keeps
 TON_ZEICHEN = 1800        # characters of one turn read aloud
+SAGT_MAX = 200            # characters of one hero's spoken line (what stands in quotes in the action)
+STIMMEN_S = 600           # seconds the speech output's voice list is kept before it is asked again
 TON_BYTES = 32 * 1024 * 1024
 HOER_BYTES = 1024 * 1024  # one recording (16 kHz mono WAV: about 30 s)
 GESCHICHTEN_MAX = 30      # the admin's stories
@@ -174,7 +176,7 @@ _GID = re.compile(r"g[0-9a-f]{8}")
 _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
-WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen")
+WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme")
 TASCHE = 12               # items in one bag
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
@@ -186,12 +188,15 @@ ERFOLG_ARTEN = ("gegner", "ziel")
 ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle")
 ZIELE = ("selbst", "gruppe")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
+WERT_MAX = 20             # a value's score at most (as in D&D); every level's point raises one by 1
+KON = "konstitution"     # the value that adds to life (its bonus on every level, as in D&D)
 _lock = threading.RLock()   # _end and keep_hero run inside it
 _seen = {}                # seat id -> last ask (memory only, so polling never writes)
 _running = set()          # rounds whose Dungeon Master is answering right now
 _summing = set()          # campaigns whose „Bisher geschah“ is being written right now
 _speaking = set()         # rounds whose last turn is being read aloud right now
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
+_stimmen = {"t": 0.0, "v": [], "laeuft": False}   # the speech output's voices a hero may take (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0)
 
@@ -278,13 +283,15 @@ def check_rules(r):
              f"{k}: id nur aus a-z, 0-9 und _ (höchstens 24 Zeichen)" + (", bei toene eine Zahl" if k == "toene" else ""))
         need(all(_pair(x.get("name"), 40) for x in v if isinstance(x, dict) and k not in ("effekte",)), f"{k}: name als [deutsch, englisch], je höchstens 40 Zeichen")
     werte = {x.get("id") for x in r.get("werte") or [] if isinstance(x, dict)}
-    need(len(werte) == 3, "werte: genau drei Werte")
+    need(len(werte) == 6 and KON in werte, f"werte: genau sechs Werte, darunter {KON}")
+    vt = r.get("verteilung")
+    need(isinstance(vt, list) and len(vt) == len(werte) and all(_int(x, 3, 18) for x in vt), "verteilung: je Wert eine Zahl von 3 bis 18")
     for v in r.get("voelker") or []:
-        need(isinstance(v.get("werte"), dict) and set(v["werte"]) <= werte and all(_int(x, 0, 3) for x in v["werte"].values()), f"voelker {v.get('id')}: werte je 0 bis 3")
+        need(isinstance(v.get("werte"), dict) and set(v["werte"]) <= werte and all(_int(x, 0, 2) for x in v["werte"].values()), f"voelker {v.get('id')}: werte je 0 bis 2")
     kids = set()
     for k in r.get("klassen") or []:
         kids.add(k.get("id"))
-        need(isinstance(k.get("werte"), dict) and set(k["werte"]) <= werte and all(_int(x, 0, 3) for x in k["werte"].values()), f"klassen {k.get('id')}: werte je 0 bis 3")
+        need(isinstance(k.get("reihe"), list) and sorted(map(str, k["reihe"])) == sorted(map(str, werte)), f"klassen {k.get('id')}: reihe nennt jeden Wert genau einmal")
         need(_int(k.get("leben"), 4, 30) and _int(k.get("leben_plus"), 1, 10), f"klassen {k.get('id')}: leben 4 bis 30, leben_plus 1 bis 10")
         need(isinstance(k.get("waffen"), list) and k["waffen"], f"klassen {k.get('id')}: waffen als Liste von Gegenstand-ids")
         fs = k.get("faehigkeiten")
@@ -350,6 +357,31 @@ def own_rules():
     return read_json(EIGENE, {})
 
 
+_ALT = {"verstand": "intelligenz"}   # the three values before V01.0.958 → the six
+
+
+def _alt(own):
+    """The admin's own entries written for the three values: "verstand" counts as "intelligenz", a class's "werte"
+    becomes its "reihe" (highest first), a people's bonus at most 2."""
+    def walk(x):
+        if isinstance(x, dict):
+            x = {_ALT.get(k, k) if isinstance(v, int) else k: walk(v) for k, v in x.items()}
+            if isinstance(x.get("wert"), str):
+                x["wert"] = _ALT.get(x["wert"], x["wert"])
+            return x
+        return [walk(v) for v in x] if isinstance(x, list) else x
+    own = walk(own) if isinstance(own, dict) else {}
+    order = [w["id"] for w in _base_rules()["werte"]]
+    for k in own.get("klassen") or []:
+        if isinstance(k, dict) and "reihe" not in k and isinstance(k.get("werte"), dict):
+            old = k.pop("werte")
+            k["reihe"] = sorted(order, key=lambda w: (-int(old.get(w, 0) if isinstance(old.get(w, 0), int) else 0), order.index(w)))
+    for v in own.get("voelker") or []:
+        if isinstance(v, dict) and isinstance(v.get("werte"), dict):
+            v["werte"] = {k: min(2, x) if isinstance(x, int) else x for k, x in v["werte"].items()}
+    return own
+
+
 def rules():
     """The rules in force: shipped plus the admin's own when they pass check_rules, else the shipped ones."""
     try:
@@ -358,7 +390,7 @@ def rules():
         key = 0
     if _rules["key"] != key or _rules["r"] is None:
         base = _base_rules()
-        r = merge(base, own_rules())
+        r = merge(base, _alt(own_rules()))
         if check_rules(r):
             print("dungeon: regeln verworfen | pruefung", flush=True)
             r = base
@@ -398,18 +430,69 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     return it
 
 
+def mod(score):
+    """The bonus of a score, as in D&D: 10 and 11 give 0, every two more +1 (8 gives -1, 16 gives +3)."""
+    return (int(score) - 10) // 2
+
+
+def spread(r, klasse, want=None):
+    """The scores before the people's bonus: the fixed row (15, 14, 13, 12, 10, 8) on the values. What the player
+    dragged counts only when it is exactly that row; else the class's order lays it out."""
+    ids, row = [w["id"] for w in r["werte"]], sorted(r["verteilung"], reverse=True)
+    if isinstance(want, dict) and set(want) == set(ids) and all(isinstance(x, int) for x in want.values()) \
+            and sorted(want.values(), reverse=True) == row:
+        return {w: want[w] for w in ids}
+    return dict(zip(klasse["reihe"], row))
+
+
+def life(r, h):
+    """Life at the hero's level: the class's start, then leben_plus per level, each with the bonus of
+    Konstitution (at least 1 a level)."""
+    k, m = _by(r, "klassen")[h["klasse"]], mod(h["werte"].get(KON, 10))
+    return max(1, k["leben"] + m) + (h["stufe"] - 1) * max(1, k["leben_plus"] + m)
+
+
 def new_hero(r, b, rng=None):
-    """A hero from what was typed and picked: name, people, class, one sentence; values from people and class."""
+    """A hero from what was typed and picked: name, people, class, one sentence; the six scores from the fixed row
+    as dragged (else the class's order) plus the people's bonus."""
     name = _clean(b.get("name"), NAME_MAX)
     volk, klasse = _by(r, "voelker").get(b.get("volk")), _by(r, "klassen").get(b.get("klasse"))
     if len(name) < 2 or not re.search(r"[A-Za-zÄÖÜäöüß]", name) or not volk or not klasse:
         raise ValueError("held")
-    werte = {w["id"]: volk["werte"].get(w["id"], 0) + klasse["werte"].get(w["id"], 0) for w in r["werte"]}
+    werte = {w: x + volk["werte"].get(w, 0) for w, x in spread(r, klasse, b.get("verteilung")).items()}
     h = {"hid": "h" + os.urandom(5).hex(), "name": name, "volk": volk["id"], "klasse": klasse["id"],
-         "satz": _clean(b.get("satz"), SATZ_MAX), "stufe": 1, "ep": 0, "werte": werte, "leben": klasse["leben"],
-         "leben_max": klasse["leben"], "gold": r["start"]["gold"], "waffe": item(r, klasse["waffen"][0], rng=rng),
+         "satz": _clean(b.get("satz"), SATZ_MAX), "stufe": 1, "ep": 0, "werte": werte, "leben": 0,
+         "leben_max": 0, "gold": r["start"]["gold"], "waffe": item(r, klasse["waffen"][0], rng=rng),
          "ruestung": None, "schmuck": None, "tasche": [item(r, x, rng=rng) for x in r["start"]["tasche"]],
          "faehigkeiten": [], "punkte": 0, "wahl": [], "ohne_selten": 0, "seit_fund": 0, "aufstieg": "", "segen": []}
+    h["leben"] = h["leben_max"] = life(r, h)
+    return h
+
+
+def six(r, h):
+    """A hero from before the six values (V01.0.958): the scores laid out anew by the class's order plus the
+    people's bonus, every point already spent comes back to spend again, life at its level; items and blessings
+    on "verstand" count for Intelligenz. Leaves a hero with the six values as it is."""
+    ids = [w["id"] for w in r["werte"]]
+    if isinstance(h.get("werte"), dict) and set(h["werte"]) == set(ids) and all(isinstance(x, int) for x in h["werte"].values()):
+        return h
+    volk, klasse = _by(r, "voelker")[h["volk"]], _by(r, "klassen")[h["klasse"]]
+    stufe = max(1, int(h.get("stufe") or 1))
+    h["werte"] = {w: x + volk["werte"].get(w, 0) for w, x in spread(r, klasse).items()}
+    h["punkte"] = stufe - 1                    # one point a level, spent or not: all to spend again
+    full = h.get("leben", 0) >= h.get("leben_max", 0)
+    h["stufe"] = stufe
+    h["leben_max"] = life(r, h)
+    h["leben"] = h["leben_max"] if full else max(1, min(int(h.get("leben") or 1), h["leben_max"]))
+    cat = _by(r, "gegenstaende")
+    for it in [h.get(s) for s in SLOTS] + list(h.get("tasche") or []):
+        if isinstance(it, dict) and it.get("wert"):
+            c = cat.get(it.get("id")) or {}
+            it["wert"] = c["wert"] if c.get("art") == "waffe" else _ALT.get(it["wert"], it["wert"])
+    for x in h.get("segen") or []:
+        if isinstance(x, dict):
+            x["wert"] = _ALT.get(x.get("wert"), x.get("wert"))
+    print("dungeon: held umgestellt | sechs werte", flush=True)
     return h
 
 
@@ -428,6 +511,8 @@ def fix_hero(r, h):
     h["faehigkeiten"] = [x for x in h.get("faehigkeiten") or [] if x in fa]
     h["wahl"] = [x for x in h.get("wahl") or [] if x in fa][:2]
     h["stufe"] = max(1, min(int(h.get("stufe") or 1), r["grenzen"]["stufe_max"]))
+    six(r, h)
+    h["stimme"] = h["stimme"] if isinstance(h.get("stimme"), str) and _VOICE.fullmatch(h["stimme"]) else ""
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
@@ -443,8 +528,9 @@ def fits(r, h, c):
 
 
 def total(r, h, wert):
-    """A value for a check: the hero's own, the bonus of the items worn for it, of effects and abilities."""
-    v = h["werte"].get(wert, 0)
+    """The bonus for a check on a value: the bonus of the hero's score (D&D), of the items worn for it, of effects,
+    abilities and blessings."""
+    v = mod(h["werte"].get(wert, 10))
     eff, fa = _by(r, "effekte"), {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
     for s in SLOTS:
         it = h.get(s)
@@ -516,7 +602,9 @@ def hero_view(r, h, lang, full=True):
     nxt = se[h["stufe"]] if h["stufe"] < min(len(se), r["grenzen"]["stufe_max"]) else None
     fa = {x["id"]: x for x in k["faehigkeiten"]}
     out.update(satz=h.get("satz", ""), ep=h["ep"], ep_naechste=nxt, gold=h["gold"], punkte=h["punkte"],
-               werte=[{"id": w["id"], "name": w["name"][li], "wert": h["werte"].get(w["id"], 0), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
+               werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
+                       "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
+               wert_max=WERT_MAX, stimme=h.get("stimme", ""),
                schutz=schutz(r, h), slots={s: item_view(r, h[s], lang) if h.get(s) else None for s in SLOTS},
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
@@ -527,9 +615,11 @@ def hero_view(r, h, lang, full=True):
 
 
 def hero_card(r, h, lang):
-    """What every seat sees of a hero at the table: the three values in short, protection and what it wears."""
+    """What every seat sees of a hero at the table: the six scores in short with the bonus for a check, protection
+    and what it wears."""
     li = 1 if lang == "en" else 0
-    return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": total(r, h, w["id"])} for w in r["werte"]],
+    return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": h["werte"].get(w["id"], 10),
+                       "mod": total(r, h, w["id"])} for w in r["werte"]],
             "schutz": schutz(r, h), "dinge": [item_view(r, h[s], lang)["name"] for s in SLOTS if h.get(s)]}
 
 
@@ -548,7 +638,7 @@ def gain(r, h, ep, abend, rng=None):
     k = _by(r, "klassen")[h["klasse"]]
     h["stufe"] += 1
     h["aufstieg"] = abend
-    h["leben_max"] += k["leben_plus"]
+    h["leben_max"] = life(r, h)
     h["leben"] = h["leben_max"]
     h["punkte"] += 1
     if h["stufe"] in r["faehigkeit_auf"]:
@@ -617,7 +707,16 @@ def keep_hero(uid, h):
 def _read():
     d = read_json(FILE, {})
     rs = d.get("runden") if isinstance(d, dict) else None
-    return {"runden": {k: v for k, v in (rs or {}).items() if _RID.fullmatch(k) and isinstance(v, dict)}}
+    out = {"runden": {k: v for k, v in (rs or {}).items() if _RID.fullmatch(k) and isinstance(v, dict)}}
+    r = None
+    for rd in out["runden"].values():                # heroes at a table from before the six values
+        for p in (rd.get("plaetze") or {}).values():
+            h = p.get("held") if isinstance(p, dict) else None
+            if isinstance(h, dict) and isinstance(h.get("werte"), dict) and "verstand" in h["werte"]:
+                r = r or rules()
+                if h.get("klasse") in _by(r, "klassen") and h.get("volk") in _by(r, "voelker"):
+                    six(r, h)
+    return out
 
 
 def _write(d):
@@ -1724,7 +1823,7 @@ async def run_turn(rid, turn):
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid)
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
-                    said.extend(speak_parts(r, e["text"], e.get("npc") or []))
+                    said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn)))
                 cur["dm"] = ""
                 _write(d)
                 for p in cur["plaetze"].values():
@@ -1826,10 +1925,32 @@ def _ton_drop(rid, keep=()):
                 pass
 
 
-def speak_parts(r, story_text, npc):
-    """What a turn reads aloud: the narration in the narrator's voice, then each NPC in the NPC voice."""
+_SAGT = re.compile(r'„([^“”"]+)[“”"]|"([^"]+)"|»([^«]+)«|«([^»]+)»|“([^”]+)”')
+
+
+def says(text):
+    """What a hero says out loud in an action: the words in quotes („…“, "…", »…«), at most SAGT_MAX together."""
+    out = " ".join(" ".join(x for x in m if x).strip() for m in _SAGT.findall(text or ""))
+    return re.sub(r"\s+", " ", out).strip()[:SAGT_MAX]
+
+
+def hero_lines(r, rd, turn):
+    """The heroes' own lines of a turn, each in its voice: only what a hero says in quotes, only heroes with a voice,
+    never a line with a word the round refuses."""
+    out = []
+    for e in rd["log"]:
+        h = (rd["plaetze"].get(e.get("pid")) or {}).get("held") if e["art"] == "aktion" and e.get("n") == turn else None
+        line = says(e["text"]) if h and h.get("stimme") else ""
+        if line and not bad_words(r, rd, line):
+            out.append((h["stimme"], line))
+    return out
+
+
+def speak_parts(r, story_text, npc, helden=()):
+    """What a turn reads aloud: first what the heroes said in their own voices, then the narration in the narrator's
+    voice, then each NPC in the NPC voice."""
     v = voices(r)
-    parts = [(v["erzaehler"], story_text)] + [(v["npc"], f"{n['name']}: {n['sagt']}") for n in npc]
+    parts = list(helden) + [(v["erzaehler"], story_text)] + [(v["npc"], f"{n['name']}: {n['sagt']}") for n in npc]
     out, n = [], 0
     for voice, text in parts:
         if n + len(text) > TON_ZEICHEN:
@@ -1882,6 +2003,49 @@ async def speak_turn(rid, n, parts):
     finally:
         _speaking.discard(rid)
         print(f"dungeon: vorlesen | {why} | {len(parts)} teile | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+async def hero_voices():
+    """The voices a hero may take: the speech output's list, asked at most every STIMMEN_S (in the background, a
+    seat never waits for it)."""
+    if _stimmen["laeuft"] or time.time() - _stimmen["t"] < STIMMEN_S:
+        return
+    _stimmen["laeuft"] = True
+    try:
+        import admin
+        v = await admin.tts_voices()
+        _stimmen["v"] = [x for x in v.get("voices") or [] if isinstance(x, str) and x and _VOICE.fullmatch(x)][:60]
+    except Exception:
+        pass
+    finally:
+        _stimmen.update(t=time.time(), laeuft=False)
+
+
+PROBE = ("Ich bin bereit. Wohin führt uns der Weg?", "I am ready. Where does the road lead us?")
+
+
+async def probe(voice, lang):
+    """A short fixed sentence in one of the heroes' voices, as WAV; kept per voice so trying it again costs nothing."""
+    if voice not in _stimmen["v"]:
+        raise ValueError("stimme")
+    li = 1 if lang == "en" else 0
+    f = os.path.join(TON_DIR, "probe-" + hashlib.sha256(f"{voice}|{li}".encode()).hexdigest()[:16] + ".wav")
+    if os.path.exists(f):
+        with open(f, "rb") as x:
+            return x.read()
+    import begleiter
+    async with _tts_lock():
+        wav = begleiter.wav_of(_pcm(await asyncio.wait_for(ask_tts(PROBE[li], voice), DM_S)))
+
+    def keep():
+        os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
+        with open(f + ".neu", "wb") as x:
+            x.write(wav)
+        os.chmod(f + ".neu", 0o600)
+        os.replace(f + ".neu", f)
+    await asyncio.to_thread(keep)
+    print("dungeon: stimmprobe | neu", flush=True)
+    return wav
 
 
 def _tts_lock():
@@ -1980,7 +2144,7 @@ def view(rid, pid, now=None):
             "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
-            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]},
+            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]),
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
@@ -2052,10 +2216,17 @@ def hero_act(rid, pid, b):
             if an.get("uid"):
                 keep_hero(an["uid"], an["held"])
         elif was == "punkt":
-            if h["punkte"] < 1 or b.get("wert") not in h["werte"] or h["werte"][b["wert"]] >= 9:
+            if h["punkte"] < 1 or b.get("wert") not in h["werte"] or h["werte"][b["wert"]] >= WERT_MAX:
                 raise ValueError("punkt")
             h["punkte"] -= 1
             h["werte"][b["wert"]] += 1
+            if b["wert"] == KON:                       # a better bonus counts for every level, as in D&D
+                was_max, h["leben_max"] = h["leben_max"], life(r, h)
+                h["leben"] = max(1, min(h["leben_max"], h["leben"] + h["leben_max"] - was_max))
+        elif was == "stimme":
+            if b.get("stimme") not in [""] + _stimmen["v"]:
+                raise ValueError("stimme")
+            h["stimme"] = b["stimme"]
         elif was == "faehigkeit":
             if b.get("id") not in h["wahl"]:
                 raise ValueError("faehigkeit")
@@ -2214,9 +2385,10 @@ def _choices(lang):
     li = 1 if lang == "en" else 0
     return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li]} for x in r["welten"]],
             "toene": [{"id": x["id"], "name": x["name"][li]} for x in r["toene"]],
-            "voelker": [{"id": x["id"], "name": x["name"][li]} for x in r["voelker"]],
-            "klassen": [{"id": x["id"], "name": x["name"][li]} for x in r["klassen"]],
-            "werte": [{"id": x["id"], "name": x["name"][li]} for x in r["werte"]],
+            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"]} for x in r["voelker"]],
+            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"]} for x in r["klassen"]],
+            "werte": [{"id": x["id"], "name": x["name"][li], "kurz": x["name"][li][:3].upper()} for x in r["werte"]],
+            "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
             "spieler": r["grenzen"]["spieler"], "prompt": r["prompt"], "text_max": TEXT_MAX,
             "geschichten": [{"gid": k, "titel": g["titel"], "welt": g["welt"], "ton": g["ton"], "akte": len(g["akte"])}
@@ -2286,6 +2458,7 @@ async def runde(rid: str, request: Request, prof=Depends(own_profile)):
     try:
         pid = await asyncio.to_thread(_seat_uid, rid, uid)
         await asyncio.to_thread(maybe_close, rid)
+        spawn(hero_voices(), name="dungeon")
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
         raise _http(e)
@@ -2484,6 +2657,22 @@ async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
         wav = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n))
     except KNOWN as e:
         raise _http(e)
+    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+
+@router.get("/api/profile/dungeon/{rid}/probe", dependencies=[Depends(assistant)])
+async def stimm_probe(rid: str, stimme: str, request: Request, prof=Depends(own_profile)):
+    """A fixed sentence in a voice the own hero at this table may take, as WAV."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeonprobe", uid)
+    try:
+        await asyncio.to_thread(_seat_uid, rid, uid)
+        wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de")
+    except KNOWN as e:
+        raise _http(e)
+    except (RuntimeError, asyncio.TimeoutError):
+        raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 
@@ -2690,6 +2879,7 @@ async def gast_beitreten(request: Request):
 async def gast_lage(request: Request):
     b, rid, pid = await _guest(request)
     await asyncio.to_thread(maybe_close, rid)
+    spawn(hero_voices(), name="dungeon")
     try:
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
@@ -2738,6 +2928,20 @@ async def gast_ton(request: Request):
         wav = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"))
     except KNOWN as e:
         raise _http(e)
+    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/api/dungeon/probe")
+async def gast_probe(request: Request):
+    """{"code", "stimme"}: a fixed sentence in a voice the seat's hero may take, as WAV."""
+    b, rid, pid = await _guest(request)
+    guard.limit(request, "dungeonprobe")
+    try:
+        wav = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"))
+    except KNOWN as e:
+        raise _http(e)
+    except (RuntimeError, asyncio.TimeoutError):
+        raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 

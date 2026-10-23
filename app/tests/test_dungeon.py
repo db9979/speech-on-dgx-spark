@@ -446,7 +446,8 @@ class AdminRules(Base):
         g = self.v.post("/api/dungeon/lage", json={"code": code}).json()
         self.assertEqual((g["welt_id"], g["farben"]["gold"]), ("fantasy", r["welten"][0]["farben"]["gold"]))
         host = next(p for p in g["plaetze"] if p.get("gastgeber"))
-        self.assertEqual([x["wert"] for x in host["karte"]["werte"]], [dungeon.total(r, self.state(v["rid"])["plaetze"][v["pid"]]["held"], w["id"]) for w in r["werte"]])
+        held = self.state(v["rid"])["plaetze"][v["pid"]]["held"]
+        self.assertEqual([(x["wert"], x["mod"]) for x in host["karte"]["werte"]], [(held["werte"][w["id"]], dungeon.total(r, held, w["id"])) for w in r["werte"]])
         self.assertEqual(len(host["karte"]["dinge"]), 1)                        # the starting weapon
 
     def test_full_screen_and_guide_for_every_seat(self):
@@ -463,6 +464,68 @@ class AdminRules(Base):
             json.dump({"grenzen": {"spieler": 999}}, f)
         dungeon._rules["r"] = None
         self.assertEqual(dungeon.rules()["grenzen"]["spieler"], 5)
+
+
+class SixValues(Base):
+    """The six values as in D&D: a score from the fixed row (dragged by the player), its bonus for a check,
+    Konstitution in life, older heroes and older admin entries carried over."""
+
+    def test_scores_bonus_and_the_dragged_row(self):
+        r = dungeon.rules()
+        self.assertEqual([w["id"] for w in r["werte"]], ["staerke", "geschick", "konstitution", "intelligenz", "weisheit", "charisma"])
+        self.assertEqual([dungeon.mod(x) for x in (8, 9, 10, 11, 12, 16, 20)], [-1, -1, 0, 0, 1, 3, 5])
+        drag = {"staerke": 8, "geschick": 15, "konstitution": 14, "intelligenz": 13, "weisheit": 12, "charisma": 10}
+        h = dungeon.new_hero(r, {"name": "Arvid", "volk": "zwerg", "klasse": "krieger", "verteilung": drag})
+        self.assertEqual(h["werte"], dict(drag, konstitution=16, weisheit=13))             # Zwerg: Konstitution +2, Weisheit +1
+        self.assertEqual(h["leben_max"], 14 + 3)                                           # the class's 14 plus the bonus of 16
+        self.assertEqual(dungeon.total(r, h, "geschick"), 2)
+        for bad in ({"staerke": 18, "geschick": 18}, dict(drag, staerke=15), dict(drag, staerke="15"), "15,14"):
+            h = dungeon.new_hero(r, {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "verteilung": bad})
+            self.assertEqual(h["werte"]["staerke"], 16)                                    # not the row: the class's order (15 + 1)
+        v = self.new_round(held=dict(HERO, verteilung=drag))
+        self.assertEqual(self.state(v["rid"])["plaetze"][v["pid"]]["held"]["werte"]["geschick"], 16)
+
+    def test_points_up_to_twenty_and_constitution_counts_for_every_level(self):
+        v = self.new_round()
+        rid, pid = v["rid"], v["pid"]
+        with dungeon._lock:
+            d = dungeon._read()
+            h = d["runden"][rid]["plaetze"][pid]["held"]
+            h.update(stufe=3, punkte=2)
+            h["werte"]["konstitution"] = 15
+            h["leben_max"] = h["leben"] = dungeon.life(dungeon.rules(), h)
+            dungeon._write(d)
+        before = self.state(rid)["plaetze"][pid]["held"]["leben_max"]
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/held", json={"was": "punkt", "wert": "konstitution"}).status_code, 200)
+        h = self.state(rid)["plaetze"][pid]["held"]
+        self.assertEqual((h["werte"]["konstitution"], h["leben_max"]), (16, before + 3))  # bonus 2 → 3 on all three levels
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["plaetze"][pid]["held"]["werte"]["staerke"] = dungeon.WERT_MAX
+            dungeon._write(d)
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/held", json={"was": "punkt", "wert": "staerke"}).status_code, 400)
+
+    def test_older_heroes_and_admin_entries_carry_over(self):
+        r = dungeon.rules()
+        old = dungeon.new_hero(r, {"name": "Arvid", "volk": "ork", "klasse": "magier"})
+        old.update(werte={"staerke": 4, "geschick": 1, "verstand": 3}, stufe=4, punkte=1, leben=5, leben_max=30)
+        old["schmuck"] = dict(dungeon.item(r, "ring"), wert="verstand")
+        old["segen"] = [{"wert": "verstand", "bonus": 2, "zuege": 2, "von": "x"}]
+        h = dungeon.fix_hero(r, old)
+        self.assertEqual(h["werte"]["intelligenz"], 15)                                    # the mage's best score, Ork gives none
+        self.assertEqual(h["werte"]["staerke"], 8 + 2)
+        self.assertEqual((h["punkte"], h["leben"]), (3, 5))                                # every level's point back to spend
+        self.assertEqual(h["leben_max"], dungeon.life(r, h))
+        self.assertEqual((h["schmuck"]["wert"], h["segen"][0]["wert"]), ("intelligenz", "intelligenz"))
+        self.assertIs(dungeon.fix_hero(r, h), h)
+        own = dungeon._alt({"klassen": [{"id": "krieger", "werte": {"staerke": 2, "verstand": 1}}],
+                            "voelker": [{"id": "ork", "werte": {"staerke": 3, "verstand": 1}}],
+                            "effekte": [{"id": "x", "wert": "verstand"}]})
+        self.assertEqual(own["klassen"][0]["reihe"][:2], ["staerke", "intelligenz"])
+        self.assertEqual(own["voelker"][0]["werte"], {"staerke": 2, "intelligenz": 1})
+        self.assertEqual(own["effekte"][0]["wert"], "intelligenz")
+        bad = dungeon.merge(dungeon._base_rules(), {"klassen": [{"id": "krieger", "reihe": ["staerke", "staerke"]}]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "reihe" in e])
 
 
 class Campaign(Base):
@@ -610,6 +673,40 @@ class Voice(Base):
         big = base64.b64encode(b"RIFF" + b"\0" * 4 + b"WAVE" + b"\0" * dungeon.HOER_BYTES).decode()
         self.assertIn(self.v.post("/api/dungeon/hoeren", json={"code": code, "wav": big}).status_code, (400, 413))
         self.assertEqual(self.c2.post(f"/api/profile/dungeon/{rid}/hoeren", json={"wav": b64}).status_code, 404)
+
+    def test_hero_voices_speak_only_quotes(self):
+        self.assertEqual(dungeon.says('Ich ziehe das Schwert. „Halt, wer da?“ Dann "Zurück!"'), "Halt, wer da? Zurück!")
+        self.assertEqual(dungeon.says("Ich schleiche weiter."), "")
+        self.assertLessEqual(len(dungeon.says("„" + "a" * 900 + "“")), dungeon.SAGT_MAX)
+        dungeon._stimmen.update(t=__import__("time").time(), v=["Ryan", "Vivian"])
+        self.addCleanup(dungeon._stimmen.update, t=0.0, v=[])
+        v = self.new_round(vorlesen=True)
+        rid, host = v["rid"], v["pid"]
+        code, gp = self.guest(rid)
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{rid}").json()["stimmen"], ["Ryan", "Vivian"])
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/held", json={"was": "stimme", "stimme": "Ryan"}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": code, "was": "stimme", "stimme": "Ryan;rm"}).status_code, 400)
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": code, "was": "stimme", "stimme": "Vivian"}).status_code, 200)
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            dungeon._log(rd, "aktion", pid=host, name="Arvid", text="Ich hebe die Hand. „Wer da?“")
+            dungeon._log(rd, "aktion", pid=gp, name="Bela", text="„" + r["nie"][0] + "!“")     # a refused word: not spoken
+            lines = dungeon.hero_lines(r, rd, rd["zug"])
+        self.assertEqual(lines, [("Ryan", "Wer da?")])
+        self.assertEqual(dungeon.speak_parts(r, "Stille.", [], lines)[0], ("Ryan", "Wer da?"))   # the heroes first
+
+        async def tts(text, voice):
+            return b"\1\0" * 50
+        old = dungeon.ask_tts
+        dungeon.ask_tts = tts
+        self.addCleanup(setattr, dungeon, "ask_tts", old)
+        p = self.c.get(f"/api/profile/dungeon/{rid}/probe", params={"stimme": "Ryan"})
+        self.assertEqual((p.status_code, p.content[:4]), (200, b"RIFF"))
+        self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "stimme": "Vivian"}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "stimme": "Fremd"}).status_code, 400)
+        self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/probe", params={"stimme": "Ryan"}).status_code, 404)   # not a seat
 
     def test_app_seat_code_only_own_seat(self):
         v = self.new_round()

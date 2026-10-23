@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.958** · 2026-10-23 · KI-Dungeon-Master: sechs Werte wie bei D&D (Stärke bis Charisma, Bonus aus dem Wert, Leben aus Konstitution, Standardreihe zum Verteilen per Ziehen, alte Helden umgestellt) und Heldenstimmen (eigene Stimme je Held mit Probe, gesprochen wird die wörtliche Rede)
 - **V01.0.957** · 2026-10-23 · KI-Dungeon-Master Spieltisch-Thema: dunkler Tisch mit Pergament-Erzählung, Heldenkarten mit Werten und Ausrüstung, Farben je Welt (vom Admin änderbar), Vollbild-Knopf und „So spielst du“ für Spieler und Gäste
 - **V01.0.956** · 2026-10-23 · KI-Dungeon-Master: Vorteil und Nachteil (das Panel würfelt zwei W20), OOC-Zeile nur für den betroffenen Spieler bei unklaren Eingaben, längere Erzählung zu Beginn von Runde, Kapitel und Akt, Standard-Prompt mit Sinneseindrücken und Welttreue.
 - **V01.0.955** · 2026-10-23 · KI-Dungeon-Master Geschichten-Planer: der Admin legt Geschichten mit 3 bis 5 Akten, Wendepunkten, Schauplätzen und Tabus an, das Sprachmodell entwirft sie aus Stichworten oder schreibt einen Akt neu, das Panel prüft; im Spiel entscheidet das Modell, wann der nächste Akt beginnt (frühestens nach 3 Zügen, nach anderthalbmal den geplanten Zügen schaltet das Panel), Spieler sehen nur die Aktnummer; Welt- und Ton-Knöpfe, Tauschen und das Regel-Fenster im Panel-Stil.

@@ -100,6 +100,7 @@ OPEN = {
     "/api/dungeon/held": "Dungeon-Master seat link: the seat's own hero moves (equip, potion, trade) by fixed rules; same door as /api/dungeon/platz",
     "/api/dungeon/figur": "Dungeon-Master seat link: the seat's hero as a Figur-Code, shown once, only its hash kept; same door as /api/dungeon/platz",
     "/api/dungeon/ton": "Dungeon-Master seat link: the turn read aloud as WAV, only a turn of this seat's round still kept; same door as /api/dungeon/platz",
+    "/api/dungeon/probe": "Dungeon-Master seat link: a fixed sentence in one of the speech output's voices as WAV, kept per voice, own rate limit dungeonprobe; same door as /api/dungeon/platz",
     "/api/dungeon/hoeren": "Dungeon-Master seat link: speak instead of type, a WAV within HOER_BYTES becomes text for the seat's own field (never sent), own rate limit dungeonohr; same door as /api/dungeon/platz",
     "/api/liste/add": "Mitschreib-Link: only puts entries on the one list of the link; 404 unless allowed, same door as /api/liste/check, Mein Notaus of the owner holds it",
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",

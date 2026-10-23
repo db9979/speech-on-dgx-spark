@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.958** KI-Dungeon-Master: sechs Werte wie bei D&D (Stärke bis Charisma, Bonus aus dem Wert, Leben aus Konstitution, Standardreihe zum Verteilen per Ziehen, alte Helden umgestellt) und Heldenstimmen (eigene Stimme je Held mit Probe, gesprochen wird die wörtliche Rede)
 - **V01.0.957** KI-Dungeon-Master Spieltisch-Thema: dunkler Tisch mit Pergament-Erzählung, Heldenkarten mit Werten und Ausrüstung, Farben je Welt (vom Admin änderbar), Vollbild-Knopf und „So spielst du“ für Spieler und Gäste
 - **V01.0.956** KI-Dungeon-Master: Vorteil und Nachteil (das Panel würfelt zwei W20), OOC-Zeile nur für den betroffenen Spieler, längere Anfänge, Standard-Prompt mit Sinneseindrücken und Welttreue
 - **V01.0.955** KI-Dungeon-Master Geschichten-Planer: der Admin legt Geschichten mit Akten, Wendepunkten und Tabus an, vom Sprachmodell aus Stichworten entworfen und vom Panel geprüft; im Spiel entscheidet das Modell in festen Grenzen, wann der nächste Akt beginnt; Knöpfe des Spiels im Panel-Stil
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.951** ROT-FIX: jedes apt wartet jetzt per DPkg::Lock::Timeout auf die dpkg-Sperre, damit der Install nicht an unattended-upgrades („Could not get lock … code 100“) rot fällt
 - **V01.0.950** Tests-Workflow robuster: Install-Netzschritte mit Timeout und drei Versuchen, damit hängende Runner nicht ins 45-min-Limit laufen
 - **V01.0.949** KI-Dungeon-Master (Schalter, aus): Rollenspiel für bis zu fünf, auch Gäste per Link; Beute, Stufen, Tauschen und Helden zum Mitnehmen, Regeln vom Admin anpassbar
-- **V01.0.948** ROT-FIX: der Angriffs-Selbsttest für das Tagesbriefing hing von der Uhrzeit um Mitternacht ab; sein Termin gilt jetzt unabhängig von Uhrzeit und Zeitzone als „heute“
 
 
 
