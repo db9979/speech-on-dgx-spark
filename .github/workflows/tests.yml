@@ -44,14 +44,19 @@ jobs:
           # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
           python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
           python -m pip install -q playwright==1.55.0
-          # The browser and the apt packages come over the network and are not cached. On some runners that
-          # stalled for 35-42 min (while a good runner needs under three), and the job hit the 45-min cap with
-          # the tests never run. So each network step runs under a short timeout with three tries: a stalled
-          # runner starts over in minutes instead of burning to the cap, and three real failures end the job
-          # red and visible rather than hanging. No test is touched or weakened.
-          netz() { for i in 1 2 3; do timeout "$1" bash -c "$2" && return 0; echo "::warning::\"$2\" fehlgeschlagen oder Timeout nach $1 s (Versuch $i/3), neu ..."; sleep 5; done; echo "::error::\"$2\" dreimal fehlgeschlagen"; return 1; }
-          netz 420 "python -m playwright install --with-deps chromium"
-          netz 300 "sudo apt-get -o Acquire::Retries=3 install -y -q ffmpeg"
+          # A hosted runner often still runs unattended-upgrades at job start, holding the dpkg lock. Then
+          # "playwright install --with-deps" (which calls apt-get) and our own apt-get fail at once with
+          # "Could not get lock /var/lib/dpkg/lock-frontend ... exited with code: 100" (seen on V01.0.950,
+          # run rot). So let every apt wait up to five minutes for the lock instead of failing on the flake.
+          echo 'DPkg::Lock::Timeout "300";' | sudo tee /etc/apt/apt.conf.d/99lock-timeout >/dev/null
+          # The browser and the apt packages also come over the network and are not cached. On some runners
+          # that stalled for 35-42 min (while a good runner needs under three), and the job hit the 45-min cap
+          # with the tests never run. So each network step runs under a timeout (room for the lock wait) with
+          # three tries: a stalled or locked runner starts over in minutes instead of burning to the cap, and
+          # three real failures end the job red and visible rather than hanging. No test is touched or weakened.
+          netz() { for i in 1 2 3; do timeout "$1" bash -c "$2" && return 0; echo "::warning::\"$2\" fehlgeschlagen oder Timeout nach $1 s (Versuch $i/3), neu ..."; sleep 10; done; echo "::error::\"$2\" dreimal fehlgeschlagen"; return 1; }
+          netz 480 "python -m playwright install --with-deps chromium"
+          netz 360 "sudo apt-get -o Acquire::Retries=3 install -y -q ffmpeg"
       - name: Self-tests
         working-directory: app
         # a failed test gets one second try (selftest.py); green only then is a warning in the summary

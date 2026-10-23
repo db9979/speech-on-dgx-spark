@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.951** · 2026-10-23 · ROT-FIX: der .950-Lauf fiel rot, weil beim Jobstart noch unattended-upgrades die dpkg-Sperre hielt und „playwright install --with-deps“ sofort mit „Could not get lock … code 100“ abbrach; jetzt wartet jedes apt per DPkg::Lock::Timeout bis zu 5 min auf die Sperre, statt an der Flake rot zu fallen
 - **V01.0.950** · 2026-10-23 · Tests-Workflow robuster: die Netz-Schritte beim Install (Playwright-Browser, apt) brachen auf manchen Runnern 35-42 min ein und liefen in das 45-min-Limit; jetzt mit kurzem Timeout und drei Versuchen je Schritt, kein Test wird berührt
 - **V01.0.949** · 2026-10-23 · KI-Dungeon-Master (Schalter, aus): Rollenspiel für bis zu fünf Spieler, auch Gäste ohne Profil per Platz-Link; das eigene Sprachmodell erzählt, das Panel würfelt und vergibt Beute aus dem Katalog, Erfahrung und Stufen 1 bis 10; Ausrüstung tauschen per Angebot, Helden bleiben je Profil gespeichert, Gäste nehmen sie per Figur-Code mit; Regeln und Katalog vom Admin anpassbar.
 - **V01.0.948** · 2026-10-23 · ROT-FIX: der Angriffs-Selbsttest für das Tagesbriefing hing von der Uhrzeit um Mitternacht ab; sein Termin gilt jetzt unabhängig von Uhrzeit und Zeitzone als „heute“
