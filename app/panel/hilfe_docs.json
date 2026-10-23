@@ -5349,6 +5349,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wartezeit angenehm (V01.0.975, Plan dungeon-master/plan.md Abschnitt „5j“, Dominik 2026-10-23 „1-7 aber viel mehr fest sätze als viarianten das es nicht zu schnell zu eintönig wird“): Während der Dungeon-Master erzählt, zeigt der Tisch unten in der Erzählung, wo er steht: die Schritte Lesen, Würfeln, Erzählen mit je einem festen Satz (bei einer Nachbesserung ein eigener), die Würfe des Panels sofort, noch bevor die Erzählung kommt, drei Wissenskarten der Welt (Völker, Orte, Regeln, Seefahrt, Raumfahrt …) und einen Hinweis „Während du wartest“. Alle Texte sind fest (app/panel/dungeon_warten.json: 122 Fortschrittssätze je Schritt und Welt, 160 Wissenskarten, 30 Hinweise), alle ab 8 Jahren und gegen die Wortliste des jüngsten Tons geprüft, nie vom Modell; das Panel wählt sie aus und zeigt in einer Runde dieselben nicht so bald wieder (Sätze eines Schritts frühestens nach 10, Karten nach 90). Eine neue Erzählung erscheint Satz für Satz (ohne Bewegung, wenn das Gerät „Bewegung reduzieren“ will). Schreibt ein anderer gerade an seiner Aktion, steht „✎ Name schreibt …“ über dem Feld (nur im Speicher, 6 Sekunden). Unter dem Feld liegt das „💬 Tischgespräch“: kurze Zeilen n"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ur zwischen den Plätzen der Runde (bis 200 Zeichen, gesäubert wie Aktionen, die letzten 40 bleiben); der Dungeon-Master liest es nie, es steht in keinen Fakten und keinem Auftrag ans Modell (Selbsttest). Zustand → Live zählt Runden, die auf die Erzählung warten, und Zeilen Tischgespräch heute; Logs: dungeon: tisch | gesagt, dungeon: tisch | abgelehnt. API: POST /api/profile/dungeon/{rid}/tisch {text} (Anfragegrenze dungeontisch), POST …/{rid}/tippt (Anfragegrenze dungeontippt); für Gäste POST /api/dungeon/tisch und POST /api/dungeon/tippt über den Platz-Code. Selbsttests Waiting und Windows.test_waiting_and_table_talk_at_the_table in app/tests/test_dungeon.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: alte Runden löschen und Erzählung nach der Karte (V01.0.975, Dominik 2026-10-23 „alte runden sollen gelöscht werden können“ und „die geschichte soll die karte beachten und auch nur das zulassen“): In der Liste „Deine Runden“ hat eine beendete Runde neben „Öffnen“ einen Knopf „Löschen“ (Gastgeber: die Runde samt Vorlese-Ton und Bildern ist weg) oder „Ausblenden“ (Mitspieler: nur aus der eigenen Liste); der zweite Tipp („Wirklich?“) bestätigt. Eine laufende Runde beendet weiter nur der Gastgeber. Klappt „Öffnen“ nicht, rollt die Seite zur Meldung. Logs: dungeon: runde | geloescht, dungeon: runde | ausgeblendet. Die Erzählung prüft das Panel jetzt auch gegen die Karte: nennt sie einen Ort der Karte, an dem die Gruppe nicht sein kann (weder der Ort, an dem sie steht, noch ein Nachbar, noch der gewählte Weg), fragt das Panel einmal neu mit dem festen Hinweis, nur den Ort und die Wege aus der Karte zu erzählen (dungeon: nachbessern | karte); der Ort der Szene ist ohnehin immer der der Karte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
 },
 {
@@ -17446,6 +17470,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "up). ✕, Esc or a tap beside the window closes it (Esc closes the item window first); on a phone it fills the screen. If the Dungeon Master narrates on while a window is open, \"New turn …\" with \"To the table\" shows at the top. The window always shows the panel's state; the panel checks every action as before, there are no new endpoints. Guests get the same windows. Self-test Windows in app/tests/test_dungeon.py (browser at 1280, 390 and 320 px)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a pleasant wait (V01.0.975, plan dungeon-master/plan.md section \"5j\", Dominik 2026-10-23 \"1-7 but many more fixed sentences than variants so it does not get monotonous too quickly\"): While the Dungeon Master narrates, the table shows at the bottom of the story where it stands: the steps reading, dice, narrating with one fixed sentence each (a rewrite has its own), the panel's rolls right away, before the narration comes, three lore cards of the world (peoples, places, rules, seafaring, spaceflight …) and a hint \"While you wait\". All texts are fixed (app/panel/dungeon_warten.json: 122 progress sentences per step and world, 160 lore cards, 30 hints), all fine from age 8 and checked against the word list of the youngest tone, never from the model; the panel picks them and does not show the same ones again soon in a round (a step's sentences after 10 at the earliest, cards after 90). A new narration appears sentence by sentence (without motion when the device asks to reduce motion). When someone else is writing their action, \"✎ Name is typing …\" shows above the field (memory only, 6 seconds). Below the field lies the \"💬 Table talk\": short lines only between the seats"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " of the round (up to 200 characters, cleaned like actions, the last 40 stay); the Dungeon Master never reads it, it is in no facts and no task for the model (self-test). Status → Live counts rounds waiting for the narration and lines of table talk today; logs: dungeon: tisch | gesagt, dungeon: tisch | abgelehnt. API: POST /api/profile/dungeon/{rid}/tisch {text} (rate limit dungeontisch), POST …/{rid}/tippt (rate limit dungeontippt); for guests POST /api/dungeon/tisch and POST /api/dungeon/tippt via the seat code. Self-tests Waiting and Windows.test_waiting_and_table_talk_at_the_table in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: deleting old rounds and narration by the map (V01.0.975, Dominik 2026-10-23 \"old rounds should be deletable\" and \"the story should respect the map and only allow that\"): In the list \"Your rounds\" an ended round has a button \"Delete\" next to \"Open\" (host: the round with its read-aloud sound and pictures is gone) or \"Hide\" (player: only off the own list); the second tap (\"Really?\") confirms. A running round is still only ended by the host. If \"Open\" fails, the page scrolls to the message. Logs: dungeon: runde | geloescht, dungeon: runde | ausgeblendet. The panel now also checks the narration against the map: when it names a place of the map the group cannot be at (neither the place where it stands, nor a neighbour, nor the chosen way), the panel asks once more with the fixed hint to narrate only the place and the ways from the map (dungeon: nachbessern | karte); the scene's place is always the map's anyway."
 },
 {
 "lang": "en",

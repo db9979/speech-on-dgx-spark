@@ -2893,6 +2893,13 @@
 "titel": "Dungeon-Master: Karte lesbar und mit Bildern",
 "text": "A: Eine Runde am Rechner und am Handy öffnen: die Namen auf der Karte sind so groß wie der Text daneben, nichts überlagert sich, lange Namen stehen in zwei Zeilen, über der Karte steht „📍 Ihr seid in …“. ⤢ zeigt die Karte groß, die Schrift bleibt gleich groß. B: Mit Bilder für Ausrüstung und Zauber und Bilder malen: im Admin „Bilder jetzt erstellen“, danach zeigen Orte und Gewölberäume Bilder statt Zeichen (die Zahl unter „Bilder für Ausrüstung und Zauber“ ist größer als vorher). C: In einer laufenden Runde zu einem neuen Ort gehen: nach einer Minute zeigt der Ort ein eigenes Bild, auch beim Gast; Zustand → Überblick → Live zählt „Ortsbilder“.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P438",
+"v": 975,
+"titel": "Dungeon-Master: Wartezeit angenehm",
+"text": "A: Zwei Plätze handeln: unten in der Erzählung stehen die Schritte Lesen, Würfeln, Erzählen mit einem Satz, drei Wissenskarten und ein Hinweis. B: Gibt es eine Probe, steht der Wurf da, bevor die Erzählung kommt. C: Die Erzählung erscheint Satz für Satz. D: Tippt der andere Platz an seiner Aktion, steht bei dir „✎ Name schreibt …“. E: „💬 Tischgespräch“ aufklappen, „Wer hat den Kompass?“ sagen: der andere sieht es, in der nächsten Erzählung kommt es nicht vor. F: Über mehrere Züge wiederholen sich Sätze und Karten nicht gleich.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

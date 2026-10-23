@@ -75,8 +75,10 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
     POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb)
+    POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
+    POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
-    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin|daumen   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
@@ -102,6 +104,7 @@ from fastapi.responses import Response
 
 import dungeon_karte
 import dungeon_erzaehler as erz
+import dungeon_warten as warten
 import features
 import guard
 import mfa
@@ -251,7 +254,7 @@ _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, mad
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
-                  wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0)
+                  wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0)
 
 
 def _go(coro, name):
@@ -1083,6 +1086,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
         dungeon_karte.make(r, rd, start=((kampagne or {}).get("orte") or [""])[-1])   # the chapter goes on where the last one ended
         _log(rd, "system", text=["Die Runde beginnt. Schreibt, was eure Figuren tun.", "The round begins. Write what your characters do."])
         rd["dm"] = "prolog"                   # the Dungeon Master opens it first (run_prolog), the turn waits
+        warten.start(rd)
         _running.add(rid)
         _write(d)
     _day.bump("runden")
@@ -2155,6 +2159,9 @@ async def run_turn(rid, turn):
             obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd), schema_proben(r), "proben", 300)
             proben, drop = check_proben(r, rd, obj)
             wuerfe = roll(r, rd, proben)
+            if wuerfe:                            # the dice show at the table before the narration comes (5j)
+                await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
+            await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
             facts_w = [{"name": w["name"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
                         "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {})} for w in wuerfe]
             story, best, extra = None, None, ""
@@ -2170,6 +2177,7 @@ async def run_turn(rid, turn):
                     break
                 best = best or s
                 extra = erz.hint(fault, missing, rd["lang"])
+                await asyncio.to_thread(wait_step, rid, turn, "nachbessern")
                 _day.bump("nachgebessert")
                 print(f"dungeon: nachbessern | {fault}", flush=True)
             story = story or best
@@ -2199,6 +2207,7 @@ async def run_turn(rid, turn):
                 if story and story["bild"] and cur["szene"].get("ort") != ort0:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
+                warten.end(cur)
                 _write(d)
                 for p in cur["plaetze"].values():
                     if p.get("uid") and p.get("held"):
@@ -2260,6 +2269,7 @@ async def run_prolog(rid):
             if wahr:
                 rd["wahrheit"] = wahr
                 _day.bump("wahrheit")
+            await asyncio.to_thread(wait_step, rid, 1, "erzaehlen")
             for _ in range(2):
                 obj = await _ask_json(system_text(r, rd, "prolog"), facts(r, rd), SCHEMA_ERZAEHLEN, "prolog", 900)
                 story, drop = check_story(r, rd, obj)
@@ -2285,6 +2295,7 @@ async def run_prolog(rid):
                 if story and story["bild"]:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
+                warten.end(cur)
                 cur["zug_t"] = time.time()            # the turn's time starts with the opening read
                 _write(d)
         await asyncio.to_thread(keep)
@@ -2304,6 +2315,17 @@ def _clear_dm(rid):
         rd = d["runden"].get(rid)
         if rd and rd.get("dm"):
             rd["dm"] = ""
+            warten.end(rd)
+            _write(d)
+
+
+def wait_step(rid, turn, s, wuerfe=None):
+    """The next step the table shows while the Dungeon Master narrates (dungeon_warten.py, 5j)."""
+    with _lock:
+        d = _read()
+        rd = d["runden"].get(rid)
+        if rd and rd["zug"] == turn and rd.get("dm"):
+            warten.step(rd, s, wuerfe)
             _write(d)
 
 
@@ -2327,6 +2349,7 @@ def maybe_close(rid, now=None, force=False):
         if rid in _running or not (due(rd, now) or force and rd["offen"] and rd["status"] == "laeuft" and not rd.get("dm")):
             return False
         rd["dm"] = "denkt"
+        warten.start(rd)
         _running.add(rid)
         turn = rd["zug"]
         _write(d)
@@ -3059,6 +3082,7 @@ def view(rid, pid, now=None):
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
             "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
+    out.update(warten.view(rd, rid, pid, lang))
     import dungeon_dingbild
     import dungeon_musik
     out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
@@ -3474,7 +3498,8 @@ def for_live():
             "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),
             "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], 
             "wahrheit": t["wahrheit"], "zusammengefasst": t["zusammengefasst"], "nachgebessert": t["nachgebessert"],
-            "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"], **dungeon_karte.for_live(rs)}
+            "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"],
+            "tisch": t["tisch"], "warten": sum(1 for v in rs if v.get("dm")), **dungeon_karte.for_live(rs)}
 
 
 def own_count(uid):
@@ -3550,7 +3575,7 @@ def _mine(uid, lang):
     out = []
     for rid, v in _read()["runden"].items():
         pid, p = seat_of(v, uid)
-        if pid and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
+        if pid and uid not in (v.get("weg") or []) and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
             out.append({"rid": rid, "titel": v["titel"], "welt": v["welt"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
@@ -3758,6 +3783,48 @@ async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
 
 
+@router.post("/api/profile/dungeon/{rid}/tisch", dependencies=[Depends(assistant)])
+async def tisch(rid: str, request: Request, prof=Depends(browser_profile)):
+    """{text}: one line of table talk between the seats of the round; the model never sees it (5j)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeontisch", uid)
+    b = await json_body(request, BODY)
+    return await _talk(rid, lambda: _seat_uid(rid, uid), b)
+
+
+async def _talk(rid, seat, b):
+    def go():
+        pid = seat()
+        with _lock:
+            d = _read()
+            warten.talk(_me, _round(d, rid), pid, b.get("text"), time.time())
+            _write(d)
+        return view(rid, pid)
+    try:
+        v = await asyncio.to_thread(go)
+    except KNOWN as e:
+        print(f"dungeon: tisch | abgelehnt | {type(e).__name__}", flush=True)
+        raise _http(e)
+    _day.bump("tisch")
+    print("dungeon: tisch | gesagt", flush=True)
+    return v
+
+
+@router.post("/api/profile/dungeon/{rid}/tippt", dependencies=[Depends(assistant)])
+async def tippt(rid: str, request: Request, prof=Depends(browser_profile)):
+    """A keystroke in the own action field: the others see „X schreibt …“ for a few seconds (kept in memory only)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeontippt", uid)
+    await json_body(request, BODY)
+    try:
+        warten.typing(rid, await asyncio.to_thread(_seat_uid, rid, uid))
+    except KNOWN as e:
+        raise _http(e)
+    return {"ok": True}
+
+
 @router.post("/api/profile/dungeon/{rid}/termin", dependencies=[Depends(assistant)])
 async def termin(rid: str, request: Request, prof=Depends(browser_profile)):
     """The host sets the next game date (t epoch seconds, 0 takes it back)."""
@@ -3866,7 +3933,9 @@ async def daten_loeschen(request: Request, prof=Depends(browser_profile)):
 
 @router.delete("/api/profile/dungeon/{rid}", dependencies=[Depends(assistant)])
 async def beenden(rid: str, request: Request, prof=Depends(browser_profile)):
-    """The host ends the round (also while blocked: own data); the heroes of profiles are kept."""
+    """The host ends the round (also while blocked: own data); the heroes of profiles are kept. An ended round goes:
+    the host deletes it with its sounds and pictures, a player only takes it off the own list (Dominik 2026-10-23
+    „alte runden sollen gelöscht werden können“)."""
     uid = prof["id"]
     guard.limit(request, "dungeon", uid)
 
@@ -3874,11 +3943,23 @@ async def beenden(rid: str, request: Request, prof=Depends(browser_profile)):
         with _lock:
             d = _read()
             rd = _round(d, rid)
-            if rd["owner"] != uid:
+            pid, _ = seat_of(rd, uid)
+            what = ""
+            if rd["status"] == "ende" and rd["owner"] == uid:
+                del d["runden"][rid]
+                _ton_drop(rid)
+                _bild_drop(rid)
+                what = "geloescht"
+            elif rd["status"] == "ende" and pid:
+                rd["weg"] = sorted(set(rd.get("weg") or []) | {uid})
+                what = "ausgeblendet"
+            elif rd["owner"] != uid:
                 raise LookupError("gastgeber")
-            if rd["status"] != "ende":
+            else:
                 _end(rd, time.time(), "gastgeber")
             _write(d)
+        if what:
+            print(f"dungeon: runde | {what}", flush=True)
         return _mine(uid, rd["lang"])
     try:
         return await asyncio.to_thread(go)
@@ -4312,6 +4393,23 @@ async def gast_daumen(request: Request):
         return {"daumen": await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"))}
     except KNOWN as e:
         raise _http(e)
+
+
+@router.post("/api/dungeon/tisch")
+async def gast_tisch(request: Request):
+    """{"code", "text"}: one line of table talk from the seat; the model never sees it."""
+    b, rid, pid = await _guest(request)
+    guard.limit(request, "dungeontisch")
+    return await _talk(rid, lambda: pid, b)
+
+
+@router.post("/api/dungeon/tippt")
+async def gast_tippt(request: Request):
+    """{"code"}: a keystroke of the seat in its action field („X schreibt …“ for the others)."""
+    b, rid, pid = await _guest(request)
+    guard.limit(request, "dungeontippt")
+    warten.typing(rid, pid)
+    return {"ok": True}
 
 
 @router.post("/api/dungeon/termin")

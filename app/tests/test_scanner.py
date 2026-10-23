@@ -106,6 +106,8 @@ OPEN = {
     "/api/dungeon/portraet": "Dungeon-Master seat link: the portrait (PNG) of a hero at this seat's own round only; same door as /api/dungeon/platz",
     "/api/dungeon/ding": "Dungeon-Master seat link: a picture (PNG) of an item or spell by its fixed name (ding-<hash> or fund-<iid>, pattern checked), no personal data, own rate limit dungeonding; same door as /api/dungeon/platz",
     "/api/dungeon/daumen": "Dungeon-Master seat link: the seat's 👍/👎 for a narration of its own round (a number, no text), counted per world and tone; same door as /api/dungeon/platz",
+    "/api/dungeon/tisch": "Dungeon-Master seat link: one line of table talk to the other seats of its own round, cleaned and cut to 200 characters, never given to the model; same door as /api/dungeon/platz",
+    "/api/dungeon/tippt": "Dungeon-Master seat link: a keystroke of the seat, so the others see „X schreibt …“ for 6 seconds (memory only); same door as /api/dungeon/platz",
     "/api/dungeon/termin": "Dungeon-Master seat link: the host's game date of this seat's own round as a calendar file (.ics), no other data; same door as /api/dungeon/platz",
     "/api/dungeon/musik": "Dungeon-Master seat link: one music piece (MP3) of the Spark's shared store, nothing personal, only for a seat of a running round, own rate limit dungeonmusik; same door as /api/dungeon/platz",
     "/api/dungeon/portraet/malen": "Dungeon-Master seat link: paints the seat's own hero's portrait once per level, only with the host's Bilder malen and the game's day limit, own rate limit dungeonbild; same door as /api/dungeon/platz",

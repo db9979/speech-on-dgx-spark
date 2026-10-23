@@ -259,6 +259,10 @@ HINWEIS = {
     "namen": ("Hinweis: Jede Figur, die gehandelt hat, muss mit ihrem Namen vorkommen und eine Folge ihrer Aktion "
               "erleben: {namen}.",
               "Note: every character that acted must appear by name and meet a consequence of its action: {namen}."),
+    "karte": ("Hinweis: Die Gruppe kann nicht dort sein: {namen}. Erzähle nur den Ort, an dem sie steht, und die Wege "
+              "aus karte.wege; andere Orte erreicht sie erst über die Karte.",
+              "Note: the group cannot be there: {namen}. Narrate only the place where it stands and the ways from "
+              "karte.wege; other places it reaches only over the map."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -273,8 +277,8 @@ def _triples(text):
 
 def judge(dm, rd, story):
     """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
-    and is missing (one the model answered out of the game, ooc, may be missing), too much repeated from the last
-    narrations."""
+    and is missing (one the model answered out of the game, ooc, may be missing), a map place the group cannot be at,
+    too much repeated from the last narrations."""
     text = story["text"]
     if len(text) < ZU_KURZ:
         return "kurz", []
@@ -284,11 +288,36 @@ def judge(dm, rd, story):
                and rd["plaetze"][pid]["held"]["name"].lower() not in low]
     if missing:
         return "namen", missing
+    far = far_places(rd, story, low)
+    if far:
+        return "karte", far
     t = _triples(text)
     old = set().union(*[_triples(x["text"]) for x in [e for e in rd["log"] if e["art"] == "dm"][-WIEDER_ZURUECK:]] or [set()])
     if t and len(t & old) / len(t) > WIEDERHOLT:
         return "wiederholung", []
     return "", []
+
+
+def far_places(rd, story, low):
+    """Places of the map the narration names although the group cannot be there (Dominik 2026-10-23 „die geschichte
+    soll die karte beachten und auch nur das zulassen“): only the place where the group stands, its neighbours and
+    the way the model chose may come up; the names are the panel's, a match is a whole-word one."""
+    k = rd.get("karte")
+    if not k or k.get("drin") is not None:
+        return []
+    near = {k["hier"]}
+    for a, b in k["wege"]:
+        if k["hier"] in (a, b):
+            near |= {a, b}
+    oid = str(story.get("ort_id") or "")
+    if oid[:1] == "o" and oid[1:].isdigit():
+        near.add(int(oid[1:]) - 1)
+    out = []
+    for i, o in enumerate(k["orte"]):
+        n = str(o.get("name") or "")
+        if i not in near and len(n) >= 4 and re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", low):
+            out.append(n)
+    return out[:3]
 
 
 def hint(why, missing, lang):

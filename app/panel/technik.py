@@ -174,6 +174,7 @@ MODULE = {
     "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen"),
     "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe-Raster (Fallen, Rätsel); Bilder je Ortsart und Ort"),
     "dungeon_musik": ("dienste", "KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser"),
+    "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),
     "dungeon_erzaehler": ("dienste", "Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen"),
     "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),

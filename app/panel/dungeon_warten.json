@@ -1,0 +1,1638 @@
+{
+ "_hinweis": [
+  "Feste Texte für die Wartezeit zwischen den Zügen (dungeon_warten.py): Fortschrittssätze je Schritt und Welt, Wissenskarten je Welt, Hinweise. Alle ab 8 Jahren; nie Text vom Modell oder von Spielern.",
+  "Fixed texts for the wait between turns (dungeon_warten.py): progress sentences per step and world, lore cards per world, hints. All fine from age 8; never text from the model or players."
+ ],
+ "schritte": {
+  "lesen": {
+   "alle": [
+    [
+     "Der Dungeon-Master liest, was ihr vorhabt.",
+     "The Dungeon Master reads what you plan."
+    ],
+    [
+     "Eure Aktionen liegen auf dem Tisch.",
+     "Your actions lie on the table."
+    ],
+    [
+     "Der Dungeon-Master blättert in seinen Notizen.",
+     "The Dungeon Master leafs through their notes."
+    ],
+    [
+     "Wer wagt was? Der Dungeon-Master sortiert eure Pläne.",
+     "Who dares what? The Dungeon Master sorts your plans."
+    ],
+    [
+     "Ein prüfender Blick über den Rand des Schirms.",
+     "A searching look over the edge of the screen."
+    ],
+    [
+     "Der Dungeon-Master überlegt, was dafür nötig ist.",
+     "The Dungeon Master considers what this will take."
+    ],
+    [
+     "Stift gezückt, Stirn gerunzelt: es wird nachgedacht.",
+     "Pen drawn, brow furrowed: some thinking is going on."
+    ],
+    [
+     "Die Regeln werden befragt.",
+     "The rules are consulted."
+    ]
+   ],
+   "fantasy": [
+    [
+     "Eine Eule trägt eure Pläne zum Dungeon-Master.",
+     "An owl carries your plans to the Dungeon Master."
+    ],
+    [
+     "Im Kerzenschein werden eure Worte gelesen.",
+     "Your words are read by candlelight."
+    ],
+    [
+     "Der alte Foliant öffnet sich bei der richtigen Seite.",
+     "The old tome falls open at the right page."
+    ],
+    [
+     "Runen flackern auf, als eure Absichten den Tisch erreichen.",
+     "Runes flicker as your intentions reach the table."
+    ],
+    [
+     "Ein Zwerg am Kamin nickt: das wird spannend.",
+     "A dwarf by the fire nods: this will be exciting."
+    ],
+    [
+     "Die Schicksalsfäden werden sortiert.",
+     "The threads of fate are being sorted."
+    ]
+   ],
+   "horror": [
+    [
+     "Irgendwo knarrt eine Diele, während eure Pläne gelesen werden.",
+     "Somewhere a floorboard creaks while your plans are read."
+    ],
+    [
+     "Die Kerze flackert. Der Dungeon-Master liest weiter.",
+     "The candle flickers. The Dungeon Master reads on."
+    ],
+    [
+     "Ein kalter Luftzug blättert die Seite um.",
+     "A cold draught turns the page."
+    ],
+    [
+     "Hinter dem Schirm wird leise geflüstert.",
+     "Behind the screen someone whispers softly."
+    ],
+    [
+     "Die Uhr im Flur schlägt, eure Worte werden gewogen.",
+     "The clock in the hall strikes, your words are weighed."
+    ],
+    [
+     "Etwas im Schatten hört aufmerksam zu.",
+     "Something in the shadows listens closely."
+    ]
+   ],
+   "scifi": [
+    [
+     "Eure Befehle werden an die Brücke übertragen.",
+     "Your orders are transmitted to the bridge."
+    ],
+    [
+     "Signal empfangen, Auswertung läuft.",
+     "Signal received, analysis running."
+    ],
+    [
+     "Die Bordrechnerin liest eure Pläne vor.",
+     "The ship's computer reads your plans aloud."
+    ],
+    [
+     "Datenpakete von allen Crewmitgliedern eingegangen.",
+     "Data packets received from every crew member."
+    ],
+    [
+     "Ein Hologramm eurer Absichten dreht sich über dem Tisch.",
+     "A hologram of your intentions turns above the table."
+    ],
+    [
+     "Funkverkehr wird entschlüsselt.",
+     "Radio traffic is being decoded."
+    ]
+   ],
+   "piraten": [
+    [
+     "Der Kapitän entrollt eure Pläne auf dem Kartentisch.",
+     "The captain unrolls your plans on the chart table."
+    ],
+    [
+     "Eine Flaschenpost mit euren Absichten ist angekommen.",
+     "A message in a bottle with your intentions has arrived."
+    ],
+    [
+     "Der Papagei krächzt eure Befehle nach.",
+     "The parrot squawks your orders back."
+    ],
+    [
+     "Im Licht der Laterne wird jede Zeile gelesen.",
+     "Every line is read in the lantern's light."
+    ],
+    [
+     "Der Steuermann hört zu und kaut auf seiner Pfeife.",
+     "The helmsman listens and chews on his pipe."
+    ],
+    [
+     "Die Mannschaft rückt näher an den Tisch.",
+     "The crew moves closer to the table."
+    ]
+   ],
+   "eigene": [
+    [
+     "Eure Pläne finden ihren Weg in diese Welt.",
+     "Your plans find their way into this world."
+    ],
+    [
+     "Der Dungeon-Master liest mit großen Augen.",
+     "The Dungeon Master reads with wide eyes."
+    ],
+    [
+     "Eure Absichten werden in die Geschichte gewoben.",
+     "Your intentions are woven into the story."
+    ],
+    [
+     "Diese Welt hat eigene Regeln, sie werden befragt.",
+     "This world has rules of its own, they are consulted."
+    ],
+    [
+     "Die Seiten eurer Welt rascheln.",
+     "The pages of your world rustle."
+    ],
+    [
+     "Jede Aktion wird genau gelesen.",
+     "Every action is read carefully."
+    ]
+   ]
+  },
+  "wuerfeln": {
+   "alle": [
+    [
+     "Die Würfel rollen.",
+     "The dice roll."
+    ],
+    [
+     "Klappern im Würfelbecher.",
+     "Rattling in the dice cup."
+    ],
+    [
+     "Das Panel würfelt, fair wie immer.",
+     "The panel rolls, fair as ever."
+    ],
+    [
+     "Ein W20 tanzt über den Tisch.",
+     "A d20 dances across the table."
+    ],
+    [
+     "Alle halten den Atem an: die Würfel fallen.",
+     "Everyone holds their breath: the dice fall."
+    ],
+    [
+     "Glück oder Können? Gleich wissen wir es.",
+     "Luck or skill? We will know in a moment."
+    ],
+    [
+     "Der Würfel kippt, wackelt und bleibt liegen.",
+     "The die tips, wobbles and comes to rest."
+    ],
+    [
+     "Zahlen, Boni, Schwierigkeit: das Panel rechnet.",
+     "Numbers, bonuses, difficulty: the panel does the sums."
+    ]
+   ],
+   "fantasy": [
+    [
+     "Knochenwürfel klackern in der Hand des Schicksals.",
+     "Bone dice clatter in the hand of fate."
+    ],
+    [
+     "Ein Funke Magie springt auf den Würfel über.",
+     "A spark of magic jumps onto the die."
+    ],
+    [
+     "Die Götter schauen auf den Würfel.",
+     "The gods watch the die."
+    ],
+    [
+     "Der Würfel rollt über eine alte Landkarte.",
+     "The die rolls across an old map."
+    ],
+    [
+     "Ein Kobold wettet auf eine Eins.",
+     "A goblin bets on a one."
+    ],
+    [
+     "Der Würfel glüht kurz auf.",
+     "The die glows for a moment."
+    ]
+   ],
+   "horror": [
+    [
+     "Der Würfel rollt in die Dunkelheit.",
+     "The die rolls into the darkness."
+    ],
+    [
+     "Ein Schatten fällt über den Würfel.",
+     "A shadow falls over the die."
+    ],
+    [
+     "Die Würfel klappern wie Zähne vor Kälte.",
+     "The dice chatter like teeth in the cold."
+    ],
+    [
+     "Ganz still: man hört nur den Würfel.",
+     "Total silence: only the die can be heard."
+    ],
+    [
+     "Der Würfel rollt, die Kerze flackert.",
+     "The die rolls, the candle flickers."
+    ],
+    [
+     "Etwas hofft auf eine niedrige Zahl.",
+     "Something hopes for a low number."
+    ]
+   ],
+   "scifi": [
+    [
+     "Zufallsgenerator gestartet, Ergebnis folgt.",
+     "Random generator started, result incoming."
+    ],
+    [
+     "Wahrscheinlichkeiten werden berechnet.",
+     "Probabilities are being calculated."
+    ],
+    [
+     "Ein holografischer W20 rotiert.",
+     "A holographic d20 spins."
+    ],
+    [
+     "Quantenwürfel kollabiert gleich.",
+     "Quantum die about to collapse."
+    ],
+    [
+     "Sensoren lesen den Wurf aus.",
+     "Sensors read out the roll."
+    ],
+    [
+     "Die Schwerkraft entscheidet über den Würfel.",
+     "Gravity decides the die."
+    ]
+   ],
+   "piraten": [
+    [
+     "Die Würfel rollen über die Planken.",
+     "The dice roll across the planks."
+    ],
+    [
+     "Ein Wurf auf dem schwankenden Deck.",
+     "A roll on the rolling deck."
+    ],
+    [
+     "Der Würfel springt gegen ein Fass.",
+     "The die bounces off a barrel."
+    ],
+    [
+     "Die Mannschaft wettet um Dublonen.",
+     "The crew bets doubloons."
+    ],
+    [
+     "Würfel im Becher, Wind in den Segeln.",
+     "Dice in the cup, wind in the sails."
+    ],
+    [
+     "Der Bootsmann würfelt mit ernster Miene.",
+     "The boatswain rolls with a stern face."
+    ]
+   ],
+   "eigene": [
+    [
+     "Der Würfel kennt eure Welt nicht, aber er rollt trotzdem.",
+     "The die does not know your world, but it rolls anyway."
+    ],
+    [
+     "Ein Wurf für eure ganz eigene Geschichte.",
+     "A roll for your very own story."
+    ],
+    [
+     "Der Würfel fällt, die Welt hält inne.",
+     "The die falls, the world pauses."
+    ],
+    [
+     "Die Zahlen werden gelesen.",
+     "The numbers are read."
+    ],
+    [
+     "Das Panel würfelt nach euren Regeln.",
+     "The panel rolls by your rules."
+    ],
+    [
+     "Ein leises Klacken, dann Stille.",
+     "A soft click, then silence."
+    ]
+   ]
+  },
+  "erzaehlen": {
+   "alle": [
+    [
+     "Der Dungeon-Master erzählt …",
+     "The Dungeon Master is narrating …"
+    ],
+    [
+     "Die Geschichte nimmt Gestalt an.",
+     "The story takes shape."
+    ],
+    [
+     "Worte werden gewählt, Sätze geformt.",
+     "Words are chosen, sentences shaped."
+    ],
+    [
+     "Gleich geht es weiter.",
+     "It goes on in a moment."
+    ],
+    [
+     "Der Dungeon-Master holt tief Luft.",
+     "The Dungeon Master takes a deep breath."
+    ],
+    [
+     "Was folgt, wird gerade aufgeschrieben.",
+     "What happens next is being written down."
+    ],
+    [
+     "Die nächste Szene entsteht.",
+     "The next scene is being made."
+    ],
+    [
+     "Spannung steigt: die Erzählung kommt.",
+     "Tension rises: the narration is coming."
+    ]
+   ],
+   "fantasy": [
+    [
+     "Der Barde stimmt die Laute.",
+     "The bard tunes the lute."
+    ],
+    [
+     "Die Feder kratzt über das Pergament.",
+     "The quill scratches across the parchment."
+    ],
+    [
+     "Ein Drache am Horizont? Bald wisst ihr es.",
+     "A dragon on the horizon? You will know soon."
+    ],
+    [
+     "Die Chronik eurer Gruppe wächst um ein Kapitel.",
+     "Your group's chronicle grows by a chapter."
+    ],
+    [
+     "Am Lagerfeuer wird die Geschichte weitergesponnen.",
+     "The story is spun on by the campfire."
+    ],
+    [
+     "Ein Zauberer flüstert den nächsten Satz.",
+     "A wizard whispers the next sentence."
+    ]
+   ],
+   "horror": [
+    [
+     "Die Geschichte kriecht langsam näher.",
+     "The story creeps slowly closer."
+    ],
+    [
+     "Eine Stimme aus dem Dunkeln setzt an.",
+     "A voice from the dark begins."
+    ],
+    [
+     "Die Tinte ist noch feucht.",
+     "The ink is still wet."
+    ],
+    [
+     "Etwas regt sich in der nächsten Szene.",
+     "Something stirs in the next scene."
+    ],
+    [
+     "Die Seiten blättern sich von allein um.",
+     "The pages turn by themselves."
+    ],
+    [
+     "Der Nebel lichtet sich gleich.",
+     "The fog will lift in a moment."
+    ]
+   ],
+   "scifi": [
+    [
+     "Logbuch wird aktualisiert.",
+     "Log being updated."
+    ],
+    [
+     "Die Simulation rechnet die nächste Szene.",
+     "The simulation computes the next scene."
+    ],
+    [
+     "Übertragung läuft, bitte warten.",
+     "Transmission running, please stand by."
+    ],
+    [
+     "Der Bordfunk rauscht: gleich kommt eine Meldung.",
+     "The intercom crackles: a message is coming."
+    ],
+    [
+     "Navigationsdaten für die Geschichte geladen.",
+     "Navigation data for the story loaded."
+    ],
+    [
+     "Die Erzähl-KI des Schiffs formuliert.",
+     "The ship's narrator AI is phrasing it."
+    ]
+   ],
+   "piraten": [
+    [
+     "Ein alter Seebär erzählt weiter.",
+     "An old sea dog tells on."
+    ],
+    [
+     "Am Horizont taucht die nächste Szene auf.",
+     "The next scene appears on the horizon."
+    ],
+    [
+     "Das Logbuch des Kapitäns bekommt einen Eintrag.",
+     "The captain's log gets an entry."
+    ],
+    [
+     "Die Wellen tragen die Geschichte heran.",
+     "The waves carry the story in."
+    ],
+    [
+     "Shanty-Pause vorbei, es geht weiter.",
+     "Shanty break over, on we go."
+    ],
+    [
+     "Der Ausguck ruft: Land in Sicht? Gleich wisst ihr es.",
+     "The lookout calls: land ahoy? You will know soon."
+    ]
+   ],
+   "eigene": [
+    [
+     "Eure Welt wächst um eine Szene.",
+     "Your world grows by a scene."
+    ],
+    [
+     "Die Geschichte findet ihre Worte.",
+     "The story finds its words."
+    ],
+    [
+     "Was jetzt kommt, gibt es nur bei euch.",
+     "What comes now exists only at your table."
+    ],
+    [
+     "Ein neues Stück eurer Welt entsteht.",
+     "A new piece of your world takes shape."
+    ],
+    [
+     "Die Erzählung wird gewebt.",
+     "The narration is being woven."
+    ],
+    [
+     "Nur noch ein Augenblick.",
+     "Just a moment more."
+    ]
+   ]
+  },
+  "nachbessern": {
+   "alle": [
+    [
+     "Der Dungeon-Master liest gegen und feilt noch.",
+     "The Dungeon Master proofreads and polishes."
+    ],
+    [
+     "Noch ein zweiter Entwurf, damit alle vorkommen.",
+     "One more draft, so everyone is in it."
+    ],
+    [
+     "Ein Satz wird gestrichen, ein besserer kommt.",
+     "A sentence is struck, a better one comes."
+    ],
+    [
+     "Der erste Entwurf war gut, der zweite wird besser.",
+     "The first draft was good, the second will be better."
+    ],
+    [
+     "Kurz nachgebessert, gleich ist es so weit.",
+     "A quick touch-up, nearly there."
+    ],
+    [
+     "Der Dungeon-Master radiert und schreibt neu.",
+     "The Dungeon Master erases and writes again."
+    ],
+    [
+     "Feinschliff an der Erzählung.",
+     "Fine-tuning the narration."
+    ],
+    [
+     "Damit es nicht nach letzter Runde klingt: neue Worte.",
+     "So it does not sound like last time: new words."
+    ]
+   ]
+  }
+ },
+ "karten": {
+  "alle": [
+   [
+    "Der W20",
+    "The d20",
+    "Ein Würfel mit zwanzig Seiten. Eine 20 gelingt fast immer, eine 1 geht fast immer schief.",
+    "A die with twenty sides. A 20 almost always succeeds, a 1 almost always goes wrong."
+   ],
+   [
+    "Vorteil",
+    "Advantage",
+    "Mit Vorteil würfelt das Panel zweimal und nimmt den besseren Wurf.",
+    "With advantage the panel rolls twice and keeps the better roll."
+   ],
+   [
+    "Nachteil",
+    "Disadvantage",
+    "Mit Nachteil zählt der schlechtere von zwei Würfen. Schwere Taschen machen ungeschickt.",
+    "With disadvantage the worse of two rolls counts. Heavy bags make you clumsy."
+   ],
+   [
+    "Stärke",
+    "Strength",
+    "Stärke hebt, schiebt und schlägt zu. Sie bestimmt auch, wie viel du tragen kannst.",
+    "Strength lifts, pushes and strikes. It also decides how much you can carry."
+   ],
+   [
+    "Geschick",
+    "Dexterity",
+    "Geschick schleicht, klettert und weicht aus. Wer belastet ist, würfelt es mit Nachteil.",
+    "Dexterity sneaks, climbs and dodges. Whoever is burdened rolls it at disadvantage."
+   ],
+   [
+    "Konstitution",
+    "Constitution",
+    "Konstitution ist Ausdauer. Sie gibt dir mehr Leben.",
+    "Constitution is endurance. It gives you more life."
+   ],
+   [
+    "Intelligenz",
+    "Intelligence",
+    "Intelligenz erinnert sich, rechnet und entziffert alte Schriften.",
+    "Intelligence remembers, reckons and deciphers old writing."
+   ],
+   [
+    "Weisheit",
+    "Wisdom",
+    "Weisheit bemerkt, was andere übersehen, und spürt, wenn jemand lügt.",
+    "Wisdom notices what others miss and senses when someone lies."
+   ],
+   [
+    "Charisma",
+    "Charisma",
+    "Charisma überzeugt, verhandelt und bringt Händler zu besseren Preisen.",
+    "Charisma convinces, bargains and gets merchants to better prices."
+   ],
+   [
+    "Der Bonus",
+    "The bonus",
+    "Ein Wert von 10 gibt +0, jede zwei Punkte mehr geben +1. Eine 16 gibt also +3.",
+    "A value of 10 gives +0, every two points more give +1. So a 16 gives +3."
+   ],
+   [
+    "Seltenheit",
+    "Rarity",
+    "Grün ist selten, blau rar, lila episch und orange legendär.",
+    "Green is uncommon, blue rare, purple epic and orange legendary."
+   ],
+   [
+    "Unerkannte Magie",
+    "Unknown magic",
+    "Sehr seltene Dinge zeigen erst, was sie können, wenn jemand sie erkennt.",
+    "Very rare things only show what they can do once someone identifies them."
+   ],
+   [
+    "Stapel",
+    "Stacks",
+    "Gleiche Tränke stapeln sich in der Tasche und brauchen nur einen Platz.",
+    "The same potions stack in the bag and need only one place."
+   ],
+   [
+    "Tauschen",
+    "Trading",
+    "Ein Tausch ist erst fertig, wenn der andere annimmt. Bis dahin passiert nichts.",
+    "A trade is only done once the other accepts. Until then nothing happens."
+   ],
+   [
+    "Stufen",
+    "Levels",
+    "Erfahrung bringt Stufen, Stufen bringen Wertpunkte und neue Fähigkeiten.",
+    "Experience brings levels, levels bring value points and new abilities."
+   ],
+   [
+    "Das Panel entscheidet",
+    "The panel decides",
+    "Der Dungeon-Master erzählt, aber Würfel, Beute und Leben bestimmt das Panel nach festen Regeln.",
+    "The Dungeon Master narrates, but dice, loot and life are set by the panel by fixed rules."
+   ],
+   [
+    "Offene Fäden",
+    "Open threads",
+    "Versprechen, Aufgaben und Rätsel stehen in der Seitenspalte, bis ihr sie erledigt.",
+    "Promises, tasks and riddles stand in the side column until you finish them."
+   ],
+   [
+    "Gemeinsam schneller",
+    "Faster together",
+    "Haben alle gehandelt, erzählt der Dungeon-Master sofort weiter.",
+    "Once everyone has acted, the Dungeon Master narrates right away."
+   ],
+   [
+    "Sprechen statt tippen",
+    "Speak instead of typing",
+    "Mit dem Mikrofon sprichst du deine Aktion, abgeschickt wird erst mit „Handeln“.",
+    "With the microphone you speak your action, it is sent only with \"Act\"."
+   ],
+   [
+    "Gute Aktionen",
+    "Good actions",
+    "Ein, zwei Sätze reichen: was du tust, wie und warum. Der Rest ist Sache des Würfels.",
+    "One or two sentences are enough: what you do, how and why. The rest is up to the die."
+   ]
+  ],
+  "fantasy": [
+   [
+    "Elfen",
+    "Elves",
+    "Elfen leben lange und vergessen wenig. Viele hören den Wald flüstern.",
+    "Elves live long and forget little. Many hear the forest whisper."
+   ],
+   [
+    "Zwerge",
+    "Dwarves",
+    "Zwerge graben tief und bauen für die Ewigkeit. Ein Zwergenwort gilt.",
+    "Dwarves dig deep and build for eternity. A dwarf's word holds."
+   ],
+   [
+    "Halblinge",
+    "Halflings",
+    "Halblinge sind klein, flink und lieben ein zweites Frühstück.",
+    "Halflings are small, quick and love a second breakfast."
+   ],
+   [
+    "Drachen",
+    "Dragons",
+    "Drachen schlafen auf Gold und zählen jede Münze. Wecke nie einen ohne Plan.",
+    "Dragons sleep on gold and count every coin. Never wake one without a plan."
+   ],
+   [
+    "Heiltränke",
+    "Healing potions",
+    "Ein Heiltrank schmeckt nach Kräutern und Honig und schließt Wunden in Sekunden.",
+    "A healing potion tastes of herbs and honey and closes wounds in seconds."
+   ],
+   [
+    "Schriftrollen",
+    "Scrolls",
+    "Eine Schriftrolle hält einen Zauber fest, bis jemand sie liest. Dann zerfällt sie zu Staub.",
+    "A scroll holds a spell until someone reads it. Then it crumbles to dust."
+   ],
+   [
+    "Gasthäuser",
+    "Inns",
+    "Im Gasthaus erfährt man mehr als in jeder Bibliothek, wenn man zuhört.",
+    "At an inn you learn more than in any library, if you listen."
+   ],
+   [
+    "Kobolde",
+    "Goblins",
+    "Kobolde sind laut, gierig und erstaunlich gute Fallensteller.",
+    "Goblins are loud, greedy and surprisingly good at setting traps."
+   ],
+   [
+    "Runensteine",
+    "Rune stones",
+    "Alte Runensteine markieren Wege, Grenzen und manchmal Verstecke.",
+    "Old rune stones mark paths, borders and sometimes hiding places."
+   ],
+   [
+    "Die Magierakademie",
+    "The academy of magic",
+    "Lehrlinge üben jahrelang, bevor sie eine Kerze ohne Funken anzünden.",
+    "Apprentices practise for years before they light a candle without a spark."
+   ],
+   [
+    "Mondnächte",
+    "Moonlit nights",
+    "Bei Vollmond blühen manche Kräuter, die man sonst nie findet.",
+    "At full moon some herbs bloom that you otherwise never find."
+   ],
+   [
+    "Brücken",
+    "Bridges",
+    "Unter alten Brücken wohnen oft Trolle. Sie mögen Rätsel und Höflichkeit.",
+    "Trolls often live under old bridges. They like riddles and good manners."
+   ],
+   [
+    "Schmiede",
+    "Smiths",
+    "Ein guter Schmied hört am Klang, ob eine Klinge taugt.",
+    "A good smith hears from the ring whether a blade is any good."
+   ],
+   [
+    "Wälder",
+    "Forests",
+    "In tiefen Wäldern verliert man leicht den Weg, Moos wächst nicht immer im Norden.",
+    "In deep forests you easily lose your way, moss does not always grow on the north side."
+   ],
+   [
+    "Ritter",
+    "Knights",
+    "Ein Ritter schwört, die Schwachen zu schützen. Manche halten sich sogar daran.",
+    "A knight swears to protect the weak. Some even keep to it."
+   ],
+   [
+    "Feen",
+    "Fairies",
+    "Feen lieben Tauschgeschäfte, aber lies immer das Kleingedruckte.",
+    "Fairies love bargains, but always read the small print."
+   ],
+   [
+    "Greifen",
+    "Griffins",
+    "Greifen sind halb Adler, halb Löwe und sehr stolz. Verbeuge dich zuerst.",
+    "Griffins are half eagle, half lion and very proud. Bow first."
+   ],
+   [
+    "Der Markt",
+    "The market",
+    "Auf dem Markt zahlt man mit Gold, Silber oder einer guten Geschichte.",
+    "At the market you pay with gold, silver or a good story."
+   ],
+   [
+    "Ruinen",
+    "Ruins",
+    "Ruinen erzählen von Reichen, die keiner mehr kennt. Manche Türen sind noch zu.",
+    "Ruins tell of realms no one remembers. Some doors are still shut."
+   ],
+   [
+    "Zauberstäbe",
+    "Wands",
+    "Ein Zauberstab sucht sich seinen Besitzer aus, sagen die Alten.",
+    "A wand chooses its owner, the old ones say."
+   ],
+   [
+    "Laternen",
+    "Lanterns",
+    "Wer in die Tiefe geht, nimmt eine Laterne mit und noch eine zweite.",
+    "Whoever goes into the depths takes a lantern along, and a second one."
+   ],
+   [
+    "Wegzeichen",
+    "Way marks",
+    "Wanderer ritzen Zeichen in Bäume: ein Kreis heißt Wasser, ein Kreuz Gefahr.",
+    "Wanderers carve signs into trees: a circle means water, a cross danger."
+   ],
+   [
+    "Einhörner",
+    "Unicorns",
+    "Einhörner zeigen sich nur denen, die nichts von ihnen wollen.",
+    "Unicorns show themselves only to those who want nothing from them."
+   ],
+   [
+    "Die Barden",
+    "Bards",
+    "Barden kennen Lieder über jeden Helden, auch über die, die es noch werden.",
+    "Bards know songs about every hero, even those who are still to become one."
+   ],
+   [
+    "Bergpässe",
+    "Mountain passes",
+    "Im Gebirge kommt der Winter früh. Wer zu spät aufbricht, wartet bis zum Frühling.",
+    "In the mountains winter comes early. Whoever sets out too late waits for spring."
+   ],
+   [
+    "Das Orakel",
+    "The oracle",
+    "Das Orakel antwortet immer, nur selten so, wie man es erwartet.",
+    "The oracle always answers, only rarely the way you expect."
+   ],
+   [
+    "Brot und Käse",
+    "Bread and cheese",
+    "Kein Abenteuer ohne Proviant. Hungrige Helden würfeln schlechter, sagt man.",
+    "No adventure without provisions. Hungry heroes roll worse, they say."
+   ],
+   [
+    "Wasserfälle",
+    "Waterfalls",
+    "Hinter manchem Wasserfall liegt eine Höhle. Hinter manchem nur nasse Füße.",
+    "Behind some waterfalls lies a cave. Behind others only wet feet."
+   ],
+   [
+    "Wappen",
+    "Coats of arms",
+    "Jedes Haus hat ein Wappen. Wer es trägt, spricht für die ganze Familie.",
+    "Every house has a coat of arms. Whoever wears it speaks for the whole family."
+   ],
+   [
+    "Die Sterne",
+    "The stars",
+    "Seefahrer und Magier lesen dieselben Sterne, aber nicht dasselbe darin.",
+    "Sailors and mages read the same stars, but not the same things in them."
+   ]
+  ],
+  "horror": [
+   [
+    "Alte Häuser",
+    "Old houses",
+    "Alte Häuser knarren, weil das Holz arbeitet. Meistens jedenfalls.",
+    "Old houses creak because the wood moves. Most of the time, anyway."
+   ],
+   [
+    "Kerzen",
+    "Candles",
+    "Eine Kerze, die ohne Wind flackert, verdient einen zweiten Blick.",
+    "A candle that flickers without wind deserves a second look."
+   ],
+   [
+    "Spiegel",
+    "Mirrors",
+    "In manchen Geschichten zeigen Spiegel mehr, als vor ihnen steht.",
+    "In some stories mirrors show more than what stands in front of them."
+   ],
+   [
+    "Nebel",
+    "Fog",
+    "Im Nebel klingen Schritte näher, als sie sind.",
+    "In the fog footsteps sound closer than they are."
+   ],
+   [
+    "Dachböden",
+    "Attics",
+    "Auf Dachböden liegen Kisten, die niemand gepackt haben will.",
+    "In attics lie boxes that nobody admits to having packed."
+   ],
+   [
+    "Taschenlampen",
+    "Torches",
+    "Eine Taschenlampe ist nur so gut wie ihre Batterie. Prüfe sie vorher.",
+    "A torch is only as good as its battery. Check it before."
+   ],
+   [
+    "Mut",
+    "Courage",
+    "Mut heißt nicht, keine Angst zu haben, sondern trotzdem weiterzugehen.",
+    "Courage does not mean having no fear, but going on anyway."
+   ],
+   [
+    "Zusammenbleiben",
+    "Staying together",
+    "In jeder unheimlichen Geschichte gilt: trennt euch nicht.",
+    "In every spooky story the rule is: do not split up."
+   ],
+   [
+    "Friedhöfe",
+    "Graveyards",
+    "Auf alten Friedhöfen stehen Namen, die man in keinem Buch mehr findet.",
+    "Old graveyards hold names you will not find in any book."
+   ],
+   [
+    "Raben",
+    "Ravens",
+    "Raben sind klug und merken sich Gesichter, freundliche wie unfreundliche.",
+    "Ravens are clever and remember faces, friendly and unfriendly ones."
+   ],
+   [
+    "Spieluhren",
+    "Music boxes",
+    "Eine Spieluhr, die von allein spielt, will meistens etwas sagen.",
+    "A music box that plays by itself usually wants to say something."
+   ],
+   [
+    "Kellertüren",
+    "Cellar doors",
+    "Kellertüren sind schwer, damit man sie nicht aus Versehen öffnet.",
+    "Cellar doors are heavy so you do not open them by accident."
+   ],
+   [
+    "Tagebücher",
+    "Diaries",
+    "Alte Tagebücher erklären oft, was im Haus geschehen ist, wenn man bis zum Ende liest.",
+    "Old diaries often explain what happened in the house, if you read to the end."
+   ],
+   [
+    "Salz",
+    "Salt",
+    "In vielen Sagen hält eine Linie aus Salz Unheil fern.",
+    "In many legends a line of salt keeps harm away."
+   ],
+   [
+    "Glocken",
+    "Bells",
+    "Wenn eine Glocke um Mitternacht läutet, zählen alle mit.",
+    "When a bell rings at midnight, everyone counts along."
+   ],
+   [
+    "Porträts",
+    "Portraits",
+    "Bei manchen Gemälden scheinen die Augen einem zu folgen. Es ist nur ein Trick der Maler.",
+    "In some paintings the eyes seem to follow you. It is only a painter's trick."
+   ],
+   [
+    "Gewitter",
+    "Thunderstorms",
+    "Zähle zwischen Blitz und Donner: drei Sekunden sind etwa ein Kilometer.",
+    "Count between lightning and thunder: three seconds are about one kilometre."
+   ],
+   [
+    "Geheime Gänge",
+    "Secret passages",
+    "Hinter Bücherregalen verbergen sich in Geschichten oft Gänge. Zieh am richtigen Buch.",
+    "In stories bookshelves often hide passages. Pull the right book."
+   ],
+   [
+    "Flüstern",
+    "Whispers",
+    "Flüstern ist leiser als Reden, aber man hört genauer hin.",
+    "Whispering is quieter than talking, but people listen more closely."
+   ],
+   [
+    "Laternen im Sumpf",
+    "Lights in the marsh",
+    "Irrlichter locken Wanderer vom Weg. Bleib auf den Planken.",
+    "Will-o'-the-wisps lure wanderers off the path. Stay on the boards."
+   ],
+   [
+    "Schlüssel",
+    "Keys",
+    "Ein Schlüssel ohne Schloss ist ein Rätsel, das noch wartet.",
+    "A key without a lock is a riddle that is still waiting."
+   ],
+   [
+    "Die Uhr",
+    "The clock",
+    "Steht eine Uhr still, ist irgendwann etwas Wichtiges geschehen.",
+    "When a clock stands still, something important happened at some point."
+   ],
+   [
+    "Wölfe",
+    "Wolves",
+    "Wölfe meiden Menschen meist. Das Heulen ist nur ihr Weg, sich zu finden.",
+    "Wolves mostly avoid people. Howling is just how they find each other."
+   ],
+   [
+    "Schatten",
+    "Shadows",
+    "Ein Schatten braucht immer ein Licht. Wer das Licht findet, versteht den Schatten.",
+    "A shadow always needs a light. Whoever finds the light understands the shadow."
+   ],
+   [
+    "Der Leuchtturm",
+    "The lighthouse",
+    "Ein Leuchtturmwärter sieht in einer Nacht mehr als andere in einem Jahr.",
+    "A lighthouse keeper sees more in one night than others in a year."
+   ],
+   [
+    "Puppen",
+    "Dolls",
+    "Puppen sitzen still, darum sind sie die besten Zeugen in alten Kinderzimmern.",
+    "Dolls sit still, which makes them the best witnesses in old nurseries."
+   ],
+   [
+    "Schritte",
+    "Footsteps",
+    "Hörst du Schritte über dir, frag dich zuerst, ob es überhaupt ein oberes Stockwerk gibt.",
+    "If you hear footsteps above you, first ask whether there even is an upper floor."
+   ],
+   [
+    "Tapferkeit",
+    "Bravery",
+    "Die tapfersten Helden sind oft die, die zugeben, dass sie sich fürchten.",
+    "The bravest heroes are often the ones who admit they are afraid."
+   ],
+   [
+    "Geräusche",
+    "Sounds",
+    "Die meisten Geräusche in der Nacht sind Katzen, Wind oder Rohre.",
+    "Most sounds in the night are cats, wind or pipes."
+   ],
+   [
+    "Das Ende der Nacht",
+    "The end of the night",
+    "Jede Nacht endet irgendwann. Im Morgengrauen sieht alles kleiner aus.",
+    "Every night ends at some point. At dawn everything looks smaller."
+   ]
+  ],
+  "scifi": [
+   [
+    "Lichtjahre",
+    "Light years",
+    "Ein Lichtjahr ist eine Strecke, keine Zeit: fast zehn Billionen Kilometer.",
+    "A light year is a distance, not a time: almost ten trillion kilometres."
+   ],
+   [
+    "Schwerelosigkeit",
+    "Zero gravity",
+    "In der Schwerelosigkeit wird alles, was nicht festgeschnallt ist, zum Wurfgeschoss.",
+    "In zero gravity everything that is not strapped down becomes a projectile."
+   ],
+   [
+    "Raumanzüge",
+    "Space suits",
+    "Ein Raumanzug ist ein kleines Raumschiff in Menschenform. Prüfe die Dichtungen.",
+    "A space suit is a little spaceship in human shape. Check the seals."
+   ],
+   [
+    "Androiden",
+    "Androids",
+    "Androiden lernen von Menschen, auch die schlechten Witze.",
+    "Androids learn from humans, the bad jokes too."
+   ],
+   [
+    "Hyperraum",
+    "Hyperspace",
+    "Im Hyperraum sehen die Sterne aus wie Striche. Fenster lieber zu.",
+    "In hyperspace the stars look like streaks. Better keep the shutters closed."
+   ],
+   [
+    "Bordrechner",
+    "Ship computers",
+    "Der Bordrechner weiß fast alles über das Schiff, nur nicht, wo der Kaffee steht.",
+    "The ship's computer knows nearly everything about the ship, except where the coffee is."
+   ],
+   [
+    "Asteroidengürtel",
+    "Asteroid belts",
+    "In Filmen sind Asteroiden dicht gedrängt. In Wirklichkeit liegen sie weit auseinander.",
+    "In films asteroids are packed tight. In reality they lie far apart."
+   ],
+   [
+    "Sauerstoff",
+    "Oxygen",
+    "An Bord ist Sauerstoff kostbarer als Gold. Kerzen sind verboten.",
+    "On board oxygen is more precious than gold. Candles are forbidden."
+   ],
+   [
+    "Raumstationen",
+    "Space stations",
+    "Eine Raumstation dreht sich, damit oben und unten einen Sinn ergeben.",
+    "A space station spins so that up and down make sense."
+   ],
+   [
+    "Funkstille",
+    "Radio silence",
+    "Funkstille kann Vorsicht bedeuten oder einen kaputten Sender.",
+    "Radio silence can mean caution or a broken transmitter."
+   ],
+   [
+    "Laser",
+    "Lasers",
+    "Im All sieht man Laserstrahlen nicht, solange kein Staub sie streut.",
+    "In space you cannot see laser beams unless dust scatters them."
+   ],
+   [
+    "Kälteschlaf",
+    "Cryosleep",
+    "Nach dem Kälteschlaf haben alle Hunger und keiner weiß, welcher Tag ist.",
+    "After cryosleep everyone is hungry and nobody knows what day it is."
+   ],
+   [
+    "Terraforming",
+    "Terraforming",
+    "Einen Planeten bewohnbar zu machen dauert Jahrhunderte. Geduld ist Ausrüstung.",
+    "Making a planet habitable takes centuries. Patience is equipment."
+   ],
+   [
+    "Schilde",
+    "Shields",
+    "Energieschilde schlucken Treffer, aber jeder Treffer kostet Strom.",
+    "Energy shields absorb hits, but every hit costs power."
+   ],
+   [
+    "Händlergilden",
+    "Trade guilds",
+    "Zwischen den Sternen zählen Verträge mehr als Waffen.",
+    "Between the stars contracts count for more than weapons."
+   ],
+   [
+    "Roboter",
+    "Robots",
+    "Ein Wartungsroboter kennt jeden Schacht des Schiffs. Freunde dich mit ihm an.",
+    "A maintenance robot knows every shaft of the ship. Make friends with it."
+   ],
+   [
+    "Monde",
+    "Moons",
+    "Manche Monde haben Ozeane unter dickem Eis. Was darin schwimmt, weiß keiner.",
+    "Some moons have oceans under thick ice. Nobody knows what swims in them."
+   ],
+   [
+    "Sonnenstürme",
+    "Solar storms",
+    "Bei einem Sonnensturm spielen Anzeigen verrückt. Verlass dich auf Sicht.",
+    "In a solar storm the displays go haywire. Trust your eyes."
+   ],
+   [
+    "Notsignale",
+    "Distress signals",
+    "Ein Notsignal muss man beantworten, so will es das Gesetz der Raumfahrt.",
+    "A distress signal must be answered, so says the law of spaceflight."
+   ],
+   [
+    "Hologramme",
+    "Holograms",
+    "Ein Hologramm wirft keinen Schatten. So erkennt man es.",
+    "A hologram casts no shadow. That is how you spot it."
+   ],
+   [
+    "Schwarze Löcher",
+    "Black holes",
+    "Einem schwarzen Loch kommt man besser nicht zu nahe. Selbst Licht kehrt nicht zurück.",
+    "Better not get too close to a black hole. Even light does not come back."
+   ],
+   [
+    "Außerirdische",
+    "Aliens",
+    "Fremde Wesen denken anders. Ein Lächeln kann bei ihnen alles Mögliche heißen.",
+    "Alien beings think differently. A smile can mean all sorts of things to them."
+   ],
+   [
+    "Andockmanöver",
+    "Docking",
+    "Beim Andocken zählt jeder Zentimeter. Langsam ist schnell.",
+    "When docking every centimetre counts. Slow is fast."
+   ],
+   [
+    "Bordgärten",
+    "Ship gardens",
+    "Auf langen Reisen wachsen Tomaten unter Lampen. Sie schmecken nach Heimat.",
+    "On long journeys tomatoes grow under lamps. They taste of home."
+   ],
+   [
+    "Datenkristalle",
+    "Data crystals",
+    "Ein Datenkristall fasst ganze Bibliotheken. Lass ihn nicht fallen.",
+    "A data crystal holds whole libraries. Do not drop it."
+   ],
+   [
+    "Die Brücke",
+    "The bridge",
+    "Auf der Brücke wird entschieden, im Maschinenraum wird es möglich gemacht.",
+    "Decisions are made on the bridge, the engine room makes them possible."
+   ],
+   [
+    "Magnetstiefel",
+    "Magnetic boots",
+    "Mit Magnetstiefeln läuft man auch an der Außenhülle, nur langsam.",
+    "With magnetic boots you can walk on the outer hull too, just slowly."
+   ],
+   [
+    "Kometen",
+    "Comets",
+    "Ein Komet ist ein schmutziger Schneeball mit einem Schweif aus Glitzer.",
+    "A comet is a dirty snowball with a tail of glitter."
+   ],
+   [
+    "Übersetzer",
+    "Translators",
+    "Universalübersetzer sind gut, aber Redewendungen machen sie ratlos.",
+    "Universal translators are good, but idioms leave them puzzled."
+   ],
+   [
+    "Heimweh",
+    "Homesickness",
+    "Selbst die erfahrensten Raumfahrer schauen manchmal zurück zur Erde.",
+    "Even the most seasoned spacefarers sometimes look back at Earth."
+   ]
+  ],
+  "piraten": [
+   [
+    "Der Kodex",
+    "The code",
+    "Der Piratenkodex ist eher eine Richtlinie als eine Regel.",
+    "The pirate code is more of a guideline than a rule."
+   ],
+   [
+    "Kompass",
+    "Compass",
+    "Ein Kompass zeigt nach Norden, ein guter Steuermann weiß, wohin es danach geht.",
+    "A compass points north, a good helmsman knows where to go after that."
+   ],
+   [
+    "Schatzkarten",
+    "Treasure maps",
+    "Auf Schatzkarten markiert ein X den Schatz, und ein Totenkopf die Abkürzung, die man meiden sollte.",
+    "On treasure maps an X marks the treasure, and a skull the shortcut you should avoid."
+   ],
+   [
+    "Papageien",
+    "Parrots",
+    "Papageien plappern alles nach, auch Geheimnisse. Vorsicht, was du an Deck sagst.",
+    "Parrots repeat everything, secrets too. Careful what you say on deck."
+   ],
+   [
+    "Knoten",
+    "Knots",
+    "Ein Seemann kennt hundert Knoten. Zwei davon halten wirklich alles.",
+    "A sailor knows a hundred knots. Two of them truly hold anything."
+   ],
+   [
+    "Dublonen",
+    "Doubloons",
+    "Eine Dublone ist eine Goldmünze. Echte klingen hell, wenn man sie fallen lässt.",
+    "A doubloon is a gold coin. Real ones ring brightly when you drop them."
+   ],
+   [
+    "Flaute",
+    "Doldrums",
+    "Bei Flaute liegt das Schiff still. Dann wird gesungen, geflickt und gewartet.",
+    "In the doldrums the ship lies still. Then there is singing, mending and waiting."
+   ],
+   [
+    "Der Ausguck",
+    "The lookout",
+    "Wer im Krähennest sitzt, sieht Land, Wetter und Ärger zuerst.",
+    "Whoever sits in the crow's nest sees land, weather and trouble first."
+   ],
+   [
+    "Kanonen",
+    "Cannons",
+    "Eine Kanone laden dauert eine Minute. Darum zählt der erste Schuss.",
+    "Loading a cannon takes a minute. That is why the first shot counts."
+   ],
+   [
+    "Inseln",
+    "Islands",
+    "Nicht jede Insel steht auf einer Karte. Manche wollen nicht gefunden werden.",
+    "Not every island is on a map. Some do not want to be found."
+   ],
+   [
+    "Meerjungfrauen",
+    "Mermaids",
+    "Seeleute erzählen von Meerjungfrauen. Meistens waren es Seekühe.",
+    "Sailors tell of mermaids. Mostly they were manatees."
+   ],
+   [
+    "Rum",
+    "Grog",
+    "Auf See gibt es Grog: Wasser mit Zitrone, damit keiner krank wird.",
+    "At sea there is grog: water with lemon, so nobody falls ill."
+   ],
+   [
+    "Die Planke",
+    "The plank",
+    "Über die Planke gehen musste in Wirklichkeit kaum jemand. Es ist vor allem eine Geschichte.",
+    "Hardly anyone really had to walk the plank. It is mostly a story."
+   ],
+   [
+    "Häfen",
+    "Harbours",
+    "In jedem Hafen gibt es eine Taverne, einen Händler und jemanden, der zu viel weiß.",
+    "In every harbour there is a tavern, a merchant and someone who knows too much."
+   ],
+   [
+    "Stürme",
+    "Storms",
+    "Bei Sturm werden die Segel gerefft und alles festgezurrt, sogar der Koch.",
+    "In a storm the sails are reefed and everything lashed down, even the cook."
+   ],
+   [
+    "Flaggen",
+    "Flags",
+    "Die schwarze Flagge sagt: ergebt euch. Die rote sagt: zu spät.",
+    "The black flag says: surrender. The red one says: too late."
+   ],
+   [
+    "Wracks",
+    "Wrecks",
+    "Wracks am Meeresgrund sind Heimat für Fische und Schatzsucher.",
+    "Wrecks on the sea bed are home to fish and treasure hunters."
+   ],
+   [
+    "Die Mannschaft",
+    "The crew",
+    "Ein Kapitän ist nur so gut wie seine Mannschaft. Teile die Beute gerecht.",
+    "A captain is only as good as the crew. Share the loot fairly."
+   ],
+   [
+    "Gezeiten",
+    "Tides",
+    "Bei Ebbe tauchen Höhlen auf, die bei Flut verschwunden sind.",
+    "At low tide caves appear that vanish at high tide."
+   ],
+   [
+    "Fernrohre",
+    "Spyglasses",
+    "Ein Fernrohr holt das Ferne nah, aber nur, wenn man es richtig herum hält.",
+    "A spyglass brings the far near, but only if you hold it the right way round."
+   ],
+   [
+    "Seeungeheuer",
+    "Sea monsters",
+    "Alte Karten zeigen Seeungeheuer an den Rändern. Dort war noch niemand.",
+    "Old maps show sea monsters at the edges. Nobody had been there yet."
+   ],
+   [
+    "Schiffskatzen",
+    "Ship's cats",
+    "Jedes gute Schiff hat eine Katze. Sie hält die Mäuse fern und die Moral hoch.",
+    "Every good ship has a cat. It keeps the mice away and spirits up."
+   ],
+   [
+    "Shantys",
+    "Shanties",
+    "Shantys halten den Takt beim Ziehen. Wer singt, zieht im Gleichschritt.",
+    "Shanties keep the rhythm when hauling. Whoever sings pulls in step."
+   ],
+   [
+    "Muscheln",
+    "Shells",
+    "Halte eine Muschel ans Ohr, und du hörst das Meer, selbst an Land.",
+    "Hold a shell to your ear and you hear the sea, even on land."
+   ],
+   [
+    "Leuchtfeuer",
+    "Beacons",
+    "Leuchtfeuer warnen vor Riffen. Falsche Feuer locken Schiffe hinein.",
+    "Beacons warn of reefs. False fires lure ships onto them."
+   ],
+   [
+    "Der Anker",
+    "The anchor",
+    "Ein Anker hält das Schiff, solange der Grund gut ist. Sand ist besser als Fels.",
+    "An anchor holds the ship as long as the bottom is good. Sand is better than rock."
+   ],
+   [
+    "Kaperbriefe",
+    "Letters of marque",
+    "Mit einem Kaperbrief ist ein Pirat plötzlich ein Freibeuter im Dienst der Krone.",
+    "With a letter of marque a pirate is suddenly a privateer serving the crown."
+   ],
+   [
+    "Seemannsgarn",
+    "Tall tales",
+    "Seemannsgarn sind Geschichten, die mit jeder Erzählung etwas länger werden.",
+    "Tall tales are stories that get a little longer with every telling."
+   ],
+   [
+    "Navigation",
+    "Navigation",
+    "Mit Sextant und Sternen findet man seinen Ort auch mitten auf dem Ozean.",
+    "With a sextant and the stars you find your place even in the middle of the ocean."
+   ],
+   [
+    "Heimkehr",
+    "Homecoming",
+    "Der schönste Hafen ist der, aus dem man aufgebrochen ist.",
+    "The finest harbour is the one you set out from."
+   ]
+  ],
+  "eigene": [
+   [
+    "Eure Welt",
+    "Your world",
+    "Diese Welt gibt es nur an eurem Tisch. Was ihr entdeckt, ist wirklich neu.",
+    "This world exists only at your table. What you discover is truly new."
+   ],
+   [
+    "Eigene Regeln",
+    "Own rules",
+    "Jede Welt hat eigene Gesetze. Findet heraus, welche hier gelten.",
+    "Every world has laws of its own. Find out which apply here."
+   ],
+   [
+    "Fragen stellen",
+    "Asking questions",
+    "Wer Personen fragt, erfährt oft mehr als durch jede Suche.",
+    "Whoever asks people often learns more than through any search."
+   ],
+   [
+    "Orte merken",
+    "Remembering places",
+    "Die Karte merkt sich, wo ihr wart. Ihr müsst es nicht.",
+    "The map remembers where you have been. You do not have to."
+   ],
+   [
+    "Zusammenarbeit",
+    "Teamwork",
+    "Zwei Helden mit einem Plan schaffen mehr als fünf ohne.",
+    "Two heroes with a plan achieve more than five without."
+   ],
+   [
+    "Kleine Details",
+    "Small details",
+    "Ein Geruch, ein Geräusch, eine Farbe: kleine Dinge machen die Welt lebendig.",
+    "A smell, a sound, a colour: small things bring the world to life."
+   ],
+   [
+    "Mut zur Lücke",
+    "Leaving gaps",
+    "Nicht alles muss erklärt werden. Manche Rätsel bleiben schöner offen.",
+    "Not everything needs explaining. Some riddles are nicer left open."
+   ],
+   [
+    "Namen",
+    "Names",
+    "Gib Dingen und Orten Namen, dann bleiben sie in Erinnerung.",
+    "Give things and places names, then they stay in mind."
+   ],
+   [
+    "Wiederkehrende Gesichter",
+    "Returning faces",
+    "Personen, denen ihr helft, tauchen gern wieder auf.",
+    "People you help like to turn up again."
+   ],
+   [
+    "Pausen",
+    "Breaks",
+    "Auch Helden brauchen Pausen. Ein Lager am Abend tut allen gut.",
+    "Heroes need breaks too. A camp in the evening does everyone good."
+   ],
+   [
+    "Neugier",
+    "Curiosity",
+    "Neugier öffnet mehr Türen als jeder Dietrich.",
+    "Curiosity opens more doors than any lockpick."
+   ],
+   [
+    "Geschenke",
+    "Gifts",
+    "Ein kleines Geschenk kann aus einem Fremden einen Freund machen.",
+    "A small gift can turn a stranger into a friend."
+   ],
+   [
+    "Die Gruppe",
+    "The group",
+    "Jede Figur hat etwas, das nur sie kann. Lasst jede glänzen.",
+    "Every character has something only they can do. Let each one shine."
+   ],
+   [
+    "Spuren",
+    "Tracks",
+    "Spuren verraten, wer hier war, wann und manchmal warum.",
+    "Tracks reveal who was here, when and sometimes why."
+   ],
+   [
+    "Wetter",
+    "Weather",
+    "Regen, Wind und Sonne können eine Szene völlig verändern.",
+    "Rain, wind and sun can change a scene completely."
+   ],
+   [
+    "Humor",
+    "Humour",
+    "Ein guter Witz zur rechten Zeit rettet manche brenzlige Lage.",
+    "A good joke at the right time saves many a tight spot."
+   ],
+   [
+    "Versprechen",
+    "Promises",
+    "Was ihr versprecht, merkt sich der Dungeon-Master unter den offenen Fäden.",
+    "What you promise, the Dungeon Master keeps among the open threads."
+   ],
+   [
+    "Umwege",
+    "Detours",
+    "Der kürzeste Weg ist nicht immer der beste. Umwege haben oft Geschichten.",
+    "The shortest way is not always the best. Detours often have stories."
+   ],
+   [
+    "Geheimnisse",
+    "Secrets",
+    "Jede Welt hat Geheimnisse. Manche erfahrt ihr erst ganz am Ende.",
+    "Every world has secrets. Some you learn only at the very end."
+   ],
+   [
+    "Euer Stil",
+    "Your style",
+    "Ob ernst oder lustig: der Ton eurer Runde prägt jede Erzählung.",
+    "Serious or funny: your round's tone shapes every narration."
+   ]
+  ]
+ },
+ "tipps": [
+  [
+   "Schau in deinen Heldenbogen: passt deine Ausrüstung noch?",
+   "Look at your hero sheet: does your equipment still fit?"
+  ],
+  [
+   "Tippe ein Ding in deiner Tasche an, um seine Werte zu sehen.",
+   "Tap a thing in your bag to see its values."
+  ],
+  [
+   "Schreib im Tischgespräch, was ihr als Nächstes vorhabt. Der Dungeon-Master liest es nicht.",
+   "Write in the table talk what you plan next. The Dungeon Master does not read it."
+  ],
+  [
+   "Überleg schon deine nächste Aktion: was, wie und warum.",
+   "Think about your next action already: what, how and why."
+  ],
+  [
+   "Ist ein Heiltrank in der Tasche? Leben unter einem Drittel ist gefährlich.",
+   "Is there a healing potion in the bag? Life under a third is dangerous."
+  ],
+  [
+   "Offene Fäden in der Seitenspalte zeigen, was noch ansteht.",
+   "Open threads in the side column show what is still to do."
+  ],
+  [
+   "Ein Blick auf die Karte: welche Wege sind noch unbekannt?",
+   "A look at the map: which ways are still unknown?"
+  ],
+  [
+   "Gefällt dir die Erzählung? Ein 👍 darunter hilft dem Admin beim Einstellen.",
+   "Do you like the narration? A 👍 under it helps the admin with the settings."
+  ],
+  [
+   "Gib deinem Helden eine Stimme, dann spricht er beim Vorlesen selbst.",
+   "Give your hero a voice, then they speak for themselves when reading aloud."
+  ],
+  [
+   "Hast du Gold übrig? Beim nächsten Händler lohnt sich ein Blick.",
+   "Gold left over? A look at the next merchant pays off."
+  ],
+  [
+   "Eine Rolle des Erkennens zeigt, was unbekannte Magie kann.",
+   "A scroll of identification shows what unknown magic can do."
+  ],
+  [
+   "Zu schwer beladen? Leg etwas hin, sonst würfelst du Geschick mit Nachteil.",
+   "Carrying too much? Put something down, otherwise you roll Dexterity at disadvantage."
+  ],
+  [
+   "Mit 🎤 kannst du deine nächste Aktion gleich sprechen.",
+   "With 🎤 you can speak your next action straight away."
+  ],
+  [
+   "Was weiß dein Held, was die anderen nicht wissen? Bring es ein.",
+   "What does your hero know that the others do not? Bring it in."
+  ],
+  [
+   "Sprich mit Personen in der Geschichte, sie kennen oft den Weg.",
+   "Talk to people in the story, they often know the way."
+  ],
+  [
+   "Neue Stufe erreicht? Im Heldenbogen wartet ein Wertpunkt.",
+   "Reached a new level? A value point waits in the hero sheet."
+  ],
+  [
+   "Tauschen geht per Angebot im Heldenbogen.",
+   "Trading works by offer in the hero sheet."
+  ],
+  [
+   "Der Gastgeber kann einen Spieltermin setzen, damit alle wieder zusammenkommen.",
+   "The host can set a game date so everyone meets again."
+  ],
+  [
+   "Gute Aktionen sind kurz: ein, zwei Sätze reichen.",
+   "Good actions are short: one or two sentences are enough."
+  ],
+  [
+   "Vorteil bekommst du oft, wenn ihr zusammenarbeitet.",
+   "You often get advantage when you work together."
+  ],
+  [
+   "Lies die letzte Erzählung noch einmal: steckt ein Hinweis darin?",
+   "Read the last narration once more: is there a clue in it?"
+  ],
+  [
+   "Kurze Pause? Hol dir ein Glas Wasser, der Tisch wartet.",
+   "Short break? Get a glass of water, the table will wait."
+  ],
+  [
+   "Was würde dein Held jetzt fühlen? Das macht Aktionen lebendig.",
+   "What would your hero feel right now? That brings actions to life."
+  ],
+  [
+   "Wer hat schon lange nichts gesagt? Bezieh die anderen mit ein.",
+   "Who has not said anything for a while? Bring the others in."
+  ],
+  [
+   "Rätsel löst ihr, indem ihr die Antwort einfach in eure Aktion schreibt.",
+   "You solve riddles by simply writing the answer into your action."
+  ],
+  [
+   "Ein Plan B schadet nie.",
+   "A plan B never hurts."
+  ],
+  [
+   "Auf dem Handy öffnet der Heldenbogen bildschirmfüllend.",
+   "On a phone the hero sheet opens full screen."
+  ],
+  [
+   "Merk dir Namen: Personen aus der Geschichte kommen wieder.",
+   "Remember names: people from the story come back."
+  ],
+  [
+   "Das Panel würfelt fair, auch für den Dungeon-Master.",
+   "The panel rolls fair, for the Dungeon Master too."
+  ],
+  [
+   "Nach einer langen Pause steht oben „Was letztes Mal geschah“.",
+   "After a long break \"What happened last time\" stands at the top."
+  ]
+ ]
+}

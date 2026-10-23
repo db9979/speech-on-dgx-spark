@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.975** KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft
 - **V01.0.974** Selbsttest des KI-Dungeon-Masters fest: der Bilder-Test wählt auf der gewürfelten Karte einen Weg, der weiterführt, statt in eine Sackgasse (war 1 von 3 Läufen rot)
 - **V01.0.973** KI-Dungeon-Master-Karte lesbar und mit Bildern: Schrift in Bildschirmgröße, Namen ohne Überlagerung, Standort als Zeile statt Schild; Bilder je Ortsart und Raumart im nächtlichen Lauf und ein eigenes Bild je besuchtem Ort (geprüft, Tageslimit, nur für die eigene Runde), das Zeichen bis dahin
 - **V01.0.972** Dokumentsuche trifft Tabellen in PDFs: jede Zeile bleibt eine Zeile mit ihren Zellen (pdfium liest Linien, Kästen und Spalten), lange Tabellen werden nur zwischen Zeilen geteilt mit Kopfzeile in jedem Stück, alte PDFs mit Original werden in ruhigen Minuten neu gelesen; „Erst lokal suchen“ zeigt das Stück mit den Suchwörtern statt der ersten 500 Zeichen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.968** KI-Dungeon-Master Stufe 5a: „Du bist dran“ als Mitteilung einmal je Zug, Erinnerung wenn der Zug wartet, Spieltermin des Gastgebers mit Kalenderdatei und Mitteilung 15 Minuten vorher, Rückblick nach 12 Stunden Pause; Fehler 500 bei „Handeln“ behoben, kein „KI-Bild“-Zeichen mehr auf den Bildern
 - **V01.0.967** KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, ein gemaltes Bild je Gegenstand und Zauber im Stil jeder Welt mit Seltenheitsrahmen, nachts von 01:00 bis 05:00 oder sofort per „Bilder jetzt erstellen“ (höchstens 300 am Tag), eigenes Bild für benannte Fundstücke ab rar; eigener Admin-Schalter, braucht Bilder malen
 - **V01.0.966** Ohne Internet: Zeitserver im Heimnetz für beide Rechner (Einstellungen → Spark → Betrieb), Prüfkarte unter Zustand → Überblick → Ohne Internet (Modelle, Uhren, Namen, was pausiert) und ein Hinweis, wenn der Modell-Rechner wegen der Uhrzeit ablehnt; Sprachdienste und Parakeet laden nur von der eigenen Platte, Wächter-Test gegen Downloads zur Laufzeit
-- **V01.0.965** TestFlight wartet bis zu 100 Minuten auf den „Tests“-Lauf (vorher 30): .960 und .963 kamen trotz grüner Tests nicht hoch, weil Tests auf main nacheinander laufen und zusammen länger brauchen
 
 
 
