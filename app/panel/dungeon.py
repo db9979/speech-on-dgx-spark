@@ -74,8 +74,9 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
+    POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
-    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin|daumen   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
@@ -92,6 +93,7 @@ import random
 import re
 import secrets
 import threading
+import sys
 import time
 from urllib.parse import urlsplit
 
@@ -99,6 +101,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 
 import dungeon_karte
+import dungeon_erzaehler as erz
 import features
 import guard
 import mfa
@@ -108,6 +111,7 @@ from common import STATE, DayCounter, load_config, model_url, no_think, read_jso
 from core import assistant, auth, browser_profile, json_body, main_loop, own_profile, spawn
 
 router = APIRouter()
+_me = sys.modules[__name__]   # dungeon_erzaehler reads the rounds through this module
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_regeln.json")
 VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_geschichten.json")
 FILE = os.path.join(STATE, "dungeon-runden.json")
@@ -246,7 +250,8 @@ _sweep = [0.0]            # last look for portraits and covers nobody keeps (_bi
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
-                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0)
+                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
+                  wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0)
 
 
 def _go(coro, name):
@@ -428,6 +433,7 @@ def check_rules(r):
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
+    erz.check_style(r, need)
     return err + dungeon_karte.check_rules(r)
 
 
@@ -945,8 +951,9 @@ def _read():
     d = read_json(FILE, {})
     rs = d.get("runden") if isinstance(d, dict) else None
     out = {"runden": {k: v for k, v in (rs or {}).items() if _RID.fullmatch(k) and isinstance(v, dict)}}
-    if isinstance(d, dict) and isinstance(d.get("bilder"), dict):
-        out["bilder"] = d["bilder"]
+    for k in ("bilder", "daumen_welt"):
+        if isinstance(d, dict) and isinstance(d.get(k), dict):
+            out[k] = d[k]
     r = None
     for rd in out["runden"].values():                # heroes at a table from before the six values
         for p in (rd.get("plaetze") or {}).values():
@@ -1067,6 +1074,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
         rd = d["runden"][rid]
         if kampagne:
             rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
+            rd.update(erz.carry(kampagne))
             plan = kampagne.get("plan")
             if plan:
                 rd["akt"] = kampagne.get("akt", 0)
@@ -1278,6 +1286,7 @@ def end_chapter(owner, rid, now=None):
                             "prompt": rd.get("prompt", ""), "made": now, "bisher": "", "kapitel": 0}
         c["vorlesen"] = bool(rd.get("vorlesen"))
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
+        c.update(erz.keep_chapter(rd))
         kid = kid or "k" + os.urandom(4).hex()
         c["orte"] = dungeon_karte.names(rd)[-ORTE_KARTE:]
         cover(rid, rd, kid, c)
@@ -1391,7 +1400,8 @@ def next_chapter(owner, kid, b, lang, now=None):
     rb = {k: c.get(k) for k in ("titel", "welt", "ton", "zug_s", "stunden", "prompt", "vorlesen")}
     rid = make_round(owner, dict(rb, held=held, einstieg=""), c.get("lang") or lang, now,
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
-                               "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte")})
+                               "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte"),
+                               "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -1825,7 +1835,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
         "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
     "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
-    "bild": {"type": "string", "maxLength": BILD_MAX + 100},
+    "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -1846,9 +1856,10 @@ def facts(r, rd, wuerfe=None):
     gruppe = [{"name": p["held"]["name"], "volk": _by(r, "voelker")[p["held"]["volk"]]["name"][li],
                "klasse": _by(r, "klassen")[p["held"]["klasse"]]["name"][li], "stufe": p["held"]["stufe"],
                "leben": f"{p['held']['leben']}/{p['held']['leben_max']}"} for p in names.values()]
-    bisher = [x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-BISHER:]
+    bisher = [x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-(2 if rd.get("kurz") else BISHER):]
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
-    fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": rd["szene"], "bisher": bisher, "still": still}
+    fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": rd["szene"], "bisher": bisher, "still": still,
+              **erz.facts_extra(rd, li)}
     zauber = [{"wer": x["name"], "zauber": x["zauber"], "wirkung": x["satz"]} for x in rd["log"] if x["art"] == "zauber" and x["n"] == rd["zug"]]
     if zauber:
         fakten["zauber"] = zauber
@@ -1875,8 +1886,11 @@ def system_text(r, rd, task):
     t = PANEL_REGELN[lang].format(ton=ton["regel"][1 if lang == "en" else 0])
     bild = AUFGABE_BILD[lang].format(n=BILD_MAX) if task != "proben" and pictures_on(rd["owner"]) else ""
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
+                   erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild) if task == "prolog" else
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+    if task in ("prolog", "erzaehlen"):
+        t += " " + erz.AUFGABE_FAEDEN[lang] + erz.style_text(_me, r, rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     if task != "proben":
@@ -2015,6 +2029,7 @@ def check_story(r, rd, obj):
         drop += 1
     fr = str(obj.get("frage_an") or "").strip().lower()
     out["frage"] = names.get(fr, "")
+    out["faeden"] = erz.check_threads(_me, r, rd, obj.get("faeden"))
     return out, drop
 
 
@@ -2109,7 +2124,7 @@ def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
 async def ask_model(system, user, schema, name, tokens):
     """One answer of the own language model in a fixed JSON schema (tests replace this)."""
     import llm
-    return await llm.complete(system, user, "Dungeon-Master", tokens, temperature=0.8, timeout=DM_S + 5,
+    return await llm.complete(system, user, "Dungeon-Master", tokens, timeout=DM_S + 5, **erz.sampling(name),
                               response_format={"type": "json_schema", "json_schema": {"name": name, "schema": schema}})
 
 
@@ -2142,12 +2157,22 @@ async def run_turn(rid, turn):
             wuerfe = roll(r, rd, proben)
             facts_w = [{"name": w["name"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
                         "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {})} for w in wuerfe]
-            for _ in range(2):
-                obj = await _ask_json(system_text(r, rd, "erzaehlen"), facts(r, rd, facts_w), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
-                story, d2 = check_story(r, rd, obj)
+            story, best, extra = None, None, ""
+            for _ in range(2):                    # a second try when the first fails the checks (erz.judge: one rewrite)
+                obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
+                s, d2 = check_story(r, rd, obj)
                 drop += d2
-                if story:
+                if not s:
+                    continue
+                fault, missing = erz.judge(_me, rd, s)
+                if not fault:
+                    story = s
                     break
+                best = best or s
+                extra = erz.hint(fault, missing, rd["lang"])
+                _day.bump("nachgebessert")
+                print(f"dungeon: nachbessern | {fault}", flush=True)
+            story = story or best
             if drop:
                 _day.bump("verworfen", drop)
             why = "ok" if story else "ausfall"
@@ -2164,6 +2189,10 @@ async def run_turn(rid, turn):
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
                 ort0 = cur["szene"].get("ort")
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid)
+                if story:
+                    erz.learn_people(cur, story)
+                    erz.apply_threads(cur, story["faeden"])
+                    kurz.append(erz.wants_summary(cur))
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn)))
@@ -2174,10 +2203,12 @@ async def run_turn(rid, turn):
                 for p in cur["plaetze"].values():
                     if p.get("uid") and p.get("held"):
                         keep_hero(p["uid"], p["held"])
-        said, bild = [], []
+        said, bild, kurz = [], [], []
         await asyncio.to_thread(keep)
         if said:
             _go(speak_turn(rid, turn, said), name="dungeon")
+        if any(kurz):
+            _go(erz.summarize(_me, rid), name="dungeon")
         if bild:
             _go(paint_scene(rid, *bild), name="dungeon-bild")
         if why != "ok":
@@ -2223,8 +2254,12 @@ async def run_prolog(rid):
         rd = (await asyncio.to_thread(_read))["runden"].get(rid)
         if not rd:
             return
-        story, why = None, "pause"
+        story, why, wahr = None, "pause", None
         if not wartung.paused("llm"):
+            wahr = await erz.make_truth(_me, r, rd)
+            if wahr:
+                rd["wahrheit"] = wahr
+                _day.bump("wahrheit")
             for _ in range(2):
                 obj = await _ask_json(system_text(r, rd, "prolog"), facts(r, rd), SCHEMA_ERZAEHLEN, "prolog", 900)
                 story, drop = check_story(r, rd, obj)
@@ -2239,6 +2274,11 @@ async def run_prolog(rid):
                 cur = d["runden"].get(rid)
                 if not cur or cur["zug"] != 1 or cur["status"] != "laeuft":
                     return
+                if wahr and not cur.get("wahrheit"):
+                    cur["wahrheit"] = wahr
+                if story:
+                    erz.learn_people(cur, story)
+                    erz.apply_threads(cur, story["faeden"])
                 if prolog(r, cur, story) and cur.get("vorlesen"):
                     e = cur["log"][-1]
                     said.extend(speak_parts(r, e["text"], e.get("npc") or []))
@@ -3018,6 +3058,7 @@ def view(rid, pid, now=None):
             "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
             "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
+    out.update(erz.view(rd, pid, host))
     import dungeon_dingbild
     import dungeon_musik
     out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
@@ -3431,7 +3472,9 @@ def for_live():
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
             "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),
-            "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], **dungeon_karte.for_live(rs)}
+            "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], 
+            "wahrheit": t["wahrheit"], "zusammengefasst": t["zusammengefasst"], "nachgebessert": t["nachgebessert"],
+            "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"], **dungeon_karte.for_live(rs)}
 
 
 def own_count(uid):
@@ -3698,6 +3741,19 @@ async def melden(rid: str, request: Request, prof=Depends(browser_profile)):
         return view(rid, pid)
     try:
         return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/daumen", dependencies=[Depends(assistant)])
+async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """{zug, gut}: the own seat's 👍/👎 for the narration of that turn (numbers for the admin, the model learns nothing)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        return {"daumen": await asyncio.to_thread(lambda: erz.thumb(_me, rid, _seat_uid(rid, uid), b.get("zug"), b.get("gut")))}
     except KNOWN as e:
         raise _http(e)
 
@@ -4248,6 +4304,16 @@ async def gast_bild(request: Request):
         raise _http(e)
 
 
+@router.post("/api/dungeon/daumen")
+async def gast_daumen(request: Request):
+    """{"code", "zug", "gut"}: the seat's 👍/👎 for a narration of its round."""
+    b, rid, pid = await _guest(request)
+    try:
+        return {"daumen": await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"))}
+    except KNOWN as e:
+        raise _http(e)
+
+
 @router.post("/api/dungeon/termin")
 async def gast_termin(request: Request):
     """{"code"}: the game date of the seat's round as a calendar file."""
@@ -4319,7 +4385,7 @@ def admin_show(request: Request = None):
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
                                                "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX},
-            "dingbilder": dungeon_dingbild.status(r)}
+            "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r)}
 
 
 @router.put("/api/admin/dungeon", dependencies=[Depends(auth)])

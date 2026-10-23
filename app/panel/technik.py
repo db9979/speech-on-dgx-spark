@@ -173,6 +173,7 @@ MODULE = {
     "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen"),
     "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz je Kapitel mit Nebel und Gewölbe als Raster, Fallen, Rätsel"),
     "dungeon_musik": ("dienste", "KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser"),
+    "dungeon_erzaehler": ("dienste", "Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen"),
     "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),
     "kalenderserver": ("post", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),

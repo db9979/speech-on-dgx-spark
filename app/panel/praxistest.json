@@ -2865,6 +2865,20 @@
 "titel": "Dungeon-Master: Musik, Geräusche, Würfel",
 "text": "Voraussetzung: Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: „Musik vorbereiten“ an, 12 Stücke, Speichern, dann „Musik jetzt vorbereiten“: die Tabelle zeigt Felder mit ⏳ und füllt sich nach und nach; Live zeigt „Musik … Stücke“. B: Neue Runde: über der Erzählung erscheint die Leiste mit Stimmung und „Stück x von n“, einmal auf den Tisch tippen, die Musik läuft leise und blendet am Ende ins nächste Stück über; ⏭ wechselt. C: Eine Probe: der d20 rollt kurz und bleibt auf der Zahl im Verlauf stehen, mit Würfelklang. D: Ort mit Regen oder Lagerfeuer: leises Regen- oder Feuergeräusch; „Geräusche“ aus: still. E: Händler rufen: die Musik wechselt zu Taverne; ein Akt endet: ein kurzes Sieg-Stück. F: Ein Gast am Handy hört dieselbe Musik und stellt sie für sich aus. G: „Musik vorbereiten“ aus: keine Musik mehr, Geräusche und Würfel bleiben.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P434",
+"v": 971,
+"titel": "Dungeon-Master: Bessere Geschichten",
+"text": "A: Neue Runde starten: als Gastgeber steht unter den Gastgeber-Knöpfen „Wahrheit dieses Kapitels“ mit 3 bis 6 Personen; ein Mitspieler sieht sie nicht. B: Ein paar Züge spielen: in Erzählungen tauchen diese Personen wieder auf, unter „Offene Fäden“ stehen Aufgaben, erledigte verschwinden. C: Zwei Spieler handeln, einer wird nicht erwähnt: in Zustand → Live steigt „nachgebessert“, die Erzählung nennt meist beide. D: Nach 5 Zügen zählt Live eine Zusammenfassung. E: 👍 unter einer Erzählung antippen, dann 👎: nur einer leuchtet; „Regeln anpassen“ zeigt die Zahlen je Welt und Ton. F: Kapitel beenden und das nächste starten: Welt-Wahrheit und Fäden sind noch da.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P435",
+"v": 971,
+"titel": "Dungeon-Master: große Fenster",
+"text": "A: Am Tisch zeigt die Seitenspalte nur noch eine kurze Karte deines Helden mit „📜 Heldenbogen“. B: „📜 Heldenbogen“: großes Fenster mit Werten links, Ausrüstung und Tasche rechts; ein Ding aus der Tasche auf einen Platz ziehen klappt. C: Ein Ding antippen: eigenes Fenster mit großem Bild, Werten und Knöpfen; Esc schließt nur dieses. D: Gastgeber öffnet den Markt: „⚖ Händler“ zeigt große Karten, „Kaufen“ legt das Ding in die Tasche, das Fenster bleibt offen. E: „🗺 Karte“ öffnet die große Karte. F: Am Handy füllt das Fenster den Bildschirm, ✕ schließt. G: Während ein Fenster offen ist, erzählt der Dungeon-Master weiter: oben steht „Neuer Zug“ mit „Zum Tisch“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

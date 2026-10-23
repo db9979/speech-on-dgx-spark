@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.971** KI-Dungeon-Master: bessere Geschichten mit verborgener Welt-Wahrheit (Personen, Gruppen, Geheimnisse), offenen Fäden, laufender Zusammenfassung alle 5 Züge, einmal Nachbessern nach festen Regeln (zu kurz, Held fehlt, Wiederholung), Stilbeispielen je Welt, abwechslungsreicherer Erzählung und 👍/👎 je Erzählung; große Fenster für Heldenbogen, Händler und Karte, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte
 - **V01.0.970** KI-Dungeon-Master mit Musik, Geräuschen und Würfeln: viele Stücke je Welt und Stimmung vom eigenen Musikmodell, im Voraus für den nächsten Akt und nachts gemacht, leise Schleife mit Überblendung; Geräusche und rollender d20 im Browser (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch, Standard aus)
 - **V01.0.969** KI-Dungeon-Master mit Karte: das Panel würfelt je Kapitel ein Ortsnetz in fünf Formen (verstreut, Tal, See, zwei Reiche, Küste) mit Nebel, die Gruppe zieht nur zu Nachbarorten, unterwegs Begegnungen; Zufalls-Gewölbe als Raster in fünf Grundrissen mit Fallen, Rätseln, Wächtern, Schatz, Quelle, Altar und Boss, alles vom Panel gewürfelt und geprüft
 - **V01.0.968** KI-Dungeon-Master Stufe 5a: „Du bist dran“ als Mitteilung einmal je Zug, Erinnerung wenn der Zug wartet, Spieltermin des Gastgebers mit Kalenderdatei und Mitteilung 15 Minuten vorher, Rückblick nach 12 Stunden Pause; Fehler 500 bei „Handeln“ behoben, kein „KI-Bild“-Zeichen mehr auf den Bildern
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.964** KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen
 - **V01.0.963** KI-Dungeon-Master im Auto: CarPlay-Zeile „Dungeon-Master spielen“ liest die Erzählung vor und nimmt die gesprochene Aktion an; feste Fragen zum Helden (Leben, Tasche, Heiltrank, wer fehlt) beantwortet das Panel
 - **V01.0.962** KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
-- **V01.0.961** KI-Dungeon-Master im D&D-Look auf der ganzen Seite: Welt, Geschichte, Ton, Volk und Klasse als Karten mit Bildzeichen, je Welt 10 fertige Geschichten, Knopf für hell oder dunkel, Helden als Karten
 
 
 

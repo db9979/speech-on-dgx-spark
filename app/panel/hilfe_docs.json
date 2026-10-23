@@ -5277,6 +5277,46 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Bessere Geschichten (V01.0.971, Plan dungeon-master/plan.md Abschnitt „Bessere Geschichten – Bauplan“, Dominik 2026-10-23 „1-6“): Sechs Bausteine machen die Erzählung dichter und abwechslungsreicher, alle ohne Schalter, weil sie nur das eigene Sprachmodell betreffen. Welt-Wahrheit: Vor dem Prolog schreibt das Modell einmal je Runde eine verborgene Wahrheit (3 bis 6 Personen mit Rolle, Ziel und Sprechweise, bis zu 3 Gruppen und 3 Geheimnisse); das Panel prüft sie (feste Längen, keine Heldennamen, keine Doppel, Wortliste) und gibt sie jedem Zug als Fakten mit. Neue Personen aus Erzählungen kommen dazu (höchstens 12). Nur der Gastgeber sieht sie am Tisch unter „Wahrheit dieses Kapitels“. Offene Fäden: Das Modell meldet mit jeder Erzählung neue Aufgaben, Versprechen oder Rätsel (höchstens 2) und erledigte (nur offene Fäden lassen sich schließen); höchstens 8 stehen in der Seitenspalte unter „Offene Fäden“. Laufende Zusammenfassung: Alle 5 Züge fasst das Modell die Runde in höchstens 900 Zeichen zusammen; danach bekommt jeder Zug nur noch die Zusammenfassung und die letzten zwei Erzählungen statt einer langen Liste. Nachbessern: Das Panel prüft jede Erzählung mit fest"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "en Regeln: zu kurz (unter 80 Zeichen), ein Held mit Aktion fehlt im Text, oder sie wiederholt die letzten Erzählungen (mehr als 35 % gleiche Wortgruppen). Dann fragt es einmal neu mit einem festen Hinweis; ist auch das nichts, bleibt die erste. Stil und Ton: Jede Welt hat in den Regeln feste Stilbeispiele (welten[].stil, bis zu 3 Paare Deutsch/Englisch, 20 bis 400 Zeichen), die der Erzählung mitgegeben werden; die Erzählung fragt mit mehr Abwechslung (Temperatur 0,85, Wiederholungsstrafe), Proben und Zusammenfassung bleiben nüchtern. Die Welt-Wahrheit und die Fäden gehen ins nächste Kapitel mit. Daumen: Unter jeder Erzählung stehen 👍 und 👎 je Platz (Gäste auch); der Admin sieht unter „Regeln anpassen“ die Zahlen je Welt und Ton, nie wer wie gedrückt hat. Zustand → Live zählt Welt-Wahrheiten, Zusammenfassungen, Nachbesserungen und Daumen heute; Logs: dungeon: wahrheit | ok, dungeon: wahrheit | ausfall, dungeon: kurz | ok, dungeon: kurz | ausfall, dungeon: kurz | fehler, dungeon: nachbessern | namen, dungeon: nachbessern | kurz, dungeon: nachbessern | wiederholung, dungeon: daumen | hoch, dungeon: daumen | runter. API: POST /api/profile/dungeon/{rid}/daumen {zug, gut}, für Gäste POST"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " /api/dungeon/daumen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: große Fenster für Heldenbogen, Händler und Karte (V01.0.971, Plan dungeon-master/plan.md Abschnitt „5k“, Dominik 2026-10-23 „ok so umsetzten“ und „clicken auf ausrüstungs und inventar gegenstände sollte ein fenster aufmachen“): Die Seitenspalte am Tisch zeigt vom eigenen Helden nur noch eine kurze Karte (Porträt, Stufe, Leben, Gold, Tasche, Hinweise auf neue Stufe, Tauschangebote und Dinge am Boden) mit den Knöpfen „📜 Heldenbogen“, „⚖ Händler“ (nur bei offenem Markt) und „🗺 Karte“. Sie öffnen große Fenster im Look des Tischs über der Erzählung: Der Heldenbogen zeigt links Werte, Fähigkeiten und Stimme, rechts die neun Ausrüstungsplätze groß und die Tasche als Kacheln mit Bildern, Ziehen und Ablegen geht wie vorher, darunter Boden und Tauschen. Der Händler zeigt seine Waren als große Karten mit Bild im Rahmen der Seltenheit, Werten, Preis und „Kaufen“, darunter, was aus der eigenen Tasche verkauft oder erkannt werden kann. Die Karte öffnet die große Kartenansicht. Ein Tipp auf ein Ding in Tasche, Ausrüstung, beim Händler oder am Boden öffnet sein eigenes Fenster mit großem Bild, Seltenheit, Gewicht, Beschreibung, Werten und den passenden Knöpfen (Anlegen, Trinken,"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Wirken, Erkennen, Verkaufen, Geben, Hinlegen, Ablegen, Kaufen, Aufheben). ✕, Esc oder ein Tipp neben das Fenster schließt es (Esc zuerst das Ding-Fenster); auf dem Handy füllt es den Bildschirm. Erzählt der Dungeon-Master weiter, während ein Fenster offen ist, steht oben „Neuer Zug …“ mit „Zum Tisch“. Das Fenster zeigt immer den Stand des Panels; jede Aktion prüft das Panel wie bisher, neue Endpunkte gibt es nicht. Gäste bekommen dieselben Fenster. Selbsttest Windows in app/tests/test_dungeon.py (Browser bei 1280, 390 und 320 px)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
 },
 {
@@ -17302,6 +17342,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "hat ended in an error 500. Game date: the host sets the next date in the side column under \"Game date\" (in the future, 60 days at most); 15 minutes before, every profile seat gets \"\"title\" goes on at hh:mm.\" once. \"Add to calendar\" downloads a calendar file (.ics, two hours, reminder 15 minutes before), guests too through their seat code. Look back: when someone comes to the table after more than 12 hours (kept in the browser), \"Last time\" stands above the narration: the last two narrations, the latest loot and levels, from the round's log, without the model; \"Play on\" closes it. Status → Live counts game dates and the notes sent today; Logs: dungeon: melden | dran, dungeon: melden | erinnert, dungeon: melden | termin, dungeon: melden | an, dungeon: termin | gesetzt, dungeon: termin | kalender. API: POST /api/profile/dungeon/{rid}/melden {an}, POST …/{rid}/termin {t} (host, 0 removes it), GET …/{rid}/termin.ics; for guests POST /api/dungeon/termin."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: better stories (V01.0.971, plan dungeon-master/plan.md section \"Bessere Geschichten – Bauplan\", Dominik 2026-10-23 \"1-6\"): Six parts make the narration denser and more varied, all without a switch, because they only concern the own language model. World truth: Before the prologue the model writes a hidden truth once per round (3 to 6 people with role, goal and way of speaking, up to 3 groups and 3 secrets); the panel checks it (fixed lengths, no hero names, no doubles, word list) and gives it to every turn as facts. New people from narrations are added (at most 12). Only the host sees it at the table under \"Truth of this chapter\". Open threads: With each narration the model reports new tasks, promises or riddles (at most 2) and finished ones (only open threads can be closed); at most 8 stand in the side column under \"Open threads\". Running summary: Every 5 turns the model sums up the round in at most 900 characters; after that each turn gets only the summary and the last two narrations instead of a long list. Rewrite: The panel checks every narration with fixed rules: too short (under 80 characters), a hero with an action is missing from the text, or it repeats t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "he last narrations (more than 35 % equal word groups). Then it asks once more with a fixed hint; if that fails too, the first one stays. Style and tone: Each world has fixed style examples in the rules (welten[].stil, up to 3 pairs German/English, 20 to 400 characters) that go with the narration; the narration asks with more variety (temperature 0.85, repetition penalty), checks and summary stay sober. The world truth and the threads go on into the next chapter. Thumbs: Under each narration there are 👍 and 👎 per seat (guests too); the admin sees the numbers per world and tone under \"Adjust rules\", never who pressed what. Status → Live counts world truths, summaries, rewrites and thumbs today; logs: dungeon: wahrheit | ok, dungeon: wahrheit | ausfall, dungeon: kurz | ok, dungeon: kurz | ausfall, dungeon: kurz | fehler, dungeon: nachbessern | namen, dungeon: nachbessern | kurz, dungeon: nachbessern | wiederholung, dungeon: daumen | hoch, dungeon: daumen | runter. API: POST /api/profile/dungeon/{rid}/daumen {zug, gut}, for guests POST /api/dungeon/daumen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: big windows for hero sheet, merchant and map (V01.0.971, plan dungeon-master/plan.md section \"5k\", Dominik 2026-10-23 \"ok so umsetzten\" and \"clicking on equipment and inventory items should open a window\"): The side column at the table now shows only a short card of the own hero (portrait, level, life, gold, bag, hints on a new level, trade offers and things on the ground) with the buttons \"📜 Hero sheet\", \"⚖ Merchant\" (only with an open market) and \"🗺 Map\". They open big windows in the table's look over the narration: the hero sheet shows values, abilities and voice on the left, the nine equipment places large and the bag as tiles with pictures on the right, drag and drop works as before, below them the ground and trading. The merchant shows the goods as big cards with the picture in the rarity's frame, values, price and \"Buy\", below them what the own bag can sell or have identified. The map opens the large map view. A tap on a thing in the bag, the equipment, at the merchant or on the ground opens its own window with a big picture, rarity, weight, description, values and the fitting buttons (equip, drink, cast, identify, sell, give, put down, unequip, buy, pick "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "up). ✕, Esc or a tap beside the window closes it (Esc closes the item window first); on a phone it fills the screen. If the Dungeon Master narrates on while a window is open, \"New turn …\" with \"To the table\" shows at the top. The window always shows the panel's state; the panel checks every action as before, there are no new endpoints. Guests get the same windows. Self-test Windows in app/tests/test_dungeon.py (browser at 1280, 390 and 320 px)."
 },
 {
 "lang": "en",

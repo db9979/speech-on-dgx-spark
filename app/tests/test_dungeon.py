@@ -37,12 +37,14 @@ import threading
 import unittest
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402
 import guard  # noqa: E402
 import dungeon  # noqa: E402
 import dungeon_karte  # noqa: E402
+REAL_ASK = dungeon.ask_model                    # Base swaps in a fake; the sampling test needs the real one
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -1192,7 +1194,8 @@ class Equipment(Base):
 class Prologue(Base):
     def test_the_dungeon_master_opens_the_round(self):
         """Dominik 2026-10-23 „nach erstellung eines spiels fehlt der einleitungs text, stimmung und ausgangssituation“."""
-        dungeon.ask_model = fake([{"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten. Arvid steht am Brunnen.",
+        dungeon.ask_model = fake([{"personen": [{"name": "Küster", "rolle": "hütet die Glocke"}]},
+                                  {"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten. Arvid steht am Brunnen.",
                                    "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid",
                                    "npc": [{"name": "Küster", "sagt": "Ihr kommt spät."}, {"name": "Magd", "sagt": "Hilfe!"}],
                                    "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "beute": [{"anlass": "boss"}],
@@ -1464,6 +1467,177 @@ class FromAThread(unittest.TestCase):
             loop.close()
 
 
+class BetterStories(Base):
+    """Bessere Geschichten (Dominik 2026-10-23 „1-6“): the chapter's truth, the running summary and open threads,
+    style examples, fixed checks with one rewrite, the sampling, 👍/👎; what the model writes is checked first."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+        self.systems = []
+
+    def play(self, answers):
+        it = iter(answers)
+
+        async def ask(system, user, schema, name, tokens):
+            self.systems.append((name, system, user))
+            return json.dumps(next(it))
+        old = dungeon.ask_model
+        dungeon.ask_model = ask
+        try:
+            asyncio.run(dungeon.run_turn(self.rid, self.state(self.rid)["zug"]))
+        finally:
+            dungeon.ask_model = old
+        return self.state(self.rid)
+
+    def act_all(self, zug=1):
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich lausche.", "zug": zug}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich lausche.", "zug": zug}).status_code, 200)
+
+    def test_truth_checked_kept_and_only_for_the_host(self):
+        rd = self.state(self.rid)
+        w = dungeon.erz.check_truth(dungeon, dungeon.rules(), rd, {
+            "personen": [{"name": "Arvid", "rolle": "Held"}, {"name": "Küsterin Hella", "rolle": "hütet die Glocke", "ziel": "das Dorf schützen"},
+                         {"name": "küsterin hella", "rolle": "doppelt"}, {"name": "X", "rolle": "zu kurz"}],
+            "gruppen": [{"name": "Glockengilde", "will": "das Läuten verbieten"}], "geheimnisse": ["Die Glocke ist hohl und voller Briefe.", "kurz"]})
+        self.assertEqual([p["name"] for p in w["personen"]], ["Küsterin Hella"])         # no hero, no twice, no one-letter name
+        self.assertEqual((len(w["gruppen"]), len(w["geheimnisse"])), (1, 1))
+        self.assertIsNone(dungeon.erz.check_truth(dungeon, dungeon.rules(), rd, {"personen": [{"name": "Arvid", "rolle": "x"}]}))
+        dungeon.ask_model = fake([{"personen": [{"name": "Küsterin Hella", "rolle": "hütet die Glocke"}], "geheimnisse": ["Die Glocke ist hohl und voller Briefe."]},
+                                  {"erzaehlung": "Nebel über Hallstein. Arvid hört die Küsterin Hella am Brunnen flüstern.", "frage_an": "Arvid",
+                                   "faeden": {"neu": ["Wer hat die Glocke zum Schweigen gebracht?"]}}])
+        v = self.new_round(titel="Zweite")
+        rd = self.state(v["rid"])
+        self.assertEqual(rd["wahrheit"]["personen"][0]["name"], "Küsterin Hella")
+        self.assertEqual(rd["faeden"], ["Wer hat die Glocke zum Schweigen gebracht?"])
+        self.assertIn("voller Briefe", dungeon.facts(dungeon.rules(), rd))                 # the model knows the secret
+        self.assertIn("voller Briefe", json.dumps(self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["wahrheit"], ensure_ascii=False))
+        code = self.invite(v["rid"])
+        self.assertEqual(self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "magier"}}).status_code, 200)
+        g = self.v.post("/api/dungeon/lage", json={"code": code}).json()
+        self.assertNotIn("wahrheit", g)                                                     # a player never sees it
+        self.assertEqual(g["faeden"], ["Wer hat die Glocke zum Schweigen gebracht?"])
+
+    def test_one_rewrite_when_a_hero_is_missing(self):
+        self.act_all()
+        rd = self.play([{"proben": []},
+                        {"erzaehlung": "Arvid lauscht an der Tür, dahinter klirrt leise Metall, als würde jemand Münzen zählen.", "frage_an": "Arvid"},
+                        {"erzaehlung": "Arvid und Bela lauschen, hinter der Tür zählt jemand Münzen und summt dabei ein altes Lied.", "frage_an": "Bela"}])
+        self.assertIn("Bela", [x for x in rd["log"] if x["art"] == "dm"][-1]["text"])
+        erz = [s for n, s, _ in self.systems if n == "erzaehlen"]
+        self.assertEqual(len(erz), 2)
+        self.assertIn("Bela", erz[1].split("Hinweis:")[1])                                 # the fixed hint names who is missing
+        self.assertEqual(dungeon.for_live()["nachgebessert"], 1)
+
+    def test_the_first_stays_when_the_rewrite_fails_too(self):
+        self.act_all()
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid lauscht, und hinter der Tür ist es plötzlich still wie in einem Grab.", "frage_an": "Arvid"},
+                        {"erzaehlung": "kurz", "frage_an": ""}])
+        self.assertIn("still wie in einem Grab", [x for x in rd["log"] if x["art"] == "dm"][-1]["text"])
+
+    def test_repeating_counts_as_a_fault(self):
+        rd = self.state(self.rid)
+        old = "Der Regen trommelt auf das Dach der Hütte, und die Laterne schwankt im Wind über der Tür"
+        rd["log"].append({"art": "dm", "text": old, "n": 0})
+        rd["offen"] = {}
+        self.assertEqual(dungeon.erz.judge(dungeon, rd, {"text": old + " noch immer, während alle warten und warten.", "ooc": []})[0], "wiederholung")
+        self.assertEqual(dungeon.erz.judge(dungeon, rd, {"text": "Ein Fuchs huscht über den Hof, seine Augen glühen grün im Licht der ersten Sterne, dann ist er fort und hinterlässt nur Spuren im nassen Gras.", "ooc": []})[0], "")
+
+    def test_threads_open_close_and_keep_at_most(self):
+        rd = self.state(self.rid)
+        rd["faeden"] = [f"Faden Nummer {i}" for i in range(dungeon.erz.FAEDEN_MAX)]
+        f = dungeon.erz.check_threads(dungeon, dungeon.rules(), rd, {"neu": ["Ein neuer Auftrag vom Wirt", "x"], "erledigt": ["faden nummer 3", "Unbekannt"]})
+        self.assertEqual((f["neu"], f["erledigt"]), (["Ein neuer Auftrag vom Wirt"], ["Faden Nummer 3"]))
+        dungeon.erz.apply_threads(rd, f)
+        self.assertEqual(len(rd["faeden"]), dungeon.erz.FAEDEN_MAX)
+        self.assertNotIn("Faden Nummer 3", rd["faeden"])
+        self.assertEqual(rd["faeden"][-1], "Ein neuer Auftrag vom Wirt")
+
+    def test_running_summary_every_few_turns(self):
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            for i in range(4):
+                dungeon._log(rd, "dm", text=f"Teil {i}: Arvid und Bela gehen tiefer in den Wald.", npc=[], frage="")
+            rd["zug"] = dungeon.erz.KURZ_ALLE
+            dungeon._write(d)
+        self.assertTrue(dungeon.erz.wants_summary(self.state(self.rid)))
+        dungeon.ask_model = fake([{"kurz": "Arvid und Bela folgten dem Pfad in den Wald und fanden die alte Mühle, deren Rad sich rückwärts drehte."}])
+        asyncio.run(dungeon.erz.summarize(dungeon, self.rid))
+        rd = self.state(self.rid)
+        self.assertIn("alte Mühle", rd["kurz"])
+        self.assertFalse(dungeon.erz.wants_summary(rd))
+        f = dungeon.facts(dungeon.rules(), rd)
+        self.assertIn("alte Mühle", f)
+        self.assertNotIn("Teil 1:", f)                                                      # only the last two narrations beside it
+        dungeon.ask_model = fake([{"kurz": "zu kurz"}])
+        rd["zug"] += dungeon.erz.KURZ_ALLE
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["zug"] = rd["zug"]
+            dungeon._write(d)
+        asyncio.run(dungeon.erz.summarize(dungeon, self.rid))
+        self.assertIn("alte Mühle", self.state(self.rid)["kurz"])                          # a bad one never replaces it
+
+    def test_thumbs_per_seat_and_numbers_for_the_admin(self):
+        zug = [x for x in self.state(self.rid)["log"] if x["art"] == "dm"]
+        with dungeon._lock:
+            d = dungeon._read()
+            dungeon._log(d["runden"][self.rid], "dm", text="Arvid hört Schritte.", npc=[], frage="")
+            dungeon._write(d)
+        n = self.state(self.rid)["log"][-1]["n"]
+        u = f"/api/profile/dungeon/{self.rid}/daumen"
+        self.assertEqual(self.c.post(u, json={"zug": n, "gut": True}).json()["daumen"], {str(n): 1})
+        self.assertEqual(self.c.post(u, json={"zug": n, "gut": False}).json()["daumen"], {str(n): -1})   # replaced, not twice
+        self.assertEqual(self.v.post("/api/dungeon/daumen", json={"code": self.code, "zug": n, "gut": True}).status_code, 200)
+        self.assertEqual(self.c.post(u, json={"zug": 999, "gut": True}).status_code, 404)
+        self.assertEqual(self.c.post(u, json={"zug": n, "gut": "ja"}).status_code, 400)
+        a = ADMIN.get("/api/admin/dungeon").json()["daumen"]
+        self.assertEqual([(x["hoch"], x["runter"]) for x in a], [(1, 1)])
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["daumen"], {str(n): -1})
+        self.assertIsInstance(zug, list)
+
+    def test_style_examples_and_sampling(self):
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        welt = dungeon._by(r, "welten")["fantasy"]
+        self.assertIn(welt["stil"][0][0][:40], dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertNotIn(welt["stil"][0][0][:40], dungeon.system_text(r, rd, "proben"))
+        bad = copy.deepcopy(r)
+        bad["welten"][0]["stil"] = [["zu kurz", "too short"]]
+        self.assertTrue(any("stil" in e for e in dungeon.check_rules(bad)))
+        self.assertEqual(dungeon.check_rules(r), [])
+        seen = {}
+
+        async def complete(system, user, job, tokens, **kw):
+            seen.update(kw)
+            return "{}"
+        import llm
+        old = llm.complete
+        llm.complete = complete
+        try:
+            asyncio.run(REAL_ASK("s", "u", {}, "erzaehlen", 10))
+        finally:
+            llm.complete = old
+        self.assertEqual((seen["temperature"], seen["presence_penalty"]), (0.85, 0.4))
+
+    def test_truth_and_threads_go_on_in_the_next_chapter(self):
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd.update(wahrheit={"personen": [{"name": "Hella", "rolle": "", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []},
+                      faeden=["Die Krypta öffnen"])
+            dungeon._write(d)
+        kid = self.c.post(f"/api/profile/dungeon/{self.rid}/kapitel", json={}).json()["kid"]
+        dungeon.ask_model = fake([{"bisher": "Arvid und Bela fanden unter der Glocke eine versiegelte Krypta."}])
+        asyncio.run(dungeon.summarize(self.uid, kid))
+        r = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        rd = self.state(r.json()["rid"])
+        self.assertEqual((rd["wahrheit"]["personen"][0]["name"], rd["faeden"]), ("Hella", ["Die Krypta öffnen"]))
+
+
 class Pictures(Base):
     """Stufe 3 (Dominik 2026-10-23 „ok stufe 3 umsetzten“ = 1a bis 5a): a scene picture on a new place and on the
     host's button, the game's own limits, the portrait once per level, the chapter's cover and the map; only with
@@ -1640,6 +1814,97 @@ class Pictures(Base):
         self.assertEqual(self.c.delete("/api/profile/dungeon/daten").status_code, 200)
         left = [f for f in os.listdir(dungeon.BILD_DIR) if f.startswith((kid, rid, "held-" + h["hid"]))]
         self.assertEqual(left, [])
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Windows(unittest.TestCase):
+    """5k (Dominik 2026-10-23 „ok so umsetzten“): hero sheet, merchant and one item open as big windows over the
+    table; ✕, Esc or a tap beside it closes; the window fits the screen at 1280, 390 and 320 px."""
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import Browser
+        Browser.setUpClass.__func__(cls)
+
+    def test_hero_sheet_merchant_and_item_windows(self):
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        old_ask = dungeon.ask_model
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")
+        dungeon.ask_model = silent
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
+        rid = dungeon.make_round(uid, {"titel": "Fenstertisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["dm"] = ""
+            h = next(iter(rd["plaetze"].values()))["held"]
+            h["tasche"] = [dungeon.item(r, "dolch"), dungeon.item(r, "dolch", "selten")]
+            h["gold"] = 900
+            dungeon.open_market(r, rd, name="Grimm", rng=random.Random(3))
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+        fits = "(()=>{const x=document.querySelector('#dmview .dm-fen-box').getBoundingClientRect();return x.left>=0&&x.right<=innerWidth+0.5&&x.top>=0&&x.bottom<=innerHeight+0.5})()"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844), (320, 700)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-mek [data-dmfen=bogen]')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-side .dm-doll').length"), 0)   # the side only sums up
+                        await pg.click("#dmview [data-dmfen=bogen]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')")
+                        self.assertTrue(await pg.evaluate(fits), w)
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"bogen-{w}.png"))
+                        await pg.click("#dmview .dm-fen-bogen .dm-bag [data-dmi] .dm-ding")             # a tap on an item: its own window
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-detail')")
+                        self.assertIn("Dolch", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-detail-n').textContent"))
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"ding-{w}.png"))
+                        await pg.keyboard.press("Escape")                                                 # Esc closes the top window only
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-bogen')"))
+                        await pg.click("#dmview .dm-fen-bogen [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        await pg.click("#dmview [data-dmfen=haendler]")
+                        await b.until(pg, "document.querySelectorAll('#dmview .dm-fen-haendler .dm-ware').length>0")
+                        self.assertTrue(await pg.evaluate(fits), w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"haendler-{w}.png"))
+                        if w == 1280:                    # buying in the window: the bag grows, the window stays open
+                            n = await pg.evaluate("DM.v.ich.tasche.length")
+                            await pg.click("#dmview .dm-fen-haendler .dm-ware [data-dmhero=kaufen]")
+                            await b.until(pg, f"DM.v.ich.tasche.length>{n}")
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-haendler')"))
+                        if w == 1280:
+                            await pg.mouse.click(3, ht - 3)                                               # a tap beside it closes
+                        else:                                                                             # on a phone it fills the screen: ✕
+                            await pg.click("#dmview .dm-fen [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
 
 
 if __name__ == "__main__":
