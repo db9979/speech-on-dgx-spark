@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.954** Red fix: ffmpeg in the test workflow installs with --no-install-recommends (codecs stay) plus resilient apt config so a slow package mirror no longer aborts the run
 - **V01.0.953** AI Dungeon Master stage 2: campaigns with "The story so far" and chapters, the story read aloud with narrator and NPC voices, speaking instead of typing, iPhone page; many more items, potions and spells
 - **V01.0.952** Red fix: apt now aborts only a stalled connection and retries it so a slow ffmpeg download keeps going; network steps under a generous cap, job limit raised to 60 min
 - **V01.0.951** Red fix: every apt now waits for the dpkg lock via DPkg::Lock::Timeout so Install no longer fails red on unattended-upgrades ("Could not get lock ... code 100")
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.947** IT crisis game removed again (as requested): game, net duel and „crisis game only“ profiles
 - **V01.0.946** Turn end by tone (switch, off): Smart Turn on the model computer measures at each speaking pause whether you sound done; numbers only, decides nothing yet, summary after 200 pauses or 7 days below the switch
 - **V01.0.945** Game profiles "Crisis game only": players without the assistant
-- **V01.0.944** Barge-in: pause first in the iPhone app too: a "mhm" only pauses the answer, "stop" ends it, a sentence becomes the new question; without a decision after 4 s it plays on
 
 
 

@@ -44,18 +44,18 @@ jobs:
           # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
           python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
           python -m pip install -q playwright==1.55.0
-          # apt on a hosted runner has two flaky spots. At job start unattended-upgrades still holds the dpkg
-          # lock, so "playwright install --with-deps" (it calls apt-get) and our apt-get died at once with
-          # "Could not get lock /var/lib/dpkg/lock-frontend ... code: 100" (V01.0.950/.951 rot). And the Azure
-          # mirror sometimes trickles the 94 MB of ffmpeg deps so slowly that a short step timeout killed a
-          # download that was still making progress (V01.0.951 rot after three tries). So configure apt itself
-          # to wait for the lock, and to abort only a *stalled* connection (60 s, then retry) while a slow but
-          # progressing download runs on. Each network step then runs once under a generous cap that only a
-          # true hang reaches (the job limit above was raised to 60 min to match). No test is touched or weakened.
+          # ffmpeg from apt pulled 99 packages / 94 MB, most of it Recommends (pocketsphinx, the mesa/vdpau/va
+          # driver stack, sdl2, jack, pulse, flite ...), and the Azure ubuntu mirror sometimes delivered that so
+          # slowly the job hit its time cap (V01.0.950-.953 rot, every time on the ffmpeg step). Two changes make
+          # it robust. (1) --no-install-recommends drops those extras: ffmpeg's codec libraries are hard Depends
+          # and still come, so every codec the tests use is present, which cuts the download substantially.
+          # (2) apt itself is made resilient - it waits for the dpkg lock (unattended-upgrades holds it at job
+          # start, else "Could not get lock ... code: 100", V01.0.950/.951), and aborts only a *stalled*
+          # connection (60 s, then retries it) while a slow but progressing download runs on (V01.0.952). With
+          # the 60-min job cap that leaves, even a slow mirror finishes. No test is touched or weakened.
           printf '%s\n' 'DPkg::Lock::Timeout "300";' 'Acquire::Retries "5";' 'Acquire::http::Timeout "60";' 'Acquire::https::Timeout "60";' | sudo tee /etc/apt/apt.conf.d/99ci >/dev/null
-          netz() { timeout "$1" bash -c "$2" && return 0; echo "::error::\"$2\" nach $1 s nicht fertig (Timeout oder echter Fehler)"; return 1; }
-          netz 900 "python -m playwright install --with-deps chromium"
-          netz 1500 "sudo apt-get install -y -q ffmpeg"
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y -q --no-install-recommends ffmpeg
       - name: Self-tests
         working-directory: app
         # a failed test gets one second try (selftest.py); green only then is a warning in the summary
