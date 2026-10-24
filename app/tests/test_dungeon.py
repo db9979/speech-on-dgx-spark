@@ -2327,8 +2327,9 @@ class Powers(Base):
         self.assertIn("rundumschlag", kr["faehigkeiten"])
         pw = dungeon.powers(self.r, mag)
         self.assertEqual({z["id"]: z["rest"] for z in pw["zauber"]}, {"lichtzauber": None, "heilende_haende": 2})   # grade 2 not yet
-        start = {k["id"]: k["start"] for k in dungeon._choices("de")["klassen"]} if hasattr(dungeon, "_choices") else {}
-        self.assertIn("Licht", start.get("magier", []))
+        start = {k["id"]: k["start"] for k in dungeon._choices("de")["klassen"]}
+        self.assertIn([0, "Licht"], start["magier"]["z"])                  # the card counts, the detail lists by grade
+        self.assertTrue(start["krieger"]["f"])
         self.assertEqual(dungeon.gain(self.r, dict(mag, ep=0), 0, "x"), 0)
         up = copy.deepcopy(mag)
         up["ep"] = self.r["stufen_ep"][1]
@@ -2639,6 +2640,67 @@ class Windows(unittest.TestCase):
                         d["runden"][rid]["tisch"] = []
                         d["runden"][rid]["warten"]["w"][0].pop("geworfen", None)
                         dungeon._write(d)
+        asyncio.run(go())
+
+    def test_side_tabs_and_class_detail(self):
+        """Dominik 2026-10-24 „rechte spalte … durcheinander und lang“, „unübersichtlich“: the right column shows the turn
+        and the own hero, then one tab of map, host and date at a time; a class card only counts, the detail below names
+        the powers by grade. No page wider than the screen at 1280, 390 and 320 px."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Spaltentisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["dm"] = ""
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+        tabs = "[...document.querySelectorAll('#dmview .dm-seite [data-dmseite]')].map(x=>x.dataset.dmseite)"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844), (320, 700)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("try{localStorage.removeItem('dm-seite')}catch(e){};goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data&&!!document.querySelector('.dmf-kdet')")
+                        self.assertNotIn("kann:", await pg.evaluate("document.querySelector('.dmf-klasse ~ .dm-vk, .dm-vk[data-dmvkk=klasse]').textContent"))
+                        await pg.click(".dm-vk[data-dmvkk=klasse] [data-dmvk=magier]")
+                        await b.until(pg, "/Licht/.test(document.querySelector('.dmf-kdet').textContent)")
+                        self.assertIn("Zaubertricks", await pg.evaluate("document.querySelector('.dmf-kdet').textContent"))
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.locator(".dm-vk[data-dmvkk=klasse]").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"klassen-{w}.png"))
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-seite')")
+                        self.assertEqual((await pg.evaluate(tabs))[:2], ["karte", "host"])
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-seitein').length"), 1)
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-seitein .dmk')"))   # the map first
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmweiter]')"))
+                        await pg.click("#dmview [data-dmseite=host]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-seitein [data-dmweiter]')")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk')"))
+                        self.assertEqual(await pg.evaluate("localStorage.getItem('dm-seite')"), "host")       # remembered
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-side .dm-mek')"))  # the own hero stays
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"spalte-{w}.png"), full_page=True)
+                        await pg.click("#dmview [data-dmseite=termin]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-seitein .dm-termin')")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
 if __name__ == "__main__":

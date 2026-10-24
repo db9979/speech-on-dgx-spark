@@ -3499,11 +3499,12 @@ def _hint(key, lang):
 
 
 def start_powers(r, k, lang):
-    """The names of what a new hero of the class can do from level 1 (shown when it is made)."""
+    """What a new hero of the class can do from level 1, shown when it is made: {"f": [ability names], "z": [[grade,
+    spell name], …]} (the card shows the counts, the detail below the cards the names by grade)."""
     h = {"klasse": k["id"], "stufe": 1, "tasche": [], "faehigkeiten": list(k.get("start_faehigkeiten") or [])}
     h["ladungen"] = full_charges(r, h)
     pw = powers(r, h, lang)
-    return [f["name"] for f in pw["faehigkeiten"]] + [z["name"] for z in pw["zauber"]]
+    return {"f": [f["name"] for f in pw["faehigkeiten"]], "z": [[z["grad"], z["name"]] for z in pw["zauber"]]}
 
 
 def _cast(r, rd, pid, h, c, bonus, name):

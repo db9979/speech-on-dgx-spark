@@ -5429,6 +5429,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: rechte Spalte und Klassenwahl aufgeräumt (V01.0.983, Dominik 2026-10-24 „sehr durcheinander und lang“, „unübersichtlich“): Am Tisch zeigt die rechte Spalte oben den Zug und den eigenen Helden, darunter Reiter für Karte, Gastgeber, offene Fäden und Termin, von denen immer nur einer offen ist; das Gerät merkt sich den zuletzt gewählten. Unter „Gastgeber“ stehen die häufigen Knöpfe oben, „Kapitel beenden“ und „Runde beenden“ unter „Seltener“. Die Karten der Klassenwahl zählen nur noch, was die Klasse kann („1 Kraft · 20 Zauber“); darunter stehen für die gewählte Klasse die Startkräfte und die Zauber nach Grad als kleine Felder. Klassennamen werden nicht mehr mitten im Wort getrennt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Platz für die SRD-Daten (V01.0.978, Abstimmung mit dem Datenteil „DnDAppFiles“, Dominik 2026-10-23 „1-6“, „1-3“): Neben dungeon_regeln.json liest das Panel eine zweite mitgelieferte Datei dungeon_srd.json (Daten aus dem D&D-SRD 5.1/5.2, CC-BY-4.0) als Schicht zwischen den Grundregeln und den eigenen Regeln des Admins: gleiche Listen, eine gleiche id ersetzt den Eintrag, {\"id\": …, \"dazu\": {…}} hängt an die Listen eines vorhandenen Eintrags an (etwa Waffen einer Klasse, Zauber je Grad, Klassen eines Gegenstands; gilt auch in den eigenen Regeln des Admins). Fehlt die Datei, bleibt alles wie vorher; besteht sie check_rules nicht, spielt das Panel ohne sie (Log dungeon: regeln verworfen | srd). Neu im Regelwerk und geprüft: die Listen gegner (Zeichen, Welten, Stufe 0 bis 30, Leben, Rüstung, Angriff, Schaden, Erfahrung, sechs Werte, Größe, Zustände), zustaende (Wirkung nur aus festen Wörtern wie nachteil_angriff oder kein_zug, Dauer in Runden) und hintergruende (Wertboni 0 bis 2, Startausrüstung), die feste Schwierigkeitstabelle sg (sehr leicht 5 bis fast unmöglich 30), ladungen je Stufe und Zaubergrad 1 bis 5, an Klassen start_faehigkeiten und zauber je Grad, an Zaube"
 },
 {
@@ -17694,6 +17702,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "und and the campaign (40 at most); a missing or unfitting trait comes from the name, always the same. The traits are not in the log. Without VoiceDesign the fixed voices of the rules stay. Live: number of NPC voices. Log: dungeon: erzaehler | neu or gewaehlt. Every refusal of the panel now says its reason (dungeon._http sends the rule's fixed reason word, such as held spielt, runden, tasche voll), and the page shows a whole sentence with what to do (DMGRUND in dungeon.js) in a notice box with ⚠; \"besetzt\" when starting a round now reads \"This hero is playing in another round right now. End it there or pick another hero.\" test_dungeon.Refusals checks every reason word has its sentence. When the second engine is not running (loading, stopped or failed; log dungeon: stimmen | voicedesign <reason> | feste stimme), the fixed voice stands in, for the narrator the one from the rules: reading aloud goes on, a sample adds \"Voices from a description are not running right now\" and is not kept as that voice; after 10 minutes the panel asks again (V01.0.982). When the speech output is only busy, it stays at \"busy right now\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: right column and class choice tidied up (V01.0.983, Dominik 2026-10-24 \"very muddled and long\", \"hard to take in\"): At the table the right column shows the turn and the own hero on top, below tabs for map, host, open threads and date with only one open at a time; the device remembers the last one. Under \"Host\" the frequent buttons come first, \"End chapter\" and \"End round\" under \"Less often\". The class cards only count what the class can do (\"1 power · 20 spells\"); below them the chosen class's starting powers and spells by grade stand as small chips. Class names no longer break in the middle of a word."
 },
 {
 "lang": "en",

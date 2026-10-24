@@ -2933,7 +2933,7 @@
 "id": "P443",
 "v": 979,
 "titel": "Dungeon-Master: Zauber nur, wenn der Held sie kann",
-"text": "Nach dem Update der SRD-Daten. A: Neuen Magier anlegen: unter der Klasse steht „kann: …“. B: In der Runde den Bogen öffnen: „Das kann ich“ zeigt Fähigkeiten und Zauber mit Ladungen; Antippen schreibt „Ich wirke …“ ins Feld. C: „Ich wirke Feuerball“ auf Stufe 1 schicken: nur du siehst „(OOC: Das kann … noch nicht: Feuerball.)“, die Erzählung lässt es misslingen. D: Einen Grad-1-Zauber zweimal wirken: danach „keine Ladung mehr in diesem Kapitel“. E: Neues Kapitel: Ladungen wieder voll.",
+"text": "Nach dem Update der SRD-Daten. A: Neuen Magier anlegen: die Karte zählt Kräfte und Zauber, darunter stehen ihre Namen nach Grad. B: In der Runde den Bogen öffnen: „Das kann ich“ zeigt Fähigkeiten und Zauber mit Ladungen; Antippen schreibt „Ich wirke …“ ins Feld. C: „Ich wirke Feuerball“ auf Stufe 1 schicken: nur du siehst „(OOC: Das kann … noch nicht: Feuerball.)“, die Erzählung lässt es misslingen. D: Einen Grad-1-Zauber zweimal wirken: danach „keine Ladung mehr in diesem Kapitel“. E: Neues Kapitel: Ladungen wieder voll.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 },
 {
@@ -2941,6 +2941,13 @@
 "v": 981,
 "titel": "Dungeon-Master: Gäste mit E-Mail",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Gäste mit E-Mail an, unter „Regeln anpassen“ ein Postfach wählen und sichern (Pille „bereit“). A: Einen Gast einladen, als Gast beitreten, „Gast-Konto mit E-Mail“ öffnen, Adresse eingeben, „Code senden“: die Mail kommt vom gewählten Postfach. Code eintippen, „Anmelden“: „Gast-Konto · 1/8 Helden“. B: „Du bist dran per Mail“ mit derselben Adresse einschalten; Tab schließen, Zug 10 Minuten offen lassen: eine Mail „Du bist dran“. C: Runde beenden, neue Einladung auf einem anderen Gerät öffnen, dort anmelden: „Held aus deinem Gast-Konto“ wählen und mitspielen. D: „Gast-Konto löschen“: alles weg.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P445",
+"v": 983,
+"titel": "Dungeon-Master: rechte Spalte und Klassenwahl",
+"text": "A: Neue Runde anlegen: die Klassenkarten zeigen nur „1 Kraft · 20 Zauber“, ein Tipp auf Magier zeigt darunter Startkräfte und Zauber nach Grad; „Waldläufer“ steht ungetrennt. B: Am Tisch rechts: oben Zug und dein Held, darunter Reiter Karte, Gastgeber, Termin; nur einer ist offen. C: „Gastgeber“ wählen, Seite neu laden: „Gastgeber“ bleibt gewählt; „Kapitel beenden“ und „Runde beenden“ stehen unter „Seltener“. D: Am Handy (390 px) nichts breiter als der Bildschirm.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]

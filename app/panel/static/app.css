@@ -2265,7 +2265,9 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-bar{display:block;height:5px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:4px}
 .dm-bar em{display:block;height:100%;background:var(--ok)}.dm-bar.low em{background:var(--bad)}.dm-bar.ep em{background:var(--acc)}
 .dm-round{display:flex;gap:4px;margin-bottom:4px}.dm-round span{width:14px;height:14px;border-radius:50%;background:var(--line)}.dm-round span.on{background:var(--ok)}
-.dm-hostb,.dm-iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.dm-iacts select{max-width:140px}
+.dm-hostb,.dm-iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dm-zugk{display:flex;align-items:center;gap:10px}.dm-zugk .dm-round{margin:0}.dm-side .dm-mek{margin-top:10px}
+.dm-seite{display:flex;width:100%;margin:12px 0 8px}.dm-seite button{flex:1;padding-left:4px;padding-right:4px;white-space:nowrap}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
@@ -2499,7 +2501,9 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-cards.dm-klein{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
 .dm-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));
   background:var(--t-karte,var(--card));color:var(--t-text,var(--fg));font:inherit;cursor:pointer;min-width:0}
-.dm-card b{font-variant:small-caps;letter-spacing:.05em;color:var(--t-gold,var(--acct));font-size:15px;overflow-wrap:anywhere}
+.dm-card b{font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct));font-size:15px;overflow-wrap:normal;hyphens:auto}
+.dm-kdet{margin-top:10px;padding:12px 14px;border:1px solid var(--t-linie,var(--line));border-radius:12px}.dm-kdet h5{margin:10px 0 4px}
+.dm-chip{display:inline-block;border:1px solid var(--t-linie,var(--line));border-radius:16px;padding:2px 10px;margin:2px 4px 2px 0;font-size:13px}
 .dm-card small{color:var(--t-mut,var(--mut));font-size:12px;line-height:1.35}.dm-card:hover:not(:disabled){border-color:var(--t-gold,var(--acc))}
 .dm-card.on{border-color:var(--t-gold,var(--acc));box-shadow:0 0 0 1px var(--t-gold,var(--acc)) inset,0 4px 14px var(--t-schatten,transparent);background:color-mix(in srgb,var(--t-gold,var(--acc)) 12%,var(--t-karte,var(--card)))}
 .dm-card:disabled{opacity:.4;cursor:default}.dm-klein .dm-card{padding:8px 10px}.dm-klein .dm-ic{font-size:20px}

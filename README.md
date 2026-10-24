@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.983** AI Dungeon Master: the table's right column with tabs for map, host, threads and date instead of one long list; class choice with short cards, starting powers and spells by grade below
 - **V01.0.982** AI Dungeon Master: when VoiceDesign is not running, the fixed voice speaks instead of an error (sample with a hint, reading aloud goes on), the log names the reason
 - **V01.0.981** AI Dungeon Master: guests with e-mail: a 6-digit code from the admin's mailbox, a guest account with up to 8 heroes on any device, "Your turn" by mail on wish, only a hash of the address (the address sealed only for turn mails)
 - **V01.0.980** AI Dungeon Master: big catalog from the SRD 5.1 (CC-BY-4.0): 162 foes, 254 items with 85 spells, tools and treasure, 17 conditions, difficulties, 15 backgrounds, 4 peoples, 7 new classes; starting powers and spell lists per class with charges per level
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.976** AI Dungeon Master: calm ambient music, soft pads instead of drums, 60 to 80 beats per minute, in fights too; the old store is made again
 - **V01.0.975** AI Dungeon Master: a pleasant wait: steps reading, dice, narrating with fixed sentences, rolls before the narration, lore cards of the world and hints from 300 fixed texts without soon repeats, narration sentence by sentence, "is typing …" and table talk only between the players; deleting ended rounds; narration checked against the map
 - **V01.0.974** AI Dungeon Master self-test steady: the pictures test picks a way on the rolled map that leads on instead of into a dead end (was red in 1 of 3 runs)
-- **V01.0.973** AI Dungeon Master map readable and with pictures: text at screen size, names without overlap, the place as a line instead of a sign; pictures per kind of place and room in the night run and an own picture per visited place (checked, day limit, only for its own round), the sign until then
 
 
 
