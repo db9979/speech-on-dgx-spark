@@ -3033,6 +3033,13 @@
 "titel": "Werte bei Gegenständen und Gegnern",
 "text": "A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Gegenstände: jede Zeile nennt Art, Seltenheit, Wert, Schaden oder Schutz und Preis. B: Einen Eintrag antippen: die Werte-Liste nennt, was er bewirkt, worauf er zählt, Gewicht und Preis. C: Gegner (Bestiarium): Zeile mit Stufe, Leben, Rüstung, Angriff, Schaden und EP; im Detail Schaden mit Durchschnitt, die sechs Werte und Zustände, die er bewirken kann.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P458",
+"v": 998,
+"titel": "Mac-Begleiter: Fenster ohne Rand",
+"text": "Neuen Mac-Begleiter installieren. Fenster öffnen, auf „Meldungen“ (mit mehreren Meldungen) wechseln, Fenster schließen und wieder öffnen (öffnet auf Heute): das Fenster sitzt direkt unter der Menüleiste, ohne leeren Rand oben oder unter „Panel öffnen · Notaus“. „Alle n zeigen“ bei Als Nächstes: das Fenster wächst nach unten, die Oberkante bleibt.",
+"thread": "Begleiter nachziehen"
 }
 ]
 }

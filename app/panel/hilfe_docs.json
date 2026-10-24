@@ -6917,7 +6917,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Begleiter-Fenster geordnet (V01.0.913)",
-"text": "em Start (höchstens 10, nur im Speicher) mit denselben Knöpfen wie die Mitteilung; „OK“ nimmt sie auch aus der Mitteilungszentrale. Kein neuer Schalter, keine Änderung am Panel. Braucht den neuen Begleiter-Build."
+"text": "em Start (höchstens 10, nur im Speicher) mit denselben Knöpfen wie die Mitteilung; „OK“ nimmt sie auch aus der Mitteilungszentrale. Kein neuer Schalter, keine Änderung am Panel. Braucht den neuen Begleiter-Build. Seit V01.0.998 sitzt das Mac-Fenster immer genau so hoch wie sein Inhalt direkt unter der Menüleiste; vorher wurde es nach einem längeren Reiter nicht wieder kleiner, und der Inhalt stand mit leerem Rand oben und unten in der Mitte."
 },
 {
 "lang": "de",
@@ -19285,7 +19285,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Companion window in order (V01.0.913)",
-"text": "ication; \"OK\" also removes it from the Notification Center. No new switch, no change in the panel. Needs the new companion build."
+"text": "ication; \"OK\" also removes it from the Notification Center. No new switch, no change in the panel. Needs the new companion build. Since V01.0.998 the Mac window always sits exactly as high as its content right under the menu bar; before it did not get smaller again after a longer tab, and the content stood in the middle with empty room above and below."
 },
 {
 "lang": "en",

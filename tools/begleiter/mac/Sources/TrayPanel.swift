@@ -19,10 +19,27 @@ struct WindowGrabber: NSViewRepresentable {
 /// The holder of the panel's window (a class, so setting it does not redraw the view).
 final class PanelWindow {
     weak var window: NSWindow?
+    /// the panel's own height, measured; the window follows it
+    var height: CGFloat = 0
 
     @MainActor
     func close() {
         window?.close()
+    }
+
+    /// The window exactly as high as the panel, its top edge stays under the menu bar (Dominik 2026-10-24: the
+    /// MenuBarExtra window grows with the content but never shrinks back; the panel then sat in the middle of a
+    /// too-high window, with empty room above and below).
+    @MainActor
+    func fit() {
+        guard let w = window, height > 0 else { return }
+        let content = w.contentRect(forFrameRect: w.frame).height
+        guard abs(content - height) > 0.5 else { return }
+        var f = w.frame
+        let top = f.maxY
+        f.size.height = w.frameRect(forContentRect: NSRect(x: 0, y: 0, width: f.width, height: height)).height
+        f.origin.y = top - f.size.height
+        w.setFrame(f, display: true, animate: false)
     }
 }
 
@@ -35,6 +52,11 @@ enum PanelTab: String, CaseIterable {
 
 /// The height of a part of the panel, measured, so the tab gets exactly the room it needs (up to the screen).
 private struct PanelHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+private struct RootHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
@@ -138,9 +160,18 @@ struct TrayPanel: View {
             footer
         }
         .frame(width: 360)
+        .fixedSize(horizontal: false, vertical: true)
         .background(Theme.card)
         .foregroundColor(Theme.fg)
-        .background(WindowGrabber { w in holder.window = w })
+        .background(GeometryReader { g in Color.clear.preference(key: RootHeightKey.self, value: g.size.height) })
+        .onPreferenceChange(RootHeightKey.self) { h in
+            holder.height = h
+            holder.fit()
+        }
+        .background(WindowGrabber { w in
+            holder.window = w
+            holder.fit()
+        })
         .onExitCommand { holder.close() }
         .onPreferenceChange(PanelHeightKey.self) { h in
             // grows with the tab, never shrinks while open: switching tabs does not make the panel jump

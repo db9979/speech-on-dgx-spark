@@ -2023,6 +2023,12 @@ class PanelTabs(unittest.TestCase):
         self.assertIn(".frame(height: min(max(tabHeight, 40), maxTabHeight))", tray)
         self.assertIn("visibleFrame.height", tray[tray.index("private var maxTabHeight"):])
         self.assertIn('@AppStorage("panelTab")', tray)
+        # Dominik 2026-10-24: the MenuBarExtra window never shrank back and the panel sat in its middle; the window
+        # now follows the panel's measured height, top edge kept under the menu bar
+        fit = tray[tray.index("func fit()"):tray.index("/// The tabs below the tiles")]
+        self.assertIn("f.origin.y = top - f.size.height", fit)
+        self.assertIn(".onPreferenceChange(RootHeightKey.self)", tray)
+        self.assertEqual(tray.count("holder.fit()"), 2)                         # on a new height and on the window
         self.assertIn("tab = notes.unseen ? .meldungen : (PanelTab(rawValue: savedTab) ?? .heute)", tray)
         self.assertIn("count: 4)", tray[tray.index("private static let tileColumns"):])
         tiles = tray[tray.index("private var tiles: some View"):tray.index('/// "Dieser Mac"')]

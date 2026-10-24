@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.998** · 2026-10-24 · Begleiter am Mac: das Fenster in der Menüleiste ist immer genau so hoch wie sein Inhalt, kein leerer Rand mehr oben und unten nach einem langen Reiter
 - **V01.0.997** · 2026-10-24 · KI-Dungeon-Master: unter Regeln anpassen zeigen Gegenstände und Gegner ihre Werte und was sie bewirken, in der Zeile und als Werte-Liste im Detail
 - **V01.0.996** · 2026-10-24 · KI-Dungeon-Master: das „⋯“-Menü eines Mitspielers wird in der Seitenspalte nicht mehr abgeschnitten, „Malen“ unter Regeln anpassen ohne Tageslimit für den Admin
 - **V01.0.995** · 2026-10-24 · E-Mail: die Einordnen-Leiste über der Liste verschwindet nach dem Lauf mit „Schließen“; „Einordnen rückgängig“ bleibt im „⋯“ des eingeordneten Ordners (Panel und iPhone)
