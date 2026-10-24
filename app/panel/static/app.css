@@ -2306,6 +2306,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dmp-akt{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px}.dmp-akt .dm-khead span{display:flex;gap:6px;flex-wrap:wrap}
 .dm-fa{display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;margin-top:6px}
 .dm-doll{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.dm-doll [data-dmslot=fuesse]{grid-column:2}.dm-pl.dm-passt{border-color:var(--ok,#22a55a);border-style:solid;background:color-mix(in srgb,var(--ok,#22a55a) 12%,transparent)}.dm-pl.dm-nein{opacity:.45}
 .dm-pl{position:relative;border:1px dashed var(--line);border-radius:10px;padding:6px 8px;min-height:54px;display:flex;flex-direction:column;gap:2px;font-size:12px}
 .dm-pl small{color:var(--mut);font-size:11px}.dm-pl i{color:var(--mut)}.dm-pl b{font-size:12px;line-height:1.25;padding-right:18px;overflow-wrap:anywhere}
 .dm-pl.voll{border-style:solid;border-left-width:4px;cursor:grab}.dm-pl .ic-ib{position:absolute;top:2px;right:2px}
@@ -2532,6 +2533,17 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-bub b{display:block;font-variant:small-caps;letter-spacing:.1em;font-size:12px;color:var(--t-gold,var(--acct))}.dm-bub p{margin:2px 0 0}
 .dm-tisch .dm-wurf{align-self:center;border:1px solid var(--t-linie);border-radius:99px;padding:4px 14px;background:color-mix(in srgb,var(--t-karte) 70%,transparent)}
 .dm-tisch .dm-wurf.ok b{color:var(--t-ok)}.dm-tisch .dm-wurf.bad b{color:var(--t-bad)}
+/* a check as a card: what it is for large, who rolls above, the sum below, the result on the right (Dominik 2026-10-24) */
+.dm-wurf.dm-pk{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;flex-wrap:nowrap}
+.dm-tisch .dm-wurf.dm-pk{align-self:stretch;border-radius:12px;border-left:4px solid var(--t-linie);padding:8px 14px}
+.dm-tisch .dm-wurf.dm-pk.ok{border-left-color:var(--t-ok)}.dm-tisch .dm-wurf.dm-pk.bad{border-left-color:var(--t-bad)}
+.dm-pk .dm-d20{width:40px;height:40px;font-size:17px}.dm-pkt{display:flex;flex-direction:column;min-width:0}
+.dm-pkwer{font:600 11.5px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--t-mut,var(--mut))}
+.dm-pkwas,.dm-tisch .dm-wurf.dm-pk .dm-pkwas{font-size:16px;line-height:1.25;color:var(--t-gold,var(--acct))}.dm-wselbst .dm-pkwas{display:block;font-size:18px;margin:2px 0 4px}
+.dm-pkr{font-size:12.5px;color:var(--t-mut,var(--mut))}.dm-pkr b{color:var(--t-text,var(--text))}
+.dm-pke{font:700 12.5px system-ui,sans-serif;padding:4px 10px;border-radius:9px;color:#fff;white-space:nowrap}
+.dm-pk.ok .dm-pke{background:var(--t-ok,var(--ok))}.dm-pk.bad .dm-pke{background:var(--t-bad,var(--bad))}
+@container dmtisch (max-width:520px){.dm-wurf.dm-pk{grid-template-columns:auto minmax(0,1fr)}.dm-pk .dm-pke{grid-column:2;justify-self:start}}
 .dm-tisch .dm-d20{background:transparent;border:1px solid var(--t-gold);color:var(--t-gold)}
 /* music, sounds and the rolling d20 at the table (dungeon-ton.js) */
 .dm-ton{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;font-size:13px}
@@ -2576,6 +2588,9 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-tisch .dm-vslot{border-color:var(--t-linie)}.dm-tisch .dm-vchip{background:var(--t-feld);color:var(--t-text);border-color:var(--t-linie)}.dm-tisch .dm-vchip.on{border-color:var(--t-gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--t-gold) 35%,transparent)}.dm-tisch .dm-vsum{color:var(--t-mut)}
 .dm-top{margin-bottom:4px}.dm-top h3{margin:0}.dm-modus{flex:none}.dm-ic{font-size:24px;line-height:1;flex:none}
 .dm-form{max-width:900px}
+/* the overview in the middle with a width that fits (Dominik 2026-10-24 „nicht wirklich alles zentriert bei größerem bildschirm“): the cards spread over it, the fields stay readable */
+.dm-mitte{max-width:1240px;margin:0 auto}.dm-mitte .dm-cards.dmf-welt{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.dm-mitte .dm-form{max-width:none}.dm-mitte .dm-form :is(input:not([type=checkbox]):not([type=radio]),select,textarea){max-width:760px}
+.dm.dm-voll:not(.dm-tisch){position:fixed;inset:0;z-index:200;margin:0;border-radius:0;overflow:auto;padding:16px max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 .dm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.dm-cards.dm-gs{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 .dm-cards.dm-klein{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
 .dm-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));
@@ -2590,8 +2605,13 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .dm-pcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-pcard .dm-pic{width:100%;aspect-ratio:4/3}
 .dm-pcard b{padding:7px 10px 0}.dm-pcard small{padding:0 10px 8px}
+.dm-vk.dm-klein{grid-template-columns:repeat(auto-fill,minmax(min(148px,calc(50% - 5px)),1fr));container-type:inline-size}@container (max-width:340px){.dm-vk .dm-pcard b{font-size:12px;letter-spacing:0;padding:6px 7px 0}.dm-vk .dm-pchips{padding:4px 7px 8px;gap:3px}.dm-vk .dm-pchip{font-size:10.5px;padding:1px 5px}}.dm-vk .dm-pcard b{hyphens:manual;font-size:14px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-pchips{display:flex;flex-wrap:wrap;gap:4px;padding:5px 10px 9px}
+.dm-pchip{font:700 11.5px system-ui,sans-serif;padding:2px 7px;border-radius:7px;white-space:nowrap;border:1px solid var(--t-linie,var(--line));color:var(--t-text,var(--text));background:color-mix(in srgb,var(--t-karte,var(--card)) 80%,var(--t-text,var(--text)) 6%)}
+.dm-pchip.up{color:var(--t-ok,var(--okt));border-color:color-mix(in srgb,var(--t-ok,var(--okt)) 45%,transparent)}
+.dm-pchip.leben{color:var(--t-bad,var(--badt));border-color:color-mix(in srgb,var(--t-bad,var(--badt)) 45%,transparent)}
+.dm-pchip.kraft{color:var(--t-gold,var(--acct));border-color:color-mix(in srgb,var(--t-gold,var(--acct)) 45%,transparent)}
 .dm-wcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-wcard .dm-wpic{width:100%;aspect-ratio:16/9}.dm-wcard b{padding:7px 10px 0}.dm-wcard small{padding:0 10px 8px}
-.dm-pbadge{position:absolute;left:6px;top:6px;font:700 11px system-ui,sans-serif;font-style:normal;color:#fff;background:#0009;padding:2px 7px;border-radius:9px;white-space:nowrap;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
 .dm-kdet{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:16px}.dm-kdet>.dm-pic.gross{aspect-ratio:3/4;border-radius:10px}
 .dm-kdet-n{font-size:22px;font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct))}.dm-kdet-t{min-width:0}.dm-kdet-t>small{display:block}.dm-kdet-t p{margin:6px 0}
 .dm-kts{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}

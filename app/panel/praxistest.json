@@ -3159,6 +3159,13 @@
 "titel": "Längere Erzählungen und Erzählweise",
 "text": "A: Runde anlegen, unter „Die Runde“ Erzählweise „ausführlich“. B: Eine Aktion „Wir gehen zur …“ (ein Nachbarort der Karte): die Erzählung beschreibt den neuen Ort in 3 bis 4 Absätzen. C: Ein gewöhnlicher Zug (Gespräch) bleibt kürzer. D: Im Reiter „Leiten“ „📜 Erzählweise“ auf „knapp“: ab dem nächsten Zug kürzer. E: Zustand → Logs, Filter „laenge“: je Zug „ort“, „kampf“, „wurf“ oder „normal“ mit der Grenze. F: Kommt eine Begegnung, nennt die Erzählung genau die Gegner der Karte (Name gleich); die Karte passt hell und dunkel zum Tisch, Werte stehen sichtbar. G: Heldenbogen → Das kann ich: ein Tipp auf das Bild einer Kachel öffnet ihr Fenster, auch am Handy. H: Vorlesen an, eine Szene mit Nebenfiguren: ihre Zitate kommen einmal in ihrer Stimme, ohne dass ihr Name davor gesprochen wird, und stehen nicht noch einmal unter der Erzählung; „…“, warnt er spricht eine Männerstimme. I: Bilder malen an, 5 Züge ohne Knopf spielen oder den Ort wechseln: das Szenenbild kommt von selbst. J: Beute aus einer Truhe: das Ding heißt wie im Katalog (etwa Gürtel), darunter „Gefunden in: …“; alte falsch benannte Dinge im Heldenbogen sind repariert.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P476",
+"v": 1019,
+"titel": "Würfelprobe mit Zweck, Sprechweisen, Werte-Chips",
+"text": "A: Eine Runde spielen, eine Aktion mit Risiko („Ich untersuche den Wächter auf Schwächen“): die Würfelanzeige und die Karte im Verlauf zeigen groß, wofür gewürfelt wird, darüber wer welchen Wert würfelt, darunter die Rechnung, rechts geschafft oder nicht. B: Mit VoiceDesign und Vorlesen: ein Zitat mit „flüstert er“ klingt geflüstert, „ruft sie“ laut; Zustand → Logs, Filter „sprechweise“: je Zug eine Zeile mit der Zahl. C: Neue Runde anlegen: Volk- und Klassenkacheln zeigen die Werte als Chips (KON +2, ❤ 14, ✦ 1 Kraft, ✨ 20 Zauber), nichts ist abgeschnitten, kein Name getrennt, auch am Handy. D: Am großen Bildschirm steht die Übersicht mittig, die Welten füllen die Zeile, „⛶ Vollbild“ ist schon auf der Übersicht. E: Heldenbogen → Ausrüstung: ein Gürtel lässt sich nur auf das Feld „Gürtel“ ziehen, beim Ziehen leuchten die passenden Felder; auf „Hals“ gezogen kommt die Meldung, dass jedes Ding an seinen Körperteil gehört. Ein früher am Hals getragener Gürtel sitzt jetzt am Gürtel.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

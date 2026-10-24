@@ -67,6 +67,9 @@ def check(d, welten):
     for k, (words, add) in (d.get("stimmung") or {}).items():
         if not words or not all(isinstance(s, str) and s == s.lower() for s in words) or not re.fullmatch(r"[a-z ,]{5,40}", add):
             err.append(f"stimmung.{k}")
+    for k, (words, add) in (d.get("sprechweise") or {}).items():
+        if not words or not all(isinstance(s, str) and s == s.lower() and len(s) >= 4 for s in words) or not re.fullmatch(r"[a-z ,]{5,40}", add):
+            err.append(f"sprechweise.{k}")
     n = d.get("npc") or {}
     for k in MERKMALE:
         if not n.get(k) or not all(re.fullmatch(r"[a-z]{2,12}", a) and re.fullmatch(r"[a-z ]{3,30}", b) for a, b in n[k].items()):
@@ -112,6 +115,18 @@ def mood(stimmung):
         if any(w in low for w in words):
             return add
     return ""
+
+
+WEISEN_MAX = 2             # ways of speaking one quote takes at most (flüstert … mit archaischer Stimme)
+
+
+def weise(words):
+    """How a quote is spoken (Dominik 2026-10-24 „Wenn der Erzähler eine Stimme beschreibt, wie sie redet … auch
+    umsetzen“, „Feste Sprechweisen aus dem Text“): the words around it (vortrag.rede) matched against the fixed list
+    „sprechweise“, at most WEISEN_MAX fixed English additions; the model's words never reach the speech output."""
+    low = str(words or "").lower()
+    out = [add for ws, add in data().get("sprechweise", {}).values() if any(w in low for w in ws)]
+    return ", ".join(out[:WEISEN_MAX])
 
 
 def narrator(rd):

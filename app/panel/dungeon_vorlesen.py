@@ -65,6 +65,14 @@ def _after(low, b):
     return x[:cut]
 
 
+def around(text, a, b):
+    """The words that say how a quote is spoken: those right after it („…“, flüstert er mit archaischer Stimme) or
+    the clause right before it when it ends in a colon (Kael zischt: „…“), else ""."""
+    low = str(text).lower()
+    before = re.split(r"[.!?…“”\"»«]", low[max(0, a - VOR):a])[-1]
+    return _after(low, b) or (before if before.rstrip().endswith(":") else "")
+
+
 def pronoun(text, b):
     """The gender the words after a quote give its speaker („…“, warnt er leise: maennlich), else ""."""
     m = _ER.search(_after(str(text).lower(), b))
@@ -88,9 +96,10 @@ def _speaker(text, a, b, names, sex_of=None):
 
 
 def rede(text, names, sex_of=None):
-    """The narration as [(speaker, piece, quoted, gender)]: plain narration with speaker "", every quote with the name
-    of who says it (lower case, one of names) or "" when nobody is named, and the gender of the pronoun after it
-    ("maennlich", "weiblich" or "") for a voice when nobody is named. sex_of(name) gives a name's gender or ""."""
+    """The narration as [(speaker, piece, quoted, gender, around)]: plain narration with speaker "", every quote with
+    the name of who says it (lower case, one of names) or "" when nobody is named, the gender of the pronoun after it
+    ("maennlich", "weiblich" or "") for a voice when nobody is named, and the words around it that say how it is
+    spoken (around). sex_of(name) gives a name's gender or ""."""
     text = str(text or "")
     names = sorted({str(n).strip().lower() for n in names if str(n).strip()}, key=len, reverse=True)
     out, i = [], 0
@@ -100,12 +109,12 @@ def rede(text, names, sex_of=None):
             continue
         plain = text[i:m.start()].strip(" ,:–-")
         if re.search(r"\w", plain):
-            out.append(("", plain, False, ""))
-        out.append((_speaker(text, m.start(), m.end(), names, sex_of), said, True, pronoun(text, m.end())))
+            out.append(("", plain, False, "", ""))
+        out.append((_speaker(text, m.start(), m.end(), names, sex_of), said, True, pronoun(text, m.end()), around(text, m.start(), m.end())))
         i = m.end()
     rest = text[i:].strip(" ,:–-")
     if re.search(r"\w", rest):
-        out.append(("", rest, False, ""))
+        out.append(("", rest, False, "", ""))
     return out
 
 
@@ -114,5 +123,5 @@ def in_text(line, text):
     es nicht“, stammelt er, „es ist ein Gefängnis.“): then it is read once, at its place, and not shown again
     (Dominik 2026-10-24 „beim vorlesen der npc sagst du die namen mit“)."""
     w = lambda s: " " + re.sub(r"[^\w]+", " ", str(s).lower()).strip() + " "
-    said = w(" ".join(x for _, x, quoted, _ in rede(text, []) if quoted))
+    said = w(" ".join(x[1] for x in rede(text, []) if x[2]))
     return w(line).strip() != "" and w(line) in said

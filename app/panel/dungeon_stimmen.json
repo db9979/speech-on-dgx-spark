@@ -52,5 +52,27 @@
     "geschlecht": {"weiblich": "woman", "maennlich": "man", "offen": "person"},
     "klang": {"tief": "deep voice", "hell": "high voice", "rau": "rough voice", "sanft": "soft voice", "kraeftig": "strong voice", "duenn": "thin voice"},
     "wesen": {"freundlich": "friendly and warm", "finster": "grim and cold", "listig": "sly and sneaky", "aengstlich": "nervous and timid", "stolz": "proud and haughty", "froehlich": "cheerful and lively", "muede": "tired and slow", "weise": "wise and calm"}
+  },
+  "sprechweise": {
+    "fluestern": [["flüster", "wisper", "raunt", "raunte", "haucht", "whisper"], "whispering, very quiet"],
+    "rufen": [["ruft", "rief", "brüll", "schrei", "grölt", "shout", "yell", "scream", "roar"], "shouting loudly"],
+    "stammeln": [["stammel", "stotter", "stammer", "stutter"], "stammering, hesitant"],
+    "knurren": [["knurr", "grollt", "growl", "snarl"], "growling, low and rough"],
+    "zischen": [["zisch", "faucht", "hiss"], "hissing through the teeth"],
+    "lachen": [["lacht", "kicher", "gluckst", "laugh", "chuckl", "giggl"], "laughing while speaking"],
+    "weinen": [["schluchz", "weint", "wimmer", "sobbing", "weep", "whimper", "sobs"], "sobbing, tearful"],
+    "murmeln": [["murmel", "brummt", "nuschel", "mumbl", "mutters"], "murmuring under the breath"],
+    "zittern": [["zitter", "bebend", "ängstlich", "trembl", "shaky", "fearful"], "trembling with fear"],
+    "wuetend": [["wütend", "zornig", "angry", "furious"], "angry and sharp"],
+    "archaisch": [["archaisch", "uralt", "feierlich", "hallend", "archaic", "ancient", "solemn", "hollow"], "solemn, ancient and echoing"],
+    "kalt": [["eisig", "kalter stimme", "frostig", "icily", "coldly"], "cold and flat"],
+    "sanft": [["sanft", "leise", "beruhig", "gentle", "softly", "soothing", "quietly"], "soft and gentle"],
+    "hastig": [["hastig", "gehetzt", "atemlos", "keucht", "hurried", "breathless", "panting"], "hurried and breathless"],
+    "spott": [["spött", "höhn", "grinst", "mock", "sneer"], "mocking and sly"],
+    "befehl": [["befiehlt", "bellt", "herrscht", "commands", "bark"], "commanding and firm"],
+    "muede": [["müde", "erschöpft", "schwach", "tired", "weakly", "exhausted"], "weak and tired"],
+    "singen": [["singt", "summt", "sings", "hums"], "half singing, melodic"],
+    "flehen": [["fleht", "bettelt", "pleads", "begging"], "pleading, desperate"],
+    "warnen": [["warnt", "mahnt", "warns"], "urgent and serious"]
   }
 }

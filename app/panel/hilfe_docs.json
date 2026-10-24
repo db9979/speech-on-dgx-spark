@@ -5525,6 +5525,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Würfelprobe mit Zweck, Sprechweisen, Werte als Chips (V01.1.019, Dominik 2026-10-24 „bei den Würfelproben sollte noch angezeigt werden, für was die Würfelprobe gerade gemacht wird“, „1 umsetzten“, „Feste Sprechweisen aus dem Text“, „die werte anzeige ist nicht cool gelöst“, „1“): Würfelprobe: Jede Probe trägt ihren Zweck (wofuer, höchstens 60 Zeichen): die wenigen Wörter des Modells, geprüft wie sein Text (Klartext, Wortfilter), sonst der Anfang der eigenen Aktion des Spielers. Die Probenkarte im Verlauf und in der Würfelanzeige zeigt oben „Gandalf würfelt Intelligenz“, groß den Zweck, darunter „14 +2 = 16 gegen Schwierigkeit 13“ und rechts „geschafft“ oder „nicht geschafft“; beim eigenen Wurf steht der Zweck groß über dem Würfel. Sprechweisen: Mit VoiceDesign spricht jede Figur ein Zitat so, wie der Text es sagt: Die Wörter direkt nach dem Zitat („…“, flüstert er mit archaischer Stimme) oder der Satzteil mit Doppelpunkt davor (Kael zischt: „…“) werden mit einer festen Liste von 20 Sprechweisen abgeglichen (dungeon_stimmen.json „sprechweise“: flüstern, rufen, stammeln, knurren, zischen, lachen, weinen, murmeln, zittern, wütend, archaisch, kalt, sanft, hastig, spö"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ttisch, befehlend, müde, singend, flehend, warnend); höchstens zwei feste englische Zusätze kommen an die Stimmbeschreibung der Figur (stimmen.weise). Der Text des Modells geht nie an die Sprachausgabe. Ohne VoiceDesign bleiben die festen Stimmen. Log dungeon: sprechweise | 2 (Zitate mit Sprechweise im Zug). Werte als Chips: Volk- und Klassenkacheln beim Anlegen zeigen ihre Werte als kleine Chips, die nie umbrechen: beim Volk der Bonus („KON +2“, „WEI +1“), bei der Klasse die Hauptwerte, „❤ Leben“, „✦ Kräfte“ und „✨ Zauber“ (statt des abgeschnittenen Abzeichens auf dem Bild); die Namen stehen ganz, ohne Trennstrich, am Handy zwei Kacheln je Zeile. Keine neuen Endpunkte. Selbsttests Turns.test_every_check_says_what_it_is_for, Voices.test_a_quote_is_spoken_the_way_the_text_says und die Browser-Tests Windows.test_waiting_and_table_talk_at_the_table, Windows.test_side_tabs_and_class_detail. Übersicht mittig, Vollbild (Dominik 2026-10-24 „nicht wirklich alles zentriert bei größerem bildschirm … ebenso fehlt hier bereits der fullscreen modus“): Runden-Übersicht und Helden stehen auf breiten Bildschirmen mittig mit höchstens 1240 Pixel Breite, die Welt-Kacheln verteilen sich über die ganz"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e Zeile, Eingabefelder bleiben lesbar schmal; „⛶ Vollbild“ steht schon im Kopf der Übersicht (eine Quelle dmVollKnopf, auch am Tisch). Browser-Test Windows.test_overview_in_the_middle_and_full_screen bei 1920 und 390 Pixel. Nur am passenden Körperteil (Dominik „Ausrüstungsgegenstände müssen wir auch darauf achten, dass die an den entsprechenden Körperteilen nur angelegt werden können“): Gürtel und Schärpe standen im Katalog auf „Hals“, so trug ein Held einen Gürtel am Hals. Jetzt gibt es einen zehnten Platz „Gürtel“ (SLOTS, PLATZ, PLATZ_ART), Gürtel, Schärpe und Gürtel der Riesenstärke sitzen dort. Zieht man ein Ding auf einen Platz, an den es nicht gehört, lehnt das Panel ab (platz falsch, Logzeile dungeon: platz | falsch) und sagt, dass jedes Ding an seinen Körperteil gehört; beim Ziehen leuchten die passenden Felder, die anderen werden blass. Was in laufenden Runden oder in gespeicherten Helden falsch angelegt ist, wandert beim Lesen an einen freien passenden Platz, sonst in die Tasche (right_place). Selbsttest Equipment.test_only_on_the_fitting_body_part prüft auch den Katalog: was auf -gürtel, -stiefel, -handschuhe, -helm, -amulett, -halskette oder -schild heißt, sitzt am pass"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "enden Platz."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: längere Erzählungen an den Momenten, Erzählweise je Runde (V01.1.018, Dominik 2026-10-24 „können wir die erzählungen etwas ausweiten … für die stimmung währe es zum teil länger besser“, „alles wie vorgeschlagen“ = 1 und 2): Länge nach Moment: Vor jeder Erzählung bestimmt das Panel nach festen Regeln, ob der Zug ein Moment ist (moment_of): „ort“, wenn eine Aktion nach einem Nachbarort der Karte fragt (mit Namen oder Richtung, dungeon_karte.named_way), „kampf“ im ersten Zug eines Kampfs oder wenn ein Gegner fällt, „wurf“ bei einer natürlichen 20 oder 1. Dann darf die Erzählung bis 1.600 Zeichen lang sein (ERZ_MOMENT, sonst 900, der Auftakt von Runde, Kapitel oder Akt 1.500), und das Modell bekommt den festen Auftrag, den Moment in 3 bis 4 Absätzen mit allen Sinnen zu erzählen. Erzählweise je Runde: knapp, normal oder ausführlich (×0,7, ×1, ×1,6 auf jede Grenze, WEISEN), beim Anlegen unter „Die Runde“ und für den Gastgeber im Reiter „Leiten“ unter „📜 Erzählweise“, gilt ab dem nächsten Zug. Endpunkt POST /api/profile/dungeon/{rid}/erzaehler mit {weise} (Gastgeber, Anmeldung, Profil, CSRF, Größen- und Rate-Limit; ein fremdes Wort wird abgelehnt). Längere Erzählungen b"
 },
 {
@@ -18198,6 +18230,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: checks with their purpose, ways of speaking, values as chips (V01.1.019, Dominik 2026-10-24 \"bei den Würfelproben sollte noch angezeigt werden, für was die Würfelprobe gerade gemacht wird\", \"1 umsetzten\", \"Feste Sprechweisen aus dem Text\", \"die werte anzeige ist nicht cool gelöst\", \"1\"): Checks: every check carries its purpose (wofuer, at most 60 characters): the model's few words, checked like its text (plain text, word filter), else the start of the player's own action. The check card in the story and in the dice view shows \"Gandalf rolls Intelligence\" on top, the purpose large, below it \"14 +2 = 16 vs difficulty 13\" and on the right \"success\" or \"failed\"; at the own throw the purpose stands large above the die. Ways of speaking: with VoiceDesign every character speaks a quote the way the text says: the words right after the quote (\"…\", flüstert er mit archaischer Stimme) or the clause with a colon before it (Kael zischt: \"…\") are matched against a fixed list of 20 ways of speaking (dungeon_stimmen.json \"sprechweise\": whispering, shouting, stammering, growling, hissing, laughing, sobbing, murmuring, trembling, angry, ancient, cold, soft, hurried, mocking, comma"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nding, tired, singing, pleading, warning); at most two fixed English additions go onto the character's voice description (stimmen.weise). The model's text never reaches the speech output. Without VoiceDesign the fixed voices stay. Log dungeon: sprechweise | 2 (quotes with a way of speaking in the turn). Values as chips: people and class cards when creating a hero show their values as small chips that never break: the people's bonus (\"KON +2\", \"WEI +1\"), the class's main values, \"❤ life\", \"✦ powers\" and \"✨ spells\" (instead of the cut-off badge on the picture); the names stand whole, without a hyphen, two cards a row on a phone. No new endpoints. Self-tests Turns.test_every_check_says_what_it_is_for, Voices.test_a_quote_is_spoken_the_way_the_text_says and the browser tests Windows.test_waiting_and_table_talk_at_the_table, Windows.test_side_tabs_and_class_detail. Overview in the middle, full screen (Dominik 2026-10-24 \"nicht wirklich alles zentriert bei größerem bildschirm … ebenso fehlt hier bereits der fullscreen modus\"): on wide screens the rounds overview and heroes stand in the middle, at most 1240 pixels wide, the world cards spread over the whole row, input fields stay readably"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " narrow; \"⛶ Full screen\" is already in the overview's head (one source dmVollKnopf, also at the table). Browser test Windows.test_overview_in_the_middle_and_full_screen at 1920 and 390 pixels. Only on the fitting body part (Dominik \"Ausrüstungsgegenstände müssen wir auch darauf achten, dass die an den entsprechenden Körperteilen nur angelegt werden können\"): belt and sash stood at \"neck\" in the catalogue, so a hero wore a belt at the neck. Now there is a tenth place \"belt\" (SLOTS, PLATZ, PLATZ_ART); belt, sash and belt of giant strength sit there. Dragging an item to a place it does not belong, the panel refuses (platz falsch, log line dungeon: platz | falsch) and says every item belongs on its body part; while dragging, the fitting places light up and the others fade. What is worn wrongly in running rounds or stored heroes moves on reading to a free fitting place, else into the bag (right_place). Self-test Equipment.test_only_on_the_fitting_body_part also checks the catalogue: whatever is named -gürtel, -stiefel, -handschuhe, -helm, -amulett, -halskette or -schild sits at the fitting place."
 },
 {
 "lang": "en",

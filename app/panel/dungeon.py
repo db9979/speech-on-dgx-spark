@@ -249,6 +249,7 @@ BILD_W, BILD_H = 1024, 576   # a scene picture (16:9, multiples of 16)
 PORTRAET = 512            # a hero's portrait (square)
 BILDER_RUNDE = 12         # scene pictures one round paints (and keeps)
 BILD_ABSTAND = 3          # turns between two scene pictures at least
+WOFUER_MAX = 60           # characters of what a check is for (wofuer)
 BILD_AUTO = 5             # turns without a picture after which the panel paints the scene on its own (auto_scene)
 BILDER_TAG = 40           # pictures of the game a day on the whole Spark, without grenzen.bilder_tag
 BILD_MAX = 300            # the model's description of a picture (English)
@@ -269,12 +270,13 @@ BILD_KIND = "friendly children's picture book illustration, soft pastel colours,
 PORTRAET_STIL = "painted fantasy character portrait, head and shoulders, plain dark background"
 BILD_ENDE = "no text, no letters, no watermark"
 BILD_GRUENDE = ("pruefung", "ohne_pruefung", "memory", "belegt", "missing", "dienst", "zeit", "wartung")   # why a picture did not come (journal)
-# Ausrüstung, Traglast und Händler (Stufe 4, Dominik 2026-10-23 "ja so umsetzten" = 1a-6a): nine places as in D&D
-SLOTS = ("kopf", "hals", "koerper", "haupthand", "nebenhand", "haende", "fuesse", "ring1", "ring2")
+# Ausrüstung, Traglast und Händler (Stufe 4, Dominik 2026-10-23 "ja so umsetzten" = 1a-6a): the places as in D&D, the
+# belt its own since 2026-10-24 ("dass die an den entsprechenden Körperteilen nur angelegt werden können")
+SLOTS = ("kopf", "hals", "koerper", "haupthand", "nebenhand", "haende", "guertel", "fuesse", "ring1", "ring2")
 PLATZ = {"kopf": ("kopf",), "hals": ("hals",), "koerper": ("koerper",), "haupthand": ("haupthand",), "nebenhand": ("nebenhand",),
-         "haende": ("haende",), "fuesse": ("fuesse",), "ring": ("ring1", "ring2")}    # a catalog item's platz -> the places it fits
+         "haende": ("haende",), "guertel": ("guertel",), "fuesse": ("fuesse",), "ring": ("ring1", "ring2")}    # a catalog item's platz -> the places it fits
 PLATZ_ART = {"waffe": ("haupthand",), "ruestung": ("koerper", "kopf", "nebenhand", "haende", "fuesse"),
-             "schmuck": ("ring", "kopf", "hals", "haende", "fuesse")}               # what platz an art may name, the first without one
+             "schmuck": ("ring", "kopf", "hals", "haende", "guertel", "fuesse")}    # what platz an art may name, the first without one
 _PLATZ_TXT = "; ".join(f"{a}: {', '.join(p)}" for a, p in PLATZ_ART.items())
 KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2, "werkzeug": 1, "schatz": 0.1}   # weight without its own kg
 TRAG_KG = 3.75            # carry limit per point of Stärke (D&D: 15 lb)
@@ -777,7 +779,7 @@ def use_one(h, it):
 
 
 def nine(r, h):
-    """The nine places (Stufe 4) for a hero from before: weapon in the main hand, armour on the body, jewellery on
+    """The places (Stufe 4) for a hero from before: weapon in the main hand, armour on the body, jewellery on
     its place; what has no free place goes into the bag."""
     if isinstance(h.get("an"), dict):
         h["an"] = {k: h["an"].get(k) for k in SLOTS}
@@ -1031,6 +1033,24 @@ def six(r, h):
     return h
 
 
+def right_place(r, h):
+    """What is worn where it does not fit (a belt at the neck from before the belt place) moves to a free place it
+    fits, else into the bag; with the bag full it stays off. How many moved."""
+    items, n = _by(r, "gegenstaende"), 0
+    for k in SLOTS:
+        it = h["an"].get(k)
+        c = items.get(it.get("id")) if isinstance(it, dict) else None
+        if not c or k in places(r, c):
+            continue
+        h["an"][k], n = None, n + 1
+        free = [x for x in places(r, c) if not h["an"].get(x)]
+        if free:
+            h["an"][free[0]] = it
+        elif len(h.setdefault("tasche", [])) < TASCHE:
+            bag_add(r, h, it)
+    return n
+
+
 def fix_hero(r, h):
     """A hero read from a file, kept to the rules in force (an admin may have taken a class or an item out)."""
     if not isinstance(h, dict) or not _HID.fullmatch(str(h.get("hid"))) or h.get("klasse") not in _by(r, "klassen") \
@@ -1046,8 +1066,9 @@ def fix_hero(r, h):
         if x.get("n") is not None and not (_int(x["n"], 1, STAPEL) and _c(r, x)["art"] in STAPEL_ARTEN):
             x.pop("n")
     for k, it in h["an"].items():
-        if it and not (ok(it) and k in places(r, items[it["id"]])):
+        if it and not ok(it):
             h["an"][k] = None
+    right_place(r, h)
     fa = {x["id"] for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
     h["faehigkeiten"] = [x for x in h.get("faehigkeiten") or [] if x in fa]
     h["faehigkeiten"] += [x for x in _by(r, "klassen")[h["klasse"]].get("start_faehigkeiten") or [] if x not in h["faehigkeiten"]]
@@ -1476,6 +1497,10 @@ def _read():
                 if isinstance(it, dict) and it.get("eigen"):      # a find named after its chest or hiding place (own_name)
                     r = r or rules()
                     own_name(r, it)
+            if isinstance(h, dict) and isinstance(h.get("an"), dict) and isinstance(h.get("tasche", []), list):
+                r = r or rules()
+                h["an"] = {k: h["an"].get(k) for k in SLOTS}
+                right_place(r, h)                    # worn where it does not fit: to its place or into the bag
             if isinstance(h, dict) and isinstance(h.get("werte"), dict) and "verstand" in h["werte"]:
                 r = r or rules()
                 if h.get("klasse") in _by(r, "klassen") and h.get("volk") in _by(r, "voelker"):
@@ -2498,10 +2523,12 @@ KANN_REGEL = {
 AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko). "
           "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich); vorteil ist vorteil, wenn die "
-          "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer.",
+          "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer. wofuer sagt in wenigen Wörtern aus Sicht "
+          "der Spieler, wofür gewürfelt wird (etwa „Schattenwächter auf Schwächen untersuchen“).",
     "en": "Task: decide which actions need a check (at most one per character, only with real risk). "
           "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
-          "situation helps the character, nachteil when it hinders, else empty."}
+          "situation helps the character, nachteil when it hinders, else empty. wofuer says in a few words from the "
+          "players' view what the roll is for (such as \"Search the shadow warden for weak spots\")."}
 AUFGABE_PROLOG = {
     "de": "Aufgabe: Eröffne die Runde mit einem Prolog (höchstens {n} Zeichen): Beschreibe den Ort mit allen Sinnen, die "
           "Stimmung und die Ausgangslage, sodass jede Figur der Gruppe darin vorkommt und weiß, wo sie steht und was auf "
@@ -2558,7 +2585,7 @@ def schema_proben(r):
                    "required": ["wer", "wert", "schwer"], "properties": {
                        "wer": {"type": "string", "maxLength": NAME_MAX}, "wert": {"type": "string", "enum": [w["id"] for w in r["werte"]]},
                        "schwer": {"type": "integer"}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]},
-                       "ziel": {"type": "string", "maxLength": kampf.ZIEL_MAX}}}}}}
+                       "ziel": {"type": "string", "maxLength": kampf.ZIEL_MAX}, "wofuer": {"type": "string", "maxLength": WOFUER_MAX}}}}}}
 
 
 SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required": ["erzaehlung", "frage_an"], "properties": {
@@ -2720,8 +2747,21 @@ def check_proben(r, rd, obj):
             continue
         seen.add(pid)
         out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
-                    "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else "", "ziel": plain(p.get("ziel"), kampf.ZIEL_MAX)})
+                    "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else "", "ziel": plain(p.get("ziel"), kampf.ZIEL_MAX),
+                    "wofuer": wofuer(r, rd, pid, p.get("wofuer"))})
     return out, drop
+
+
+def wofuer(r, rd, pid, said):
+    """What a check is for, as the table shows it above the roll (Dominik 2026-10-24 „für was die Würfelprobe gerade
+    gemacht wird“): the model's few words, checked like its text, else the start of the player's own action, cut at a
+    word within WOFUER_MAX."""
+    t = plain(said, WOFUER_MAX)
+    if t and not bad_words(r, rd, t):
+        return t.rstrip(".")
+    a = re.sub(r"\s+", " ", str((rd["offen"].get(pid) or {}).get("text", ""))).strip()
+    a = re.split(r"(?<=[.!?])\s", a)[0].rstrip(".!? ")
+    return a if len(a) <= WOFUER_MAX else a[:WOFUER_MAX].rsplit(" ", 1)[0] + " …"
 
 
 def roll(r, rd, proben, rng=None):
@@ -2750,7 +2790,7 @@ def roll(r, rd, proben, rng=None):
             if w == 1 and not c["hilft"].get("fest"):   # a natural 1 breaks the tool (Dominik 2026-10-23 „1“), apply takes it
                 extra["kaputt"] = tool["i"]
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
-                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, **extra})
+                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra})
     return out
 
 
@@ -2907,7 +2947,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, p in seated(rd) if not p["held"].get("tot")}
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
@@ -3430,16 +3470,21 @@ def speak_parts(r, story_text, npc, helden=(), rd=None):
     heroes = {p["held"]["name"].lower(): p["held"] for _, p in seated(rd)} if rd else {}
     names = [n["name"] for n in npc] + list((rd or {}).get("npc_stimmen") or {}) + list(heroes)
     parts = list(helden)
-    for wer, text, quoted, sex in vortrag.rede(story_text, names, lambda n: stimmen.sex(rd or {}, n)):
+    weisen = 0
+    for wer, text, quoted, sex, um in vortrag.rede(story_text, names, lambda n: stimmen.sex(rd or {}, n)):
         h = heroes.get(wer)
         if not quoted:
             parts.append((v["erzaehler"], text, stimmen.narrator(rd) if design else ""))
             continue
+        art = stimmen.weise(um) if design else ""          # how it is spoken: fixed words onto the speaker's description
         if h and (h.get("stimme") or h.get("klang")):
-            parts.append((h.get("stimme", "") or v["npc"], text, h.get("klang", "") if design else ""))
+            fest, klang = h.get("stimme", "") or v["npc"], h.get("klang", "") if design else ""
         else:
             fest, klang = _npc_voice(r, rd, wer or "?", design, "" if wer else sex)
-            parts.append((fest, text, klang))
+        parts.append((fest, text, klang + ", " + art if klang and art else klang))
+        weisen += bool(klang and art)
+    if design:
+        print(f"dungeon: sprechweise | {weisen}", flush=True)
     for n in npc:                                # a line not in the text: in the NPC's voice, never with its name
         if not vortrag.in_text(n["sagt"], story_text):
             fest, klang = _npc_voice(r, rd, n["name"], design)
@@ -4336,6 +4381,9 @@ def hero_act(rid, pid, b):
         if was == "anlegen":
             c = _c(r, it) if it else None
             pl = places(r, c) if c else ()
+            if b.get("platz") and pl and b["platz"] not in pl:       # a belt dropped on the neck: refused, never moved
+                print("dungeon: platz | falsch", flush=True)
+                raise ValueError("platz falsch")
             k = b.get("platz") if b.get("platz") in pl else next((x for x in pl if not h["an"][x]), pl[0] if pl else None)
             if not k or not fits(r, h, c) or it.get("n", 1) != 1:
                 raise ValueError("passt nicht")
