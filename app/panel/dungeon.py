@@ -62,6 +62,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/auto              {text?, nach, lang}: the game in the car, spoken only (CarPlay)
     POST   /api/profile/dungeon/{rid}/platz       host: {base} a new seat link with its QR code, shown once
     DELETE /api/profile/dungeon/{rid}/platz/{pid} host: take a seat back
+    PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken} a guest's new link, not waited for, again
     DELETE /api/profile/dungeon/{rid}             host: end the round (heroes of profiles are kept)
     POST   /api/profile/dungeon/beitreten         {code, held}: take a seat with the own login
     DELETE /api/profile/dungeon/held/{hid}        delete an own hero
@@ -205,6 +206,7 @@ POLL_S = 3
 ONLINE_S = 15
 DM_S = 75                 # seconds one model answer may take
 ENDE_H = 24               # an ended round stays this long (Figur-Code, last look)
+FREI_H = 72               # a free seat nobody took goes after this long (Dominik 2026-10-24 „dass sich das nicht auffüllt“)
 BODY = 4096
 ADMIN_BODY = 96 * 1024
 CODE = re.compile(r"[A-Za-z0-9_\-]{32}")
@@ -426,6 +428,8 @@ def check_rules(r):
     need(isinstance(vt, list) and len(vt) == len(werte) and all(_int(x, 3, 18) for x in vt), "verteilung: je Wert eine Zahl von 3 bis 18")
     for v in r.get("voelker") or []:
         need(isinstance(v.get("werte"), dict) and set(v["werte"]) <= werte and all(_int(x, 0, 2) for x in v["werte"].values()), f"voelker {v.get('id')}: werte je 0 bis 2")
+    for x in (r.get("voelker") or []) + (r.get("klassen") or []):   # a sentence for the hero form, optional
+        need("satz" not in x or _pair(x["satz"]), f"{x.get('id')}: satz als [deutsch, englisch]")
     kids = set()
     for k in r.get("klassen") or []:
         kids.add(k.get("id"))
@@ -797,8 +801,31 @@ def powers(r, h, lang="de"):
             n = item_view(r, it, lang)["name"]
             if n not in dinge:
                 dinge.append(n)
-    return {"faehigkeiten": [{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
+    import dungeon_dingbild as db
+    have = db.files() if db.on() else frozenset()
+    for z in zs:
+        c = cat[z["id"]]
+        n = db.picture_of(r, c)[0]
+        z.update(bild=n if n in have else "", art=power_kind(c), info=(c.get("info") or ["", ""])[li])
+    return {"faehigkeiten": [{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li], "wert": _by(r, "werte")[fa[x]["wert"]]["name"][li],
+                              "bonus": fa[x]["bonus"], "art": power_kind(fa[x]), "bild": db.hero_pic(r, "kraft", fa[x], have)}
+                             for x in h["faehigkeiten"] if x in fa],
             "zauber": zs, "dinge": dinge}
+
+
+KANN_ARTEN = ("angriff", "heilen", "schutz", "sonst")   # the colour of a tile on „Das kann ich“ (Dominik 2026-10-24 „alles“)
+_KANN_ART = (("heilen", re.compile(r"(?i)heil|heal|wiederbeleb|reviv|reinig|cleans")),
+             ("schutz", re.compile(r"(?i)schutz|schild|abfang|weniger|ausweich|tarn|protect|shield|less damage|dodge|hide")),
+             ("angriff", re.compile(r"(?i)schaden|gegner|foe|enem|trifft|treffer|angriff|schuss|schlag|feuer|blitz|kälte|gift|damage|hits?\b|attack|shot|blow|fire|cold|lightning|poison")))
+
+
+def power_kind(c):
+    """The kind of an ability or spell by fixed words of the catalog's name and sentence (never the model): healing,
+    protection, attack, else other."""
+    if c.get("heilung"):
+        return "heilen"
+    t = " ".join(list(c.get("name") or []) + list(c.get("satz") or []))
+    return next((k for k, rx in _KANN_ART if rx.search(t)), "sonst")
 
 
 _KANN_VERB = re.compile(r"(?i)\b(wirk|zauber|sprech|sprich|beschw|ruf|setz|nutz|benutz|einsetz|cast|spell|use|invoke|channel)")
@@ -1285,6 +1312,11 @@ def _prune(d, now):
             continue
         if v.get("until", 0) <= now:
             _end(v, now, "zeit")
+        frei = [pid for pid, p in v["plaetze"].items() if not p.get("held") and now - p.get("made", now) >= FREI_H * 3600]
+        for pid in frei:                          # an invitation nobody took goes, the list does not fill up
+            v["plaetze"].pop(pid)
+        if frei:
+            print(f"dungeon: platz weg | {len(frei)} frei abgelaufen", flush=True)
         keep[k] = v
     d["runden"] = keep
     _bild_sweep(d, now)
@@ -1435,6 +1467,38 @@ def drop_seat(owner, rid, pid):
     _seen.pop(pid, None)
     print("dungeon: platz weg | ok", flush=True)
     return True
+
+
+SITZ_WAS = ("link", "ruhen", "wecken")
+
+
+def manage_seat(owner, rid, pid, was):
+    """The host on a fellow player's seat (Dominik 2026-10-24 „andere spieler bearbeiten … den code nochmal dem spieler
+    geben“): "link" a new seat code for a guest (the old one stops at once, the hero stays; returned once, only its
+    hash kept), "ruhen" not waited for until the seat acts again, "wecken" waited for again. Returns the code or ""."""
+    if was not in SITZ_WAS:
+        raise ValueError("was")
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        p = rd["plaetze"].get(pid)
+        if rd["owner"] != owner or not p or not p.get("held") or p.get("uid") == owner or rd["status"] == "ende":
+            print(f"dungeon: platz | {was} | nicht da", flush=True)
+            raise LookupError("platz")
+        code = ""
+        if was == "link":
+            if p.get("uid"):                     # a profile opens the round from its own list
+                print("dungeon: platz | link | profil", flush=True)
+                raise LookupError("profil")
+            code = secrets.token_urlsafe(24)
+            p["h"] = _hash(code)
+        elif was == "ruhen":
+            p["ruht"] = True
+        else:
+            p.pop("ruht", None)
+        _write(d)
+    print(f"dungeon: platz | {was}", flush=True)
+    return code
 
 
 def find(code, now=None):
@@ -2053,7 +2117,7 @@ def due(rd, now):
     one action (never while paused, never while the Dungeon Master answers)."""
     if rd["status"] != "laeuft" or rd.get("pause") or rd.get("dm") or not rd["offen"]:
         return False
-    players = [pid for pid, _ in seated(rd)]
+    players = [pid for pid, p in seated(rd) if not p.get("ruht")]   # „Nicht mehr warten“ of the host: not waited for
     return all(pid in rd["offen"] for pid in players) or now - rd.get("zug_t", now) >= rd["zug_s"]
 
 
@@ -2067,6 +2131,7 @@ def act(rd, pid, text, turn, now):
     if not t:
         raise ValueError("leer")
     rd["offen"][pid] = {"text": t, "t": now}
+    rd["plaetze"][pid].pop("ruht", None)          # back at the table: waited for again
 
 
 PANEL_REGELN = {
@@ -3521,7 +3586,7 @@ def view(rid, pid, now=None):
                 plaetze.append({"pid": p_id, "frei": True, "made": p.get("made", 0)})
             continue
         plaetze.append(dict(hero_view(r, p["held"], lang, full=False), pid=p_id, gast=bool(p.get("gast")), karte=hero_card(r, p["held"], lang),
-                            gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"],
+                            gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"], ruht=bool(p.get("ruht")),
                             online=p_id == pid or now - _seen.get(p_id, 0) < ONLINE_S,
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
@@ -3579,12 +3644,13 @@ def _hint(key, lang):
 
 
 def start_powers(r, k, lang):
-    """What a new hero of the class can do from level 1, shown when it is made: {"f": [ability names], "z": [[grade,
-    spell name], …]} (the card shows the counts, the detail below the cards the names by grade)."""
+    """What a new hero of the class can do from level 1, shown when it is made: {"f": [abilities as in powers], "z":
+    [{grade, name, sentence, info, kind, picture}, …]} (the card shows the counts, the class's detail picture tiles by
+    grade, a tap explains one)."""
     h = {"klasse": k["id"], "stufe": 1, "tasche": [], "faehigkeiten": list(k.get("start_faehigkeiten") or [])}
     h["ladungen"] = full_charges(r, h)
     pw = powers(r, h, lang)
-    return {"f": [f["name"] for f in pw["faehigkeiten"]], "z": [[z["grad"], z["name"]] for z in pw["zauber"]]}
+    return {"f": pw["faehigkeiten"], "z": [{x: z[x] for x in ("grad", "name", "satz", "info", "art", "bild")} for z in pw["zauber"]]}
 
 
 def _cast(r, rd, pid, h, c, bonus, name):
@@ -4034,12 +4100,17 @@ def _choices(lang, stories=True):
     r = rules()
     li = 1 if lang == "en" else 0
     z = lambda x: x.get("zeichen") or ZEICHEN
+    import dungeon_dingbild as db
+    have = db.files() if db.on() else frozenset()
+    pic = lambda a, x: db.hero_pic(r, a, x, have)
+    satz = lambda x: (x.get("satz") or ["", ""])[li]
     return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x),
                         "farben": {k: v for k, v in (x.get("farben") or {}).items() if k in FARBEN}} for x in r["welten"]],
             "toene": [{"id": x["id"], "name": x["name"][li], "zeichen": z(x)} for x in r["toene"]],
-            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x)} for x in r["voelker"]],
-            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x),
-                         "leben": x["leben"], "start": start_powers(r, x, lang)} for x in r["klassen"]],
+            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x), "satz": satz(x), "bild": pic("volk", x)}
+                        for x in r["voelker"]],
+            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x), "satz": satz(x), "bild": pic("klasse", x),
+                         "leben": x["leben"], "leben_plus": x["leben_plus"], "start": start_powers(r, x, lang)} for x in r["klassen"]],
             "werte": [{"id": x["id"], "name": x["name"][li], "kurz": x["name"][li][:3].upper()} for x in r["werte"]],
             "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
@@ -4428,6 +4499,28 @@ async def platz(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
     link = f"{base}/#spiel={code}"
     return dict(await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid)), link=link, qr=mfa._qr_svg(link), neu=pid)
+
+
+@router.put("/api/profile/dungeon/{rid}/platz/{pid}", dependencies=[Depends(assistant)])
+async def platz_aendern(rid: str, pid: str, request: Request, prof=Depends(browser_profile)):
+    """The host on a fellow player's seat: {"was": "link", "base"} a new link with its QR code (shown once),
+    {"was": "ruhen"|"wecken"} not waited for / waited for again."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        if not _PID.fullmatch(pid):
+            raise LookupError("platz")
+        base = _base(b) if b.get("was") == "link" else ""
+        code = await asyncio.to_thread(manage_seat, uid, rid, pid, b.get("was"))
+        out = await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
+    except KNOWN as e:
+        raise _http(e)
+    if code:
+        link = f"{base}/#spiel={code}"
+        out = dict(out, link=link, qr=mfa._qr_svg(link))
+    return out
 
 
 @router.delete("/api/profile/dungeon/{rid}/platz/{pid}", dependencies=[Depends(assistant)])

@@ -2977,6 +2977,13 @@
 "titel": "Dungeon-Master: Prolog mit Auftrag und Möglichkeiten",
 "text": "A: Neue Runde ohne Geschichte anlegen: der Prolog ist deutlich länger, nennt einen Auftrag (wer will was, warum, Lohn) und eine erste Spur. B: Darunter je Held ein Satz, warum er hier ist, und „Was ihr tun könnt“ mit 2 bis 4 Knöpfen; ein Tipp schreibt den Vorschlag in dein Feld. C: Rechts unter „Zug 1“ steht „Auftrag“ mit 🎯; erreicht ihr das Ziel, ist er abgehakt. D: Neue Runde mit einer Geschichte: der Auftrag passt zum Ziel der Geschichte. E: Links in der Gruppe auf ein getragenes Ding tippen: großes Fenster mit Bild und Werten. F: Würfel wie 1W6+2 sind violett, Boni grün, Mali rot, auch in der Erzählung. G: Als Gastgeber rechts: kein zweiter Knopf „Karte“, Reiter Karte/Leiten/Fäden/Termin gleich breit; unter „Leiten“ „▶ Jetzt weiter“ breit, vier gleiche Kacheln, Einladen als Zeile, Kapitel/Runde beenden unter „⋯ Mehr“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P450",
+"v": 988,
+"titel": "Dungeon-Master: Bilder, Klasse groß und Heldenbogen mit Reitern",
+"text": "A: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an, „Bilder jetzt erstellen“: nach und nach bekommen Völker, Klassen und Fähigkeiten Bilder. B: Neuer Held: Volk- und Klassenkarten zeigen Bild oder ruhige Farbe, kein Emoji; Boni grün. C: Klasse Magier wählen: groß mit Bild, Satz, Startkraft, Zaubertricks und Grad 1 als Bild-Kacheln; Tipp auf eine Kachel erklärt sie darunter, zweiter Tipp schließt. D: Am Tisch Heldenbogen öffnen: Porträt groß, sechs Wert-Kacheln, Reiter Ausrüstung/Das kann ich/Tasche/Werte verteilen; der letzte Reiter bleibt gemerkt. E: „Das kann ich“: Kacheln oben farbig nach Art, Filter oben, Ladungen als Punkte; Tipp öffnet das Fenster mit „✨ Wirken“/„Einsetzen“, das den Satz in dein Feld schreibt. F: Nach einem Aufstieg öffnet der Hinweis in der Seitenspalte direkt „Werte verteilen“. G: Handy 390 px: nichts ragt heraus, Reiter zweizeilig. H: Am Tisch „Handeln“: grüne Karte mit ✓, Text, „Wartet auf …“ mit Zeit; „Ändern“ holt den Text zurück. I: Regeln anpassen → Gäste mit E-Mail: iCloud-Postfach wählbar, „bereit“, Code kommt an. J: Als Gastgeber „⋯“ auf einem Gast: Neuer Link (alter geht nicht mehr), Nicht mehr warten, Vom Tisch nehmen fragt nach. K: Gast-Link ohne Anmeldung: ganzes Fenster, kein Schließen, nichts dahinter erreichbar.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

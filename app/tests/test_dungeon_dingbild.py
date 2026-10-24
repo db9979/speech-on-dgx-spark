@@ -11,6 +11,9 @@ world, painted at night or on the admin's button, and an own picture for a named
 - A seat sees the pictures through view() as a copy (the round's file stays as it was); a profile without the game
   and a wrong code get nothing; a name outside the pattern is refused.
 - The sweep removes pictures nobody asks for; Live only counts.
+- Peoples, classes and class abilities of the hero form (Dominik 2026-10-24 „bilder keine icons“): one fixed prompt
+  each in the first world's style, painted like the catalog; the hero form and „Das kann ich“ name the picture only
+  once it is there and the pictures are on (else "" and the page shows a colour, never an emoji).
 
 No wall clock: the module's clock is set by the tests.
 """
@@ -355,6 +358,54 @@ class Finds(Base):
         self.assertNotIn("Glockenbrecher", json.dumps(live))
         helpers.set_config(dungeon_bilder=False)
         self.assertEqual(db.for_live(), {"on": False})
+
+
+class Heroes(Base):
+    def test_peoples_classes_and_abilities_get_one_fixed_picture_each(self):
+        r = dungeon.rules()
+        first = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+        want = dict(db.wanted(r))
+        hs = db.heroes(r)
+        self.assertEqual(len(hs), len(r["voelker"]) + len(r["klassen"]) + sum(len(k["faehigkeiten"]) for k in r["klassen"]))
+        for art, c in hs:
+            p = db.hero_prompt(r, art, c)
+            self.assertIn(db.name_of(p), want)                                  # painted like the catalog
+            self.assertTrue(p.startswith(first) and p.endswith(dungeon.BILD_ENDE), p)
+            self.assertIn(c["name"][1], p)
+            self.assertTrue(db._ok_text(p), p)                                # the picture rules pass the shipped data
+        kraft = r["klassen"][0]["faehigkeiten"][0]
+        self.assertIn(kraft["satz"][1], db.hero_prompt(r, "kraft", kraft))
+        self.assertNotIn("{}", "".join(db.hero_prompt(r, a, c) for a, c in hs))
+        w = dungeon._choices("de")
+        self.assertTrue(all(x["bild"] == "" for x in w["voelker"] + w["klassen"]))   # nothing painted yet: no name
+        self.assertTrue(all(x["satz"] for x in w["voelker"][:5] + w["klassen"][:5]))   # the shipped ones have a sentence
+        mensch = next(x for x in r["voelker"] if x["id"] == "mensch")
+        n = db.name_of(db.hero_prompt(r, "volk", mensch))
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        with open(dungeon.bild_file(n), "wb") as f:
+            f.write(PNG)
+        db._files["m"] = None
+        self.assertEqual(next(x for x in dungeon._choices("de")["voelker"] if x["id"] == "mensch")["bild"], n)
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{n}").status_code, 200)   # loaded like an item's picture
+        db.sweep(force=True)
+        self.assertIn(n, db.files())                                          # the sweep keeps it
+        helpers.set_config(dungeon_bilder=False)                              # off: no picture named
+        self.assertEqual(next(x for x in dungeon._choices("de")["voelker"] if x["id"] == "mensch")["bild"], "")
+
+    def test_powers_carry_picture_and_kind(self):
+        r = dungeon.rules()
+        mag = next(k for k in r["klassen"] if k["id"] == "magier")
+        st = dungeon.start_powers(r, mag, "de")
+        self.assertTrue(st["f"] and st["z"])
+        for x in st["f"]:
+            self.assertEqual(set(x) >= {"name", "satz", "wert", "bonus", "art", "bild"}, True)
+        for z in st["z"]:
+            self.assertEqual(set(z), {"grad", "name", "satz", "info", "art", "bild"})
+        self.assertTrue(all(x["art"] in dungeon.KANN_ARTEN for x in st["f"] + st["z"]))
+        kinds = {f["id"]: dungeon.power_kind(f) for k in r["klassen"] for f in k["faehigkeiten"]}
+        self.assertEqual((kinds["rundumschlag"], kinds["eisenhaut"], kinds["handauflegen"]), ("angriff", "schutz", "heilen"))
+        heal = next(c for c in r["gegenstaende"] if c.get("heilung"))
+        self.assertEqual(dungeon.power_kind(heal), "heilen")                 # healing by the catalog's number, not a word
 
 
 if __name__ == "__main__":

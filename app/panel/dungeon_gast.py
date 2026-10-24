@@ -110,7 +110,17 @@ def sender():
     import mail
     a = _read().get("absender") or {}
     acct = next((x for x in mail.get(a.get("uid", ""))["accounts"] if x.get("id") == a.get("acct")), None) if a.get("uid") else None
-    return (a["uid"], acct) if acct and acct.get("smtp_host") else None
+    return (a["uid"], acct) if acct and _sends(acct) else None
+
+
+def _sends(acct):
+    """The mailbox has an outgoing server: typed in, or the known provider's (iCloud, Gmail, GMX, WEB.DE: senden.SMTP_FOR).
+    Dominik 2026-10-24: an iCloud mailbox was missing from the choice, it has no own smtp_host."""
+    import senden
+    try:
+        return bool(senden.outgoing(acct))
+    except (ValueError, KeyError):
+        return False
 
 
 def choices():
@@ -119,8 +129,8 @@ def choices():
     import profiles
     out = []
     for p in profiles.names():
-        for x in mail.public(p["id"])["accounts"]:
-            if x.get("smtp"):
+        for x in mail.get(p["id"])["accounts"]:
+            if _sends(x):
                 out.append({"k": f"{p['id']}/{x['id']}", "name": f"{p.get('name', '')} · {x['user']}"})
     return out
 
@@ -144,6 +154,20 @@ def set_sender(k):
             d["absender"] = {"uid": uid, "acct": acct}
         _write(d)
     print(f"dungeon: gastmail | absender {'gesetzt' if k else 'leer'}", flush=True)
+
+
+_WARUM = (("no TLS", "kein tls"), ("not reachable", "nicht erreichbar"), ("user name or password", "anmeldung"),
+          ("recipients", "empfaenger"), ("refused the mail", "abgelehnt"), ("broke off", "abbruch"))
+
+
+def _why(e):
+    """A fixed reason word for the journal (never the server's text or an address): why a mail did not go."""
+    if isinstance(e, notaus.NotausAktiv):
+        return "notaus"
+    if isinstance(e, LookupError):
+        return "kein postfach"
+    t = str(e)
+    return next((w for k, w in _WARUM if k in t), "ausgang fehlt" if "outgoing" in t else type(e).__name__)
 
 
 def _send(to, kind, lang, **kw):
@@ -192,9 +216,11 @@ def ask_code(addr, titel, lang, now=None):
     try:
         _send(a, "code", lang, titel=titel[:80], pin=pin)
     except Exception as e:      # noqa: BLE001 - the guest gets the reason word, the journal a fixed line
-        print(f"dungeon: gastmail | code nicht gesendet | {type(e).__name__}", flush=True)
+        print(f"dungeon: gastmail | code nicht gesendet | {_why(e)}", flush=True)
         if isinstance(e, notaus.NotausAktiv):
             raise PermissionError("notaus")
+        if isinstance(e, LookupError):            # no mailbox picked: say so, not „try again“ (Dominik 2026-10-24 screenshot)
+            raise LookupError("postfach")
         raise ConnectionError("mail")
     print("dungeon: gastmail | code gesendet", flush=True)
 
@@ -362,7 +388,7 @@ def send_turns(rd, todo, now=None):
             _send(addr, "dran", rd.get("lang", "de"), titel=rd.get("titel", "")[:80], zug=rd.get("zug", 0), held=held)
             print("dungeon: gastmail | dran | gesendet", flush=True)
         except Exception as e:  # noqa: BLE001
-            print(f"dungeon: gastmail | dran | nicht gesendet | {type(e).__name__}", flush=True)
+            print(f"dungeon: gastmail | dran | nicht gesendet | {_why(e)}", flush=True)
 
 
 def counts():

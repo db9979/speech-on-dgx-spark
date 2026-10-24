@@ -26,14 +26,14 @@
   ],
   "verteilung": [15, 14, 13, 12, 10, 8],
   "voelker": [
-    {"id": "mensch", "zeichen": "🧑", "name": ["Mensch", "Human"], "werte": {"staerke": 1, "geschick": 1, "konstitution": 1, "intelligenz": 1, "weisheit": 1, "charisma": 1}},
-    {"id": "zwerg", "zeichen": "⛏️", "name": ["Zwerg", "Dwarf"], "werte": {"konstitution": 2, "weisheit": 1}},
-    {"id": "elf", "zeichen": "🧝", "name": ["Elf", "Elf"], "werte": {"geschick": 2, "intelligenz": 1}},
-    {"id": "halbling", "zeichen": "🍀", "name": ["Halbling", "Halfling"], "werte": {"geschick": 2, "charisma": 1}},
-    {"id": "ork", "zeichen": "👹", "name": ["Ork", "Orc"], "werte": {"staerke": 2, "konstitution": 1}}
+    {"id": "mensch", "zeichen": "🧑", "name": ["Mensch", "Human"], "satz": ["Vielseitig und ehrgeizig, in jedem Beruf zu Hause.", "Versatile and ambitious, at home in every trade."], "werte": {"staerke": 1, "geschick": 1, "konstitution": 1, "intelligenz": 1, "weisheit": 1, "charisma": 1}},
+    {"id": "zwerg", "zeichen": "⛏️", "name": ["Zwerg", "Dwarf"], "satz": ["Zäh und stur, Meister von Stein und Schmiede.", "Tough and stubborn, masters of stone and forge."], "werte": {"konstitution": 2, "weisheit": 1}},
+    {"id": "elf", "zeichen": "🧝", "name": ["Elf", "Elf"], "satz": ["Flink und klug, mit scharfen Sinnen und langer Erinnerung.", "Quick and clever, with keen senses and a long memory."], "werte": {"geschick": 2, "intelligenz": 1}},
+    {"id": "halbling", "zeichen": "🍀", "name": ["Halbling", "Halfling"], "satz": ["Klein, flink und voller Glück, beliebt bei allen.", "Small, nimble and lucky, liked by everyone."], "werte": {"geschick": 2, "charisma": 1}},
+    {"id": "ork", "zeichen": "👹", "name": ["Ork", "Orc"], "satz": ["Stark und unerschrocken, ehrlich im Kampf.", "Strong and fearless, honest in a fight."], "werte": {"staerke": 2, "konstitution": 1}}
   ],
   "klassen": [
-    {"id": "krieger", "zeichen": "🛡️", "name": ["Krieger", "Warrior"], "reihe": ["staerke", "konstitution", "geschick", "weisheit", "charisma", "intelligenz"], "leben": 14, "leben_plus": 5, "waffen": ["schwert", "axt", "hammer", "speer", "langschwert", "zweihaender", "streitaxt", "morgenstern", "hellebarde", "flegel", "runenklinge"], "start_faehigkeiten": ["eisenhaut"],
+    {"id": "krieger", "zeichen": "🛡️", "name": ["Krieger", "Warrior"], "satz": ["Kämpft vorn, hält viel aus und schützt die Freunde.", "Fights up front, takes a lot and shields friends."], "reihe": ["staerke", "konstitution", "geschick", "weisheit", "charisma", "intelligenz"], "leben": 14, "leben_plus": 5, "waffen": ["schwert", "axt", "hammer", "speer", "langschwert", "zweihaender", "streitaxt", "morgenstern", "hellebarde", "flegel", "runenklinge"], "start_faehigkeiten": ["eisenhaut"],
      "faehigkeiten": [
        {"id": "rundumschlag", "name": ["Rundumschlag", "Sweeping blow"], "satz": ["Trifft alle Gegner direkt neben dir.", "Hits every foe right next to you."], "wert": "staerke", "bonus": 1},
        {"id": "schildwall", "name": ["Schildwall", "Shield wall"], "satz": ["1× je Szene Schaden eines Treffers für einen Freund abfangen.", "Once per scene take a hit's damage for a friend."], "wert": "staerke", "bonus": 1},
@@ -42,7 +42,7 @@
        {"id": "standhaft", "name": ["Standhaft", "Steadfast"], "satz": ["Proben gegen Angst und Zauber +2.", "Checks against fear and spells +2."], "wert": "weisheit", "bonus": 2},
        {"id": "waffenmeister", "name": ["Waffenmeister", "Weapon master"], "satz": ["Waffen machen +1 Schaden.", "Weapons do +1 damage."], "wert": "staerke", "bonus": 2}
      ]},
-    {"id": "magier", "zeichen": "🔮", "name": ["Magier", "Mage"], "reihe": ["intelligenz", "konstitution", "geschick", "weisheit", "charisma", "staerke"], "leben": 9, "leben_plus": 3, "waffen": ["stab", "dolch", "zauberbuch", "kugel", "runenstab", "zauberstab", "kristallstab", "grimoire", "sternenszepter", "schattenfolio"], "start_faehigkeiten": ["frostnova"], "zauber": {"0": ["lichtzauber"], "1": ["blick_voraus", "nebelschleier"], "2": ["eislanze", "unsichtbarkeit", "gedanken_lesen"], "3": ["feuerball", "hast", "zeitlupe", "lebensraub"], "4": ["steinhaut"], "5": ["kettenblitz"]},
+    {"id": "magier", "zeichen": "🔮", "name": ["Magier", "Mage"], "satz": ["Gelehrt in arkaner Kunst: wenig Leben, viele Zauber.", "Learned in the arcane: little life, many spells."], "reihe": ["intelligenz", "konstitution", "geschick", "weisheit", "charisma", "staerke"], "leben": 9, "leben_plus": 3, "waffen": ["stab", "dolch", "zauberbuch", "kugel", "runenstab", "zauberstab", "kristallstab", "grimoire", "sternenszepter", "schattenfolio"], "start_faehigkeiten": ["frostnova"], "zauber": {"0": ["lichtzauber"], "1": ["blick_voraus", "nebelschleier"], "2": ["eislanze", "unsichtbarkeit", "gedanken_lesen"], "3": ["feuerball", "hast", "zeitlupe", "lebensraub"], "4": ["steinhaut"], "5": ["kettenblitz"]},
      "faehigkeiten": [
        {"id": "feuerball", "name": ["Feuerball", "Fireball"], "satz": ["1× je Szene eine Gruppe Gegner in Flammen setzen.", "Once per scene set a group of foes on fire."], "wert": "intelligenz", "bonus": 2},
        {"id": "unsichtbar", "name": ["Unsichtbarkeit", "Invisibility"], "satz": ["1× je Szene bis zur nächsten Aktion unsichtbar.", "Once per scene invisible until your next action."], "wert": "geschick", "bonus": 1},
@@ -51,7 +51,7 @@
        {"id": "frostnova", "name": ["Frostnova", "Frost nova"], "satz": ["Friert Gegner in der Nähe für eine Runde ein.", "Freezes nearby foes for one round."], "wert": "intelligenz", "bonus": 1},
        {"id": "teleport", "name": ["Blinzeln", "Blink"], "satz": ["Springt einige Schritte weit durch den Raum.", "Jumps a few steps through space."], "wert": "geschick", "bonus": 1}
      ]},
-    {"id": "dieb", "zeichen": "🗡️", "name": ["Dieb", "Rogue"], "reihe": ["geschick", "intelligenz", "charisma", "konstitution", "weisheit", "staerke"], "leben": 11, "leben_plus": 4, "waffen": ["dolch", "bogen", "kurzschwert", "armbrust", "wurfmesser", "rapier", "giftdolch", "kurzbogen", "handarmbrust", "krummdolch", "schattenklinge", "krummsaebel"], "start_faehigkeiten": ["hinterhalt", "schloesser"],
+    {"id": "dieb", "zeichen": "🗡️", "name": ["Dieb", "Rogue"], "satz": ["Leise, geschickt und listig, öffnet jedes Schloss.", "Quiet, deft and cunning, opens any lock."], "reihe": ["geschick", "intelligenz", "charisma", "konstitution", "weisheit", "staerke"], "leben": 11, "leben_plus": 4, "waffen": ["dolch", "bogen", "kurzschwert", "armbrust", "wurfmesser", "rapier", "giftdolch", "kurzbogen", "handarmbrust", "krummdolch", "schattenklinge", "krummsaebel"], "start_faehigkeiten": ["hinterhalt", "schloesser"],
      "faehigkeiten": [
        {"id": "schattenschritt", "name": ["Schattenschritt", "Shadow step"], "satz": ["1× je Szene unbemerkt bewegen, Schleich-Probe automatisch geschafft.", "Once per scene move unseen, a sneak check passes by itself."], "wert": "geschick", "bonus": 2},
        {"id": "hinterhalt", "name": ["Hinterhältiger Stich", "Sneak attack"], "satz": ["+1W6 Schaden, wenn ein Verbündeter danebensteht.", "+1d6 damage when an ally stands next to the foe."], "wert": "geschick", "bonus": 1},
@@ -60,7 +60,7 @@
        {"id": "ausweichen", "name": ["Ausweichen", "Evasion"], "satz": ["1× je Szene einem Treffer ganz ausweichen.", "Once per scene dodge a hit completely."], "wert": "geschick", "bonus": 1},
        {"id": "gift", "name": ["Giftklinge", "Poisoned blade"], "satz": ["Der nächste Treffer macht +2 Schaden.", "The next hit does +2 damage."], "wert": "geschick", "bonus": 1}
      ]},
-    {"id": "heiler", "zeichen": "🌿", "name": ["Heiler", "Healer"], "reihe": ["weisheit", "konstitution", "staerke", "charisma", "intelligenz", "geschick"], "leben": 11, "leben_plus": 4, "waffen": ["stab", "streitkolben", "kugel", "heiligenkolben", "segensstab", "lichtszepter", "pilgerstab", "sonnenhammer"], "start_faehigkeiten": ["handauflegen"], "zauber": {"0": ["lichtzauber"], "1": ["heilende_haende", "segen_des_lichts"], "3": ["kreis_der_heilung", "schutzgeister"], "4": ["hauch_des_lebens"], "5": ["erdbeben"]},
+    {"id": "heiler", "zeichen": "🌿", "name": ["Heiler", "Healer"], "satz": ["Heilt Wunden, segnet die Gruppe und vertreibt Untote.", "Heals wounds, blesses the group and drives off the undead."], "reihe": ["weisheit", "konstitution", "staerke", "charisma", "intelligenz", "geschick"], "leben": 11, "leben_plus": 4, "waffen": ["stab", "streitkolben", "kugel", "heiligenkolben", "segensstab", "lichtszepter", "pilgerstab", "sonnenhammer"], "start_faehigkeiten": ["handauflegen"], "zauber": {"0": ["lichtzauber"], "1": ["heilende_haende", "segen_des_lichts"], "3": ["kreis_der_heilung", "schutzgeister"], "4": ["hauch_des_lebens"], "5": ["erdbeben"]},
      "faehigkeiten": [
        {"id": "handauflegen", "name": ["Handauflegen", "Laying on hands"], "satz": ["1× je Szene einen Freund um 1W6+2 heilen.", "Once per scene heal a friend by 1d6+2."], "wert": "weisheit", "bonus": 1},
        {"id": "segen", "name": ["Segen", "Blessing"], "satz": ["Ein Freund bekommt bei seiner nächsten Probe +2.", "A friend gets +2 on the next check."], "wert": "weisheit", "bonus": 1},
@@ -69,7 +69,7 @@
        {"id": "schutzkreis", "name": ["Schutzkreis", "Circle of protection"], "satz": ["Die Gruppe nimmt eine Runde lang 1 Schaden weniger.", "The group takes 1 less damage for a round."], "wert": "weisheit", "bonus": 1},
        {"id": "wiederbeleben", "name": ["Zurückholen", "Revive"], "satz": ["Holt einen bewusstlosen Freund mit 3 Leben zurück.", "Brings an unconscious friend back with 3 life."], "wert": "weisheit", "bonus": 2}
      ]},
-    {"id": "waldlaeufer", "zeichen": "🏹", "name": ["Waldläufer", "Ranger"], "reihe": ["geschick", "weisheit", "konstitution", "staerke", "intelligenz", "charisma"], "leben": 12, "leben_plus": 4, "waffen": ["bogen", "speer", "kurzschwert", "armbrust", "langbogen", "kompositbogen", "jagdspeer", "jagdmesser", "wurfaxt", "elfenbogen"], "start_faehigkeiten": ["faehrte"], "zauber": {"1": ["tiersprache", "dornenranken"], "4": ["steinhaut"]},
+    {"id": "waldlaeufer", "zeichen": "🏹", "name": ["Waldläufer", "Ranger"], "satz": ["Fährtenleser und Schütze, zu Hause in der Wildnis.", "Tracker and archer, at home in the wild."], "reihe": ["geschick", "weisheit", "konstitution", "staerke", "intelligenz", "charisma"], "leben": 12, "leben_plus": 4, "waffen": ["bogen", "speer", "kurzschwert", "armbrust", "langbogen", "kompositbogen", "jagdspeer", "jagdmesser", "wurfaxt", "elfenbogen"], "start_faehigkeiten": ["faehrte"], "zauber": {"1": ["tiersprache", "dornenranken"], "4": ["steinhaut"]},
      "faehigkeiten": [
        {"id": "faehrte", "name": ["Fährtenleser", "Tracker"], "satz": ["Spuren lesen und Wege finden: Probe +3.", "Reading tracks and finding paths: check +3."], "wert": "weisheit", "bonus": 2},
        {"id": "doppelschuss", "name": ["Doppelschuss", "Double shot"], "satz": ["Zwei Pfeile auf einmal, zwei Ziele.", "Two arrows at once, two targets."], "wert": "geschick", "bonus": 1},

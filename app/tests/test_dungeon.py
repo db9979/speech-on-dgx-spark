@@ -34,7 +34,9 @@ import os
 import random
 import re
 import threading
+import time
 import unittest
+from unittest import mock
 
 from tests import helpers
 from tests.test_ui_browser import browser_ok
@@ -354,6 +356,64 @@ class Turns(Base):
             run = run + 1 if s == "gewoehnlich" else 0
             best = max(best, run)
         self.assertLessEqual(best, r["pech_schutz"])
+
+
+class Seats(Base):
+    """The host on a fellow player's seat (Dominik 2026-10-24 „andere spieler bearbeiten, bzw. löschen usw. dass sich
+    dass nicht auffüllt oder den code nochmal dem spieler geben“): a guest's new link (the old one stops, the hero
+    stays), not waited for until the seat acts again, off the table; a free seat nobody took goes after FREI_H."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+
+    def put(self, client, pid, **b):
+        return client.put(f"/api/profile/dungeon/{self.rid}/platz/{pid}", json=dict(b, base=BASE))
+
+    def test_a_new_link_for_a_guest(self):
+        r = self.put(self.c, self.gp, was="link")
+        self.assertEqual(r.status_code, 200, r.text)
+        new = code_of(r.json()["link"])
+        self.assertIn("<svg", r.json()["qr"])
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": self.code}).status_code, 400)   # the old one stops
+        lage = self.v.post("/api/dungeon/lage", json={"code": new})
+        self.assertEqual(lage.status_code, 200)
+        self.assertEqual(lage.json()["ich"]["name"], "Bela")                                               # the hero stays
+        self.assertNotIn(new, json.dumps(dungeon._read()))                                                 # only its hash kept
+        self.assertEqual(self.put(self.c, self.host, was="link").status_code, 404)                         # not the own seat
+        self.assertEqual(self.put(self.c2, self.gp, was="link").status_code, 404)                          # only the host
+        self.assertEqual(self.v.put(f"/api/profile/dungeon/{self.rid}/platz/{self.gp}", json={"was": "link"}).status_code, 401)
+        self.assertEqual(self.put(self.c, self.gp, was="weg").status_code, 400)
+        self.assertEqual(self.put(self.c, "x" * 40, was="link").status_code, 404)
+
+    def test_not_waited_for_until_the_seat_acts(self):
+        self.assertEqual(self.put(self.c, self.gp, was="ruhen").status_code, 200)
+        seat = next(p for p in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["plaetze"] if p.get("pid") == self.gp)
+        self.assertTrue(seat["ruht"])
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich warte.", "zug": 1}).status_code, 200)
+        self.assertIn("dungeon", self.spawned)                 # the host alone closes the turn: Bela is not waited for
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid].update(offen={}, dm="")
+            dungeon._write(d)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich bin zurück.", "zug": 1}).status_code, 200)
+        self.assertNotIn("ruht", self.state(self.rid)["plaetze"][self.gp])   # acting again: waited for again
+        self.assertEqual(self.put(self.c, self.gp, was="ruhen").status_code, 200)
+        self.assertEqual(self.put(self.c, self.gp, was="wecken").status_code, 200)
+        self.assertNotIn("ruht", self.state(self.rid)["plaetze"][self.gp])
+
+    def test_a_free_seat_nobody_took_goes(self):
+        self.invite(self.rid)
+        free = [k for k, p in self.state(self.rid)["plaetze"].items() if not p.get("held")]
+        self.assertEqual(len(free), 1)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][free[0]]["made"] -= dungeon.FREI_H * 3600 + 1
+            dungeon._prune(d, time.time())
+            dungeon._write(d)
+        self.assertNotIn(free[0], self.state(self.rid)["plaetze"])
+        self.assertIn(self.gp, self.state(self.rid)["plaetze"])                # a seat with a hero stays
 
 
 class Trade(Base):
@@ -2374,7 +2434,7 @@ class Powers(Base):
         pw = dungeon.powers(self.r, mag)
         self.assertEqual({z["id"]: z["rest"] for z in pw["zauber"]}, {"lichtzauber": None, "heilende_haende": 2})   # grade 2 not yet
         start = {k["id"]: k["start"] for k in dungeon._choices("de")["klassen"]}
-        self.assertIn([0, "Licht"], start["magier"]["z"])                  # the card counts, the detail lists by grade
+        self.assertIn((0, "Licht"), [(z["grad"], z["name"]) for z in start["magier"]["z"]])   # the card counts, the detail shows tiles by grade
         self.assertTrue(start["krieger"]["f"])
         self.assertEqual(dungeon.gain(self.r, dict(mag, ep=0), 0, "x"), 0)
         up = copy.deepcopy(mag)
@@ -2474,6 +2534,26 @@ class GuestMail(Base):
         self.assertEqual(self.gast(was="konto", token=d["token"]).json()["konto"]["helden_max"], dungeon_gast.HELDEN_MAX)
         self.assertEqual(self.c.post("/api/dungeon/gast", json={"code": "y" * 32, "was": "konto"}).status_code, 400)
 
+    def test_a_failed_code_mail_says_why(self):
+        """Dominik 2026-10-24 (screenshot „Die Mail ging gerade nicht raus“): no mailbox picked is said as such, a
+        server's refusal as „try again“; the journal names a fixed reason word, never the address or the server's text."""
+        import io
+        from contextlib import redirect_stdout
+
+        def none(to, kind, lang, **kw):
+            raise LookupError("postfach")
+
+        def tls(to, kind, lang, **kw):
+            raise ValueError("the outgoing server offers no TLS")
+        for fn, status, word, line in ((none, 404, "postfach", "kein postfach"), (tls, 503, "mail", "kein tls")):
+            dungeon_gast._send = fn
+            out = io.StringIO()
+            with redirect_stdout(out):
+                r = self.gast(was="code", adresse=self.ADR)
+            self.assertEqual((r.status_code, r.json()["detail"]), (status, word))
+            self.assertIn(f"dungeon: gastmail | code nicht gesendet | {line}", out.getvalue())
+            self.assertNotIn("bela", out.getvalue().lower())
+
     def test_limits(self):
         for _ in range(dungeon_gast.PRO_STUNDE):
             self.assertEqual(self.gast(was="code", adresse=self.ADR).status_code, 200)
@@ -2527,6 +2607,18 @@ class GuestMail(Base):
         self.assertIn("gastmail", ADMIN.get("/api/admin/dungeon").json())
         self.assertEqual(self.c.put("/api/admin/dungeon/gastmail", json={"absender": ""}).status_code, 401)
 
+    def test_a_known_provider_mailbox_can_be_picked(self):
+        """Dominik 2026-10-24 (screenshot, empty choice): an iCloud mailbox has no own outgoing server typed in, the
+        known provider's counts (senden.SMTP_FOR); a mailbox without any stays out."""
+        icloud = {"id": "mi", "host": "imap.mail.me.com", "user": "spiel@icloud.com", "password": "x"}
+        fremd = {"id": "mf", "host": "imap.example.org", "user": "a@example.org", "password": "x"}
+        with mock.patch("mail.get", lambda uid: {"accounts": [icloud, fremd]}):
+            names = [x["name"] for x in dungeon_gast.choices()]
+            self.assertTrue(any("spiel@icloud.com" in n for n in names))
+            self.assertFalse(any("a@example.org" in n for n in names))
+            self.assertTrue(dungeon_gast._sends(icloud))
+            self.assertFalse(dungeon_gast._sends(fremd))
+
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Windows(unittest.TestCase):
@@ -2577,7 +2669,7 @@ class Windows(unittest.TestCase):
                 for w, ht in ((1280, 900), (390, 844), (320, 700)):
                     br, pg, errors = await b.page(p, w, ht)
                     try:
-                        await pg.evaluate("goSec('dungeon')")
+                        await pg.evaluate("try{localStorage.removeItem('dm-bogen')}catch(e){};goSec('dungeon')")
                         await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
                         await pg.evaluate(f"DM.rid='{rid}';dmRound()")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-mek [data-dmfen=bogen]')")
@@ -2595,11 +2687,41 @@ class Windows(unittest.TestCase):
                         await pg.click("#dmview .dm-fen-ding [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
                         await pg.click("#dmview [data-dmfen=bogen]")
-                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')")   # „Ausrüstung“ first
                         self.assertTrue(await pg.evaluate(fits), w)
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"bogen-{w}.png"))
+                        # the sheet (Dominik 2026-10-24 „alles“): portrait, six value tiles, four tabs, one open at a time
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-wk .dm-erkb').length"), 6)
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-btabs [data-dmbt]')].map(x=>x.dataset.dmbt)"), ["aus", "kann", "tasche", "werte"])
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-bport .dm-pbig')"))
+                        await pg.click("#dmview .dm-btabs [data-dmbt=kann]")
+                        await b.until(pg, "document.querySelectorAll('#dmview .dm-fen-bogen .dm-kts [data-dmkt]').length>0")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')"))
+                        self.assertEqual(await pg.evaluate("localStorage.getItem('dm-bogen')"), "kann")   # remembered
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt .dm-pic').length"),
+                                         await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length"))   # a picture or its colour, no emoji
+                        n_all = await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length")
+                        await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(2)")                         # a kind filters the tiles
+                        await b.until(pg, "document.querySelector('#dmview .dm-kfilter .dm-kf:nth-child(2)').classList.contains('on')")
+                        k = await pg.evaluate("document.querySelector('#dmview .dm-kfilter .dm-kf.on').className.match(/k-(\\w+)/)[1]")
+                        self.assertEqual(await pg.evaluate(f"[...document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt')].filter(x=>!x.classList.contains('k-{k}')).length"), 0)
+                        await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(1)")
+                        await b.until(pg, f"document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length=={n_all}")
+                        await pg.click("#dmview .dm-fen-bogen .dm-kt")                                    # a tap explains the power in its window
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-ktd')")
+                        name = await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-ktd-n').textContent")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding .dm-ktchips .dm-chip')"))
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"kraft-{w}.png"))
+                        await pg.click("#dmview .dm-fen-ding [data-dmkann]")                              # „✨ Einsetzen“ writes it into the own field
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        self.assertIn(name, await pg.evaluate("document.querySelector('#dmview .dm-in').value"))
+                        await pg.evaluate("document.querySelector('#dmview .dm-in').value=''")
+                        await pg.click("#dmview [data-dmfen=bogen]")
+                        await pg.click("#dmview .dm-btabs [data-dmbt=tasche]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-bag [data-dmi]')")
                         await pg.click("#dmview .dm-fen-bogen .dm-bag [data-dmi] .dm-ding")             # a tap on an item: its own window
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-detail')")
                         self.assertIn("Dolch", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-detail-n').textContent"))
@@ -2693,6 +2815,166 @@ class Windows(unittest.TestCase):
                         dungeon._write(d)
         asyncio.run(go())
 
+    def test_acting_shows_the_own_action(self):
+        """Dominik 2026-10-24 „beim click auf handeln passiert nichts weiter“, „1-6“: after „Handeln“ the own action
+        stands as a card with ✓ and who is still missing (never the own name), „Ändern“ brings the field back with the
+        text, a refused action keeps the text in the field and says why right below it."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        old_ask, old_spawn = dungeon.ask_model, dungeon.spawn
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")
+
+        def run(coro, name=""):
+            coro.close()
+        dungeon.ask_model, dungeon.spawn = silent, run
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
+        self.addCleanup(setattr, dungeon, "spawn", old_spawn)
+        rid = dungeon.make_round(uid, {"titel": "Handeltisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        _, code = dungeon.make_seat(uid, rid)
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["dm"] = ""
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        with dungeon._lock:
+                            d = dungeon._read()
+                            d["runden"][rid]["offen"] = {}
+                            dungeon._write(d)
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-in')")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-mein')"))
+                        await pg.fill("#dmview .dm-in", "Ich öffne vorsichtig die Tür.")
+                        await pg.click("#dmview [data-dmsend]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-mein')")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-in')"))   # the card instead of an empty field
+                        card = await pg.evaluate("document.querySelector('#dmview .dm-mein').textContent")
+                        self.assertIn("Ich öffne vorsichtig die Tür.", card)
+                        self.assertIn("Bela", card)                                                    # who is still missing
+                        self.assertNotIn("Uma", await pg.evaluate("document.querySelector('#dmview .dm-mein-w').textContent"))
+                        self.assertRegex(await pg.evaluate("document.querySelector('#dmview .dm-mein-z').textContent"), r"\d+:\d\d")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"gehandelt-{w}.png"))
+                        await pg.click("#dmview [data-dmaendern]")                                     # „Ändern“: the field with the text
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-in')")
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-in').value"), "Ich öffne vorsichtig die Tür.")
+                        await pg.fill("#dmview .dm-in", "Ich lausche erst an der Tür.")
+                        await pg.click("#dmview [data-dmsend]")
+                        await b.until(pg, "/lausche/.test((document.querySelector('#dmview .dm-mein')||{}).textContent||'')")
+                        self.assertIn("lausche", dungeon._read()["runden"][rid]["offen"][next(iter(dungeon._read()["runden"][rid]["plaetze"]))]["text"])
+                        await pg.click("#dmview [data-dmaendern]")                                     # a refused one: text stays, reason below
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-in')")
+                        await pg.route("**/aktion", lambda route: route.fulfill(status=409, content_type="application/json", body='{"detail":"alter zug"}'))
+                        await pg.fill("#dmview .dm-in", "Zu spät.")
+                        await pg.click("#dmview [data-dmsend]")
+                        await b.until(pg, "/\\S/.test((document.querySelector('#dmview .dm-story .dmmsg.err')||{}).textContent||'')")
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-in').value"), "Zu spät.")
+                        await pg.unroute("**/aktion")
+                        # the host's „⋯“ on Bela (Dominik „andere spieler bearbeiten … den code nochmal dem spieler geben“)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-smenu').length"), 1)   # not on the own seat
+                        await pg.click("#dmview .dm-smenu summary")
+                        await pg.click("#dmview .dm-smenu [data-dmsitz=link]")
+                        await b.until(pg, "/#spiel=/.test((document.querySelector('#dmview .dm-smenu .mitmade input')||{}).value||'')")
+                        await pg.click("#dmview .dm-smenu [data-dmsitz=ruhen]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=wecken]')")
+                        self.assertTrue(dungeon._read()["runden"][rid]["plaetze"][next(k for k, x in dungeon._read()["runden"][rid]["plaetze"].items() if x.get("gast"))].get("ruht"))
+                        await pg.click("#dmview .dm-smenu [data-dmseatdel]")                           # asks once more
+                        await b.until(pg, "/wirklich/i.test(document.querySelector('#dmview .dm-smenu [data-dmseatdel]').textContent)")
+                        self.assertEqual(len([x for x in dungeon._read()["runden"][rid]["plaetze"].values() if x.get("held")]), 2)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"sitzmenue-{w}.png"))
+                        await pg.click("#dmview [data-dmsitz=wecken]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=ruhen]')")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+    def test_a_seat_link_fills_the_browser(self):
+        """Dominik 2026-10-24 „der spiel gast sollte vom assisten im hintergrund und das icon rechts unten nichts sehen.
+        am besten direkt alles über die volle breite und höhe des browser“."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Gasttisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        _, code = dungeon.make_seat(uid, rid)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate(f"location.hash='#spiel={code}';dmHash()")
+                        await b.until(pg, "!!document.querySelector('#dgcard .dm-invite')")
+                        box = await pg.evaluate("(()=>{const x=document.getElementById('dgcard').getBoundingClientRect();return [x.left,x.top,x.width]})()")
+                        self.assertEqual((box[0], box[1]), (0, 0))
+                        self.assertGreaterEqual(box[2], w - 20)                                    # the whole width (a scrollbar aside)
+                        self.assertTrue(await pg.evaluate("!document.getElementById('fab')||getComputedStyle(document.getElementById('fab')).display==='none'"))
+                        self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('dgmodal')).backdropFilter"), "none")
+                        await pg.click("#dgcard [data-dgleave]")                                     # a profile may leave
+                        self.assertFalse(await pg.evaluate("document.body.classList.contains('dg-offen')"))
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+                # a guest without any login (Dominik „das muss richtig abgesichert sein das man da nicht irgenwie raus
+                # kommt“): no „Schließen“, nothing of the page behind the game is shown or reachable
+                from tests.test_ui_browser import chromium
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                try:
+                    pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE")).new_page()
+                    errors = []
+                    pg.on("pageerror", lambda e: errors.append(str(e)))
+                    await pg.goto(f"http://127.0.0.1:{self.port}/#spiel={code}")
+                    await pg.wait_for_selector("#dgcard .dm-invite")
+                    self.assertFalse(await pg.evaluate("!!document.querySelector('#dgcard [data-dgleave]')"))
+                    self.assertTrue(await pg.evaluate("document.body.classList.contains('dg-gast')"))
+                    hidden = await pg.evaluate("[...document.body.children].filter(x=>x.id!=='dgmodal'&&getComputedStyle(x).display!=='none').map(x=>x.id||x.className)")
+                    self.assertEqual(hidden, [])
+                    await pg.keyboard.press("Escape")
+                    await pg.keyboard.press("Control+k")
+                    self.assertEqual(await pg.evaluate("[...document.body.children].filter(x=>x.id!=='dgmodal'&&getComputedStyle(x).display!=='none').length"), 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_side_tabs_and_class_detail(self):
         """Dominik 2026-10-24 „rechte spalte … durcheinander und lang“, „unübersichtlich“: the right column shows the turn
         and the own hero, then one tab of map, host and date at a time; a class card only counts, the detail below names
@@ -2730,6 +3012,18 @@ class Windows(unittest.TestCase):
                         await pg.click(".dm-vk[data-dmvkk=klasse] [data-dmvk=magier]")
                         await b.until(pg, "/Licht/.test(document.querySelector('.dmf-kdet').textContent)")
                         self.assertIn("Zaubertricks", await pg.evaluate("document.querySelector('.dmf-kdet').textContent"))
+                        # pictures, not emoji (Dominik 2026-10-24 „bilder keine icons“): every people and class card, every power tile
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('.dm-vk .dm-ic').length"), 0)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('.dm-vk .dm-card:not(:has(.dm-pic))').length"), 0)
+                        self.assertTrue(await pg.evaluate("/Gelehrt/.test(document.querySelector('.dmf-kdet').textContent)"))   # the class's sentence
+                        await pg.click(".dmf-kdet [data-dmkt]")                                               # a tap explains a power right there
+                        await b.until(pg, "!!document.querySelector('.dmf-kdet .dm-ktd')")
+                        self.assertTrue(await pg.evaluate("document.querySelector('.dmf-kdet .dm-ktd p').textContent.length>5"))
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.locator(".dmf-kdet").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"klasse-{w}.png"))
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('.dmf-kdet .dm-ktd [data-dmkann]')"))   # nothing to cast in the form
+                        await pg.click(".dmf-kdet [data-dmkt].on")                                            # a second tap closes it
+                        await b.until(pg, "!document.querySelector('.dmf-kdet .dm-ktd')")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.locator(".dm-vk[data-dmvkk=klasse]").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"klassen-{w}.png"))

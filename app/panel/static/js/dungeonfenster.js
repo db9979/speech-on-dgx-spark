@@ -1,5 +1,5 @@
 // KI-Dungeon-Master: big windows over the table (5k). The side column keeps a short card of the own hero with
-// buttons; the hero sheet, the merchant and a single item open as a window in the table's look. The window is
+// buttons; the hero sheet, the merchant, a single item and a power of „Das kann ich“ open as a window in the table's look. The window is
 // drawn with the table on every repaint (dmTable), so it always shows the panel's current state; ✕, Esc or a tap
 // beside it closes it, a new turn shows a line „zum Tisch“. Only the view lives here, every action is the
 // table's own (data-dmhero, data-dmtx), the panel checks it as before.
@@ -8,7 +8,7 @@ function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='e
   return `<div class="dm-me dm-mek"><div class="dm-mek-k">${h.bild?`<span class="dm-mek-b">${dmImg(mode,v,'p',v.pid,h.stufe)}</span>`:''}<div><h4>${esc(h.name)}</h4><small class="mut">${esc(h.volk)} ${esc(h.klasse)} · ${esc(t('Stufe','Level'))} ${h.stufe}</small></div></div>
     <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></div>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}
     <div class="dm-line"><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span><span>${esc(t('Tasche','Bag'))} ${h.tasche.length}/${h.tasche_max}</span></div>
-    ${h.punkte||h.wahl.length?`<div class="dm-hint">${esc(t('Neue Stufe: im Heldenbogen verteilen.','New level: spend it in the hero sheet.'))}</div>`:''}
+    ${h.punkte||h.wahl.length?`<button type="button" class="dm-hint dm-hintb" data-dmfen="bogen" data-dmbt="werte">${esc(t('Neue Stufe: im Heldenbogen verteilen.','New level: spend it in the hero sheet.'))}</button>`:''}
     ${mir?`<div class="dm-hint">${esc(mir===1?t('Ein Tauschangebot wartet.','A trade offer is waiting.'):t(mir+' Tauschangebote warten.',mir+' trade offers are waiting.'))}</div>`:''}
     ${boden?`<small class="mut">${esc(boden===1?t('Hier liegt 1 Ding.','1 thing lies here.'):t('Hier liegen '+boden+' Dinge.',boden+' things lie here.'))}</small>`:''}
     <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}</div></div>`}
@@ -20,8 +20,10 @@ function dmShop(v){const h=v.ich,m=v.markt;
   return `${m.satz?`<p class="dm-isatz">„${esc(m.satz)}“</p>`:''}<small class="mut">${esc(t('Preise legt das Panel fest.','The panel sets the prices.'))}${m.rabatt?' '+esc(t('Dein Charisma: '+m.rabatt+' % Rabatt.','Your Charisma: '+m.rabatt+' % off.')):''} · ${esc(t('Dein Gold','Your gold'))}: <b>${h.gold}</b></small>
     <div class="dm-waren">${ware||`<small class="mut">${esc(t('Ausverkauft.','Sold out.'))}</small>`}</div>
     ${mine?`<h5>${esc(t('Aus deiner Tasche','From your bag'))}</h5><div class="dm-bag dm-bag-k">${mine}</div>`:''}`}
-// one item by its key: bag, equipment slot („an:<slot>“), merchant or ground
+// one item by its key: bag, equipment slot („an:<slot>“), merchant or ground; a power of „Das kann ich“ („k:kf:<id>“, „k:kz:<id>“)
 function dmFind(v,key){const h=v.ich;if(!h||!key)return null;
+  if(key.startsWith('k:')){const k=h.kann||{faehigkeiten:[],zauber:[]},id=key.slice(5),x=(key.startsWith('k:kf:')?k.faehigkeiten:k.zauber).find(y=>y.id===id);
+    return x?{kann:x,it:x,wo:'kann',zauber:key.startsWith('k:kz:')}:null}
   if(key.startsWith('an:')){const k=key.slice(3),it=h.an[k];return it?{it,wo:'an',k}:null}
   if(key.startsWith('s:')){const [pid,k]=key.slice(2).split('|'),p=(v.plaetze||[]).find(x=>x.pid===pid),it=p&&p.karte&&p.karte.dinge.find(d=>d.platz===k);return it?{it,wo:'fremd',wer:p.name}:null}
   const a=[['tasche',h.tasche],['ware',v.markt&&v.status!=='ende'?v.markt.ware:[]],['boden',v.status!=='ende'?v.boden||[]:[]]];
@@ -43,7 +45,8 @@ function dmFenster(v,mode){const W=DMW[mode],h=v.ich;if(!h){W.w=W.ding='';return
   const f=dmFind(v,W.ding);if(!f)W.ding='';if(!W.w&&!W.ding)return '';
   const neu=W.zug&&v.zug>W.zug?`<div class="dm-fen-neu" role="status">${esc(t('Neuer Zug '+v.zug+': der Dungeon-Master hat weitererzählt.','New turn '+v.zug+': the Dungeon Master has told on.'))}<button type="button" class="b" data-dmfenzu="alle">${esc(t('Zum Tisch','To the table'))}</button></div>`:'';
   const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,dmShop(v),neu):'';
-  return main+(f?dmFenBox('ding',f.it.name,dmDetail(v,f),main?'':neu):'')}
+  const det=f&&(f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
+  return main+(f?dmFenBox('ding',f.it.name,det,main?'':neu):'')}
 // the window's own scroll stays across the table's repaints
 function dmFenKeep(w){const s=[...w.querySelectorAll('.dm-fen-body')].map(x=>[x.closest('.dm-fen').className,x.scrollTop]);
   return ()=>s.forEach(([c,y])=>{const b=w.querySelector(`.dm-fen[class="${c}"] .dm-fen-body`);if(b)b.scrollTop=y})}
@@ -62,6 +65,8 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
   const sd=e.target.closest('#dmview [data-dmsding],#dgcard [data-dmsding]');
   if(sd){const m=dmFenMode(sd),v=dmFenV(m),[pid,k]=sd.dataset.dmsding.split('|'),key=v&&v.pid===pid?'an:'+k:'s:'+pid+'|'+k;
     if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m);return}
+  const kt=e.target.closest('#dmview .dm-bogen [data-dmkt],#dgcard .dm-bogen [data-dmkt]');   // a power of „Das kann ich“: its window
+  if(kt){const m=dmFenMode(kt),v=dmFenV(m),key='k:'+kt.dataset.dmkt;if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m);return}
   const it=e.target.closest('#dmview [data-dmi],#dgcard [data-dmi],#dmview .dm-pl.voll,#dgcard .dm-pl.voll');
   if(!it||e.target.closest('button,select,input,label,a,textarea'))return;const m=dmFenMode(it),v=dmFenV(m),key=it.dataset.dmi||'an:'+it.dataset.dmslot;
   if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m)});

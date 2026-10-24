@@ -5453,6 +5453,46 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: gemalte Bilder statt Zeichen, Klasse groß, Heldenbogen mit Reitern (V01.0.988, Dominik 2026-10-24 „bilder keine icons. ansprechnder klick auf fähigkeiten etc. sollen diese öffnen und beschreiben bild und werte“, „alles“): Völker, Klassen und die Fähigkeiten jeder Klasse bekommen ein eigenes gemaltes Bild, je eines im Stil der ersten Welt, mit festem Text des Panels (englischer Name, bei Fähigkeiten ihr Satz) und gemalt wie die Bilder der Gegenstände (Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber, nachts oder per Knopf, gleiche Prüfung und Tagesgrenze). Bis ein Bild da ist, steht eine ruhige eigene Farbe, nie mehr ein Emoji. Beim Anlegen eines Helden zeigen die Karten von Volk und Klasse das Bild, darunter Boni farbig, auf der Klasse ein Schild „1 Kraft · 10 Zauber“. Die gewählte Klasse steht groß: Bild, Satz, Hauptwerte, Leben je Stufe und ihre Kräfte als Bild-Kacheln nach Grad (Startkräfte, Zaubertricks, Grad 1); ein Tipp auf eine Kachel erklärt sie direkt darunter mit Bild, Art, Satz und Werten. Völker und Klassen haben dafür einen kurzen Satz (satz, freiwillig, geprüft von check_rules). Der Heldenbogen zeigt oben links das Porträt groß (ode"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "r die Farbe), daneben Leben, Erfahrung, die sechs Werte als Kacheln mit farbigem Bonus und Schutz, Gold und Tasche; darunter vier Reiter: *Ausrüstung* (die neun Plätze), *Das kann ich* (Kräfte als Bild-Kacheln, oben farbig nach Art: rot Angriff, grün Heilen, blau Schutz, gold Sonstiges, mit Filter und Ladungen je Grad als Punkte), *Tasche* (Tasche und Tauschen) und *Werte verteilen* (neue Wertpunkte, neue Fähigkeit, Stimme, Figur-Code). Der zuletzt gewählte Reiter bleibt auf dem Gerät gemerkt; „Neue Stufe: im Heldenbogen verteilen“ öffnet direkt *Werte verteilen*. Ein Tipp auf eine Kraft öffnet ihr Fenster mit Bild, Beschreibung, Werten und „✨ Wirken“ (bei Fähigkeiten „Einsetzen“), das den Satz in die eigene Aktion schreibt; das Panel prüft ihn wie jede Aktion. Die Art einer Kraft ergibt sich aus festen Wörtern des Katalogs (dungeon.power_kind), nie aus dem Modell. Keine neuen Endpunkte, die Bilder kommen über den bekannten Bild-Weg. Selbsttests Heroes in app/tests/test_dungeon_dingbild.py und Windows in app/tests/test_dungeon.py. Im selben Schritt (Dominik, Bildschirmfoto „Die Mail ging gerade nicht raus“): Ist für Gäste mit E-Mail kein Postfach gewählt, sagt die Seite das jetzt ("
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "„Für Gast-Mails ist noch kein Postfach gewählt …“) statt „probiere es gleich noch einmal“, und das Log nennt bei jeder nicht gesendeten Gast-Mail einen festen Grund: dungeon: gastmail | code nicht gesendet | kein postfach (oder kein tls, nicht erreichbar, anmeldung, empfaenger, abgelehnt, abbruch, ausgang fehlt, notaus), nie Adresse oder Text des Servers. Die Auswahl des Postfachs zeigt jetzt auch Postfächer bekannter Anbieter ohne eigenen Ausgangsserver (iCloud, Gmail, GMX, WEB.DE: der bekannte Server zählt), bisher blieb sie damit leer. Selbsttests GuestMail.test_a_failed_code_mail_says_why und test_a_known_provider_mailbox_can_be_picked. Nach „Handeln“ (Dominik „beim click auf handeln passiert nichts weiter“, „1-6“): Statt eines leeren Felds steht die eigene Aktion als grüne Karte mit ✓ da („Deine Aktion für Zug 3“, der Text, „Wartet auf Gandalf · spätestens in 1:55“), sie springt kurz auf und das Handy vibriert einmal. „Ändern“ holt den Text zurück ins Feld; ein neues „Handeln“ ersetzt die Aktion, solange der Zug offen ist. Der eigene Name steht nach dem Handeln nie mehr bei „Warten auf“. Lehnt das Panel eine Aktion ab, bleibt der Text im Feld und der Grund steht direkt darunte"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "r. Haben alle gehandelt, zeigt die Erzählung wie bisher die Schritte Lesen, Würfeln, Erzählen. Selbsttest Windows.test_acting_shows_the_own_action. Gast-Link über das ganze Fenster (Dominik „der spiel gast sollte vom assisten im hintergrund und das icon rechts unten nichts sehen“): Ein Platz-Link öffnet den Tisch über die volle Breite und Höhe des Browsers, ohne den Assistenten dahinter und ohne das Assistenten-Symbol unten rechts; Wer mit Profil angemeldet ist, kommt mit „Schließen“ zurück. Ein Gast ohne Anmeldung (Dominik „das muss richtig abgesichert sein das man da nicht irgenwie raus kommt“) bekommt kein „Schließen“, alles andere der Seite (Anmeldung, Notzugang, Suche) ist ausgeblendet und auch per Tastatur nicht erreichbar; der Server lässt einen Platz-Code ohnehin nur an /api/dungeon/* seines eigenen Platzes. Selbsttest Windows.test_a_seat_link_fills_the_browser. Mitspieler verwalten (Dominik „können wir andere spieler bearbeiten, bzw. löschen usw. dass sich dass nicht auffüllt oder den code nochmal dem spieler geben“, gebaut nach der Empfehlung 1 bis 4 und 6): Als Gastgeber hat jede Heldenkarte eines Mitspielers ein „⋯“ mit Neuer Link (nur Gäste: der alte Link gilt sofort n"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "icht mehr, der Held bleibt, der neue erscheint einmal mit QR-Code), Nicht mehr warten (der Zug wartet nicht mehr auf ihn, bis er wieder handelt; „Wieder warten“ hebt es auf) und Vom Tisch nehmen mit Rückfrage (ein Held mit Profil bleibt im Profil, mit Gast-Konto im Gast-Konto, sonst ist er weg). Ein freier Platz, dessen Link 72 Stunden niemand genutzt hat, verschwindet von selbst. Neuer Endpunkt PUT /api/profile/dungeon/{rid}/platz/{pid} (nur der Gastgeber, Anmeldung, CSRF, Größen- und Rate-Limit), Logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Selbsttests Seats und Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Reiter „Regeln“ mit Bestiarium und Gleichgewicht (V01.0.984, Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „das besarium zu sehen zu bearbeten gegenstände etc.“, „alle punkte umsetzten … gleichgewicht 1-5 zu stark nur hinweis“): Der Admin hat auf der Seite Dungeon-Master einen dritten Reiter *Regeln* neben *Runden* und *Helden*; *Funktionen → KI-Dungeon-Master → Regeln anpassen* öffnet ihn (ohne Profil wie bisher als Karte). Links stehen die Teile: Geschichten, Gegenstände, Gegner (Bestiarium), Klassen, Völker, Hintergründe, Welten, Töne, Zustände, dann Stimmen, Bilder, Musik, Gäste mit E-Mail, Wie es ankommt und *Für Fortgeschrittene (JSON)*. Ein Teil des Katalogs ist eine Liste mit Bild oder Zeichen vorne, einer Zeile Werte, der Herkunft (Grundregel, SRD, eigen, geändert, ausgeblendet) und der Marke des Gleichgewichts, mit Suche und Filtern (Gegenstände nach Art, Gegner nach Stufe, beide nach Gleichgewicht); daneben (am Handy darunter) das Detail mit *Ändern* (der ganze Eintrag, geprüft wie alle Regeln), *Eigene Kopie*, *Ausblenden* und *Zurück auf mitgeliefert*. Bilder: Gegner bekommen wie Gegenstände ein gemaltes Bild im Stil ihrer Welt"
 },
 {
@@ -17774,6 +17814,46 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " and bonuses get lost in the running text … everywhere in the game\"): a tap on a worn thing on a hero card of the group opens its big window with picture, rarity, description and values like in the hero sheet; for the own hero with \"Unequip\", for others only to look at. Dice (1d6+2, d20) stand out everywhere in the game as a violet box, bonuses green, penalties red: in narrations, rolls, values, items and \"What I can do\". A calmer side column (Dominik \"the menu is not well arranged, it looks restless\", \"all\"): the second \"Map\" button goes (the map is the first tab, large via ⤢), the four tabs map, host, threads and date are equally wide with the sign above the word. In the tab *Host* \"▶ Go on now\" stands wide on top with \"waiting for …\", below it four tiles of the same size with their state (pause, market, read aloud, scene picture), invite and the narrator's voice as one row each, ending the chapter or round behind \"⋯ More\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: painted pictures instead of signs, the class large, a hero sheet with tabs (V01.0.988, Dominik 2026-10-24 \"pictures, not icons. a tap on abilities etc. should open them and show picture and values\", \"all\"): Peoples, classes and every class's abilities get a painted picture of their own, one each in the first world's style, from a fixed text of the panel (the English name, for abilities their sentence) and painted like the item pictures (Features → AI Dungeon Master → Pictures for gear and spells, at night or on the button, the same check and day limit). Until a picture is there a calm colour of its own stands in its place, never an emoji again. When making a hero the people and class cards show the picture, bonuses in colour below, on the class a badge \"1 power · 10 spells\". The chosen class stands large: picture, sentence, main values, life per level and its powers as picture tiles by grade (starting powers, cantrips, grade 1); a tap on a tile explains it right below with picture, kind, sentence and values. Peoples and classes have a short sentence for it (satz, optional, checked by check_rules). The hero sheet shows the portrait large on the top left (or the co"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lour), beside it life, experience, the six values as tiles with a coloured bonus, and protection, gold and bag; below four tabs: *Equipment* (the nine slots), *What I can do* (powers as picture tiles, coloured on top by kind: red attack, green healing, blue protection, gold other, with a filter and the charges per grade as dots), *Bag* (bag and trading) and *Spend points* (new value points, a new ability, voice, hero code). The last chosen tab stays remembered on the device; \"New level: spend it in the hero sheet\" opens *Spend points* directly. A tap on a power opens its window with picture, description, values and \"✨ Cast\" (\"Use\" for abilities), which writes the sentence into the own action; the panel checks it like every action. A power's kind comes from fixed words of the catalog (dungeon.power_kind), never from the model. No new endpoints, the pictures come through the known picture route. Self-tests Heroes in app/tests/test_dungeon_dingbild.py and Windows in app/tests/test_dungeon.py. In the same step (Dominik, screenshot \"The mail did not go out right now\"): if no mailbox is chosen for guests with e-mail, the page now says so (\"No mailbox is chosen for guest mails yet …\") ins"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "tead of \"try again shortly\", and the log names a fixed reason for every guest mail that did not go: dungeon: gastmail | code nicht gesendet | kein postfach (or kein tls, nicht erreichbar, anmeldung, empfaenger, abgelehnt, abbruch, ausgang fehlt, notaus), never the address or the server's text. The mailbox choice now also lists mailboxes of known providers without an own outgoing server (iCloud, Gmail, GMX, WEB.DE: the known server counts); before, it stayed empty with those. Self-tests GuestMail.test_a_failed_code_mail_says_why and test_a_known_provider_mailbox_can_be_picked. After \"Act\" (Dominik \"a click on act does nothing more\", \"1-6\"): instead of an empty field the own action stands as a green card with ✓ (\"Your action for turn 3\", the text, \"Waiting for Gandalf · at the latest in 1:55\"), it pops in briefly and a phone vibrates once. \"Change\" brings the text back into the field; a new \"Act\" replaces the action while the turn is open. The own name never stands under \"Waiting for\" after acting. If the panel refuses an action, the text stays in the field and the reason stands right below it. Once everyone has acted, the narration shows the steps reading, dice, narrating as before."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " Self-test Windows.test_acting_shows_the_own_action. A seat link fills the window (Dominik \"the game guest should see nothing of the assistant in the background and the icon at the bottom right\"): a seat link opens the table over the full width and height of the browser, without the assistant behind it and without the assistant icon at the bottom right; Whoever is signed in with a profile gets back with \"Close\". A guest without sign-in (Dominik \"this must be properly secured so nobody gets out somehow to see something else\") gets no \"Close\", everything else of the page (sign-in, emergency access, search) is hidden and not reachable by keyboard either; the server lets a seat code reach only /api/dungeon/* of its own seat anyway. Self-test Windows.test_a_seat_link_fills_the_browser. Managing fellow players (Dominik \"can we edit other players, or delete them etc., so it does not fill up, or give the player the code again if they lost it\", built as recommended, 1 to 4 and 6): as the host every hero card of a fellow player has a \"⋯\" with New link (guests only: the old link stops at once, the hero stays, the new one shows once with its QR code), Stop waiting (the turn no longer waits for"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
 },
 {
 "lang": "en",
