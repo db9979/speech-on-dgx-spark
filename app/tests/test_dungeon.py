@@ -3016,6 +3016,65 @@ class Windows(unittest.TestCase):
                         dungeon._write(d)
         asyncio.run(go())
 
+    def test_pictures_once_in_the_story(self):
+        """Punkt 7 of 2026-10-24: the newest scene picture stands once, large, at its place in the story and scrolls
+        with it (never above the text), older ones small; an action shows its hero's portrait; a missing picture is a
+        calm sign on parchment."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Bildertisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+            for n in ("b00000001", "b00000002"):
+                dungeon._bild_rm(f"{rid}-{n}")
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            pid, p = next(iter(rd["plaetze"].items()))
+            p["held"]["bild"] = p["held"]["stufe"]
+            for n, ort in (("b00000001", "Hafen"), ("b00000002", "Turm")):
+                dungeon._bild_save(f"{rid}-{n}", PNG)
+                rd["bilder"] = (rd.get("bilder") or []) + [{"b": n, "n": 1, "ort": ort}]
+                dungeon._log(rd, "bild", b=n, ort=ort)
+                dungeon._log(rd, "aktion", pid=pid, name="Uma", text="Ich sehe mich um.")
+            dungeon._write(d)
+        dungeon._bild_save("held-" + p["held"]["hid"], PNG)
+        self.addCleanup(dungeon._bild_rm, "held-" + p["held"]["hid"])
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as pw:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(pw, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-feed .dm-bild')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-bild').length"), 1, w)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-story>.dm-bild').length"), 0, w)
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-feed .dm-bild figcaption').textContent"), "Turm")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-feed .dm-bildk').length"), 1, w)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-act .dm-avb img').length"), 2, w)
+                        self.assertTrue(await pg.evaluate("dmPic('','Elf','gross').includes('dm-pz')&&dmPic('','Elf','gross').includes('Noch kein Bild')"))
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.locator("#dmview .dm-story").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"bilder-{w}.png"))
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
     def test_acting_shows_the_own_action(self):
         """Dominik 2026-10-24 „beim click auf handeln passiert nichts weiter“, „1-6“: after „Handeln“ the own action
         stands as a card with ✓ and who is still missing (never the own name), „Ändern“ brings the field back with the

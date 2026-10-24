@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.002** AI Dungeon Master: the scene picture stands only once and scrolls with the story, older ones small in the log; portraits at actions; a sign on parchment instead of a colour blob while a picture is missing
 - **V01.1.001** AI Dungeon Master: the round's word list also holds for table talk, actions and hero names; the host hides lines for everyone and mutes a seat in the table talk
 - **V01.1.000** AI Dungeon Master: button "Paint all pictures" without the day limit, with progress and cancel; foe pictures from description, size and a fixed human/humanoid list instead of the name alone
 - **V01.0.999** AI Dungeon Master: tools are a kind of their own with their own picture and 🧰 instead of a scroll; peoples, classes, abilities and foes are painted in each world's style, the hero form shows the picture of the world chosen
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.995** E-mail: the sorting bar above the list goes after the run with "Close"; "Undo the sorting" stays in the "⋯" of the folder that was sorted (panel and iPhone)
 - **V01.0.994** AI Dungeon Master: the own die lands on the number that counts, with advantage or disadvantage the throw and the log show both dice, natural 20 and 1 are named under the bar, the same check next turn is a new throw
 - **V01.0.993** AI Dungeon Master: the map follows when the narrator tells the way but forgets the place id (name or direction from the turn and the name in the narration), the new place gets its picture
-- **V01.0.992** No daily limit also without the second login step: the admin ticks "No daily limit" under Rights for any profile (pictures, music, allowance, Dungeon pictures; space and queues stay)
 
 
 

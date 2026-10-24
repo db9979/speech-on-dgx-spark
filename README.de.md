@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.002** KI-Dungeon-Master: das Szenenbild steht nur noch einmal und scrollt mit der Geschichte, ältere klein im Verlauf; Porträts bei den Aktionen; Zeichen auf Pergament statt Farbfleck, solange ein Bild fehlt
 - **V01.1.001** KI-Dungeon-Master: die Wortliste der Runde gilt auch für Tischgespräch, Aktionen und Heldennamen; der Gastgeber blendet Zeilen für alle aus und schaltet einen Platz im Tischgespräch stumm
 - **V01.1.000** KI-Dungeon-Master: Knopf „Alle Bilder malen“ ohne Tageslimit mit Fortschritt und Abbrechen; Gegnerbilder aus Beschreibung, Größe und fester Liste Mensch/humanoid statt nur aus dem Namen
 - **V01.0.999** KI-Dungeon-Master: Werkzeuge sind eine eigene Art mit eigenem Bild und 🧰 statt Schriftrolle; Völker, Klassen, Fähigkeiten und Gegner werden im Stil jeder Welt gemalt, das Heldenformular zeigt das Bild der gewählten Welt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.995** E-Mail: die Einordnen-Leiste über der Liste verschwindet nach dem Lauf mit „Schließen“; „Einordnen rückgängig“ bleibt im „⋯“ des eingeordneten Ordners (Panel und iPhone)
 - **V01.0.994** KI-Dungeon-Master: der eigene Würfel landet auf der Zahl, die zählt, bei Vorteil oder Nachteil zeigen Wurf und Protokoll beide Würfel, natürliche 20 und 1 stehen unter der Leiste, dieselbe Probe im nächsten Zug ist ein neuer Wurf
 - **V01.0.993** KI-Dungeon-Master: die Karte zieht mit, wenn der Erzähler den Weg erzählt, aber die Orts-id vergisst (Name oder Richtung aus dem Zug und Name in der Erzählung), der neue Ort bekommt sein Bild
-- **V01.0.992** Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 
 
 

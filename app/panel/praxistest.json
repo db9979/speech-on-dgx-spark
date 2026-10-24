@@ -3061,6 +3061,13 @@
 "titel": "Wortliste für Spielertext, ausblenden und stumm",
 "text": "A: Eine Runde ab 8 anlegen und im Tischgespräch „Da ist Blut!“ schreiben: die Seite sagt, das Wort steht auf der Wortliste, der Text bleibt im Feld; dasselbe bei einer Aktion und beim Umbenennen. B: Als Gastgeber bei einer Zeile im Tischgespräch und bei einer Aktion ⊘ tippen: sie verschwindet auch beim Mitspieler. C: Im ⋯ eines Mitspielers „Im Tischgespräch stumm“: er kann weiter handeln, im Tischgespräch steht nur der Hinweis; „Wieder mitreden lassen“ hebt es auf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P462",
+"v": 1002,
+"titel": "Szenenbild einmal, Porträts bei Aktionen",
+"text": "A: Eine Runde mit Bildern spielen, bis zwei Szenenbilder da sind: das neueste steht einmal groß im Verlauf und scrollt mit, das ältere klein mit seinem Ort; oben über dem Verlauf steht kein Bild mehr. B: Ein Held mit Porträt handelt: im Verlauf steht sein Porträt bei der Aktion. C: Neue Runde, Klasse wählen: Kräfte ohne Bild zeigen ihr Zeichen auf Pergament, das große Bild „Noch kein Bild“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

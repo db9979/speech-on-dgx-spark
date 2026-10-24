@@ -177,26 +177,29 @@ function dmKlasseZahl(x){const st=x.start||{f:[],z:[]},f=st.f.length,z=st.z.leng
   return [f?f+' '+t(f===1?'Kraft':'Kräfte',f===1?'power':'powers'):'',z?z+' '+t('Zauber',z===1?'spell':'spells'):''].filter(Boolean).join(' · ')}
 // painted pictures for peoples, classes and powers (Dominik 2026-10-24 „bilder keine icons“, dungeon_dingbild.hero_prompt):
 // the picture once it is painted, a calm colour of its own until then, never an emoji
-const dmHue=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.codePointAt(0))%360;return h};
-function dmPic(bild,id,cls){return `<span class="dm-pic${cls?' '+cls:''}" style="--dmh:${dmHue(id)}" aria-hidden="true">${bild?`<img alt="" loading="lazy" data-dmding="${esc(bild)}">`:''}</span>`}
+// until a picture is painted a calm placeholder (Punkt 7 of 2026-10-24): the thing's sign on parchment, large ones say
+// „Noch kein Bild“; the painted picture covers it once it loads
+const DMZ={angriff:'⚔',heilen:'✚',schutz:'🛡',sonst:'✦'};
+function dmPic(bild,id,cls,zeichen){const z=zeichen||String(id||'?').trim().slice(0,1).toUpperCase();
+  return `<span class="dm-pic${cls?' '+cls:''}" aria-hidden="true"><span class="dm-pz">${esc(z)}${/gross/.test(cls||'')?`<small>${esc(t('Noch kein Bild','No picture yet'))}</small>`:''}</span>${bild?`<img alt="" loading="lazy" data-dmding="${esc(bild)}">`:''}</span>`}
 // the hero form's picture of a people, class or power in the style of the world chosen (Punkt 8a of 2026-10-24): the
 // new round's form gets each world's (bilder), a seat's form only its round's (bild)
 const DMBW={w:''},dmHB=x=>(x.bilder&&x.bilder[DMBW.w])||x.bild;
 function dmHBSwap(f){const w=DM.data&&DM.data.wahl;if(!f||!w)return;
   f.querySelectorAll('.dmf-neu .dm-vk [data-dmvk]').forEach(c=>{const a=c.closest('.dm-vk').dataset.dmvkk==='volk'?w.voelker:w.klassen,x=a.find(y=>y.id===c.dataset.dmvk),p=c.querySelector('.dm-pic');
-    if(x&&p)p.outerHTML=dmPic(dmHB(x),x.id)});
+    if(x&&p)p.outerHTML=dmPic(dmHB(x),x.name)});
   const det=f.querySelector('.dmf-kdet');if(det)det.innerHTML=dmKlasseDet(w,(f.querySelector('.dmf-klasse')||{}).value);dmDingFill(f,'p')}
-const dmPCard=(attr,on,x,sub,badge)=>`<button type="button" class="dm-card dm-pcard${on?' on':''}" ${attr}>${dmPic(dmHB(x),x.id)}${badge?`<em class="dm-pbadge">${esc(badge)}</em>`:''}<b>${esc(x.name)}</b>${sub?`<small>${dmFx(sub)}</small>`:''}</button>`;
+const dmPCard=(attr,on,x,sub,badge)=>`<button type="button" class="dm-card dm-pcard${on?' on':''}" ${attr}>${dmPic(dmHB(x),x.name)}${badge?`<em class="dm-pbadge">${esc(badge)}</em>`:''}<b>${esc(x.name)}</b>${sub?`<small>${dmFx(sub)}</small>`:''}</button>`;
 // a power as a picture tile (class detail, „Das kann ich“): the colour on top is its kind, a tap explains it
 // the colour of a kind (app.css), named here in full so every class is found
 const DMKK={angriff:'k-angriff',heilen:'k-heilen',schutz:'k-schutz',sonst:'k-sonst'};
 const DMKART=()=>({angriff:t('Angriff','Attack'),heilen:t('Heilen','Healing'),schutz:t('Schutz','Protection'),sonst:t('Sonstiges','Other')});
 const dmKtSub=x=>x.grad===undefined?(x.wert?x.wert+' +'+x.bonus:''):x.grad&&x.rest!==undefined&&x.rest!==null?t('noch '+x.rest+' von '+x.voll,x.rest+' of '+x.voll+' left'):x.satz||'';
-function dmKt(x,key,on,off){return `<button type="button" class="dm-kt ${DMKK[x.art]||DMKK.sonst}${on?' on':''}${off?' aus':''}" data-dmkt="${esc(key)}" aria-expanded="${!!on}">${dmPic(dmHB(x),x.name)}${x.grad?`<em>${esc(t('Grad '+x.grad,'Grade '+x.grad))}</em>`:''}<b>${esc(x.name)}</b><small>${dmFx(dmKtSub(x))}</small></button>`}
+function dmKt(x,key,on,off){return `<button type="button" class="dm-kt ${DMKK[x.art]||DMKK.sonst}${on?' on':''}${off?' aus':''}" data-dmkt="${esc(key)}" aria-expanded="${!!on}">${dmPic(dmHB(x),x.name,'',DMZ[x.art]||DMZ.sonst)}${x.grad?`<em>${esc(t('Grad '+x.grad,'Grade '+x.grad))}</em>`:''}<b>${esc(x.name)}</b><small>${dmFx(dmKtSub(x))}</small></button>`}
 // what a power is: picture, kind, sentence, explanation and its values; „✨ Wirken“ writes it into the own action field
 function dmKtDet(x,say){const zt=x.grad===undefined?t('Fähigkeit','Ability'):x.grad?t('Zauber Grad '+x.grad,'Spell grade '+x.grad):t('Zaubertrick','Cantrip');
   const chips=[DMKART()[x.art]||'',x.wert?`🎲 ${esc(x.wert)} ${dmBo(x.bonus)}`:'',x.grad?esc(x.rest===undefined||x.rest===null?t('Ladungen je Stufe','charges per level'):t('noch '+x.rest+' von '+x.voll+' Ladungen',x.rest+' of '+x.voll+' charges left')):x.grad===0?esc(t('beliebig oft','any time')):''].filter(Boolean);
-  return `<div class="dm-ktd ${DMKK[x.art]||DMKK.sonst}">${dmPic(dmHB(x),x.name,'gross')}<div><b class="dm-ktd-n">${esc(x.name)}</b> <small class="mut">· ${esc(zt)}</small>
+  return `<div class="dm-ktd ${DMKK[x.art]||DMKK.sonst}">${dmPic(dmHB(x),x.name,'gross',DMZ[x.art]||DMZ.sonst)}<div><b class="dm-ktd-n">${esc(x.name)}</b> <small class="mut">· ${esc(zt)}</small>
     ${x.satz?`<p>${dmFx(x.satz)}</p>`:''}${x.info?`<p class="mut">${dmFx(x.info)}</p>`:''}<div class="dm-ktchips">${chips.map((c,i)=>`<span class="dm-chip${i?'':' dm-kart'}">${i?c:esc(c)}</span>`).join('')}</div>
     ${say?`<div class="dm-iacts"><button type="button" class="b p" data-dmkann="${esc(say)}" data-dmfenzu="alle">✨ ${esc(x.grad===undefined?t('Einsetzen','Use'):t('Wirken','Cast'))}</button></div>`:''}</div></div>`}
 // the chosen class large (Dominik 2026-10-24 „alles“): picture, sentence, values, the powers of level 1 as tiles by grade
@@ -206,7 +209,7 @@ function dmKlasseDet(w,kid){const x=w.klassen.find(k=>k.id===kid)||w.klassen[0];
   const sel=DMKT.x,pick=sel?(sel[0]==='f'?st.f[+sel.slice(2)]:st.z[+sel.slice(2)]):null;
   const tiles=a=>`<div class="dm-kts">${a.map(([y,k])=>dmKt(y,k,k===sel)).join('')}</div>`;
   const vn=k=>(w.werte.find(v=>v.id===k)||{}).name||k;
-  return `<div class="dm-kdet">${dmPic(dmHB(x),x.id,'gross')}<div class="dm-kdet-t"><b class="dm-kdet-n">${esc(x.name)}</b>
+  return `<div class="dm-kdet">${dmPic(dmHB(x),x.name,'gross')}<div class="dm-kdet-t"><b class="dm-kdet-n">${esc(x.name)}</b>
     <small class="mut">${esc(t('Hauptwerte ','Main values ')+x.reihe.slice(0,2).map(vn).join(t(' und ',' and ')))} · ${esc(t('Leben','Life'))} ${x.leben}${x.leben_plus?` (${dmBo(x.leben_plus)} ${esc(t('je Stufe','per level'))})`:''}</small>
     ${x.satz?`<p>${esc(x.satz)}</p>`:''}
     <h5>${esc(t('Startkräfte','Starting powers'))}</h5>${st.f.length?tiles(st.f.map((y,i)=>[y,'f:'+i])):`<small class="mut">${esc(t('keine','none'))}</small>`}
@@ -314,8 +317,13 @@ async function dmImgFill(w){if(!DG.code)return;for(const im of w.querySelectorAl
       if(!r.ok){delete DMI[key];continue}DMI[key]=URL.createObjectURL(await r.blob())}catch(e){delete DMI[key];continue}
     document.querySelectorAll(`#dgcard img[data-dmimg="${im.dataset.dmimg}"]`).forEach(x=>x.src=DMI[key])}}
 function dmAv(mode,v,p,c){return p.bild?`<span class="dm-av dm-avb" data-c="${c}">${dmImg(mode,v,'p',p.pid,p.stufe)}</span>`:`<span class="dm-av" data-c="${c}">${esc((p.name||'?').slice(0,1).toUpperCase())}</span>`}
-function dmScene(v,mode){const b=(v.bilder||[]).slice(-1)[0];if(!b&&!v.bild_malt)return '';
-  return `<figure class="dm-bild${b?'':' leer'}">${b?dmImg(mode,v,'b',b.b)+`${b.ort&&!v.bild_malt?`<figcaption>${esc(b.ort)}</figcaption>`:''}`:''}${v.bild_malt?`<div class="dm-malt">🖼 ${esc(v.bild_hint||t('Das Szenenbild wird gemalt …','The scene picture is being painted …'))}</div>`:''}</figure>`}
+// the scene picture once (Punkt 7 of 2026-10-24): the newest large at its place in the log, so it scrolls with the
+// story and never covers it; older ones small; only when its line left the shown log it opens the feed
+const dmNewest=v=>((v.bilder||[]).slice(-1)[0]||{}).b||'';
+const dmBildGross=(mode,v,b,ort)=>`<figure class="dm-bild">${dmImg(mode,v,'b',b)}${ort?`<figcaption>${esc(ort)}</figcaption>`:''}</figure>`;
+function dmScene(v,mode){const b=(v.bilder||[]).slice(-1)[0];
+  return b&&!v.log.some(e=>e.art==='bild'&&e.b===b.b)?dmBildGross(mode,v,b.b,b.ort):''}
+const dmMalt=v=>v.bild_malt?`<div class="dm-malt" role="status">🖼 ${esc(v.bild_hint||t('Das Szenenbild wird gemalt …','The scene picture is being painted …'))}</div>`:'';
 // better stories: the open threads the panel keeps (promises, quests, questions), the chapter's truth only for the host
 // the right column (Dominik 2026-10-24 „sehr durcheinander und lang“): turn and own hero on top, below one tab at a
 // time of map, host, threads and date; the last tab is remembered per device
@@ -380,7 +388,7 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('.dm [data-d
 function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en'?1:0]:e.text;
   if(e.art==='dm'){const my=(v.daumen||{})[String(e.n||1)]||0,th=v.ich?`<span class="dm-thumbs">${[[1,'👍',t('Gut erzählt','Well told')],[-1,'👎',t('Nicht so gut','Not so good')]].map(([g,i,l])=>`<button type="button" class="ic-ib${my===g?' on':''}" data-dmdaumen="${g}" data-zug="${e.n||1}" title="${esc(l)}" aria-label="${esc(l)}" aria-pressed="${my===g}">${i}</button>`).join('')}</span>`:'';
     return `<div class="dm-dm"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${(e.npc||[]).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}${e.prolog?dmProlog(v,e):''}</div>`}
-  if(e.art==='aktion')return `<div class="dm-act"><span class="dm-av" data-c="${col?col(e.pid):0}">${esc((e.name||'?').slice(0,1).toUpperCase())}</span><div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div>${dmHide(v,'aktion',e.n,e.pid)}</div>`;
+  if(e.art==='aktion')return `<div class="dm-act">${dmAv(v.mode,v,Object.assign({name:e.name},(v.plaetze||[]).find(p=>p.pid===e.pid)||{}),col?col(e.pid):0)}<div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div>${dmHide(v,'aktion',e.n,e.pid)}</div>`;
   if(e.art==='wurf')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${dmVt(e)}${dmTool(e)}${esc(e.name)} · ${esc(W[e.wert]||e.wert)} ${dmBo(e.bonus)} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.schwer} · <b>${esc(e.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>${dmLeiste(e,v.werkzeug_bonus)}`;
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})</div>`;
   if(e.art==='beute')return `<div class="dm-beute"><div class="dm-n">${esc(t('Beute für ','Loot for '))}${esc(e.name)}</div>${dmItem(e.item)}${e.boden?`<small class="mut">${esc(t('Zu schwer oder kein Platz: liegt hier am Boden.','Too heavy or no room: lies here on the ground.'))}</small>`:''}${e.gold?`<small class="mut">${esc(t('Gold für jeden: ','Gold for everyone: '))}${e.gold}</small>`:''}</div>`;
@@ -388,7 +396,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='handel'){const w={kauf:t('kauft','buys'),verkauf:t('verkauft','sells'),erkannt:t('erkennt','identifies')}[e.was]||e.was;return `<div class="dm-sys mut">⚖ ${esc(e.name)} ${esc(w)} <b>${esc(e.ding)}</b>${e.gold?' · '+e.gold+' '+esc(t('Gold','gold')):''}</div>`}
   if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
   if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
-  if(e.art==='bild')return (v.bilder||[]).some(x=>x.b===e.b)?`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`:'';
+  if(e.art==='bild')return !(v.bilder||[]).some(x=>x.b===e.b)?'':e.b===dmNewest(v)?dmBildGross(v.mode,v,e.b,e.ort):`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`;
   if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
   if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP</div>`;
   if(e.art==='stufe')return `<div class="dm-stufe">★ ${esc(e.name)} ${esc(t('erreicht Stufe','reaches level'))} ${e.stufe}!</div>`;
@@ -497,7 +505,7 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
   w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${v.vorlesen?`<button type="button" class="b dm-hear" data-dmhear="1"${v.ton_zug.length?'':' disabled'}>${esc(v.liest?t('🔊 wird gesprochen …','🔊 being spoken …'):t('🔊 Hören','🔊 Listen'))}</button>`:''}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe?0:1}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
     ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
-    <div class="dm-col dm-story">${dmBack(v)}${dmScene(v,mode)}<div class="dm-feed" aria-live="polite">${log}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
+    <div class="dm-col dm-story">${dmBack(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
     <div class="dm-col dm-side"><div class="dm-zugk"><b>${esc(t('Zug','Turn'))} ${v.zug}</b><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div></div>${dmAuftrag(v)}
     <small class="mut dm-left${dmUhr(v,S).warn?' dm-warn':''}">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):dmUhr(v,S).text)}</small>
     ${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmFenster(v,mode)}`;
