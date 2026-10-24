@@ -525,6 +525,7 @@ async function dmProbe(mode,h){const A=DMA[mode],voice=h.stimme||'',klang=h.klan
   try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&klang=${encodeURIComponent(klang)}&erzaehler=${encodeURIComponent(erz)}&lang=${L==='en'?'en':'de'}`);
     else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,stimme:voice,klang})});
     if(!r.ok){dmSay(mode==='p'?DM:DG,t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'),1);return}
+    if(r.headers.get('X-Stimme')==='fest')dmSay(mode==='p'?DM:DG,t('Stimmen aus Beschreibung laufen gerade nicht, die Probe kommt in der festen Stimme.','Voices from a description are not running right now, the sample uses the fixed voice.'));
     if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(e){}}
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmerz]');if(!s||!DM.rid)return;
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/erzaehler`,{k:s.value},DM);if(d){DM.v=d;DM.at=Date.now();dmDraw()}});

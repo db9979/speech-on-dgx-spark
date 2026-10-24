@@ -805,6 +805,25 @@ class Voice(Base):
             self.assertIn(("", "Hier entlang.", "tiefe, raue Zwergenstimme"), dungeon.hero_lines(r, rd, rd["zug"]))
         self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "klang": "tiefe, raue Zwergenstimme"}).status_code, 200)
         self.assertEqual(asked[-1], "tiefe, raue Zwergenstimme")
+        # the VoiceDesign engine not up (503 stopped): the fixed voice stands in, the seat is told, nothing kept
+        async def down(text, voice, klang=""):
+            asked.append((voice, klang))
+            if klang:
+                raise RuntimeError("tts 503 stopped")
+            return b"\2\0" * 50
+        dungeon.ask_tts = down
+        p = self.v.post("/api/dungeon/probe", json={"code": code, "klang": "helle, klare Elfenstimme"})
+        self.assertEqual((p.status_code, p.headers.get("X-Stimme")), (200, "fest"))
+        self.assertEqual(asked[-2:], [("", "helle, klare Elfenstimme"), ("", "")])
+        self.assertFalse(dungeon._stimmen["design"])
+        p = self.v.post("/api/dungeon/probe", json={"code": code, "klang": "helle, klare Elfenstimme"})
+        self.assertEqual((p.status_code, p.headers.get("X-Stimme"), asked[-1]), (200, "fest", ("", "")))
+        dungeon._stimmen["design"] = True
+
+        async def busy(text, voice, klang=""):
+            raise RuntimeError("tts 503 busy")
+        dungeon.ask_tts = busy                                                                     # busy: no stand-in
+        self.assertEqual(self.v.post("/api/dungeon/probe", json={"code": code, "klang": "leise, alte Stimme"}).status_code, 503)
 
     def test_app_seat_code_only_own_seat(self):
         v = self.new_round()

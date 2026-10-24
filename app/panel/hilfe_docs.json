@@ -5413,7 +5413,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ritt nennt das Modell nur Merkmale aus festen Listen (Alter, Geschlecht, Klang, Wesen), das Panel baut daraus die Beschreibung aus festen englischen Wörtern und behält sie für die Runde und die Kampagne (höchstens 40); fehlt ein Merkmal oder passt es nicht, kommt es fest aus dem Namen. Die Merkmale stehen nicht im Verlauf. Ohne VoiceDesign bleibt es bei den festen Stimmen der Regeln. Live: Zahl der NSC-Stimmen. Log: dungeon: erzaehler | neu oder gewaehlt. Jede Ablehnung des Panels sagt jetzt ihren Grund (dungeon._http schickt das feste Grundwort der Regel, etwa held spielt, runden, tasche voll), und die Seite zeigt dazu einen ganzen Satz mit dem, was zu tun ist (DMGRUND in dungeon.js), als Hinweis-Kasten mit ⚠; „besetzt“ beim Start einer Runde heißt jetzt „Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.“ test_dungeon.Refusals prüft, dass jedes Grundwort seinen Satz hat."
+"text": "ritt nennt das Modell nur Merkmale aus festen Listen (Alter, Geschlecht, Klang, Wesen), das Panel baut daraus die Beschreibung aus festen englischen Wörtern und behält sie für die Runde und die Kampagne (höchstens 40); fehlt ein Merkmal oder passt es nicht, kommt es fest aus dem Namen. Die Merkmale stehen nicht im Verlauf. Ohne VoiceDesign bleibt es bei den festen Stimmen der Regeln. Live: Zahl der NSC-Stimmen. Log: dungeon: erzaehler | neu oder gewaehlt. Jede Ablehnung des Panels sagt jetzt ihren Grund (dungeon._http schickt das feste Grundwort der Regel, etwa held spielt, runden, tasche voll), und die Seite zeigt dazu einen ganzen Satz mit dem, was zu tun ist (DMGRUND in dungeon.js), als Hinweis-Kasten mit ⚠; „besetzt“ beim Start einer Runde heißt jetzt „Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.“ test_dungeon.Refusals prüft, dass jedes Grundwort seinen Satz hat. Läuft die zweite Engine gerade nicht (sie lädt, steht oder hat einen Fehler; Log dungeon: stimmen | voicedesign <grund> | feste stimme), springt die feste Stimme ein, für den Erzähler die aus den Regeln: Vorlesen geht weiter, eine Probe sagt dazu „Stimmen aus Beschr"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "eibung laufen gerade nicht“ und wird nicht als diese Stimme behalten; nach 10 Minuten fragt das Panel wieder nach (V01.0.982). Ist die Sprachausgabe nur belegt, bleibt es bei „gerade belegt“."
 },
 {
 "lang": "de",
@@ -17685,7 +17693,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "und and the campaign (40 at most); a missing or unfitting trait comes from the name, always the same. The traits are not in the log. Without VoiceDesign the fixed voices of the rules stay. Live: number of NPC voices. Log: dungeon: erzaehler | neu or gewaehlt. Every refusal of the panel now says its reason (dungeon._http sends the rule's fixed reason word, such as held spielt, runden, tasche voll), and the page shows a whole sentence with what to do (DMGRUND in dungeon.js) in a notice box with ⚠; \"besetzt\" when starting a round now reads \"This hero is playing in another round right now. End it there or pick another hero.\" test_dungeon.Refusals checks every reason word has its sentence."
+"text": "und and the campaign (40 at most); a missing or unfitting trait comes from the name, always the same. The traits are not in the log. Without VoiceDesign the fixed voices of the rules stay. Live: number of NPC voices. Log: dungeon: erzaehler | neu or gewaehlt. Every refusal of the panel now says its reason (dungeon._http sends the rule's fixed reason word, such as held spielt, runden, tasche voll), and the page shows a whole sentence with what to do (DMGRUND in dungeon.js) in a notice box with ⚠; \"besetzt\" when starting a round now reads \"This hero is playing in another round right now. End it there or pick another hero.\" test_dungeon.Refusals checks every reason word has its sentence. When the second engine is not running (loading, stopped or failed; log dungeon: stimmen | voicedesign <reason> | feste stimme), the fixed voice stands in, for the narrator the one from the rules: reading aloud goes on, a sample adds \"Voices from a description are not running right now\" and is not kept as that voice; after 10 minutes the panel asks again (V01.0.982). When the speech output is only busy, it stays at \"busy right now\"."
 },
 {
 "lang": "en",

@@ -144,6 +144,8 @@ TON_ZUEGE = 3             # turns read aloud a round keeps
 TON_ZEICHEN = 1800        # characters of one turn read aloud
 SAGT_MAX = 200            # characters of one hero's spoken line (what stands in quotes in the action)
 KLANG = re.compile(r"[A-Za-zÄÖÜäöüß0-9 ,.\-]{3,80}")   # a hero's voice described in words (VoiceDesign), nothing else
+TTS_NICHT = re.compile(r"TTS engine (loading|stopped|error|blocked)|TTS (busy)")   # why the speech output said 503
+TTS_AUS = ("loading", "stopped", "error", "blocked")      # the VoiceDesign engine is not up: the fixed voice stands in
 STIMMEN_S = 600           # seconds the speech output's voice list is kept before it is asked again
 TON_BYTES = 32 * 1024 * 1024
 HOER_BYTES = 1024 * 1024  # one recording (16 kHz mono WAV: about 30 s)
@@ -2723,12 +2725,28 @@ async def ask_tts(text, voice, klang=""):
     async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S * 2, connect=5)) as c:
         async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body, headers=api_headers()) as r:
             if r.status_code != 200:
-                raise RuntimeError(f"tts {r.status_code}")
+                m = TTS_NICHT.search((await r.aread())[:400].decode("utf-8", "replace"))
+                raise RuntimeError(f"tts {r.status_code}" + (f" {m.group(1) or m.group(2)}" if m else ""))
             async for part in r.aiter_bytes():
                 out += part
                 if len(out) > TON_BYTES:
                     raise RuntimeError("tts")
     return bytes(out)
+
+
+async def spoken(text, voice, klang, s):
+    """ask_tts within s seconds; when the VoiceDesign engine is not up (loading, stopped, error, blocked), the same
+    text once more in the fixed voice, and VoiceDesign stays out until the next look at the speech output
+    (hero_voices, STIMMEN_S). (pcm, True when the fixed voice stood in)."""
+    try:
+        return await asyncio.wait_for(ask_tts(text, voice, klang), s), False
+    except RuntimeError as e:
+        why = str(e).rpartition(" ")[2]
+        if not klang or not str(e).startswith("tts 503") or why not in TTS_AUS:
+            raise
+    _stimmen.update(design=False, t=time.time())
+    print(f"dungeon: stimmen | voicedesign {why} | feste stimme", flush=True)
+    return await asyncio.wait_for(ask_tts(text, voice, ""), s), True
 
 
 def _pcm(b):
@@ -2810,7 +2828,7 @@ async def speak_turn(rid, n, parts):
         async with _tts_lock():
             pcm = bytearray()
             for voice, text, klang in parts:
-                pcm += _pcm(await asyncio.wait_for(ask_tts(text, voice, klang), DM_S * 2))
+                pcm += _pcm((await spoken(text, voice, klang, DM_S * 2))[0])
                 pcm += b"\0" * 14400        # 0.3 s between the voices
                 if len(pcm) > TON_BYTES:
                     raise RuntimeError("tts")
@@ -2859,19 +2877,26 @@ async def hero_voices():
 PROBE = ("Ich bin bereit. Wohin führt uns der Weg?", "I am ready. Where does the road lead us?")
 
 
-async def probe(voice, lang, klang=""):
-    """A short fixed sentence in one of the heroes' voices (or one made from klang), as WAV; kept per voice so
-    trying it again costs nothing."""
-    if klang and not (_stimmen["design"] and KLANG.fullmatch(klang)) or not klang and voice not in _stimmen["v"]:
+async def probe(voice, lang, klang="", fest=""):
+    """A short fixed sentence in one of the heroes' voices (or one made from klang), as (WAV, True when the fixed
+    voice stood in for klang); kept per voice so trying it again costs nothing. fest: the voice for klang while
+    VoiceDesign is not up (the narrator's of the rules; else the speech output's own)."""
+    if klang and not KLANG.fullmatch(klang) or not klang and voice not in _stimmen["v"]:
         raise ValueError("stimme")
+    ersatz = bool(klang) and not _stimmen["design"]
+    if ersatz:
+        voice, klang = fest, ""
     li = 1 if lang == "en" else 0
     f = os.path.join(TON_DIR, "probe-" + hashlib.sha256(f"{voice}|{klang}|{li}".encode()).hexdigest()[:16] + ".wav")
     if os.path.exists(f):
         with open(f, "rb") as x:
-            return x.read()
+            return x.read(), ersatz
     import begleiter
     async with _tts_lock():
-        wav = begleiter.wav_of(_pcm(await asyncio.wait_for(ask_tts(PROBE[li], voice, klang), DM_S)))
+        pcm, statt = await spoken(PROBE[li], fest if klang else voice, klang, DM_S)
+        wav = begleiter.wav_of(_pcm(pcm))
+    if statt:
+        return wav, True       # never kept under the described voice
 
     def keep():
         os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
@@ -2881,7 +2906,15 @@ async def probe(voice, lang, klang=""):
         os.replace(f + ".neu", f)
     await asyncio.to_thread(keep)
     print("dungeon: stimmprobe | neu", flush=True)
-    return wav
+    return wav, ersatz
+
+
+def _probe_out(wav, ersatz):
+    """The sample as WAV; X-Stimme: fest when the fixed voice stood in for a described one (the seat says so)."""
+    h = {"Cache-Control": "no-store"}
+    if ersatz:
+        h["X-Stimme"] = "fest"
+    return Response(wav, media_type="audio/wav", headers=h)
 
 
 def _tts_lock():
@@ -4542,13 +4575,14 @@ async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str =
             if erzaehler not in [x["k"] for x in stimmen.view(_round(_read(), rid), "de", True)["erzaehler_liste"]]:
                 raise ValueError("stimme")
             stimme, klang = "", stimmen.probe_text(erzaehler)
-        wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de", klang[:100])
+        wav, ersatz = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de", klang[:100],
+                                  voices(await asyncio.to_thread(rules))["erzaehler"] if erzaehler else "")
     except KNOWN as e:
         raise _http(e)
     except (RuntimeError, asyncio.TimeoutError) as e:
-        print(f"dungeon: stimmprobe | fehler | {'klang' if klang else 'stimme'} | {str(e)[:12] or type(e).__name__}", flush=True)
+        print(f"dungeon: stimmprobe | fehler | {'klang' if klang else 'stimme'} | {str(e)[:20] or type(e).__name__}", flush=True)
         raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
-    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+    return _probe_out(wav, ersatz)
 
 
 @router.post("/api/profile/dungeon/{rid}/hoeren", dependencies=[Depends(assistant)])
@@ -4956,13 +4990,14 @@ async def gast_probe(request: Request):
     b, rid, pid = await _guest(request)
     guard.limit(request, "dungeonprobe")
     try:
-        wav = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"), str(b.get("klang") or ""))
+        wav, ersatz = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"),
+                                  str(b.get("klang") or ""))
     except KNOWN as e:
         raise _http(e)
     except (RuntimeError, asyncio.TimeoutError) as e:
-        print(f"dungeon: stimmprobe | fehler | {'klang' if b.get('klang') else 'stimme'} | {str(e)[:12] or type(e).__name__}", flush=True)
+        print(f"dungeon: stimmprobe | fehler | {'klang' if b.get('klang') else 'stimme'} | {str(e)[:20] or type(e).__name__}", flush=True)
         raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
-    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+    return _probe_out(wav, ersatz)
 
 
 @router.post("/api/dungeon/hoeren")
