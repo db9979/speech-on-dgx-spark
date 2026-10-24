@@ -468,7 +468,7 @@ class Heroes(Base):
         first = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
         want = dict(db.wanted(r))
         hs = db.heroes(r)
-        self.assertEqual(len(hs), len(r["voelker"]) + len(r["klassen"]) + sum(len(k["faehigkeiten"]) for k in r["klassen"]))
+        self.assertEqual(len(hs), len(r["voelker"]) + len(r["klassen"]) + sum(len(k["faehigkeiten"]) for k in r["klassen"]) + len(r["hintergruende"]))
         for art, c in hs:
             p = db.hero_prompt(r, art, c)
             self.assertTrue(p.startswith(first) and p.endswith(dungeon.BILD_ENDE), p)
@@ -542,6 +542,74 @@ class Heroes(Base):
         self.assertEqual(set(db.ZEICHEN), set(dungeon.ARTEN))
         import dungeon_regelseite
         self.assertEqual(set(dungeon_regelseite.ART), set(dungeon.ARTEN))      # the rules page names every kind
+
+class RulesPage(Base):
+    """Dominik 2026-10-24 „1a 2 und 3“: peoples, classes and backgrounds get a picture on the rules tab in the world
+    chosen above the list (Malen, Nochmal malen, Neues/Altes behalten; a kept one stays), backgrounds are painted per
+    world from name and description, and each world has a title picture in its own style (a landscape, no people)
+    that the new round's world card shows instead of the sign."""
+    K = "/api/admin/dungeon/katalog/"
+
+    def test_backgrounds_per_world_and_kept(self):
+        r = dungeon.rules()
+        first = r["welten"][0]["id"]
+        scifi = next(w["id"] for w in r["welten"] if "science fiction" in w["bildstil"])
+        h = r["hintergruende"][0]
+        want = dict(db.wanted(r))
+        for w in r["welten"]:                                                   # painted at night and with „Alle“
+            self.assertIn(db.name_of(db.hero_prompt(r, "hintergrund", h, w["id"])), want)
+        d = ADMIN.get(self.K + "hintergruende?welt=" + scifi).json()
+        self.assertEqual(d["welt"], scifi)
+        self.assertEqual([w["id"] for w in d["welten"]], [w["id"] for w in r["welten"]])
+        self.assertTrue(all("bild" in x and x["bild"] == "" for x in d["zeilen"]))   # nothing painted yet
+        self.assertEqual(ADMIN.get(self.K + "hintergruende?welt=nirgends").json()["welt"], first)   # unknown: the first
+        res = ADMIN.post(self.K + "hintergruende/bild", json={"id": h["id"], "was": "malen", "welt": scifi})
+        self.assertEqual(res.status_code, 200, res.text)
+        n = db.name_of(db.hero_prompt(r, "hintergrund", h, scifi))
+        self.assertEqual(res.json()["bild"], n)                                # a missing one is put in place at once
+        self.assertIn(n, db.files())
+        self.assertEqual(db.entry_pic(r, "hintergruende", h, scifi), (n, True))
+        self.assertFalse(db.entry_pic(r, "hintergruende", h, first)[1])       # the other world has none yet
+        row = next(x for x in ADMIN.get(self.K + "hintergruende?welt=" + scifi).json()["zeilen"] if x["id"] == h["id"])
+        self.assertEqual(row["bild"], n)
+        res = ADMIN.post(self.K + "hintergruende/bild", json={"id": h["id"], "was": "malen", "welt": scifi})
+        self.assertEqual(res.json()["neu"], "neu-" + n[5:])                    # „Nochmal malen“: a candidate
+        self.assertEqual(ADMIN.post(self.K + "hintergruende/bild", json={"id": h["id"], "was": "neu", "welt": scifi}).status_code, 200)
+        self.assertEqual(db._state()["fest"][db.key_of(dungeon.style(r, {"welt": scifi, "ton": None}), h, "hintergrund")], n)
+        with mock.patch("dungeon_dingbild._hero_text", lambda s, a, c, f=db._hero_text: f(s, a, c) + ", v2"):
+            self.assertEqual(db.entry_pic(r, "hintergruende", h, scifi), (n, True))   # kept: a later prompt keeps it
+            self.assertNotIn(db.name_of(db.hero_prompt(r, "hintergrund", h, scifi)), dict(db.missing(r)))
+
+    def test_classes_and_peoples_on_the_rules_tab(self):
+        r = dungeon.rules()
+        scifi = next(w["id"] for w in r["welten"] if "science fiction" in w["bildstil"])
+        k = r["klassen"][0]
+        res = ADMIN.post(self.K + "klassen/bild", json={"id": k["id"], "was": "malen", "welt": scifi})
+        self.assertEqual(res.status_code, 200, res.text)
+        n = db.name_of(db.hero_prompt(r, "klasse", k, scifi))                  # the same picture as the hero form's
+        self.assertEqual(res.json()["bild"], n)
+        x = next(x for x in dungeon._choices("de", False, scifi)["klassen"] if x["id"] == k["id"])
+        self.assertEqual(x["bild"], n)
+        self.assertIn("welten", ADMIN.get(self.K + "voelker").json())
+        self.assertNotIn("welten", ADMIN.get(self.K + "gegner").json())          # a foe keeps its own world
+
+    def test_world_title_picture(self):
+        r = dungeon.rules()
+        w = r["welten"][1]
+        p = db.world_text(r, w)
+        self.assertTrue(p.startswith(dungeon.style(r, {"welt": w["id"], "ton": None})), p)   # its own style
+        self.assertIn("no people", p)
+        self.assertIn(w["name"][1], p)
+        self.assertTrue(all(db._ok_text(db.world_text(r, x), r) for x in r["welten"]))
+        self.assertIn(db.name_of(p), dict(db.wanted(r)))                       # painted at night and with „Alle“
+        self.assertTrue(all(x["bild"] == "" for x in dungeon._choices("de")["welten"]))   # the sign until painted
+        res = ADMIN.post(self.K + "welten/bild", json={"id": w["id"], "was": "malen"})
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertEqual(res.json()["bild"], db.name_of(p))
+        self.assertEqual(next(x for x in dungeon._choices("de")["welten"] if x["id"] == w["id"])["bild"], db.name_of(p))
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{db.name_of(p)}").status_code, 200)
+        helpers.set_config(dungeon_bilder=False)                               # off: the sign again
+        self.assertTrue(all(x["bild"] == "" for x in dungeon._choices("de")["welten"]))
 
 if __name__ == "__main__":
     unittest.main()

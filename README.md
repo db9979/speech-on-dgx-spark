@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.009** AI Dungeon Master: pictures for classes, peoples, backgrounds and worlds on the rules tab (Paint, Paint again, world to choose), backgrounds per world, a title picture per world on the world cards
 - **V01.1.008** AI Dungeon Master: at 0 life down, after 3 turns without healing fallen for good (things and gold lie here, at the children's table only unconscious), Iron skin, Shield wall and Battle cry work by fixed rules, experience only at the end of the round
 - **V01.1.007** AI Dungeon Master: with a Base model every character speaks as a clone of its first VoiceDesign voice, the same sound in every turn and faster; with CustomVoice nothing changes
 - **V01.1.006** AI Dungeon Master: on the phone a bar of its own at the bottom (Story, Group, Hero, Map), one part at a time, a red dot on a new turn; the panel's bar is hidden at the table
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.002** AI Dungeon Master: the scene picture stands only once and scrolls with the story, older ones small in the log; portraits at actions; a sign on parchment instead of a colour blob while a picture is missing
 - **V01.1.001** AI Dungeon Master: the round's word list also holds for table talk, actions and hero names; the host hides lines for everyone and mutes a seat in the table talk
 - **V01.1.000** AI Dungeon Master: button "Paint all pictures" without the day limit, with progress and cancel; foe pictures from description, size and a fixed human/humanoid list instead of the name alone
-- **V01.0.999** AI Dungeon Master: tools are a kind of their own with their own picture and 🧰 instead of a scroll; peoples, classes, abilities and foes are painted in each world's style, the hero form shows the picture of the world chosen
 
 
 

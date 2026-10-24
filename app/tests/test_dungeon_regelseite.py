@@ -37,7 +37,7 @@ class Page(Base):
         self.assertIn(self.c.post(K + "gegner", json={"was": "aus", "id": "goblin"}).status_code, (401, 403))
         self.assertIn(self.c.post(K + "gegner/bild", json={"was": "malen", "id": "goblin"}).status_code, (401, 403))
         self.assertEqual(ADMIN.get(K + "geheim").status_code, 404)
-        self.assertEqual(ADMIN.post(K + "klassen/bild", json={"was": "malen", "id": "krieger"}).status_code, 404)
+        self.assertEqual(ADMIN.post(K + "toene/bild", json={"was": "malen", "id": "12"}).status_code, 404)   # a part without pictures
         self.assertEqual(ADMIN.get("/api/admin/dungeon/bild/..%2Fdungeon.json").status_code, 404)
 
     def test_every_part_lists_its_entries(self):

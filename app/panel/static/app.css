@@ -2577,6 +2577,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .dm-pcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-pcard .dm-pic{width:100%;aspect-ratio:4/3}
 .dm-pcard b{padding:7px 10px 0}.dm-pcard small{padding:0 10px 8px}
+.dm-wcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-wcard .dm-wpic{width:100%;aspect-ratio:16/9}.dm-wcard b{padding:7px 10px 0}.dm-wcard small{padding:0 10px 8px}
 .dm-pbadge{position:absolute;left:6px;top:6px;font:700 11px system-ui,sans-serif;font-style:normal;color:#fff;background:#0009;padding:2px 7px;border-radius:9px;white-space:nowrap;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
 .dm-kdet{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:16px}.dm-kdet>.dm-pic.gross{aspect-ratio:3/4;border-radius:10px}
 .dm-kdet-n{font-size:22px;font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct))}.dm-kdet-t{min-width:0}.dm-kdet-t>small{display:block}.dm-kdet-t p{margin:6px 0}

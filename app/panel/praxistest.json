@@ -3110,6 +3110,13 @@
 "titel": "Am Boden, gefallen, Kräfte und Erfahrung am Ende",
 "text": "A: Runde mit Gast, dem Gast im Spiel Schaden geben lassen, bis er 0 Leben hat: „liegt am Boden. Noch 3 Züge“, sein Feld zeigt den Hinweis, Handeln geht nicht, der Zug wartet nicht auf ihn. B: An seiner Karte „🧪 Heiltrank geben“: er steht wieder auf. C: Noch einmal auf 0 und 3 Züge ohne Heilung weiterspielen: „ist gefallen“, seine Dinge und sein Gold stehen unter „Liegt hier“, Aufheben geht. D: Runde im Ton „Kinder (ab 8)“: nach 3 Zügen nur ohnmächtig; nächstes Kapitel: wach, Leben voll, Gold 0. E: Krieger mit Eisenhaut: im Fenster „wirkt immer“, kein Einsetzen; ein Treffer kostet 1 weniger. F: „Ich setze Schildwall ein“ und ein Freund wird getroffen: der Krieger fängt den Treffer ab; am selben Ort noch einmal: Zeile „schon eingesetzt“. G: Im Bogen „+X EP noch am Tisch“, gutgeschrieben erst nach „Runde beenden“. H: Zustand → Überblick, Dungeon-Master: „am Boden“ und „gefallen“ gezählt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P469",
+"v": 1009,
+"titel": "Dungeon-Master: Bilder für Klassen, Völker, Hintergründe, Welten",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Klassen: oben „Bilder in: …“ eine Welt wählen, bei einer Klasse „Malen“: das Bild ist im Stil dieser Welt; „Nochmal malen“ und „Neues behalten“ halten es fest. B: Dasselbe bei Völkern und Hintergründen; eine andere Welt oben zeigt ein anderes Bild. C: Welten: bei einer Welt „Malen“, dann beim Dungeon-Master unter „Neue Runde“: die Weltkarte zeigt das Bild statt des Zeichens. D: „Alle Bilder malen“ zählt auch Hintergründe und Welten mit.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

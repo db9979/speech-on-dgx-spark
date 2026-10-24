@@ -94,7 +94,11 @@ HUMANOID = frozenset(("goblin", "kobold", "ork_krieger", "hobgoblin", "grottensc
 WESEN_EN = {"mensch": "an ordinary human person", "humanoid": "a humanoid with two arms and two legs"}
 HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders, plain dark background",   # Dominik 2026-10-24 „bilder keine icons“
            "klasse": "character art, a {} of this world in a typical pose, the whole figure, plain dark background",
-           "kraft": "game ability art, one glowing moment of power, no person in the centre, plain dark background: {}"}
+           "kraft": "game ability art, one glowing moment of power, no person in the centre, plain dark background: {}",
+           # Dominik 2026-10-24 „1a 2 und 3“: backgrounds and worlds get pictures too, renewed on the rules page
+           "hintergrund": "character art, a {} of this world in a fitting place, the whole figure"}
+WELT_EN = "landscape art, a wide view of the world {}, no people"   # a world's title picture (its own style)
+HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
 NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
 NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
@@ -217,14 +221,31 @@ def hero_prompt(r, art, c, welt=""):
 
 
 def _hero_text(style, art, c):
+    import bilder
     what = f"{c['name'][1]}, {c['satz'][1]}" if art == "kraft" else c["name"][1]
+    info = (c.get("info") or ["", ""])[1].strip().rstrip(".") if art == "hintergrund" else ""
+    if info and not bilder.refuse_text("", info):                      # a description the word list refuses stays out
+        what += f", {info}"
     return f"{style}, {HELD_EN[art].format(what)}, {dungeon.BILD_ENDE}"
 
 
+def world_text(r, w):
+    """A world's title picture in its own style: the English name and sentence, no people (Dominik 2026-10-24 „3“)."""
+    return f"{dungeon.style(r, {'welt': w['id'], 'ton': None})}, {WELT_EN.format(w['name'][1] + ', ' + w['satz'][1])}, {dungeon.BILD_ENDE}"
+
+
+def world_pic(r, w, have=None):
+    """The name of a world's title picture once it is painted (and the pictures are on), else ""."""
+    have = (files() if on() else frozenset()) if have is None else have
+    n = _pick(name_of(world_text(r, w)), key_of(dungeon.style(r, {"welt": w["id"], "ton": None}), w, "welt"), have)
+    return n if n in have else ""
+
+
 def heroes(r):
-    """[(art, entry)] of every people, class and class ability there is a picture for."""
+    """[(art, entry)] of every people, class, class ability and background there is a picture for."""
     return [("volk", v) for v in r["voelker"]] + [("klasse", k) for k in r["klassen"]] + \
-        [("kraft", f) for k in r["klassen"] for f in k["faehigkeiten"]]
+        [("kraft", f) for k in r["klassen"] for f in k["faehigkeiten"]] + \
+        [("hintergrund", h) for h in r.get("hintergruende") or []]
 
 
 def hero_pic(r, art, c, have=None, welt=""):
@@ -268,7 +289,9 @@ def _want(r):
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
                 [(n, p, None) for n, p in dungeon_karte.bilder(r, s)] + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
-                ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] if s != dungeon.BILD_KIND else []):
+                ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
+                 [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
+                 if s != dungeon.BILD_KIND else []):
             if n not in seen:
                 seen.add(n)
                 out.append((n, p, k))
@@ -605,10 +628,26 @@ def picture_of(r, c, welt=""):
     return n, n in have
 
 
-def _current(r, c):
-    """(name of the current prompt's picture, prompt, key) of a catalog entry in its world's style."""
+def _current(r, c, teil="", welt=""):
+    """(name of the current prompt's picture, prompt, key) of an entry of the rules page: an item or foe in its
+    world's style, a people, class or background in the style of welt (else the first world), a world in its own."""
+    if teil in HELD_TEILE:
+        s = dungeon.style(r, {"welt": welt or r["welten"][0]["id"], "ton": None})
+        p = _hero_text(s, HELD_TEILE[teil], c)
+        return name_of(p), p, key_of(s, c, HELD_TEILE[teil])
+    if teil == "welten":
+        p = world_text(r, c)
+        return name_of(p), p, key_of(dungeon.style(r, {"welt": c["id"], "ton": None}), c, "welt")
     s = dungeon.style(r, {"welt": _welt(r, c), "ton": None})
     return name_of(prompt(s, c)), prompt(s, c), key_of(s, c)
+
+
+def entry_pic(r, teil, c, welt=""):
+    """The picture of an entry of the rules page as shown (_pick), and whether it is there."""
+    n, _, k = _current(r, c, teil, welt)
+    have = files()
+    n = _pick(n, k, have)
+    return n, n in have
 
 
 def _welt(r, c):
@@ -616,7 +655,7 @@ def _welt(r, c):
     return ws[0] if ws else r["welten"][0]["id"]
 
 
-async def repaint(r, c, frei=False):
+async def repaint(r, c, frei=False, teil="", welt=""):
     """Paints a catalog entry's picture once more as a candidate neu-<hash> next to the one in use (the same checks
     and day limit as every catalog picture; frei: the admin's own button, no day limit, Dominik 2026-10-24 „im
     Dungeon-Master kann ich keine neuen Bilder erstellen“, it still counts). Returns ("ok", name) or (reason, "")."""
@@ -625,7 +664,7 @@ async def repaint(r, c, frei=False):
     d = _state()
     if _today(d) >= TAG_MAX and not frei:
         return "tag", ""
-    n, p, _ = _current(r, c)
+    n, p, _ = _current(r, c, teil, welt)
     if not _ok_text(p, r):
         return "pruefung", ""
     neu = "neu-" + n[5:]
@@ -640,10 +679,10 @@ async def repaint(r, c, frei=False):
     return (why, neu if why == "ok" else "")
 
 
-def settle(r, c, keep_new):
+def settle(r, c, keep_new, teil="", welt=""):
     """„Neues behalten“ puts the candidate in place of the picture and keeps it as the admin's own (fest: a later
     prompt does not paint it over, the sweep keeps it), „Altes behalten“ drops it."""
-    n, _, k = _current(r, c)
+    n, _, k = _current(r, c, teil, welt)
     neu = "neu-" + n[5:]
     if not os.path.exists(dungeon.bild_file(neu)):
         raise LookupError("bild")

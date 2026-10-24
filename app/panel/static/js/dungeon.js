@@ -52,6 +52,9 @@ const dmWelt=(w,id)=>(w&&w.welten||[]).find(x=>x.id===id)||(w&&w.welten||[])[0]|
 const dmTop=sub=>`<div class="dm-head dm-top"><div class="dm-htitle"><h3>⚔ ${esc(t('Dungeon-Master','Dungeon Master'))}</h3><small class="mut">${esc(sub)}</small></div>${dmModus()}</div>`;
 // a card to choose (world, story, tone, people, class): picture, name, one line
 const dmCard=(attr,on,ic,name,sub)=>`<button type="button" class="dm-card${on?' on':''}" ${attr}><span class="dm-ic" aria-hidden="true">${esc(ic||'')}</span><b>${esc(name)}</b>${sub?`<small>${esc(sub)}</small>`:''}</button>`;
+// a world's card on the new round's form: its title picture (landscape, Dominik 2026-10-24 „3“) once painted, else the sign
+const dmWCard=(x,on)=>x.bild?`<button type="button" class="dm-card dm-wcard${on?' on':''}" data-dmseg="${esc(x.id)}">${dmPic(x.bild,x.name,'dm-wpic',x.zeichen)}<b>${esc(x.name)}</b>${x.satz?`<small>${esc(x.satz)}</small>`:''}</button>`
+  :dmCard(`data-dmseg="${esc(x.id)}"`,on,x.zeichen,x.name,x.satz);
 // the colour of a rarity (app.css), named here in full so every class is found
 const DMSEL={gewoehnlich:'dm-s0',selten:'dm-s1',rar:'dm-s2',episch:'dm-s3',legendaer:'dm-s4'};
 // the menu entry only for a signed-in profile the admin released the game for (start.js, like the Wissensbuch)
@@ -300,7 +303,7 @@ function dmStory(w,b){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D||!
 function dmNew(D){const w=D.wahl;if(D.runden.filter(x=>x.gastgeber&&x.status!=='ende').length>=D.runden_max)return `<div class="ic-note"><div class="ic-mid"><b>${esc(t('Du leitest schon '+D.runden_max+' Runden.','You host '+D.runden_max+' rounds already.'))}</b><span>${esc(t('Beende eine, um eine neue anzulegen.','End one to start a new one.'))}</span></div></div>`;
   const min=s=>s>=3600?Math.round(s/3600)+' h':s>=60?Math.round(s/60)+' min':s+' s',welt=DMBW.w=dmWelt(w,DM.welt).id,step=(n,x)=>`<h4 class="dm-step"><span>${n}</span>${esc(x)}</h4>`;
   return `<h3 class="sec">${esc(t('Neue Runde','New round'))}</h3><div class="dm-form">
-    ${step(1,t('Welt','World'))}<div class="dm-cards dmf-welt">${w.welten.map(x=>dmCard(`data-dmseg="${esc(x.id)}"`,x.id===welt,x.zeichen,x.name,x.satz)).join('')}</div>
+    ${step(1,t('Welt','World'))}<div class="dm-cards dmf-welt">${w.welten.map(x=>dmWCard(x,x.id===welt)).join('')}</div>
     ${step(2,t('Geschichte','Story'))}<div class="dm-cards dm-gs dmf-gesch">${dmStories(w,welt)}</div>
     ${step(3,t('Die Runde','The round'))}
     <label>${esc(t('Titel','Title'))}</label><input class="dmf-titel" maxlength="60" placeholder="${esc(t('Die Glocke von Hallstein','The bell of Hallstein'))}">
@@ -867,7 +870,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 // Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „unübersichtlich“: the sections on the left,
 // the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
 // detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
-const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:Date.now()};
+const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:Date.now(),welt:{}};
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),
@@ -914,7 +917,9 @@ function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N
     <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button></div>`}
 const dmThumbsPics=d=>`<div id="dmbilder">${dmDingAdmin(d.dingbilder)||`<div class="fh">${esc(t('Bilder für Ausrüstung und Zauber sind aus.','Pictures for gear and spells are off.'))}</div>`}</div>`;
 // ---- one part of the catalog: search, filters, the list with picture and mark, the detail with „Ändern“ and „Nochmal malen“
-async function dmKatLoad(teil){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang());
+// peoples, classes and backgrounds are shown and painted in the world chosen above the list (DMR.welt per part)
+const dmRWelt=teil=>DMR.welt[teil]?'&welt='+encodeURIComponent(DMR.welt[teil]):'';
+async function dmKatLoad(teil){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang()+dmRWelt(teil));
   if(!r.ok){DMR.k[teil]={zeilen:[],eintraege:{},fehler:dmErr(r.status,d.detail)}}else DMR.k[teil]=d;if(DMR.teil===teil&&DMP.d)dmRulesDraw(DMP.d,'')}
 const DMRMARKE={schwach:'',ok:'ok',stark:'warn',zu_stark:'bad'};
 const DMRSTAND=()=>({grund:t('Grundregel','Base'),srd:'SRD',eigen:t('eigen','own'),geaendert:t('geändert','changed'),aus:t('ausgeblendet','hidden')});
@@ -941,8 +946,9 @@ function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
     return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}${x.selten?' dm-rsel '+(DMSEL[x.selten]||''):'selten' in x?' dm-rsel dm-sx':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small></span></button>
       <span class="dm-rpills">${m}${x.stand!=='grund'&&x.stand!=='srd'?`<span class="pill">${esc(St[x.stand])}</span>`:''}${x.neu?`<span class="pill warn">${esc(t('neues Bild','new picture'))}</span>`:''}</span>
       ${'bild' in x&&!x.bild&&K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(t('Malen','Paint'))}</button>`:''}</div>`}).join('');
+  const wsel=K.welten?`<select class="dmr-w" aria-label="${esc(t('Bilder in der Welt','Pictures in the world'))}">${K.welten.map(w=>`<option value="${esc(w.id)}"${w.id===K.welt?' selected':''}>${esc(t('Bilder in: ','Pictures in: ')+w.name)}</option>`).join('')}</select>`:'';
   return `<h3 class="sec">${esc(N[teil])} · ${K.zeilen.length}</h3>
-    <div class="dm-rsrch"><input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
+    <div class="dm-rsrch">${wsel}<input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
       ${F?`<div class="lseg dm-rseg">${F.map(([v,l])=>`<button type="button" class="${DMR.f===v?'on':''}" data-dmrf="${v}">${esc(l)}</button>`).join('')}</div>`:''}
       ${hasM?`<select class="dmr-m" aria-label="${esc(t('Gleichgewicht','Balance'))}">${['alle','stark','zu_stark','schwach'].map(v=>`<option value="${v}"${DMR.m===v?' selected':''}>${esc(v==='alle'?t('Gleichgewicht: alle','Balance: all'):nm[v])}</option>`).join('')}</select>`:''}</div>
     ${K.seltenheiten?dmRSelLeg(K):''}<div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
@@ -977,14 +983,15 @@ function dmRDraw(){const c=$('dmadmcard');if(!c||!DMP.d)return;const l=c.querySe
 function dmRPick(){const c=$('dmadmcard'),det=$('dmrdet');if(!c||!det||!DMR.k[DMR.teil])return dmRDraw();
   c.querySelectorAll('.dm-rrow').forEach(r=>{const b=r.querySelector('[data-dmrsel]');r.classList.toggle('on',!!b&&b.dataset.dmrsel===DMR.sel)});
   det.innerHTML=dmRDet(DMR.teil)}
-async function dmRDo(teil,was,id,eintrag){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang(),xjson('POST',{was,id,eintrag}));
+async function dmRDo(teil,was,id,eintrag){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang()+dmRWelt(teil),xjson('POST',{was,id,eintrag}));
   if(!r.ok){DMR.err=Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail));dmRDraw();return false}
   DMR.k[teil]=d;DMR.edit=null;DMR.err='';if(eintrag)DMR.sel=String(eintrag.id);dmRDraw();
   if(d.hinweis)sayToast(t('Gespeichert. Hinweis: ','Saved. Hint: ')+d.hinweis.name+' · '+d.hinweis.grund);else sayToast(t('Gespeichert','Saved'));return true}
 const DMRWARUM=()=>({aus:t('Die Bilder sind aus.','Pictures are off.'),tag:t('Das Tageslimit für Bilder ist erreicht.','The day limit for pictures is reached.'),pruefung:t('Die Bildbeschreibung hat die Prüfung nicht bestanden.','The picture prompt did not pass the check.'),
   missing:t('Das Bildmodell fehlt.','The picture model is missing.'),ohne_pruefung:t('Die Bildprüfung fehlt.','The image check is missing.'),belegt:t('Das Bildmodell ist gerade belegt.','The picture model is busy right now.')});
 document.body.addEventListener('input',e=>{const q=e.target.closest('#dmadmcard .dmr-q');if(!q)return;DMR.q=q.value;const p=q.selectionStart;dmRDraw();const n=document.querySelector('#dmadmcard .dmr-q');if(n){n.focus();n.setSelectionRange(p,p)}});
-document.body.addEventListener('change',e=>{const s=e.target.closest('#dmadmcard .dmr-m');if(!s)return;DMR.m=s.value;dmRDraw()});
+document.body.addEventListener('change',e=>{const w=e.target.closest('#dmadmcard .dmr-w');if(w){DMR.welt[DMR.teil]=w.value;DMR.neu={};dmKatLoad(DMR.teil);return}
+  const s=e.target.closest('#dmadmcard .dmr-m');if(!s)return;DMR.m=s.value;dmRDraw()});
 document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmadmcard');if(!c)return;const teil=DMR.teil;
   const nb=e.target.closest('[data-dmrteil]');if(nb){DMR.teil=nb.dataset.dmrteil;DMR.sel='';DMR.q='';DMR.f='alle';DMR.m='alle';DMR.edit=null;DMR.err='';DMP.g=null;dmRDraw();return}
   const fb=e.target.closest('[data-dmrf]');if(fb){DMR.f=fb.dataset.dmrf;dmRDraw();return}
@@ -1000,7 +1007,7 @@ document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmad
     await dmRDo(teil,was,String(x.id));return}
   const pb=e.target.closest('[data-dmrbild]');if(pb){const id=pb.dataset.id,was=pb.dataset.dmrbild;if(DMR.busy)return;
     if(was==='malen'){DMR.busy=id;dmRDraw()}
-    const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'/bild',xjson('POST',{id,was}));DMR.busy='';
+    const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'/bild',xjson('POST',{id,was,welt:DMR.welt[teil]||(DMR.k[teil]||{}).welt||''}));DMR.busy='';
     if(!r.ok){sayToast(DMRWARUM()[d.detail]||dmErr(r.status,d.detail));dmRDraw();return}
     if(was==='malen'&&d.neu)DMR.neu[id]=d.neu;else delete DMR.neu[id];DMR.v=Date.now();DMR.sel=id;
     await dmKatLoad(teil);return}});

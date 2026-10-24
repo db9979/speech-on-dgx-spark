@@ -4614,7 +4614,8 @@ def _lang(b):
 def _choices(lang, stories=True, welt=""):
     """What a new round or hero is chosen from; stories (the admin's and the shipped ones, title and idea) only for a
     host, not for a guest's seat form. The pictures of the hero form: a seat's form in its round's world (welt), the new
-    round's form each world's ("bilder", dungeon.js dmHB shows the world chosen; "bild" the first world's)."""
+    round's form each world's ("bilder", dungeon.js dmHB shows the world chosen; "bild" the first world's). A world's
+    "bild" is its title picture (landscape, in its own style), shown on the new round's world card instead of the sign."""
     r = rules()
     li = 1 if lang == "en" else 0
     z = lambda x: x.get("zeichen") or ZEICHEN
@@ -4622,7 +4623,7 @@ def _choices(lang, stories=True, welt=""):
     have = db.files() if db.on() else frozenset()
     pic = lambda a, x: {"bild": db.hero_pic(r, a, x, have, welt), **({} if welt else {"bilder": db.hero_pics(r, a, x, have)})}
     satz = lambda x: (x.get("satz") or ["", ""])[li]
-    return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x),
+    return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x), "bild": db.world_pic(r, x, have),
                         "farben": {k: v for k, v in (x.get("farben") or {}).items() if k in FARBEN}} for x in r["welten"]],
             "toene": [{"id": x["id"], "name": x["name"][li], "zeichen": z(x)} for x in r["toene"]],
             "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x), "satz": satz(x), **pic("volk", x)}

@@ -30,7 +30,8 @@ from core import auth, json_body
 
 router = APIRouter()
 TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende")
-MIT_BILD = ("gegenstaende", "gegner")
+MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten")   # welten, peoples, classes,
+# backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above
 BODY = 16000              # one entry as JSON
 
 
@@ -141,10 +142,18 @@ def werte(teil, x, r, li):
     return [z for z in out if z[1]]
 
 
-def view(teil, lang="de"):
+def _welt_of(r, welt):
+    """The world a people, class or background is shown and painted in: the one asked for if there is one, else the
+    first."""
+    ids = [w["id"] for w in r["welten"]]
+    return welt if welt in ids else ids[0]
+
+
+def view(teil, lang="de", welt=""):
     """{"teil", "zeilen": [...], "eintraege": {id: entry}}: the merged part with where each entry comes from."""
     li = 1 if lang == "en" else 0
     r = dungeon.rules()
+    welt = _welt_of(r, welt)
     grund = {x["id"] for x in dungeon._base_rules(srd=False).get(teil) or []}
     base = {x["id"]: x for x in dungeon._base_rules().get(teil) or []}
     own = {x.get("id"): x for x in dungeon.own_rules().get(teil) or [] if isinstance(x, dict)}
@@ -164,12 +173,15 @@ def view(teil, lang="de"):
             row["marke"] = balance.item(x, lang)
             row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled
         if teil in MIT_BILD:
-            n, _ = dingbild.picture_of(r, x)
+            n, _ = dingbild.entry_pic(r, teil, x, welt)
             row["bild"] = n if n in have else ""
-            row["neu"] = "neu-" + n[5:] if "neu-" + n[5:] in neu else ""
+            cur = dingbild._current(r, x, teil, welt)[0]
+            row["neu"] = "neu-" + cur[5:] if "neu-" + cur[5:] in neu else ""
         rows.append(row)
         entries[str(i)] = x
     out = {"teil": teil, "zeilen": rows, "eintraege": entries, "bilder_an": dingbild.on()}
+    if teil in dingbild.HELD_TEILE:     # the world the pictures are in, and the worlds to choose from (dungeon.js)
+        out.update(welt=welt, welten=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]])
     if teil == "gegenstaende":       # the ladder a rolled item climbs (dungeon.rarity: W100 + 2 × level)
         out["seltenheiten"] = [{"id": s["id"], "name": _name(s, li), "ab": s["ab"], "bonus": s["bonus"],
                                 "stufe": s["stufe_min"], "preis": s["preis"]} for s in r["seltenheit"]]
@@ -221,7 +233,7 @@ async def katalog(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
     if teil not in TEILE:
         raise HTTPException(404, "teil")
-    return await asyncio.to_thread(view, teil, _lang(request))
+    return await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
 
 
 @router.post("/api/admin/dungeon/katalog/{teil}", dependencies=[Depends(auth)])
@@ -237,7 +249,7 @@ async def katalog_change(teil: str, request: Request):
         hint = await asyncio.to_thread(change, teil, str(b.get("was") or ""), i, b.get("eintrag"))
     except ValueError as e:
         raise HTTPException(422, e.args[0] if e.args and isinstance(e.args[0], list) else ["eintrag"])
-    out = await asyncio.to_thread(view, teil, _lang(request))
+    out = await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
     out["hinweis"] = hint
     return out
 
@@ -253,17 +265,18 @@ async def katalog_bild(teil: str, request: Request):
     try:
         c = await asyncio.to_thread(_entry, teil, str(b.get("id") or ""))
         r = dungeon.rules()
+        welt = _welt_of(r, str(b.get("welt") or ""))
         if was == "malen":
-            why, neu = await dingbild.repaint(r, c, frei=True)   # only an admin reaches this: no day limit
+            why, neu = await dingbild.repaint(r, c, True, teil, welt)   # only an admin reaches this: no day limit
             if why != "ok":
                 raise HTTPException(409, why)
-            if not dingbild.picture_of(r, c)[1]:          # „🖌 Malen“ of a missing picture: nothing to compare
-                await asyncio.to_thread(dingbild.settle, r, c, True)
-                return {"neu": "", "bild": dingbild.picture_of(r, c)[0]}
+            if not dingbild.entry_pic(r, teil, c, welt)[1]:   # „🖌 Malen“ of a missing picture: nothing to compare
+                await asyncio.to_thread(dingbild.settle, r, c, True, teil, welt)
+                return {"neu": "", "bild": dingbild.entry_pic(r, teil, c, welt)[0]}
             return {"neu": neu}
         if was not in ("neu", "alt"):
             raise HTTPException(400, "was")
-        await asyncio.to_thread(dingbild.settle, r, c, was == "neu")
+        await asyncio.to_thread(dingbild.settle, r, c, was == "neu", teil, welt)
         return {"ok": True}
     except LookupError as e:
         raise dungeon._http(e)
