@@ -90,6 +90,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/admin/dungeon/geschichte/akt      {plan, n, hinweis}: the model writes act n again
 """
 import asyncio
+import base64
 import copy
 import hashlib
 import hmac
@@ -132,6 +133,9 @@ FIGUREN = os.path.join(STATE, "dungeon-figuren.json")
 EIGENE = os.path.join(STATE, "dungeon-regeln.json")
 HELDEN = "dungeon-helden.json"
 TON_DIR = os.path.join(STATE, "dungeon-ton")
+KLON_DIR = os.path.join(STATE, "dungeon-klone")   # a character's voice as clone reference (<hash of its description>.wav/.txt)
+KLON_MAX = 200             # clone references kept (the longest unused go first)
+KLON_S = (3.0, 15.0)       # seconds a piece made with VoiceDesign needs to become its character's clone reference
 KAMPAGNEN = "dungeon-kampagnen.json"
 GESCHICHTEN = os.path.join(STATE, "dungeon-geschichten.json")
 BILD_DIR = os.path.join(STATE, "dungeon-bild")
@@ -301,11 +305,11 @@ _speaking = set()         # rounds whose last turn is being read aloud right now
 _bilder_jobs = {}          # rid or "h:"+hid -> the heavy job's id of a picture on its way (memory: a restart forgets it)
 _sweep = [0.0]            # last look for portraits and covers nobody keeps (_bild_sweep)
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
-_stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
+_stimmen = {"t": 0.0, "v": [], "design": False, "base": False, "laeuft": False}   # the speech output's voices a hero may take, whether it can make one from a description and whether its main model clones (Base) (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
-                  kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0)
+                  kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0)
 
 
 def _go(coro, name):
@@ -2974,14 +2978,17 @@ def voices(r):
     return {k: (have.get(str(s.get(k) or "").lower(), "") if have else str(s.get(k) or "")) for k in STIMMEN}
 
 
-async def ask_tts(text, voice, klang=""):
+async def ask_tts(text, voice, klang="", ref=None):
     """One part spoken by the Spark's speech output as 16-bit mono PCM; with klang a voice made from that description
-    (VoiceDesign) instead of a named one (tests replace this)."""
+    (VoiceDesign) instead of a named one, with ref (data URL, words) the Base model clones that recording (tests
+    replace this)."""
     import httpx
     from core import api_headers
     cfg = load_config()
     body = {"input": text, "response_format": "pcm"}
-    if klang:
+    if ref:
+        body.update(ref_audio=ref[0], ref_text=ref[1])
+    elif klang:
         body.update(task_type="VoiceDesign", instructions=klang)
     elif voice:
         body["voice"] = voice
@@ -2998,10 +3005,12 @@ async def ask_tts(text, voice, klang=""):
     return bytes(out)
 
 
-async def spoken(text, voice, klang, s):
+async def spoken(text, voice, klang, s, ref=None):
     """ask_tts within s seconds; when the VoiceDesign engine is not up (loading, stopped, error, blocked), the same
     text once more in the fixed voice, and VoiceDesign stays out until the next look at the speech output
     (hero_voices, STIMMEN_S). (pcm, True when the fixed voice stood in)."""
+    if ref:
+        return await asyncio.wait_for(ask_tts(text, "", "", ref=ref), s), False
     try:
         return await asyncio.wait_for(ask_tts(text, voice, klang), s), False
     except RuntimeError as e:
@@ -3115,15 +3124,76 @@ TEIL_S = 40               # seconds one piece read aloud may take
 
 async def _piece(text, voice, klang):
     """One piece read aloud: the voice asked for, once more, then the speech output's own voice. (pcm, how) with how
-    "ok", "nochmal" or "ersatz"; None when even that failed (the piece is left out, the rest goes on)."""
-    tries = [(voice, klang, "ok"), (voice, klang, "nochmal")] + ([("", "", "ersatz")] if voice or klang else [])
-    for v, k, how in tries:
+    "ok", "nochmal" or "ersatz"; None when even that failed (the piece is left out, the rest goes on).
+    With a Base model (Dominik 2026-10-24 „Beides, je nach Modell“) a character made from a description speaks as its
+    clone: its first piece made with VoiceDesign becomes the reference (klon_keep), every later one clones it, twice,
+    then VoiceDesign again; with CustomVoice nothing changes."""
+    ref = await asyncio.to_thread(klon_of, klang) if klang and _stimmen["base"] else None
+    tries = ([(ref, "ok"), (ref, "nochmal"), (None, "nochmal")] if ref else [(None, "ok"), (None, "nochmal")]) \
+        + ([("ersatz", "ersatz")] if voice or klang else [])
+    for r, how in tries:
+        v, k = ("", "") if r == "ersatz" else (voice, klang)
         try:
-            pcm, statt = await spoken(text, v, k, TEIL_S)
-            return _pcm(pcm), "ersatz" if statt else how
+            pcm, statt = await spoken(text, v, k, TEIL_S, ref=r if isinstance(r, tuple) else None)
         except Exception:
             continue
+        pcm = _pcm(pcm)
+        if klang and _stimmen["base"] and not ref and r is None and not statt:
+            await asyncio.to_thread(klon_keep, klang, pcm, text)
+        return pcm, "ersatz" if statt else how
     return None
+
+
+def _klon_file(klang):
+    return os.path.join(KLON_DIR, hashlib.sha256(klang.encode()).hexdigest()[:24])
+
+
+def klon_of(klang):
+    """The clone reference of the character with this description: (data URL of its WAV, the words in it), None before
+    its first piece; a use keeps it from being dropped first."""
+    f = _klon_file(klang)
+    try:
+        with open(f + ".wav", "rb") as x:
+            wav = x.read()
+        with open(f + ".txt", encoding="utf-8") as x:
+            words = x.read()
+        os.utime(f + ".wav")
+    except OSError:
+        return None
+    return "data:audio/wav;base64," + base64.b64encode(wav).decode(), words
+
+
+def klon_keep(klang, pcm, text):
+    """A piece made with VoiceDesign as its character's clone reference, when it is KLON_S long; at most KLON_MAX kept,
+    the longest unused go."""
+    import begleiter
+    s = len(pcm) / 48000                       # 16-bit mono at 24 kHz
+    if not KLON_S[0] <= s <= KLON_S[1] or not str(text).strip():
+        return False
+    os.makedirs(KLON_DIR, mode=0o700, exist_ok=True)
+    f = _klon_file(klang)
+    for ext, data in ((".txt", str(text).strip().encode()), (".wav", begleiter.wav_of(pcm))):
+        with open(f + ext + ".neu", "wb") as x:
+            x.write(data)
+        os.chmod(f + ext + ".neu", 0o600)
+        os.replace(f + ext + ".neu", f + ext)
+    alle = sorted((os.path.getmtime(os.path.join(KLON_DIR, n)), n[:-4]) for n in os.listdir(KLON_DIR) if n.endswith(".wav"))
+    for _, n in alle[:max(0, len(alle) - KLON_MAX)]:
+        for ext in (".wav", ".txt"):
+            try:
+                os.remove(os.path.join(KLON_DIR, n + ext))
+            except FileNotFoundError:
+                pass
+    _day.bump("klone")
+    print(f"dungeon: vorlesen | klon | neu | {round(s, 1)} s", flush=True)
+    return True
+
+
+def klone_count():
+    try:
+        return sum(1 for n in os.listdir(KLON_DIR) if n.endswith(".wav"))
+    except FileNotFoundError:
+        return 0
 
 
 def _ton_set(rid, **kw):
@@ -3215,6 +3285,7 @@ async def hero_voices():
         v = await admin.tts_voices()
         _stimmen["v"] = [x for x in v.get("voices") or [] if isinstance(x, str) and x and _VOICE.fullmatch(x)][:60]
         _stimmen["design"] = v.get("voicedesign") is True
+        _stimmen["base"] = v.get("model_kind") == "base"
     except Exception:
         pass
     finally:
@@ -4253,6 +4324,7 @@ def for_live():
             "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "verworfen": t["verworfen"],
             "abgelehnt": t["abgelehnt"], "kampagnen": sum(len(campaigns(u)) for u in profiles.user_ids()),
             "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking), "vorlesen_fehler": t["vorlesen_fehler"], "vorlesen_ersatz": t["vorlesen_ersatz"],
+            "klone": klone_count(), "klone_neu": t["klone"],
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
             "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),

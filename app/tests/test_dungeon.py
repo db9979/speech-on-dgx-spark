@@ -1112,6 +1112,57 @@ class ReadAloud(Base):
         self.assertTrue(len(V.saetze("A" * 400 + ".", first=True)[0]) <= V.ERST_MAX)
         self.assertEqual(V.saetze("Ja. Nein. Vielleicht doch."), ["Ja. Nein. Vielleicht doch."])   # short ones together
 
+    def test_a_character_speaks_as_its_clone_with_a_base_model(self):
+        """Dominik 2026-10-24 „Beides, je nach Modell“: with a Base model the first piece a character made with
+        VoiceDesign becomes its clone reference, every later piece clones it (twice, then VoiceDesign again); too short
+        a piece is no reference; at most KLON_MAX kept; with CustomVoice nothing is cloned."""
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        old_dir, old_max = dungeon.KLON_DIR, dungeon.KLON_MAX
+        dungeon.KLON_DIR = tmp
+        self.addCleanup(setattr, dungeon, "KLON_DIR", old_dir)
+        self.addCleanup(setattr, dungeon, "KLON_MAX", old_max)
+        self.addCleanup(__import__("shutil").rmtree, tmp, True)
+        said, fail = [], []
+
+        async def tts(text, voice, klang="", ref=None):
+            said.append(("klon" if ref else "design" if klang else voice, text))
+            if fail and fail[0](ref, klang):
+                raise RuntimeError("tts 500")
+            return b"\1\0" * 24000 * (1 if text.startswith("Kurz") else 5)     # 1 s or 5 s
+        old = dungeon.ask_tts
+        dungeon.ask_tts = tts
+        self.addCleanup(setattr, dungeon, "ask_tts", old)
+        grimma = "an old woman, raspy, warm"
+        dungeon._stimmen["base"] = False                                     # CustomVoice: no clone
+        asyncio.run(dungeon._piece("Willkommen in meiner Hütte.", "", grimma))
+        self.assertEqual(dungeon.klone_count(), 0)
+        dungeon._stimmen["base"] = True
+        self.addCleanup(dungeon._stimmen.update, base=False)
+        asyncio.run(dungeon._piece("Kurz.", "", grimma))                    # one second: no reference
+        self.assertEqual(dungeon.klone_count(), 0)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            got = asyncio.run(dungeon._piece("Willkommen in meiner Hütte.", "", grimma))
+        self.assertEqual((got[1], dungeon.klone_count()), ("ok", 1))
+        self.assertIn("dungeon: vorlesen | klon | neu | 5.0 s", out.getvalue())
+        ref = dungeon.klon_of(grimma)
+        self.assertTrue(ref[0].startswith("data:audio/wav;base64,UklGR"))
+        self.assertEqual(ref[1], "Willkommen in meiner Hütte.")
+        said.clear()
+        self.assertEqual(asyncio.run(dungeon._piece("Setzt euch.", "", grimma))[1], "ok")
+        self.assertEqual(said, [("klon", "Setzt euch.")])                    # the clone, no VoiceDesign any more
+        said.clear()
+        fail.append(lambda ref, klang: bool(ref))                            # the clone fails twice: VoiceDesign again
+        self.assertEqual(asyncio.run(dungeon._piece("Setzt euch.", "", grimma))[1], "nochmal")
+        self.assertEqual([x[0] for x in said], ["klon", "klon", "design"])
+        fail.clear()
+        dungeon.KLON_MAX = 2                                                 # the longest unused go
+        for i in range(3):
+            asyncio.run(dungeon._piece("Willkommen in meiner Hütte.", "", f"voice number {i}, calm"))
+        self.assertEqual(dungeon.klone_count(), 2)
+        self.assertIsNone(dungeon.klon_of(grimma))
+
     def test_quotes_in_the_voice_of_who_says_them(self):
         v = self.new_round(vorlesen=True)
         rid = v["rid"]

@@ -3096,6 +3096,13 @@
 "titel": "Handy-Leiste am Spieltisch",
 "text": "A: Am Handy eine Runde öffnen: unten steht eine eigene Leiste mit Geschichte, Gruppe, Held und Karte, die Leiste des Panels ist weg. B: Jeder Knopf zeigt nur seinen Teil, Held den eigenen Helden mit Heldenbogen und Leiten, Karte nur die Karte. C: Auf Gruppe bleiben, bis der Dungeon-Master weitererzählt: Geschichte bekommt einen roten Punkt, der beim Antippen verschwindet. D: „← Runden“: die Leiste des Panels ist wieder da. E: Am Rechner: drei Spalten wie bisher, keine Leiste.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P467",
+"v": 1007,
+"titel": "Figuren mit Klon-Stimme (Base-Modell)",
+"text": "Nur mit Base-Modell und VoiceDesign (Einstellungen → Sprachausgabe). A: Runde mit Vorlesen, ein NPC spricht zum ersten Mal: Zustand → Logs zeigt „dungeon: vorlesen | klon | neu“. B: Der NPC spricht im nächsten Zug wieder: gleicher Klang, der Satz kommt schneller. C: Zustand → Überblick, Dungeon-Master: „n Klon-Stimmen“. D: Mit CustomVoice: keine Klon-Zeile, Vorlesen wie bisher.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

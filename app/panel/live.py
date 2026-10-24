@@ -1779,6 +1779,7 @@ def snapshot(view="admin", now=None):
                         + (f" · Vorlesen läuft ({dgn['liest']})" if dgn.get("liest") else "")
                         + (f" · Vorlesen: {dgn['vorlesen_ersatz']} Teile mit Ersatzstimme" if dgn.get("vorlesen_ersatz") else "")
                         + (f" · Vorlesen: {dgn['vorlesen_fehler']} Fehler" if dgn.get("vorlesen_fehler") else "")
+                        + (f" · {dgn['klone']} Klon-Stimmen" + (f", heute {dgn['klone_neu']} neu" if dgn.get("klone_neu") else "") if dgn.get("klone") else "")
                         + (" · schreibt Bisher geschah" if dgn.get("schreibt") else "")
                         + f" · {dgn.get('geschichten', 0)} Geschichten, heute {dgn.get('akte', 0)} Akte weiter, {dgn.get('vorschlaege', 0)} Vorschläge"
                         + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe"
