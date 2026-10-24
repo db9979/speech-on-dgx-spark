@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.017** AI Dungeon Master: music fitting world and mood with drums and bass, own vault mood; mark a music piece as annoying with 👎, guests too, made again at night
 - **V01.1.016** AI Dungeon Master: reading aloud at the table audible again (the unlocking silence came as data: and the panel's security rule blocked it), the table wraps cleanly at small widths instead of word by word, prompt rule "as JSON" gone and new "no values outside the facts"
 - **V01.1.015** Model start more robust: when the panel may not change refs/main or the Hub file listing of a model (e.g. left by root), it only writes a log line, the engine starts anyway
 - **V01.1.014** AI Dungeon Master: guardian and master of a vault fight with foes from the Bestiarium by the group's level, only the victory in the fight opens the room; traps as a saving throw like in D&D (made half damage, armour does not count)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.009** AI Dungeon Master: pictures for classes, peoples, backgrounds and worlds on the rules tab (Paint, Paint again, world to choose), backgrounds per world, a title picture per world on the world cards
 - **V01.1.008** AI Dungeon Master: at 0 life down, after 3 turns without healing fallen for good (things and gold lie here, at the children's table only unconscious), Iron skin, Shield wall and Battle cry work by fixed rules, experience only at the end of the round
 - **V01.1.007** AI Dungeon Master: with a Base model every character speaks as a clone of its first VoiceDesign voice, the same sound in every turn and faster; with CustomVoice nothing changes
-- **V01.1.006** AI Dungeon Master: on the phone a bar of its own at the bottom (Story, Group, Hero, Map), one part at a time, a red dot on a new turn; the panel's bar is hidden at the table
 
 
 

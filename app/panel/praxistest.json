@@ -3145,6 +3145,13 @@
 "titel": "Vorlesen hörbar und Tisch bei kleiner Breite",
 "text": "A: Runde mit Vorlesen an, einmal „🔊 Ton an“ tippen (Chrome und Safari): die Erzählung wird vorgelesen, in der Konsole steht kein „violates … media-src“. B: Das Panel-Fenster auf Laptop-Breite verkleinern (Menü links sichtbar): Titel und „Fantasy · … · Zug“ stehen in einer Zeile, Musik und Knöpfe darunter, nichts liegt übereinander; die Geschichte ist breit, die Gruppe steht als Zeile oben. C: Noch schmaler: eine Spalte. D: Funktionen → KI-Dungeon-Master → Regeln anpassen: im Prompt fehlt „Formatiere … JSON“, Regel 7 „Erfinde keine Werte …“ ist da.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P474",
+"v": 1017,
+"titel": "Dungeon-Master: Musik zum Thema, Stück nervt",
+"text": "A: Runde mit Musik, ein Stück läuft: in der Leiste 👎 tippen. Hinweis „Kommt nicht wieder …“, das nächste Stück blendet ein. B: Ein Gast am Handy tippt bei einem anderen Stück 👎: auch an deinem Tisch kommt es nicht wieder. C: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: „2 markiert“ mit Welt und Stimmung; bei einem „Zurücknehmen“, es spielt wieder. D: Am nächsten Morgen ist das andere weg, die Tabelle zeigt das Feld wieder voll; Live zeigt die Zahl, nie einen Namen. E: Nach dem Update spielen erst die alten Stücke weiter; nach „Musik jetzt vorbereiten“ oder einer Nacht klingt die Taverne nach Laute, Fiedel und Trommel, der Kampf nach Kriegstrommeln und tiefem Bass, beides nie hektisch. F: Im Zufalls-Gewölbe der Karte wechselt die Leiste zu „Gewölbe“ mit eigener Musik.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

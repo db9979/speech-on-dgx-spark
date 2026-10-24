@@ -51,6 +51,7 @@ class MusicBase(Base):
         dm._want.clear()
         dm._akte.clear()
         dm._plays.clear()
+        dm._gemerkt.clear()
         dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False)
         self.made = []
 
@@ -111,8 +112,8 @@ class OffByDefault(MusicBase):
 class Words(MusicBase):
     def test_caption_only_fixed_words(self):
         import random
-        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.ENDE, *dm.STIL.values(), *dm.ART.values(), *dm.TONART,
-                                                     *[x for v in dm.INSTRUMENTE.values() for x in v], *dm.INSTRUMENTE_EIGEN,
+        themen = [t for w in list(dm.THEMA.values()) + [dm.EIGEN_THEMA] for sz, wie in w.values() for t in (sz, *wie)]
+        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.ENDE, *dm.STIL.values(), *themen, *dm.TONART,
                                                      *[x for v in dm.TEMPO.values() for x in v]]).lower()))
         for welt in list(dm.STIL) + ["eigene", EVIL]:
             for st in dm.STIMMUNGEN:
@@ -121,21 +122,25 @@ class Words(MusicBase):
                 self.assertNotIn("IGNORE", c)
                 self.assertLessEqual(set(re.findall(r"[a-z]+", c.lower())), fixed)
 
-    def test_calm_ambient_never_fast(self):
-        """Dominik 2026-10-23: nothing annoying or fast, calm ambient music; a fight too stays a soft pulse."""
+    def test_theme_drums_and_bass_never_hectic(self):
+        """Dominik 2026-10-24: the pieces fit the theme, drums and bass welcome; 2026-10-23: never annoying or too fast."""
         import random
         for welt in list(dm.STIL) + ["eigene"]:
+            table = dm.THEMA.get(welt, dm.EIGEN_THEMA)
+            self.assertEqual(set(table), set(dm.STIMMUNGEN))               # every mood has its own scene
             for st in dm.STIMMUNGEN:
-                for seed in range(40):
+                for seed in range(20):
                     c = dm.caption(welt, st, random.Random(seed)).lower()
-                    self.assertIn("ambient", c)
-                    self.assertIn("no drums, no percussion", c)
-                    self.assertEqual(c.count("drum"), 1, c)              # only "no drums"
-                    self.assertNotRegex(c, r"\b(fast|driving|intense|urgent|relentless|frantic|energetic|bouncy|dance|"
-                                           r"heroic|epic|fanfare|choir hums|taiko|bagpipes|arpeggios)\b")
+                    self.assertIn(table[st][0], c)
+                    self.assertRegex(c, r"drum|taiko|timpani|percussion|tambourine")
+                    self.assertRegex(c, r"bass")
+                    self.assertTrue(c.endswith(dm.ENDE.lower()))
+                    self.assertNotRegex(c[:-len(dm.ENDE)], r"\b(fast|frantic|hectic|relentless|chaotic|no drums)\b")
                     bpm = [int(x) for x in re.findall(r"(\d+) bpm", c)]
                     self.assertEqual(len(bpm), 1, c)
-                    self.assertLessEqual(bpm[0], 80)
+                    self.assertLessEqual(bpm[0], 110)
+        self.assertIn("never hectic", dm.ENDE)
+        self.assertNotEqual(dm.caption("fantasy", "taverne", random.Random(1)), dm.caption("piraten", "taverne", random.Random(1)))
 
     def test_game_text_never_reaches_the_model(self):
         self.music_on()
@@ -178,6 +183,17 @@ class Moods(MusicBase):
         self.assertEqual(dm.mood({"szene": {"ort": "Taverne zum Eber", "stimmung": ""}}), "taverne")
         self.assertEqual(dm.mood({"szene": {"ort": "Brücke", "stimmung": "Gefecht"}}), "kampf")
 
+    def test_vault_has_its_own_mood(self):
+        import dungeon_karte
+        old = dungeon_karte.vault
+        dungeon_karte.vault = lambda rd: {"name": "x"} if rd.get("karte", {}).get("drin") else None
+        self.addCleanup(setattr, dungeon_karte, "vault", old)
+        rd = {"szene": {"ort": "Taverne", "stimmung": ""}, "karte": {"drin": 1}}
+        self.assertEqual(dm.mood(rd), "gewoelbe")
+        self.assertEqual(dm.mood(dict(rd, kampf={"x": 1})), "kampf")      # a fight in the vault is a fight
+        self.assertEqual(dm.mood(dict(rd, karte={"drin": 0})), "taverne")
+        self.assertEqual(dm.mood({"szene": {}}), "erkunden")               # no map, no vault
+
     def test_victory_and_door_turns(self):
         rd = {"log": [{"art": "dm", "text": "Die Tür knarrt.", "n": 2}, {"art": "stufe", "n": 3}, {"art": "dm", "text": "Stille.", "n": 4}],
               "status": "laeuft", "szene": {}}
@@ -192,6 +208,12 @@ class Ahead(MusicBase):
         dm.ask_round("r1", rd)
         self.assertEqual(set(dm._want), {("fantasy", m) for m in ("erkunden", "spannung", "kampf", "sieg")})
         self.assertTrue(all(w["upto"] == dm.BEREIT and w["extra"] == 0 for w in dm._want.values()))
+        dm._want.clear()
+        dm.ask_round("r0", dict(rd, karte={"orte": []}))      # a round with a map asks for its vault too
+        self.assertIn(("fantasy", "gewoelbe"), dm._want)
+        dm._want.clear()
+        dm._akte.pop("r0", None)
+        dm.ask_round("r1", rd)
         dm.ask_round("r1", dict(rd, akt=1))                     # a new act: new pieces for the act after it
         self.assertEqual(dm._want[("fantasy", "finale")], {"upto": dm.BEREIT, "extra": dm.NEU_JE_AKT})
         dm.ask_round("r1", dict(rd, akt=1))                     # the same act again adds nothing
@@ -274,32 +296,34 @@ class Store(MusicBase):
         self.assertTrue(set(left) - set(ids))                    # the new one stays
 
     def test_megabytes(self):
-        d = {"stuecke": [{"id": f"m{i:010x}", "w": "fantasy", "st": dm.STIMMUNGEN[i % 6], "s": 60, "t": i, "b": 400 * 1024, "n": 0}
+        d = {"stuecke": [{"id": f"m{i:010x}", "w": "fantasy", "st": dm.STIMMUNGEN[i % 7], "s": 60, "t": i, "b": 400 * 1024, "n": 0}
                          for i in range(12)]}
         gone = dm.prune(d, 30, 1, keep="m0000000000")
         self.assertLessEqual(sum(x["b"] for x in d["stuecke"]), 1024 * 1024)
         self.assertIn("m0000000000", [x["id"] for x in d["stuecke"]])
         self.assertEqual(len(gone), 10)
 
-    def test_older_style_made_again(self):
-        """Pieces of an older style (before the calm ambient one) are never played, and the first look throws them away."""
-        self.music_on()
-        new = self.put("fantasy", "erkunden", 1)[0]
+    def test_older_style_plays_until_new_ones_come(self):
+        """A piece of an older style plays until its field has new ones (the table is never silent), its field asks
+        for new ones, and once full the older ones go first."""
+        self.music_on(n=4)
         old = "m" + os.urandom(5).hex()
         with open(dm.file_of(old), "wb") as f:
             f.write(MP3)
-        d = dm.read_json(dm.INDEX, {})
-        d["stuecke"].append({"id": old, "w": "fantasy", "st": "erkunden", "s": 60, "t": 1, "b": 10, "n": 0})
         with open(dm.INDEX, "w") as f:
-            json.dump(d, f)
+            json.dump({"stuecke": [{"id": old, "w": "fantasy", "st": "erkunden", "s": 60, "t": 1, "b": 10, "n": 0, "v": 2}]}, f)
         dm._cache.update(mtime=None, d=None)
-        self.assertEqual([x["id"] for x in dm._read()["stuecke"]], [new])   # never played
-        asyncio.run(dm.step(at_hour(12)))
+        self.assertEqual(dm.count(dm._read(), "fantasy", "erkunden"), 0)
+        rd = {"welt": "fantasy", "status": "laeuft", "szene": {}, "akt": 0}
+        self.assertEqual(dm.for_view("r1", rd)["stuecke"], [old])          # never silent
+        self.assertEqual(dm.for_live()["alt"], 1)
+        new = self.put("fantasy", "erkunden", 1)[0]
+        self.assertEqual(dm.for_view("r1", rd)["stuecke"], [new])          # the new style once there
+        d = {"stuecke": list(dm._read()["stuecke"])}
+        self.put("fantasy", "erkunden", 3)
+        d = {"stuecke": list(dm._read()["stuecke"])}
+        self.assertEqual(dm.prune(d, 4, 600), [old])                      # full: the older one goes first
         self.assertFalse(os.path.exists(dm.file_of(old)))
-        self.assertTrue(os.path.exists(dm.file_of(new)))
-        self.assertEqual([x["id"] for x in dm.read_json(dm.INDEX, {})["stuecke"]][:1], [new])
-        self.assertTrue(all(x.get("v") == dm.STIL_V for x in dm.read_json(dm.INDEX, {})["stuecke"]))
-        self.assertEqual(dm.alt_weg(), 0)
 
     def test_clear(self):
         self.put("fantasy", "kampf", 2)
@@ -360,6 +384,87 @@ class Doors(MusicBase):
         self.assertNotRegex(js, r"new Audio\((?!u\))")             # music only from the store's pieces
         self.assertNotIn(".mp3", js)                               # sounds are made, no files
 
+
+
+class Nervt(MusicBase):
+    """Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“, „alles wie
+    vorgeschlagen“: one mark of any seat is enough, the night makes a new one, the admin takes a mark back."""
+
+    def test_guest_marks_once_and_it_never_plays_again(self):
+        self.music_on()
+        sid, other = self.put("fantasy", "erkunden", 2)
+        v = self.new_round()
+        code, _ = self.guest(v["rid"])
+        r = self.v.post("/api/dungeon/musik/nervt", json={"code": code, "s": sid})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"ok": True, "neu": True})
+        self.assertEqual(self.v.post("/api/dungeon/musik/nervt", json={"code": code, "s": sid}).json()["neu"], False)   # once per seat
+        x = next(x for x in dm.read_json(dm.INDEX, {})["stuecke"] if x["id"] == sid)
+        self.assertEqual(x["nervt"], 1)                                   # only a number, no seat or name
+        self.assertEqual(set(x) - {"id", "w", "st", "s", "t", "b", "n", "v", "nervt"}, set())
+        self.assertEqual(self.v.post("/api/dungeon/musik", json={"code": code, "s": sid}).status_code, 404)
+        self.assertEqual(dm.count(dm._read(), "fantasy", "erkunden"), 1)    # the field asks for a new one
+        view = self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["musik"]
+        self.assertNotIn(sid, view["stuecke"])
+        self.assertIn(other, view["stuecke"])
+        self.assertEqual(self.v.post("/api/dungeon/musik/nervt", json={"code": "x" * 32, "s": other}).status_code, 400)
+        self.assertEqual(self.v.post("/api/dungeon/musik/nervt", json={"code": code, "s": "../index"}).status_code, 404)
+
+    def test_profile_seat_only(self):
+        self.music_on()
+        sid = self.put("fantasy", "erkunden", 1)[0]
+        v = self.new_round()
+        self.assertIn(self.c2.post(f"/api/profile/dungeon/{v['rid']}/musik/{sid}/nervt").status_code, (403, 404))   # no seat
+        self.assertTrue(dm.spielbar(dm._read()["stuecke"][0]))
+        r = self.c.post(f"/api/profile/dungeon/{v['rid']}/musik/{sid}/nervt")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertFalse(dm.spielbar(dm.read_json(dm.INDEX, {})["stuecke"][0]))
+
+    def test_night_throws_marked_away_and_makes_new(self):
+        self.music_on(n=4)
+        ids = self.put("horror", "kampf", 4)
+        dm.nervt(ids[0], "r:a")
+        dm.nervt(ids[0], "r:b")
+        self.assertEqual(dm.for_live()["markiert"], 1)
+        self.assertEqual(asyncio.run(dm.step(at_hour(12))), "nichts")    # by day it waits for the night (no round asks)
+        self.assertTrue(os.path.exists(dm.file_of(ids[0])))
+        asyncio.run(dm.step(at_hour(3)))
+        self.assertFalse(os.path.exists(dm.file_of(ids[0])))
+        left = [x["id"] for x in dm._read()["stuecke"]]
+        self.assertNotIn(ids[0], left)
+        self.assertEqual(len(left), 4)                                    # the night made a new one for the field
+        self.assertEqual(dm.for_live()["markiert"], 0)
+
+    def test_marked_go_first_when_full(self):
+        d = {"stuecke": [{"id": f"m{i:010x}", "w": "fantasy", "st": "spannung", "s": 60, "t": i, "b": 1, "n": 9 - i, "v": dm.STIL_V}
+                         for i in range(5)]}
+        d["stuecke"][4]["nervt"] = 1
+        self.assertEqual(dm.prune(d, 4, 600), ["m0000000004"])
+
+    def test_admin_takes_a_mark_back(self):
+        from tests.test_dungeon import ADMIN
+        self.music_on()
+        sid = self.put("scifi", "finale", 1)[0]
+        dm.nervt(sid, "r:a")
+        self.assertEqual(self.c.post(f"/api/admin/dungeon/musik/{sid}/zurueck").status_code, 401)
+        d = ADMIN.get("/api/admin/dungeon/musik").json()
+        self.assertEqual([x["id"] for x in d["markiert"]], [sid])
+        r = ADMIN.post(f"/api/admin/dungeon/musik/{sid}/zurueck")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["markiert"], [])
+        self.assertTrue(dm.spielbar(dm._read()["stuecke"][0]))
+        self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/m0000000000/zurueck").status_code, 404)
+
+    def test_rate_limit_live_and_button(self):
+        import guard
+        self.assertIn("dungeonnervt", guard.RATE)
+        live = dm.for_live()
+        self.assertIn("markiert", live)
+        self.assertTrue(all(isinstance(x, (int, bool)) for x in live.values()))
+        js = open(os.path.join(os.path.dirname(dm.__file__), "static", "js", "dungeon-ton.js"), encoding="utf-8").read()
+        self.assertIn('data-dmton="nervt"', js)
+        self.assertIn("/api/dungeon/musik/nervt", js)
+        self.assertIn('data-dmmusik="zurueck"', js)
 
 if __name__ == "__main__":
     unittest.main()

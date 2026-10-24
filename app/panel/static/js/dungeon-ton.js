@@ -3,6 +3,7 @@
 // last victory and door; the log's throws and events), this file only plays it: a quiet loop that fades into the next
 // piece of the same mood (never one of the last three), every sound made here with WebAudio (no files), the d20 rolls
 // 0.8 s and always stops on the panel's number. Each device keeps its own choice (music, sounds, volume).
+// „👎 Nervt“ (Dominik 2026-10-24): any seat marks the piece playing, it is never played again, the night makes a new one.
 const DMT={ctx:null,out:null,amb:null,ambK:'',noise:null,el:[null,null],g:[null,null],cur:-1,id:'',st:'',last:[],urls:{},v:null,mode:'',
   seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
 const DMT_FADE=8,DMT_LAUT=20,DMT_URLS=4;
@@ -66,7 +67,14 @@ function dmtBar(v){const m=v.musik||{},on=dmtMusik(),n=(m.stuecke||[]).length,i=
   const txt=m.an?(n?`♪ ${m.name}${on&&i>=0?' · '+t('Stück','piece')+' '+(i+1)+' '+t('von','of')+' '+n:''}`:`♪ ${m.name} · ${t('Musik wird vorbereitet …','music is being prepared …')}`):'';
   return `<div class="dm-ton">${txt?`<span class="dm-eq${on&&DMT.id?' on':''}" aria-hidden="true"><b></b><b></b><b></b><b></b></span><span class="dm-tontxt">${esc(txt)}</span>`:''}<span class="dm-tonsp"></span>
     ${m.an?`<button type="button" class="b${on?' p':''}" data-dmton="musik" aria-pressed="${on}">${esc(t('Musik','Music'))}</button>`:''}<button type="button" class="b${dmtFx()?' p':''}" data-dmton="fx" aria-pressed="${dmtFx()}">${esc(t('Geräusche','Sounds'))}</button>
-    <input type="range" class="dm-laut" min="0" max="100" step="5" value="${dmtLaut()}" aria-label="${esc(t('Lautstärke','Volume'))}">${m.an&&on&&n>1?`<button type="button" class="b" data-dmton="weiter" title="${esc(t('Nächstes Stück','Next piece'))}" aria-label="${esc(t('Nächstes Stück','Next piece'))}">⏭</button>`:''}</div>`}
+    <input type="range" class="dm-laut" min="0" max="100" step="5" value="${dmtLaut()}" aria-label="${esc(t('Lautstärke','Volume'))}">${m.an&&on&&n>1?`<button type="button" class="b" data-dmton="weiter" title="${esc(t('Nächstes Stück','Next piece'))}" aria-label="${esc(t('Nächstes Stück','Next piece'))}">⏭</button>`:''}${m.an&&on&&DMT.id?`<button type="button" class="b" data-dmton="nervt" title="${esc(t('Nervt: nie mehr spielen, nachts kommt ein neues','Annoying: never play it again, a new one comes at night'))}" aria-label="${esc(t('Stück nervt','Piece is annoying'))}">👎</button>`:''}</div>`}
+// „👎 Nervt“: the panel marks the piece for every table, here it leaves the list at once and the next one fades in
+async function dmtNervt(){const id=DMT.id,v=DMT.v;if(!id||!v)return;
+  try{if(DMT.mode==='p'){const {r}=await apiTry(`/api/profile/dungeon/${v.rid}/musik/${id}/nervt`,xjson('POST',{}));if(!r.ok)return}
+    else await dgPub('/api/dungeon/musik/nervt',{code:DG.code,s:id})}catch{return}
+  const m=v.musik||{};['stuecke','sieg'].forEach(k=>{if(m[k])m[k]=m[k].filter(x=>x!==id)});
+  if(DMT.urls[id]){URL.revokeObjectURL(DMT.urls[id]);delete DMT.urls[id]}sayToast(t('Kommt nicht wieder, nachts gibt es ein neues','Will not come again, a new one comes at night'));
+  if((m.stuecke||[]).length)dmtStart(m.stuecke);else dmtStop()}
 const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe'};
 function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dice=[...w.querySelectorAll('.dm-feed .dm-wurf .dm-d20')].slice(-news.length);
@@ -92,6 +100,7 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmton
   if(k==='musik'){dmtSet('musik',dmtMusik()?'0':'1');if(!dmtMusik())dmtStop()}
   else if(k==='fx'){dmtSet('fx',dmtFx()?'0':'1');if(!dmtFx())dmtAmb('')}
   else if(k==='weiter'){dmtNext();return}
+  else if(k==='nervt'){dmtNervt();return}
   const w=b.closest('.dm');if(w&&DMT.v){const old=w.querySelector('.dm-ton');if(old)old.remove();window.dmTon(w,DMT.v,DMT.mode)}});
 document.body.addEventListener('input',e=>{const r=e.target.closest('.dm-laut');if(!r)return;dmtSet('laut',r.value);
   if(DMT.cur>=0&&DMT.g[DMT.cur])DMT.g[DMT.cur].gain.setTargetAtTime(dmtLevel(),dmtNow(),.1);if(DMT.amb)DMT.amb.g.gain.setTargetAtTime(DMT.amb.lvl*dmtLaut()/100,dmtNow(),.2)});
@@ -110,11 +119,14 @@ function dmMusikDraw(d,err){const c=$('dmmusikadm');if(!c)return;const s=d.einst
       <div><label for="dmmusikmb">${esc(t('Speicherplatz (MB)','Storage (MB)'))}</label><input id="dmmusikmb" type="number" min="${d.spanne.mb[0]}" max="${d.spanne.mb[1]}" step="50" value="${s.mb}"></div></div>
     <label class="chk"><input type="checkbox" id="dmmusikan"${s.an?' checked':''}> ${esc(t('Musik vorbereiten','Prepare music'))}</label>
     <div class="dm-mfeld"><i></i>${d.stimmungen.map(m=>`<b title="${esc(m.name)}">${esc(m.name)}</b>`).join('')}${d.felder.map(f=>`<b>${esc((f.zeichen?f.zeichen+' ':'')+f.name)}</b>${d.stimmungen.map(m=>`<span class="${f.n[m.id]>=s.stuecke?'ok':'warn'}">${f.n[m.id]}${f.wartet.includes(m.id)?' ⏳':''}</span>`).join('')}`).join('')}</div>
+    ${(d.markiert||[]).length?`<h4>${esc(t(`${d.markiert.length} markiert (👎 Nervt)`,`${d.markiert.length} marked (👎 annoying)`))}</h4><div class="pintro">${esc(t('Diese Stücke spielt kein Tisch mehr; nachts macht der Spark neue. Bis dahin lässt sich eine Markierung zurücknehmen.','No table plays these pieces any more; at night the Spark makes new ones. Until then a mark can be taken back.'))}</div>
+      ${d.markiert.map(x=>`<div class="setrow"><div class="lbl"><b>${esc(x.welt+' · '+x.st)}</b><span>${esc(t(`${x.s} s · ${x.nervt}× markiert`,`${x.s} s · marked ${x.nervt}×`))}</span></div><button type="button" class="b" data-dmmusik="zurueck" data-id="${esc(x.id)}">${esc(t('Zurücknehmen','Take back'))}</button></div>`).join('')}`:''}
     <small class="mut">${esc(t(`${L2.stuecke} Stücke, ${L2.mb} MB · heute ${L2.gemacht} gemacht, ${L2.weg} nicht gekommen`,`${L2.stuecke} pieces, ${L2.mb} MB · today ${L2.gemacht} made, ${L2.weg} did not come`))}${L2.macht?' · '+esc(t('macht gerade ein Stück','making a piece now')):''}</small>
     ${err?`<div class="err">${esc(err)}</div>`:''}
     <div class="row"><button type="button" class="b p" data-dmmusik="save">${esc(t('Speichern','Save'))}</button><button type="button" class="b" data-dmmusik="jetzt"${s.an&&d.installiert?'':' disabled'}>${esc(t('Musik jetzt vorbereiten','Prepare music now'))}</button><button type="button" class="b danger" data-dmmusik="weg">${esc(t('Alle Stücke löschen','Delete all pieces'))}</button></div>`}
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmusikadm [data-dmmusik]');if(!b)return;const k=b.dataset.dmmusik,q='?lang='+(L==='en'?'en':'de');
   if(k==='weg'&&b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich alle löschen?','Really delete all?');return}
+  if(k==='zurueck'){const {r,d}=await apiTry(`/api/admin/dungeon/musik/${encodeURIComponent(b.dataset.id)}/zurueck${q}`,{method:'POST'});if(r.ok){dmMusikDraw(d,'');sayToast(t('Spielt wieder','Plays again'))}return}
   const o=k==='save'?{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({an:$('dmmusikan').checked,stuecke:+$('dmmusikn').value,mb:+$('dmmusikmb').value})}:k==='jetzt'?{method:'POST'}:{method:'DELETE'};
   const {r,d}=await apiTry('/api/admin/dungeon/musik'+(k==='jetzt'?'/jetzt':'')+q,o);if(r.ok){dmMusikDraw(d,'');if(k==='save')sayToast(t('Gespeichert','Saved'));return}
   const g=await apiTry('/api/admin/dungeon/musik'+q);if(g.r.ok)dmMusikDraw(g.d,errSay(r.status,d.detail,''))});

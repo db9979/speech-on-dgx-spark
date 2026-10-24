@@ -113,6 +113,7 @@ OPEN = {
     "/api/dungeon/wurf": "Dungeon-Master seat link: the seat throws its own die, the others then see the number the panel rolled; same door as /api/dungeon/platz",
     "/api/dungeon/termin": "Dungeon-Master seat link: the host's game date of this seat's own round as a calendar file (.ics), no other data; same door as /api/dungeon/platz",
     "/api/dungeon/musik": "Dungeon-Master seat link: one music piece (MP3) of the Spark's shared store, nothing personal, only for a seat of a running round, own rate limit dungeonmusik; same door as /api/dungeon/platz",
+    "/api/dungeon/musik/nervt": "Dungeon-Master seat link: „👎 Nervt“ marks a music piece of the Spark's shared store (only a number of marks, no name), only for a seat of a running round, own rate limit dungeonnervt; same door as /api/dungeon/platz",
     "/api/dungeon/portraet/malen": "Dungeon-Master seat link: paints the seat's own hero's portrait once per level, only with the host's Bilder malen and the game's day limit, own rate limit dungeonbild; same door as /api/dungeon/platz",
     "/api/liste/add": "Mitschreib-Link: only puts entries on the one list of the link; 404 unless allowed, same door as /api/liste/check, Mein Notaus of the owner holds it",
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
