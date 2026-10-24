@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.987** · 2026-10-24 · KI-Dungeon-Master: Prolog mit Halt (Auftrag, erste Spur, „Was ihr tun könnt“ als Knöpfe, Haken je Held, Auftrag angeheftet), getragene Dinge der Gruppe öffnen ihr Fenster mit Bild, Würfel und Boni farbig, Seitenspalte ruhiger
 - **V01.0.986** · 2026-10-24 · KI-Dungeon-Master: Karte als Pergament mit Gelände, Nebel, Kompass, Rahmen und Fähnchen, Stil je Welt (Pergament, fahles Papier, Seekarte, Sternkarte), Gewölbe mit Steinboden, Türen, Fackeln und Licht, sanfte Bewegung; „Gewölbe würfeln“ legt nur einen Eingang an, hinein erst mit der Aktion
 - **V01.0.985** · 2026-10-24 · E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 - **V01.0.984** · 2026-10-24 · KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)

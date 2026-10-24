@@ -59,8 +59,8 @@ if(typeof DMT_FX!=='undefined')Object.assign(DMT_FX,{
 function dmSaetze(v,e){const key=v.rid+':'+(e.prolog?'p':'')+(e.n||1),S=DMWT.seen[v.rid]||(DMWT.seen[v.rid]={});
   if(!(key in S))S[key]=S._ready?Date.now():0;S._ready=true;
   const parts=String(e.text||'').match(/[^.!?…]+(?:[.!?…]+["“”»«')]*\s*|$)/g)||[e.text||''],el=S[key]?(Date.now()-S[key])/1000:1e9;
-  if(el>parts.length*0.9+1)return esc(e.text);
-  return parts.map((p,i)=>`<span class="dm-satz" style="animation-delay:${(i*0.9-el).toFixed(2)}s">${esc(p)}</span>`).join('')}
+  if(el>parts.length*0.9+1)return dmFx(e.text);
+  return parts.map((p,i)=>`<span class="dm-satz" style="animation-delay:${(i*0.9-el).toFixed(2)}s">${dmFx(p)}</span>`).join('')}
 function dmTyping(v){const n=v.tippt||[];return n.length&&!v.dm?`<small class="dm-wait dm-tippt">✎ ${esc(n.join(', '))} ${esc(n.length===1?t('schreibt …','is typing …'):t('schreiben …','are typing …'))}</small>`:''}
 function dmTalk(v,mode){if(!v.ich||v.status==='ende')return '';const l=v.tisch||[];
   return `<details class="dm-talk" data-dmtalk="1"${DMWT.talk[mode]?' open':''}><summary>💬 ${esc(t('Tischgespräch','Table talk'))}${l.length?` <span class="pill">${l.length}</span>`:''} <small class="mut">${esc(t('nur unter euch, der Dungeon-Master liest nicht mit','just between you, the Dungeon Master does not read it'))}</small></summary>

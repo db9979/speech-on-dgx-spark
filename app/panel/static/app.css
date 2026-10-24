@@ -2268,7 +2268,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-round{display:flex;gap:4px;margin-bottom:4px}.dm-round span{width:14px;height:14px;border-radius:50%;background:var(--line)}.dm-round span.on{background:var(--ok)}
 .dm-hostb,.dm-iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .dm-zugk{display:flex;align-items:center;gap:10px}.dm-zugk .dm-round{margin:0}.dm-side .dm-mek{margin-top:10px}
-.dm-seite{display:flex;width:100%;margin:12px 0 8px}.dm-seite button{flex:1;padding-left:4px;padding-right:4px;white-space:nowrap}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
+.dm-seite{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));width:100%;margin:12px 0 8px;box-sizing:border-box}.dm-seite button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}.dm-seite button span{font-size:17px;line-height:1.1}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
@@ -2563,3 +2563,26 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-rvgl .dm-rno{background:transparent}.dm-rvgl figcaption{font-size:12px;color:var(--mut);margin-top:3px}
 @media (max-width:1100px){.dm-rkat{grid-template-columns:1fr}.dm-rdet{position:static}.dm-rlist{max-height:none;overflow:visible}}
 @media (max-width:760px){.dm-rlay{grid-template-columns:1fr}.dm-rnav{position:static;flex-direction:row;flex-wrap:wrap}.dm-rnav hr{display:none}.dm-rnav button{padding:5px 9px;font-size:13px;border:1px solid var(--line)}}
+/* the prologue's hold: hooks per hero, „Was ihr tun könnt“, the pinned quest (dungeon.js dmProlog, dmAuftrag) */
+.dm-haken{margin:8px 0 0;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:3px}.dm-haken li.me b{color:var(--t-gold,var(--acc))}
+.dm-wege{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}.dm-wege small{flex-basis:100%;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.dm-weg{font:inherit;font-size:13.5px;text-align:left;padding:6px 11px;border-radius:10px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;cursor:pointer}
+.dm-weg:hover{border-color:var(--t-gold,var(--acc))}
+.dm-auftrag{display:flex;flex-direction:column;gap:2px;margin:8px 0;padding:8px 10px;border-radius:10px;border:1px solid var(--t-gold,var(--acc));background:color-mix(in srgb,var(--t-gold,var(--acc)) 10%,transparent)}
+.dm-auftrag small{font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}.dm-auftrag b{font-weight:600;font-size:14px;overflow-wrap:anywhere}.dm-auftrag.ok{opacity:.7}.dm-auftrag.ok b{text-decoration:line-through}
+/* dice and bonuses stand out in every text of the game (dungeon.js dmFx, dmBo) */
+.dm-wf{display:inline-block;padding:0 6px;border-radius:6px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7a3dd6;background:color-mix(in srgb,#7a3dd6 13%,transparent);border:1px solid color-mix(in srgb,#7a3dd6 35%,transparent)}
+.dm-bo{display:inline-block;padding:0 5px;border-radius:6px;font-weight:700;font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dm-bo.up{color:#1f8a4c;background:color-mix(in srgb,#1f8a4c 14%,transparent)}.dm-bo.dn{color:#c0392b;background:color-mix(in srgb,#c0392b 14%,transparent)}.dm-bo.nu{opacity:.7}
+.dm-tisch:not(.dm-hell) .dm-wf{color:#c9a7ff;background:color-mix(in srgb,#b48cff 18%,transparent);border-color:color-mix(in srgb,#b48cff 40%,transparent)}
+.dm-tisch:not(.dm-hell) .dm-bo.up{color:#7ee2a2;background:color-mix(in srgb,#5fd38d 16%,transparent)}.dm-tisch:not(.dm-hell) .dm-bo.dn{color:#ff9a8a;background:color-mix(in srgb,#ff7a66 16%,transparent)}
+/* the host's tab „Leiten“ (dungeon.js host): one main action, four tiles alike, quiet rows, „⋯ Mehr“ */
+.dm-go{display:flex;justify-content:center;align-items:baseline;gap:6px;width:100%;margin:4px 0 10px;padding:11px 12px;border:0;border-radius:12px;background:#2f6b45;color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer}
+.dm-go small{font-weight:400;font-size:12.5px;opacity:.9}.dm-go:disabled{background:color-mix(in srgb,var(--t-linie,var(--line)) 70%,transparent);color:var(--t-mut,var(--mut));cursor:default}
+.dm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dm-tile{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 10px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:14px system-ui,sans-serif;text-align:left;cursor:pointer;min-width:0}
+.dm-tile>span:first-child{font-size:18px;flex:none}.dm-tile b{display:block;font-weight:600}.dm-tile small{display:block;font-size:11.5px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-tile.on{border-color:var(--t-gold,var(--acc));background:color-mix(in srgb,var(--t-gold,var(--acc)) 14%,transparent)}.dm-tile:disabled{opacity:.5;cursor:default}
+.dm-zeile{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:14px system-ui,sans-serif;cursor:pointer;list-style:none}
+.dm-zeile::-webkit-details-marker{display:none}.dm-zeile small{opacity:.75;white-space:nowrap}.dm-zeile-d[open]>.dm-zeile{border-color:var(--t-gold,var(--acc))}.dm-zeile-d .dm-erzwahl{margin-top:8px}.dm-zeile-d .dm-erzwahl>label{display:none}
+.dm-mehr{margin-top:10px;padding-top:8px;border-top:1px solid var(--t-linie,var(--line))}.dm-mehr>summary{cursor:pointer;font:13px system-ui,sans-serif;opacity:.8;list-style:none}.dm-mehr>summary::-webkit-details-marker{display:none}.dm-mehr .dm-hostb{margin-top:8px}

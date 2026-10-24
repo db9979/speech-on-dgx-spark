@@ -5437,6 +5437,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Prolog mit Halt (V01.0.987, Dominik 2026-10-24 „der prolog ist noch zu kurz die spieler haben keinerlei anhalts punkt was zu tun ist“, „1-5“): Der Prolog hat jetzt einen festen Aufbau: erst Ort und Stimmung, dann ein klarer Auftrag (wer will was von der Gruppe, warum, was winkt), dann eine erste Spur, mindestens 700 Zeichen. Ist er kürzer, fehlt der Auftrag oder gibt es weniger als zwei Möglichkeiten, schickt das Panel ihn einmal zurück; der zweite Versuch gilt, wie er ist. Unter dem Prolog steht je Held ein Satz, warum gerade er hier ist (nur Namen der Gruppe), und Was ihr tun könnt mit zwei bis vier Knöpfen; ein Tipp schreibt die Möglichkeit in das eigene Feld, eigene Ideen gehen weiter. Der Auftrag steht in der Seitenspalte unter dem Zug und bleibt dort, bis die Erzählung ein Ziel als erreicht meldet (dann abgehakt); das Modell bekommt ihn bei jedem Zug mit. Ohne Geschichten-Plan wählt das Panel als Rahmen eine Auftragsart aus einer festen Liste (Rettung, Suche, Schutz, Rätsel, Flucht); mit Plan gilt dessen Ziel, auch wenn das Modell keinen Auftrag liefert. Alles Text des Modells, geprüft wie jede Erzählung (Ton, „nie“, Tabus). Im selben Schritt (Dominik „das "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "bild sollte so wie aus der heldenkarte dargestellt werden“, „Würfel und Bonis … gehen im fließtext unter … überall im spiel“): Ein Tipp auf ein getragenes Ding auf einer Heldenkarte der Gruppe öffnet dessen großes Fenster mit Bild, Seltenheit, Beschreibung und Werten wie im Heldenbogen; beim eigenen Helden mit „Ablegen“, bei anderen nur zum Ansehen. Würfel (1W6+2, W20) stehen überall im Spiel als violettes Kästchen, Boni grün, Mali rot: in Erzählungen, Würfen, Werten, Gegenständen und „Das kann ich“. Seitenspalte ruhiger (Dominik „das menü ist nicht gut angeordnet wirkt unruhig“, „alles“): Der zweite Knopf „Karte“ fällt weg (die Karte ist der erste Reiter, groß über ⤢), die vier Reiter Karte, Leiten, Fäden und Termin sind gleich breit mit Zeichen über dem Wort. Im Reiter *Leiten* steht oben breit „▶ Jetzt weiter“ mit „wartet auf …“, darunter vier gleich große Kacheln mit Zustand (Pause, Markt, Vorlesen, Szenenbild), Einladen und die Stimme des Erzählers als je eine Zeile, Kapitel und Runde beenden hinter „⋯ Mehr“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Reiter „Regeln“ mit Bestiarium und Gleichgewicht (V01.0.984, Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „das besarium zu sehen zu bearbeten gegenstände etc.“, „alle punkte umsetzten … gleichgewicht 1-5 zu stark nur hinweis“): Der Admin hat auf der Seite Dungeon-Master einen dritten Reiter *Regeln* neben *Runden* und *Helden*; *Funktionen → KI-Dungeon-Master → Regeln anpassen* öffnet ihn (ohne Profil wie bisher als Karte). Links stehen die Teile: Geschichten, Gegenstände, Gegner (Bestiarium), Klassen, Völker, Hintergründe, Welten, Töne, Zustände, dann Stimmen, Bilder, Musik, Gäste mit E-Mail, Wie es ankommt und *Für Fortgeschrittene (JSON)*. Ein Teil des Katalogs ist eine Liste mit Bild oder Zeichen vorne, einer Zeile Werte, der Herkunft (Grundregel, SRD, eigen, geändert, ausgeblendet) und der Marke des Gleichgewichts, mit Suche und Filtern (Gegenstände nach Art, Gegner nach Stufe, beide nach Gleichgewicht); daneben (am Handy darunter) das Detail mit *Ändern* (der ganze Eintrag, geprüft wie alle Regeln), *Eigene Kopie*, *Ausblenden* und *Zurück auf mitgeliefert*. Bilder: Gegner bekommen wie Gegenstände ein gemaltes Bild im Stil ihrer Welt"
 },
 {
@@ -17742,6 +17758,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: right column and class choice tidied up (V01.0.983, Dominik 2026-10-24 \"very muddled and long\", \"hard to take in\"): At the table the right column shows the turn and the own hero on top, below tabs for map, host, open threads and date with only one open at a time; the device remembers the last one. Under \"Host\" the frequent buttons come first, \"End chapter\" and \"End round\" under \"Less often\". The class cards only count what the class can do (\"1 power · 20 spells\"); below them the chosen class's starting powers and spells by grade stand as small chips. Class names no longer break in the middle of a word."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a prologue with a hold (V01.0.987, Dominik 2026-10-24 \"the prologue is still too short, the players have no clue what to do\", \"1-5\"): The prologue now has a fixed shape: first place and mood, then a clear quest (who wants what from the group, why, what reward waits), then a first lead, at least 700 characters. If it is shorter, has no quest or fewer than two possibilities, the panel sends it back once; the second try counts as it is. Below the prologue each hero gets one sentence why exactly they are here (only names of the group), and What you can do with two to four buttons; a tap writes the possibility into the own field, own ideas go on as before. The quest stands in the side column under the turn and stays there until the narration reports a goal reached (then ticked); the model gets it with every turn. Without a story plan the panel picks a kind of quest from a fixed list as the frame (rescue, search, protection, mystery, escape); with a plan its goal counts, also when the model gives no quest. All of it is the model's text, checked like every narration (tone, \"never\", taboos). In the same step (Dominik \"the picture should look like in the hero card\", \"dice"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " and bonuses get lost in the running text … everywhere in the game\"): a tap on a worn thing on a hero card of the group opens its big window with picture, rarity, description and values like in the hero sheet; for the own hero with \"Unequip\", for others only to look at. Dice (1d6+2, d20) stand out everywhere in the game as a violet box, bonuses green, penalties red: in narrations, rolls, values, items and \"What I can do\". A calmer side column (Dominik \"the menu is not well arranged, it looks restless\", \"all\"): the second \"Map\" button goes (the map is the first tab, large via ⤢), the four tabs map, host, threads and date are equally wide with the sign above the word. In the tab *Host* \"▶ Go on now\" stands wide on top with \"waiting for …\", below it four tiles of the same size with their state (pause, market, read aloud, scene picture), invite and the narrator's voice as one row each, ending the chapter or round behind \"⋯ More\"."
 },
 {
 "lang": "en",

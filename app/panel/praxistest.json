@@ -2970,6 +2970,13 @@
 "titel": "Dungeon-Master: Karte und Gewölbe schön",
 "text": "A: Eine Runde je Welt öffnen (Fantasy, Horror, Piraten, Sci-Fi): die Karte sieht aus wie Pergament, fahles Papier, Seekarte oder Sternkarte, mit Bäumen und Bergen passend zu den Orten, Nebel über Unbekanntem, Kompass, Rahmen, Titel-Schild und Fähnchen am Standort; hell und dunkel lesbar. B: Einen Weg gehen: das Fähnchen wandert, neue Orte blenden ein; mit „Bewegung reduzieren“ am Gerät steht alles still. C: Als Gastgeber „🎲 Gewölbe würfeln“: die Gruppe bleibt draußen, an der Karte steht ⚔ und unter „Von hier aus“ „ins Gewölbe“; erst die Aktion führt hinein, dann springt die Karte auf „Gewölbe“ mit Steinboden, Türen, flackernden Fackeln und Licht um die Gruppe.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P449",
+"v": 987,
+"titel": "Dungeon-Master: Prolog mit Auftrag und Möglichkeiten",
+"text": "A: Neue Runde ohne Geschichte anlegen: der Prolog ist deutlich länger, nennt einen Auftrag (wer will was, warum, Lohn) und eine erste Spur. B: Darunter je Held ein Satz, warum er hier ist, und „Was ihr tun könnt“ mit 2 bis 4 Knöpfen; ein Tipp schreibt den Vorschlag in dein Feld. C: Rechts unter „Zug 1“ steht „Auftrag“ mit 🎯; erreicht ihr das Ziel, ist er abgehakt. D: Neue Runde mit einer Geschichte: der Auftrag passt zum Ziel der Geschichte. E: Links in der Gruppe auf ein getragenes Ding tippen: großes Fenster mit Bild und Werten. F: Würfel wie 1W6+2 sind violett, Boni grün, Mali rot, auch in der Erzählung. G: Als Gastgeber rechts: kein zweiter Knopf „Karte“, Reiter Karte/Leiten/Fäden/Termin gleich breit; unter „Leiten“ „▶ Jetzt weiter“ breit, vier gleiche Kacheln, Einladen als Zeile, Kapitel/Runde beenden unter „⋯ Mehr“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

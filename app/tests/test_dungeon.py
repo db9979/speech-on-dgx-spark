@@ -1312,13 +1312,14 @@ class Explained(Equipment):
 class Prologue(Base):
     def test_the_dungeon_master_opens_the_round(self):
         """Dominik 2026-10-23 „nach erstellung eines spiels fehlt der einleitungs text, stimmung und ausgangssituation“."""
-        dungeon.ask_model = fake([{"personen": [{"name": "Küster", "rolle": "hütet die Glocke"}]},
+        answers = ([{"personen": [{"name": "Küster", "rolle": "hütet die Glocke"}]},
                                   {"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten. Arvid steht am Brunnen.",
                                    "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid",
                                    "npc": [{"name": "Küster", "sagt": "Ihr kommt spät."}, {"name": "Magd", "sagt": "Hilfe!"}],
                                    "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "beute": [{"anlass": "boss"}],
                                    "erfolg": [{"art": "ziel"}]}])
-        v = self.new_round(einstieg="Ein Dorf, eine Glocke.")
+        dungeon.ask_model = fake(answers + answers[1:])
+        v = self.new_round(einstieg="Ein Dorf, eine Glocke.")       # too short the first time, the second counts
         rd = self.state(v["rid"])
         e = [x for x in rd["log"] if x["art"] == "dm"]
         self.assertEqual(len(e), 1)
@@ -1331,6 +1332,49 @@ class Prologue(Base):
         self.assertNotIn(v["rid"], dungeon._running)
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{v['rid']}/aktion", json={"text": "Ich läute.", "zug": 1}).status_code, 200)
         self.assertIn("prolog", dungeon.system_text(dungeon.rules(), rd, "prolog").lower())
+
+    def test_a_prologue_with_a_hold(self):
+        """Dominik 2026-10-24 „der prolog ist noch zu kurz die spieler haben keinerlei anhalts punkt was zu tun ist“,
+        „1-5“: at least PROLOG_MIN characters, a quest pinned until a goal is reached, 2 to 4 possibilities, a hook
+        per hero (only names of the group), and without a story plan a frame the panel picks."""
+        lang = "Nebel liegt über Hallstein. " * 40
+        good = {"erzaehlung": lang, "frage_an": "Arvid", "auftrag": "Findet die verschwundene Glockengießerin bis Neumond.",
+                "wege": ["Den Küster nach der Glocke fragen", "Den Küster nach der Glocke fragen", "Zum Turm gehen", "x"],
+                "haken": [{"wer": "Arvid", "text": "Die Gießerin ist deine Tante, ihr Brief kam vor drei Tagen."},
+                          {"wer": "Fremder", "text": "Niemand am Tisch heißt so, das fällt weg."}]}
+        short = dict(good, erzaehlung="Nebel. Eine Glocke. Arvid wartet am Brunnen und schaut.")
+        dungeon.ask_model = fake([{"personen": []}, short, good])
+        v = self.new_round()
+        rd = self.state(v["rid"])
+        e = [x for x in rd["log"] if x["art"] == "dm"][0]
+        self.assertEqual(len(e["text"]), len(dungeon.plain(lang, dungeon.ERZ_LANG)))   # the second answer, the long one
+        self.assertEqual(e["wege"], ["Den Küster nach der Glocke fragen", "Zum Turm gehen"])
+        pid = next(iter(rd["plaetze"]))
+        self.assertEqual(list(e["haken"]), [pid])
+        self.assertIn(rd["rahmen"], dungeon.RAHMEN)
+        self.assertIn(dungeon.RAHMEN[rd["rahmen"]][0], dungeon.system_text(dungeon.rules(), rd, "prolog"))
+        self.assertIn(str(dungeon.PROLOG_MIN), dungeon.system_text(dungeon.rules(), rd, "prolog"))
+        t = self.c.get(f"/api/profile/dungeon/{v['rid']}").json()
+        self.assertEqual(t["auftrag"], {"text": good["auftrag"], "ok": False})
+        self.assertIn(good["auftrag"], dungeon.facts(dungeon.rules(), rd))
+        story = {"text": "Die Gießerin ist frei.", "npc": [], "folgen": [], "beute": None, "erfolg": [{"art": "ziel", "rang": 1}],
+                 "szene": None, "frage": "", "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "",
+                 "npc_stimme": [], "faeden": {"neu": [], "erledigt": []}}
+        dungeon.apply(dungeon.rules(), rd, [], story, v["rid"])
+        self.assertTrue(rd["auftrag_ok"])
+        self.assertNotIn("auftrag", json.loads(dungeon.facts(dungeon.rules(), rd).split("\n", 1)[0]))
+        # strict on the first try: no quest or too few possibilities send it back
+        r = dungeon.rules()
+        self.assertIsNone(dungeon.check_opening(r, rd, dict(good, auftrag=""))[0])
+        self.assertIsNone(dungeon.check_opening(r, rd, dict(good, wege=["Zum Turm gehen"]))[0])
+        self.assertIsNotNone(dungeon.check_opening(r, rd, dict(good, wege=["Zum Turm gehen"]), strict=False)[0])
+
+    def test_a_story_plan_gives_the_quest_and_no_frame(self):
+        gid, g = next(iter(dungeon.shipped(dungeon.rules(), "de").items()))
+        v = self.new_round(geschichte=gid)                            # without the model
+        rd = self.state(v["rid"])
+        self.assertFalse(rd.get("rahmen"))
+        self.assertEqual((rd["auftrag"], rd["auftrag_ok"]), (rd["plan"]["ziel"], False))
 
     def test_without_the_model_the_opening_or_the_first_act(self):
         v = self.new_round(einstieg="Ein Dorf, eine Glocke, ein Schweigen.")
@@ -1624,7 +1668,9 @@ class BetterStories(Base):
         self.assertIsNone(dungeon.erz.check_truth(dungeon, dungeon.rules(), rd, {"personen": [{"name": "Arvid", "rolle": "x"}]}))
         dungeon.ask_model = fake([{"personen": [{"name": "Küsterin Hella", "rolle": "hütet die Glocke"}], "geheimnisse": ["Die Glocke ist hohl und voller Briefe."]},
                                   {"erzaehlung": "Nebel über Hallstein. Arvid hört die Küsterin Hella am Brunnen flüstern.", "frage_an": "Arvid",
-                                   "faeden": {"neu": ["Wer hat die Glocke zum Schweigen gebracht?"]}}])
+                                   "faeden": {"neu": ["Wer hat die Glocke zum Schweigen gebracht?"]}}] * 1 + [
+                                  {"erzaehlung": "Nebel über Hallstein. Arvid hört die Küsterin Hella am Brunnen flüstern.", "frage_an": "Arvid",
+                                   "faeden": {"neu": ["Wer hat die Glocke zum Schweigen gebracht?"]}}])   # short: the second try counts
         v = self.new_round(titel="Zweite")
         rd = self.state(v["rid"])
         self.assertEqual(rd["wahrheit"]["personen"][0]["name"], "Küsterin Hella")
@@ -1915,7 +1961,7 @@ class Pictures(Base):
 
     def opening(self, bild="a misty village square with a silent bell tower at dusk", **kw):
         dungeon.ask_model = fake([{"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten.",
-                                   "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid", "bild": bild}] * 2)
+                                   "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid", "bild": bild}] * 3)   # truth, a short prologue twice
         return self.new_round(**kw)
 
     def test_scene_on_a_new_place_for_every_seat_and_its_limits(self):
@@ -2539,10 +2585,15 @@ class Windows(unittest.TestCase):
                         await pg.click("#dmview .dm-group .dm-stats .dm-erkb:nth-child(2)")             # a tap on a value explains it
                         await b.until(pg, "!!document.querySelector('#dmview .dm-group .dm-erk')")
                         self.assertIn("Geschick", await pg.evaluate("document.querySelector('#dmview .dm-group .dm-erk').textContent"))
-                        await pg.click("#dmview .dm-group .dm-pills .dm-erkb")                           # a worn thing too
-                        await b.until(pg, "/Dolch|Stab|Schwert|Bogen/.test(document.querySelector('#dmview .dm-group .dm-erk').textContent)")
-                        await pg.click("#dmview .dm-group .dm-pills .dm-erkb")                           # a second tap closes it
+                        await pg.click("#dmview .dm-group .dm-erkb.on")                                  # a second tap closes it
                         await b.until(pg, "!document.querySelector('#dmview .dm-group .dm-erk')")
+                        # a worn thing opens its window with picture and values like in the hero sheet (Dominik 2026-10-24)
+                        await pg.click("#dmview .dm-group .dm-pills [data-dmsding]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-detail-b')")
+                        self.assertRegex(await pg.evaluate("document.querySelector('#dmview .dm-fen-ding').textContent"), "Dolch|Stab|Schwert|Bogen")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding .dm-detail-w .dm-wf')"))   # the die stands out
+                        await pg.click("#dmview .dm-fen-ding [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
                         await pg.click("#dmview [data-dmfen=bogen]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')")
                         self.assertTrue(await pg.evaluate(fits), w)
@@ -2693,6 +2744,17 @@ class Windows(unittest.TestCase):
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk')"))
                         self.assertEqual(await pg.evaluate("localStorage.getItem('dm-seite')"), "host")       # remembered
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-side .dm-mek')"))  # the own hero stays
+                        # „Leiten“ calm (Dominik 2026-10-24 „wirkt unruhig“): one main action, tiles alike, rare ones behind „⋯ Mehr“
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-seitein .dm-go[data-dmweiter]')"))
+                        self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-tiles .dm-tile').length"), 3)
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=karte]')"))   # the map is a tab
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-seite button')].filter(x=>x.scrollWidth>x.clientWidth+1).length"), 0, w)
+                        self.assertFalse(await pg.evaluate("document.querySelector('#dmview .dm-mehr').open"))
+                        await pg.click("#dmview .dm-mehr summary")
+                        await pg.click("#dmview .dm-mehr [data-dmkap]")                                  # asks again, the box stays open
+                        await b.until(pg, "/wirklich/i.test(document.querySelector('#dmview .dm-mehr [data-dmkap]').textContent)")
+                        self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-mehr').open"))
+                        await pg.evaluate("DM.kap=false;DMA.auf='';dmDraw()")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"spalte-{w}.png"), full_page=True)
@@ -2752,6 +2814,56 @@ class Windows(unittest.TestCase):
                         await pg.evaluate("dmRules()")
                         await b.until(pg, "!!document.querySelector('#dungeon.on .ic-tabs button[data-k=regeln].on')||!!document.querySelector('.ic-tabs button[data-k=regeln].on')")
                         self.assertFalse(await pg.evaluate("!!document.getElementById('dmadm')"))   # no card over the page
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+    def test_prologue_hold_on_the_table(self):
+        """Dominik 2026-10-24 „keinerlei anhalts punkt was zu tun ist“: the hooks under the prologue, „Was ihr tun
+        könnt“ as buttons that fill the own field, the quest pinned under the turn; fits at 1280, 390 and 320 px."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Halttisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["dm"] = ""
+            pid = next(iter(rd["plaetze"]))
+            rd["auftrag"], rd["auftrag_ok"] = "Findet die Glockengießerin bis Neumond.", False
+            dungeon._log(rd, "dm", text="Nebel liegt über Hallstein.", npc=[], frage="", prolog=True,
+                         wege=["Den Küster fragen", "Zum Turm gehen"], haken={pid: "Die Gießerin ist deine Tante."})
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844), (320, 700)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-wege [data-dmweg]')")
+                        self.assertIn("Tante", await pg.evaluate("document.querySelector('#dmview .dm-haken li.me').textContent"))
+                        self.assertIn("Neumond", await pg.evaluate("document.querySelector('#dmview .dm-side .dm-auftrag').textContent"))
+                        await pg.click("#dmview [data-dmweg='Zum Turm gehen']")
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-in').value"), "Zum Turm gehen")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"prolog-{w}.png"), full_page=True)
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

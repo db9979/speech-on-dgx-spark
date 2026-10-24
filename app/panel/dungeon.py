@@ -171,6 +171,24 @@ EINSTIEG_MAX = 400
 PROMPT_MAX = 4000
 ERZ_MAX = 900             # one narration
 ERZ_LANG = 1500           # the narration that opens a round, a chapter or an act
+# the prologue with a hold (Dominik 2026-10-24 „der prolog ist noch zu kurz die spieler haben keinerlei anhalts punkt
+# was zu tun ist“, „1-5“): a minimum length, a quest, 2 to 4 things to do as buttons, a hook per hero, a frame
+PROLOG_MIN = 700          # shorter goes back once (the second try counts as it is)
+AUFTRAG_MAX = 160         # the quest, pinned above the open threads until a goal is reached
+WEGE = (2, 4)             # „Was ihr tun könnt“: the prologue's possibilities
+WEG_MAX = 80
+HAKEN_MAX = 160           # why exactly this hero is here
+RAHMEN = {                # without a story plan the panel picks the quest's kind, the model fills it
+    "rettung": ("Rettung: jemand ist verschwunden oder gefangen und muss gefunden und befreit werden.",
+                "Rescue: someone is missing or held captive and must be found and freed."),
+    "suche": ("Suche: ein Gegenstand, ein Ort oder ein Wissen muss gefunden werden, bevor es ein anderer findet.",
+              "Search: a thing, a place or a piece of knowledge must be found before someone else finds it."),
+    "schutz": ("Schutz: ein Ort, eine Person oder eine Ladung muss gegen eine Bedrohung verteidigt werden.",
+               "Protection: a place, a person or a load must be defended against a threat."),
+    "raetsel": ("Rätsel: etwas Unerklärliches geschieht, die Gruppe soll die Ursache herausfinden und beenden.",
+                "Mystery: something strange is happening, the group is to find out the cause and end it."),
+    "flucht": ("Flucht: die Gruppe sitzt fest oder wird gejagt und muss heil hinausfinden.",
+               "Escape: the group is trapped or hunted and must get out unharmed.")}
 OOC_MAX = 160             # one out-of-character line to a single player
 VORTEIL = ("vorteil", "nachteil")   # two d20, the higher or the lower counts
 NPC_MAX = 3
@@ -1088,7 +1106,7 @@ def hero_card(r, h, lang):
     li = 1 if lang == "en" else 0
     return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": h["werte"].get(w["id"], 10),
                        "mod": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]} for w in r["werte"]],
-            "schutz": schutz(r, h), "dinge": [{"name": x["name"], "info": x["info"], "zeilen": x["zeilen"]} for x in (item_view(r, it, lang) for it in worn(h))],
+            "schutz": schutz(r, h), "dinge": [dict(item_view(r, it, lang), platz=k) for k, it in (h.get("an") or {}).items() if it],   # a tap opens its window
             "belastet": burdened(r, h)}
 
 
@@ -2079,12 +2097,22 @@ AUFGABE_PROBEN = {
 AUFGABE_PROLOG = {
     "de": "Aufgabe: Eröffne die Runde mit einem Prolog (höchstens {n} Zeichen): Beschreibe den Ort mit allen Sinnen, die "
           "Stimmung und die Ausgangslage, sodass jede Figur der Gruppe darin vorkommt und weiß, wo sie steht und was auf "
-          "dem Spiel steht. Höchstens ein NPC spricht. Noch keine Proben, kein Schaden, keine Beute. szene nennt Ort und "
+          "dem Spiel steht. Mindestens {min} Zeichen in drei Teilen: erst Ort und Stimmung, dann ein klarer Auftrag (wer "
+          "will was von der Gruppe, warum, was winkt als Lohn), dann eine erste Spur, der man sofort folgen kann. "
+          "auftrag ist dieser Auftrag in einem Satz. wege sind {wmin} bis {wmax} kurze Dinge, die die Gruppe jetzt tun "
+          "kann, je höchstens {wl} Zeichen, aus Sicht der Spieler (etwa „Den Wirt nach dem Fremden fragen“). haken gibt "
+          "jeder Figur einen Satz, warum gerade sie hier ist (ein Brief, eine Schuld, ein Gerücht); wer ist ihr Name. "
+          "Höchstens ein NPC spricht. Noch keine Proben, kein Schaden, keine Beute. szene nennt Ort und "
           "Stimmung. Ende mit einer Frage an die Gruppe; frage_an ist eine Figur. {bild}",
     "en": "Task: open the round with a prologue (at most {n} characters): describe the place with all senses, the mood and "
           "the starting situation, so every character of the group is in it and knows where it stands and what is at "
-          "stake. At most one NPC speaks. No checks yet, no damage, no loot. szene names place and mood. End with a "
-          "question to the group; frage_an is a character. {bild}"}
+          "stake. At least {min} characters in three parts: first place and mood, then a clear quest (who wants what "
+          "from the group, why, what reward waits), then a first lead one can follow at once. auftrag is this quest in "
+          "one sentence. wege are {wmin} to {wmax} short things the group can do now, at most {wl} characters each, from "
+          "the players' view (such as \"Ask the innkeeper about the stranger\"). haken gives every character one sentence "
+          "why exactly it is here (a letter, a debt, a rumour); wer is its name. At most one NPC speaks. No checks yet, "
+          "no damage, no loot. szene names place and mood. End with a question to the group; frage_an is a character. {bild}"}
+AUFGABE_RAHMEN = {"de": "Rahmen des Auftrags (vom Panel gewählt): {r}", "en": "Frame of the quest (chosen by the panel): {r}"}
 AUFGABE_BILD = {
     "de": "Wechselt der Ort, beschreibe in bild auf Englisch, was man in der neuen Szene sieht (höchstens {n} Zeichen, "
           "ohne Namen, ohne Text im Bild), sonst lass bild leer.",
@@ -2134,6 +2162,10 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
         "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
     "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
+    "auftrag": {"type": "string", "maxLength": AUFTRAG_MAX + 60},
+    "wege": {"type": "array", "maxItems": WEGE[1], "items": {"type": "string", "maxLength": WEG_MAX + 40}},
+    "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
+              "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
     "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
@@ -2178,6 +2210,8 @@ def facts(r, rd, wuerfe=None):
     nicht = [{"wer": names[pid]["held"]["name"], "was": a["nicht"]} for pid, a in rd["offen"].items() if pid in names and a.get("nicht")]
     if nicht:
         fakten["nicht_bekannt"] = nicht
+    if rd.get("auftrag") and not rd.get("auftrag_ok"):
+        fakten["auftrag"] = rd["auftrag"]
     if rd.get("markt"):
         fakten["haendler"] = rd["markt"]["name"]
     handel = [{"wer": x["name"], "was": x["was"], "ding": x["ding"]} for x in rd["log"] if x["art"] == "handel" and x["n"] == rd["zug"]]
@@ -2202,8 +2236,10 @@ def system_text(r, rd, task):
     bild = AUFGABE_BILD[lang].format(n=BILD_MAX) if task != "proben" and pictures_on(rd["owner"]) else ""
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
-                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild) if task == "prolog" else
+                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+    if task == "prolog" and rd.get("rahmen") in RAHMEN and not rd.get("plan"):
+        t += " " + AUFGABE_RAHMEN[lang].format(r=RAHMEN[rd["rahmen"]][1 if lang == "en" else 0])
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
@@ -2370,6 +2406,39 @@ def check_story(r, rd, obj):
     return out, drop
 
 
+def check_opening(r, rd, obj, strict=True):
+    """The prologue by fixed rules on top of check_story: the quest, the possibilities (no twice, none refused) and a
+    hook per hero (only names of the group). strict (the first try): too short, no quest or fewer than WEGE[0]
+    possibilities send it back; the second try counts as it is."""
+    story, drop = check_story(r, rd, obj)
+    if not story:
+        return None, drop
+    a = plain(obj.get("auftrag"), AUFTRAG_MAX)
+    story["auftrag"] = a if len(a) >= 10 and not bad_words(r, rd, a) else ""
+    wege, seen = [], set()
+    for w in obj.get("wege") or []:
+        t = plain(w, WEG_MAX)
+        if len(t) < 5 or bad_words(r, rd, t) or t.lower() in seen or len(wege) >= WEGE[1]:
+            drop += 1
+            continue
+        seen.add(t.lower())
+        wege.append(t)
+    story["wege"] = wege
+    names, haken = _name_map(rd), {}
+    for h in obj.get("haken") or []:
+        pid = names.get(str(h.get("wer", "")).strip().lower()) if isinstance(h, dict) else None
+        t = plain(h.get("text") if isinstance(h, dict) else "", HAKEN_MAX)
+        if not pid or pid in haken or len(t) < 10 or bad_words(r, rd, t):
+            drop += 1
+            continue
+        haken[pid] = t
+    story["haken"] = haken
+    if strict and (len(story["text"]) < PROLOG_MIN or not story["auftrag"] or len(wege) < WEGE[0]):
+        print(f"dungeon: prolog | zu knapp | {len(story['text'])} zeichen {len(wege)} wege", flush=True)
+        return None, drop + 1
+    return story, drop
+
+
 def apply(r, rd, wuerfe, story, rid, rng=None):
     """The checked story into the round: rolls, narration, consequences, loot, experience and levels, fairness; then
     the next turn opens. Every number comes from here, never from the model."""
@@ -2426,6 +2495,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
             give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
         for e in story["erfolg"]:
             if e["art"] == "ziel":
+                if rd.get("auftrag"):
+                    rd["auftrag_ok"] = True       # the pinned quest shows as done
                 for pid in ep:
                     ep[pid] += r["ep"]["ziel"]
             else:
@@ -2589,13 +2660,18 @@ def prolog(r, rd, story):
         if story.get("haendler") and not rd.get("markt"):
             open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"])
         text, npc, frage = story["text"], story["npc"][:1], story["frage"]
+        if story.get("auftrag"):
+            rd["auftrag"], rd["auftrag_ok"] = story["auftrag"], False
     else:
         akte = (rd.get("plan") or {}).get("akte") or []
         text = rd.get("einstieg") or (akte[rd.get("akt", 0)]["inhalt"] if rd.get("akt", 0) < len(akte) else "")
         npc, frage = [], ""
+    if not rd.get("auftrag") and (rd.get("plan") or {}).get("ziel"):
+        rd["auftrag"], rd["auftrag_ok"] = rd["plan"]["ziel"], False   # without the model's quest the story's goal
     if not text:
         return False
-    _log(rd, "dm", text=text, npc=npc, frage=names[frage]["held"]["name"] if frage in names else "", prolog=True)
+    extra = {"wege": story["wege"], "haken": story["haken"]} if story and story.get("wege") is not None else {}
+    _log(rd, "dm", text=text, npc=npc, frage=names[frage]["held"]["name"] if frage in names else "", prolog=True, **extra)
     return True
 
 
@@ -2610,15 +2686,17 @@ async def run_prolog(rid):
         if not rd:
             return
         story, why, wahr = None, "pause", None
+        rahmen = rd.get("rahmen") or ("" if rd.get("plan") else random.choice(list(RAHMEN)))
+        rd["rahmen"] = rahmen
         if not wartung.paused("llm"):
             wahr = await erz.make_truth(_me, r, rd)
             if wahr:
                 rd["wahrheit"] = wahr
                 _day.bump("wahrheit")
             await asyncio.to_thread(wait_step, rid, 1, "erzaehlen")
-            for _ in range(2):
+            for i in range(2):
                 obj = await _ask_json(system_text(r, rd, "prolog"), facts(r, rd), SCHEMA_ERZAEHLEN, "prolog", 900)
-                story, drop = check_story(r, rd, obj)
+                story, drop = check_opening(r, rd, obj, strict=i == 0)
                 if story:
                     break
             why = "ok" if story else "ausfall"
@@ -2632,6 +2710,8 @@ async def run_prolog(rid):
                     return
                 if wahr and not cur.get("wahrheit"):
                     cur["wahrheit"] = wahr
+                if rahmen and not cur.get("rahmen"):
+                    cur["rahmen"] = rahmen
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
@@ -3467,7 +3547,7 @@ def view(rid, pid, now=None):
             "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",
             "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
-            "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
+            "termin": rd.get("termin") or 0, "auftrag": {"text": rd["auftrag"], "ok": bool(rd.get("auftrag_ok"))} if rd.get("auftrag") else None, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
     out.update(warten.view(rd, rid, pid, lang))
     out["werkzeug_bonus"] = WERKZEUG

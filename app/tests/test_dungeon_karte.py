@@ -536,7 +536,7 @@ class Table(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#dmview .dmk-land')")
                         self.assertEqual(await pg.evaluate(OVERLAP), [], w)
                         await b.until(pg, "!!document.querySelector('#dmview .dmk-land image[data-dmkb][href]')")
-                        await pg.click("#dmview [data-dmfen=karte]")                 # the big map: the same sizes, no overlap
+                        await pg.click("#dmview .dmk [data-dmkgross]")              # the big map: the same sizes, no overlap
                         await b.until(pg, "!!document.querySelector('#dmview .dmk.gross .dmk-land')")
                         await pg.wait_for_timeout(100)
                         self.assertEqual(await pg.evaluate(OVERLAP), [], w)
