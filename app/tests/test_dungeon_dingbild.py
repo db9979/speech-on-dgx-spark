@@ -223,8 +223,8 @@ class Catalog(Base):
     def test_paint_all_ignores_the_day_limit(self):
         """„Alle Bilder malen“ (Dominik 2026-10-24): the admin's run without the day limit; the stop still ends it."""
         r = dungeon.rules()
-        few = db.wanted(r)[:8]
-        with mock.patch("dungeon_dingbild.wanted", lambda r: few):
+        few = db._want(r)[:8]
+        with mock.patch("dungeon_dingbild._want", lambda r: few):
             self.run_now()
             self.assertEqual(len(self.calls), db.TAG_MAX)
             self.assertEqual(db._end_why("knopf"), "tag")
@@ -404,6 +404,62 @@ class Finds(Base):
         self.assertNotIn("Glockenbrecher", json.dumps(live))
         helpers.set_config(dungeon_bilder=False)
         self.assertEqual(db.for_live(), {"on": False})
+
+
+class Keep(Base):
+    """Dominik 2026-10-24: pictures of the Bestiarium were gone after every restart (the sweep after a start took
+    them when a new version changed the prompt). A picture stays shown until the new prompt's is there, one the admin
+    painted by hand stays for good, and no sweep runs on rules that fell back."""
+    def test_a_changed_prompt_keeps_the_old_picture_until_the_new_one_is_there(self):
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+        foe = next(g for g in r["gegner"] if g["id"] == "kultist")
+        k = db.key_of(style, foe)
+        old = "ding-00000000000000aa"                               # painted under an older prompt
+        dungeon._bild_save(old, PNG)
+        st = db._state()
+        st["zuletzt"][k] = old
+        db._save(st)
+        self.assertEqual(db.picture_of(r, foe), (old, True))         # shown, not gone
+        self.assertEqual(db.sweep(force=True), 0)
+        self.assertIn(old, db.files())                               # the sweep after a restart keeps it
+        self.assertIn(db.picture_of(r, foe)[0], db.files())
+        self.assertIn(db.name_of(db.prompt(style, foe)), dict(db.missing(r)))   # the run still paints the new prompt
+        new = db.name_of(db.prompt(style, foe))
+        dungeon._bild_save(new, PNG)
+        st = db._state()
+        st["zuletzt"][k] = new
+        db._save(st)
+        self.assertEqual(db.picture_of(r, foe)[0], new)
+        self.assertEqual(db.sweep(force=True), 1)                    # now the old one may go
+        self.assertNotIn(old, db.files())
+        self.assertIn(new, db.files())
+
+    def test_the_admins_own_picture_stays_and_is_not_painted_over(self):
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+        foe = next(g for g in r["gegner"] if g["id"] == "goblin")
+        n = db.name_of(db.prompt(style, foe))
+        dungeon._bild_save("neu-" + n[5:], PNG)                     # „Malen“ on the rules page, kept
+        db.settle(r, foe, True)
+        k = db.key_of(style, foe)
+        self.assertEqual(db._state()["fest"][k], n)
+        with mock.patch("dungeon_dingbild.prompt", lambda s, c, f=db.prompt: f(s, c) + (", v2" if c is foe or c.get("id") == "goblin" else "")):
+            self.assertEqual(db.picture_of(r, foe), (n, True))       # a later version's prompt: still the admin's
+            self.assertNotIn(db.name_of(db.prompt(style, foe)), dict(db.missing(r)))   # and never painted over
+            db.sweep(force=True)
+            self.assertIn(n, db.files())
+
+    def test_no_sweep_on_rules_that_fell_back(self):
+        r = dungeon.rules()
+        keep = db.name_of(db.prompt(dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None}), r["gegner"][0]))
+        dungeon._bild_save(keep, PNG)
+        thin = dict(r, gegner=[])                                     # dungeon.rules without the SRD data
+        with mock.patch("dungeon.rules", lambda: thin):
+            self.assertFalse(db._complete(thin))
+            self.assertEqual(db.sweep(force=True), 0)
+        self.assertIn(keep, db.files())
+        self.assertTrue(db._complete(r))
 
 
 class Heroes(Base):

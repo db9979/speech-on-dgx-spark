@@ -101,6 +101,7 @@ NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # o
 _lauf = {"task": None, "grund": "", "start": 0.0, "gemalt": 0, "stop": False}
 _funde = set()            # iids of finds being painted right now
 _files = {"m": None, "set": frozenset()}
+_gelesen = {"m": None, "d": None}
 _sweep = [0.0]
 _day = DayCounter(gemalt=0, verworfen=0, ausgefallen=0, funde=0)
 clock = time.time        # the one clock of this module (the tests set it, nothing here reads the wall clock else)
@@ -114,10 +115,39 @@ def on():
 
 def _state():
     d = read_json(FILE, {})
-    for k in ("tag", "fehl", "funde", "letzter"):
+    for k in ("tag", "fehl", "funde", "letzter", "zuletzt", "fest"):
         if not isinstance(d.get(k), dict):
             d[k] = {}
     return d
+
+
+def _seen():
+    """The state for the lookups of every view (read again only when the file changed)."""
+    try:
+        m = os.stat(FILE).st_mtime_ns
+    except FileNotFoundError:
+        m = None
+    if m != _gelesen["m"] or _gelesen["d"] is None:
+        _gelesen.update(m=m, d=_state())
+    return _gelesen["d"]
+
+
+def key_of(style, c, art=""):
+    """An entry in a style, whatever its prompt says (the prompt's hash names the file, this key names the entry):
+    art "volk"/"klasse"/"kraft" of the hero form, an item, or a foe (no "art")."""
+    kind = art or ("ding" if "art" in c else "gegner")
+    return "k" + hashlib.sha256(f"{style}|{kind}|{c.get('id')}".encode()).hexdigest()[:16]
+
+
+def _pick(n, k, have):
+    """The picture to show for an entry (Dominik 2026-10-24: pictures of the Bestiarium were gone after every
+    restart, the sweep took them when a new version changed the prompt): the admin's own (fest) first, then the one
+    of the current prompt, then the last one painted for the entry until the new one is there; n when none is."""
+    d = _seen()
+    for x in (d["fest"].get(k), n, d["zuletzt"].get(k)):
+        if x and x in have:
+            return x
+    return n
 
 
 def _save(d):
@@ -201,7 +231,8 @@ def hero_pic(r, art, c, have=None, welt=""):
     """The picture name of a people, class or ability in a world's style (welt, else the first) once it is painted (and
     the pictures are on), else ""."""
     have = (files() if on() else frozenset()) if have is None else have
-    n = name_of(hero_prompt(r, art, c, welt))
+    s = dungeon.style(r, {"welt": welt or r["welten"][0]["id"], "ton": None})
+    n = _pick(name_of(_hero_text(s, art, c)), key_of(s, c, art), have)
     return n if n in have else ""
 
 
@@ -225,16 +256,22 @@ def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
     then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner), then
     the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book)."""
+    return [(n, p) for n, p, _ in _want(r)]
+
+
+def _want(r):
+    """wanted with the entry's key (key_of; None for the map's kinds, dungeon_karte names them itself)."""
     out, seen = [], set()
     for s in styles(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
-        for n, p in [(name_of(prompt(s, c)), prompt(s, c)) for c in r["gegenstaende"]] + dungeon_karte.bilder(r, s) + \
-                [(name_of(prompt(s, c)), prompt(s, c)) for c in foes] + \
-                ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c)) for a, c in heroes(r)] if s != dungeon.BILD_KIND else []):
+        for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
+                [(n, p, None) for n, p in dungeon_karte.bilder(r, s)] + \
+                [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
+                ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] if s != dungeon.BILD_KIND else []):
             if n not in seen:
                 seen.add(n)
-                out.append((n, p))
+                out.append((n, p, k))
     return out
 
 
@@ -251,9 +288,12 @@ def _ok_text(p, r=None):
 
 
 def missing(r, d=None):
+    """What a run still paints: the current prompt's picture is not there, nothing the admin painted by hand stands
+    for the entry (fest), and it was not refused too often."""
     d = _state() if d is None else d
     have = files()
-    return [(n, p) for n, p in wanted(r) if n not in have and d["fehl"].get(n, 0) < FEHL_MAX]
+    return [(n, p) for n, p, k in _want(r) if n not in have and d["fehl"].get(n, 0) < FEHL_MAX
+            and not (k and d["fest"].get(k) in have)]
 
 
 def _night(now):
@@ -324,6 +364,7 @@ async def _run(grund):
                 break
             r = dungeon.rules()
             todo = [x for x in await asyncio.to_thread(missing, r) if x[0] not in tried]
+            keys = {x[0]: x[2] for x in await asyncio.to_thread(_want, r)} if todo else {}
             if not todo:
                 break
             n, p = todo[0]
@@ -337,6 +378,8 @@ async def _run(grund):
                     d["tag"] = {"day": _date(), "n": _today(d) + 1}
                 if res != "ok":
                     d["fehl"][n] = d["fehl"].get(n, 0) + (FEHL_MAX if res == "wortliste" else 1)
+                elif keys.get(n):
+                    d["zuletzt"][keys[n]] = n           # shown until a later prompt's picture is there
                 _save(d)
             await asyncio.to_thread(note)
             if res == "ok":
@@ -454,7 +497,17 @@ def sweep(now=None, force=False):
         return 0
     _sweep[0] = now
     r = dungeon.rules()
-    keep = {n for n, _ in wanted(r)}
+    if not _complete(r):                     # the rules fell back (no SRD): never take pictures of the missing entries
+        print("dungeon: dingbild | aufraeumen ausgelassen | regeln unvollstaendig", flush=True)
+        return 0
+    want = _want(r)
+    st = _state()
+    ks = {k for _, _, k in want if k}
+    keep = {n for n, _, _ in want} | {st[t][k] for t in ("zuletzt", "fest") for k in ks if st[t].get(k)}
+    if any(set(st[t]) - ks for t in ("zuletzt", "fest")):
+        for t in ("zuletzt", "fest"):
+            st[t] = {k: v for k, v in st[t].items() if k in ks}
+        _save(st)
     iids = set()
 
     def held(h):
@@ -506,7 +559,7 @@ def add(r, rd, out):
         bild = ""
         if c and have:
             f = "fund-" + str(x.get("i"))
-            bild = f if not x.get("u") and f in have else name_of(prompt(style, c))
+            bild = f if not x.get("u") and f in have else _pick(name_of(prompt(style, c)), key_of(style, c), have)
             bild = bild if bild in have else ""
         return dict(x, zeichen=ZEICHEN.get(x.get("art"), dungeon.ZEICHEN), bild=bild)
 
@@ -530,11 +583,32 @@ def candidates():
         return []
 
 
+def _complete(r):
+    """The rules in force hold every shipped item and foe but those the admin hid (dungeon.rules falls back to the
+    rules without the SRD data when they do not pass; a sweep then would take hundreds of pictures)."""
+    base = dungeon._base_rules()
+    own = dungeon.own_rules()
+    own = own if isinstance(own, dict) else {}
+    for teil in ("gegner", "gegenstaende"):
+        hidden = {str(e.get("id")) for e in own.get(teil) or [] if isinstance(e, dict) and e.get("aus") is True}
+        if {str(x["id"]) for x in base.get(teil) or []} - hidden - {str(x["id"]) for x in r.get(teil) or []}:
+            return False
+    return True
+
+
 def picture_of(r, c, welt=""):
     """The name of a catalog entry's picture in the style of its world (the first it belongs to, else the first
-    world), and whether it is there."""
-    n = name_of(prompt(dungeon.style(r, {"welt": welt or _welt(r, c), "ton": None}), c))
-    return n, n in files()
+    world), and whether it is there: the admin's own, else the current prompt's, else the last one painted (_pick)."""
+    s = dungeon.style(r, {"welt": welt or _welt(r, c), "ton": None})
+    have = files()
+    n = _pick(name_of(prompt(s, c)), key_of(s, c), have)
+    return n, n in have
+
+
+def _current(r, c):
+    """(name of the current prompt's picture, prompt, key) of a catalog entry in its world's style."""
+    s = dungeon.style(r, {"welt": _welt(r, c), "ton": None})
+    return name_of(prompt(s, c)), prompt(s, c), key_of(s, c)
 
 
 def _welt(r, c):
@@ -551,9 +625,8 @@ async def repaint(r, c, frei=False):
     d = _state()
     if _today(d) >= TAG_MAX and not frei:
         return "tag", ""
-    n, _ = picture_of(r, c)
-    p = prompt(dungeon.style(r, {"welt": _welt(r, c), "ton": None}), c)
-    if not _ok_text(p):
+    n, p, _ = _current(r, c)
+    if not _ok_text(p, r):
         return "pruefung", ""
     neu = "neu-" + n[5:]
     why = await paint_one(neu, p)
@@ -568,13 +641,17 @@ async def repaint(r, c, frei=False):
 
 
 def settle(r, c, keep_new):
-    """„Neues behalten“ puts the candidate in place of the picture, „Altes behalten“ drops it."""
-    n, _ = picture_of(r, c)
+    """„Neues behalten“ puts the candidate in place of the picture and keeps it as the admin's own (fest: a later
+    prompt does not paint it over, the sweep keeps it), „Altes behalten“ drops it."""
+    n, _, k = _current(r, c)
     neu = "neu-" + n[5:]
     if not os.path.exists(dungeon.bild_file(neu)):
         raise LookupError("bild")
     if keep_new:
         os.replace(dungeon.bild_file(neu), dungeon.bild_file(n))
+        d = _state()
+        d["fest"][k] = d["zuletzt"][k] = n
+        _save(d)
     else:
         dungeon._bild_rm(neu)
     print(f"dungeon: dingbild | nochmal | {'neu behalten' if keep_new else 'alt behalten'}", flush=True)

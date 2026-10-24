@@ -3082,6 +3082,13 @@
 "titel": "Ruhiger Tisch: Hilfe zum Blättern, nichts doppelt",
 "text": "A: Als neuer Spieler eine Runde öffnen: „So spielst du“ kommt einmal als Fenster, mit ‹ › oder den Punkten blättern, am Rechner auch mit den Pfeiltasten; Esc, ✕ oder ein Tipp daneben schließt. B: Musik und Geräusche stehen im Kopf des Tisches, keine eigene Zeile darunter. C: Zug, Uhr und „haben gehandelt“ stehen nur einmal, die rechte Spalte wiederholt sie nicht. D: Der eigene Held steht in der Gruppe nur als kurze Zeile, ganz rechts groß. E: Am Tisch ist das Assistenten-Gesicht weg, auf anderen Seiten wieder da. F: Leiten: die Kacheln in der Schrift des Tisches, eine ungerade letzte Kachel füllt die Zeile.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P465",
+"v": 1005,
+"titel": "Dungeon-Master: Bilder bleiben nach Neustart",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Gegner: bei einem Gegner ohne Bild „Malen“, dann „Behalten“. B: Spark neu starten (oder auf das nächste Update warten): das Bild ist noch da. C: Ein Gegner mit Bild aus einer früheren Version zeigt sein Bild weiter, bis der nächste Lauf das neue gemalt hat. D: Zustand → Logs nach dem Start: kein „aufgeraeumt“ mit vielen Bildern.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

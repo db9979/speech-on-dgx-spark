@@ -5701,7 +5701,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "e) und aus festen Listen des Panels, was sie sind (MENSCH: „an ordinary human person“, HUMANOID: „a humanoid with two arms and two legs“), nie aus einer Entscheidung des Modells; statt „plain dark background“ steht „in a fitting place of its world“, passend zum Hintergrund des Weltstils. Jeder Bildtext geht durch die Wortliste von „Bilder malen“ und die Liste „nie“ des Spiels, im Bilderbuch-Stil auch durch die Wörter des jüngsten Tons. Der neue Text malt alle Gegner einmal neu. Der Lauf endet bei Notaus, „Anhalten“, ausgeschaltetem Schalter, am Morgen (nur der nächtliche), am Tageslimit, bei voller Warteschlange und wenn Bildmodell oder Bildprüfung fehlen; ein Bild, das die Bildprüfung zweimal zurückhält, wird nicht mehr versucht. Fundstücke: Gibt das Modell einem Fund ab „rar“ einen Namen, malt das Panel innerhalb einer Minute ein eigenes Bild (Stil der Runde, englischer Name aus dem Katalog, Name und Satz des Modells, geprüft wie eine Szenenbeschreibung mit Ton, „nie“ und Tabus); unerkannte Magie erst, wenn sie erkannt ist. Das zählt zum Tageslimit der Spielbilder (grenzen.bilder_tag) und braucht „Bilder malen“ des Gastgebers. Am Tisch: Jeder Gegenstand in Tasche, Ausrüstung, Beu"
+"text": "e) und aus festen Listen des Panels, was sie sind (MENSCH: „an ordinary human person“, HUMANOID: „a humanoid with two arms and two legs“), nie aus einer Entscheidung des Modells; statt „plain dark background“ steht „in a fitting place of its world“, passend zum Hintergrund des Weltstils. Jeder Bildtext geht durch die Wortliste von „Bilder malen“ und die Liste „nie“ des Spiels, im Bilderbuch-Stil auch durch die Wörter des jüngsten Tons. Der neue Text malt alle Gegner einmal neu. Bilder bleiben (seit V01.1.005, Dominik 2026-10-24: im Bestiarium neu gemalte Bilder fehlten nach jedem Neustart): Das Aufräumen nach einem Start nahm jedes Bild, dessen Bildtext eine neue Version geändert hatte. Jetzt merkt sich das Panel je Eintrag und Stil das zuletzt gemalte Bild (zuletzt) und zeigt es, bis das Bild des neuen Textes da ist; ein unter Regeln anpassen gemaltes und behaltenes Bild ist fest (fest), wird nie übermalt und nie aufgeräumt. Fallen die Regeln auf den Stand ohne SRD-Daten zurück, räumt es gar nicht auf (Log dungeon: dingbild | aufraeumen ausgelassen | regeln unvollstaendig). Der Lauf endet bei Notaus, „Anhalten“, ausgeschaltetem Schalter, am Morgen (nur der nächtliche), am Tageslim"
 },
 {
 "lang": "de",
@@ -5709,7 +5709,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "te, am Boden und beim Händler zeigt sein Bild im Rahmen der Seltenheit (grün, blau, lila, orange), bis dahin das Zeichen der Art (⚔️ 🛡️ 💍 🧪 ✨ 📜). Profile holen Bilder über GET /api/profile/dungeon/ding/{name}, Gäste über ihren Platz-Code (POST /api/dungeon/ding); Rate-Limit dungeonding. Der Stand liegt in dungeon-dingbilder.json, stündlich räumt das Panel Bilder weg, die kein Eintrag und kein Held mehr braucht. Zustand → Live zählt in der Zeile Dungeon-Master Gegenstandsbilder, Fundstücke, heute gemalte, verworfene und ausgefallene; Logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
+"text": "it, bei voller Warteschlange und wenn Bildmodell oder Bildprüfung fehlen; ein Bild, das die Bildprüfung zweimal zurückhält, wird nicht mehr versucht. Fundstücke: Gibt das Modell einem Fund ab „rar“ einen Namen, malt das Panel innerhalb einer Minute ein eigenes Bild (Stil der Runde, englischer Name aus dem Katalog, Name und Satz des Modells, geprüft wie eine Szenenbeschreibung mit Ton, „nie“ und Tabus); unerkannte Magie erst, wenn sie erkannt ist. Das zählt zum Tageslimit der Spielbilder (grenzen.bilder_tag) und braucht „Bilder malen“ des Gastgebers. Am Tisch: Jeder Gegenstand in Tasche, Ausrüstung, Beute, am Boden und beim Händler zeigt sein Bild im Rahmen der Seltenheit (grün, blau, lila, orange), bis dahin das Zeichen der Art (⚔️ 🛡️ 💍 🧪 ✨ 📜). Profile holen Bilder über GET /api/profile/dungeon/ding/{name}, Gäste über ihren Platz-Code (POST /api/dungeon/ding); Rate-Limit dungeonding. Der Stand liegt in dungeon-dingbilder.json, stündlich räumt das Panel Bilder weg, die kein Eintrag und kein Held mehr braucht. Zustand → Live zählt in der Zeile Dungeon-Master Gegenstandsbilder, Fundstücke, heute gemalte, verworfene und ausgefallene; Logs: dungeon: dingbild | lauf start | knopf, dungeo"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
 },
 {
 "lang": "de",
@@ -18197,7 +18205,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "H: \"an ordinary human person\", HUMANOID: \"a humanoid with two arms and two legs\"), never from a choice of the model; instead of \"plain dark background\" it says \"in a fitting place of its world\", matching the background of the world's style. Every picture text goes through the word list of Painting pictures and the game's list \"nie\", in the picture book style through the youngest tone's words too. The new text paints every foe once more. The run ends on Notaus, \"Stop\", the switch off, in the morning (only the night's run), at the day limit, with a full queue and when the picture model or the image check is missing; a picture the image check holds back twice is not tried again. Finds: when the model names a find from \"rare\" on, the panel paints its own picture within a minute (the round's style, the English name from the catalog, the model's name and sentence, checked like a scene description with tone, \"nie\" and taboos); unknown magic only once it is known. It counts to the day limit of the game's pictures (grenzen.bilder_tag) and needs the host's \"Painting pictures\". At the table: every item in the bag, the equipment, loot, on the ground and at the merchant shows its picture in its"
+"text": "H: \"an ordinary human person\", HUMANOID: \"a humanoid with two arms and two legs\"), never from a choice of the model; instead of \"plain dark background\" it says \"in a fitting place of its world\", matching the background of the world's style. Every picture text goes through the word list of Painting pictures and the game's list \"nie\", in the picture book style through the youngest tone's words too. The new text paints every foe once more. Pictures stay (since V01.1.005, Dominik 2026-10-24: pictures newly painted in the bestiary were gone after every restart): the sweep after a start took every picture whose picture text a new version had changed. Now the panel remembers the last picture painted per entry and style (zuletzt) and shows it until the new text's picture is there; a picture painted and kept under Adjust rules is fixed (fest), never painted over and never swept. When the rules fall back to the state without the SRD data, it does not sweep at all (log dungeon: dingbild | aufraeumen ausgelassen | regeln unvollstaendig). The run ends on Notaus, \"Stop\", the switch off, in the morning (only the night's run), at the day limit, with a full queue and when the picture model or the i"
 },
 {
 "lang": "en",
@@ -18205,7 +18213,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " rarity's frame (green, blue, purple, orange), until then the kind's sign (⚔️ 🛡️ 💍 🧪 ✨ 📜). Profiles load pictures with GET /api/profile/dungeon/ding/{name}, guests with their seat code (POST /api/dungeon/ding); rate limit dungeonding. The state lives in dungeon-dingbilder.json, hourly the panel removes pictures no entry and no hero needs any more. Status → Live counts item pictures, finds, painted, discarded and failed today on the Dungeon Master line; logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
+"text": "mage check is missing; a picture the image check holds back twice is not tried again. Finds: when the model names a find from \"rare\" on, the panel paints its own picture within a minute (the round's style, the English name from the catalog, the model's name and sentence, checked like a scene description with tone, \"nie\" and taboos); unknown magic only once it is known. It counts to the day limit of the game's pictures (grenzen.bilder_tag) and needs the host's \"Painting pictures\". At the table: every item in the bag, the equipment, loot, on the ground and at the merchant shows its picture in its rarity's frame (green, blue, purple, orange), until then the kind's sign (⚔️ 🛡️ 💍 🧪 ✨ 📜). Profiles load pictures with GET /api/profile/dungeon/ding/{name}, guests with their seat code (POST /api/dungeon/ding); rate limit dungeonding. The state lives in dungeon-dingbilder.json, hourly the panel removes pictures no entry and no hero needs any more. Status → Live counts item pictures, finds, painted, discarded and failed today on the Dungeon Master line; logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: di"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ngbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
 },
 {
 "lang": "en",
