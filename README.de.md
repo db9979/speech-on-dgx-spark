@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.993** KI-Dungeon-Master: die Karte zieht mit, wenn der Erzähler den Weg erzählt, aber die Orts-id vergisst (Name oder Richtung aus dem Zug und Name in der Erzählung), der neue Ort bekommt sein Bild
 - **V01.0.992** Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 - **V01.0.991** KI-Dungeon-Master: mehr Zeit zwischen den Zügen: Lesezeit vor der Zugzeit, 300 s als Standard, 10 s Gnadenfrist nach dem letzten „Handeln“, „+1 Minute“ einmal pro Zug und Spieler, Uhr rot ab 30 s
 - **V01.0.990** Sprechen auf dem Modell-Rechner startet wieder ohne Internet: jedes gepinnte Modell zeigt mit refs/main auf seinen geprüften Commit, sonst fand vllm-omni das Stimmen-Modell offline nicht (TTS-Design startete alle 30 s neu)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.986** KI-Dungeon-Master: Karte als Pergament mit Gelände, Nebel, Kompass, Rahmen und Fähnchen, Stil je Welt (Pergament, fahles Papier, Seekarte, Sternkarte), Gewölbe mit Steinboden, Türen, Fackeln und Licht, sanfte Bewegung; „Gewölbe würfeln“ legt nur einen Eingang an, hinein erst mit der Aktion
 - **V01.0.985** E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 - **V01.0.984** KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)
-- **V01.0.983** KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
 
 
 

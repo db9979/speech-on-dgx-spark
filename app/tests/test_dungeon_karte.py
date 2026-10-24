@@ -180,6 +180,38 @@ class Moves(unittest.TestCase):
         self.assertTrue(K.step(r, self.rd, self.story(f"o{to + 1}"), {}, random.Random(1)))
         self.assertEqual((k["hier"], k["schritte"], k["besucht"][-1]), (to, 1, to))
 
+    def test_a_named_way_moves_when_the_model_forgot_the_id(self):
+        """Dominik 2026-10-24: „in die alte Bibliothek bewegt, keine Grafik, die Position ist nicht aktuell“: the
+        model told the way but left ort_id empty. The panel moves only when exactly one neighbour's name stands in an
+        action of the turn and in the narration; a far place, a name only told, or two names never move."""
+        k, r = self.k, self.r
+        here = k["hier"]
+        nbs = sorted(K._nb(k)[here])
+        to = nbs[0]
+        far = next(i for i in range(len(k["orte"])) if i != here and i not in nbs)
+        name, fname = k["orte"][to]["name"], k["orte"][far]["name"]
+        told = f"Sie folgen den Hinweisen und betreten {name}. Staub liegt in der Luft."
+        self.rd["offen"] = {"pa": {"text": f"Ich gehe nach {fname}."}}
+        self.assertFalse(K.step(r, self.rd, self.story(text=f"Sie betreten {fname}."), {}, random.Random(1)))
+        self.rd["offen"] = {"pa": {"text": "Ich sehe mich um."}}
+        self.assertFalse(K.step(r, self.rd, self.story(text=told), {}, random.Random(1)))     # only told: stays
+        self.assertEqual(k["hier"], here)
+        if len(nbs) > 1:
+            both = f"{name} und {k['orte'][nbs[1]]['name']}"
+            self.rd["offen"] = {"pa": {"text": f"Wir gehen nach {both}."}}
+            self.assertFalse(K.step(r, self.rd, self.story(text=f"Zwischen {both} zögern sie."), {}, random.Random(1)))
+        self.rd["offen"] = {"pa": {"text": f"Ich gehe zu {name.lower()}!"}}
+        self.assertEqual(K.named_way(self.rd, told), to)
+        o = k["orte"]
+        d = K._dir((o[here]["x"], o[here]["y"]), (o[to]["x"], o[to]["y"]), 0)
+        self.rd["offen"] = {"pa": {"text": f"Wir folgen den Hinweisen nach {d}."}}
+        self.assertEqual(K.named_way(self.rd, told), to)                                   # or by its direction
+        self.rd["offen"] = {"pa": {"text": f"Ich gehe zu {name.lower()}!"}}
+        self.assertTrue(K.step(r, self.rd, self.story(text=told), {}, random.Random(1)))
+        self.assertEqual((k["hier"], k["besucht"][-1]), (to, to))
+        self.assertTrue(K._names("Alte Bibliothek", K._words("zur alten Bibliothek")))     # bent words count
+        self.assertFalse(K._names("Alte Bibliothek", K._words("die Bibliothekarin")))
+
     def test_fog_in_the_view_and_in_the_facts(self):
         k, r = self.k, self.r
         hidden = unknown(k)

@@ -483,10 +483,13 @@ def _table(r, k, tid):
     return next((x for x in r[k] if x["id"] == tid), None)
 
 
-def _norm(s):
+def _words(s):
     s = str(s or "").lower().replace("ß", "ss").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
-    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
-    return set(re.findall(r"[a-z]+", s))
+    return re.findall(r"[a-z]+", unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode())
+
+
+def _norm(s):
+    return set(_words(s))
 
 
 def solved(r, rd):
@@ -500,6 +503,30 @@ def solved(r, rd):
         return False
     want = {w for ws in q["loesung"] for w in _norm(" ".join(ws))}
     return any(want & _norm(a.get("text")) for a in (rd.get("offen") or {}).values())
+
+
+def _names(name, words):
+    """Whether every longer word of a place's name stands in words (also bent: „alten“ for „Alte“)."""
+    need = [w for w in _words(name) if len(w) >= 4]
+    return bool(need) and all(any(x.startswith(w) for x in words) for w in need)
+
+
+def named_way(rd, text):
+    """The way the turn named when the model left szene.ort_id empty (Dominik 2026-10-24 „in die alte Bibliothek
+    bewegt, die Position ist nicht aktuell“): exactly one neighbouring place is named in the narration and asked for
+    in an action of this turn (by its name or its direction). The panel's fixed rule, never the model alone; -1 for
+    none (pure)."""
+    k = rd.get("karte")
+    if not k or vault(rd):
+        return -1
+    told, li, o, here = _words(text), _li(rd), k["orte"], k["hier"]
+    said = [_words(a.get("text")) for a in (rd.get("offen") or {}).values() if isinstance(a, dict)]
+
+    def asked(j):       # its name, or its direction („nach Nordosten“), in an action
+        d = " " + " ".join(_words(_dir((o[here]["x"], o[here]["y"]), (o[j]["x"], o[j]["y"]), li))) + " "
+        return any(_names(o[j]["name"], w) or d in " " + " ".join(w) + " " for w in said)
+    hits = [j for j in sorted(_nb(k)[here]) if _names(o[j]["name"], told) and asked(j)]
+    return hits[0] if len(hits) == 1 else -1
 
 
 def vault(rd):
@@ -752,6 +779,9 @@ def step(r, rd, story, ep, rng=None):
     k = ensure(r, rd, rng)
     k.pop("unterwegs", None)                     # told in the narration after it, then it is behind the group
     want = story.get("ort_id") or ""
+    if not want and named_way(rd, story.get("text")) >= 0:
+        want = f"o{named_way(rd, story.get('text')) + 1}"
+        print("dungeon: karte | name statt id", flush=True)
     before = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier"))
     v = vault(rd)
     if v:

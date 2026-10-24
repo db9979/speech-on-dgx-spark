@@ -3005,6 +3005,13 @@
 "titel": "Ohne Tageslimit ohne zweiten Schritt",
 "text": "A: Personen und Geräte, ein Profil ohne zweiten Anmeldeschritt öffnen, unter Rechte „Ohne Tageslimit“ den Haken „frei“ setzen. B: Mit diesem Profil mehr Bilder malen als das Tageslimit erlaubt: es geht weiter, Ich → Bilder zeigt „ohne Tageslimit“; dasselbe unter Ich → Musik. C: Haken wieder weg: das Tageslimit gilt sofort wieder. D: Bei einem Profil mit Admin-Rolle ist der Haken gesetzt und grau. E: Zustand → Logs zeigt „coadmin: tageslimit | frei“ bzw. „begrenzt“, das Admin-Protokoll „Tageslimit eines Profils geändert“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P454",
+"v": 993,
+"titel": "Karte zieht mit ohne Orts-id",
+"text": "A: In einer Runde mit Karte als Aktion schreiben „Ich gehe zur <Name eines Nachbarorts>“ oder „Wir gehen nach <Richtung>“. B: Erzählt der Dungeon-Master, dass die Gruppe dort ankommt, steht der Punkt auf der Karte danach dort und der Ort bekommt sein Bild. C: Nur „Ich sehe mich um“ schreiben, auch wenn die Erzählung einen Nachbarort erwähnt: die Gruppe bleibt. D: Zustand → Logs zeigt bei Fall B, wenn das Modell die id vergessen hat, „dungeon: karte | name statt id“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
