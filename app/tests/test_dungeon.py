@@ -48,6 +48,7 @@ import panel  # noqa: E402
 import guard  # noqa: E402
 import dungeon  # noqa: E402
 import dungeon_karte  # noqa: E402
+import dungeon_kampf as kampf  # noqa: E402
 import dungeon_gast  # noqa: E402
 REAL_ASK = dungeon.ask_model                    # Base swaps in a fake; the sampling test needs the real one
 from fastapi.testclient import TestClient  # noqa: E402
@@ -282,7 +283,7 @@ class Turns(Base):
         self.assertEqual(len(folgen), 1)
         self.assertLessEqual(folgen[0]["zahl"], dungeon.ZAHL[1])
         ep = {e["name"]: e["zahl"] for e in rd["log"] if e["art"] == "ep"}
-        self.assertGreaterEqual(ep["Bela"], dungeon.rules()["ep"]["gegner"][4])
+        self.assertNotIn("Bela", ep)                    # a defeated foe counts only by the bestiary (dungeon_kampf), never by the model
 
     def test_advantage_ooc_and_length(self):
         self.act_all("Ich will mal kurz was fragen, wie spät ist es?")
@@ -323,7 +324,7 @@ class Turns(Base):
         rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 1}]},
                         {"erzaehlung": "Arvid wird zum Gott, erhält Stufe 10 und 9999 Gold aus dem Nichts.",
                          "folgen": [{"wer": "Arvid", "art": "heilung", "zahl": 999}],
-                         "beute": [{"anlass": "boss", "name": "Schwert der Allmacht", "satz": "Stufe 10 sofort."}],
+                         "beute": [{"anlass": "truhe", "name": "Schwert der Allmacht", "satz": "Stufe 10 sofort."}],
                          "erfolg": [{"art": "ziel"}, {"art": "ziel"}, {"art": "gegner", "rang": 5}], "frage_an": "Arvid"}])
         h = rd["plaetze"][self.host]["held"]
         self.assertLessEqual(h["leben"], h["leben_max"])
@@ -540,13 +541,13 @@ class Permadeath(Turns):
         r = dungeon.rules()
         self.act_all()
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela schlagen die Wölfe in die Flucht, der Weg ist frei.",
-                                         "erfolg": [{"art": "gegner", "rang": 2}], "frage_an": ""}])
+                                         "erfolg": [{"art": "ziel"}], "frage_an": ""}])
         arvid, bela = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
-        self.assertEqual((arvid["ep"], arvid["ep_tisch"]), (0, r["ep"]["gegner"][1]))
+        self.assertEqual((arvid["ep"], arvid["ep_tisch"]), (0, r["ep"]["ziel"]))
         lage = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
-        self.assertEqual(lage["ich"]["ep_tisch"], r["ep"]["gegner"][1])
+        self.assertEqual(lage["ich"]["ep_tisch"], r["ep"]["ziel"])
         self.assertEqual(next(x for x in dungeon.heroes(self.uid) if x["hid"] == arvid["hid"])["ep"], 0)
-        self.assertEqual(bela["ep_tisch"], r["ep"]["gegner"][1])
+        self.assertEqual(bela["ep_tisch"], r["ep"]["ziel"])
         # a profile at the table that the host takes back leaves with the experience it came with
         seat = self.invite(self.rid)
         j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": seat, "held": dict(HERO, name="Emil")})
@@ -557,7 +558,7 @@ class Permadeath(Turns):
             self.assertEqual(c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": t, "zug": z}).status_code, 200)
         self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich auch.", "zug": z})
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid, Bela und Emil vertreiben die Krähen vom Turm, endlich Ruhe.",
-                                         "erfolg": [{"art": "gegner", "rang": 1}], "frage_an": ""}])
+                                         "erfolg": [{"art": "ziel"}], "frage_an": ""}])
         self.assertTrue(rd["plaetze"][ep]["held"]["ep_tisch"])
         self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}/platz/{ep}").status_code, 200)
         emil = dungeon.heroes(self.uid2)[0]
@@ -1974,6 +1975,7 @@ class Prologue(Base):
         story = {"text": "Die Gießerin ist frei.", "npc": [], "folgen": [], "beute": None, "erfolg": [{"art": "ziel", "rang": 1}],
                  "szene": None, "frage": "", "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "",
                  "npc_stimme": [], "faeden": {"neu": [], "erledigt": []}}
+        rd["zug"] = dungeon.AUFTRAG_ZUEGE                      # late enough in the story (quest_may_end)
         dungeon.apply(dungeon.rules(), rd, [], story, v["rid"])
         self.assertTrue(rd["auftrag_ok"])
         self.assertNotIn("auftrag", json.loads(dungeon.facts(dungeon.rules(), rd).split("\n", 1)[0]))
@@ -2719,6 +2721,13 @@ class Pictures(Base):
         live = dungeon.for_live()
         self.assertGreaterEqual(live["gemalt"], 2)
         self.assertNotIn("bell", json.dumps(live))
+
+    def test_every_opening_paints_its_scene(self):
+        v = self.opening(bild="")                                          # no picture text: the place and mood
+        self.assertEqual(len(self.coros), 1)
+        self.paint()
+        self.assertIn(", neblig, ", self.calls[-1]["prompt"])
+        self.assertEqual(len(self.state(v["rid"])["bilder"]), 1)
 
     def test_checked_like_a_wish_fail_closed_and_only_with_the_switch(self):
         v = self.opening(bild="Dora stands naked at the well")              # a refused word and a known person
@@ -4227,6 +4236,223 @@ class Windows(unittest.TestCase):
                     finally:
                         await br.close()
         asyncio.run(go())
+
+
+class Dice:
+    """Dice that fall as told: the given numbers in turn, then always the highest; randrange the first."""
+    def __init__(self, *seq):
+        self.seq = list(seq)
+
+    def randint(self, a, b):
+        return max(a, min(b, self.seq.pop(0))) if self.seq else b
+
+    def randrange(self, n):
+        return 0
+
+
+class Fight(Turns):
+    """Review point 2 with bestiary points 1 and 2 (2026-10-24): the panel builds the encounter from the bestiary by a
+    budget, rolls every attack against the armour class and gives the experience of the bestiary; the model only picks
+    from the offer and tells."""
+    def held(self):
+        rd = self.state(self.rid)
+        return rd, dungeon._living(rd)
+
+    def act(self, text="Ich greife an."):
+        z = self.state(self.rid)["zug"]
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": z}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": text, "zug": z}).status_code, 200)
+
+    def set_foe(self, k, **kw):
+        with dungeon._lock:
+            d = dungeon._read()
+            next(g for g in d["runden"][self.rid]["kampf"]["gegner"] if g["k"] == k).update(kw)
+            dungeon._write(d)
+
+    def encounter(self, n=1):
+        """Turn 1 brings the first offered foe n times."""
+        r = dungeon.rules()
+        rd, held = self.held()
+        foe = kampf.offer(dungeon, r, rd, held)[0]
+        self.act_all()
+        rd = self.play([{"proben": []}, {"erzaehlung": "Aus dem Schatten des Ganges tritt etwas hervor und versperrt den Weg.",
+                                         "begegnung": [{"id": foe["id"], "anzahl": n}], "frage_an": ""}])
+        return rd, foe
+
+    def test_the_offer_fits_world_budget_and_turn(self):
+        r = dungeon.rules()
+        rd, held = self.held()
+        b = kampf.budget(dungeon, r, rd, held)
+        self.assertEqual(b, sum(kampf.BUDGET[h["stufe"] - 1] for h in held))
+        o = kampf.offer(dungeon, r, rd, held)
+        self.assertTrue(0 < len(o) <= kampf.ANGEBOT)
+        for g in o:
+            self.assertTrue("fantasy" in g["welten"] or "alle" in g["welten"], g["id"])
+            self.assertLessEqual(g["ep"], b * kampf.SCHWER)
+        self.assertEqual([g["id"] for g in kampf.offer(dungeon, r, rd, held)], [g["id"] for g in o])   # the same turn, the same offer
+        kid = dict(rd, ton=min(t["id"] for t in r["toene"]))
+        self.assertEqual(kampf.budget(dungeon, r, kid, held), int(b * kampf.KIND))
+        self.assertIn("angebot", dungeon.facts(r, rd))
+        self.assertEqual(kampf.offer(dungeon, r, dict(rd, kampf={"gegner": []}), held), [])
+
+    def test_the_model_picks_only_from_the_offer_and_the_panel_clamps(self):
+        r = dungeon.rules()
+        rd, held = self.held()
+        o = kampf.offer(dungeon, r, rd, held)
+        b = kampf.budget(dungeon, r, rd, held) * kampf.SCHWER
+        self.assertEqual(kampf.check_encounter(dungeon, r, rd, held, [{"id": "drache_der_alte", "anzahl": 1}]), [])
+        self.assertEqual(kampf.check_encounter(dungeon, r, rd, held, "goblin"), [])
+        got = kampf.check_encounter(dungeon, r, rd, held, [{"id": o[0]["id"], "anzahl": 99}, {"id": o[0]["id"], "anzahl": 2},
+                                                           {"id": o[-1]["id"], "anzahl": True}])
+        self.assertTrue(got)
+        self.assertEqual(len({g["id"] for g, _ in got}), len(got))                   # one entry per kind
+        flat = [g for g, n in got for _ in range(n)]
+        self.assertTrue(all(1 <= n <= kampf.ANZAHL_MAX for _, n in got))
+        self.assertTrue(len(flat) == 1 or (len(flat) <= kampf.GEGNER_MAX and kampf.adjusted(flat) <= b))
+        self.assertEqual(kampf.check_encounter(dungeon, r, dict(rd, kampf={"gegner": []}), held, [{"id": o[0]["id"]}]), [])
+
+    def test_attack_rolls_by_the_panel_against_the_armour_class(self):
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        h = rd["plaetze"][self.host]["held"]
+        p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"].upper()}
+        rest, hits = kampf.attacks(dungeon, r, rd, [p, {"pid": self.gp, "wert": "geschick", "schwer": 10, "vt": ""}], Dice(20))
+        self.assertEqual(rest, [{"pid": self.gp, "wert": "geschick", "schwer": 10, "vt": ""}])     # a check without a foe stays a check
+        x = hits[0]
+        wp = kampf._weapon(dungeon, r, h)
+        wert = dungeon._c(r, wp)["wert"] if wp else "staerke"
+        self.assertEqual(x["bonus"], dungeon.total(r, h, wert) + kampf.prof(h["stufe"]))
+        self.assertTrue(x["treffer"] and x["krit"])
+        die = dungeon._c(r, wp)["schaden"] if wp else kampf.FAUST
+        plus = (0 if wp.get("u") else wp.get("bonus", 0)) if wp else 0
+        self.assertEqual(x["schaden"], max(1, 2 * die + dungeon.mod(h["werte"].get(wert, 10)) + plus))   # a natural 20: the dice twice
+        x = kampf.attacks(dungeon, r, rd, [dict(p, vt="")], Dice(1))[1][0]
+        self.assertEqual((x["treffer"], x["schaden"]), (False, 0))                                     # a natural 1 always misses
+        x = kampf.attacks(dungeon, r, rd, [dict(p, vt="vorteil")], Dice(1, 2))[1][0]
+        self.assertEqual((x["w"], x["ws"]), (2, [1, 2]))
+        miss = g["rk"] - x["bonus"] - 1
+        if 1 < miss < 20:
+            x = kampf.attacks(dungeon, r, rd, [p], Dice(miss))[1][0]
+            self.assertFalse(x["treffer"])
+            x = kampf.attacks(dungeon, r, rd, [p], Dice(miss + 1))[1][0]
+            self.assertTrue(x["treffer"])
+        self.assertEqual(kampf.attacks(dungeon, r, dict(rd, kampf=None), [p])[0][0].get("ziel"), None)   # no fight: ziel goes
+
+    def test_a_whole_fight_through_the_turns(self):
+        r = dungeon.rules()
+        rd, foe = self.encounter()
+        k = rd["kampf"]
+        self.assertEqual([g["id"] for g in k["gegner"]], [foe["id"]])
+        card = next(e for e in rd["log"] if e["art"] == "begegnung")
+        self.assertEqual((card["gegner"][0]["id"], card["gegner"][0]["anzahl"], card["gefahr"]), (foe["id"], 1, k["gefahr"]))
+        self.assertIn(k["gefahr"], [n for _, n in kampf.GEFAHR])
+        g = k["gegner"][0]
+        self.assertEqual((g["leben"], g["rk"], g["ep"]), (foe["leben"], foe["ruestung"], foe["ep"]))
+        self.assertIn("kampf", dungeon.facts(r, rd))
+        view = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual(view["kampf"]["gegner"][0]["name"], g["name"])
+        self.assertTrue(view["kampf"]["stehen"])
+        # the model's damage, its foe and its find do not count in a fight; only the panel's roll does
+        self.set_foe("g1", leben=1)
+        bela = self.state(self.rid)["plaetze"][self.gp]["held"]["leben"]
+        self.act()
+        with mock.patch.object(kampf, "random", Dice(20)):
+            rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 10, "ziel": g["name"]}]},
+                            {"erzaehlung": f"Arvid trifft {g['name']} mit voller Wucht, und es bricht zusammen.",
+                             "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 9}], "erfolg": [{"art": "gegner"}],
+                             "beute": {"anlass": "boss", "name": "", "satz": ""}, "frage_an": ""}])
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], bela)
+        hit = [e for e in rd["log"] if e["art"] == "angriff"]
+        self.assertEqual([(e["name"], e["treffer"], e["krit"]) for e in hit], [("Arvid", True, True)])
+        self.assertEqual([(e["gegner"], e["was"]) for e in rd["log"] if e["art"] == "gegner"], [(g["name"], "besiegt")])
+        self.assertNotIn("kampf", rd)
+        end = next(e for e in rd["log"] if e["art"] == "kampf")
+        each = -(-foe["ep"] // 2)
+        self.assertEqual((end["was"], end["besiegt"], end["ep"]), ("sieg", 1, each))
+        self.assertGreaterEqual(rd["plaetze"][self.gp]["held"]["ep_tisch"], each)
+        self.assertEqual(len([e for e in rd["log"] if e["art"] == "beute"]), 1)        # one find of the foe, none of the model's boss
+        self.assertNotIn("kampf", self.c.get(f"/api/profile/dungeon/{self.rid}").json().get("kampf") or {})
+
+    def test_the_foes_attack_flee_and_give_up_at_the_childrens_table(self):
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20))
+        self.assertEqual(len(z), 1)
+        h = rd["plaetze"][z[0]["pid"]]["held"]
+        self.assertEqual((z[0]["rk"], z[0]["treffer"], z[0]["krit"]), (kampf.rk(dungeon, r, h), True, True))
+        self.assertEqual(z[0]["schaden"], max(1, 2 * g["wuerfel"] * g["schaden"] + g["plus"]))
+        folgen = kampf.apply(dungeon, r, rd, [], z, "", {}, Dice(20))
+        self.assertEqual(folgen, [{"pid": z[0]["pid"], "art": "schaden", "zahl": z[0]["schaden"], "gegner": g["name"]}])
+        self.assertTrue(rd["log"][-1]["von_gegner"])
+        g["leben"] = max(1, g["max"] // kampf.FLUCHT)
+        kampf.apply(dungeon, r, rd, [], [], "", {}, Dice(1))
+        self.assertEqual(g["aus"], "geflohen")
+        end = rd["log"][-1]
+        self.assertEqual((end["art"], end["geflohen"]), ("kampf", 1))
+        kid = copy.deepcopy(self.state(self.rid))
+        kid["ton"] = min(t["id"] for t in r["toene"])
+        kid["kampf"]["gegner"][0]["leben"] = 1
+        kampf.apply(dungeon, r, kid, [], [], "", {}, Dice(1))
+        self.assertEqual([e["was"] for e in kid["log"] if e["art"] == "gegner"], ["aufgegeben"])
+        peace = copy.deepcopy(self.state(self.rid))
+        ep = {self.host: 0}
+        kampf.apply(dungeon, r, peace, [], [], "frieden", ep, Dice(20))
+        self.assertNotIn("kampf", peace)
+        self.assertEqual((peace["log"][-1]["was"], ep[self.host]), ("frieden", 0))
+
+    def test_a_room_of_the_map_brings_its_own_foes_and_says_when_it_is_won(self):
+        r = dungeon.rules()
+        rd, held = self.held()
+        rd["raum_gegner"] = {"raum": "gw-r5", "ids": ["oger", "gibt_es_nicht"]}
+        o = kampf.offer(dungeon, r, rd, held)
+        self.assertEqual([g["id"] for g in o], ["oger"])                                  # only the room's foe, beyond the budget too
+        self.assertEqual([(g["id"], n) for g, n in kampf.check_encounter(dungeon, r, rd, held, [{"id": "oger", "anzahl": 4}, {"id": "goblin"}])],
+                         [("oger", 1)])
+        kampf.start(dungeon, r, rd, held, [(o[0], 1)], 0)
+        self.assertEqual(rd["kampf"]["raum"], "gw-r5")
+        rd["kampf"]["gegner"][0].update(leben=0, aus="besiegt")
+        kampf.end(dungeon, r, rd, {self.host: 0})
+        self.assertEqual(rd.get("sieg"), "gw-r5")
+        self.assertNotIn("raum_gegner", rd)
+        rd.pop("sieg")
+        rd["raum_gegner"] = {"raum": "gw-r6", "ids": ["oger"]}
+        kampf.start(dungeon, r, rd, held, [(o[0], 1)], 0)
+        kampf.end(dungeon, r, rd, {self.host: 0}, "flucht")                               # fled: the way stays shut
+        self.assertNotIn("sieg", rd)
+        self.assertIn("raum_gegner", rd)
+
+    def test_the_quest_is_not_done_after_one_goal_early_in_the_story(self):
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid].update(auftrag="Den Gelehrten Silas finden und retten.", auftrag_ok=True)   # closed too early by .010
+            dungeon._write(d)
+        self.act_all()
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela finden frische Spuren im Schlamm, die zum Lagerhaus führen.",
+                                         "erfolg": [{"art": "ziel"}], "frage_an": ""}])
+        self.assertFalse(rd["auftrag_ok"])                                                # a step on the way, the quest stays open
+        self.assertEqual(rd["plaetze"][self.host]["held"]["ep_tisch"], r["ep"]["ziel"])  # its experience counts
+        self.assertIn("auftrag", dungeon.facts(r, rd))
+        late = dict(rd, zug=dungeon.AUFTRAG_ZUEGE)
+        self.assertTrue(dungeon.quest_may_end(late))
+        plan = {"akte": [{}, {}, {}]}
+        self.assertEqual([dungeon.quest_may_end(dict(rd, plan=plan, akt=a, zug=99)) for a in (0, 1, 2, 3)], [False, False, True, True])
+
+    def test_armour_class_and_the_experience_curve(self):
+        r = dungeon.rules()
+        h = {"werte": {"geschick": 16}, "an": {}}
+        self.assertEqual(kampf.rk(dungeon, r, h), 13)                                     # 10 + Geschick 3
+        h["an"] = {"koerper": dungeon.item(r, "lederruestung", "gewoehnlich")}
+        self.assertEqual(kampf.rk(dungeon, r, h), 10 + 2 + 3)
+        h["an"]["koerper"] = dungeon.item(r, "kettenhemd", "gewoehnlich")
+        self.assertEqual(kampf.rk(dungeon, r, h), 10 + 4 + 2)                             # medium: Geschick at most 2
+        h["an"] = {"koerper": dungeon.item(r, "plattenpanzer", "gewoehnlich"), "nebenhand": dungeon.item(r, "schild", "gewoehnlich")}
+        self.assertEqual(kampf.rk(dungeon, r, h), 10 + 6 + 1)                             # heavy: no Geschick
+        self.assertEqual((kampf.prof(1), kampf.prof(5), kampf.prof(9)), (2, 3, 4))
+        self.assertEqual(r["stufen_ep"][4], 6500)                                        # level 5 from 6,500 as in D&D
+        self.assertNotIn("gegner", r["ep"])                                                # a foe's experience is the bestiary's
 
 
 if __name__ == "__main__":

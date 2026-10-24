@@ -2258,6 +2258,12 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-wurf{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}.dm-wurf.ok b{color:var(--okt)}.dm-wurf.bad b{color:var(--badt)}
 .dm-d20{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;font-weight:700;background:var(--line);font-variant-numeric:tabular-nums}
 .dm-stufe{font-weight:650;color:var(--warnt)}.dm-beute{display:flex;flex-direction:column;gap:4px}
+.dm-beg,.dm-kampf{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--bad) 6%,var(--card))}
+.dm-kampf{margin-bottom:8px;position:sticky;top:0;z-index:2}
+.dm-beg .pill[data-gefahr=leicht],.dm-kampf .pill[data-gefahr=leicht]{color:var(--okt)}.dm-beg .pill[data-gefahr=schwer],.dm-kampf .pill[data-gefahr=schwer]{color:var(--badt)}
+.dm-foe summary{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px}.dm-foe .dm-fwerte{display:block;color:var(--mut);margin-top:2px}
+.dm-kgs{display:flex;flex-wrap:wrap;gap:8px}.dm-kg{display:flex;align-items:center;gap:8px;flex:1 1 160px;min-width:0}.dm-kg>div{flex:1;min-width:0}.dm-kg.aus{opacity:.5}
+.dm-gzug{opacity:.92}
 .dm-scene{font-size:12px;color:var(--mut);font-style:italic}
 .dm-inp{display:flex;gap:8px;align-items:flex-end}.dm-inp textarea{flex:1;min-width:0;resize:none}
 .dm-mein{display:flex;gap:12px;align-items:flex-start;margin-top:8px;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,#1f8a4c 45%,var(--t-linie,var(--line)));background:color-mix(in srgb,#1f8a4c 9%,var(--t-karte,var(--card)))}

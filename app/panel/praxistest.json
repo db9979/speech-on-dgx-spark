@@ -3124,6 +3124,13 @@
 "titel": "Dinge-Gedächtnis: nichts ändert sich heimlich",
 "text": "A: Runde starten und spielen, bis die Erzählung ein Ding mit Merkmalen nennt (eine Truhe, ein Kästchen, eine Tür). Als Gastgeber unter „Wahrheit dieses Kapitels“ „Gemerkte Dinge · nur du siehst das“ öffnen: das Ding steht mit Stoff, Farbe oder Zustand und Ort da. B: In den nächsten Zügen das Ding öffnen oder ansehen: die Erzählung beschreibt es mit denselben Merkmalen (Eisen bleibt Eisen). C: ✏️ ändern (z. B. Merkmale „vergoldet“) und sichern: die nächste Erzählung nimmt das neue Merkmal. D: 🗑 vergisst ein Ding. E: Als Gast in derselben Runde: die Liste ist nicht zu sehen. F: Kapitel beenden und weiterspielen: die Dinge stehen wieder in der Liste. G: Zustand → Überblick zeigt beim Dungeon-Master „gemerkte Dinge“ und, wenn es vorkam, „Widersprüche nachgebessert“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P471",
+"v": 1013,
+"titel": "Kampf: Begegnung, Angriffswürfe, Rüstungsklasse",
+"text": "A: Runde starten (Fantasy, ab 12) und in einen Kampf laufen (z. B. „Ich gehe in die dunkle Höhle“). Die Karte „⚔ Begegnung“ erscheint mit Gegnern, Anzahl und Gefahr; ein Tipp auf einen Gegner zeigt Stufe, Leben, RK, Angriff, Schaden, EP. B: Über der Geschichte steht die Leiste „⚔ Kampf“ mit dem Leben jedes Gegners. C: „Ich greife den Goblin mit dem Schwert an“: im Verlauf steht der Angriff mit W20, Bonus, Gesamt gegen RK und Treffer oder daneben; danach greifen die Gegner an (Pfeil Gegner → Held). D: Der Heldenbogen zeigt „Rüstungsklasse“ statt Schutz, die Karte „RK“; ein Tipp erklärt sie. E: Alle Gegner besiegt: „Der Kampf ist gewonnen“ mit EP für jeden, die Leiste verschwindet, es gibt einen Fund. F: Am Kindertisch (Ton 8) heißt Fliehen „gibt auf“. G: Zustand → Überblick zeigt beim Dungeon-Master Begegnungen, Kämpfe, Treffer und daneben. H: Bilder malen an, neue Runde starten: der Prolog zeigt gleich „Das Szenenbild wird gemalt …“ und danach das Bild. I: Vorlesen an, am iPhone in Safari einmal „🔊 Ton an“: der Ton läuft, kein Hinweis „Der Browser lässt den Ton gerade nicht zu“. J: In Zug 1 oder 2 eine Spur finden: der Auftrag rechts bleibt offen, die EP kommen trotzdem; erst im letzten Akt (ohne Geschichte nach 8 Zügen) wird er abgehakt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

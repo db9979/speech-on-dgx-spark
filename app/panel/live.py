@@ -1801,6 +1801,10 @@ def snapshot(view="admin", now=None):
                         + _dungeon_regeln(dgn.get("regeln") or {})
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
+                        + (f" · {dgn['kaempfe_laufen']} Kämpfe laufen, {dgn['gegner_stehen']} Gegner stehen" if dgn.get("kaempfe_laufen") else "")
+                        + (f" · heute {dgn.get('begegnungen', 0)} Begegnungen, {dgn.get('kaempfe', 0)} Kämpfe vorbei, {dgn.get('treffer', 0)} Treffer, "
+                           f"{dgn.get('daneben', 0)} daneben, {dgn.get('besiegt', 0)} Gegner besiegt, {dgn.get('geflohen', 0)} geflohen"
+                           if dgn.get("begegnungen") or dgn.get("kaempfe") else "")
                         + (f" · {dgn['dinge']} gemerkte Dinge" if dgn.get("dinge") else "")
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")

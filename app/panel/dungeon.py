@@ -111,6 +111,7 @@ from fastapi.responses import Response
 
 import dungeon_karte
 import dungeon_erzaehler as erz
+import dungeon_kampf as kampf
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
@@ -164,6 +165,7 @@ AKTE = (3, 5)             # acts of a story
 AKT_ZUEGE = (2, 30)       # planned turns of an act
 AKT_MIN = 3               # turns an act lasts at least before the model may close it
 AKT_UEBER = 1.5           # after this many times the planned turns the panel moves on by itself
+AUFTRAG_ZUEGE = 8         # without a story plan the pinned quest can be done after this many turns at the earliest
 STICHWORTE_MAX = 300
 IDEE_MAX = 400
 ZIEL_MAX = 200
@@ -288,8 +290,9 @@ RABATT = (5, 20)          # per point of the Charisma bonus, at most (percent)
 ERKENNEN = 5              # a merchant names an unknown item for a fifth of its price, at least this much gold
 HAENDLER = ("Fahrender Händler", "Travelling merchant")   # the merchant the host calls without one in the story
 FOLGE_ARTEN = ("schaden", "heilung")
-ANLAESSE = ("gegner", "truhe", "belohnung", "boss")
-ERFOLG_ARTEN = ("gegner", "ziel")
+FUNDE = ("gegner", "truhe", "belohnung", "boss")   # the occasions of a find (rules anlass, gold)
+ANLAESSE = ("truhe", "belohnung")   # the model's; „gegner“ and „boss“ the panel gives at a fight's end (dungeon_kampf)
+ERFOLG_ARTEN = ("ziel",)   # a defeated foe counts by the bestiary (dungeon_kampf), never by the model
 ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "werkzeug", "schatz")   # schatz: gems and art, only to sell;
 # werkzeug: a tool (hilft) of its own kind, so it gets its own picture (Dominik 2026-10-24 „alles umsetzten“, Punkt 4)
 HILFT_ARTEN = ("werkzeug", "rolle")   # a scroll or map may help too, and the admin's older tools stay "rolle"
@@ -320,7 +323,8 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
-                  zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0)
+                  zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
+                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0)
 
 
 def _go(coro, name):
@@ -561,11 +565,10 @@ def check_rules(r):
          and se == sorted(se) and len(set(se)) == len(se), "stufen_ep: aufsteigende Zahlen ab 0, mindestens so viele wie grenzen.stufe_max")
     need(isinstance(r.get("faehigkeit_auf"), list) and all(_int(x, 2, 20) for x in r["faehigkeit_auf"]), "faehigkeit_auf: Stufen 2 bis 20")
     ep = r.get("ep") or {}
-    need(_int(ep.get("probe"), 0, 100) and _int(ep.get("ziel"), 0, 1000) and _int(ep.get("idee"), 0, 200)
-         and isinstance(ep.get("gegner"), list) and len(ep["gegner"]) == 5 and all(_int(x, 0, 2000) for x in ep["gegner"]),
-         "ep: probe 0 bis 100, ziel 0 bis 1000, idee 0 bis 200, gegner fünf Zahlen")
-    need(set(r.get("anlass") or {}) == set(ANLAESSE) and all(_int(x, 0, 50) for x in r["anlass"].values()), "anlass: gegner, truhe, belohnung, boss je 0 bis 50")
-    need(set(r.get("gold") or {}) == set(ANLAESSE) and all(isinstance(x, list) and len(x) == 2 and _int(x[0], 0, 1000)
+    need(_int(ep.get("probe"), 0, 100) and _int(ep.get("ziel"), 0, 1000) and _int(ep.get("idee"), 0, 200),
+         "ep: probe 0 bis 100, ziel 0 bis 1000, idee 0 bis 200 (Gegner zählen nach dem Bestiarium)")
+    need(set(r.get("anlass") or {}) == set(FUNDE) and all(_int(x, 0, 50) for x in r["anlass"].values()), "anlass: gegner, truhe, belohnung, boss je 0 bis 50")
+    need(set(r.get("gold") or {}) == set(FUNDE) and all(isinstance(x, list) and len(x) == 2 and _int(x[0], 0, 1000)
                                                            and _int(x[1], x[0], 5000) for x in r["gold"].values()), "gold: je [von, bis]")
     need(_int(r.get("pech_schutz"), 2, 50), "pech_schutz: 2 bis 50")
     need(isinstance(r.get("preise"), dict) and set(r["preise"]) == set(ARTEN) and all(_int(x, 1, 10000) for x in r["preise"].values()),
@@ -1273,7 +1276,7 @@ def hero_view(r, h, lang, full=True, welt=""):
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]}
                       for w in r["werte"]],
                wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"],
-               schutz=schutz(r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
+               rk=kampf.rk(_me, r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
@@ -1290,7 +1293,7 @@ def hero_card(r, h, lang):
     li = 1 if lang == "en" else 0
     return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": h["werte"].get(w["id"], 10),
                        "mod": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]} for w in r["werte"]],
-            "schutz": schutz(r, h), "dinge": [dict(item_view(r, it, lang), platz=k) for k, it in (h.get("an") or {}).items() if it],   # a tap opens its window
+            "rk": kampf.rk(_me, r, h), "dinge": [dict(item_view(r, it, lang), platz=k) for k, it in (h.get("an") or {}).items() if it],   # a tap opens its window
             "belastet": burdened(r, h)}
 
 
@@ -2304,6 +2307,14 @@ async def redo_act(b):
     return g
 
 
+def quest_may_end(rd):
+    """Whether the pinned quest may count as done (Dominik 2026-10-24 „Wieso ist ein Auftrag direkt nach dem zweiten
+    Zug erledigt?“): with a story plan only in its last act or after it, without one after AUFTRAG_ZUEGE turns; a goal
+    the model reports earlier is a step on the way (its experience counts, the quest stays open)."""
+    p = rd.get("plan")
+    return rd.get("akt", 0) >= len(p["akte"]) - 1 if p and p.get("akte") else rd.get("zug", 0) >= AUFTRAG_ZUEGE
+
+
 def step_act(rd, fertig):
     """After a narrated turn: the next act when the model says the turning point is told and the act ran AKT_MIN
     turns, or by the panel after AKT_UEBER times its planned turns; always one act on, never back. Returns why."""
@@ -2474,14 +2485,14 @@ AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
           "Erzählung), gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
-          "mit Name und einem Satz, Erfolge als gegner (rang 1 bis 5) oder ziel. Ende mit einer Frage an die Gruppe; "
+          "mit Name und einem Satz, ein erreichtes Ziel als ziel in erfolg. Ende mit einer Frage an die Gruppe; "
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
-          "name and one sentence, successes as gegner (rang 1 to 5) or ziel. End with a question to the group; "
+          "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
           "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
@@ -2493,7 +2504,8 @@ def schema_proben(r):
         "proben": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False,
                    "required": ["wer", "wert", "schwer"], "properties": {
                        "wer": {"type": "string", "maxLength": NAME_MAX}, "wert": {"type": "string", "enum": [w["id"] for w in r["werte"]]},
-                       "schwer": {"type": "integer"}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]}}}}}}
+                       "schwer": {"type": "integer"}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]},
+                       "ziel": {"type": "string", "maxLength": kampf.ZIEL_MAX}}}}}}
 
 
 SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required": ["erzaehlung", "frage_an"], "properties": {
@@ -2508,7 +2520,8 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
               "properties": {"anlass": {"type": "string", "enum": list(ANLAESSE)}, "name": {"type": "string", "maxLength": 40},
                              "satz": {"type": "string", "maxLength": SATZ_MAX}}}},
     "erfolg": {"type": "array", "maxItems": ERFOLG_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["art"],
-               "properties": {"art": {"type": "string", "enum": list(ERFOLG_ARTEN)}, "rang": {"type": "integer"}}}},
+               "properties": {"art": {"type": "string", "enum": list(ERFOLG_ARTEN)}}}},
+    "begegnung": kampf.SCHEMA_BEGEGNUNG, "kampf_ende": kampf.SCHEMA_ENDE,
     "szene": {"type": "object", "additionalProperties": False, "properties": {"ort": {"type": "string", "maxLength": 60},
                                                                            "stimmung": {"type": "string", "maxLength": 30},
                                                                            "ort_id": dungeon_karte.SCHEMA}},
@@ -2538,7 +2551,11 @@ def kann_facts(r, h, lang):
         [z["name"] + ("" if z["rest"] is None else f" ({z['rest']}/{z['voll']})") for z in pw["zauber"]] + pw["dinge"]
 
 
-def facts(r, rd, wuerfe=None):
+def _living(rd):
+    return [p["held"] for _, p in seated(rd) if not p["held"].get("tot")]
+
+
+def facts(r, rd, wuerfe=None, zuege=None):
     """The data the model gets: world, opening, scene, the group, earlier narrations and the actions; everything a
     player typed only inside the fenced block, its markers broken up (textnorm.defuse)."""
     li = 1 if rd["lang"] == "en" else 0
@@ -2573,8 +2590,11 @@ def facts(r, rd, wuerfe=None):
         fakten["handel"] = handel
     if rd.get("karte"):
         fakten["karte"] = dungeon_karte.facts(r, rd)
+    fakten.update(kampf.facts(_me, r, rd, _living(rd), li))
     if wuerfe is not None:
         fakten["proben"] = wuerfe
+    if zuege:
+        fakten["gegner_zuege"] = zuege
     spieltext = "\n".join(f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names)
     head = json.dumps(fakten, ensure_ascii=False)
     einstieg = f"\n<<<\n{textnorm.defuse(rd['einstieg'])}\n>>>" if rd.get("einstieg") and not bisher else ""
@@ -2599,6 +2619,8 @@ def system_text(r, rd, task):
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
+    if task == "erzaehlen" or task == "proben" and rd.get("kampf"):
+        t += kampf.task(rd, lang)
     if task != "proben":
         t += dungeon_karte.task(rd)
     return t + "\n\n" + (rd.get("prompt") or r["prompt"])
@@ -2643,7 +2665,7 @@ def check_proben(r, rd, obj):
             continue
         seen.add(pid)
         out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
-                    "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else ""})
+                    "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else "", "ziel": plain(p.get("ziel"), kampf.ZIEL_MAX)})
     return out, drop
 
 
@@ -2709,6 +2731,7 @@ def check_story(r, rd, obj):
         out["bild"], why = picture_text(r, rd, obj["bild"])
         if why and why != "leer":
             drop += 1
+            out["bild_nein"] = why             # refused: no picture of this turn at all, not even of the place
             print(f"dungeon: bild | abgelehnt | {why}", flush=True)
     for o in obj.get("ooc") or []:
         pid = names.get(str(o.get("wer", "")).strip().lower()) if isinstance(o, dict) else None
@@ -2727,7 +2750,8 @@ def check_story(r, rd, obj):
             out["npc_stimme"].append({"name": name, "stimme": n["stimme"]})   # only the fixed lists count (stimmen.learn)
     for f in obj.get("folgen") or []:
         pid = names.get(str(f.get("wer", "")).strip().lower()) if isinstance(f, dict) else None
-        if not pid or f.get("art") not in FOLGE_ARTEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX:
+        if not pid or f.get("art") not in FOLGE_ARTEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX \
+                or (f["art"] == "schaden" and rd.get("kampf")):      # in a fight only the panel's rolls hurt (dungeon_kampf)
             drop += 1
             continue
         out["folgen"].append({"pid": pid, "art": f["art"], "zahl": max(ZAHL[0], min(ZAHL[1], f["zahl"]))})
@@ -2744,8 +2768,7 @@ def check_story(r, rd, obj):
             drop += 1
             continue
         ziel = ziel or e["art"] == "ziel"
-        rang = e.get("rang") if isinstance(e.get("rang"), int) else 1
-        out["erfolg"].append({"art": e["art"], "rang": max(1, min(5, rang))})
+        out["erfolg"].append({"art": e["art"]})
     s = obj.get("szene")
     if isinstance(s, dict):
         ort, st = plain(s.get("ort"), 60), plain(s.get("stimmung"), 30)
@@ -2761,6 +2784,8 @@ def check_story(r, rd, obj):
     out["frage"] = names.get(fr, "")
     out["faeden"] = erz.check_threads(_me, r, rd, obj.get("faeden"))
     out["dinge"] = erz.check_things(_me, r, rd, obj.get("dinge"))
+    out["begegnung"] = kampf.check_encounter(_me, r, rd, _living(rd), obj.get("begegnung"))
+    out["kampf_ende"] = obj.get("kampf_ende") if rd.get("kampf") and obj.get("kampf_ende") in kampf.ENDE else ""
     return out, drop
 
 
@@ -2797,12 +2822,12 @@ def check_opening(r, rd, obj, strict=True):
     return story, drop
 
 
-def apply(r, rd, wuerfe, story, rid, rng=None):
+def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
     """The checked story into the round: rolls, narration, consequences, loot, experience and levels, fairness; then
     the next turn opens. Every number comes from here, never from the model."""
     rng = rng or random
     li = 1 if rd["lang"] == "en" else 0
-    held = [p["held"] for _, p in seated(rd) if not p["held"].get("tot")]     # the dead find nothing, gain nothing
+    held = _living(rd)                       # the dead find nothing, gain nothing
     stufe = group_level(held)
     if story:
         for pid, a in rd["offen"].items():
@@ -2844,19 +2869,26 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         for o in story.get("ooc") or []:
             if o["pid"] in names:
                 _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
-        consequences(r, rd, story["folgen"], names)
+        hiebe, war = [], bool(rd.get("kampf"))
+        if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
+            hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
+        consequences(r, rd, story["folgen"] + hiebe, names)
+        if war and not rd.get("kampf") and held and rd["log"][-1]["art"] == "kampf" and rd["log"][-1]["besiegt"]:
+            give_loot(r, rd, held, "gegner", stufe, rng)
+        elif not war and story.get("begegnung") and held:
+            kampf.start(_me, r, rd, held, story["begegnung"], li)
         if story["beute"] and held:
             b = story["beute"]
             give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
         for e in story["erfolg"]:
             if e["art"] == "ziel":
-                if rd.get("auftrag"):
+                if rd.get("auftrag") and quest_may_end(rd) and not rd.get("auftrag_ok"):
                     rd["auftrag_ok"] = True       # the pinned quest shows as done
+                    print("dungeon: auftrag | erfuellt", flush=True)
+                elif rd.get("auftrag") and not rd.get("auftrag_ok"):
+                    print("dungeon: auftrag | zu frueh", flush=True)
                 for pid in ep:
                     ep[pid] += r["ep"]["ziel"]
-            else:
-                for pid in ep:
-                    ep[pid] += r["ep"]["gegner"][e["rang"] - 1]
     else:
         _log(rd, "dm", text=r["ausfall"][li], npc=[], frage="")
     for pid, n in ep.items():
@@ -2865,6 +2897,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         h = rd["plaetze"][pid]["held"]
         h["ep_tisch"] = min(10 ** 7, h.get("ep_tisch", 0) + n)     # given at the end of the round (pay_ep)
         _log(rd, "ep", pid=pid, name=h["name"], zahl=n, tisch=h["ep_tisch"])
+    if rd.get("auftrag_ok") and not quest_may_end(rd):
+        rd["auftrag_ok"] = False                 # a quest an older version closed too early is open again
     if story:
         cast_powers(r, rd)
         down(r, rd)
@@ -2878,8 +2912,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
 
 
 def consequences(r, rd, folgen, names):
-    """Damage and healing of a told turn by the panel (Punkt 3 of 2026-10-24): a hit costs its number less the
-    protection (at least 1), less 1 for every ability „weniger_schaden“ (Eisenhaut, down to 0); a hero whose action
+    """Damage and healing of a told turn by the panel (Punkt 3 of 2026-10-24): a hit costs its number (armour works on
+    the attack roll, dungeon_kampf.rk), less 1 for every ability „weniger_schaden“ (Eisenhaut, down to 0); a hero whose action
     used an ability „abfangen“ (Schildwall) takes the first hit meant for a friend instead, once a scene; healing gets a
     hero down up again; nothing for the unconscious or dead."""
     fa = lambda h, fid: next((x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"] if x["id"] == fid), None)
@@ -2905,9 +2939,10 @@ def consequences(r, rd, folgen, names):
             print("dungeon: kraft | abfangen", flush=True)
             pid, h = g, gh
         minus = sum(KRAFT["weniger_schaden"] for _ in kraft(r, h, "weniger_schaden"))
-        n = max(0, max(1, f["zahl"] - schutz(r, h)) - minus)
+        n = max(0, f["zahl"] - minus)          # armour works against the attack roll (dungeon_kampf.rk), not on the damage
         h["leben"] = max(0, h["leben"] - n)
-        _log(rd, "folge", pid=pid, name=h["name"], was="schaden", zahl=n, leben=h["leben"], **({"weniger": minus} if minus else {}))
+        _log(rd, "folge", pid=pid, name=h["name"], was="schaden", zahl=n, leben=h["leben"], **({"weniger": minus} if minus else {}),
+             **({"von": f["gegner"]} if f.get("gegner") else {}))
         if minus:
             _day.bump("kraft_wirkt")
 
@@ -2953,13 +2988,15 @@ async def run_turn(rid, turn):
         if not rd or rd["zug"] != turn:
             return
         why = "ok"
-        wuerfe, story = [], None
+        wuerfe, story, hits, zuege = [], None, [], []
         if wartung.paused("llm"):
             why = "pause"
         else:
             obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd), schema_proben(r), "proben", 300)
             proben, drop = check_proben(r, rd, obj)
+            proben, hits = kampf.attacks(_me, r, rd, proben)
             wuerfe = roll(r, rd, proben)
+            zuege = kampf.foes_turn(_me, r, rd, hits)
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
@@ -2967,9 +3004,13 @@ async def run_turn(rid, turn):
                         "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {}),
                         **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
                        for w in wuerfe]
+            facts_w += [{"angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
+                         "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {})}
+                        for x in hits]
+            facts_z = [{"gegner": x["gegner"], "greift_an": x["name"], "trifft": x["treffer"], "schaden": x["schaden"]} for x in zuege]
             story, best, extra = None, None, ""
             for _ in range(2):                    # a second try when the first fails the checks (erz.judge: one rewrite)
-                obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
+                obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
                 s, d2 = check_story(r, rd, obj)
                 drop += d2
                 if not s:
@@ -2999,7 +3040,8 @@ async def run_turn(rid, turn):
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
                 ort0 = cur["szene"].get("ort")
-                apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid)
+                apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
+                      kampfwuerfe=([x for x in hits if x["pid"] in seats], [x for x in zuege if x["pid"] in seats]) if story else ([], []))
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
@@ -3110,8 +3152,14 @@ async def run_prolog(rid):
                     e = cur["log"][-1]
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], (), cur))
                     cur["spricht"] = time.time()
-                if story and story["bild"]:
-                    bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
+                # every opening paints its scene (Dominik 2026-10-24 „Male während des Prologes das Szenenbild gleich
+                # immer mit“): the model's picture text, else the place and mood, within the limits of „Bilder malen“
+                pic, why = (story["bild"], "") if story and story["bild"] else ("", story["bild_nein"]) if story and story.get("bild_nein") \
+                    else scene_text(r, cur, own=False)
+                why = why or may_paint(r, d, rid, cur)
+                if not why:
+                    bild.extend(queue_scene(r, d, rid, cur, pic) or ())
+                print(f"dungeon: bild | prolog | {why or 'ok'}", flush=True)
                 cur["dm"] = ""
                 warten.end(cur)
                 _narrated(cur)                        # the turn's time starts after the opening's reading time
@@ -3636,6 +3684,11 @@ def picture_text(r, rd, text):
     return ("", why) if why else (t, "")
 
 
+def scene_text(r, rd, own=True):
+    """The checked description of the scene now: the model's last picture text (own), else the place and mood."""
+    return picture_text(r, rd, own and rd.get("bild_text") or ", ".join(x for x in (rd["szene"].get("ort"), rd["szene"].get("stimmung")) if x))
+
+
 def _bild_count(d):
     """Pictures of the game today on the whole Spark (kept in the rounds file, so a restart does not reset it)."""
     b = d.get("bilder") if isinstance(d.get("bilder"), dict) else {}
@@ -3784,7 +3837,7 @@ def paint_now(owner, rid):
         why = may_paint(r, d, rid, rd)
         text = ""
         if not why:
-            text, why = picture_text(r, rd, rd.get("bild_text") or ", ".join(x for x in (rd["szene"].get("ort"), rd["szene"].get("stimmung")) if x))
+            text, why = scene_text(r, rd)
         if why:
             print(f"dungeon: bild | abgelehnt | {why}", flush=True)
             raise ValueError(why)
@@ -4106,6 +4159,8 @@ def view(rid, pid, now=None):
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
             "termin": rd.get("termin") or 0, "auftrag": {"text": rd["auftrag"], "ok": bool(rd.get("auftrag_ok"))} if rd.get("auftrag") else None, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
+    out["kampf"] = kampf.view(_me, r, rd)
+    kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
     out["werkzeug_bonus"] = WERKZEUG
     import dungeon_dingbild
@@ -4570,6 +4625,7 @@ def for_live():
             "am_boden": sum(1 for _, p in seats if zustand(p["held"]) == "boden"), "zu_boden": t["zu_boden"], "gefallen": t["gefallen"],
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
+            **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
             **dungeon_karte.for_live(rs)}
 
 

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.013** AI Dungeon Master: fights by fixed rules, the panel builds encounters by budget from the bestiary, rolls every attack against the armour class (10 + armour + Dexterity) and lets the foes strike back, a bar with the foes' life, experience from the bestiary divided among the heroes, levels as in D&D; every prologue paints its scene picture right away, "🔊 Sound on" now unlocks the sound in Safari too, the quest counts as done only towards the end of the story
 - **V01.1.012** Speaking on the model computer starts without the internet also with the Hub file listing: the listing of all files of a pinned model goes after the check, otherwise huggingface_hub called the snapshot incomplete (.gitattributes)
 - **V01.1.010** AI Dungeon Master: thing memory, the story keeps important things with material, colour and state and writes a narration against them once more (no iron box turns into a wooden one any more), the host sees and changes the kept things, no OOC line speaks for the panel any more
 - **V01.1.009** AI Dungeon Master: pictures for classes, peoples, backgrounds and worlds on the rules tab (Paint, Paint again, world to choose), backgrounds per world, a title picture per world on the world cards
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.005** AI Dungeon Master: pictures in the bestiary and the catalog no longer vanish after a restart; the last painted picture stays until the new one is there, hand-painted ones stay for good
 - **V01.1.004** AI Dungeon Master: a calm table, the guide How to play as a window to page through, music and sounds in the head, turn and clock shown once, the own hero only on the right, no assistant at the table, Host in the table's font without a gap
 - **V01.1.003** AI Dungeon Master: reading aloud piece by piece with a second try and a stand-in voice, on every device after one tap on Sound on, the clock waits for the reading; quoted speech in the character's voice, three fixed voices (narrator, NPC man, NPC woman), a voice proposed for heroes
-- **V01.1.002** AI Dungeon Master: the scene picture stands only once and scrolls with the story, older ones small in the log; portraits at actions; a sign on parchment instead of a colour blob while a picture is missing
 
 
 

@@ -5525,6 +5525,46 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Szenenbild im Prolog, „🔊 Ton an“ (V01.1.013, Dominik 2026-10-24 „Male während des Prologes das Szenenbild gleich immer mit“, „passiert aber nichts“): Jeder Prolog (neue Runde, nächstes Kapitel) malt sein Szenenbild gleich mit, in den Grenzen von „Bilder malen“ (may_paint): mit dem Bildtext des Modells, ohne ihn aus Ort und Stimmung der Szene (scene_text, dieselbe Quelle wie „Szenenbild jetzt malen“). Lehnt die Prüfung den Bildtext des Modells ab, malt der Prolog nichts, auch nicht den Ort. Log dungeon: bild | prolog | ok oder mit dem Grund (aus, malt, leer, person …). „🔊 Ton an“ schaltet den Ton mit einer echten, 0,1 s langen Stille frei (die leere Datei spielte Safari nicht ab, der Knopf blieb gesperrt) und weckt den Audio-Kontext; nur eine Ablehnung des Browsers (NotAllowedError) lässt ihn gesperrt. Selbsttest Pictures.test_every_opening_paints_its_scene. Auftrag erst am Ende erfüllt (Dominik 2026-10-24 „Wieso ist ein Auftrag direkt nach dem zweiten Zug erledigt?“): Ein Ziel, das das Modell meldet (erfolg „ziel“), hakte bisher sofort den angehefteten Auftrag ab, auch wenn nur eine Spur gefunden war. Jetzt gilt eine feste Regel (quest_may_end): mit einem Geschic"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "hten-Plan erst im letzten Akt oder danach, ohne Plan frühestens nach 8 Zügen (AUFTRAG_ZUEGE). Ein früheres Ziel ist ein Schritt auf dem Weg, seine 100 EP zählen, der Auftrag bleibt offen und das Modell bekommt ihn weiter als Fakt. Ein zu früh abgehakter Auftrag einer laufenden Runde ist nach dem nächsten Zug wieder offen. Log dungeon: auftrag | erfuellt oder … | zu frueh. Selbsttest Fight.test_the_quest_is_not_done_after_one_goal_early_in_the_story."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf nach festen Regeln (V01.1.013, Prüfpunkt 2 mit den Bestiarium-Punkten 1 und 2 und Gegenstands-Punkt 9 vom 2026-10-24, Dominik „Ja, alles nach Empfehlung umsetzen“): Begegnung nach Budget: Das Panel rechnet das Erfahrungs-Budget einer mittleren D&D-Begegnung aus der Stufe jedes lebenden Helden (dungeon_kampf.BUDGET, am Kindertisch die Hälfte) und bietet dem Modell ohne laufenden Kampf höchstens 5 Gegner der Welt der Runde aus dem Bestiarium an (Fakt angebot, je Zug fest ausgelost aus den 12, die am nächsten an einem Drittel des Budgets liegen). Das Modell wählt nur daraus (Feld begegnung: id und Anzahl); das Panel nimmt nur angebotene ids, je Art höchstens 4, zusammen höchstens 6, und nimmt den stärksten weg, bis die Erfahrung mit dem D&D-Vervielfacher für die Anzahl höchstens das 1,5-fache des Budgets ist. Die Karte „⚔ Begegnung“ zeigt jeden Gegner mit Bild oder Zeichen, Anzahl und Gefahr (leicht, mittel, schwer); ein Tipp zeigt Text, Stufe, Leben, Rüstungsklasse, Angriff, Schaden und Erfahrung. Angriffe würfelt das Panel: Greift ein Held an, gibt das Modell seiner Probe das Ziel (ziel, der Name des Gegners). Das Panel würfelt W20 + Bonus des Werts der Waff"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e (mit Ausrüstung und Segen) + Übungsbonus nach Stufe (prof: +2, ab Stufe 5 +3 …) gegen die Rüstungsklasse des Gegners; eine 20 trifft immer und würfelt den Schaden doppelt, eine 1 trifft nie. Der Schaden ist der Würfel der Waffe + Bonus des Werts + Bonus der Seltenheit, mit einem Angriffszauber dessen Würfel nach Grad, ohne Waffe 1W2. Danach greift jeder Gegner, der noch steht, an: den Helden, der ihn zuletzt getroffen hat, sonst einen stehenden; W20 + Angriff aus dem Bestiarium gegen die Rüstungsklasse des Helden (10 + doppelt die Körperrüstung + Helm, Schild, Handschuhe, Stiefel + Geschick-Bonus, in mittlerer Rüstung höchstens +2, in schwerer keiner; steht im Heldenbogen und an der Karte statt Schutz), Schaden nach Würfeln des Bestiariums. Leben der Gegner ändert nur das Panel; Schaden, den das Modell im Kampf meldet, zählt nicht. Ein Gegner mit einem Viertel seines Lebens oder weniger flieht mit einem W20 von 9 oder weniger, am Kindertisch „gibt er auf“. Die Leiste „⚔ Kampf“ über der Geschichte zeigt jeden Gegner mit Leben, besiegt oder geflohen. Ende und Erfahrung: Steht kein Gegner mehr oder meldet das Modell kampf_ende (Frieden, Flucht), endet der Kampf. Die Erfahrung kommt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "aus dem Bestiarium (geflohene zur Hälfte), geteilt durch die lebenden Helden und aufgerundet; nur ein gewonnener Kampf bringt einen Fund. Das Modell meldet keinen besiegten Gegner und keine Beute „Gegner“ oder „Boss“ mehr, nur ein erreichtes Ziel (100 EP). Die Stufen folgen der D&D-Kurve (Stufe 5 ab 6.500 EP). Räume der Karte: Legt die Karte für einen Wächter- oder Boss-Raum raum_gegner (Kennung des Raums und ids des Bestiariums) in die Runde, bietet das Panel nur diese Gegner an, je einmal und ohne Budget; ist der Kampf gewonnen (kein Gegner steht mehr), steht sieg mit der Kennung des Raums in der Runde, und der Weg ist frei. Selbsttests Fight (sieben Fälle). Live-Übersicht: laufende Kämpfe, stehende Gegner, heute Begegnungen, Kämpfe, Treffer, daneben, besiegt, geflohen. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Dinge-Gedächtnis (V01.1.010, Dominik 2026-10-24 „1 a und b und c“, ein verrostetes Eisenkästchen, das einen Zug später ein morsches Kästchen war): Das Modell trägt in jeder Erzählung höchstens 3 wichtige Dinge, die zum ersten Mal vorkommen, mit ihren Merkmalen ein (Feld dinge: name, merkmale mit Stoff, Farbe, Zustand). Das Panel prüft sie nach festen Regeln (kurz, Wortliste der Runde, kein Heldenname, keins doppelt, keins gegen ein schon gemerktes) und merkt sich höchstens 12 je Runde mit Ort und Zug (dungeon_erzaehler.DINGE_MAX). Jede Erzählung bekommt die gemerkten Dinge am Ort der Gruppe oder aus den letzten 10 Zügen als Fakten mit der festen Regel, Stoff, Farbe und Zustand nie zu ändern. Feste Widerspruchsprüfung: Nennt eine Erzählung ein gemerktes Ding mit einem Merkmal aus einer festen Wortliste (Stoff: Holz, Eisen, Silber, Gold, Stein, Bronze, Kupfer, Glas, Leder, Knochen, Kristall; Farbe), das keinem gemerkten Merkmal dieser Art entspricht („das morsche Kästchen“, „Holzkästchen“ statt „Eisenkästchen“), schreibt der Dungeon-Master sie einmal neu, mit einem festen Hinweis, der das Ding und seine Merkmale nennt; wie bei fehlenden Namen bleibt sonst die erste"
 },
 {
@@ -18086,6 +18126,46 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: scene picture in the prologue, \"🔊 Sound on\" (V01.1.013, Dominik 2026-10-24 \"Male während des Prologes das Szenenbild gleich immer mit\", \"passiert aber nichts\"): Every prologue (new round, next chapter) paints its scene picture right away, within the limits of \"Paint pictures\" (may_paint): with the model's picture text, without one from the scene's place and mood (scene_text, the same source as \"Paint scene picture now\"). When the check refuses the model's picture text, the prologue paints nothing, not the place either. Log dungeon: bild | prolog | ok or with the reason (aus, malt, leer, person …). \"🔊 Sound on\" unlocks the sound with a real 0.1 s silence (Safari did not play the empty file, so the button stayed locked) and wakes the audio context; only a refusal of the browser (NotAllowedError) keeps it locked. Self-test Pictures.test_every_opening_paints_its_scene. Quest done only at the end (Dominik 2026-10-24 \"Wieso ist ein Auftrag direkt nach dem zweiten Zug erledigt?\"): A goal the model reports (erfolg \"ziel\") used to tick off the pinned quest at once, even when only a lead was found. Now a fixed rule holds (quest_may_end): with a story plan only in its last "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "act or after it, without a plan after 8 turns at the earliest (AUFTRAG_ZUEGE). An earlier goal is a step on the way, its 100 XP count, the quest stays open and the model keeps getting it as a fact. A quest of a running round ticked off too early is open again after the next turn. Log dungeon: auftrag | erfuellt or … | zu frueh. Self-test Fight.test_the_quest_is_not_done_after_one_goal_early_in_the_story."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: fights by fixed rules (V01.1.013, review point 2 with bestiary points 1 and 2 and item point 9 of 2026-10-24, Dominik \"Ja, alles nach Empfehlung umsetzen\"): Encounter by budget: The panel works out the experience budget of a medium D&D encounter from the level of every living hero (dungeon_kampf.BUDGET, half at the children's table) and, without a running fight, offers the model at most 5 foes of the round's world from the bestiary (fact angebot, drawn fixed per turn from the 12 nearest to a third of the budget). The model picks only from them (field begegnung: id and count); the panel takes only offered ids, at most 4 of a kind and 6 in all, and takes the strongest away until the experience with the D&D multiplier for the count is at most 1.5 times the budget. The card \"⚔ Encounter\" shows every foe with picture or sign, count and danger (easy, medium, hard); a tap shows text, level, life, armour class, attack, damage and experience. The panel rolls the attacks: When a hero attacks, the model gives the check the target (ziel, the foe's name). The panel rolls d20 + the bonus of the weapon's value (with equipment and blessings) + the proficiency bonus by level (pro"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "f: +2, from level 5 +3 …) against the foe's armour class; a 20 always hits and rolls the damage twice, a 1 never hits. The damage is the weapon's die + the value's bonus + the rarity's bonus, with an attack spell its die by grade, without a weapon 1d2. Then every foe still standing attacks: the hero who last hit it, else a standing one; d20 + attack from the bestiary against the hero's armour class (10 + twice the body armour + helmet, shield, gloves, boots + Dexterity bonus, at most +2 in medium armour, none in heavy; shown on the hero sheet and the card instead of protection), damage by the bestiary's dice. Only the panel changes the foes' life; damage the model reports in a fight does not count. A foe at a quarter of its life or less flees on a d20 of 9 or less, at the children's table it \"gives up\". The bar \"⚔ Fight\" above the story shows every foe with its life, defeated or fled. End and experience: When no foe stands or the model reports kampf_ende (peace, flight), the fight ends. The experience comes from the bestiary (fled ones half), divided among the living heroes and rounded up; only a won fight brings a find. The model no longer reports a defeated foe or loot \"foe\" or \""
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "boss\", only a goal reached (100 XP). Levels follow the D&D curve (level 5 from 6,500 XP). Rooms of the map: When the map puts raum_gegner (the room's tag and bestiary ids) into the round for a guardian or boss room, the panel offers only these foes, once each and without the budget; when the fight is won (no foe stands), sieg with the room's tag is in the round and the way is free. Self-tests Fight (seven cases). Live overview: running fights, standing foes, today encounters, fights, hits, misses, defeated, fled. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
 },
 {
 "lang": "en",
