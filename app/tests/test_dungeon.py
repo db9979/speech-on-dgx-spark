@@ -2951,6 +2951,24 @@ class Windows(unittest.TestCase):
         from tests.test_ui_browser import Browser
         Browser.setUpClass.__func__(cls)
 
+    def setUp(self):
+        # every test here keeps a hero of its own (make_round): the profile's heroes come back as they were, so the
+        # class never runs into HELDEN_MAX
+        import profiles
+        uid = next((u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest"), "")
+        if uid:
+            f = dungeon._hfile(uid)
+            old = open(f, "rb").read() if os.path.exists(f) else None
+
+            def back():
+                if old is None:
+                    if os.path.exists(f):
+                        os.remove(f)
+                else:
+                    with open(f, "wb") as fh:
+                        fh.write(old)
+            self.addCleanup(back)
+
     def test_hero_sheet_merchant_and_item_windows(self):
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
@@ -2981,6 +2999,10 @@ class Windows(unittest.TestCase):
             h["tasche"] = [dungeon.item(r, "dolch"), dungeon.item(r, "dolch", "selten")]
             h["gold"] = 900
             dungeon.open_market(r, rd, name="Grimm", rng=random.Random(3))
+            p2 = copy.deepcopy(next(iter(rd["plaetze"].values())))                 # a second hero: the group shows the others in full
+            p2.update(uid="", gast=True, made=p2.get("made", 0) + 1)
+            p2["held"].update(name="Bela", hid="h_bela")
+            rd["plaetze"]["p_bela"] = p2
             dungeon._write(d)
         b = Browser("run")
         b.port = self.port
@@ -2996,6 +3018,8 @@ class Windows(unittest.TestCase):
                         await pg.evaluate(f"DM.rid='{rid}';dmRound()")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-mek [data-dmfen=bogen]')")
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-side .dm-doll').length"), 0)   # the side only sums up
+                        # the own hero only once (Punkt 9): a short row in the group, the card in the side column
+                        self.assertEqual(await pg.evaluate("[document.querySelectorAll('#dmview .dm-group .dm-ichz').length,document.querySelectorAll('#dmview .dm-group .me .dm-stats').length,document.querySelectorAll('#dmview .dm-side .dm-mek').length]"), [1, 0, 1])
                         await pg.click("#dmview .dm-group .dm-stats .dm-erkb:nth-child(2)")             # a tap on a value explains it
                         await b.until(pg, "!!document.querySelector('#dmview .dm-group .dm-erk')")
                         self.assertIn("Geschick", await pg.evaluate("document.querySelector('#dmview .dm-group .dm-erk').textContent"))
@@ -3196,6 +3220,81 @@ class Windows(unittest.TestCase):
                         await br.close()
         asyncio.run(go())
 
+    def test_table_calm_guide_pages_and_no_doubles(self):
+        """Punkt 9 of 2026-10-24: the guide is a window to page through; music and sounds sit in the head; turn, clock
+        and „gehandelt“ stand once (not again in the side column); the own hero only in the side column; the
+        assistant's face stays away at the table; „Leiten“ uses the table's font and an odd last tile fills its row."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Ruhetisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["dm"] = ""
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as pw:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(pw, w, ht)
+                    try:
+                        await pg.evaluate("try{localStorage.removeItem('dm-hilfe');localStorage.setItem('dm-seite','host')}catch(e){};goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-hilfe')")             # opens by itself once
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-hpunkte button').length"), await pg.evaluate("DMHILFE.length"))
+                        self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-hnav [data-dmhilfe=\"-1\"]').disabled"))
+                        await pg.click("#dmview .dm-hnav .b.p")                                          # „Weiter“: page 2
+                        await b.until(pg, "/Seite 2 von/.test(document.querySelector('#dmview .dm-hseite').textContent)")
+                        await pg.keyboard.press("ArrowLeft")                                              # the arrow keys page too
+                        await b.until(pg, "/Seite 1 von/.test(document.querySelector('#dmview .dm-hseite').textContent)")
+                        await pg.click(f"#dmview .dm-hpunkte button:nth-child({await pg.evaluate('DMHILFE.length')})")                     # a dot: the last page ends with „Fertig“
+                        await b.until(pg, "document.querySelector('#dmview .dm-hnav .b.p').dataset.dmhilfe==='zu'")
+                        self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-fen-hilfe .dm-fen-box').getBoundingClientRect().right<=innerWidth+0.5"), w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"hilfe-{w}.png"))
+                        await pg.keyboard.press("Escape")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-hilfe')")
+                        await pg.click("#dmview [data-dmhilfe='0']")                                     # the head's button opens it again
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-hilfe')")
+                        await pg.click("#dmview .dm-fen-hilfe [data-dmhilfe=zu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-hilfe')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-head .dm-ton').length"), 1, w)   # sounds in the head
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-tisch>.dm-ton').length"), 0, w)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-side .dm-left,#dmview .dm-side .dm-round').length"), 0, w)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-left').length"), 1, w)            # the clock once
+                        self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('fab')).display"), "none", w)   # no face at the table
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-group .dm-ichz').length"), 1, w)
+                        if await pg.evaluate("!!document.querySelector('#dmview [data-dmseite=host]')"):
+                            await pg.click("#dmview [data-dmseite=host]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-tiles .dm-tile')")
+                        same = "(()=>{const a=getComputedStyle(document.querySelector('#dmview .dm-tile')).fontFamily,b=getComputedStyle(document.querySelector('#dmview .dm-tisch,#dmview.dm-tisch')).fontFamily;return a===b})()"
+                        self.assertTrue(await pg.evaluate(same), w)
+                        gap = ("(()=>{const t=[...document.querySelectorAll('#dmview .dm-tiles .dm-tile')],g=document.querySelector('#dmview .dm-tiles').getBoundingClientRect();"
+                               "const l=t[t.length-1].getBoundingClientRect();return t.length%2===0||Math.abs(l.width-g.width)<1})()")
+                        self.assertTrue(await pg.evaluate(gap), w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"ruhig-{w}.png"), full_page=True)
+                        await pg.evaluate("goSec('mon')")                                                 # away from the table the face is back
+                        await b.until(pg, "getComputedStyle(document.getElementById('fab')).display!=='none'")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
     def test_reading_aloud_piece_by_piece_on_this_device(self):
         """Punkt 16 of 2026-10-24: one tap on „🔊 Ton an“ unlocks the sound, then every piece plays in order as it
         comes; the clock says it waits for the reading; „🔇“ switches it off for this device only."""
@@ -3331,10 +3430,10 @@ class Windows(unittest.TestCase):
                         # Zugzeit (Dominik „1-5“): „+1 Minute“ once, the name shows; red from WARN_S on
                         if not dungeon._read()["runden"][rid].get("mehr"):                         # the round stays across the widths
                             await pg.click("#dmview [data-dmmehr]")
-                        await b.until(pg, "!document.querySelector('#dmview [data-dmmehr]')&&/Zeit für/.test(document.querySelector('#dmview .dm-left').textContent)")
+                        await b.until(pg, "!document.querySelector('#dmview [data-dmmehr]')&&/für dich/.test(document.querySelector('#dmview .dm-mein-z').textContent)")   # once acted the clock is the own card's (Punkt 9)
                         self.assertEqual(len(dungeon._read()["runden"][rid].get("mehr") or {}), 1)
                         self.assertTrue(await pg.evaluate("Object.assign(DM.v,{rest:12,lesen:0,gnade:0});DM.at=Date.now();dmLeft(DM);"
-                                                          "document.querySelector('#dmview .dm-left').classList.contains('dm-warn')"))
+                                                          "document.querySelector('#dmview .dm-mein-z').classList.contains('dm-warn')"))
                         await pg.click("#dmview [data-dmaendern]")                                     # a refused one: text stays, reason below
                         await b.until(pg, "!!document.querySelector('#dmview .dm-in')")
                         await pg.route("**/aktion", lambda route: route.fulfill(status=409, content_type="application/json", body='{"detail":"alter zug"}'))

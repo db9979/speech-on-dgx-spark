@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.004** · 2026-10-24 · KI-Dungeon-Master: ruhiger Tisch, die Hilfe „So spielst du“ als Fenster zum Blättern, Musik und Geräusche im Kopf, Zug und Uhr nur einmal, der eigene Held nur rechts, kein Assistent am Tisch, „Leiten“ in der Schrift des Tisches ohne Lücke
 - **V01.1.003** · 2026-10-24 · KI-Dungeon-Master: Vorlesen Stück für Stück mit zweitem Versuch und Ersatzstimme, auf jedem Gerät nach einmal „Ton an“, die Uhr wartet aufs Vorlesen; wörtliche Rede spricht die Figur, drei feste Stimmen (Erzähler, NPC Mann, NPC Frau), Stimmvorschlag für Helden
 - **V01.1.002** · 2026-10-24 · KI-Dungeon-Master: das Szenenbild steht nur noch einmal und scrollt mit der Geschichte, ältere klein im Verlauf; Porträts bei den Aktionen; Zeichen auf Pergament statt Farbfleck, solange ein Bild fehlt
 - **V01.1.001** · 2026-10-24 · KI-Dungeon-Master: die Wortliste der Runde gilt auch für Tischgespräch, Aktionen und Heldennamen; der Gastgeber blendet Zeilen für alle aus und schaltet einen Platz im Tischgespräch stumm

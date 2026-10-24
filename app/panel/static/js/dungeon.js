@@ -21,8 +21,14 @@ const DMHILFE=[['Karte und Gewölbe','Map and vaults','Die Karte zeigt, wo ihr s
   ['Warten und Tischgespräch','Waiting and table talk','Während der Dungeon-Master erzählt, zeigt der Tisch die Würfe schon vorab, dazu Wissenskarten der Welt. Im „💬 Tischgespräch“ unter dem Feld redet ihr miteinander; der Dungeon-Master liest das nie.','While the Dungeon Master narrates, the table already shows the rolls, plus lore cards of the world. In the "💬 Table talk" below the field you talk to each other; the Dungeon Master never reads it.'],
   ['Hören und Sprechen','Listen and speak','Ist Vorlesen an, tippst du einmal auf „🔊 Ton an“, danach liest jedes Gerät die Erzählung Satz für Satz von selbst vor. Was jemand wörtlich sagt, spricht die Figur, nie der Erzähler; dein Held bekommt eine eigene Stimme vorgeschlagen. Die Uhr startet erst nach dem Vorlesen. 🔈/🔇 schaltet es nur auf diesem Gerät an oder aus, „🔊 Nochmal hören“ liest den letzten Zug noch einmal. Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','With reading aloud on, tap "🔊 Sound on" once; after that every device reads the narration sentence by sentence by itself. What someone says word for word is spoken by the character, never the narrator; your hero gets a voice of its own proposed. The clock starts only after the reading. 🔈/🔇 switches it on or off on this device only, "🔊 Listen again" reads the last turn once more. With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
   ['Als Gast','As a guest','Am Ende bekommst du einen Figur-Code. Damit spielt dein Held beim nächsten Mal weiter, auch in einem eigenen Profil. Schreib ihn dir auf.','At the end you get a hero code. With it your hero plays on next time, also in a profile of your own. Write it down.']];
-function dmHilfe(){if(DMA.hilfe===null){let seen=false;try{seen=localStorage.getItem('dm-hilfe')==='1';localStorage.setItem('dm-hilfe','1')}catch(e){}DMA.hilfe=!seen}
-  return DMA.hilfe?`<div class="dm-guide"><div class="dm-gtop"><h5>${esc(t('So spielst du','How to play'))}</h5><button type="button" class="b" data-dmhilfe="0">${esc(t('Schließen','Close'))}</button></div><div class="dm-gl">${DMHILFE.map(x=>`<div><b>${esc(t(x[0],x[1]))}</b><small>${esc(t(x[2],x[3]))}</small></div>`).join('')}</div></div>`:''}
+// the guide is a window with one page per part (Punkt 9 of the review of 2026-10-24): ‹ › or the dots page, ✕, Esc or a tap beside it closes
+function dmHilfe(){if(DMA.hilfe===null){let seen=false;try{seen=localStorage.getItem('dm-hilfe')==='1';localStorage.setItem('dm-hilfe','1')}catch(e){}DMA.hilfe=seen?false:0}
+  if(DMA.hilfe===false)return '';const n=DMHILFE.length,i=Math.max(0,Math.min(n-1,+DMA.hilfe||0)),x=DMHILFE[i],titel='❔ '+t('So spielst du','How to play');
+  return `<div class="dm-fen dm-fen-hilfe" data-dmfenbg="hilfe"><div class="dm-fen-box" role="dialog" aria-modal="true" aria-label="${esc(titel)}">
+    <div class="dm-fen-kopf"><h3>${esc(titel)}</h3><button type="button" class="ic-ib" data-dmhilfe="zu" title="${esc(t('Schließen','Close'))}" aria-label="${esc(t('Schließen','Close'))}">✕</button></div>
+    <div class="dm-fen-body dm-hseite"><small class="mut">${esc(t('Seite '+(i+1)+' von '+n,'Page '+(i+1)+' of '+n))}</small><h4>${esc(t(x[0],x[1]))}</h4><p>${esc(t(x[2],x[3]))}</p></div>
+    <div class="dm-hnav"><button type="button" class="b" data-dmhilfe="${i-1}"${i?'':' disabled'}>‹ ${esc(t('Zurück','Back'))}</button><span class="dm-hpunkte">${DMHILFE.map((y,k)=>`<button type="button" class="${k===i?'on':''}" data-dmhilfe="${k}" title="${esc(t(y[0],y[1]))}" aria-label="${esc(t(y[0],y[1]))}"></button>`).join('')}</span><button type="button" class="b p" data-dmhilfe="${i<n-1?i+1:'zu'}">${esc(i<n-1?t('Weiter','Next')+' ›':t('Fertig','Done'))}</button></div></div></div>`}
+const dmHilfeAuf=w=>DMA.hilfe=w==='zu'?false:Math.max(0,Math.min(DMHILFE.length-1,+w||0));
 // the table alone, filling the screen (the button again, Esc or leaving the browser's full screen ends it; without the browser's full screen, as on the iPhone, it fills the window)
 function dmVoll(on){DMA.voll=on;const f=document.querySelector('[data-dmvoll]'),w=f&&f.closest('.dm');if(w)w.classList.toggle('dm-voll',on);
   try{if(on&&w&&w.requestFullscreen&&!document.fullscreenElement)w.requestFullscreen().catch(()=>{});if(!on&&document.fullscreenElement)document.exitFullscreen()}catch(e){}
@@ -477,6 +483,7 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const seats=v.plaetze.filter(p=>!p.frei),col=pid=>Math.max(0,seats.findIndex(p=>p.pid===pid))%5;
   const group=v.plaetze.map(p=>p.frei?`<div class="dm-seat free"><span class="dm-av">+</span><div><b>${esc(t('Platz frei','Free seat'))}</b><small class="mut">${esc(t('Link verschickt ','Link sent '))}${esc(dmWhen(p.made))}</small></div><button type="button" class="b" data-dmseatdel="${esc(p.pid)}">${esc(t('Zurücknehmen','Take back'))}</button></div>`
+    :p.ich&&v.ich?`<div class="dm-seat dm-hero me dm-ichz">${dmAv(mode,v,p,col(p.pid))}<div><b>${esc(p.name)}</b> <small class="mut">${esc(t('du','you'))} · ${p.leben}/${p.leben_max}</small></div><small class="dm-state ${p.gehandelt?'ok':''}">${esc(p.gehandelt?t('hat gehandelt','acted'):t('denkt nach','thinking'))}</small></div>`
     :`<div class="dm-seat dm-hero${p.ich?' me':''}"><div class="dm-hhead">${dmAv(mode,v,p,col(p.pid))}<div><b>${esc(p.name)}</b> <i>${esc(p.volk)} ${esc(p.klasse)}</i><small class="mut">${dmErkBtn(mode,`s:${p.pid}:stufe`,esc(t('Stufe','Level'))+' '+p.stufe,t('Stufe erklären','Explain level'))}${p.gastgeber?' · '+esc(t('leitet','hosts')):p.gast?' · '+esc(t('Gast','guest')):''}</small></div>${mode==='p'&&v.gastgeber&&!p.gastgeber?dmSeatMenu(p):''}</div>
       ${dmErkBtn(mode,`s:${p.pid}:leben`,`<span class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${p.leben} / ${p.leben_max}</span></span>${dmBar(p.leben,p.leben_max,p.leben*3<p.leben_max?'low':'')}`,t('Leben erklären','Explain life'))}
       ${p.karte?`<div class="dm-stats">${p.karte.werte.map(x=>dmErkBtn(mode,`s:${p.pid}:w:${x.kurz}`,`<small>${esc(x.kurz)}</small><b>${x.wert}</b><i>${dmBo(x.mod)}</i>`,x.name)).join('')}${dmErkBtn(mode,`s:${p.pid}:schutz`,`<small>${esc(t('SCH','PRO'))}</small><b>${p.karte.schutz}</b>`,t('Schutz','Protection'))}</div>
@@ -503,12 +510,10 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
     ${DM.made?`<div class="mitmade"><div class="jqr">${DM.made.qr||''}</div><div class="sp"><input readonly value="${esc(DM.made.link)}" aria-label="${esc(t('Der Link','The link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Wer ihn öffnet, sitzt auf diesem Platz: als Gast ohne Profil oder mit seinem Profil.','Shown only now. Whoever opens it takes this seat: as a guest without a profile or with their profile.'))}</small></div></div>`:''}`:'';
   v.mode=mode;const log=v.log.map(e=>dmLog(v,e,col)).join('');
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
-  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe?0:1}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
+  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe===false?0:'zu'}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
     ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
-    <div class="dm-col dm-side"><div class="dm-zugk"><b>${esc(t('Zug','Turn'))} ${v.zug}</b><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div></div>${dmAuftrag(v)}
-    <small class="mut dm-left${dmUhr(v,S).warn?' dm-warn':''}">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):dmUhr(v,S).text)}</small>
-    ${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmFenster(v,mode)}`;
+    <div class="dm-col dm-side">${dmAuftrag(v)}${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmFenster(v,mode)}`;
   fen();tk();
   if(mode==='g')dmImgFill(w);
   dmDingFill(w,mode);
@@ -615,9 +620,12 @@ function dmUhr(v,S){const el=(Date.now()-S.at)/1000,lese=Math.max(0,Math.round(v
   const mehr=(v.mehr||[]).length?t(' · mehr Zeit für ',' · more time for ')+v.mehr.join(', '):'';
   const text=`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(v.pause?'':v.spricht?t(' · wird vorgelesen, die Uhr startet danach',' · being read aloud, the clock starts afterwards'):gn?t(' · geht in '+gn+' s weiter',' · goes on in '+gn+' s'):
     lese?t(' · Lesezeit, die Uhr startet in '+lese+' s',' · reading time, the clock starts in '+lese+' s'):done?t(' · weiter spätestens in ',' · goes on at the latest in ')+dmMS(sek):'')+mehr;
-  const mine=v.pause?t(' · Pause',' · paused'):v.spricht?t(' · wird vorgelesen, die Uhr startet danach',' · being read aloud, the clock starts afterwards'):gn?t(' · geht in '+gn+' s weiter, „Ändern“ geht noch',' · goes on in '+gn+' s, "Change" still works'):t(' · spätestens in ',' · at the latest in ')+dmMS(sek);
+  const mine=v.pause?t(' · Pause',' · paused'):v.spricht?t(' · wird vorgelesen, die Uhr startet danach',' · being read aloud, the clock starts afterwards'):gn?t(' · geht in '+gn+' s weiter, „Ändern“ geht noch',' · goes on in '+gn+' s, "Change" still works'):t(' · spätestens in ',' · at the latest in ')+dmMS(sek)+dmMehrIch(v);
   return {text,mine,warn}}
-function dmLeft(S){const v=S.v,els=document.querySelectorAll(S===DM?'#dmview .dm-left':'#dgcard .dm-left');if(!v||!els.length||v.dm||v.status==='ende')return;
+// the own card's line names the own extra minute as „für dich“, never the own name (it waits for nobody else)
+function dmMehrIch(v){const me=v.ich&&v.ich.name,m=v.mehr||[],o=m.filter(x=>x!==me);
+  return (o.length?t(' · mehr Zeit für ',' · more time for ')+o.join(', '):'')+(me&&m.includes(me)?t(' · +1 Minute für dich',' · +1 minute for you'):'')}
+function dmLeft(S){const v=S.v,els=document.querySelectorAll(S===DM?'#dmview .dm-left':'#dgcard .dm-left');if(!v||v.dm||v.status==='ende')return;   // the clock above the field or, once acted, in the own card
   const u=dmUhr(v,S);els.forEach(el=>{el.textContent=u.text;el.classList.toggle('dm-warn',u.warn)});
   if(u.warn&&DMA.warnt!==S.v.rid+':'+v.zug){DMA.warnt=S.v.rid+':'+v.zug;try{if(navigator.vibrate)navigator.vibrate([60,80,60])}catch(e){}}
   const z=document.querySelector(S===DM?'#dmview .dm-mein-z':'#dgcard .dm-mein-z');if(z){z.textContent=u.mine;z.classList.toggle('dm-warn',u.warn)}}
@@ -653,7 +661,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     if(typeof m==='string')dmSay(DM,m,true);dmDraw();return}
   if(B.dmhear){dmHear('p',B.dmhear);return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
-  if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dmDraw();return}
+  if(B.dmhilfe){dmHilfeAuf(B.dmhilfe);dmDraw();return}
   if(B.dmprobe){dmProbe('p',DM.v&&DM.v.ich||{});return}
   if(B.dmerzprobe){const sel=document.querySelector('#dmview [data-dmerz]');dmProbe('p',{erzaehler:sel?sel.value:''});return}
   if(B.dmmic){dmMic('p');return}
@@ -796,7 +804,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
   if(B.dgleave){if(dgGast())return;DG.v=null;$('dgmodal').style.display='none';document.body.classList.remove('dg-offen');return}
   if(B.dmhear){dmHear('g',B.dmhear);return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
-  if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dgDraw();return}
+  if(B.dmhilfe){dmHilfeAuf(B.dmhilfe);dgDraw();return}
   if(B.dmprobe){dmProbe('g',DG.v&&DG.v.ich||{});return}
   if(B.dmmic){dmMic('g');return}
   if(B.dmmehr){await dgAct('/api/dungeon/mehrzeit',{});return}

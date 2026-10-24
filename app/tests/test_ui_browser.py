@@ -127,6 +127,9 @@ class Browser(unittest.TestCase):
         await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'&&ADMIN===true")
         await pg.wait_for_timeout(300)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+        # the Dungeon-Master's guide opens once per device as a window over the table (V01.1.004): a fresh test browser
+        # counts it as seen; test_dungeon's test_table_calm_guide_pages_and_no_doubles takes it back
+        await pg.evaluate("try{localStorage.setItem('dm-hilfe','1')}catch(e){}")
         return br, pg, errors
 
     def test_every_page_without_errors_or_sideways_scrolling(self):

@@ -73,7 +73,7 @@ function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-re
   dice.forEach(d=>{const real=d.textContent;if(reduce)return;d.classList.add('dm-rollt');let k=0;const iv=setInterval(()=>{d.textContent=String(1+Math.floor(Math.random()*20));if(++k>=12){clearInterval(iv);d.textContent=real;d.classList.remove('dm-rollt')}},66)})}
 window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
   if(DMT.rid[mode]!==v.rid){DMT.rid[mode]=v.rid;DMT.seen[mode]=null;DMT.sieg[mode]=null;DMT.tuer[mode]=null}
-  const head=w.querySelector('.dm-head');if(head)head.insertAdjacentHTML('afterend',dmtBar(v));
+  const head=w.querySelector('.dm-head .dm-htitle');if(head)head.insertAdjacentHTML('afterend',dmtBar(v));   // in the head, no own row (Punkt 9)
   // the log's new entries since the last drawing: the dice roll, the events sound (the first drawing only counts)
   const log=v.log||[],key=log.length?JSON.stringify(log[log.length-1]):'';
   if(DMT.seen[mode]!==null&&DMT.seen[mode]!==key){let i=log.length-1;while(i>=0&&JSON.stringify(log[i])!==DMT.seen[mode])i--;

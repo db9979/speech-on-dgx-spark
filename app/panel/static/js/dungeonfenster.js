@@ -53,7 +53,7 @@ function dmFenKeep(w){const s=[...w.querySelectorAll('.dm-fen-body')].map(x=>[x.
 const dmFenMode=el=>el.closest('#dgcard')?'g':'p';
 const dmFenDraw=mode=>mode==='g'?dgDraw():dmDraw();
 const dmFenV=mode=>mode==='g'?DG.v:DM.v;
-function dmFenZu(mode,was){const W=DMW[mode];if(was==='ding'&&W.ding)W.ding='';else{W.w='';W.ding=''}if(!W.w&&!W.ding)W.zug=0;dmFenDraw(mode)}
+function dmFenZu(mode,was){if(was==='hilfe'){DMA.hilfe=false;dmFenDraw(mode);return}const W=DMW[mode];if(was==='ding'&&W.ding)W.ding='';else{W.w='';W.ding=''}if(!W.w&&!W.ding)W.zug=0;dmFenDraw(mode)}
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmfen],#dgcard [data-dmfen],#dmview [data-dmfenzu],#dgcard [data-dmfenzu]');
   const mode=b?dmFenMode(b):'';
   if(b&&b.dataset.dmfen){const W=DMW[mode],v=dmFenV(mode);
@@ -70,7 +70,9 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
   const it=e.target.closest('#dmview [data-dmi],#dgcard [data-dmi],#dmview .dm-pl.voll,#dgcard .dm-pl.voll');
   if(!it||e.target.closest('button,select,input,label,a,textarea'))return;const m=dmFenMode(it),v=dmFenV(m),key=it.dataset.dmi||'an:'+it.dataset.dmslot;
   if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m)});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
+document.addEventListener('keydown',e=>{const hf=document.querySelector('#dmview .dm-fen-hilfe,#dgcard .dm-fen-hilfe');
+  if(hf&&/^Arrow(Left|Right)$/.test(e.key)){dmHilfeAuf(DMA.hilfe+(e.key==='ArrowRight'?1:-1));dmFenDraw(dmFenMode(hf));return}   // the guide pages with the arrow keys
+  if(e.key!=='Escape')return;if(hf){dmFenZu(dmFenMode(hf),'hilfe');return}
   for(const m of ['g','p']){const W=DMW[m];if((W.w||W.ding)&&document.querySelector(m==='g'?'#dgcard .dm-fen':'#dmview .dm-fen')){dmFenZu(m,W.ding?'ding':'w');return}}
   const k=document.querySelector('.dmk.gross');if(k){DMK.gross=false;k.classList.remove('gross')}});
 // a tap on a value, life, level, protection or a worn thing explains it right below (Dominik 2026-10-23 „bei klicken

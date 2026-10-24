@@ -2277,9 +2277,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:color-mix(in srgb,var(--acc) 16%,var(--card))}
 .dm-bar{display:block;height:5px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:4px}
 .dm-bar em{display:block;height:100%;background:var(--ok)}.dm-bar.low em{background:var(--bad)}.dm-bar.ep em{background:var(--acc)}
-.dm-round{display:flex;gap:4px;margin-bottom:4px}.dm-round span{width:14px;height:14px;border-radius:50%;background:var(--line)}.dm-round span.on{background:var(--ok)}
 .dm-hostb,.dm-iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.dm-zugk{display:flex;align-items:center;gap:10px}.dm-zugk .dm-round{margin:0}.dm-side .dm-mek{margin-top:10px}
+.dm-side .dm-mek{margin-top:10px}
 .dm-seite{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));width:100%;margin:12px 0 8px;box-sizing:border-box}.dm-seite button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}.dm-seite button span{font-size:17px;line-height:1.1}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
@@ -2322,6 +2321,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dgmodal{padding:0;place-items:stretch;align-items:stretch;background:var(--bg);backdrop-filter:none;z-index:150}
 .dgcard{width:100%;max-width:none;min-height:100vh;min-height:100dvh;box-sizing:border-box;margin:0;border:0;border-radius:0;animation:none;padding:14px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
+/* at the table the assistant's face stays away (Punkt 9): it sat over the field and the side column */
+body:has(#dungeon.on .dm-tisch) #fab,body.dg-offen #fab{display:none!important}
 body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a profile: nothing but the game */.dmadmcard{max-width:900px;width:calc(100vw - 32px)}#dmadmtxt{width:100%;min-height:50vh;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 /* the game's own look (Dominik 2026-10-23 "ok" to 1a-5, then the whole page): dark ground, the narration on parchment
    with an initial, actions as speech bubbles, hero cards with values; colours per world from the rules (welten[].farben,
@@ -2527,8 +2528,13 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-tisch .dm-pl{border-color:var(--t-linie);background:color-mix(in srgb,var(--t-karte) 70%,transparent)}.dm-tisch .dm-pl.voll.dm-s0{border-left-color:var(--t-gold)}.dm-tisch .dm-pl small,.dm-tisch .dm-pl i{color:var(--t-mut)}.dm-fen-kopf h3{color:var(--t-gold,inherit)}
 .dm-tisch .pill{background:color-mix(in srgb,var(--t-text) 10%,transparent);color:var(--t-text)}
 .dm-tisch details.dm-plan{border-color:var(--t-linie)}.dm-tisch .dm-plan summary{color:var(--t-gold)}
-.dm-guide{border:1px solid var(--t-linie);border-radius:12px;padding:10px 12px;margin-bottom:12px;background:var(--t-karte)}.dm-gtop{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-gtop h5{margin:0}
-.dm-gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 16px;margin-top:8px}.dm-gl b{display:block;color:var(--t-gold);font-weight:600}.dm-gl small{display:block;line-height:1.45}
+.dm-gtop{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-gtop h5{margin:0}
+/* the guide as a window, one part per page (Punkt 9) */
+.dm-fen-hilfe .dm-fen-box{width:min(560px,100%)}.dm-hseite{padding:14px 18px;min-height:150px;flex:1}.dm-hseite h4{margin:4px 0 8px;color:var(--t-gold,inherit);font-size:18px}.dm-hseite p{margin:0;line-height:1.55}
+.dm-hnav{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--t-linie,var(--line))}.dm-hpunkte{flex:1;display:flex;justify-content:center;gap:5px;min-width:0}
+.dm-hpunkte button{width:8px;height:8px;flex:none;padding:0;border-radius:50%;border:0;background:var(--t-linie,var(--line));cursor:pointer}.dm-hpunkte button.on{background:var(--t-gold,var(--acc))}
+.dm-head .dm-ton{margin:0;padding:3px 8px;flex:0 1 auto;min-width:0;flex-wrap:nowrap}.dm-head .dm-tontxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}.dm-head .dm-tonsp{display:none}.dm-head .dm-laut{width:70px}
+.dm-tisch .dm-seat.dm-ichz{display:flex;align-items:center;gap:8px;padding:8px 12px}.dm-ichz>div{flex:1;min-width:0}.dm-ichz .dm-state{flex:none;margin:0}
 .dm-hell .dm-dm{border:1px solid var(--t-linie)}
 /* the page around the table in the same look: rounds, campaigns, the new round, the heroes and a guest's invitation */
 .dm-tisch h3.sec,.dm-tisch .dm-step{font-variant:small-caps;letter-spacing:.08em;color:var(--t-gold);font-weight:600;margin:18px 0 8px;border:0;padding:0;display:flex;align-items:center;gap:10px}
@@ -2634,13 +2640,13 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-tisch:not(.dm-hell) .dm-wf{color:#c9a7ff;background:color-mix(in srgb,#b48cff 18%,transparent);border-color:color-mix(in srgb,#b48cff 40%,transparent)}
 .dm-tisch:not(.dm-hell) .dm-bo.up{color:#7ee2a2;background:color-mix(in srgb,#5fd38d 16%,transparent)}.dm-tisch:not(.dm-hell) .dm-bo.dn{color:#ff9a8a;background:color-mix(in srgb,#ff7a66 16%,transparent)}
 /* the host's tab „Leiten“ (dungeon.js host): one main action, four tiles alike, quiet rows, „⋯ Mehr“ */
-.dm-go{display:flex;justify-content:center;align-items:baseline;gap:6px;width:100%;margin:4px 0 10px;padding:11px 12px;border:0;border-radius:12px;background:#2f6b45;color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer}
+.dm-go{display:flex;justify-content:center;align-items:baseline;gap:6px;width:100%;margin:4px 0 10px;padding:11px 12px;border:0;border-radius:12px;background:#2f6b45;color:#fff;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
 .dm-go small{font-weight:400;font-size:12.5px;opacity:.9}.dm-go:disabled{background:color-mix(in srgb,var(--t-linie,var(--line)) 70%,transparent);color:var(--t-mut,var(--mut));cursor:default}
-.dm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.dm-tile{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 10px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:14px system-ui,sans-serif;text-align:left;cursor:pointer;min-width:0}
+.dm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dm-tiles>.dm-tile:last-child:nth-child(odd){grid-column:1/-1}   /* an odd last tile spans the row, no gap */
+.dm-tile{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 10px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer;min-width:0}
 .dm-tile>span:first-child{font-size:18px;flex:none}.dm-tile b{display:block;font-weight:600}.dm-tile small{display:block;font-size:11.5px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dm-tile.on{border-color:var(--t-gold,var(--acc));background:color-mix(in srgb,var(--t-gold,var(--acc)) 14%,transparent)}.dm-tile:disabled{opacity:.5;cursor:default}
-.dm-zeile{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:14px system-ui,sans-serif;cursor:pointer;list-style:none}
+.dm-zeile{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:inherit;font-size:14px;cursor:pointer;list-style:none}
 .dm-zeile::-webkit-details-marker{display:none}.dm-zeile small{opacity:.75;white-space:nowrap}.dm-zeile-d[open]>.dm-zeile{border-color:var(--t-gold,var(--acc))}.dm-zeile-d .dm-erzwahl{margin-top:8px}.dm-zeile-d .dm-erzwahl>label{display:none}
-.dm-mehr{margin-top:10px;padding-top:8px;border-top:1px solid var(--t-linie,var(--line))}.dm-mehr>summary{cursor:pointer;font:13px system-ui,sans-serif;opacity:.8;list-style:none}.dm-mehr>summary::-webkit-details-marker{display:none}.dm-mehr .dm-hostb{margin-top:8px}
+.dm-mehr{margin-top:10px;padding-top:8px;border-top:1px solid var(--t-linie,var(--line))}.dm-mehr>summary{cursor:pointer;font:inherit;font-size:13px;opacity:.8;list-style:none}.dm-mehr>summary::-webkit-details-marker{display:none}.dm-mehr .dm-hostb{margin-top:8px}
 .dm-left.dm-warn,.dm-mein-z.dm-warn{color:#e5484d;font-weight:600}.dm-plus1{flex:none}.dm-zeitz{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0}.dm-mein-k{display:flex;flex-direction:column;gap:6px}

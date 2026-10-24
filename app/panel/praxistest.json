@@ -3075,6 +3075,13 @@
 "titel": "Vorlesen Stück für Stück, Figuren mit eigener Stimme",
 "text": "A: Runde mit Vorlesen auf zwei Geräten öffnen (eines als Gast), auf beiden einmal „🔊 Ton an“: nach dem nächsten Zug kommt der erste Satz nach ein, zwei Sekunden, beide Geräte lesen vor. B: Die Uhr zeigt „wird vorgelesen, die Uhr startet danach“ und läuft erst nach dem Vorlesen. C: Eine Erzählung mit „…“, sagt Grimma: die Rede spricht eine andere Stimme als der Erzähler, Frauen in der Frauenstimme. D: 🔇 auf einem Gerät: nur dort ist es still. E: Funktionen → KI-Dungeon-Master → Regeln anpassen, Teil Stimmen: drei Stimmen mit Voreinstellung.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P464",
+"v": 1004,
+"titel": "Ruhiger Tisch: Hilfe zum Blättern, nichts doppelt",
+"text": "A: Als neuer Spieler eine Runde öffnen: „So spielst du“ kommt einmal als Fenster, mit ‹ › oder den Punkten blättern, am Rechner auch mit den Pfeiltasten; Esc, ✕ oder ein Tipp daneben schließt. B: Musik und Geräusche stehen im Kopf des Tisches, keine eigene Zeile darunter. C: Zug, Uhr und „haben gehandelt“ stehen nur einmal, die rechte Spalte wiederholt sie nicht. D: Der eigene Held steht in der Gruppe nur als kurze Zeile, ganz rechts groß. E: Am Tisch ist das Assistenten-Gesicht weg, auf anderen Seiten wieder da. F: Leiten: die Kacheln in der Schrift des Tisches, eine ungerade letzte Kachel füllt die Zeile.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
