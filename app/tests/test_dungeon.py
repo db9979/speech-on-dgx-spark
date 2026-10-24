@@ -115,6 +115,10 @@ class Base(unittest.TestCase):
                     os.remove(f)
         dungeon._rules["r"] = None
         dungeon._running.clear()
+        # the last action closes the turn at once here; Zugzeit checks GNADE_S and the reading time on their own
+        p = mock.patch.object(dungeon, "GNADE_S", 0)
+        p.start()
+        self.addCleanup(p.stop)
         self.spawned = []
         old, old_ask = dungeon.spawn, dungeon.ask_model
 
@@ -429,6 +433,84 @@ class Seats(Base):
             dungeon._write(d)
         self.assertNotIn(free[0], self.state(self.rid)["plaetze"])
         self.assertIn(self.gp, self.state(self.rid)["plaetze"])                # a seat with a hero stays
+
+
+class Zugzeit(Base):
+    """Dominik 2026-10-24 „die interaktion für den user geht zu schnell weg“, „1-5“: the turn's time starts after a
+    reading time, the last action closes it only GNADE_S later, each seat may ask once a turn for a minute more, the
+    page turns red from WARN_S on."""
+    def setUp(self):
+        super().setUp()
+        p = mock.patch.object(dungeon, "GNADE_S", 10)       # the real grace here (Base sets it to 0)
+        p.start()
+        self.addCleanup(p.stop)
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+
+    def edit(self, **kw):
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid].update(kw)
+            dungeon._write(d)
+
+    def test_reading_time_grows_with_the_narration(self):
+        self.assertEqual(dungeon.read_s(""), 15)
+        self.assertEqual(dungeon.read_s("x" * 600), 25)
+        self.assertEqual(dungeon.read_s("x" * 100000), 90)
+        rd = self.state(self.rid)
+        rd["log"].append({"art": "dm", "text": "y" * 1200})
+        dungeon._narrated(rd)
+        self.assertEqual((rd["lesen"], rd["mehr"]), (35, {}))
+        self.assertEqual(dungeon.turn_start(rd), rd["zug_t"] + 35)
+        self.assertEqual(dungeon.turn_end(rd), rd["zug_t"] + 35 + rd["zug_s"])
+        self.assertEqual(dungeon.rules()["grenzen"]["zug_standard"], 300)        # point 2: more time by default
+
+    def test_one_action_waits_for_reading_and_turn_time(self):
+        now = time.time()
+        self.edit(zug_t=now, lesen=30, zug_s=60)
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich warte.", "zug": 1}).status_code, 200)
+        rd = self.state(self.rid)
+        self.assertFalse(dungeon.due(rd, now + 80))           # 30 s reading + 60 s turn: not yet
+        self.assertTrue(dungeon.due(rd, now + 91))
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertGreater(v["lesen"], 20)
+        self.assertEqual((v["rest"], v["warn_s"]), (60, dungeon.WARN_S))     # the clock waits while one reads
+
+    def test_the_last_action_closes_only_after_the_grace(self):
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich warte.", "zug": 1}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich auch.", "zug": 1}).status_code, 200)
+        self.assertEqual(self.spawned, [])                      # „Ändern“ still works
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertTrue(0 < v["gnade"] <= 10)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Doch lieber anders.", "zug": 1}).status_code, 200)
+        rd = self.state(self.rid)
+        t = max(x["t"] for x in rd["offen"].values())
+        self.assertFalse(dungeon.due(rd, t + 9))
+        self.assertTrue(dungeon.due(rd, t + 10))
+        self.assertTrue(dungeon.maybe_close(self.rid, now=t + 10))
+        self.assertIn("dungeon", self.spawned)
+
+    def test_one_more_minute_once_per_seat_and_turn(self):
+        rd = self.state(self.rid)
+        end = dungeon.turn_end(rd)
+        r = self.v.post("/api/dungeon/mehrzeit", json={"code": self.code})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["mehr"], ["Bela"])                         # everyone sees who
+        self.assertFalse(r.json()["mehr_ich"])
+        self.assertEqual(dungeon.turn_end(self.state(self.rid)), end + dungeon.MEHR_S)
+        r = self.v.post("/api/dungeon/mehrzeit", json={"code": self.code})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "mehrzeit"))
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/mehrzeit", json={}).status_code, 200)
+        self.assertEqual(dungeon.turn_end(self.state(self.rid)), end + 2 * dungeon.MEHR_S)
+        self.assertEqual(self.c2.post(f"/api/profile/dungeon/{self.rid}/mehrzeit", json={}).status_code, 404)   # no seat
+        self.assertEqual(self.v.post("/api/dungeon/mehrzeit", json={"code": "x" * 32}).status_code, 400)
+        self.edit(dm="denkt")
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/mehrzeit", json={}).status_code, 409)     # not while narrating
+        rd = self.state(self.rid)
+        rd["log"].append({"art": "dm", "text": "Weiter."})
+        dungeon._narrated(rd)
+        self.assertEqual(rd["mehr"], {})                                     # a new turn: asked again
 
 
 class Trade(Base):
@@ -2904,6 +2986,13 @@ class Windows(unittest.TestCase):
                         await pg.click("#dmview [data-dmsend]")
                         await b.until(pg, "/lausche/.test((document.querySelector('#dmview .dm-mein')||{}).textContent||'')")
                         self.assertIn("lausche", dungeon._read()["runden"][rid]["offen"][next(iter(dungeon._read()["runden"][rid]["plaetze"]))]["text"])
+                        # Zugzeit (Dominik „1-5“): „+1 Minute“ once, the name shows; red from WARN_S on
+                        if not dungeon._read()["runden"][rid].get("mehr"):                         # the round stays across the widths
+                            await pg.click("#dmview [data-dmmehr]")
+                        await b.until(pg, "!document.querySelector('#dmview [data-dmmehr]')&&/Zeit für/.test(document.querySelector('#dmview .dm-left').textContent)")
+                        self.assertEqual(len(dungeon._read()["runden"][rid].get("mehr") or {}), 1)
+                        self.assertTrue(await pg.evaluate("Object.assign(DM.v,{rest:12,lesen:0,gnade:0});DM.at=Date.now();dmLeft(DM);"
+                                                          "document.querySelector('#dmview .dm-left').classList.contains('dm-warn')"))
                         await pg.click("#dmview [data-dmaendern]")                                     # a refused one: text stays, reason below
                         await b.until(pg, "!!document.querySelector('#dmview .dm-in')")
                         await pg.route("**/aktion", lambda route: route.fulfill(status=409, content_type="application/json", body='{"detail":"alter zug"}'))

@@ -84,6 +84,7 @@ const DMGRUND={
   'profil':['Du spielst mit deinem Profil, deine Helden bleiben dort.','You play with your profile, your heroes stay there.'],
   'aus':['Gast-Konten sind auf diesem Spark gerade aus.','Guest accounts are switched off on this Spark right now.'],
   'held spielt':['Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.','This hero is playing in another round right now. End it there or pick another hero.'],
+  'mehrzeit':['Du hast in diesem Zug schon eine Minute mehr bekommen.','You already got one more minute this turn.'],
   'besetzt':['Dieser Platz ist schon besetzt, oder du sitzt schon an diesem Tisch.','This seat is taken already, or you already sit at this table.'],
   'runden':['Du hast schon so viele offene Runden, wie gehen. Beende eine alte Runde, dann klappt es.','You already have as many open rounds as allowed. End an old round, then it works.'],
   'helden':['Deine Heldenliste ist voll. Lösche einen alten Helden oder spiele mit einem vorhandenen.','Your hero list is full. Delete an old hero or play with one you have.'],
@@ -466,8 +467,10 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   const S=mode==='p'?DM:DG,sid=mode==='p'?'dmsend':'dgsend';
   // after „Handeln“ (Dominik 2026-10-24 „beim click auf handeln passiert nichts weiter“): the own action stands as a card with
   // ✓, who is still missing and „Ändern“; the field comes back on „Ändern“ or with the next turn
-  const mine=!!v.meine_aktion&&!v.dm&&DMA.aendern[mode]!==v.zug;
-  const input=v.status==='ende'||!v.ich?'':mine?dmMine(v,wait,S):`${wait.length&&!v.dm?`<small class="dm-wait">${esc(t('Warten auf: ','Waiting for: '))}<b>${esc(wait.join(', '))}</b></small>`:''}${dmTyping(v)}<div class="dm-inp"><textarea class="dm-in" rows="1" data-zeilen="4" data-senden="${sid}" maxlength="${v.text_max}" placeholder="${esc(t('Was macht ','What does ')+v.ich.name+t('? ',' do? '))}" aria-label="${esc(t('Deine Aktion','Your action'))}"${v.dm?' disabled':''}></textarea><button type="button" class="b dm-mic${DMA.rec&&DMA.mode===mode?' on':''}" data-dmmic="1" title="${esc(t('Sprechen statt tippen','Speak instead of typing'))}" aria-label="${esc(t('Sprechen statt tippen','Speak instead of typing'))}"${v.dm?' disabled':''}>${DMA.rec&&DMA.mode===mode?'● '+esc(t('Fertig','Done')):'🎤'}</button><button type="button" class="b p" id="${sid}" data-dmsend="1"${v.dm?' disabled':''}>${esc(t('Handeln','Act'))}</button></div>${dmMsg(S)}`;
+  const mine=!!v.meine_aktion&&!v.dm&&DMA.aendern[mode]!==v.zug,u=dmUhr(v,S);
+  const plus=v.mehr_ich&&v.status==='laeuft'&&v.ich?`<button type="button" class="b dm-plus1" data-dmmehr="1">${esc(t('+1 Minute','+1 minute'))}</button>`:'';
+  const uhr=v.dm||v.status==='ende'?'':`<div class="dm-zeitz"><small class="mut dm-left${u.warn?' dm-warn':''}">${esc(u.text)}</small>${plus}</div>`;
+  const input=v.status==='ende'||!v.ich?'':mine?dmMine(v,wait,S,plus):`${uhr}${wait.length&&!v.dm?`<small class="dm-wait">${esc(t('Warten auf: ','Waiting for: '))}<b>${esc(wait.join(', '))}</b></small>`:''}${dmTyping(v)}<div class="dm-inp"><textarea class="dm-in" rows="1" data-zeilen="4" data-senden="${sid}" maxlength="${v.text_max}" placeholder="${esc(t('Was macht ','What does ')+v.ich.name+t('? ',' do? '))}" aria-label="${esc(t('Deine Aktion','Your action'))}"${v.dm?' disabled':''}></textarea><button type="button" class="b dm-mic${DMA.rec&&DMA.mode===mode?' on':''}" data-dmmic="1" title="${esc(t('Sprechen statt tippen','Speak instead of typing'))}" aria-label="${esc(t('Sprechen statt tippen','Speak instead of typing'))}"${v.dm?' disabled':''}>${DMA.rec&&DMA.mode===mode?'● '+esc(t('Fertig','Done')):'🎤'}</button><button type="button" class="b p" id="${sid}" data-dmsend="1"${v.dm?' disabled':''}>${esc(t('Handeln','Act'))}</button></div>${dmMsg(S)}`;
   // the host's tab „Leiten“ (Dominik 2026-10-24 „wirkt unruhig“, „alles“): one main action, four tiles of the same
   // size with their state, invite and narrator voice as quiet rows, the rare ones behind „⋯ Mehr“
   const tile=(attr,ic,name,sub,on,off)=>`<button type="button" class="dm-tile${on?' on':''}" ${attr}${off?` disabled title="${esc(off)}"`:''}><span aria-hidden="true">${ic}</span><span><b>${esc(name)}</b><small>${esc(sub)}</small></span></button>`;
@@ -484,7 +487,7 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
     ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}${dmScene(v,mode)}<div class="dm-feed" aria-live="polite">${log}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
     <div class="dm-col dm-side"><div class="dm-zugk"><b>${esc(t('Zug','Turn'))} ${v.zug}</b><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div></div>${dmAuftrag(v)}
-    <small class="mut dm-left">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(done&&!v.pause?t(' · weiter spätestens in ',' · goes on at the latest in ')+Math.max(0,Math.round(v.rest-(Date.now()-S.at)/1000))+' s':''))}</small>
+    <small class="mut dm-left${dmUhr(v,S).warn?' dm-warn':''}">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):dmUhr(v,S).text)}</small>
     ${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmFenster(v,mode)}`;
   fen();tk();
   if(mode==='g')dmImgFill(w);
@@ -547,16 +550,26 @@ function dmSeatMenu(p){const k='s:'+p.pid,nl=DM.neulink&&DM.neulink.pid===p.pid?
     <div class="dm-zeile dm-sname-z"><span>✎ ${esc(t('Umbenennen','Rename'))}</span><div class="row"><input class="dm-sname" maxlength="24" value="${esc(p.name)}" aria-label="${esc(t('Neuer Name des Helden','The hero\'s new name'))}"><button type="button" class="b" data-dmsitz="name" data-pid="${esc(p.pid)}">${esc(t('Sichern','Save'))}</button></div><small>${esc(t('nur der Name, die Werte bleiben','only the name, the values stay'))}</small></div>
     <button type="button" class="dm-zeile" data-dmsitz="${p.ruht?'wecken':'ruhen'}" data-pid="${esc(p.pid)}"><span>${esc(p.ruht?'▶ '+t('Wieder warten','Wait again'):'⏸ '+t('Nicht mehr warten','Stop waiting'))}</span><small>${esc(p.ruht?t('der Zug wartet wieder auf '+p.name,'the turn waits for '+p.name+' again'):t('bis '+p.name+' wieder handelt','until '+p.name+' acts again'))}</small></button>
     <button type="button" class="dm-zeile dm-weg" data-dmseatdel="${esc(p.pid)}"><span>${esc(weg?t('Wirklich vom Tisch nehmen?','Really take off the table?'):t('Vom Tisch nehmen','Take off the table'))}</span><small>${esc(p.gast?t('ohne Gast-Konto oder Figur-Code ist der Held dann weg','without a guest account or hero code the hero is gone'):t('der Held bleibt im Profil','the hero stays in the profile'))}</small></button></div></details>`}
-function dmMine(v,wait,S){return `<div class="dm-mein${Date.now()-DMA.gesendet<2500?' neu':''}" role="status"><span class="dm-mein-ok" aria-hidden="true">✓</span><div class="dm-mein-t"><small>${esc(t('Deine Aktion für Zug '+v.zug,'Your action for turn '+v.zug))}</small><p>${dmFx(v.meine_aktion)}</p>
+function dmMine(v,wait,S,plus){return `<div class="dm-mein${Date.now()-DMA.gesendet<2500?' neu':''}" role="status"><span class="dm-mein-ok" aria-hidden="true">✓</span><div class="dm-mein-t"><small>${esc(t('Deine Aktion für Zug '+v.zug,'Your action for turn '+v.zug))}</small><p>${dmFx(v.meine_aktion)}</p>
     <small class="dm-mein-w">${esc(wait.length?t('Wartet auf ','Waiting for ')+wait.join(', '):t('Alle haben gehandelt, der Dungeon-Master erzählt gleich.','Everyone has acted, the Dungeon Master tells on shortly.'))}<span class="dm-mein-z"></span></small></div>
-    <button type="button" class="b" data-dmaendern="1">${esc(t('Ändern','Change'))}</button></div>${dmMsg(S)}`}
+    <div class="dm-mein-k"><button type="button" class="b" data-dmaendern="1">${esc(t('Ändern','Change'))}</button>${plus||''}</div></div>${dmMsg(S)}`}
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmaendern],#dgcard [data-dmaendern]');if(!b)return;const g=!!b.closest('#dgcard'),v=g?DG.v:DM.v;if(!v)return;
   DMA.aendern[g?'g':'p']=v.zug;g?dgDraw():dmDraw()});
-function dmLeft(S){const v=S.v,el=document.querySelector(S===DM?'#dmview .dm-left':'#dgcard .dm-left');if(!v||!el||v.dm||v.status==='ende')return;
-  const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
-  const sek=Math.max(0,Math.round(v.rest-(Date.now()-S.at)/1000));
-  el.textContent=`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(done&&!v.pause?t(' · weiter spätestens in ',' · goes on at the latest in ')+sek+' s':'');
-  const z=document.querySelector(S===DM?'#dmview .dm-mein-z':'#dgcard .dm-mein-z');if(z)z.textContent=v.pause?t(' · Pause',' · paused'):t(' · spätestens in ',' · at the latest in ')+Math.floor(sek/60)+':'+String(sek%60).padStart(2,'0')}
+// the turn's clock (Dominik 2026-10-24 „die interaktion geht zu schnell weg“, „1-5“): first the reading time, then the
+// turn's time; after the last action GNADE_S to change it; red from warn_s on, a phone vibrates once per turn
+const dmMS=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function dmUhr(v,S){const el=(Date.now()-S.at)/1000,lese=Math.max(0,Math.round(v.lesen-el)),gn=Math.max(0,Math.round(v.gnade-el));
+  const sek=Math.max(0,Math.round(v.rest-Math.max(0,el-v.lesen))),done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
+  const warn=!!done&&!v.pause&&!gn&&!lese&&sek<=v.warn_s;
+  const mehr=(v.mehr||[]).length?t(' · mehr Zeit für ',' · more time for ')+v.mehr.join(', '):'';
+  const text=`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(v.pause?'':gn?t(' · geht in '+gn+' s weiter',' · goes on in '+gn+' s'):
+    lese?t(' · Lesezeit, die Uhr startet in '+lese+' s',' · reading time, the clock starts in '+lese+' s'):done?t(' · weiter spätestens in ',' · goes on at the latest in ')+dmMS(sek):'')+mehr;
+  const mine=v.pause?t(' · Pause',' · paused'):gn?t(' · geht in '+gn+' s weiter, „Ändern“ geht noch',' · goes on in '+gn+' s, "Change" still works'):t(' · spätestens in ',' · at the latest in ')+dmMS(sek);
+  return {text,mine,warn}}
+function dmLeft(S){const v=S.v,els=document.querySelectorAll(S===DM?'#dmview .dm-left':'#dgcard .dm-left');if(!v||!els.length||v.dm||v.status==='ende')return;
+  const u=dmUhr(v,S);els.forEach(el=>{el.textContent=u.text;el.classList.toggle('dm-warn',u.warn)});
+  if(u.warn&&DMA.warnt!==S.v.rid+':'+v.zug){DMA.warnt=S.v.rid+':'+v.zug;try{if(navigator.vibrate)navigator.vibrate([60,80,60])}catch(e){}}
+  const z=document.querySelector(S===DM?'#dmview .dm-mein-z':'#dgcard .dm-mein-z');if(z){z.textContent=u.mine;z.classList.toggle('dm-warn',u.warn)}}
 const dmHeroBody2=B=>({was:B.dmhero,i:B.i,wert:B.wert,id:B.id,platz:B.platz,mit:B.mit});
 async function dmHeroDo(mode,b){if(mode==='g'){await dgAct('/api/dungeon/held',b);return}
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,b,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
@@ -571,7 +584,7 @@ async function dmSend(path,b,S,x){if(S.busy)return null;S.busy=true;
   const o=x?xjson(x.method,Object.assign({lang:dmLang()},x.body||{})):b===null?{method:'DELETE'}:xjson('POST',Object.assign({lang:dmLang()},b||{}));const {r,d}=await apiTry(path,o);S.busy=false;
   if(!r.ok){dmSay(S,dmErr(r.status,d.detail),true);return null}S.msg='';S.err=false;return d}
 // ---------------------------------------------------------------- clicks of the own page
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmsitz],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmerzprobe],#dmview [data-dmerzneu],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden]');
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmsitz],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmerzprobe],#dmview [data-dmerzneu],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden],#dmview [data-dmmehr]');
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(b.closest('.dmf-welt'))dmWorld(w,B.dmseg);return}
   if(B.dmgs!==undefined){dmStory(w,b);return}
@@ -615,6 +628,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   else if(B.dmerzneu)d=await dmSend(`/api/profile/dungeon/${rid}/erzaehler`,{k:''},DM);
   else if(B.dmbild)d=await dmSend(`/api/profile/dungeon/${rid}/bild`,{},DM);
   else if(B.dmportraet)d=await dmSend(`/api/profile/dungeon/${rid}/portraet`,{},DM);
+  else if(B.dmmehr)d=await dmSend(`/api/profile/dungeon/${rid}/mehrzeit`,{},DM);
   else if(B.dmmelden)d=await dmSend(`/api/profile/dungeon/${rid}/melden`,{an:B.dmmelden==='1'},DM);
   else if(B.dmtermin){const x=w.querySelector('.dm-tin'),tt=B.dmtermin==='1'&&x&&x.value?Math.floor(new Date(x.value).getTime()/1000):0;
     if(B.dmtermin==='1'&&!(tt*1000>Date.now())){dmSay(DM,t('Bitte einen Zeitpunkt in der Zukunft wählen (höchstens 60 Tage).','Please pick a time in the future (60 days at most).'),true);return}
@@ -725,7 +739,7 @@ function dgKontoForm(){const box=$('dgcard'),body=box&&box.querySelector('.dgf-b
   s.hidden=!hs.length;s.innerHTML=hs.length?`<label>${esc(t('Held aus deinem Gast-Konto','Hero from your guest account'))}</label><select class="dgf-kontoheld"><option value="">${esc(t('Keiner, eine neue Figur','None, a new character'))}</option>${hs.map(h=>`<option value="${esc(h.hid)}">${esc(h.name)} · ${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</option>`).join('')}</select>`:''}
 async function dgAct(path,b){if(DG.busy)return;DG.busy=true;
   try{DG.v=await dgPub(path,Object.assign({code:DG.code},b));DG.at=Date.now();DG.msg='';DG.err=false;dgDraw()}catch(e){dmSay(DG,dgErr(e),true)}DG.busy=false}
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmprobe],#dgcard [data-dmmic],#dgcard [data-dmportraet]');if(!b)return;
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmprobe],#dgcard [data-dmmic],#dgcard [data-dmportraet],#dgcard [data-dmmehr]');if(!b)return;
   const B=b.dataset,box=$('dgcard');
   if(B.dgleave){if(dgGast())return;DG.v=null;$('dgmodal').style.display='none';document.body.classList.remove('dg-offen');return}
   if(B.dmhear){dmPlay('g');return}
@@ -733,6 +747,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dgDraw();return}
   if(B.dmprobe){dmProbe('g',DG.v&&DG.v.ich||{});return}
   if(B.dmmic){dmMic('g');return}
+  if(B.dmmehr){await dgAct('/api/dungeon/mehrzeit',{});return}
   if(B.dgwie){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
     box.querySelector('.dgf-body').innerHTML=dmHeroForm(DG.info.wahl,B.dgwie==='p'&&DM.data?DM.data.helden:[],'dgf-');dmDingFill(box,'g');return}
   if(B.dgjoin){const wie=(box.querySelector('.dgf-wie .on')||{dataset:{dgwie:'g'}}).dataset.dgwie,held=dmHeroBody(box,'dgf-');

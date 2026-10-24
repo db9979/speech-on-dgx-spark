@@ -5509,6 +5509,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Mehr Zeit zwischen den Zügen (V01.0.991, Dominik 2026-10-24 „die interaktion für den user geht zu schnell weg, hat manchmal keine chance zwischen den zügen das fenster zu lesen zu agieren“, „1-5“): Nach jeder Erzählung läuft zuerst eine Lesezeit (15 s plus 1 s je 60 Zeichen der Erzählung, höchstens 90 s, dungeon.read_s); erst danach zählt die Zugzeit, die Uhr zeigt bis dahin „Lesezeit, die Uhr startet in … s“. Neue Runden haben 300 s statt 120 s (wählbar bleiben 60, 120, 300; laufende Runden behalten ihre Zeit). Hat der Letzte gehandelt, schließt der Zug erst 10 s später (GNADE_S), die eigene Karte zeigt die Sekunden und „Ändern“ geht noch. Unter dem Eingabefeld und in der eigenen Karte steht „+1 Minute“: einmal pro Zug und Platz (POST /api/profile/dungeon/{rid}/mehrzeit, Gäste POST /api/dungeon/mehrzeit; Anmeldung bzw. Platz-Code, CSRF, Größen- und Rate-Limit wie die übrigen Spiel-Endpunkte), alle sehen „mehr Zeit für …“. Ab 30 s Restzeit wird die Uhr rot und ein Handy vibriert einmal. Logs: dungeon: mehrzeit | ok, dungeon: mehrzeit | schon, dungeon: mehrzeit | nicht jetzt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Reiter „Regeln“ mit Bestiarium und Gleichgewicht (V01.0.984, Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „das besarium zu sehen zu bearbeten gegenstände etc.“, „alle punkte umsetzten … gleichgewicht 1-5 zu stark nur hinweis“): Der Admin hat auf der Seite Dungeon-Master einen dritten Reiter *Regeln* neben *Runden* und *Helden*; *Funktionen → KI-Dungeon-Master → Regeln anpassen* öffnet ihn (ohne Profil wie bisher als Karte). Links stehen die Teile: Geschichten, Gegenstände, Gegner (Bestiarium), Klassen, Völker, Hintergründe, Welten, Töne, Zustände, dann Stimmen, Bilder, Musik, Gäste mit E-Mail, Wie es ankommt und *Für Fortgeschrittene (JSON)*. Ein Teil des Katalogs ist eine Liste mit Bild oder Zeichen vorne, einer Zeile Werte, der Herkunft (Grundregel, SRD, eigen, geändert, ausgeblendet) und der Marke des Gleichgewichts, mit Suche und Filtern (Gegenstände nach Art, Gegner nach Stufe, beide nach Gleichgewicht); daneben (am Handy darunter) das Detail mit *Ändern* (der ganze Eintrag, geprüft wie alle Regeln), *Eigene Kopie*, *Ausblenden* und *Zurück auf mitgeliefert*. Bilder: Gegner bekommen wie Gegenstände ein gemaltes Bild im Stil ihrer Welt"
 },
 {
@@ -17886,6 +17894,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "t least one letter); values, level and bag stay. Log dungeon: platz | name."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: More time between turns (V01.0.991, Dominik 2026-10-24 \"the interaction goes away too fast for the user, sometimes no chance to read the window and act between turns\", \"1-5\"): After every narration a reading time runs first (15 s plus 1 s per 60 characters of the narration, at most 90 s, dungeon.read_s); only then the turn time counts, until then the clock shows \"reading time, the clock starts in … s\". New rounds have 300 s instead of 120 s (60, 120, 300 stay selectable; running rounds keep their time). Once the last player acted, the turn closes only 10 s later (GNADE_S), the own card shows the seconds and \"Change\" still works. Below the input field and in the own card there is \"+1 minute\": once per turn and seat (POST /api/profile/dungeon/{rid}/mehrzeit, guests POST /api/dungeon/mehrzeit; sign-in or seat code, CSRF, size and rate limit like the other game endpoints), everyone sees \"more time for …\". From 30 s left the clock turns red and a phone vibrates once. Logs: dungeon: mehrzeit | ok, dungeon: mehrzeit | schon, dungeon: mehrzeit | nicht jetzt."
 },
 {
 "lang": "en",

@@ -97,6 +97,7 @@ OPEN = {
     "/api/dungeon/beitreten": "Dungeon-Master seat link: takes the one seat of the code with a new hero or a Figur-Code; same door as /api/dungeon/platz",
     "/api/dungeon/lage": "Dungeon-Master seat link: the round as this seat sees it, nothing else; same door as /api/dungeon/platz",
     "/api/dungeon/aktion": "Dungeon-Master seat link: one action text of this seat for the turn (TEXT_MAX); same door as /api/dungeon/platz",
+    "/api/dungeon/mehrzeit": "Dungeon-Master seat link: one more minute for this seat, once per turn (MEHR_S); same door as /api/dungeon/platz",
     "/api/dungeon/held": "Dungeon-Master seat link: the seat's own hero moves (equip, potion, trade) by fixed rules; same door as /api/dungeon/platz",
     "/api/dungeon/figur": "Dungeon-Master seat link: the seat's hero as a Figur-Code, shown once, only its hash kept; same door as /api/dungeon/platz",
     "/api/dungeon/ton": "Dungeon-Master seat link: the turn read aloud as WAV, only a turn of this seat's round still kept; same door as /api/dungeon/platz",

@@ -53,6 +53,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/runde             {titel, welt, einstieg, ton, zug_s, stunden, prompt?, held, lang}
     GET    /api/profile/dungeon/{rid}             the round as the own seat sees it (the page polls)
     POST   /api/profile/dungeon/{rid}/aktion      {text, zug}
+    POST   /api/profile/dungeon/{rid}/mehrzeit    one more minute for this turn, once per seat (MEHR_S)
     POST   /api/profile/dungeon/{rid}/held        {was: anlegen|ablegen|trinken|wirken|schenken|punkt|faehigkeit|
                                                    tauschen|annehmen|ablehnen|stimme|kaufen|verkaufen|
                                                    erkennen|aufheben|fallen, ...}
@@ -81,7 +82,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
-    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/dungeon/platz|beitreten|lage|aktion|mehrzeit|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
@@ -238,6 +239,13 @@ BILD_MAX = 300            # the model's description of a picture (English)
 KAPITEL_BILDER = 20       # chapter covers a campaign keeps
 ORTE_KARTE = 20           # places of a chapter a campaign keeps (dungeon_karte.names)
 ERINNERN_S = 6 * 3600     # a turn open this long without the seat's action: one reminder
+# Dominik 2026-10-24 „die interaktion geht zu schnell weg“ („1-5“): the turn's time starts after a reading time that
+# grows with the narration, the last action closes the turn only GNADE_S later („Ändern“ still works), and each seat
+# may ask once a turn for MEHR_S more (everyone sees who)
+LESE_S = (15, 60, 90)     # reading time: 15 s plus 1 s per 60 characters of the narration, at most 90 s
+GNADE_S = 10
+MEHR_S = 60
+WARN_S = 30               # the clock turns red and a phone vibrates once
 TERMIN_VOR = 15 * 60      # the note before the host's game date
 TERMIN_TAGE = 60          # the date at most this far ahead
 BILD_STIL = "painted storybook illustration, soft light, rich colours"   # a world without its own bildstil
@@ -2124,13 +2132,39 @@ def plan_facts(rd):
 
 
 # ---------------------------------------------------------------- a turn
+def read_s(text):
+    """The reading time of a narration in seconds (LESE_S)."""
+    return min(LESE_S[2], LESE_S[0] + len(text or "") // LESE_S[1])
+
+
+def _narrated(rd):
+    """A new turn opens after a narration: its reading time counts first, nobody asked for more yet."""
+    last = next((e for e in reversed(rd["log"]) if e.get("art") == "dm"), None)
+    rd["zug_t"] = time.time()
+    rd["lesen"] = read_s(last["text"]) if last else 0
+    rd["mehr"] = {}
+
+
+def turn_start(rd):
+    """When the turn's time starts to run: after the reading time."""
+    return rd.get("zug_t", 0) + rd.get("lesen", 0)
+
+
+def turn_end(rd):
+    """When the turn's time is over: start, the round's seconds and a minute for each seat that asked for more."""
+    return turn_start(rd) + rd["zug_s"] + MEHR_S * len(rd.get("mehr") or {})
+
+
 def due(rd, now):
     """Whether the turn closes now by the fixed rule: everyone with a hero acted, or the timer ran out with at least
-    one action (never while paused, never while the Dungeon Master answers)."""
+    one action (never while paused, never while the Dungeon Master answers); the last action closes it only GNADE_S
+    after it was written, so „Ändern“ still works."""
     if rd["status"] != "laeuft" or rd.get("pause") or rd.get("dm") or not rd["offen"]:
         return False
     players = [pid for pid, p in seated(rd) if not p.get("ruht")]   # „Nicht mehr warten“ of the host: not waited for
-    return all(pid in rd["offen"] for pid in players) or now - rd.get("zug_t", now) >= rd["zug_s"]
+    if all(pid in rd["offen"] for pid in players):
+        return now - max(x.get("t", 0) for x in rd["offen"].values()) >= GNADE_S
+    return now >= turn_end(rd)
 
 
 def act(rd, pid, text, turn, now):
@@ -2599,7 +2633,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
             rd["still"][pid] = 0 if pid in rd["offen"] else rd["still"].get(pid, 0) + 1
         rd["offen"] = {}
         rd["zug"] += 1
-    rd["zug_t"] = time.time()
+    _narrated(rd)
 
 
 def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
@@ -2800,7 +2834,7 @@ async def run_prolog(rid):
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
                 warten.end(cur)
-                cur["zug_t"] = time.time()            # the turn's time starts with the opening read
+                _narrated(cur)                        # the turn's time starts after the opening's reading time
                 _write(d)
         await asyncio.to_thread(keep)
         if said:
@@ -3480,7 +3514,7 @@ def due_notes(rd, now):
         if p.get("dran") != rd["zug"] and not rd.get("dm"):
             p["dran"] = rd["zug"]
             out.append((p["uid"], "dran"))
-        elif p.get("erinnert") != rd["zug"] and now - rd.get("zug_t", now) >= (rd["zug_s"] // 2 if rd["offen"] else ERINNERN_S):
+        elif p.get("erinnert") != rd["zug"] and now - turn_start(rd) >= (rd["zug_s"] // 2 if rd["offen"] else ERINNERN_S):
             p["erinnert"] = rd["zug"]
             out.append((p["uid"], "erinnert"))
     t = rd.get("termin") or 0
@@ -3606,14 +3640,20 @@ def view(rid, pid, now=None):
                             gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"], ruht=bool(p.get("ruht")),
                             online=p_id == pid or now - _seen.get(p_id, 0) < ONLINE_S,
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
-    left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
+    runs = rd["offen"] and not rd.get("pause")
+    left = max(0, int(turn_end(rd) - max(now, turn_start(rd)))) if runs else rd["zug_s"] + MEHR_S * len(rd.get("mehr") or {})
+    alle = bool(rd["offen"]) and all(x in rd["offen"] for x, p in seated(rd) if not p.get("ruht"))
+    gnade = max(0, int(GNADE_S - (now - max(x.get("t", 0) for x in rd["offen"].values())))) if alle and not rd.get("pause") else 0
+    mehr = [rd["plaetze"][x]["held"]["name"] for x in (rd.get("mehr") or {}) if (rd["plaetze"].get(x) or {}).get("held")]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
     out = {"rid": rid, "pid": pid, "gastkonto": not me.get("uid") and gastkonto.on(), "im_konto": bool(me.get("konto")), "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
             "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),
-            "rest": left, "zug_s": rd["zug_s"], "szene": rd["szene"], "gastgeber": host, "lang": lang,
+            "rest": left, "zug_s": rd["zug_s"], "lesen": max(0, int(turn_start(rd) - now)) if not rd.get("dm") else 0, "gnade": gnade,
+            "mehr": mehr, "mehr_ich": bool(pid) and pid in rd["plaetze"] and pid not in (rd.get("mehr") or {}) and not rd.get("dm"),
+            "warn_s": WARN_S, "szene": rd["szene"], "gastgeber": host, "lang": lang,
             "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
@@ -4238,6 +4278,43 @@ async def aktion(rid: str, request: Request, prof=Depends(browser_profile)):
     return await _act(rid, lambda: _seat_uid(rid, uid), b)
 
 
+def more_time(rid, pid):
+    """One more minute for the open turn, once per seat and turn (Dominik 2026-10-24 „1-5“, point 4)."""
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["status"] != "laeuft" or rd.get("dm") or not (rd["plaetze"].get(pid) or {}).get("held"):
+            print("dungeon: mehrzeit | nicht jetzt", flush=True)
+            raise TimeoutError("zug")
+        mehr = rd.setdefault("mehr", {})
+        if pid in mehr:
+            print("dungeon: mehrzeit | schon", flush=True)
+            raise FileExistsError("mehrzeit")
+        mehr[pid] = rd["zug"]
+        _write(d)
+    print("dungeon: mehrzeit | ok", flush=True)
+
+
+async def _more(rid, seat):
+    def go():
+        pid = seat()
+        more_time(rid, pid)
+        return view(rid, pid)
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/mehrzeit", dependencies=[Depends(assistant)])
+async def mehrzeit(rid: str, request: Request, prof=Depends(browser_profile)):
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    await json_body(request, BODY)
+    return await _more(rid, lambda: _seat_uid(rid, uid))
+
+
 async def _act(rid, seat, b):
     def go():
         pid = seat()
@@ -4315,7 +4392,7 @@ async def pause(rid: str, request: Request, prof=Depends(browser_profile)):
             if rd["owner"] != uid or rd["status"] == "ende":
                 raise LookupError("gastgeber")
             rd["pause"] = bool(b.get("an"))
-            rd["zug_t"] = time.time()
+            rd["zug_t"], rd["lesen"] = time.time(), 0
             _write(d)
         print(f"dungeon: pause | {'an' if b.get('an') else 'aus'}", flush=True)
         return view(rid, _seat_uid(rid, uid))
@@ -4994,6 +5071,12 @@ async def gast_lage(request: Request):
 async def gast_aktion(request: Request):
     b, rid, pid = await _guest(request)
     return await _act(rid, lambda: pid, b)
+
+
+@router.post("/api/dungeon/mehrzeit")
+async def gast_mehrzeit(request: Request):
+    b, rid, pid = await _guest(request)
+    return await _more(rid, lambda: pid)
 
 
 @router.post("/api/dungeon/held")
