@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.016** · 2026-10-24 · KI-Dungeon-Master: Vorlesen am Tisch wieder hörbar (die Freischalt-Stille kam als data: und die Sicherheitsregel des Panels blockierte sie), der Tisch bricht bei kleiner Breite sauber um statt Wort für Wort, Prompt-Regel „als JSON“ weg und neu „keine Werte außerhalb der Fakten“
 - **V01.1.015** · 2026-10-24 · Modell-Start robuster: kann das Panel refs/main oder die Hub-Dateiliste eines Modells nicht ändern (etwa von root angelegt), schreibt es nur eine Logzeile, die Engine startet trotzdem
 - **V01.1.014** · 2026-10-24 · KI-Dungeon-Master: Wächter und Herr im Gewölbe kämpfen mit Gegnern aus dem Bestiarium nach der Gruppenstufe, erst der Sieg im Kampf öffnet den Raum; Fallen als Rettungswurf wie bei D&D (geschafft halber Schaden, Rüstung zählt nicht)
 - **V01.1.013** · 2026-10-24 · KI-Dungeon-Master: Kampf nach festen Regeln, das Panel stellt Begegnungen nach Budget aus dem Bestiarium zusammen, würfelt jeden Angriff gegen die Rüstungsklasse (10 + Rüstung + Geschick) und lässt die Gegner zurückschlagen, Leiste mit dem Leben der Gegner, Erfahrung aus dem Bestiarium geteilt durch die Helden, Stufen wie bei D&D; jeder Prolog malt sein Szenenbild gleich mit, „🔊 Ton an“ schaltet den Ton jetzt auch in Safari frei, der Auftrag gilt erst gegen Ende der Geschichte als erfüllt

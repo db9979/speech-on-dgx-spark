@@ -511,7 +511,6 @@ class Permadeath(Turns):
         eh = next(x for x in lage["ich"]["kann"]["faehigkeiten"] if x["id"] == "eisenhaut")
         self.assertTrue(eh["immer"])
         self.set_hero(self.host, leben=20, leben_max=20, faehigkeiten=["eisenhaut", "schildwall", "kampfschrei"])
-        schutz = dungeon.schutz(r, self.state(self.rid)["plaetze"][self.host]["held"])
         z = self.state(self.rid)["zug"]
         self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich setze Schildwall ein und decke Bela.", "zug": z})
         self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich zaubere.", "zug": z})
@@ -520,7 +519,7 @@ class Permadeath(Turns):
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid springt vor Bela, der Hieb kracht auf seinen Schild.",
                                          "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], bela0)                 # taken by Arvid
-        self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 20 - max(0, max(1, 6 - schutz) - 1))
+        self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 20 - (6 - 1))          # armour works on the attack roll (dungeon_kampf.rk), Eisenhaut takes 1
         self.assertEqual([e for e in rd["log"] if e["art"] == "kraft"][-1]["fuer"], "Bela")
         # once a scene: the same place refuses it with a line for that seat
         z = rd["zug"]
@@ -3617,7 +3616,7 @@ class Windows(unittest.TestCase):
 
         async def go():
             async with async_playwright() as pw:
-                for w, ht in ((1280, 900), (390, 844)):
+                for w, ht in ((1280, 900), (1000, 800), (390, 844)):
                     br, pg, errors = await b.page(pw, w, ht)
                     try:
                         await pg.evaluate("try{localStorage.removeItem('dm-hilfe');localStorage.setItem('dm-seite','host')}catch(e){};goSec('dungeon')")
@@ -3645,6 +3644,14 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-tisch>.dm-ton').length"), 0, w)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-side .dm-left,#dmview .dm-side .dm-round').length"), 0, w)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-left').length"), 1, w)            # the clock once
+                        # the head wraps before the title gets narrow, nothing lies over it (Dominik 2026-10-24 „bei kleinerer auflösung“)
+                        head = ("(()=>{const t=document.querySelector('#dmview .dm-htitle').getBoundingClientRect(),o=[...document.querySelectorAll('#dmview .dm-head>*:not(.dm-htitle)')]"
+                                ".map(e=>e.getBoundingClientRect()).filter(r=>r.width&&r.height);return t.width>=Math.min(280,innerWidth-60)&&"
+                                "!o.some(r=>r.left<t.right-1&&r.right>t.left+1&&r.top<t.bottom-1&&r.bottom>t.top+1)})()")
+                        self.assertTrue(await pg.evaluate(head), w)
+                        story = ("(()=>{const g=document.querySelector('#dmview .dm-grid').getBoundingClientRect().width;"
+                                 "return document.querySelector('#dmview .dm-story').getBoundingClientRect().width>=Math.min(420,g-2)})()")
+                        self.assertTrue(await pg.evaluate(story), w)                                      # the story never a narrow strip
                         self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('fab')).display"), "none", w)   # no face at the table
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-group .dm-ichz').length"), 1, w)
                         if await pg.evaluate("!!document.querySelector('#dmview [data-dmseite=host]')"):
@@ -4422,6 +4429,14 @@ class Fight(Turns):
         kampf.end(dungeon, r, rd, {self.host: 0}, "flucht")                               # fled: the way stays shut
         self.assertNotIn("sieg", rd)
         self.assertIn("raum_gegner", rd)
+
+    def test_table_sound_only_from_sources_the_csp_allows(self):
+        """The panel's CSP allows media only from 'self' and blob: (Dominik 2026-10-24, Chrome blocked the silent data:
+        file, nothing was read aloud): no data: audio in the table's scripts."""
+        js = os.path.join(os.path.dirname(dungeon.__file__), "static", "js")
+        for f in ("dungeon.js", "dungeon-ton.js", "dungeonwarten.js"):
+            self.assertNotIn("data:audio", open(os.path.join(js, f), encoding="utf-8").read(), f)
+        self.assertIn("media-src 'self' blob:", open(os.path.join(os.path.dirname(dungeon.__file__), "panel.py"), encoding="utf-8").read())
 
     def test_the_quest_is_not_done_after_one_goal_early_in_the_story(self):
         r = dungeon.rules()

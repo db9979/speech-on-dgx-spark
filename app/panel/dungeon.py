@@ -1090,11 +1090,6 @@ def wear_off(rd):
         h["segen"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("segen") or [] if x["zuege"] > 1]
 
 
-def schutz(r, h):
-    """Protection of everything worn: armour, helmet, shield, gauntlets, boots (an unknown item only its base)."""
-    return sum(_c(r, it).get("schutz", 0) + (0 if it.get("u") else it.get("bonus", 0)) for it in worn(h) if _c(r, it)["art"] == "ruestung")
-
-
 def zustand(h):
     """A hero's state by the panel (Punkt 1 of 2026-10-24): "" up, "boden" at 0 life, "ohnmacht" unconscious until its
     next table (the children's table), "tot" dead for good."""

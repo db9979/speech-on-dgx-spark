@@ -5525,6 +5525,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Vorlesen wieder hörbar, Tisch bei kleiner Breite, Prompt ohne JSON-Regel (V01.1.016, Dominik 2026-10-24 „Aktuell werden Texte nicht mehr gesprochen“, Chrome-Konsole „violates … media-src 'self' blob:“, „bei kleinerer auflösung sieht die seite schrecklich aus“, „1 2“): Vorlesen: Die kurze Stille, mit der „🔊 Ton an“ den Player freischaltet, kam als data:-Adresse. Die Sicherheitsregel des Panels (CSP media-src 'self' blob:) blockiert das in jedem Browser, der Player blieb gesperrt, und kein Teil wurde abgespielt, obwohl der Spark jeden fertig sprach. Jetzt entsteht die Stille beim Tippen als blob: (dmStill). Selbsttest Fight.test_table_sound_only_from_sources_the_csp_allows (kein data:audio in den Skripten des Tischs). Tisch bei kleiner Breite: Der Kopf bricht um, bevor der Titel schmaler als 320 px wird; Musik, Ton und Knöpfe rücken in eine zweite Zeile und liegen nie über dem Titel. Die drei Spalten richten sich nach der Breite des Tischs selbst, nicht des Fensters (neben dem Menü bleiben am Laptop rund 700 px): bis 1060 px zwei Spalten mit der Gruppe als Zeile oben, bis 720 px eine Spalte. Browser-Test bei 1280, 1000 und 390 px. Prompt: In den Regeln (Funktionen "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "→ KI-Dungeon-Master → Regeln anpassen) fällt Regel 4 „Formatiere als JSON“ weg, das feste Schema regelt das genauer; neu ist Regel 7 „Erfinde keine Werte, Gegenstände oder Gegner außerhalb der Fakten; das Panel verwirft sie.“ dungeon.schutz ist weg: Rüstung wirkt über die Rüstungsklasse."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Szenenbild im Prolog, „🔊 Ton an“ (V01.1.013, Dominik 2026-10-24 „Male während des Prologes das Szenenbild gleich immer mit“, „passiert aber nichts“): Jeder Prolog (neue Runde, nächstes Kapitel) malt sein Szenenbild gleich mit, in den Grenzen von „Bilder malen“ (may_paint): mit dem Bildtext des Modells, ohne ihn aus Ort und Stimmung der Szene (scene_text, dieselbe Quelle wie „Szenenbild jetzt malen“). Lehnt die Prüfung den Bildtext des Modells ab, malt der Prolog nichts, auch nicht den Ort. Log dungeon: bild | prolog | ok oder mit dem Grund (aus, malt, leer, person …). „🔊 Ton an“ schaltet den Ton mit einer echten, 0,1 s langen Stille frei (die leere Datei spielte Safari nicht ab, der Knopf blieb gesperrt) und weckt den Audio-Kontext; nur eine Ablehnung des Browsers (NotAllowedError) lässt ihn gesperrt. Selbsttest Pictures.test_every_opening_paints_its_scene. Auftrag erst am Ende erfüllt (Dominik 2026-10-24 „Wieso ist ein Auftrag direkt nach dem zweiten Zug erledigt?“): Ein Ziel, das das Modell meldet (erfolg „ziel“), hakte bisher sofort den angehefteten Auftrag ab, auch wenn nur eine Spur gefunden war. Jetzt gilt eine feste Regel (quest_may_end): mit einem Geschic"
 },
 {
@@ -18126,6 +18142,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: reading aloud audible again, table at small widths, prompt without the JSON rule (V01.1.016, Dominik 2026-10-24 \"Aktuell werden Texte nicht mehr gesprochen\", Chrome console \"violates … media-src 'self' blob:\", \"bei kleinerer auflösung sieht die seite schrecklich aus\", \"1 2\"): Reading aloud: The short silence with which \"🔊 Sound on\" unlocks the player came as a data: address. The panel's security rule (CSP media-src 'self' blob:) blocks that in every browser, the player stayed locked and no piece played, although the Spark spoke every one. Now the silence is made on the tap as a blob: (dmStill). Self-test Fight.test_table_sound_only_from_sources_the_csp_allows (no data:audio in the table's scripts). Table at small widths: The head wraps before the title gets narrower than 320 px; music, sound and buttons move into a second row and never lie over the title. The three columns follow the table's own width, not the window's (next to the menu a laptop leaves about 700 px): up to 1060 px two columns with the group as a row on top, up to 720 px one column. Browser test at 1280, 1000 and 390 px. Prompt: In the rules (Funktionen → KI-Dungeon-Master → Regeln anpassen) rule "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "4 \"format as JSON\" goes, the fixed schema rules that more precisely; new is rule 7 \"Invent no values, items or foes outside the facts; the panel drops them.\" dungeon.schutz is gone: armour works through the armour class."
 },
 {
 "lang": "en",
