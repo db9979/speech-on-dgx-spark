@@ -1460,6 +1460,9 @@ struct MailFolders: View {
                                             Label("Alle Mails hier einordnen", systemImage: "tray.and.arrow.down")
                                         }
                                     }
+                                    if sort.undo > 0 && !sort.going && sort.undoAccount == f.account && sort.undoFolder == f.name {
+                                        Button { sortAsk = "back" } label: { Label("Einordnen rückgängig (\(sort.undo))", systemImage: "arrow.uturn.backward") }
+                                    }
                                     if f.own {
                                         Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }
                                     }
@@ -1653,10 +1656,12 @@ struct MailSortRun {
         if let u = d["undo"] as? [String: Any] {
             undo = u["n"] as? Int ?? 0
             undoFolder = u["folder"] as? String ?? ""
+            undoAccount = u["account"] as? String ?? ""
         }
     }
     var going: Bool { ["scan", "move", "back"].contains(state) }
-    var shown: Bool { !state.isEmpty || undo > 0 }
+    var shown: Bool { !state.isEmpty }   // only while a run is there; „Rückgängig“ of the last run stays at its folder
+    var undoAccount = ""
     var into: Int { by.reduce(0) { $0 + $1.1 } }
     static func name(_ f: String) -> String { f.isEmpty || f.uppercased() == "INBOX" ? String(localized: "Posteingang") : f }
 }

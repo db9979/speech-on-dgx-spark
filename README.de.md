@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.995** E-Mail: die Einordnen-Leiste über der Liste verschwindet nach dem Lauf mit „Schließen“; „Einordnen rückgängig“ bleibt im „⋯“ des eingeordneten Ordners (Panel und iPhone)
 - **V01.0.994** KI-Dungeon-Master: der eigene Würfel landet auf der Zahl, die zählt, bei Vorteil oder Nachteil zeigen Wurf und Protokoll beide Würfel, natürliche 20 und 1 stehen unter der Leiste, dieselbe Probe im nächsten Zug ist ein neuer Wurf
 - **V01.0.993** KI-Dungeon-Master: die Karte zieht mit, wenn der Erzähler den Weg erzählt, aber die Orts-id vergisst (Name oder Richtung aus dem Zug und Name in der Erzählung), der neue Ort bekommt sein Bild
 - **V01.0.992** Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.988** KI-Dungeon-Master: gemalte Bilder für Völker, Klassen und Fähigkeiten statt Zeichen, die gewählte Klasse groß mit Bild-Kacheln, Heldenbogen mit Porträt, Werte-Kacheln und Reitern, Kräfte mit eigenem Fenster und „Wirken“, eigene Aktion nach „Handeln“ als Karte mit „Ändern“, Mitspieler verwalten (neuer Link, nicht mehr warten, vom Tisch), Gast-Link über das ganze Fenster und abgesichert, Gast-Mail-Postfach wählbar
 - **V01.0.987** KI-Dungeon-Master: Prolog mit Halt (Auftrag, erste Spur, „Was ihr tun könnt“ als Knöpfe, Haken je Held, Auftrag angeheftet), getragene Dinge der Gruppe öffnen ihr Fenster mit Bild, Würfel und Boni farbig, Seitenspalte ruhiger
 - **V01.0.986** KI-Dungeon-Master: Karte als Pergament mit Gelände, Nebel, Kompass, Rahmen und Fähnchen, Stil je Welt (Pergament, fahles Papier, Seekarte, Sternkarte), Gewölbe mit Steinboden, Türen, Fackeln und Licht, sanfte Bewegung; „Gewölbe würfeln“ legt nur einen Eingang an, hinein erst mit der Aktion
-- **V01.0.985** E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 
 
 

@@ -17610,6 +17610,16 @@
           }
         }
       }
+    },
+    "Einordnen rückgängig (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the sorting (%lld)"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
