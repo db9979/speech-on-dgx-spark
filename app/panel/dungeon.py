@@ -116,6 +116,7 @@ import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
 import dungeon_gast as gastkonto
+import dungeon_auto as auto_car
 import coadmin
 import features
 import guard
@@ -4643,107 +4644,6 @@ def offers_for(r, rd, pid, lang):
     return out
 
 
-# ---------------------------------------------------------------- in the car (CarPlay, Dominik 2026-10-23 „Alles umsetzten“)
-# The car shows no text (Apple's rule for voice apps): the app reads the newest narration aloud, listens, and sends
-# what was said. A few fixed questions about the own hero are answered by the panel from its rules; everything else is
-# the action for the open turn. The model decides nothing here.
-AUTO_FRAGEN = (
-    ("leben", re.compile(r"(?i)\b(wie ?viel\w*\b.*\bleben|lebenspunkte|wie geht es (mir|meinem helden)|how much (life|health)|hit points|my health)\b")),
-    ("tasche", re.compile(r"(?i)\b(tasche|inventar|was trage ich|what do i carry|my bag|inventory)\b")),
-    ("trinken", re.compile(r"(?i)\b(trink\w*|drink\w*)\b.*\b(\w*trank|potion)\b")),
-    ("nochmal", re.compile(r"(?i)^\W*(wiederhol\w*|noch ?mal|nochmal( bitte)?|repeat( that)?|say (it|that) again)\W*$")),
-    ("warten", re.compile(r"(?i)\b(auf wen warten|wer fehlt|who are we waiting for|who is missing)\b")))
-AUTO_KURZ = 60              # only a short sentence is one of the fixed questions; a longer one is always the action
-AUTO_SAGEN = {
-    "keine": ("Du sitzt gerade in keiner laufenden Runde. Leg im Panel unter Dungeon-Master eine an oder nimm einen Platz.",
-              "You are not in a running round. Start one in the panel under Dungeon Master or take a seat."),
-    "dran": ("{name} ist dran. Was tust du?", "It is {name}'s turn. What do you do?"),
-    "leben": ("{name} hat {leben} von {max} Leben.", "{name} has {leben} of {max} life."),
-    "tasche": ("In der Tasche: {dinge}. Dazu {gold} Gold.", "In the bag: {dinge}. And {gold} gold."),
-    "leer": ("Die Tasche ist leer. Du hast {gold} Gold.", "The bag is empty. You have {gold} gold."),
-    "trank": ("{name} trinkt {trank} und hat jetzt {leben} von {max} Leben.", "{name} drinks {trank} and now has {leben} of {max} life."),
-    "kein_trank": ("Du hast keinen Trank in der Tasche.", "You have no potion in the bag."),
-    "noch_nichts": ("Der Dungeon-Master hat noch nichts erzählt.", "The Dungeon Master has not told anything yet."),
-    "warten": ("Wir warten noch auf {namen}.", "We are still waiting for {namen}."),
-    "alle": ("Alle haben gehandelt, der Dungeon-Master erzählt gleich.", "Everyone has acted, the Dungeon Master tells it shortly."),
-    "notiert": ("Notiert. Wir warten noch auf {namen}.", "Noted. We are still waiting for {namen}."),
-    "notiert_alle": ("Notiert. Der Dungeon-Master erzählt.", "Noted. The Dungeon Master is telling it."),
-    "erzaehlt": ("Der Dungeon-Master erzählt gerade, gleich bist du dran.", "The Dungeon Master is telling it right now, your turn comes shortly."),
-    "sagt": ("{name} sagt: {text}", "{name} says: {text}")}
-
-
-def _say(k, li, **kw):
-    return AUTO_SAGEN[k][li].format(**kw)
-
-
-def told(e, li):
-    """A narration as it is read aloud in the car: the text, then every NPC's line not already in it."""
-    return " ".join([e["text"]] + [_say("sagt", li, name=n["name"], text=n["sagt"]) for n in e.get("npc") or []
-                                   if not vortrag.in_text(n["sagt"], e["text"])])
-
-
-def car(uid, text="", nach=0, lang="de"):
-    """The game in the car for the profile's newest running round: without text the newest narration after the
-    number `nach` (or that it is the hero's turn); with text a fixed question about the own hero answered by the panel
-    or the action for the open turn. Returns {"sagen", "n", "warten", "aus"}: warten means the app asks again after a
-    moment without listening (the Dungeon Master is telling, or others still act)."""
-    r = rules()
-    li = 1 if lang == "en" else 0
-    seats = sorted(((rd.get("made", 0), rid, pid) for rid, rd in _read()["runden"].items() if rd.get("status") == "laeuft"
-                    for pid, p in rd["plaetze"].items() if p.get("uid") == uid and p.get("held")), reverse=True)
-    if not seats:
-        return {"sagen": _say("keine", li), "n": 0, "warten": False, "aus": True}
-    _, rid, pid = seats[0]
-    maybe_close(rid)
-    rd = _read()["runden"][rid]
-    li = 1 if rd["lang"] == "en" else 0
-    h = rd["plaetze"][pid]["held"]
-    erz = [e for e in rd["log"] if e["art"] == "dm"]
-    last = erz[-1] if erz else None
-    n = last.get("k", 0) if last else 0
-    names = [p["held"]["name"] for q, p in seated(rd) if q not in rd["offen"]]
-    out = lambda k, warten=False, **kw: {"sagen": _say(k, li, **kw), "n": n, "warten": warten, "aus": False}
-    text = _clean(text, TEXT_MAX)
-    if not text:
-        if last and n > nach:
-            return {"sagen": told(last, li), "n": n, "warten": False, "aus": False}
-        if rd.get("dm") or pid in rd["offen"]:
-            return {"sagen": "", "n": n, "warten": True, "aus": False}
-        return out("dran", name=h["name"])
-    kind = next((k for k, rx in AUTO_FRAGEN if rx.search(text)), "aktion") if len(text) <= AUTO_KURZ else "aktion"
-    _day.bump("auto")
-    print(f"dungeon: auto | {kind}", flush=True)
-    if kind == "leben":
-        return out("leben", name=h["name"], leben=h["leben"], max=h["leben_max"])
-    if kind == "tasche":
-        dinge = [(f"{x['n']} " if x.get("n", 1) > 1 else "") + item_view(r, x, rd["lang"])["name"] for x in h["tasche"]]
-        return out("tasche", dinge=", ".join(dinge[:8]), gold=h["gold"]) if dinge else out("leer", gold=h["gold"])
-    if kind == "trinken":
-        tr = [x for x in h["tasche"] if _c(r, x)["art"] == "trank"]
-        tr.sort(key=lambda x: not _c(r, x).get("heilung"))
-        if not tr:
-            return out("kein_trank")
-        name = item_view(r, tr[0], rd["lang"])["name"]
-        hero_act(rid, pid, {"was": "trinken", "i": tr[0]["i"]})
-        h = _read()["runden"][rid]["plaetze"][pid]["held"]
-        return out("trank", name=h["name"], trank=name, leben=h["leben"], max=h["leben_max"])
-    if kind == "nochmal":
-        return {"sagen": told(last, li), "n": n, "warten": False, "aus": False} if last else out("noch_nichts")
-    if kind == "warten":
-        return out("warten", namen=", ".join(names)) if names else out("alle")
-    if rd.get("dm"):
-        return out("erzaehlt", warten=True)
-    with _lock:
-        d = _read()
-        cur = _round(d, rid)
-        act(cur, pid, text, cur["zug"], time.time())
-        _write(d)
-    maybe_close(rid)
-    rd = _read()["runden"][rid]
-    names = [p["held"]["name"] for q, p in seated(rd) if q not in rd["offen"]]
-    return out("notiert", warten=True, namen=", ".join(names)) if names and not rd.get("dm") else out("notiert_alle", warten=True)
-
-
 # ---------------------------------------------------------------- Live and own data
 def for_live():
     """Running rounds, seats with a hero, seats online, guests; turns, loot, levels and fallbacks today (numbers)."""
@@ -4915,16 +4815,22 @@ async def neue_runde(request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/dungeon/auto", dependencies=[Depends(assistant)])
 async def auto(request: Request, prof=Depends(browser_profile)):
-    """The game in the car (CarPlay): the iPhone app reads aloud what comes back and listens (car)."""
+    """The game in the car (CarPlay, dungeon_auto.py): the iPhone app reads aloud what comes back and listens."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeonauto", uid)
     b = await json_body(request, BODY)
     nach = b.get("nach") if isinstance(b.get("nach"), int) and not isinstance(b.get("nach"), bool) else 0
+    rid = b.get("rid") if isinstance(b.get("rid"), str) and _RID.fullmatch(b["rid"]) else ""
+    wahl = [g for g in b.get("wahl") or [] if isinstance(g, str)][:auto_car.WAHL] if isinstance(b.get("wahl"), list) else None
     try:
-        return await asyncio.to_thread(car, uid, str(b.get("text") or ""), nach, _lang(b))
+        out = await asyncio.to_thread(auto_car.car, uid, str(b.get("text") or ""), nach, _lang(b), rid, b.get("ok") is True,
+                                      b.get("neu") is True, wahl)
     except KNOWN as e:
         raise _http(e)
+    if out.pop("prolog", None):          # a new round chosen in the car opens like one made at the table
+        _go(run_prolog(out["rid"]), name="dungeon-prolog")
+    return out
 
 
 @router.get("/api/profile/dungeon/{rid}", dependencies=[Depends(assistant)])

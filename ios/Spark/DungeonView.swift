@@ -46,13 +46,19 @@ final class DungeonModel: ObservableObject {
     @Published var error: String?
     @Published var play: PanelPlace?
 
-    private func take(_ d: [String: Any]) {
+    /// The own rounds of GET /api/profile/dungeon (also the rows of „Dungeon-Master“ in the car, CarPlayScene).
+    static func runden(_ d: [String: Any]) -> [DMRunde] {
         let n = { (x: Any?) in (x as? NSNumber)?.intValue ?? 0 }
-        runden = (d["runden"] as? [[String: Any]] ?? []).prefix(40).map {
+        return (d["runden"] as? [[String: Any]] ?? []).prefix(40).map {
             DMRunde(id: $0["rid"] as? String ?? "", titel: $0["titel"] as? String ?? "", laeuft: $0["status"] as? String == "laeuft",
                     zug: n($0["zug"]), kapitel: n($0["kapitel"]), spieler: n($0["spieler"]), held: $0["held"] as? String ?? "",
                     host: $0["gastgeber"] as? Bool ?? false)
         }
+    }
+
+    private func take(_ d: [String: Any]) {
+        let n = { (x: Any?) in (x as? NSNumber)?.intValue ?? 0 }
+        runden = Self.runden(d)
         helden = (d["helden"] as? [[String: Any]] ?? []).prefix(20).map {
             DMHeld(id: $0["hid"] as? String ?? "", name: $0["name"] as? String ?? "",
                    art: [$0["volk"] as? String ?? "", $0["klasse"] as? String ?? ""].filter { !$0.isEmpty }.joined(separator: " "),
@@ -226,7 +232,7 @@ struct DMBild: View {
         .clipShape(RoundedRectangle(cornerRadius: width == nil ? 10 : 22))
         .accessibilityLabel(Text("Bild"))
         .task(id: path) {
-            guard let api = SparkAPI.current, let d = try? await api.dungeonPicture(path) else { return }
+            guard let api = SparkAPI.current, let d = try? await api.dungeonFile(path) else { return }
             image = UIImage(data: d)
         }
     }

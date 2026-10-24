@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.022** · 2026-10-24 · CarPlay Dungeon-Master: Runde im Auto wählen und neu anlegen, „Passt das?“ vor jeder Aktion, mehr Sprachbefehle (Kampfstand, Wohin, Anlegen, Wirken, Aufheben, Trank an Freund, Händler, Wertpunkt, Fähigkeit, „Jetzt weiter“), Zusammenfassung nach der Erzählung, Stimmen der Runde, Warten ohne 10-Minuten-Grenze
 - **V01.1.021** · 2026-10-24 · KI-Dungeon-Master: Gegner und Beute öffnen ein großes Fenster zum Betrachten (Bild, Werte, sechs Werte, was er bewirken kann, Blättern), Nebenfiguren klingen mit VoiceDesign verschiedener (Sprechtempo, mehr Klangfarben)
 - **V01.1.020** · 2026-10-24 · KI-Dungeon-Master: die Wege von hier mit Richtung und Ziel auch für die Sprache (dungeon_karte.wege, für CarPlay), nie ein Ort im Nebel
 - **V01.1.019** · 2026-10-24 · KI-Dungeon-Master: Würfelprobe zeigt groß, wofür gewürfelt wird, Figuren sprechen Zitate so, wie der Text es sagt (flüstert, ruft, stammelt …), Werte auf Volk- und Klassenkacheln als Chips, Übersicht mittig mit Vollbild, Ausrüstung nur am passenden Körperteil (eigener Gürtelplatz)

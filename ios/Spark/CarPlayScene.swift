@@ -159,6 +159,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             Self.away = nil
             let talk = Conversation.shared
             talk.stop("Auto getrennt")
+            talk.leaveGame()
             talk.inCar = false
         }
     }
@@ -195,8 +196,8 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             }
             out.append(due)
         }
-        if areas.contains("dungeon") {   // KI-Dungeon-Master (dungeon.car): the newest narration, then the hero's action by voice
-            let game = CPListItem(text: String(localized: "Dungeon-Master spielen"), detailText: String(localized: "Erzählung hören, Aktion sprechen"),
+        if areas.contains("dungeon") {   // KI-Dungeon-Master (dungeon_auto.py): the own rounds, then narration and actions by voice
+            let game = CPListItem(text: String(localized: "Dungeon-Master spielen"), detailText: String(localized: "Runde wählen, Erzählung hören, Aktion sprechen"),
                                   image: UIImage(systemName: "shield.lefthalf.filled"))
             game.handler = { [weak self] _, done in
                 done()
@@ -239,10 +240,69 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         reachable { Conversation.shared.write(question, hint: hint) }
     }
 
-    /// „Dungeon-Master spielen“ (Dominik 2026-10-23 „Alles umsetzten“): the game of the own running round, spoken only.
+    /// „Dungeon-Master spielen“ (Dominik 2026-10-23 „Alles umsetzten“, 2026-10-24 Punkt 11): a list of the own running
+    /// rounds (one row each), „Neue Runde“ (the Spark offers three stories by voice) and, while a game is open, „Spiel
+    /// verlassen“. A round is played spoken only; the rows come from GET /api/profile/dungeon like in the app.
     private func playGame() {
         AudioEngine.note("CarPlay: Knopf Dungeon")
-        reachable { Conversation.shared.startGame() }
+        reachable { [weak self] in
+            Task { [weak self] in
+                let rounds: [DMRunde]
+                if let api = SparkAPI.current,
+                   let d = try? await api.object("GET", "/api/profile/dungeon", query: Conversation.gameLang == "en" ? ["lang": "en"] : [:], body: nil) {
+                    rounds = DungeonModel.runden(d).filter { $0.laeuft && !$0.held.isEmpty }
+                } else {
+                    rounds = []
+                }
+                self?.gameList(rounds)
+            }
+        }
+    }
+
+    private func gameList(_ rounds: [DMRunde]) {
+        guard let interface else { return }
+        var rows: [CPListItem] = rounds.prefix(12).map { r -> CPListItem in
+            let row = CPListItem(text: r.titel, detailText: String(localized: "Zug \(r.zug) · \(r.held)"),
+                                 image: UIImage(systemName: "shield.lefthalf.filled"))
+            row.handler = { [weak self] _, done in
+                done()
+                self?.game(r.id, new: false)
+            }
+            return row
+        }
+        let new = CPListItem(text: String(localized: "Neue Runde"), detailText: String(localized: "Drei Geschichten zur Wahl"),
+                             image: UIImage(systemName: "plus"))
+        new.handler = { [weak self] _, done in
+            done()
+            self?.game("", new: true)
+        }
+        rows.append(new)
+        if Conversation.shared.gameOpen {
+            let leave = CPListItem(text: String(localized: "Spiel verlassen"), detailText: String(localized: "Die Runde läuft am Tisch weiter"),
+                                   image: UIImage(systemName: "xmark"))
+            leave.handler = { [weak self] _, done in
+                done()
+                self?.leaveGame()
+            }
+            rows.append(leave)
+        }
+        let sub = CPListTemplate(title: String(localized: "Dungeon-Master"), sections: [CPListSection(items: rows)])
+        interface.pushTemplate(sub, animated: true) { _, _ in }
+    }
+
+    /// A round from the list (rid) or „Neue Runde“: back to the main list, the game speaks.
+    private func game(_ rid: String, new: Bool) {
+        AudioEngine.note(new ? "CarPlay: Knopf Neue Runde" : "CarPlay: Knopf Runde")
+        interface?.popToRootTemplate(animated: true) { _, _ in }
+        reachable { Conversation.shared.startGame(rid, new: new) }
+    }
+
+    private func leaveGame() {
+        AudioEngine.note("CarPlay: Knopf Spiel verlassen")
+        interface?.popToRootTemplate(animated: true) { _, _ in }
+        let talk = Conversation.shared
+        talk.leaveGame()
+        if talk.phase != .idle && talk.phase != .waiting { talk.stop("Spiel verlassen") }
     }
 
     /// „Erinnerung sprechen“: listens at once, the voice window asks „Woran soll ich dich erinnern?“.

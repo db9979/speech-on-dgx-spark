@@ -5253,7 +5253,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "des Dungeon-Masters (Kopf „Prolog“): Ort mit allen Sinnen, Stimmung und Ausgangslage, jede Figur der Gruppe kommt darin vor, höchstens ein NPC spricht, am Ende eine Frage an die Gruppe. Das Modell bekommt dafür Welt, Gruppe, den Einstieg des Gastgebers, „Bisher geschah“ und den ersten Akt der Geschichte; geprüft wird er wie jede Erzählung, Schaden, Beute und Erfolge darin zählen nicht. Bis er steht, wartet der erste Zug (höchstens zwei Versuche), danach beginnt die Zugzeit; mit Vorlesen wird er gesprochen. Antwortet das Modell nicht, steht der Einstieg des Gastgebers oder der Inhalt des ersten Akts als Prolog da. Hing eine Runde nach einem Neustart des Panels beim Erzählen, gibt die nächste Anfrage sie frei. Log dungeon: prolog | ok | 4100 ms. Die Bildlaufleisten am Spieltisch haben jetzt die Farben der Welt. Im Auto (V01.0.963, Dominik 2026-10-23 „Alles umsetzten“): In CarPlay liest die Zeile „Dungeon-Master spielen“ die neueste Erzählung vor und nimmt die gesprochene Aktion an; kurze feste Fragen zum eigenen Helden (Leben, Tasche, Heiltrank trinken, wer fehlt, nochmal; höchstens 60 Zeichen, AUTO_FRAGEN) beantwortet das Panel mit festen Sätzen, alles andere ist die Aktion des offe"
+"text": "des Dungeon-Masters (Kopf „Prolog“): Ort mit allen Sinnen, Stimmung und Ausgangslage, jede Figur der Gruppe kommt darin vor, höchstens ein NPC spricht, am Ende eine Frage an die Gruppe. Das Modell bekommt dafür Welt, Gruppe, den Einstieg des Gastgebers, „Bisher geschah“ und den ersten Akt der Geschichte; geprüft wird er wie jede Erzählung, Schaden, Beute und Erfolge darin zählen nicht. Bis er steht, wartet der erste Zug (höchstens zwei Versuche), danach beginnt die Zugzeit; mit Vorlesen wird er gesprochen. Antwortet das Modell nicht, steht der Einstieg des Gastgebers oder der Inhalt des ersten Akts als Prolog da. Hing eine Runde nach einem Neustart des Panels beim Erzählen, gibt die nächste Anfrage sie frei. Log dungeon: prolog | ok | 4100 ms. Die Bildlaufleisten am Spieltisch haben jetzt die Farben der Welt. Im Auto (V01.0.963, Dominik 2026-10-23 „Alles umsetzten“): In CarPlay liest die Zeile „Dungeon-Master spielen“ die neueste Erzählung vor und nimmt die gesprochene Aktion an; kurze feste Fragen zum eigenen Helden (Leben, Tasche, Heiltrank trinken, wer fehlt, nochmal; höchstens 60 Zeichen, heute dungeon_auto.FRAGEN) beantwortet das Panel mit festen Sätzen, alles andere ist die A"
 },
 {
 "lang": "de",
@@ -5261,7 +5261,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "nen Zugs. Jede Erzählung hat dafür eine eigene Nummer (k). POST /api/profile/dungeon/auto ({text, nach, lang}, Antwort {sagen, n, warten, aus}), auch für die iPhone-App freigegeben, eigenes Rate-Limit dungeonauto (60 je Minute); Zustand → Live zählt die Schritte im Auto, Log dungeon: auto | leben."
+"text": "ktion des offenen Zugs. Jede Erzählung hat dafür eine eigene Nummer (k). POST /api/profile/dungeon/auto ({text, nach, lang}, Antwort {sagen, n, warten, aus}), auch für die iPhone-App freigegeben, eigenes Rate-Limit dungeonauto (60 je Minute); Zustand → Live zählt die Schritte im Auto, Log dungeon: auto | leben."
 },
 {
 "lang": "de",
@@ -6038,6 +6038,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "ve Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master im Auto (Punkte 8 bis 13, V01.1.022, Dominik 2026-10-24 „alles nach empfehlung umsetzten. 2b mit voice design für varianz.“): Alles fürs Auto steht jetzt in dungeon_auto.py (vorher in dungeon.py), der Endpunkt POST /api/profile/dungeon/auto bleibt ({text, nach, lang, rid, ok, neu, wahl}, Antwort {sagen, n, warten, aus, rid}, dazu bei Bedarf danach, ton, frage, weiter). Zusammenfassung (Punkt 8): Nach der Erzählung sagt das Panel aus dem Log seit der vorigen Erzählung mit festen Sätzen, was passiert ist (Würfe, Treffer, Schaden, Heilung, Beute, Stufe, am Boden, ohnmächtig, tot, wieder auf, Zauber, Sieg; höchstens EREIGNIS_MAX = 8) und wer dran ist. Rückfrage (Punkt 9): Jede Aktion und jeder Befehl, der etwas ändert (TUN), kommt zuerst als „… Passt das?“ zurück (frage); erst dieselbe Anfrage mit ok handelt. Befehle (Punkt 10, FRAGEN, nur bis 60 Zeichen, sonst ist es die Aktion): Kampfstand, Anlegen, Wirken (nur ein Zauber aus der eigenen Tasche), Aufheben, Trank an einen Freund, Händler mit Kaufen und Verkaufen, Wertpunkt, Fähigkeit beim Stufenaufstieg, Wege der Karte, „Jetzt weiter“ des Gastgebers. Jeder Befehl geht durch dieselben Regeln wie am Tisch (hero_act, ac"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "t, maybe_close); Namen findet das Panel nur unter den eigenen Dingen, den Waren des offenen Markts und den Plätzen der Runde. Runde wählen und neu anlegen (Punkt 11): rid wählt eine eigene Runde (nur ein eigener Platz zählt, sonst die neueste), neu bietet drei Geschichten an (WAHL), wahl nimmt nur Geschichten, die das Panel selbst angeboten hat; nach „ja“ legt make_round die Runde mit dem ersten freien Helden an, der Prolog startet. Stimmen (Punkt 12, „2b“): Ist Vorlesen in der Runde an, wartet das Auto bis zu TON_WARTEN = 90 Sekunden auf die Stücke der Runde (Erzähler und NPC-Stimmen aus Voice Design) und spielt sie (GET /api/profile/dungeon/{rid}/ton/{n}/{k}, jetzt auch für die iPhone-App frei), sonst liest die Spark-Stimme. Warten (Punkt 13): Die iPhone-App fragt ohne 10-Minuten-Grenze nach (4 Sekunden, nach 2 Minuten 10 Sekunden, bis 4 Stunden) und nur, solange nichts anderes läuft. Logs nur feste Wörter: dungeon: auto | anlegen | ok, dungeon: auto | kaufen | abgelehnt, dungeon: auto | neue runde | angeboten, dungeon: weiter | gastgeber | auto. Zustand → Live zählt die Schritte im Auto wie bisher. „Wohin können wir?“ sagt die Wege der Karte wie „Von hier aus“ am Tisch (dungeon_"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "karte.wege, nur was ein Platz sehen darf). Noch offen: „Runde pausieren“. Selbsttests test_dungeon_auto (Panel) und test_carplay.DungeonInTheCar (App)."
 },
 {
 "lang": "de",
@@ -11365,7 +11389,7 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "Stabil im Auto",
-"text": "fragt „Woran soll ich dich erinnern?“, deine Worte werden zu „Erinnere mich …“; nur mit Erinnerungen). - Briefing beim Einsteigen (App: Einstellungen → CarPlay, aus, nur dieses iPhone): einmal am Tag, ein paar Sekunden nach dem Verbinden, „Mein Tag“ von selbst. - Das Ton-Protokoll nennt jetzt jedes Gesprächsende mit Grund („Ende: Stille“, „fremde Stimme“, „Danke gesagt“, „Hinweis gesagt“, „zu langsam“, „Unterbrechung“, „Mikrofon stumm“, „Auto getrennt“ …), ein Ende ohne Grund mit der Zeile im Code, dazu „Zuhören“ und die Töne. - Dungeon-Master spielen (seit V01.0.963, Dominik 2026-10-23 „Alles umsetzten“): Die Zeile steht im Auto, solange der KI-Dungeon-Master für dich frei ist. Sie liest die neueste Erzählung deiner laufenden Runde vor (die neueste, in der du sitzt) und hört dann zu. Was du sagst, ist die Aktion deines Helden für den offenen Zug; danach sagt Spark „Notiert. Wir warten noch auf …“ und fragt alle 4 Sekunden nach, bis die nächste Erzählung da ist, die er dann vorliest (höchstens 10 Minuten). Kurze feste Fragen beantwortet das Panel nach seinen Regeln, nie das Modell: „Wie viel Leben habe ich?“, „Was ist in meiner Tasche?“, „Trink einen Heiltrank“, „Wer fehlt noch?“, "
+"text": "fragt „Woran soll ich dich erinnern?“, deine Worte werden zu „Erinnere mich …“; nur mit Erinnerungen). - Briefing beim Einsteigen (App: Einstellungen → CarPlay, aus, nur dieses iPhone): einmal am Tag, ein paar Sekunden nach dem Verbinden, „Mein Tag“ von selbst. - Das Ton-Protokoll nennt jetzt jedes Gesprächsende mit Grund („Ende: Stille“, „fremde Stimme“, „Danke gesagt“, „Hinweis gesagt“, „zu langsam“, „Unterbrechung“, „Mikrofon stumm“, „Auto getrennt“ …), ein Ende ohne Grund mit der Zeile im Code, dazu „Zuhören“ und die Töne. - Dungeon-Master spielen (seit V01.0.963, Dominik 2026-10-23 „Alles umsetzten“; ausgebaut in V01.1.022, Dominik 2026-10-24 „alles nach empfehlung umsetzten“, Punkte 8 bis 13 der Prüfung): Die Zeile steht im Auto, solange der KI-Dungeon-Master für dich frei ist. Sie öffnet eine Liste mit einer Zeile je laufender Runde, in der du einen Helden hast („Zug 12 · Uma“), dazu „Neue Runde“ und, solange ein Spiel offen ist, „Spiel verlassen“. Eine Runde liest die neueste Erzählung vor, in den Stimmen der Runde (Erzähler und Nebenfiguren wie am Tisch, wenn dort „Vorlesen“ an ist; sonst mit der Spark-Stimme), danach kurz, was passiert ist: Würfe, Treffer und Schaden, Hei"
 },
 {
 "lang": "de",
@@ -11373,7 +11397,7 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "Stabil im Auto",
-"text": "„Nochmal“. „Danke“ oder „Ende“ beendet das Spiel im Auto. Der Text steht danach wie immer am Tisch im Panel oder in der App. Ohne laufende Runde sagt Spark das und das Mikrofon bleibt zu. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit dem Schalter „Ton-Protokoll der App anhängen“ mit."
+"text": "lung, Beute, neue Stufe, wer am Boden liegt, Sieg (höchstens 8 Dinge, dann „Und mehr, am Tisch zu sehen“), und wer dran ist. Dann hört Spark zu. Rückfrage: Bevor eine Aktion oder ein Befehl abgeht, sagt das Auto, was es verstanden hat, etwa „Uma: Ich greife den Goblin an. Passt das?“. Erst „Ja“ schickt es ab, „Nein“ fragt „Was tust du stattdessen?“, ein anderer Satz ist die neue Aktion. Befehle (das Panel entscheidet nach seinen Regeln, nie das Modell): „Wie viel Leben habe ich?“, „Was ist in meiner Tasche?“, „Wie steht der Kampf?“, „Wohin können wir?“, „Trink einen Heiltrank“, „Gib Mira einen Heiltrank“, „Leg den Helm an“, „Wirke Feuerball“, „Heb das Seil auf“, „Was verkauft der Händler?“, „Kauf …“, „Verkauf …“, „Punkt auf Stärke“, „Die erste Fähigkeit“, „Wer fehlt noch?“, „Nochmal“, „Hilfe“; als Gastgeber „Jetzt weiter“ (schließt den Zug). Warten: Nach deiner Aktion sagt Spark „Notiert. Wir warten noch auf …, ich melde mich, wenn du dran bist“, das Mikrofon geht zu, und die App fragt von selbst nach (die ersten 2 Minuten alle 4 Sekunden, dann alle 10, bis zu 4 Stunden) und liest den neuen Zug vor, sobald er da ist; kein Abbruch mehr nach 10 Minuten. Fragst du zwischendurch etwas "
 },
 {
 "lang": "de",
@@ -17997,7 +18021,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "roup. The model gets world, group, the host's opening, \"The story so far\" and the story's first act; it is checked like every narration, damage, loot and successes in it do not count. The first turn waits until it stands (at most two tries), then the turn time starts; with reading aloud on it is spoken. When the model does not answer, the host's opening or the first act's content stands there as the prologue. When a round hung while narrating after a restart of the panel, the next request frees it. Log dungeon: prolog | ok | 4100 ms. The scroll bars at the table now have the world's colours. In the car (V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"): in CarPlay the row \"Play Dungeon Master\" reads the newest narration aloud and takes the spoken action; short fixed questions about the own hero (life, bag, drink a healing potion, who is missing, again; at most 60 characters, AUTO_FRAGEN) are answered by the panel with fixed sentences, everything else is the action of the open turn. For that every narration has its own number (k). POST /api/profile/dungeon/auto ({text, nach, lang}, answer {sagen, n, warten, aus}), also opened for the iPhone app, own rate limit dungeonauto (60 a minut"
+"text": "roup. The model gets world, group, the host's opening, \"The story so far\" and the story's first act; it is checked like every narration, damage, loot and successes in it do not count. The first turn waits until it stands (at most two tries), then the turn time starts; with reading aloud on it is spoken. When the model does not answer, the host's opening or the first act's content stands there as the prologue. When a round hung while narrating after a restart of the panel, the next request frees it. Log dungeon: prolog | ok | 4100 ms. The scroll bars at the table now have the world's colours. In the car (V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"): in CarPlay the row \"Play Dungeon Master\" reads the newest narration aloud and takes the spoken action; short fixed questions about the own hero (life, bag, drink a healing potion, who is missing, again; at most 60 characters, today dungeon_auto.FRAGEN) are answered by the panel with fixed sentences, everything else is the action of the open turn. For that every narration has its own number (k). POST /api/profile/dungeon/auto ({text, nach, lang}, answer {sagen, n, warten, aus}), also opened for the iPhone app, own rate limit dungeonau"
 },
 {
 "lang": "en",
@@ -18005,7 +18029,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "e); Status → Live counts the steps in the car, log dungeon: auto | leben."
+"text": "to (60 a minute); Status → Live counts the steps in the car, log dungeon: auto | leben."
 },
 {
 "lang": "en",
@@ -18734,6 +18758,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ck, healer, druid, bard, paladin, ranger) have a spell list per level (zauber, level 0 to 5, every spell carries its grad), warrior, rogue, barbarian and monk have none. Cantrips (level 0) work any number of times, from level 1 on charges per chapter by hero level count (ladungen, level 1: two charges of level 1, level 10: 4/3/3/3/2 as in the D&D table). The data is only data: rolls, damage and loot are still decided by the panel by its rules, the model only narrates. Self-test test_dungeon_srd: attribution in the file and in the docs, no address except the licence, no id shared with the base rules, check_rules on the merged rules empty, every weapon belongs to a class, every condition and starting item exists, every world has at least 15 foes from weak to strong. Attribution: *This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master in the car (points 8 to 13, V01.1.022, Dominik 2026-10-24 \"implement everything as recommended. 2b with voice design for variety.\"): everything for the car now lives in dungeon_auto.py (before in dungeon.py), the endpoint POST /api/profile/dungeon/auto stays ({text, nach, lang, rid, ok, neu, wahl}, answer {sagen, n, warten, aus, rid}, plus danach, ton, frage, weiter when they fit). Summary (point 8): after the narration the panel says with fixed sentences what happened, from the log since the previous narration (rolls, hits, damage, healing, loot, level, down, unconscious, dead, up again, spells, victory; at most EREIGNIS_MAX = 8) and whose turn it is. Asking back (point 9): every action and every command that changes something (TUN) first comes back as \"… Is that right?\" (frage); only the same request with ok acts. Commands (point 10, FRAGEN, only up to 60 characters, else it is the action): fight status, equip, cast (only a spell from the own bag), pick up, potion to a friend, merchant with buy and sell, stat point, ability at a level up, the map's ways, the host's \"Go on now\". Every command goes through the same rules as at the table (hero_act, act, maybe_close"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "); the panel finds names only among the own things, the wares of the open market and the seats of the round. Choosing and creating a round (point 11): rid picks an own round (only an own seat counts, else the newest), neu offers three stories (WAHL), wahl takes only stories the panel offered itself; after \"yes\" make_round creates the round with the first free hero, and the prologue starts. Voices (point 12, \"2b\"): with reading aloud on in the round, the car waits up to TON_WARTEN = 90 seconds for the round's pieces (narrator and NPC voices from Voice Design) and plays them (GET /api/profile/dungeon/{rid}/ton/{n}/{k}, now also open for the iPhone app), else the Spark voice reads. Waiting (point 13): the iPhone app asks again without the 10-minute limit (4 seconds, after 2 minutes 10 seconds, up to 4 hours) and only while nothing else runs. Logs only fixed words: dungeon: auto | anlegen | ok, dungeon: auto | kaufen | abgelehnt, dungeon: auto | neue runde | angeboten, dungeon: weiter | gastgeber | auto. Status → Live counts the steps in the car as before. \"Where can we go?\" says the map's ways as \"From here\" at the table (dungeon_karte.wege, only what a seat may see). Still open: \"Pau"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "se the round\". Self-tests test_dungeon_auto (panel) and test_carplay.DungeonInTheCar (app)."
 },
 {
 "lang": "en",
@@ -23901,7 +23949,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "Stable in the car",
-"text": "hould I remind you of?\", your words become \"Remind me …\"; only with reminders). - Briefing when getting in (app: Settings → CarPlay, off, only this iPhone): once a day, a few seconds after connecting, \"My day\" by itself. - The sound log now names every end of a conversation with its reason (\"Ende: Stille\", \"fremde Stimme\", \"Danke gesagt\", \"Hinweis gesagt\", \"zu langsam\", \"Unterbrechung\", \"Mikrofon stumm\", \"Auto getrennt\" …), an end without a reason with its line in the code, plus \"Zuhören\" and the tones. - Play Dungeon Master (since V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"): the row stands in the car while the AI Dungeon Master is released for you. It reads the newest narration of your running round aloud (the newest one you sit in) and then listens. What you say is your hero's action for the open turn; then Spark says \"Noted. We are still waiting for …\" and asks every 4 seconds until the next narration is there, which it then reads aloud (at most 10 minutes). The panel answers short fixed questions by its rules, never the model: \"How much life do I have?\", \"What is in my bag?\", \"Drink a potion\", \"Who is missing?\", \"Repeat\". \"Thanks\" or \"End\" ends the game in the car. The tex"
+"text": "hould I remind you of?\", your words become \"Remind me …\"; only with reminders). - Briefing when getting in (app: Settings → CarPlay, off, only this iPhone): once a day, a few seconds after connecting, \"My day\" by itself. - The sound log now names every end of a conversation with its reason (\"Ende: Stille\", \"fremde Stimme\", \"Danke gesagt\", \"Hinweis gesagt\", \"zu langsam\", \"Unterbrechung\", \"Mikrofon stumm\", \"Auto getrennt\" …), an end without a reason with its line in the code, plus \"Zuhören\" and the tones. - Play Dungeon Master (since V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"; extended in V01.1.022, Dominik 2026-10-24 \"implement everything as recommended\", points 8 to 13 of the review): the row stands in the car while the AI Dungeon Master is released for you. It opens a list with one row per running round you have a hero in (\"Turn 12 · Uma\"), plus \"New round\" and, while a game is open, \"Leave the game\". A round reads the newest narration aloud in the round's voices (narrator and side characters as at the table when \"Read aloud\" is on there; otherwise with the Spark voice), then briefly what happened: rolls, hits and damage, healing, loot, a new level, who is down, victory (at m"
 },
 {
 "lang": "en",
@@ -23909,7 +23957,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "Stable in the car",
-"text": "t then stands at the table in the panel or the app as always. Without a running round Spark says so and the microphone stays closed. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
+"text": "ost 8 things, then \"And more, to see at the table\"), and whose turn it is. Then Spark listens. Asking back: before an action or command goes out, the car says what it understood, for example \"Uma: I attack the goblin. Is that right?\". Only \"Yes\" sends it, \"No\" asks \"What do you do instead?\", another sentence is the new action. Commands (the panel decides by its rules, never the model): \"How much life do I have?\", \"What is in my bag?\", \"How is the fight?\", \"Where can we go?\", \"Drink a potion\", \"Give Mira a potion\", \"Put on the helmet\", \"Cast fireball\", \"Pick up the rope\", \"What does the merchant sell?\", \"Buy …\", \"Sell …\", \"Point in strength\", \"The first ability\", \"Who is missing?\", \"Repeat\", \"Help\"; as host \"Go on now\" (closes the turn). Waiting: after your action Spark says \"Noted. We are still waiting for …, I will tell you when it is your turn\", the microphone closes, and the app asks again by itself (every 4 seconds for the first 2 minutes, then every 10, up to 4 hours) and reads the new turn as soon as it is there; no more giving up after 10 minutes. If you ask something else in between, you leave the game. New round: Spark names three stories (\"Which one do you take?\"), you sa"
 },
 {
 "lang": "en",

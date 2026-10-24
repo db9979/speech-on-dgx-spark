@@ -203,5 +203,64 @@ class RoundTwo(unittest.TestCase):
         self.assertIn('static var carBriefing: Bool { get { d.bool(forKey: "carBriefing") }', read("Phone.swift"))
 
 
+class DungeonInTheCar(unittest.TestCase):
+    """KI-Dungeon-Master per CarPlay (Dominik 2026-10-24, Punkte 8-13): the app only carries the Spark's answers
+    (dungeon_auto.py decides everything, test_dungeon_auto), asks back before acting, waits without giving up."""
+
+    def test_only_yes_sends_what_was_said_back(self):
+        a = read("Assistant.swift")
+        self.assertIn('gameAsk = d["frage"] as? Bool == true ? sent : nil', body(a, "private func tellGame("))
+        self.assertIn('if gameAsk != nil && Self.yes(text) { playGame("", confirmed: true); return }', a)
+        self.assertIn("if gameAsk != nil && Self.no(text) { gameAsk = nil; sayGame(", a)
+        play = body(a, "private func playGame(")
+        self.assertIn('if confirmed, let ask = gameAsk { body = ask; body["ok"] = true }', play)
+        self.assertEqual(a.count('["ok"] = true'), 1)   # ok is sent nowhere else
+        self.assertIn("gameAsk = nil", body(a, "private func base("))
+
+    def test_leaving_the_game(self):
+        a = read("Assistant.swift")
+        self.assertIn("if inCar && Self.bye(text) || inCar && game && Self.leave(text)", a)
+        rx = re.search(r'static func leave\(_ t: String\) -> Bool \{\n\s*t\.lowercased\(\)\.range\(of: #"(.+?)"#', a).group(1)
+        for t in ("Pause", "Spiel beenden", "spiel verlassen", "Aufhören.", "leave the game"):
+            self.assertRegex(t.lower(), rx)
+        for t in ("Ich mache eine Pause am Feuer", "Uma hört auf den Wind", "Kampfstand"):
+            self.assertNotRegex(t.lower(), rx)
+        car = read("CarPlayScene.swift")
+        self.assertIn("talk.leaveGame()", body(car, "didDisconnectInterfaceController"))
+        self.assertIn("if !game { endWatch() }", body(a, "private func listen("))
+
+    def test_waiting_never_gives_up_after_ten_minutes(self):
+        a = read("Assistant.swift")
+        self.assertNotIn("gameMax", a)
+        self.assertIn("static let gameLong: TimeInterval = 4 * 3600", a)
+        self.assertIn("waitTurn()", body(a, "private func answered()"))
+        w = body(a, "private func waitTurn()")
+        self.assertIn('base("Spiel wartet")', w)
+        self.assertIn("gone < Self.gameQuick ? Self.gamePoll : Self.gameSlowPoll", w)
+        self.assertIn("guard self.inCar, gone < Self.gameLong else { break }", w)
+        self.assertEqual(w.count("guard self.phase == .idle || self.phase == .waiting else { continue }"), 2)   # never over a question
+
+    def test_the_rounds_own_voices(self):
+        a = read("Assistant.swift")
+        t = body(a, "private func tellGame(")
+        self.assertIn('api.dungeonFile("api/profile/dungeon/\\(rid)/ton/\\(n)/\\(i)")', t)
+        self.assertIn('rid.range(of: "^r[0-9a-f]{10}$", options: .regularExpression) != nil', t)
+        self.assertIn("(voiced ? [] : Self.pieces(say)) + Self.pieces(after)", t)
+        self.assertIn('b[8..<12].elementsEqual("WAVE".utf8)', body(a, "static func pcm("))
+        self.assertIn("static func pieces(_ text: String, max: Int = 900)", a)
+        allowed = open(os.path.join(APP, "panel", "iphone.py"), encoding="utf-8").read()
+        self.assertIn(r'/api/profile/dungeon/r[0-9a-f]{10}/ton/[0-9]{1,4}/[0-9]{1,4}', allowed)
+
+    def test_choosing_a_round_in_the_car(self):
+        car = read("CarPlayScene.swift")
+        self.assertIn("DungeonModel.runden(d).filter { $0.laeuft && !$0.held.isEmpty }", body(car, "private func playGame()"))
+        rows = body(car, "private func gameList(")
+        self.assertIn('String(localized: "Neue Runde")', rows)
+        self.assertIn('String(localized: "Spiel verlassen")', rows)
+        self.assertIn("interface.pushTemplate(sub, animated: true)", rows)
+        self.assertIn("reachable { Conversation.shared.startGame(rid, new: new) }", car)
+        self.assertIn("runden = Self.runden(d)", read("DungeonView.swift"))   # one parser for the app and the car
+
+
 if __name__ == "__main__":
     unittest.main()

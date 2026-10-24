@@ -683,8 +683,9 @@ struct SparkAPI {
         return data
     }
 
-    /// A picture of the Dungeon-Master (an own hero's portrait, a chapter's cover; dungeon.py Stufe 3) as PNG.
-    func dungeonPicture(_ path: String) async throws -> Data {
+    /// A file of the Dungeon-Master: a picture (an own hero's portrait, a chapter's cover; dungeon.py Stufe 3) as PNG, or a
+    /// piece of a narration read aloud (WAV, dungeon_auto.py in the car).
+    func dungeonFile(_ path: String) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(for: request(path))
         try Self.check(data, response)
         return data

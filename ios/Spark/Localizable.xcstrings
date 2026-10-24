@@ -13211,16 +13211,6 @@
         }
       }
     },
-    "Erzählung hören, Aktion sprechen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hear the story, speak your action"
-          }
-        }
-      }
-    },
     "Fristen vorlesen": {
       "localizations": {
         "en": {
@@ -17617,6 +17607,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Undo the sorting (%lld)"
+          }
+        }
+      }
+    },
+    "Runde wählen, Erzählung hören, Aktion sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a round, hear the story, speak your action"
+          }
+        }
+      }
+    },
+    "Gut. Was tust du stattdessen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All right. What do you do instead?"
+          }
+        }
+      }
+    },
+    "Zug %lld · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn %lld · %@"
+          }
+        }
+      }
+    },
+    "Neue Runde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New round"
+          }
+        }
+      }
+    },
+    "Drei Geschichten zur Wahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three stories to choose from"
+          }
+        }
+      }
+    },
+    "Spiel verlassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave the game"
+          }
+        }
+      }
+    },
+    "Die Runde läuft am Tisch weiter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The round goes on at the table"
           }
         }
       }

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.022** CarPlay Dungeon Master: pick and create a round in the car, "Is that right?" before every action, more voice commands, a summary, the round's voices, waiting without a time limit
 - **V01.1.021** AI Dungeon Master: foes and loot open a big window to look at (picture, values, six scores, what it can cause, paging), side characters sound more varied with VoiceDesign (speaking pace, more timbres)
 - **V01.1.020** AI Dungeon Master: the ways from here with direction and goal for the voice too (dungeon_karte.wege, for CarPlay), never a place in the fog
 - **V01.1.019** AI Dungeon Master: a check shows large what it is for, characters speak quotes the way the text says (whispers, shouts, stammers …), values on people and class cards as chips, overview in the middle with full screen, equipment only on the fitting body part (a belt place of its own)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.015** Model start more robust: when the panel may not change refs/main or the Hub file listing of a model (e.g. left by root), it only writes a log line, the engine starts anyway
 - **V01.1.014** AI Dungeon Master: guardian and master of a vault fight with foes from the Bestiarium by the group's level, only the victory in the fight opens the room; traps as a saving throw like in D&D (made half damage, armour does not count)
 - **V01.1.013** AI Dungeon Master: fights by fixed rules, the panel builds encounters by budget from the bestiary, rolls every attack against the armour class (10 + armour + Dexterity) and lets the foes strike back, a bar with the foes' life, experience from the bestiary divided among the heroes, levels as in D&D; every prologue paints its scene picture right away, "🔊 Sound on" now unlocks the sound in Safari too, the quest counts as done only towards the end of the story
-- **V01.1.012** Speaking on the model computer starts without the internet also with the Hub file listing: the listing of all files of a pinned model goes after the check, otherwise huggingface_hub called the snapshot incomplete (.gitattributes)
 
 
 
