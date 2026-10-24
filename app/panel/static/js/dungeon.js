@@ -7,7 +7,7 @@
 const DM={on:false,data:null,rid:'',v:null,seq:0,busy:false,msg:'',err:false,made:null,at:0,ende:false,form:{},edit:'',kap:false};
 const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:'',konto:{tok:'',v:null,step:'',adr:'',msg:'',err:false,gebunden:false}};
 // read aloud (the last turn's WAV, the host's device plays it by itself) and the microphone of a seat
-const DMA={p:{n:null,el:null,url:''},g:{n:null,el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},gesendet:0};
+const DMA={p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},gesendet:0};
 // the short guide for players at the table: opens by itself once on this device, then by its button
 const DMHILFE=[['Karte und Gewölbe','Map and vaults','Die Karte zeigt, wo ihr seid, und wächst mit, je mehr ihr entdeckt. Tippe unter „Von hier aus“ einen Weg an, dann steht er in deinem Feld. In Gewölben würfelt das Panel Fallen; die Antwort auf ein Rätsel schreibst du einfach in deine Aktion.','The map shows where you are and grows as you explore. Tap a way under "From here" to put it in your field. In vaults the panel rolls the traps; just write the answer to a riddle into your action.'],
   ['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
@@ -19,7 +19,7 @@ const DMHILFE=[['Karte und Gewölbe','Map and vaults','Die Karte zeigt, wo ihr s
   ['Händler','Merchants','In Siedlungen bietet ein Händler Waren an, „⚖ Händler“ zeigt sie groß. Die Preise macht das Panel, Charisma gibt bis 20 % Rabatt; Verkaufen bringt die Hälfte. Sehr seltene Magie ist erst unerkannt: Eine Rolle des Erkennens oder der Händler nennt, was sie kann.','In settlements a merchant offers goods, "⚖ Merchant" shows them large. The panel sets the prices, Charisma gives up to 20 % off; selling fetches half. Very rare magic is unknown at first: a scroll of knowing or the merchant names what it does.'],
   ['Werte, Dinge und Werkzeuge','Values, things and tools','Tippe auf einen Wert, auf Leben, Stufe oder Schutz: darunter steht, was es ist und wofür es zählt. Ein getragenes Ding öffnet sein Fenster mit Bild. Nennst du in deiner Aktion ein Werkzeug wie Seil oder Dietrich und passt die Probe, gibt es +2; bei einer 1 kann es zerbrechen.','Tap a value, life, level or protection: below it says what it is and what it counts for. A worn thing opens its window with the picture. If your action names a tool like a rope or lockpick and the check fits, you get +2; on a 1 it can break.'],
   ['Warten und Tischgespräch','Waiting and table talk','Während der Dungeon-Master erzählt, zeigt der Tisch die Würfe schon vorab, dazu Wissenskarten der Welt. Im „💬 Tischgespräch“ unter dem Feld redet ihr miteinander; der Dungeon-Master liest das nie.','While the Dungeon Master narrates, the table already shows the rolls, plus lore cards of the world. In the "💬 Table talk" below the field you talk to each other; the Dungeon Master never reads it.'],
-  ['Hören und Sprechen','Listen and speak','„🔊 Hören“ liest die Erzählung vor, jede Geschichte mit ihrer eigenen Erzählerstimme und jede Figur mit ihrer eigenen (wenn die Sprachausgabe Stimmen aus Beschreibungen machen kann). Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','"🔊 Listen" reads the narration aloud, every story with its own narrator voice and every character with its own (when the speech output can make voices from descriptions). With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
+  ['Hören und Sprechen','Listen and speak','Ist Vorlesen an, tippst du einmal auf „🔊 Ton an“, danach liest jedes Gerät die Erzählung Satz für Satz von selbst vor. Was jemand wörtlich sagt, spricht die Figur, nie der Erzähler; dein Held bekommt eine eigene Stimme vorgeschlagen. Die Uhr startet erst nach dem Vorlesen. 🔈/🔇 schaltet es nur auf diesem Gerät an oder aus, „🔊 Nochmal hören“ liest den letzten Zug noch einmal. Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','With reading aloud on, tap "🔊 Sound on" once; after that every device reads the narration sentence by sentence by itself. What someone says word for word is spoken by the character, never the narrator; your hero gets a voice of its own proposed. The clock starts only after the reading. 🔈/🔇 switches it on or off on this device only, "🔊 Listen again" reads the last turn once more. With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
   ['Als Gast','As a guest','Am Ende bekommst du einen Figur-Code. Damit spielt dein Held beim nächsten Mal weiter, auch in einem eigenen Profil. Schreib ihn dir auf.','At the end you get a hero code. With it your hero plays on next time, also in a profile of your own. Write it down.']];
 function dmHilfe(){if(DMA.hilfe===null){let seen=false;try{seen=localStorage.getItem('dm-hilfe')==='1';localStorage.setItem('dm-hilfe','1')}catch(e){}DMA.hilfe=!seen}
   return DMA.hilfe?`<div class="dm-guide"><div class="dm-gtop"><h5>${esc(t('So spielst du','How to play'))}</h5><button type="button" class="b" data-dmhilfe="0">${esc(t('Schließen','Close'))}</button></div><div class="dm-gl">${DMHILFE.map(x=>`<div><b>${esc(t(x[0],x[1]))}</b><small>${esc(t(x[2],x[3]))}</small></div>`).join('')}</div></div>`:''}
@@ -503,7 +503,7 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
     ${DM.made?`<div class="mitmade"><div class="jqr">${DM.made.qr||''}</div><div class="sp"><input readonly value="${esc(DM.made.link)}" aria-label="${esc(t('Der Link','The link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Wer ihn öffnet, sitzt auf diesem Platz: als Gast ohne Profil oder mit seinem Profil.','Shown only now. Whoever opens it takes this seat: as a guest without a profile or with their profile.'))}</small></div></div>`:''}`:'';
   v.mode=mode;const log=v.log.map(e=>dmLog(v,e,col)).join('');
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
-  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${v.vorlesen?`<button type="button" class="b dm-hear" data-dmhear="1"${v.ton_zug.length?'':' disabled'}>${esc(v.liest?t('🔊 wird gesprochen …','🔊 being spoken …'):t('🔊 Hören','🔊 Listen'))}</button>`:''}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe?0:1}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
+  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe?0:1}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
     ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
     <div class="dm-col dm-side"><div class="dm-zugk"><b>${esc(t('Zug','Turn'))} ${v.zug}</b><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div></div>${dmAuftrag(v)}
@@ -517,18 +517,48 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
   const inp=w.querySelector('.dm-in');if(inp){if(kv)inp.value=kv;else if(DMA.aendern[mode]===v.zug&&v.meine_aktion)inp.value=v.meine_aktion;if(kf||!keep&&DMA.aendern[mode]===v.zug)inp.focus({preventScroll:true})}
   dmLeft(S);
-  const n=(v.ton_zug||[]).length?v.ton_zug[0]:-1,A=DMA[mode];if(A.n===null)A.n=n;else if(n>=0&&n!==A.n){A.n=n;if(mode==='p'&&v.gastgeber&&v.vorlesen)dmPlay(mode,n)}}
+  dmLesung(mode,v)}
 // the admin's story of the round: only the host sees the plan, the players only the act's number
 function dmPlanHost(v){const p=v.plan;if(!p)return '';const cur=v.erzaehlt?-1:v.akt-1;
   return `<details class="adv dm-plan"><summary>${esc(t('Geschichte: ','Story: ')+p.titel)} · ${esc(t('nur du siehst das','only you see this'))}</summary><small class="mut">${esc(t('Ziel: ','Goal: ')+p.ziel)}${p.gegner?' · '+esc(t('Gegenspieler: ','Foe: ')+p.gegner):''}</small>
     <ol>${p.akte.map((a,i)=>`<li class="${i===cur?'on':i<cur||cur<0?'mut':''}"><b>${esc(a.titel)}</b> <small>${esc(a.inhalt)}</small><small class="mut">${esc(t('Wendepunkt: ','Turning point: ')+a.wende)} · ${a.zuege} ${esc(t('Züge','turns'))}</small></li>`).join('')}</ol>
     <small class="mut">${esc(t('Der Dungeon-Master entscheidet, wann der nächste Akt beginnt (frühestens nach '+v.akt_min+' Zügen); läuft ein Akt anderthalbmal so lange wie geplant, geht das Panel selbst weiter.','The Dungeon Master decides when the next act begins (after '+v.akt_min+' turns at the earliest); when an act runs one and a half times as long as planned, the panel moves on by itself.'))}</small></details>`}
-// the turn read aloud: the same WAV for every seat, fetched when asked (the host's device: by itself)
-async function dmPlay(mode,n){const A=DMA[mode];n=n??A.n;if(n==null||n<0)return;
-  try{let blob;if(mode==='p'){const r=await api(`/api/profile/dungeon/${DM.rid}/ton/${n}`);if(!r.ok)return;blob=await r.blob()}
-    else{const r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/ton',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,zug:n})});if(!r.ok)return;blob=await r.blob()}
-    if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(blob);A.el=new Audio(A.url);await A.el.play()}
-  catch(e){dmSay(mode==='p'?DM:DG,t('Zum Vorlesen bitte einmal „🔊 Hören“ tippen.','Tap "🔊 Listen" once to hear it.'),false)}}
+// read aloud piece by piece (Punkt 16 of 2026-10-24): every device that has it on plays the round's pieces in order
+// as the Spark makes them, guests and the iPhone app too; browsers allow sound only after a tap, so one tap on
+// „🔊 Ton an“ unlocks this page's player, then it runs by itself. Entering mid-turn reads nothing old.
+const DMLES={p:{n:null,k:0,frei:false,laeuft:false,el:null,url:''},g:{n:null,k:0,frei:false,laeuft:false,el:null,url:''}};
+const DMSTILL='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+function dmLesHier(){try{return localStorage.getItem('dm-ton')!=='0'}catch(e){return true}}
+function dmLesKnopf(v,mode){if(!v.vorlesen)return '';const A=DMLES[mode],hier=dmLesHier();
+  const main=!hier?'':!A.frei?`<button type="button" class="b dm-hear dm-tonan" data-dmhear="frei">${esc(t('🔊 Ton an','🔊 Sound on'))}</button>`
+    :A.laeuft||v.liest?`<button type="button" class="b dm-hear" data-dmhear="stopp">${esc(t('⏹ Vorlesen stoppen','⏹ Stop reading'))}</button>`
+    :`<button type="button" class="b dm-hear" data-dmhear="nochmal"${v.lesung?'':' disabled'}>${esc(t('🔊 Nochmal hören','🔊 Listen again'))}</button>`;
+  return `${main}<button type="button" class="ic-ib dm-tonhier" data-dmhear="${hier?'aus':'an'}" aria-pressed="${hier}" title="${esc(hier?t('Auf diesem Gerät nicht vorlesen','Do not read aloud on this device'):t('Auf diesem Gerät vorlesen','Read aloud on this device'))}" aria-label="${esc(hier?t('Auf diesem Gerät nicht vorlesen','Do not read aloud on this device'):t('Auf diesem Gerät vorlesen','Read aloud on this device'))}">${hier?'🔈':'🔇'}</button>`}
+function dmLesung(mode,v){const A=DMLES[mode],T=v.lesung;if(!T)return;
+  if(A.n===null){A.n=T.n;A.k=T.k;return}
+  if(T.n!==A.n){A.n=T.n;A.k=0}
+  dmLesWeiter(mode)}
+async function dmLesFrei(mode){const A=DMLES[mode];if(!A.el)A.el=new Audio();A.el.src=DMSTILL;
+  try{await A.el.play();A.frei=true}catch(e){A.frei=false}}
+async function dmLesWeiter(mode){const A=DMLES[mode],S=mode==='p'?DM:DG,T=S.v&&S.v.lesung;
+  if(!T||A.laeuft||!A.frei||!dmLesHier()||!S.v.vorlesen||T.n!==A.n||A.k>=T.k)return;
+  const n=A.n,k=A.k;A.laeuft=true;let gone=true;
+  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/ton/${n}/${k}`);
+    else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/ton',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,zug:n,k})});
+    if(r.ok){if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el.src=A.url;
+      await new Promise((ok,no)=>{A.el.onended=ok;A.el.onerror=ok;A.el.play().catch(no)})}}
+  catch(e){if(e&&e.name==='NotAllowedError'){A.frei=false;gone=false}}      // the browser locked the sound again: a tap
+  A.laeuft=false;if(gone&&A.n===n&&A.k===k)A.k=k+1;
+  const now=S.v&&S.v.lesung;if(now&&A.k<now.k&&now.n===A.n)dmLesWeiter(mode);else{if(now&&!now.fertig)S.at=0;mode==='p'?dmDraw():dgDraw()}}
+function dmLesStopp(mode){const A=DMLES[mode],S=mode==='p'?DM:DG;if(A.el)A.el.pause();const T=S.v&&S.v.lesung;if(T){A.n=T.n;A.k=99999}A.laeuft=false}
+async function dmHear(mode,was){const A=DMLES[mode],S=mode==='p'?DM:DG,T=S.v&&S.v.lesung;
+  if(was==='aus'){try{localStorage.setItem('dm-ton','0')}catch(e){}dmLesStopp(mode)}
+  else if(was==='stopp')dmLesStopp(mode);
+  else{if(was==='an'){try{localStorage.setItem('dm-ton','1')}catch(e){}}
+    await dmLesFrei(mode);if(was==='nochmal'&&T){A.n=T.n;A.k=0}
+    if(!A.frei)dmSay(S,t('Der Browser lässt den Ton gerade nicht zu. Tippe noch einmal auf „🔊 Ton an“.','The browser does not allow sound right now. Tap "🔊 Sound on" once more.'),false);
+    dmLesWeiter(mode)}
+  mode==='p'?dmDraw():dgDraw()}
 // speak instead of type: up to 30 s, the panel's speech recognition writes it into the own field, sending stays a tap
 async function dmMic(mode){const S=mode==='p'?DM:DG;
   if(DMA.rec){DMA.rec.stop();return}
@@ -550,7 +580,7 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
     catch(e){dmSay(S,mode==='p'?t('Das hat nicht geklappt.','That did not work.'):dgErr(e),true)}};
   rec.start();mode==='p'?dmDraw():dgDraw()}
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
-function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,(v.ton_zug||[]).join(),v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.wahrheit||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null)].join('#'):''}
+function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.wahrheit||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null)].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
   if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v);DM.at=Date.now();
     const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}
@@ -581,11 +611,11 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
 const dmMS=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 function dmUhr(v,S){const el=(Date.now()-S.at)/1000,lese=Math.max(0,Math.round(v.lesen-el)),gn=Math.max(0,Math.round(v.gnade-el));
   const sek=Math.max(0,Math.round(v.rest-Math.max(0,el-v.lesen))),done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
-  const warn=!!done&&!v.pause&&!gn&&!lese&&sek<=v.warn_s;
+  const warn=!!done&&!v.pause&&!v.spricht&&!gn&&!lese&&sek<=v.warn_s;
   const mehr=(v.mehr||[]).length?t(' · mehr Zeit für ',' · more time for ')+v.mehr.join(', '):'';
-  const text=`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(v.pause?'':gn?t(' · geht in '+gn+' s weiter',' · goes on in '+gn+' s'):
+  const text=`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(v.pause?'':v.spricht?t(' · wird vorgelesen, die Uhr startet danach',' · being read aloud, the clock starts afterwards'):gn?t(' · geht in '+gn+' s weiter',' · goes on in '+gn+' s'):
     lese?t(' · Lesezeit, die Uhr startet in '+lese+' s',' · reading time, the clock starts in '+lese+' s'):done?t(' · weiter spätestens in ',' · goes on at the latest in ')+dmMS(sek):'')+mehr;
-  const mine=v.pause?t(' · Pause',' · paused'):gn?t(' · geht in '+gn+' s weiter, „Ändern“ geht noch',' · goes on in '+gn+' s, "Change" still works'):t(' · spätestens in ',' · at the latest in ')+dmMS(sek);
+  const mine=v.pause?t(' · Pause',' · paused'):v.spricht?t(' · wird vorgelesen, die Uhr startet danach',' · being read aloud, the clock starts afterwards'):gn?t(' · geht in '+gn+' s weiter, „Ändern“ geht noch',' · goes on in '+gn+' s, "Change" still works'):t(' · spätestens in ',' · at the latest in ')+dmMS(sek);
   return {text,mine,warn}}
 function dmLeft(S){const v=S.v,els=document.querySelectorAll(S===DM?'#dmview .dm-left':'#dgcard .dm-left');if(!v||!els.length||v.dm||v.status==='ende')return;
   const u=dmUhr(v,S);els.forEach(el=>{el.textContent=u.text;el.classList.toggle('dm-warn',u.warn)});
@@ -609,7 +639,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(b.closest('.dmf-welt'))dmWorld(w,B.dmseg);return}
   if(B.dmgs!==undefined){dmStory(w,b);return}
-  if(B.dmopen){DM.rid=B.dmopen;DM.made=null;DM.ende=false;DMA.p.n=null;await dmRound();return}
+  if(B.dmopen){DM.rid=B.dmopen;DM.made=null;DM.ende=false;DMLES.p.n=null;await dmRound();return}
   if(B.dmback){DM.rid='';DM.v=null;DM.made=null;await dmLoad();return}
   if(B.dmmake){const q=c=>w.querySelector(c),D=DM.data,body={titel:q('.dmf-titel').value.trim(),welt:q('.dmf-welt .on').dataset.dmseg,einstieg:q('.dmf-einstieg').value.trim(),
       ton:+q('.dmf-ton .on').dataset.dmseg,zug_s:+q('.dmf-zug').value,stunden:+q('.dmf-stunden').value,held:dmHeroBody(w,'dmf-'),vorlesen:q('.dmf-vorlesen').checked};
@@ -618,10 +648,10 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     if(body.titel.length<2){dmSay(DM,t('Bitte gib der Runde einen Titel.','Please give the round a title.'),true);return}
     const pt=q('.dmf-portraet'),want=pt&&pt.checked&&typeof body.held==='object';
     let d=await dmSend('/api/profile/dungeon/runde',body,DM);if(d&&want)d=await dmSend(`/api/profile/dungeon/${d.rid}/portraet`,{},DM)||d;
-    if(d){DM.rid=d.rid;DM.v=d;DM.at=Date.now();DMA.p.n=-1;dmDraw()}return}
+    if(d){DM.rid=d.rid;DM.v=d;DM.at=Date.now();DMLES.p.n=-1;dmDraw()}return}
   if(B.dmtx){const m=await dmTx(B,'p',async b2=>{const d=await dmSend(`/api/profile/dungeon/${rid}/held`,b2,DM);if(d){DM.v=d;DM.at=Date.now()}return !!d});
     if(typeof m==='string')dmSay(DM,m,true);dmDraw();return}
-  if(B.dmhear){dmPlay('p');return}
+  if(B.dmhear){dmHear('p',B.dmhear);return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dmDraw();return}
   if(B.dmprobe){dmProbe('p',DM.v&&DM.v.ich||{});return}
@@ -632,7 +662,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     const x=B.dmksave?await dmSend('/api/profile/dungeon/kampagne/'+kid,null,DM,{method:'PUT',body:{bisher:(w.querySelector('.dm-kedit')||{}).value||''}})
       :B.dmkneu?await dmSend(`/api/profile/dungeon/kampagne/${kid}/neu`,{},DM):await dmSend('/api/profile/dungeon/kampagne/'+kid,null,DM);
     if(x){DM.data=x;DM.edit=''}dmDraw();return}
-  if(B.dmkweiter){const d=await dmSend(`/api/profile/dungeon/kampagne/${B.dmkweiter}/weiter`,{},DM);if(d){DM.rid=d.rid;DM.v=d;DM.at=Date.now();DMA.p.n=-1}dmDraw();return}
+  if(B.dmkweiter){const d=await dmSend(`/api/profile/dungeon/kampagne/${B.dmkweiter}/weiter`,{},DM);if(d){DM.rid=d.rid;DM.v=d;DM.at=Date.now();DMLES.p.n=-1}dmDraw();return}
   if(B.dmkap){if(!DM.kap){DM.kap=true;dmDraw();return}DM.kap=false;
     const x=await dmSend(`/api/profile/dungeon/${rid}/kapitel`,{},DM);if(x){DM.data=x;DM.rid='';DM.v=null;DM.made=null;DM.at=Date.now();icTabSet('dungeon','runden')}dmDraw();return}
   if(B.dmdelhero){const d=await dmSend('/api/profile/dungeon/held/'+B.dmdelhero,null,DM);if(d){DM.data=d;dmDraw()}return}
@@ -764,7 +794,7 @@ async function dgAct(path,b){if(DG.busy)return;DG.busy=true;
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmprobe],#dgcard [data-dmmic],#dgcard [data-dmportraet],#dgcard [data-dmmehr]');if(!b)return;
   const B=b.dataset,box=$('dgcard');
   if(B.dgleave){if(dgGast())return;DG.v=null;$('dgmodal').style.display='none';document.body.classList.remove('dg-offen');return}
-  if(B.dmhear){dmPlay('g');return}
+  if(B.dmhear){dmHear('g',B.dmhear);return}
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dgDraw();return}
   if(B.dmprobe){dmProbe('g',DG.v&&DG.v.ich||{});return}
@@ -827,9 +857,9 @@ function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=
 function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N[k])}</h3>`,E=err?`<div class="err dm-adm-err">${err}</div>`:'';
   if(k==='geschichten')return DMP.g?dmPlanForm(d):dmPlans(d)+E;
   if(DMRKAT.includes(k))return dmKat(k);
-  if(k==='stimmen')return h+`<div class="fh">${esc(t('Die Stimme des Erzählers und der NPCs, wenn eine Welt keine eigene beschreibt.','The narrator\'s and the NPCs\' voice when a world describes none of its own.'))}</div>
-    <div class="dm-two">${[['erzaehler',t('Stimme des Erzählers','Narrator voice')],['npc',t('Stimme der NPCs','NPC voice')]].map(([v,nm])=>{const cur=((d.eigene||{}).stimmen||{})[v]||'';
-      return `<div><label>${esc(nm)}</label><select class="dmadm-voice" data-k="${v}"><option value="">${esc(t('Standardstimme','Default voice'))}</option>${[...new Set([cur,...(DMA.voices||[])].filter(Boolean))].map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`}).join('')}</div>
+  if(k==='stimmen')return h+`<div class="fh">${esc(t('Drei feste Stimmen, alle verschieden: der Erzähler, NPCs (Männer) und NPCs (Frauen). Sie sprechen, wenn keine beschriebene Stimme (VoiceDesign) da ist; wörtliche Rede in der Erzählung spricht immer die Figur, nie der Erzähler.','Three fixed voices, all different: the narrator, NPCs (men) and NPCs (women). They speak when no described voice (VoiceDesign) is there; quoted speech in the narration is always spoken by the character, never by the narrator.'))}</div>
+    <div class="dm-two">${[['erzaehler',t('Stimme des Erzählers','Narrator voice')],['npc',t('NPCs (Männer)','NPCs (men)')],['npc_w',t('NPCs (Frauen)','NPCs (women)')]].map(([v,nm])=>{const cur=((d.eigene||{}).stimmen||{})[v]||'',grund=((d.standard||{}).stimmen||{})[v]||'';
+      return `<div><label>${esc(nm)}</label><select class="dmadm-voice" data-k="${v}"><option value="">${esc(grund?t('Voreinstellung','Preset')+' ('+grund+')':t('Standardstimme','Default voice'))}</option>${[...new Set([cur,...(DMA.voices||[])].filter(Boolean))].map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`}).join('')}</div>
     ${E}<div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Speichern','Save'))}</button></div>`;
   if(k==='bilder')return dmThumbsPics(d);
   if(k==='musik')return '<div id="dmmusikadm"></div>';
@@ -945,7 +975,7 @@ document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')
   const ta=$('dmadmtxt');let own;
   if(ta){try{own=JSON.parse(ta.value||'{}')}catch{dmRulesDraw(DMP.d,esc(t('Das ist kein gültiges JSON.','This is not valid JSON.')));$('dmadmtxt').value=ta.value;return}}else own=JSON.parse(JSON.stringify(DMP.d.eigene||{}));
   const sv={},vs=document.querySelectorAll('#dmadmcard .dmadm-voice');vs.forEach(x=>{sv[x.dataset.k]=x.value});
-  if(vs.length&&(Object.values(sv).some(Boolean)||own.stimmen))own.stimmen=sv;
+  if(vs.length){Object.keys(sv).forEach(x=>{if(!sv[x])delete sv[x]});if(Object.keys(sv).length)own.stimmen=sv;else delete own.stimmen}   // empty: the preset
   const keep=ta&&ta.value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
   if(r.ok){DMR.k={};dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
   dmRulesDraw(DMP.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail)));if(keep&&$('dmadmtxt'))$('dmadmtxt').value=keep});

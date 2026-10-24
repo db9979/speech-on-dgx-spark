@@ -2314,6 +2314,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-sum{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.dm-adm-err{margin:8px 0;font-size:13px}
 .dm-pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:10px;border-radius:10px;background:color-mix(in srgb,var(--line) 35%,transparent)}
 .dm-mic{flex:none}.dm-mic.on{background:var(--bad);color:#fff;border-color:var(--bad)}.dm-hear,.dm-help,.dm-full{flex:none}.dm-head>.dm-htitle{flex:1;min-width:0}
+.dm-tonhier{flex:none}.dm-tonan{animation:dmPuls 1.6s ease-in-out 3}@keyframes dmPuls{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--t-gold,var(--acc)) 35%,transparent)}}@media (prefers-reduced-motion:reduce){.dm-tonan{animation:none}}
 .dm-kamp{display:flex;flex-direction:column;gap:10px;max-width:820px}.dm-k{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .dm-k small{display:block}.dm-k .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:8px}
 .dm-bisher{margin:4px 0;font-family:Georgia,serif;overflow-wrap:anywhere}.dm-kedit{width:100%}.dm-check{display:flex;gap:8px;align-items:center}

@@ -279,6 +279,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |
 | `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen |
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
+| `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |

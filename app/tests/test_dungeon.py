@@ -28,7 +28,9 @@ No wall clock in the checks: expiry and turns use a given now; dice use a seeded
 """
 import asyncio
 import base64
+import contextlib
 import copy
+import io
 import json
 import os
 import random
@@ -953,13 +955,17 @@ class Voice(Base):
         for n in (1, 2, 3, 4):
             asyncio.run(dungeon.speak_turn(rid, n, parts))
         self.assertEqual(self.state(rid)["ton_n"], [2, 3, 4])
-        self.assertEqual(sorted(os.listdir(dungeon.TON_DIR)), [f"{rid}-{n}.wav" for n in (2, 3, 4)])
-        r = self.c.get(f"/api/profile/dungeon/{rid}/ton/4")
+        self.assertEqual(self.state(rid)["lesung"], {"n": 4, "k": 2, "fertig": True, "fehler": 0})   # one piece each
+        self.assertEqual(sorted(os.listdir(dungeon.TON_DIR)), sorted(f"{rid}-{n}-{k}.wav" for n in (2, 3, 4) for k in (0, 1)))
+        r = self.c.get(f"/api/profile/dungeon/{rid}/ton/4/1")
         self.assertEqual((r.status_code, r.content[:4]), (200, b"RIFF"))
-        g = self.v.post("/api/dungeon/ton", json={"code": code, "zug": 4})
+        g = self.v.post("/api/dungeon/ton", json={"code": code, "zug": 4, "k": 1})
         self.assertEqual(g.content, r.content)                               # the same file for every seat
         self.assertEqual(self.v.post("/api/dungeon/ton", json={"code": code, "zug": 1}).status_code, 404)
-        self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/ton/4").status_code, 404)   # not a seat
+        for bad in (2, -1, "0", True):
+            self.assertEqual(self.v.post("/api/dungeon/ton", json={"code": code, "zug": 4, "k": bad}).status_code, 404, bad)
+        self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/ton/4/0").status_code, 404)   # not a seat
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{rid}").json()["lesung"], {"n": 4, "k": 2, "fertig": True})
         self.assertEqual(self.v.post(f"/api/profile/dungeon/{rid}/vorlesen", json={"an": False}).status_code, 401)
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/vorlesen", json={"an": False}).json()["vorlesen"], False)
         self.c.delete("/api/profile/dungeon/daten")
@@ -1070,6 +1076,121 @@ class Voice(Base):
         self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": code}).status_code, 400)    # a newer one replaces it
         self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": code2}).status_code, 200)
         self.assertEqual(self.c2.post(f"/api/profile/dungeon/{rid}/sitzcode", json={}).status_code, 404)
+
+
+class ReadAloud(Base):
+    """Punkt 16 and 17 of 2026-10-24 (Dominik „das vorlesen klappt nicht zuverlässig“, „die klingen gleich wie die des
+    erzählers“): pieces of a sentence or two with a short first one, a second try and the fixed voice per piece, the
+    rest goes on; quotes in the narration in the voice of who says them; the clock waits for the reading."""
+    def setUp(self):
+        super().setUp()
+        self.addCleanup(lambda: [os.remove(os.path.join(dungeon.TON_DIR, f)) for f in os.listdir(dungeon.TON_DIR)]
+                        if os.path.isdir(dungeon.TON_DIR) else None)
+        dungeon._stimmen.update(t=__import__("time").time(), v=["ryan", "eric", "serena", "vivian"], design=False)
+        self.addCleanup(dungeon._stimmen.update, t=0.0, v=[], design=False)
+
+    def tts(self, fail=()):
+        said = []
+
+        async def tts(text, voice, klang=""):
+            said.append((voice, text))
+            if any(f(voice, text, len(said)) for f in fail):
+                raise RuntimeError("tts 500")
+            return b"\1\0" * 100
+        old = dungeon.ask_tts
+        dungeon.ask_tts = tts
+        self.addCleanup(setattr, dungeon, "ask_tts", old)
+        return said
+
+    def test_pieces_with_a_short_first_one(self):
+        V = dungeon.vortrag
+        long = "Die Tür knarrt. " + "Ein kalter Hauch zieht durch den Gang, und irgendwo tropft Wasser auf alten Stein. " * 6
+        p = V.saetze(long, first=True)
+        self.assertEqual(p[0], "Die Tür knarrt.")
+        self.assertTrue(all(len(x) <= V.TEIL_MAX for x in p))
+        self.assertEqual(" ".join(p), " ".join(long.split()))
+        self.assertTrue(len(V.saetze("A" * 400 + ".", first=True)[0]) <= V.ERST_MAX)
+        self.assertEqual(V.saetze("Ja. Nein. Vielleicht doch."), ["Ja. Nein. Vielleicht doch."])   # short ones together
+
+    def test_quotes_in_the_voice_of_who_says_them(self):
+        v = self.new_round(vorlesen=True)
+        rid = v["rid"]
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["npc_stimmen"] = {"grimma": dict(dungeon.stimmen._traits("grimma"), geschlecht="weiblich"),
+                                 "bodo": dict(dungeon.stimmen._traits("bodo"), geschlecht="maennlich")}
+            dungeon._write(d)
+        text = ("Grimma hebt die Laterne. „Wer da?“ Bodo grinst. „Nur wir.“ Von irgendwo ruft es: „Lauft!“ "
+                "„Bleibt hier“, sagt Arvid.")
+        parts = dungeon.speak_parts(r, text, [{"name": "Grimma", "sagt": "Wer da?"}, {"name": "Bodo", "sagt": "Kommt näher."}], (), rd)
+        self.assertEqual(parts, [("ryan", "Grimma hebt die Laterne.", ""), ("serena", "Wer da?", ""), ("ryan", "Bodo grinst.", ""),
+                                 ("eric", "Nur wir.", ""), ("ryan", "Von irgendwo ruft es", ""), ("eric", "Lauft!", ""),
+                                 ("vivian", "Bleibt hier", ""), ("ryan", "sagt Arvid.", ""), ("eric", "Bodo: Kommt näher.", "")])
+        self.assertNotIn(("ryan", "Wer da?", ""), parts)                    # the narrator never speaks a quote
+        with dungeon._lock:                     # the hero speaks its own quote in its voice (proposed when it sat down)
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            next(p for p in rd["plaetze"].values() if p.get("held"))["held"]["stimme"] = ""
+            dungeon._write(d)
+        self.assertIn(("eric", "Bleibt hier", ""), dungeon.speak_parts(r, text, [], (), self.state(rid)))   # none: the NPC voice
+        dungeon._stimmen["v"] = ["ryan"]                                     # a voice the speech output lacks: its own
+        self.assertEqual({p[0] for p in dungeon.speak_parts(r, "„Halt!“, sagt Bodo.", [], (), self.state(rid))}, {"", "ryan"})
+        self.assertEqual(set(dungeon.voices(r)), {"erzaehler", "npc", "npc_w"})
+        self.assertEqual(dungeon.check_rules(dict(r, stimmen={"erzaehler": "a;b"}))[-1:], ["stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer"])
+
+    def test_a_second_try_then_the_fixed_voice_and_the_rest_goes_on(self):
+        v = self.new_round(vorlesen=True)
+        rid = v["rid"]
+        said = self.tts(fail=[lambda voice, text, n: n == 1,                     # the first try of the first piece
+                              lambda voice, text, n: text.startswith("Zwei") and voice,   # never in its own voice
+                              lambda voice, text, n: text.startswith("Drei")])           # never at all
+        parts = [("eric", "Eins ist da.", ""), ("eric", "Zwei kommt.", ""), ("eric", "Drei fehlt.", ""), ("ryan", "Vier ist da.", "")]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            asyncio.run(dungeon.speak_turn(rid, 3, parts))
+        lines = [x for x in out.getvalue().splitlines() if x.startswith("dungeon: vorlesen")]
+        self.assertEqual([x.split(" | ")[2] for x in lines[:-1]], ["nochmal", "ersatz", "fehler", "ok"])
+        self.assertTrue(all(x.endswith(" ms") for x in lines))
+        self.assertTrue(lines[-1].startswith("dungeon: vorlesen | teils | 3 teile"))
+        self.assertEqual(("", "Zwei kommt."), said[4])                      # the speech output's own voice stood in
+        self.assertEqual(self.state(rid)["lesung"], {"n": 3, "k": 3, "fertig": True, "fehler": 1})
+        live = dungeon.for_live()
+        self.assertEqual((live["vorlesen_fehler"], live["vorlesen_ersatz"]), (1, 2))
+
+    def test_a_hero_sitting_down_gets_a_voice_of_its_own(self):
+        dungeon._stimmen["v"] = ["ryan", "eric", "serena", "vivian", "aiden"]
+        v = self.new_round(vorlesen=True)
+        rid = v["rid"]
+        code, gp = self.guest(rid)
+        got = [p["held"]["stimme"] for p in self.state(rid)["plaetze"].values() if p.get("held")]
+        self.assertEqual(sorted(got), ["aiden", "vivian"])                   # never a fixed voice, never twice
+        r = self.v.post("/api/dungeon/held", json={"code": code, "was": "stimme", "stimme": "eric"})
+        self.assertEqual(r.status_code, 200, r.text)                         # only a proposal: the player changes it
+        self.assertEqual(self.state(rid)["plaetze"][gp]["held"]["stimme"], "eric")
+
+    def test_the_clock_waits_for_the_reading(self):
+        v = self.new_round(vorlesen=True)
+        rid = v["rid"]
+        self.tts()
+        now = __import__("time").time()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd.update(spricht=now, zug_t=now - 500, lesen=20)
+            dungeon._write(d)
+        self.assertGreaterEqual(dungeon.turn_start(self.state(rid)), now + 20)   # not yet while it reads
+        self.assertTrue(self.c.get(f"/api/profile/dungeon/{rid}").json()["spricht"])
+        asyncio.run(dungeon.speak_turn(rid, 2, [("ryan", "Es ist still.", "")]))
+        rd = self.state(rid)
+        self.assertNotIn("spricht", rd)
+        self.assertGreaterEqual(rd["zug_t"], now)                            # reading time and turn start after it
+        with dungeon._lock:                                                  # a reading that never ends holds at most SPRICHT_MAX
+            d = dungeon._read()
+            d["runden"][rid].update(spricht=now - dungeon.vortrag.SPRICHT_MAX - 1, zug_t=now - 500)
+            dungeon._write(d)
+        self.assertLess(dungeon.turn_start(self.state(rid)), now)
 
 
 class Magic(Base):
@@ -3073,6 +3194,67 @@ class Windows(unittest.TestCase):
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
+        asyncio.run(go())
+
+    def test_reading_aloud_piece_by_piece_on_this_device(self):
+        """Punkt 16 of 2026-10-24: one tap on „🔊 Ton an“ unlocks the sound, then every piece plays in order as it
+        comes; the clock says it waits for the reading; „🔇“ switches it off for this device only."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import begleiter
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Hörtisch", "welt": "fantasy", "ton": 12, "vorlesen": True, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+            dungeon._ton_drop(rid)
+        self.addCleanup(drop)
+
+        def state(k, fertig, spricht):
+            with dungeon._lock:
+                d = dungeon._read()
+                rd = d["runden"][rid]
+                rd.update(ton_n=[5], lesung={"n": 5, "k": k, "fertig": fertig, "fehler": 0})
+                rd.pop("spricht", None)
+                if spricht:
+                    rd["spricht"] = __import__("time").time()
+                dungeon._write(d)
+        os.makedirs(dungeon.TON_DIR, exist_ok=True)
+        for k in (0, 1):
+            with open(dungeon.ton_file(rid, 5, k), "wb") as f:
+                f.write(begleiter.wav_of(b"\1\0" * 2400))
+        state(0, False, True)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as pw:
+                br, pg, errors = await b.page(pw, 1280, 900)
+                try:
+                    await pg.evaluate("try{localStorage.removeItem('dm-ton')}catch(e){}")
+                    await pg.evaluate("goSec('dungeon')")
+                    await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                    await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                    await b.until(pg, "!!document.querySelector('#dmview [data-dmhear=frei]')")
+                    self.assertIn("wird vorgelesen", await pg.evaluate("document.querySelector('#dmview .dm-left').textContent"))
+                    state(2, True, False)                                          # two pieces made meanwhile
+                    await pg.click("#dmview [data-dmhear=frei]")
+                    await pg.evaluate("DM.at=0")
+                    await b.until(pg, "DMLES.p.k===2")                              # both played, in order
+                    self.assertTrue(await pg.evaluate("DMLES.p.frei"))
+                    await b.until(pg, "!!document.querySelector('#dmview [data-dmhear=nochmal]')")
+                    await pg.click("#dmview [data-dmhear=aus]")                      # off for this device
+                    self.assertEqual(await pg.evaluate("localStorage.getItem('dm-ton')"), "0")
+                    await b.until(pg, "!!document.querySelector('#dmview [data-dmhear=an]')&&!document.querySelector('#dmview [data-dmhear=nochmal]')")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
         asyncio.run(go())
 
     def test_acting_shows_the_own_action(self):

@@ -111,6 +111,7 @@ import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
+import dungeon_vorlesen as vortrag
 import dungeon_gast as gastkonto
 import coadmin
 import features
@@ -166,7 +167,7 @@ WENDE_MAX = 200
 ORTE_MAX = 6
 TABUS_MAX = 10
 PLAN_BODY = 16 * 1024
-STIMMEN = ("erzaehler", "npc")
+STIMMEN = ("erzaehler", "npc", "npc_w")   # the fixed voices: narrator, NPC (male), NPC (female)
 TEXT_MAX = 300            # one action
 NAME_MAX = 24
 SATZ_MAX = 120
@@ -304,7 +305,7 @@ _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech 
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
-                  kann_nicht=0, kraefte=0, verborgen=0, wortliste=0)
+                  kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0)
 
 
 def _go(coro, name):
@@ -567,7 +568,7 @@ def check_rules(r):
                  for x in r.get(k) or []), f"{k}: zeichen ein Bildzeichen (höchstens 8 Zeichen, keine Buchstaben)")
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
-         "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
+         "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
     return err + dungeon_karte.check_rules(r)
 
@@ -1450,6 +1451,8 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                             "stunden": stunden, "vorlesen": bool(b.get("vorlesen")),
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
+        if not h.get("stimme") and not h.get("klang"):
+            h["stimme"] = voice_for(r, rd, h)
         if kampagne:
             rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
             rd.update(erz.carry(kampagne))
@@ -1638,6 +1641,8 @@ def join(rid, pid, b, uid="", now=None):
             _day.bump("wortliste")
             raise NameError("wortliste")
         h["ladungen"] = full_charges(r, h)
+        if not h.get("stimme") and not h.get("klang"):
+            h["stimme"] = voice_for(r, rd, h)
         p["held"] = h
         if uid:
             p.update(uid=uid, h="", gast=False)
@@ -2201,7 +2206,10 @@ def _narrated(rd):
 
 
 def turn_start(rd):
-    """When the turn's time starts to run: after the reading time."""
+    """When the turn's time starts to run: after the reading time; while the round reads aloud not yet (at most
+    vortrag.SPRICHT_MAX, Punkt 16 of 2026-10-24)."""
+    if rd.get("spricht") and time.time() - rd["spricht"] < vortrag.SPRICHT_MAX:
+        return time.time() + rd.get("lesen", 0)
     return rd.get("zug_t", 0) + rd.get("lesen", 0)
 
 
@@ -2290,14 +2298,15 @@ AUFGABE_BILD = {
           "no names, no text in the picture), else leave bild empty."}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
-          "NPCs sprechen, gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
+          "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
+          "Erzählung), gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, Erfolge als gegner (rang 1 bis 5) oder ziel. Ende mit einer Frage an die Gruppe; "
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
-          "speak, give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
+          "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, successes as gegner (rang 1 to 5) or ziel. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
@@ -2792,6 +2801,7 @@ async def run_turn(rid, turn):
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn), cur))
+                    cur["spricht"] = time.time()      # the clock waits for the reading (speak_turn ends it)
                 if story and story["bild"] and cur["szene"].get("ort") != ort0:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
@@ -2889,6 +2899,7 @@ async def run_prolog(rid):
                 if prolog(r, cur, story) and cur.get("vorlesen"):
                     e = cur["log"][-1]
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], (), cur))
+                    cur["spricht"] = time.time()
                 if story and story["bild"]:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
@@ -2956,8 +2967,11 @@ def maybe_close(rid, now=None, force=False):
 
 # ---------------------------------------------------------------- read aloud and speak (Stufe 2)
 def voices(r):
+    """The fixed voices of the rules; a name the speech output does not have (when its list is known) is left empty,
+    so its own voice speaks instead of a refused request."""
     s = r.get("stimmen") or {}
-    return {k: str(s.get(k) or "") for k in STIMMEN}
+    have = {x.lower(): x for x in _stimmen["v"]}
+    return {k: (have.get(str(s.get(k) or "").lower(), "") if have else str(s.get(k) or "")) for k in STIMMEN}
 
 
 async def ask_tts(text, voice, klang=""):
@@ -3007,17 +3021,18 @@ def _pcm(b):
     return b
 
 
-def ton_file(rid, n):
-    return os.path.join(TON_DIR, f"{rid}-{int(n)}.wav")
+def ton_file(rid, n, k):
+    return os.path.join(TON_DIR, f"{rid}-{int(n)}-{int(k)}.wav")
 
 
 def _ton_drop(rid, keep=()):
+    """The round's pieces read aloud, but those of the turns in keep."""
     try:
         names = os.listdir(TON_DIR)
     except FileNotFoundError:
         return
     for f in names:
-        if f.startswith(rid + "-") and f not in keep:
+        if f.startswith(rid + "-") and f[len(rid) + 1:].split("-")[0] not in {str(n) for n in keep}:
             try:
                 os.remove(os.path.join(TON_DIR, f))
             except FileNotFoundError:
@@ -3045,14 +3060,47 @@ def hero_lines(r, rd, turn):
     return out
 
 
+def _npc_voice(r, rd, name, design):
+    """(fixed voice, description) of an NPC: by its gender the NPC voice or the female one; with VoiceDesign its own."""
+    v = voices(r)
+    return (v["npc_w"] if rd and stimmen.weiblich(rd, name) else v["npc"]), (stimmen.npc(rd, name) if design else "")
+
+
+def voice_for(r, rd, h):
+    """A voice proposed for a hero sitting down (Punkt 17 of 2026-10-24): one of the speech output's that is neither a
+    fixed voice of the rules nor another hero's at the table, the same for the same hero; "" while the list is not known.
+    The player changes it in the hero sheet."""
+    taken = {x.lower() for x in voices(r).values() if x} | {str(p["held"].get("stimme", "")).lower() for _, p in seated(rd)}
+    pool = [x for x in _stimmen["v"] if x.lower() not in taken] or [x for x in _stimmen["v"] if x.lower() not in {v.lower() for v in voices(r).values() if v}]
+    return pool[int(hashlib.sha256(h["hid"].encode()).hexdigest(), 16) % len(pool)] if pool else ""
+
+
 def speak_parts(r, story_text, npc, helden=(), rd=None):
     """What a turn reads aloud: first what the heroes said in their own voices, then the narration in the narrator's
-    voice, then each NPC in its voice. With VoiceDesign the narrator is the round's own with the scene's mood and every
-    NPC has its own (dungeon_stimmen.py); without, the fixed voices of the rules."""
+    voice, every quote in it in the voice of who says it (vortrag.rede: an NPC, a hero, else the NPC voice, never the
+    narrator's, Punkt 17 of 2026-10-24), then each NPC line not already read. With VoiceDesign the narrator is the
+    round's own with the scene's mood and every NPC has its own (dungeon_stimmen.py); without, the fixed voices of the
+    rules, NPCs by their gender."""
     v = voices(r)
     design = bool(rd) and _stimmen["design"]
-    parts = list(helden) + [(v["erzaehler"], story_text, stimmen.narrator(rd) if design else "")] + \
-        [(v["npc"], f"{n['name']}: {n['sagt']}", stimmen.npc(rd, n["name"]) if design else "") for n in npc]
+    heroes = {p["held"]["name"].lower(): p["held"] for _, p in seated(rd)} if rd else {}
+    names = [n["name"] for n in npc] + list((rd or {}).get("npc_stimmen") or {}) + list(heroes)
+    parts, heard = list(helden), []
+    for wer, text, quoted in vortrag.rede(story_text, names):
+        h = heroes.get(wer)
+        if not quoted:
+            parts.append((v["erzaehler"], text, stimmen.narrator(rd) if design else ""))
+            continue
+        heard.append(text)
+        if h and (h.get("stimme") or h.get("klang")):
+            parts.append((h.get("stimme", "") or v["npc"], text, h.get("klang", "") if design else ""))
+        else:
+            fest, klang = _npc_voice(r, rd, wer or "?", design)
+            parts.append((fest, text, klang))
+    for n in npc:
+        if not any(vortrag.same(n["sagt"], x) for x in heard):
+            fest, klang = _npc_voice(r, rd, n["name"], design)
+            parts.append((fest, f"{n['name']}: {n['sagt']}", klang))
     out, n = [], 0
     for voice, text, klang in parts:
         if n + len(text) > TON_ZEICHEN:
@@ -3062,49 +3110,98 @@ def speak_parts(r, story_text, npc, helden=(), rd=None):
     return out
 
 
+TEIL_S = 40               # seconds one piece read aloud may take
+
+
+async def _piece(text, voice, klang):
+    """One piece read aloud: the voice asked for, once more, then the speech output's own voice. (pcm, how) with how
+    "ok", "nochmal" or "ersatz"; None when even that failed (the piece is left out, the rest goes on)."""
+    tries = [(voice, klang, "ok"), (voice, klang, "nochmal")] + ([("", "", "ersatz")] if voice or klang else [])
+    for v, k, how in tries:
+        try:
+            pcm, statt = await spoken(text, v, k, TEIL_S)
+            return _pcm(pcm), "ersatz" if statt else how
+        except Exception:
+            continue
+    return None
+
+
+def _ton_set(rid, **kw):
+    """The round's reading state under the lock: rd["lesung"] {"n", "k" pieces ready, "fertig", "fehler"}."""
+    with _lock:
+        d = _read()
+        rd = d["runden"].get(rid)
+        if not rd:
+            return None
+        if "n" in kw and (rd.get("lesung") or {}).get("n") != kw["n"]:
+            rd["ton_n"] = (rd.get("ton_n") or [])[-(TON_ZUEGE - 1):] + [kw["n"]]
+            rd["lesung"] = {"n": kw["n"], "k": 0, "fertig": False, "fehler": 0}
+            _ton_drop(rid, {n for n in rd["ton_n"]})
+        else:
+            rd.setdefault("lesung", {}).update(kw)
+        if kw.get("fertig"):
+            if rd.pop("spricht", None):
+                rd["zug_t"] = time.time()          # the reading time and the turn's time start after the reading
+        _write(d)
+        return dict(rd["lesung"])
+
+
 async def speak_turn(rid, n, parts):
-    """The turn n read aloud, once for every seat: one TTS job on the Spark at a time (the TTS slows down with many
-    at once), kept as STATE/dungeon-ton/<rid>-<n>.wav for the last TON_ZUEGE turns. Never raises."""
+    """The turn n read aloud, once for every seat, in pieces (dungeon_vorlesen.py, Punkt 16 of 2026-10-24): each
+    piece its own WAV STATE/dungeon-ton/<rid>-<n>-<k>.wav as soon as it is made, so the seats start after the first;
+    one piece at a time on the Spark (the TTS slows down with many at once); every piece a second try, then the fixed
+    voice, else left out. Kept for the last TON_ZUEGE turns. Never raises; the clock goes on at the end."""
     import begleiter
     import verbrauch
     import wartung
     t0 = time.perf_counter()
-    why = "ok"
+    why, k, fehl = "ok", 0, 0
     _speaking.add(rid)
     try:
         if wartung.paused("tts"):
             why = "pause"
             return
-        async with _tts_lock():
-            pcm = bytearray()
-            for voice, text, klang in parts:
-                pcm += _pcm((await spoken(text, voice, klang, DM_S * 2))[0])
-                pcm += b"\0" * 14400        # 0.3 s between the voices
-                if len(pcm) > TON_BYTES:
-                    raise RuntimeError("tts")
-        wav = begleiter.wav_of(bytes(pcm))
+        pieces = [(voice, x, klang) for i, (voice, text, klang) in enumerate(parts) for x in vortrag.saetze(text, first=i == 0)]
+        await asyncio.to_thread(_ton_set, rid, n=n)
+        for voice, text, klang in pieces:
+            t1 = time.perf_counter()
+            async with _tts_lock():
+                got = await _piece(text, voice, klang)
+            ms = round((time.perf_counter() - t1) * 1000)
+            if not got:
+                fehl += 1
+                _day.bump("vorlesen_fehler")
+                print(f"dungeon: vorlesen | teil | fehler | {ms} ms", flush=True)
+                await asyncio.to_thread(_ton_set, rid, fehler=fehl)
+                continue
+            wav = begleiter.wav_of(got[0])
 
-        def keep():
-            os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
-            with open(ton_file(rid, n) + ".neu", "wb") as f:
-                f.write(wav)
-            os.chmod(ton_file(rid, n) + ".neu", 0o600)
-            os.replace(ton_file(rid, n) + ".neu", ton_file(rid, n))
-            with _lock:
-                d = _read()
-                rd = d["runden"].get(rid)
-                if rd:
-                    rd["ton_n"] = (rd.get("ton_n") or [])[-(TON_ZUEGE - 1):] + [n]
-                    _write(d)
-                    _ton_drop(rid, {os.path.basename(ton_file(rid, x)) for x in rd["ton_n"]})
-        await asyncio.to_thread(keep)
-        verbrauch.spoken("Dungeon-Master", wav=wav)
-        _day.bump("vorgelesen")
+            def keep(k=k, wav=wav):
+                os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
+                f = ton_file(rid, n, k)
+                with open(f + ".neu", "wb") as x:
+                    x.write(wav)
+                os.chmod(f + ".neu", 0o600)
+                os.replace(f + ".neu", f)
+            await asyncio.to_thread(keep)
+            k += 1
+            await asyncio.to_thread(_ton_set, rid, k=k)
+            verbrauch.spoken("Dungeon-Master", wav=wav)
+            if got[1] != "ok":
+                _day.bump("vorlesen_ersatz")
+            print(f"dungeon: vorlesen | teil | {got[1]} | {ms} ms", flush=True)
+        why = "ok" if k and not fehl else "teils" if k else "ausfall"
+        _day.bump("vorgelesen" if k else "vorlesen_fehler")
     except Exception:
         why = "ausfall"
+        _day.bump("vorlesen_fehler")
     finally:
         _speaking.discard(rid)
-        print(f"dungeon: vorlesen | {why} | {len(parts)} teile | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+        try:
+            await asyncio.to_thread(_ton_set, rid, fertig=True)
+        except Exception:
+            pass
+        print(f"dungeon: vorlesen | {why} | {k} teile | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
 
 
 async def hero_voices():
@@ -3173,13 +3270,14 @@ def _tts_lock():
     return _tts[0]
 
 
-def ton_of(rid, pid, n):
-    """The WAV of turn n for a seat of the round, or LookupError."""
+def ton_of(rid, pid, n, k=0):
+    """The WAV of piece k of turn n for a seat of the round, or LookupError."""
     rd = _round(_read(), rid)
-    if pid not in rd["plaetze"] or not isinstance(n, int) or n not in (rd.get("ton_n") or []):
+    ok = lambda x: isinstance(x, int) and not isinstance(x, bool) and 0 <= x < 10000
+    if pid not in rd["plaetze"] or not ok(n) or not ok(k) or n not in (rd.get("ton_n") or []):
         raise LookupError("ton")
     try:
-        with open(ton_file(rid, n), "rb") as f:
+        with open(ton_file(rid, n, k), "rb") as f:
             return f.read()
     except FileNotFoundError:
         raise LookupError("ton")
@@ -3708,7 +3806,8 @@ def view(rid, pid, now=None):
     out = {"rid": rid, "pid": pid, "gastkonto": not me.get("uid") and gastkonto.on(), "im_konto": bool(me.get("konto")), "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
-            "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
+            "lesung": {x: rd["lesung"].get(x) for x in ("n", "k", "fertig")} if rd.get("lesung") else None,
+            "liest": rid in _speaking, "spricht": bool(rd.get("spricht")), "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),
             "rest": left, "zug_s": rd["zug_s"], "lesen": max(0, int(turn_start(rd) - now)) if not rd.get("dm") else 0, "gnade": gnade,
             "mehr": mehr, "mehr_ich": bool(pid) and pid in rd["plaetze"] and pid not in (rd.get("mehr") or {}) and not rd.get("dm"),
@@ -4153,7 +4252,7 @@ def for_live():
             "gaeste": sum(1 for _, p in seats if p.get("gast")), "denkt": len(_running), "zuege": t["zuege"],
             "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "verworfen": t["verworfen"],
             "abgelehnt": t["abgelehnt"], "kampagnen": sum(len(campaigns(u)) for u in profiles.user_ids()),
-            "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking),
+            "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking), "vorlesen_fehler": t["vorlesen_fehler"], "vorlesen_ersatz": t["vorlesen_ersatz"],
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
             "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),
@@ -4800,13 +4899,14 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
 
 
-@router.get("/api/profile/dungeon/{rid}/ton/{n}", dependencies=[Depends(assistant)])
-async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
+@router.get("/api/profile/dungeon/{rid}/ton/{n}/{k}", dependencies=[Depends(assistant)])
+async def ton(rid: str, n: int, k: int, request: Request, prof=Depends(own_profile)):
+    """Piece k of turn n read aloud (Punkt 16 of 2026-10-24), for a seat of the round."""
     uid = prof["id"]
     _need(uid)
-    guard.limit(request, "dungeon", uid)
+    guard.limit(request, "dungeonton", uid)
     try:
-        wav = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n))
+        wav = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n, k))
     except KNOWN as e:
         raise _http(e)
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
@@ -5255,10 +5355,10 @@ async def gast_konto(request: Request):
 
 @router.post("/api/dungeon/ton")
 async def gast_ton(request: Request):
-    """{"code", "zug"}: the turn read aloud as WAV, the same file for every seat."""
+    """{"code", "zug", "k"}: piece k of the turn read aloud as WAV, the same file for every seat."""
     b, rid, pid = await _guest(request)
     try:
-        wav = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"))
+        wav = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"), b.get("k", 0))
     except KNOWN as e:
         raise _http(e)
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})

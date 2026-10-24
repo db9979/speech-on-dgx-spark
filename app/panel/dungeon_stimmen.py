@@ -149,6 +149,12 @@ def npc(rd, name):
     return f"{who[0].upper()}{who[1:]}, {n['klang'][t['klang']]}, {n['wesen'][t['wesen']]}"
 
 
+def weiblich(rd, name):
+    """Whether an NPC is a woman or a girl by its kept traits (or those of its name): the fixed female NPC voice."""
+    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or _traits(str(name or "?"))
+    return t.get("geschlecht") == "weiblich"
+
+
 def keep(rd):
     """What a campaign carries to its next chapter."""
     return {k: rd[k] for k in ("erzaehler", "npc_stimmen") if rd.get(k)}

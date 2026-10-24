@@ -180,6 +180,7 @@ MODULE = {
     "dungeon_balance": ("dienste", "Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark"),
     "dungeon_gast": ("dienste", "Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse"),
     "dungeon_stimmen": ("dienste", "Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen"),
+    "dungeon_vorlesen": ("dienste", "Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet"),
     "dungeon_erzaehler": ("dienste", "Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen"),
     "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),

@@ -5493,7 +5493,39 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Bilder richtig verteilt (V01.1.002, Punkt 7 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Das neueste Szenenbild stand bisher zweimal da, groß über dem Verlauf und noch einmal klein darin, und das große blieb beim Lesen stehen und verdeckte den Anfang der Erzählung. Jetzt steht es nur einmal groß, an seiner Stelle im Verlauf. Es scrollt mit der Geschichte und liegt nie über dem Text. Ältere Szenenbilder bleiben klein mit ihrem Ort, und „Das Szenenbild wird gemalt …“ steht als ruhige Zeile am Ende des Verlaufs. Bei jeder Aktion im Verlauf steht das Porträt des Helden, solange er eines hat, sonst wie bisher sein Anfangsbuchstabe. Wo noch kein Bild gemalt ist (Völker, Klassen, Kräfte, Porträt im Heldenbogen), steht statt eines Farbflecks ein ruhiger Platzhalter: das Zeichen auf Pergament (bei Kräften ⚔ Angriff, ✚ Heilen, 🛡 Schutz, ✦ Sonstiges, sonst der Anfangsbuchstabe), die großen mit „Noch kein Bild“. Keine neuen Endpunkte. Selbsttest Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py."
+"text": "KI-Dungeon-Master: Bilder richtig verteilt (V01.1.002, Punkt 7 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Das neueste Szenenbild stand bisher zweimal da, groß über dem Verlauf und noch einmal klein darin, und das große blieb beim Lesen stehen und verdeckte den Anfang der Erzählung. Jetzt steht es nur einmal groß, an seiner Stelle im Verlauf. Es scrollt mit der Geschichte und liegt nie über dem Text. Ältere Szenenbilder bleiben klein mit ihrem Ort, und „Das Szenenbild wird gemalt …“ steht als ruhige Zeile am Ende des Verlaufs. Bei jeder Aktion im Verlauf steht das Porträt des Helden, solange er eines hat, sonst wie bisher sein Anfangsbuchstabe. Wo noch kein Bild gemalt ist (Völker, Klassen, Kräfte, Porträt im Heldenbogen), steht statt eines Farbflecks ein ruhiger Platzhalter: das Zeichen auf Pergament (bei Kräften ⚔ Angriff, ✚ Heilen, 🛡 Schutz, ✦ Sonstiges, sonst der Anfangsbuchstabe), die großen mit „Noch kein Bild“. Keine neuen Endpunkte. Selbsttest Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py. KI-Dungeon-Master: Vorlesen zuverlässig und schnell, jede Figur mit eigener Stimme (V01.1.003, Punkte 16 und 17 der Prüfung vom 2026-10-24, Dominik „das"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " vorlesen klappt nicht zuverlässig. wie können wir das verbessern und beschleunigen“, „alle vorschläge umsetzten“, „wie werden die stimmen gemacht die z.b. unter \"\" sind. die klingen gleich wie die des erzählers“, „ja, alles so umsetzten“): Bisher wurde ein ganzer Zug als eine Datei erzeugt. Man wartete, bis alles fertig war, und fiel ein Teil aus, blieb alles stumm. Von selbst spielte es nur beim Gastgeber, wo der Browser den Ton oft sperrte. Jetzt entsteht der Zug Stück für Stück (ein oder wenige Sätze, das erste ganz kurz), jedes Stück als eigene Datei. Die Geräte spielen die Stücke der Reihe nach, während die nächsten entstehen, der erste Ton kommt also nach ein, zwei Sekunden. Jedes Stück bekommt einen zweiten Versuch, danach spricht die Stimme der Sprachausgabe selbst. Klappt auch das nicht, fällt nur dieses Stück weg, und der Rest läuft weiter. Vorlesen läuft auf jedem Gerät, das es eingeschaltet hat, auch bei Gästen und in der iPhone-App: Einmal „🔊 Ton an“ tippen schaltet den Ton der Seite frei (Browser lassen Ton erst nach einem Tipp zu), danach geht es von selbst. 🔈/🔇 schaltet das Vorlesen nur auf diesem Gerät aus oder an, „⏹ Vorlesen stoppen“ hält es an, „🔊 Nochmal hören"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "“ liest den letzten Zug noch einmal. Wer mitten im Zug dazukommt, hört nichts Altes. Solange vorgelesen wird, wartet die Uhr: Lesezeit und Zugzeit beginnen erst nach dem letzten Stück, höchstens 4 Minuten lang („wird vorgelesen, die Uhr startet danach“). Stimmen: Unter Funktionen → KI-Dungeon-Master → Regeln anpassen stehen im Teil „Stimmen“ drei feste, verschiedene Stimmen, voreingestellt Erzähler „ryan“, NPCs (Männer) „eric“ und NPCs (Frauen) „serena“. Hat die Sprachausgabe eine dieser Stimmen nicht, spricht ihre eigene. Was in der Erzählung in Anführungszeichen steht, spricht jetzt die Figur, nie der Erzähler: wer direkt danach genannt ist („…“, sagt Grimma) oder zuletzt davor, ein NPC in seiner Stimme (Frauen und Mädchen in der Frauenstimme), ein Held in seiner eigenen, sonst die NPC-Stimme. Steht derselbe Satz auch im Feld der NPCs, wird er nur einmal gelesen. Das Modell wird angewiesen, wörtliche Rede mit Namen ins Feld der NPCs zu schreiben. Mit VoiceDesign bleiben die beschriebenen Stimmen wie bisher. Setzt sich ein Held an den Tisch, bekommt er eine eigene Stimme vorgeschlagen: eine der Sprachausgabe, die weder eine der festen Stimmen ist noch ein anderer Held am Tisch hat"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Im Heldenbogen lässt sie sich ändern. Neues Modul dungeon_vorlesen.py, Stücke unter STATE/dungeon-ton/<runde>-<zug>-<stück>.wav (wie bisher nur die letzten drei Züge), Endpunkt jetzt GET /api/profile/dungeon/{rid}/ton/{n}/{k} und für Gäste POST /api/dungeon/ton {code, zug, k} (Anmeldung bzw. Platz-Code, Größen- und Rate-Limit). Je Stück eine Logzeile mit Millisekunden: dungeon: vorlesen | teil | ok (oder nochmal, ersatz, fehler) | 812 ms, am Ende dungeon: vorlesen | ok | 7 teile | 9400 ms (oder teils, ausfall, pause). Die Live-Übersicht zeigt „Vorlesen läuft“, wie viele Züge heute fertig vorgelesen wurden, Stücke mit Ersatzstimme und Fehler. Selbsttests ReadAloud, Voice und Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Bilder richtig verteilt (V01.0.1001, Punkt 7 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Das neueste Szenenbild stand bisher zweimal da, groß über dem Verlauf und noch einmal klein darin, und das große blieb beim Lesen stehen und verdeckte den Anfang der Erzählung. Jetzt steht es nur einmal groß, an seiner Stelle im Verlauf. Es scrollt mit der Geschichte und liegt nie über dem Text. Ältere Szenenbilder bleiben klein mit ihrem Ort, und „Das Szenenbild wird gemalt …“ steht als ruhige Zeile am Ende des Verlaufs. Bei jeder Aktion im Verlauf steht das Porträt des Helden, solange er eines hat, sonst wie bisher sein Anfangsbuchstabe. Wo noch kein Bild gemalt ist (Völker, Klassen, Kräfte, Porträt im Heldenbogen), steht statt eines Farbflecks ein ruhiger Platzhalter: das Zeichen auf Pergament (bei Kräften ⚔ Angriff, ✚ Heilen, 🛡 Schutz, ✦ Sonstiges, sonst der Anfangsbuchstabe), die großen mit „Noch kein Bild“. Keine neuen Endpunkte. Selbsttest Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py."
 },
 {
 "lang": "de",
@@ -17957,7 +17989,39 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: pictures in the right places (V01.1.002, point 7 of the review of 2026-10-24, Dominik \"implement everything\"): The newest scene picture stood twice so far, large above the log and small again inside it, and the large one stayed in place while reading and covered the start of the narration. Now it stands once, large, at its place in the log. It scrolls with the story and never lies over the text. Older scene pictures stay small with their place, and \"The scene picture is being painted …\" stands as a calm line at the end of the log. Every action in the log shows the hero's portrait when there is one, otherwise its initial as before. Where no picture is painted yet (peoples, classes, powers, the portrait in the hero sheet), a calm placeholder replaces the colour blob: the sign on parchment (for powers ⚔ attack, ✚ healing, 🛡 protection, ✦ other, otherwise the initial), the large ones with \"No picture yet\". No new endpoints. Self-test Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py."
+"text": "AI Dungeon Master: pictures in the right places (V01.1.002, point 7 of the review of 2026-10-24, Dominik \"implement everything\"): The newest scene picture stood twice so far, large above the log and small again inside it, and the large one stayed in place while reading and covered the start of the narration. Now it stands once, large, at its place in the log. It scrolls with the story and never lies over the text. Older scene pictures stay small with their place, and \"The scene picture is being painted …\" stands as a calm line at the end of the log. Every action in the log shows the hero's portrait when there is one, otherwise its initial as before. Where no picture is painted yet (peoples, classes, powers, the portrait in the hero sheet), a calm placeholder replaces the colour blob: the sign on parchment (for powers ⚔ attack, ✚ healing, 🛡 protection, ✦ other, otherwise the initial), the large ones with \"No picture yet\". No new endpoints. Self-test Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py. AI Dungeon Master: reading aloud reliable and fast, every character with its own voice (V01.1.003, points 16 and 17 of the review of 2026-10-24, Dominik \"reading aloud"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " does not work reliably. how can we improve and speed it up\", \"implement all proposals\", \"how are the voices made that are in quotes, e.g. they sound the same as the narrator's\", \"yes, implement it all like that\"): So far a whole turn was made as one file. You waited until all of it was done, and when one part failed everything stayed silent. It played by itself only on the host's device, where the browser often blocked the sound. Now the turn is made piece by piece (one or a few sentences, the first very short), each piece its own file. The devices play the pieces in order while the next ones are made, so the first sound comes after a second or two. Every piece gets a second try, then the speech output's own voice speaks. If that fails too, only that piece is left out and the rest goes on. Reading aloud runs on every device that has it switched on, guests and the iPhone app too: one tap on \"🔊 Sound on\" unlocks the page's sound (browsers allow sound only after a tap), after that it runs by itself. 🔈/🔇 switches reading aloud off or on for this device only, \"⏹ Stop reading\" stops it, \"🔊 Listen again\" reads the last turn once more. Whoever joins mid-turn hears nothing old. While it re"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ads, the clock waits: reading time and turn time start only after the last piece, for at most 4 minutes (\"being read aloud, the clock starts afterwards\"). Voices: under Features → AI Dungeon Master → Adjust rules the part \"Voices\" has three fixed, different voices, preset narrator \"ryan\", NPCs (men) \"eric\" and NPCs (women) \"serena\". If the speech output lacks one of them, its own voice speaks. What stands in quotes in the narration is now spoken by the character, never by the narrator: whoever is named right after it (\"…\", says Grimma) or last before it, an NPC in its voice (women and girls in the women's voice), a hero in its own, otherwise the NPC voice. If the same line also stands in the NPC field, it is read once. The model is told to put quoted speech with the name into the NPC field. With VoiceDesign the described voices stay as before. When a hero sits down at the table, it gets a voice of its own proposed: one of the speech output's that is neither a fixed voice nor another hero's at the table. It can be changed in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: pictures in the right places (V01.0.1001, point 7 of the review of 2026-10-24, Dominik \"implement everything\"): The newest scene picture stood twice so far, large above the log and small again inside it, and the large one stayed in place while reading and covered the start of the narration. Now it stands once, large, at its place in the log. It scrolls with the story and never lies over the text. Older scene pictures stay small with their place, and \"The scene picture is being painted …\" stands as a calm line at the end of the log. Every action in the log shows the hero's portrait when there is one, otherwise its initial as before. Where no picture is painted yet (peoples, classes, powers, the portrait in the hero sheet), a calm placeholder replaces the colour blob: the sign on parchment (for powers ⚔ attack, ✚ healing, 🛡 protection, ✦ other, otherwise the initial), the large ones with \"No picture yet\". No new endpoints. Self-test Windows.test_pictures_once_in_the_story in app/tests/test_dungeon.py."
 },
 {
 "lang": "en",
