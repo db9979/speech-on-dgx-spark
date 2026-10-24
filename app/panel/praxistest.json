@@ -3040,6 +3040,13 @@
 "titel": "Mac-Begleiter: Fenster ohne Rand",
 "text": "Neuen Mac-Begleiter installieren. Fenster öffnen, auf „Meldungen“ (mit mehreren Meldungen) wechseln, Fenster schließen und wieder öffnen (öffnet auf Heute): das Fenster sitzt direkt unter der Menüleiste, ohne leeren Rand oben oder unter „Panel öffnen · Notaus“. „Alle n zeigen“ bei Als Nächstes: das Fenster wächst nach unten, die Oberkante bleibt.",
 "thread": "Begleiter nachziehen"
+},
+{
+"id": "P459",
+"v": 999,
+"titel": "Dungeon-Master: Werkzeug-Bilder und Bildstil je Welt",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an, „Bilder jetzt erstellen“ einmal gelaufen. A: In der Tasche oder beim Händler zeigt ein Dietrich, eine Laterne oder ein Kletterseil ein Werkzeug-Bild (ohne Bild 🧰), keine Schriftrolle. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Gegenstände: Filter „Werkzeug“ zeigt die Werkzeuge. C: Neue Runde, Welt Science-Fiction wählen: Völker und Klassen im Heldenformular wechseln auf Bilder im Sci-Fi-Stil (sobald gemalt), zurück auf Fantasy wieder die Fantasy-Bilder. D: Am Tisch einer Horror-Runde zeigt „Das kann ich“ die Fähigkeiten im Horror-Stil. E: Gegner im Bestiarium einer Sci-Fi-Welt sehen nicht nach Fantasy aus.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

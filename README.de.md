@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.999** KI-Dungeon-Master: Werkzeuge sind eine eigene Art mit eigenem Bild und 🧰 statt Schriftrolle; Völker, Klassen, Fähigkeiten und Gegner werden im Stil jeder Welt gemalt, das Heldenformular zeigt das Bild der gewählten Welt
 - **V01.0.998** Begleiter am Mac: das Fenster in der Menüleiste ist immer genau so hoch wie sein Inhalt, kein leerer Rand mehr oben und unten nach einem langen Reiter
 - **V01.0.997** KI-Dungeon-Master: unter Regeln anpassen zeigen Gegenstände und Gegner ihre Werte und was sie bewirken, in der Zeile und als Werte-Liste im Detail
 - **V01.0.996** KI-Dungeon-Master: das „⋯“-Menü eines Mitspielers wird in der Seitenspalte nicht mehr abgeschnitten, „Malen“ unter Regeln anpassen ohne Tageslimit für den Admin
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.992** Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 - **V01.0.991** KI-Dungeon-Master: mehr Zeit zwischen den Zügen: Lesezeit vor der Zugzeit, 300 s als Standard, 10 s Gnadenfrist nach dem letzten „Handeln“, „+1 Minute“ einmal pro Zug und Spieler, Uhr rot ab 30 s
 - **V01.0.990** Sprechen auf dem Modell-Rechner startet wieder ohne Internet: jedes gepinnte Modell zeigt mit refs/main auf seinen geprüften Commit, sonst fand vllm-omni das Stimmen-Modell offline nicht (TTS-Design startete alle 30 s neu)
-- **V01.0.989** Keine Tageslimits für Admin-Profile (Bilder, Lieder, eigene Musikdateien, Bilder der eigenen Dungeon-Runde; Platz und Warteschlange bleiben), unter Funktionen → KI-Dungeon-Master → Regeln anpassen hüpft bei den Gegenständen die Liste nicht mehr und jeder Gegenstand steht im Rahmen seiner Seltenheit, gewürfelte mit Leiter im Detail, der Gastgeber benennt den Helden eines Mitspielers über „⋯“ um
 
 
 

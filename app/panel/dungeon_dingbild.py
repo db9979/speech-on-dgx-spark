@@ -22,8 +22,10 @@ The map (dungeon_karte.py) adds its kinds of places and rooms to the catalog (wa
 picture of every visited place (ort-<hash>, dungeon_karte.queue_orte from due, shown only to seats of its round).
 The Bestiarium (dungeon.gegner) is painted alike, with its own fixed phrase FOE_EN, in the style of the worlds a foe
 belongs to. The hero form's peoples, classes and class abilities (Dominik 2026-10-24 „bilder keine icons“) are
-painted alike, once each in the first world's style with their own fixed phrases HELD_EN (hero_prompt); until one is
-there the form shows a colour placeholder, never the old sign. On the admin's tab „Regeln“ (dungeon_regelseite.py) „Nochmal malen“ paints one entry again as a candidate
+painted alike, once each in every world's style with their own fixed phrases HELD_EN (hero_prompt; Punkt 8a of
+2026-10-24: the style of the world, never fixed fantasy); the form shows the one of the world chosen, a round the one
+of its world, until one is there a colour placeholder, never the old sign. Tools (art "werkzeug") have their own
+phrase in ART_EN, no longer the scroll's. On the admin's tab „Regeln“ (dungeon_regelseite.py) „Nochmal malen“ paints one entry again as a candidate
 neu-<hash> next to the picture in use (repaint, the same checks and day limit); „Neues behalten“ or „Altes behalten“
 settles it, a candidate nobody settles goes with the sweep after NEU_S.
 
@@ -69,13 +71,16 @@ FUNDE_MAX = 2000          # finds the state file remembers
 STOP = ("missing", "ohne_pruefung", "dienst", "zeit", "wartung", "memory", "belegt")   # a run ends on these
 ART_EN = {"waffe": "a weapon", "ruestung": "a piece of armour", "schmuck": "a piece of jewellery",
           "trank": "a potion in a glass bottle", "zauber": "a magic spell, glowing magical energy",
-          "rolle": "a rolled parchment scroll", "schatz": "a precious gem or a small work of art"}
-ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜", "schatz": "💎"}
+          "rolle": "a rolled parchment scroll", "werkzeug": "a tool or a piece of gear, the object itself",
+          "schatz": "a precious gem or a small work of art"}
+ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜", "werkzeug": "🧰", "schatz": "💎"}
 ITEM_EN = "game item art, one single object in the centre, plain dark background"
-FOE_EN = "creature art for a fantasy bestiary, the whole creature in the centre, plain dark background"   # the Bestiarium (gegner)
-HELD_EN = {"volk": "character art, a fantasy {} adventurer, head and shoulders, plain dark background",   # Dominik 2026-10-24 „bilder keine icons“
-           "klasse": "character art, a fantasy {} in a typical pose, the whole figure, plain dark background",
-           "kraft": "game ability art, one glowing magical moment, no person in the centre, plain dark background: {}"}
+# the world's style (welten[].bildstil) says fantasy, horror or science fiction, so these phrases name none (Dominik
+# 2026-10-24 „alles umsetzten“, Punkt 8a: a sci-fi people was painted as a fantasy adventurer)
+FOE_EN = "creature art for a bestiary, the whole creature in the centre, plain dark background"   # the Bestiarium (gegner)
+HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders, plain dark background",   # Dominik 2026-10-24 „bilder keine icons“
+           "klasse": "character art, a {} of this world in a typical pose, the whole figure, plain dark background",
+           "kraft": "game ability art, one glowing moment of power, no person in the centre, plain dark background: {}"}
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
 NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
 NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
@@ -155,12 +160,15 @@ def prompt(style, c):
     return f"{style}, {ITEM_EN}: {c['name'][1]}, {ART_EN[c['art']]}{extra}, {dungeon.BILD_ENDE}"
 
 
-def hero_prompt(r, art, c):
-    """The fixed prompt of a people (art "volk"), a class ("klasse") or a class's ability ("kraft") of the hero form,
-    always in the first world's style (one picture each, whatever the round): the English name, an ability's sentence."""
-    s = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+def hero_prompt(r, art, c, welt=""):
+    """The fixed prompt of a people (art "volk"), a class ("klasse") or a class's ability ("kraft") of the hero form in
+    the style of a world (welt, else the first; one picture each per world): the English name, an ability's sentence."""
+    return _hero_text(dungeon.style(r, {"welt": welt or r["welten"][0]["id"], "ton": None}), art, c)
+
+
+def _hero_text(style, art, c):
     what = f"{c['name'][1]}, {c['satz'][1]}" if art == "kraft" else c["name"][1]
-    return f"{s}, {HELD_EN[art].format(what)}, {dungeon.BILD_ENDE}"
+    return f"{style}, {HELD_EN[art].format(what)}, {dungeon.BILD_ENDE}"
 
 
 def heroes(r):
@@ -169,11 +177,24 @@ def heroes(r):
         [("kraft", f) for k in r["klassen"] for f in k["faehigkeiten"]]
 
 
-def hero_pic(r, art, c, have=None):
-    """The picture name of a people, class or ability once it is painted (and the pictures are on), else ""."""
+def hero_pic(r, art, c, have=None, welt=""):
+    """The picture name of a people, class or ability in a world's style (welt, else the first) once it is painted (and
+    the pictures are on), else ""."""
     have = (files() if on() else frozenset()) if have is None else have
-    n = name_of(hero_prompt(r, art, c))
+    n = name_of(hero_prompt(r, art, c, welt))
     return n if n in have else ""
+
+
+def hero_pics(r, art, c, have=None):
+    """{world id: picture name} of a people, class or ability, the worlds it is painted for (the hero form shows the
+    one of the world chosen, dungeon.js dmHB)."""
+    have = (files() if on() else frozenset()) if have is None else have
+    out = {}
+    for w in r["welten"]:
+        n = hero_pic(r, art, c, have, w["id"])
+        if n:
+            out[w["id"]] = n
+    return out
 
 
 def name_of(p):
@@ -182,16 +203,15 @@ def name_of(p):
 
 def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
-    then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner); with the
-    first style the peoples, classes and abilities of the hero form (hero_prompt)."""
+    then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner), then
+    the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book)."""
     out, seen = [], set()
-    first = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
     for s in styles(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p in [(name_of(prompt(s, c)), prompt(s, c)) for c in r["gegenstaende"]] + dungeon_karte.bilder(r, s) + \
                 [(name_of(prompt(s, c)), prompt(s, c)) for c in foes] + \
-                ([(name_of(hero_prompt(r, a, c)), hero_prompt(r, a, c)) for a, c in heroes(r)] if s == first else []):
+                ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c)) for a, c in heroes(r)] if s != dungeon.BILD_KIND else []):
             if n not in seen:
                 seen.add(n)
                 out.append((n, p))

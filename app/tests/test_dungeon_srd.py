@@ -86,7 +86,7 @@ class Srd(unittest.TestCase):
             self.assertTrue(set(x.get("klassen") or klassen) <= set(klassen), x["id"])
             self.assertTrue(set(x.get("welten") or welten) <= welten, x["id"])
             if "hilft" in x:
-                self.assertEqual(x["art"], "rolle", x["id"])
+                self.assertIn(x["art"], dungeon.HILFT_ARTEN, x["id"])
                 self.assertTrue(all(re.fullmatch(r"[a-zäöüß]{2,20}", w) for w in x["hilft"]["worte"]), x["id"])
         zid = {z["id"] for z in r["zustaende"]}
         for g in r["gegner"]:

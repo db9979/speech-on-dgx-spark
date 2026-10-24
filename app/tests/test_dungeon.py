@@ -1409,8 +1409,11 @@ class Explained(Equipment):
             self.assertTrue(dungeon._pair(x.get("info"), dungeon.INFO_MAX), x["id"])
             for t in x["info"]:
                 self.assertFalse(dungeon.bad_words(self.r, kid, t.lower()), (x["id"], t))
-        tools = [x for x in self.r["gegenstaende"] if x["art"] == "rolle" and not x.get("erkennt")]
-        self.assertTrue(tools and all(x.get("hilft") for x in tools), "every tool helps with a check")
+        tools = [x for x in self.r["gegenstaende"] if x["art"] == "werkzeug"]
+        self.assertTrue(len(tools) >= 30 and all(x.get("hilft") for x in tools), "every tool helps with a check")
+        self.assertTrue(all(x["art"] in dungeon.HILFT_ARTEN for x in self.r["gegenstaende"] if x.get("hilft")))
+        # a tool has its own kind, so it is not painted as a scroll (Dominik 2026-10-24 „alles umsetzten“, Punkt 4)
+        self.assertEqual(next(x for x in self.r["gegenstaende"] if x["id"] == "dietrich")["art"], "werkzeug")
         it = dungeon.item_view(self.r, {"i": "x", "id": "dietrich", "s": "gewoehnlich"}, "de")
         self.assertIn("Schlösser", it["info"])
         self.assertIn(f"+{dungeon.WERKZEUG} bei Geschick-Proben", " ".join(it["zeilen"]))

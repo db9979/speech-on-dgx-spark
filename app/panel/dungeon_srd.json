@@ -6294,7 +6294,7 @@
     },
     {
       "id": "diebeswerkzeug",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Diebeswerkzeug",
         "Thieves' tools"
@@ -6321,7 +6321,7 @@
     },
     {
       "id": "heilerkasten",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Heilerkasten",
         "Healer's kit"
@@ -6348,7 +6348,7 @@
     },
     {
       "id": "kletterausruestung",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Kletterausrüstung",
         "Climber's kit"
@@ -6376,7 +6376,7 @@
     },
     {
       "id": "brecheisen",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Brecheisen",
         "Crowbar"
@@ -6404,7 +6404,7 @@
     },
     {
       "id": "enterhaken",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Enterhaken",
         "Grappling hook"
@@ -6432,7 +6432,7 @@
     },
     {
       "id": "stahlspiegel",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Stahlspiegel",
         "Steel mirror"
@@ -6460,7 +6460,7 @@
     },
     {
       "id": "kreide",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Kreide",
         "Chalk"
@@ -6487,7 +6487,7 @@
     },
     {
       "id": "zunderkaestchen",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Zunderkästchen",
         "Tinderbox"
@@ -6514,7 +6514,7 @@
     },
     {
       "id": "schaufel",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Schaufel",
         "Shovel"
@@ -6542,7 +6542,7 @@
     },
     {
       "id": "jagdfalle",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Jagdfalle",
         "Hunting trap"
@@ -6569,7 +6569,7 @@
     },
     {
       "id": "verkleidungsset",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Verkleidungsset",
         "Disguise kit"
@@ -6596,7 +6596,7 @@
     },
     {
       "id": "faelscherset",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Fälscherset",
         "Forgery kit"
@@ -6623,7 +6623,7 @@
     },
     {
       "id": "alchemiebedarf",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Alchemistenbedarf",
         "Alchemist's supplies"
@@ -6650,7 +6650,7 @@
     },
     {
       "id": "laute",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Laute",
         "Lute"
@@ -6678,7 +6678,7 @@
     },
     {
       "id": "schreibzeug",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Schreibzeug",
         "Writing kit"
@@ -6705,7 +6705,7 @@
     },
     {
       "id": "lupe",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Lupe",
         "Magnifying glass"
@@ -6733,7 +6733,7 @@
     },
     {
       "id": "angelzeug",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Angelzeug",
         "Fishing tackle"
@@ -6760,7 +6760,7 @@
     },
     {
       "id": "navigationsbesteck",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Navigationsbesteck",
         "Navigator's tools"
@@ -6823,7 +6823,7 @@
     },
     {
       "id": "weihrauch",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Weihrauch",
         "Incense"
@@ -6854,7 +6854,7 @@
     },
     {
       "id": "scanner",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Scanner",
         "Scanner"
@@ -6885,7 +6885,7 @@
     },
     {
       "id": "hackmodul",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Hackmodul",
         "Hacking module"
@@ -6915,7 +6915,7 @@
     },
     {
       "id": "multiwerkzeug",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Multiwerkzeug",
         "Multitool"
@@ -6945,7 +6945,7 @@
     },
     {
       "id": "atemmaske",
-      "art": "rolle",
+      "art": "werkzeug",
       "name": [
         "Atemmaske",
         "Breathing mask"

@@ -174,17 +174,24 @@ function dmKlasseZahl(x){const st=x.start||{f:[],z:[]},f=st.f.length,z=st.z.leng
 // the picture once it is painted, a calm colour of its own until then, never an emoji
 const dmHue=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.codePointAt(0))%360;return h};
 function dmPic(bild,id,cls){return `<span class="dm-pic${cls?' '+cls:''}" style="--dmh:${dmHue(id)}" aria-hidden="true">${bild?`<img alt="" loading="lazy" data-dmding="${esc(bild)}">`:''}</span>`}
-const dmPCard=(attr,on,x,sub,badge)=>`<button type="button" class="dm-card dm-pcard${on?' on':''}" ${attr}>${dmPic(x.bild,x.id)}${badge?`<em class="dm-pbadge">${esc(badge)}</em>`:''}<b>${esc(x.name)}</b>${sub?`<small>${dmFx(sub)}</small>`:''}</button>`;
+// the hero form's picture of a people, class or power in the style of the world chosen (Punkt 8a of 2026-10-24): the
+// new round's form gets each world's (bilder), a seat's form only its round's (bild)
+const DMBW={w:''},dmHB=x=>(x.bilder&&x.bilder[DMBW.w])||x.bild;
+function dmHBSwap(f){const w=DM.data&&DM.data.wahl;if(!f||!w)return;
+  f.querySelectorAll('.dmf-neu .dm-vk [data-dmvk]').forEach(c=>{const a=c.closest('.dm-vk').dataset.dmvkk==='volk'?w.voelker:w.klassen,x=a.find(y=>y.id===c.dataset.dmvk),p=c.querySelector('.dm-pic');
+    if(x&&p)p.outerHTML=dmPic(dmHB(x),x.id)});
+  const det=f.querySelector('.dmf-kdet');if(det)det.innerHTML=dmKlasseDet(w,(f.querySelector('.dmf-klasse')||{}).value);dmDingFill(f,'p')}
+const dmPCard=(attr,on,x,sub,badge)=>`<button type="button" class="dm-card dm-pcard${on?' on':''}" ${attr}>${dmPic(dmHB(x),x.id)}${badge?`<em class="dm-pbadge">${esc(badge)}</em>`:''}<b>${esc(x.name)}</b>${sub?`<small>${dmFx(sub)}</small>`:''}</button>`;
 // a power as a picture tile (class detail, „Das kann ich“): the colour on top is its kind, a tap explains it
 // the colour of a kind (app.css), named here in full so every class is found
 const DMKK={angriff:'k-angriff',heilen:'k-heilen',schutz:'k-schutz',sonst:'k-sonst'};
 const DMKART=()=>({angriff:t('Angriff','Attack'),heilen:t('Heilen','Healing'),schutz:t('Schutz','Protection'),sonst:t('Sonstiges','Other')});
 const dmKtSub=x=>x.grad===undefined?(x.wert?x.wert+' +'+x.bonus:''):x.grad&&x.rest!==undefined&&x.rest!==null?t('noch '+x.rest+' von '+x.voll,x.rest+' of '+x.voll+' left'):x.satz||'';
-function dmKt(x,key,on,off){return `<button type="button" class="dm-kt ${DMKK[x.art]||DMKK.sonst}${on?' on':''}${off?' aus':''}" data-dmkt="${esc(key)}" aria-expanded="${!!on}">${dmPic(x.bild,x.name)}${x.grad?`<em>${esc(t('Grad '+x.grad,'Grade '+x.grad))}</em>`:''}<b>${esc(x.name)}</b><small>${dmFx(dmKtSub(x))}</small></button>`}
+function dmKt(x,key,on,off){return `<button type="button" class="dm-kt ${DMKK[x.art]||DMKK.sonst}${on?' on':''}${off?' aus':''}" data-dmkt="${esc(key)}" aria-expanded="${!!on}">${dmPic(dmHB(x),x.name)}${x.grad?`<em>${esc(t('Grad '+x.grad,'Grade '+x.grad))}</em>`:''}<b>${esc(x.name)}</b><small>${dmFx(dmKtSub(x))}</small></button>`}
 // what a power is: picture, kind, sentence, explanation and its values; „✨ Wirken“ writes it into the own action field
 function dmKtDet(x,say){const zt=x.grad===undefined?t('Fähigkeit','Ability'):x.grad?t('Zauber Grad '+x.grad,'Spell grade '+x.grad):t('Zaubertrick','Cantrip');
   const chips=[DMKART()[x.art]||'',x.wert?`🎲 ${esc(x.wert)} ${dmBo(x.bonus)}`:'',x.grad?esc(x.rest===undefined||x.rest===null?t('Ladungen je Stufe','charges per level'):t('noch '+x.rest+' von '+x.voll+' Ladungen',x.rest+' of '+x.voll+' charges left')):x.grad===0?esc(t('beliebig oft','any time')):''].filter(Boolean);
-  return `<div class="dm-ktd ${DMKK[x.art]||DMKK.sonst}">${dmPic(x.bild,x.name,'gross')}<div><b class="dm-ktd-n">${esc(x.name)}</b> <small class="mut">· ${esc(zt)}</small>
+  return `<div class="dm-ktd ${DMKK[x.art]||DMKK.sonst}">${dmPic(dmHB(x),x.name,'gross')}<div><b class="dm-ktd-n">${esc(x.name)}</b> <small class="mut">· ${esc(zt)}</small>
     ${x.satz?`<p>${dmFx(x.satz)}</p>`:''}${x.info?`<p class="mut">${dmFx(x.info)}</p>`:''}<div class="dm-ktchips">${chips.map((c,i)=>`<span class="dm-chip${i?'':' dm-kart'}">${i?c:esc(c)}</span>`).join('')}</div>
     ${say?`<div class="dm-iacts"><button type="button" class="b p" data-dmkann="${esc(say)}" data-dmfenzu="alle">✨ ${esc(x.grad===undefined?t('Einsetzen','Use'):t('Wirken','Cast'))}</button></div>`:''}</div></div>`}
 // the chosen class large (Dominik 2026-10-24 „alles“): picture, sentence, values, the powers of level 1 as tiles by grade
@@ -194,7 +201,7 @@ function dmKlasseDet(w,kid){const x=w.klassen.find(k=>k.id===kid)||w.klassen[0];
   const sel=DMKT.x,pick=sel?(sel[0]==='f'?st.f[+sel.slice(2)]:st.z[+sel.slice(2)]):null;
   const tiles=a=>`<div class="dm-kts">${a.map(([y,k])=>dmKt(y,k,k===sel)).join('')}</div>`;
   const vn=k=>(w.werte.find(v=>v.id===k)||{}).name||k;
-  return `<div class="dm-kdet">${dmPic(x.bild,x.id,'gross')}<div class="dm-kdet-t"><b class="dm-kdet-n">${esc(x.name)}</b>
+  return `<div class="dm-kdet">${dmPic(dmHB(x),x.id,'gross')}<div class="dm-kdet-t"><b class="dm-kdet-n">${esc(x.name)}</b>
     <small class="mut">${esc(t('Hauptwerte ','Main values ')+x.reihe.slice(0,2).map(vn).join(t(' und ',' and ')))} · ${esc(t('Leben','Life'))} ${x.leben}${x.leben_plus?` (${dmBo(x.leben_plus)} ${esc(t('je Stufe','per level'))})`:''}</small>
     ${x.satz?`<p>${esc(x.satz)}</p>`:''}
     <h5>${esc(t('Startkräfte','Starting powers'))}</h5>${st.f.length?tiles(st.f.map((y,i)=>[y,'f:'+i])):`<small class="mut">${esc(t('keine','none'))}</small>`}
@@ -261,7 +268,7 @@ document.body.addEventListener('drop',e=>{const s=e.target.closest&&e.target.clo
 function dmStories(w,welt){const ton=id=>w.toene.find(x=>x.id===id)||{};
   return dmCard('data-dmgs=""',true,'✒',t('Frei erzählen','Tell freely'),t('Der Dungeon-Master erfindet die Geschichte aus dem Einstieg.','The Dungeon Master makes up the story from the opening.'))
     +(w.geschichten||[]).filter(g=>g.welt===welt).map(g=>`<button type="button" class="dm-card dm-gcard" data-dmgs="${esc(g.gid)}"><b>${esc(g.titel)}</b><small class="dm-gidee">${esc(g.idee)}</small><small class="dm-gmeta">${esc((ton(g.ton).zeichen||'')+' '+(ton(g.ton).name||''))} · ${g.akte} ${esc(t('Akte','acts'))}${g.von==='admin'?' · '+esc(t('vom Admin','by the admin')):''}</small></button>`).join('')}
-function dmWorld(w,id){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D)return;DM.welt=id;dmLook(w,dmWelt(D.wahl,id).farben);
+function dmWorld(w,id){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D)return;DM.welt=id;DMBW.w=id;dmLook(w,dmWelt(D.wahl,id).farben);dmHBSwap(f);
   f.querySelector('.dmf-gesch').innerHTML=dmStories(D.wahl,id);dmStory(w,f.querySelector('.dmf-gesch [data-dmgs=""]'))}
 function dmStory(w,b){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D||!b)return;
   f.querySelectorAll('.dmf-gesch .dm-card').forEach(x=>x.classList.toggle('on',x===b));
@@ -269,7 +276,7 @@ function dmStory(w,b){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D||!
   f.querySelectorAll('.dmf-ton .dm-card').forEach(x=>{x.disabled=!!g&&x.dataset.dmseg!==String(g.ton);if(g)x.classList.toggle('on',x.dataset.dmseg===String(g.ton))});
   if(ti&&(!ti.value.trim()||ti.value===ti.dataset.auto)){ti.value=g?g.titel:'';ti.dataset.auto=ti.value}}
 function dmNew(D){const w=D.wahl;if(D.runden.filter(x=>x.gastgeber&&x.status!=='ende').length>=D.runden_max)return `<div class="ic-note"><div class="ic-mid"><b>${esc(t('Du leitest schon '+D.runden_max+' Runden.','You host '+D.runden_max+' rounds already.'))}</b><span>${esc(t('Beende eine, um eine neue anzulegen.','End one to start a new one.'))}</span></div></div>`;
-  const min=s=>s>=3600?Math.round(s/3600)+' h':s>=60?Math.round(s/60)+' min':s+' s',welt=dmWelt(w,DM.welt).id,step=(n,x)=>`<h4 class="dm-step"><span>${n}</span>${esc(x)}</h4>`;
+  const min=s=>s>=3600?Math.round(s/3600)+' h':s>=60?Math.round(s/60)+' min':s+' s',welt=DMBW.w=dmWelt(w,DM.welt).id,step=(n,x)=>`<h4 class="dm-step"><span>${n}</span>${esc(x)}</h4>`;
   return `<h3 class="sec">${esc(t('Neue Runde','New round'))}</h3><div class="dm-form">
     ${step(1,t('Welt','World'))}<div class="dm-cards dmf-welt">${w.welten.map(x=>dmCard(`data-dmseg="${esc(x.id)}"`,x.id===welt,x.zeichen,x.name,x.satz)).join('')}</div>
     ${step(2,t('Geschichte','Story'))}<div class="dm-cards dm-gs dmf-gesch">${dmStories(w,welt)}</div>
@@ -825,7 +832,7 @@ async function dmKatLoad(teil){const {r,d}=await apiTry('/api/admin/dungeon/kata
   if(!r.ok){DMR.k[teil]={zeilen:[],eintraege:{},fehler:dmErr(r.status,d.detail)}}else DMR.k[teil]=d;if(DMR.teil===teil&&DMP.d)dmRulesDraw(DMP.d,'')}
 const DMRMARKE={schwach:'',ok:'ok',stark:'warn',zu_stark:'bad'};
 const DMRSTAND=()=>({grund:t('Grundregel','Base'),srd:'SRD',eigen:t('eigen','own'),geaendert:t('geändert','changed'),aus:t('ausgeblendet','hidden')});
-function dmRFilter(teil){if(teil==='gegenstaende')return [['alle',t('Alle','All')],['waffe',t('Waffen','Weapons')],['ruestung',t('Rüstung','Armour')],['zauber',t('Zauber','Spells')],['trank',t('Tränke','Potions')],['schatz',t('Schätze','Treasure')]];
+function dmRFilter(teil){if(teil==='gegenstaende')return [['alle',t('Alle','All')],['waffe',t('Waffen','Weapons')],['ruestung',t('Rüstung','Armour')],['zauber',t('Zauber','Spells')],['trank',t('Tränke','Potions')],['werkzeug',t('Werkzeug','Tools')],['schatz',t('Schätze','Treasure')]];
   if(teil==='gegner')return [['alle',t('Alle','All')],['s0',t('Stufe 0-4','Level 0-4')],['s5',t('Stufe 5-10','Level 5-10')],['s11',t('Stufe 11+','Level 11+')]];return null}
 function dmRPass(x){const f=DMR.f,q=DMR.q.trim().toLowerCase();
   if(q&&!(x.name.toLowerCase().includes(q)||String(x.id).toLowerCase().includes(q)))return false;

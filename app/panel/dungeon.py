@@ -260,11 +260,11 @@ PLATZ = {"kopf": ("kopf",), "hals": ("hals",), "koerper": ("koerper",), "hauptha
 PLATZ_ART = {"waffe": ("haupthand",), "ruestung": ("koerper", "kopf", "nebenhand", "haende", "fuesse"),
              "schmuck": ("ring", "kopf", "hals", "haende", "fuesse")}               # what platz an art may name, the first without one
 _PLATZ_TXT = "; ".join(f"{a}: {', '.join(p)}" for a, p in PLATZ_ART.items())
-KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2, "schatz": 0.1}   # weight without its own kg
+KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2, "werkzeug": 1, "schatz": 0.1}   # weight without its own kg
 TRAG_KG = 3.75            # carry limit per point of Stärke (D&D: 15 lb)
 BELASTET = 0.75           # from three quarters of it a hero is burdened: Geschick checks with disadvantage
 STAPEL = 3                # potions, spells and scrolls of one kind stack on one bag place
-STAPEL_ARTEN = ("trank", "zauber", "rolle", "schatz")
+STAPEL_ARTEN = ("trank", "zauber", "rolle", "werkzeug", "schatz")
 BODEN_MAX = 12            # items lying at a place for the group (until the place changes)
 WARE = (6, 10)            # items a merchant offers
 WARE_MAX = 20             # with what the heroes sold to it
@@ -274,7 +274,9 @@ HAENDLER = ("Fahrender Händler", "Travelling merchant")   # the merchant the ho
 FOLGE_ARTEN = ("schaden", "heilung")
 ANLAESSE = ("gegner", "truhe", "belohnung", "boss")
 ERFOLG_ARTEN = ("gegner", "ziel")
-ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "schatz")   # schatz: gems and art, only to sell
+ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "werkzeug", "schatz")   # schatz: gems and art, only to sell;
+# werkzeug: a tool (hilft) of its own kind, so it gets its own picture (Dominik 2026-10-24 „alles umsetzten“, Punkt 4)
+HILFT_ARTEN = ("werkzeug", "rolle")   # a scroll or map may help too, and the admin's older tools stay "rolle"
 LEER_OK = ("gegner", "zustaende", "hintergruende")   # lists of the SRD data (dungeon_srd.json): may be empty
 WIRKUNGEN = ("nachteil_angriff", "vorteil_angriff", "nachteil_proben", "vorteil_gegen", "nachteil_gegen", "kein_zug",
              "halbe_bewegung", "schaden_pro_zug")   # what a condition does, fixed words only
@@ -472,11 +474,11 @@ def check_rules(r):
         need("erkennt" not in x or x.get("art") == "rolle" and x["erkennt"] is True, f"gegenstaende {x.get('id')}: erkennt nur bei rolle, true")
         need("info" not in x or _pair(x["info"], INFO_MAX), f"gegenstaende {x.get('id')}: info als [deutsch, englisch], je höchstens {INFO_MAX} Zeichen")
         hf = x.get("hilft")
-        need(hf is None or x.get("art") == "rolle" and isinstance(hf, dict) and set(hf) <= {"werte", "worte", "fest"}
+        need(hf is None or x.get("art") in HILFT_ARTEN and isinstance(hf, dict) and set(hf) <= {"werte", "worte", "fest"}
              and isinstance(hf.get("werte"), list) and hf["werte"] and set(hf["werte"]) <= werte
              and isinstance(hf.get("worte"), list) and 1 <= len(hf["worte"]) <= 6
              and all(isinstance(w, str) and 3 <= len(w) <= 30 and w == w.lower() for w in hf["worte"]) and hf.get("fest", True) is True,
-             f"gegenstaende {x.get('id')}: hilft nur bei rolle, {{werte, worte (1 bis 6, klein), fest true}}")
+             f"gegenstaende {x.get('id')}: hilft nur bei werkzeug oder rolle, {{werte, worte (1 bis 6, klein), fest true}}")
         if x.get("art") in ("trank", "zauber"):
             sg = x.get("segen")
             need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg) and (sg is None or isinstance(sg, dict)
@@ -786,10 +788,12 @@ def full_charges(r, h):
     return list(la[min(h["stufe"], len(la)) - 1])
 
 
-def powers(r, h, lang="de"):
+def powers(r, h, lang="de", welt="", alle=False):
     """What the hero can do (Dominik 2026-10-23 „1-3“): its abilities, the spells of its class it can cast at its level
     (grade 0 any time, a higher grade while its level has charges for it) with the charges left, the spells and tools in
-    its bag. {"faehigkeiten": [...], "zauber": [...], "dinge": [...]}, names in the round's language."""
+    its bag. {"faehigkeiten": [...], "zauber": [...], "dinge": [...]}, names in the round's language. The pictures in
+    the style of welt (a round's world; else the first world, a spell its own); alle: also "bilder" {world: picture}
+    for the hero form, which shows the world chosen (Punkt 8a of 2026-10-24)."""
     li = 1 if lang == "en" else 0
     k = _by(r, "klassen")[h["klasse"]]
     fa, cat = {x["id"]: x for x in k["faehigkeiten"]}, _by(r, "gegenstaende")
@@ -814,10 +818,13 @@ def powers(r, h, lang="de"):
     have = db.files() if db.on() else frozenset()
     for z in zs:
         c = cat[z["id"]]
-        n = db.picture_of(r, c)[0]
+        n = db.picture_of(r, c, welt)[0]
         z.update(bild=n if n in have else "", art=power_kind(c), info=(c.get("info") or ["", ""])[li])
+        if alle:
+            z["bilder"] = {w["id"]: m for w in r["welten"] for m in [db.picture_of(r, c, w["id"])[0]] if m in have}
     return {"faehigkeiten": [{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li], "wert": _by(r, "werte")[fa[x]["wert"]]["name"][li],
-                              "bonus": fa[x]["bonus"], "art": power_kind(fa[x]), "bild": db.hero_pic(r, "kraft", fa[x], have)}
+                              "bonus": fa[x]["bonus"], "art": power_kind(fa[x]), "bild": db.hero_pic(r, "kraft", fa[x], have, welt),
+                              **({"bilder": db.hero_pics(r, "kraft", fa[x], have)} if alle else {})}
                              for x in h["faehigkeiten"] if x in fa],
             "zauber": zs, "dinge": dinge}
 
@@ -1110,7 +1117,7 @@ def tool_line(r, c, li):
                 else (" · bricht bei einer 1" if not li else " · breaks on a 1"))
 
 
-def hero_view(r, h, lang, full=True):
+def hero_view(r, h, lang, full=True, welt=""):
     li = 1 if lang == "en" else 0
     k, v = _by(r, "klassen")[h["klasse"]], _by(r, "voelker")[h["volk"]]
     out = {"hid": h["hid"], "name": h["name"], "volk": v["name"][li], "klasse": k["name"][li], "stufe": h["stufe"],
@@ -1129,7 +1136,7 @@ def hero_view(r, h, lang, full=True):
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
-               kann=powers(r, h, lang),
+               kann=powers(r, h, lang, welt),
                segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
                       for x in h.get("segen") or []],
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa])
@@ -3654,7 +3661,7 @@ def view(rid, pid, now=None):
             "rest": left, "zug_s": rd["zug_s"], "lesen": max(0, int(turn_start(rd) - now)) if not rd.get("dm") else 0, "gnade": gnade,
             "mehr": mehr, "mehr_ich": bool(pid) and pid in rd["plaetze"] and pid not in (rd.get("mehr") or {}) and not rd.get("dm"),
             "warn_s": WARN_S, "szene": rd["szene"], "gastgeber": host, "lang": lang,
-            "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
+            "ich": hero_view(r, me["held"], lang, welt=rd["welt"]) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
@@ -3700,14 +3707,14 @@ def _hint(key, lang):
     return schwer.hint(_bilder_jobs[key], lang == "en") if key in _bilder_jobs else ""
 
 
-def start_powers(r, k, lang):
+def start_powers(r, k, lang, welt=""):
     """What a new hero of the class can do from level 1, shown when it is made: {"f": [abilities as in powers], "z":
     [{grade, name, sentence, info, kind, picture}, …]} (the card shows the counts, the class's detail picture tiles by
     grade, a tap explains one)."""
     h = {"klasse": k["id"], "stufe": 1, "tasche": [], "faehigkeiten": list(k.get("start_faehigkeiten") or [])}
     h["ladungen"] = full_charges(r, h)
-    pw = powers(r, h, lang)
-    return {"f": pw["faehigkeiten"], "z": [{x: z[x] for x in ("grad", "name", "satz", "info", "art", "bild")} for z in pw["zauber"]]}
+    pw = powers(r, h, lang, welt, alle=not welt)
+    return {"f": pw["faehigkeiten"], "z": [{x: z[x] for x in ("grad", "name", "satz", "info", "art", "bild", "bilder") if x in z} for z in pw["zauber"]]}
 
 
 def _cast(r, rd, pid, h, c, bonus, name):
@@ -4151,23 +4158,24 @@ def _lang(b):
     return "en" if b.get("lang") == "en" else "de"
 
 
-def _choices(lang, stories=True):
+def _choices(lang, stories=True, welt=""):
     """What a new round or hero is chosen from; stories (the admin's and the shipped ones, title and idea) only for a
-    host, not for a guest's seat form."""
+    host, not for a guest's seat form. The pictures of the hero form: a seat's form in its round's world (welt), the new
+    round's form each world's ("bilder", dungeon.js dmHB shows the world chosen; "bild" the first world's)."""
     r = rules()
     li = 1 if lang == "en" else 0
     z = lambda x: x.get("zeichen") or ZEICHEN
     import dungeon_dingbild as db
     have = db.files() if db.on() else frozenset()
-    pic = lambda a, x: db.hero_pic(r, a, x, have)
+    pic = lambda a, x: {"bild": db.hero_pic(r, a, x, have, welt), **({} if welt else {"bilder": db.hero_pics(r, a, x, have)})}
     satz = lambda x: (x.get("satz") or ["", ""])[li]
     return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x),
                         "farben": {k: v for k, v in (x.get("farben") or {}).items() if k in FARBEN}} for x in r["welten"]],
             "toene": [{"id": x["id"], "name": x["name"][li], "zeichen": z(x)} for x in r["toene"]],
-            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x), "satz": satz(x), "bild": pic("volk", x)}
+            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x), "satz": satz(x), **pic("volk", x)}
                         for x in r["voelker"]],
-            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x), "satz": satz(x), "bild": pic("klasse", x),
-                         "leben": x["leben"], "leben_plus": x["leben_plus"], "start": start_powers(r, x, lang)} for x in r["klassen"]],
+            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x), "satz": satz(x), **pic("klasse", x),
+                         "leben": x["leben"], "leben_plus": x["leben_plus"], "start": start_powers(r, x, lang, welt)} for x in r["klassen"]],
             "werte": [{"id": x["id"], "name": x["name"][li], "kurz": x["name"][li][:3].upper()} for x in r["werte"]],
             "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
@@ -5037,7 +5045,7 @@ async def gast_platz(request: Request):
     p = rd["plaetze"][pid]
     host = profiles.by_id(rd["owner"]) or {}
     out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"], "welt": rd["welt"],
-           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": dict(_choices(rd["lang"], False), bilder_an=pictures_on(rd["owner"])),
+           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": dict(_choices(rd["lang"], False, rd["welt"]), bilder_an=pictures_on(rd["owner"])),
            "profil_genommen": bool(p.get("uid")), "kapitel": rd.get("kapitel", 0),
            "gastkonto": gastkonto.on() and bool(await asyncio.to_thread(gastkonto.sender)),
            "kampagne_helden": [] if p.get("held") else [hero_view(rules(), h, rd["lang"], full=False) for h in

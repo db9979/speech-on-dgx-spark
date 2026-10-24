@@ -12,8 +12,10 @@ world, painted at night or on the admin's button, and an own picture for a named
   and a wrong code get nothing; a name outside the pattern is refused.
 - The sweep removes pictures nobody asks for; Live only counts.
 - Peoples, classes and class abilities of the hero form (Dominik 2026-10-24 „bilder keine icons“): one fixed prompt
-  each in the first world's style, painted like the catalog; the hero form and „Das kann ich“ name the picture only
-  once it is there and the pictures are on (else "" and the page shows a colour, never an emoji).
+  each in every world's style (Punkt 8a of 2026-10-24: never a fixed fantasy phrase, the foes neither), painted like
+  the catalog; the hero form and „Das kann ich“ name the picture only once it is there and the pictures are on (else
+  "" and the page shows a colour, never an emoji); a seat's form and a round the one of its world.
+- Tools (art "werkzeug", Punkt 4 of 2026-10-24) have their own phrase and sign, never the scroll's.
 
 No wall clock: the module's clock is set by the tests.
 """
@@ -369,10 +371,17 @@ class Heroes(Base):
         self.assertEqual(len(hs), len(r["voelker"]) + len(r["klassen"]) + sum(len(k["faehigkeiten"]) for k in r["klassen"]))
         for art, c in hs:
             p = db.hero_prompt(r, art, c)
-            self.assertIn(db.name_of(p), want)                                  # painted like the catalog
             self.assertTrue(p.startswith(first) and p.endswith(dungeon.BILD_ENDE), p)
             self.assertIn(c["name"][1], p)
-            self.assertTrue(db._ok_text(p), p)                                # the picture rules pass the shipped data
+            for w in r["welten"]:                                              # every world's style (Punkt 8a)
+                q = db.hero_prompt(r, art, c, w["id"])
+                self.assertIn(db.name_of(q), want)                              # painted like the catalog
+                self.assertTrue(q.startswith(dungeon.style(r, {"welt": w["id"], "ton": None})), q)
+                self.assertTrue(db._ok_text(q), q)                              # the picture rules pass the shipped data
+        self.assertFalse(any("fantasy" in t for t in list(db.HELD_EN.values()) + [db.FOE_EN]))   # the world's style says it
+        scifi = next(w["id"] for w in r["welten"] if "science fiction" in w["bildstil"])
+        foe = next(g for g in r["gegner"] if "alle" in g.get("welten", ["alle"]) or scifi in g["welten"])
+        self.assertNotIn("fantasy", db.prompt(dungeon.style(r, {"welt": scifi, "ton": None}), foe))
         kraft = r["klassen"][0]["faehigkeiten"][0]
         self.assertIn(kraft["satz"][1], db.hero_prompt(r, "kraft", kraft))
         self.assertNotIn("{}", "".join(db.hero_prompt(r, a, c) for a, c in hs))
@@ -387,6 +396,15 @@ class Heroes(Base):
         db._files["m"] = None
         self.assertEqual(next(x for x in dungeon._choices("de")["voelker"] if x["id"] == "mensch")["bild"], n)
         self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{n}").status_code, 200)   # loaded like an item's picture
+        m = db.name_of(db.hero_prompt(r, "volk", mensch, scifi))               # the same people in the sci-fi world
+        self.assertNotEqual(m, n)
+        with open(dungeon.bild_file(m), "wb") as f:
+            f.write(PNG)
+        db._files["m"] = None
+        x = next(x for x in dungeon._choices("de")["voelker"] if x["id"] == "mensch")
+        self.assertEqual(x["bilder"], {r["welten"][0]["id"]: n, scifi: m})   # the new round's form: each world's
+        x = next(x for x in dungeon._choices("de", False, scifi)["voelker"] if x["id"] == "mensch")
+        self.assertEqual((x["bild"], "bilder" in x), (m, False))             # a seat's form: its round's world only
         db.sweep(force=True)
         self.assertIn(n, db.files())                                          # the sweep keeps it
         helpers.set_config(dungeon_bilder=False)                              # off: no picture named
@@ -400,13 +418,30 @@ class Heroes(Base):
         for x in st["f"]:
             self.assertEqual(set(x) >= {"name", "satz", "wert", "bonus", "art", "bild"}, True)
         for z in st["z"]:
-            self.assertEqual(set(z), {"grad", "name", "satz", "info", "art", "bild"})
+            self.assertEqual(set(z), {"grad", "name", "satz", "info", "art", "bild", "bilder"})   # bilder: per world
+        self.assertTrue(all("bilder" in x for x in st["f"]))
+        st = dungeon.start_powers(r, mag, "de", r["welten"][1]["id"])         # a seat's form: its round's world
+        self.assertFalse(any("bilder" in x for x in st["f"] + st["z"]))
         self.assertTrue(all(x["art"] in dungeon.KANN_ARTEN for x in st["f"] + st["z"]))
         kinds = {f["id"]: dungeon.power_kind(f) for k in r["klassen"] for f in k["faehigkeiten"]}
         self.assertEqual((kinds["rundumschlag"], kinds["eisenhaut"], kinds["handauflegen"]), ("angriff", "schutz", "heilen"))
         heal = next(c for c in r["gegenstaende"] if c.get("heilung"))
         self.assertEqual(dungeon.power_kind(heal), "heilen")                 # healing by the catalog's number, not a word
 
+    def test_tools_have_their_own_kind_picture_and_sign(self):
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+        tools = [c for c in r["gegenstaende"] if c["art"] == "werkzeug"]
+        self.assertTrue(len(tools) >= 30)
+        for c in tools:
+            p = db.prompt(style, c)
+            self.assertIn(db.ART_EN["werkzeug"], p)
+            self.assertNotIn("scroll", p.lower().replace(c["name"][1].lower(), ""))   # never painted as a scroll
+        self.assertEqual(db.ZEICHEN["werkzeug"], "🧰")
+        self.assertEqual(set(db.ART_EN), set(dungeon.ARTEN))
+        self.assertEqual(set(db.ZEICHEN), set(dungeon.ARTEN))
+        import dungeon_regelseite
+        self.assertEqual(set(dungeon_regelseite.ART), set(dungeon.ARTEN))      # the rules page names every kind
 
 if __name__ == "__main__":
     unittest.main()

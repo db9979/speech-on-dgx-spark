@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.999** AI Dungeon Master: tools are a kind of their own with their own picture and 🧰 instead of a scroll; peoples, classes, abilities and foes are painted in each world's style, the hero form shows the picture of the world chosen
 - **V01.0.998** Companion on the Mac: the menu bar window is always exactly as high as its content, no more empty room above and below after a long tab
 - **V01.0.997** AI Dungeon Master: under Adjust rules items and foes show their values and what they do, in the row and as a list of values in the detail
 - **V01.0.996** AI Dungeon Master: a fellow player's "⋯" menu is no longer cut off in the side column, "Malen" under Adjust rules without a day limit for the admin
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.992** No daily limit also without the second login step: the admin ticks "No daily limit" under Rights for any profile (pictures, music, allowance, Dungeon pictures; space and queues stay)
 - **V01.0.991** AI Dungeon Master: more time between turns: reading time before the turn time, 300 s by default, 10 s grace after the last "Act", "+1 minute" once per turn and player, the clock red from 30 s
 - **V01.0.990** Speaking on the model computer starts again without the internet: every pinned model points refs/main at its checked commit, otherwise vllm-omni did not find the voice model offline (TTS design restarted every 30 s)
-- **V01.0.989** No daily limits for admin profiles (pictures, songs, own music files, pictures of the own Dungeon round; space and queue stay), under Features → AI Dungeon Master → Adjust rules the item list no longer jumps and every item stands in its rarity frame, rolled ones with the ladder in the detail, the host renames a fellow player's hero via "⋯"
 
 
 

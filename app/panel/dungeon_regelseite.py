@@ -85,7 +85,8 @@ def line(teil, x, r, li):
 
 
 ART = {"waffe": ("Waffe", "Weapon"), "ruestung": ("Rüstung", "Armour"), "schmuck": ("Schmuck", "Jewellery"),
-       "trank": ("Trank", "Potion"), "zauber": ("Zauber", "Spell"), "rolle": ("Schriftrolle", "Scroll"), "schatz": ("Schatz", "Treasure")}
+       "trank": ("Trank", "Potion"), "zauber": ("Zauber", "Spell"), "rolle": ("Schriftrolle", "Scroll"),
+       "werkzeug": ("Werkzeug", "Tool"), "schatz": ("Schatz", "Treasure")}
 
 
 def werte(teil, x, r, li):
