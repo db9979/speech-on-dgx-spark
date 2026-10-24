@@ -74,6 +74,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     DELETE /api/profile/dungeon/daten             all own data of the game (also while blocked)
     POST   /api/profile/dungeon/{rid}/vorlesen    host: {an} read the narration aloud (narrator and NPC voice)
     POST   /api/profile/dungeon/{rid}/erzaehler   host: {k} the narrator's voice of the world's list, "" a new one (dungeon_stimmen.py)
+    POST   /api/profile/dungeon/{rid}/dinge       host: {n, weg} or {n, name, merkmale}: a kept thing (dungeon_erzaehler.edit_thing)
     GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, the last TON_ZUEGE turns)
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
@@ -199,6 +200,7 @@ RAHMEN = {                # without a story plan the panel picks the quest's kin
     "flucht": ("Flucht: die Gruppe sitzt fest oder wird gejagt und muss heil hinausfinden.",
                "Escape: the group is trapped or hunted and must get out unharmed.")}
 OOC_MAX = 160             # one out-of-character line to a single player
+OOC_PANEL = re.compile(r"(?i)\bpanel")   # „Das Panel bestätigt …“ in an ooc line: the model speaks for the panel (Dominik 2026-10-24)
 VORTEIL = ("vorteil", "nachteil")   # two d20, the higher or the lower counts
 NPC_MAX = 3
 NPC_SAGT = 300
@@ -318,7 +320,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
-                  zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0)
+                  zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0)
 
 
 def _go(coro, name):
@@ -2011,7 +2013,8 @@ def next_chapter(owner, kid, b, lang, now=None):
     rid = make_round(owner, dict(rb, held=held, einstieg=""), c.get("lang") or lang, now,
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
                                "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte"),
-                               "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "stimmen": c.get("stimmen")})
+                               "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "dinge": c.get("dinge"),
+                               "stimmen": c.get("stimmen")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -2516,7 +2519,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "wege": {"type": "array", "maxItems": WEGE[1], "items": {"type": "string", "maxLength": WEG_MAX + 40}},
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
-    "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN,
+    "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -2592,7 +2595,7 @@ def system_text(r, rd, task):
     if task == "prolog" and rd.get("rahmen") in RAHMEN and not rd.get("plan"):
         t += " " + AUFGABE_RAHMEN[lang].format(r=RAHMEN[rd["rahmen"]][1 if lang == "en" else 0])
     if task in ("prolog", "erzaehlen"):
-        t += " " + erz.AUFGABE_FAEDEN[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
+        t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -2710,7 +2713,7 @@ def check_story(r, rd, obj):
     for o in obj.get("ooc") or []:
         pid = names.get(str(o.get("wer", "")).strip().lower()) if isinstance(o, dict) else None
         t = plain(o.get("text") if isinstance(o, dict) else "", OOC_MAX)
-        if not pid or len(t) < 5 or bad_words(r, rd, t) or pid in (x["pid"] for x in out["ooc"]):
+        if not pid or len(t) < 5 or bad_words(r, rd, t) or OOC_PANEL.search(t) or pid in (x["pid"] for x in out["ooc"]):
             drop += 1
             continue
         out["ooc"].append({"pid": pid, "text": t})
@@ -2757,6 +2760,7 @@ def check_story(r, rd, obj):
     fr = str(obj.get("frage_an") or "").strip().lower()
     out["frage"] = names.get(fr, "")
     out["faeden"] = erz.check_threads(_me, r, rd, obj.get("faeden"))
+    out["dinge"] = erz.check_things(_me, r, rd, obj.get("dinge"))
     return out, drop
 
 
@@ -2999,6 +3003,7 @@ async def run_turn(rid, turn):
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
+                    erz.learn_things(cur, story["dinge"])
                     kurz.append(erz.wants_summary(cur))
                 if story:
                     stimmen.learn(cur, story["npc_stimme"])
@@ -3099,6 +3104,7 @@ async def run_prolog(rid):
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
+                    erz.learn_things(cur, story["dinge"])
                     stimmen.learn(cur, story["npc_stimme"])
                 if prolog(r, cur, story) and cur.get("vorlesen"):
                     e = cur["log"][-1]
@@ -4563,6 +4569,7 @@ def for_live():
             "werkzeug": t["werkzeug"], "kaputt": t["kaputt"], "geworfen": t["geworfen"],
             "am_boden": sum(1 for _, p in seats if zustand(p["held"]) == "boden"), "zu_boden": t["zu_boden"], "gefallen": t["gefallen"],
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
+            "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **dungeon_karte.for_live(rs)}
 
 
@@ -5194,6 +5201,23 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             stimmen.choose(rd, str(b.get("k") or ""))
             _write(d)
         print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/dinge", dependencies=[Depends(assistant)])
+async def dinge(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {n, weg} forgets kept thing n, {n, name, merkmale} fixes it (dungeon_erzaehler.edit_thing)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        erz.edit_thing(_me, uid, rid, b.get("n"), b)
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)

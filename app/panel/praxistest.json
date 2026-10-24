@@ -3117,6 +3117,13 @@
 "titel": "Dungeon-Master: Bilder für Klassen, Völker, Hintergründe, Welten",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Klassen: oben „Bilder in: …“ eine Welt wählen, bei einer Klasse „Malen“: das Bild ist im Stil dieser Welt; „Nochmal malen“ und „Neues behalten“ halten es fest. B: Dasselbe bei Völkern und Hintergründen; eine andere Welt oben zeigt ein anderes Bild. C: Welten: bei einer Welt „Malen“, dann beim Dungeon-Master unter „Neue Runde“: die Weltkarte zeigt das Bild statt des Zeichens. D: „Alle Bilder malen“ zählt auch Hintergründe und Welten mit.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P470",
+"v": 1010,
+"titel": "Dinge-Gedächtnis: nichts ändert sich heimlich",
+"text": "A: Runde starten und spielen, bis die Erzählung ein Ding mit Merkmalen nennt (eine Truhe, ein Kästchen, eine Tür). Als Gastgeber unter „Wahrheit dieses Kapitels“ „Gemerkte Dinge · nur du siehst das“ öffnen: das Ding steht mit Stoff, Farbe oder Zustand und Ort da. B: In den nächsten Zügen das Ding öffnen oder ansehen: die Erzählung beschreibt es mit denselben Merkmalen (Eisen bleibt Eisen). C: ✏️ ändern (z. B. Merkmale „vergoldet“) und sichern: die nächste Erzählung nimmt das neue Merkmal. D: 🗑 vergisst ein Ding. E: Als Gast in derselben Runde: die Liste ist nicht zu sehen. F: Kapitel beenden und weiterspielen: die Dinge stehen wieder in der Liste. G: Zustand → Überblick zeigt beim Dungeon-Master „gemerkte Dinge“ und, wenn es vorkam, „Widersprüche nachgebessert“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

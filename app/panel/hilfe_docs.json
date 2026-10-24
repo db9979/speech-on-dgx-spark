@@ -5525,6 +5525,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Dinge-Gedächtnis (V01.1.010, Dominik 2026-10-24 „1 a und b und c“, ein verrostetes Eisenkästchen, das einen Zug später ein morsches Kästchen war): Das Modell trägt in jeder Erzählung höchstens 3 wichtige Dinge, die zum ersten Mal vorkommen, mit ihren Merkmalen ein (Feld dinge: name, merkmale mit Stoff, Farbe, Zustand). Das Panel prüft sie nach festen Regeln (kurz, Wortliste der Runde, kein Heldenname, keins doppelt, keins gegen ein schon gemerktes) und merkt sich höchstens 12 je Runde mit Ort und Zug (dungeon_erzaehler.DINGE_MAX). Jede Erzählung bekommt die gemerkten Dinge am Ort der Gruppe oder aus den letzten 10 Zügen als Fakten mit der festen Regel, Stoff, Farbe und Zustand nie zu ändern. Feste Widerspruchsprüfung: Nennt eine Erzählung ein gemerktes Ding mit einem Merkmal aus einer festen Wortliste (Stoff: Holz, Eisen, Silber, Gold, Stein, Bronze, Kupfer, Glas, Leder, Knochen, Kristall; Farbe), das keinem gemerkten Merkmal dieser Art entspricht („das morsche Kästchen“, „Holzkästchen“ statt „Eisenkästchen“), schreibt der Dungeon-Master sie einmal neu, mit einem festen Hinweis, der das Ding und seine Merkmale nennt; wie bei fehlenden Namen bleibt sonst die erste"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Für den Gastgeber: Unter „Wahrheit dieses Kapitels“ steht „Gemerkte Dinge · nur du siehst das“ mit Name, Merkmalen und Ort; ✏️ ändert ein Ding an Ort und Stelle, 🗑 vergisst es. Mitspieler sehen die Liste nie. Die gemerkten Dinge gehen ins nächste Kapitel mit und zählen dort an ihrem Ort. Eine Zeile außerhalb des Spiels (ooc), die für das Panel spricht („Das Panel bestätigt …“), wird verworfen. Endpunkt POST /api/profile/dungeon/{rid}/dinge (Gastgeber, Anmeldung, Profil, CSRF, Größen- und Rate-Limit). Live-Übersicht: gemerkte Dinge, heute Widersprüche nachgebessert. Log: dungeon: dinge | neu | 2, … | geaendert, … | weg, … | wortliste, … | nicht da, dungeon: nachbessern | widerspruch. Selbsttests ThingMemory (sechs Fälle) und Windows.test_kept_things_for_the_host."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Leben 0 hat Folgen, Kräfte wirken nach festen Regeln, Erfahrung erst am Ende (V01.1.008, Punkte 1 und 3 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“, „1“ mit Permadeath, „nur ohnmächtig“ am Kindertisch): Bei 0 Leben liegt ein Held am Boden: Er handelt nicht, der Zug wartet nicht auf ihn, und Tasche, Bogen und Tauschen sind gesperrt (Grund „boden“). Ein Freund gibt ihm mit „🧪 Heiltrank geben“ an seiner Karte einen eigenen Heiltrank, ein Heilzauber für die Gruppe hebt ihn auf, oder die Erzählung meldet Heilung, wenn ihm jemand in seiner Aktion aufhilft. Nach 3 erzählten Zügen ohne Heilung (BODEN_ZUEGE) ist er gefallen, für immer: Alles, was er trug und in der Tasche hatte, und sein Gold liegen unter „Liegt hier“ für die anderen, die Erfahrung dieses Tisches verfällt. Ein gefallener Held bleibt so in der Heldenliste des Profils, im Gast-Konto und in einer Kampagne; er setzt sich an keinen Tisch mehr (Grund „tot“), bekommt keinen Figur-Code und keine Folgen mehr. Für einen neuen Helden nimmt der Gastgeber den Platz zurück und lädt neu ein. Liegen alle am Boden, erzählt der Dungeon-Master weiter, sobald die Zugzeit um ist. Am Kindertisch (der jüngste Ton) sti"
 },
 {
@@ -18070,6 +18086,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: thing memory (V01.1.010, Dominik 2026-10-24 \"1 a und b und c\", a rusty iron box that one turn later was a rotten box): In every narration the model reports at most 3 important things that come up for the first time, with their features (field dinge: name, merkmale with material, colour, state). The panel checks them by fixed rules (short, the round's word list, no hero's name, none twice, none against one already kept) and keeps at most 12 per round with place and turn (dungeon_erzaehler.DINGE_MAX). Every narration gets the kept things at the group's place or from the last 10 turns as facts with the fixed rule never to change material, colour or state. Fixed contradiction check: when a narration names a kept thing with a feature from a fixed word list (material: wood, iron, silver, gold, stone, bronze, copper, glass, leather, bone, crystal; colour) that matches no kept feature of that kind (\"the rotten box\", \"wooden box\" instead of \"iron box\"), the Dungeon Master writes it once more, with a fixed hint naming the thing and its features; as with missing names, the first one stays otherwise. For the host: under \"Truth of this chapter\" stands \"Kept things · only you "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "see this\" with name, features and place; ✏️ changes a thing in place, 🗑 forgets it. Players never see the list. The kept things go on into the next chapter and count there at their place. A line out of the game (ooc) that speaks for the panel (\"the panel confirms …\") is dropped. Endpoint POST /api/profile/dungeon/{rid}/dinge (host, login, profile, CSRF, size and rate limit). Live overview: kept things, contradictions rewritten today. Log: dungeon: dinge | neu | 2, … | geaendert, … | weg, … | wortliste, … | nicht da, dungeon: nachbessern | widerspruch. Self-tests ThingMemory (six cases) and Windows.test_kept_things_for_the_host."
 },
 {
 "lang": "en",

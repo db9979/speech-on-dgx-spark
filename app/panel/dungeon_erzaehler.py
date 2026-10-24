@@ -9,6 +9,7 @@ value. dungeon.py owns the rounds; this module only reads and changes the fields
     rd["wahrheit"]   {"personen": [{name, rolle, ziel, sprache}], "gruppen": [{name, will}], "geheimnisse": [str]}
     rd["kurz"], rd["kurz_zug"]   the running summary of the chapter and the turn it was written at
     rd["faeden"]     [str]   open threads (promises, quests, questions), oldest first
+    rd["dinge"]      [{name, merkmale, ort, zug}]   things the story named with fixed features (thing memory)
     rd["daumen"]     {zug: {pid: 1|-1}}   the seats' thumbs per narration
     d["daumen_welt"] {"welt|ton": [hoch, runter]}   the thumbs over all rounds (the admin's numbers)
 """
@@ -35,6 +36,28 @@ STIL_LEN = 400
 WIEDERHOLT = 0.35          # share of word triples already in the last narrations that counts as repeating
 WIEDER_ZURUECK = 3         # narrations a new one is compared with
 ZU_KURZ = 80               # a narration under this many characters is too short
+# the thing memory (Dominik 2026-10-24 „1 a und b und c“, an iron box that later was a rotten wooden one): the model
+# reports a thing the first time with its features, the panel keeps them and checks every narration against them
+DINGE_MAX = 12             # things kept per round (and carried into the next chapter)
+DINGE_NEU = 3              # new ones one narration may report
+DING_NAME = 40
+DING_MERKMALE = 80
+DINGE_ZUEGE = 10           # a thing counts for the check at its place, or when it came up in the last this many turns
+# fixed feature words: a word form (or the start of a compound) -> (kind, value); two values of one kind contradict
+_MERKMAL = {"stoff": {"holz": ("holz", "hölzern", "morsch", "eiche", "eichen", "wood", "wooden", "rotten", "oak"),
+                      "eisen": ("eisen", "eisern", "verrostet", "rostig", "stahl", "stählern", "iron", "rusty", "rusted", "steel"),
+                      "silber": ("silber", "silbern", "silver"), "gold": ("gold", "golden", "vergoldet", "gilded"),
+                      "stein": ("stein", "steinern", "marmor", "stone", "marble"), "bronze": ("bronze", "bronzen"),
+                      "kupfer": ("kupfer", "kupfern", "copper"), "glas": ("glas", "gläsern", "glass"),
+                      "leder": ("leder", "ledern", "leather"), "knochen": ("knochen", "beinern", "bone"),
+                      "kristall": ("kristall", "kristallen", "crystal")},
+            "farbe": {"rot": ("rot", "red"), "blau": ("blau", "blue"), "gruen": ("grün", "green"), "gelb": ("gelb", "yellow"),
+                      "schwarz": ("schwarz", "black"), "weiss": ("weiß", "weiss", "white"), "grau": ("grau", "grey", "gray"),
+                      "braun": ("braun", "brown")}}
+_FORM = {w: (k, v) for k, vs in _MERKMAL.items() for v, ws in vs.items() for w in ws}
+_ENDUNG = re.compile(r"(e|es|er|en|em|n|s)?$")
+_WORT = re.compile(r"[a-zäöüß]+")
+_SATZ = re.compile(r"[.!?;:]+")
 
 # the model's sampling per job (llm.complete puts the extra keys into the request): a narration a little freer
 # and less repetitive, the checks sober
@@ -221,6 +244,8 @@ def facts_extra(rd, li):
         out["kurz"] = rd["kurz"]
     if rd.get("faeden"):
         out["faeden"] = list(rd["faeden"])
+    if things_facts(rd):
+        out["dinge"] = things_facts(rd)
     return out
 
 
@@ -252,6 +277,10 @@ def style_text(dm, r, rd, lang):
 
 # ---------------------------------------------------------------- fixed checks with one rewrite
 HINWEIS = {
+    "widerspruch": ("Hinweis: Deine Erzählung widerspricht Dingen mit festen Merkmalen: {namen}. Beschreibe sie genau so "
+                    "weiter, mit demselben Stoff, derselben Farbe, demselben Zustand.",
+                    "Note: your narration contradicts things with fixed features: {namen}. Describe them exactly so, with "
+                    "the same material, colour and state."),
     "wiederholung": ("Hinweis: Deine Erzählung wiederholt zu viel aus den letzten Zügen. Erzähle Neues: eine Wendung, "
                      "ein neues Detail, eine Reaktion der Welt.",
                      "Note: your narration repeats too much of the last turns. Tell something new: a twist, a new "
@@ -291,6 +320,10 @@ def judge(dm, rd, story):
     far = far_places(rd, story, low)
     if far:
         return "karte", far
+    bad = contradicts(rd, text)
+    if bad:
+        dm._day.bump("widerspruch")
+        return "widerspruch", [f"{x['name']} ({x.get('merkmale', '')})" for x in rd.get("dinge") or [] if x["name"] in bad]
     t = _triples(text)
     old = set().union(*[_triples(x["text"]) for x in [e for e in rd["log"] if e["art"] == "dm"][-WIEDER_ZURUECK:]] or [set()])
     if t and len(t & old) / len(t) > WIEDERHOLT:
@@ -369,18 +402,170 @@ def stats(dm, r):
     return out
 
 
+# ---------------------------------------------------------------- the thing memory
+SCHEMA_DINGE = {"type": "array", "maxItems": DINGE_NEU, "items": {"type": "object", "additionalProperties": False,
+                "required": ["name", "merkmale"], "properties": {"name": {"type": "string", "maxLength": DING_NAME + 20},
+                                                                 "merkmale": {"type": "string", "maxLength": DING_MERKMALE + 40}}}}
+AUFGABE_DINGE = {
+    "de": f"In dinge trägst du höchstens {DINGE_NEU} wichtige Dinge ein, die in dieser Erzählung zum ersten Mal vorkommen "
+          "(eine Truhe, eine Tür, ein Brief, eine Waffe), name kurz, merkmale mit Stoff, Farbe, Zustand und Besonderem. "
+          "Die Liste dinge der Fakten gilt fest: Beschreibe jedes Ding darin immer genau so, ändere nie Stoff, Farbe oder "
+          "Zustand.",
+    "en": f"In dinge put at most {DINGE_NEU} important things that come up for the first time in this narration (a chest, "
+          "a door, a letter, a weapon), name short, merkmale with material, colour, state and anything special. The list "
+          "dinge of the facts is fixed: describe every thing in it always exactly so, never change its material, colour or "
+          "state."}
+
+
+def _feature(w, compound=False):
+    """(kind, value) of one word: a feature word with an ending („morsche“), or at the start of a compound
+    („Eisenkästchen“) when compound."""
+    base = _ENDUNG.sub("", w) if w not in _FORM else w
+    hit = _FORM.get(w) or _FORM.get(base)
+    if hit or not compound:
+        return hit
+    return next((_FORM[f] for f in sorted(_FORM, key=len, reverse=True) if len(f) >= 4 and w.startswith(f) and len(w) - len(f) >= 4), None)
+
+
+def features(text):
+    """The fixed features a thing's name and features name: {kind: {values}}."""
+    out = {}
+    for w in _WORT.findall(str(text).lower()):
+        hit = _feature(w, True)
+        if hit:
+            out.setdefault(hit[0], set()).add(hit[1])
+    return out
+
+
+def head(name):
+    """The word a thing is called by in a narration: the last word of its name that is no feature word, without a
+    feature at its start („Eisenkästchen“ -> „kästchen“); "" when none has 4 letters."""
+    for w in reversed(_WORT.findall(str(name).lower())):
+        if len(w) < 4 or _feature(w):
+            continue
+        f = next((f for f in sorted(_FORM, key=len, reverse=True) if len(f) >= 4 and w.startswith(f) and len(w) - len(f) >= 4), "")
+        return w[len(f):]
+    return ""
+
+
+def check_things(dm, r, rd, obj):
+    """dinge of a narration by fixed rules: short, no refused word, no hero's name, none kept already, none that
+    contradicts a kept thing of the same kind. [{name, merkmale}]."""
+    heroes = {p["held"]["name"].lower() for _, p in dm.seated(rd)}
+    known = {x["name"].lower() for x in rd.get("dinge") or []}
+    out = []
+    for x in (obj if isinstance(obj, list) else [])[:DINGE_NEU * 3]:
+        if not isinstance(x, dict) or len(out) >= DINGE_NEU:
+            continue
+        name, mm = _part(dm, r, rd, x.get("name"), DING_NAME), _part(dm, r, rd, x.get("merkmale"), DING_MERKMALE)
+        if len(name) < 3 or not head(name) or name.lower() in known | heroes or contradicts(rd, f"{mm} {name}", head(name)):
+            continue
+        known.add(name.lower())
+        out.append({"name": name, "merkmale": mm})
+    return out
+
+
+def learn_things(rd, dinge):
+    """New things into the memory (the place and turn they came up), the oldest dropped past DINGE_MAX."""
+    if not dinge:
+        return
+    ort = (rd.get("szene") or {}).get("ort", "")
+    rd["dinge"] = ((rd.get("dinge") or []) + [dict(x, ort=ort, zug=rd.get("zug", 0)) for x in dinge])[-DINGE_MAX:]
+    print(f"dungeon: dinge | neu | {len(dinge)}", flush=True)
+
+
+def _near(rd):
+    """The kept things that count now: at the group's place or named in the last DINGE_ZUEGE turns."""
+    ort, zug = (rd.get("szene") or {}).get("ort", ""), rd.get("zug", 0)
+    return [x for x in rd.get("dinge") or [] if (ort and x.get("ort") == ort) or zug - x.get("zug", 0) <= DINGE_ZUEGE]
+
+
+def contradicts(rd, text, only=""):
+    """The kept things a text describes against their fixed features (Dominik 2026-10-24 „1 b“): where the text calls
+    a thing by its word, a feature right before it or at the start of its compound („das morsche Kästchen“,
+    „Holzkästchen“) that differs from all kept things of that word of the same kind. Returns their names."""
+    things = {}
+    for x in _near(rd):
+        h = head(x["name"])
+        if h and (not only or h == only):
+            things.setdefault(h, []).append(x)
+    out = []
+    for satz in _SATZ.split(str(text).lower()):
+        ws = _WORT.findall(satz)
+        for i, w in enumerate(ws):
+            for h, xs in things.items():
+                if h not in w or w.index(h) + len(h) < len(w) - 2:
+                    continue
+                said = {}
+                for v in ws[max(0, i - 3):i]:
+                    hit = _feature(v)
+                    if hit:
+                        said.setdefault(hit[0], set()).add(hit[1])
+                pre = w[:w.index(h)]
+                hit = _feature(pre) if len(pre) >= 3 else None
+                if hit:
+                    said.setdefault(hit[0], set()).add(hit[1])
+                kept = {}
+                for x in xs:
+                    for k, vs in features(x["name"] + " " + x.get("merkmale", "")).items():
+                        kept.setdefault(k, set()).update(vs)
+                if any(k in kept and not vs <= kept[k] for k, vs in said.items()):
+                    out += [x["name"] for x in xs if x["name"] not in out]
+    return out[:3]
+
+
+def things_facts(rd):
+    return [{"name": x["name"], "merkmale": x.get("merkmale", "")} for x in _near(rd)]
+
+
+def edit_thing(dm, owner, rid, n, b):
+    """The host on a kept thing (Dominik 2026-10-24 „1 c“): {"weg": true} forgets it, else {name, merkmale} by the
+    same rules as the model's (the round's word list). Returns the round's things."""
+    if not isinstance(n, int) or isinstance(n, bool):
+        raise ValueError("eingabe")
+    r = dm.rules()
+    with dm._lock:
+        d = dm._read()
+        rd = dm._round(d, rid)
+        xs = rd.get("dinge") or []
+        if rd["owner"] != owner or not 0 <= n < len(xs):
+            print("dungeon: dinge | nicht da", flush=True)
+            raise LookupError("eintrag")
+        if b.get("weg") is True:
+            xs.pop(n)
+            what = "weg"
+        else:
+            name, mm = dm.plain(b.get("name"), DING_NAME), dm.plain(b.get("merkmale"), DING_MERKMALE)
+            if len(name) < 3 or not head(name):
+                raise ValueError("eingabe")
+            if dm.bad_words(r, rd, f"{name} {mm}"):
+                print("dungeon: dinge | wortliste", flush=True)
+                raise ValueError("wortliste")
+            xs[n].update(name=name, merkmale=mm)
+            what = "geaendert"
+        rd["dinge"] = xs
+        dm._write(d)
+    print(f"dungeon: dinge | {what}", flush=True)
+    return xs
+
+
 # ---------------------------------------------------------------- a chapter's truth goes on in the next one
 def keep_chapter(rd):
-    return {"wahrheit": rd.get("wahrheit"), "faeden": list(rd.get("faeden") or [])}
+    return {"wahrheit": rd.get("wahrheit"), "faeden": list(rd.get("faeden") or []), "dinge": list(rd.get("dinge") or [])}
 
 
 def carry(kampagne):
-    return {k: kampagne[k] for k in ("wahrheit", "faeden") if kampagne.get(k)}
+    """What a chapter takes over from the last one; its kept things count at their places, not as new."""
+    out = {k: kampagne[k] for k in ("wahrheit", "faeden", "dinge") if kampagne.get(k)}
+    if out.get("dinge"):
+        out["dinge"] = [dict(x, zug=-DINGE_ZUEGE - 1) for x in out["dinge"] if isinstance(x, dict) and x.get("name")][-DINGE_MAX:]
+    return out
 
 
 def view(rd, pid, host):
     out = {"faeden": list(rd.get("faeden") or []), "daumen": mine(rd, pid)}
     if host:
         out["wahrheit"] = rd.get("wahrheit")
+        out["dinge"] = [{"name": x["name"], "merkmale": x.get("merkmale", ""), "ort": x.get("ort", "")} for x in rd.get("dinge") or []]
     return out
 

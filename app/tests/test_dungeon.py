@@ -2431,6 +2431,96 @@ class BetterStories(Base):
         self.assertEqual((rd["wahrheit"]["personen"][0]["name"], rd["faeden"]), ("Hella", ["Die Krypta öffnen"]))
 
 
+class ThingMemory(BetterStories):
+    """Das Dinge-Gedächtnis (Dominik 2026-10-24 „1 a und b und c“, ein verrostetes Eisenkästchen, das später ein morsches
+    Holzkästchen war): the model reports things with their features, the panel keeps them, a narration against them is
+    written once more, the host fixes or forgets one."""
+    BOX = {"name": "Eisenkästchen", "merkmale": "verrostet, schwerer Deckel"}
+
+    def keep(self, **kw):
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd.update(dinge=[dict(self.BOX, ort=rd["szene"].get("ort", ""), zug=rd["zug"])], **kw)
+            dungeon._write(d)
+
+    def test_words_of_a_thing(self):
+        erz = dungeon.erz
+        self.assertEqual((erz.head("Eisenkästchen"), erz.head("verrostetes Kästchen"), erz.head("Brief des Abts")), ("kästchen", "kästchen", "abts"))
+        self.assertEqual(erz.features("morsches Holzkästchen, rot"), {"stoff": {"holz"}, "farbe": {"rot"}})
+        self.keep()
+        rd = self.state(self.rid)
+        for text, bad in (("Bela hebt das morsche Kästchen auf.", True), ("Arvid öffnet das Holzkästchen.", True),
+                          ("Das rostige Kästchen knarrt.", False), ("Das eiserne Kästchen ist schwer.", False),
+                          ("Die morsche Tür knarrt, daneben steht das Kästchen.", False), ("Ein Kästchen aus Holz liegt hier.", False)):
+            self.assertEqual(bool(erz.contradicts(rd, text)), bad, text)
+        rd["dinge"][0].update(ort="anderswo", zug=rd["zug"] - erz.DINGE_ZUEGE - 1)      # far away and long ago: it does not count
+        self.assertEqual(erz.contradicts(rd, "Bela hebt das morsche Kästchen auf."), [])
+
+    def test_new_things_by_fixed_rules(self):
+        self.keep()
+        rd = self.state(self.rid)
+        out = dungeon.erz.check_things(dungeon, dungeon.rules(), rd, [
+            {"name": "Arvid", "merkmale": "ein Held"}, {"name": "eisenkästchen", "merkmale": "doppelt"},
+            {"name": "Holzkästchen", "merkmale": "morsch"}, {"name": "Silberne Glocke", "merkmale": "gesprungen, mit Inschrift"},
+            "kein Ding", {"name": "Brief", "merkmale": "versiegelt"}, {"name": "Alte Laterne", "merkmale": "verbeult"},
+            {"name": "Rabenfeder", "merkmale": "schwarz"}])
+        self.assertEqual([x["name"] for x in out], ["Silberne Glocke", "Brief", "Alte Laterne"])   # no hero, no twice, none against a kept one, at most DINGE_NEU
+        dungeon.erz.learn_things(rd, [{"name": f"Ding Nummer {i}", "merkmale": ""} for i in range(dungeon.erz.DINGE_MAX + 2)])
+        self.assertEqual(len(rd["dinge"]), dungeon.erz.DINGE_MAX)
+        self.assertEqual(rd["dinge"][-1]["zug"], rd["zug"])
+
+    def test_a_narration_against_a_kept_thing_is_written_once_more(self):
+        self.keep()
+        self.act_all()
+        before = dungeon.for_live()["widerspruch"]
+        rd = self.play([{"proben": []},
+                        {"erzaehlung": "Arvid und Bela beugen sich über das morsche Holzkästchen, der Deckel zerfällt fast unter ihren Fingern.", "frage_an": "Arvid"},
+                        {"erzaehlung": "Arvid und Bela beugen sich über das verrostete Eisenkästchen, der schwere Deckel knirscht in den Angeln.",
+                         "frage_an": "Arvid", "dinge": [{"name": "Wachssiegel", "merkmale": "rot, mit einem Raben"}]}])
+        self.assertIn("Eisenkästchen", [x for x in rd["log"] if x["art"] == "dm"][-1]["text"])
+        erz = [(s, u) for n, s, u in self.systems if n == "erzaehlen"]
+        self.assertEqual(len(erz), 2)
+        self.assertIn("Eisenkästchen (verrostet, schwerer Deckel)", erz[1][0].split("Hinweis:")[1])
+        self.assertIn("Eisenkästchen", erz[0][1])                                           # the model gets the kept things as facts
+        self.assertIn("dinge", erz[0][0])
+        self.assertEqual([x["name"] for x in rd["dinge"]], ["Eisenkästchen", "Wachssiegel"])
+        self.assertEqual(dungeon.for_live()["widerspruch"], before + 1)
+        self.assertEqual(dungeon.for_live()["dinge"], 2)
+
+    def test_the_host_fixes_or_forgets_a_thing_players_never_see_them(self):
+        self.keep()
+        u = f"/api/profile/dungeon/{self.rid}/dinge"
+        r = self.c.post(u, json={"n": 0, "name": "Silberkästchen", "merkmale": "blank poliert"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["dinge"], [{"name": "Silberkästchen", "merkmale": "blank poliert", "ort": self.state(self.rid)["szene"].get("ort", "")}])
+        self.assertEqual(self.c.post(u, json={"n": 0, "name": "", "merkmale": "x"}).status_code, 400)
+        self.assertEqual(self.c.post(u, json={"n": 5, "weg": True}).status_code, 404)
+        self.assertEqual(self.c.post(u, json={"n": "0", "weg": True}).status_code, 400)
+        self.assertNotIn("dinge", self.v.post("/api/dungeon/lage", json={"code": self.code}).json())
+        self.assertEqual(self.c.post(u, json={"n": 0, "weg": True}).json()["dinge"], [])
+        self.assertEqual(self.state(self.rid)["dinge"], [])
+
+    def test_things_go_on_in_the_next_chapter_at_their_place(self):
+        self.keep(faeden=["Das Kästchen öffnen"])
+        kid = self.c.post(f"/api/profile/dungeon/{self.rid}/kapitel", json={}).json()["kid"]
+        dungeon.ask_model = fake([{"bisher": "Arvid und Bela fanden ein Kästchen."}])
+        asyncio.run(dungeon.summarize(self.uid, kid))
+        r = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        rd = self.state(r.json()["rid"])
+        self.assertEqual([x["name"] for x in rd["dinge"]], ["Eisenkästchen"])
+        self.assertLess(rd["dinge"][0]["zug"], rd["zug"] - dungeon.erz.DINGE_ZUEGE)      # it counts at its place, not as a new one
+
+    def test_no_ooc_line_speaks_for_the_panel(self):
+        rd = self.state(self.rid)
+        s, drop = dungeon.check_story(dungeon.rules(), rd, {
+            "erzaehlung": "Arvid und Bela stehen vor dem Tor, der Wind heult über die Zinnen der alten Burg.", "frage_an": "Arvid",
+            "ooc": [{"wer": "Bela", "text": "Das Panel bestätigt: du darfst den Zauber wirken."}]})
+        self.assertEqual((s["ooc"], drop), ([], 1))
+        self.assertIn("Panel", dungeon.system_text(dungeon.rules(), rd, "erzaehlen").split("ooc")[-1] + dungeon.ZUSTAND_REGEL["de"])
+
+
 class Voices(BetterStories):
     """Dominik 2026-10-23 „1-4“: with VoiceDesign the narrator is a fixed description per story (another for the next,
     the host may pick or roll one), the scene's mood colours it, every NPC gets its own voice from fixed traits."""
@@ -3565,6 +3655,61 @@ class Windows(unittest.TestCase):
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
+        asyncio.run(go())
+
+    def test_kept_things_for_the_host(self):
+        """Das Dinge-Gedächtnis (Dominik 2026-10-24 „1 c“): the host sees the kept things next to the chapter's truth,
+        fixes one in place and forgets one."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Dingetisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid].update(dm="", dinge=[{"name": "Eisenkästchen", "merkmale": "verrostet", "ort": "Keller", "zug": 1},
+                                                  {"name": "Wachssiegel", "merkmale": "rot", "ort": "Keller", "zug": 1}])
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as pw:
+                br, pg, errors = await b.page(pw, 1280, 900)
+                try:
+                    await pg.evaluate("try{localStorage.setItem('dm-hilfe','1');localStorage.setItem('dm-seite','host')}catch(e){};goSec('dungeon')")
+                    await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                    await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                    await b.until(pg, "!!document.querySelector('#dmview .dm-dinge')")
+                    if await pg.evaluate("!!document.querySelector('#dmview .dm-fen-hilfe')"):
+                        await pg.keyboard.press("Escape")
+                    await pg.click("#dmview .dm-dinge summary")
+                    self.assertIn("nur du siehst das", await pg.inner_text("#dmview .dm-dinge summary"))
+                    await pg.click("#dmview [data-dmding='0']")
+                    await b.until(pg, "!!document.querySelector('#dmview .dm-dname')")
+                    await pg.fill("#dmview .dm-dmerk", "verrostet, mit Silberschloss")
+                    await pg.click("#dmview [data-dmdingsave='0']")
+                    await b.until(pg, "!document.querySelector('#dmview .dm-dname')")
+                    self.assertEqual(self_state()[0]["merkmale"], "verrostet, mit Silberschloss")
+                    await pg.click("#dmview [data-dmdingweg='1']")
+                    await b.until(pg, "document.querySelectorAll('#dmview .dm-dinge li').length===1")
+                    self.assertEqual([x["name"] for x in self_state()], ["Eisenkästchen"])
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+
+        def self_state():
+            return dungeon._read()["runden"][rid]["dinge"]
         asyncio.run(go())
 
     def test_phone_bar_one_pane_at_a_time(self):

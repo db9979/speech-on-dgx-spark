@@ -1801,6 +1801,8 @@ def snapshot(view="admin", now=None):
                         + _dungeon_regeln(dgn.get("regeln") or {})
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
+                        + (f" · {dgn['dinge']} gemerkte Dinge" if dgn.get("dinge") else "")
+                        + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")
                         + (f" · {dgn['warten']} Runden warten auf die Erzählung" if dgn.get("warten") else "")
                         + (f" · heute {dgn['tisch']} Zeilen Tischgespräch" if dgn.get("tisch") else "")
