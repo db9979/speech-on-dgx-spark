@@ -561,6 +561,7 @@ class Table(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#dmview .dmk svg')")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dmk-wege [data-dmkid]').length"), 1)
+                        await helpers.dm_pane(pg, "karte")                           # the phone shows the map as its own pane
                         await pg.click("#dmview .dmk-wege [data-dmkid]")
                         self.assertIn("Wir gehen", await pg.evaluate("document.querySelector('#dmview .dm-in').value"))
                         # names stay readable and apart: no name over another name or another place, not bigger than the text

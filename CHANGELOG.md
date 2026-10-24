@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.006** · 2026-10-24 · KI-Dungeon-Master: am Handy eine eigene Leiste unten (Geschichte, Gruppe, Held, Karte), immer nur ein Teil, roter Punkt bei neuem Zug; die Leiste des Panels ist am Tisch ausgeblendet
 - **V01.1.005** · 2026-10-24 · KI-Dungeon-Master: Bilder im Bestiarium und im Katalog verschwinden nach einem Neustart nicht mehr; das zuletzt gemalte Bild bleibt, bis das neue da ist, selbst gemalte bleiben fest
 - **V01.1.004** · 2026-10-24 · KI-Dungeon-Master: ruhiger Tisch, die Hilfe „So spielst du“ als Fenster zum Blättern, Musik und Geräusche im Kopf, Zug und Uhr nur einmal, der eigene Held nur rechts, kein Assistent am Tisch, „Leiten“ in der Schrift des Tisches ohne Lücke
 - **V01.1.003** · 2026-10-24 · KI-Dungeon-Master: Vorlesen Stück für Stück mit zweitem Versuch und Ersatzstimme, auf jedem Gerät nach einmal „Ton an“, die Uhr wartet aufs Vorlesen; wörtliche Rede spricht die Figur, drei feste Stimmen (Erzähler, NPC Mann, NPC Frau), Stimmvorschlag für Helden

@@ -5525,6 +5525,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: eigene Leiste am Handy (V01.1.006, Punkt 10 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Am Handy zeigt der Spieltisch immer nur einen Teil, unten wählt eine eigene Leiste ihn aus: 📖 Geschichte (Erzählung, Uhr und Feld), 👥 Gruppe (die Mitspieler), 📜 Held (der eigene Held mit Heldenbogen, dazu Leiten, Fäden und Termin) und 🗺 Karte (nur die Karte, sobald es eine gibt). Erzählt der Dungeon-Master weiter, während ein anderer Teil offen ist, bekommt „Geschichte“ einen roten Punkt. Die Leiste des Panels (Assistent, Heute, Dokumente, Ich, Verwalten) ist am Tisch ausgeblendet und kommt mit „← Runden“ zurück. Am breiten Bildschirm bleibt alles wie bisher in drei Spalten. Selbsttest Windows.test_phone_bar_one_pane_at_a_time."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ruhiger Tisch ohne Doppeltes (V01.1.004, Punkt 9 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Die Hilfe „So spielst du“ ist ein Fenster in der Art des Tisches mit einer Seite je Teil (Karte, Schreiben, Würfeln, Leben, Händler, Vorlesen und mehr). „‹ Zurück“, „Weiter ›“, die Punkte und am Rechner die Pfeiltasten blättern; Esc, ✕ oder ein Tipp daneben schließt. Sie öffnet sich wie bisher einmal von selbst auf jedem Gerät, danach über „❔ So spielst du“ im Kopf. Musik, Geräusche und die Lautstärke stehen jetzt im Kopf des Tisches statt in einer eigenen Zeile. Zug, Uhr und „haben gehandelt“ stehen nur noch einmal: der Zug im Kopf, Uhr und Stand über dem Feld; die rechte Spalte wiederholt sie nicht mehr. Wer gehandelt hat, sieht die Uhr in der eigenen Karte, eine eigene Extra-Minute dort als „+1 Minute für dich“. Der eigene Held steht in der Gruppe nur als kurze Zeile (Name, Leben, Stand), die große Karte mit Heldenbogen bleibt rechts. Am Spieltisch ist das schwebende Assistenten-Gesicht ausgeblendet, auf allen anderen Seiten ist es wieder da. Der Reiter „Leiten“ nutzt die Schrift des Tisches, eine ungerade letzte Kachel füllt ihre Zeile. Selbsttest Windows."
 },
 {
@@ -18030,6 +18038,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a bar of its own on the phone (V01.1.006, point 10 of the review of 2026-10-24, Dominik \"alles umsetzten\"): on the phone the game table shows one part at a time, a bar of its own at the bottom picks it: 📖 Story (narration, clock and field), 👥 Group (the other players), 📜 Hero (the own hero with the hero sheet, plus Host, Threads and Date) and 🗺 Map (only the map, once there is one). When the Dungeon Master tells on while another part is open, \"Story\" gets a red dot. The panel's own bar (Assistant, Today, Documents, Me, Manage) is hidden at the table and comes back with \"← Rounds\". On a wide screen everything stays in three columns as before. Self-test Windows.test_phone_bar_one_pane_at_a_time."
 },
 {
 "lang": "en",

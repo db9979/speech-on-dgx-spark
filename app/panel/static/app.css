@@ -2321,6 +2321,15 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dgmodal{padding:0;place-items:stretch;align-items:stretch;background:var(--bg);backdrop-filter:none;z-index:150}
 .dgcard{width:100%;max-width:none;min-height:100vh;min-height:100dvh;box-sizing:border-box;margin:0;border:0;border-radius:0;animation:none;padding:14px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
+/* the phone at the table (Punkt 10): one pane at a time, a bar of its own at the bottom instead of the panel's */
+.dm-unten{display:none}
+@media (max-width:760px){.dm-tisch .dm-unten{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:4px 6px calc(4px + env(safe-area-inset-bottom));background:var(--t-grund,var(--bg));border-top:1px solid var(--t-linie,var(--line))}
+  .dm-unten button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;background:none;border:0;color:var(--t-mut,var(--mut));font:inherit;font-size:11.5px;cursor:pointer;min-width:0}
+  .dm-unten button>span{font-size:20px;line-height:1.2}.dm-unten button.on{color:var(--t-gold,var(--acc));font-weight:600}
+  .dm-hneu{position:absolute;top:2px;left:calc(50% + 9px);width:9px;height:9px;border-radius:50%;background:#e5484d}
+  .dm.dm-tisch{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+  .dm-grid[data-dmpane=geschichte]>:not(.dm-story),.dm-grid[data-dmpane=gruppe]>:not(.dm-group),.dm-grid[data-dmpane=held]>:not(.dm-side),.dm-grid[data-dmpane=karte]>:not(.dm-side),.dm-grid[data-dmpane=karte] .dm-side>:not(.dm-seitein){display:none}
+  body:has(#dungeon.on .dm-tisch) #aptabs{display:none!important}}
 /* at the table the assistant's face stays away (Punkt 9): it sat over the field and the side column */
 body:has(#dungeon.on .dm-tisch) #fab,body.dg-offen #fab{display:none!important}
 body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a profile: nothing but the game */.dmadmcard{max-width:900px;width:calc(100vw - 32px)}#dmadmtxt{width:100%;min-height:50vh;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}

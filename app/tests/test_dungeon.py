@@ -3020,6 +3020,7 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-side .dm-doll').length"), 0)   # the side only sums up
                         # the own hero only once (Punkt 9): a short row in the group, the card in the side column
                         self.assertEqual(await pg.evaluate("[document.querySelectorAll('#dmview .dm-group .dm-ichz').length,document.querySelectorAll('#dmview .dm-group .me .dm-stats').length,document.querySelectorAll('#dmview .dm-side .dm-mek').length]"), [1, 0, 1])
+                        await helpers.dm_pane(pg, "gruppe")
                         await pg.click("#dmview .dm-group .dm-stats .dm-erkb:nth-child(2)")             # a tap on a value explains it
                         await b.until(pg, "!!document.querySelector('#dmview .dm-group .dm-erk')")
                         self.assertIn("Geschick", await pg.evaluate("document.querySelector('#dmview .dm-group .dm-erk').textContent"))
@@ -3032,6 +3033,7 @@ class Windows(unittest.TestCase):
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding .dm-detail-w .dm-wf')"))   # the die stands out
                         await pg.click("#dmview .dm-fen-ding [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
+                        await helpers.dm_pane(pg, "held")
                         await pg.click("#dmview [data-dmfen=bogen]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-bogen .dm-doll')")   # „Ausrüstung“ first
                         self.assertTrue(await pg.evaluate(fits), w)
@@ -3278,6 +3280,7 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('fab')).display"), "none", w)   # no face at the table
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-group .dm-ichz').length"), 1, w)
                         if await pg.evaluate("!!document.querySelector('#dmview [data-dmseite=host]')"):
+                            await helpers.dm_pane(pg, "held")
                             await pg.click("#dmview [data-dmseite=host]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-tiles .dm-tile')")
                         same = "(()=>{const a=getComputedStyle(document.querySelector('#dmview .dm-tile')).fontFamily,b=getComputedStyle(document.querySelector('#dmview .dm-tisch,#dmview.dm-tisch')).fontFamily;return a===b})()"
@@ -3289,6 +3292,71 @@ class Windows(unittest.TestCase):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"ruhig-{w}.png"), full_page=True)
                         await pg.evaluate("goSec('mon')")                                                 # away from the table the face is back
                         await b.until(pg, "getComputedStyle(document.getElementById('fab')).display!=='none'")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+    def test_phone_bar_one_pane_at_a_time(self):
+        """Punkt 10 of 2026-10-24: on the phone the table shows one pane at a time, the bar at the bottom picks it
+        (Geschichte, Gruppe, Held, Karte), a new turn elsewhere puts a dot on „Geschichte“, the panel's own bar stays
+        away at the table; on a wide screen nothing of it shows."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Handytisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["dm"] = ""
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+        shown = "(s=>{const e=document.querySelector(s);return !!e&&e.getClientRects().length>0})"
+
+        async def go():
+            async with async_playwright() as pw:
+                for w, ht in ((390, 844), (1280, 900)):
+                    br, pg, errors = await b.page(pw, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';DMA.handy='geschichte';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-unten')")
+                        if w > 760:                                                                      # wide: three columns, no bar
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-unten'),{shown}('#dmview .dm-group'),{shown}('#dmview .dm-story'),{shown}('#dmview .dm-mek')]"), [False, True, True, True])
+                        else:
+                            names = await pg.evaluate("[...document.querySelectorAll('#dmview .dm-unten [data-dmh]')].map(x=>x.dataset.dmh)")
+                            self.assertEqual(names[:3], ["geschichte", "gruppe", "held"])
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-story'),{shown}('#dmview .dm-group'),{shown}('#dmview .dm-mek')]"), [True, False, False])
+                            self.assertFalse(await pg.evaluate(f"{shown}('#aptabs')"))                    # the panel's bar stays away
+                            await pg.click("#dmview [data-dmh=gruppe]")
+                            await b.until(pg, f"{shown}('#dmview .dm-group')&&!{shown}('#dmview .dm-story')")
+                            await pg.evaluate("DMA.hzug.p=DM.v.zug-1;dmDraw()")                          # a new turn meanwhile: the dot
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview [data-dmh=geschichte] .dm-hneu')"))
+                            await pg.click("#dmview [data-dmh=held]")
+                            await b.until(pg, f"{shown}('#dmview .dm-mek')&&!{shown}('#dmview .dm-group')")
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-side [data-dmseite=karte]')"))
+                            if "karte" in names:                                                         # the map as its own pane
+                                await pg.click("#dmview [data-dmh=karte]")
+                                await b.until(pg, f"{shown}('#dmview .dm-seitein .dmk')&&!{shown}('#dmview .dm-mek')")
+                            if os.environ.get("DMF_SHOT"):
+                                await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"handy-{names[-1]}.png"))
+                            await pg.click("#dmview [data-dmh=geschichte]")
+                            await b.until(pg, f"{shown}('#dmview .dm-story')&&!document.querySelector('#dmview .dm-hneu')")
+                            if await pg.evaluate("document.body.classList.contains('appview')"):
+                                await pg.evaluate("goSec('mon')")                                         # away from the table the bar is back
+                                await b.until(pg, f"{shown}('#aptabs')")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         self.assertEqual(errors, [])
                     finally:
@@ -3444,6 +3512,7 @@ class Windows(unittest.TestCase):
                         await pg.unroute("**/aktion")
                         # the host's „⋯“ on Bela (Dominik „andere spieler bearbeiten … den code nochmal dem spieler geben“)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-smenu').length"), 1)   # not on the own seat
+                        await helpers.dm_pane(pg, "gruppe")
                         await pg.click("#dmview .dm-smenu summary")
                         # the menu stays inside the hero's card, nothing cut off at the column's edge (Dominik 2026-10-24)
                         inside = await pg.evaluate("""(()=>{const m=document.querySelector('#dmview .dm-smenu-l').getBoundingClientRect(),
@@ -3598,6 +3667,7 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-seitein').length"), 1)
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-seitein .dmk')"))   # the map first
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmweiter]')"))
+                        await helpers.dm_pane(pg, "held")
                         await pg.click("#dmview [data-dmseite=host]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-seitein [data-dmweiter]')")
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk')"))

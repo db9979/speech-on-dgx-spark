@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.006** KI-Dungeon-Master: am Handy eine eigene Leiste unten (Geschichte, Gruppe, Held, Karte), immer nur ein Teil, roter Punkt bei neuem Zug; die Leiste des Panels ist am Tisch ausgeblendet
 - **V01.1.005** KI-Dungeon-Master: Bilder im Bestiarium und im Katalog verschwinden nach einem Neustart nicht mehr; das zuletzt gemalte Bild bleibt, bis das neue da ist, selbst gemalte bleiben fest
 - **V01.1.004** KI-Dungeon-Master: ruhiger Tisch, die Hilfe „So spielst du“ als Fenster zum Blättern, Musik und Geräusche im Kopf, Zug und Uhr nur einmal, der eigene Held nur rechts, kein Assistent am Tisch, „Leiten“ in der Schrift des Tisches ohne Lücke
 - **V01.1.003** KI-Dungeon-Master: Vorlesen Stück für Stück mit zweitem Versuch und Ersatzstimme, auf jedem Gerät nach einmal „Ton an“, die Uhr wartet aufs Vorlesen; wörtliche Rede spricht die Figur, drei feste Stimmen (Erzähler, NPC Mann, NPC Frau), Stimmvorschlag für Helden
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.999** KI-Dungeon-Master: Werkzeuge sind eine eigene Art mit eigenem Bild und 🧰 statt Schriftrolle; Völker, Klassen, Fähigkeiten und Gegner werden im Stil jeder Welt gemalt, das Heldenformular zeigt das Bild der gewählten Welt
 - **V01.0.998** Begleiter am Mac: das Fenster in der Menüleiste ist immer genau so hoch wie sein Inhalt, kein leerer Rand mehr oben und unten nach einem langen Reiter
 - **V01.0.997** KI-Dungeon-Master: unter Regeln anpassen zeigen Gegenstände und Gegner ihre Werte und was sie bewirken, in der Zeile und als Werte-Liste im Detail
-- **V01.0.996** KI-Dungeon-Master: das „⋯“-Menü eines Mitspielers wird in der Seitenspalte nicht mehr abgeschnitten, „Malen“ unter Regeln anpassen ohne Tageslimit für den Admin
 
 
 

@@ -1048,3 +1048,10 @@ def declared(src):
     for m in DECLARED.finditer(src):
         out.setdefault(m.group(1).lower(), set()).update(re.findall(r'"([a-z_]+)"', m.group(2)))
     return out
+
+
+async def dm_pane(pg, name):
+    """The Dungeon-Master's table on the phone (V01.1.006) shows one pane at a time: the bar at the bottom opens
+    geschichte, gruppe, held or karte; on a wide screen all stand and nothing is clicked."""
+    if await pg.evaluate("(()=>{const e=document.querySelector('#dmview .dm-unten');return !!e&&e.getClientRects().length>0})()"):
+        await pg.click(f"#dmview .dm-unten [data-dmh={name}]")

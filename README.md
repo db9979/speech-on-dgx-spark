@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.006** AI Dungeon Master: on the phone a bar of its own at the bottom (Story, Group, Hero, Map), one part at a time, a red dot on a new turn; the panel's bar is hidden at the table
 - **V01.1.005** AI Dungeon Master: pictures in the bestiary and the catalog no longer vanish after a restart; the last painted picture stays until the new one is there, hand-painted ones stay for good
 - **V01.1.004** AI Dungeon Master: a calm table, the guide How to play as a window to page through, music and sounds in the head, turn and clock shown once, the own hero only on the right, no assistant at the table, Host in the table's font without a gap
 - **V01.1.003** AI Dungeon Master: reading aloud piece by piece with a second try and a stand-in voice, on every device after one tap on Sound on, the clock waits for the reading; quoted speech in the character's voice, three fixed voices (narrator, NPC man, NPC woman), a voice proposed for heroes
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.999** AI Dungeon Master: tools are a kind of their own with their own picture and 🧰 instead of a scroll; peoples, classes, abilities and foes are painted in each world's style, the hero form shows the picture of the world chosen
 - **V01.0.998** Companion on the Mac: the menu bar window is always exactly as high as its content, no more empty room above and below after a long tab
 - **V01.0.997** AI Dungeon Master: under Adjust rules items and foes show their values and what they do, in the row and as a list of values in the detail
-- **V01.0.996** AI Dungeon Master: a fellow player's "⋯" menu is no longer cut off in the side column, "Malen" under Adjust rules without a day limit for the admin
 
 
 

@@ -3089,6 +3089,13 @@
 "titel": "Dungeon-Master: Bilder bleiben nach Neustart",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Gegner: bei einem Gegner ohne Bild „Malen“, dann „Behalten“. B: Spark neu starten (oder auf das nächste Update warten): das Bild ist noch da. C: Ein Gegner mit Bild aus einer früheren Version zeigt sein Bild weiter, bis der nächste Lauf das neue gemalt hat. D: Zustand → Logs nach dem Start: kein „aufgeraeumt“ mit vielen Bildern.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P466",
+"v": 1006,
+"titel": "Handy-Leiste am Spieltisch",
+"text": "A: Am Handy eine Runde öffnen: unten steht eine eigene Leiste mit Geschichte, Gruppe, Held und Karte, die Leiste des Panels ist weg. B: Jeder Knopf zeigt nur seinen Teil, Held den eigenen Helden mit Heldenbogen und Leiten, Karte nur die Karte. C: Auf Gruppe bleiben, bis der Dungeon-Master weitererzählt: Geschichte bekommt einen roten Punkt, der beim Antippen verschwindet. D: „← Runden“: die Leiste des Panels ist wieder da. E: Am Rechner: drei Spalten wie bisher, keine Leiste.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -7,7 +7,7 @@
 const DM={on:false,data:null,rid:'',v:null,seq:0,busy:false,msg:'',err:false,made:null,at:0,ende:false,form:{},edit:'',kap:false};
 const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:'',konto:{tok:'',v:null,step:'',adr:'',msg:'',err:false,gebunden:false}};
 // read aloud (the last turn's WAV, the host's device plays it by itself) and the microphone of a seat
-const DMA={p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},gesendet:0};
+const DMA={handy:'geschichte',hzug:{p:-1,g:-1},p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},gesendet:0};
 // the short guide for players at the table: opens by itself once on this device, then by its button
 const DMHILFE=[['Karte und Gewölbe','Map and vaults','Die Karte zeigt, wo ihr seid, und wächst mit, je mehr ihr entdeckt. Tippe unter „Von hier aus“ einen Weg an, dann steht er in deinem Feld. In Gewölben würfelt das Panel Fallen; die Antwort auf ein Rätsel schreibst du einfach in deine Aktion.','The map shows where you are and grows as you explore. Tap a way under "From here" to put it in your field. In vaults the panel rolls the traps; just write the answer to a riddle into your action.'],
   ['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
@@ -333,12 +333,23 @@ const dmMalt=v=>v.bild_malt?`<div class="dm-malt" role="status">🖼 ${esc(v.bil
 // better stories: the open threads the panel keeps (promises, quests, questions), the chapter's truth only for the host
 // the right column (Dominik 2026-10-24 „sehr durcheinander und lang“): turn and own hero on top, below one tab at a
 // time of map, host, threads and date; the last tab is remembered per device
-function dmSeite(v,mode,host){const teile=[['karte','🗺',t('Karte','Map'),dmKarte(v,mode)],['host','🎲',t('Leiten','Host'),host],
-    ['faeden','📜',t('Fäden','Threads'),dmThreads(v)],['termin','📅',t('Termin','Date'),dmDate(v,mode)]].filter(x=>x[3]).map(x=>[x[0],x[1]+'|'+x[2],x[3]]);if(!teile.length)return '';
+function dmSeite(v,mode,host){const hp=dmHandy()?DMA.handy:'';   // on the phone „Karte“ is its own pane, „Held“ shows the others
+  const teile=[['karte','🗺',t('Karte','Map'),dmKarte(v,mode)],['host','🎲',t('Leiten','Host'),host],
+    ['faeden','📜',t('Fäden','Threads'),dmThreads(v)],['termin','📅',t('Termin','Date'),dmDate(v,mode)]].filter(x=>x[3]&&(hp==='karte'?x[0]==='karte':hp!=='held'||x[0]!=='karte')).map(x=>[x[0],x[1]+'|'+x[2],x[3]]);if(!teile.length)return '';
   if(!DMA.seite){try{DMA.seite=localStorage.getItem('dm-seite')||''}catch(e){}}
   const on=(teile.find(x=>x[0]===DMA.seite)||teile[0])[0];
   return `${teile.length>1?`<div class="lseg dm-seite" role="tablist">${teile.map(x=>`<button type="button" role="tab" aria-selected="${x[0]===on}" class="${x[0]===on?'on':''}" data-dmseite="${x[0]}"><span aria-hidden="true">${x[1].split('|')[0]}</span>${esc(x[1].split('|')[1])}</button>`).join('')}</div>`:''}
     <div class="dm-seitein">${teile.find(x=>x[0]===on)[2]}</div>`}
+// the phone (Punkt 10 of the review of 2026-10-24): one pane at a time, the bar at the bottom picks it (Geschichte, Gruppe,
+// Held, Karte); a new turn while another pane is open puts a dot on „Geschichte“. The panel's own bar stays away at the table.
+const DMH=[['geschichte','📖','Geschichte','Story'],['gruppe','👥','Gruppe','Group'],['held','📜','Held','Hero'],['karte','🗺','Karte','Map']];
+const dmHandy=()=>!!(window.matchMedia&&matchMedia('(max-width:760px)').matches);
+function dmUnten(v,mode){const z=DMH.filter(x=>x[0]!=='karte'||v.karte);if(!z.some(x=>x[0]===DMA.handy))DMA.handy='geschichte';
+  const neu=DMA.handy!=='geschichte'&&DMA.hzug[mode]>=0&&v.zug>DMA.hzug[mode];
+  return `<nav class="dm-unten" aria-label="${esc(t('Spieltisch','Game table'))}">${z.map(x=>`<button type="button" data-dmh="${x[0]}" class="${x[0]===DMA.handy?'on':''}" aria-pressed="${x[0]===DMA.handy}"><span aria-hidden="true">${x[1]}</span>${esc(t(x[2],x[3]))}${neu&&x[0]==='geschichte'?`<em class="dm-hneu" title="${esc(t('Neuer Zug','New turn'))}"></em>`:''}</button>`).join('')}</nav>`}
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmh],#dgcard [data-dmh]');if(!b)return;const g=!!b.closest('#dgcard'),S=g?DG:DM;
+  if(DMA.handy==='geschichte'&&b.dataset.dmh!=='geschichte'&&S.v)DMA.hzug[g?'g':'p']=S.v.zug;DMA.handy=b.dataset.dmh;
+  g?dgDraw():dmDraw();window.scrollTo(0,0)});
 // an open row („Stimme des Erzählers“, „⋯ Mehr“) stays open across the table's repaints
 document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof Element)||!d.matches('[data-dmauf]'))return;if(d.open)DMA.auf=d.dataset.dmauf;else if(DMA.auf===d.dataset.dmauf)DMA.auf=''},true);
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmseite]');if(!b)return;DMA.seite=b.dataset.dmseite;
@@ -511,9 +522,9 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   v.mode=mode;const log=v.log.map(e=>dmLog(v,e,col)).join('');
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
   w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe===false?0:'zu'}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
-    ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
+    ${v.ich?dmHilfe():''}<div class="dm-grid" data-dmpane="${DMA.handy}"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input}${dmTalk(v,mode)}</div>
-    <div class="dm-col dm-side">${dmAuftrag(v)}${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmFenster(v,mode)}`;
+    <div class="dm-col dm-side">${dmAuftrag(v)}${dmMeKurz(v,mode)}${dmSeite(v,mode,host)}</div></div>${input?'':dmMsg(S)}${dmUnten(v,mode)}${dmFenster(v,mode)}`;
   fen();tk();
   if(mode==='g')dmImgFill(w);
   dmDingFill(w,mode);
