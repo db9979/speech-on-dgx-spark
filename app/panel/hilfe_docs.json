@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Ort im Verlauf, Figuren von anderswo, Teil 3 und 4 (V01.1.024, Dominik 2026-10-24 „1-5 umsetzten“ zu „nach einem Ortswechsel wieder am alten Ort, die Figuren von dort sind auch wieder da“): Die Teile 1, 2 und 5 baut die Karte (Rückweg nur, wenn eine Aktion ihn nennt; dungeon_karte.leute: wer hier ist, wer anderswo und an welchem Ort, wer mitreist; Anzeige „Ort nicht gewechselt“). Verlauf mit Ort: Jede Erzählung trägt beim Eintragen ins Log ihren Ort (where: ort, ort_name; die Räume eines Gewölbes zählen zum Ort darüber). Das Modell bekommt unter bisher nach einem Wechsel nur noch die Erzählungen des neuen Orts und die letzte als Brücke, jede mit „[Ort]“ davor (told_here); Züge von früher ohne Ort bleiben, wie sie waren. Die Fakten tragen personen aus dungeon_karte.leute, und eine feste Regel im Auftrag sagt: Niemand ist an einem anderen Ort als dort angegeben, wer unter „anderswo“ steht, spricht hier nicht, außer er reist mit (ORTE_REGEL). Prüfung: Spricht in der Erzählung eine Figur, die laut Karte anderswo ist und nicht mitreist, schreibt das Modell die Erzählung einmal neu (dungeon_erzaehler.elsewhere, Hinweis „anderswo“, Logzeile dungeon: nachbessern | anders"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "wo); geht die Gruppe gerade zu ihrem Ort, ist sie erlaubt. Selbsttest BetterStories.test_a_narration_keeps_its_place_and_others_stay_elsewhere."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschichten-Planer (V01.0.955, Dominik 2026-10-23 „Können wir auch für den Admin so einen Geschichtengenerator machen“, „natürlich mit LLM-Unterstützung“, „Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.“): Unter *Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“, Abschnitt Geschichten legt der Admin bis zu 30 Geschichten an: Titel, Welt, Ton, Grundidee, Ziel der Helden, Gegenspieler, bis zu 6 Schauplätze, bis zu 10 Tabus und 3 bis 5 Akte mit Titel, Inhalt, Wendepunkt am Ende und geplanten Zügen (2 bis 30). Vorschlag erzeugen lässt das eigene Sprachmodell die ganze Geschichte aus ein paar Stichworten (höchstens 300 Zeichen) entwerfen, ↻ Neu schreiben einen einzelnen Akt mit einem freien Hinweis; die Stichworte stehen dabei nur als Daten im Block <<< … >>> (Marker entschärft), die Antwort kommt im festen JSON-Schema, und das Panel prüft sie mit denselben Regeln wie eine getippte Geschichte (check_plan: Längen, Anzahl der Akte, Züge, Wörter des Tons, „nie“ und die Tabus); erst „Prüfen und speichern“ behält sie (dungeon-geschichten.json im Zustandsordner). Wer eine Runde anlegt, wählt die Geschichte u"
 },
 {
@@ -17902,6 +17918,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: place in the story so far, characters from elsewhere, parts 3 and 4 (V01.1.024, Dominik 2026-10-24 \"1-5 umsetzten\" on \"back at the old place after moving on, its characters there again\"): Parts 1, 2 and 5 are the map's (the way back only when an action names it; dungeon_karte.leute: who is here, who elsewhere and at which place, who travels along; the note \"place not changed\"). Story so far with places: every narration carries its place when it goes into the log (where: ort, ort_name; a vault's rooms count as the place above it). After a change the model gets under bisher only the new place's narrations and the last one as a bridge, each with \"[place]\" in front (told_here); turns from before without a place stay as they were. The facts carry personen from dungeon_karte.leute, and a fixed rule in the task says: nobody is at another place than given there, whoever stands under \"anderswo\" does not speak here unless travelling along (ORTE_REGEL). Check: if a character speaks who is elsewhere by the map and does not travel along, the model writes the narration once more (dungeon_erzaehler.elsewhere, hint \"anderswo\", log line dungeon: nachbessern | anderswo); when the "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "group is just walking to that place, it is allowed. Self-test BetterStories.test_a_narration_keeps_its_place_and_others_stay_elsewhere."
 },
 {
 "lang": "en",

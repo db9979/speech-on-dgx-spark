@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.024** KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf
 - **V01.1.023** KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“
 - **V01.1.022** CarPlay Dungeon-Master: Runde im Auto wählen und neu anlegen, „Passt das?“ vor jeder Aktion, mehr Sprachbefehle, Zusammenfassung, Stimmen der Runde, Warten ohne Zeitgrenze
 - **V01.1.021** KI-Dungeon-Master: Gegner und Beute öffnen ein großes Fenster zum Betrachten (Bild, Werte, sechs Werte, was er bewirken kann, Blättern), Nebenfiguren klingen mit VoiceDesign verschiedener (Sprechtempo, mehr Klangfarben)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.017** KI-Dungeon-Master: Musik passend zu Welt und Stimmung mit Trommeln und Bass, eigene Stimmung Gewölbe; Musikstück mit 👎 als nervig markieren, auch Gäste, nachts neu gemacht
 - **V01.1.016** KI-Dungeon-Master: Vorlesen am Tisch wieder hörbar (die Freischalt-Stille kam als data: und die Sicherheitsregel des Panels blockierte sie), der Tisch bricht bei kleiner Breite sauber um statt Wort für Wort, Prompt-Regel „als JSON“ weg und neu „keine Werte außerhalb der Fakten“
 - **V01.1.015** Modell-Start robuster: kann das Panel refs/main oder die Hub-Dateiliste eines Modells nicht ändern (etwa von root angelegt), schreibt es nur eine Logzeile, die Engine startet trotzdem
-- **V01.1.014** KI-Dungeon-Master: Wächter und Herr im Gewölbe kämpfen mit Gegnern aus dem Bestiarium nach der Gruppenstufe, erst der Sieg im Kampf öffnet den Raum; Fallen als Rettungswurf wie bei D&D (geschafft halber Schaden, Rüstung zählt nicht)
 
 
 

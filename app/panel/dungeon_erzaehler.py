@@ -295,6 +295,10 @@ HINWEIS = {
               "aus karte.wege; andere Orte erreicht sie erst über die Karte.",
               "Note: the group cannot be there: {namen}. Narrate only the place where it stands and the ways from "
               "karte.wege; other places it reaches only over the map."),
+    "anderswo": ("Hinweis: Diese Figuren sind an einem anderen Ort und können hier nicht sprechen: {namen}. Lass sie weg "
+                 "oder erzähle, wie die Gruppe zu ihnen geht.",
+                 "Note: these characters are at another place and cannot speak here: {namen}. Leave them out or tell how "
+                 "the group goes to them."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -328,6 +332,9 @@ def judge(dm, rd, story):
     far = far_places(rd, story, low)
     if far:
         return "karte", far
+    away = elsewhere(rd, story)
+    if away:
+        return "anderswo", away
     bad = contradicts(rd, text)
     if bad:
         dm._day.bump("widerspruch")
@@ -337,6 +344,21 @@ def judge(dm, rd, story):
     if t and len(t & old) / len(t) > WIEDERHOLT:
         return "wiederholung", []
     return "", []
+
+
+def elsewhere(rd, story):
+    """Speaking people the panel knows at another place (dungeon_karte.leute „anderswo“, not travelling along „mit“):
+    they cannot speak here (Dominik 2026-10-24 „1-5 umsetzten“, Punkt 4). One at the place the narration walks to may."""
+    k = rd.get("karte")
+    if not k:
+        return []
+    import dungeon_karte
+    p = dungeon_karte.leute(rd)
+    oid = str(story.get("ort_id") or "")
+    ziel = k["orte"][int(oid[1:]) - 1]["name"].lower() if oid[:1] == "o" and oid[1:].isdigit() and 0 < int(oid[1:]) <= len(k["orte"]) else ""
+    mit = {str(n).lower() for n in p.get("mit") or []}
+    weg = {str(x["name"]).lower(): x["name"] for x in p.get("anderswo") or [] if str(x.get("ort", "")).lower() != ziel and str(x["name"]).lower() not in mit}
+    return sorted({weg[n["name"].lower()] for n in story.get("npc") or [] if n["name"].lower() in weg})
 
 
 def far_places(rd, story, low):

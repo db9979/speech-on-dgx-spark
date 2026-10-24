@@ -2407,6 +2407,41 @@ class BetterStories(Base):
         self.assertEqual(dungeon.erz.judge(dungeon, rd, dict(story, text=text.format(k["orte"][nb]["name"])))[0], "")
         self.assertEqual(dungeon.erz.judge(dungeon, rd, dict(story, ort_id=f"o{far + 1}"))[0], "")   # the way the model chose
 
+    def test_a_narration_keeps_its_place_and_others_stay_elsewhere(self):
+        """Dominik 2026-10-24 „1-5 umsetzten“ (back at the old place, its people there again), Punkte 3 und 4: every
+        narration carries its place; after a change the model gets only the new place's and the last one, each with
+        „[place]“; a speaker the map knows elsewhere and who does not travel along makes the narration a fault."""
+        import dungeon_karte
+        rd = self.state(self.rid)
+        rd["offen"] = {}
+        k = rd["karte"]
+        a = k["hier"]
+        b = next(y for x, y in k["wege"] if x == a) if any(x == a for x, _ in k["wege"]) else next(x for x, y in k["wege"] if y == a)
+        rd["log"] = []
+        dungeon._log(rd, "dm", text="Am Brunnen erzählt die Wirtin von Wölfen.", npc=[], frage="")
+        dungeon._log(rd, "dm", text="Die Wirtin schenkt Tee nach.", npc=[], frage="")
+        self.assertEqual((rd["log"][0]["ort"], rd["log"][0]["ort_name"]), (str(a), k["orte"][a]["name"]))
+        k["hier"] = b
+        dungeon._log(rd, "dm", text="Ihr erreicht den Wald.", npc=[], frage="")
+        k["hier"] = b
+        told = dungeon.told_here(rd, dungeon.BISHER)
+        self.assertEqual(told, [f"[{k['orte'][b]['name']}] Ihr erreicht den Wald."])
+        rd["log"].pop()                                   # just arrived: the last narration of the old place stays as the bridge
+        self.assertEqual(dungeon.told_here(rd, dungeon.BISHER), [f"[{k['orte'][a]['name']}] Die Wirtin schenkt Tee nach."])
+        rd["log"].append({"art": "dm", "text": "Ein alter Zug ohne Ort.", "n": 0})
+        self.assertIn("Ein alter Zug ohne Ort.", dungeon.told_here(rd, dungeon.BISHER))   # from before: kept as it was
+        self.assertIn(dungeon.ORTE_REGEL["de"], dungeon.system_text(dungeon.rules(), rd, "erzaehlen"))
+        self.assertIn("personen", json.loads(dungeon.facts(dungeon.rules(), rd).split("\n")[0]))
+        leute = {"hier": [], "anderswo": [{"name": "Grimma", "ort": k["orte"][a]["name"]}], "mit": []}
+        text = "Arvid und Bela gehen zwischen den Bäumen weiter, und von irgendwo her ruft eine bekannte Stimme nach ihnen, rau und laut."
+        story = {"text": text, "ooc": [], "ort_id": "", "npc": [{"name": "Grimma", "sagt": "Wartet!"}]}
+        with mock.patch.object(dungeon_karte, "leute", lambda rd: leute):
+            self.assertEqual(dungeon.erz.judge(dungeon, rd, story), ("anderswo", ["Grimma"]))
+            self.assertIn("Grimma", dungeon.erz.hint("anderswo", ["Grimma"], "de"))
+            self.assertEqual(dungeon.erz.judge(dungeon, rd, dict(story, ort_id=f"o{a + 1}"))[0], "")   # the group walks to her
+            leute["mit"] = ["Grimma"]
+            self.assertEqual(dungeon.erz.judge(dungeon, rd, story)[0], "")                             # she travels along
+
     def test_threads_open_close_and_keep_at_most(self):
         rd = self.state(self.rid)
         rd["faeden"] = [f"Faden Nummer {i}" for i in range(dungeon.erz.FAEDEN_MAX)]

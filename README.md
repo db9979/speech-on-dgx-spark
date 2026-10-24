@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.024** AI Dungeon Master: every narration keeps its place, after a change of place the model only gets the new place's story so far, characters from elsewhere no longer just turn up
 - **V01.1.023** AI Dungeon Master: people stay at their place (only those an action takes along travel), back to the previous place only when an action asks, the map shows "Place not changed"
 - **V01.1.022** CarPlay Dungeon Master: pick and create a round in the car, "Is that right?" before every action, more voice commands, a summary, the round's voices, waiting without a time limit
 - **V01.1.021** AI Dungeon Master: foes and loot open a big window to look at (picture, values, six scores, what it can cause, paging), side characters sound more varied with VoiceDesign (speaking pace, more timbres)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.017** AI Dungeon Master: music fitting world and mood with drums and bass, own vault mood; mark a music piece as annoying with 👎, guests too, made again at night
 - **V01.1.016** AI Dungeon Master: reading aloud at the table audible again (the unlocking silence came as data: and the panel's security rule blocked it), the table wraps cleanly at small widths instead of word by word, prompt rule "as JSON" gone and new "no values outside the facts"
 - **V01.1.015** Model start more robust: when the panel may not change refs/main or the Hub file listing of a model (e.g. left by root), it only writes a log line, the engine starts anyway
-- **V01.1.014** AI Dungeon Master: guardian and master of a vault fight with foes from the Bestiarium by the group's level, only the victory in the fight opens the room; traps as a saving throw like in D&D (made half damage, armour does not count)
 
 
 

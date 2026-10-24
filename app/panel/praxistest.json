@@ -3187,6 +3187,13 @@
 "titel": "Dungeon-Master: Orte und Figuren bleiben",
 "text": "A: An einem Ort mit einer Figur sprechen, dann ohne sie weitergehen: am neuen Ort taucht sie nicht auf, die Erzählung kennt sie als „anderswo“. B: Eine Figur mit „komm mit uns“ mitnehmen: sie reist mit; mit „bleib hier“ bleibt sie zurück. C: Weitergehen und dann ohne Wunsch nach „zurück“ handeln: die Gruppe landet nicht wieder am alten Ort. D: Einen Weg nennen, den die Karte nicht geht: unter der Karte steht „Ort nicht gewechselt“.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P480",
+"v": 1024,
+"titel": "Ort im Verlauf, Figuren von anderswo",
+"text": "A: Eine Runde an einem Ort mit einer Nebenfigur spielen (etwa eine Wirtin), dann über die Karte zu einem Nachbarort gehen. B: Zwei, drei Züge am neuen Ort: die Wirtin spricht nicht mehr mit, die Erzählung bleibt am neuen Ort. C: Eine Aktion „Die Wirtin kommt mit uns“ am alten Ort, dann weiterziehen: jetzt darf sie mitreden. D: Zustand → Logs, Filter „nachbessern“: steht dort „anderswo“, hat das Panel eine Erzählung mit einer Figur von anderswo einmal neu schreiben lassen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
