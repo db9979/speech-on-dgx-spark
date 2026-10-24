@@ -312,11 +312,14 @@ class Vaults(unittest.TestCase):
         rolls = [e for e in rd["log"] if e["art"] == "wurf"]
         self.assertEqual(len(rolls), 2)
         self.assertTrue(all(e["wert"] == f["wert"] for e in rolls))
-        for e in rolls:
+        room = v["raeume"][j]
+        for e in rolls:                          # a save as in D&D: failed the whole damage, made half, no armour
             hit = [x for x in rd["log"] if x["art"] == "folge" and x["name"] == e["name"]]
-            self.assertEqual(bool(hit), not e["ok"])
+            n = hit[0]["zahl"] if hit else 0
+            self.assertTrue(f["schaden"][0] <= n <= f["schaden"][1] if not e["ok"] else n <= f["schaden"][1] // 2, e)
+            self.assertEqual(e["name"] in room["bemerkt"], not n)
             if hit:
-                self.assertTrue(1 <= before[e["name"]] - hit[0]["leben"] <= f["schaden"][1])
+                self.assertEqual(hit[0]["leben"], max(0, before[e["name"]] - n))
         self.assertTrue(v["raeume"][j]["fertig"])
         n = len(rd["log"])
         K.step(self.r, rd, {"ort_id": "r1", "erfolg": []}, {}, random.Random(3))
@@ -350,13 +353,40 @@ class Vaults(unittest.TestCase):
         if beyond:
             self.assertNotEqual(v["hier"], j)
 
+    def test_room_foes_by_the_groups_level(self):
+        """A guardian: one or two foes of the challenge nearest L/2; the master: the one nearest L+1 and helpers."""
+        import dungeon
+        lv = dungeon.group_level([p["held"] for _, p in dungeon.seated(self.rd)])
+        tab = [x for x in self.r["gegner"] if "alle" in x.get("welten", ["alle"]) or self.rd["welt"] in x.get("welten", [])]
+        by = {x["id"]: x for x in tab}
+        best = lambda t: min(abs(x["stufe"] - t) for x in tab)
+        for seed in range(20):
+            g = K._room_foes(self.r, self.rd, False, random.Random(seed))
+            self.assertTrue(1 <= len(g) <= 2 and len(set(g)) == len(g))
+            self.assertTrue(all(abs(by[i]["stufe"] - max(0.125, lv / 2)) == best(max(0.125, lv / 2)) for i in g))
+            b = K._room_foes(self.r, self.rd, True, random.Random(seed))
+            self.assertTrue(1 <= len(b) <= 5 and len(set(b)) == len(b))
+            self.assertEqual(abs(by[b[0]]["stufe"] - (lv + 1)), best(lv + 1))
+
     def test_guardian_shuts_until_beaten_treasure_spring_altar(self):
         rd, v, j = self.vault_with("waechter")
         K.step(self.r, rd, {"ort_id": f"r{j + 1}", "erfolg": []}, {}, random.Random(3))
-        self.assertIn("gegner_rang", K.facts(self.r, rd))
+        self.assertIn("gegner", K.facts(self.r, rd))
         self.assertTrue(all(x in v["besucht"] for x in K._ways_in(v)))
-        K.step(self.r, rd, {"ort_id": "", "erfolg": [{"art": "gegner", "rang": 2}]}, {}, random.Random(3))
+        rid = f"gw{rd['karte']['drin']}-r{j + 1}"        # the room's foes are offered to the fight (dungeon_kampf)
+        self.assertEqual(rd["raum_gegner"]["raum"], rid)
+        foes = {x["id"]: x for x in self.r["gegner"]}
+        self.assertTrue(1 <= len(rd["raum_gegner"]["ids"]) <= 5)
+        self.assertTrue(all(rd["welt"] in foes[i].get("welten", [rd["welt"]]) or "alle" in foes[i].get("welten", []) for i in rd["raum_gegner"]["ids"]))
+        for wrong in ({"erfolg": [{"art": "gegner", "rang": 2}]}, {"sieg": "gw9-r1"}):   # only the fight's victory for this room
+            rd.update({k: x for k, x in wrong.items() if k == "sieg"})
+            K.step(self.r, rd, {"ort_id": "", "erfolg": wrong.get("erfolg", [])}, {}, random.Random(3))
+            self.assertFalse(v["raeume"][j]["fertig"], wrong)
+        rd["sieg"] = rid
+        K.step(self.r, rd, {"ort_id": "", "erfolg": []}, {}, random.Random(3))
         self.assertTrue(v["raeume"][j]["fertig"])
+        self.assertNotIn("raum_gegner", rd)
+        self.assertNotIn("sieg", rd)
         self.assertEqual(K._ways_in(v), sorted(K._vnb(v)[j]))
         rd, v, j = self.vault_with("schatz")
         K.step(self.r, rd, {"ort_id": f"r{j + 1}", "erfolg": []}, {}, random.Random(3))

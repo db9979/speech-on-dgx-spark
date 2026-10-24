@@ -8,7 +8,7 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   story's places, then from the world's kinds of places (ortsarten in the rules, the admin adds his own): a name of
   the list or, for a kind with teile, a stem of the world (silben) joined with one of its endings.
 - Going a way for the first time, the panel rolls an encounter on the way (begegnungen, UNTERWEGS percent): quiet,
-  weather or a hint for the narration, a foe of the group's rank, a find from the catalog, a merchant.
+  weather or a hint for the narration, a foe (the fight's offer, dungeon_kampf), a find from the catalog, a merchant.
 - The model gets only the place it stands at, the ways from there with their direction and the direction of the next
   act's place (facts); it names in szene.ort_id one of those ways when the group goes on. Any other id leaves the
   group where it is (journal „dungeon: karte | verworfen“). The place's name is the panel's, whatever the model wrote.
@@ -19,10 +19,12 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   entrance at the west edge in one of the GEWOELBE forms (branching, a long corridor with side rooms, a maze with
   loops, a cross around a hall, a winding cave), the master of the vault in the farthest room, a treasure next to it,
   a trap, a riddle, a guardian, a spring and an altar when there is room, the rest by weight from the room table of
-  the world. Entering a trap room the panel rolls d20 + value for every hero against the
-  trap's difficulty (raised by the group's level) and deals its damage; a riddle door keeps its ways shut until an
+  the world. Entering a trap room the panel rolls a save, d20 + value for every hero against the
+  trap's difficulty (raised by the group's level): failed the whole damage, made half (armour does not count); a riddle door keeps its ways shut until an
   action holds one of the fixed answers (umlauts and case do not count), after VERSUCHE turns the hint is shown; a
-  guardian or the master keeps its ways shut until the narration reports a foe beaten there; a treasure room gives
+  guardian or the master keeps its ways shut until the fight is won: entering, the panel picks the room's foes from the
+  Bestiarium of the world by the group's level (_room_foes) and offers only them (rd["raum_gegner"]); the fight's
+  victory (rd["sieg"], dungeon_kampf) opens the room; a treasure room gives
   the catalog's loot „truhe“ once, a spring heals every hero (QUELLE), an altar blesses one value (ALTAR). The answer never reaches the model, only whether it was found.
 
 Pictures instead of signs (Dominik 2026-10-23 „sollten wir auch bilder generieren und keine emojies verwenden“, option
@@ -89,12 +91,12 @@ AUFGABE = {
     "de": "Die Karte führt das Panel (karte in den Fakten). Zieht die Gruppe weiter, setze szene.ort_id auf die id eines "
           "Wegs aus karte.wege und erzähle den Weg dorthin; andere Orte gibt es nicht, erfinde keine. Bleibt sie, lass "
           "ort_id leer. Nenne Orte und Räume nur mit ihren Namen aus der Karte. Steht in karte eine Falle, ein Rätsel "
-          "oder ein Gegner, erzähle, was das Panel entschieden hat; die Lösung eines Rätsels kennst du nicht, verrate "
+          "oder Gegner, erzähle, was das Panel entschieden hat (Gegner kommen nur aus dem Angebot); die Lösung eines Rätsels kennst du nicht, verrate "
           "keine.",
     "en": "The panel keeps the map (karte in the facts). When the group moves on, set szene.ort_id to the id of a way "
           "from karte.wege and narrate the way there; there are no other places, invent none. When it stays, leave "
           "ort_id empty. Name places and rooms only by their names from the map. When karte holds a trap, a riddle or "
-          "a foe, narrate what the panel decided; you do not know a riddle's answer, give none away."}
+          "foes, narrate what the panel decided (foes come only from the offer); you do not know a riddle's answer, give none away."}
 
 
 # ---------------------------------------------------------------- the tables (shipped; the admin's own on top)
@@ -534,12 +536,6 @@ def vault(rd):
     return k["gw"].get(str(k["drin"])) if k and k.get("drin") is not None else None
 
 
-def _rank(rd, boss):
-    import dungeon
-    stufe = dungeon.group_level([p["held"] for _, p in dungeon.seated(rd)])
-    return max(1, min(5, (stufe + 1) // 2 + (1 if boss else 0)))
-
-
 # ---------------------------------------------------------------- what the model gets
 def facts(r, rd):
     """The map as the model may know it: where the group stands, the ways from there, the direction of the next act's
@@ -573,7 +569,7 @@ def facts(r, rd):
                 if not room["fertig"] and room.get("versuche", 0) >= VERSUCHE:
                     out["raetsel"]["hinweis"] = q["hinweis"][li]
         if room["art"] in ("waechter", "boss") and not room["fertig"]:
-            out["gegner_rang"] = _rank(rd, room["art"] == "boss")
+            out["gegner"] = ("die Gegner dieses Raums stehen im Angebot", "the foes of this room are in the offer")[li]
         if room["art"] == "schatz":
             out["truhe"] = "offen" if room["fertig"] else "zu"
         if room["art"] in ("quelle", "altar"):
@@ -605,7 +601,7 @@ def _on_way(r, rd):
     b = _table(r, "begegnungen", (u or {}).get("t"))
     if not b or u["zug"] != rd.get("zug"):
         return {}
-    return {"unterwegs": dict({"art": b["art"], "satz": b["satz"][_li(rd)]}, **({"gegner_rang": u["rang"]} if u.get("rang") else {}))}
+    return {"unterwegs": {"art": b["art"], "satz": b["satz"][_li(rd)]}}
 
 
 def task(rd):
@@ -630,7 +626,8 @@ def _say(rd, de, en):
 
 
 def _trap(r, rd, room, rng):
-    """The panel rolls for every hero entering a trap room: d20 + value against the difficulty; damage if failed."""
+    """The panel rolls for every hero entering a trap room: a save, d20 + value against the difficulty; failed the
+    whole damage, made half of it (as in D&D: armour does not help against a trap)."""
     import dungeon
     f = _table(r, "fallen", room.get("falle"))
     if not f:
@@ -646,10 +643,10 @@ def _trap(r, rd, room, rng):
         w, bonus = rng.randint(1, 20), dungeon.total(r, h, f["wert"])
         ok = w == 20 or (w != 1 and w + bonus >= schwer)
         dungeon._log(rd, "wurf", pid=pid, name=h["name"], wert=f["wert"], w=w, bonus=bonus, gesamt=w + bonus, schwer=schwer, ok=ok, vt="", ws=[w])
-        if ok:
+        n = rng.randint(*f["schaden"]) // (2 if ok else 1)
+        if not n:
             room["bemerkt"].append(h["name"])
             continue
-        n = max(1, rng.randint(*f["schaden"]) - dungeon.schutz(r, h))
         h["leben"] = max(0, h["leben"] - n)
         room["getroffen"].append(h["name"])
         dungeon._log(rd, "folge", pid=pid, name=h["name"], was="schaden", zahl=n, leben=h["leben"])
@@ -699,16 +696,67 @@ def _enter_room(r, rd, v, j, rng):
     e = [min(a, j), max(a, j)]
     if e not in v["gegangen"]:
         v["gegangen"].append(e)
+    rd.pop("raum_gegner", None)                  # the foes of the room left behind are no more on offer
+    room = v["raeume"][j]
     if j not in v["besucht"]:
         v["besucht"].append(j)
-        room = v["raeume"][j]
         if room["art"] in ON_ENTER and not room["fertig"]:
             ON_ENTER[room["art"]](r, rd, room, rng)
+    if room["art"] in ("waechter", "boss") and not room["fertig"]:
+        room.setdefault("gegner", _room_foes(r, rd, room["art"] == "boss", rng))
+        if room["gegner"]:
+            rd["raum_gegner"] = {"raum": _room_id(rd, j), "ids": room["gegner"]}
+
+
+def won(rd):
+    """The fight's victory (rd["sieg"], dungeon_kampf.end) opens the guardian's or the master's room the group stands
+    in; dungeon.apply calls it right after the fight, step before its move. Any other tag is dropped."""
+    sieg, v = rd.pop("sieg", None), vault(rd)
+    if not sieg or not v:
+        return
+    room = v["raeume"][v["hier"]]
+    if room["art"] not in ("waechter", "boss") or room["fertig"] or sieg != _room_id(rd, v["hier"]):
+        print("dungeon: gewoelbe | sieg verworfen", flush=True)
+        return
+    room["fertig"] = True
+    rd.pop("raum_gegner", None)
+    print(f"dungeon: gewoelbe | sieg | {room['art']}", flush=True)
+    if room["art"] == "boss":
+        _say(rd, f"Das Gewölbe {v['name']} ist bezwungen.", f"The vault {v['name']} is conquered.")
+        print("dungeon: gewoelbe | bezwungen", flush=True)
+
+
+def _room_id(rd, j):
+    """The id of a vault's room for the fight (dungeon_kampf: rd["raum_gegner"], rd["sieg"])."""
+    return f"gw{rd['karte']['drin']}-r{j + 1}"
+
+
+def _room_foes(r, rd, boss, rng):
+    """The foes of a guardian's or the master's room from the Bestiarium of the world, by the group's level L: a
+    guardian is one foe (two from 3 heroes on) of the challenge nearest L/2, the master one of the challenge nearest
+    L+1 with up to two of the nearest L/4 at his side (from 2 heroes on); never more than 5."""
+    import dungeon
+    held = dungeon.seated(rd)
+    lv = dungeon.group_level([p["held"] for _, p in held])
+    tab = [x for x in r.get("gegner") or [] if "alle" in x.get("welten", ["alle"]) or rd.get("welt") in x.get("welten", [])]
+
+    def near(t, n, but=()):
+        c = [x for x in tab if x["id"] not in but]
+        if not c:
+            return []
+        d = min(abs(x["stufe"] - t) for x in c)
+        c = [x["id"] for x in c if abs(x["stufe"] - t) == d]
+        rng.shuffle(c)
+        return c[:n]
+    if not boss:
+        return near(max(0.125, lv / 2), 2 if len(held) >= 3 else 1)
+    herr = near(lv + 1, 1)
+    return (herr + near(max(0.125, lv / 4), 2 if len(held) >= 2 else 0, herr))[:5]
 
 
 def on_the_way(r, rd, rng):
     """A way gone for the first time: UNTERWEGS percent an encounter from the world's table, its effect by the panel
-    (a find from the catalog, a merchant, a foe's rank for the narration); the next narration hears of it."""
+    (a find from the catalog, a merchant; a foe comes through the fight's offer); the next narration hears of it."""
     import dungeon
     k = rd["karte"]
     tab = _of_world(r, "begegnungen", rd.get("welt"))
@@ -720,8 +768,6 @@ def on_the_way(r, rd, rng):
     held = [p["held"] for _, p in dungeon.seated(rd)]
     if b["art"] == "fund" and held:
         dungeon.give_loot(r, rd, held, "belohnung", dungeon.group_level(held), rng)
-    elif b["art"] == "gegner":
-        k["unterwegs"]["rang"] = _rank(rd, False)
     print(f"dungeon: unterwegs | {b['art']}", flush=True)
 
 
@@ -783,6 +829,7 @@ def step(r, rd, story, ep, rng=None):
         want = f"o{named_way(rd, story.get('text')) + 1}"
         print("dungeon: karte | name statt id", flush=True)
     before = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier"))
+    won(rd)
     v = vault(rd)
     if v:
         room = v["raeume"][v["hier"]]
@@ -796,13 +843,9 @@ def step(r, rd, story, ep, rng=None):
             else:
                 room["versuche"] = room.get("versuche", 0) + 1
                 print(f"dungeon: raetsel | offen | {room['versuche']} versuche", flush=True)
-        if room["art"] in ("waechter", "boss") and not room["fertig"] and any(e["art"] == "gegner" for e in story.get("erfolg") or []):
-            room["fertig"] = True
-            if room["art"] == "boss":
-                _say(rd, f"Das Gewölbe {v['name']} ist bezwungen.", f"The vault {v['name']} is conquered.")
-                print("dungeon: gewoelbe | bezwungen", flush=True)
         if want == "aus" and v["hier"] == 0:
             k["drin"] = None
+            rd.pop("raum_gegner", None)
             _say(rd, f"Ihr verlasst das Gewölbe {v['name']}.", f"You leave the vault {v['name']}.")
         elif want.startswith("r") and int(want[1:]) - 1 in _ways_in(v):
             _enter_room(r, rd, v, int(want[1:]) - 1, rng)

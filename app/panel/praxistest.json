@@ -3131,6 +3131,13 @@
 "titel": "Kampf: Begegnung, Angriffswürfe, Rüstungsklasse",
 "text": "A: Runde starten (Fantasy, ab 12) und in einen Kampf laufen (z. B. „Ich gehe in die dunkle Höhle“). Die Karte „⚔ Begegnung“ erscheint mit Gegnern, Anzahl und Gefahr; ein Tipp auf einen Gegner zeigt Stufe, Leben, RK, Angriff, Schaden, EP. B: Über der Geschichte steht die Leiste „⚔ Kampf“ mit dem Leben jedes Gegners. C: „Ich greife den Goblin mit dem Schwert an“: im Verlauf steht der Angriff mit W20, Bonus, Gesamt gegen RK und Treffer oder daneben; danach greifen die Gegner an (Pfeil Gegner → Held). D: Der Heldenbogen zeigt „Rüstungsklasse“ statt Schutz, die Karte „RK“; ein Tipp erklärt sie. E: Alle Gegner besiegt: „Der Kampf ist gewonnen“ mit EP für jeden, die Leiste verschwindet, es gibt einen Fund. F: Am Kindertisch (Ton 8) heißt Fliehen „gibt auf“. G: Zustand → Überblick zeigt beim Dungeon-Master Begegnungen, Kämpfe, Treffer und daneben. H: Bilder malen an, neue Runde starten: der Prolog zeigt gleich „Das Szenenbild wird gemalt …“ und danach das Bild. I: Vorlesen an, am iPhone in Safari einmal „🔊 Ton an“: der Ton läuft, kein Hinweis „Der Browser lässt den Ton gerade nicht zu“. J: In Zug 1 oder 2 eine Spur finden: der Auftrag rechts bleibt offen, die EP kommen trotzdem; erst im letzten Akt (ohne Geschichte nach 8 Zügen) wird er abgehakt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P472",
+"v": 1014,
+"titel": "Dungeon-Master: Wächter und Herr im Kampf",
+"text": "A: In einem Gewölbe einen Wächter-Raum betreten: der Kampf bietet nur die Gegner dieses Raums an (passend zur Stufe der Gruppe), die Tür bleibt zu, bis der Kampf gewonnen ist, im selben Zug geht sie auf. Flucht oder Frieden lassen sie zu. B: Beim Herrn des Gewölbes genauso, nach dem Sieg steht „bezwungen“ im Kopf der Gewölbe-Karte. C: Eine Falle betreten: wer den Wurf schafft, bekommt die Hälfte des Schadens, wer ihn verfehlt, den ganzen; die Rüstung ändert daran nichts.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

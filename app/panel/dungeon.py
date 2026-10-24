@@ -2873,6 +2873,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
         consequences(r, rd, story["folgen"] + hiebe, names)
+        if war:
+            dungeon_karte.won(rd)                # the fight won in a vault's room opens it in the same turn
         if war and not rd.get("kampf") and held and rd["log"][-1]["art"] == "kampf" and rd["log"][-1]["besiegt"]:
             give_loot(r, rd, held, "gegner", stufe, rng)
         elif not war and story.get("begegnung") and held:

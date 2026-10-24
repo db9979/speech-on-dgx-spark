@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.014** · 2026-10-24 · KI-Dungeon-Master: Wächter und Herr im Gewölbe kämpfen mit Gegnern aus dem Bestiarium nach der Gruppenstufe, erst der Sieg im Kampf öffnet den Raum; Fallen als Rettungswurf wie bei D&D (geschafft halber Schaden, Rüstung zählt nicht)
 - **V01.1.013** · 2026-10-24 · KI-Dungeon-Master: Kampf nach festen Regeln, das Panel stellt Begegnungen nach Budget aus dem Bestiarium zusammen, würfelt jeden Angriff gegen die Rüstungsklasse (10 + Rüstung + Geschick) und lässt die Gegner zurückschlagen, Leiste mit dem Leben der Gegner, Erfahrung aus dem Bestiarium geteilt durch die Helden, Stufen wie bei D&D; jeder Prolog malt sein Szenenbild gleich mit, „🔊 Ton an“ schaltet den Ton jetzt auch in Safari frei, der Auftrag gilt erst gegen Ende der Geschichte als erfüllt
 - **V01.1.012** · 2026-10-24 · Sprechen auf dem Modell-Rechner startet ohne Internet auch mit Dateiliste des Hubs: die Liste aller Dateien eines gepinnten Modells fällt nach der Prüfung weg, sonst nannte huggingface_hub den Stand unvollständig (.gitattributes)
 - **V01.1.010** · 2026-10-24 · KI-Dungeon-Master: Dinge-Gedächtnis, die Geschichte merkt sich wichtige Dinge mit Stoff, Farbe und Zustand und schreibt eine Erzählung, die ihnen widerspricht, einmal neu (kein Eisenkästchen wird mehr zum Holzkästchen), der Gastgeber sieht und ändert die gemerkten Dinge, keine OOC-Zeile spricht mehr für das Panel
