@@ -544,6 +544,7 @@ function dmSeatMenu(p){const k='s:'+p.pid,nl=DM.neulink&&DM.neulink.pid===p.pid?
   return `<details class="dm-smenu" data-dmauf="${esc(k)}"${DMA.auf===k||nl||weg?' open':''}><summary class="ic-ib" title="${esc(t('Mitspieler verwalten','Manage player'))}" aria-label="${esc(t('Mitspieler verwalten','Manage player')+': '+p.name)}">⋯</summary><div class="dm-smenu-l">
     ${p.gast?`<button type="button" class="dm-zeile" data-dmsitz="link" data-pid="${esc(p.pid)}"><span>🔗 ${esc(t('Neuer Link','New link'))}</span><small>${esc(t('der alte gilt dann nicht mehr','the old one stops working'))}</small></button>`:''}
     ${nl?`<div class="mitmade"><div class="jqr">${nl.qr||''}</div><div class="sp"><input readonly value="${esc(nl.link)}" aria-label="${esc(t('Der neue Link','The new link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Schick ihn '+p.name+'; der Held bleibt, wie er ist.','Shown only now. Send it to '+p.name+'; the hero stays as it is.'))}</small></div></div>`:''}
+    <div class="dm-zeile dm-sname-z"><span>✎ ${esc(t('Umbenennen','Rename'))}</span><div class="row"><input class="dm-sname" maxlength="24" value="${esc(p.name)}" aria-label="${esc(t('Neuer Name des Helden','The hero\'s new name'))}"><button type="button" class="b" data-dmsitz="name" data-pid="${esc(p.pid)}">${esc(t('Sichern','Save'))}</button></div><small>${esc(t('nur der Name, die Werte bleiben','only the name, the values stay'))}</small></div>
     <button type="button" class="dm-zeile" data-dmsitz="${p.ruht?'wecken':'ruhen'}" data-pid="${esc(p.pid)}"><span>${esc(p.ruht?'▶ '+t('Wieder warten','Wait again'):'⏸ '+t('Nicht mehr warten','Stop waiting'))}</span><small>${esc(p.ruht?t('der Zug wartet wieder auf '+p.name,'the turn waits for '+p.name+' again'):t('bis '+p.name+' wieder handelt','until '+p.name+' acts again'))}</small></button>
     <button type="button" class="dm-zeile dm-weg" data-dmseatdel="${esc(p.pid)}"><span>${esc(weg?t('Wirklich vom Tisch nehmen?','Really take off the table?'):t('Vom Tisch nehmen','Take off the table'))}</span><small>${esc(p.gast?t('ohne Gast-Konto oder Figur-Code ist der Held dann weg','without a guest account or hero code the hero is gone'):t('der Held bleibt im Profil','the hero stays in the profile'))}</small></button></div></details>`}
 function dmMine(v,wait,S){return `<div class="dm-mein${Date.now()-DMA.gesendet<2500?' neu':''}" role="status"><span class="dm-mein-ok" aria-hidden="true">✓</span><div class="dm-mein-t"><small>${esc(t('Deine Aktion für Zug '+v.zug,'Your action for turn '+v.zug))}</small><p>${dmFx(v.meine_aktion)}</p>
@@ -621,7 +622,8 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   else if(B.dminvite){d=await dmSend(`/api/profile/dungeon/${rid}/platz`,{base:location.origin},DM);if(d)DM.made={link:d.link,qr:d.qr}}
   else if(B.dmseatdel){const fp=!b.closest('.dm-smenu');if(!fp&&DM.sitzweg!==B.dmseatdel){DM.sitzweg=B.dmseatdel;dmDraw();return}
     DM.sitzweg='';d=await dmSend(`/api/profile/dungeon/${rid}/platz/${B.dmseatdel}`,null,DM)}
-  else if(B.dmsitz){d=await dmSend(`/api/profile/dungeon/${rid}/platz/${B.pid}`,null,DM,{method:'PUT',body:{was:B.dmsitz,base:location.origin}});
+  else if(B.dmsitz){d=await dmSend(`/api/profile/dungeon/${rid}/platz/${B.pid}`,null,DM,{method:'PUT',body:{was:B.dmsitz,base:location.origin,name:B.dmsitz==='name'?((b.closest('.dm-smenu')||document).querySelector('.dm-sname')||{}).value||'':undefined}});
+    if(d&&B.dmsitz==='name')sayToast(t('Umbenannt','Renamed'));
     DM.neulink=d&&d.link?{pid:B.pid,link:d.link,qr:d.qr}:null}
   else if(B.dmend){if(!DM.ende){DM.ende=true;dmDraw();return}DM.ende=false;
     const x=await dmSend(`/api/profile/dungeon/${rid}`,null,DM);if(x){DM.data=x;DM.rid='';DM.v=null;DM.made=null;dmDraw()}return}
@@ -818,23 +820,31 @@ function dmRPass(x){const f=DMR.f,q=DMR.q.trim().toLowerCase();
   if(f[0]==='s'&&x.stufe!=null){const s=+x.stufe;return f==='s0'?s<5:f==='s5'?s>=5&&s<=10:s>10}
   return x.art===f}
 const dmRImg=n=>`<img alt="" loading="lazy" src="/api/admin/dungeon/bild/${encodeURIComponent(n)}?v=${DMR.v}">`;
-function dmRThumb(x,K){if(!K.bilder_an&&!x.bild||!('bild' in x))return `<span class="dm-rth dm-dz" aria-hidden="true">${esc(x.zeichen||'·')}</span>`;
-  return x.bild?`<span class="dm-rth">${dmRImg(x.bild)}</span>`:`<span class="dm-rth dm-rno" aria-hidden="true">${esc(x.zeichen||'')}</span>`}
+// an item's picture in its rarity's frame, as in the bag (DMSEL; Dominik 2026-10-24 „farblich anders umrandet“)
+function dmRThumb(x,K){const s=x.selten?' '+(DMSEL[x.selten]||''):'selten' in x?' dm-sx':'';
+  if(!K.bilder_an&&!x.bild||!('bild' in x))return `<span class="dm-rth dm-dz${s}" aria-hidden="true">${esc(x.zeichen||'·')}</span>`;
+  return x.bild?`<span class="dm-rth${s}">${dmRImg(x.bild)}</span>`:`<span class="dm-rth dm-rno${s}" aria-hidden="true">${esc(x.zeichen||'')}</span>`}
 function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
   if(!K)return `<h3 class="sec">${esc(N[teil])}</h3><div class="mut">${esc(t('Lade …','Loading …'))}</div>`;
   if(K.fehler)return `<h3 class="sec">${esc(N[teil])}</h3><div class="err">${esc(K.fehler)}</div>`;
   const F=dmRFilter(teil),hasM=K.zeilen.some(x=>x.marke),rows=K.zeilen.filter(dmRPass),MAX=200;
   const nm={alle:t('Alle','All'),stark:t('stark und zu stark','strong and too strong'),zu_stark:t('zu stark','too strong'),schwach:t('schwach','weak')};
   const list=rows.slice(0,MAX).map(x=>{const m=x.marke&&x.marke.marke!=='ok'?`<span class="pill ${DMRMARKE[x.marke.marke]}" title="${esc(x.marke.grund)}">${esc(x.marke.name)}</span>`:'';
-    return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small></span></button>
+    return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}${x.selten?' dm-rsel '+(DMSEL[x.selten]||''):'selten' in x?' dm-rsel dm-sx':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small></span></button>
       <span class="dm-rpills">${m}${x.stand!=='grund'&&x.stand!=='srd'?`<span class="pill">${esc(St[x.stand])}</span>`:''}${x.neu?`<span class="pill warn">${esc(t('neues Bild','new picture'))}</span>`:''}</span>
       ${'bild' in x&&!x.bild&&K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(t('Malen','Paint'))}</button>`:''}</div>`}).join('');
   return `<h3 class="sec">${esc(N[teil])} · ${K.zeilen.length}</h3>
     <div class="dm-rsrch"><input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
       ${F?`<div class="lseg dm-rseg">${F.map(([v,l])=>`<button type="button" class="${DMR.f===v?'on':''}" data-dmrf="${v}">${esc(l)}</button>`).join('')}</div>`:''}
       ${hasM?`<select class="dmr-m" aria-label="${esc(t('Gleichgewicht','Balance'))}">${['alle','stark','zu_stark','schwach'].map(v=>`<option value="${v}"${DMR.m===v?' selected':''}>${esc(v==='alle'?t('Gleichgewicht: alle','Balance: all'):nm[v])}</option>`).join('')}</select>`:''}</div>
-    <div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
+    ${K.seltenheiten?dmRSelLeg(K):''}<div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
     <div class="dm-rdet" id="dmrdet">${dmRDet(teil)}</div></div>`}
+// the rarities as frames: a fixed one shows its colour, a rolled item (most of them) gets it when it is found
+function dmRSelLeg(K){return `<div class="dm-rsleg" aria-label="${esc(t('Seltenheit','Rarity'))}">${K.seltenheiten.map(s=>`<span class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i>${esc(s.name)}</span>`).join('')}<span class="dm-rsl"><i class="dm-rth dm-sx"></i>${esc(t('gewürfelt beim Fund','rolled when found'))}</span></div>`}
+function dmRSelLadder(K,x){if(!K.seltenheiten)return '';
+  if(x.selten){const s=K.seltenheiten.find(z=>z.id===x.selten);return s?`<div class="fh dm-rsfest"><i class="dm-rth ${DMSEL[s.id]||''}"></i>${esc(t(`Immer ${s.name}: +${s.bonus}, Preis ×${s.preis}`,`Always ${s.name}: +${s.bonus}, price ×${s.preis}`))}</div>`:''}
+  return `<div class="dm-rsleiter"><div class="fh">${esc(t('Die Seltenheit wird beim Fund gewürfelt (W100 plus zweimal die Stufe) und gibt den Rahmen:','The rarity is rolled when it is found (d100 plus twice the level) and gives the frame:'))}</div>
+    ${K.seltenheiten.map(s=>`<div class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i><b>${esc(s.name)}</b><small>${esc(t(`ab ${s.ab||1} · +${s.bonus} · Preis ×${s.preis}${s.stufe>1?` · ab Stufe ${s.stufe}`:''}`,`from ${s.ab||1} · +${s.bonus} · price ×${s.preis}${s.stufe>1?` · from level ${s.stufe}`:''}`))}</small></div>`).join('')}</div>`}
 function dmRDet(teil){const K=DMR.k[teil],x=K.zeilen.find(z=>String(z.id)===DMR.sel),St=DMRSTAND();
   if(!x)return `<div class="ic-empty">${esc(t('Tippe links einen Eintrag an.','Tap an entry on the left.'))}</div>`;
   const e=K.eintraege[String(x.id)]||{},li=L==='en'?1:0,tx=v=>Array.isArray(v)?v[li]||v[0]:v||'';
@@ -843,16 +853,22 @@ function dmRDet(teil){const K=DMR.k[teil],x=K.zeilen.find(z=>String(z.id)===DMR.
     <textarea class="mono dmr-txt" rows="16" data-fest spellcheck="false">${esc(JSON.stringify(DMR.edit.e,null,2))}</textarea>${DMR.err?`<div class="err dm-adm-err">${DMR.err}</div>`:''}
     <div class="row"><button type="button" class="b p" data-dmrdo="setzen">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmrdo="abbrechen">${esc(t('Abbrechen','Cancel'))}</button></div>`;
   const m=x.marke,neu=DMR.neu[String(x.id)]||x.neu,b='bild' in x;
-  const pic=b?`<div class="dm-rbild">${neu?`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(t('jetzt','now'))}</figcaption></figure><figure>${dmRImg(neu)}<figcaption>${esc(t('neu gemalt','painted again'))}</figcaption></figure></div>
+  const pic=b?`<div class="dm-rbild${x.selten?' '+(DMSEL[x.selten]||''):''}">${neu?`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(t('jetzt','now'))}</figcaption></figure><figure>${dmRImg(neu)}<figcaption>${esc(t('neu gemalt','painted again'))}</figcaption></figure></div>
       <div class="row"><button type="button" class="b p" data-dmrbild="neu" data-id="${esc(x.id)}">${esc(t('Neues behalten','Keep the new one'))}</button><button type="button" class="b" data-dmrbild="alt" data-id="${esc(x.id)}">${esc(t('Altes behalten','Keep the old one'))}</button></div>`
       :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
       <div class="row">${K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(DMR.busy===String(x.id)?t('Malt gerade …','Painting …'):x.bild?t('Nochmal malen','Paint again'):t('Malen','Paint'))}</button>`:`<small class="mut">${esc(t('Die Bilder sind aus; einschalten im Abschnitt „Bilder“.','Pictures are off; switch them on in the part "Pictures".'))}</small>`}</div></div>`:'';
   return `<div class="dm-rdkopf"><div><b class="dm-rname">${esc(x.zeichen||'')} ${esc(x.name)}</b> <span class="pill">${esc(St[x.stand])}</span>${m?` <span class="pill ${DMRMARKE[m.marke]}">${esc(m.name)}</span>`:''}</div></div>
-    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}
+    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${dmRSelLadder(K,x)}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}
       <div class="row"><button type="button" class="b" data-dmrdo="aendern">${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmrdo="kopie">${esc(t('Eigene Kopie','Own copy'))}</button>
       ${x.stand==='aus'||x.stand==='geaendert'?`<button type="button" class="b" data-dmrdo="zurueck">${esc(t('Zurück auf mitgeliefert','Back to shipped'))}</button>`:''}
       ${x.stand==='eigen'?`<button type="button" class="b danger" data-dmrdo="zurueck">${esc(t('Eigenen Eintrag löschen','Delete own entry'))}</button>`:x.stand!=='aus'?`<button type="button" class="b" data-dmrdo="aus">${esc(t('Ausblenden','Hide'))}</button>`:''}</div></div>${pic}</div>`}
-function dmRDraw(){const c=$('dmadmcard');if(c&&DMP.d)dmRulesDraw(DMP.d,'')}
+// the list keeps its place when it is drawn again (Dominik 2026-10-24 „beim Klicken hüpft die Liste“)
+function dmRDraw(){const c=$('dmadmcard');if(!c||!DMP.d)return;const l=c.querySelector('.dm-rlist'),top=l?l.scrollTop:0;
+  dmRulesDraw(DMP.d,'');const n=c.querySelector('.dm-rlist');if(n)n.scrollTop=top}
+// a tap on an entry: only the mark and the detail change, the list stays as it is
+function dmRPick(){const c=$('dmadmcard'),det=$('dmrdet');if(!c||!det||!DMR.k[DMR.teil])return dmRDraw();
+  c.querySelectorAll('.dm-rrow').forEach(r=>{const b=r.querySelector('[data-dmrsel]');r.classList.toggle('on',!!b&&b.dataset.dmrsel===DMR.sel)});
+  det.innerHTML=dmRDet(DMR.teil)}
 async function dmRDo(teil,was,id,eintrag){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang(),xjson('POST',{was,id,eintrag}));
   if(!r.ok){DMR.err=Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail));dmRDraw();return false}
   DMR.k[teil]=d;DMR.edit=null;DMR.err='';if(eintrag)DMR.sel=String(eintrag.id);dmRDraw();
@@ -864,7 +880,7 @@ document.body.addEventListener('change',e=>{const s=e.target.closest('#dmadmcard
 document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmadmcard');if(!c)return;const teil=DMR.teil;
   const nb=e.target.closest('[data-dmrteil]');if(nb){DMR.teil=nb.dataset.dmrteil;DMR.sel='';DMR.q='';DMR.f='alle';DMR.m='alle';DMR.edit=null;DMR.err='';DMP.g=null;dmRDraw();return}
   const fb=e.target.closest('[data-dmrf]');if(fb){DMR.f=fb.dataset.dmrf;dmRDraw();return}
-  const sb=e.target.closest('[data-dmrsel]');if(sb){DMR.sel=sb.dataset.dmrsel;DMR.edit=null;DMR.err='';dmRDraw();const d=$('dmrdet');if(d&&window.innerWidth<900)d.scrollIntoView({block:'start',behavior:'smooth'});return}
+  const sb=e.target.closest('[data-dmrsel]');if(sb){DMR.sel=sb.dataset.dmrsel;DMR.edit=null;DMR.err='';dmRPick();const d=$('dmrdet');if(d&&window.innerWidth<900)d.scrollIntoView({block:'start',behavior:'smooth'});return}
   const db=e.target.closest('[data-dmrdo]');if(db){const K=DMR.k[teil],x=K&&K.zeilen.find(z=>String(z.id)===DMR.sel);if(!x)return;const was=db.dataset.dmrdo;
     if(was==='abbrechen'){DMR.edit=null;DMR.err='';dmRDraw();return}
     if(was==='aendern'||was==='kopie'){const e0=JSON.parse(JSON.stringify(K.eintraege[String(x.id)]||{}));

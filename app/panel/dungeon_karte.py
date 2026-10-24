@@ -941,7 +941,7 @@ def queue_orte():
                 if f.get("st") in ("ok", "weg") or f.get("n") in _malt or f.get("st") in ("tag", "fehler", "malt") and f.get("day") == today:
                     continue
                 text, why = dungeon.picture_text(r, rd, _ort_text(r, k, i))
-                if not why and dungeon._bild_count(d) >= r["grenzen"].get("bilder_tag", dungeon.BILDER_TAG):
+                if not why and dungeon._bild_tag_voll(r, d, rd):
                     why = "tag"
                 if not why and schwer.full():
                     continue

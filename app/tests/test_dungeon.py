@@ -403,6 +403,21 @@ class Seats(Base):
         self.assertEqual(self.put(self.c, self.gp, was="wecken").status_code, 200)
         self.assertNotIn("ruht", self.state(self.rid)["plaetze"][self.gp])
 
+    def test_rename_only_the_name(self):
+        """Dominik 2026-10-24 „1-6“, Punkt 5: the host renames a fellow player's hero; only the name, never a value."""
+        before = copy.deepcopy(self.state(self.rid)["plaetze"][self.gp]["held"])
+        r = self.put(self.c, self.gp, was="name", name="Bela <die Kühne>", werte={"STR": 20}, stufe=10)
+        self.assertEqual(r.status_code, 200, r.text)
+        after = self.state(self.rid)["plaetze"][self.gp]["held"]
+        self.assertEqual(after["name"], "Bela die Kühne")                  # cleaned like a new hero's name
+        self.assertEqual({k: v for k, v in after.items() if k != "name"}, {k: v for k, v in before.items() if k != "name"})
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["ich"]["name"], "Bela die Kühne")
+        for bad in ("", "1", "!!!", None):
+            self.assertEqual(self.put(self.c, self.gp, was="name", name=bad).status_code, 400, bad)
+        self.assertEqual(self.put(self.c2, self.gp, was="name", name="Fremd").status_code, 404)   # only the host
+        self.assertEqual(self.put(self.c, self.host, was="name", name="Ich").status_code, 404)    # not the own seat
+        self.assertEqual(self.state(self.rid)["plaetze"][self.gp]["held"]["name"], "Bela die Kühne")
+
     def test_a_free_seat_nobody_took_goes(self):
         self.invite(self.rid)
         free = [k for k, p in self.state(self.rid)["plaetze"].items() if not p.get("held")]
@@ -2069,6 +2084,9 @@ class Pictures(Base):
                 dungeon._write(d)
             self.assertEqual(dungeon.may_paint(dungeon.rules(), dungeon._read(), rid, self.state(rid)), why)
         self.assertEqual(self.v.post("/api/dungeon/portraet/malen", json={"code": code}).json()["detail"], dungeon._nein("tag", "de"))
+        owner = self.state(rid)["owner"]           # Dominik 2026-10-24: the round of an admin profile has no day limit
+        with mock.patch.object(dungeon.coadmin, "acts", lambda u: "admin" if u == owner else ""):
+            self.assertEqual(dungeon.may_paint(dungeon.rules(), dungeon._read(), rid, self.state(rid)), "")
         live = dungeon.for_live()
         self.assertGreaterEqual(live["gemalt"], 2)
         self.assertNotIn("bell", json.dumps(live))
@@ -2902,6 +2920,12 @@ class Windows(unittest.TestCase):
                         await pg.click("#dmview .dm-smenu [data-dmsitz=ruhen]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=wecken]')")
                         self.assertTrue(dungeon._read()["runden"][rid]["plaetze"][next(k for k, x in dungeon._read()["runden"][rid]["plaetze"].items() if x.get("gast"))].get("ruht"))
+                        await pg.fill("#dmview .dm-smenu .dm-sname", "Bela die Kühne")                # point 5: only the name
+                        async with pg.expect_response(lambda x: "/platz/" in x.url and x.request.method == "PUT") as got:
+                            await pg.click("#dmview .dm-smenu [data-dmsitz=name]")
+                        self.assertEqual((await got.value).status, 200)
+                        await b.until(pg, "/Bela die Kühne/.test((document.querySelector('#dmview .dm-smenu summary')||{}).getAttribute('aria-label')||'')")
+                        self.assertIn("Bela die Kühne", [x["held"]["name"] for x in dungeon._read()["runden"][rid]["plaetze"].values() if x.get("held")])
                         await pg.click("#dmview .dm-smenu [data-dmseatdel]")                           # asks once more
                         await b.until(pg, "/wirklich/i.test(document.querySelector('#dmview .dm-smenu [data-dmseatdel]').textContent)")
                         self.assertEqual(len([x for x in dungeon._read()["runden"][rid]["plaetze"].values() if x.get("held")]), 2)
@@ -3100,6 +3124,20 @@ class Windows(unittest.TestCase):
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"regeln-{w}.png"), full_page=True)
+                        # Dominik 2026-10-24: items in their rarity's frame, and a tap never makes the list jump
+                        await pg.click("#dmadmcard [data-dmrteil=gegenstaende]")
+                        await b.until(pg, f"{n}>20")
+                        self.assertGreater(await pg.evaluate("document.querySelectorAll('#dmadmcard .dm-rrow.dm-rsel.dm-s4 .dm-rth.dm-s4').length"), 0)
+                        if w == 1280:
+                            top = await pg.evaluate("(()=>{const l=document.querySelector('#dmadmcard .dm-rlist');l.scrollTop=400;return l.scrollTop})()")
+                            self.assertGreater(top, 0)
+                            await pg.evaluate("(()=>{const l=document.querySelector('#dmadmcard .dm-rlist'),r=l.getBoundingClientRect();"
+                                              "[...l.querySelectorAll('[data-dmrsel]')].find(x=>x.getBoundingClientRect().top>r.top+100).click()})()")
+                            await b.until(pg, "!!document.querySelector('#dmrdet .dm-rname')")
+                            self.assertEqual(await pg.evaluate("document.querySelector('#dmadmcard .dm-rlist').scrollTop"), top)
+                            self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmadmcard .dm-rrow.on').length"), 1)
+                            if os.environ.get("DMF_SHOT"):
+                                await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], "regeln-gegenstaende.png"))
                         await pg.click("#dmadmcard [data-dmrteil=json]")
                         await b.until(pg, "!!document.getElementById('dmadmtxt')")
                         await pg.click("#dmadmcard [data-dmrteil=geschichten]")

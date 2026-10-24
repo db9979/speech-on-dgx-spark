@@ -472,12 +472,9 @@ def limits(uid, c=None):
     none = {z: 0 for z in ZEITRAEUME}
     if not uid or uid in (GUEST, SPARK) or not features.allowed("kontingent", uid, c):
         return none
-    try:
-        import coadmin
-        if coadmin.acts(uid) == "admin":
-            return none
-    except Exception:
-        pass
+    import coadmin
+    if coadmin.unbegrenzt(uid):
+        return none
     own, base = quotas().get(uid, {}), defaults(c)
     return {z: own.get(z, base[z]) * 1000 for z in ZEITRAEUME}
 

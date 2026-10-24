@@ -100,13 +100,18 @@ def view(teil, lang="de"):
             row["stufe"] = x.get("stufe", 0)
         elif teil == "gegenstaende":
             row["marke"] = balance.item(x, lang)
+            row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled
         if teil in MIT_BILD:
             n, _ = dingbild.picture_of(r, x)
             row["bild"] = n if n in have else ""
             row["neu"] = "neu-" + n[5:] if "neu-" + n[5:] in neu else ""
         rows.append(row)
         entries[str(i)] = x
-    return {"teil": teil, "zeilen": rows, "eintraege": entries, "bilder_an": dingbild.on()}
+    out = {"teil": teil, "zeilen": rows, "eintraege": entries, "bilder_an": dingbild.on()}
+    if teil == "gegenstaende":       # the ladder a rolled item climbs (dungeon.rarity: W100 + 2 × level)
+        out["seltenheiten"] = [{"id": s["id"], "name": _name(s, li), "ab": s["ab"], "bonus": s["bonus"],
+                                "stufe": s["stufe_min"], "preis": s["preis"]} for s in r["seltenheit"]]
+    return out
 
 
 def change(teil, was, i, eintrag=None):

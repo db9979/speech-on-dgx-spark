@@ -45,6 +45,7 @@ import time
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
+import coadmin
 import features
 import guard
 import notaus
@@ -653,7 +654,7 @@ def start(prof, caption, wish, seconds=None, sung=False, language="", lyrics="",
             _say("warteschlange", prof)
             raise ValueError(("Gerade warten schon viele Lieder; bitte etwas später noch einmal.",
                               "Many songs are waiting already; please try again a little later."))
-    if today_count(uid) >= lim["day"]:
+    if today_count(uid) >= lim["day"] and not coadmin.unbegrenzt(uid):
         _say("tageslimit", prof)
         raise ValueError((f"Heute sind schon {lim['day']} Lieder entstanden; morgen wieder.",
                           f"{lim['day']} songs were made today already; tomorrow again."))
@@ -967,13 +968,13 @@ def start_edit(prof, sid, art, p, src="seite", client="web"):
             _say("warteschlange", prof)
             raise ValueError(("Gerade warten schon viele Lieder; bitte etwas später noch einmal.",
                               "Many songs are waiting already; please try again a little later."))
-    if today_count(uid) >= lim["day"]:
+    if today_count(uid) >= lim["day"] and not coadmin.unbegrenzt(uid):
         _say("tageslimit", prof)
         raise ValueError((f"Heute sind schon {lim['day']} Lieder entstanden; morgen wieder.",
                           f"{lim['day']} songs were made today already; tomorrow again."))
     n = p.get("vorschlaege")
     n = n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 3 else 1
-    n = min(n, lim["day"] - today_count(uid))
+    n = n if coadmin.unbegrenzt(uid) else min(n, lim["day"] - today_count(uid))
     jid = secrets.token_hex(6)
     j = {"id": jid, "uid": uid, "state": "wait", "kind": "edit", "caption": label[0], "wish": row.get("wish", ""),
          "seconds": int(round(after)), "sung": bool(row.get("sung")), "language": row.get("language", ""), "lyrics": "",
@@ -1194,7 +1195,7 @@ async def upload(prof, data, name):
         _say("notaus", prof)
         raise ValueError(REFUSED["notaus"])
     lim = limits()
-    if uploads_today(uid) >= UPLOADS_DAY:
+    if uploads_today(uid) >= UPLOADS_DAY and not coadmin.unbegrenzt(uid):
         _say("tageslimit", prof)
         raise ValueError((f"Heute sind schon {UPLOADS_DAY} eigene Dateien hochgeladen; morgen wieder.",
                           f"{UPLOADS_DAY} own files were uploaded today already; tomorrow again."))
@@ -1364,10 +1365,10 @@ def musik_list(request: Request, prof=Depends(own_profile)):
     guard.limit(request, "musik", uid)
     edit = features.allowed(EDIT_KEY, uid)
     return {"songs": [public(x) for x in all_songs(uid)], "jobs": jobs_of(uid), "limits": limits(),
-            "used": used_bytes(uid), "today": today_count(uid), "langs": list(LANGS),
+            "used": used_bytes(uid), "today": today_count(uid), "frei": coadmin.unbegrenzt(uid), "langs": list(LANGS),
             "edit": {"on": edit, "genres": [[k, de, en] for k, (de, en, _w) in GENRES.items()], "near": len(NEAR),
                      "max_add": MAX_ADD_S, "versions": MAX_VERSIONS, "upload_mb": MAX_UPLOAD // 1024**2,
-                     "uploads": uploads_today(uid), "uploads_day": UPLOADS_DAY,
+                     "uploads": uploads_today(uid), "uploads_day": 0 if coadmin.unbegrenzt(uid) else UPLOADS_DAY,
                      "formats": [k for k, _ in FORMATS]} if edit else {"on": False}}
 
 

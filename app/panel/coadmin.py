@@ -103,6 +103,16 @@ def acts(uid):
     return r if r and mfa.enabled(uid) else ""
 
 
+def unbegrenzt(uid):
+    """No daily limit for this profile (Dominik 2026-10-24 „Tageslimits für Admins deaktiviert“): an admin role that
+    acts. The one rule for the Kontingent, pictures, songs, own song files and the pictures of an own Dungeon game;
+    space, queues and what goes out of the house (mails, calls, reMarkable) keep their limits."""
+    try:
+        return bool(uid) and acts(uid) == "admin"
+    except Exception:
+        return False
+
+
 def main_uid():
     """The main admin profile (Haupt-Admin): hears of admin things, its code is also the password's; "" for none."""
     m = _read()["main"]

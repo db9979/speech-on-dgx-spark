@@ -476,6 +476,30 @@ class Jobs(On):
         music(day_limit=10)
         musik.clear(uid)
 
+    def test_an_admin_has_no_daily_limit(self):
+        """Dominik 2026-10-24: Tageslimits gelten nicht für Admins (coadmin.unbegrenzt), auch nicht für eigene Dateien."""
+        import coadmin
+        c, prof = profile("Musikerin Admin")
+        uid = prof["id"]
+        musik.clear(uid)
+        music(day_limit=1)
+        call, _ = fake_song()
+        try:
+            with mock.patch.object(musik, "call", call), contextlib.redirect_stdout(io.StringIO()) as out, \
+                    mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+                for _ in range(2):
+                    run(musik._jobs[musik.start(prof, "calm piano", "Klavier")["id"]])
+                d = c.get("/api/musik").json()
+                self.assertTrue(d["frei"])
+                self.assertEqual(d["today"], 2)
+            self.assertNotIn("tageslimit", out.getvalue())
+            self.assertFalse(c.get("/api/musik").json()["frei"])
+            with mock.patch.object(musik, "call", call), contextlib.redirect_stdout(io.StringIO()), self.assertRaises(ValueError):
+                musik.start(prof, "calm piano", "Klavier")
+        finally:
+            music(day_limit=10)
+            musik.clear(uid)
+
     def test_notaus_and_maintenance_hold_new_songs(self):
         _, prof = profile("Musikerin Pause")
         with mock.patch.object(wartung, "paused", lambda part: part == "musik"), \

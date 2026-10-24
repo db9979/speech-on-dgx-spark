@@ -386,7 +386,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "f368ac974e",
+        "stand": "d56c3ed081",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -474,11 +474,13 @@ SEITEN = {
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
               ("Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens {bilder.MAX_PICS} Bilder; "
                "Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens {musik.MAX_VERSIONS} "
-               "Fassungen, {musik.UPLOADS_DAY} eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Auf dem ganzen Spark warten höchstens "
+               "Fassungen, {musik.UPLOADS_DAY} eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Admin-Profile haben keine "
+               "Tageslimits (coadmin.unbegrenzt), Platz und Warteschlange gelten auch für sie. Auf dem ganzen Spark warten höchstens "
                "{schwer.WAITING} schwere Aufträge, Bilder und Lieder zusammen.",
                "Per profile there are pictures per day (rolling 24 hours), space and at most {bilder.MAX_PICS} "
                "pictures; songs: songs per day, space and the longest song (musik.start), at most {musik.MAX_VERSIONS} "
-               "versions per song, {musik.UPLOADS_DAY} own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most "
+               "versions per song, {musik.UPLOADS_DAY} own files a day; musik.plan_edit checks every number of a change. Admin profiles have no "
+               "daily limits (coadmin.unbegrenzt); space and the queue hold for them too. On the whole Spark at most "
                "{schwer.WAITING} heavy jobs wait, pictures and songs together."),
               ("stop", "nein", ("Abgelehnt mit Grund", "Refused with the reason"))),
             S("s5", "schritt", ("Warten auf Pause und Platz", "Wait for a pause and the place"),

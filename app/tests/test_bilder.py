@@ -366,6 +366,32 @@ class Jobs(On):
             image(day_limit=30, store_mb=500)
             bilder.clear(uid)
 
+    def test_an_admin_has_no_daily_limit(self):
+        """Dominik 2026-10-24: Tageslimits gelten nicht für Admins (coadmin.unbegrenzt); der Platz schon."""
+        import coadmin
+        c, prof = profile("Malerin Admin")
+        uid = prof["id"]
+        bilder.clear(uid)
+        image(day_limit=1, store_mb=50)
+        try:
+            call, _ = fake()
+            with mock.patch.object(bilder, "call", call), \
+                    mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+                for _ in range(3):
+                    run(bilder._jobs[bilder.start(prof, "a cat", "Katze", "quadrat")["id"]])
+                self.assertEqual(bilder.today_count(uid), 3)
+                self.assertTrue(c.get("/api/bilder").json()["frei"])
+                with mock.patch.object(bilder, "used_bytes", lambda u: 50 * 1024 * 1024), self.assertRaises(ValueError) as e:
+                    bilder.start(prof, "a cat", "Katze", "quadrat")
+                self.assertIn("ganzen Platz", e.exception.args[0][0])
+            self.assertFalse(c.get("/api/bilder").json()["frei"])
+            with self.assertRaises(ValueError) as e:        # without the role the limit is back
+                bilder.start(prof, "a cat", "Katze", "quadrat")
+            self.assertIn("Heute sind schon 1 Bilder", e.exception.args[0][0])
+        finally:
+            image(day_limit=30, store_mb=500)
+            bilder.clear(uid)
+
     def test_notaus_holds_new_pictures(self):
         _, prof = profile("Malerin Notaus")
         with mock.patch.object(notaus, "level", lambda: 2), self.assertRaises(ValueError) as e:

@@ -39,6 +39,7 @@ import time
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
+import coadmin
 import features
 import guard
 import notaus
@@ -470,7 +471,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web", ref=None, von=""):
             _say("warteschlange", prof)
             raise ValueError(("Gerade warten schon viele Bilder; bitte etwas später noch einmal.",
                               "Many pictures are waiting already; please try again a little later."))
-    if today_count(uid) >= lim["day"]:
+    if today_count(uid) >= lim["day"] and not coadmin.unbegrenzt(uid):
         _say("tageslimit", prof)
         raise ValueError((f"Heute sind schon {lim['day']} Bilder gemalt; morgen wieder.",
                           f"{lim['day']} pictures were painted today already; tomorrow again."))
@@ -751,7 +752,7 @@ def bilder_list(request: Request, prof=Depends(own_profile)):
     guard.limit(request, "bilder", uid)
     lim = limits()
     return {"pics": [public(x) for x in all_pics(uid)], "jobs": jobs_of(uid), "limits": lim,
-            "used": used_bytes(uid), "today": today_count(uid),
+            "used": used_bytes(uid), "today": today_count(uid), "frei": coadmin.unbegrenzt(uid),
             "formats": [[k, v[2], v[3]] for k, v in FORMATS.items()],
             "quick": [[k, de, en] for k, (de, en) in QUICK.items()] if features.allowed(EDIT_KEY, uid) else []}
 

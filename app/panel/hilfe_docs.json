@@ -2829,7 +2829,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ne Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste und Geheimnisse, Wunsch und Beschreibung auf „im Stil von“ einem Künstler (im Gespräch mit festem Hinweis, die Beschreibung ohne Namen neu zu schicken); Namen gehen. „Text schreiben“ (musik.write_lyrics) lässt das Sprachmodell den Liedtext aus der Beschreibung schreiben und Künstlernamen in Stilwörter setzen; das Panel schneidet „im Stil von …“ heraus und lehnt ab, wenn ein Name bleibt. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen. 5. Warten auf Pause und Platz: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pic"
+"text": "ne Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste und Geheimnisse, Wunsch und Beschreibung auf „im Stil von“ einem Künstler (im Gespräch mit festem Hinweis, die Beschreibung ohne Namen neu zu schicken); Namen gehen. „Text schreiben“ (musik.write_lyrics) lässt das Sprachmodell den Liedtext aus der Beschreibung schreiben und Künstlernamen in Stilwörter setzen; das Panel schneidet „im Stil von …“ heraus und lehnt ab, wenn ein Name bleibt. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Admin-Profile haben keine Tageslimits (coadmin.unbegrenzt), Platz und Warteschlange gelten auch für sie. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen. 5. Warten auf Pause und Platz: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang),"
 },
 {
 "lang": "de",
@@ -2837,7 +2837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "k nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeic"
+"text": " und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bi"
 },
 {
 "lang": "de",
@@ -2845,7 +2845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
+"text": "ld prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
 },
 {
 "lang": "de",
@@ -5486,6 +5486,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "icht mehr, der Held bleibt, der neue erscheint einmal mit QR-Code), Nicht mehr warten (der Zug wartet nicht mehr auf ihn, bis er wieder handelt; „Wieder warten“ hebt es auf) und Vom Tisch nehmen mit Rückfrage (ein Held mit Profil bleibt im Profil, mit Gast-Konto im Gast-Konto, sonst ist er weg). Ein freier Platz, dessen Link 72 Stunden niemand genutzt hat, verschwindet von selbst. Neuer Endpunkt PUT /api/profile/dungeon/{rid}/platz/{pid} (nur der Gastgeber, Anmeldung, CSRF, Größen- und Rate-Limit), Logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Selbsttests Seats und Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Keine Tageslimits für Admins, Seltenheit unter Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 „Tageslimits für Admins sollten deaktiviert sein“ und „beim Klicken auf Gegenstände hüpft die Liste“): Ein Profil mit Admin-Rolle (coadmin.unbegrenzt, dieselbe Regel wie beim Kontingent) hat keine Tageslimits mehr: Bilder malen und ändern, Lieder, eigene Musikdateien und die Bilder einer eigenen Dungeon-Runde. Ich → Bilder und Ich → Musik zeigen dann „ohne Tageslimit (Admin)“. Platz, die Warteschlange schwerer Aufträge und alles, was das Haus verlässt (Mails, Anrufe, reMarkable), behalten ihre Grenzen. Unter Funktionen → KI-Dungeon-Master → Regeln anpassen bleibt bei den Gegenständen die Liste beim Antippen stehen, nur Markierung und Detail wechseln. Jeder Gegenstand steht im Rahmen seiner Seltenheit; die meisten Grundregel-Gegenstände würfeln sie erst beim Fund, sie tragen einen gestrichelten Rahmen und einen Farbverlauf, und ihr Detail zeigt die Leiter gewöhnlich bis legendär mit Wurf, Bonus, Preis und Mindeststufe. Mitspieler umbenennen (Punkt 5 der Vorschläge zu „Mitspieler verwalten“, Dominik „1-6“): Im „⋯“ eines Mitspielers kann der Gastgeber den Namen seines Helden ändern (PUT "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "/api/profile/dungeon/{rid}/platz/{pid} mit {\"was\": \"name\"}), nur den Namen, geprüft wie beim Anlegen (2 bis 24 Zeichen, mindestens ein Buchstabe); Werte, Stufe und Tasche bleiben. Log dungeon: platz | name."
 },
 {
 "lang": "de",
@@ -15285,7 +15301,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list and secrets, wish and description for \"in the style of\" an artist (in the conversation with a fixed hint to send the description again without names); names are fine. \"Write lyrics\" (musik.write_lyrics) has the language model write the lyrics from the description and turn artist names into style words; the panel cuts \"in the style of …\" out and refuses if a name stays. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most 10 heavy jobs wait, pictures and songs together. 5. Wait for a pause and the place: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a"
+"text": "against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list and secrets, wish and description for \"in the style of\" an artist (in the conversation with a fixed hint to send the description again without names); names are fine. \"Write lyrics\" (musik.write_lyrics) has the language model write the lyrics from the description and turn artist names into style words; the panel cuts \"in the style of …\" out and refuses if a name stays. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. Admin profiles have no daily limits (coadmin.unbegrenzt); space and the queue hold for them too. On the whole Spark at most 10 heavy jobs wait, pictures and songs together. 5. Wait for a pause and the place: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer"
 },
 {
 "lang": "en",
@@ -15293,7 +15309,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The "
+"text": ".pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it "
 },
 {
 "lang": "en",
@@ -15301,7 +15317,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
+"text": "that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
 },
 {
 "lang": "en",
@@ -17854,6 +17870,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "No daily limits for admins, rarity under Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 \"daily limits for admins should be off\" and \"clicking items makes the list jump\"): A profile with the admin role (coadmin.unbegrenzt, the same rule as for the quota) has no daily limits any more: painting and changing pictures, songs, own music files and the pictures of an own Dungeon round. Me → Pictures and Me → Music then show \"no daily limit (admin)\". Space, the queue of heavy jobs and everything that leaves the house (mails, calls, reMarkable) keep their limits. Under Features → AI Dungeon Master → Adjust rules the item list stays put on a tap, only the mark and the detail change. Every item stands in its rarity's frame; most basic items roll it only when found, they carry a dashed frame and a colour gradient, and their detail shows the ladder common to legendary with roll, bonus, price and minimum level. Renaming a fellow player (point 5 of the proposals on managing fellow players, Dominik \"1-6\"): in a fellow player's \"⋯\" the host can change the hero's name (PUT /api/profile/dungeon/{rid}/platz/{pid} with {\"was\": \"name\"}), only the name, checked as when creating (2 to 24 characters, a"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "t least one letter); values, level and bag stay. Log dungeon: platz | name."
 },
 {
 "lang": "en",

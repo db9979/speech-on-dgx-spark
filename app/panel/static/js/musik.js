@@ -69,7 +69,7 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   const wrap=icEl('div','ld-box mu');box.appendChild(wrap);
   // the head: count, space and today's songs, the "⋯" menu
   const head=icEl('div','ld-head'),hl=icEl('div','mu-hl');hl.append(icEl('b','',t(`${d.songs.length} Lieder`,`${d.songs.length} songs`)),
-    icEl('span','mut',' · '+t(`${muMb(d.used)} von ${lim.store_mb} MB · heute ${d.today} von ${lim.day}`,`${muMb(d.used)} of ${lim.store_mb} MB · today ${d.today} of ${lim.day}`)));
+    icEl('span','mut',' · '+t(`${muMb(d.used)} von ${lim.store_mb} MB · heute ${d.today}${d.frei?' · ohne Tageslimit (Admin)':' von '+lim.day}`,`${muMb(d.used)} of ${lim.store_mb} MB · today ${d.today}${d.frei?' · no daily limit (admin)':' of '+lim.day}`)));
   head.appendChild(hl);const ed=d.edit||{on:false};const menu=[];if(ed.on)menu.push({label:t('Eigene Datei hochladen','Upload an own file'),act:()=>{up.hidden=false;up.querySelector('input').focus()}});
   if(d.songs.length)menu.push({label:t('Alle Lieder löschen','Delete all songs'),danger:true,act:muClear});if(menu.length)head.appendChild(icMenu(menu));wrap.appendChild(head);
   const up=muUpload(ed);
@@ -351,5 +351,5 @@ function muUpload(ed){const c=icEl('div','mu-new mu-up');c.hidden=true;if(!ed.on
     const r=await apiTry('/api/musik/hochladen?rechte=1&name='+encodeURIComponent(fl.name.slice(0,120)),{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:fl});
     if(!r.r.ok){msg.textContent=String(r.d.detail||t('Ging nicht.','Did not work.'));ok();return}MU.sel=r.d.id;showMusik()};
   const row=icEl('div','mu-opts');row.append(f,icEl('span','mu-sp'),no,go);
-  c.append(icEl('b','',t('Eigene Datei hochladen','Upload an own file')),icEl('div','fh',t(`${(ed.formats||[]).join(', ').toUpperCase()} bis ${ed.upload_mb} MB und 10 Minuten · heute ${ed.uploads} von ${ed.uploads_day}. Hochgeladene Lieder bekommen keine KI-Kennzeichnung, bis du sie bearbeitest.`,
-    `${(ed.formats||[]).join(', ').toUpperCase()} up to ${ed.upload_mb} MB and 10 minutes · today ${ed.uploads} of ${ed.uploads_day}. Uploaded songs get no AI mark until you edit them.`)),row,tl,msg);return c}
+  c.append(icEl('b','',t('Eigene Datei hochladen','Upload an own file')),icEl('div','fh',t(`${(ed.formats||[]).join(', ').toUpperCase()} bis ${ed.upload_mb} MB und 10 Minuten · heute ${ed.uploads}${ed.uploads_day?' von '+ed.uploads_day:''}. Hochgeladene Lieder bekommen keine KI-Kennzeichnung, bis du sie bearbeitest.`,
+    `${(ed.formats||[]).join(', ').toUpperCase()} up to ${ed.upload_mb} MB and 10 minutes · today ${ed.uploads}${ed.uploads_day?' of '+ed.uploads_day:''}. Uploaded songs get no AI mark until you edit them.`)),row,tl,msg);return c}

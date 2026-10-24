@@ -62,7 +62,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/auto              {text?, nach, lang}: the game in the car, spoken only (CarPlay)
     POST   /api/profile/dungeon/{rid}/platz       host: {base} a new seat link with its QR code, shown once
     DELETE /api/profile/dungeon/{rid}/platz/{pid} host: take a seat back
-    PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken} a guest's new link, not waited for, again
+    PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken|name} a guest's new link, not waited for, again, a new name
     DELETE /api/profile/dungeon/{rid}             host: end the round (heroes of profiles are kept)
     POST   /api/profile/dungeon/beitreten         {code, held}: take a seat with the own login
     DELETE /api/profile/dungeon/held/{hid}        delete an own hero
@@ -110,6 +110,7 @@ import dungeon_erzaehler as erz
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_gast as gastkonto
+import coadmin
 import features
 import guard
 import mfa
@@ -753,9 +754,9 @@ def life(r, h):
 def new_hero(r, b, rng=None):
     """A hero from what was typed and picked: name, people, class, one sentence; the six scores from the fixed row
     as dragged (else the class's order) plus the people's bonus."""
-    name = _clean(b.get("name"), NAME_MAX)
+    name = hero_name(b.get("name"))
     volk, klasse = _by(r, "voelker").get(b.get("volk")), _by(r, "klassen").get(b.get("klasse"))
-    if len(name) < 2 or not re.search(r"[A-Za-zÄÖÜäöüß]", name) or not volk or not klasse:
+    if not volk or not klasse:
         raise ValueError("held")
     werte = {w: x + volk["werte"].get(w, 0) for w, x in spread(r, klasse, b.get("verteilung")).items()}
     h = {"hid": "h" + os.urandom(5).hex(), "name": name, "volk": volk["id"], "klasse": klasse["id"],
@@ -1469,13 +1470,22 @@ def drop_seat(owner, rid, pid):
     return True
 
 
-SITZ_WAS = ("link", "ruhen", "wecken")
+SITZ_WAS = ("link", "ruhen", "wecken", "name")
 
 
-def manage_seat(owner, rid, pid, was):
+def hero_name(v):
+    """A hero's name as typed, or ValueError("held"): 2 to NAME_MAX characters with at least one letter."""
+    name = _clean(v, NAME_MAX)
+    if len(name) < 2 or not re.search(r"[A-Za-zÄÖÜäöüß]", name):
+        raise ValueError("held")
+    return name
+
+
+def manage_seat(owner, rid, pid, was, name=""):
     """The host on a fellow player's seat (Dominik 2026-10-24 „andere spieler bearbeiten … den code nochmal dem spieler
     geben“): "link" a new seat code for a guest (the old one stops at once, the hero stays; returned once, only its
-    hash kept), "ruhen" not waited for until the seat acts again, "wecken" waited for again. Returns the code or ""."""
+    hash kept), "ruhen" not waited for until the seat acts again, "wecken" waited for again, "name" the hero's new name
+    (only the name, never a value, Dominik 2026-10-24 „1-6“). Returns the code or ""."""
     if was not in SITZ_WAS:
         raise ValueError("was")
     with _lock:
@@ -1486,7 +1496,9 @@ def manage_seat(owner, rid, pid, was):
             print(f"dungeon: platz | {was} | nicht da", flush=True)
             raise LookupError("platz")
         code = ""
-        if was == "link":
+        if was == "name":
+            p["held"]["name"] = hero_name(name)
+        elif was == "link":
             if p.get("uid"):                     # a profile opens the round from its own list
                 print("dungeon: platz | link | profil", flush=True)
                 raise LookupError("profil")
@@ -3162,6 +3174,11 @@ def _bild_count(d):
     return b.get("n", 0) if b.get("day") == DayCounter.date() else 0
 
 
+def _bild_tag_voll(r, d, rd):
+    """The game's pictures of today are used up; never in the round of an admin profile (coadmin.unbegrenzt)."""
+    return _bild_count(d) >= r["grenzen"].get("bilder_tag", BILDER_TAG) and not coadmin.unbegrenzt(rd.get("owner"))
+
+
 def _bild_take(d):
     d["bilder"] = {"day": DayCounter.date(), "n": _bild_count(d) + 1}
 
@@ -3179,7 +3196,7 @@ def may_paint(r, d, rid, rd):
         return "abstand"
     if rd.get("bilder_n", 0) >= BILDER_RUNDE:
         return "runde"
-    if _bild_count(d) >= r["grenzen"].get("bilder_tag", BILDER_TAG):
+    if _bild_tag_voll(r, d, rd):
         return "tag"
     if schwer.full():
         return "voll"
@@ -3329,7 +3346,7 @@ def queue_portrait(rid, pid):
         key = "h:" + h["hid"]
         why = ("aus" if not pictures_on(rd["owner"]) else "malt" if key in _bilder_jobs else
                "stufe" if h.get("bild") == h["stufe"] else
-               "tag" if _bild_count(d) >= r["grenzen"].get("bilder_tag", BILDER_TAG) else "voll" if schwer.full() else "")
+               "tag" if _bild_tag_voll(r, d, rd) else "voll" if schwer.full() else "")
         text = ""
         if not why:
             text, why = picture_text(r, rd, portrait_text(r, h))
@@ -4504,7 +4521,7 @@ async def platz(rid: str, request: Request, prof=Depends(browser_profile)):
 @router.put("/api/profile/dungeon/{rid}/platz/{pid}", dependencies=[Depends(assistant)])
 async def platz_aendern(rid: str, pid: str, request: Request, prof=Depends(browser_profile)):
     """The host on a fellow player's seat: {"was": "link", "base"} a new link with its QR code (shown once),
-    {"was": "ruhen"|"wecken"} not waited for / waited for again."""
+    {"was": "ruhen"|"wecken"} not waited for / waited for again, {"was": "name", "name"} the hero's new name."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -4513,7 +4530,7 @@ async def platz_aendern(rid: str, pid: str, request: Request, prof=Depends(brows
         if not _PID.fullmatch(pid):
             raise LookupError("platz")
         base = _base(b) if b.get("was") == "link" else ""
-        code = await asyncio.to_thread(manage_seat, uid, rid, pid, b.get("was"))
+        code = await asyncio.to_thread(manage_seat, uid, rid, pid, b.get("was"), b.get("name"))
         out = await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
     except KNOWN as e:
         raise _http(e)
