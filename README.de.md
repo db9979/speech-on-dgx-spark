@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.996** KI-Dungeon-Master: das „⋯“-Menü eines Mitspielers wird in der Seitenspalte nicht mehr abgeschnitten, „Malen“ unter Regeln anpassen ohne Tageslimit für den Admin
 - **V01.0.995** E-Mail: die Einordnen-Leiste über der Liste verschwindet nach dem Lauf mit „Schließen“; „Einordnen rückgängig“ bleibt im „⋯“ des eingeordneten Ordners (Panel und iPhone)
 - **V01.0.994** KI-Dungeon-Master: der eigene Würfel landet auf der Zahl, die zählt, bei Vorteil oder Nachteil zeigen Wurf und Protokoll beide Würfel, natürliche 20 und 1 stehen unter der Leiste, dieselbe Probe im nächsten Zug ist ein neuer Wurf
 - **V01.0.993** KI-Dungeon-Master: die Karte zieht mit, wenn der Erzähler den Weg erzählt, aber die Orts-id vergisst (Name oder Richtung aus dem Zug und Name in der Erzählung), der neue Ort bekommt sein Bild
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.989** Keine Tageslimits für Admin-Profile (Bilder, Lieder, eigene Musikdateien, Bilder der eigenen Dungeon-Runde; Platz und Warteschlange bleiben), unter Funktionen → KI-Dungeon-Master → Regeln anpassen hüpft bei den Gegenständen die Liste nicht mehr und jeder Gegenstand steht im Rahmen seiner Seltenheit, gewürfelte mit Leiter im Detail, der Gastgeber benennt den Helden eines Mitspielers über „⋯“ um
 - **V01.0.988** KI-Dungeon-Master: gemalte Bilder für Völker, Klassen und Fähigkeiten statt Zeichen, die gewählte Klasse groß mit Bild-Kacheln, Heldenbogen mit Porträt, Werte-Kacheln und Reitern, Kräfte mit eigenem Fenster und „Wirken“, eigene Aktion nach „Handeln“ als Karte mit „Ändern“, Mitspieler verwalten (neuer Link, nicht mehr warten, vom Tisch), Gast-Link über das ganze Fenster und abgesichert, Gast-Mail-Postfach wählbar
 - **V01.0.987** KI-Dungeon-Master: Prolog mit Halt (Auftrag, erste Spur, „Was ihr tun könnt“ als Knöpfe, Haken je Held, Auftrag angeheftet), getragene Dinge der Gruppe öffnen ihr Fenster mit Bild, Würfel und Boni farbig, Seitenspalte ruhiger
-- **V01.0.986** KI-Dungeon-Master: Karte als Pergament mit Gelände, Nebel, Kompass, Rahmen und Fähnchen, Stil je Welt (Pergament, fahles Papier, Seekarte, Sternkarte), Gewölbe mit Steinboden, Türen, Fackeln und Licht, sanfte Bewegung; „Gewölbe würfeln“ legt nur einen Eingang an, hinein erst mit der Aktion
 
 
 

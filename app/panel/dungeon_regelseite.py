@@ -192,7 +192,7 @@ async def katalog_bild(teil: str, request: Request):
         c = await asyncio.to_thread(_entry, teil, str(b.get("id") or ""))
         r = dungeon.rules()
         if was == "malen":
-            why, neu = await dingbild.repaint(r, c)
+            why, neu = await dingbild.repaint(r, c, frei=True)   # only an admin reaches this: no day limit
             if why != "ok":
                 raise HTTPException(409, why)
             if not dingbild.picture_of(r, c)[1]:          # „🖌 Malen“ of a missing picture: nothing to compare

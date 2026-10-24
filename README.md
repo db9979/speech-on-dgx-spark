@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.996** AI Dungeon Master: a fellow player's "⋯" menu is no longer cut off in the side column, "Malen" under Adjust rules without a day limit for the admin
 - **V01.0.995** E-mail: the sorting bar above the list goes after the run with "Close"; "Undo the sorting" stays in the "⋯" of the folder that was sorted (panel and iPhone)
 - **V01.0.994** AI Dungeon Master: the own die lands on the number that counts, with advantage or disadvantage the throw and the log show both dice, natural 20 and 1 are named under the bar, the same check next turn is a new throw
 - **V01.0.993** AI Dungeon Master: the map follows when the narrator tells the way but forgets the place id (name or direction from the turn and the name in the narration), the new place gets its picture
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.989** No daily limits for admin profiles (pictures, songs, own music files, pictures of the own Dungeon round; space and queue stay), under Features → AI Dungeon Master → Adjust rules the item list no longer jumps and every item stands in its rarity frame, rolled ones with the ladder in the detail, the host renames a fellow player's hero via "⋯"
 - **V01.0.988** AI Dungeon Master: painted pictures for peoples, classes and abilities instead of signs, the chosen class large with picture tiles, a hero sheet with portrait, value tiles and tabs, powers with their own window and "Cast", the own action after "Act" as a card with "Change", managing fellow players (new link, stop waiting, off the table), a seat link fills the window and is locked, the guest mail mailbox can be picked
 - **V01.0.987** AI Dungeon Master: a prologue with a hold (quest, first lead, "What you can do" as buttons, a hook per hero, quest pinned), worn things of the group open their window with picture, dice and bonuses in colour, a calmer side column
-- **V01.0.986** AI Dungeon Master: map as parchment with terrain, fog, compass, frame and flag, a style per world (parchment, pale paper, sea chart, star chart), vaults with stone floor, doors, torches and light, gentle motion; "Roll a vault" only lays an entrance, in only by the action
 
 
 

@@ -5493,6 +5493,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Mitspieler-Menü nicht mehr abgeschnitten (V01.0.996, Dominik 2026-10-24 „menü nicht sichtbar, wird abgeschnitten“): Das „⋯“-Menü eines Mitspielers in der Seitenspalte war breiter als die Spalte und wurde links abgeschnitten. Jetzt ist es genau so breit wie die Karte des Helden und liegt unter ihrem Kopf. Ein Browser-Test prüft das bei 1280 und 390 Pixel Breite. Malen unter Regeln ohne Tageslimit („im Dungeon-Master kann ich keine neuen Bilder erstellen“): Der Knopf „Malen“ unter Funktionen → KI-Dungeon-Master → Regeln anpassen erreicht nur der Admin. Er hält sich deshalb nicht mehr an die Tagesgrenze der Katalogbilder (300 am Tag, dungeon_dingbild.TAG_MAX), zählt aber mit. Der Lauf über den ganzen Katalog, nachts oder per Knopf, endet weiter bei dieser Grenze."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Der Würfel landet auf der Zahl, die zählt (V01.0.994, Dominik 2026-10-24 „der Würfel zeigt 14, dann 9 bei der Berechnung“): Beim eigenen Wurf liefen bisher Zufallszahlen über den Würfel, und erst danach sprang er auf die Zahl des Panels. Jetzt wird er langsamer und zeigt als letzte Zahl immer die Zahl des Panels. Bei Vorteil oder Nachteil würfelt das Panel zwei Würfel; der Wurf und das Protokoll zeigen jetzt beide und sagen, welcher zählt („Nachteil: 14 und 9, es zählt die 9“). Vor dem Wurf steht dabei „zwei Würfel, der niedrigere zählt“ (bzw. der höhere). Eine natürliche 20 oder 1 steht unter der Leiste („natürliche 20: immer geschafft“, „natürliche 1: immer daneben“). Jede Wartezeit hat einen eigenen Stempel (warten.wt). Dieselbe Probe im nächsten Zug ist darum ein neuer Wurf und keine alte Zahl."
 },
 {
@@ -17902,6 +17910,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the player menu is no longer cut off (V01.0.996, Dominik 2026-10-24 \"menu not visible, cut off\"): A fellow player's \"⋯\" menu in the side column was wider than the column and was cut off on the left. Now it is exactly as wide as the hero's card and opens under its head. A browser test checks this at 1280 and 390 pixels wide. Painting under the rules without a day limit (\"in the Dungeon Master I cannot make new pictures\"): only the admin reaches the \"Malen\" button under Features → AI Dungeon Master → Adjust rules. It therefore no longer stops at the day limit of catalogue pictures (300 a day, dungeon_dingbild.TAG_MAX), but it still counts. The run over the whole catalogue, at night or by button, still ends at that limit."
 },
 {
 "lang": "en",

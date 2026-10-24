@@ -494,13 +494,14 @@ def _welt(r, c):
     return ws[0] if ws else r["welten"][0]["id"]
 
 
-async def repaint(r, c):
+async def repaint(r, c, frei=False):
     """Paints a catalog entry's picture once more as a candidate neu-<hash> next to the one in use (the same checks
-    and day limit as every catalog picture). Returns ("ok", name) or (reason, "")."""
+    and day limit as every catalog picture; frei: the admin's own button, no day limit, Dominik 2026-10-24 „im
+    Dungeon-Master kann ich keine neuen Bilder erstellen“, it still counts). Returns ("ok", name) or (reason, "")."""
     if not on():
         return "aus", ""
     d = _state()
-    if _today(d) >= TAG_MAX:
+    if _today(d) >= TAG_MAX and not frei:
         return "tag", ""
     n, _ = picture_of(r, c)
     p = prompt(dungeon.style(r, {"welt": _welt(r, c), "ton": None}), c)

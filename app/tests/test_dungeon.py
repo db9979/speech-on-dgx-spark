@@ -3027,6 +3027,11 @@ class Windows(unittest.TestCase):
                         # the host's „⋯“ on Bela (Dominik „andere spieler bearbeiten … den code nochmal dem spieler geben“)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-smenu').length"), 1)   # not on the own seat
                         await pg.click("#dmview .dm-smenu summary")
+                        # the menu stays inside the hero's card, nothing cut off at the column's edge (Dominik 2026-10-24)
+                        inside = await pg.evaluate("""(()=>{const m=document.querySelector('#dmview .dm-smenu-l').getBoundingClientRect(),
+                            c=document.querySelector('#dmview .dm-smenu').closest('.dm-seat').getBoundingClientRect();
+                            return m.left>=c.left-1&&m.right<=c.right+1&&m.left>=0&&m.right<=innerWidth})()""")
+                        self.assertTrue(inside, w)
                         await pg.click("#dmview .dm-smenu [data-dmsitz=link]")
                         await b.until(pg, "/#spiel=/.test((document.querySelector('#dmview .dm-smenu .mitmade input')||{}).value||'')")
                         await pg.click("#dmview .dm-smenu [data-dmsitz=ruhen]")

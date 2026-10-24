@@ -3019,6 +3019,13 @@
 "titel": "Würfel landet auf der Zahl, die zählt",
 "text": "A: In einer Runde eine Aktion mit Probe schicken und den eigenen Würfel antippen: er wird langsamer und bleibt auf der Zahl stehen, die auch die Leiste und das Protokoll zeigen. B: Mit Nachteil (z. B. belastet bei Geschick): vor dem Wurf steht „zwei Würfel, der niedrigere zählt“, danach „Nachteil: X und Y, es zählt die Y“. C: Bei einer natürlichen 20 steht unter der Leiste „natürliche 20: immer geschafft“. D: Dieselbe Probe im nächsten Zug: der Würfel ist wieder zum Antippen da.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P456",
+"v": 996,
+"titel": "Mitspieler-Menü ganz sichtbar, Malen ohne Tageslimit",
+"text": "A: Als Gastgeber am Tisch beim Helden eines Mitspielers auf „⋯“ tippen, am Rechner und am Handy: das Menü ist ganz zu sehen, so breit wie die Karte des Helden. B: Funktionen → KI-Dungeon-Master → Regeln anpassen, Gegenstände: „Malen“ bei einem Eintrag malt auch nach vielen Bildern am Tag, ohne „Das Tageslimit für Bilder ist erreicht“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

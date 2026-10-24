@@ -126,9 +126,11 @@ class Repaint(Base):
         self.assertEqual(dungeon._png(name), first)
         self.assertEqual(self.paint("goblin", "alt").status_code, 404)   # nothing left to settle
         self.assertEqual(self.paint("goblin", "malen").status_code, 200)
-        x = self.paint("goblin", "malen")                              # TAG_MAX 3 in the tests: the day is over
-        self.assertEqual((x.status_code, x.json()["detail"]), (409, "tag"))
-        self.assertEqual(len(self.calls), 3)
+        x = self.paint("goblin", "malen")                              # TAG_MAX 3 in the tests: the day is over for
+        self.assertEqual(x.status_code, 200, x.text)                   # the night run, never for the admin's button
+        self.assertEqual(len(self.calls), 4)
+        self.assertGreaterEqual(db._today(db._state()), db.TAG_MAX)    # it still counts
+        self.assertEqual(db._end_why("knopf"), "tag")                   # the run over the whole catalog keeps its limit
 
     def test_keep_new_and_the_switch(self):
         r = dungeon.rules()
