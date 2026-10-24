@@ -359,8 +359,9 @@ def view(dm, r, rd):
         return None
     import dungeon_dingbild as db
     have = db.files() if db.on() else frozenset()
-    out = [{"k": g["k"], "id": g["id"], "name": g["name"], "zeichen": g["zeichen"], "leben": max(0, g["leben"]), "max": g["max"],
-            "aus": g["aus"], "bild": _picture(r, rd, g["id"], have)} for g in k["gegner"]]
+    lang, cat = "en" if rd.get("lang") == "en" else "de", dm._by(r, "gegner")
+    out = [dict(card(dm, r, rd, g["id"], lang) if g["id"] in cat else {}, k=g["k"], id=g["id"], name=g["name"], zeichen=g["zeichen"],
+                leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], bild=_picture(r, rd, g["id"], have)) for g in k["gegner"]]
     return {"gegner": out, "gefahr": k["gefahr"], "stehen": len(up(rd))}
 
 
@@ -387,7 +388,12 @@ def card(dm, r, rd, gid, lang):
             "leben": c["leben"], "rk": c["ruestung"], "angriff": c["angriff"], "groesse": c.get("groesse", "mittel"),
             "schaden": f"{c.get('anzahl_wuerfel', 1)}{'W' if not li else 'd'}{c['schaden']}" + (f"+{c['schaden_plus']}" if c.get("schaden_plus", 0) > 0 else
                                                                                                f"{c['schaden_plus']}" if c.get("schaden_plus", 0) < 0 else ""),
-            "ep": c["ep"]}
+            "ep": c["ep"],
+            # for the big window (Dominik 2026-10-24 „click auf beute etc. sollte ein fenster aufgehen lassen um es genauer zu
+            # betrachten - auch gegener“, 1a): the six scores with their bonus and what its blows can cause
+            "werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": (c.get("werte") or {}).get(w["id"], 10),
+                       "mod": dm.mod((c.get("werte") or {}).get(w["id"], 10))} for w in r["werte"]],
+            "zustaende": [{"name": z["name"][li], "info": z["info"][li]} for z in r.get("zustaende") or [] if z["id"] in (c.get("zustaende") or [])]}
 
 
 def for_live(rs):

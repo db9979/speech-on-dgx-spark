@@ -2714,9 +2714,16 @@ class Voices(BetterStories):
         self.assertTrue(any("stimme" in s for n, s, _ in self.systems if n == "erzaehlen"))   # the model is told about the lists
         dm = [x for x in rd["log"] if x["art"] == "dm"][-1]
         self.assertNotIn("stimme", json.dumps(dm["npc"]))                                       # the traits stay out of the log
-        self.assertEqual(S.npc(rd, "Grimma"), "An old woman, rough voice, grim and cold")
+        tempi = tuple(", " + x for x in S.data()["npc"]["tempo"].values())
+        grimma = S.npc(rd, "Grimma")
+        self.assertTrue(grimma.startswith("An old woman, rough voice, grim and cold, ") and grimma.endswith(tempi))   # no tempo given: by the name
         tom = S.npc(rd, "tom")
-        self.assertTrue(tom.startswith("A boy, ") and tom.endswith("cheerful and lively"))     # a wrong value: from the name
+        self.assertTrue(tom.startswith("A boy, ") and "cheerful and lively, " in tom)          # a wrong value: from the name
+        # many NPCs, many voices (Dominik 2026-10-24 „2b mit voice design für varianz“): 60 names, at least 50 descriptions
+        self.assertGreaterEqual(len({S.npc({}, f"Figur {i}") for i in range(60)}), 50)
+        self.assertTrue(all(len(S.npc({}, f"Figur {i}")) <= S.TEXT_MAX for i in range(200)))
+        old = dict(rd, npc_stimmen={"grimma": {"alter": "alt", "geschlecht": "weiblich", "klang": "rau", "wesen": "finster"}})
+        self.assertTrue(S.npc(old, "Grimma").endswith(tempi))                                   # kept before the tempo: still a voice
         self.assertEqual(tom, S.npc(rd, "Tom"))
         parts = dungeon.speak_parts(dungeon.rules(), dm["text"], dm["npc"], (), rd)
         self.assertIn("eerie", parts[0][2])                                                      # the mood colours the narrator
@@ -3652,6 +3659,85 @@ class Windows(unittest.TestCase):
                         else:                                                                             # on a phone it fills the screen: ✕
                             await pg.click("#dmview .dm-fen [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+    def test_a_foe_and_a_loot_line_open_a_big_window(self):
+        """Dominik 2026-10-24 „click auf beute etc. sollte ein fenster aufgehen lassen um es genauer zu betrachten - auch
+        gegener“ (1a): a foe of the encounter card opens its window with values and the six scores, ‹ › and the arrow
+        keys page through the others; a loot line opens its item with the bag's buttons."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        old_ask = dungeon.ask_model
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")
+        dungeon.ask_model = silent
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
+        rid = dungeon.make_round(uid, {"titel": "Betrachten", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        r = dungeon.rules()
+        foes = [g["id"] for g in r["gegner"] if "fantasy" in g.get("welten", [])][:2]
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["dm"] = ""
+            h = next(iter(rd["plaetze"].values()))["held"]
+            loot = dungeon.item(r, "dolch", "selten")
+            h["tasche"] = [loot]
+            dungeon._log(rd, "begegnung", gegner=[dict(kampf.card(dungeon, r, rd, g, "de"), anzahl=1 + i) for i, g in enumerate(foes)], gefahr="mittel")
+            dungeon._log(rd, "beute", name="Uma", item=dungeon.item_view(r, loot, "de"), gold=0, boden=False)
+            dungeon._write(d)
+        names = [kampf.card(dungeon, r, rd, g, "de")["name"] for g in foes]
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-beg [data-dmgeg]')")
+                        await helpers.dm_pane(pg, "geschichte")
+                        await pg.click("#dmview .dm-beg [data-dmgeg]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-gdet')")
+                        txt = await pg.evaluate("document.querySelector('#dmview .dm-fen-ding').textContent")
+                        self.assertIn(names[0], txt)
+                        self.assertIn("RK", txt)
+                        self.assertIn("1 / 2", txt)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-ding .dm-gwerte span').length"), 6)
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding .dm-detail-b .dm-ding')"))   # the picture big
+                        await pg.click("#dmview .dm-fen-ding [data-dmblatt='1']")
+                        await b.until(pg, f"document.querySelector('#dmview .dm-fen-ding .dm-detail-n').textContent==={json.dumps(names[1])}")
+                        self.assertIn("×2", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding').textContent"))
+                        await pg.keyboard.press("ArrowRight")                                             # round again to the first
+                        await b.until(pg, f"document.querySelector('#dmview .dm-fen-ding .dm-detail-n').textContent==={json.dumps(names[0])}")
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"gegner-{w}.png"))
+                        await pg.keyboard.press("Escape")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
+                        await pg.click("#dmview .dm-beute [data-dmbeute] .dm-item")                       # the loot: its item with the bag's buttons
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-detail')")
+                        self.assertIn("In deiner Tasche", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding').textContent"))
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding [data-dmhero=anlegen]')"))
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        await pg.click("#dmview .dm-fen-ding [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
@@ -4618,6 +4704,15 @@ class Fight(Turns):
         view = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
         self.assertEqual(view["kampf"]["gegner"][0]["name"], g["name"])
         self.assertTrue(view["kampf"]["stehen"])
+        # the big window (Dominik 2026-10-24 „auch gegener“, 1a): values, the six scores and what it causes, in the fight and on the card
+        vg = view["kampf"]["gegner"][0]
+        self.assertEqual((vg["rk"], vg["ep"], vg["leben"], vg["max"], len(vg["werte"])), (foe["ruestung"], foe["ep"], g["leben"], g["max"], 6))
+        self.assertEqual(vg["werte"][1]["wert"], (foe.get("werte") or {}).get(r["werte"][1]["id"], 10))
+        vc = next(e for e in view["log"] if e["art"] == "begegnung")["gegner"][0]
+        self.assertEqual((len(vc["werte"]), isinstance(vc["zustaende"], list)), (6, True))
+        z = next(x for x in r["gegner"] if x.get("zustaende"))
+        self.assertEqual([y["name"] for y in kampf.card(dungeon, r, rd, z["id"], "de")["zustaende"]],
+                         [y["name"][0] for y in r["zustaende"] if y["id"] in z["zustaende"]])
         # the model's damage, its foe and its find do not count in a fight; only the panel's roll does
         self.set_foe("g1", leben=1)
         bela = self.state(self.rid)["plaetze"][self.gp]["held"]["leben"]

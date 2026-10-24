@@ -5050,6 +5050,19 @@ async def weiter(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
 
 
+def set_pause(rid, uid, an):
+    """The host pauses the round or goes on (the page's button, the car's „Runde pausieren“); the clock starts anew."""
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["owner"] != uid or rd["status"] == "ende":
+            raise LookupError("gastgeber")
+        rd["pause"] = bool(an)
+        rd["zug_t"], rd["lesen"] = time.time(), 0
+        _write(d)
+    print(f"dungeon: pause | {'an' if an else 'aus'}", flush=True)
+
+
 @router.post("/api/profile/dungeon/{rid}/pause", dependencies=[Depends(assistant)])
 async def pause(rid: str, request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
@@ -5058,15 +5071,7 @@ async def pause(rid: str, request: Request, prof=Depends(browser_profile)):
     b = await json_body(request, BODY)
 
     def go():
-        with _lock:
-            d = _read()
-            rd = _round(d, rid)
-            if rd["owner"] != uid or rd["status"] == "ende":
-                raise LookupError("gastgeber")
-            rd["pause"] = bool(b.get("an"))
-            rd["zug_t"], rd["lesen"] = time.time(), 0
-            _write(d)
-        print(f"dungeon: pause | {'an' if b.get('an') else 'aus'}", flush=True)
+        set_pause(rid, uid, b.get("an"))
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)

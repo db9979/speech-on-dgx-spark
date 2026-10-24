@@ -3166,6 +3166,13 @@
 "titel": "Würfelprobe mit Zweck, Sprechweisen, Werte-Chips",
 "text": "A: Eine Runde spielen, eine Aktion mit Risiko („Ich untersuche den Wächter auf Schwächen“): die Würfelanzeige und die Karte im Verlauf zeigen groß, wofür gewürfelt wird, darüber wer welchen Wert würfelt, darunter die Rechnung, rechts geschafft oder nicht. B: Mit VoiceDesign und Vorlesen: ein Zitat mit „flüstert er“ klingt geflüstert, „ruft sie“ laut; Zustand → Logs, Filter „sprechweise“: je Zug eine Zeile mit der Zahl. C: Neue Runde anlegen: Volk- und Klassenkacheln zeigen die Werte als Chips (KON +2, ❤ 14, ✦ 1 Kraft, ✨ 20 Zauber), nichts ist abgeschnitten, kein Name getrennt, auch am Handy. D: Am großen Bildschirm steht die Übersicht mittig, die Welten füllen die Zeile, „⛶ Vollbild“ ist schon auf der Übersicht. E: Heldenbogen → Ausrüstung: ein Gürtel lässt sich nur auf das Feld „Gürtel“ ziehen, beim Ziehen leuchten die passenden Felder; auf „Hals“ gezogen kommt die Meldung, dass jedes Ding an seinen Körperteil gehört. Ein früher am Hals getragener Gürtel sitzt jetzt am Gürtel.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P477",
+"v": 1021,
+"titel": "Gegner und Beute betrachten, Stimmen der Nebenfiguren",
+"text": "A: Eine Runde bis zu einer Begegnung spielen, auf einen Gegner der Begegnungskarte tippen: ein großes Fenster mit Bild, Stufe, Leben, RK, Angriff, Schaden, EP, den sechs Werten und „Kann bewirken“. B: Mit ‹ › oder den Pfeiltasten durch alle Gegner der Begegnung blättern; im Kampf dasselbe über den Kampfkasten, dort mit dem Lebensbalken. C: Auf eine Beute-Zeile tippen: das Ding öffnet sich groß, aus der eigenen Tasche mit „Anlegen“. Am Handy füllt das Fenster den Bildschirm, ✕ schließt. D: Mit VoiceDesign und Vorlesen eine Szene mit mehreren Nebenfiguren: sie klingen deutlich verschieden (Tempo und Klangfarbe), dieselbe Figur immer gleich.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

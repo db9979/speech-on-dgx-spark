@@ -25,7 +25,7 @@ QUELLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_stimm
 NPC_MAX = 40               # NPC voices kept per round
 ZULETZT = 3                # a new round's narrator is none of the owner's last this many
 TEXT_MAX = 80              # a description (as for a hero's voice, dungeon.KLANG)
-MERKMALE = ("alter", "geschlecht", "klang", "wesen")
+MERKMALE = ("alter", "geschlecht", "klang", "wesen", "tempo")   # tempo since 2026-10-24 (Dominik „2b mit voice design für varianz“)
 _TEXT = re.compile(r"[A-Za-z0-9 ,.\-]{10,%d}" % TEXT_MAX)
 _data = {}
 
@@ -158,7 +158,7 @@ def learn(rd, npcs):
 def _of(rd, name, sex=""):
     """An NPC's traits: kept, else those of its name; sex sets the gender of one nobody named (the pronoun after its
     quote, vortrag.pronoun)."""
-    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or _traits(str(name or "?"))
+    t = dict(_traits(str(name or "?")), **((rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or {}))  # a trait added later: by the name
     return dict(t, geschlecht=sex) if sex else t
 
 
@@ -174,7 +174,7 @@ def npc(rd, name, sex=""):
     t = _of(rd, name, sex)
     who = {"weiblich": "a girl", "maennlich": "a boy"}.get(t["geschlecht"], "a child") if t["alter"] == "kind" \
         else f"{n['alter'][t['alter']]} {n['geschlecht'][t['geschlecht']]}"
-    return f"{who[0].upper()}{who[1:]}, {n['klang'][t['klang']]}, {n['wesen'][t['wesen']]}"
+    return f"{who[0].upper()}{who[1:]}, {n['klang'][t['klang']]}, {n['wesen'][t['wesen']]}, {n['tempo'][t['tempo']]}"
 
 
 def weiblich(rd, name, sex=""):

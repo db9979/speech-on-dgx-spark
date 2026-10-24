@@ -22,17 +22,37 @@ function dmShop(v){const h=v.ich,m=v.markt;
     ${mine?`<h5>${esc(t('Aus deiner Tasche','From your bag'))}</h5><div class="dm-bag dm-bag-k">${mine}</div>`:''}`}
 // one item by its key: bag, equipment slot („an:<slot>“), merchant or ground; a power of „Das kann ich“ („k:kf:<id>“, „k:kz:<id>“)
 function dmFind(v,key){const h=v.ich;if(!h||!key)return null;
+  if(key.startsWith('g:')||key.startsWith('kg:'))return dmFoeFind(v,key);
+  if(key.startsWith('b:')){const [n,i]=key.slice(2).split(':'),e=[...(v.log||[])].reverse().find(x=>x.art==='beute'&&String(x.n)===n&&x.item&&x.item.i===i);if(!e)return null;
+    const mine=h.tasche.find(x=>x.i===i),boden=v.status!=='ende'&&(v.boden||[]).find(x=>x.i===i);   // still in the own bag or on the ground: its buttons
+    return mine?{it:mine,wo:'tasche'}:boden?{it:boden,wo:'boden'}:{it:e.item,wo:'beute',wer:e.name}}
   if(key.startsWith('k:')){const k=h.kann||{faehigkeiten:[],zauber:[]},id=key.slice(5),x=(key.startsWith('k:kf:')?k.faehigkeiten:k.zauber).find(y=>y.id===id);
     return x?{kann:x,it:x,wo:'kann',zauber:key.startsWith('k:kz:')}:null}
   if(key.startsWith('an:')){const k=key.slice(3),it=h.an[k];return it?{it,wo:'an',k}:null}
   if(key.startsWith('s:')){const [pid,k]=key.slice(2).split('|'),p=(v.plaetze||[]).find(x=>x.pid===pid),it=p&&p.karte&&p.karte.dinge.find(d=>d.platz===k);return it?{it,wo:'fremd',wer:p.name}:null}
   const a=[['tasche',h.tasche],['ware',v.markt&&v.status!=='ende'?v.markt.ware:[]],['boden',v.status!=='ende'?v.boden||[]:[]]];
   for(const [wo,l] of a){const it=(l||[]).find(x=>x.i===key);if(it)return {it,wo}}return null}
+// a foe to look at closely (Dominik 2026-10-24 „click auf beute etc. sollte ein fenster aufgehen lassen um es genauer zu
+// betrachten - auch gegener“, 1a): its card from an encounter („g:<turn>:<n>“) or the fight („kg:<k>“), with the others to page through
+function dmFoeFind(v,key){let list=[];
+  if(key.startsWith('kg:'))list=((v.kampf||{}).gegner||[]).map(g=>({g,key:'kg:'+g.k}));
+  else{const [n]=key.slice(2).split(':'),e=[...(v.log||[])].reverse().find(x=>x.art==='begegnung'&&String(x.n)===n);list=e?(e.gegner||[]).map((g,j)=>({g,key:'g:'+n+':'+j})):[]}
+  const i=list.findIndex(x=>x.key===key);return i<0?null:{gegner:list[i].g,it:list[i].g,wo:'gegner',list:list.map(x=>x.key),at:i}}
+function dmFoeDet(f){const g=f.gegner,n=f.list.length,fx=x=>(x>=0?'+':'')+x,chip=(k,a,b)=>`<span class="dm-pchip${k?' '+k:''}"><small>${esc(a)}</small><b>${esc(String(b))}</b></span>`;
+  const blatt=n>1?`<div class="dm-blatt"><button type="button" class="b" data-dmblatt="-1" aria-label="${esc(t('Voriger Gegner','Previous foe'))}">‹</button><small>${f.at+1} / ${n}</small><button type="button" class="b" data-dmblatt="1" aria-label="${esc(t('Nächster Gegner','Next foe'))}">›</button></div>`:'';
+  const gr={winzig:t('winzig','tiny'),klein:t('klein','small'),mittel:t('mittelgroß','medium'),gross:t('groß','large'),riesig:t('riesig','huge'),gigantisch:t('gigantisch','gargantuan')}[g.groesse]||'';
+  const leben=g.max?`<div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${g.leben} / ${g.max}</span></div>${dmBar(g.leben,g.max,g.leben*3<g.max?'low':'')}`:'';
+  return `<div class="dm-detail dm-gdet"><span class="dm-detail-b">${dmDing(g)}</span><div class="dm-detail-t">${blatt}
+    <div><b class="dm-detail-n">${esc(g.name)}</b>${g.anzahl>1?` <span class="pill">×${g.anzahl}</span>`:''}${g.aus?` <span class="pill">${esc(g.aus==='besiegt'?t('besiegt','defeated'):t('geflohen','fled'))}</span>`:''}</div>
+    ${gr?`<small>${esc(gr)}</small>`:''}${g.info?`<p class="dm-iinfo">${esc(g.info)}</p>`:''}${leben}
+    ${g.rk!=null?`<div class="dm-pchips">${chip('',t('Stufe','Level'),dmCr(g.stufe))}${g.max?'':chip('leben','❤',g.leben)}${chip('',t('RK','AC'),g.rk)}${chip('kraft',t('Angriff','Attack'),fx(g.angriff))}${chip('',t('Schaden','Damage'),g.schaden)}${chip('up',t('EP','XP'),g.ep)}</div>`:''}
+    ${(g.werte||[]).length?`<div class="dm-gwerte">${g.werte.map(w=>`<span title="${esc(w.name)}"><small>${esc(w.kurz)}</small><b>${w.wert}</b><i>${esc(fx(w.mod))}</i></span>`).join('')}</div>`:''}
+    ${(g.zustaende||[]).length?`<h5>${esc(t('Kann bewirken','Can cause'))}</h5><ul class="dm-detail-w">${g.zustaende.map(z=>`<li><b>${esc(z.name)}</b>: ${esc(z.info)}</li>`).join('')}</ul>`:''}</div></div>`}
 function dmDetail(v,f){const it=f.it,h=v.ich,open=v.status!=='ende',kg=it.kg?String(it.kg).replace('.',L==='en'?'.':',')+' kg':'';
   const acts=!open||f.wo==='fremd'?'':f.wo==='tasche'?dmActs(v,it):f.wo==='an'?`<div class="dm-iacts"><button type="button" class="b" data-dmhero="ablegen" data-platz="${esc(f.k)}">${esc(t('Ablegen','Unequip'))}</button></div>`
     :f.wo==='ware'?`<div class="dm-iacts"><button type="button" class="b p" data-dmhero="kaufen" data-i="${esc(it.i)}"${h.gold<it.preis?' disabled':''}>${esc(t('Kaufen','Buy'))} · ${it.preis} ${esc(t('Gold','gold'))}</button></div>`
-    :`<div class="dm-iacts"><button type="button" class="b" data-dmhero="aufheben" data-i="${esc(it.i)}">${esc(t('Aufheben','Pick up'))}</button></div>`;
-  const wo={tasche:t('In deiner Tasche','In your bag'),an:t('Angelegt','Equipped'),ware:t('Beim Händler','At the merchant'),boden:t('Liegt hier','Lying here'),fremd:t('Trägt '+f.wer,'Worn by '+f.wer)}[f.wo];
+    :f.wo==='beute'?'':`<div class="dm-iacts"><button type="button" class="b" data-dmhero="aufheben" data-i="${esc(it.i)}">${esc(t('Aufheben','Pick up'))}</button></div>`;
+  const wo={tasche:t('In deiner Tasche','In your bag'),an:t('Angelegt','Equipped'),ware:t('Beim Händler','At the merchant'),boden:t('Liegt hier','Lying here'),fremd:t('Trägt '+f.wer,'Worn by '+f.wer),beute:t('Beute für '+f.wer,'Loot for '+f.wer)}[f.wo];
   return `<div class="dm-detail ${DMSEL[it.selten]||''}"><span class="dm-detail-b">${dmDing(it)}</span><div class="dm-detail-t"><small class="mut">${esc(wo)}</small>
     <div><b class="dm-detail-n">${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''}</div><small>${esc(it.selten_name||'')}${kg?' · '+kg:''}</small>
     ${it.fund?`<p class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</p>`:''}${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${dmFx(z)}</li>`).join('')}</ul>`:''}
@@ -45,7 +65,7 @@ function dmFenster(v,mode){const W=DMW[mode],h=v.ich;if(!h){W.w=W.ding='';return
   const f=dmFind(v,W.ding);if(!f)W.ding='';if(!W.w&&!W.ding)return '';
   const neu=W.zug&&v.zug>W.zug?`<div class="dm-fen-neu" role="status">${esc(t('Neuer Zug '+v.zug+': der Dungeon-Master hat weitererzählt.','New turn '+v.zug+': the Dungeon Master has told on.'))}<button type="button" class="b" data-dmfenzu="alle">${esc(t('Zum Tisch','To the table'))}</button></div>`:'';
   const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,dmShop(v),neu):'';
-  const det=f&&(f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
+  const det=f&&(f.gegner?dmFoeDet(f):f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
   return main+(f?dmFenBox('ding',f.it.name,det,main?'':neu):'')}
 // the window's own scroll stays across the table's repaints
 function dmFenKeep(w){const s=[...w.querySelectorAll('.dm-fen-body')].map(x=>[x.closest('.dm-fen').className,x.scrollTop]);
@@ -62,6 +82,10 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
   const bg=e.target.closest('.dm-fen');if(bg&&e.target===bg){dmFenZu(dmFenMode(bg),bg.dataset.dmfenbg);return}
   // a tap on an item (not on its buttons) opens its window: bag, equipment, merchant, ground
   // a worn thing on a seat card: the own one as „an:<slot>“ (with its buttons), another hero's to look at
+  const gb=e.target.closest('#dmview [data-dmgeg],#dgcard [data-dmgeg],#dmview [data-dmbeute],#dgcard [data-dmbeute]');
+  if(gb&&!e.target.closest('button')){const m=dmFenMode(gb),v=dmFenV(m),key=gb.dataset.dmgeg||gb.dataset.dmbeute;if(!v||!dmFind(v,key))return;
+    const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m);return}
+  const bl=e.target.closest('#dmview [data-dmblatt],#dgcard [data-dmblatt]');if(bl){dmBlatt(dmFenMode(bl),+bl.dataset.dmblatt);return}
   const sd=e.target.closest('#dmview [data-dmsding],#dgcard [data-dmsding]');
   if(sd){const m=dmFenMode(sd),v=dmFenV(m),[pid,k]=sd.dataset.dmsding.split('|'),key=v&&v.pid===pid?'an:'+k:'s:'+pid+'|'+k;
     if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m);return}
@@ -70,6 +94,11 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
   const it=e.target.closest('#dmview [data-dmi],#dgcard [data-dmi],#dmview .dm-pl.voll,#dgcard .dm-pl.voll');
   if(!it||e.target.closest('button,select,input,label,a,textarea'))return;const m=dmFenMode(it),v=dmFenV(m),key=it.dataset.dmi||'an:'+it.dataset.dmslot;
   if(!v||!dmFind(v,key))return;const W=DMW[m];W.ding=key;if(!W.zug)W.zug=v.zug;dmFenDraw(m)});
+// page through the foes of the open window: ‹ › and the arrow keys
+function dmBlatt(m,d){const W=DMW[m],v=dmFenV(m),f=v&&dmFind(v,W.ding);if(!f||!f.list||f.list.length<2)return;W.ding=f.list[(f.at+d+f.list.length)%f.list.length];dmFenDraw(m)}
+document.addEventListener('keydown',e=>{if(/^Arrow(Left|Right)$/.test(e.key)&&!e.target.closest('input,textarea,select')){for(const m of ['g','p']){const W=DMW[m];
+    if(W.ding&&(W.ding.startsWith('g:')||W.ding.startsWith('kg:'))&&document.querySelector(m==='g'?'#dgcard .dm-fen-ding':'#dmview .dm-fen-ding')){dmBlatt(m,e.key==='ArrowRight'?1:-1);return}}}
+  if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('[data-dmgeg]')){e.preventDefault();e.target.click();return}});
 document.addEventListener('keydown',e=>{const hf=document.querySelector('#dmview .dm-fen-hilfe,#dgcard .dm-fen-hilfe');
   if(hf&&/^Arrow(Left|Right)$/.test(e.key)){dmHilfeAuf(DMA.hilfe+(e.key==='ArrowRight'?1:-1));dmFenDraw(dmFenMode(hf));return}   // the guide pages with the arrow keys
   if(e.key!=='Escape')return;if(hf){dmFenZu(dmFenMode(hf),'hilfe');return}

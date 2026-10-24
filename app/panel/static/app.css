@@ -2701,3 +2701,10 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-zeile select{width:auto;max-width:55%;margin:0}.dm-zeile::-webkit-details-marker{display:none}.dm-zeile small{opacity:.75;white-space:nowrap}.dm-zeile-d[open]>.dm-zeile{border-color:var(--t-gold,var(--acc))}.dm-zeile-d .dm-erzwahl{margin-top:8px}.dm-zeile-d .dm-erzwahl>label{display:none}
 .dm-mehr{margin-top:10px;padding-top:8px;border-top:1px solid var(--t-linie,var(--line))}.dm-mehr>summary{cursor:pointer;font:inherit;font-size:13px;opacity:.8;list-style:none}.dm-mehr>summary::-webkit-details-marker{display:none}.dm-mehr .dm-hostb{margin-top:8px}
 .dm-left.dm-warn,.dm-mein-z.dm-warn{color:#e5484d;font-weight:600}.dm-plus1{flex:none}.dm-zeitz{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0}.dm-mein-k{display:flex;flex-direction:column;gap:6px}
+/* KI-Dungeon-Master: a foe or a loot line opens its big window (Betrachten, 2026-10-24) */
+[data-dmgeg],[data-dmbeute] .dm-item{cursor:pointer}[data-dmgeg]:hover,[data-dmbeute] .dm-item:hover{border-color:var(--t-gold,var(--accent))}
+.dm-gdet .dm-pchips{padding:4px 0}.dm-gdet .dm-pchip{font-size:13px;padding:4px 9px}.dm-gdet .dm-pchip small{font-weight:500;margin-right:5px;color:inherit;opacity:.75}
+.dm-gwerte{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:4px 0}.dm-gwerte span{display:flex;flex-direction:column;align-items:center;border:1px solid var(--t-linie,var(--line));border-radius:9px;padding:5px 2px}
+.dm-gwerte small{font-size:11px}.dm-gwerte b{font-size:16px}.dm-gwerte i{font-style:normal;font-size:11px;color:var(--t-mut,var(--mut))}
+@media (max-width:420px){.dm-gwerte{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dm-blatt{display:flex;align-items:center;gap:8px;align-self:flex-end}.dm-blatt .b{min-width:40px;font-size:18px;line-height:1}

@@ -50,8 +50,9 @@
   "npc": {
     "alter": {"kind": "a child", "jung": "a young", "mittel": "a middle aged", "alt": "an old"},
     "geschlecht": {"weiblich": "woman", "maennlich": "man", "offen": "person"},
-    "klang": {"tief": "deep voice", "hell": "high voice", "rau": "rough voice", "sanft": "soft voice", "kraeftig": "strong voice", "duenn": "thin voice"},
-    "wesen": {"freundlich": "friendly and warm", "finster": "grim and cold", "listig": "sly and sneaky", "aengstlich": "nervous and timid", "stolz": "proud and haughty", "froehlich": "cheerful and lively", "muede": "tired and slow", "weise": "wise and calm"}
+    "klang": {"tief": "deep voice", "hell": "high voice", "rau": "rough voice", "sanft": "soft voice", "kraeftig": "strong voice", "duenn": "thin voice", "heiser": "hoarse voice", "nasal": "nasal voice", "samtig": "velvety voice", "kratzig": "scratchy voice"},
+    "wesen": {"freundlich": "friendly and warm", "finster": "grim and cold", "listig": "sly and sneaky", "aengstlich": "nervous and timid", "stolz": "proud and haughty", "froehlich": "cheerful and lively", "muede": "tired and slow", "weise": "wise and calm"},
+    "tempo": {"langsam": "slow speech", "ruhig": "even pace", "schnell": "quick speech", "stockend": "halting speech"}
   },
   "sprechweise": {
     "fluestern": [["flüster", "wisper", "raunt", "raunte", "haucht", "whisper"], "whispering, very quiet"],

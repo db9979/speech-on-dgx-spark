@@ -5525,6 +5525,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegner und Beute genauer ansehen, mehr Stimmen für Nebenfiguren (V01.1.021, Dominik 2026-10-24 „click auf beute etc. sollte ein fenster aufgehen lassen um es genauer zu betrachten - auch gegener. ist alles zeimlich klein“, „alles nach empfehlung umsetzten. 2b mit voice design für varianz“): Betrachten: Ein Tipp auf einen Gegner der Begegnungskarte oder des Kampfkastens öffnet ein großes Fenster wie bei Ausrüstung: großes Bild, Name, Anzahl, Größe, Beschreibung, im Kampf das Leben als Balken, dazu Stufe, Leben, Rüstungsklasse, Angriff, Schaden und EP als Chips, die sechs Werte mit ihrem Bonus und unter „Kann bewirken“ die Zustände, die seine Treffer auslösen können (aus dem Bestiarium, dungeon_kampf.card; der Kampfkasten bekommt dieselben Werte über dungeon_kampf.view). Mit ‹ › oder den Pfeiltasten blättert man durch alle Gegner derselben Begegnung oder desselben Kampfes. Ein Tipp auf eine Beute-Zeile öffnet das Ding: liegt es in der eigenen Tasche, mit „Anlegen“ und den anderen Knöpfen der Tasche, liegt es am Boden mit „Aufheben“, sonst zum Ansehen (dungeonfenster.js, Schlüssel g:, kg:, b:). Browser-Test Windows.test_a_foe_and_a_loot_line_open_a_big_window bei 12"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "80 und 390 Pixel. Stimmen der Nebenfiguren: Ohne VoiceDesign bleiben die feste Männer- und Frauenstimme (Wahl 2b). Mit VoiceDesign hat jede Nebenfigur schon ihre eigene Beschreibung; dazu kommen jetzt ein Sprechtempo (langsam, ruhig, schnell, stockend) und vier weitere Klangfarben (heiser, nasal, samtig, kratzig), so klingen viele Figuren verschieden (dungeon_stimmen.json „npc“, MERKMALE). Figuren, die vor dem Tempo gemerkt wurden, bekommen es aus ihrem Namen. Selbsttest: 60 Namen ergeben mindestens 50 verschiedene Stimmen, jede Beschreibung höchstens 80 Zeichen. Für das Auto: set_pause(rid, uid, an) ist aus dem Pause-Endpunkt herausgezogen, damit „Runde pausieren“ im Auto dieselbe Regel nutzt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Würfelprobe mit Zweck, Sprechweisen, Werte als Chips (V01.1.019, Dominik 2026-10-24 „bei den Würfelproben sollte noch angezeigt werden, für was die Würfelprobe gerade gemacht wird“, „1 umsetzten“, „Feste Sprechweisen aus dem Text“, „die werte anzeige ist nicht cool gelöst“, „1“): Würfelprobe: Jede Probe trägt ihren Zweck (wofuer, höchstens 60 Zeichen): die wenigen Wörter des Modells, geprüft wie sein Text (Klartext, Wortfilter), sonst der Anfang der eigenen Aktion des Spielers. Die Probenkarte im Verlauf und in der Würfelanzeige zeigt oben „Gandalf würfelt Intelligenz“, groß den Zweck, darunter „14 +2 = 16 gegen Schwierigkeit 13“ und rechts „geschafft“ oder „nicht geschafft“; beim eigenen Wurf steht der Zweck groß über dem Würfel. Sprechweisen: Mit VoiceDesign spricht jede Figur ein Zitat so, wie der Text es sagt: Die Wörter direkt nach dem Zitat („…“, flüstert er mit archaischer Stimme) oder der Satzteil mit Doppelpunkt davor (Kael zischt: „…“) werden mit einer festen Liste von 20 Sprechweisen abgeglichen (dungeon_stimmen.json „sprechweise“: flüstern, rufen, stammeln, knurren, zischen, lachen, weinen, murmeln, zittern, wütend, archaisch, kalt, sanft, hastig, spö"
 },
 {
@@ -18230,6 +18246,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ged in the hero sheet. New module dungeon_vorlesen.py, pieces under STATE/dungeon-ton/<round>-<turn>-<piece>.wav (as before only the last three turns), the endpoint is now GET /api/profile/dungeon/{rid}/ton/{n}/{k} and for guests POST /api/dungeon/ton {code, zug, k} (sign-in or seat code, size and rate limit). One log line per piece with milliseconds: dungeon: vorlesen | teil | ok (or nochmal, ersatz, fehler) | 812 ms, at the end dungeon: vorlesen | ok | 7 teile | 9400 ms (or teils, ausfall, pause). The live overview shows \"reading aloud running\", how many turns were read aloud today, pieces with a stand-in voice and failures. Self-tests ReadAloud, Voice and Windows.test_reading_aloud_piece_by_piece_on_this_device in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: look at foes and loot closely, more voices for side characters (V01.1.021, Dominik 2026-10-24 \"click auf beute etc. sollte ein fenster aufgehen lassen um es genauer zu betrachten - auch gegener. ist alles zeimlich klein\", \"alles nach empfehlung umsetzten. 2b mit voice design für varianz\"): Look closely: a tap on a foe of the encounter card or the fight box opens a big window like for equipment: big picture, name, count, size, description, in a fight its life as a bar, plus level, life, armour class, attack, damage and XP as chips, the six scores with their bonus and under \"Can cause\" the conditions its hits can cause (from the bestiary, dungeon_kampf.card; the fight box gets the same values via dungeon_kampf.view). ‹ › or the arrow keys page through all foes of the same encounter or fight. A tap on a loot line opens the item: in the own bag with \"Equip\" and the bag's other buttons, on the ground with \"Pick up\", otherwise to look at (dungeonfenster.js, keys g:, kg:, b:). Browser test Windows.test_a_foe_and_a_loot_line_open_a_big_window at 1280 and 390 pixels. Voices of side characters: without VoiceDesign the fixed male and female voice stay (choice 2b). With Voic"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "eDesign every side character already has its own description; now a speaking pace (slow, even, quick, halting) and four more timbres (hoarse, nasal, velvety, scratchy) join, so many characters sound different (dungeon_stimmen.json \"npc\", MERKMALE). Characters kept before the pace get it from their name. Self-test: 60 names give at least 50 different voices, every description at most 80 characters. For the car: set_pause(rid, uid, an) is drawn out of the pause endpoint so \"pause the round\" in the car uses the same rule."
 },
 {
 "lang": "en",
