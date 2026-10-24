@@ -67,7 +67,9 @@ class Page(Base):
             self.assertIn("Gewicht", labels, x["id"])
         kw = {a: v for a, v in items["keule"]["werte"]}
         self.assertEqual(kw["Zählt auf"], "Stärke")
-        self.assertIn("Schaden 1W4", kw["Wirkung"])
+        wirkung = [v for a, v in items["keule"]["werte"] if a == "Wirkung"]      # one row per line of the item
+        self.assertTrue(any("Schaden 1W4" in v for v in wirkung), wirkung)
+        self.assertTrue(any(v.startswith("Wucht · leicht") for v in wirkung), wirkung)   # Kampf Teil 2: kind and properties
         self.assertTrue(items["keule"]["zeile"].startswith("Waffe · "))
         fb = items["feuerball"]
         self.assertTrue(any(a == "Wirkung" and "Intelligenz +4" in v for a, v in fb["werte"]), fb["werte"])

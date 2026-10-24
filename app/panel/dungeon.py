@@ -500,6 +500,11 @@ def check_rules(r):
         need("platz" not in x or x.get("art") in PLATZ_ART and x["platz"] in PLATZ_ART[x["art"]],
              f"gegenstaende {x.get('id')}: platz passend zur art ({_PLATZ_TXT})")
         need("zweihand" not in x or x.get("art") == "waffe" and isinstance(x["zweihand"], bool), f"gegenstaende {x.get('id')}: zweihand nur bei waffe, true oder false")
+        need("eigenschaften" not in x or x.get("art") == "waffe" and isinstance(x["eigenschaften"], list)
+             and set(x["eigenschaften"]) <= set(kampf.EIGENSCHAFTEN) and len(set(x["eigenschaften"])) == len(x["eigenschaften"]),
+             f"gegenstaende {x.get('id')}: eigenschaften nur bei waffe, aus {', '.join(kampf.EIGENSCHAFTEN)}")
+        need("schaden_art" not in x or x.get("art") in ("waffe", "zauber", "rolle") and x["schaden_art"] in kampf.SCHADEN_ARTEN,
+             f"gegenstaende {x.get('id')}: schaden_art aus {', '.join(kampf.SCHADEN_ARTEN)}")
         need("kg" not in x or isinstance(x["kg"], (int, float)) and not isinstance(x["kg"], bool) and 0 <= x["kg"] <= 60,
              f"gegenstaende {x.get('id')}: kg 0 bis 60")
         need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
@@ -550,9 +555,13 @@ def check_rules(r):
              and all(_int(x.get(f), lo, hi) for f, lo, hi in num) and _int(x.get("anzahl_wuerfel", 1), 1, 4)
              and isinstance(x.get("werte"), dict) and set(x["werte"]) == werte and all(_int(w, 1, 30) for w in x["werte"].values())
              and x.get("groesse", "mittel") in GROESSEN
-             and isinstance(x.get("zustaende", []), list) and set(x.get("zustaende", [])) <= zids,
+             and isinstance(x.get("zustaende", []), list) and set(x.get("zustaende", [])) <= zids
+             and x.get("schaden_art", "hieb") in kampf.SCHADEN_ARTEN and x.get("boss", False) in (True, False)
+             and all(isinstance(x.get(f, []), list) and set(x.get(f, [])) <= set(kampf.SCHADEN_ARTEN) for f in ("resistenz", "immun", "schwaeche"))
+             and not (set(x.get("resistenz", [])) | set(x.get("immun", []))) & set(x.get("schwaeche", [])),
              f"gegner {x.get('id')}: zeichen, info, welten, stufe 0 bis 30, leben, ruestung, angriff, schaden, ep, "
-             f"die sechs werte, groesse ({', '.join(GROESSEN)}) und zustaende aus zustaende")
+             f"die sechs werte, groesse ({', '.join(GROESSEN)}), zustaende aus zustaende, schaden_art, resistenz, immun und "
+             f"schwaeche aus {', '.join(kampf.SCHADEN_ARTEN)} (nichts zugleich schwach und geschützt), boss true oder false")
     for x in r.get("hintergruende") or []:
         need(_pair(x.get("info"), INFO_MAX) and isinstance(x.get("werte", {}), dict) and set(x.get("werte", {})) <= werte
              and all(_int(w, 0, 2) for w in x.get("werte", {}).values())
@@ -1280,6 +1289,8 @@ def item_view(r, it, lang):
     zeilen = []
     if c["art"] == "waffe":
         zeilen.append(("Schaden 1W{} + {}" if not li else "Damage 1d{} + {}").format(c["schaden"], bonus) + (" · zweihändig" if not li else " · two-handed") * bool(c.get("zweihand")))
+        if c.get("schaden_art"):                  # Kampf Teil 2: the damage kind and what each property does
+            zeilen.append(kampf.ART_NAME[c["schaden_art"]][li] + "".join(" · " + kampf.EIGENSCHAFT_REGEL[e][li] for e in c.get("eigenschaften") or []))
     if c["art"] == "ruestung":
         zeilen.append(("Schutz {}" if not li else "Protection {}").format(c.get("schutz", 0) + bonus))
     if u:
@@ -1318,7 +1329,8 @@ def hero_view(r, h, lang, full=True, welt=""):
     li = 1 if lang == "en" else 0
     k, v = _by(r, "klassen")[h["klasse"]], _by(r, "voelker")[h["volk"]]
     out = {"hid": h["hid"], "name": h["name"], "volk": v["name"][li], "klasse": k["name"][li], "stufe": h["stufe"],
-           "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h)}
+           "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h),
+           "zust": [{"name": z["name"][li], "info": z["info"][li]} for z in kampf._states(r, h)]}   # from a foe's hit (Kampf Teil 2)
     if out["zustand"] == "boden":
         out["noch"] = BODEN_ZUEGE - h.get("boden", 0)       # told turns until it falls (or lies unconscious)
     if not full:
@@ -2669,7 +2681,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
     gruppe = [{"name": p["held"]["name"], "volk": _by(r, "voelker")[p["held"]["volk"]]["name"][li],
                "klasse": _by(r, "klassen")[p["held"]["klasse"]]["name"][li], "stufe": p["held"]["stufe"],
                "leben": f"{p['held']['leben']}/{p['held']['leben_max']}", "kann": kann_facts(r, p["held"], rd["lang"]),
-               **({"zustand": ZUSTAND_WORT[zustand(p["held"])][li]} if zustand(p["held"]) else {})}
+               **({"zustand": ZUSTAND_WORT[zustand(p["held"])][li]} if zustand(p["held"]) else {}),
+               **({"zustaende": [z["name"][li] for z in kampf._states(r, p["held"])]} if p["held"].get("zust") else {})}
               for p in names.values()]
     bisher = told_here(rd, 2 if rd.get("kurz") else BISHER)
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
@@ -2804,6 +2817,7 @@ def roll(r, rd, proben, rng=None):
         last = p["wert"] == "geschick" and burdened(r, h)
         if last:                                 # burdened: Geschick with disadvantage, advantage cancels it (2a)
             vt = "" if vt == "vorteil" else "nachteil"
+        vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
         ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
         w = max(ws) if vt == "vorteil" else min(ws)
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
@@ -3016,7 +3030,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if war:
             dungeon_karte.won(rd)                # the fight won in a vault's room opens it in the same turn
         if war and not rd.get("kampf") and held and rd["log"][-1]["art"] == "kampf" and rd["log"][-1]["besiegt"]:
-            give_loot(r, rd, held, "gegner", stufe, rng)
+            give_loot(r, rd, held, "boss" if rd["log"][-1].get("boss") else "gegner", stufe, rng)   # a boss: its own better find
         elif not war and story.get("begegnung") and held:
             kampf.start(_me, r, rd, held, story["begegnung"], li)
         if story["beute"] and held:
@@ -3147,9 +3161,10 @@ async def run_turn(rid, turn):
                         **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
                        for w in wuerfe]
             facts_w += [{"angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
-                         "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {})}
+                         "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
+                         **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {})}
                         for x in hits]
-            facts_z = [{"gegner": x["gegner"], "greift_an": x["name"], "trifft": x["treffer"], "schaden": x["schaden"]} for x in zuege]
+            facts_z = [kampf.zug_facts(r, rd, x) for x in zuege]
             rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
             print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
             story, best, extra = None, None, ""

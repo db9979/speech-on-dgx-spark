@@ -4643,6 +4643,8 @@ class Fight(Turns):
         self.assertEqual(x["bonus"], dungeon.total(r, h, wert) + kampf.prof(h["stufe"]))
         self.assertTrue(x["treffer"] and x["krit"])
         die = dungeon._c(r, wp)["schaden"] if wp else kampf.FAUST
+        if wp and "vielseitig" in dungeon._c(r, wp).get("eigenschaften", []) and not h["an"].get("nebenhand"):
+            die += 2                                                                                      # both hands on it (Kampf Teil 2)
         plus = (0 if wp.get("u") else wp.get("bonus", 0)) if wp else 0
         self.assertEqual(x["schaden"], max(1, 2 * die + dungeon.mod(h["werte"].get(wert, 10)) + plus))   # a natural 20: the dice twice
         x = kampf.attacks(dungeon, r, rd, [dict(p, vt="")], Dice(1))[1][0]
@@ -4656,6 +4658,90 @@ class Fight(Turns):
             x = kampf.attacks(dungeon, r, rd, [p], Dice(miss + 1))[1][0]
             self.assertTrue(x["treffer"])
         self.assertEqual(kampf.attacks(dungeon, r, dict(rd, kampf=None), [p])[0][0].get("ziel"), None)   # no fight: ziel goes
+
+    def test_weapon_properties_damage_kinds_states_and_bosses(self):
+        """Kampf Teil 2 (Dominik 2026-10-24 „alles nach empfehlung umsetzten“): every property of a weapon is a fixed
+        rule, a foe's resistance halves, immunity stops, weakness doubles; a foe's hit may cause a state with a save, the
+        state works on attacks and checks and ends with the fight; a boss has more life, a second phase and two attacks."""
+        r = dungeon.rules()
+        self.assertEqual(dungeon.check_rules(r), [])
+        for c in r["gegenstaende"]:                                 # every weapon, base rules and SRD layer
+            if c["art"] == "waffe":
+                self.assertIn(c.get("schaden_art"), kampf.SCHADEN_ARTEN, c["id"])
+                self.assertIn(kampf.ART_NAME[c["schaden_art"]][0], dungeon.item_view(r, dungeon.item(r, c["id"]), "de")["zeilen"][1])
+        for g in r["gegner"]:                                         # every foe hits with a kind of damage
+            self.assertIn(g.get("schaden_art"), kampf.SCHADEN_ARTEN, g["id"])
+        bad = copy.deepcopy(r)
+        next(x for x in bad["gegenstaende"] if x["id"] == "dolch")["eigenschaften"] = ["fliegend"]
+        next(x for x in bad["gegner"] if x["id"] == r["gegner"][0]["id"]).update(resistenz=["feuer"], schwaeche=["feuer"])
+        self.assertEqual(len(dungeon.check_rules(bad)), 2)
+        g = {"immun": ["gift"], "resistenz": ["hieb"], "schwaeche": ["strahlend"]}
+        self.assertEqual([kampf.against(g, a, 9) for a in ("gift", "hieb", "strahlend", "stich", "")],
+                         [(0, "immun"), (4, "resistenz"), (18, "schwaeche"), (9, ""), (9, "")])
+        rd, foe = self.encounter()
+        h = rd["plaetze"][self.host]["held"]
+        g = rd["kampf"]["gegner"][0]
+        p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
+        h["werte"].update(staerke=8, geschick=16)
+        h["an"]["haupthand"], h["an"]["nebenhand"] = dungeon.item(r, "rapier"), None             # finesse: the better value
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 3))[1][0]
+        self.assertEqual((x["wert"], x["art"], x["eig"]), ("geschick", "stich", ["finesse"]))
+        h["an"]["haupthand"] = dungeon.item(r, "dolch")                                              # light: critical from 19
+        self.assertTrue(kampf.attacks(dungeon, r, rd, [p], Dice(19, 1, 1))[1][0]["krit"])
+        rd["offen"][self.host] = {"text": "Ich werfe den Dolch", "t": 0}
+        self.assertIn("wurf", kampf.attacks(dungeon, r, rd, [p], Dice(10, 1))[1][0]["eig"])        # a throw by the fixed words
+        rd["offen"].pop(self.host)
+        h["an"]["haupthand"] = dungeon.item(r, "zweihaender")                                        # heavy below Stärke 13
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10, 10))[1][0]["vt"], "nachteil")
+        h["werte"]["staerke"] = 14
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10))[1][0]["vt"], "")
+        h["an"]["haupthand"] = dungeon.item(r, "langschwert")                                        # versatile: a free off hand
+        one = kampf.attacks(dungeon, r, rd, [dict(p, vt="")], Dice(20, 99, 99))[1][0]["schaden"]
+        h["an"]["nebenhand"] = dungeon.item(r, "schild")
+        two = kampf.attacks(dungeon, r, rd, [dict(p, vt="")], Dice(20, 99, 99))[1][0]["schaden"]
+        self.assertEqual(one - two, 4)                                                               # 2 × (d10 − d8) at most
+        g.update(resistenz=["hieb"])
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(20, 99, 99))[1][0]
+        self.assertEqual((x["wirkt"], x["schaden"]), ("resistenz", two // 2))
+        g["resistenz"] = []
+        # a state from a foe's hit: failed save, then the hero attacks and checks at a disadvantage
+        g["zustaende"] = ["vergiftet"]
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20, 99, 99, 1))
+        hit = next(y for y in z if y.get("pid") == self.host or y.get("k"))
+        self.assertEqual((hit["rettung"]["zustand"], hit["rettung"]["ok"], hit["rettung"]["wert"]), ("vergiftet", False, "konstitution"))
+        folgen = kampf.apply(dungeon, r, rd, [], [dict(y, pid=self.host, name=h["name"]) for y in z if y.get("k")][:1], "", {})
+        self.assertTrue(folgen and [y["id"] for y in h["zust"]] == ["vergiftet"])
+        self.assertTrue(any(e["art"] == "rettung" and not e["ok"] for e in rd["log"]))
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10, 10))[1][0]["vt"], "nachteil")
+        self.assertEqual(dungeon.roll(r, rd, [{"pid": self.host, "wert": "weisheit", "schwer": 10}], Dice(10, 10))[0]["vt"], "nachteil")
+        self.assertIn("Vergiftet", " ".join(x["name"].title() for x in dungeon.hero_view(r, h, "de")["zust"]))
+        h["zust"] = [{"id": "gelaehmt", "bis": rd["zug"] + 1}]                                       # no turn: no attack, a line
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]
+        self.assertEqual((x["treffer"], x["kann_nicht"]), (False, "gelaehmt"))
+        h["zust"] = [{"id": "brennend", "bis": rd["zug"] + 1}]                                       # burning: damage each turn
+        self.assertTrue(any(y.get("zustand_schaden") == "brennend" for y in kampf.foes_turn(dungeon, r, rd, [], Dice(1))))
+        kampf.end(dungeon, r, rd, {})
+        self.assertNotIn("zust", h)                                                                  # every state ends with the fight
+        # a boss: life per hero, phase 2 at half life, two attacks a turn, a better find
+        cat = dict(foe, boss=True)
+        k = kampf.start(dungeon, r, rd, [p_["held"] for _, p_ in dungeon.seated(rd)], [(cat, 1)], 0)
+        b = k["gegner"][0]
+        self.assertEqual(b["max"], int(foe["leben"] * (1 + kampf.BOSS_LEBEN * (len(dungeon.seated(rd)) - 1))))
+        rd["kampf"] = k
+        self.assertEqual(len([y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(1, 1)) if y.get("k")]), 2)
+        b["leben"] = b["max"] // 2 + 1
+        kampf.apply(dungeon, r, rd, [{"pid": self.host, "name": h["name"], "ziel": b["k"], "gegner": b["name"], "mit": "", "w": 15, "ws": [15],
+                                      "vt": "", "bonus": 3, "gesamt": 18, "rk": b["rk"], "treffer": True, "krit": False, "schaden": 1,
+                                      "faellt": False}], [], "", {})
+        self.assertEqual((b["phase"], rd["log"][-1]["was"] if rd["log"][-1]["art"] == "gegner" else ""), (2, "phase2"))
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(10))
+        self.assertEqual(z[0]["bonus"], b["angriff"] + kampf.BOSS_PHASE)
+        self.assertEqual(kampf.facts(dungeon, r, rd, [], 0)["kampf"]["gegner"][0]["phase"], 2)
+        for x in k["gegner"]:
+            x.update(leben=0, aus="besiegt")
+        ep = {self.host: 0}
+        kampf.end(dungeon, r, rd, ep)
+        self.assertTrue(rd["log"][-1]["boss"])
 
     def test_a_whole_fight_through_the_turns(self):
         r = dungeon.rules()

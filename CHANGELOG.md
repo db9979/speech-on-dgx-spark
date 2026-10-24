@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.026** · 2026-10-24 · KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
 - **V01.1.025** · 2026-10-24 · KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
 - **V01.1.024** · 2026-10-24 · KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf
 - **V01.1.023** · 2026-10-24 · KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“

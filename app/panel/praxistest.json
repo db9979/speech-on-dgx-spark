@@ -3194,6 +3194,13 @@
 "titel": "Ort im Verlauf, Figuren von anderswo",
 "text": "A: Eine Runde an einem Ort mit einer Nebenfigur spielen (etwa eine Wirtin), dann über die Karte zu einem Nachbarort gehen. B: Zwei, drei Züge am neuen Ort: die Wirtin spricht nicht mehr mit, die Erzählung bleibt am neuen Ort. C: Eine Aktion „Die Wirtin kommt mit uns“ am alten Ort, dann weiterziehen: jetzt darf sie mitreden. D: Zustand → Logs, Filter „nachbessern“: steht dort „anderswo“, hat das Panel eine Erzählung mit einer Figur von anderswo einmal neu schreiben lassen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P481",
+"v": 1026,
+"titel": "Kampf Teil 2: Waffen, Schadensarten, Zustände, Bosse",
+"text": "A: Heldenbogen → Ausrüstung, eine Waffe antippen: unter dem Schaden steht die Art (Hieb, Stich, Wucht) und was jede Eigenschaft tut. B: Im Kampf mit Dolch oder Rapier angreifen: der Verlauf zeigt „Finesse“, eine 19 mit dem Dolch ist kritisch. Mit „Ich werfe den Dolch“: „Wurf“. C: Gegen einen Gegner mit Schwäche (etwa ein Untoter gegen strahlend): „doppelt!“ im Verlauf; mit Resistenz „halbiert“. Das Gegner-Fenster zeigt, wogegen er schwach oder geschützt ist. D: Ein Gegner mit Gift oder Griff trifft: ein Rettungswurf steht im Verlauf; misslingt er, zeigt der Platz ☠ und den Zustand, Angriffe kommen mit Nachteil. Nach dem Kampf ist er weg. E: Ein Boss (👑 im Kampfkasten): ab halbem Leben die Zeile „zweite Phase“, er greift zweimal je Zug an, danach eine bessere Beute.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

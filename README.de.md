@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.026** KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
 - **V01.1.025** KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
 - **V01.1.024** KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf
 - **V01.1.023** KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.019** KI-Dungeon-Master: Würfelprobe zeigt groß, wofür gewürfelt wird, Figuren sprechen Zitate so, wie der Text es sagt (flüstert, ruft, stammelt …), Werte auf Volk- und Klassenkacheln als Chips, Übersicht mittig mit Vollbild, Ausrüstung nur am passenden Körperteil (eigener Gürtelplatz)
 - **V01.1.018** KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 - **V01.1.017** KI-Dungeon-Master: Musik passend zu Welt und Stimmung mit Trommeln und Bass, eigene Stimmung Gewölbe; Musikstück mit 👎 als nervig markieren, auch Gäste, nachts neu gemacht
-- **V01.1.016** KI-Dungeon-Master: Vorlesen am Tisch wieder hörbar (die Freischalt-Stille kam als data: und die Sicherheitsregel des Panels blockierte sie), der Tisch bricht bei kleiner Breite sauber um statt Wort für Wort, Prompt-Regel „als JSON“ weg und neu „keine Werte außerhalb der Fakten“
 
 
 

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.026** AI Dungeon Master: fight part 2, weapons with properties (light, finesse, reach, thrown, heavy, versatile), damage kinds with weakness, resistance and immunity, states from hits with a save, real bosses with a second phase
 - **V01.1.025** AI Dungeon Master: SRD foes with damage type, resistance, immunity, vulnerability and boss, SRD weapons with damage type and properties (combat part 2, data)
 - **V01.1.024** AI Dungeon Master: every narration keeps its place, after a change of place the model only gets the new place's story so far, characters from elsewhere no longer just turn up
 - **V01.1.023** AI Dungeon Master: people stay at their place (only those an action takes along travel), back to the previous place only when an action asks, the map shows "Place not changed"
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.019** AI Dungeon Master: a check shows large what it is for, characters speak quotes the way the text says (whispers, shouts, stammers …), values on people and class cards as chips, overview in the middle with full screen, equipment only on the fitting body part (a belt place of its own)
 - **V01.1.018** AI Dungeon Master: longer narrations at the moments (a new place, a fight, a 20 or a 1), way of telling per round brief, normal or rich; the encounter names the card's foes, a tap on a tile's picture opens its window, NPC lines read once, without names and in a fitting voice, scene pictures on their own, a find is no longer named after its chest
 - **V01.1.017** AI Dungeon Master: music fitting world and mood with drums and bass, own vault mood; mark a music piece as annoying with 👎, guests too, made again at night
-- **V01.1.016** AI Dungeon Master: reading aloud at the table audible again (the unlocking silence came as data: and the panel's security rule blocked it), the table wraps cleanly at small widths instead of word by word, prompt rule "as JSON" gone and new "no values outside the facts"
 
 
 

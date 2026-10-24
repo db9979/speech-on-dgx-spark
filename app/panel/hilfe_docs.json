@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf Teil 2 (V01.1.026, Bestiarium-Punkte 4 bis 6 und Gegenstands-Punkt 2, Dominik 2026-10-24 „alles nach empfehlung umsetzten“): Waffeneigenschaften: Jede Waffe trägt eine Schadensart (schaden_art: Hieb, Stich, Wucht, bei Zauberstäben Energie, strahlend oder nekrotisch) und Eigenschaften (eigenschaften), jede mit einer festen Regel des Panels (dungeon_kampf.EIGENSCHAFT_REGEL): leicht ist schon ab einer 19 kritisch, Finesse trifft mit dem besseren von Stärke und Geschick, ein Wurf (die Aktion sagt „werfen“, feste Wörter WURF_WORTE) ebenso, schwer greift unter Stärke 13 mit Nachteil an, vielseitig würfelt mit freier zweiter Hand einen Würfel zwei Seiten größer, Reichweite hält den getroffenen Gegner auf Abstand (sein Angriff auf diesen Helden im selben Zug mit Nachteil). Der Gegenstand zeigt Art und Regeln als eigene Zeile. Schadensarten: Jeder Treffer hat eine Art (Waffe, Zauber, Faust = Wucht). Ein Gegner mit resistenz nimmt halben Schaden, mit immun keinen, mit schwaeche doppelten; der Verlauf zeigt die Art und „halbiert“, „wirkungslos“ oder „doppelt!“, das Gegner-Fenster zeigt, wogegen er schwach oder geschützt ist. Zustände durch Treffer: Trifft ein Gegner m"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "it zustaende (vergiftet, gepackt, verängstigt, brennend …), würfelt der Held einen Rettungswurf mit Konstitution (Weisheit bei bezaubert und verängstigt) gegen 10 + ein Viertel der Gegnerstufe. Misslingt er, hält der Zustand seine Runden aus dem Katalog und wirkt nach festen Regeln: Nachteil auf eigene Angriffe oder Proben, Vorteil für die Gegner, kein Angriff (gelähmt, betäubt …), brennend oder blutend kostet je Zug 1W4 Leben. Alle Zustände enden mit dem Kampf. Der Platz zeigt sie mit ☠, der Verlauf jeden Rettungswurf, das Modell bekommt sie in den Fakten. Bosse: Ein Gegner mit boss hat mehr Leben je Held (+50 % für jeden weiteren), ab halbem Leben eine zweite Phase (+2 auf den Angriff, eine Zeile im Verlauf), greift zweimal je Zug an und lässt einen besseren Fund (Anlass „boss“). Die Gegner-Daten des SRD (Schadensarten, Resistenzen, Bosse) füllt der DnDAppFiles-Thread; check_rules prüft alle neuen Felder. Selbsttest Fight.test_weapon_properties_damage_kinds_states_and_bosses."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Ort im Verlauf, Figuren von anderswo, Teil 3 und 4 (V01.1.024, Dominik 2026-10-24 „1-5 umsetzten“ zu „nach einem Ortswechsel wieder am alten Ort, die Figuren von dort sind auch wieder da“): Die Teile 1, 2 und 5 baut die Karte (Rückweg nur, wenn eine Aktion ihn nennt; dungeon_karte.leute: wer hier ist, wer anderswo und an welchem Ort, wer mitreist; Anzeige „Ort nicht gewechselt“). Verlauf mit Ort: Jede Erzählung trägt beim Eintragen ins Log ihren Ort (where: ort, ort_name; die Räume eines Gewölbes zählen zum Ort darüber). Das Modell bekommt unter bisher nach einem Wechsel nur noch die Erzählungen des neuen Orts und die letzte als Brücke, jede mit „[Ort]“ davor (told_here); Züge von früher ohne Ort bleiben, wie sie waren. Die Fakten tragen personen aus dungeon_karte.leute, und eine feste Regel im Auftrag sagt: Niemand ist an einem anderen Ort als dort angegeben, wer unter „anderswo“ steht, spricht hier nicht, außer er reist mit (ORTE_REGEL). Prüfung: Spricht in der Erzählung eine Figur, die laut Karte anderswo ist und nicht mitreist, schreibt das Modell die Erzählung einmal neu (dungeon_erzaehler.elsewhere, Hinweis „anderswo“, Logzeile dungeon: nachbessern | anders"
 },
 {
@@ -17934,6 +17950,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: fight part 2 (V01.1.026, bestiary points 4 to 6 and item point 2, Dominik 2026-10-24 \"alles nach empfehlung umsetzten\"): Weapon properties: every weapon carries a damage kind (schaden_art: slashing, piercing, bludgeoning, for wands force, radiant or necrotic) and properties (eigenschaften), each a fixed rule of the panel (dungeon_kampf.EIGENSCHAFT_REGEL): light is critical from a 19, finesse hits with the better of Strength and Dexterity, a throw (the action says \"throw\", fixed words WURF_WORTE) too, heavy attacks at a disadvantage below Strength 13, versatile rolls a die two sides bigger with the off hand free, reach keeps the foe it hit at a distance (its attack on that hero in the same turn at a disadvantage). The item shows kind and rules as a line of its own. Damage kinds: every hit has a kind (weapon, spell, fists = bludgeoning). A foe with resistenz takes half the damage, with immun none, with schwaeche double; the log shows the kind and \"halved\", \"no effect\" or \"double!\", the foe's window shows what it is weak against or protected from. States from hits: when a foe with zustaende (poisoned, grappled, frightened, burning …) hits, the hero rolls a save with"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " Constitution (Wisdom against charmed and frightened) against 10 + a quarter of the foe's level. Failed, the state lasts its turns from the catalogue and works by fixed rules: disadvantage on own attacks or checks, advantage for the foes, no attack (paralysed, stunned …), burning or bleeding costs 1d4 life each turn. All states end with the fight. The seat shows them with ☠, the log every save, the model gets them in the facts. Bosses: a foe with boss has more life per hero (+50 % for each further one), a second phase from half life (+2 to hit, a line in the log), attacks twice a turn and leaves a better find (occasion \"boss\"). The SRD's foe data (damage kinds, resistances, bosses) is filled by the DnDAppFiles thread; check_rules checks all new fields. Self-test Fight.test_weapon_properties_damage_kinds_states_and_bosses."
 },
 {
 "lang": "en",

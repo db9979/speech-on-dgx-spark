@@ -2708,3 +2708,6 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-gwerte small{font-size:11px}.dm-gwerte b{font-size:16px}.dm-gwerte i{font-style:normal;font-size:11px;color:var(--t-mut,var(--mut))}
 @media (max-width:420px){.dm-gwerte{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .dm-blatt{display:flex;align-items:center;gap:8px;align-self:flex-end}.dm-blatt .b{min-width:40px;font-size:18px;line-height:1}
+/* Kampf Teil 2: states on a hero, a boss, resistances in the foe's window */
+.dm-zst2{color:#a855f7}.dm-phase2{font-weight:700;color:var(--bad,#c0392b)}
+.dm-gboss{margin:2px 0;font-size:13px}.dm-gres{font-size:13px}.dm-gres-schwaeche{color:var(--ok,#1f9d55)}.dm-gres-immun{color:var(--bad,#c0392b)}
