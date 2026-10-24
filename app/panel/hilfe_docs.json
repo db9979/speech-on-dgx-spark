@@ -5493,6 +5493,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Werte bei Gegenständen und Gegnern (V01.0.997, Dominik 2026-10-24 „sollten immer auch Werte anzeigen wie stark, was sie bewirken“): Unter Funktionen → KI-Dungeon-Master → Regeln anpassen zeigt jede Zeile jetzt mehr. Bei Gegenständen stehen dort Art, Seltenheit, der Wert, auf den der Gegenstand zählt, Schaden, Schutz, Heilung, Segen mit Wert, Werkzeug-Bonus und Preis. Bei Gegnern stehen Stufe, Leben, Rüstung, Angriff, Schaden und EP. Das Detail hat dazu eine Werte-Liste (dungeon_regelseite.werte). Bei Gegenständen steht dort, was er am Tisch bewirkt (dieselben Zeilen wie im Heldenbogen), worauf er zählt, für wen, Zaubergrad, Klassen, Gewicht und Preis. Bei Gegnern stehen Leben, Rüstung, Angriff, Schaden mit Durchschnitt, EP, die sechs Werte, die Zustände, die er bewirken kann, und die Größe. Zustände zeigen Wirkung und Dauer. Alles kommt aus festen Wörtern und den Zahlen des Katalogs."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Mitspieler-Menü nicht mehr abgeschnitten (V01.0.996, Dominik 2026-10-24 „menü nicht sichtbar, wird abgeschnitten“): Das „⋯“-Menü eines Mitspielers in der Seitenspalte war breiter als die Spalte und wurde links abgeschnitten. Jetzt ist es genau so breit wie die Karte des Helden und liegt unter ihrem Kopf. Ein Browser-Test prüft das bei 1280 und 390 Pixel Breite. Malen unter Regeln ohne Tageslimit („im Dungeon-Master kann ich keine neuen Bilder erstellen“): Der Knopf „Malen“ unter Funktionen → KI-Dungeon-Master → Regeln anpassen erreicht nur der Admin. Er hält sich deshalb nicht mehr an die Tagesgrenze der Katalogbilder (300 am Tag, dungeon_dingbild.TAG_MAX), zählt aber mit. Der Lauf über den ganzen Katalog, nachts oder per Knopf, endet weiter bei dieser Grenze."
 },
 {
@@ -17910,6 +17918,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: values for items and foes (V01.0.997, Dominik 2026-10-24 \"should always show values, how strong, what they do\"): Under Features → AI Dungeon Master → Adjust rules every row now shows more. Items show kind, rarity, the value the item uses, damage, protection, healing, blessing with its value, tool bonus and price. Foes show level, life, armour, attack, damage and EP. The detail also has a list of values (dungeon_regelseite.werte). For items it shows what the item does at the table (the same lines as on the hero sheet), what it uses, whom it is for, spell grade, classes, weight and price. For foes it shows life, armour, attack, damage with its average, EP, the six values, the conditions it can cause, and size. Conditions show effect and duration. Everything comes from fixed words and the catalogue's numbers."
 },
 {
 "lang": "en",

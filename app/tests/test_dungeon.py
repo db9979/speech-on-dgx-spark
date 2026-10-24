@@ -3236,6 +3236,8 @@ class Windows(unittest.TestCase):
                         await pg.click("#dmadmcard .dm-rrow [data-dmrsel]")
                         await b.until(pg, "/Goblin/.test((document.querySelector('#dmrdet .dm-rname')||{}).textContent||'')")
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmrdet [data-dmrdo=aendern]')&&!!document.querySelector('#dmrdet .dm-rvgl')"))
+                        # what a foe does, as values (Dominik 2026-10-24 „sollten immer auch Werte anzeigen“)
+                        self.assertIn("Leben", await pg.evaluate("(document.querySelector('#dmrdet .dm-rwerte')||{}).textContent||''"))
                         await pg.click("#dmrdet [data-dmrdo=aendern]")
                         await b.until(pg, "/goblin/.test((document.querySelector('#dmrdet .dmr-txt')||{}).value||'')")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)

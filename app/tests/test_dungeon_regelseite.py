@@ -57,6 +57,32 @@ class Page(Base):
         items, _ = self.rows("gegenstaende")
         self.assertTrue(all("marke" in x and "bild" in x for x in items.values()))
 
+    def test_every_foe_and_item_shows_what_it_does(self):
+        """Dominik 2026-10-24 „sollten immer auch Werte anzeigen wie stark, was sie bewirken“: every foe and item
+        has its values in the row and a list of what it does in the detail, in fixed words from the catalog."""
+        items, _ = self.rows("gegenstaende")
+        for x in items.values():
+            labels = [a for a, _ in x["werte"]]
+            self.assertIn("Art", labels, x["id"])
+            self.assertIn("Gewicht", labels, x["id"])
+        kw = {a: v for a, v in items["keule"]["werte"]}
+        self.assertEqual(kw["Zählt auf"], "Stärke")
+        self.assertIn("Schaden 1W4", kw["Wirkung"])
+        self.assertTrue(items["keule"]["zeile"].startswith("Waffe · "))
+        fb = items["feuerball"]
+        self.assertTrue(any(a == "Wirkung" and "Intelligenz +4" in v for a, v in fb["werte"]), fb["werte"])
+        self.assertIn("Segen INT +4", fb["zeile"])
+        foes, _ = self.rows("gegner")
+        gw = {a: v for a, v in foes["goblin"]["werte"]}
+        self.assertEqual((gw["Leben"], gw["Stufe"]), ("7", "¼"))
+        self.assertIn("im Schnitt 5.5", gw["Schaden"])
+        self.assertIn("GES 14", gw["Werte"])
+        self.assertIn("50 EP", foes["goblin"]["zeile"])
+        poison = next(x for x in foes.values() if any(a == "Kann bewirken" for a, _ in x["werte"]))
+        self.assertTrue(poison)
+        en = {a: v for a, v in ADMIN.get(K + "gegner?lang=en").json()["zeilen"][0]["werte"]}
+        self.assertIn("Life", en)
+
     def test_change_hint_hide_and_back(self):
         e = dict(dungeon._by(dungeon.rules(), "gegner")["goblin"], leben=120, angriff=12)
         r = ADMIN.post(K + "gegner", json={"was": "setzen", "id": "goblin", "eintrag": e})

@@ -54,16 +54,21 @@ def line(teil, x, r, li):
         s = {0.125: "⅛", 0.25: "¼", 0.5: "½"}.get(x.get("stufe"), f"{x.get('stufe', 0):g}")
         dmg = f"{x.get('anzahl_wuerfel', 1)}{'d' if en else 'W'}{x.get('schaden', 0)}" + (f"+{x['schaden_plus']}" if x.get("schaden_plus") else "")
         return " · ".join([("Level " if en else "Stufe ") + s, ("Life " if en else "Leben ") + str(x.get("leben", 0)),
-                           ("Armour " if en else "Rüstung ") + str(x.get("ruestung", 0)), _sign(x.get("angriff", 0)) + " " + dmg])
+                           ("Armour " if en else "Rüstung ") + str(x.get("ruestung", 0)), _sign(x.get("angriff", 0)) + " " + dmg, f"{x.get('ep', 0)} EP"])
     if teil == "gegenstaende":
         sel = {s["id"]: s["name"][li] for s in r["seltenheit"]}
-        out = [sel.get(x.get("seltenheit"), "gewürfelt" if not en else "rolled")]
+        out = [ART.get(x.get("art"), ("", ""))[li], sel.get(x.get("seltenheit"), "gewürfelt" if not en else "rolled")]
+        if x.get("wert"):
+            out.append(_name(next((v for v in r["werte"] if v["id"] == x["wert"]), {"id": x["wert"]}), li))
         for k, de, enw, pre in (("schaden", "Schaden", "Damage", "W"), ("schutz", "Schutz", "Protection", ""), ("heilung", "Heilung", "Healing", ""),
                                 ("grad", "Grad", "Grade", "")):
             if k in x:
                 out.append(f"{enw if en else de} {('d' if en else pre) if pre else ''}{x[k]}")
         if isinstance(x.get("segen"), dict):
-            out.append(f"{'Blessing' if en else 'Segen'} +{x['segen'].get('bonus', 0)} × {x['segen'].get('zuege', 1)}")
+            sw = next((_name(v, li)[:3].upper() for v in r["werte"] if v["id"] == x["segen"].get("wert")), "")
+            out.append(f"{'Blessing' if en else 'Segen'} {sw} +{x['segen'].get('bonus', 0)} × {x['segen'].get('zuege', 1)}".replace("  ", " "))
+        if isinstance(x.get("hilft"), dict):
+            out.append(("Tool +" if en else "Werkzeug +") + str(dungeon.WERKZEUG))
         if "preis" in x:
             out.append(f"{x['preis']} {'gold' if en else 'Gold'}")
         return " · ".join(out)
@@ -77,6 +82,62 @@ def line(teil, x, r, li):
         return " · ".join([w.replace("_", " ") for w in x.get("wirkung") or []] + ([f"{x['runden']} {'rounds' if en else 'Runden'}"] if x.get("runden") else []))
     s = x.get("satz") or x.get("info")
     return str(s[li] if isinstance(s, list) and len(s) > li else s or "")
+
+
+ART = {"waffe": ("Waffe", "Weapon"), "ruestung": ("Rüstung", "Armour"), "schmuck": ("Schmuck", "Jewellery"),
+       "trank": ("Trank", "Potion"), "zauber": ("Zauber", "Spell"), "rolle": ("Schriftrolle", "Scroll"), "schatz": ("Schatz", "Treasure")}
+
+
+def werte(teil, x, r, li):
+    """What an entry does, as [label, value] pairs for the detail (Dominik 2026-10-24 „sollten immer auch Werte
+    anzeigen wie stark, was sie bewirken“): the catalog's numbers in fixed words, the same lines the table shows."""
+    en = li == 1
+    w = {v["id"]: _name(v, li) for v in r["werte"]}
+    L = lambda de, enw: enw if en else de          # noqa: E731
+    out = []
+    if teil == "gegenstaende":
+        out.append([L("Art", "Kind"), ART.get(x.get("art"), (x.get("art", ""),) * 2)[li]])
+        try:                                        # what it does at the table (dungeon.item_view, common rarity)
+            it = {"i": 0, "id": x["id"], "s": x.get("seltenheit") or r["seltenheit"][0]["id"]}
+            for z in dungeon.item_view(r, it, "en" if en else "de")["zeilen"]:
+                out.append([L("Wirkung", "Effect"), z.replace(" + 0", "")])
+        except (KeyError, IndexError, TypeError):
+            pass
+        if x.get("wert"):
+            out.append([L("Zählt auf", "Uses"), w.get(x["wert"], x["wert"])])
+        if x.get("ziel"):
+            out.append([L("Für", "For"), {"selbst": L("sich selbst", "oneself"), "gruppe": L("die ganze Gruppe", "the whole group")}.get(x["ziel"], x["ziel"])])
+        if x.get("grad"):
+            out.append([L("Zaubergrad", "Spell grade"), str(x["grad"])])
+        if x.get("klassen"):
+            k = {c["id"]: _name(c, li) for c in r["klassen"]}
+            out.append([L("Klassen", "Classes"), ", ".join(k.get(c, c) for c in x["klassen"])])
+        if x.get("platz"):
+            out.append([L("Getragen an", "Worn on"), str(x["platz"])])
+        out.append([L("Gewicht", "Weight"), f"{x.get('kg', 0):g} kg"])
+        if "preis" in x:
+            out.append([L("Preis", "Price"), f"{x['preis']} {L('Gold', 'gold')}" + ("" if x.get("seltenheit") else L(" (mal Seltenheit)", " (times rarity)"))])
+    elif teil == "gegner":
+        d = x.get("schaden", 0)
+        n = x.get("anzahl_wuerfel", 1)
+        avg = n * (d + 1) / 2 + x.get("schaden_plus", 0)
+        out += [[L("Stufe", "Level"), line("gegner", x, r, li).split(" · ")[0].split(" ")[-1]], [L("Leben", "Life"), str(x.get("leben", 0))],
+                [L("Rüstung", "Armour"), str(x.get("ruestung", 0)) + L(" (so schwer ist er zu treffen)", " (how hard it is to hit)")],
+                [L("Angriff", "Attack"), f"W20 {_sign(x.get('angriff', 0))}" if not en else f"d20 {_sign(x.get('angriff', 0))}"],
+                [L("Schaden", "Damage"), f"{n}{'d' if en else 'W'}{d}" + (f"+{x['schaden_plus']}" if x.get("schaden_plus") else "") + L(f", im Schnitt {avg:g}", f", {avg:g} on average")],
+                ["EP", str(x.get("ep", 0)) + L(" für die Gruppe", " for the group")]]
+        if isinstance(x.get("werte"), dict) and x["werte"]:
+            out.append([L("Werte", "Values"), " · ".join(f"{w.get(k, k)[:3].upper()} {v}" for k, v in x["werte"].items())])
+        if x.get("zustaende"):
+            z = {c["id"]: _name(c, li) for c in r.get("zustaende") or []}
+            out.append([L("Kann bewirken", "Can cause"), ", ".join(z.get(c, c) for c in x["zustaende"])])
+        if x.get("groesse"):
+            out.append([L("Größe", "Size"), str(x["groesse"])])
+    elif teil == "zustaende":
+        out += [[L("Wirkung", "Effect"), ", ".join(v.replace("_", " ") for v in x.get("wirkung") or [])]]
+        if x.get("runden"):
+            out.append([L("Dauer", "Lasts"), f"{x['runden']} " + L("Runden", "rounds")])
+    return [z for z in out if z[1]]
 
 
 def view(teil, lang="de"):
@@ -94,7 +155,7 @@ def view(teil, lang="de"):
         o = own.get(i)
         stand = "aus" if o and o.get("aus") else "geaendert" if o and i in base else "eigen" if o else "grund" if i in grund else "srd"
         row = {"id": i, "name": _name(x, li), "zeichen": x.get("zeichen") or dingbild.ZEICHEN.get(x.get("art"), ""),
-               "zeile": line(teil, x, r, li), "stand": stand, "art": x.get("art", "")}
+               "zeile": line(teil, x, r, li), "werte": werte(teil, x, r, li), "stand": stand, "art": x.get("art", "")}
         if teil == "gegner":
             row["marke"] = balance.foe(x, lang)
             row["stufe"] = x.get("stufe", 0)
