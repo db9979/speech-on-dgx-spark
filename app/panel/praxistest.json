@@ -2963,6 +2963,13 @@
 "titel": "E-Mail: alle Mails eines Ordners einordnen",
 "text": "Pi auf V01.0.985, „Mails ordnen“ an, mindestens eine Mail-Regel mit Ordner. A: Seite E-Mail, Postfächer einblenden, am Archiv (oder einem alten Ordner) „⋯“ → „Alle Mails hier einordnen“: über der Liste „Ordne … ein: N von M Mails angesehen“, danach der Vorschlag „x nach …; y bleiben“; im Ordner hat sich noch nichts bewegt. B: „x verschieben“, bestätigen (Code, falls gefragt): Fortschritt, dann „x Mails verschoben“; die Mails liegen in ihren Ordnern, auch welche älter als 90 Tage. C: „Rückgängig: x zurück“: alle wieder im Ordner. D: Einen großen Ordner starten und „Abbrechen“: hält nach dem laufenden Schritt an. E: Am Papierkorb oder Gesendet gibt es den Eintrag nicht. F: iPhone-App: Ordnerliste, lange drücken auf einen Ordner → „Alle Mails hier einordnen“, oben „Einordnen“ mit denselben Knöpfen.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P448",
+"v": 986,
+"titel": "Dungeon-Master: Karte und Gewölbe schön",
+"text": "A: Eine Runde je Welt öffnen (Fantasy, Horror, Piraten, Sci-Fi): die Karte sieht aus wie Pergament, fahles Papier, Seekarte oder Sternkarte, mit Bäumen und Bergen passend zu den Orten, Nebel über Unbekanntem, Kompass, Rahmen, Titel-Schild und Fähnchen am Standort; hell und dunkel lesbar. B: Einen Weg gehen: das Fähnchen wandert, neue Orte blenden ein; mit „Bewegung reduzieren“ am Gerät steht alles still. C: Als Gastgeber „🎲 Gewölbe würfeln“: die Gruppe bleibt draußen, an der Karte steht ⚔ und unter „Von hier aus“ „ins Gewölbe“; erst die Aktion führt hinein, dann springt die Karte auf „Gewölbe“ mit Steinboden, Türen, flackernden Fackeln und Licht um die Gruppe.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

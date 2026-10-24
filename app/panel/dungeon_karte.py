@@ -14,7 +14,8 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   group where it is (journal „dungeon: karte | verworfen“). The place's name is the panel's, whatever the model wrote.
 - Fog: a place is visited, known (a neighbour of a visited one) or unknown; the players' view carries only visited
   and known places, an unknown one only as a stub with „?“ (view), and the model never hears of it.
-- A vault (a kind with gewoelbe, or the host's „Gewölbe würfeln“) is a grid of RAEUME rooms (RASTER) grown from the
+- A vault (below a kind with gewoelbe, or rolled by the host's „Gewölbe würfeln“; the group goes in only when the
+  narration names the way "ein", never just by arriving or by the button) is a grid of RAEUME rooms (RASTER) grown from the
   entrance at the west edge in one of the GEWOELBE forms (branching, a long corridor with side rooms, a maze with
   loops, a cross around a hall, a winding cave), the master of the vault in the farthest room, a treasure next to it,
   a trap, a riddle, a guardian, a spring and an altar when there is room, the rest by weight from the room table of
@@ -36,7 +37,7 @@ profile or a guest's seat of a round whose map names it (may_see).
 The round keeps it all in rd["karte"] (dungeon-runden.json, nothing new on disk). Journal: fixed words and numbers.
 
     POST /api/profile/dungeon/{rid}/karte   host: {was: neu|gewoelbe} roll the map again (before the first step)
-                                            or a vault at the current place
+                                            or a vault's entrance at the current place
 """
 import asyncio
 import hashlib
@@ -565,7 +566,7 @@ def facts(r, rd):
         _, back, _ = _hops(len(o), k["wege"], here)
         nxt = _path(back, here, goal)[1]
         out["aktziel"] = _dir(p, (o[nxt]["x"], o[nxt]["y"]), li)
-    if kd and kd.get("gewoelbe"):
+    if has_vault(r, k, here):
         out["wege"].append({"id": "ein", "name": ("ins Gewölbe", "into the vault")[li], "richtung": ("hinein", "inside")[li],
                             "besucht": str(here) in k["gw"]})
     return dict(out, **_on_way(r, rd))
@@ -697,6 +698,22 @@ def on_the_way(r, rd, rng):
     print(f"dungeon: unterwegs | {b['art']}", flush=True)
 
 
+def has_vault(r, k, i):
+    """A place leads into a vault: by its kind, or the host rolled one there."""
+    return bool((_kind(r, k["orte"][i]["art"]) or {}).get("gewoelbe") or str(i) in k["gw"])
+
+
+def roll_entrance(r, rd, rng):
+    """The host's „Gewölbe würfeln“: a vault below the place the group stands at; the group goes in only when its
+    action says so (ort_id "ein", Dominik 2026-10-24 „warum landet man direkt im gewölbe“)."""
+    k = rd["karte"]
+    key = str(k["hier"])
+    if key not in k["gw"]:
+        k["gw"][key] = roll_vault(r, rd, k["orte"][k["hier"]]["name"], rng)
+        _say(rd, f"Ein Eingang tut sich auf: {k['gw'][key]['name']}.", f"An entrance opens: {k['gw'][key]['name']}.")
+    return k["gw"][key]
+
+
 def enter_vault(r, rd, rng):
     """The group goes into the vault of the place it stands at (rolled the first time)."""
     k = rd["karte"]
@@ -770,10 +787,7 @@ def step(r, rd, story, ep, rng=None):
             on_the_way(r, rd, rng)
         if j not in k["besucht"]:
             k["besucht"].append(j)
-        kd = _kind(r, k["orte"][j]["art"])
-        if kd and kd.get("gewoelbe"):
-            enter_vault(r, rd, rng)
-    elif want == "ein" and (_kind(r, k["orte"][k["hier"]]["art"]) or {}).get("gewoelbe"):
+    elif want == "ein" and has_vault(r, k, k["hier"]):
         enter_vault(r, rd, rng)
     elif want:
         print("dungeon: karte | verworfen | weg", flush=True)
@@ -803,7 +817,7 @@ def view(r, rd, host=False):
     def place(i):
         kd = _kind(r, o[i]["art"]) or {}
         return {"id": f"o{i + 1}", "n": o[i]["name"], "z": kd.get("zeichen", "◆"), "x": o[i]["x"], "y": o[i]["y"],
-                "s": 2 if i in k["besucht"] else 1, "gw": bool(kd.get("gewoelbe"))}
+                "s": 2 if i in k["besucht"] else 1, "gw": has_vault(r, k, i), "a": o[i]["art"]}
     wege = []
     for a, b in k["wege"]:
         if a in known and b in known:
@@ -815,7 +829,7 @@ def view(r, rd, host=False):
     xs = [o[i]["x"] for i in known] + [w[2] for w in wege]
     ys = [o[i]["y"] for i in known] + [w[3] for w in wege]
     out = {"box": _box(xs, ys), "w": FLAECHE[0], "h": FLAECHE[1], "form": k.get("form", "verstreut"), "deko": k.get("deko") or {}, "orte": [place(i) for i in sorted(known)], "wege": wege, "hier": f"o{k['hier'] + 1}",
-           "gesehen": len(k["besucht"]), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
+           "welt": rd.get("welt"), "gesehen": len(k["besucht"]), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
     v = vault(rd)
     here = (o[k["hier"]]["x"], o[k["hier"]]["y"])
     if v:
@@ -853,9 +867,9 @@ def view(r, rd, host=False):
     else:
         out["von_hier"] = [{"id": f"o{j + 1}", "n": o[j]["name"], "r": _dir(here, (o[j]["x"], o[j]["y"]), li), "b": j in k["besucht"]}
                            for j in sorted(nb[k["hier"]])]
-        if (_kind(r, o[k["hier"]]["art"]) or {}).get("gewoelbe"):
+        if has_vault(r, k, k["hier"]):
             out["von_hier"].append({"id": "ein", "n": ("ins Gewölbe", "into the vault")[li], "r": "", "b": str(k["hier"]) in k["gw"]})
-        out["gw_knopf"] = host and str(k["hier"]) not in k["gw"]
+        out["gw_knopf"] = host and not has_vault(r, k, k["hier"])
     return _pictures(r, rd, out)
 
 
@@ -1024,8 +1038,8 @@ def for_live(rounds):
 # ---------------------------------------------------------------- the host's buttons
 @router.post("/api/profile/dungeon/{rid}/karte", dependencies=[Depends(assistant)])
 async def karte(rid: str, request: Request, prof=Depends(browser_profile)):
-    """{was: neu} rolls the map again while the group has not moved; {was: gewoelbe} rolls a vault at the place
-    the group stands at and takes it in (a place with its vault already: in again)."""
+    """{was: neu} rolls the map again while the group has not moved; {was: gewoelbe} rolls a vault below the place
+    the group stands at (a place with a vault already: refused); the group goes in by its action."""
     import dungeon
     uid = prof["id"]
     dungeon._need(uid)
@@ -1044,10 +1058,8 @@ async def karte(rid: str, request: Request, prof=Depends(browser_profile)):
             if was == "neu" and (not k or k["schritte"] == 0 and k.get("drin") is None and not k["gw"]):
                 make(r, rd, start=k["orte"][k["hier"]]["name"] if k and rd.get("kid") else "")
                 dungeon.close_market(rd)
-            elif was == "gewoelbe" and k and k.get("drin") is None:
-                enter_vault(r, rd, random.Random())
-                dungeon.close_market(rd)
-                rd["boden"] = []
+            elif was == "gewoelbe" and k and k.get("drin") is None and not has_vault(r, k, k["hier"]):
+                roll_entrance(r, rd, random.Random())
             else:
                 raise ValueError("eingabe")
             rd["szene"] = dict(rd["szene"], ort=place_name(r, rd))

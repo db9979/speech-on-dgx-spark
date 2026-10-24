@@ -236,6 +236,16 @@ class Moves(unittest.TestCase):
         v = c.post(f"/api/profile/dungeon/{rid}/karte", json={"was": "neu"}).json()
         self.assertTrue(v["karte"]["neu"])
         v = c.post(f"/api/profile/dungeon/{rid}/karte", json={"was": "gewoelbe"}).json()
+        self.assertIsNone(v["karte"].get("gewoelbe"))                  # only the entrance: the group stays outside
+        self.assertIn("ein", [w["id"] for w in v["karte"]["von_hier"]])
+        self.assertFalse(v["karte"]["gw_knopf"])
+        self.assertEqual(c.post(f"/api/profile/dungeon/{rid}/karte", json={"was": "gewoelbe"}).status_code, 400)
+        with dungeon._lock:                                            # in only by the action's way
+            d = dungeon._read()
+            st = {"ort_id": "ein", "erfolg": []}
+            K.step(dungeon.rules(), d["runden"][rid], st, {}, random.Random(1))
+            dungeon._write(d)
+        v = c.get(f"/api/profile/dungeon/{rid}").json()
         self.assertIsNotNone(v["karte"]["gewoelbe"])
         self.assertFalse(v["karte"]["neu"])
         self.assertEqual(c.post(f"/api/profile/dungeon/{rid}/karte", json={"was": "neu"}).status_code, 400)
@@ -463,7 +473,7 @@ class Pictures(DingBase):
 # every name on the drawn map against every other name and every other place; a name drawn bigger than the page text
 OVERLAP = """(()=>{const s=document.querySelector('#dmview .dmk-land');if(!s)return ['no map'];
   const R=e=>e.getBoundingClientRect(),cut=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1;
-  const g=[...s.querySelectorAll('.dmk-ort')].map(o=>({n:o.querySelector('.dmk-n'),c:o.querySelector('circle')})),out=[];
+  const g=[...s.querySelectorAll('.dmk-ort')].map(o=>({n:o.querySelector('.dmk-n'),c:o.querySelector("circle.dmk-c")})),out=[];
   const fs=parseFloat(getComputedStyle(document.body).fontSize);
   g.forEach((a,i)=>{const r=R(a.n);if(r.height/a.n.querySelectorAll('tspan').length>fs*1.6)out.push('big '+a.n.textContent);
     g.forEach((b,j)=>{if(i===j)return;if(j>i&&cut(r,R(b.n)))out.push(a.n.textContent+' / '+b.n.textContent);if(cut(r,R(b.c)))out.push(a.n.textContent+' over a place')})});
@@ -538,8 +548,19 @@ class Table(unittest.TestCase):
                                 await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"karte-{w}-{m}.png"))
                                 await pg.click("#dmview [data-dmmodus]")
                             await pg.screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"tisch-{w}.png"), full_page=True)
+                            for x in dungeon.rules()["welten"]:   # the look per world, only for the pictures
+                                await pg.evaluate(f"DM.v.farben={json.dumps(x['farben'])};DM.v.karte.welt='{x['id']}';DMK.tab='welt';dmDraw()")
+                                await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"welt-{x['id']}-{w}.png"))
+                            await pg.evaluate("dmRound()")
                         if w == 1280:                    # the host rolls a vault: the grid of rooms, the way out
                             await pg.click("#dmview [data-dmkarte=gewoelbe]")
+                            await b.until(pg, "!!document.querySelector('#dmview .dmk-wege [data-dmkid=ein]')")
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk-tief')"))   # not inside yet
+                            with dungeon._lock:                  # the next turn's narration takes the way in
+                                d = dungeon._read()
+                                K.step(dungeon.rules(), d["runden"][rid], {"ort_id": "ein", "erfolg": []}, {}, random.Random(1))
+                                dungeon._write(d)
+                            await pg.evaluate("dmRound()")
                             await b.until(pg, "!!document.querySelector('#dmview .dmk-tief')")
                             self.assertIn("out", await pg.evaluate("[...document.querySelectorAll('#dmview .dmk-wege [data-dmkid]')].map(x=>x.dataset.dmkid==='aus'?'out':'').join()"))
                             if os.environ.get("DMK_SHOT"):
