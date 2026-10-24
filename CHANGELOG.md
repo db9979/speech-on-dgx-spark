@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.008** · 2026-10-24 · KI-Dungeon-Master: bei 0 Leben am Boden, nach 3 Zügen ohne Heilung gefallen für immer (Dinge und Gold liegen hier, am Kindertisch nur ohnmächtig), Eisenhaut, Schildwall und Kampfschrei wirken nach festen Regeln, Erfahrung erst am Ende der Runde
 - **V01.1.007** · 2026-10-24 · KI-Dungeon-Master: mit einem Base-Modell spricht jede Figur als Klon ihrer ersten VoiceDesign-Stimme, gleicher Klang in jedem Zug und schneller; mit CustomVoice ändert sich nichts
 - **V01.1.006** · 2026-10-24 · KI-Dungeon-Master: am Handy eine eigene Leiste unten (Geschichte, Gruppe, Held, Karte), immer nur ein Teil, roter Punkt bei neuem Zug; die Leiste des Panels ist am Tisch ausgeblendet
 - **V01.1.005** · 2026-10-24 · KI-Dungeon-Master: Bilder im Bestiarium und im Katalog verschwinden nach einem Neustart nicht mehr; das zuletzt gemalte Bild bleibt, bis das neue da ist, selbst gemalte bleiben fest

@@ -2283,6 +2283,10 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
+.dm-zst{display:block;font-size:12px;font-weight:600;color:var(--warnt)}.dm-zst[data-z=tot]{color:var(--badt)}.dm-zst[data-z=ohnmacht]{color:var(--mut)}
+.dm-zstz{margin:6px 0;font-size:14px;font-weight:600;color:var(--warnt)}.dm-zstz[data-z=tot]{color:var(--badt)}.dm-zstz[data-z=auf]{color:var(--okt)}.dm-zstz[data-z=ohnmacht]{color:var(--mut)}
+.dm-eptisch{display:block;font-size:12px;color:var(--mut)}.dm-helfen{margin-top:6px}.dm-bgold{align-items:center;margin:6px 0}
+.dm-zsatz{padding:10px 12px;border:1px solid var(--line);border-radius:10px}.dm-zsatz[data-z=tot]{color:var(--badt)}
 .dm-segen{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-zauber{margin:6px 0;padding:6px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));font-size:13px}
 /* an out-of-character line only its player sees; the admin's story: the act line, the plan only the host sees, the acts in the editor */
 .dm-ooc{margin:6px 0;padding:6px 10px;border-radius:10px;border:1px dashed var(--line);color:var(--mut);font-size:13px;font-style:italic}

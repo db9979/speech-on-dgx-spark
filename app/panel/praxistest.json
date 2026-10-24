@@ -3103,6 +3103,13 @@
 "titel": "Figuren mit Klon-Stimme (Base-Modell)",
 "text": "Nur mit Base-Modell und VoiceDesign (Einstellungen → Sprachausgabe). A: Runde mit Vorlesen, ein NPC spricht zum ersten Mal: Zustand → Logs zeigt „dungeon: vorlesen | klon | neu“. B: Der NPC spricht im nächsten Zug wieder: gleicher Klang, der Satz kommt schneller. C: Zustand → Überblick, Dungeon-Master: „n Klon-Stimmen“. D: Mit CustomVoice: keine Klon-Zeile, Vorlesen wie bisher.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P468",
+"v": 1008,
+"titel": "Am Boden, gefallen, Kräfte und Erfahrung am Ende",
+"text": "A: Runde mit Gast, dem Gast im Spiel Schaden geben lassen, bis er 0 Leben hat: „liegt am Boden. Noch 3 Züge“, sein Feld zeigt den Hinweis, Handeln geht nicht, der Zug wartet nicht auf ihn. B: An seiner Karte „🧪 Heiltrank geben“: er steht wieder auf. C: Noch einmal auf 0 und 3 Züge ohne Heilung weiterspielen: „ist gefallen“, seine Dinge und sein Gold stehen unter „Liegt hier“, Aufheben geht. D: Runde im Ton „Kinder (ab 8)“: nach 3 Zügen nur ohnmächtig; nächstes Kapitel: wach, Leben voll, Gold 0. E: Krieger mit Eisenhaut: im Fenster „wirkt immer“, kein Einsetzen; ein Treffer kostet 1 weniger. F: „Ich setze Schildwall ein“ und ein Freund wird getroffen: der Krieger fängt den Treffer ab; am selben Ort noch einmal: Zeile „schon eingesetzt“. G: Im Bogen „+X EP noch am Tisch“, gutgeschrieben erst nach „Runde beenden“. H: Zustand → Überblick, Dungeon-Master: „am Boden“ und „gefallen“ gezählt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

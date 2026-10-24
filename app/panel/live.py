@@ -1780,6 +1780,9 @@ def snapshot(view="admin", now=None):
                         + (f" · Vorlesen: {dgn['vorlesen_ersatz']} Teile mit Ersatzstimme" if dgn.get("vorlesen_ersatz") else "")
                         + (f" · Vorlesen: {dgn['vorlesen_fehler']} Fehler" if dgn.get("vorlesen_fehler") else "")
                         + (f" · {dgn['klone']} Klon-Stimmen" + (f", heute {dgn['klone_neu']} neu" if dgn.get("klone_neu") else "") if dgn.get("klone") else "")
+                        + (f" · {dgn['am_boden']} am Boden" if dgn.get("am_boden") else "")
+                        + (f" · heute {dgn.get('zu_boden', 0)} zu Boden, {dgn.get('aufgestanden', 0)} wieder auf, {dgn.get('geholfen', 0)} Tränke für Freunde, {dgn.get('gefallen', 0)} gefallen, {dgn.get('ohnmacht', 0)} ohnmächtig, {dgn.get('kraft_wirkt', 0)} Kräfte gewirkt"
+                           if any(dgn.get(k) for k in ("zu_boden", "gefallen", "ohnmacht", "kraft_wirkt")) else "")
                         + (" · schreibt Bisher geschah" if dgn.get("schreibt") else "")
                         + f" · {dgn.get('geschichten', 0)} Geschichten, heute {dgn.get('akte', 0)} Akte weiter, {dgn.get('vorschlaege', 0)} Vorschläge"
                         + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe"

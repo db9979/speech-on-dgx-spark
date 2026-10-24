@@ -364,6 +364,213 @@ class Turns(Base):
         self.assertLessEqual(best, r["pech_schutz"])
 
 
+class Permadeath(Turns):
+    """Punkt 1 and 3 of 2026-10-24: life 0 means down, three told turns without healing and the hero is dead for good
+    (at the children's table only unconscious); powers work by the panel; experience only at the end of a round."""
+    TEXTE = ["Arvid hält den Gang, Staub rieselt von der Decke herab auf die Steine.",
+             "Arvid lauscht, irgendwo tropft Wasser in eine tiefe, kalte Zisterne.",
+             "Arvid stemmt sich gegen die Tür, die Angeln ächzen wie ein altes Schiff.",
+             "Arvid sieht Fackelschein am Ende des Ganges, Schatten tanzen an den Wänden.",
+             "Arvid tritt in die Halle, Spinnweben hängen wie Vorhänge von den Balken."]
+
+    def set_hero(self, pid, **kw):
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][pid]["held"].update(kw)
+            dungeon._write(d)
+
+    def host_turn(self, i, folgen=(), proben=(), erfolg=()):
+        """Only the host acts (the guest is down) and the turn is told."""
+        z = self.state(self.rid)["zug"]
+        r = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich halte die Stellung.", "zug": z})
+        self.assertEqual(r.status_code, 200, r.text)
+        return self.play([{"proben": list(proben)}, {"erzaehlung": self.TEXTE[i], "folgen": list(folgen), "erfolg": list(erfolg), "frage_an": ""}])
+
+    def down_bela(self):
+        self.set_hero(self.gp, leben=1)
+        self.act_all()
+        return self.play([{"proben": []}, {"erzaehlung": "Ein Pfeil trifft Bela, Arvid und Bela stolpern in den Gang.",
+                                           "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+
+    def test_down_three_turns_then_dead_and_things_lie_here(self):
+        rd = self.down_bela()
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual((bela["leben"], dungeon.zustand(bela)), (0, "boden"))
+        z = [e for e in rd["log"] if e["art"] == "zustand"]
+        self.assertEqual((z[-1]["was"], z[-1]["noch"]), ("boden", dungeon.BODEN_ZUEGE))
+        # down: no action, no move of its own; the turn does not wait for it
+        r = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich stehe auf.", "zug": rd["zug"]})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "boden"))
+        r = self.v.post("/api/dungeon/held", json={"code": self.code, "was": "fallen", "i": bela["tasche"][0]["i"]})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "boden"))
+        lage = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertEqual((lage["ich"]["zustand"], lage["ich"]["noch"]), ("boden", dungeon.BODEN_ZUEGE))
+        dinge = len(dungeon.worn(bela)) + len(bela["tasche"])
+        gold = bela["gold"]
+        for i in range(dungeon.BODEN_ZUEGE):
+            self.spawned.clear()
+            rd = self.host_turn(i)
+            self.assertIn("dungeon", self.spawned)               # the host alone closed the turn
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual(dungeon.zustand(bela), "tot")
+        self.assertEqual((bela["tasche"], dungeon.worn(bela), bela["gold"]), ([], [], 0))
+        self.assertEqual((len(rd["boden"]), rd["boden_gold"]), (dinge, gold))
+        self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "zustand"][-1], "tot")
+        # the dead hero goes nowhere: no Figur-Code; its gold is the others' now
+        r = self.v.post("/api/dungeon/figur", json={"code": self.code})
+        self.assertEqual((r.status_code, r.json()["detail"]), (404, "tot"))
+        arvid = rd["plaetze"][self.host]["held"]["gold"]
+        r = self.c.post(f"/api/profile/dungeon/{self.rid}/held", json={"was": "aufheben", "i": "gold"})
+        self.assertEqual(r.status_code, 200, r.text)
+        rd = self.state(self.rid)
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], arvid + gold)
+        self.assertNotIn("boden_gold", rd)
+        # facts tell the model who fell; a fallen hero gets no more consequences
+        self.assertIn("gefallen", dungeon.facts(dungeon.rules(), rd))
+        rd = self.host_turn(3, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 6}])
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], 0)
+
+    def test_a_friend_potion_gets_a_hero_up(self):
+        rd = self.down_bela()
+        trank = next(x for x in rd["plaetze"][self.host]["held"]["tasche"] if x["id"] == "heiltrank")
+        r = self.c.post(f"/api/profile/dungeon/{self.rid}/held", json={"was": "trinken", "i": trank["i"], "an": self.gp})
+        self.assertEqual(r.status_code, 200, r.text)
+        rd = self.state(self.rid)
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertGreater(bela["leben"], 0)
+        self.assertEqual(dungeon.zustand(bela), "")
+        self.assertNotIn("boden", bela)
+        self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "zustand"][-1], "auf")
+        # standing again: a new fall counts from the start
+        self.set_hero(self.gp, leben=1)
+        z = self.state(self.rid)["zug"]
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich ducke mich.", "zug": z}).status_code, 200)
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich decke Bela.", "zug": z}).status_code, 200)
+        rd = self.play([{"proben": []}, {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["boden"], 0)
+        # healing by the story gets it up too
+        rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
+        self.assertEqual(dungeon.zustand(rd["plaetze"][self.gp]["held"]), "")
+
+    def test_childrens_table_only_unconscious_and_wakes_without_gold(self):
+        r = dungeon.rules()
+        kid = min(t["id"] for t in r["toene"])
+        self.c.delete(f"/api/profile/dungeon/{self.rid}")
+        v = self.new_round(ton=kid)
+        self.rid, self.host = v["rid"], v["pid"]
+        hid = self.state(self.rid)["plaetze"][self.host]["held"]["hid"]
+        self.set_hero(self.host, leben=1, gold=40)
+        z = self.state(self.rid)["zug"]
+        self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich klettere.", "zug": z})
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid rutscht vom nassen Ast und landet weich im Moos.",
+                                         "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        self.assertEqual(dungeon.zustand(rd["plaetze"][self.host]["held"]), "boden")
+        with dungeon._lock:                                  # nobody is up: the clock tells the turns
+            d = dungeon._read()
+            for _ in range(dungeon.BODEN_ZUEGE):
+                dungeon.down(r, d["runden"][self.rid])
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual(dungeon.zustand(h), "ohnmacht")
+        self.assertTrue(h["tasche"])                          # keeps its things
+        self.assertFalse(rd.get("boden"))
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}").status_code, 200)
+        kept = next(x for x in dungeon.heroes(self.uid) if x["hid"] == hid)
+        self.assertTrue(kept["ohnmacht"])
+        v = self.new_round(held=hid)
+        h = self.state(v["rid"])["plaetze"][v["pid"]]["held"]
+        self.assertEqual((dungeon.zustand(h), h["gold"], h["leben"]), ("", 0, h["leben_max"]))
+        self.assertTrue(h["tasche"])
+
+    def test_dead_profile_hero_stays_dead(self):
+        with dungeon._lock:
+            d = dungeon._read()
+            h = d["runden"][self.rid]["plaetze"][self.host]["held"]
+            hid = h["hid"]
+            dungeon.fall(dungeon.rules(), d["runden"][self.rid], self.host, h)
+            dungeon._write(d)
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}").status_code, 200)
+        kept = next(x for x in dungeon.heroes(self.uid) if x["hid"] == hid)
+        self.assertEqual(dungeon.zustand(kept), "tot")
+        r = self.c.post("/api/profile/dungeon/runde", json={"titel": "Nochmal", "welt": "fantasy", "ton": 12, "held": hid})
+        self.assertEqual((r.status_code, r.json()["detail"]), (404, "tot"))
+        mine = self.c.get("/api/profile/dungeon").json()
+        self.assertEqual(next(x for x in mine["helden"] if x["hid"] == hid)["zustand"], "tot")
+
+    def test_iron_skin_shield_wall_and_battle_cry_by_the_panel(self):
+        r = dungeon.rules()
+        krieger = next(k for k in r["klassen"] if k["id"] == "krieger")
+        fa = {x["id"]: x for x in krieger["faehigkeiten"]}
+        self.assertEqual((fa["eisenhaut"]["wirkung"], fa["eisenhaut"]["immer"]), ("weniger_schaden", True))
+        self.assertEqual((fa["schildwall"]["wirkung"], fa["kampfschrei"]["wirkung"]), ("abfangen", "gruppe_probe"))
+        self.assertEqual(dungeon.check_rules(dict(r, klassen=[dict(k, faehigkeiten=[dict(x, wirkung="gottmodus") for x in k["faehigkeiten"]]) for k in r["klassen"]])) != [], True)
+        # Eisenhaut: one less on every hit (Arvid starts with it), shown as „wirkt immer“ without „Einsetzen“
+        lage = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        eh = next(x for x in lage["ich"]["kann"]["faehigkeiten"] if x["id"] == "eisenhaut")
+        self.assertTrue(eh["immer"])
+        self.set_hero(self.host, leben=20, leben_max=20, faehigkeiten=["eisenhaut", "schildwall", "kampfschrei"])
+        schutz = dungeon.schutz(r, self.state(self.rid)["plaetze"][self.host]["held"])
+        z = self.state(self.rid)["zug"]
+        self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich setze Schildwall ein und decke Bela.", "zug": z})
+        self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich zaubere.", "zug": z})
+        self.assertEqual(self.state(self.rid)["offen"][self.host]["wirkt"], {"abfangen": "schildwall"})
+        bela0 = self.state(self.rid)["plaetze"][self.gp]["held"]["leben"]
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid springt vor Bela, der Hieb kracht auf seinen Schild.",
+                                         "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], bela0)                 # taken by Arvid
+        self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 20 - max(0, max(1, 6 - schutz) - 1))
+        self.assertEqual([e for e in rd["log"] if e["art"] == "kraft"][-1]["fuer"], "Bela")
+        # once a scene: the same place refuses it with a line for that seat
+        z = rd["zug"]
+        self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich setze Schildwall ein, noch einmal.", "zug": z})
+        a = self.state(self.rid)["offen"][self.host]
+        self.assertNotIn("wirkt", a)
+        self.assertIn("Schildwall", a["nicht"])
+        # Kampfschrei: +1 on the group's checks of the turn
+        a = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich nutze meinen Kampfschrei!", "zug": z})
+        self.assertEqual(self.state(self.rid)["offen"][self.host]["wirkt"], {"gruppe_probe": "kampfschrei"})
+        rd = self.state(self.rid)
+        mit = dungeon.roll(r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10}], random.Random(4))[0]
+        rd["offen"].pop(self.host)
+        ohne = dungeon.roll(r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10}], random.Random(4))[0]
+        self.assertEqual((mit["bonus"] - ohne["bonus"], mit.get("schrei")), (1, True))
+
+    def test_experience_only_at_the_end_and_gone_when_leaving_early(self):
+        r = dungeon.rules()
+        self.act_all()
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela schlagen die Wölfe in die Flucht, der Weg ist frei.",
+                                         "erfolg": [{"art": "gegner", "rang": 2}], "frage_an": ""}])
+        arvid, bela = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
+        self.assertEqual((arvid["ep"], arvid["ep_tisch"]), (0, r["ep"]["gegner"][1]))
+        lage = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual(lage["ich"]["ep_tisch"], r["ep"]["gegner"][1])
+        self.assertEqual(next(x for x in dungeon.heroes(self.uid) if x["hid"] == arvid["hid"])["ep"], 0)
+        self.assertEqual(bela["ep_tisch"], r["ep"]["gegner"][1])
+        # a profile at the table that the host takes back leaves with the experience it came with
+        seat = self.invite(self.rid)
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": seat, "held": dict(HERO, name="Emil")})
+        self.assertEqual(j.status_code, 200, j.text)
+        ep = j.json()["pid"]
+        z = self.state(self.rid)["zug"]
+        for c, t in ((self.c, "Ich gehe vor."), (self.c2, "Ich folge.")):
+            self.assertEqual(c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": t, "zug": z}).status_code, 200)
+        self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich auch.", "zug": z})
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid, Bela und Emil vertreiben die Krähen vom Turm, endlich Ruhe.",
+                                         "erfolg": [{"art": "gegner", "rang": 1}], "frage_an": ""}])
+        self.assertTrue(rd["plaetze"][ep]["held"]["ep_tisch"])
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}/platz/{ep}").status_code, 200)
+        emil = dungeon.heroes(self.uid2)[0]
+        self.assertEqual((emil["ep"], emil.get("ep_tisch")), (0, None))
+        arvid = self.state(self.rid)["plaetze"][self.host]["held"]
+        # the regular end pays the rest, once
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}").status_code, 200)
+        kept = next(x for x in dungeon.heroes(self.uid) if x["hid"] == arvid["hid"])
+        self.assertEqual((kept["ep"], kept.get("ep_tisch")), (arvid["ep_tisch"], None))
+        log = self.state(self.rid)["log"]
+        self.assertEqual(sorted(e["zahl"] for e in log if e["art"] == "ep" and e.get("ende")), sorted([arvid["ep_tisch"], self.state(self.rid)["plaetze"][self.gp]["held"]["ep"]]))
+
+
 class Seats(Base):
     """The host on a fellow player's seat (Dominik 2026-10-24 „andere spieler bearbeiten, bzw. löschen usw. dass sich
     dass nicht auffüllt oder den code nochmal dem spieler geben“): a guest's new link (the old one stops, the hero
@@ -3049,6 +3256,7 @@ class Windows(unittest.TestCase):
             h = next(iter(rd["plaetze"].values()))["held"]
             h["tasche"] = [dungeon.item(r, "dolch"), dungeon.item(r, "dolch", "selten")]
             h["gold"] = 900
+            h["faehigkeiten"] = ["eisenhaut", "kampfschrei"]     # one that always works, one to use
             dungeon.open_market(r, rd, name="Grimm", rng=random.Random(3))
             p2 = copy.deepcopy(next(iter(rd["plaetze"].values())))                 # a second hero: the group shows the others in full
             p2.update(uid="", gast=True, made=p2.get("made", 0) + 1)
@@ -3108,7 +3316,17 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate(f"[...document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt')].filter(x=>!x.classList.contains('k-{k}')).length"), 0)
                         await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(1)")
                         await b.until(pg, f"document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length=={n_all}")
-                        await pg.click("#dmview .dm-fen-bogen .dm-kt")                                    # a tap explains the power in its window
+                        # Eisenhaut always works (Punkt 3 of 2026-10-24): „wirkt immer“, no „Einsetzen“
+                        await pg.click("#dmview .dm-fen-bogen .dm-kt.immer")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-ktd')")
+                        self.assertIn("wirkt immer", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-ktchips').textContent"))
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding [data-dmkann]')"))
+                        await pg.click("#dmview .dm-fen-ding [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
+                        if not await pg.evaluate("!!document.querySelector('#dmview .dm-fen-bogen .dm-kt')"):
+                            await pg.click("#dmview [data-dmfen=bogen]")
+                            await pg.click("#dmview .dm-btabs [data-dmbt=kann]")
+                        await pg.click("#dmview .dm-fen-bogen .dm-kt:not(.immer)")                        # a tap explains the power in its window
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-ktd')")
                         name = await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-ktd-n').textContent")
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding .dm-ktchips .dm-chip')"))
