@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.012** Sprechen auf dem Modell-Rechner startet ohne Internet auch mit Dateiliste des Hubs: die Liste aller Dateien eines gepinnten Modells fällt nach der Prüfung weg, sonst nannte huggingface_hub den Stand unvollständig (.gitattributes)
 - **V01.1.010** KI-Dungeon-Master: Dinge-Gedächtnis, die Geschichte merkt sich wichtige Dinge mit Stoff, Farbe und Zustand und schreibt eine Erzählung, die ihnen widerspricht, einmal neu (kein Eisenkästchen wird mehr zum Holzkästchen), der Gastgeber sieht und ändert die gemerkten Dinge, keine OOC-Zeile spricht mehr für das Panel
 - **V01.1.009** KI-Dungeon-Master: Bilder für Klassen, Völker, Hintergründe und Welten im Regeln-Reiter (Malen, Nochmal malen, Welt wählbar), Hintergründe je Welt, Titelbild je Welt auf den Weltkarten
 - **V01.1.008** KI-Dungeon-Master: bei 0 Leben am Boden, nach 3 Zügen ohne Heilung gefallen für immer (Dinge und Gold liegen hier, am Kindertisch nur ohnmächtig), Eisenhaut, Schildwall und Kampfschrei wirken nach festen Regeln, Erfahrung erst am Ende der Runde
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.004** KI-Dungeon-Master: ruhiger Tisch, die Hilfe „So spielst du“ als Fenster zum Blättern, Musik und Geräusche im Kopf, Zug und Uhr nur einmal, der eigene Held nur rechts, kein Assistent am Tisch, „Leiten“ in der Schrift des Tisches ohne Lücke
 - **V01.1.003** KI-Dungeon-Master: Vorlesen Stück für Stück mit zweitem Versuch und Ersatzstimme, auf jedem Gerät nach einmal „Ton an“, die Uhr wartet aufs Vorlesen; wörtliche Rede spricht die Figur, drei feste Stimmen (Erzähler, NPC Mann, NPC Frau), Stimmvorschlag für Helden
 - **V01.1.002** KI-Dungeon-Master: das Szenenbild steht nur noch einmal und scrollt mit der Geschichte, ältere klein im Verlauf; Porträts bei den Aktionen; Zeichen auf Pergament statt Farbfleck, solange ein Bild fehlt
-- **V01.1.001** KI-Dungeon-Master: die Wortliste der Runde gilt auch für Tischgespräch, Aktionen und Heldennamen; der Gastgeber blendet Zeilen für alle aus und schaltet einen Platz im Tischgespräch stumm
 
 
 

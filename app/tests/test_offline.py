@@ -14,6 +14,7 @@ import asyncio
 import glob
 import hashlib
 import io
+import json
 import os
 import re
 import secrets
@@ -209,6 +210,35 @@ class Zeiger(unittest.TestCase):
             # a loader without a revision now finds exactly the checked snapshot, offline
             path = huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
             self.assertEqual(os.path.realpath(path), os.path.realpath(os.path.join(d, "snapshots", self.REV)))
+
+    def test_the_tree_listing_of_the_whole_repository_goes(self):
+        """The download keeps the listing of every file of the commit, also .gitattributes, which ERLAUBT never
+        takes; offline huggingface_hub then called the snapshot incomplete (tars 2026-10-24)."""
+        import huggingface_hub
+        with tempfile.TemporaryDirectory() as hub:
+            d = self.cache(hub)
+            modelle.zeiger(d, self.REV)
+            os.makedirs(os.path.join(d, "trees"))
+            files = {n: {"size": 2, "blob_id": "0" * 40} for n in ("config.json", "model.safetensors", ".gitattributes")}
+            liste = os.path.join(d, "trees", self.REV + ".json")
+            with open(liste, "w") as f:
+                json.dump({"format_version": 1, "files": files}, f)
+            if hasattr(huggingface_hub.errors, "IncompleteSnapshotError"):     # the library that checks it
+                with self.assertRaises(huggingface_hub.errors.IncompleteSnapshotError):
+                    huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
+                # the engine is a new process; this one keeps the listing it read in memory
+                getattr(sys.modules.get("huggingface_hub._tree_cache"), "_IN_MEMORY_TREE_CACHE", {}).clear()
+            with mock.patch.object(huggingface_hub, "snapshot_download", side_effect=AssertionError("download")):
+                self.assertEqual(modelle._laden("A/B", self.REV, d), self.REV)
+            self.assertFalse(os.path.exists(liste))
+            path = huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
+            self.assertEqual(os.path.realpath(path), os.path.realpath(os.path.join(d, "snapshots", self.REV)))
+            # only the listing of the pinned commit goes, never another file
+            other = os.path.join(d, "trees", "b" * 40 + ".json")
+            with open(other, "w") as f:
+                f.write("{}")
+            self.assertFalse(modelle.zeiger(d, self.REV))
+            self.assertTrue(os.path.exists(other))
 
     def test_the_pointer_is_written_once_and_only_to_a_checked_commit(self):
         with tempfile.TemporaryDirectory() as hub:

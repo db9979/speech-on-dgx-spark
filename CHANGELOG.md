@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.012** · 2026-10-24 · Sprechen auf dem Modell-Rechner startet ohne Internet auch mit Dateiliste des Hubs: die Liste aller Dateien eines gepinnten Modells fällt nach der Prüfung weg, sonst nannte huggingface_hub den Stand unvollständig (.gitattributes)
 - **V01.1.010** · 2026-10-24 · KI-Dungeon-Master: Dinge-Gedächtnis, die Geschichte merkt sich wichtige Dinge mit Stoff, Farbe und Zustand und schreibt eine Erzählung, die ihnen widerspricht, einmal neu (kein Eisenkästchen wird mehr zum Holzkästchen), der Gastgeber sieht und ändert die gemerkten Dinge, keine OOC-Zeile spricht mehr für das Panel
 - **V01.1.009** · 2026-10-24 · KI-Dungeon-Master: Bilder für Klassen, Völker, Hintergründe und Welten im Regeln-Reiter (Malen, Nochmal malen, Welt wählbar), Hintergründe je Welt, Titelbild je Welt auf den Weltkarten
 - **V01.1.008** · 2026-10-24 · KI-Dungeon-Master: bei 0 Leben am Boden, nach 3 Zügen ohne Heilung gefallen für immer (Dinge und Gold liegen hier, am Kindertisch nur ohnmächtig), Eisenhaut, Schildwall und Kampfschrei wirken nach festen Regeln, Erfahrung erst am Ende der Runde

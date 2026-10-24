@@ -783,19 +783,29 @@ def _laden(repo, rev, ordner):
 
 
 def zeiger(ordner, rev):
-    """Points refs/main of a cached repository at its checked, pinned commit. snapshot_download with a commit writes
-    no refs/main, and some loaders ask for the repository without a revision (vllm-omni's omni_snapshot_download):
-    with HF_HUB_OFFLINE they then find no refs/main and stop (LocalEntryNotFoundError, speech-spark-tts-design
-    restarted every 30 s on tars 2026-10-23). Pointed at the pinned commit they load exactly the checked files. Only
-    a commit of 40 hex whose snapshot exists; written only when it differs, through a temporary file."""
+    """Makes the checked, pinned commit of a cached repository what a loader without a revision finds offline
+    (vllm-omni's omni_snapshot_download asks for the repository without one):
+    - refs/main points at the commit. snapshot_download with a commit writes no refs/main; with HF_HUB_OFFLINE the
+      loader then stopped (LocalEntryNotFoundError, speech-spark-tts-design restarted every 30 s on tars 2026-10-23).
+    - the cached tree listing of the commit (trees/<commit>.json) goes. It lists every file of the repository, also
+      the kinds the download never takes (ERLAUBT), and offline huggingface_hub then calls the snapshot incomplete
+      (IncompleteSnapshotError, ".gitattributes missing", tars 2026-10-24). Without it the library trusts the folder;
+      pruefen has checked every file in it. Online the next download writes it again, and this runs after it.
+    Only a commit of 40 hex whose snapshot exists; refs/main written only when it differs, through a temporary file.
+    Returns whether anything changed."""
     if not REV.match(rev or "") or not os.path.isdir(os.path.join(ordner, "snapshots", rev)):
         raise Fehler("revision")
+    neu = False
+    liste = os.path.join(ordner, "trees", rev + ".json")
+    if os.path.islink(liste) or os.path.isfile(liste):
+        os.unlink(liste)
+        neu = True
     refs = os.path.join(ordner, "refs")
     ziel = os.path.join(refs, "main")
     try:
         with open(ziel) as f:
             if f.read().strip() == rev and not os.path.islink(ziel):
-                return False
+                return neu
     except OSError:
         pass
     os.makedirs(refs, exist_ok=True)
