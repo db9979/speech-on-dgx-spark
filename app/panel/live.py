@@ -1419,6 +1419,8 @@ def snapshot(view="admin", now=None):
         post_idle = mailidle.for_live()
         import mailcode
         post_code = mailcode.for_live()
+        import einordnen
+        post_sort = einordnen.for_live()
         import mailvorrat
         post_supply = mailvorrat.for_live()
         post_older = mail.older_today()
@@ -1437,6 +1439,7 @@ def snapshot(view="admin", now=None):
         post_threads = 0
         post_later = 0
         post_code = {}
+        post_sort = {}
         post_fd = {}
     try:
         import vorwaermen
@@ -1639,6 +1642,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · Codes: heute {post_code['today']} Mitteilungen"
         if x["id"] == "mail" and post_later:     # Später senden: planned mails waiting (a number, never to whom)
             x["sub"] += f" · {post_later} Mails geplant"
+        if x["id"] == "mail" and (post_sort.get("going") or post_sort.get("runs")):   # Alle Mails hier einordnen: numbers only
+            x["sub"] += f" · Einordnen: {post_sort['going']} läuft, heute {post_sort['runs']} Läufe, {post_sort['moved']} verschoben"
         if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only
             x["sub"] += f" · heute {avs['suggested']}× Antwortvorschläge, {avs['rewritten']}× umformuliert"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)

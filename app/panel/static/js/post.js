@@ -43,7 +43,7 @@ async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq
     if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&again))POST.data=d;POST.err='';
     if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
-  POST.busy=false;postDraw();postFuerLoad();postLaterLoad()}
+  POST.busy=false;postDraw();postFuerLoad();postLaterLoad();postSortLoad()}
 // Ältere nachladen (Dominik 2026-10-21 „1a 2a 5a“): at the end of the list the next older page (mark vor, mail.more),
 // in the inbox and in a folder, with the search over the whole mailbox; rows already there are not shown twice
 async function postMore(){const d=POST.data;if(!d||!d.vor||POST.more||POST.busy)return;const seq=POST.seq;POST.more=true;postMoreBtn();
@@ -331,11 +331,11 @@ function postSmart(k,only){if(only){const on=k==='unread'?POST.unread:!!POST.chi
   POST.sel=null;POST.msg=null;POST.fsheet=false;postLoad()}
 function postQ(){return [POST.q,...POST_CHIPS.filter(c=>POST.chips[c[0]]).map(c=>c[1]),POST.box&&POST.unread?'ist:ungelesen':''].filter(Boolean).join(' ').slice(0,100)}
 function postUndo(w){const u=POST.done,box=w.querySelector('.postundo');if(!box)return;
-  const pick=(ORD_ON&&POST.pick.length?postPickBar():'')+postHintHtml()+(POST.note?`<div class="note">${esc(POST.note)}</div>`:''),pend=postPendHtml()+postLaterHtml();
-  if(!u){box.innerHTML=pend+pick;postPendBind(box);postLaterListBind(box);postPickBind(box);postHintBind(box);return}
+  const pick=(ORD_ON&&POST.pick.length?postPickBar():'')+postHintHtml()+(POST.note?`<div class="note">${esc(POST.note)}</div>`:''),pend=postPendHtml()+postLaterHtml()+postSortHtml();
+  if(!u){box.innerHTML=pend+pick;postPendBind(box);postLaterListBind(box);postSortBind(box);postPickBind(box);postHintBind(box);return}
   box.innerHTML=pend+`<div class="note">${esc(u.del?(u.n>1?t(u.n+' Mails in den Papierkorb gelegt.',u.n+' mails put into the trash.'):t('In den Papierkorb gelegt.','Put into the trash.'))
     :(u.n>1?t(u.n+' Mails verschoben nach ',u.n+' mails moved to '):t('Verschoben nach ','Moved to '))+(u.folder==='INBOX'?t('Posteingang','Inbox'):u.folder)+'.')} <button class="b" type="button" data-u="1">${esc(t('Rückgängig','Undo'))}</button></div>`+pick;
-  postPendBind(box);postLaterListBind(box);postPickBind(box);postHintBind(box);
+  postPendBind(box);postLaterListBind(box);postSortBind(box);postPickBind(box);postHintBind(box);
   box.querySelector('[data-u]').onclick=async()=>{const {r,d}=u.mids?await apiTry('/api/profile/mail/acts/back',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:u.acct,folder:u.folder,mids:u.mids,src:u.src})})
       :await apiTry('/api/profile/mail/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:u.acct+':0',action:'back',folder:u.folder,mid:u.mid,src:u.src})});
     POST.done=null;if(!r.ok){box.innerHTML=`<div class="note warn">${esc(errSay(r.status,d.detail,''))}</div>`;return}postTreeShift(u.acct,'','',0);postLoad()}}
@@ -389,17 +389,20 @@ function postTreeHtml(){const tr=POST.tree;
       a.folders.map(f=>{const rl=POST_ROLE[f.role]||POST_ROLE.folder,name=rl[1]&&!f.depth?t(rl[1],rl[2]):f.name.split(a.delim).pop(),pad=f.depth?` style="padding-left:${8+f.depth*18}px"`:'';
         // Dominik 2026-10-21 „besser integriert“: a small menu at the folder like Apple Mail (⋯ or right click; a sheet from below on a phone)
         const k=a.id+'|'+f.name,fa=`data-fa2="${esc(a.id)}" data-ff2="${esc(f.name)}"`;
+        // „Alle Mails hier einordnen“ (einordnen.py, Dominik 2026-10-24 „1-3“): at the inbox, the archive and every own folder
+        const sortable=['inbox','archive','folder'].includes(f.role),hasMenu=f.own||sortable;
         const menu=POST.fmenu===k?`<div class="postmenu postfmenu" role="menu">`+
-          `<button type="button" role="menuitem" data-fo="rename" ${fa}>${postIc('pen')}${esc(t('Umbenennen','Rename'))}</button>`+
+          (sortable?`<button type="button" role="menuitem" data-fo="sort" ${fa}>${postIc('folder')}<span>${esc(t('Alle Mails hier einordnen','Sort every mail here'))}<small>${esc(t('nach deinen Regeln, erst ein Vorschlag','by your rules, a proposal first'))}</small></span></button>`:'')+
+          (f.own?`<button type="button" role="menuitem" data-fo="rename" ${fa}>${postIc('pen')}${esc(t('Umbenennen','Rename'))}</button>`+
           `<button type="button" role="menuitem" data-fo="new" ${fa}>${postIc('folder')}${esc(t('Neuer Ordner darin','New folder inside'))}</button>`+
-          `<button type="button" role="menuitem" class="bad" data-fo="remove" ${fa}>${postIc('trash')}<span>${esc(t('Ordner entfernen','Remove folder'))}<small>${esc(t('nur wenn er leer ist','only when it is empty'))}</small></span></button></div>`:'';
+          `<button type="button" role="menuitem" class="bad" data-fo="remove" ${fa}>${postIc('trash')}<span>${esc(t('Ordner entfernen','Remove folder'))}<small>${esc(t('nur wenn er leer ist','only when it is empty'))}</small></span></button>`:'')+`</div>`:'';
         const fresh=POST.fnew&&POST.fnew.acct===a.id&&POST.fnew.inside===f.name?postFoldInput('new',a.id,f.name,'',(f.depth||0)+1):'';
         if(POST.fren===k)return postFoldInput('rename',a.id,f.name,name,f.depth||0)+fresh;
         return row(POST.box&&POST.box.account===a.id&&POST.box.folder===f.name,(f.role==='group'?'':`data-acct="${esc(a.id)}" data-f="${esc(f.name)}" data-role="${esc(f.role)}"`)+pad,rl[0],name,
           f.unseen?`<span class="ld-badge read">${f.unseen}</span>`:'',
-          f.own?`<button type="button" class="postfmore" data-fa="${esc(a.id)}" data-ff="${esc(f.name)}" aria-label="${esc(t('Ordner bearbeiten','Edit folder'))}" aria-haspopup="menu" aria-expanded="${POST.fmenu===k}">${postIc('more')}</button>`+menu:'')+fresh}).join('')+
+          hasMenu?`<button type="button" class="postfmore" data-fa="${esc(a.id)}" data-ff="${esc(f.name)}" aria-label="${esc(t('Mehr zum Ordner','More for the folder'))}" aria-haspopup="menu" aria-expanded="${POST.fmenu===k}">${postIc('more')}</button>`+menu:'')+fresh}).join('')+
       (POST.fnew&&POST.fnew.acct===a.id&&!POST.fnew.inside?postFoldInput('new',a.id,'','',0):'')).join('')+
-    `<div class="fh">${esc(t('Eigene Ordner: ⋯ oder Rechtsklick zum Umbenennen, für einen Ordner darin oder zum Entfernen (nur leere). Ordner des Mail-Programms und von „Mails aufräumen“ bleiben, wie sie sind.','Own folders: ⋯ or right click to rename, for a folder inside or to remove (empty ones only). Folders of the mail program and of "Tidy mails" stay as they are.')+(NARROW()?'':' '+t('Mails ziehst du einfach auf einen Ordner.','Drag mails straight onto a folder.')))}</div>`}
+    `<div class="fh">${esc(t('⋯ oder Rechtsklick: alle Mails eines Ordners einordnen; bei eigenen Ordnern auch umbenennen, einen Ordner darin anlegen oder entfernen (nur leere). Ordner des Mail-Programms und von „Mails aufräumen“ bleiben, wie sie sind.','⋯ or right click: sort every mail of a folder; for own folders also rename, add a folder inside or remove (empty ones only). Folders of the mail program and of "Tidy mails" stay as they are.')+(NARROW()?'':' '+t('Mails ziehst du einfach auf einen Ordner.','Drag mails straight onto a folder.')))}</div>`}
 // a folder named in its own row (Umbenennen, Neuer Ordner): Enter keeps it, Esc or leaving the field drops it
 function postFoldInput(op,acct,folder,value,depth){const pad=depth?` style="padding-left:${8+depth*18}px"`:'';
   return `<div class="ld-row postfren"${pad}><span class="postfi" aria-hidden="true">${postIc('folder')}</span><input type="text" maxlength="100" data-fin="${op}" data-fa2="${esc(acct)}" data-ff2="${esc(folder)}" value="${esc(value)}" placeholder="${esc(t('Name des Ordners','Folder name'))}" aria-label="${esc(op==='new'?t('Name des neuen Ordners','Name of the new folder'):t('Neuer Name','New name'))}"></div>`}
@@ -474,6 +477,7 @@ async function postFolderCall(path,body){const {r,d}=await apiTry(path,{method:'
 // Neuer Ordner and Umbenennen happen in the row itself (postFoldInput), like Apple Mail
 function postFolderNew(acct,inside){POST.fmenu=null;POST.fren=null;POST.fnew={acct,inside};postDraw()}
 async function postFolderDo(op,acct,f){POST.fmenu=null;
+  if(op==='sort')return postSortStart(acct,f);
   if(op==='new')return postFolderNew(acct,f);
   if(op==='rename'){POST.fnew=null;POST.fren=acct+'|'+f;postDraw();return}
   if(op==='remove'&&confirm(t('Den leeren Ordner „'+f+'“ entfernen? Mails werden nie gelöscht: einen Ordner mit Mails lässt der Spark stehen.','Remove the empty folder "'+f+'"? Mails are never deleted: a folder holding mails stays.'))){
@@ -588,6 +592,34 @@ function postLaterListBind(box){const d=box.querySelector('.postlaterl');if(!d)r
   d.querySelectorAll('[data-ld]').forEach(b=>b.onclick=async()=>{const x=POST.later.find(y=>y.id===b.dataset.ld);
     if(x&&x.state==='wartet'&&!confirm(t('Diese geplante Mail zurücknehmen? Sie wird nicht gesendet.','Take back this planned mail? It will not be sent.')))return;
     const {r,d:y}=await apiTry('/api/profile/mail/later/'+encodeURIComponent(b.dataset.ld),{method:'DELETE'});if(r.ok)POST.later=y.items;const w=$('postview');if(w)postUndo(w)})}
+// Alle Mails hier einordnen (einordnen.py, Dominik 2026-10-24 „1-3“): a proposal for every mail of the folder, then
+// „Verschieben“; the run goes on in the background (asked every 2 s while it runs), „Abbrechen“ stops it after the step
+async function postSortLoad(){if(!ORD_ON)return;const {r,d}=await apiTry('/api/profile/mail/einordnen');POST.sort=r.ok?d:null;
+  const w=$('postview');if(w)postUndo(w);clearTimeout(POST.sortT);
+  if(r.ok&&['scan','move','back'].includes(d.state))POST.sortT=setTimeout(()=>{if($('postview'))postSortLoad()},2000)}
+async function postSortCall(path,body){const {r,d}=await apiTry('/api/profile/mail/einordnen'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+  if(!r.ok){POST.note=errSay(r.status,d.detail,'');postDraw();return}POST.sort=d;postSortLoad()}
+function postSortStart(acct,f){postDraw();postSortCall('',{account:acct,folder:f})}
+const postSortName=f=>!f||f.toUpperCase()==='INBOX'?t('Posteingang','Inbox'):f;
+function postSortHtml(){const s=POST.sort;if(!s||(!s.state&&!s.undo))return '';const n=x=>Number(x||0).toLocaleString(kalLoc());
+  const into=(s.by||[]).reduce((a,x)=>a+x[1],0),where=postSortName(s.folder),btn=(k,label,p)=>`<button class="b${p?' p':''}" type="button" data-so="${k}">${esc(label)}</button>`;
+  let txt='',acts='';
+  if(s.state==='scan'){txt=t('Ordne „'+where+'“ ein: '+n(s.looked)+' von '+n(Math.min(s.total,50000)||s.looked)+' Mails angesehen …','Sorting "'+where+'": '+n(s.looked)+' of '+n(Math.min(s.total,50000)||s.looked)+' mails looked at …');acts=btn('stop',t('Abbrechen','Stop'))}
+  else if(s.state==='ready'){txt=into?t('Vorschlag für „'+where+'“: ','Proposal for "'+where+'": ')+(s.by||[]).slice(0,6).map(x=>t(n(x[1])+' nach ',n(x[1])+' to ')+postSortName(x[0])).join(', ')+((s.by||[]).length>6?' …':'')+t('; '+n(s.stays)+' bleiben.','; '+n(s.stays)+' stay.')
+      :t('In „'+where+'“ passt keine deiner Regeln: alle '+n(s.stays)+' Mails bleiben.','None of your rules fits in "'+where+'": all '+n(s.stays)+' mails stay.');
+    if(s.cut)txt+=' '+t('Angesehen wurden die neuesten 50.000.','The newest 50,000 were looked at.');
+    acts=(into?btn('go',t(n(into)+' verschieben','Move '+n(into)),true):'')+btn('stop',into?t('Verwerfen','Discard'):t('Schließen','Close'))}
+  else if(s.state==='move'){txt=t('Verschiebe: '+n(s.moved)+' von '+n(into||s.moved)+' …','Moving: '+n(s.moved)+' of '+n(into||s.moved)+' …');acts=btn('stop',t('Abbrechen','Stop'))}
+  else if(s.state==='back'){txt=t('Hole zurück nach „'+where+'“: '+n(s.moved)+' von '+n(s.total)+' …','Bringing back to "'+where+'": '+n(s.moved)+' of '+n(s.total)+' …');acts=btn('stop',t('Abbrechen','Stop'))}
+  else if(s.state==='error')txt=t('Einordnen ging nicht: ','Sorting did not work: ')+({renumbered:t('der Mail-Server hat den Ordner inzwischen neu nummeriert, bitte noch einmal.','the mail server has numbered the folder anew since, please once more.'),'not reachable':t('das Postfach war nicht erreichbar.','the mailbox was not reachable.')}[s.err]||t('bitte noch einmal.','please once more.'));
+  else if(s.state)txt=(s.state==='stopped'?t('Abgebrochen. ','Stopped. '):'')+t(n(s.moved)+' Mails '+(s.kind==='back'?'zurückgeholt.':'verschoben.'),n(s.moved)+' mails '+(s.kind==='back'?'brought back.':'moved.'));
+  if(['done','stopped','error'].includes(s.state))acts+=btn('stop',t('Schließen','Close'));
+  if(s.undo&&!['scan','move','back'].includes(s.state))acts=btn('back',t('Rückgängig: '+n(s.undo.n)+' zurück nach „'+postSortName(s.undo.folder)+'“','Undo: '+n(s.undo.n)+' back to "'+postSortName(s.undo.folder)+'"'))+acts;
+  return `<div class="note postsort" role="status"><span>${esc(txt||t('Einordnen','Sorting'))}</span><span class="row">${acts}</span></div>`}
+function postSortBind(box){box.querySelectorAll('[data-so]').forEach(b=>b.onclick=()=>{const k=b.dataset.so;
+  if(k==='go'&&!confirm(t('Jetzt verschieben? Es wird nichts gelöscht, und „Rückgängig“ holt alles zurück.','Move now? Nothing is deleted, and "Undo" brings everything back.')))return;
+  if(k==='back'&&!confirm(t('Alle Mails des letzten Einordnens zurück in ihren Ordner holen?','Bring every mail of the last sorting back into its folder?')))return;
+  b.disabled=true;postSortCall('/'+k)})}
 // leaving the form: what was typed is asked about first, nothing else is lost
 function postDrop(){const f=POST.write;
   if(f&&!POST.prev&&(f.text||'').trim()&&!confirm(t('Den Entwurf verwerfen?','Discard the draft?')))return;

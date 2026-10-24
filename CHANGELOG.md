@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.985** · 2026-10-24 · E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 - **V01.0.984** · 2026-10-24 · KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)
 - **V01.0.983** · 2026-10-24 · KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
 - **V01.0.982** · 2026-10-24 · KI-Dungeon-Master: läuft VoiceDesign gerade nicht, spricht die feste Stimme statt einer Fehlermeldung (Probe mit Hinweis, Vorlesen geht weiter), das Log nennt den Grund

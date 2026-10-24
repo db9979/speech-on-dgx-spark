@@ -1431,6 +1431,8 @@ struct MailFolders: View {
     @State private var naming: (account: String, inside: String, folder: String)?
     @State private var name = ""
     @State private var removing: MailFolder?
+    @State private var sort = MailSortRun()
+    @State private var sortAsk: String?
 
     var body: some View {
         NavigationStack {
@@ -1438,6 +1440,7 @@ struct MailFolders: View {
                 Button { pick(nil) } label: {
                     Label("Alle Posteingänge", systemImage: current == nil ? "tray.full.fill" : "tray.full")
                 }
+                if sort.shown { MailSortRow(run: sort, act: { k in if k == "go" || k == "back" { sortAsk = k } else { Task { await sortCall(k) } } }) }
                 ForEach(accounts) { a in
                     Section {
                         if a.error { Text("Dieses Postfach war nicht erreichbar.").foregroundStyle(.red) }
@@ -1451,6 +1454,12 @@ struct MailFolders: View {
                                 }
                                 // like Apple Mail (Dominik 2026-10-21 „besser integriert“): long press, each with its symbol
                                 .contextMenu {
+                                    // Alle Mails hier einordnen (einordnen.py, Dominik 2026-10-24 „1-3“): first a proposal, nothing moves yet
+                                    if ["inbox", "archive", "folder"].contains(f.role) {
+                                        Button { Task { await sortCall("", body: ["account": f.account, "folder": f.name]) } } label: {
+                                            Label("Alle Mails hier einordnen", systemImage: "tray.and.arrow.down")
+                                        }
+                                    }
                                     if f.own {
                                         Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }
                                     }
@@ -1467,7 +1476,7 @@ struct MailFolders: View {
                     } header: {
                         Text(verbatim: a.name)
                     } footer: {
-                        Text("Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.")
+                        Text("Lange drücken: alle Mails eines Ordners nach deinen Regeln einordnen. Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.")
                     }
                 }
                 if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
@@ -1478,6 +1487,13 @@ struct MailFolders: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .refreshable { await load(fresh: true) }
             .task { await load(fresh: false) }
+            .task { await sortLoad() }
+            .confirmationDialog(sortAsk == "back" ? LocalizedStringKey("Alle Mails des letzten Einordnens zurückholen?") : LocalizedStringKey("Jetzt verschieben?"),
+                                isPresented: Binding(get: { sortAsk != nil }, set: { if !$0 { sortAsk = nil } }), titleVisibility: .visible) {
+                Button(sortAsk == "back" ? LocalizedStringKey("Zurückholen") : LocalizedStringKey("Verschieben")) { if let k = sortAsk { Task { await sortCall(k) } } }
+            } message: {
+                Text("Es wird nichts gelöscht, und „Rückgängig“ holt alles zurück.")
+            }
             .alert(naming?.folder.isEmpty == false ? LocalizedStringKey("Ordner umbenennen") : LocalizedStringKey("Neuer Ordner"),
                    isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
                 TextField("Name", text: $name)
@@ -1576,6 +1592,30 @@ struct MailFolders: View {
         await load(fresh: true)
     }
 
+    /// the run of „Alle Mails hier einordnen“: asked again every 2 s while it goes
+    private func sortLoad() async {
+        guard let api = SparkAPI.current else { return }
+        while !Task.isCancelled {
+            guard let d = try? await api.object("GET", "api/profile/mail/einordnen") else { return }
+            sort = MailSortRun(d)
+            if !sort.going { return }
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+        }
+    }
+
+    private func sortCall(_ k: String, body: [String: Any] = [:]) async {
+        sortAsk = nil
+        guard let api = SparkAPI.current else { return }
+        do {
+            sort = MailSortRun(try await api.object("POST", "api/profile/mail/einordnen" + (k.isEmpty ? "" : "/" + k), body: body))
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+        await sortLoad()
+        if sort.state == "done" || sort.state == "stopped" { await load(fresh: true) }
+    }
+
     private func remove(_ f: MailFolder) async {
         removing = nil
         guard let api = SparkAPI.current else { return }
@@ -1587,6 +1627,78 @@ struct MailFolders: View {
             self.error = error.localizedDescription
         }
         await load(fresh: true)
+    }
+}
+
+/// Alle Mails hier einordnen (einordnen.py): the state of the run, numbers only; folder names come from the mail server.
+struct MailSortRun {
+    var kind = "", state = "", folder = "", err = ""
+    var looked = 0, total = 0, stays = 0, moved = 0, undo = 0
+    var undoFolder = ""
+    var by: [(String, Int)] = []
+    init() {}
+    init(_ d: [String: Any]) {
+        kind = d["kind"] as? String ?? ""
+        state = d["state"] as? String ?? ""
+        folder = d["folder"] as? String ?? ""
+        err = d["err"] as? String ?? ""
+        looked = d["looked"] as? Int ?? 0
+        total = d["total"] as? Int ?? 0
+        stays = d["stays"] as? Int ?? 0
+        moved = d["moved"] as? Int ?? 0
+        by = (d["by"] as? [[Any]] ?? []).prefix(20).compactMap { x in
+            guard x.count == 2, let f = x[0] as? String, let n = x[1] as? Int else { return nil }
+            return (String(f.prefix(80)), n)
+        }
+        if let u = d["undo"] as? [String: Any] {
+            undo = u["n"] as? Int ?? 0
+            undoFolder = u["folder"] as? String ?? ""
+        }
+    }
+    var going: Bool { ["scan", "move", "back"].contains(state) }
+    var shown: Bool { !state.isEmpty || undo > 0 }
+    var into: Int { by.reduce(0) { $0 + $1.1 } }
+    static func name(_ f: String) -> String { f.isEmpty || f.uppercased() == "INBOX" ? String(localized: "Posteingang") : f }
+}
+
+struct MailSortRow: View {
+    let run: MailSortRun
+    let act: (String) -> Void
+
+    var body: some View {
+        Section("Einordnen") {
+            Text(verbatim: line).font(.subheadline)
+            if run.going { ProgressView().frame(maxWidth: .infinity, alignment: .leading) }
+            if run.state == "ready" && run.into > 0 {
+                Button { act("go") } label: { Label("\(run.into) verschieben", systemImage: "tray.and.arrow.down") }
+            }
+            if run.going {
+                Button("Abbrechen", role: .destructive) { act("stop") }
+            } else if !run.state.isEmpty {
+                Button(run.state == "ready" && run.into > 0 ? LocalizedStringKey("Verwerfen") : LocalizedStringKey("Schließen")) { act("stop") }
+            }
+            if run.undo > 0 && !run.going {
+                Button { act("back") } label: { Label("Rückgängig: \(run.undo) zurück", systemImage: "arrow.uturn.backward") }
+            }
+        }
+    }
+
+    private var line: String {
+        let w = MailSortRun.name(run.folder)
+        switch run.state {
+        case "scan": return String(localized: "„\(w)“: \(run.looked) von \(min(run.total, 50000)) Mails angesehen …")
+        case "ready":
+            if run.into == 0 { return String(localized: "In „\(w)“ passt keine deiner Regeln: alle \(run.stays) Mails bleiben.") }
+            let list = run.by.prefix(6).map { "\($0.1) → \(MailSortRun.name($0.0))" }.joined(separator: ", ")
+            return String(localized: "Vorschlag für „\(w)“: \(list); \(run.stays) bleiben.")
+        case "move": return String(localized: "Verschiebe: \(run.moved) von \(run.into) …")
+        case "back": return String(localized: "Hole zurück: \(run.moved) von \(run.total) …")
+        case "error": return run.err == "renumbered" ? String(localized: "Der Mail-Server hat den Ordner neu nummeriert, bitte noch einmal.")
+            : String(localized: "Einordnen ging nicht, bitte noch einmal.")
+        case "done", "stopped":
+            return run.kind == "back" ? String(localized: "\(run.moved) Mails zurückgeholt.") : String(localized: "\(run.moved) Mails verschoben.")
+        default: return String(localized: "Letztes Einordnen: \(run.undo) Mails, „Rückgängig“ holt sie zurück.")
+        }
     }
 }
 

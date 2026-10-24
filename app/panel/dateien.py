@@ -111,6 +111,9 @@ DATEIEN = [
     profil("mail-spaeter.bin", "Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text",
            "Send later: planned mails until they go out, after that for a day the line without text", art="Warteschlange",
            schutz=("versiegelt", "sealed")),  # senden.py
+    profil("mail-einordnen.bin", "Alle Mails hier einordnen: der letzte Lauf für „Rückgängig“ (Ordner und Message-IDs, keine Mail), 30 Tage",
+           "Sort every mail here: the last run for \"Undo\" (folders and Message-IDs, never a mail), 30 days", art="Zustand",
+           schutz=("versiegelt", "sealed")),  # einordnen.py
     profil("spark-kalender.json", "Spark-Kalender: Termine der Kalender ohne Konto (nur hier)", "Spark calendar: appointments of the calendars without an account (only here)",
            art="Termine", schutz=("versiegelt", "sealed")),  # sparkkalender.py
     profil("kalender-server.json", "Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps", "Calendar server: check value of the app password for calendar apps",

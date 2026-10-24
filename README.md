@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.985** E-mail: "Sort every mail here" in the "⋯" of every folder sorts all mails of a folder by your rules, without the 90-day limit: a proposal first, then moving in packages, Stop and Undo; panel and iPhone
 - **V01.0.984** AI Dungeon Master: own tab "Rules" for the admin with bestiary and items with their pictures, edit per entry, paint again with a comparison and a balance check (too strong only as a hint)
 - **V01.0.983** AI Dungeon Master: the table's right column with tabs for map, host, threads and date instead of one long list; class choice with short cards, starting powers and spells by grade below
 - **V01.0.982** AI Dungeon Master: when VoiceDesign is not running, the fixed voice speaks instead of an error (sample with a hint, reading aloud goes on), the log names the reason
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.978** AI Dungeon Master: room for the SRD data: a second rules file dungeon_srd.json, checked lists for foes, conditions, backgrounds, difficulties, spell charges and starting powers, treasure to sell, fixed rarity, items only in their worlds, up to 500 entries per list
 - **V01.0.977** AI Dungeon Master: items and values explained (tools +2, break on a 1), throw your own die with a check bar, sparks on a 20 and result sounds, own voices for the narrator per story and every NPC, every refusal as a clear sentence
 - **V01.0.976** AI Dungeon Master: calm ambient music, soft pads instead of drums, 60 to 80 beats per minute, in fights too; the old store is made again
-- **V01.0.975** AI Dungeon Master: a pleasant wait: steps reading, dice, narrating with fixed sentences, rolls before the narration, lore cards of the world and hints from 300 fixed texts without soon repeats, narration sentence by sentence, "is typing …" and table talk only between the players; deleting ended rounds; narration checked against the map
 
 
 

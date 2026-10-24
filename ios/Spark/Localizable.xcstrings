@@ -17430,6 +17430,186 @@
           }
         }
       }
+    },
+    "Alle Mails hier einordnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort every mail here"
+          }
+        }
+      }
+    },
+    "Lange drücken: alle Mails eines Ordners nach deinen Regeln einordnen. Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long press: sort every mail of a folder by your rules. Own folders: swipe or long press to rename or remove (empty ones only). A folder holding mails stays."
+          }
+        }
+      }
+    },
+    "Einordnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting"
+          }
+        }
+      }
+    },
+    "Alle Mails des letzten Einordnens zurückholen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back every mail of the last sorting?"
+          }
+        }
+      }
+    },
+    "Jetzt verschieben?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move now?"
+          }
+        }
+      }
+    },
+    "Es wird nichts gelöscht, und „Rückgängig“ holt alles zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is deleted, and \"Undo\" brings everything back."
+          }
+        }
+      }
+    },
+    "Der Mail-Server hat den Ordner neu nummeriert, bitte noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The mail server has numbered the folder anew, please once more."
+          }
+        }
+      }
+    },
+    "Einordnen ging nicht, bitte noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorting did not work, please once more."
+          }
+        }
+      }
+    },
+    "%lld verschieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld"
+          }
+        }
+      }
+    },
+    "Rückgängig: %lld zurück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo: %lld back"
+          }
+        }
+      }
+    },
+    "„%@“: %lld von %lld Mails angesehen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\": %lld of %lld mails looked at …"
+          }
+        }
+      }
+    },
+    "In „%@“ passt keine deiner Regeln: alle %lld Mails bleiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of your rules fits in \"%@\": all %lld mails stay."
+          }
+        }
+      }
+    },
+    "Vorschlag für „%@“: %@; %lld bleiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal for \"%@\": %@; %lld stay."
+          }
+        }
+      }
+    },
+    "Verschiebe: %lld von %lld …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving: %lld of %lld …"
+          }
+        }
+      }
+    },
+    "Hole zurück: %lld von %lld …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bringing back: %lld of %lld …"
+          }
+        }
+      }
+    },
+    "%lld Mails zurückgeholt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails brought back."
+          }
+        }
+      }
+    },
+    "%lld Mails verschoben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails moved."
+          }
+        }
+      }
+    },
+    "Letztes Einordnen: %lld Mails, „Rückgängig“ holt sie zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last sorting: %lld mails, \"Undo\" brings them back."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

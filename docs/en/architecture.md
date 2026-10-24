@@ -318,6 +318,7 @@ The own pages E-mail, Calendar and Contacts, fetching from the provider, the sea
 | `app/panel/calendars.py` | Calendar and daily briefing per profile (guests have neither). |
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
 | `app/panel/einladung.py` | Einladungen aus Mails: a mail with an invitation (.ics, iMIP) shows above its text what, when, where and who invites, and with one tap it goes into a calenda … |
+| `app/panel/einordnen.py` | Alle Mails eines Ordners einordnen: from the „⋯“ of a folder on the page E-Mail (the inbox, the archive or an own folder) every mail in it, down to the oldes … |
 | `app/panel/kalenderserver.py` | Spark-Kalender, Stufe 4: the Spark as a CalDAV server, so the iPhone's own calendar app (or Thunderbird, DAVx5 on Android) shows and changes the profile's Sp … |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/kalserie.py` | Kalender wie Apple Kalender: the fields of an appointment the page Kalender and the iPhone app set (place, all day, start and end, repeat, alert, people, not … |
@@ -572,6 +573,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
 | `users/ID/mail-spaeter.bin` | Send later: planned mails until they go out, after that for a day the line without text | Queue | sealed | yes | – |
+| `users/ID/mail-einordnen.bin` | Sort every mail here: the last run for "Undo" (folders and Message-IDs, never a mail), 30 days | State | sealed | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
 | `users/ID/kalender-server.json` | Calendar server: check value of the app password for calendar apps | Login | hash only | yes | – |
 | `users/ID/calendar.json` | Calendar account and shares with other profiles | Login | password sealed | yes | – |
@@ -3733,7 +3735,7 @@ flowchart TD
 6. <a id="kn-post-s6"></a>**Supply sealed**: mailvorrat.keep_heads keeps the newest headers, plus the texts read last; vorrat.seal seals them with the Spark's key in the profile's folder.
 7. <a id="kn-post-s7"></a>**Answer with its time**: When something is not fresh from the provider, frisch.stand says with a fixed sentence when it is from ("as of yesterday 18:00"). The pages show at once what is there and load the rest behind.
 8. <a id="kn-post-s8"></a>**Change something?**: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log.
-9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
+9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. "Sort every mail here" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
 10. <a id="kn-post-s10"></a>**Door for apps**: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book "On the Spark"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with "Edit contacts".
 11. <a id="kn-post-s11"></a>**Own data only**: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares.
 
@@ -3770,12 +3772,13 @@ flowchart TD
 - `app/panel/senden.py` `preview`: preview sheet ([step 9](#kn-post-s9))
 - `app/panel/senden.py` `send`: send after the tap ([step 9](#kn-post-s9))
 - `app/panel/senden.py` `later`: send later, sealed ([step 9](#kn-post-s9))
+- `app/panel/einordnen.py` `start`: sort a folder, a proposal first ([step 9](#kn-post-s9))
 - `app/panel/mailcode.py` `arrived`: confirmation code as a note ([step 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: card back with If-Match ([step 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: door for calendar and contacts apps ([step 2](#kn-post-s2), [step 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: card from a contacts app ([step 10](#kn-post-s10))
 
-Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`
+Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
 
 ### journald
 

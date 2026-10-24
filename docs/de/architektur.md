@@ -318,6 +318,7 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 | `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
 | `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
 | `app/panel/einladung.py` | Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden |
+| `app/panel/einordnen.py` | Alle Mails eines Ordners einordnen: nach Regeln und Aufräum-Stufen, erst Vorschlag, Rückgängig versiegelt |
 | `app/panel/kalenderserver.py` | Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort) |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
 | `app/panel/kalserie.py` | Kalender wie Apple: Wiederholen, Erinnerung, Personen ohne Einladung, Serie nur dieser oder alle künftigen |
@@ -572,6 +573,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-spaeter.bin` | Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text | Warteschlange | versiegelt | ja | – |
+| `users/ID/mail-einordnen.bin` | Alle Mails hier einordnen: der letzte Lauf für „Rückgängig“ (Ordner und Message-IDs, keine Mail), 30 Tage | Zustand | versiegelt | ja | – |
 | `users/ID/spark-kalender.json` | Spark-Kalender: Termine der Kalender ohne Konto (nur hier) | Termine | versiegelt | ja | – |
 | `users/ID/kalender-server.json` | Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps | Login | nur der Hash | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang und Freigaben an andere Profile | Login | Passwort versiegelt | ja | – |
@@ -3733,7 +3735,7 @@ flowchart TD
 6. <a id="kn-post-s6"></a>**Vorrat versiegelt**: mailvorrat.keep_heads behält die neuesten Kopfzeilen, dazu die zuletzt gelesenen Texte; vorrat.seal versiegelt sie mit dem Schlüssel des Spark im Ordner des Profils.
 7. <a id="kn-post-s7"></a>**Antwort mit Stand**: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach.
 8. <a id="kn-post-s8"></a>**Etwas ändern?**: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log.
-9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
+9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
 10. <a id="kn-post-s10"></a>**Tür für Apps**: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“.
 11. <a id="kn-post-s11"></a>**Nur eigene Daten**: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt.
 
@@ -3770,12 +3772,13 @@ flowchart TD
 - `app/panel/senden.py` `preview`: Vorschau-Blatt ([Schritt 9](#kn-post-s9))
 - `app/panel/senden.py` `send`: senden nach dem Tipp ([Schritt 9](#kn-post-s9))
 - `app/panel/senden.py` `later`: später senden, versiegelt ([Schritt 9](#kn-post-s9))
+- `app/panel/einordnen.py` `start`: einen Ordner einordnen, erst Vorschlag ([Schritt 9](#kn-post-s9))
 - `app/panel/mailcode.py` `arrived`: Bestätigungscode als Mitteilung ([Schritt 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: Karte zurück mit If-Match ([Schritt 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: Tür für Kalender- und Kontakte-Apps ([Schritt 2](#kn-post-s2), [Schritt 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: Karte einer Kontakte-App ([Schritt 10](#kn-post-s10))
 
-Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`
+Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
 
 ### journald
 

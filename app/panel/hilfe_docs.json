@@ -3525,7 +3525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und "
+"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur di"
 },
 {
 "lang": "de",
@@ -3533,7 +3533,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
+"text": "e Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
 },
 {
 "lang": "de",
@@ -3573,7 +3573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
+"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/einordnen.py start: einen Ordner einordnen, erst Vorschlag (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
 },
 {
 "lang": "de",
@@ -3581,7 +3581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode"
+"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen"
 },
 {
 "lang": "de",
@@ -6350,6 +6350,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Mail-Statistik (V01.0.906, Dominik 2026-10-21 „6“; Teil von „Mails ordnen“, kein eigener Schalter): Oben auf dem Reiter Regeln (Panel und iPhone) klappt „Wer schreibt dir am meisten“ auf: die Mails je Woche der letzten vier Wochen und die 15 häufigsten Absender der letzten 30 Tage mit Anzahl und ungelesenen, dazu „hat Regel“ oder „Regel …“ (das Formular mit diesem Absender). mailregeln.stats zählt fest im Panel aus der Liste, die der Mail-Vorrat ohnehin hält (300 Kopfzeilen je Postfach), und liest nichts neu, solange sie frisch ist; nichts geht an das Modell. GET /api/profile/mail/stats (Rate-Limit postordnen), Log mail: stats shown|too slow … nur mit Zahlen, Live bei Mail: wie oft heute angesehen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Alle Mails hier einordnen (V01.0.985, Dominik 2026-10-24 „1-3“; Teil von „Mails ordnen“, kein eigener Schalter): Im „⋯“ (oder Rechtsklick, am iPhone lange drücken) am Posteingang, am Archiv und an jedem eigenen Ordner der Seite E-Mail ordnet „Alle Mails hier einordnen“ jede Mail dieses Ordners einmal ein, ohne Tagesgrenze bis zur ältesten (die neuesten 50.000), nicht nur die letzten 90 Tage wie „Altlasten“. Es entscheidet je Mail die erste passende Regel: zuerst deine Mail-Regeln (nur ihr Ordner), dann, wo „Postfach aufräumen“ für das Postfach an ist, dessen Stufen 1 bis 3 (geschützte Absender, deine Aufräum-Regeln, feste Kopfzeilen). Das Sprachmodell entscheidet hier nie: eine Mail, die keine Regel kennt, bleibt liegen, ebenso eine, deren Ziel der Ordner selbst ist. Erst kommt im Hintergrund ein Vorschlag mit Fortschritt („1.240 nach Rechnungen, 830 nach Spark/Newsletter; 2.100 bleiben“), verschoben wird erst nach „Verschieben“ (mit dem Code wie jede Sammeländerung), in Paketen von 100; „Abbrechen“ hält nach dem laufenden Schritt an. „Rückgängig“ holt jede Mail des letzten Laufs über ihre Message-ID in den Ordner zurück. Nie aus Gesendet, Entwürfe, Papierkorb oder Spam, nie gelösc"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ht, nie markiert; hat der Mailserver den Ordner inzwischen neu nummeriert, wird nichts verschoben. Ein Lauf je Profil, höchstens zwei zugleich auf dem Spark, Sprache geht zwischen den Schritten vor. einordnen.py, GET/POST /api/profile/mail/einordnen, …/go, …/back (beide mit Code), …/stop (Rate-Limit postordnen); der Vorschlag liegt nur im Speicher, der letzte Lauf für „Rückgängig“ versiegelt in mail-einordnen.bin (30 Tage). Log mail: sort folder … nur mit Zahlen, Live bei Mail: Läufe und verschobene Mails heute."
 },
 {
 "lang": "de",
@@ -15869,7 +15885,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, exce"
+"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. \"Sort every mail here\" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes "
 },
 {
 "lang": "en",
@@ -15877,7 +15893,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "pt a calendar its owner shares."
+"text": "only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
 },
 {
 "lang": "en",
@@ -15917,7 +15933,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
+"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/einordnen.py start: sort a folder, a proposal first (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
 },
 {
 "lang": "en",
@@ -15925,7 +15941,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode"
+"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen"
 },
 {
 "lang": "en",
@@ -18606,6 +18622,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "Mail statistics (V01.0.906, Dominik 2026-10-21 \"6\"; part of \"Mails ordnen\", no switch of its own): at the top of the tab Rules (panel and iPhone) \"Who writes most\" opens: the mails a week of the last four weeks and the 15 most frequent senders of the last 30 days with count and unread ones, and \"has rule\" or \"Rule …\" (the form with that sender). mailregeln.stats counts in the panel from the listing the Mail-Vorrat keeps anyway (300 headers a mailbox) and reads nothing again while it is fresh; nothing goes to the model. GET /api/profile/mail/stats (rate limit postordnen), log mail: stats shown|too slow … with numbers only, Live at mail: how often looked at today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Sort every mail here (V01.0.985, Dominik 2026-10-24 \"1-3\"; part of \"Mails ordnen\", no switch of its own): in the \"⋯\" (or right click, a long press on the iPhone) at the inbox, the archive and every own folder of the page E-mail, \"Sort every mail here\" sorts every mail of that folder once, without a limit of days down to the oldest (the newest 50,000), not only the last 90 days like \"old mail\". Per mail the first rule that fits decides: first your mail rules (only their folder), then, where inbox tidying is on for the mailbox, its stages 1 to 3 (protected senders, your tidying rules, fixed header signs). The language model never decides here: a mail no rule knows stays, so does one whose target is the folder itself. First a proposal comes in the background with progress (\"1,240 to Rechnungen, 830 to Spark/Newsletter; 2,100 stay\"); mails move only after \"Move\" (with the code like any bulk change), in packages of 100; \"Stop\" halts after the step running. \"Undo\" brings every mail of the last run back into the folder by its Message-ID. Never out of sent, drafts, trash or junk, never deleted, never flagged; if the mail server numbered the folder anew meanwhile, nothing moves. One run per"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " profile, at most two at once on the Spark, speech goes first between the steps. einordnen.py, GET/POST /api/profile/mail/einordnen, …/go, …/back (both with the code), …/stop (rate limit postordnen); the proposal lives in memory only, the last run for \"Undo\" sealed in mail-einordnen.bin (30 days). Log mail: sort folder … with numbers only, Live at mail: runs and mails moved today."
 },
 {
 "lang": "en",

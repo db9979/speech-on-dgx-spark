@@ -60,6 +60,8 @@ LIST = {
     ("POST", "/api/profile/mail/folder/rename"): (CONFIRM, "Konten", "Mail-Ordner umbenennen", "Rename a mail folder"),
     ("POST", "/api/profile/mail/folder/remove"): (CONFIRM, "Konten", "Leeren Mail-Ordner entfernen", "Remove an empty mail folder"),
     ("POST", "/api/profile/mail/rules/{rid}/apply"): (CONFIRM, "Konten", "Mail-Regel auf vorhandene Mails anwenden", "Apply a mail rule to the mails already there"),
+    ("POST", "/api/profile/mail/einordnen/go"): (CONFIRM, "Konten", "Alle Mails eines Ordners einordnen", "Sort every mail of a folder"),
+    ("POST", "/api/profile/mail/einordnen/back"): (CONFIRM, "Konten", "Einordnen eines Ordners rückgängig machen", "Undo sorting a folder"),
     ("POST", "/api/profile/contacts"): (CONFIRM, "Konten", "Adressbuch verbinden", "Connect an address book"),
     ("PUT", "/api/profile/homeassistant"): (CONFIRM, "Konten", "Home Assistant verbinden", "Connect Home Assistant"),
     ("POST", "/api/profile/telegram/link"): (CONFIRM, "Konten", "Telegram verbinden", "Connect Telegram"),

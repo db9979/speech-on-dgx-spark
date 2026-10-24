@@ -164,6 +164,7 @@ MODULE = {
     "mailvorrat": ("post", "Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall"),
     "frisch": ("gespraech", "Tagesaktuell: jede Quelle gegen heute geprüft, Websuche mit Zeitraum, Stand mit Tag, Hinweis wenn alt"),
     "vorrat": ("dienste", "Vorrat je Profil: Antworten aus dem Speicher, solange frisch genug; versiegelt auf der Platte (Mail, Wetter, Pakete)"),
+    "einordnen": ("post", "Alle Mails eines Ordners einordnen: nach Regeln und Aufräum-Stufen, erst Vorschlag, Rückgängig versiegelt"),
     "mailcode": ("post", "Bestätigungscodes: Code aus neuer Mail als Mitteilung aufs genutzte Gerät, nie Telegram, nie im Log"),
     "mailidle": ("post", "Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen"),
     "mailstil": ("post", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),

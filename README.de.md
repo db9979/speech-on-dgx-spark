@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.985** E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 - **V01.0.984** KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)
 - **V01.0.983** KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
 - **V01.0.982** KI-Dungeon-Master: läuft VoiceDesign gerade nicht, spricht die feste Stimme statt einer Fehlermeldung (Probe mit Hinweis, Vorlesen geht weiter), das Log nennt den Grund
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.978** KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste
 - **V01.0.977** KI-Dungeon-Master: Gegenstände und Werte erklärt (Werkzeuge +2, zerbrechen bei einer 1), Würfel selbst werfen mit Proben-Leiste, Funken bei 20 und Ergebnis-Geräuschen, eigene Stimmen für Erzähler je Geschichte und jeden NSC, jede Ablehnung als klarer Satz
 - **V01.0.976** KI-Dungeon-Master: Musik ruhig und ambient, weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf; der alte Vorrat wird neu gemacht
-- **V01.0.975** KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft
 
 
 

@@ -32,6 +32,7 @@ import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
+import einordnen  # noqa: E402
 import mailregeln  # noqa: E402
 import mailansicht  # noqa: E402
 import senden  # noqa: E402
@@ -1551,6 +1552,62 @@ async def profile_mail_rule_apply(request: Request, rid: str, prof=Depends(secre
     """„Auch die vorhandenen“: the rule on the inbox mails it fits now (with the code; „Rückgängig“ brings them back)."""
     guard.limit(request, "postordnen", prof["id"])
     return await _rule(prof, "apply", mailregeln.apply, rid[:20])
+
+
+async def _einordnen(prof, what, fn, *args):
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(fn, prof["id"], *args), 60)
+    except LookupError:
+        print(f"mail: sort folder {what} refused, not found | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Das gibt es nicht mehr: kein Vorschlag, Postfach oder Ordner dazu.")
+    except notaus.NotausAktiv:
+        print(f"mail: sort folder {what} refused, notaus | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        print(f"mail: sort folder {what} refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: sort folder {what} too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: sort folder {what} not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.get("/api/profile/mail/einordnen", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+def profile_mail_einordnen(request: Request, prof=Depends(browser_profile)):
+    """Alle Mails eines Ordners einordnen (einordnen.py): the run's state and numbers, and what „Rückgängig“ brings back."""
+    guard.limit(request, "postmehr", prof["id"])
+    return einordnen.public(prof["id"])
+
+
+@router.post("/api/profile/mail/einordnen", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_einordnen_start(request: Request, prof=Depends(browser_profile)):
+    """{account, folder}: the proposal for every mail of the folder, in the background; nothing moves yet."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 4096)
+    return await _einordnen(prof, "start", einordnen.start, str(b.get("account") or "")[:20], str(b.get("folder") or "INBOX")[:200])
+
+
+@router.post("/api/profile/mail/einordnen/go", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_einordnen_go(request: Request, prof=Depends(secret_profile)):
+    """„Verschieben“: the proposal is carried out in the background (with the code, like any bulk change)."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _einordnen(prof, "go", einordnen.go)
+
+
+@router.post("/api/profile/mail/einordnen/back", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_einordnen_back(request: Request, prof=Depends(secret_profile)):
+    """„Rückgängig“: the mails of the last run back into their folder, in the background."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _einordnen(prof, "back", einordnen.back)
+
+
+@router.post("/api/profile/mail/einordnen/stop", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_einordnen_stop(request: Request, prof=Depends(browser_profile)):
+    """„Abbrechen“ of a run going, „Verwerfen“ of a proposal."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _einordnen(prof, "stop", einordnen.stop)
 
 
 @router.delete("/api/profile/mail/rules/{rid}", dependencies=[Depends(assistant)])

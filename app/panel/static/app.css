@@ -2020,6 +2020,7 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postfl .ld-row.on .postfi,.post .postfl .ld-row.on b{color:var(--acc)}
 .post .postfl .ld-row.drop,.post .pib.drop{outline:2px dashed var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 16%,var(--card));color:var(--acc)}
 .post .posthint{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.post .posthint .row{display:flex;flex-wrap:wrap;gap:6px}
+.post .postsort{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}.post .postsort .row{display:flex;flex-wrap:wrap;gap:6px}
 @container (min-width:900px){
   .post .ld-list{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 6px 8px}
   .post .ld-list>.posthead{margin:0 -6px 4px;border-radius:14px 14px 0 0}

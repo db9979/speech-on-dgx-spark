@@ -169,6 +169,8 @@ def forget(uid):
     mailregeln.forget(uid)   # the mail rules go with the mailboxes
     import senden   # senden.py imports this module
     senden.later_forget(uid)   # and the planned mails (Später senden)
+    import einordnen   # einordnen.py imports this module
+    einordnen.forget(uid)   # and the run of „Alle Mails hier einordnen“ with its „Rückgängig“
 
 
 def _drop(uid):
