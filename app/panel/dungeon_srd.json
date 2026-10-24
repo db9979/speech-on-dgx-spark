@@ -1870,7 +1870,11 @@
       "schaden": 4,
       "wert": "staerke",
       "kg": 1,
-      "preis": 5
+      "preis": 5,
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "leicht"
+      ]
     },
     {
       "id": "grosskeule",
@@ -1887,7 +1891,11 @@
       "wert": "staerke",
       "kg": 5,
       "preis": 20,
-      "zweihand": true
+      "zweihand": true,
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "schwer"
+      ]
     },
     {
       "id": "sichel",
@@ -1903,7 +1911,11 @@
       "schaden": 4,
       "wert": "staerke",
       "kg": 1,
-      "preis": 10
+      "preis": 10,
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "leicht"
+      ]
     },
     {
       "id": "leichter_hammer",
@@ -1919,7 +1931,12 @@
       "schaden": 4,
       "wert": "staerke",
       "kg": 1,
-      "preis": 12
+      "preis": 12,
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "leicht",
+        "wurf"
+      ]
     },
     {
       "id": "wurfspeer",
@@ -1935,7 +1952,11 @@
       "schaden": 6,
       "wert": "staerke",
       "kg": 1,
-      "preis": 12
+      "preis": 12,
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "wurf"
+      ]
     },
     {
       "id": "schleuder",
@@ -1951,7 +1972,8 @@
       "schaden": 4,
       "wert": "geschick",
       "kg": 0.1,
-      "preis": 5
+      "preis": 5,
+      "schaden_art": "wucht"
     },
     {
       "id": "blasrohr",
@@ -1967,7 +1989,8 @@
       "schaden": 4,
       "wert": "geschick",
       "kg": 0.5,
-      "preis": 15
+      "preis": 15,
+      "schaden_art": "stich"
     },
     {
       "id": "kriegshammer",
@@ -1983,7 +2006,11 @@
       "schaden": 8,
       "wert": "staerke",
       "kg": 1,
-      "preis": 40
+      "preis": 40,
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "kriegspicke",
@@ -1999,7 +2026,8 @@
       "schaden": 8,
       "wert": "staerke",
       "kg": 1,
-      "preis": 40
+      "preis": 40,
+      "schaden_art": "stich"
     },
     {
       "id": "glefe",
@@ -2016,7 +2044,12 @@
       "wert": "staerke",
       "kg": 3,
       "preis": 50,
-      "zweihand": true
+      "zweihand": true,
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "schwer",
+        "reichweite"
+      ]
     },
     {
       "id": "lanze",
@@ -2032,7 +2065,11 @@
       "schaden": 12,
       "wert": "staerke",
       "kg": 3,
-      "preis": 60
+      "preis": 60,
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "reichweite"
+      ]
     },
     {
       "id": "pike",
@@ -2049,7 +2086,12 @@
       "wert": "staerke",
       "kg": 9,
       "preis": 45,
-      "zweihand": true
+      "zweihand": true,
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "schwer",
+        "reichweite"
+      ]
     },
     {
       "id": "peitsche",
@@ -2065,7 +2107,12 @@
       "schaden": 4,
       "wert": "geschick",
       "kg": 1.5,
-      "preis": 15
+      "preis": 15,
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "finesse",
+        "reichweite"
+      ]
     },
     {
       "id": "dreizack",
@@ -2081,7 +2128,12 @@
       "schaden": 6,
       "wert": "staerke",
       "kg": 2,
-      "preis": 30
+      "preis": 30,
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "wurf",
+        "vielseitig"
+      ]
     },
     {
       "id": "schwere_armbrust",
@@ -2098,7 +2150,11 @@
       "wert": "geschick",
       "kg": 8,
       "preis": 55,
-      "zweihand": true
+      "zweihand": true,
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "schwer"
+      ]
     },
     {
       "id": "handwickel",
@@ -2114,7 +2170,12 @@
       "schaden": 4,
       "wert": "geschick",
       "kg": 0.1,
-      "preis": 5
+      "preis": 5,
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "finesse",
+        "leicht"
+      ]
     },
     {
       "id": "paktklinge",
@@ -2130,7 +2191,11 @@
       "schaden": 8,
       "wert": "charisma",
       "kg": 2,
-      "preis": 45
+      "preis": 45,
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "entermesser",
@@ -2149,6 +2214,11 @@
       "preis": 25,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "finesse",
+        "leicht"
       ]
     },
     {
@@ -2168,6 +2238,11 @@
       "preis": 25,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "leicht",
+        "wurf"
       ]
     },
     {
@@ -2187,6 +2262,10 @@
       "preis": 35,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "wurf"
       ]
     },
     {
@@ -2206,6 +2285,10 @@
       "preis": 120,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "leicht"
       ]
     },
     {
@@ -2226,6 +2309,10 @@
       "zweihand": true,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "schwer"
       ]
     },
     {
@@ -2245,6 +2332,10 @@
       "preis": 2,
       "welten": [
         "piraten"
+      ],
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "leicht"
       ]
     },
     {
@@ -2265,6 +2356,12 @@
       "welten": [
         "horror",
         "fantasy"
+      ],
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "finesse",
+        "leicht",
+        "wurf"
       ]
     },
     {
@@ -2285,6 +2382,10 @@
       "welten": [
         "horror",
         "fantasy"
+      ],
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
       ]
     },
     {
@@ -2304,6 +2405,10 @@
       "preis": 2,
       "welten": [
         "horror"
+      ],
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "leicht"
       ]
     },
     {
@@ -2323,6 +2428,10 @@
       "preis": 120,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "feuer",
+      "eigenschaften": [
+        "leicht"
       ]
     },
     {
@@ -2343,6 +2452,10 @@
       "zweihand": true,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "feuer",
+      "eigenschaften": [
+        "schwer"
       ]
     },
     {
@@ -2363,6 +2476,10 @@
       "zweihand": true,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "feuer",
+      "eigenschaften": [
+        "schwer"
       ]
     },
     {
@@ -2382,6 +2499,11 @@
       "preis": 150,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "finesse",
+        "leicht"
       ]
     },
     {
@@ -2402,6 +2524,10 @@
       "zweihand": true,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "energie",
+      "eigenschaften": [
+        "vielseitig"
       ]
     },
     {
@@ -2421,6 +2547,10 @@
       "preis": 60,
       "welten": [
         "scifi"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "leicht"
       ]
     },
     {
@@ -2438,7 +2568,11 @@
       "wert": "staerke",
       "kg": 1.5,
       "preis": 300,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "frostbrand",
@@ -2455,7 +2589,11 @@
       "wert": "staerke",
       "kg": 1.5,
       "preis": 500,
-      "seltenheit": "episch"
+      "seltenheit": "episch",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "sonnenklinge",
@@ -2472,7 +2610,12 @@
       "wert": "geschick",
       "kg": 1,
       "preis": 500,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "strahlend",
+      "eigenschaften": [
+        "finesse",
+        "vielseitig"
+      ]
     },
     {
       "id": "zwergenwurfhammer",
@@ -2489,7 +2632,12 @@
       "wert": "staerke",
       "kg": 1,
       "preis": 600,
-      "seltenheit": "episch"
+      "seltenheit": "episch",
+      "schaden_art": "wucht",
+      "eigenschaften": [
+        "wurf",
+        "vielseitig"
+      ]
     },
     {
       "id": "drachentoeter",
@@ -2506,7 +2654,11 @@
       "wert": "staerke",
       "kg": 1.5,
       "preis": 400,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "riesentoeter",
@@ -2524,7 +2676,11 @@
       "kg": 3,
       "preis": 400,
       "zweihand": true,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "schwer"
+      ]
     },
     {
       "id": "blitzspeer",
@@ -2541,7 +2697,11 @@
       "wert": "staerke",
       "kg": 1,
       "preis": 250,
-      "seltenheit": "selten"
+      "seltenheit": "selten",
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "wurf"
+      ]
     },
     {
       "id": "giftdolch_magisch",
@@ -2558,7 +2718,13 @@
       "wert": "geschick",
       "kg": 0.5,
       "preis": 250,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "finesse",
+        "leicht",
+        "wurf"
+      ]
     },
     {
       "id": "schreckenskolben",
@@ -2575,7 +2741,8 @@
       "wert": "staerke",
       "kg": 2,
       "preis": 400,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "wucht"
     },
     {
       "id": "zerschmetterer",
@@ -2592,7 +2759,8 @@
       "wert": "staerke",
       "kg": 2,
       "preis": 500,
-      "seltenheit": "episch"
+      "seltenheit": "episch",
+      "schaden_art": "wucht"
     },
     {
       "id": "berserkeraxt",
@@ -2610,7 +2778,11 @@
       "kg": 3,
       "preis": 400,
       "zweihand": true,
-      "seltenheit": "rar"
+      "seltenheit": "rar",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "schwer"
+      ]
     },
     {
       "id": "schwurbogen",
@@ -2628,7 +2800,11 @@
       "kg": 1,
       "preis": 700,
       "zweihand": true,
-      "seltenheit": "episch"
+      "seltenheit": "episch",
+      "schaden_art": "stich",
+      "eigenschaften": [
+        "schwer"
+      ]
     },
     {
       "id": "heiliger_raecher",
@@ -2645,7 +2821,11 @@
       "wert": "staerke",
       "kg": 1.5,
       "preis": 2000,
-      "seltenheit": "legendaer"
+      "seltenheit": "legendaer",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "vorpalschwert",
@@ -2662,7 +2842,11 @@
       "wert": "staerke",
       "kg": 1.5,
       "preis": 2500,
-      "seltenheit": "legendaer"
+      "seltenheit": "legendaer",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "vielseitig"
+      ]
     },
     {
       "id": "schnellsaebel",
@@ -2679,7 +2863,12 @@
       "wert": "geschick",
       "kg": 1.5,
       "preis": 700,
-      "seltenheit": "episch"
+      "seltenheit": "episch",
+      "schaden_art": "hieb",
+      "eigenschaften": [
+        "finesse",
+        "leicht"
+      ]
     },
     {
       "id": "fellruestung",
@@ -7898,7 +8087,8 @@
         "charisma": 8
       },
       "ep": 50,
-      "groesse": "klein"
+      "groesse": "klein",
+      "schaden_art": "hieb"
     },
     {
       "id": "kobold",
@@ -7930,7 +8120,8 @@
         "charisma": 8
       },
       "ep": 25,
-      "groesse": "klein"
+      "groesse": "klein",
+      "schaden_art": "stich"
     },
     {
       "id": "ork_krieger",
@@ -7962,7 +8153,8 @@
         "charisma": 10
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "hobgoblin",
@@ -7994,7 +8186,8 @@
         "charisma": 9
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "grottenschrat",
@@ -8026,7 +8219,8 @@
         "charisma": 9
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "gnoll",
@@ -8058,7 +8252,8 @@
         "charisma": 7
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "bandit",
@@ -8090,7 +8285,8 @@
         "charisma": 10
       },
       "ep": 25,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "banditenhauptmann",
@@ -8122,7 +8318,8 @@
         "charisma": 14
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "schlaeger",
@@ -8154,7 +8351,8 @@
         "charisma": 11
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "kultist",
@@ -8187,7 +8385,8 @@
         "charisma": 10
       },
       "ep": 25,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "kultfanatiker",
@@ -8223,7 +8422,8 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "wache",
@@ -8255,7 +8455,8 @@
         "charisma": 10
       },
       "ep": 25,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "veteran",
@@ -8287,7 +8488,8 @@
         "charisma": 10
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "ritter",
@@ -8319,7 +8521,8 @@
         "charisma": 15
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "berserker",
@@ -8352,7 +8555,8 @@
         "charisma": 9
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "spion",
@@ -8384,7 +8588,8 @@
         "charisma": 16
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "assassine",
@@ -8419,6 +8624,10 @@
       "groesse": "mittel",
       "zustaende": [
         "vergiftet"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "gift"
       ]
     },
     {
@@ -8452,7 +8661,8 @@
         "charisma": 11
       },
       "ep": 2300,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "priester",
@@ -8485,7 +8695,8 @@
         "charisma": 13
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "gladiator",
@@ -8517,7 +8728,8 @@
         "charisma": 15
       },
       "ep": 1800,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "dunkelelf",
@@ -8552,7 +8764,8 @@
       "groesse": "mittel",
       "zustaende": [
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "duergar",
@@ -8584,7 +8797,11 @@
         "charisma": 9
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "gift"
+      ]
     },
     {
       "id": "echsenmensch",
@@ -8617,7 +8834,8 @@
         "charisma": 7
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "sahuagin",
@@ -8649,7 +8867,8 @@
         "charisma": 9
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "merrow",
@@ -8684,7 +8903,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "meerhexe",
@@ -8720,7 +8940,8 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "waldhexe",
@@ -8753,7 +8974,8 @@
         "charisma": 14
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "nachtvettel",
@@ -8788,6 +9010,14 @@
       "groesse": "mittel",
       "zustaende": [
         "erschoepft"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "kaelte",
+        "feuer",
+        "hieb",
+        "stich",
+        "wucht"
       ]
     },
     {
@@ -8822,7 +9052,14 @@
         "charisma": 5
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "immun": [
+        "gift"
+      ],
+      "schwaeche": [
+        "wucht"
+      ]
     },
     {
       "id": "zombie",
@@ -8855,7 +9092,11 @@
         "charisma": 5
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
+      ]
     },
     {
       "id": "ogerzombie",
@@ -8887,7 +9128,11 @@
         "charisma": 5
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
+      ]
     },
     {
       "id": "ghul",
@@ -8923,6 +9168,10 @@
       "groesse": "mittel",
       "zustaende": [
         "gelaehmt"
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -8959,6 +9208,13 @@
       "zustaende": [
         "gelaehmt",
         "vergiftet"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -8994,6 +9250,24 @@
       "groesse": "mittel",
       "zustaende": [
         "erschoepft"
+      ],
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "saeure",
+        "kaelte",
+        "feuer",
+        "blitz",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "nekrotisch",
+        "gift"
+      ],
+      "schwaeche": [
+        "strahlend"
       ]
     },
     {
@@ -9026,7 +9300,22 @@
         "charisma": 11
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "saeure",
+        "kaelte",
+        "feuer",
+        "blitz",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "nekrotisch",
+        "gift"
+      ]
     },
     {
       "id": "geist",
@@ -9062,6 +9351,21 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "saeure",
+        "feuer",
+        "blitz",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "kaelte",
+        "nekrotisch",
+        "gift"
       ]
     },
     {
@@ -9095,7 +9399,17 @@
         "charisma": 15
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "nekrotisch",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
+      ]
     },
     {
       "id": "todesalb",
@@ -9127,7 +9441,22 @@
         "charisma": 15
       },
       "ep": 1800,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "saeure",
+        "kaelte",
+        "feuer",
+        "blitz",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "nekrotisch",
+        "gift"
+      ]
     },
     {
       "id": "mumie",
@@ -9163,6 +9492,19 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "nekrotisch",
+        "gift"
+      ],
+      "schwaeche": [
+        "feuer"
       ]
     },
     {
@@ -9198,6 +9540,13 @@
       "groesse": "mittel",
       "zustaende": [
         "gepackt"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "nekrotisch",
+        "hieb",
+        "stich",
+        "wucht"
       ]
     },
     {
@@ -9231,7 +9580,22 @@
         "charisma": 11
       },
       "ep": 450,
-      "groesse": "winzig"
+      "groesse": "winzig",
+      "schaden_art": "blitz",
+      "resistenz": [
+        "saeure",
+        "kaelte",
+        "feuer",
+        "nekrotisch",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "blitz",
+        "gift"
+      ]
     },
     {
       "id": "werwolf",
@@ -9264,7 +9628,13 @@
         "charisma": 10
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ]
     },
     {
       "id": "werratte",
@@ -9296,7 +9666,13 @@
         "charisma": 8
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ]
     },
     {
       "id": "doppelgaenger",
@@ -9329,7 +9705,8 @@
         "charisma": 14
       },
       "ep": 700,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "mimik",
@@ -9365,6 +9742,10 @@
       "groesse": "mittel",
       "zustaende": [
         "gepackt"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "saeure"
       ]
     },
     {
@@ -9400,7 +9781,8 @@
       "groesse": "gross",
       "zustaende": [
         "festgesetzt"
-      ]
+      ],
+      "schaden_art": "saeure"
     },
     {
       "id": "grauschlamm",
@@ -9433,7 +9815,13 @@
         "charisma": 2
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "saeure",
+        "kaelte",
+        "feuer"
+      ]
     },
     {
       "id": "schwarzer_pudding",
@@ -9466,7 +9854,14 @@
         "charisma": 1
       },
       "ep": 1100,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "saeure",
+        "kaelte",
+        "blitz",
+        "hieb"
+      ]
     },
     {
       "id": "ockergallert",
@@ -9498,7 +9893,15 @@
         "charisma": 1
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "saeure"
+      ],
+      "immun": [
+        "blitz",
+        "hieb"
+      ]
     },
     {
       "id": "plappermaul",
@@ -9533,7 +9936,8 @@
       "groesse": "mittel",
       "zustaende": [
         "kampfunfaehig"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "otyugh",
@@ -9568,7 +9972,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "chuul",
@@ -9604,6 +10009,10 @@
       "groesse": "gross",
       "zustaende": [
         "gelaehmt"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -9639,7 +10048,8 @@
       "groesse": "gross",
       "zustaende": [
         "blind"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "aboleth",
@@ -9675,7 +10085,9 @@
       "groesse": "gross",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "wucht",
+      "boss": true
     },
     {
       "id": "belebte_ruestung",
@@ -9708,7 +10120,12 @@
         "charisma": 1
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ]
     },
     {
       "id": "fliegendes_schwert",
@@ -9740,7 +10157,12 @@
         "charisma": 1
       },
       "ep": 50,
-      "groesse": "klein"
+      "groesse": "klein",
+      "schaden_art": "hieb",
+      "immun": [
+        "gift",
+        "psychisch"
+      ]
     },
     {
       "id": "wuergeteppich",
@@ -9776,6 +10198,11 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
       ]
     },
     {
@@ -9808,7 +10235,17 @@
         "charisma": 5
       },
       "ep": 1800,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "blitz",
+        "gift"
+      ]
     },
     {
       "id": "steingolem",
@@ -9840,7 +10277,18 @@
         "charisma": 1
       },
       "ep": 5900,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "boss": true
     },
     {
       "id": "gargyl",
@@ -9873,7 +10321,16 @@
         "charisma": 7
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
+      ]
     },
     {
       "id": "imp",
@@ -9909,6 +10366,17 @@
       "groesse": "winzig",
       "zustaende": [
         "vergiftet"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "kaelte",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "feuer",
+        "gift"
       ]
     },
     {
@@ -9945,6 +10413,18 @@
       "groesse": "winzig",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "kaelte",
+        "feuer",
+        "blitz",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -9981,6 +10461,10 @@
       "groesse": "mittel",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "feuer"
       ]
     },
     {
@@ -10016,6 +10500,10 @@
       "groesse": "gross",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "feuer"
       ]
     },
     {
@@ -10051,6 +10539,16 @@
       "groesse": "mittel",
       "zustaende": [
         "bezaubert"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "kaelte",
+        "feuer",
+        "blitz",
+        "gift",
+        "hieb",
+        "stich",
+        "wucht"
       ]
     },
     {
@@ -10087,6 +10585,17 @@
       "groesse": "mittel",
       "zustaende": [
         "blutend"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "kaelte",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "feuer",
+        "gift"
       ]
     },
     {
@@ -10122,6 +10631,17 @@
       "groesse": "mittel",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "kaelte",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "feuer",
+        "gift"
       ]
     },
     {
@@ -10157,6 +10677,15 @@
       "groesse": "klein",
       "zustaende": [
         "vergiftet"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "kaelte",
+        "feuer",
+        "blitz"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -10192,6 +10721,18 @@
       "groesse": "gross",
       "zustaende": [
         "betaeubt"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "kaelte",
+        "feuer",
+        "blitz",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -10224,7 +10765,8 @@
         "charisma": 7
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht"
     },
     {
       "id": "troll",
@@ -10256,7 +10798,8 @@
         "charisma": 7
       },
       "ep": 1800,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "huegelriese",
@@ -10291,7 +10834,8 @@
       "groesse": "riesig",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "ettin",
@@ -10323,7 +10867,8 @@
         "charisma": 8
       },
       "ep": 1100,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "minotaurus",
@@ -10358,7 +10903,8 @@
       "groesse": "gross",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "eulenbaer",
@@ -10393,7 +10939,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "harpyie",
@@ -10429,7 +10976,8 @@
       "groesse": "mittel",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "basilisk",
@@ -10464,7 +11012,8 @@
       "groesse": "mittel",
       "zustaende": [
         "versteinert"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "medusa",
@@ -10500,7 +11049,8 @@
       "groesse": "mittel",
       "zustaende": [
         "versteinert"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "mantikor",
@@ -10532,7 +11082,8 @@
         "charisma": 8
       },
       "ep": 700,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "stich"
     },
     {
       "id": "greif",
@@ -10564,7 +11115,8 @@
         "charisma": 8
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "hydra",
@@ -10597,7 +11149,8 @@
         "charisma": 7
       },
       "ep": 3900,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "stich"
     },
     {
       "id": "chimaere",
@@ -10632,7 +11185,8 @@
       "groesse": "gross",
       "zustaende": [
         "brennend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "bulette",
@@ -10667,7 +11221,8 @@
       "groesse": "gross",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "ankheg",
@@ -10702,7 +11257,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "phasenspinne",
@@ -10738,7 +11294,8 @@
       "groesse": "gross",
       "zustaende": [
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "ettercap",
@@ -10774,7 +11331,8 @@
       "groesse": "mittel",
       "zustaende": [
         "festgesetzt"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "drider",
@@ -10810,7 +11368,8 @@
       "groesse": "gross",
       "zustaende": [
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "rostmonster",
@@ -10842,7 +11401,8 @@
         "charisma": 6
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "dunkelmantel",
@@ -10878,7 +11438,8 @@
       "groesse": "klein",
       "zustaende": [
         "blind"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "grick",
@@ -10911,7 +11472,13 @@
         "charisma": 5
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ]
     },
     {
       "id": "roper",
@@ -10946,7 +11513,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "winterwolf",
@@ -10978,7 +11546,11 @@
         "charisma": 8
       },
       "ep": 700,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "stich",
+      "immun": [
+        "kaelte"
+      ]
     },
     {
       "id": "warg",
@@ -11013,7 +11585,8 @@
       "groesse": "gross",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "todeshund",
@@ -11046,7 +11619,8 @@
         "charisma": 6
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich"
     },
     {
       "id": "wolf",
@@ -11082,7 +11656,8 @@
       "groesse": "mittel",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "schreckenswolf",
@@ -11117,7 +11692,8 @@
       "groesse": "gross",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "braunbaer",
@@ -11149,7 +11725,8 @@
         "charisma": 7
       },
       "ep": 200,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "riesenspinne",
@@ -11186,7 +11763,8 @@
       "zustaende": [
         "festgesetzt",
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "riesenratte",
@@ -11218,7 +11796,8 @@
         "charisma": 4
       },
       "ep": 25,
-      "groesse": "klein"
+      "groesse": "klein",
+      "schaden_art": "stich"
     },
     {
       "id": "rattenschwarm",
@@ -11252,7 +11831,13 @@
         "charisma": 3
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ]
     },
     {
       "id": "fledermausschwarm",
@@ -11285,7 +11870,13 @@
         "charisma": 4
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ]
     },
     {
       "id": "stirge",
@@ -11321,7 +11912,8 @@
       "groesse": "winzig",
       "zustaende": [
         "blutend"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "riesenskorpion",
@@ -11357,7 +11949,8 @@
       "zustaende": [
         "gepackt",
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "riesenkrabbe",
@@ -11392,7 +11985,8 @@
       "groesse": "mittel",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "riesenkrake",
@@ -11427,7 +12021,8 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "jagdhai",
@@ -11459,7 +12054,8 @@
         "charisma": 4
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "stich"
     },
     {
       "id": "riesenhai",
@@ -11491,7 +12087,8 @@
         "charisma": 5
       },
       "ep": 1800,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "stich"
     },
     {
       "id": "piranhaschwarm",
@@ -11523,7 +12120,13 @@
         "charisma": 2
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ]
     },
     {
       "id": "seeschlange",
@@ -11555,7 +12158,8 @@
         "charisma": 5
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "stich"
     },
     {
       "id": "schwertwal",
@@ -11587,7 +12191,8 @@
         "charisma": 7
       },
       "ep": 700,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "stich"
     },
     {
       "id": "meermensch",
@@ -11619,7 +12224,8 @@
         "charisma": 12
       },
       "ep": 25,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht"
     },
     {
       "id": "wasserelementar",
@@ -11655,6 +12261,16 @@
       "groesse": "gross",
       "zustaende": [
         "gepackt"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "saeure",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -11690,6 +12306,16 @@
       "groesse": "gross",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "feuer",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "feuer",
+        "gift"
       ]
     },
     {
@@ -11722,7 +12348,19 @@
         "charisma": 5
       },
       "ep": 1800,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
+      ],
+      "schwaeche": [
+        "donner"
+      ]
     },
     {
       "id": "luftelementar",
@@ -11758,6 +12396,17 @@
       "groesse": "gross",
       "zustaende": [
         "liegend"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "blitz",
+        "donner",
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -11793,6 +12442,11 @@
       "groesse": "mittel",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "feuer",
+        "gift"
       ]
     },
     {
@@ -11828,6 +12482,18 @@
       "groesse": "gross",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "feuer"
+      ],
+      "schwaeche": [
+        "kaelte"
       ]
     },
     {
@@ -11860,7 +12526,12 @@
         "charisma": 11
       },
       "ep": 1800,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "hieb",
+        "stich"
+      ]
     },
     {
       "id": "dryade",
@@ -11895,7 +12566,8 @@
       "groesse": "mittel",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "satyr",
@@ -11930,7 +12602,8 @@
       "groesse": "mittel",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "erweckter_baum",
@@ -11962,7 +12635,15 @@
         "charisma": 7
       },
       "ep": 450,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "wucht",
+        "stich"
+      ],
+      "schwaeche": [
+        "feuer"
+      ]
     },
     {
       "id": "schlurfhaufen",
@@ -11998,6 +12679,14 @@
       "groesse": "gross",
       "zustaende": [
         "festgesetzt"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "kaelte",
+        "feuer"
+      ],
+      "immun": [
+        "blitz"
       ]
     },
     {
@@ -12031,7 +12720,8 @@
         "charisma": 1
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch"
     },
     {
       "id": "baumhirte",
@@ -12063,7 +12753,15 @@
         "charisma": 12
       },
       "ep": 5000,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "wucht",
+        "stich"
+      ],
+      "schwaeche": [
+        "feuer"
+      ]
     },
     {
       "id": "pseudodrache",
@@ -12098,7 +12796,8 @@
       "groesse": "winzig",
       "zustaende": [
         "bewusstlos"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "roter_nestling",
@@ -12133,6 +12832,10 @@
       "groesse": "mittel",
       "zustaende": [
         "brennend"
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "feuer"
       ]
     },
     {
@@ -12166,7 +12869,11 @@
         "charisma": 13
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "immun": [
+        "saeure"
+      ]
     },
     {
       "id": "weisser_nestling",
@@ -12198,7 +12905,11 @@
         "charisma": 11
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "immun": [
+        "kaelte"
+      ]
     },
     {
       "id": "lindwurm",
@@ -12234,7 +12945,8 @@
       "groesse": "gross",
       "zustaende": [
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "junger_gruener_drache",
@@ -12269,6 +12981,10 @@
       "groesse": "gross",
       "zustaende": [
         "vergiftet"
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "gift"
       ]
     },
     {
@@ -12304,7 +13020,12 @@
       "groesse": "gross",
       "zustaende": [
         "brennend"
-      ]
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "feuer"
+      ],
+      "boss": true
     },
     {
       "id": "junger_schwarzer_drache",
@@ -12337,7 +13058,11 @@
         "charisma": 15
       },
       "ep": 2900,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "stich",
+      "immun": [
+        "saeure"
+      ]
     },
     {
       "id": "hippogreif",
@@ -12369,7 +13094,8 @@
         "charisma": 8
       },
       "ep": 200,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "einhorn",
@@ -12401,7 +13127,12 @@
         "charisma": 16
       },
       "ep": 1800,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
+      ],
+      "boss": true
     },
     {
       "id": "zentaur",
@@ -12433,7 +13164,8 @@
         "charisma": 11
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht"
     },
     {
       "id": "lamia",
@@ -12469,7 +13201,8 @@
       "groesse": "gross",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "hieb"
     },
     {
       "id": "kokatrix",
@@ -12504,7 +13237,8 @@
       "groesse": "klein",
       "zustaende": [
         "versteinert"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "riesenaffe",
@@ -12537,7 +13271,8 @@
         "charisma": 7
       },
       "ep": 2900,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "wucht"
     },
     {
       "id": "tyrannosaurus",
@@ -12573,7 +13308,8 @@
       "groesse": "riesig",
       "zustaende": [
         "gepackt"
-      ]
+      ],
+      "schaden_art": "stich"
     },
     {
       "id": "mammut",
@@ -12608,7 +13344,8 @@
       "groesse": "riesig",
       "zustaende": [
         "liegend"
-      ]
+      ],
+      "schaden_art": "wucht"
     },
     {
       "id": "oni",
@@ -12641,7 +13378,8 @@
         "charisma": 15
       },
       "ep": 2900,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb"
     },
     {
       "id": "erzmagier",
@@ -12673,7 +13411,14 @@
         "charisma": 16
       },
       "ep": 8400,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "boss": true
     },
     {
       "id": "wachdrohne",
@@ -12705,7 +13450,15 @@
         "charisma": 1
       },
       "ep": 50,
-      "groesse": "klein"
+      "groesse": "klein",
+      "schaden_art": "energie",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ]
     },
     {
       "id": "kampfroboter",
@@ -12737,7 +13490,19 @@
         "charisma": 1
       },
       "ep": 700,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "hieb",
+        "stich"
+      ],
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ]
     },
     {
       "id": "raumpirat",
@@ -12769,7 +13534,8 @@
         "charisma": 11
       },
       "ep": 100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "energie"
     },
     {
       "id": "cyborg_soeldner",
@@ -12801,7 +13567,14 @@
         "charisma": 8
       },
       "ep": 450,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "resistenz": [
+        "gift"
+      ],
+      "schwaeche": [
+        "blitz"
+      ]
     },
     {
       "id": "xeno_kriecher",
@@ -12837,6 +13610,10 @@
       "groesse": "mittel",
       "zustaende": [
         "vergiftet"
+      ],
+      "schaden_art": "saeure",
+      "immun": [
+        "saeure"
       ]
     },
     {
@@ -12874,7 +13651,20 @@
       "zustaende": [
         "gepackt",
         "vergiftet"
-      ]
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "saeure"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "boss": true
     },
     {
       "id": "nanitenwolke",
@@ -12906,7 +13696,20 @@
         "charisma": 1
       },
       "ep": 450,
-      "groesse": "gross"
+      "groesse": "gross",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ]
     },
     {
       "id": "abtruennige_ki",
@@ -12941,7 +13744,16 @@
       "groesse": "gross",
       "zustaende": [
         "betaeubt"
-      ]
+      ],
+      "schaden_art": "blitz",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "boss": true
     },
     {
       "id": "mutant",
@@ -12974,7 +13786,11 @@
         "charisma": 6
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "gift"
+      ]
     },
     {
       "id": "weltraumhai",
@@ -13006,7 +13822,11 @@
         "charisma": 4
       },
       "ep": 1800,
-      "groesse": "riesig"
+      "groesse": "riesig",
+      "schaden_art": "stich",
+      "resistenz": [
+        "kaelte"
+      ]
     },
     {
       "id": "geschuetzturm",
@@ -13038,7 +13858,18 @@
         "charisma": 1
       },
       "ep": 200,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "resistenz": [
+        "stich"
+      ],
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ]
     },
     {
       "id": "geisterpirat",
@@ -13074,6 +13905,19 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "immun": [
+        "gift",
+        "kaelte"
+      ],
+      "schwaeche": [
+        "strahlend"
       ]
     },
     {
@@ -13106,7 +13950,8 @@
         "charisma": 12
       },
       "ep": 100,
-      "groesse": "winzig"
+      "groesse": "winzig",
+      "schaden_art": "wucht"
     },
     {
       "id": "krakenbrut",
@@ -13141,6 +13986,13 @@
       "groesse": "riesig",
       "zustaende": [
         "gepackt"
+      ],
+      "schaden_art": "wucht",
+      "resistenz": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "blitz"
       ]
     },
     {
@@ -13173,7 +14025,8 @@
         "charisma": 10
       },
       "ep": 50,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb"
     },
     {
       "id": "piratenkapitaen",
@@ -13205,7 +14058,9 @@
         "charisma": 16
       },
       "ep": 1100,
-      "groesse": "mittel"
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "boss": true
     },
     {
       "id": "puppenspieler",
@@ -13240,7 +14095,12 @@
       "groesse": "mittel",
       "zustaende": [
         "bezaubert"
-      ]
+      ],
+      "schaden_art": "psychisch",
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "boss": true
     },
     {
       "id": "schattenkind",
@@ -13275,6 +14135,15 @@
       "groesse": "klein",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "hieb",
+        "stich",
+        "wucht"
+      ],
+      "schwaeche": [
+        "strahlend"
       ]
     },
     {
@@ -13310,6 +14179,14 @@
       "groesse": "mittel",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "hieb",
+      "resistenz": [
+        "stich",
+        "wucht"
+      ],
+      "schwaeche": [
+        "feuer"
       ]
     },
     {
@@ -13345,6 +14222,13 @@
       "groesse": "gross",
       "zustaende": [
         "veraengstigt"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "schwaeche": [
+        "strahlend"
       ]
     }
   ]

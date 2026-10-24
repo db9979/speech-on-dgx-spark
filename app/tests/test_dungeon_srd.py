@@ -14,6 +14,9 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   Liste, jeder Zauber hat einen Grad und steht bei einer Klasse nur unter diesem Grad, jeder Zauber gehört zu mindestens
   einer Klasse mit Zaubern; die Ladungen gelten für Stufe 1 bis 10 und wachsen nie nach unten, auf Stufe 1 gibt es
   Ladungen nur für Grad 1.
+- Kampf Teil 2: Schadensart, Resistenz, Immunität und Schwäche jedes Gegners nur aus der festen Liste der
+  Schadensarten, keine Art zugleich in zwei dieser Listen, „boss“ nur als true; jede Waffe der SRD-Datei hat eine Schadensart und
+  Eigenschaften nur aus der festen Liste.
 """
 import json
 import os
@@ -28,6 +31,9 @@ import dungeon  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRD = os.path.join(os.path.dirname(HERE), "panel", "dungeon_srd.json")
 DOCS = os.path.join(os.path.dirname(os.path.dirname(HERE)), "docs")
+ARTEN = {"hieb", "stich", "wucht", "feuer", "kaelte", "blitz", "saeure", "gift", "nekrotisch", "strahlend", "psychisch",
+         "donner", "energie"}
+EIGENSCHAFTEN = {"leicht", "finesse", "reichweite", "wurf", "schwer", "vielseitig"}
 
 
 def srd():
@@ -122,6 +128,20 @@ class Srd(unittest.TestCase):
         self.assertTrue(all(len(x) == 5 and all(0 <= n <= 9 for n in x) for x in la))
         self.assertTrue(all(a <= b for x, y in zip(la, la[1:]) for a, b in zip(x, y)))
         self.assertEqual(la[0][1:], [0, 0, 0, 0])
+
+    def test_schadensarten_nur_aus_der_liste(self):
+        r = dungeon._base_rules()
+        for g in r["gegner"]:
+            self.assertIn(g.get("schaden_art", "hieb"), ARTEN, g["id"])
+            listen = [set(g.get(k) or []) for k in ("resistenz", "immun", "schwaeche")]
+            for x in listen:
+                self.assertTrue(x <= ARTEN, g["id"])
+            self.assertEqual(sum(map(len, listen)), len(set().union(*listen)), g["id"])
+            self.assertIn(g.get("boss", True), (True,), g["id"])
+        for x in srd()["gegenstaende"]:
+            if x.get("art") == "waffe":
+                self.assertIn(x.get("schaden_art"), ARTEN, x["id"])
+                self.assertTrue(set(x.get("eigenschaften") or []) <= EIGENSCHAFTEN, x["id"])
 
 
 if __name__ == "__main__":

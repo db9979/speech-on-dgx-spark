@@ -6085,6 +6085,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Schadensarten und Bosse im SRD-Katalog (V01.1.025, Kampf Teil 2, Daten): Jeder der 162 Gegner trägt seine Schadensart (schaden_art: hieb, stich, wucht, feuer, kaelte, blitz, saeure, gift, nekrotisch, strahlend, psychisch, donner oder energie, aus dem stärksten Angriff im SRD), dazu wo das SRD es nennt resistenz (halber Schaden), immun (kein Schaden) und schwaeche (doppelter Schaden), etwa Skelett: Schwäche gegen Wucht, Geist: immun gegen Kälte und Gift. Das Spiel kennt keine magischen Waffen, darum zählt Immunität gegen nichtmagische Hiebe, Stiche und Wucht als Widerstand (Steingolem, Werwolf), so bleibt jeder Gegner besiegbar. boss steht bei Gegnern mit legendären Aktionen oder ab Stufe 10 (Aboleth, Steingolem, junger roter Drache, Einhorn, Erzmagier) und bei den eigenen Anführern Xeno-Königin, abtrünnige KI, Piratenkapitän und Puppenspieler; die 20 eigenen Gegner sind von Hand eingeordnet (Geisterpirat: Widerstand gegen Hieb, Stich und Wucht, Schwäche gegen Strahlend). Jede der 47 Waffen aus dem SRD hat ihre Schadensart und eigenschaften (leicht, finesse, reichweite, wurf, schwer, vielseitig); Zauberfoki machen Energie, Laser und Plasma Feuer, Lichtwaffen Strah"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "lend. Was daraus im Kampf folgt, rechnet das Panel nach festen Regeln. Selbsttest test_dungeon_srd: Arten und Eigenschaften nur aus diesen Listen, keine Art zugleich in zwei Listen, jede SRD-Waffe mit Schadensart."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
 },
 {
@@ -18814,6 +18830,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "se the round\". Self-tests test_dungeon_auto (panel) and test_carplay.DungeonInTheCar (app)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: damage types and bosses in the SRD catalog (V01.1.025, combat part 2, data): Each of the 162 foes carries its damage type (schaden_art: slashing, piercing, bludgeoning, fire, cold, lightning, acid, poison, necrotic, radiant, psychic, thunder or force, taken from the strongest attack in the SRD), plus, where the SRD names them, resistenz (half damage), immun (no damage) and schwaeche (double damage), e.g. skeleton: vulnerable to bludgeoning, ghost: immune to cold and poison. The game knows no magic weapons, so immunity to nonmagical slashing, piercing and bludgeoning counts as resistance (stone golem, werewolf), which keeps every foe beatable. boss marks foes with legendary actions or from level 10 (aboleth, stone golem, young red dragon, unicorn, archmage) and the own leaders xeno queen, rogue AI, pirate captain and puppeteer; the 20 own foes are set by hand (ghost pirate: resistant to slashing, piercing and bludgeoning, vulnerable to radiant). Each of the 47 weapons from the SRD has its damage type and eigenschaften (light, finesse, reach, thrown, heavy, versatile); spell foci deal force, lasers and plasma fire, light weapons radiant. What follows from this in c"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ombat is computed by the panel by fixed rules. Self-test test_dungeon_srd: types and properties only from these lists, no type in two lists at once, every SRD weapon with a damage type."
 },
 {
 "lang": "en",
