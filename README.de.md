@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.992** Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 - **V01.0.991** KI-Dungeon-Master: mehr Zeit zwischen den Zügen: Lesezeit vor der Zugzeit, 300 s als Standard, 10 s Gnadenfrist nach dem letzten „Handeln“, „+1 Minute“ einmal pro Zug und Spieler, Uhr rot ab 30 s
 - **V01.0.990** Sprechen auf dem Modell-Rechner startet wieder ohne Internet: jedes gepinnte Modell zeigt mit refs/main auf seinen geprüften Commit, sonst fand vllm-omni das Stimmen-Modell offline nicht (TTS-Design startete alle 30 s neu)
 - **V01.0.989** Keine Tageslimits für Admin-Profile (Bilder, Lieder, eigene Musikdateien, Bilder der eigenen Dungeon-Runde; Platz und Warteschlange bleiben), unter Funktionen → KI-Dungeon-Master → Regeln anpassen hüpft bei den Gegenständen die Liste nicht mehr und jeder Gegenstand steht im Rahmen seiner Seltenheit, gewürfelte mit Leiter im Detail, der Gastgeber benennt den Helden eines Mitspielers über „⋯“ um
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.985** E-Mail: „Alle Mails hier einordnen“ im „⋯“ jedes Ordners ordnet alle Mails eines Ordners nach deinen Regeln ein, ohne 90-Tage-Grenze: erst ein Vorschlag, dann Verschieben in Paketen, Abbrechen und Rückgängig; Panel und iPhone
 - **V01.0.984** KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)
 - **V01.0.983** KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
-- **V01.0.982** KI-Dungeon-Master: läuft VoiceDesign gerade nicht, spricht die feste Stimme statt einer Fehlermeldung (Probe mit Hinweis, Vorlesen geht weiter), das Log nennt den Grund
 
 
 

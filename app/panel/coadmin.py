@@ -25,6 +25,7 @@ Every admin request is logged with who did it (by); admin profiles hear of new a
 
     STATE/admins.json  {"main": "<profile id>" | "", "users": {uid: {"role", "since", "by"}}}
                        (before V01.0.541: "on", "notify", roles owner/coadmin/manager: read as below)
+    STATE/ohne-tageslimit.json  {"uids": [...]}  profiles the admin freed from daily limits (unbegrenzt)
 """
 import json
 import os
@@ -37,6 +38,7 @@ import profiles
 from common import STATE, write_json
 
 FILE = os.path.join(STATE, "admins.json")
+FREI = os.path.join(STATE, "ohne-tageslimit.json")
 ROLES = ("admin", "manager")
 NAMES = {"admin": "Admin", "manager": "Verwalter"}
 MAX_ADMINS = 5
@@ -103,12 +105,35 @@ def acts(uid):
     return r if r and mfa.enabled(uid) else ""
 
 
+def frei_uids():
+    """The profiles the admin freed from daily limits (Personen und Geräte → profile → Rechte „Ohne Tageslimit“),
+    without a second step (Dominik 2026-10-24); profiles that are gone are left out."""
+    try:
+        with open(FREI) as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        d = {}
+    u = d.get("uids") if isinstance(d, dict) else []
+    ids = profiles.user_ids()
+    return [x for x in (u if isinstance(u, list) else []) if isinstance(x, str) and x in ids]
+
+
+def set_frei(uid, on):
+    if uid not in profiles.user_ids():
+        raise LookupError(uid)
+    with _lock:
+        cur = [x for x in frei_uids() if x != uid] + ([uid] if on else [])
+        write_json(FREI, {"uids": cur}, mode=0o600)
+    return bool(on)
+
+
 def unbegrenzt(uid):
     """No daily limit for this profile (Dominik 2026-10-24 „Tageslimits für Admins deaktiviert“): an admin role that
-    acts. The one rule for the Kontingent, pictures, songs, own song files and the pictures of an own Dungeon game;
-    space, queues and what goes out of the house (mails, calls, reMarkable) keep their limits."""
+    acts, or a profile the admin freed by hand (frei_uids, no second step needed). The one rule for the Kontingent,
+    pictures, songs, own song files and the pictures of an own Dungeon game; space, queues and what goes out of
+    the house (mails, calls, reMarkable) keep their limits. Guests are never a profile here."""
     try:
-        return bool(uid) and acts(uid) == "admin"
+        return bool(uid) and (acts(uid) == "admin" or uid in frei_uids())
     except Exception:
         return False
 

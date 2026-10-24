@@ -2989,7 +2989,7 @@
 "id": "P451",
 "v": 989,
 "titel": "Keine Tageslimits für Admins, Seltenheit bei Gegenständen",
-"text": "A: Als Admin-Profil mehr Bilder malen als Funktionen → Bilder malen am Tag erlaubt: es geht weiter, Ich → Bilder zeigt „ohne Tageslimit (Admin)“. B: Dasselbe unter Ich → Musik bei Liedern und eigenen Dateien. C: Ein Profil ohne Admin-Rolle stößt wie bisher an das Tageslimit. D: Funktionen → KI-Dungeon-Master → Regeln anpassen, Teil Gegenstände: Liste weit herunterscrollen, einen Eintrag antippen, die Liste bleibt stehen. E: Oben die Farben gewöhnlich bis legendär und „gewürfelt beim Fund“; SRD-Gegenstände mit fester Seltenheit haben den farbigen Rahmen, gewürfelte einen gestrichelten. F: Detail eines gewürfelten Gegenstands zeigt die Leiter mit ab-Wurf, Bonus, Preis und Mindeststufe. G: Am Tisch als Gastgeber „⋯“ auf einem Mitspieler → Umbenennen: neuer Name erscheint überall, Werte bleiben; ein Name ohne Buchstaben wird abgelehnt.",
+"text": "A: Als Admin-Profil mehr Bilder malen als Funktionen → Bilder malen am Tag erlaubt: es geht weiter, Ich → Bilder zeigt „ohne Tageslimit“. B: Dasselbe unter Ich → Musik bei Liedern und eigenen Dateien. C: Ein Profil ohne Admin-Rolle stößt wie bisher an das Tageslimit. D: Funktionen → KI-Dungeon-Master → Regeln anpassen, Teil Gegenstände: Liste weit herunterscrollen, einen Eintrag antippen, die Liste bleibt stehen. E: Oben die Farben gewöhnlich bis legendär und „gewürfelt beim Fund“; SRD-Gegenstände mit fester Seltenheit haben den farbigen Rahmen, gewürfelte einen gestrichelten. F: Detail eines gewürfelten Gegenstands zeigt die Leiter mit ab-Wurf, Bonus, Preis und Mindeststufe. G: Am Tisch als Gastgeber „⋯“ auf einem Mitspieler → Umbenennen: neuer Name erscheint überall, Werte bleiben; ein Name ohne Buchstaben wird abgelehnt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 },
 {
@@ -2997,6 +2997,13 @@
 "v": 990,
 "titel": "Dungeon-Master: Lesezeit, Gnadenfrist und +1 Minute",
 "text": "A: Neue Runde: Zugzeit steht auf 5 Minuten. B: Nach einer Erzählung zeigt die Uhr „Lesezeit, die Uhr startet in … s“, erst danach zählt die Zugzeit. C: Alle handeln: die Karte zeigt „geht in 10 s weiter, Ändern geht noch“; „Ändern“ in dieser Zeit klappt. D: „+1 Minute“ unter dem Feld oder in der Karte: einmal pro Zug, alle sehen „mehr Zeit für <Name>“, zweites Mal geht nicht. E: Unter 30 s Restzeit wird die Uhr rot, das Handy vibriert einmal. F: Als Gast über den Link dasselbe.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P453",
+"v": 992,
+"titel": "Ohne Tageslimit ohne zweiten Schritt",
+"text": "A: Personen und Geräte, ein Profil ohne zweiten Anmeldeschritt öffnen, unter Rechte „Ohne Tageslimit“ den Haken „frei“ setzen. B: Mit diesem Profil mehr Bilder malen als das Tageslimit erlaubt: es geht weiter, Ich → Bilder zeigt „ohne Tageslimit“; dasselbe unter Ich → Musik. C: Haken wieder weg: das Tageslimit gilt sofort wieder. D: Bei einem Profil mit Admin-Rolle ist der Haken gesetzt und grau. E: Zustand → Logs zeigt „coadmin: tageslimit | frei“ bzw. „begrenzt“, das Admin-Protokoll „Tageslimit eines Profils geändert“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]

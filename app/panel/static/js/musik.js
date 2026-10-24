@@ -69,7 +69,7 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   const wrap=icEl('div','ld-box mu');box.appendChild(wrap);
   // the head: count, space and today's songs, the "⋯" menu
   const head=icEl('div','ld-head'),hl=icEl('div','mu-hl');hl.append(icEl('b','',t(`${d.songs.length} Lieder`,`${d.songs.length} songs`)),
-    icEl('span','mut',' · '+t(`${muMb(d.used)} von ${lim.store_mb} MB · heute ${d.today}${d.frei?' · ohne Tageslimit (Admin)':' von '+lim.day}`,`${muMb(d.used)} of ${lim.store_mb} MB · today ${d.today}${d.frei?' · no daily limit (admin)':' of '+lim.day}`)));
+    icEl('span','mut',' · '+t(`${muMb(d.used)} von ${lim.store_mb} MB · heute ${d.today}${d.frei?' · ohne Tageslimit':' von '+lim.day}`,`${muMb(d.used)} of ${lim.store_mb} MB · today ${d.today}${d.frei?' · no daily limit':' of '+lim.day}`)));
   head.appendChild(hl);const ed=d.edit||{on:false};const menu=[];if(ed.on)menu.push({label:t('Eigene Datei hochladen','Upload an own file'),act:()=>{up.hidden=false;up.querySelector('input').focus()}});
   if(d.songs.length)menu.push({label:t('Alle Lieder löschen','Delete all songs'),danger:true,act:muClear});if(menu.length)head.appendChild(icMenu(menu));wrap.appendChild(head);
   const up=muUpload(ed);

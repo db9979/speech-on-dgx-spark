@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.992** No daily limit also without the second login step: the admin ticks "No daily limit" under Rights for any profile (pictures, music, allowance, Dungeon pictures; space and queues stay)
 - **V01.0.991** AI Dungeon Master: more time between turns: reading time before the turn time, 300 s by default, 10 s grace after the last "Act", "+1 minute" once per turn and player, the clock red from 30 s
 - **V01.0.990** Speaking on the model computer starts again without the internet: every pinned model points refs/main at its checked commit, otherwise vllm-omni did not find the voice model offline (TTS design restarted every 30 s)
 - **V01.0.989** No daily limits for admin profiles (pictures, songs, own music files, pictures of the own Dungeon round; space and queue stay), under Features → AI Dungeon Master → Adjust rules the item list no longer jumps and every item stands in its rarity frame, rolled ones with the ladder in the detail, the host renames a fellow player's hero via "⋯"
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.985** E-mail: "Sort every mail here" in the "⋯" of every folder sorts all mails of a folder by your rules, without the 90-day limit: a proposal first, then moving in packages, Stop and Undo; panel and iPhone
 - **V01.0.984** AI Dungeon Master: own tab "Rules" for the admin with bestiary and items with their pictures, edit per entry, paint again with a comparison and a balance check (too strong only as a hint)
 - **V01.0.983** AI Dungeon Master: the table's right column with tabs for map, host, threads and date instead of one long list; class choice with short cards, starting powers and spells by grade below
-- **V01.0.982** AI Dungeon Master: when VoiceDesign is not running, the fixed voice speaks instead of an error (sample with a hint, reading aloud goes on), the log names the reason
 
 
 

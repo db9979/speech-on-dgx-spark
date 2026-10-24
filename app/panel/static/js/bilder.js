@@ -53,7 +53,7 @@ async function showBilder(){const box=$('bildbox');if(!box)return;if(!PROFILE||!
     'Describe a picture and the Spark paints it itself (FLUX.2 klein), without the internet. It works in the conversation too: "Paint me a cat on a skateboard". Every picture is marked as made by an AI; the Spark paints no nudity, no violence and no people it knows.')));
   if(BILDAE_ON)box.appendChild(icEl('div','fh',t('Ändern: Bild antippen und sagen, was anders sein soll, oder im Chat ein Foto anhängen und „Mach den Himmel blau“ schreiben. Das Original bleibt.',
     'Change: tap a picture and say what should be different, or attach a photo in the chat and write "Make the sky blue". The original stays.')));
-  const sub=t(`${blMb(d.used)} von ${lim.store_mb} MB · heute ${d.today}${d.frei?' · ohne Tageslimit (Admin)':' von '+lim.day}`,`${blMb(d.used)} of ${lim.store_mb} MB · today ${d.today}${d.frei?' · no daily limit (admin)':' of '+lim.day}`);
+  const sub=t(`${blMb(d.used)} von ${lim.store_mb} MB · heute ${d.today}${d.frei?' · ohne Tageslimit':' von '+lim.day}`,`${blMb(d.used)} of ${lim.store_mb} MB · today ${d.today}${d.frei?' · no daily limit':' of '+lim.day}`);
   box.appendChild(icCard('spark',t(`${d.pics.length} Bilder`,`${d.pics.length} pictures`),sub,[],
     d.pics.length?[{label:t('Alle Bilder löschen','Delete all pictures'),danger:true,act:blClear}]:[]));
   // a new picture

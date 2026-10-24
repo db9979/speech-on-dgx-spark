@@ -295,7 +295,7 @@ async def logout_everywhere(request: Request):
 # iPhone app, without a second stage (plan plaene/admin-ohne-zweite-stufe.md).
 ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_profile_login",
                 "admin_role", "admin_role_refused", "admin_main", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
-                "feature_profile", "agent_level", "iphone_update_rights", "person_priority",
+                "feature_profile", "agent_level", "iphone_update_rights", "person_priority", "profile_daily_limit",
                 "live_monitor_code", "live_monitor_paired", "live_monitor_deleted", "live_code_failed")
 
 

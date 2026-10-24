@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.992** · 2026-10-24 · Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 - **V01.0.991** · 2026-10-24 · KI-Dungeon-Master: mehr Zeit zwischen den Zügen: Lesezeit vor der Zugzeit, 300 s als Standard, 10 s Gnadenfrist nach dem letzten „Handeln“, „+1 Minute“ einmal pro Zug und Spieler, Uhr rot ab 30 s
 - **V01.0.990** · 2026-10-24 · Sprechen auf dem Modell-Rechner startet wieder ohne Internet: jedes gepinnte Modell zeigt mit refs/main auf seinen geprüften Commit, sonst fand vllm-omni das Stimmen-Modell offline nicht (TTS-Design startete alle 30 s neu)
 - **V01.0.989** · 2026-10-24 · Keine Tageslimits für Admin-Profile (Bilder, Lieder, eigene Musikdateien, Bilder der eigenen Dungeon-Runde; Platz und Warteschlange bleiben), unter Funktionen → KI-Dungeon-Master → Regeln anpassen hüpft bei den Gegenständen die Liste nicht mehr und jeder Gegenstand steht im Rahmen seiner Seltenheit, gewürfelte mit Leiter im Detail, der Gastgeber benennt den Helden eines Mitspielers über „⋯“ um

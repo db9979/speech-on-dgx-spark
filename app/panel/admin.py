@@ -215,10 +215,31 @@ def _rights(uid):
     lv = agent.admin_state().get("levels", {}).get(uid, "")
     docs = features.chat_cfg().get("documents", True) is not False
     return {"agent": {"spark": agent.admin_on(), "level": lv}, "vorrang": stufe.rights(uid),
+            "tageslimit": {"frei": uid in coadmin.frei_uids(), "admin": coadmin.acts(uid) == "admin"},
             "update": dict(appupdate.rights(uid), spark=appupdate.admin_on()),
             "quota": {"spark": docs, "mb": wissen.quota_bytes(uid) // 1024**2, "own": uid in wissen._quotas(),
                       "default_mb": wissen.quota_bytes("") // 1024**2,
                       "used": documents.usage_total(uid) if os.path.exists(documents.db_path(uid)) else 0}}
+
+
+@router.put("/api/admin/profiles/{uid}/tageslimit", dependencies=[Depends(auth)])
+async def admin_set_frei(uid: str, request: Request):
+    """{"frei": bool}: this profile has no daily limits (pictures, songs, Kontingent, own Dungeon pictures), also
+    without the second step (Dominik 2026-10-24); space and queues stay (coadmin.unbegrenzt)."""
+    guard.limit(request, "features", admin=True)
+    frei = (await json_body(request, 256)).get("frei")
+    if not isinstance(frei, bool):
+        raise HTTPException(400, "frei: true or false")
+    try:
+        coadmin.set_frei(uid, frei)
+    except LookupError:
+        print("coadmin: tageslimit | kein profil", flush=True)
+        raise HTTPException(404, "no such profile")
+    elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
+    guard.log("profile_daily_limit", ip=guard.client_ip(request), uid=uid, by="main" if not elev else elev["id"],
+              detail="frei" if frei else "begrenzt")
+    print(f"coadmin: tageslimit | {'frei' if frei else 'begrenzt'}", flush=True)
+    return {"frei": frei}
 
 
 @router.delete("/api/admin/profiles/{uid}/sessions/{sid}", dependencies=[Depends(auth)])

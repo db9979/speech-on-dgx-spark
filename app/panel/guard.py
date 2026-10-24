@@ -577,7 +577,7 @@ LIVE_WORDS = {
     "rollback": ("Update", "Rückkehr zur vorigen Version gestartet"), "update_from_app": ("Update", "Update aus der App gestartet"),
     "livecheck_failed": ("Dienste", "Funktionsprüfung fehlgeschlagen"), "memory_low": ("Dienste", "Speicher knapp"),
     "room_end": ("Raum-Modus", "Zuhören beendet"), "foreign_page_refused": ("Wächter", "fremde Seite abgewiesen"),
-    "profile_memory_tidied": ("Hintergrund", "Gedächtnis aufgeräumt"), "person_priority": ("Vorrang", "Vorrang eines Profils geändert"),
+    "profile_memory_tidied": ("Hintergrund", "Gedächtnis aufgeräumt"), "person_priority": ("Vorrang", "Vorrang eines Profils geändert"), "profile_daily_limit": ("Personen", "Tageslimit eines Profils geändert"),
     # added 2026-10-12 (Dominik: everything on the live page; test_live checks every kind here or in LIVE_SKIP)
     "admin_mfa_recovery": ("Sicherheit", "neue Wiederherstellungscodes"), "admin_mfa_forget": ("Sicherheit", "vertraute Browser vergessen"),
     "profile_mfa_reset": ("Sicherheit", "zweiter Schritt eines Profils zurückgesetzt"),

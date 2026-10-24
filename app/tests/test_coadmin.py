@@ -34,10 +34,11 @@ class CoAdmin(unittest.TestCase):
 
     def tearDown(self):
         mfa.enabled, mfa.verify, mfa.mark = self.real
-        try:
-            os.remove(coadmin.FILE)
-        except OSError:
-            pass
+        for f in (coadmin.FILE, coadmin.FREI):
+            try:
+                os.remove(f)
+            except OSError:
+                pass
         guard.reset()
 
     def signin(self, name, code=True, pin="1234"):
@@ -192,6 +193,35 @@ class CoAdmin(unittest.TestCase):
         profile("KoXaversKind")
         d = c.get(f"/api/admin/profiles/{uid_of('KoXaversKind')}").json()
         self.assertNotIn("rights", d)
+
+    def test_admin_frees_a_profile_from_daily_limits(self):
+        """Dominik 2026-10-24: „admin hat noch tageslimits“, the profile had no second step and so no role; the
+        admin frees any profile by hand (Rechte „Ohne Tageslimit“), without the second step; a role that acts is
+        free anyway; a Verwalter cannot; only true/false, only real profiles; backed up, logged with fixed words."""
+        import backup
+        profile("KoFreda")
+        uid = uid_of("KoFreda")
+        self.assertFalse(coadmin.unbegrenzt(uid))
+        self.assertEqual(ADMIN.get(f"/api/admin/profiles/{uid}").json()["rights"]["tageslimit"], {"frei": False, "admin": False})
+        for bad in ({"frei": "ja"}, {}, {"frei": 1}):
+            self.assertEqual(ADMIN.put(f"/api/admin/profiles/{uid}/tageslimit", json=bad).status_code, 400, bad)
+        self.assertEqual(ADMIN.put("/api/admin/profiles/u_000000000000/tageslimit", json={"frei": True}).status_code, 404)
+        r = ADMIN.put(f"/api/admin/profiles/{uid}/tageslimit", json={"frei": True})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(coadmin.unbegrenzt(uid))
+        self.assertFalse(mfa.enabled(uid))
+        self.assertEqual(coadmin.acts(uid), "")                     # the rights themselves still need the second step
+        self.assertTrue(ADMIN.get(f"/api/admin/profiles/{uid}").json()["rights"]["tageslimit"]["frei"])
+        c, _ = self.give("KoGerd", role="manager")
+        self.assertEqual(c.put(f"/api/admin/profiles/{uid}/tageslimit", json={"frei": False}).status_code, 403)
+        self.assertTrue(coadmin.unbegrenzt(uid))
+        self.assertEqual(ADMIN.put(f"/api/admin/profiles/{uid}/tageslimit", json={"frei": False}).status_code, 200)
+        self.assertFalse(coadmin.unbegrenzt(uid))
+        self.assertFalse(coadmin.unbegrenzt(""))
+        _, adm = self.give("KoHanna")
+        self.assertTrue(coadmin.unbegrenzt(adm))
+        self.assertEqual(ADMIN.get(f"/api/admin/profiles/{adm}").json()["rights"]["tageslimit"]["admin"], True)
+        self.assertIn("ohne-tageslimit.json", backup.STATE_FILES)
 
     def test_manager_only_lifts_blocks(self):
         """Dominik 2026-10-14: only the admin switches functions on and off and blocks a profile; a Verwalter only

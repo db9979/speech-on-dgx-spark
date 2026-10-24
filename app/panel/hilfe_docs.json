@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 41), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 89). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 42), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 89). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 41 Dateien in jeder Sicherung (Schritt 7) - 89 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 42 Dateien in jeder Sicherung (Schritt 7) - 89 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5493,7 +5493,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Keine Tageslimits für Admins, Seltenheit unter Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 „Tageslimits für Admins sollten deaktiviert sein“ und „beim Klicken auf Gegenstände hüpft die Liste“): Ein Profil mit Admin-Rolle (coadmin.unbegrenzt, dieselbe Regel wie beim Kontingent) hat keine Tageslimits mehr: Bilder malen und ändern, Lieder, eigene Musikdateien und die Bilder einer eigenen Dungeon-Runde. Ich → Bilder und Ich → Musik zeigen dann „ohne Tageslimit (Admin)“. Platz, die Warteschlange schwerer Aufträge und alles, was das Haus verlässt (Mails, Anrufe, reMarkable), behalten ihre Grenzen. Unter Funktionen → KI-Dungeon-Master → Regeln anpassen bleibt bei den Gegenständen die Liste beim Antippen stehen, nur Markierung und Detail wechseln. Jeder Gegenstand steht im Rahmen seiner Seltenheit; die meisten Grundregel-Gegenstände würfeln sie erst beim Fund, sie tragen einen gestrichelten Rahmen und einen Farbverlauf, und ihr Detail zeigt die Leiter gewöhnlich bis legendär mit Wurf, Bonus, Preis und Mindeststufe. Mitspieler umbenennen (Punkt 5 der Vorschläge zu „Mitspieler verwalten“, Dominik „1-6“): Im „⋯“ eines Mitspielers kann der Gastgeber den Namen seines Helden ändern (PUT "
+"text": "Ohne Tageslimit auch ohne zweiten Schritt (V01.0.992, Dominik 2026-10-24 „admin hat noch tageslimits“): Die Regel aus V01.0.989 griff nur bei einer Admin-Rolle, die zählt, und die gibt es nur mit zweitem Anmeldeschritt. Ein Profil ohne zweiten Schritt behielt deshalb seine Tageslimits. Jetzt setzt der Admin unter Personen und Geräte beim Profil unter Rechte „Ohne Tageslimit“ den Haken „frei“, für jedes Profil und ohne zweiten Schritt (PUT /api/admin/profiles/{uid}/tageslimit mit {\"frei\": true}, nur Admin, kein Verwalter, Rate-Limit, CSRF). Ein Profil mit Admin-Rolle hat den Haken fest gesetzt. Gespeichert in state/ohne-tageslimit.json (in der Sicherung), Änderungen im Admin-Protokoll (profile_daily_limit) und im Log coadmin: tageslimit | frei|begrenzt|kein profil. Die Admin-Rechte selbst brauchen weiter den zweiten Schritt. Ich → Bilder und Ich → Musik zeigen „ohne Tageslimit“."
 },
 {
 "lang": "de",
@@ -5501,7 +5501,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "/api/profile/dungeon/{rid}/platz/{pid} mit {\"was\": \"name\"}), nur den Namen, geprüft wie beim Anlegen (2 bis 24 Zeichen, mindestens ein Buchstabe); Werte, Stufe und Tasche bleiben. Log dungeon: platz | name."
+"text": "Keine Tageslimits für Admins, Seltenheit unter Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 „Tageslimits für Admins sollten deaktiviert sein“ und „beim Klicken auf Gegenstände hüpft die Liste“): Ein Profil mit Admin-Rolle (coadmin.unbegrenzt, dieselbe Regel wie beim Kontingent) hat keine Tageslimits mehr: Bilder malen und ändern, Lieder, eigene Musikdateien und die Bilder einer eigenen Dungeon-Runde. Ich → Bilder und Ich → Musik zeigen dann „ohne Tageslimit“. Platz, die Warteschlange schwerer Aufträge und alles, was das Haus verlässt (Mails, Anrufe, reMarkable), behalten ihre Grenzen. Unter Funktionen → KI-Dungeon-Master → Regeln anpassen bleibt bei den Gegenständen die Liste beim Antippen stehen, nur Markierung und Detail wechseln. Jeder Gegenstand steht im Rahmen seiner Seltenheit; die meisten Grundregel-Gegenstände würfeln sie erst beim Fund, sie tragen einen gestrichelten Rahmen und einen Farbverlauf, und ihr Detail zeigt die Leiter gewöhnlich bis legendär mit Wurf, Bonus, Preis und Mindeststufe. Mitspieler umbenennen (Punkt 5 der Vorschläge zu „Mitspieler verwalten“, Dominik „1-6“): Im „⋯“ eines Mitspielers kann der Gastgeber den Namen seines Helden ändern (PUT /api/pro"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "file/dungeon/{rid}/platz/{pid} mit {\"was\": \"name\"}), nur den Namen, geprüft wie beim Anlegen (2 bis 24 Zeichen, mindestens ein Buchstabe); Werte, Stufe und Tasche bleiben. Log dungeon: platz | name."
 },
 {
 "lang": "de",
@@ -15653,7 +15661,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 41), otherwise the line gives its reason (dateien.STATE_LOCAL, 89). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 42), otherwise the line gives its reason (dateien.STATE_LOCAL, 89). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -15669,7 +15677,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 41 files in every backup (step 7) - 89 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 42 files in every backup (step 7) - 89 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -17885,7 +17893,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "No daily limits for admins, rarity under Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 \"daily limits for admins should be off\" and \"clicking items makes the list jump\"): A profile with the admin role (coadmin.unbegrenzt, the same rule as for the quota) has no daily limits any more: painting and changing pictures, songs, own music files and the pictures of an own Dungeon round. Me → Pictures and Me → Music then show \"no daily limit (admin)\". Space, the queue of heavy jobs and everything that leaves the house (mails, calls, reMarkable) keep their limits. Under Features → AI Dungeon Master → Adjust rules the item list stays put on a tap, only the mark and the detail change. Every item stands in its rarity's frame; most basic items roll it only when found, they carry a dashed frame and a colour gradient, and their detail shows the ladder common to legendary with roll, bonus, price and minimum level. Renaming a fellow player (point 5 of the proposals on managing fellow players, Dominik \"1-6\"): in a fellow player's \"⋯\" the host can change the hero's name (PUT /api/profile/dungeon/{rid}/platz/{pid} with {\"was\": \"name\"}), only the name, checked as when creating (2 to 24 characters, a"
+"text": "No daily limit also without the second step (V01.0.992, Dominik 2026-10-24 \"admin still has daily limits\"): The rule from V01.0.989 only held for an admin role that counts, and that exists only with the second login step. A profile without the second step therefore kept its daily limits. Now the admin ticks \"frei\" under People and devices, at the profile under Rights \"No daily limit\", for any profile and without the second step (PUT /api/admin/profiles/{uid}/tageslimit with {\"frei\": true}, admin only, no manager, rate limit, CSRF). A profile with the admin role has the tick set for good. Stored in state/ohne-tageslimit.json (in the backup), changes in the admin log (profile_daily_limit) and in the log coadmin: tageslimit | frei|begrenzt|kein profil. The admin rights themselves still need the second step. Me → Pictures and Me → Music show \"no daily limit\"."
 },
 {
 "lang": "en",
@@ -17893,7 +17901,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "t least one letter); values, level and bag stay. Log dungeon: platz | name."
+"text": "No daily limits for admins, rarity under Regeln → Gegenstände (V01.0.989, Dominik 2026-10-24 \"daily limits for admins should be off\" and \"clicking items makes the list jump\"): A profile with the admin role (coadmin.unbegrenzt, the same rule as for the quota) has no daily limits any more: painting and changing pictures, songs, own music files and the pictures of an own Dungeon round. Me → Pictures and Me → Music then show \"no daily limit\". Space, the queue of heavy jobs and everything that leaves the house (mails, calls, reMarkable) keep their limits. Under Features → AI Dungeon Master → Adjust rules the item list stays put on a tap, only the mark and the detail change. Every item stands in its rarity's frame; most basic items roll it only when found, they carry a dashed frame and a colour gradient, and their detail shows the ladder common to legendary with roll, bonus, price and minimum level. Renaming a fellow player (point 5 of the proposals on managing fellow players, Dominik \"1-6\"): in a fellow player's \"⋯\" the host can change the hero's name (PUT /api/profile/dungeon/{rid}/platz/{pid} with {\"was\": \"name\"}), only the name, checked as when creating (2 to 24 characters, at least "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "one letter); values, level and bag stay. Log dungeon: platz | name."
 },
 {
 "lang": "en",
