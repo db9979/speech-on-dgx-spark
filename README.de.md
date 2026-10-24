@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.020** KI-Dungeon-Master: die Wege von hier mit Richtung und Ziel auch für die Sprache (dungeon_karte.wege, für CarPlay), nie ein Ort im Nebel
 - **V01.1.019** KI-Dungeon-Master: Würfelprobe zeigt groß, wofür gewürfelt wird, Figuren sprechen Zitate so, wie der Text es sagt (flüstert, ruft, stammelt …), Werte auf Volk- und Klassenkacheln als Chips, Übersicht mittig mit Vollbild, Ausrüstung nur am passenden Körperteil (eigener Gürtelplatz)
 - **V01.1.018** KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 - **V01.1.017** KI-Dungeon-Master: Musik passend zu Welt und Stimmung mit Trommeln und Bass, eigene Stimmung Gewölbe; Musikstück mit 👎 als nervig markieren, auch Gäste, nachts neu gemacht
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.013** KI-Dungeon-Master: Kampf nach festen Regeln, das Panel stellt Begegnungen nach Budget aus dem Bestiarium zusammen, würfelt jeden Angriff gegen die Rüstungsklasse (10 + Rüstung + Geschick) und lässt die Gegner zurückschlagen, Leiste mit dem Leben der Gegner, Erfahrung aus dem Bestiarium geteilt durch die Helden, Stufen wie bei D&D; jeder Prolog malt sein Szenenbild gleich mit, „🔊 Ton an“ schaltet den Ton jetzt auch in Safari frei, der Auftrag gilt erst gegen Ende der Geschichte als erfüllt
 - **V01.1.012** Sprechen auf dem Modell-Rechner startet ohne Internet auch mit Dateiliste des Hubs: die Liste aller Dateien eines gepinnten Modells fällt nach der Prüfung weg, sonst nannte huggingface_hub den Stand unvollständig (.gitattributes)
 - **V01.1.010** KI-Dungeon-Master: Dinge-Gedächtnis, die Geschichte merkt sich wichtige Dinge mit Stoff, Farbe und Zustand und schreibt eine Erzählung, die ihnen widerspricht, einmal neu (kein Eisenkästchen wird mehr zum Holzkästchen), der Gastgeber sieht und ändert die gemerkten Dinge, keine OOC-Zeile spricht mehr für das Panel
-- **V01.1.009** KI-Dungeon-Master: Bilder für Klassen, Völker, Hintergründe und Welten im Regeln-Reiter (Malen, Nochmal malen, Welt wählbar), Hintergründe je Welt, Titelbild je Welt auf den Weltkarten
 
 
 

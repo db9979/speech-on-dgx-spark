@@ -368,6 +368,24 @@ class Vaults(unittest.TestCase):
             self.assertTrue(1 <= len(b) <= 5 and len(set(b)) == len(b))
             self.assertEqual(abs(by[b[0]]["stufe"] - (lv + 1)), best(lv + 1))
 
+    def test_ways_for_a_voice(self):
+        """wege (CarPlay): the same ways as „Von hier aus“, with direction and goal, in the asked language."""
+        rd = copy.deepcopy(self.rd)
+        for lang in ("de", "en"):
+            v = K.view(self.r, dict(rd, lang=lang))
+            w = K.wege(rd, lang)
+            self.assertEqual([x["id"] for x in w], [x["id"] for x in v["von_hier"]])
+            self.assertEqual([x["ziel"] for x in w], [x["n"] for x in v["von_hier"]])
+            self.assertTrue(all(x["richtung"] for x in w))
+        k = rd["karte"]
+        unseen = {o["name"] for i, o in enumerate(k["orte"]) if i not in k["besucht"] and i not in K._nb(k)[k["hier"]]}
+        self.assertFalse(unseen & {x["ziel"] for x in K.wege(rd)})       # never a place the fog hides
+        v = K.enter_vault(self.r, rd, random.Random(1))
+        w = K.wege(rd, "en")
+        self.assertIn({"id": "aus", "richtung": "outside", "ziel": "outside"}, w)
+        self.assertTrue(all(x["ziel"] == "unknown room" for x in w if x["id"] != "aus"))
+        self.assertEqual(K.wege({}, "de"), [])
+
     def test_guardian_shuts_until_beaten_treasure_spring_altar(self):
         rd, v, j = self.vault_with("waechter")
         K.step(self.r, rd, {"ort_id": f"r{j + 1}", "erfolg": []}, {}, random.Random(3))

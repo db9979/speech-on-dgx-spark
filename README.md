@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.020** AI Dungeon Master: the ways from here with direction and goal for the voice too (dungeon_karte.wege, for CarPlay), never a place in the fog
 - **V01.1.019** AI Dungeon Master: a check shows large what it is for, characters speak quotes the way the text says (whispers, shouts, stammers …), values on people and class cards as chips, overview in the middle with full screen, equipment only on the fitting body part (a belt place of its own)
 - **V01.1.018** AI Dungeon Master: longer narrations at the moments (a new place, a fight, a 20 or a 1), way of telling per round brief, normal or rich; the encounter names the card's foes, a tap on a tile's picture opens its window, NPC lines read once, without names and in a fitting voice, scene pictures on their own, a find is no longer named after its chest
 - **V01.1.017** AI Dungeon Master: music fitting world and mood with drums and bass, own vault mood; mark a music piece as annoying with 👎, guests too, made again at night
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.013** AI Dungeon Master: fights by fixed rules, the panel builds encounters by budget from the bestiary, rolls every attack against the armour class (10 + armour + Dexterity) and lets the foes strike back, a bar with the foes' life, experience from the bestiary divided among the heroes, levels as in D&D; every prologue paints its scene picture right away, "🔊 Sound on" now unlocks the sound in Safari too, the quest counts as done only towards the end of the story
 - **V01.1.012** Speaking on the model computer starts without the internet also with the Hub file listing: the listing of all files of a pinned model goes after the check, otherwise huggingface_hub called the snapshot incomplete (.gitattributes)
 - **V01.1.010** AI Dungeon Master: thing memory, the story keeps important things with material, colour and state and writes a narration against them once more (no iron box turns into a wooden one any more), the host sees and changes the kept things, no OOC line speaks for the panel any more
-- **V01.1.009** AI Dungeon Master: pictures for classes, peoples, backgrounds and worlds on the rules tab (Paint, Paint again, world to choose), backgrounds per world, a title picture per world on the world cards
 
 
 

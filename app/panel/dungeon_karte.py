@@ -904,7 +904,6 @@ def view(r, rd, host=False):
     out = {"box": _box(xs, ys), "w": FLAECHE[0], "h": FLAECHE[1], "form": k.get("form", "verstreut"), "deko": k.get("deko") or {}, "orte": [place(i) for i in sorted(known)], "wege": wege, "hier": f"o{k['hier'] + 1}",
            "welt": rd.get("welt"), "gesehen": len(k["besucht"]), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
     v = vault(rd)
-    here = (o[k["hier"]]["x"], o[k["hier"]]["y"])
     if v:
         vnb = _vnb(v)
         seen = set(v["besucht"]) | {j for i in v["besucht"] for j in vnb[i]}
@@ -922,12 +921,7 @@ def view(r, rd, host=False):
                                       if a in seen and b in seen and (a in v["besucht"] or b in v["besucht"])],
                            "geschafft": boss["fertig"]}
         cur = v["raeume"][v["hier"]]
-        out["von_hier"] = [{"id": f"r{j + 1}", "n": (_table(r, "raeume", v["raeume"][j]["t"]) or {"name": ["", ""]})["name"][li]
-                            if j in v["besucht"] else ("unbekannter Raum", "unknown room")[li],
-                            "r": _dir((cur["x"], cur["y"]), (v["raeume"][j]["x"], v["raeume"][j]["y"]), li), "b": j in v["besucht"]}
-                           for j in _ways_in(v)]
-        if v["hier"] == 0:
-            out["von_hier"].append({"id": "aus", "n": ("hinaus", "outside")[li], "r": "", "b": True})
+        out["von_hier"] = _von_hier(r, rd)
         if _shut(v, v["hier"]):
             out["zu"] = {"raetsel": ("Die Tür bleibt zu, bis das Rätsel gelöst ist.", "The door stays shut until the riddle is solved."),
                          "waechter": ("Der Wächter versperrt den Weg.", "The guardian blocks the way."),
@@ -938,12 +932,44 @@ def view(r, rd, host=False):
                 out["raetsel"] = {"frage": q["frage"][li], "fertig": cur["fertig"], "versuche": cur.get("versuche", 0), "max": VERSUCHE,
                                   "hinweis": q["hinweis"][li] if not cur["fertig"] and cur.get("versuche", 0) >= VERSUCHE else ""}
     else:
-        out["von_hier"] = [{"id": f"o{j + 1}", "n": o[j]["name"], "r": _dir(here, (o[j]["x"], o[j]["y"]), li), "b": j in k["besucht"]}
-                           for j in sorted(nb[k["hier"]])]
-        if has_vault(r, k, k["hier"]):
-            out["von_hier"].append({"id": "ein", "n": ("ins Gewölbe", "into the vault")[li], "r": "", "b": str(k["hier"]) in k["gw"]})
+        out["von_hier"] = _von_hier(r, rd)
         out["gw_knopf"] = host and not has_vault(r, k, k["hier"])
     return _pictures(r, rd, out)
+
+
+def _von_hier(r, rd):
+    """The ways one may take from here (view's „Von hier aus“): id, name n, direction r, b already been there; in a
+    vault the open doors and „hinaus“ at the entrance, outside the neighbours and „ins Gewölbe“."""
+    k, li, v = rd["karte"], _li(rd), vault(rd)
+    if v:
+        cur = v["raeume"][v["hier"]]
+        out = [{"id": f"r{j + 1}", "n": (_table(r, "raeume", v["raeume"][j]["t"]) or {"name": ["", ""]})["name"][li]
+                if j in v["besucht"] else ("unbekannter Raum", "unknown room")[li],
+                "r": _dir((cur["x"], cur["y"]), (v["raeume"][j]["x"], v["raeume"][j]["y"]), li), "b": j in v["besucht"]}
+               for j in _ways_in(v)]
+        if v["hier"] == 0:
+            out.append({"id": "aus", "n": ("hinaus", "outside")[li], "r": "", "b": True})
+        return out
+    o = k["orte"]
+    here = (o[k["hier"]]["x"], o[k["hier"]]["y"])
+    out = [{"id": f"o{j + 1}", "n": o[j]["name"], "r": _dir(here, (o[j]["x"], o[j]["y"]), li), "b": j in k["besucht"]}
+           for j in sorted(_nb(k)[k["hier"]])]
+    if has_vault(r, k, k["hier"]):
+        out.append({"id": "ein", "n": ("ins Gewölbe", "into the vault")[li], "r": "", "b": str(k["hier"]) in k["gw"]})
+    return out
+
+
+def wege(rd, lang="de"):
+    """The ways from here for a voice (CarPlay): [{id, richtung, ziel}] in lang, the same as „Von hier aus“ at the
+    table (only what a seat may see: a neighbour not yet visited is a known place, an unvisited room „unbekannter
+    Raum“); [] without a map."""
+    import dungeon
+    if not rd.get("karte"):
+        return []
+    li = 1 if lang == "en" else 0
+    out = _von_hier(dungeon.rules(), dict(rd, lang=("de", "en")[li]))
+    inout = {"aus": ("hinaus", "outside"), "ein": ("hinein", "inside")}
+    return [{"id": w["id"], "richtung": w["r"] or inout.get(w["id"], ("", ""))[li], "ziel": w["n"]} for w in out]
 
 
 def _box(xs, ys):

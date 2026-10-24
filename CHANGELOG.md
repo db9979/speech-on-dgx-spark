@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.020** · 2026-10-24 · KI-Dungeon-Master: die Wege von hier mit Richtung und Ziel auch für die Sprache (dungeon_karte.wege, für CarPlay), nie ein Ort im Nebel
 - **V01.1.019** · 2026-10-24 · KI-Dungeon-Master: Würfelprobe zeigt groß, wofür gewürfelt wird, Figuren sprechen Zitate so, wie der Text es sagt (flüstert, ruft, stammelt …), Werte auf Volk- und Klassenkacheln als Chips, Übersicht mittig mit Vollbild, Ausrüstung nur am passenden Körperteil (eigener Gürtelplatz)
 - **V01.1.018** · 2026-10-24 · KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 - **V01.1.017** · 2026-10-24 · KI-Dungeon-Master: Musik passend zu Welt und Stimmung (eigene Szene und Instrumente je Feld, Trommeln und Bass, nie hektisch), neue Stimmung Gewölbe, alter Stil spielt bis neue da sind; Musikstück mit 👎 als nervig markieren (jeder Platz, auch Gäste, eine Markierung reicht), nachts neu gemacht, Admin-Liste „N markiert“ mit Zurücknehmen
