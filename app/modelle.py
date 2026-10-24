@@ -792,28 +792,34 @@ def zeiger(ordner, rev):
       (IncompleteSnapshotError, ".gitattributes missing", tars 2026-10-24). Without it the library trusts the folder;
       pruefen has checked every file in it. Online the next download writes it again, and this runs after it.
     Only a commit of 40 hex whose snapshot exists; refs/main written only when it differs, through a temporary file.
-    Returns whether anything changed."""
+    A file it may not change (e.g. left by root) only gets a log line, the start goes on. Returns whether anything
+    changed."""
     if not REV.match(rev or "") or not os.path.isdir(os.path.join(ordner, "snapshots", rev)):
         raise Fehler("revision")
     neu = False
-    liste = os.path.join(ordner, "trees", rev + ".json")
-    if os.path.islink(liste) or os.path.isfile(liste):
-        os.unlink(liste)
-        neu = True
-    refs = os.path.join(ordner, "refs")
-    ziel = os.path.join(refs, "main")
     try:
-        with open(ziel) as f:
-            if f.read().strip() == rev and not os.path.islink(ziel):
-                return neu
-    except OSError:
-        pass
-    os.makedirs(refs, exist_ok=True)
-    tmp = ziel + ".neu"
-    with open(tmp, "w") as f:
-        f.write(rev)
-    os.replace(tmp, ziel)
-    return True
+        liste = os.path.join(ordner, "trees", rev + ".json")
+        if os.path.islink(liste) or os.path.isfile(liste):
+            os.unlink(liste)
+            neu = True
+        refs = os.path.join(ordner, "refs")
+        ziel = os.path.join(refs, "main")
+        try:
+            with open(ziel) as f:
+                if f.read().strip() == rev and not os.path.islink(ziel):
+                    return neu
+        except OSError:
+            pass
+        os.makedirs(refs, exist_ok=True)
+        tmp = ziel + ".neu"
+        with open(tmp, "w") as f:
+            f.write(rev)
+        os.replace(tmp, ziel)
+        return True
+    except OSError as e:
+        # never a reason to keep a checked model from starting (e.g. a file left by root): the start goes on as before
+        print(f"modelle: zeiger fehlgeschlagen {type(e).__name__}", flush=True)
+        return neu
 
 
 def fest(repo, kat=None):

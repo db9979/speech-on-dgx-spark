@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.015** Modell-Start robuster: kann das Panel refs/main oder die Hub-Dateiliste eines Modells nicht ändern (etwa von root angelegt), schreibt es nur eine Logzeile, die Engine startet trotzdem
 - **V01.1.014** KI-Dungeon-Master: Wächter und Herr im Gewölbe kämpfen mit Gegnern aus dem Bestiarium nach der Gruppenstufe, erst der Sieg im Kampf öffnet den Raum; Fallen als Rettungswurf wie bei D&D (geschafft halber Schaden, Rüstung zählt nicht)
 - **V01.1.013** KI-Dungeon-Master: Kampf nach festen Regeln, das Panel stellt Begegnungen nach Budget aus dem Bestiarium zusammen, würfelt jeden Angriff gegen die Rüstungsklasse (10 + Rüstung + Geschick) und lässt die Gegner zurückschlagen, Leiste mit dem Leben der Gegner, Erfahrung aus dem Bestiarium geteilt durch die Helden, Stufen wie bei D&D; jeder Prolog malt sein Szenenbild gleich mit, „🔊 Ton an“ schaltet den Ton jetzt auch in Safari frei, der Auftrag gilt erst gegen Ende der Geschichte als erfüllt
 - **V01.1.012** Sprechen auf dem Modell-Rechner startet ohne Internet auch mit Dateiliste des Hubs: die Liste aller Dateien eines gepinnten Modells fällt nach der Prüfung weg, sonst nannte huggingface_hub den Stand unvollständig (.gitattributes)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.007** KI-Dungeon-Master: mit einem Base-Modell spricht jede Figur als Klon ihrer ersten VoiceDesign-Stimme, gleicher Klang in jedem Zug und schneller; mit CustomVoice ändert sich nichts
 - **V01.1.006** KI-Dungeon-Master: am Handy eine eigene Leiste unten (Geschichte, Gruppe, Held, Karte), immer nur ein Teil, roter Punkt bei neuem Zug; die Leiste des Panels ist am Tisch ausgeblendet
 - **V01.1.005** KI-Dungeon-Master: Bilder im Bestiarium und im Katalog verschwinden nach einem Neustart nicht mehr; das zuletzt gemalte Bild bleibt, bis das neue da ist, selbst gemalte bleiben fest
-- **V01.1.004** KI-Dungeon-Master: ruhiger Tisch, die Hilfe „So spielst du“ als Fenster zum Blättern, Musik und Geräusche im Kopf, Zug und Uhr nur einmal, der eigene Held nur rechts, kein Assistent am Tisch, „Leiten“ in der Schrift des Tisches ohne Lücke
 
 
 

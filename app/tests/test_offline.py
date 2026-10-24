@@ -211,6 +211,19 @@ class Zeiger(unittest.TestCase):
             path = huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
             self.assertEqual(os.path.realpath(path), os.path.realpath(os.path.join(d, "snapshots", self.REV)))
 
+    def test_a_file_it_may_not_change_never_stops_the_start(self):
+        """A trees/ or refs/ entry of another owner (e.g. root) must not keep a checked model from starting."""
+        with tempfile.TemporaryDirectory() as hub:
+            d = self.cache(hub)
+            os.makedirs(os.path.join(d, "trees"))
+            with open(os.path.join(d, "trees", self.REV + ".json"), "w") as f:
+                f.write("{}")
+            for name in ("unlink", "replace"):
+                out = io.StringIO()
+                with mock.patch.object(modelle.os, name, side_effect=PermissionError(13, "denied")), redirect_stdout(out):
+                    self.assertEqual(modelle._laden("A/B", self.REV, d), self.REV)
+                self.assertIn("modelle: zeiger fehlgeschlagen PermissionError", out.getvalue())
+
     def test_the_tree_listing_of_the_whole_repository_goes(self):
         """The download keeps the listing of every file of the commit, also .gitattributes, which ERLAUBT never
         takes; offline huggingface_hub then called the snapshot incomplete (tars 2026-10-24)."""
