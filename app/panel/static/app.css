@@ -2517,3 +2517,24 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 @media (max-width:980px){.dm.dm-tisch.dm-voll{overflow:auto;display:block}.dm-voll .dm-group,.dm-voll .dm-side{overflow:visible}.dm-voll .dm-feed{max-height:55vh}}
 @media (max-width:980px){.dm-grid{grid-template-columns:1fr}.dm-feed{max-height:55vh}.dm-group{order:2}.dm-story{order:1}.dm-side{order:3}.dm-tisch .dm-side{border-left:0;padding-left:0}.dm.dm-tisch{padding:10px;margin:0 -8px}.dm-tisch .dm-dm{padding:12px 14px;font-size:16px}}
 @media (max-width:520px){.dm-cards{grid-template-columns:1fr 1fr}.dm-cards.dm-gs{grid-template-columns:1fr}.dm-gidee{-webkit-line-clamp:2}.dm-vert{grid-template-columns:repeat(3,1fr)}.dm-two{grid-template-columns:1fr}}
+/* KI-Dungeon-Master: the admin's tab „Regeln“ (dungeon.js dmRulesDraw): sections left, the part right, list and detail */
+.dm-rcard{padding:4px 0}.dm-rhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-rhead h2{margin:0 0 8px}
+.dm-rlay{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}.dm-rin{min-width:0}
+.dm-rnav{display:flex;flex-direction:column;gap:2px;position:sticky;top:8px}.dm-rnav hr{width:100%;border:0;border-top:1px solid var(--line);margin:6px 0}
+.dm-rnav button{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:7px 10px;border-radius:8px;background:none;border:0;color:inherit;font:inherit;font-size:14px;cursor:pointer}
+.dm-rnav button:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}.dm-rnav button.on{background:color-mix(in srgb,var(--acc) 16%,transparent);font-weight:600}.dm-rnav small{color:var(--mut)}
+.dm-rsrch{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.dm-rsrch input{flex:1 1 200px;min-width:0}.dm-rsrch select{width:auto}
+.dm-rkat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.dm-rlist{max-height:68vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.dm-rrow{display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;border-bottom:1px solid var(--line)}.dm-rrow:last-child{border-bottom:0}.dm-rrow.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}.dm-raus{opacity:.55}
+.dm-rmain{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:4px;cursor:pointer}
+.dm-rtxt{display:flex;flex-direction:column;min-width:0}.dm-rtxt b{font-weight:600;overflow-wrap:anywhere}.dm-rtxt small{color:var(--mut);font-size:12.5px;overflow-wrap:anywhere}
+.dm-rpills{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}.dm-rpills .pill{font-size:11.5px}
+.dm-rth{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:8px;overflow:hidden;background:#0d0d10;font-size:20px}.dm-rth img{width:100%;height:100%;object-fit:cover;display:block}
+.dm-rth.dm-dz{background:transparent}.dm-rno{background:transparent;border:1px dashed var(--line)}.dm-rmehr{padding:8px 10px;font-size:13px}
+.dm-rdet{position:sticky;top:8px;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.dm-rname{font-size:17px}.dm-rzeile{margin:8px 0 4px;font-size:14px}.dm-rgrund{margin:4px 0}.dm-rinfo{margin:8px 0;font-size:14px}
+.dm-rdgrid{display:flex;flex-direction:column;gap:12px}.dm-rdet textarea{width:100%;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dm-rvgl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,170px));gap:10px}.dm-rvgl figure{margin:0}.dm-rvgl img,.dm-rvgl .dm-rno{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;background:#0d0d10;font-size:44px}
+.dm-rvgl .dm-rno{background:transparent}.dm-rvgl figcaption{font-size:12px;color:var(--mut);margin-top:3px}
+@media (max-width:1100px){.dm-rkat{grid-template-columns:1fr}.dm-rdet{position:static}.dm-rlist{max-height:none;overflow:visible}}
+@media (max-width:760px){.dm-rlay{grid-template-columns:1fr}.dm-rnav{position:static;flex-direction:row;flex-wrap:wrap}.dm-rnav hr{display:none}.dm-rnav button{padding:5px 9px;font-size:13px;border:1px solid var(--line)}}

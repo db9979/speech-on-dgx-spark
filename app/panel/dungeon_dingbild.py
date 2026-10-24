@@ -20,6 +20,10 @@ Two kinds of pictures, both painted by the fixed rules of the panel (the model c
 
 The map (dungeon_karte.py) adds its kinds of places and rooms to the catalog (wanted, painted alike) and an own
 picture of every visited place (ort-<hash>, dungeon_karte.queue_orte from due, shown only to seats of its round).
+The Bestiarium (dungeon.gegner) is painted alike, with its own fixed phrase FOE_EN, in the style of the worlds a foe
+belongs to. On the admin's tab „Regeln“ (dungeon_regelseite.py) „Nochmal malen“ paints one entry again as a candidate
+neu-<hash> next to the picture in use (repaint, the same checks and day limit); „Neues behalten“ or „Altes behalten“
+settles it, a candidate nobody settles goes with the sweep after NEU_S.
 
 Every picture: FLUX through bilder.paint (NSFW above the limit and a missing check give no picture), the AI marks of
 the service kept (bilder.quick_png „kleiner“: SIZE/2), stored as STATE/dungeon-bild/ding-<hash>.png or
@@ -66,6 +70,9 @@ ART_EN = {"waffe": "a weapon", "ruestung": "a piece of armour", "schmuck": "a pi
           "rolle": "a rolled parchment scroll", "schatz": "a precious gem or a small work of art"}
 ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜", "schatz": "💎"}
 ITEM_EN = "game item art, one single object in the centre, plain dark background"
+FOE_EN = "creature art for a fantasy bestiary, the whole creature in the centre, plain dark background"   # the Bestiarium (gegner)
+NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
+NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
 NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
 _lauf = {"task": None, "grund": "", "start": 0.0, "gemalt": 0, "stop": False}
 _funde = set()            # iids of finds being painted right now
@@ -135,7 +142,10 @@ def styles(r):
 
 
 def prompt(style, c):
-    """The fixed prompt of a catalog entry in a style: the English name, the kind's phrase, a spell's sentence."""
+    """The fixed prompt of a catalog entry in a style: the English name, the kind's phrase, a spell's sentence; a foe
+    of the Bestiarium (no "art") its own fixed phrase."""
+    if "art" not in c:
+        return f"{style}, {FOE_EN}: {c['name'][1]}, {dungeon.BILD_ENDE}"
     extra = f", {c['satz'][1]}" if c["art"] == "zauber" and c.get("satz") else ""
     return f"{style}, {ITEM_EN}: {c['name'][1]}, {ART_EN[c['art']]}{extra}, {dungeon.BILD_ENDE}"
 
@@ -146,10 +156,13 @@ def name_of(p):
 
 def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
-    then the map's kinds of places and rooms (dungeon_karte.bilder)."""
+    then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner)."""
     out, seen = [], set()
     for s in styles(r):
-        for n, p in [(name_of(prompt(s, c)), prompt(s, c)) for c in r["gegenstaende"]] + dungeon_karte.bilder(r, s):
+        welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
+        foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
+        for n, p in [(name_of(prompt(s, c)), prompt(s, c)) for c in r["gegenstaende"]] + dungeon_karte.bilder(r, s) + \
+                [(name_of(prompt(s, c)), prompt(s, c)) for c in foes]:
             if n not in seen:
                 seen.add(n)
                 out.append((n, p))
@@ -386,6 +399,13 @@ def sweep(now=None, force=False):
             for h in c.get("gaeste") or []:
                 held(h)
     gone = 0
+    for n in candidates():
+        try:
+            if now - os.path.getmtime(dungeon.bild_file(n)) > NEU_S:
+                dungeon._bild_rm(n)
+                gone += 1
+        except OSError:
+            pass
     for n in files():
         if n.startswith("ding-") and n not in keep or n.startswith("fund-") and n[5:] not in iids or n.startswith("ort-") and n not in orte:
             dungeon._bild_rm(n)
@@ -423,6 +443,63 @@ def add(r, rd, out):
     for k in list(out):
         out[k] = walk(out[k])
     return out
+
+
+# ---------------------------------------------------------------- „Nochmal malen“ (the admin's rules page)
+def candidates():
+    try:
+        return [f[:-4] for f in os.listdir(dungeon.BILD_DIR) if f.endswith(".png") and NEU.fullmatch(f[:-4])]
+    except FileNotFoundError:
+        return []
+
+
+def picture_of(r, c, welt=""):
+    """The name of a catalog entry's picture in the style of its world (the first it belongs to, else the first
+    world), and whether it is there."""
+    n = name_of(prompt(dungeon.style(r, {"welt": welt or _welt(r, c), "ton": None}), c))
+    return n, n in files()
+
+
+def _welt(r, c):
+    ws = [w for w in c.get("welten") or [] if w != "alle"]
+    return ws[0] if ws else r["welten"][0]["id"]
+
+
+async def repaint(r, c):
+    """Paints a catalog entry's picture once more as a candidate neu-<hash> next to the one in use (the same checks
+    and day limit as every catalog picture). Returns ("ok", name) or (reason, "")."""
+    if not on():
+        return "aus", ""
+    d = _state()
+    if _today(d) >= TAG_MAX:
+        return "tag", ""
+    n, _ = picture_of(r, c)
+    p = prompt(dungeon.style(r, {"welt": _welt(r, c), "ton": None}), c)
+    if not _ok_text(p):
+        return "pruefung", ""
+    neu = "neu-" + n[5:]
+    why = await paint_one(neu, p)
+
+    def note():
+        d = _state()
+        d["tag"] = {"day": _date(), "n": _today(d) + 1}
+        _save(d)
+    await asyncio.to_thread(note)
+    print(f"dungeon: dingbild | nochmal | {why}", flush=True)
+    return (why, neu if why == "ok" else "")
+
+
+def settle(r, c, keep_new):
+    """„Neues behalten“ puts the candidate in place of the picture, „Altes behalten“ drops it."""
+    n, _ = picture_of(r, c)
+    neu = "neu-" + n[5:]
+    if not os.path.exists(dungeon.bild_file(neu)):
+        raise LookupError("bild")
+    if keep_new:
+        os.replace(dungeon.bild_file(neu), dungeon.bild_file(n))
+    else:
+        dungeon._bild_rm(neu)
+    print(f"dungeon: dingbild | nochmal | {'neu behalten' if keep_new else 'alt behalten'}", flush=True)
 
 
 # ---------------------------------------------------------------- Live and the admin's page

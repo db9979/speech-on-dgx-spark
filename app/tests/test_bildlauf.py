@@ -76,6 +76,7 @@ FENSTER = {
     ".dm.dm-tisch.dm-voll": "Dungeon-Master full screen on a narrow screen: the table is the one bar",
     ".dmk.gross": "Dungeon-Master map opened large: a window over the page, its one bar while it is open",
     ".dm-fen-body": "Dungeon-Master hero sheet, merchant or item opened as a window over the table: its one bar while it is open",
+    ".dm-rlist": "Dungeon-Master tab Regeln on a wide screen: the catalogue list beside its detail (like .ld-list); narrow screens show it in full",
 }
 CSS = ("app.css", "appview.css", "live.css", "technik.css", "weiche.css")
 

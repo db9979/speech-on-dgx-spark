@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.984** · 2026-10-24 · KI-Dungeon-Master: eigener Reiter „Regeln“ für den Admin mit Bestiarium und Gegenständen samt Bild, Ändern je Eintrag, Nochmal malen mit Vergleich und Gleichgewichtsprüfung (zu stark nur als Hinweis)
 - **V01.0.983** · 2026-10-24 · KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
 - **V01.0.982** · 2026-10-24 · KI-Dungeon-Master: läuft VoiceDesign gerade nicht, spricht die feste Stimme statt einer Fehlermeldung (Probe mit Hinweis, Vorlesen geht weiter), das Log nennt den Grund
 - **V01.0.981** · 2026-10-23 · KI-Dungeon-Master: Gäste mit E-Mail: 6-stelliger Code vom Postfach des Admins, Gast-Konto mit bis zu 8 Helden auf jedem Gerät, „Du bist dran“ per Mail auf Wunsch, nur ein Hash der Adresse (die Adresse nur versiegelt bei Zug-Mails)

@@ -2703,5 +2703,60 @@ class Windows(unittest.TestCase):
                         await br.close()
         asyncio.run(go())
 
+    def test_rules_tab_for_the_admin(self):
+        """Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „das besarium zu sehen“: the admin's
+        own tab „Regeln“ with the sections left, a part as a list with picture or sign and mark, the detail below or
+        beside it; search and filters; Funktionen → KI-Dungeon-Master → Regeln anpassen opens the tab. No page wider
+        than the screen at 1280, 390 and 320 px."""
+        from tests.test_ui_browser import Browser, async_playwright
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        b = Browser("run")
+        b.port = self.port
+        n = "document.querySelectorAll('#dmadmcard .dm-rrow').length"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844), (320, 700)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.click(".ic-tabs button[data-k=regeln]")
+                        await b.until(pg, "!!document.querySelector('#dmadmcard .dm-rnav')")
+                        await pg.click("#dmadmcard [data-dmrteil=gegner]")
+                        await b.until(pg, f"{n}>100")
+                        self.assertGreater(await pg.evaluate("document.querySelectorAll('#dmadmcard .dm-rrow .dm-rth').length"), 100)
+                        await pg.click("#dmadmcard [data-dmrf=s11]")
+                        await b.until(pg, f"{n}>0&&{n}<60")
+                        await pg.select_option("#dmadmcard .dmr-m", "zu_stark")
+                        await b.until(pg, f"{n}>=0&&!!document.querySelector('#dmadmcard .dmr-m')")
+                        self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#dmadmcard .dm-rrow .pill.bad')].length===" + n))
+                        await pg.select_option("#dmadmcard .dmr-m", "alle")
+                        await pg.click("#dmadmcard [data-dmrf=alle]")
+                        await pg.fill("#dmadmcard .dmr-q", "Goblin")
+                        await b.until(pg, f"{n}>=1&&{n}<5")
+                        await pg.click("#dmadmcard .dm-rrow [data-dmrsel]")
+                        await b.until(pg, "/Goblin/.test((document.querySelector('#dmrdet .dm-rname')||{}).textContent||'')")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmrdet [data-dmrdo=aendern]')&&!!document.querySelector('#dmrdet .dm-rvgl')"))
+                        await pg.click("#dmrdet [data-dmrdo=aendern]")
+                        await b.until(pg, "/goblin/.test((document.querySelector('#dmrdet .dmr-txt')||{}).value||'')")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"regeln-{w}.png"), full_page=True)
+                        await pg.click("#dmadmcard [data-dmrteil=json]")
+                        await b.until(pg, "!!document.getElementById('dmadmtxt')")
+                        await pg.click("#dmadmcard [data-dmrteil=geschichten]")
+                        await b.until(pg, "!!document.querySelector('#dmadmcard [data-dmadm=gneu]')")
+                        await pg.evaluate("goSec('feat')")
+                        await pg.evaluate("dmRules()")
+                        await b.until(pg, "!!document.querySelector('#dungeon.on .ic-tabs button[data-k=regeln].on')||!!document.querySelector('.ic-tabs button[data-k=regeln].on')")
+                        self.assertFalse(await pg.evaluate("!!document.getElementById('dmadm')"))   # no card over the page
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+
 if __name__ == "__main__":
     unittest.main()

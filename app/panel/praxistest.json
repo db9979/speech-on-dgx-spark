@@ -2949,6 +2949,13 @@
 "titel": "Dungeon-Master: rechte Spalte und Klassenwahl",
 "text": "A: Neue Runde anlegen: die Klassenkarten zeigen nur „1 Kraft · 20 Zauber“, ein Tipp auf Magier zeigt darunter Startkräfte und Zauber nach Grad; „Waldläufer“ steht ungetrennt. B: Am Tisch rechts: oben Zug und dein Held, darunter Reiter Karte, Gastgeber, Termin; nur einer ist offen. C: „Gastgeber“ wählen, Seite neu laden: „Gastgeber“ bleibt gewählt; „Kapitel beenden“ und „Runde beenden“ stehen unter „Seltener“. D: Am Handy (390 px) nichts breiter als der Bildschirm.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P446",
+"v": 984,
+"titel": "Dungeon-Master: Reiter Regeln, Bestiarium, Gleichgewicht",
+"text": "A: Als Admin auf Dungeon-Master: neben Runden und Helden steht der Reiter „Regeln“; Funktionen → KI-Dungeon-Master → Regeln anpassen öffnet ihn. B: Links „Gegner (Bestiarium)“: Liste mit Bild oder Zeichen vorne, Werten und Marke; Filter „Stufe 11+“ und „Gleichgewicht: zu stark“ wirken, die Suche „Goblin“ findet ihn. C: Goblin antippen: Detail mit Grund der Marke; „Ändern“, Leben auf 120 setzen, „Prüfen und speichern“: gespeichert mit Hinweis „zu stark“, Stand „geändert“; „Zurück auf mitgeliefert“ stellt ihn wieder her. D: Mit Bildern an: „🖌 Malen“ bei einem Gegner ohne Bild malt es; „Nochmal malen“ zeigt alt und neu nebeneinander, „Altes behalten“ lässt das alte. E: Am Handy (390 px) nichts breiter als der Bildschirm.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -218,6 +218,13 @@ _seen = {}                        # monitor id -> (last time, address)
 _saved = [0.0]                    # last time live-monitors.json was written for "last seen"
 
 
+def _dungeon_regeln(c):
+    """The Dungeon-Master's own rules (dungeon_regelseite.counts): numbers only."""
+    if not c or not (c.get("eigene") or c.get("aus") or c.get("kandidaten")):
+        return ""
+    return f" · eigene Regeln {c['eigene']} Einträge, {c['aus']} ausgeblendet" + (f", {c['kandidaten']} neue Bilder zur Wahl" if c.get("kandidaten") else "")
+
+
 def _gastkonten():
     """„Gäste mit E-Mail“ of the Dungeon-Master (dungeon_gast.counts): numbers only, never an address."""
     import dungeon_gast
@@ -1353,6 +1360,11 @@ def snapshot(view="admin", now=None):
         dgn["ding"] = dungeon_dingbild.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["ding"] = {"on": False}
+    try:   # the admin's rules tab (dungeon_regelseite.py): own entries, hidden ones, pictures to choose
+        import dungeon_regelseite
+        dgn["regeln"] = dungeon_regelseite.counts() if dgn.get("on") else {}
+    except Exception:
+        dgn["regeln"] = {}
     try:   # Musik am Tisch (dungeon_musik.py): numbers on the game's line
         import dungeon_musik
         dgn["musik"] = dungeon_musik.for_live() if dgn.get("on") else {}
@@ -1774,6 +1786,7 @@ def snapshot(view="admin", now=None):
                         + f" · {dgn.get('karten', 0)} Karten, {dgn.get('gewoelbe_drin', 0)} im Gewölbe"
                         + (f", {dgn['ortsbilder']} Ortsbilder" if dgn.get("ortsbilder") else "")
                         + _dungeon_musik(dgn.get("musik") or {})
+                        + _dungeon_regeln(dgn.get("regeln") or {})
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")

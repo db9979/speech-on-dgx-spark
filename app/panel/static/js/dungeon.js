@@ -51,7 +51,7 @@ window.dmStart=who=>{DM.on=!!(who&&who.profile&&who.dungeon);
   document.querySelectorAll('nav button[data-s=dungeon]').forEach(b=>b.hidden=!DM.on)};
 function dmOpen(){if(!PROFILE)return;const root=$('dmroot'),box=$('dmbox');if(box){box.hidden=true;$('dungeon').appendChild(box)}root.textContent='';
   const body=k=>()=>{const w=document.createElement('div');w.className='dm';w.id='dmview';w.dataset.tab=k;dmPaint(w);return w};
-  root.appendChild(icTabs('dungeon',[{k:'runden',label:OWN_PAGES.dmbox[2],body:body('runden')},{k:'helden',label:t('Helden','Heroes'),body:body('helden')}]));
+  root.appendChild(icTabs('dungeon',[{k:'runden',label:OWN_PAGES.dmbox[2],body:body('runden')},{k:'helden',label:t('Helden','Heroes'),body:body('helden')},...(ADMIN?[{k:'regeln',label:t('Regeln','Rules'),body:dmRulesBox}]:[])]));
   dmLoad()}
 window.dmOpen=dmOpen;
 async function dmLoad(){if(!DM.on)return;const seq=++DM.seq;const {r,d}=await apiTry('/api/profile/dungeon?lang='+dmLang());if(seq!==DM.seq)return;
@@ -71,6 +71,7 @@ const dmMsg=S=>`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.ms
 // a refusal of the panel as a sentence with what to do: the reason word of the rule (dungeon._http, one per raise in
 // dungeon*.py, test_dungeon checks every one has its sentence) or the coarse word
 const DMGRUND={
+  'eintrag':['Diesen Eintrag gibt es nicht mehr. Lade die Liste neu.','This entry is gone. Reload the list.'],
   'adresse':['Diese E-Mail-Adresse passt nicht. Prüfe sie, beim Einschalten der Zug-Mails muss es die Adresse deines Gast-Kontos sein.','This e-mail address does not fit. Check it; for turn mails it must be the address of your guest account.'],
   'code':['Der Code passt nicht oder ist abgelaufen. Fordere einen neuen an.','The code does not fit or has expired. Ask for a new one.'],
   'konto':['Dein Gast-Konto ist auf diesem Gerät nicht mehr angemeldet. Melde dich mit deiner Adresse neu an.','Your guest account is no longer signed in on this device. Sign in again with your address.'],
@@ -655,31 +656,133 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
   if(B.dmportraet){await dgAct('/api/dungeon/portraet/malen',{});return}
   if(B.dmtx){const m=await dmTx(B,'g',async b2=>{await dgAct('/api/dungeon/held',b2);return !DG.err});if(typeof m==='string')dmSay(DG,m,true);dgDraw();return}
   if(B.dmfigur){if(DG.busy)return;DG.busy=true;try{const d=await dgPub('/api/dungeon/figur',{code:DG.code});DG.figur=d.figur;dgDraw()}catch(e){dmSay(DG,dgErr(e),true)}DG.busy=false}});
-// ---------------------------------------------------------------- the admin's rules (Funktionen → KI-Dungeon-Master)
-async function dmRules(){let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
+// ---------------------------------------------------------------- the admin's rules: the tab „Regeln“ (dungeon_regelseite.py)
+// Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „unübersichtlich“: the sections on the left,
+// the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
+// detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
+const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:Date.now()};
+const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende'];
+const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
+  voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),
+  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
+const dmRTab=()=>!!(PROFILE&&DM.on&&ADMIN);
+async function dmRules(){if(dmRTab()&&$('dmroot')){icTabSet('dungeon','regeln');goSec('dungeon');return}
+  let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
     m.innerHTML='<div class="card modalcard dmadmcard" id="dmadmcard"></div>';document.body.appendChild(m)}
-  m.style.display='grid';const c=$('dmadmcard');c.innerHTML=`<div class="mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;
-  DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!r.ok){c.innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
+  m.style.display='grid';dmRulesLoad()}
+function dmRulesBox(){const w=document.createElement('div');w.className='dm-regeln';w.innerHTML='<div class="dm-rcard" id="dmadmcard"></div>';setTimeout(dmRulesLoad,0);return w}
+async function dmRulesLoad(){const c=$('dmadmcard');if(!c)return;c.innerHTML=`<div class="mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;
+  DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!$('dmadmcard'))return;if(!r.ok){$('dmadmcard').innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
   try{DMA.voices=((await (await api('/api/tts/voices')).json()).voices||[]).filter(x=>typeof x==='string')}catch{DMA.voices=[]}dmRulesDraw(d,'')}
 // „Gäste mit E-Mail“ (dungeon_gast.py): the mailbox the codes and „Du bist dran“ go from, and the numbers
-function dmGastAdm(g){if(!g||!g.an)return '';
-  return `<h3 class="sec">${esc(t('Gäste mit E-Mail','Guests with e-mail'))}</h3><div class="pintro">${esc(t('Gäste bekommen einen Code und auf Wunsch „Du bist dran“ von diesem Postfach. Der Spark speichert nur einen Hash der Adresse, die Adresse selbst nur versiegelt, wenn ein Gast Zug-Mails will.','Guests get a code and, if they want, "Your turn" from this mailbox. The Spark keeps only a hash of the address, the address itself only sealed when a guest wants turn mails.'))}</div>
+function dmGastAdm(g){if(!g||!g.an)return `<div class="fh">${esc(t('Aus. Gäste mit E-Mail sind nicht freigegeben.','Off. Guests with e-mail are not released.'))}</div>`;
+  return `<div class="pintro">${esc(t('Gäste bekommen einen Code und auf Wunsch „Du bist dran“ von diesem Postfach. Der Spark speichert nur einen Hash der Adresse, die Adresse selbst nur versiegelt, wenn ein Gast Zug-Mails will.','Guests get a code and, if they want, "Your turn" from this mailbox. The Spark keeps only a hash of the address, the address itself only sealed when a guest wants turn mails.'))}</div>
     <div class="row"><select id="dmgastpf" aria-label="${esc(t('Postfach','Mailbox'))}"><option value="">${esc(t('Kein Postfach','No mailbox'))}</option>${g.postfaecher.map(x=>`<option value="${esc(x.k)}"${x.k===g.absender?' selected':''}>${esc(x.name)}</option>`).join('')}</select><button type="button" class="b" data-dmadm="mailpf">${esc(t('Sichern','Save'))}</button></div>
     <div class="dm-sum"><span class="pill${g.bereit?' ok':' warn'}">${esc(g.bereit?t('bereit','ready'):t('kein Postfach mit Ausgangsserver','no mailbox with outgoing server'))}</span> <span class="pill">${esc(t('Gast-Konten','Guest accounts'))} ${g.konten}</span> <span class="pill">${esc(t('mit Zug-Mail','with turn mail'))} ${g.zugmail}</span> <span class="pill">${esc(t('Helden','heroes'))} ${g.helden}</span> <span class="pill">${esc(t('Mails heute','mails today'))} ${g.mails_heute}</span></div>`}
-function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(d.eigene||{},null,2);DMP.d=d;
-  if(DMP.g){c.innerHTML=dmPlanForm(d);return}
+function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=d.summe,N=dmRNamen(),tab=!!c.closest('.dm-regeln');
+  const n={geschichten:(d.geschichten||[]).length,gegenstaende:S.gegenstaende,klassen:S.klassen,voelker:S.voelker,welten:S.welten,toene:S.toene};
+  for(const k of DMRKAT)if(DMR.k[k])n[k]=DMR.k[k].zeilen.length;
+  const nb=k=>`<button type="button" class="${DMR.teil===k?'on':''}" data-dmrteil="${k}"${DMR.teil===k?' aria-current="true"':''}><span>${esc(N[k])}</span>${n[k]!=null?`<small>${n[k]}</small>`:''}</button>`;
+  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt'].map(nb).join('')}<hr>${nb('json')}</nav>`;
+  c.innerHTML=`<div class="dm-rhead"><h2>${esc(t('Dungeon-Master: Regeln','Dungeon Master: rules'))}</h2>${tab?'':`<button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button>`}</div>
+    <div class="dm-rlay">${nav}<div class="dm-rin">${dmRTeil(d,err)}</div></div>`;
+  if(DMR.teil==='musik'&&window.dmMusikAdm)dmMusikAdm();
+  if(DMRKAT.includes(DMR.teil)&&!DMR.k[DMR.teil])dmKatLoad(DMR.teil)}
+function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N[k])}</h3>`,E=err?`<div class="err dm-adm-err">${err}</div>`:'';
+  if(k==='geschichten')return DMP.g?dmPlanForm(d):dmPlans(d)+E;
+  if(DMRKAT.includes(k))return dmKat(k);
+  if(k==='stimmen')return h+`<div class="fh">${esc(t('Die Stimme des Erzählers und der NPCs, wenn eine Welt keine eigene beschreibt.','The narrator\'s and the NPCs\' voice when a world describes none of its own.'))}</div>
+    <div class="dm-two">${[['erzaehler',t('Stimme des Erzählers','Narrator voice')],['npc',t('Stimme der NPCs','NPC voice')]].map(([v,nm])=>{const cur=((d.eigene||{}).stimmen||{})[v]||'';
+      return `<div><label>${esc(nm)}</label><select class="dmadm-voice" data-k="${v}"><option value="">${esc(t('Standardstimme','Default voice'))}</option>${[...new Set([cur,...(DMA.voices||[])].filter(Boolean))].map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`}).join('')}</div>
+    ${E}<div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Speichern','Save'))}</button></div>`;
+  if(k==='bilder')return dmThumbsPics(d);
+  if(k==='musik')return '<div id="dmmusikadm"></div>';
+  if(k==='gaeste')return h+dmGastAdm(d.gastmail)+E;
+  if(k==='ankommt')return h+(dmThumbsAdmin(d.daumen)||`<div class="fh">${esc(t('Noch keine 👍 oder 👎 in einer Runde.','No 👍 or 👎 in a round yet.'))}</div>`);
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
-  c.innerHTML=`<h2>${esc(t('Dungeon-Master: Regeln anpassen','Dungeon Master: adjust rules'))}</h2>
-    <div class="pintro">${esc(t('Ergänze oder ändere Welten, Töne, Völker, Klassen mit Fähigkeiten, Gegenstände, Effekte, Kurven und den Standard-Prompt. Ein Eintrag mit derselben id ersetzt den mitgelieferten, "aus": true nimmt ihn heraus. Das Panel prüft alles, bevor es gilt.','Add or change worlds, tones, peoples, classes with abilities, items, effects, curves and the default prompt. An entry with the same id replaces the shipped one, "aus": true takes it out. The panel checks everything before it counts.'))}</div>
-    ${dmPlans(d)}${dmThumbsAdmin(d.daumen)}
-    <h3 class="sec">${esc(t('Regeln und Katalog','Rules and catalogue'))}</h3>
-    <div class="dm-sum">${Object.entries(names).map(([k,n])=>`<span class="pill">${esc(n)} ${S[k]}</span>`).join(' ')}</div>
-    <div class="dm-two">${[['erzaehler',t('Stimme des Erzählers','Narrator voice')],['npc',t('Stimme der NPCs','NPC voice')]].map(([k,n])=>{const cur=((d.eigene||{}).stimmen||{})[k]||'';
-      return `<div><label>${esc(n)}</label><select class="dmadm-voice" data-k="${k}"><option value="">${esc(t('Standardstimme','Default voice'))}</option>${[...new Set([cur,...(DMA.voices||[])].filter(Boolean))].map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`}).join('')}</div>
-    <label for="dmadmtxt">${esc(t('Deine Ergänzungen (JSON)','Your additions (JSON)'))}</label><textarea id="dmadmtxt" rows="14" data-fest spellcheck="false" class="mono">${esc(txt)}</textarea>
-    ${err?`<div class="err dm-adm-err">${err}</div>`:''}
+  return h+`<div class="pintro">${esc(t('Ergänze oder ändere Welten, Töne, Völker, Klassen mit Fähigkeiten, Gegenstände, Effekte, Kurven und den Standard-Prompt. Ein Eintrag mit derselben id ersetzt den mitgelieferten, "aus": true nimmt ihn heraus. Das Panel prüft alles, bevor es gilt.','Add or change worlds, tones, peoples, classes with abilities, items, effects, curves and the default prompt. An entry with the same id replaces the shipped one, "aus": true takes it out. The panel checks everything before it counts.'))}</div>
+    <div class="dm-sum">${Object.entries(names).map(([x,nm])=>`<span class="pill">${esc(nm)} ${d.summe[x]}</span>`).join(' ')}</div>
+    <label for="dmadmtxt">${esc(t('Deine Ergänzungen (JSON)','Your additions (JSON)'))}</label><textarea id="dmadmtxt" rows="14" data-fest spellcheck="false" class="mono">${esc(JSON.stringify(d.eigene||{},null,2))}</textarea>${E}
     <details class="adv"><summary>${esc(t('Mitgelieferte Regeln ansehen (zum Kopieren)','See the shipped rules (to copy)'))}</summary><pre class="dm-pre">${esc(JSON.stringify(d.standard,null,2))}</pre></details>
-    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button><button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button></div>${dmDingAdmin(d.dingbilder)}${dmGastAdm(d.gastmail)}<div id="dmmusikadm"></div>`;if(window.dmMusikAdm)dmMusikAdm()}
+    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button></div>`}
+const dmThumbsPics=d=>`<div id="dmbilder">${dmDingAdmin(d.dingbilder)||`<div class="fh">${esc(t('Bilder für Ausrüstung und Zauber sind aus.','Pictures for gear and spells are off.'))}</div>`}</div>`;
+// ---- one part of the catalog: search, filters, the list with picture and mark, the detail with „Ändern“ and „Nochmal malen“
+async function dmKatLoad(teil){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang());
+  if(!r.ok){DMR.k[teil]={zeilen:[],eintraege:{},fehler:dmErr(r.status,d.detail)}}else DMR.k[teil]=d;if(DMR.teil===teil&&DMP.d)dmRulesDraw(DMP.d,'')}
+const DMRMARKE={schwach:'',ok:'ok',stark:'warn',zu_stark:'bad'};
+const DMRSTAND=()=>({grund:t('Grundregel','Base'),srd:'SRD',eigen:t('eigen','own'),geaendert:t('geändert','changed'),aus:t('ausgeblendet','hidden')});
+function dmRFilter(teil){if(teil==='gegenstaende')return [['alle',t('Alle','All')],['waffe',t('Waffen','Weapons')],['ruestung',t('Rüstung','Armour')],['zauber',t('Zauber','Spells')],['trank',t('Tränke','Potions')],['schatz',t('Schätze','Treasure')]];
+  if(teil==='gegner')return [['alle',t('Alle','All')],['s0',t('Stufe 0-4','Level 0-4')],['s5',t('Stufe 5-10','Level 5-10')],['s11',t('Stufe 11+','Level 11+')]];return null}
+function dmRPass(x){const f=DMR.f,q=DMR.q.trim().toLowerCase();
+  if(q&&!(x.name.toLowerCase().includes(q)||String(x.id).toLowerCase().includes(q)))return false;
+  if(DMR.m!=='alle'&&!(x.marke&&(DMR.m==='stark'?['stark','zu_stark'].includes(x.marke.marke):x.marke.marke===DMR.m)))return false;
+  if(f==='alle')return true;
+  if(f==='zauber')return ['zauber','rolle'].includes(x.art);if(f==='schatz')return ['schatz','schmuck'].includes(x.art);
+  if(f[0]==='s'&&x.stufe!=null){const s=+x.stufe;return f==='s0'?s<5:f==='s5'?s>=5&&s<=10:s>10}
+  return x.art===f}
+const dmRImg=n=>`<img alt="" loading="lazy" src="/api/admin/dungeon/bild/${encodeURIComponent(n)}?v=${DMR.v}">`;
+function dmRThumb(x,K){if(!K.bilder_an&&!x.bild||!('bild' in x))return `<span class="dm-rth dm-dz" aria-hidden="true">${esc(x.zeichen||'·')}</span>`;
+  return x.bild?`<span class="dm-rth">${dmRImg(x.bild)}</span>`:`<span class="dm-rth dm-rno" aria-hidden="true">${esc(x.zeichen||'')}</span>`}
+function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
+  if(!K)return `<h3 class="sec">${esc(N[teil])}</h3><div class="mut">${esc(t('Lade …','Loading …'))}</div>`;
+  if(K.fehler)return `<h3 class="sec">${esc(N[teil])}</h3><div class="err">${esc(K.fehler)}</div>`;
+  const F=dmRFilter(teil),hasM=K.zeilen.some(x=>x.marke),rows=K.zeilen.filter(dmRPass),MAX=200;
+  const nm={alle:t('Alle','All'),stark:t('stark und zu stark','strong and too strong'),zu_stark:t('zu stark','too strong'),schwach:t('schwach','weak')};
+  const list=rows.slice(0,MAX).map(x=>{const m=x.marke&&x.marke.marke!=='ok'?`<span class="pill ${DMRMARKE[x.marke.marke]}" title="${esc(x.marke.grund)}">${esc(x.marke.name)}</span>`:'';
+    return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small></span></button>
+      <span class="dm-rpills">${m}${x.stand!=='grund'&&x.stand!=='srd'?`<span class="pill">${esc(St[x.stand])}</span>`:''}${x.neu?`<span class="pill warn">${esc(t('neues Bild','new picture'))}</span>`:''}</span>
+      ${'bild' in x&&!x.bild&&K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(t('Malen','Paint'))}</button>`:''}</div>`}).join('');
+  return `<h3 class="sec">${esc(N[teil])} · ${K.zeilen.length}</h3>
+    <div class="dm-rsrch"><input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
+      ${F?`<div class="lseg dm-rseg">${F.map(([v,l])=>`<button type="button" class="${DMR.f===v?'on':''}" data-dmrf="${v}">${esc(l)}</button>`).join('')}</div>`:''}
+      ${hasM?`<select class="dmr-m" aria-label="${esc(t('Gleichgewicht','Balance'))}">${['alle','stark','zu_stark','schwach'].map(v=>`<option value="${v}"${DMR.m===v?' selected':''}>${esc(v==='alle'?t('Gleichgewicht: alle','Balance: all'):nm[v])}</option>`).join('')}</select>`:''}</div>
+    <div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
+    <div class="dm-rdet" id="dmrdet">${dmRDet(teil)}</div></div>`}
+function dmRDet(teil){const K=DMR.k[teil],x=K.zeilen.find(z=>String(z.id)===DMR.sel),St=DMRSTAND();
+  if(!x)return `<div class="ic-empty">${esc(t('Tippe links einen Eintrag an.','Tap an entry on the left.'))}</div>`;
+  const e=K.eintraege[String(x.id)]||{},li=L==='en'?1:0,tx=v=>Array.isArray(v)?v[li]||v[0]:v||'';
+  if(DMR.edit)return `<b class="dm-rname">${esc(DMR.edit.kopie?t('Eigene Kopie','Own copy'):t('Ändern','Edit'))}: ${esc(x.name)}</b>
+    <div class="fh">${esc(t('Der ganze Eintrag; das Panel prüft ihn wie alle Regeln. „Zu stark“ ist nur ein Hinweis.','The whole entry; the panel checks it like every rule. "Too strong" is only a hint.'))}</div>
+    <textarea class="mono dmr-txt" rows="16" data-fest spellcheck="false">${esc(JSON.stringify(DMR.edit.e,null,2))}</textarea>${DMR.err?`<div class="err dm-adm-err">${DMR.err}</div>`:''}
+    <div class="row"><button type="button" class="b p" data-dmrdo="setzen">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmrdo="abbrechen">${esc(t('Abbrechen','Cancel'))}</button></div>`;
+  const m=x.marke,neu=DMR.neu[String(x.id)]||x.neu,b='bild' in x;
+  const pic=b?`<div class="dm-rbild">${neu?`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(t('jetzt','now'))}</figcaption></figure><figure>${dmRImg(neu)}<figcaption>${esc(t('neu gemalt','painted again'))}</figcaption></figure></div>
+      <div class="row"><button type="button" class="b p" data-dmrbild="neu" data-id="${esc(x.id)}">${esc(t('Neues behalten','Keep the new one'))}</button><button type="button" class="b" data-dmrbild="alt" data-id="${esc(x.id)}">${esc(t('Altes behalten','Keep the old one'))}</button></div>`
+      :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
+      <div class="row">${K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(DMR.busy===String(x.id)?t('Malt gerade …','Painting …'):x.bild?t('Nochmal malen','Paint again'):t('Malen','Paint'))}</button>`:`<small class="mut">${esc(t('Die Bilder sind aus; einschalten im Abschnitt „Bilder“.','Pictures are off; switch them on in the part "Pictures".'))}</small>`}</div></div>`:'';
+  return `<div class="dm-rdkopf"><div><b class="dm-rname">${esc(x.zeichen||'')} ${esc(x.name)}</b> <span class="pill">${esc(St[x.stand])}</span>${m?` <span class="pill ${DMRMARKE[m.marke]}">${esc(m.name)}</span>`:''}</div></div>
+    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}
+      <div class="row"><button type="button" class="b" data-dmrdo="aendern">${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmrdo="kopie">${esc(t('Eigene Kopie','Own copy'))}</button>
+      ${x.stand==='aus'||x.stand==='geaendert'?`<button type="button" class="b" data-dmrdo="zurueck">${esc(t('Zurück auf mitgeliefert','Back to shipped'))}</button>`:''}
+      ${x.stand==='eigen'?`<button type="button" class="b danger" data-dmrdo="zurueck">${esc(t('Eigenen Eintrag löschen','Delete own entry'))}</button>`:x.stand!=='aus'?`<button type="button" class="b" data-dmrdo="aus">${esc(t('Ausblenden','Hide'))}</button>`:''}</div></div>${pic}</div>`}
+function dmRDraw(){const c=$('dmadmcard');if(c&&DMP.d)dmRulesDraw(DMP.d,'')}
+async function dmRDo(teil,was,id,eintrag){const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'?lang='+dmLang(),xjson('POST',{was,id,eintrag}));
+  if(!r.ok){DMR.err=Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail));dmRDraw();return false}
+  DMR.k[teil]=d;DMR.edit=null;DMR.err='';if(eintrag)DMR.sel=String(eintrag.id);dmRDraw();
+  if(d.hinweis)sayToast(t('Gespeichert. Hinweis: ','Saved. Hint: ')+d.hinweis.name+' · '+d.hinweis.grund);else sayToast(t('Gespeichert','Saved'));return true}
+const DMRWARUM=()=>({aus:t('Die Bilder sind aus.','Pictures are off.'),tag:t('Das Tageslimit für Bilder ist erreicht.','The day limit for pictures is reached.'),pruefung:t('Die Bildbeschreibung hat die Prüfung nicht bestanden.','The picture prompt did not pass the check.'),
+  missing:t('Das Bildmodell fehlt.','The picture model is missing.'),ohne_pruefung:t('Die Bildprüfung fehlt.','The image check is missing.'),belegt:t('Das Bildmodell ist gerade belegt.','The picture model is busy right now.')});
+document.body.addEventListener('input',e=>{const q=e.target.closest('#dmadmcard .dmr-q');if(!q)return;DMR.q=q.value;const p=q.selectionStart;dmRDraw();const n=document.querySelector('#dmadmcard .dmr-q');if(n){n.focus();n.setSelectionRange(p,p)}});
+document.body.addEventListener('change',e=>{const s=e.target.closest('#dmadmcard .dmr-m');if(!s)return;DMR.m=s.value;dmRDraw()});
+document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmadmcard');if(!c)return;const teil=DMR.teil;
+  const nb=e.target.closest('[data-dmrteil]');if(nb){DMR.teil=nb.dataset.dmrteil;DMR.sel='';DMR.q='';DMR.f='alle';DMR.m='alle';DMR.edit=null;DMR.err='';DMP.g=null;dmRDraw();return}
+  const fb=e.target.closest('[data-dmrf]');if(fb){DMR.f=fb.dataset.dmrf;dmRDraw();return}
+  const sb=e.target.closest('[data-dmrsel]');if(sb){DMR.sel=sb.dataset.dmrsel;DMR.edit=null;DMR.err='';dmRDraw();const d=$('dmrdet');if(d&&window.innerWidth<900)d.scrollIntoView({block:'start',behavior:'smooth'});return}
+  const db=e.target.closest('[data-dmrdo]');if(db){const K=DMR.k[teil],x=K&&K.zeilen.find(z=>String(z.id)===DMR.sel);if(!x)return;const was=db.dataset.dmrdo;
+    if(was==='abbrechen'){DMR.edit=null;DMR.err='';dmRDraw();return}
+    if(was==='aendern'||was==='kopie'){const e0=JSON.parse(JSON.stringify(K.eintraege[String(x.id)]||{}));
+      if(was==='kopie'){const ids=new Set(K.zeilen.map(z=>String(z.id)));let n=2;while(ids.has(`${x.id}_${n}`))n++;e0.id=typeof x.id==='number'?Math.max(...K.zeilen.map(z=>+z.id||0))+1:`${x.id}_${n}`;}
+      DMR.edit={e:e0,kopie:was==='kopie'};DMR.err='';dmRDraw();return}
+    if(was==='setzen'){let ent;try{ent=JSON.parse(c.querySelector('.dmr-txt').value)}catch{DMR.edit.e=c.querySelector('.dmr-txt').value;DMR.err=esc(t('Das ist kein gültiges JSON.','This is not valid JSON.'));dmRDraw();return}
+      DMR.edit.e=ent;await dmRDo(teil,'setzen',String(ent.id),ent);return}
+    if(db.classList.contains('danger')&&db.dataset.sure!=='1'){db.dataset.sure='1';db.textContent=t('Wirklich löschen?','Really delete?');return}
+    await dmRDo(teil,was,String(x.id));return}
+  const pb=e.target.closest('[data-dmrbild]');if(pb){const id=pb.dataset.id,was=pb.dataset.dmrbild;if(DMR.busy)return;
+    if(was==='malen'){DMR.busy=id;dmRDraw()}
+    const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'/bild',xjson('POST',{id,was}));DMR.busy='';
+    if(!r.ok){sayToast(DMRWARUM()[d.detail]||dmErr(r.status,d.detail));dmRDraw();return}
+    if(was==='malen'&&d.neu)DMR.neu[id]=d.neu;else delete DMR.neu[id];DMR.v=Date.now();DMR.sel=id;
+    await dmKatLoad(teil);return}});
 document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')){dmRules();return}
   const b=e.target.closest('#dmadmcard [data-dmadm]');if(!b)return;const k=b.dataset.dmadm;
   if(k==='close'){$('dmadm').style.display='none';return}
@@ -687,13 +790,15 @@ document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')
     if(r.ok)dmRulesDraw(d,'');else dmRulesDraw(DMP.d,esc(dmErr(r.status,d.detail)));return}
   if(k[0]==='g'){await dmPlanClick(b,k);return}
   if(k==='reset'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich auf Standard?','Really back to default?');return}
-    const {r,d}=await apiTry('/api/admin/dungeon',{method:'DELETE'});if(r.ok)dmRulesDraw(d,'');return}
-  let own;try{own=JSON.parse($('dmadmtxt').value||'{}')}catch{const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(r.ok)dmRulesDraw(Object.assign(d,{eigene:{}}),esc(t('Das ist kein gültiges JSON.','This is not valid JSON.')));return}
-  const sv={};document.querySelectorAll('#dmadmcard .dmadm-voice').forEach(x=>{sv[x.dataset.k]=x.value});
-  if(Object.values(sv).some(Boolean)||own.stimmen)own.stimmen=sv;
-  const keep=$('dmadmtxt').value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
-  if(r.ok){dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
-  const g=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail)));$('dmadmtxt').value=keep});
+    const {r,d}=await apiTry('/api/admin/dungeon',{method:'DELETE'});if(r.ok){DMR.k={};dmRulesDraw(d,'')}return}
+  // „Speichern“ in Stimmen keeps the own rules as they are, the JSON part reads them from its field
+  const ta=$('dmadmtxt');let own;
+  if(ta){try{own=JSON.parse(ta.value||'{}')}catch{dmRulesDraw(DMP.d,esc(t('Das ist kein gültiges JSON.','This is not valid JSON.')));$('dmadmtxt').value=ta.value;return}}else own=JSON.parse(JSON.stringify(DMP.d.eigene||{}));
+  const sv={},vs=document.querySelectorAll('#dmadmcard .dmadm-voice');vs.forEach(x=>{sv[x.dataset.k]=x.value});
+  if(vs.length&&(Object.values(sv).some(Boolean)||own.stimmen))own.stimmen=sv;
+  const keep=ta&&ta.value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
+  if(r.ok){DMR.k={};dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
+  dmRulesDraw(DMP.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail)));if(keep&&$('dmadmtxt'))$('dmadmtxt').value=keep});
 // 👍/👎 per narration over all rounds, per world and tone (numbers only; the model learns nothing from them)
 function dmThumbsAdmin(x){if(!x||!x.length)return '';const n=a=>a[L==='en'?1:0];
   return `<h3 class="sec">${esc(t('Wie die Erzählungen ankommen','How the narrations land'))}</h3><div class="dm-sum">${x.map(r=>`<span class="pill">${esc(n(r.welt))} · ${esc(n(r.ton))}: 👍 ${r.hoch} · 👎 ${r.runter}</span>`).join(' ')}</div>`}
@@ -770,4 +875,4 @@ async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   DMP.busy=true;DMP.err='';dmRulesDraw(d,'');
   const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(k==='gvor'?'vorschlag':'akt'),xjson('POST',body));DMP.busy=false;
   if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang})}else DMP.err=dmPlanErr(r,x);
-  if(DMP.g&&$('dmadm').style.display==='grid')dmRulesDraw(DMP.d,'')}
+  if(DMP.g&&$('dmadmcard'))dmRulesDraw(DMP.d,'')}
