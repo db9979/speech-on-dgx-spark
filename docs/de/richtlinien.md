@@ -332,7 +332,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 
 ## 10. Repo, Push-Ablauf, CI, Releases
 
-- **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.541). (PA)
+- **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.541). Nach V01.0.999 kommt V01.1.000, dann V01.1.001 usw. (Dominik 2026-10-24 „2“); verglichen wird überall als Zahlen-Tupel, nie als Text. Im Praxistest steht die Version als Zahl `v` = Mittelzahl × 1000 + Patch (V01.1.000 = 1000). (PA)
 - **Sammel-Push (PA, Dominik 2026-10-13, ersetzt „auf den Testlauf warten“):**
   1. Gepusht wird der Reihe nach über die Push-Warteschlange (`push-warteschlange.md`); nur wer ganz oben steht, pusht, nie vordrängeln.
   2. Wer oben steht, pusht sofort, auch wenn ein Lauf „Tests“ für main läuft oder wartet: vorher `git pull --rebase`, **nächste freie Versionsnummer zum Push-Zeitpunkt** (nie vorab reservieren), Schnelltest grün. Danach eigene Zeile entfernen, der Nächste ist sofort dran.

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.000** · 2026-10-24 · KI-Dungeon-Master: Knopf „Alle Bilder malen“ ohne Tageslimit mit Fortschritt und Abbrechen; Gegnerbilder aus Beschreibung, Größe und fester Liste Mensch/humanoid statt nur aus dem Namen
 - **V01.0.999** · 2026-10-24 · KI-Dungeon-Master: Werkzeuge sind eine eigene Art mit eigenem Bild und 🧰 statt Schriftrolle; Völker, Klassen, Fähigkeiten und Gegner werden im Stil jeder Welt gemalt, das Heldenformular zeigt das Bild der gewählten Welt
 - **V01.0.998** · 2026-10-24 · Begleiter am Mac: das Fenster in der Menüleiste ist immer genau so hoch wie sein Inhalt, kein leerer Rand mehr oben und unten nach einem langen Reiter
 - **V01.0.997** · 2026-10-24 · KI-Dungeon-Master: unter Regeln anpassen zeigen Gegenstände und Gegner ihre Werte und was sie bewirken, in der Zeile und als Werte-Liste im Detail

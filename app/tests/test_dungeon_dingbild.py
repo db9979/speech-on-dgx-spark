@@ -220,6 +220,50 @@ class Catalog(Base):
         s = ADMIN.get("/api/admin/dungeon/dingbilder").json()
         self.assertEqual((s["fertig"], s["von"], s["heute"]), (6, len(db.wanted(r)), 3))
 
+    def test_paint_all_ignores_the_day_limit(self):
+        """„Alle Bilder malen“ (Dominik 2026-10-24): the admin's run without the day limit; the stop still ends it."""
+        r = dungeon.rules()
+        few = db.wanted(r)[:8]
+        with mock.patch("dungeon_dingbild.wanted", lambda r: few):
+            self.run_now()
+            self.assertEqual(len(self.calls), db.TAG_MAX)
+            self.assertEqual(db._end_why("knopf"), "tag")
+            self.assertEqual(db._end_why("alle"), "")                    # no day limit for it
+            self.run_now("alle")
+            self.assertEqual(len(self.calls), len(few))                  # everything missing, past the limit
+            st = db._state()
+            self.assertEqual((st["tag"]["n"], st["letzter"]["grund"], st["letzter"]["warum"]), (len(few), "alle", "fertig"))
+        db._lauf["stop"] = True
+        self.assertEqual(db._end_why("alle"), "angehalten")              # „Abbrechen“
+        db._lauf["stop"] = False
+        started = []
+        with mock.patch("dungeon_dingbild.start", lambda g: started.append(g) or True):
+            self.assertEqual(ADMIN.post("/api/admin/dungeon/dingbilder", json={"alle": True}).status_code, 200)
+            self.assertEqual(ADMIN.post("/api/admin/dungeon/dingbilder").status_code, 200)   # no body: the old button
+            self.assertEqual(ADMIN.post("/api/admin/dungeon/dingbilder", json={"alle": "ja"}).status_code, 200)
+        self.assertEqual(started, ["alle", "knopf", "knopf"])
+
+    def test_a_foe_is_painted_from_its_description_size_and_kind(self):
+        """Dominik 2026-10-24 „2“: a Cultist came out as a horned demon from its name alone."""
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": r["welten"][0]["id"], "ton": None})
+        kult = next(g for g in r["gegner"] if g["id"] == "kultist")
+        p = db.prompt(style, kult)
+        self.assertIn(kult["info"][1].rstrip("."), p)
+        self.assertIn(db.WESEN_EN["mensch"], p)
+        self.assertIn(db.GROESSE_EN["mittel"], p)
+        self.assertNotIn("plain dark background", p)                       # the world's style asks for a background
+        self.assertIn(db.WESEN_EN["humanoid"], db.prompt(style, next(g for g in r["gegner"] if g["id"] == "goblin")))
+        wolf = db.prompt(style, next(g for g in r["gegner"] if g["id"] == "wolf"))
+        self.assertFalse(any(w in wolf for w in db.WESEN_EN.values()))
+        ids = {g["id"] for g in r["gegner"]}
+        self.assertTrue(db.MENSCH <= ids and db.HUMANOID <= ids and not db.MENSCH & db.HUMANOID)
+        ghul = next(g for g in r["gegner"] if g["id"] == "ghul")       # a description the word list refuses stays out
+        self.assertNotIn(ghul["info"][1].rstrip("."), db.prompt(style, ghul))
+        self.assertTrue(all(db._ok_text(db.prompt(style, g), r) for g in r["gegner"]))
+        bad = dict(kult, info=[kult["info"][0], f"A cultist, {r['nie'][0]}."])
+        self.assertFalse(db._ok_text(db.prompt(style, bad), r))            # the game's list „nie“ holds too
+
     def test_a_seat_sees_the_picture_as_a_copy(self):
         rid = self.new_round()
         x = self.give(rid, cid="heiltrank", s="gewoehnlich")

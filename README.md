@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.000** AI Dungeon Master: button "Paint all pictures" without the day limit, with progress and cancel; foe pictures from description, size and a fixed human/humanoid list instead of the name alone
 - **V01.0.999** AI Dungeon Master: tools are a kind of their own with their own picture and 🧰 instead of a scroll; peoples, classes, abilities and foes are painted in each world's style, the hero form shows the picture of the world chosen
 - **V01.0.998** Companion on the Mac: the menu bar window is always exactly as high as its content, no more empty room above and below after a long tab
 - **V01.0.997** AI Dungeon Master: under Adjust rules items and foes show their values and what they do, in the row and as a list of values in the detail
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.993** AI Dungeon Master: the map follows when the narrator tells the way but forgets the place id (name or direction from the turn and the name in the narration), the new place gets its picture
 - **V01.0.992** No daily limit also without the second login step: the admin ticks "No daily limit" under Rights for any profile (pictures, music, allowance, Dungeon pictures; space and queues stay)
 - **V01.0.991** AI Dungeon Master: more time between turns: reading time before the turn time, 300 s by default, 10 s grace after the last "Act", "+1 minute" once per turn and player, the clock red from 30 s
-- **V01.0.990** Speaking on the model computer starts again without the internet: every pinned model points refs/main at its checked commit, otherwise vllm-omni did not find the voice model offline (TTS design restarted every 30 s)
 
 
 

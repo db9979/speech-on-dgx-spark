@@ -38,6 +38,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PUNKTE_FILE = os.path.join(HERE, "praxistest.json")
 STAND_FILE = os.path.join(STATE, "praxistest-stand.json")
 ALT_BIS = 600              # points before V01.0.600 nobody marked are folded away (Dominik 2026-10-16, 4a)
+# a point's "v": middle number × 1000 + patch (V01.0.999 = 999, V01.1.000 = 1000; Dominik 2026-10-24 „2“), so newest first holds
 STAENDE = ("ok", "problem", "spaeter", "erledigt")   # erledigt: the button for all old points at once
 WORT = {"ok": "klappt", "problem": "problem", "spaeter": "spaeter", "erledigt": "erledigt", "offen": "offen"}
 ID = re.compile(r"P\d{3,4}")

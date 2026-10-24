@@ -332,7 +332,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 
 ## 10. Repo, push procedure, CI, releases
 
-- **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.541). (PA)
+- **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.541). After V01.0.999 comes V01.1.000, then V01.1.001 and so on (Dominik 2026-10-24 "2"); every compare is a tuple of numbers, never text. In the field test the version is the number `v` = middle number × 1000 + patch (V01.1.000 = 1000). (PA)
 - **Batched push (PA, Dominik 2026-10-13, replaces "wait for the test run"):**
   1. Pushes go in order through the push queue (`push-warteschlange.md`); only whoever is on top pushes, never jump the queue.
   2. Whoever is on top pushes at once, even while a "Tests" run for main is running or waiting: first `git pull --rebase`, the **next free version number at push time** (never reserve in advance), quick test green. Then remove your own line; the next one goes at once.

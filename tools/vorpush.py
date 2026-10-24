@@ -72,7 +72,7 @@ def check_version(base):
     mine = open(os.path.join(APP, "VERSION"), encoding="utf-8").read().strip()
     theirs = git("show", base + ":app/VERSION").stdout.strip()
     if version_num(mine) is None:
-        stop("app/VERSION " + mine + " is not of the form V01.0.NNN")
+        stop("app/VERSION " + mine + " is not of the form V01.1.NNN")
     if version_num(theirs) and version_num(mine) <= version_num(theirs):
         stop("app/VERSION " + mine + " is not higher than " + theirs + " on " + base + ": take the next free number")
     top = next((ln for ln in open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8") if ln.startswith("- **V")), "")

@@ -4,6 +4,8 @@
 // „Alle erledigt“. A way in a step becomes a jump link by itself (way.js). Text only through textContent.
 const PT_STAND={ok:['klappt','works'],problem:['Problem','problem'],spaeter:['später','later'],erledigt:['erledigt','done']};
 const PT_CLS={ok:'pt-ok',problem:'pt-problem',spaeter:'pt-spaeter',erledigt:'pt-erledigt'};
+// a point's version: v = middle number × 1000 + patch (V01.0.999 = 999, V01.1.000 = 1000, Dominik 2026-10-24 „2“)
+const ptVer=v=>'V01.'+Math.floor(v/1000)+'.'+String(v%1000).padStart(3,'0');
 function ptEl(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function ptBtn(label,cls,go){const b=ptEl('button','b sm'+(cls?' '+cls:''),label);b.type='button';b.onclick=go;return b}
 async function ptMark(id,stand){const msg=$('ptmsg');msg.textContent='';
@@ -15,7 +17,7 @@ function ptProblem(id){const msg=$('ptmsg');msg.textContent='';
     wayEl(t('Zustand → Logs → Diagnose','Status → Logs → Diagnosis'),t('Zustand → Logs → Diagnose','Status → Logs → Diagnosis')),
     t(` öffnen, „Kopieren für Thread“ und den Text mit „${id}“ in den Thread geben.`,` open, „Copy for thread“ and give the text with „${id}“ to the thread.`))}
 function ptRow(p){const row=ptEl('div','pt-row');row.dataset.id=p.id;
-  row.append(ptEl('div','pt-v',p.v?'V01.0.'+String(p.v).padStart(3,'0'):p.id));
+  row.append(ptEl('div','pt-v',p.v?ptVer(p.v):p.id));
   const tx=ptEl('div','pt-t'),h=ptEl('b',null,p.titel);tx.append(h);
   if(p.stand){const c=ptEl('span','pt-chip '+PT_CLS[p.stand],t(...PT_STAND[p.stand]));h.append(' ',c)}
   tx.append(ptEl('div','pt-steps',p.text));
@@ -41,7 +43,7 @@ async function loadPraxis(){const main=$('ptmain'),msg=$('ptmsg');if(!main)retur
   else main.append(ptEl('div','card mut',t('Nichts offen: alles Neue ist geprüft.','Nothing open: everything new is checked.')));
   const spaeter=by(p=>p.stand==='spaeter');if(spaeter.length)main.append(ptGroup(t('Später','Later'),spaeter,false));
   const alt=by(p=>p.alt);
-  if(alt.length){const g=ptGroup(t(`Alt, vor V01.0.${d.alt_bis}, vermutlich erledigt`,`Old, before V01.0.${d.alt_bis}, probably done`),alt,false);
+  if(alt.length){const g=ptGroup(t(`Alt, vor ${ptVer(d.alt_bis)}, vermutlich erledigt`,`Old, before ${ptVer(d.alt_bis)}, probably done`),alt,false);
     const b=ptBtn(t('Alle alten erledigt','All old ones done'),'',async()=>{if(!confirm(t(`${alt.length} alte Prüfpunkte als erledigt markieren?`,`Mark ${alt.length} old points as done?`)))return;
       try{await api('/api/admin/praxistest/alt',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});loadPraxis()}catch(e){msg.textContent=e.message}});
     g.insertBefore(b,g.children[1]);main.append(g)}

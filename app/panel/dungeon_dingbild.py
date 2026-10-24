@@ -21,7 +21,9 @@ Two kinds of pictures, both painted by the fixed rules of the panel (the model c
 The map (dungeon_karte.py) adds its kinds of places and rooms to the catalog (wanted, painted alike) and an own
 picture of every visited place (ort-<hash>, dungeon_karte.queue_orte from due, shown only to seats of its round).
 The Bestiarium (dungeon.gegner) is painted alike, with its own fixed phrase FOE_EN, in the style of the worlds a foe
-belongs to. The hero form's peoples, classes and class abilities (Dominik 2026-10-24 „bilder keine icons“) are
+belongs to, from its English name, description (info, when the word list lets it through), size (GROESSE_EN) and
+what it is by the panel's fixed lists MENSCH and HUMANOID (Dominik 2026-10-24 „2“). „Alle Bilder malen“ (grund
+"alle") is the admin's run without the day limit. The hero form's peoples, classes and class abilities (Dominik 2026-10-24 „bilder keine icons“) are
 painted alike, once each in every world's style with their own fixed phrases HELD_EN (hero_prompt; Punkt 8a of
 2026-10-24: the style of the world, never fixed fantasy); the form shows the one of the world chosen, a round the one
 of its world, until one is there a colour placeholder, never the old sign. Tools (art "werkzeug") have their own
@@ -57,7 +59,7 @@ import features
 import guard
 import profiles
 from common import STATE, DayCounter, read_json, write_json
-from core import assistant, auth, own_profile, spawn
+from core import assistant, auth, json_body, own_profile, spawn
 
 router = APIRouter()
 KEY = "dungeonbilder"
@@ -77,7 +79,19 @@ ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank":
 ITEM_EN = "game item art, one single object in the centre, plain dark background"
 # the world's style (welten[].bildstil) says fantasy, horror or science fiction, so these phrases name none (Dominik
 # 2026-10-24 „alles umsetzten“, Punkt 8a: a sci-fi people was painted as a fantasy adventurer)
-FOE_EN = "creature art for a bestiary, the whole creature in the centre, plain dark background"   # the Bestiarium (gegner)
+FOE_EN = "creature art for a bestiary, the whole creature in the centre, in a fitting place of its world"   # the Bestiarium (gegner);
+# no "plain dark background": the world's style asks for a detailed one (Dominik 2026-10-24 „2“: a foe from its name only
+# came out wrong, a Cultist as a horned demon), so the prompt has the English description (info), the size and what it is:
+GROESSE_EN = {"winzig": "tiny", "klein": "small", "mittel": "human-sized", "gross": "large", "riesig": "huge"}
+# what a foe is, by a fixed list of the panel (never the model's choice): people, and creatures shaped like people
+MENSCH = frozenset(("bandit", "banditenhauptmann", "schlaeger", "kultist", "kultfanatiker", "wache", "veteran", "ritter",
+                    "berserker", "spion", "assassine", "magier_gegner", "priester", "gladiator", "erzmagier", "raumpirat",
+                    "cyborg_soeldner", "mutant", "meuterer", "piratenkapitaen", "puppenspieler"))
+HUMANOID = frozenset(("goblin", "kobold", "ork_krieger", "hobgoblin", "grottenschrat", "gnoll", "dunkelelf", "duergar",
+                      "echsenmensch", "sahuagin", "meerhexe", "waldhexe", "nachtvettel", "doppelgaenger", "vampirbrut",
+                      "meermensch", "oni", "geisterpirat", "klabautermann", "schattenkind", "oger", "troll", "huegelriese",
+                      "ettin", "azer", "dryade", "satyr", "zombie", "ghul", "grabschrecken", "grabunhold", "mumie"))
+WESEN_EN = {"mensch": "an ordinary human person", "humanoid": "a humanoid with two arms and two legs"}
 HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders, plain dark background",   # Dominik 2026-10-24 „bilder keine icons“
            "klasse": "character art, a {} of this world in a typical pose, the whole figure, plain dark background",
            "kraft": "game ability art, one glowing moment of power, no person in the centre, plain dark background: {}"}
@@ -155,7 +169,13 @@ def prompt(style, c):
     """The fixed prompt of a catalog entry in a style: the English name, the kind's phrase, a spell's sentence; a foe
     of the Bestiarium (no "art") its own fixed phrase."""
     if "art" not in c:
-        return f"{style}, {FOE_EN}: {c['name'][1]}, {dungeon.BILD_ENDE}"
+        import bilder
+        wesen = WESEN_EN["mensch"] if c.get("id") in MENSCH else WESEN_EN["humanoid"] if c.get("id") in HUMANOID else ""
+        info = (c.get("info") or ["", ""])[1]
+        info = "" if bilder.refuse_text("", info) else info          # a description the word list refuses stays out
+        size = GROESSE_EN.get(c.get("groesse", "mittel"), "") if wesen or c.get("groesse", "mittel") != "mittel" else "medium-sized"
+        parts = [c["name"][1], wesen, size, info]
+        return f"{style}, {FOE_EN}: " + ", ".join(x.strip().rstrip(".") for x in parts if x and x.strip()) + f", {dungeon.BILD_ENDE}"
     extra = f", {c['satz'][1]}" if c["art"] == "zauber" and c.get("satz") else ""
     return f"{style}, {ITEM_EN}: {c['name'][1]}, {ART_EN[c['art']]}{extra}, {dungeon.BILD_ENDE}"
 
@@ -218,9 +238,15 @@ def wanted(r):
     return out
 
 
-def _ok_text(p):
-    """A catalog prompt passes the picture rules (the admin's entries are data too)."""
+def _ok_text(p, r=None):
+    """A catalog prompt passes the picture rules (the admin's entries are data too, a foe's description as well): the
+    word list of „Bilder malen“, the game's list „nie“, in the picture book style the youngest tone's words."""
     import bilder
+    if r is not None:
+        low = " " + p.lower() + " "
+        if any(w.lower() in low for w in r["nie"]) or \
+                p.startswith(dungeon.BILD_KIND) and dungeon.bad_words(r, {"ton": min(t["id"] for t in r["toene"])}, p):
+            return False
     return not bilder.refuse_text("", p)
 
 
@@ -236,7 +262,9 @@ def _night(now):
 
 
 def start(grund):
-    """Starts a run (grund "nacht" or "knopf") unless one runs; returns False when it cannot (off or running)."""
+    """Starts a run (grund "nacht", "knopf", or "alle": the admin's „Alle Bilder malen“ without the day limit, Dominik
+    2026-10-24 „alle bilder generieren lassen knopf ohne sich ans limit zu halten“; space and the queue hold) unless
+    one runs; returns False when it cannot (off or running)."""
     if not on() or (_lauf["task"] and not _lauf["task"].done()):
         return False
     _lauf.update(grund=grund, start=clock(), gemalt=0, stop=False)
@@ -265,7 +293,7 @@ def _end_why(grund):
         return "notaus"
     if grund == "nacht" and not _night(clock()):
         return "morgen"
-    if _today(_state()) >= TAG_MAX:
+    if grund != "alle" and _today(_state()) >= TAG_MAX:
         return "tag"
     if schwer.full():
         return "voll"
@@ -301,7 +329,7 @@ async def _run(grund):
             n, p = todo[0]
             tried.add(n)
             t0 = time.perf_counter()
-            res = await paint_one(n, p) if _ok_text(p) else "wortliste"
+            res = await paint_one(n, p) if _ok_text(p, r) else "wortliste"
 
             def note():
                 d = _state()
@@ -619,12 +647,14 @@ async def admin_status():
 
 @router.post("/api/admin/dungeon/dingbilder", dependencies=[Depends(auth)])
 async def admin_start(request: Request):
-    """„Bilder jetzt erstellen“: the run starts now (the same rules as at night, without the window)."""
+    """„Bilder jetzt erstellen“: the run starts now (the same rules as at night, without the window); {"alle": true}
+    „Alle Bilder malen“: without the day limit too (only the admin reaches this, coadmin.unbegrenzt's rule)."""
     guard.limit(request, "dungeonding", admin=True)
+    b = await json_body(request, 200, lenient=True)
     if not on():
         print("dungeon: dingbild | abgelehnt | aus", flush=True)
         raise HTTPException(409, "aus")
-    if not start("knopf"):
+    if not start("alle" if b.get("alle") is True else "knopf"):
         print("dungeon: dingbild | abgelehnt | laeuft", flush=True)
     return await asyncio.to_thread(status)
 

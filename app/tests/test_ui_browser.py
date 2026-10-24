@@ -757,7 +757,7 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("goSec('mon')")
                 self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#zcards .zcard .zk')].map(x=>x.textContent)"),
                                  ["Zuhören", "Sprechen", "Sprachmodell", "Speicher"])
-                self.assertIn("V01.0.", await pg.inner_text("#zmeta"))
+                self.assertRegex(await pg.inner_text("#zmeta"), r"V\d{2}\.\d+\.\d{3}")   # V01.0.999, then V01.1.000 (Dominik 2026-10-24 „2“)
                 self.assertFalse(await pg.is_visible("#svc"))
                 await pg.click("#zcards .zcard")
                 await pg.wait_for_timeout(300)

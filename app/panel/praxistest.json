@@ -3047,6 +3047,13 @@
 "titel": "Dungeon-Master: Werkzeug-Bilder und Bildstil je Welt",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an, „Bilder jetzt erstellen“ einmal gelaufen. A: In der Tasche oder beim Händler zeigt ein Dietrich, eine Laterne oder ein Kletterseil ein Werkzeug-Bild (ohne Bild 🧰), keine Schriftrolle. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Gegenstände: Filter „Werkzeug“ zeigt die Werkzeuge. C: Neue Runde, Welt Science-Fiction wählen: Völker und Klassen im Heldenformular wechseln auf Bilder im Sci-Fi-Stil (sobald gemalt), zurück auf Fantasy wieder die Fantasy-Bilder. D: Am Tisch einer Horror-Runde zeigt „Das kann ich“ die Fähigkeiten im Horror-Stil. E: Gegner im Bestiarium einer Sci-Fi-Welt sehen nicht nach Fantasy aus.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P460",
+"v": 1000,
+"titel": "Dungeon-Master: Alle Bilder malen und Gegnerbilder nach Beschreibung",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Teil Bilder: neben „Bilder jetzt erstellen“ steht „Alle Bilder malen · N“. B: Antippen: der Lauf zeigt „malt alle, ohne Tageslimit · gemalt · noch“, auch über 300 am Tag hinaus. C: „Abbrechen“ hält nach dem aktuellen Bild an, unter „zuletzt“ steht „angehalten“. D: Bestiarium: der Kultist ist ein Mensch in Kutte, kein Dämon; ein Goblin klein und menschenähnlich, ein Wolf ein Tier. E: Zustand → Logs zeigt „dungeon: dingbild | lauf start | alle“.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
