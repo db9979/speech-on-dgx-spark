@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.018** KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 - **V01.1.017** KI-Dungeon-Master: Musik passend zu Welt und Stimmung mit Trommeln und Bass, eigene Stimmung Gewölbe; Musikstück mit 👎 als nervig markieren, auch Gäste, nachts neu gemacht
 - **V01.1.016** KI-Dungeon-Master: Vorlesen am Tisch wieder hörbar (die Freischalt-Stille kam als data: und die Sicherheitsregel des Panels blockierte sie), der Tisch bricht bei kleiner Breite sauber um statt Wort für Wort, Prompt-Regel „als JSON“ weg und neu „keine Werte außerhalb der Fakten“
 - **V01.1.015** Modell-Start robuster: kann das Panel refs/main oder die Hub-Dateiliste eines Modells nicht ändern (etwa von root angelegt), schreibt es nur eine Logzeile, die Engine startet trotzdem
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.010** KI-Dungeon-Master: Dinge-Gedächtnis, die Geschichte merkt sich wichtige Dinge mit Stoff, Farbe und Zustand und schreibt eine Erzählung, die ihnen widerspricht, einmal neu (kein Eisenkästchen wird mehr zum Holzkästchen), der Gastgeber sieht und ändert die gemerkten Dinge, keine OOC-Zeile spricht mehr für das Panel
 - **V01.1.009** KI-Dungeon-Master: Bilder für Klassen, Völker, Hintergründe und Welten im Regeln-Reiter (Malen, Nochmal malen, Welt wählbar), Hintergründe je Welt, Titelbild je Welt auf den Weltkarten
 - **V01.1.008** KI-Dungeon-Master: bei 0 Leben am Boden, nach 3 Zügen ohne Heilung gefallen für immer (Dinge und Gold liegen hier, am Kindertisch nur ohnmächtig), Eisenhaut, Schildwall und Kampfschrei wirken nach festen Regeln, Erfahrung erst am Ende der Runde
-- **V01.1.007** KI-Dungeon-Master: mit einem Base-Modell spricht jede Figur als Klon ihrer ersten VoiceDesign-Stimme, gleicher Klang in jedem Zug und schneller; mit CustomVoice ändert sich nichts
 
 
 

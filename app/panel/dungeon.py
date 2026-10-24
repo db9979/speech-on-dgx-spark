@@ -183,6 +183,11 @@ EINSTIEG_MAX = 400
 PROMPT_MAX = 4000
 ERZ_MAX = 900             # one narration
 ERZ_LANG = 1500           # the narration that opens a round, a chapter or an act
+# longer at the moments that carry the mood (Dominik 2026-10-24 „können wir die erzählungen etwas ausweiten“, „alles wie
+# vorgeschlagen“ = 1 + 2): the panel names the moment before the narration by fixed rules (moment_of), the host picks
+# the round's way of telling (WEISEN, a factor on every limit)
+ERZ_MOMENT = 1600
+WEISEN = {"knapp": 0.7, "normal": 1.0, "ausfuehrlich": 1.6}
 # the prologue with a hold (Dominik 2026-10-24 „der prolog ist noch zu kurz die spieler haben keinerlei anhalts punkt
 # was zu tun ist“, „1-5“): a minimum length, a quest, 2 to 4 things to do as buttons, a hook per hero, a frame
 PROLOG_MIN = 700          # shorter goes back once (the second try counts as it is)
@@ -244,6 +249,7 @@ BILD_W, BILD_H = 1024, 576   # a scene picture (16:9, multiples of 16)
 PORTRAET = 512            # a hero's portrait (square)
 BILDER_RUNDE = 12         # scene pictures one round paints (and keeps)
 BILD_ABSTAND = 3          # turns between two scene pictures at least
+BILD_AUTO = 5             # turns without a picture after which the panel paints the scene on its own (auto_scene)
 BILDER_TAG = 40           # pictures of the game a day on the whole Spark, without grenzen.bilder_tag
 BILD_MAX = 300            # the model's description of a picture (English)
 KAPITEL_BILDER = 20       # chapter covers a campaign keeps
@@ -663,6 +669,7 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     s = _by(r, "seltenheit").get(c.get("seltenheit") or selten) or r["seltenheit"][0]   # an entry may fix its rarity
     werte = [w["id"] for w in r["werte"]]
     it = {"i": _iid(), "id": cid, "s": s["id"], "bonus": s["bonus"], "eigen": _clean(eigen, 40), "satz": _clean(satz, SATZ_MAX)}
+    own_name(r, it)
     if c["art"] == "waffe":
         it["wert"] = c["wert"]
     elif c["art"] == "schmuck":
@@ -672,6 +679,35 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
         it["eff"] = rng.choice(r["effekte"])["id"]
         it["u"] = True                        # the two rarest kinds come unknown: only the base counts until named (5a)
     return it
+
+
+_NAMWORT = re.compile(r"[^\W\d_]{4,}")
+# words of where a find lies, never of a thing (Dominik 2026-10-24: a belt came as „Versiegelte Truhe“)
+_FUNDORT = re.compile(r"truhe|kiste|versteck|schatulle|kassette|sarkophag|gruft|grab|nische|hort|lager|beutel|sack|fass|"
+                      r"chest|crate|cache|stash|hiding|coffer|casket|tomb|crypt|hoard|barrel|sack")
+
+
+def name_fits(r, cid, eigen):
+    """Whether the model's own name for a find fits it (Dominik 2026-10-24: a belt came as „Versiegelte Truhe“, a
+    short sword as „Verlassenes Versteck“): no word of a chest or hiding place (_FUNDORT) in it, or else a word of it
+    (4 letters or more) in a word of the catalog name in either language, or the other way round („Truhenbrecher-Dolch“
+    for Dolch). A proper name like „Glockenbrecher“ for a sword fits."""
+    own = _NAMWORT.findall(str(eigen or "").lower())
+    if not any(_FUNDORT.search(w) for w in own):
+        return True
+    cat = [w for n in _by(r, "gegenstaende")[cid]["name"] for w in _NAMWORT.findall(n.lower())]
+    return any(a in b or b in a for a in own for b in cat)
+
+
+def own_name(r, it):
+    """A find keeps the model's name only when it fits its thing (name_fits); otherwise the name is where it was found
+    (fund: a chest, a hiding place) and the thing keeps its catalog name. Also repairs finds from before (_read,
+    fix_hero). Returns whether it changed."""
+    e = it.get("eigen")
+    if not e or it.get("id") not in _by(r, "gegenstaende") or name_fits(r, it["id"], e):
+        return False
+    it["fund"], it["eigen"] = e, ""
+    return True
 
 
 def _c(r, it):
@@ -1004,6 +1040,8 @@ def fix_hero(r, h):
     ok = lambda it: isinstance(it, dict) and it.get("id") in items and _IID.fullmatch(str(it.get("i")))
     nine(r, h)
     h["tasche"] = [x for x in h.get("tasche") or [] if ok(x)][:TASCHE]
+    for x in h["tasche"] + [x for x in h["an"].values() if ok(x)]:
+        own_name(r, x)
     for x in h["tasche"]:
         if x.get("n") is not None and not (_int(x["n"], 1, STAPEL) and _c(r, x)["art"] in STAPEL_ARTEN):
             x.pop("n")
@@ -1240,7 +1278,7 @@ def item_view(r, it, lang):
         zeilen.append(tool_line(r, c, li))
     name = it.get("eigen") or c["name"][li]
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
-            "satz": "" if u else it.get("satz", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
+            "satz": "" if u else it.get("satz", ""), "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
             "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")),
             "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li],
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
@@ -1434,10 +1472,21 @@ def _read():
     for rd in out["runden"].values():                # heroes at a table from before the six values
         for p in (rd.get("plaetze") or {}).values():
             h = p.get("held") if isinstance(p, dict) else None
+            for it in ((h.get("tasche") or []) + list((h.get("an") or {}).values()) if isinstance(h, dict) else []) + list(rd.get("boden") or []):
+                if isinstance(it, dict) and it.get("eigen"):      # a find named after its chest or hiding place (own_name)
+                    r = r or rules()
+                    own_name(r, it)
             if isinstance(h, dict) and isinstance(h.get("werte"), dict) and "verstand" in h["werte"]:
                 r = r or rules()
                 if h.get("klasse") in _by(r, "klassen") and h.get("volk") in _by(r, "voelker"):
                     six(r, h)
+        for e in rd.get("log") or []:                # its loot line too: the catalog name, the chest as where it was found
+            v = e.get("item") if isinstance(e, dict) and e.get("art") == "beute" else None
+            if isinstance(v, dict) and not v.get("u") and not v.get("fund") and v.get("id"):
+                r = r or rules()
+                c = _by(r, "gegenstaende").get(v["id"])
+                if c and v.get("name") not in c["name"] and not name_fits(r, v["id"], v.get("name")):
+                    v["fund"], v["name"] = v["name"], c["name"][1 if rd.get("lang") == "en" else 0]
     return out
 
 
@@ -1585,6 +1634,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                             "until": now + stunden * 3600, "status": "laeuft", "zug": 1, "zug_t": now, "pause": False,
                             "offen": {}, "still": {}, "szene": {"ort": "", "stimmung": ""}, "log": [], "dm": "",
                             "stunden": stunden, "vorlesen": bool(b.get("vorlesen")),
+                            "erzaehlweise": b.get("erzaehlweise") if b.get("erzaehlweise") in WEISEN else "normal",
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
         if not h.get("stimme") and not h.get("klang"):
@@ -2476,6 +2526,14 @@ AUFGABE_BILD = {
           "ohne Namen, ohne Text im Bild), sonst lass bild leer.",
     "en": "When the place changes, describe in bild in English what one sees in the new scene (at most {n} characters, "
           "no names, no text in the picture), else leave bild empty."}
+AUFGABE_MOMENT = {      # moment_of: the turn carries the mood, tell it fully
+    "ort": ("Die Gruppe kommt an einen neuen Ort: beschreibe ihn ausführlich in 3 bis 4 Absätzen mit allen Sinnen.",
+            "The group reaches a new place: describe it fully in 3 to 4 paragraphs with every sense."),
+    "kampf": ("Ein Kampf beginnt oder ein Gegner fällt: erzähle das ausführlich in 3 bis 4 Absätzen, Bewegung, Klang, Wucht.",
+              "A fight begins or a foe falls: tell it fully in 3 to 4 paragraphs, movement, sound, force."),
+    "wurf": ("Ein Wurf war eine 20 oder eine 1: erzähle diesen Augenblick ausführlich in 3 Absätzen.",
+             "A roll was a 20 or a 1: tell this moment fully in 3 paragraphs."),
+}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
@@ -2504,7 +2562,7 @@ def schema_proben(r):
 
 
 SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required": ["erzaehlung", "frage_an"], "properties": {
-    "erzaehlung": {"type": "string", "maxLength": ERZ_LANG + 200},
+    "erzaehlung": {"type": "string", "maxLength": int(max(ERZ_LANG, ERZ_MOMENT) * max(WEISEN.values())) + 200},
     "npc": {"type": "array", "maxItems": NPC_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["name", "sagt"],
             "properties": {"name": {"type": "string", "maxLength": 40}, "sagt": {"type": "string", "maxLength": NPC_SAGT},
                            "stimme": stimmen.schema()}}},
@@ -2605,8 +2663,10 @@ def system_text(r, rd, task):
     bild = AUFGABE_BILD[lang].format(n=BILD_MAX) if task != "proben" and pictures_on(rd["owner"]) else ""
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
-                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
+                   AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+    if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
+        t += " " + AUFGABE_MOMENT[rd["_moment"]][1 if lang == "en" else 0]
     if task == "prolog" and rd.get("rahmen") in RAHMEN and not rd.get("plan"):
         t += " " + AUFGABE_RAHMEN[lang].format(r=RAHMEN[rd["rahmen"]][1 if lang == "en" else 0])
     if task in ("prolog", "erzaehlen"):
@@ -2707,8 +2767,25 @@ def used_tool(r, h, wert, text):
 
 
 def erz_max(rd):
-    """How long a narration may be: longer when it opens the round, a chapter or an act (ERZ_LANG), else ERZ_MAX."""
-    return ERZ_LANG if rd["zug"] == 1 or rd.get("plan") and rd.get("akt_zug") == rd["zug"] else ERZ_MAX
+    """How long a narration may be: longer when it opens the round, a chapter or an act (ERZ_LANG), at a moment the
+    panel named for this turn (rd["_moment"] on run_turn's copy, ERZ_MOMENT), else ERZ_MAX; times the round's way of
+    telling (WEISEN)."""
+    n = ERZ_LANG if rd["zug"] == 1 or rd.get("plan") and rd.get("akt_zug") == rd["zug"] else ERZ_MOMENT if rd.get("_moment") else ERZ_MAX
+    return int(n * WEISEN.get(rd.get("erzaehlweise"), 1.0))
+
+
+def moment_of(rd, wuerfe, hits):
+    """The moment of this turn by fixed rules, "" for an ordinary one: "ort" when an action asks for a neighbouring
+    place of the map (dungeon_karte.named_way), "kampf" in the first turn of a fight or when a foe falls, "wurf" on a
+    natural 20 or 1."""
+    k = rd.get("karte") or {}
+    if any(dungeon_karte.named_way(rd, o.get("name", "")) >= 0 for o in k.get("orte") or []):
+        return "ort"
+    if rd.get("kampf") and rd["kampf"].get("seit", -9) >= rd["zug"] - 1 or any(x["faellt"] for x in hits):
+        return "kampf"
+    if any(x["w"] in (1, 20) for x in list(wuerfe) + list(hits)):
+        return "wurf"
+    return ""
 
 
 def check_story(r, rd, obj):
@@ -2740,7 +2817,7 @@ def check_story(r, rd, obj):
         if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
             drop += 1
             continue
-        out["npc"].append({"name": name, "sagt": sagt})
+        out["npc"].append({"name": name, "sagt": sagt, **({"im_text": True} if vortrag.in_text(sagt, out.get("text", "")) else {})})
         if isinstance(n.get("stimme"), dict):
             out["npc_stimme"].append({"name": name, "stimme": n["stimme"]})   # only the fixed lists count (stimmen.learn)
     for f in obj.get("folgen") or []:
@@ -3005,6 +3082,8 @@ async def run_turn(rid, turn):
                          "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {})}
                         for x in hits]
             facts_z = [{"gegner": x["gegner"], "greift_an": x["name"], "trifft": x["treffer"], "schaden": x["schaden"]} for x in zuege]
+            rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
+            print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
             story, best, extra = None, None, ""
             for _ in range(2):                    # a second try when the first fails the checks (erz.judge: one rewrite)
                 obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
@@ -3036,7 +3115,7 @@ async def run_turn(rid, turn):
                 if story:
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
-                ort0 = cur["szene"].get("ort")
+                ort0, kampf0, akt0 = cur["szene"].get("ort"), bool(cur.get("kampf")), cur.get("akt", 0)
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
                       kampfwuerfe=([x for x in hits if x["pid"] in seats], [x for x in zuege if x["pid"] in seats]) if story else ([], []))
                 if story:
@@ -3050,8 +3129,12 @@ async def run_turn(rid, turn):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn), cur))
                     cur["spricht"] = time.time()      # the clock waits for the reading (speak_turn ends it)
-                if story and story["bild"] and cur["szene"].get("ort") != ort0:
-                    bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
+                grund = auto_scene(cur, story, ort0, kampf0, akt0)
+                if grund:
+                    text = story["bild"] or scene_text(r, cur, own=False)[0]
+                    why = may_paint(r, d, rid, cur) or ("" if text else "text")
+                    bild.extend(queue_scene(r, d, rid, cur, text) or () if not why else ())
+                    print(f"dungeon: bild | auto | {grund} | {why or 'ok'}", flush=True)
                 cur["dm"] = ""
                 warten.end(cur)
                 _write(d)
@@ -3320,10 +3403,11 @@ def hero_lines(r, rd, turn):
     return out
 
 
-def _npc_voice(r, rd, name, design):
-    """(fixed voice, description) of an NPC: by its gender the NPC voice or the female one; with VoiceDesign its own."""
+def _npc_voice(r, rd, name, design, sex=""):
+    """(fixed voice, description) of an NPC: by its gender the NPC voice or the female one; with VoiceDesign its own.
+    sex is the gender of one nobody named, from the pronoun after its quote."""
     v = voices(r)
-    return (v["npc_w"] if rd and stimmen.weiblich(rd, name) else v["npc"]), (stimmen.npc(rd, name) if design else "")
+    return (v["npc_w"] if rd and stimmen.weiblich(rd, name, sex) else v["npc"]), (stimmen.npc(rd, name, sex) if design else "")
 
 
 def voice_for(r, rd, h):
@@ -3338,29 +3422,28 @@ def voice_for(r, rd, h):
 def speak_parts(r, story_text, npc, helden=(), rd=None):
     """What a turn reads aloud: first what the heroes said in their own voices, then the narration in the narrator's
     voice, every quote in it in the voice of who says it (vortrag.rede: an NPC, a hero, else the NPC voice, never the
-    narrator's, Punkt 17 of 2026-10-24), then each NPC line not already read. With VoiceDesign the narrator is the
+    narrator's, Punkt 17 of 2026-10-24), then each NPC line not already in the text (vortrag.in_text), without its name. With VoiceDesign the narrator is the
     round's own with the scene's mood and every NPC has its own (dungeon_stimmen.py); without, the fixed voices of the
     rules, NPCs by their gender."""
     v = voices(r)
     design = bool(rd) and _stimmen["design"]
     heroes = {p["held"]["name"].lower(): p["held"] for _, p in seated(rd)} if rd else {}
     names = [n["name"] for n in npc] + list((rd or {}).get("npc_stimmen") or {}) + list(heroes)
-    parts, heard = list(helden), []
-    for wer, text, quoted in vortrag.rede(story_text, names):
+    parts = list(helden)
+    for wer, text, quoted, sex in vortrag.rede(story_text, names, lambda n: stimmen.sex(rd or {}, n)):
         h = heroes.get(wer)
         if not quoted:
             parts.append((v["erzaehler"], text, stimmen.narrator(rd) if design else ""))
             continue
-        heard.append(text)
         if h and (h.get("stimme") or h.get("klang")):
             parts.append((h.get("stimme", "") or v["npc"], text, h.get("klang", "") if design else ""))
         else:
-            fest, klang = _npc_voice(r, rd, wer or "?", design)
+            fest, klang = _npc_voice(r, rd, wer or "?", design, "" if wer else sex)
             parts.append((fest, text, klang))
-    for n in npc:
-        if not any(vortrag.same(n["sagt"], x) for x in heard):
+    for n in npc:                                # a line not in the text: in the NPC's voice, never with its name
+        if not vortrag.in_text(n["sagt"], story_text):
             fest, klang = _npc_voice(r, rd, n["name"], design)
-            parts.append((fest, f"{n['name']}: {n['sagt']}", klang))
+            parts.append((fest, n["sagt"], klang))
     out, n = [], 0
     for voice, text, klang in parts:
         if n + len(text) > TON_ZEICHEN:
@@ -3679,6 +3762,23 @@ def picture_text(r, rd, text):
         return "", "wortliste"
     why = bilder.refuse_text(rd["owner"], t)
     return ("", why) if why else (t, "")
+
+
+def auto_scene(rd, story, ort0, kampf0, akt0):
+    """Why the panel paints the scene on its own after a turn (Dominik 2026-10-24 „male selbstständig Szenenbilder“),
+    "" when not: ort (a new place), kampf (a fight began), akt (a new act of the plan), zeit (BILD_AUTO turns without a
+    picture). may_paint keeps the limits (BILD_ABSTAND, BILDER_RUNDE, the day's, none for an admin's round)."""
+    if not story:
+        return ""
+    if rd["szene"].get("ort") != ort0:
+        return "ort"
+    if rd.get("kampf") and not kampf0:
+        return "kampf"
+    if rd.get("akt", 0) != akt0:
+        return "akt"
+    if rd["zug"] - rd.get("bild_zug", 0) >= BILD_AUTO:
+        return "zeit"
+    return ""
 
 
 def scene_text(r, rd, own=True):
@@ -4133,6 +4233,7 @@ def view(rid, pid, now=None):
     out = {"rid": rid, "pid": pid, "gastkonto": not me.get("uid") and gastkonto.on(), "im_konto": bool(me.get("konto")), "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
+            "erzaehlweise": rd.get("erzaehlweise") if rd.get("erzaehlweise") in WEISEN else "normal",
             "lesung": {x: rd["lesung"].get(x) for x in ("n", "k", "fertig")} if rd.get("lesung") else None,
             "liest": rid in _speaking, "spricht": bool(rd.get("spricht")), "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),
@@ -4528,8 +4629,9 @@ def _say(k, li, **kw):
 
 
 def told(e, li):
-    """A narration as it is read aloud in the car: the text, then every NPC's line."""
-    return " ".join([e["text"]] + [_say("sagt", li, name=n["name"], text=n["sagt"]) for n in e.get("npc") or []])
+    """A narration as it is read aloud in the car: the text, then every NPC's line not already in it."""
+    return " ".join([e["text"]] + [_say("sagt", li, name=n["name"], text=n["sagt"]) for n in e.get("npc") or []
+                                   if not vortrag.in_text(n["sagt"], e["text"])])
 
 
 def car(uid, text="", nach=0, lang="de"):
@@ -5239,7 +5341,8 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/dungeon/{rid}/erzaehler", dependencies=[Depends(assistant)])
 async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
-    """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose)."""
+    """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
+    way of telling (WEISEN) from the next turn on."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -5251,9 +5354,17 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             rd = _round(d, rid)
             if rd["owner"] != uid or rd["status"] == "ende":
                 raise LookupError("gastgeber")
-            stimmen.choose(rd, str(b.get("k") or ""))
+            if "weise" in b:
+                if b["weise"] not in WEISEN:
+                    raise ValueError()
+                rd["erzaehlweise"] = b["weise"]
+            else:
+                stimmen.choose(rd, str(b.get("k") or ""))
             _write(d)
-        print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)
+        if "weise" in b:
+            print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
+        else:
+            print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)

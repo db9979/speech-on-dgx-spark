@@ -52,22 +52,45 @@ def saetze(text, first=False):
     return [x for x in out if x]
 
 
-def _speaker(text, a, b, names):
-    """Who says the quote text[a:b]: a name right after it when a comma follows the quote („…“, sagt Grimma), else
-    the last one named before it."""
+_ER = re.compile(r"\b(er|sie|he|she)\b")
+_SEX = {"er": "maennlich", "he": "maennlich", "sie": "weiblich", "she": "weiblich"}
+
+
+def _after(low, b):
+    """The words right after a quote when a comma follows it („…“, warnt er leise), up to the next quote."""
+    if not low[b:b + 3].lstrip().startswith(","):
+        return ""
+    x = low[b:b + NACH]
+    cut = min([i for i in (x.find(q) for q in "„\"»“") if i > 0] or [len(x)])
+    return x[:cut]
+
+
+def pronoun(text, b):
+    """The gender the words after a quote give its speaker („…“, warnt er leise: maennlich), else ""."""
+    m = _ER.search(_after(str(text).lower(), b))
+    return _SEX[m.group(1)] if m else ""
+
+
+def _speaker(text, a, b, names, sex_of=None):
+    """Who says the quote text[a:b]: a name right after it („…“, sagt Grimma), else the last one named before it
+    whose gender does not contradict the pronoun after the quote („…“, warnt er: no woman, Dominik 2026-10-24 „wurde
+    von einer Frauenstimme gesagt - er ist aber männlich“)."""
     low = text.lower()
-    after = low[b:b + NACH] if low[b:b + 3].lstrip().startswith(",") else ""
+    after = _after(low, b)
     hit = [(after.find(n), n) for n in names if n and after.find(n) >= 0]
     if hit:
         return min(hit)[1]
+    p = pronoun(text, b)
     before = low[max(0, a - VOR):a]
-    hit = [(before.rfind(n), n) for n in names if n and before.rfind(n) >= 0]
+    hit = [(before.rfind(n), n) for n in names if n and before.rfind(n) >= 0
+           and not (p and sex_of and sex_of(n) not in ("", p))]
     return max(hit)[1] if hit else ""
 
 
-def rede(text, names):
-    """The narration as [(speaker, piece, quoted)]: plain narration with speaker "", every quote with the name of who
-    says it (lower case, one of names) or "" when nobody is named."""
+def rede(text, names, sex_of=None):
+    """The narration as [(speaker, piece, quoted, gender)]: plain narration with speaker "", every quote with the name
+    of who says it (lower case, one of names) or "" when nobody is named, and the gender of the pronoun after it
+    ("maennlich", "weiblich" or "") for a voice when nobody is named. sex_of(name) gives a name's gender or ""."""
     text = str(text or "")
     names = sorted({str(n).strip().lower() for n in names if str(n).strip()}, key=len, reverse=True)
     out, i = [], 0
@@ -77,16 +100,19 @@ def rede(text, names):
             continue
         plain = text[i:m.start()].strip(" ,:–-")
         if re.search(r"\w", plain):
-            out.append(("", plain, False))
-        out.append((_speaker(text, m.start(), m.end(), names), said, True))
+            out.append(("", plain, False, ""))
+        out.append((_speaker(text, m.start(), m.end(), names, sex_of), said, True, pronoun(text, m.end())))
         i = m.end()
     rest = text[i:].strip(" ,:–-")
     if re.search(r"\w", rest):
-        out.append(("", rest, False))
+        out.append(("", rest, False, ""))
     return out
 
 
-def same(a, b):
-    """Whether two spoken lines are the same words (an NPC's line that also stands in the narration is read once)."""
-    w = lambda s: re.sub(r"[^\w]+", " ", str(s).lower()).strip()
-    return w(a) == w(b)
+def in_text(line, text):
+    """Whether an NPC's line already stands in the narration's quotes, as one quote or split in several („Ihr versteht
+    es nicht“, stammelt er, „es ist ein Gefängnis.“): then it is read once, at its place, and not shown again
+    (Dominik 2026-10-24 „beim vorlesen der npc sagst du die namen mit“)."""
+    w = lambda s: " " + re.sub(r"[^\w]+", " ", str(s).lower()).strip() + " "
+    said = w(" ".join(x for _, x, quoted, _ in rede(text, []) if quoted))
+    return w(line).strip() != "" and w(line) in said

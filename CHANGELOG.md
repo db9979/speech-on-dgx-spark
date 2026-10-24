@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.018** · 2026-10-24 · KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 - **V01.1.017** · 2026-10-24 · KI-Dungeon-Master: Musik passend zu Welt und Stimmung (eigene Szene und Instrumente je Feld, Trommeln und Bass, nie hektisch), neue Stimmung Gewölbe, alter Stil spielt bis neue da sind; Musikstück mit 👎 als nervig markieren (jeder Platz, auch Gäste, eine Markierung reicht), nachts neu gemacht, Admin-Liste „N markiert“ mit Zurücknehmen
 - **V01.1.016** · 2026-10-24 · KI-Dungeon-Master: Vorlesen am Tisch wieder hörbar (die Freischalt-Stille kam als data: und die Sicherheitsregel des Panels blockierte sie), der Tisch bricht bei kleiner Breite sauber um statt Wort für Wort, Prompt-Regel „als JSON“ weg und neu „keine Werte außerhalb der Fakten“
 - **V01.1.015** · 2026-10-24 · Modell-Start robuster: kann das Panel refs/main oder die Hub-Dateiliste eines Modells nicht ändern (etwa von root angelegt), schreibt es nur eine Logzeile, die Engine startet trotzdem

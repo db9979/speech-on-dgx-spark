@@ -35,7 +35,7 @@ function dmDetail(v,f){const it=f.it,h=v.ich,open=v.status!=='ende',kg=it.kg?Str
   const wo={tasche:t('In deiner Tasche','In your bag'),an:t('Angelegt','Equipped'),ware:t('Beim Händler','At the merchant'),boden:t('Liegt hier','Lying here'),fremd:t('Trägt '+f.wer,'Worn by '+f.wer)}[f.wo];
   return `<div class="dm-detail ${DMSEL[it.selten]||''}"><span class="dm-detail-b">${dmDing(it)}</span><div class="dm-detail-t"><small class="mut">${esc(wo)}</small>
     <div><b class="dm-detail-n">${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''}</div><small>${esc(it.selten_name||'')}${kg?' · '+kg:''}</small>
-    ${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${dmFx(z)}</li>`).join('')}</ul>`:''}
+    ${it.fund?`<p class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</p>`:''}${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${dmFx(z)}</li>`).join('')}</ul>`:''}
     ${it.u?`<small class="mut">${esc(t('Noch nicht erkannt: was es kann, zeigt sich erst, wenn es jemand erkennt.','Not yet identified: what it does shows only once someone identifies it.'))}</small>`:''}${acts}</div></div>`}
 const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',ding:'dm-fen dm-fen-ding'};
 function dmFenBox(kind,title,body,neu){return `<div class="${DMFENK[kind]}" data-dmfenbg="${kind==='ding'?'ding':'w'}"><div class="dm-fen-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">

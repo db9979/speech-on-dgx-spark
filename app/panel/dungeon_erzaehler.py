@@ -288,6 +288,9 @@ HINWEIS = {
     "namen": ("Hinweis: Jede Figur, die gehandelt hat, muss mit ihrem Namen vorkommen und eine Folge ihrer Aktion "
               "erleben: {namen}.",
               "Note: every character that acted must appear by name and meet a consequence of its action: {namen}."),
+    "gegner": ("Hinweis: Die Gegner der Begegnung müssen mit ihrem Namen aus angebot vorkommen: {namen}. Erfinde keine "
+               "anderen Gegner.",
+               "Note: the encounter's foes must appear by their name from angebot: {namen}. Invent no other foes."),
     "karte": ("Hinweis: Die Gruppe kann nicht dort sein: {namen}. Erzähle nur den Ort, an dem sie steht, und die Wege "
               "aus karte.wege; andere Orte erreicht sie erst über die Karte.",
               "Note: the group cannot be there: {namen}. Narrate only the place where it stands and the ways from "
@@ -306,7 +309,8 @@ def _triples(text):
 
 def judge(dm, rd, story):
     """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
-    and is missing (one the model answered out of the game, ooc, may be missing), a map place the group cannot be at,
+    and is missing (one the model answered out of the game, ooc, may be missing), a foe of the encounter not named by
+    its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
     too much repeated from the last narrations."""
     text = story["text"]
     if len(text) < ZU_KURZ:
@@ -317,6 +321,10 @@ def judge(dm, rd, story):
                and rd["plaetze"][pid]["held"]["name"].lower() not in low]
     if missing:
         return "namen", missing
+    foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
+    gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
+    if gone:
+        return "gegner", gone
     far = far_places(rd, story, low)
     if far:
         return "karte", far

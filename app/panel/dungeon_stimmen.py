@@ -140,19 +140,31 @@ def learn(rd, npcs):
         keep[name] = {k: s[k] if s.get(k) in n[k] else base[k] for k in MERKMALE}
 
 
-def npc(rd, name):
+def _of(rd, name, sex=""):
+    """An NPC's traits: kept, else those of its name; sex sets the gender of one nobody named (the pronoun after its
+    quote, vortrag.pronoun)."""
+    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or _traits(str(name or "?"))
+    return dict(t, geschlecht=sex) if sex else t
+
+
+def sex(rd, name):
+    """A known NPC's gender ("maennlich", "weiblich"), "" for anyone else (a hero, a name never heard)."""
+    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40])
+    return t["geschlecht"] if t and t.get("geschlecht") in ("maennlich", "weiblich") else ""
+
+
+def npc(rd, name, sex=""):
     """One NPC's description: its traits as fixed English words."""
     n = data()["npc"]
-    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or _traits(str(name or "?"))
+    t = _of(rd, name, sex)
     who = {"weiblich": "a girl", "maennlich": "a boy"}.get(t["geschlecht"], "a child") if t["alter"] == "kind" \
         else f"{n['alter'][t['alter']]} {n['geschlecht'][t['geschlecht']]}"
     return f"{who[0].upper()}{who[1:]}, {n['klang'][t['klang']]}, {n['wesen'][t['wesen']]}"
 
 
-def weiblich(rd, name):
+def weiblich(rd, name, sex=""):
     """Whether an NPC is a woman or a girl by its kept traits (or those of its name): the fixed female NPC voice."""
-    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or _traits(str(name or "?"))
-    return t.get("geschlecht") == "weiblich"
+    return _of(rd, name, sex).get("geschlecht") == "weiblich"
 
 
 def keep(rd):

@@ -3152,6 +3152,13 @@
 "titel": "Dungeon-Master: Musik zum Thema, Stück nervt",
 "text": "A: Runde mit Musik, ein Stück läuft: in der Leiste 👎 tippen. Hinweis „Kommt nicht wieder …“, das nächste Stück blendet ein. B: Ein Gast am Handy tippt bei einem anderen Stück 👎: auch an deinem Tisch kommt es nicht wieder. C: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: „2 markiert“ mit Welt und Stimmung; bei einem „Zurücknehmen“, es spielt wieder. D: Am nächsten Morgen ist das andere weg, die Tabelle zeigt das Feld wieder voll; Live zeigt die Zahl, nie einen Namen. E: Nach dem Update spielen erst die alten Stücke weiter; nach „Musik jetzt vorbereiten“ oder einer Nacht klingt die Taverne nach Laute, Fiedel und Trommel, der Kampf nach Kriegstrommeln und tiefem Bass, beides nie hektisch. F: Im Zufalls-Gewölbe der Karte wechselt die Leiste zu „Gewölbe“ mit eigener Musik.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P475",
+"v": 1018,
+"titel": "Längere Erzählungen und Erzählweise",
+"text": "A: Runde anlegen, unter „Die Runde“ Erzählweise „ausführlich“. B: Eine Aktion „Wir gehen zur …“ (ein Nachbarort der Karte): die Erzählung beschreibt den neuen Ort in 3 bis 4 Absätzen. C: Ein gewöhnlicher Zug (Gespräch) bleibt kürzer. D: Im Reiter „Leiten“ „📜 Erzählweise“ auf „knapp“: ab dem nächsten Zug kürzer. E: Zustand → Logs, Filter „laenge“: je Zug „ort“, „kampf“, „wurf“ oder „normal“ mit der Grenze. F: Kommt eine Begegnung, nennt die Erzählung genau die Gegner der Karte (Name gleich); die Karte passt hell und dunkel zum Tisch, Werte stehen sichtbar. G: Heldenbogen → Das kann ich: ein Tipp auf das Bild einer Kachel öffnet ihr Fenster, auch am Handy. H: Vorlesen an, eine Szene mit Nebenfiguren: ihre Zitate kommen einmal in ihrer Stimme, ohne dass ihr Name davor gesprochen wird, und stehen nicht noch einmal unter der Erzählung; „…“, warnt er spricht eine Männerstimme. I: Bilder malen an, 5 Züge ohne Knopf spielen oder den Ort wechseln: das Szenenbild kommt von selbst. J: Beute aus einer Truhe: das Ding heißt wie im Katalog (etwa Gürtel), darunter „Gefunden in: …“; alte falsch benannte Dinge im Heldenbogen sind repariert.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

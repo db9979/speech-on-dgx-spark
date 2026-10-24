@@ -1385,7 +1385,7 @@ class ReadAloud(Base):
         parts = dungeon.speak_parts(r, text, [{"name": "Grimma", "sagt": "Wer da?"}, {"name": "Bodo", "sagt": "Kommt näher."}], (), rd)
         self.assertEqual(parts, [("ryan", "Grimma hebt die Laterne.", ""), ("serena", "Wer da?", ""), ("ryan", "Bodo grinst.", ""),
                                  ("eric", "Nur wir.", ""), ("ryan", "Von irgendwo ruft es", ""), ("eric", "Lauft!", ""),
-                                 ("vivian", "Bleibt hier", ""), ("ryan", "sagt Arvid.", ""), ("eric", "Bodo: Kommt näher.", "")])
+                                 ("vivian", "Bleibt hier", ""), ("ryan", "sagt Arvid.", ""), ("eric", "Kommt näher.", "")])
         self.assertNotIn(("ryan", "Wer da?", ""), parts)                    # the narrator never speaks a quote
         with dungeon._lock:                     # the hero speaks its own quote in its voice (proposed when it sat down)
             d = dungeon._read()
@@ -1397,6 +1397,60 @@ class ReadAloud(Base):
         self.assertEqual({p[0] for p in dungeon.speak_parts(r, "„Halt!“, sagt Bodo.", [], (), self.state(rid))}, {"", "ryan"})
         self.assertEqual(set(dungeon.voices(r)), {"erzaehler", "npc", "npc_w"})
         self.assertEqual(dungeon.check_rules(dict(r, stimmen={"erzaehler": "a;b"}))[-1:], ["stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer"])
+
+    def test_an_npc_line_once_and_never_its_name(self):
+        """Dominik 2026-10-24 „beim vorlesen der npc sagst du die namen mit z.b. Kael...... Silas....“: a line that
+        stands in the text, even split in two quotes, is read once at its place and not shown again below; a line
+        not in the text is read in the NPC's voice without its name."""
+        v = self.new_round(vorlesen=True)
+        r, rd = dungeon.rules(), self.state(v["rid"])
+        text = ("Kael, der Schattenwächter, tritt hervor. „Der Leser darf nicht schlafen“, flüstert er. Silas zittert. "
+                "„Ihr versteht es nicht“, stammelt er, „es ist keine Bibliothek, es ist ein Gefängnis.“ Kael hebt die Waffe.")
+        npc = [{"name": "Kael", "sagt": "Der Leser darf nicht schlafen."},
+               {"name": "Silas", "sagt": "Ihr versteht es nicht, es ist keine Bibliothek, es ist ein Gefängnis."},
+               {"name": "Silas", "sagt": "Lauft!"}]
+        said = [p[1] for p in dungeon.speak_parts(r, text, npc, (), rd)]
+        self.assertEqual(said.count("Der Leser darf nicht schlafen"), 1)
+        self.assertEqual([x for x in said if "Gefängnis" in x], ["es ist keine Bibliothek, es ist ein Gefängnis."])
+        self.assertEqual(said[-1], "Lauft!")
+        self.assertFalse([x for x in said if x.startswith(("Kael:", "Silas:"))])
+        self.assertTrue(dungeon.vortrag.in_text(npc[1]["sagt"], text))
+        self.assertFalse(dungeon.vortrag.in_text("Ihr versteht", "Silas sagt nichts."))
+        self.assertFalse(dungeon.vortrag.in_text("", text))
+        story, _ = dungeon.check_story(r, rd, {"erzaehlung": text, "npc": npc, "frage_an": ""})
+        self.assertEqual([n.get("im_text", False) for n in story["npc"]], [True, True, False])   # the table shows only „Lauft!“ below
+        e = {"text": text, "npc": story["npc"]}
+        self.assertEqual(dungeon.told(e, 0).count("Gefängnis"), 1)                              # in the car once too
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("(e.npc||[]).filter(n=>!n.im_text)", js)
+
+    def test_the_pronoun_after_a_quote_picks_the_voices_gender(self):
+        """Dominik 2026-10-24 „Wurde von einer Frauenstimme gesagt - er ist aber männlich“: „…“, warnt er: nobody named
+        speaks with a man's voice, and a woman named before is not taken as the speaker."""
+        v = self.new_round(vorlesen=True)
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][v["rid"]]
+            rd["npc_stimmen"] = {"grimma": dict(dungeon.stimmen._traits("grimma"), geschlecht="weiblich"),
+                                 "bodo": dict(dungeon.stimmen._traits("bodo"), geschlecht="maennlich")}
+            dungeon._write(d)
+        rd = self.state(v["rid"])
+        vv = dungeon.voices(r)
+        text = "Ein flüsterndes Geräusch dringt zu ihm durch. „Die Schattenwächter sind in der Nähe“, warnt er leise."
+        part = next(p for p in dungeon.speak_parts(r, text, [], (), rd) if p[1].startswith("Die Schattenwächter"))
+        self.assertEqual(part[0], vv["npc"])
+        for sex in ("maennlich", "weiblich"):
+            self.assertTrue(dungeon.stimmen.npc(rd, "?", sex).startswith(("A ", "An ")))
+        self.assertIn("woman", dungeon.stimmen.npc(dict(rd, npc_stimmen={}), "?", "weiblich") + "girl")
+        text = "Grimma nickt Bodo zu. „Bleibt dicht beisammen“, sagt er."
+        self.assertEqual(dungeon.vortrag.rede(text, ["Grimma", "Bodo"], lambda n: dungeon.stimmen.sex(rd, n))[1][0], "bodo")
+        text = "Bodo nickt Grimma zu. „Bleibt dicht beisammen“, sagt sie."
+        self.assertEqual(dungeon.vortrag.rede(text, ["Grimma", "Bodo"], lambda n: dungeon.stimmen.sex(rd, n))[1][0], "grimma")
+        text = "Bodo nickt. „Bleibt hier“, sagt Grimma, „und wartet.“"
+        self.assertEqual([x[0] for x in dungeon.vortrag.rede(text, ["Grimma", "Bodo"]) if x[2]], ["grimma", "grimma"])   # the same speaker goes on
+        self.assertEqual(dungeon.vortrag.pronoun("„Halt“, ruft sie.", 6), "weiblich")
+        self.assertEqual(dungeon.vortrag.pronoun("„Halt.“ Der Wind heult.", 7), "")
 
     def test_a_second_try_then_the_fixed_voice_and_the_rest_goes_on(self):
         v = self.new_round(vorlesen=True)
@@ -1741,6 +1795,37 @@ class Equipment(Base):
             dungeon.apply(self.r, rd, [], story, self.rid, random.Random(3))
             return rd
         self.assertEqual(self.edit(move)["boden"], [])
+
+    def test_a_find_keeps_its_name_only_when_it_names_the_thing(self):
+        """Dominik 2026-10-24 (screenshots: a belt as „Versiegelte Truhe“ worn at the neck, a short sword as „Verlassenes
+        Versteck“): the model's name stays only when it names the catalog thing; else it is where it was found."""
+        r = self.r
+        self.assertTrue(dungeon.name_fits(r, "dolch", "Mondsichel-Dolch"))
+        self.assertTrue(dungeon.name_fits(r, "guertel", "Gürtel der Stärke"))
+        self.assertFalse(dungeon.name_fits(r, "guertel", "Versiegelte Truhe"))
+        self.assertFalse(dungeon.name_fits(r, "kurzschwert", "Verlassenes Versteck"))
+        self.assertTrue(dungeon.name_fits(r, "schwert", "Glockenbrecher"))           # a proper name stays
+        self.assertTrue(dungeon.name_fits(r, "dolch", "Truhenbrecher-Dolch"))
+        it = dungeon.item(r, "guertel", "selten", random.Random(1), "Versiegelte Truhe", "Eine Truhe mit silbernen Zierleisten.")
+        self.assertEqual((it["eigen"], it["fund"]), ("", "Versiegelte Truhe"))
+        v = dungeon.item_view(r, it, "de")
+        self.assertEqual((v["name"], v["fund"]), ("Gürtel", "Versiegelte Truhe"))
+        self.assertEqual(dungeon.item(r, "dolch", "selten", random.Random(1), "Mondsichel-Dolch")["eigen"], "Mondsichel-Dolch")
+        # finds from before are repaired when the round is read: bag, worn and the loot line
+        def old(rd):
+            h = rd["plaetze"][self.host]["held"]
+            bad = dict(dungeon.item(r, "guertel", "selten", random.Random(1)), eigen="Versiegelte Truhe")
+            h["tasche"].append(bad)
+            rd["log"].append({"art": "beute", "n": rd["zug"], "name": h["name"], "item": dict(dungeon.item_view(r, bad, "de"), name="Versiegelte Truhe"), "gold": 0, "boden": False})
+            return bad["i"]
+        i = self.edit(old)
+        rd = self.state(self.rid)
+        fixed = next(x for x in rd["plaetze"][self.host]["held"]["tasche"] if x["i"] == i)
+        self.assertEqual((fixed["eigen"], fixed["fund"]), ("", "Versiegelte Truhe"))
+        line = [e for e in rd["log"] if e["art"] == "beute"][-1]["item"]
+        self.assertEqual((line["name"], line["fund"]), ("Gürtel", "Versiegelte Truhe"))
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("it.fund?", js)
 
     def test_merchant_prices_by_the_rules_and_each_good_once(self):
         self.assertEqual(self.c2.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True}).status_code, 404)  # only the host
@@ -2728,6 +2813,37 @@ class Pictures(Base):
         self.assertIn(", neblig, ", self.calls[-1]["prompt"])
         self.assertEqual(len(self.state(v["rid"])["bilder"]), 1)
 
+    def test_the_panel_paints_on_its_own(self):
+        """Dominik 2026-10-24 „male selbstständig Szenenbilder“: after a turn with a new place, a fight that began, a
+        new act or BILD_AUTO turns without a picture the panel paints the scene, within may_paint's limits."""
+        rd = {"szene": {"ort": "Hof"}, "zug": 3, "bild_zug": 1, "akt": 0}
+        self.assertEqual(dungeon.auto_scene(rd, {"bild": ""}, "Tor", False, 0), "ort")
+        self.assertEqual(dungeon.auto_scene(dict(rd, kampf={"gegner": []}), {"bild": ""}, "Hof", False, 0), "kampf")
+        self.assertEqual(dungeon.auto_scene(dict(rd, kampf={"gegner": []}), {"bild": ""}, "Hof", True, 0), "")   # it goes on
+        self.assertEqual(dungeon.auto_scene(dict(rd, akt=1), {"bild": ""}, "Hof", False, 0), "akt")
+        self.assertEqual(dungeon.auto_scene(dict(rd, zug=1 + dungeon.BILD_AUTO), {"bild": ""}, "Hof", False, 0), "zeit")
+        self.assertEqual(dungeon.auto_scene(rd, {"bild": ""}, "Hof", False, 0), "")
+        self.assertEqual(dungeon.auto_scene(dict(rd, zug=9), None, "Tor", False, 0), "")                       # no narration
+        v = self.opening()
+        rid = v["rid"]
+        self.paint()
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["zug"] = 1 + dungeon.BILD_AUTO
+            dungeon._write(d)
+        z = self.state(rid)["zug"]
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/aktion", json={"text": "Ich sehe mich um.", "zug": z}).status_code, 200)
+        dungeon.ask_model = fake([{"proben": []}, {"erzaehlung": "Arvid sieht sich um. Der Nebel hebt sich langsam über dem stillen Dorfplatz, "
+                                                                   "und die Glocke glänzt matt im ersten Licht des Morgens.", "frage_an": ""}])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            asyncio.run(dungeon.run_turn(rid, z))
+        self.assertIn("dungeon: bild | auto | zeit | ok", out.getvalue())
+        self.assertEqual(len(self.coros), 1)                                   # no text from the model: place and mood
+        self.paint()
+        self.assertIn(", neblig, ", self.calls[-1]["prompt"])
+        self.assertEqual(self.state(rid)["bild_zug"], z + 1)                  # counted from the next turn on
+
     def test_checked_like_a_wish_fail_closed_and_only_with_the_switch(self):
         v = self.opening(bild="Dora stands naked at the well")              # a refused word and a known person
         self.assertEqual(self.coros, [])
@@ -3414,8 +3530,10 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate(f"[...document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt')].filter(x=>!x.classList.contains('k-{k}')).length"), 0)
                         await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(1)")
                         await b.until(pg, f"document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length=={n_all}")
-                        # Eisenhaut always works (Punkt 3 of 2026-10-24): „wirkt immer“, no „Einsetzen“
-                        await pg.click("#dmview .dm-fen-bogen .dm-kt.immer")
+                        # Eisenhaut always works (Punkt 3 of 2026-10-24): „wirkt immer“, no „Einsetzen“; the tap goes on its
+                        # painted picture (Dominik 2026-10-24 „click aufs bild geht nicht“), the whole tile opens the window
+                        await pg.evaluate("(()=>{const p=document.querySelector('#dmview .dm-fen-bogen .dm-kt.immer .dm-pic');p.outerHTML=dmPic('probe','P')})()")
+                        await pg.evaluate("document.querySelector('#dmview .dm-fen-bogen .dm-kt.immer .dm-pic img').click()")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-ktd')")
                         self.assertIn("wirkt immer", await pg.evaluate("document.querySelector('#dmview .dm-fen-ding .dm-ktchips').textContent"))
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-ding [data-dmkann]')"))
@@ -4282,9 +4400,35 @@ class Fight(Turns):
         rd, held = self.held()
         foe = kampf.offer(dungeon, r, rd, held)[0]
         self.act_all()
-        rd = self.play([{"proben": []}, {"erzaehlung": "Aus dem Schatten des Ganges tritt etwas hervor und versperrt den Weg.",
+        rd = self.play([{"proben": []}, {"erzaehlung": f"Aus dem Schatten des Ganges tritt {foe['name'][0]} hervor und versperrt den Weg.",
                                          "begegnung": [{"id": foe["id"], "anzahl": n}], "frage_an": ""}])
         return rd, foe
+
+    def test_the_narration_names_the_foes_of_the_card(self):
+        """The card and the text tell the same encounter (Dominik 2026-10-24: the card showed Dunkelelfen, the text
+        Schattenwächter): a foe not named by its bestiary name gets one rewrite with the names in the note."""
+        r = dungeon.rules()
+        rd, held = self.held()
+        foe = kampf.offer(dungeon, r, rd, held)[0]
+        self.act_all()
+        seen = []
+        old = dungeon.erz.hint
+
+        def hint(why, missing, lang):
+            seen.append((why, missing))
+            return old(why, missing, lang)
+        with mock.patch.object(dungeon.erz, "hint", hint):
+            rd = self.play([{"proben": []},
+                            {"erzaehlung": "Arvid und Bela stoßen die Tür auf. Aus dem Nebel treten zwei Schattenwächter hervor, "
+                                           "ihre Klingen schimmern kalt im Fackellicht, und der Gang hallt von ihren Schritten.",
+                             "begegnung": [{"id": foe["id"], "anzahl": 1}], "frage_an": ""},
+                            {"erzaehlung": f"Arvid und Bela stoßen die Tür auf. Aus dem Nebel tritt {foe['name'][0]} hervor, die "
+                                           "Klinge schimmert kalt im Fackellicht, und der Gang hallt von seinen Schritten.",
+                             "begegnung": [{"id": foe["id"], "anzahl": 1}], "frage_an": ""}])
+        self.assertEqual(seen, [("gegner", [foe["name"][0]])])
+        self.assertIn(foe["name"][0], [e for e in rd["log"] if e["art"] == "dm"][-1]["text"])
+        self.assertIn(foe["name"][0], dungeon.erz.hint("gegner", [foe["name"][0]], "de"))
+        self.assertIn("angebot", kampf.AUFGABE_ANGEBOT["de"])
 
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()
@@ -4438,6 +4582,20 @@ class Fight(Turns):
             self.assertNotIn("data:audio", open(os.path.join(js, f), encoding="utf-8").read(), f)
         self.assertIn("media-src 'self' blob:", open(os.path.join(os.path.dirname(dungeon.__file__), "panel.py"), encoding="utf-8").read())
 
+    def test_a_picture_never_carries_a_buttons_attribute(self):
+        """A tap on a tile's picture does what a tap on its text does (Dominik 2026-10-24 „click aufs bild geht nicht“):
+        the picture's img held data-dmding, the attribute of the „Dinge“ edit button, so that handler caught the tap and
+        drew the table anew before the power's window opened. No data- attribute of an img in the table's scripts may be
+        one a click handler looks for."""
+        js = os.path.join(os.path.dirname(dungeon.__file__), "static", "js")
+        src = "".join(open(os.path.join(js, f), encoding="utf-8").read() for f in sorted(os.listdir(js)) if f.startswith("dungeon"))
+        imgs = set(re.findall(r"<img[^>]*?data-(\w+)=", src))
+        self.assertTrue(imgs)
+        wanted = set()
+        for sel in re.findall(r"closest\((['`])(.*?)\1\)", src):
+            wanted |= set(re.findall(r"\[data-(\w+)", sel[1]))
+        self.assertEqual(imgs & wanted, set())
+
     def test_the_quest_is_not_done_after_one_goal_early_in_the_story(self):
         r = dungeon.rules()
         with dungeon._lock:
@@ -4454,6 +4612,38 @@ class Fight(Turns):
         self.assertTrue(dungeon.quest_may_end(late))
         plan = {"akte": [{}, {}, {}]}
         self.assertEqual([dungeon.quest_may_end(dict(rd, plan=plan, akt=a, zug=99)) for a in (0, 1, 2, 3)], [False, False, True, True])
+
+    def test_longer_at_the_moments_and_the_rounds_way_of_telling(self):
+        """Dominik 2026-10-24 „können wir die erzählungen etwas ausweiten“ („alles wie vorgeschlagen“ = 1 + 2): the panel
+        names the moment by fixed rules, the host picks knapp, normal or ausführlich."""
+        r = dungeon.rules()
+        rd = dict(self.state(self.rid), zug=5, plan=None)
+        self.assertEqual(dungeon.erz_max(rd), dungeon.ERZ_MAX)
+        self.assertEqual(dungeon.moment_of(rd, [{"w": 20}], []), "wurf")
+        self.assertEqual(dungeon.moment_of(rd, [{"w": 12}], []), "")
+        self.assertEqual(dungeon.moment_of(dict(rd, kampf={"seit": 4, "gegner": []}), [], []), "kampf")       # the first turn of a fight
+        self.assertEqual(dungeon.moment_of(dict(rd, kampf={"seit": 1, "gegner": []}), [], []), "")
+        self.assertEqual(dungeon.moment_of(rd, [], [{"w": 9, "faellt": True}]), "kampf")
+        k = rd["karte"]
+        j = sorted(dungeon_karte._nb(k)[k["hier"]])[0]
+        asks = dict(rd, offen={self.host: {"text": "Wir gehen nach " + k["orte"][j]["name"] + "."}})
+        self.assertEqual(dungeon.moment_of(asks, [], []), "ort")
+        self.assertEqual(dungeon.erz_max(dict(rd, _moment="ort")), dungeon.ERZ_MOMENT)
+        self.assertIn(dungeon.AUFGABE_MOMENT["ort"][0], dungeon.system_text(r, dict(rd, _moment="ort"), "erzaehlen"))
+        self.assertNotIn(dungeon.AUFGABE_MOMENT["ort"][0], dungeon.system_text(r, rd, "erzaehlen"))
+        # the host's way of telling, from the next turn on; a guest cannot, an unknown word is refused
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["erzaehlweise"], "normal")
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"weise": "endlos"}).status_code, 400)
+        v = self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"weise": "ausfuehrlich"})
+        self.assertEqual((v.status_code, v.json()["erzaehlweise"]), (200, "ausfuehrlich"))
+        rd = dict(self.state(self.rid), zug=5, plan=None)
+        self.assertEqual(dungeon.erz_max(rd), int(dungeon.ERZ_MAX * dungeon.WEISEN["ausfuehrlich"]))
+        self.assertEqual(dungeon.erz_max(dict(rd, erzaehlweise="knapp", _moment="kampf")), int(dungeon.ERZ_MOMENT * dungeon.WEISEN["knapp"]))
+        self.assertLessEqual(dungeon.erz_max(dict(rd, zug=1)), dungeon.SCHEMA_ERZAEHLEN["properties"]["erzaehlung"]["maxLength"])
+        self.assertEqual(self.c2.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"weise": "knapp"}).status_code, 404)
+        made = self.new_round(titel="Kurz", erzaehlweise="knapp")
+        self.assertEqual(self.state(made["rid"])["erzaehlweise"], "knapp")
+        self.assertEqual(self.state(self.new_round(titel="Fremd", erzaehlweise="roman")["rid"])["erzaehlweise"], "normal")
 
     def test_armour_class_and_the_experience_curve(self):
         r = dungeon.rules()

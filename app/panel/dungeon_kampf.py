@@ -47,11 +47,12 @@ SCHEMA_ENDE = {"type": "string", "enum": ["", *ENDE]}
 
 AUFGABE_ANGEBOT = {
     "de": "Liegt ein Kampf in der Luft (ein Hinterhalt, Wachen, ein Ungeheuer), wähle in begegnung höchstens drei Gegner "
-          "mit id und anzahl nur aus der Liste angebot der Fakten und erzähle, wie sie auftauchen. Das Panel bestimmt, "
-          "wie viele kommen und wie stark sie sind; erfinde keine anderen Gegner mit Werten.",
+          "mit id und anzahl nur aus der Liste angebot der Fakten und erzähle, wie sie auftauchen, jeden mit seinem Namen "
+          "aus angebot; nenne keine anderen Gegner. Das Panel bestimmt, wie viele kommen und wie stark sie sind; erfinde "
+          "keine anderen Gegner mit Werten.",
     "en": "When a fight is in the air (an ambush, guards, a monster), choose at most three foes in begegnung with id and "
-          "anzahl only from the list angebot of the facts and tell how they appear. The panel decides how many come "
-          "and how strong they are; never invent other foes with numbers."}
+          "anzahl only from the list angebot of the facts and tell how they appear, each by its name from angebot; name "
+          "no other foes. The panel decides how many come and how strong they are; never invent other foes with numbers."}
 AUFGABE_KAMPF = {
     "de": "Es wird gekämpft (Fakten kampf). Das Panel würfelt jeden Angriff: Greift eine Figur in ihrer Aktion einen "
           "Gegner an, gib ihr eine Probe mit ziel = dem Namen des Gegners genau wie in kampf und dem Wert, mit dem sie "

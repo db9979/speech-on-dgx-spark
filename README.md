@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.018** AI Dungeon Master: longer narrations at the moments (a new place, a fight, a 20 or a 1), way of telling per round brief, normal or rich; the encounter names the card's foes, a tap on a tile's picture opens its window, NPC lines read once, without names and in a fitting voice, scene pictures on their own, a find is no longer named after its chest
 - **V01.1.017** AI Dungeon Master: music fitting world and mood with drums and bass, own vault mood; mark a music piece as annoying with 👎, guests too, made again at night
 - **V01.1.016** AI Dungeon Master: reading aloud at the table audible again (the unlocking silence came as data: and the panel's security rule blocked it), the table wraps cleanly at small widths instead of word by word, prompt rule "as JSON" gone and new "no values outside the facts"
 - **V01.1.015** Model start more robust: when the panel may not change refs/main or the Hub file listing of a model (e.g. left by root), it only writes a log line, the engine starts anyway
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.010** AI Dungeon Master: thing memory, the story keeps important things with material, colour and state and writes a narration against them once more (no iron box turns into a wooden one any more), the host sees and changes the kept things, no OOC line speaks for the panel any more
 - **V01.1.009** AI Dungeon Master: pictures for classes, peoples, backgrounds and worlds on the rules tab (Paint, Paint again, world to choose), backgrounds per world, a title picture per world on the world cards
 - **V01.1.008** AI Dungeon Master: at 0 life down, after 3 turns without healing fallen for good (things and gold lie here, at the children's table only unconscious), Iron skin, Shield wall and Battle cry work by fixed rules, experience only at the end of the round
-- **V01.1.007** AI Dungeon Master: with a Base model every character speaks as a clone of its first VoiceDesign voice, the same sound in every turn and faster; with CustomVoice nothing changes
 
 
 
