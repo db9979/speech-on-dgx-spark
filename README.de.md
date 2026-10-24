@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.990** Sprechen auf dem Modell-Rechner startet wieder ohne Internet: jedes gepinnte Modell zeigt mit refs/main auf seinen geprüften Commit, sonst fand vllm-omni das Stimmen-Modell offline nicht (TTS-Design startete alle 30 s neu)
 - **V01.0.989** Keine Tageslimits für Admin-Profile (Bilder, Lieder, eigene Musikdateien, Bilder der eigenen Dungeon-Runde; Platz und Warteschlange bleiben), unter Funktionen → KI-Dungeon-Master → Regeln anpassen hüpft bei den Gegenständen die Liste nicht mehr und jeder Gegenstand steht im Rahmen seiner Seltenheit, gewürfelte mit Leiter im Detail, der Gastgeber benennt den Helden eines Mitspielers über „⋯“ um
 - **V01.0.988** KI-Dungeon-Master: gemalte Bilder für Völker, Klassen und Fähigkeiten statt Zeichen, die gewählte Klasse groß mit Bild-Kacheln, Heldenbogen mit Porträt, Werte-Kacheln und Reitern, Kräfte mit eigenem Fenster und „Wirken“, eigene Aktion nach „Handeln“ als Karte mit „Ändern“, Mitspieler verwalten (neuer Link, nicht mehr warten, vom Tisch), Gast-Link über das ganze Fenster und abgesichert, Gast-Mail-Postfach wählbar
 - **V01.0.987** KI-Dungeon-Master: Prolog mit Halt (Auftrag, erste Spur, „Was ihr tun könnt“ als Knöpfe, Haken je Held, Auftrag angeheftet), getragene Dinge der Gruppe öffnen ihr Fenster mit Bild, Würfel und Boni farbig, Seitenspalte ruhiger
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.983** KI-Dungeon-Master: rechte Spalte am Tisch mit Reitern für Karte, Gastgeber, Fäden und Termin statt alles untereinander; Klassenwahl mit kurzen Karten, Startkräfte und Zauber nach Grad darunter
 - **V01.0.982** KI-Dungeon-Master: läuft VoiceDesign gerade nicht, spricht die feste Stimme statt einer Fehlermeldung (Probe mit Hinweis, Vorlesen geht weiter), das Log nennt den Grund
 - **V01.0.981** KI-Dungeon-Master: Gäste mit E-Mail: 6-stelliger Code vom Postfach des Admins, Gast-Konto mit bis zu 8 Helden auf jedem Gerät, „Du bist dran“ per Mail auf Wunsch, nur ein Hash der Adresse (die Adresse nur versiegelt bei Zug-Mails)
-- **V01.0.980** KI-Dungeon-Master: großer Katalog aus dem SRD 5.1 (CC-BY-4.0): 162 Gegner, 254 Gegenstände mit 85 Zaubern, Werkzeugen und Schätzen, 17 Zustände, Schwierigkeiten, 15 Hintergründe, 4 Völker, 7 neue Klassen; Startkräfte und Zauberlisten je Klasse mit Ladungen je Stufe
 
 
 

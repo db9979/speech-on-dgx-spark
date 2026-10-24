@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.990** Speaking on the model computer starts again without the internet: every pinned model points refs/main at its checked commit, otherwise vllm-omni did not find the voice model offline (TTS design restarted every 30 s)
 - **V01.0.989** No daily limits for admin profiles (pictures, songs, own music files, pictures of the own Dungeon round; space and queue stay), under Features → AI Dungeon Master → Adjust rules the item list no longer jumps and every item stands in its rarity frame, rolled ones with the ladder in the detail, the host renames a fellow player's hero via "⋯"
 - **V01.0.988** AI Dungeon Master: painted pictures for peoples, classes and abilities instead of signs, the chosen class large with picture tiles, a hero sheet with portrait, value tiles and tabs, powers with their own window and "Cast", the own action after "Act" as a card with "Change", managing fellow players (new link, stop waiting, off the table), a seat link fills the window and is locked, the guest mail mailbox can be picked
 - **V01.0.987** AI Dungeon Master: a prologue with a hold (quest, first lead, "What you can do" as buttons, a hook per hero, quest pinned), worn things of the group open their window with picture, dice and bonuses in colour, a calmer side column
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.983** AI Dungeon Master: the table's right column with tabs for map, host, threads and date instead of one long list; class choice with short cards, starting powers and spells by grade below
 - **V01.0.982** AI Dungeon Master: when VoiceDesign is not running, the fixed voice speaks instead of an error (sample with a hint, reading aloud goes on), the log names the reason
 - **V01.0.981** AI Dungeon Master: guests with e-mail: a 6-digit code from the admin's mailbox, a guest account with up to 8 heroes on any device, "Your turn" by mail on wish, only a hash of the address (the address sealed only for turn mails)
-- **V01.0.980** AI Dungeon Master: big catalog from the SRD 5.1 (CC-BY-4.0): 162 foes, 254 items with 85 spells, tools and treasure, 17 conditions, difficulties, 15 backgrounds, 4 peoples, 7 new classes; starting powers and spell lists per class with charges per level
 
 
 

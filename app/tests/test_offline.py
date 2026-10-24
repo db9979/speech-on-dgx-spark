@@ -12,12 +12,14 @@ No test depends on the wall clock or the network: times and answers are passed i
 import ast
 import asyncio
 import glob
+import hashlib
 import io
 import os
 import re
 import secrets
 import socket
 import struct
+import tempfile
 import sys
 import threading
 import time
@@ -174,6 +176,53 @@ def packet(server_t, li=0, mode=4, stratum=2):
     secs = int(server_t) + offline.NTP_1970
     frac = int((server_t - int(server_t)) * 2 ** 32)
     return bytes([(li << 6) | (4 << 3) | mode, stratum]) + 38 * b"\0" + struct.pack("!II", secs, frac)
+
+
+class Zeiger(unittest.TestCase):
+    """refs/main of every pinned model on its checked commit (tars 2026-10-23: vllm-omni asked for the VoiceDesign
+    model without a revision, found no refs/main offline and speech-spark-tts-design restarted every 30 s)."""
+    REV = "a" * 40
+
+    def cache(self, hub):
+        d = os.path.join(hub, "models--A--B")
+        snap = os.path.join(d, "snapshots", self.REV)
+        os.makedirs(snap)
+        os.makedirs(os.path.join(d, "blobs"))
+        for name, data in (("config.json", b"{}"), ("model.safetensors", b"x" * 64)):
+            blob = (hashlib.sha256(data).hexdigest() if name.endswith(".safetensors")
+                    else hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest())
+            with open(os.path.join(d, "blobs", blob), "wb") as f:
+                f.write(data)
+            os.symlink(os.path.join("..", "..", "blobs", blob), os.path.join(snap, name))
+        return d
+
+    def test_a_checked_cache_gets_its_pointer_without_a_download(self):
+        import huggingface_hub
+        with tempfile.TemporaryDirectory() as hub:
+            d = self.cache(hub)
+            with self.assertRaises(Exception):          # the failure on tars: no refs/main, offline
+                huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
+            with mock.patch.object(huggingface_hub, "snapshot_download", side_effect=AssertionError("download")):
+                self.assertEqual(modelle._laden("A/B", self.REV, d), self.REV)
+            with open(os.path.join(d, "refs", "main")) as f:
+                self.assertEqual(f.read(), self.REV)
+            # a loader without a revision now finds exactly the checked snapshot, offline
+            path = huggingface_hub.snapshot_download("A/B", cache_dir=hub, local_files_only=True)
+            self.assertEqual(os.path.realpath(path), os.path.realpath(os.path.join(d, "snapshots", self.REV)))
+
+    def test_the_pointer_is_written_once_and_only_to_a_checked_commit(self):
+        with tempfile.TemporaryDirectory() as hub:
+            d = self.cache(hub)
+            self.assertTrue(modelle.zeiger(d, self.REV))
+            self.assertFalse(modelle.zeiger(d, self.REV))          # unchanged: nothing written
+            os.unlink(os.path.join(d, "refs", "main"))
+            os.symlink(os.path.join(hub, "anderswo"), os.path.join(d, "refs", "main"))
+            self.assertTrue(modelle.zeiger(d, self.REV))            # a link is replaced by a plain file
+            self.assertFalse(os.path.islink(os.path.join(d, "refs", "main")))
+            for bad in ("b" * 40, "../../etc", "", None):          # no snapshot or no commit
+                with self.assertRaises(modelle.Fehler):
+                    modelle.zeiger(d, bad)
+            self.assertEqual(os.listdir(os.path.join(d, "refs")), ["main"])
 
 
 class Uhr(unittest.TestCase):

@@ -662,9 +662,11 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     m, port = rolle(art, cfg, kat)
     rev = fest_revision(m, messung)
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
+    zeiger(hf_ordner(m, hf_home), rev)
     if m["vllm"].get("entwurf"):
         e = m["vllm"]["entwurf"]
         pruefen(hf_ordner(e, hf_home), e["revision"], hashes=False)
+        zeiger(hf_ordner(e, hf_home), e["revision"])
     return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
 
 
@@ -764,6 +766,7 @@ def _laden(repo, rev, ordner):
     if rev:
         try:
             pruefen(ordner, rev)
+            zeiger(ordner, rev)
             return rev
         except Fehler:
             weg = _aufraeumen(ordner, rev)
@@ -775,7 +778,32 @@ def _laden(repo, rev, ordner):
     if rev and commit != rev:
         raise Fehler("revision")
     pruefen(ordner, commit)
+    zeiger(ordner, commit)
     return commit
+
+
+def zeiger(ordner, rev):
+    """Points refs/main of a cached repository at its checked, pinned commit. snapshot_download with a commit writes
+    no refs/main, and some loaders ask for the repository without a revision (vllm-omni's omni_snapshot_download):
+    with HF_HUB_OFFLINE they then find no refs/main and stop (LocalEntryNotFoundError, speech-spark-tts-design
+    restarted every 30 s on tars 2026-10-23). Pointed at the pinned commit they load exactly the checked files. Only
+    a commit of 40 hex whose snapshot exists; written only when it differs, through a temporary file."""
+    if not REV.match(rev or "") or not os.path.isdir(os.path.join(ordner, "snapshots", rev)):
+        raise Fehler("revision")
+    refs = os.path.join(ordner, "refs")
+    ziel = os.path.join(refs, "main")
+    try:
+        with open(ziel) as f:
+            if f.read().strip() == rev and not os.path.islink(ziel):
+                return False
+    except OSError:
+        pass
+    os.makedirs(refs, exist_ok=True)
+    tmp = ziel + ".neu"
+    with open(tmp, "w") as f:
+        f.write(rev)
+    os.replace(tmp, ziel)
+    return True
 
 
 def fest(repo, kat=None):

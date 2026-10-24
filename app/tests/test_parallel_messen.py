@@ -201,10 +201,15 @@ class Varianten(unittest.TestCase):
         self.assertEqual(seen, [(ds["repo"], ds["revision"]),
                                 (ds["vllm"]["entwurf"]["repo"], ds["vllm"]["entwurf"]["revision"])])
         geprueft = []
-        with mock.patch.object(modelle, "pruefen", side_effect=lambda o, r, hashes=True: geprueft.append((o, hashes))):
+        gezeigt = []
+        with mock.patch.object(modelle, "pruefen", side_effect=lambda o, r, hashes=True: geprueft.append((o, hashes))), \
+                mock.patch.object(modelle, "zeiger", side_effect=lambda o, r: gezeigt.append((o, r))):
             cfg = {"llm": {"modell": ds["id"], "engine_port": 31016}}
             modelle.start_args("llm", cfg, {}, hf_home="/x")
         self.assertEqual([o for o, _ in geprueft], [modelle.hf_ordner(ds, "/x"), modelle.hf_ordner(ds["vllm"]["entwurf"], "/x")])
+        # refs/main of both on their pinned commits (vllm-omni and other loaders ask without a revision, offline)
+        self.assertEqual(gezeigt, [(modelle.hf_ordner(ds, "/x"), ds["revision"]),
+                                   (modelle.hf_ordner(ds["vllm"]["entwurf"], "/x"), ds["vllm"]["entwurf"]["revision"])])
         self.assertTrue(all(modelle.ERLAUBT) and not any(modelle.VERBOTEN.search(p.replace("*", "x")) for p in modelle.ERLAUBT))
 
     def test_a_shared_folder_stays_while_any_of_its_entries_runs(self):
