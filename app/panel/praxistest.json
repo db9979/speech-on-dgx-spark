@@ -3180,6 +3180,13 @@
 "titel": "Dungeon-Master im Auto: Rückfrage, Befehle, Runden, Stimmen, Warten",
 "text": "Im Auto (CarPlay), Dungeon-Master für dich frei. A: „Dungeon-Master spielen“ zeigt je laufender Runde eine Zeile („Zug n · Held“), „Neue Runde“ und, bei offenem Spiel, „Spiel verlassen“. B: Eine Runde mit Vorlesen an: die Erzählung kommt in den Stimmen der Runde (Erzähler, NPCs), danach kurz Würfe, Schaden, Beute und wer dran ist. C: „Ich greife den Goblin an“: das Auto fragt „… Passt das?“, erst „Ja“ schickt ab, „Nein“ fragt „Was tust du stattdessen?“. D: „Leg den Helm an“, „Wie steht der Kampf?“, „Was verkauft der Händler?“, „Wohin können wir?“, „Hilfe“ antworten mit festen Sätzen. E: Nach der Aktion „Ich melde mich, wenn du dran bist“: auch nach über 10 Minuten Warten liest das Auto den neuen Zug von selbst vor. F: „Neue Runde“: drei Geschichten, „die zweite“, „Ja“: der Prolog kommt. G: „Pause“ oder „Stopp“ verlässt das Spiel, am Tisch geht die Runde weiter.",
 "thread": "CarPlay stabil und bedienbar"
+},
+{
+"id": "P479",
+"v": 1023,
+"titel": "Dungeon-Master: Orte und Figuren bleiben",
+"text": "A: An einem Ort mit einer Figur sprechen, dann ohne sie weitergehen: am neuen Ort taucht sie nicht auf, die Erzählung kennt sie als „anderswo“. B: Eine Figur mit „komm mit uns“ mitnehmen: sie reist mit; mit „bleib hier“ bleibt sie zurück. C: Weitergehen und dann ohne Wunsch nach „zurück“ handeln: die Gruppe landet nicht wieder am alten Ort. D: Einen Weg nennen, den die Karte nicht geht: unter der Karte steht „Ort nicht gewechselt“.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

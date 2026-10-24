@@ -80,6 +80,14 @@ NAME_MAX = 40
 SATZ_MAX = 160
 FRAGE_MAX = 240
 STUB = 0.42               # how far a way into the unknown is drawn
+LEUTE_MAX = 40            # people the map remembers by place (the oldest go first)
+# people stay where the group met them (Dominik 2026-10-24 „1-5 umsetzten“): one comes along only when an action of
+# the turn names them with one of these words, and stays behind with the others (fixed words, never the model)
+MIT = ("mit uns", "kommt mit", "komm mit", "mitkommen", "folgt uns", "folge uns", "folg uns", "begleit",
+       "come with", "come along", "follow us", "join us")
+BLEIB = ("bleib hier", "bleibt hier", "bleib zurueck", "warte hier", "wartet hier", "verabschied", "lebe wohl",
+         "stay here", "stay behind", "wait here", "farewell", "goodbye")
+ZURUECK = ("zurueck", "umkehren", "kehren um", "kehrt um", "back", "turn around", "return")   # a way back must be asked
 BLICK = 560               # the seat's view of the plane is at least this wide (view: box)
 ORT_EN = "map vignette art, one single place seen from a high angle, a small round scene, plain light background"
 RAUM_EN = "dungeon art, one room of an underground vault seen from a high angle, no people"
@@ -531,6 +539,58 @@ def named_way(rd, text):
     return hits[0] if len(hits) == 1 else -1
 
 
+def _said(rd):
+    """This turn's actions, each as one plain string of words (pure)."""
+    return [" " + " ".join(_words(a.get("text"))) + " " for a in (rd.get("offen") or {}).values() if isinstance(a, dict)]
+
+
+def _back_asked(rd):
+    """Whether an action of the turn asks for the way back: the name of the place the group came from, its
+    direction or a word of ZURUECK (pure)."""
+    k = rd["karte"]
+    o, here, back = k["orte"], k["hier"], k.get("vorher")
+    if back is None:
+        return True
+    d = " " + " ".join(_words(_dir((o[here]["x"], o[here]["y"]), (o[back]["x"], o[back]["y"]), _li(rd)))) + " "
+    return any(_names(o[back]["name"], w.split()) or d in w or any(f" {z}" in w for z in ZURUECK) for w in _said(rd))
+
+
+def _people(rd, story):
+    """Who the group meets stays at that place (k["leute"]: name → place index, mit): a new name of the narration's
+    npc is put where the group is; one comes along when an action names them with a word of MIT, and stays when an
+    action names them with BLEIB; those along move with the group."""
+    k = rd["karte"]
+    le = k.setdefault("leute", {})
+    for n in story.get("npc") or []:
+        name = str(n.get("name") or "").strip()[:NAME_MAX]
+        if name and name not in le:
+            le[name] = {"ort": k["hier"], "mit": False}
+    said = _said(rd)
+    for name, p in le.items():
+        hits = [w for w in said if _names(name, w.split()) or set(_words(name)) & set(w.split())]
+        if any(f" {x}" in w for w in hits for x in BLEIB):
+            p["mit"] = False
+            p["ort"] = k["hier"]
+        elif any(f" {x}" in w for w in hits for x in MIT):
+            p["mit"] = True
+        if p["mit"]:
+            p["ort"] = k["hier"]
+    while len(le) > LEUTE_MAX:
+        le.pop(next(iter(le)))
+
+
+def leute(rd):
+    """The people of the story by place (dungeon.facts, dungeon_erzaehler.judge): hier at the group's place (those
+    along included), anderswo with the name of their place, mit those travelling with the group (pure)."""
+    k = rd.get("karte")
+    if not k:
+        return {"hier": [], "anderswo": [], "mit": []}
+    le = k.get("leute") or {}
+    return {"hier": [n for n, p in le.items() if p["ort"] == k["hier"]],
+            "anderswo": [{"name": n, "ort": k["orte"][p["ort"]]["name"]} for n, p in le.items() if p["ort"] != k["hier"]],
+            "mit": [n for n, p in le.items() if p["mit"]]}
+
+
 def vault(rd):
     k = rd.get("karte")
     return k["gw"].get(str(k["drin"])) if k and k.get("drin") is not None else None
@@ -828,6 +888,10 @@ def step(r, rd, story, ep, rng=None):
     if not want and named_way(rd, story.get("text")) >= 0:
         want = f"o{named_way(rd, story.get('text')) + 1}"
         print("dungeon: karte | name statt id", flush=True)
+    if not vault(rd) and want == f"o{k.get('vorher', -2) + 1}" and not _back_asked(rd):
+        print("dungeon: karte | verworfen | rueckweg", flush=True)   # back to where the group came from: only when asked
+        want = ""
+    k.pop("bleibt", None)
     before = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier"))
     won(rd)
     v = vault(rd)
@@ -853,7 +917,7 @@ def step(r, rd, story, ep, rng=None):
             print("dungeon: karte | verworfen | weg", flush=True)
     elif want.startswith("o") and int(want[1:]) - 1 in _nb(k)[k["hier"]]:
         a, j = k["hier"], int(want[1:]) - 1
-        k["hier"], k["schritte"] = j, k["schritte"] + 1
+        k["hier"], k["schritte"], k["vorher"] = j, k["schritte"] + 1, a
         e = [min(a, j), max(a, j)]
         if e not in k["gegangen"]:
             k["gegangen"].append(e)
@@ -866,6 +930,13 @@ def step(r, rd, story, ep, rng=None):
         print("dungeon: karte | verworfen | weg", flush=True)
     story["szene"] = {"ort": place_name(r, rd), "stimmung": (story.get("szene") or rd.get("szene") or {}).get("stimmung", "")}
     changed = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier")) != before
+    if k["hier"] == before[0] and not vault(rd):
+        told, said = _words(story.get("text")), _said(rd)
+        named = [j for j in _nb(k)[k["hier"]] if _names(k["orte"][j]["name"], told) and any(_names(k["orte"][j]["name"], w.split()) for w in said)]
+        if named:                                # asked and narrated, but the map did not move (shown at the table)
+            k["bleibt"] = k["orte"][named[0]]["name"]
+            print("dungeon: karte | ort bleibt", flush=True)
+    _people(rd, story)
     if changed:
         dungeon.close_market(rd)
         rd["boden"] = []
@@ -902,7 +973,7 @@ def view(r, rd, host=False):
     xs = [o[i]["x"] for i in known] + [w[2] for w in wege]
     ys = [o[i]["y"] for i in known] + [w[3] for w in wege]
     out = {"box": _box(xs, ys), "w": FLAECHE[0], "h": FLAECHE[1], "form": k.get("form", "verstreut"), "deko": k.get("deko") or {}, "orte": [place(i) for i in sorted(known)], "wege": wege, "hier": f"o{k['hier'] + 1}",
-           "welt": rd.get("welt"), "gesehen": len(k["besucht"]), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
+           "welt": rd.get("welt"), "gesehen": len(k["besucht"]), "bleibt": k.get("bleibt", ""), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
     v = vault(rd)
     if v:
         vnb = _vnb(v)

@@ -166,6 +166,58 @@ class Moves(unittest.TestCase):
     def story(self, ort_id="", ort="Irgendwo", **kw):
         return dict({"ort_id": ort_id, "szene": {"ort": ort, "stimmung": "kalt"}, "erfolg": []}, **kw)
 
+    def test_the_way_back_only_when_asked(self):
+        """Back to the place the group came from only when an action names it, its direction or „zurück“."""
+        k = self.k
+        start = k["hier"]
+        j = K._nb(k)[start][0]
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.rd["offen"] = {"pa": {"text": "Wir sehen uns hier genauer um."}}
+        self.assertFalse(K.step(self.r, self.rd, self.story(f"o{start + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], j)
+        for asked in (f"Wir gehen zurück.", f"Wir gehen nach {k['orte'][start]['name']}."):
+            self.rd["offen"] = {"pa": {"text": asked}}
+            self.assertTrue(K._back_asked(self.rd), asked)
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{start + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], start)
+
+    def test_people_stay_where_they_were_met(self):
+        """leute: a new NPC is put where the group is; along only by an action with MIT, back with BLEIB."""
+        k = self.k
+        start = k["hier"]
+        j = K._nb(k)[start][0]
+        self.assertEqual(K.leute({}), {"hier": [], "anderswo": [], "mit": []})
+        self.rd["offen"] = {"pa": {"text": "Ich grüße die beiden."}}
+        K.step(self.r, self.rd, self.story("", npc=[{"name": "Mara", "sagt": "Hallo"}, {"name": "Brom", "sagt": "Na"}]), {}, random.Random(1))
+        self.assertEqual(K.leute(self.rd)["hier"], ["Mara", "Brom"])
+        self.rd["offen"] = {"pa": {"text": "Mara, komm mit uns!"}, "pb": {"text": "Wir gehen weiter."}}
+        K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1))
+        le = K.leute(self.rd)
+        self.assertEqual((le["hier"], le["mit"]), (["Mara"], ["Mara"]))
+        self.assertEqual(le["anderswo"], [{"name": "Brom", "ort": k["orte"][start]["name"]}])
+        self.rd["offen"] = {"pa": {"text": "Mara, bleib hier und warte."}}
+        K.step(self.r, self.rd, self.story("", npc=[{"name": "Brom", "sagt": "Ich bin hier"}]), {}, random.Random(1))
+        le = K.leute(self.rd)
+        self.assertEqual(le["mit"], [])
+        self.assertEqual([x["name"] for x in le["anderswo"]], ["Brom"])     # the narration cannot move Brom here
+        for n in range(K.LEUTE_MAX + 5):
+            K.step(self.r, self.rd, self.story("", npc=[{"name": f"Figur {n}", "sagt": "x"}]), {}, random.Random(1))
+        self.assertEqual(len(k["leute"]), K.LEUTE_MAX)
+
+    def test_place_kept_is_shown(self):
+        """A way asked and narrated that the map did not go shows „Ort nicht gewechselt“ (bleibt) until the next turn."""
+        k = self.k
+        nb = K._nb(k)[k["hier"]]
+        if len(nb) < 2:
+            self.skipTest("one way only")
+        a, b = (k["orte"][x]["name"] for x in nb[:2])
+        self.rd["offen"] = {"pa": {"text": f"Wir gehen nach {a} oder {b}."}}
+        K.step(self.r, self.rd, self.story("o99", text=f"Ihr erreicht {a}."), {}, random.Random(1))
+        self.assertEqual(K.view(self.r, self.rd)["bleibt"], a)
+        self.rd["offen"] = {}
+        K.step(self.r, self.rd, self.story("", text="Ihr rastet."), {}, random.Random(1))
+        self.assertEqual(K.view(self.r, self.rd)["bleibt"], "")
+
     def test_only_along_a_way_and_the_place_is_the_maps(self):
         k, r = self.k, self.r
         here = k["hier"]
