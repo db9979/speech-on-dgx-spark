@@ -5493,6 +5493,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wortliste auch für das, was Spieler schreiben, Gastgeber blendet aus und schaltet stumm (V01.1.001, Punkt 13 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Bisher prüfte die Wortliste einer Runde (die Wörter ihres Tons, die Liste „nie“ der Regeln und die Tabus ihrer Geschichte) nur, was das Modell erzählt. Jetzt gilt sie genauso für alles, was Spieler schreiben: das Tischgespräch, jede Aktion, den neuen Namen beim Umbenennen und den Namen eines Helden, der sich an den Tisch setzt (auch ein gespeicherter Held oder ein Figur-Code von einem raueren Tisch). An einem Tisch „ab 8“ geht „Da ist Blut!“ also nicht durch. Die Seite sagt dann „Das geht an diesem Tisch nicht: Ein Wort steht auf der Wortliste der Runde … Formuliere es anders.“, und der Text bleibt im Feld. Die Liste „nie“ gilt für jeden neuen Helden. Als Gastgeber hat jede Zeile im Tischgespräch und jede Aktion im Verlauf ein kleines ⊘ „Für alle ausblenden“: Danach sieht kein Platz sie mehr, in der Datei der Runde bleibt sie aber stehen. Im „⋯“ eines Mitspielers gibt es neu Im Tischgespräch stumm und „Wieder mitreden lassen“. Ein stummer Platz kann weiter handeln, im Tischgespräch sieht er nur den Hi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nweis „Der Gastgeber hat dich im Tischgespräch stummgeschaltet“. Neuer Endpunkt POST /api/profile/dungeon/{rid}/verbergen {art: tisch|aktion, n, pid} (nur der Gastgeber, Anmeldung, CSRF, Größen- und Rate-Limit), PUT …/platz/{pid} kennt dazu stumm und laut. Logs dungeon: aktion | wortliste, dungeon: tisch | abgelehnt | ValueError, dungeon: platz | stumm, dungeon: verbergen | tisch (oder aktion, … | nicht da), dungeon: beitreten | wortliste. Die Live-Übersicht zählt verborgene Zeilen, abgelehnte Spielertexte und stumme Plätze, nie Inhalte. Selbsttests Moderation in app/tests/test_dungeon.py und Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Werte bei Gegenständen und Gegnern (V01.0.997, Dominik 2026-10-24 „sollten immer auch Werte anzeigen wie stark, was sie bewirken“): Unter Funktionen → KI-Dungeon-Master → Regeln anpassen zeigt jede Zeile jetzt mehr. Bei Gegenständen stehen dort Art, Seltenheit, der Wert, auf den der Gegenstand zählt, Schaden, Schutz, Heilung, Segen mit Wert, Werkzeug-Bonus und Preis. Bei Gegnern stehen Stufe, Leben, Rüstung, Angriff, Schaden und EP. Das Detail hat dazu eine Werte-Liste (dungeon_regelseite.werte). Bei Gegenständen steht dort, was er am Tisch bewirkt (dieselben Zeilen wie im Heldenbogen), worauf er zählt, für wen, Zaubergrad, Klassen, Gewicht und Preis. Bei Gegnern stehen Leben, Rüstung, Angriff, Schaden mit Durchschnitt, EP, die sechs Werte, die Zustände, die er bewirken kann, und die Größe. Zustände zeigen Wirkung und Dauer. Alles kommt aus festen Wörtern und den Zahlen des Katalogs."
 },
 {
@@ -17926,6 +17942,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ommended, 1 to 4 and 6): as the host every hero card of a fellow player has a \"⋯\" with New link (guests only: the old link stops at once, the hero stays, the new one shows once with its QR code), Stop waiting (the turn no longer waits for them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the word list also for what players write, the host hides and mutes (V01.1.001, point 13 of the review of 2026-10-24, Dominik \"implement everything\"): Until now a round's word list (its tone's words, the rules' list \"never\" and its story's taboos) only checked what the model tells. Now it holds just the same for everything players write: the table talk, every action, the new name when renaming and the name of a hero who sits down at the table (also a kept hero or a hero code from a rougher table). At a table \"from 8\" \"There is blood!\" does not go through. The page then says \"That does not work at this table: a word is on the round's word list … Put it another way.\", and the text stays in the field. The list \"never\" holds for every new hero. As the host every line of table talk and every action in the log has a small ⊘ \"Hide for everyone\": after that no seat sees it any more, but it stays in the round's file. A fellow player's \"⋯\" has the new Mute in table talk and \"Let talk again\". A muted seat can still act; in the table talk it only sees the note \"The host muted you in the table talk\". New endpoint POST /api/profile/dungeon/{rid}/verbergen {art: tisch|aktion, n"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": ", pid} (host only, sign-in, CSRF, size and rate limit), PUT …/platz/{pid} also knows stumm and laut. Logs dungeon: aktion | wortliste, dungeon: tisch | abgelehnt | ValueError, dungeon: platz | stumm, dungeon: verbergen | tisch (or aktion, … | nicht da), dungeon: beitreten | wortliste. The live overview counts hidden lines, refused player texts and muted seats, never contents. Self-tests Moderation in app/tests/test_dungeon.py and Windows.test_acting_shows_the_own_action."
 },
 {
 "lang": "en",

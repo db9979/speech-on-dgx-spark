@@ -435,6 +435,81 @@ class Seats(Base):
         self.assertIn(self.gp, self.state(self.rid)["plaetze"])                # a seat with a hero stays
 
 
+
+class Moderation(Turns):
+    """Punkt 13 of 2026-10-24: the round's word list (tone, „nie“, the story's taboos) holds for what players type too,
+    table talk, actions and hero names; the host hides a line for everyone and mutes a seat in the table talk."""
+    def talk(self, client, text, code=None):
+        if code:
+            return client.post("/api/dungeon/tisch", json={"code": code, "text": text})
+        return client.post(f"/api/profile/dungeon/{self.rid}/tisch", json={"text": text})
+
+    def test_the_word_list_holds_for_table_talk_actions_and_names(self):
+        bad = "Ich folter den Wächter."                                   # tone 12 refuses „folter“
+        for r in (self.talk(self.c, bad), self.talk(self.v, bad, self.code),
+                  self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": bad, "zug": 1}),
+                  self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": bad, "zug": 1})):
+            self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"), r.text)
+        rd = self.state(self.rid)
+        self.assertEqual((rd["offen"], rd.get("tisch") or []), ({}, []))
+        self.assertNotIn("folter", json.dumps(rd).lower())
+        r = self.c.put(f"/api/profile/dungeon/{self.rid}/platz/{self.gp}", json={"was": "name", "name": "Folterbert"})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"))
+        self.assertEqual(self.state(self.rid)["plaetze"][self.gp]["held"]["name"], "Bela")
+        code = self.invite(self.rid)                                      # a guest's hero name at this table
+        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Folterbert", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "wortliste"))
+        nie = dungeon.rules()["nie"][0]                                   # „nie“ holds for every new hero
+        r = self.c.post("/api/profile/dungeon/runde", json={"titel": "Zwei", "welt": "fantasy", "ton": 16, "zug_s": 120, "stunden": 6,
+                                                           "held": dict(HERO, name=nie.capitalize() + "o")})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"))
+        self.assertEqual(self.talk(self.c, "Ich öffne die Tür.").status_code, 200)
+        self.assertGreaterEqual(dungeon.for_live()["wortliste"], 6)
+
+    def test_kids_table_refuses_what_the_tone_refuses(self):
+        v = self.new_round(ton=8, titel="Kinder")
+        r = self.c.post(f"/api/profile/dungeon/{v['rid']}/tisch", json={"text": "Da ist Blut!"})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"))
+
+    def test_the_host_mutes_a_seat_in_the_table_talk(self):
+        put = lambda was, client=None: (client or self.c).put(f"/api/profile/dungeon/{self.rid}/platz/{self.gp}", json={"was": was})
+        self.assertEqual(put("stumm").status_code, 200)
+        self.assertEqual(put("stumm", self.c2).status_code, 404)          # only the host
+        seat = next(p for p in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["plaetze"] if p.get("pid") == self.gp)
+        self.assertTrue(seat["stumm"])
+        r = self.talk(self.v, "Hallo?", self.code)
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "stumm"))
+        self.assertEqual(dungeon.for_live()["stumm"], 1)
+        self.spawned.clear()                                              # the first look read the prologue aloud
+        self.act_all()                                                    # actions go on
+        self.assertEqual(put("laut").status_code, 200)
+        self.assertEqual(self.talk(self.v, "Hallo!", self.code).status_code, 200)
+        self.assertNotIn("stumm", self.state(self.rid)["plaetze"][self.gp])
+
+    def test_the_host_hides_a_line_for_everyone(self):
+        hide = lambda client, **b: client.post(f"/api/profile/dungeon/{self.rid}/verbergen", json=b)
+        self.assertEqual(self.talk(self.v, "Unpassend", self.code).status_code, 200)
+        n = self.state(self.rid)["tisch"][-1]["n"]
+        self.assertEqual(hide(self.c2, art="tisch", n=n).status_code, 404)            # only the host
+        self.assertEqual(hide(self.v, art="tisch", n=n).status_code, 401)
+        self.assertEqual(hide(self.c, art="geheim", n=n).status_code, 400)
+        self.assertEqual(hide(self.c, art="tisch", n="1").status_code, 400)
+        self.assertEqual(hide(self.c, art="tisch", n=n + 9).status_code, 404)
+        r = hide(self.c, art="tisch", n=n)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["tisch"], [])
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["tisch"], [])
+        self.spawned.clear()                                              # the first look read the prologue aloud
+        self.act_all("Ich klopfe an.")
+        self.play([{"proben": []}, {"erzaehlung": "Hinter der Tür antwortet niemand, nur der Wind pfeift durch die Ritzen der alten Bretter.", "frage_an": ""}])
+        acts = lambda v: [e for e in v["log"] if e["art"] == "aktion" and e.get("pid") == self.gp]
+        self.assertEqual(len(acts(self.v.post("/api/dungeon/lage", json={"code": self.code}).json())), 1)
+        self.assertEqual(hide(self.c, art="aktion", n=1, pid="x").status_code, 404)
+        self.assertEqual(hide(self.c, art="aktion", n=1, pid=self.gp).status_code, 200)
+        self.assertEqual(acts(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()), [])
+        self.assertEqual(len([e for e in self.state(self.rid)["log"] if e["art"] == "aktion"]), 2)   # kept in the file
+        self.assertEqual(dungeon.for_live()["verborgen"], 2)
+
 class Zugzeit(Base):
     """Dominik 2026-10-24 „die interaktion für den user geht zu schnell weg“, „1-5“: the turn's time starts after a
     reading time, the last action closes it only GNADE_S later, each seat may ask once a turn for a minute more, the
@@ -3053,6 +3128,12 @@ class Windows(unittest.TestCase):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"sitzmenue-{w}.png"))
                         await pg.click("#dmview [data-dmsitz=wecken]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=ruhen]')")
+                        await pg.click("#dmview .dm-smenu [data-dmsitz=stumm]")                          # Punkt 13: mute
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=laut]')")
+                        self.assertTrue(any(x.get("stumm") for x in dungeon._read()["runden"][rid]["plaetze"].values()))
+                        await pg.click("#dmview .dm-smenu [data-dmsitz=laut]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-smenu [data-dmsitz=stumm]')")
+                        self.assertTrue(await pg.evaluate("dmHide({gastgeber:true},'tisch',3).includes('data-dmhide=\"tisch\"')&&dmHide({gastgeber:false},'tisch',3)===''"))
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

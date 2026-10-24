@@ -67,16 +67,16 @@ function dmSaetze(v,e){const key=v.rid+':'+(e.prolog?'p':'')+(e.n||1),S=DMWT.see
 function dmTyping(v){const n=v.tippt||[];return n.length&&!v.dm?`<small class="dm-wait dm-tippt">✎ ${esc(n.join(', '))} ${esc(n.length===1?t('schreibt …','is typing …'):t('schreiben …','are typing …'))}</small>`:''}
 function dmTalk(v,mode){if(!v.ich||v.status==='ende')return '';const l=v.tisch||[];
   return `<details class="dm-talk" data-dmtalk="1"${DMWT.talk[mode]?' open':''}><summary>💬 ${esc(t('Tischgespräch','Table talk'))}${l.length?` <span class="pill">${l.length}</span>`:''} <small class="mut">${esc(t('nur unter euch, der Dungeon-Master liest nicht mit','just between you, the Dungeon Master does not read it'))}</small></summary>
-    <div class="dm-talk-l">${l.slice(-12).map(x=>`<div class="${x.ich?'me':''}"><b>${esc(x.name)}</b> ${esc(x.text)}</div>`).join('')||`<small class="mut">${esc(t('Noch ist es still am Tisch.','Quiet at the table so far.'))}</small>`}</div>
-    <div class="dm-inp"><input class="dm-talk-in" maxlength="200" placeholder="${esc(t('Etwas zu den anderen sagen …','Say something to the others …'))}" aria-label="${esc(t('Tischgespräch','Table talk'))}"><button type="button" class="b" data-dmtalksend="1">${esc(t('Sagen','Say'))}</button></div></details>`}
+    <div class="dm-talk-l">${l.slice(-12).map(x=>`<div class="${x.ich?'me':''}"><b>${esc(x.name)}</b> ${esc(x.text)}${dmHide(v,'tisch',x.n)}</div>`).join('')||`<small class="mut">${esc(t('Noch ist es still am Tisch.','Quiet at the table so far.'))}</small>`}</div>
+    ${(v.plaetze||[]).some(p=>p.ich&&p.stumm)?`<small class="mut">🔇 ${esc(t(...DMGRUND.stumm))}</small>`:`<div class="dm-inp"><input class="dm-talk-in" maxlength="200" placeholder="${esc(t('Etwas zu den anderen sagen …','Say something to the others …'))}" aria-label="${esc(t('Tischgespräch','Table talk'))}"><button type="button" class="b" data-dmtalksend="1">${esc(t('Sagen','Say'))}</button></div>`}</details>`}
 // the talk field keeps its text and focus across the table's repaints
 function dmTalkKeep(w){const i=w.querySelector('.dm-talk-in'),val=i?i.value:'',f=!!i&&document.activeElement===i;
   return ()=>{const n=w.querySelector('.dm-talk-in');if(n){if(val)n.value=val;if(f)n.focus({preventScroll:true})}}}
 async function dmTalkSend(el){const mode=el.closest('#dgcard')?'g':'p',box=el.closest('.dm-talk'),inp=box&&box.querySelector('.dm-talk-in'),text=inp?inp.value.trim():'';if(!text)return;
   try{if(mode==='g'){DG.v=await dgPub('/api/dungeon/tisch',{code:DG.code,text});DG.at=Date.now();inp.value='';dgDraw()}
-    else{const {r,d}=await apiTry(`/api/profile/dungeon/${DM.rid}/tisch`,xjson('POST',{text}));if(!r.ok)throw new Error();DM.v=d;DM.at=Date.now();inp.value='';dmDraw()}
+    else{const {r,d}=await apiTry(`/api/profile/dungeon/${DM.rid}/tisch`,xjson('POST',{text}));if(!r.ok){dmSay(DM,dmErr(r.status,d.detail),true);return}DM.v=d;DM.at=Date.now();inp.value='';dmDraw()}
     const n=document.querySelector(mode==='g'?'#dgcard .dm-talk-in':'#dmview .dm-talk-in');if(n)n.focus({preventScroll:true})}
-  catch(e){dmSay(mode==='g'?DG:DM,t('Das hat nicht geklappt.','That did not work.'),true)}}
+  catch(e){dmSay(mode==='g'?DG:DM,mode==='g'?dgErr(e):t('Das hat nicht geklappt.','That did not work.'),true)}}
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmtalksend],#dgcard [data-dmtalksend]');if(b)dmTalkSend(b)});
 document.body.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('#dmview .dm-talk-in,#dgcard .dm-talk-in')){e.preventDefault();dmTalkSend(e.target)}});
 document.body.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('.dm-talk'))DMWT.talk[d.closest('#dgcard')?'g':'p']=d.open},true);

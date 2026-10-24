@@ -3054,6 +3054,13 @@
 "titel": "Dungeon-Master: Alle Bilder malen und Gegnerbilder nach Beschreibung",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Teil Bilder: neben „Bilder jetzt erstellen“ steht „Alle Bilder malen · N“. B: Antippen: der Lauf zeigt „malt alle, ohne Tageslimit · gemalt · noch“, auch über 300 am Tag hinaus. C: „Abbrechen“ hält nach dem aktuellen Bild an, unter „zuletzt“ steht „angehalten“. D: Bestiarium: der Kultist ist ein Mensch in Kutte, kein Dämon; ein Goblin klein und menschenähnlich, ein Wolf ein Tier. E: Zustand → Logs zeigt „dungeon: dingbild | lauf start | alle“.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P461",
+"v": 1001,
+"titel": "Wortliste für Spielertext, ausblenden und stumm",
+"text": "A: Eine Runde ab 8 anlegen und im Tischgespräch „Da ist Blut!“ schreiben: die Seite sagt, das Wort steht auf der Wortliste, der Text bleibt im Feld; dasselbe bei einer Aktion und beim Umbenennen. B: Als Gastgeber bei einer Zeile im Tischgespräch und bei einer Aktion ⊘ tippen: sie verschwindet auch beim Mitspieler. C: Im ⋯ eines Mitspielers „Im Tischgespräch stumm“: er kann weiter handeln, im Tischgespräch steht nur der Hinweis; „Wieder mitreden lassen“ hebt es auf.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

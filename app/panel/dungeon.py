@@ -63,7 +63,8 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/auto              {text?, nach, lang}: the game in the car, spoken only (CarPlay)
     POST   /api/profile/dungeon/{rid}/platz       host: {base} a new seat link with its QR code, shown once
     DELETE /api/profile/dungeon/{rid}/platz/{pid} host: take a seat back
-    PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken|name} a guest's new link, not waited for, again, a new name
+    PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken|name|stumm|laut} a guest's new link, not waited for, again, a new name, no table talk, again
+    POST   /api/profile/dungeon/{rid}/verbergen   host: {art: tisch|aktion, n, pid?} hide a line of table talk or an action
     DELETE /api/profile/dungeon/{rid}             host: end the round (heroes of profiles are kept)
     POST   /api/profile/dungeon/beitreten         {code, held}: take a seat with the own login
     DELETE /api/profile/dungeon/held/{hid}        delete an own hero
@@ -303,7 +304,7 @@ _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech 
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
-                  kann_nicht=0, kraefte=0)
+                  kann_nicht=0, kraefte=0, verborgen=0, wortliste=0)
 
 
 def _go(coro, name):
@@ -765,6 +766,8 @@ def new_hero(r, b, rng=None):
     """A hero from what was typed and picked: name, people, class, one sentence; the six scores from the fixed row
     as dragged (else the class's order) plus the people's bonus."""
     name = hero_name(b.get("name"))
+    if any(w.lower() in " " + name.lower() + " " for w in r["nie"]):   # the round's own words: join() and manage_seat()
+        raise ValueError("wortliste")
     volk, klasse = _by(r, "voelker").get(b.get("volk")), _by(r, "klassen").get(b.get("klasse"))
     if not volk or not klasse:
         raise ValueError("held")
@@ -1354,6 +1357,39 @@ def _log(rd, art, **kw):
     rd["log"] = rd["log"][-LOG_MAX:]
 
 
+def shown(e, pid):
+    """Whether a seat sees a log entry: no other seat's out-of-game line, nothing the host hid."""
+    return not e.get("weg") and (e["art"] != "ooc" or e.get("pid") == pid)
+
+
+VERBERGEN_ARTEN = ("tisch", "aktion")
+
+
+def hide_line(owner, rid, art, n, pid=""):
+    """The host hides a line (Punkt 13 of 2026-10-24): a line of table talk by its number, or a seat's action of turn
+    n. The line stays in the file but no seat sees it again."""
+    if art not in VERBERGEN_ARTEN or not isinstance(n, int) or isinstance(n, bool):
+        raise ValueError("was")
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["owner"] != owner:
+            print(f"dungeon: verbergen | {art} | nicht da", flush=True)
+            raise LookupError("gastgeber")
+        if art == "tisch":
+            hit = [x for x in rd.get("tisch") or [] if x["n"] == n]
+        else:
+            hit = [e for e in rd["log"] if e["art"] == "aktion" and e["n"] == n and e.get("pid") == pid]
+        if not hit:
+            print(f"dungeon: verbergen | {art} | nicht da", flush=True)
+            raise LookupError("zeile")
+        for x in hit:
+            x["weg"] = True
+        _write(d)
+    _day.bump("verborgen")
+    print(f"dungeon: verbergen | {art}", flush=True)
+
+
 def seated(rd):
     """The seats with a hero, in the order they were taken (the host first)."""
     return [(pid, p) for pid, p in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if p.get("held")]
@@ -1485,7 +1521,7 @@ def drop_seat(owner, rid, pid):
     return True
 
 
-SITZ_WAS = ("link", "ruhen", "wecken", "name")
+SITZ_WAS = ("link", "ruhen", "wecken", "name", "stumm", "laut")
 
 
 def hero_name(v):
@@ -1500,7 +1536,8 @@ def manage_seat(owner, rid, pid, was, name=""):
     """The host on a fellow player's seat (Dominik 2026-10-24 „andere spieler bearbeiten … den code nochmal dem spieler
     geben“): "link" a new seat code for a guest (the old one stops at once, the hero stays; returned once, only its
     hash kept), "ruhen" not waited for until the seat acts again, "wecken" waited for again, "name" the hero's new name
-    (only the name, never a value, Dominik 2026-10-24 „1-6“). Returns the code or ""."""
+    (only the name, never a value, Dominik 2026-10-24 „1-6“; through the round's word list like every player text),
+    "stumm" no table talk from that seat, "laut" again (Punkt 13 of 2026-10-24). Returns the code or ""."""
     if was not in SITZ_WAS:
         raise ValueError("was")
     with _lock:
@@ -1512,7 +1549,14 @@ def manage_seat(owner, rid, pid, was, name=""):
             raise LookupError("platz")
         code = ""
         if was == "name":
-            p["held"]["name"] = hero_name(name)
+            name = hero_name(name)
+            if bad_words(rules(), rd, name):
+                print("dungeon: platz | name | wortliste", flush=True)
+                _day.bump("wortliste")
+                raise ValueError("wortliste")
+            p["held"]["name"] = name
+        elif was in ("stumm", "laut"):
+            p.update(stumm=True) if was == "stumm" else p.pop("stumm", None)
         elif was == "link":
             if p.get("uid"):                     # a profile opens the round from its own list
                 print("dungeon: platz | link | profil", flush=True)
@@ -1589,6 +1633,10 @@ def join(rid, pid, b, uid="", now=None):
             raise FileExistsError("held spielt")
         if any(x["held"]["name"].lower() == h["name"].lower() for _, x in seated(rd)):
             raise NameError("name")
+        if bad_words(r, rd, h["name"]):        # a kept hero or a hero code from a rougher table (Punkt 13)
+            print("dungeon: beitreten | wortliste", flush=True)
+            _day.bump("wortliste")
+            raise NameError("wortliste")
         h["ladungen"] = full_charges(r, h)
         p["held"] = h
         if uid:
@@ -2183,6 +2231,10 @@ def act(rd, pid, text, turn, now):
     t = _clean(text, TEXT_MAX)
     if not t:
         raise ValueError("leer")
+    if bad_words(rules(), rd, t):                 # the round's tone, „nie“ and the story's taboos (Punkt 13)
+        print("dungeon: aktion | wortliste", flush=True)
+        _day.bump("wortliste")
+        raise ValueError("wortliste")
     rd["offen"][pid] = {"text": t, "t": now}
     rd["plaetze"][pid].pop("ruht", None)          # back at the table: waited for again
 
@@ -3618,7 +3670,7 @@ def ics(rd, rid):
 
 def look_back(rd, pid):
     """„Was letztes Mal geschah“ from the round's own log (no model): the last narrations, loot and levels."""
-    log = [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid]
+    log = [e for e in rd["log"] if shown(e, pid)]
     dm = [e["text"] for e in log if e["art"] == "dm"][-2:]
     beute = [f"{e['name']}: {e['item']['name']}" for e in log if e["art"] == "beute"][-3:]
     stufen = [f"{e['name']}: {e['stufe']}" for e in log if e["art"] == "stufe"][-3:]
@@ -3644,7 +3696,7 @@ def view(rid, pid, now=None):
                 plaetze.append({"pid": p_id, "frei": True, "made": p.get("made", 0)})
             continue
         plaetze.append(dict(hero_view(r, p["held"], lang, full=False), pid=p_id, gast=bool(p.get("gast")), karte=hero_card(r, p["held"], lang),
-                            gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"], ruht=bool(p.get("ruht")),
+                            gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"], ruht=bool(p.get("ruht")), stumm=bool(p.get("stumm")),
                             online=p_id == pid or now - _seen.get(p_id, 0) < ONLINE_S,
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     runs = rd["offen"] and not rd.get("pause")
@@ -3663,7 +3715,7 @@ def view(rid, pid, now=None):
             "warn_s": WARN_S, "szene": rd["szene"], "gastgeber": host, "lang": lang,
             "ich": hero_view(r, me["held"], lang, welt=rd["welt"]) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
-            "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
+            "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if shown(e, pid)][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
             **stimmen.view(rd, lang, host),
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
@@ -4108,7 +4160,8 @@ def for_live():
             "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], 
             "wahrheit": t["wahrheit"], "zusammengefasst": t["zusammengefasst"], "nachgebessert": t["nachgebessert"],
             "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"],
-            "tisch": t["tisch"], "warten": sum(1 for v in rs if v.get("dm")),
+            "tisch": t["tisch"], "verborgen": t["verborgen"], "wortliste": t["wortliste"],
+            "stumm": sum(1 for _, p in seats if p.get("stumm")), "warten": sum(1 for v in rs if v.get("dm")),
             "npc_stimmen": sum(len(v.get("npc_stimmen") or {}) for v in rs),
             "werkzeug": t["werkzeug"], "kaputt": t["kaputt"], "geworfen": t["geworfen"], **dungeon_karte.for_live(rs)}
 
@@ -4623,6 +4676,24 @@ async def platz_aendern(rid: str, pid: str, request: Request, prof=Depends(brows
         link = f"{base}/#spiel={code}"
         out = dict(out, link=link, qr=mfa._qr_svg(link))
     return out
+
+
+@router.post("/api/profile/dungeon/{rid}/verbergen", dependencies=[Depends(assistant)])
+async def verbergen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The host hides a line: {"art": "tisch", "n"} a line of table talk, {"art": "aktion", "n", "pid"} a seat's action
+    of turn n (Punkt 13 of 2026-10-24)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        pid = b.get("pid") or ""
+        if b.get("art") == "aktion" and not (isinstance(pid, str) and _PID.fullmatch(pid)):
+            raise LookupError("platz")
+        await asyncio.to_thread(hide_line, uid, rid, b.get("art"), b.get("n"), pid)
+        return await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
+    except KNOWN as e:
+        raise _http(e)
 
 
 @router.delete("/api/profile/dungeon/{rid}/platz/{pid}", dependencies=[Depends(assistant)])

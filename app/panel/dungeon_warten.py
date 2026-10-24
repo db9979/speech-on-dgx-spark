@@ -198,6 +198,11 @@ def talk(dm, rd, pid, text, now):
     h = rd["plaetze"][pid].get("held")
     if not h:
         raise LookupError("held")
+    if rd["plaetze"][pid].get("stumm"):            # the host muted the seat (Punkt 13 of 2026-10-24)
+        raise PermissionError("stumm")
+    if dm.bad_words(dm.rules(), rd, t):            # the round's word list holds for the players' text too
+        dm._day.bump("wortliste")
+        raise ValueError("wortliste")
     log = rd.setdefault("tisch", [])
     log.append({"n": (log[-1]["n"] + 1) if log else 1, "pid": pid, "name": h["name"], "text": t, "t": now})
     del log[:-TISCH_MAX]
@@ -208,7 +213,7 @@ def view(rd, rid, pid, lang):
     li = 1 if lang == "en" else 0
     d, welt = data(), rd.get("welt", "")
     names = {p: (x.get("held") or {}).get("name", "") for p, x in rd["plaetze"].items()}
-    out = {"tisch": [{"n": x["n"], "name": x["name"], "text": x["text"], "ich": x["pid"] == pid, "t": x["t"]} for x in rd.get("tisch") or []],
+    out = {"tisch": [{"n": x["n"], "name": x["name"], "text": x["text"], "ich": x["pid"] == pid, "t": x["t"]} for x in rd.get("tisch") or [] if not x.get("weg")],
            "tippt": sorted(names[p] for p in typing_now(rid, pid) if names.get(p) and p not in rd.get("offen", {})),
            "warten": None}
     w = rd.get("warten")

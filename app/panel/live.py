@@ -1797,6 +1797,9 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")
                         + (f" · {dgn['warten']} Runden warten auf die Erzählung" if dgn.get("warten") else "")
                         + (f" · heute {dgn['tisch']} Zeilen Tischgespräch" if dgn.get("tisch") else "")
+                        + (f" · {dgn['verborgen']} Zeilen verborgen" if dgn.get("verborgen") else "")
+                        + (f" · {dgn['wortliste']} Spielertexte nach Wortliste abgelehnt" if dgn.get("wortliste") else "")
+                        + (f" · {dgn['stumm']} Plätze stumm" if dgn.get("stumm") else "")
                         + (f" · heute {dgn['werkzeug']} Proben mit Werkzeug, {dgn.get('kaputt', 0)} zerbrochen" if dgn.get("werkzeug") else "")
                         + (f" · heute {dgn['geworfen']} Würfe selbst geworfen" if dgn.get("geworfen") else "")
                         + (f" · heute {dgn['kraefte']} Zauber aus Ladungen, {dgn.get('kann_nicht', 0)} unbekannte Kräfte abgewiesen"
