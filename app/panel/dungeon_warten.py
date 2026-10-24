@@ -142,7 +142,8 @@ def step(rd, s, wuerfe=None, rng=None):
     if wuerfe is not None:
         w["wt"] = time.time()
         w["w"] = [{"pid": x.get("pid", ""), "name": x["name"], "wert": x["wert"], "w": x["w"], "bonus": x.get("bonus", 0), "gesamt": x["gesamt"], "schwer": x["schwer"],
-                   "ok": bool(x["ok"]), "vt": x.get("vt", ""), "werkzeug": x.get("werkzeug", "")} for x in wuerfe]
+                   "ok": bool(x["ok"]), "vt": x.get("vt", ""), "ws": list(x.get("ws") or [])[:2], "belastet": bool(x.get("belastet")),
+                   "werkzeug": x.get("werkzeug", "")} for x in wuerfe]
 
 
 def throw(rd, pid):
@@ -162,7 +163,8 @@ def _die(x, pid, now, wt):
     out = {"name": x["name"], "wert": x["wert"], "schwer": x["schwer"], "ich": ich, "geworfen": bool(x.get("geworfen")) or not ich and offen,
            "werkzeug": x.get("werkzeug", "")}
     if offen:
-        out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]))
+        out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]),
+                   vt=x.get("vt", ""), ws=x.get("ws") or [], belastet=bool(x.get("belastet")))
     return out
 
 
@@ -214,7 +216,7 @@ def view(rd, rid, pid, lang):
         satz = _text(d["schritte"].get(w["s"]) or {}, w["satz"]) if w.get("satz") else None
         karten = [x for x in (_text(d["karten"], k) for k in w.get("karten") or []) if x]
         tipp = _text({"alle": d["tipps"]}, w["tipp"]) if w.get("tipp") else None
-        out["warten"] = {"s": w["s"], "folge": list(FOLGE), "satz": satz[li] if satz else "",
+        out["warten"] = {"s": w["s"], "wt": w.get("wt") or 0, "folge": list(FOLGE), "satz": satz[li] if satz else "",
                          "karten": [{"titel": x[li], "text": x[2 + li]} for x in karten], "tipp": tipp[li] if tipp else "",
                          "w": [_die(x, pid, time.time(), w.get("wt")) for x in w.get("w") or []], "welt": welt}
     return out

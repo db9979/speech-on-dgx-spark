@@ -4,6 +4,7 @@
 // text here is fixed or the players' own, the panel picks it; the model never sees the table talk.
 const DMWT={seen:{},talk:{p:false,g:false},ping:0,thrown:{},shown:{},landT:{},shake:0};
 function dmWait(v){const w=v.warten;if(!v.dm||!w)return '';
+  if(w.wt&&w.wt!==DMWT.wt){DMWT.wt=w.wt;DMWT.thrown={};DMWT.shown={};DMWT.landT={}}   // a new turn's dice: the same check again is a new throw
   const st={lesen:t('Lesen','Reading'),wuerfeln:t('Würfeln','Dice'),erzaehlen:t('Erzählen','Narrating')},cur=w.s==='nachbessern'?'erzaehlen':w.s,ix=w.folge.indexOf(cur);
   const steps=`<ol class="dm-wsteps">${w.folge.map((s,i)=>`<li class="${i<ix?'ok':i===ix?'on':''}">${esc(st[s])}</li>`).join('')}</ol>`;
   const dice=w.w.length?`<div class="dm-wdice">${w.w.map(x=>dmWDie(v,x)).join('')}</div>`:'';
@@ -14,20 +15,20 @@ function dmWait(v){const w=v.warten;if(!v.dm||!w)return '';
 // close it was. Another seat's die shows „X würfelt …“ until it is thrown (or WURF_S passed, dungeon_warten).
 const dmWKey=(v,x)=>v.rid+':'+x.name+':'+x.wert+':'+x.schwer;
 function dmWDie(v,x){const W=v.werte||{},k=dmWKey(v,x),wert=esc(W[x.wert]||x.wert);
-  if(x.ich&&!DMWT.thrown[k]&&!x.geworfen)return `<div class="dm-wselbst" data-dmwkey="${esc(k)}"><b>${esc(x.name)} · ${wert}-${esc(t('Probe','check'))}</b><small class="mut">${esc(t('Schwierigkeit','Difficulty'))} ${x.schwer}${x.werkzeug?' · 🔧 '+esc(x.werkzeug):''}</small>
+  if(x.ich&&!DMWT.thrown[k]&&!x.geworfen)return `<div class="dm-wselbst" data-dmwkey="${esc(k)}"><b>${esc(x.name)} · ${wert}-${esc(t('Probe','check'))}</b><small class="mut">${esc(t('Schwierigkeit','Difficulty'))} ${x.schwer}${x.werkzeug?' · 🔧 '+esc(x.werkzeug):''}${x.vt?' · '+esc(x.vt==='vorteil'?t('Vorteil: zwei Würfel, der höhere zählt','advantage: two dice, the higher counts'):t('Nachteil: zwei Würfel, der niedrigere zählt','disadvantage: two dice, the lower counts')):''}</small>
     <button type="button" class="dm-wgross" data-dmwurf="1" aria-label="${esc(t('Würfel werfen','Throw the die'))}">${DMD20}<span>?</span></button><small class="mut">${esc(t('🎲 Antippen oder Handy schütteln','🎲 Tap or shake your phone'))}</small></div>`;
   if(!('w' in x))return `<div class="dm-wurf"><span class="dm-d20 dm-wdreht">?</span>${esc(x.name)} ${esc(t('würfelt …','is rolling …'))} · ${wert}</div>`;
   const el=Date.now()-(DMWT.landT[k]||0),land=el<1300,fun=land&&x.w===20?`<span class="dm-funken" aria-hidden="true">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${30+(i%3)*14}px;animation-delay:${(-el/1000).toFixed(2)}s"></i>`).join('')}</span>`:'';
   if(land)setTimeout(()=>{if(Date.now()-DMWT.landT[k]>=1300)(v.mode==='g'?dgDraw:dmDraw)()},1350-el);
-  return `<div class="dm-wurf ${x.ok?'ok':'bad'}${x.w===20?' dm-krit':''}${land?' dm-wland':''}" data-dmwkey="${esc(k)}"><span class="dm-d20">${x.w}${fun}</span>${dmTool(x)}${esc(x.name)} · ${wert} = <b>${x.gesamt}</b> ${esc(t('gegen','vs'))} ${x.schwer} · <b>${esc(x.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>${dmLeiste(x,v.werkzeug_bonus,el)}`}
+  return `<div class="dm-wurf ${x.ok?'ok':'bad'}${x.w===20?' dm-krit':''}${land?' dm-wland':''}" data-dmwkey="${esc(k)}"><span class="dm-d20">${x.w}${fun}</span>${dmVt(x)}${dmTool(x)}${esc(x.name)} · ${wert} = <b>${x.gesamt}</b> ${esc(t('gegen','vs'))} ${x.schwer} · <b>${esc(x.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>${dmLeiste(x,v.werkzeug_bonus,el)}`}
 const DMD20='<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
 // the bar of a check: the die, the bonus (with the tool's part) up to the red line of the difficulty
 function dmLeiste(x,wz,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i=>an?` animation-delay:${([0,.35,.6][i]-el/1000).toFixed(2)}s`:'';const tool=x.werkzeug?(wz||0):0,rest=x.bonus-tool,max=Math.max(20,x.schwer,x.gesamt)+2,pc=n=>(100*Math.max(0,n)/max).toFixed(1)+'%';
   const seg=rest>=0?`<em class="dm-lw" style="width:${pc(x.w)};${dl(0)}"></em><em class="dm-lb" style="width:${pc(rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`
     :`<em class="dm-lw" style="width:${pc(x.gesamt-tool)};${dl(0)}"></em><em class="dm-lm" style="width:${pc(-rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`;
-  const knapp=Math.abs(x.gesamt-x.schwer)<=1;
+  const knapp=Math.abs(x.gesamt-x.schwer)<=1,nat=x.w===20?t('natürliche 20: immer geschafft','natural 20: always a success'):x.w===1?t('natürliche 1: immer daneben','natural 1: always a miss'):'';
   return `<div class="dm-leiste${x.ok?' ok':' bad'}${an?' dm-lan':''}" role="img" aria-label="${esc(t('Würfel ','Die ')+x.w+', Bonus '+dmSign(x.bonus)+' = '+x.gesamt+t(', Ziel ',', target ')+x.schwer)}"><div class="dm-lbar">${seg}<i class="dm-lziel" style="left:${pc(x.schwer)}"></i></div>
-    <small class="mut">🎲 ${x.w} · ${esc(t('Bonus','bonus'))} ${dmSign(rest)}${tool?' · 🔧 +'+tool:''} = <b>${x.gesamt}</b> · ${esc(t('Ziel','target'))} ${x.schwer}${knapp?' · '+esc(x.ok?t('ganz knapp!','just made it!'):t('knapp daneben','just missed')):''}</small></div>`}
+    <small class="mut">🎲 ${x.w} · ${esc(t('Bonus','bonus'))} ${dmSign(rest)}${tool?' · 🔧 +'+tool:''} = <b>${x.gesamt}</b> · ${esc(t('Ziel','target'))} ${x.schwer}${nat?' · '+esc(nat):knapp?' · '+esc(x.ok?t('ganz knapp!','just made it!'):t('knapp daneben','just missed')):''}</small></div>`}
 // the throw: the big die rolls about a second, lands on the panel's number with its sound, a 20 throws sparks
 function dmThrow(el){const box=el.closest('[data-dmwkey]'),mode=el.closest('#dgcard')?'g':'p',v=mode==='g'?DG.v:DM.v;if(!box||!v||!v.warten)return;
   const k=box.dataset.dmwkey,x=v.warten.w.find(d=>dmWKey(v,d)===k);if(!x||DMWT.thrown[k])return;DMWT.thrown[k]=true;
@@ -37,7 +38,9 @@ function dmThrow(el){const box=el.closest('[data-dmwkey]'),mode=el.closest('#dgc
   const done=()=>{DMWT.shown[k]=true;dmWHit(x);(mode==='g'?dgPub('/api/dungeon/wurf',{code:DG.code}).then(d=>{DG.v=d;dgDraw()}):apiTry(`/api/profile/dungeon/${DM.rid}/wurf`,xjson('POST',{})).then(({r,d})=>{if(r.ok){DM.v=d;dmDraw()}})).catch(()=>{});
     DMWT.landT[k]=Date.now();mode==='g'?dgDraw():dmDraw()};
   if(reduce){num.textContent=x.w;done();return}
-  const iv=setInterval(()=>{num.textContent=String(1+Math.floor(Math.random()*20));if(++n>=14){clearInterval(iv);done()}},70)}
+  // it slows down and its last face is the panel's number, never a random one (Dominik 2026-10-24 „zeigt 14, dann 9“)
+  const tick=()=>{n++;if(n>=14){num.textContent=x.w;setTimeout(done,260);return}
+    let f=1+Math.floor(Math.random()*20);if(f===x.w)f=f%20+1;num.textContent=String(f);setTimeout(tick,n<9?60:60+(n-8)*45)};tick()}
 // the landing (dmWDie draws it for 1.3 s, across repaints): the sound of the result, sparks on a 20, a shake on a 1
 function dmWHit(x){if(typeof dmtPlay==='function')setTimeout(()=>dmtPlay(x.w===20?'krit':x.w===1?'patzer':x.ok?'geschafft':'verfehlt'),80)}
 // another seat's die shows up: it rolls once here too, with the sound; a die seen once rolls no more (log included)

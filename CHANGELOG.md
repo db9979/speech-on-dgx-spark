@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.994** · 2026-10-24 · KI-Dungeon-Master: der eigene Würfel landet auf der Zahl, die zählt, bei Vorteil oder Nachteil zeigen Wurf und Protokoll beide Würfel, natürliche 20 und 1 stehen unter der Leiste, dieselbe Probe im nächsten Zug ist ein neuer Wurf
 - **V01.0.993** · 2026-10-24 · KI-Dungeon-Master: die Karte zieht mit, wenn der Erzähler den Weg erzählt, aber die Orts-id vergisst (Name oder Richtung aus dem Zug und Name in der Erzählung), der neue Ort bekommt sein Bild
 - **V01.0.992** · 2026-10-24 · Ohne Tageslimit auch ohne zweiten Anmeldeschritt: der Admin setzt bei jedem Profil unter Rechte den Haken „Ohne Tageslimit“ (Bilder, Musik, Kontingent, Dungeon-Bilder; Platz und Warteschlangen bleiben)
 - **V01.0.991** · 2026-10-24 · KI-Dungeon-Master: mehr Zeit zwischen den Zügen: Lesezeit vor der Zugzeit, 300 s als Standard, 10 s Gnadenfrist nach dem letzten „Handeln“, „+1 Minute“ einmal pro Zug und Spieler, Uhr rot ab 30 s

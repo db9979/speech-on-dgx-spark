@@ -2372,6 +2372,29 @@ class Waiting(BetterStories):
         other = dungeon.view(self.rid, self.host)["warten"]["w"][0]
         self.assertEqual((other["w"], other["geworfen"]), (20, True))
 
+    def test_the_thrown_die_shows_both_dice_and_each_turn_is_new(self):
+        """Dominik 2026-10-24 „der Würfel zeigt 14, dann 9 bei der Berechnung“: with disadvantage both dice and the one
+        that counts reach the throw too, and every wait has its own stamp so the same check next turn is thrown anew."""
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["dm"] = "denkt"
+            dungeon.warten.start(rd, random.Random(1))
+            dungeon.warten.step(rd, "wuerfeln", [{"pid": self.gp, "name": "Bela", "wert": "geschick", "w": 9, "bonus": 2, "gesamt": 11,
+                                                   "schwer": 12, "ok": False, "vt": "nachteil", "ws": [14, 9], "belastet": True}])
+            dungeon._write(d)
+        dungeon._running.add(self.rid)
+        self.addCleanup(dungeon._running.discard, self.rid)
+        wt = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["warten"]
+        own = wt["w"][0]
+        self.assertEqual((own["w"], own["vt"], own["ws"], own["belastet"]), (9, "nachteil", [14, 9], True))
+        self.assertGreater(wt["wt"], 0)
+        other = dungeon.view(self.rid, self.host)["warten"]["w"][0]
+        self.assertNotIn("ws", other)                                        # no peeking at the second die either
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeonwarten.js")).read()
+        self.assertIn("num.textContent=x.w;setTimeout(done", js)            # the roll lands on the panel's number
+        self.assertIn("w.wt!==DMWT.wt", js)
+
 
 class SrdLayer(Base):
     """The SRD data (dungeon_srd.json) as a layer between the shipped rules and the admin's: lists up to LISTE_MAX,

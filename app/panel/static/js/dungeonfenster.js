@@ -90,4 +90,6 @@ function dmErkSeat(p){const f=dmErkFix(),m={leben:esc(f.leben),stufe:esc(f.stufe
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmerk],#dgcard [data-dmerk]');if(!b)return;
   const mode=b.closest('#dgcard')?'g':'p',k=b.dataset.dmerk;DMERK[mode]=DMERK[mode]===k?'':k;mode==='g'?dgDraw():dmDraw()});
 // a tool that helped a check, or broke on a natural 1
+// advantage or disadvantage: both dice and which one counts, so a 14 next to a 9 is never a riddle (Dominik 2026-10-24)
+function dmVt(e){const ws=e.ws||[];return (e.vt&&ws.length===2?`<small class="pill ${e.vt==='vorteil'?'ok':'warn'}">${esc(e.vt==='vorteil'?t('Vorteil','Advantage'):t('Nachteil','Disadvantage'))}: ${ws[0]} ${esc(t('und','and'))} ${ws[1]}, ${esc(t('es zählt die','counts:'))} ${e.w}</small> `:'')+(e.belastet?`<small class="pill warn">${esc(t('belastet','burdened'))}</small> `:'')}
 function dmTool(e){return e.werkzeug?`<small class="pill ${e.kaputt?'warn':'ok'}">🔧 ${esc(e.werkzeug)} ${esc(e.kaputt?t('zerbrochen','broke'):t('hilft','helps'))}</small> `:''}

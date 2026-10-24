@@ -5493,6 +5493,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Der Würfel landet auf der Zahl, die zählt (V01.0.994, Dominik 2026-10-24 „der Würfel zeigt 14, dann 9 bei der Berechnung“): Beim eigenen Wurf liefen bisher Zufallszahlen über den Würfel, und erst danach sprang er auf die Zahl des Panels. Jetzt wird er langsamer und zeigt als letzte Zahl immer die Zahl des Panels. Bei Vorteil oder Nachteil würfelt das Panel zwei Würfel; der Wurf und das Protokoll zeigen jetzt beide und sagen, welcher zählt („Nachteil: 14 und 9, es zählt die 9“). Vor dem Wurf steht dabei „zwei Würfel, der niedrigere zählt“ (bzw. der höhere). Eine natürliche 20 oder 1 steht unter der Leiste („natürliche 20: immer geschafft“, „natürliche 1: immer daneben“). Jede Wartezeit hat einen eigenen Stempel (warten.wt). Dieselbe Probe im nächsten Zug ist darum ein neuer Wurf und keine alte Zahl."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Karte zieht mit, wenn der Erzähler die id vergisst (V01.0.993, Dominik 2026-10-24 „in die alte Bibliothek bewegt, aber keine Grafik, die Position ist nicht aktuell“): Erzählt das Modell den Weg zu einem Nachbarort, lässt aber szene.ort_id leer, blieb die Gruppe auf der Karte stehen und der neue Ort bekam kein Bild. Jetzt entscheidet das Panel nach fester Regel (dungeon_karte.named_way): Steht der Name genau eines Nachbarorts in der Erzählung und hat ein Spieler in diesem Zug denselben Ort verlangt, mit Namen (auch gebeugt, „zur alten Bibliothek“) oder mit seiner Richtung („nach Nordosten“), zieht die Gruppe dorthin. Ein Ort, der nur erzählt wird, ein ferner Ort oder zwei genannte Nachbarn bewegen nie. Log dungeon: karte | name statt id."
 },
 {
@@ -17894,6 +17902,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " them until they act again; \"Wait again\" undoes it) and Take off the table after asking once more (a hero with a profile stays in the profile, with a guest account in the guest account, otherwise it is gone). A free seat whose link nobody used for 72 hours goes by itself. New endpoint PUT /api/profile/dungeon/{rid}/platz/{pid} (host only, sign-in, CSRF, size and rate limit), logs dungeon: platz | link, dungeon: platz | ruhen, dungeon: platz weg | 1 frei abgelaufen. Self-tests Seats and Windows.test_acting_shows_the_own_action."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the die lands on the number that counts (V01.0.994, Dominik 2026-10-24 \"the die shows 14, then 9 in the calculation\"): On the own throw, random numbers used to run over the die before it jumped to the panel's number. Now it slows down, and its last face is always the panel's number. With advantage or disadvantage the panel rolls two dice; the throw and the log now show both and say which one counts (\"Disadvantage: 14 and 9, counts: 9\"). Before the throw it says \"two dice, the lower counts\" (or the higher). A natural 20 or 1 is named under the bar (\"natural 20: always a success\", \"natural 1: always a miss\"). Every wait has its own stamp (warten.wt), so the same check next turn is a new throw, not an old number."
 },
 {
 "lang": "en",

@@ -3012,6 +3012,13 @@
 "titel": "Karte zieht mit ohne Orts-id",
 "text": "A: In einer Runde mit Karte als Aktion schreiben „Ich gehe zur <Name eines Nachbarorts>“ oder „Wir gehen nach <Richtung>“. B: Erzählt der Dungeon-Master, dass die Gruppe dort ankommt, steht der Punkt auf der Karte danach dort und der Ort bekommt sein Bild. C: Nur „Ich sehe mich um“ schreiben, auch wenn die Erzählung einen Nachbarort erwähnt: die Gruppe bleibt. D: Zustand → Logs zeigt bei Fall B, wenn das Modell die id vergessen hat, „dungeon: karte | name statt id“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P455",
+"v": 994,
+"titel": "Würfel landet auf der Zahl, die zählt",
+"text": "A: In einer Runde eine Aktion mit Probe schicken und den eigenen Würfel antippen: er wird langsamer und bleibt auf der Zahl stehen, die auch die Leiste und das Protokoll zeigen. B: Mit Nachteil (z. B. belastet bei Geschick): vor dem Wurf steht „zwei Würfel, der niedrigere zählt“, danach „Nachteil: X und Y, es zählt die Y“. C: Bei einer natürlichen 20 steht unter der Leiste „natürliche 20: immer geschafft“. D: Dieselbe Probe im nächsten Zug: der Würfel ist wieder zum Antippen da.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
