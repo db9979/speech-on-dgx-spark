@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.038** KI-Dungeon-Master: der eigene Würfel wartet im Verlauf bis zum Wurf (Erzählung verschwommen, nach 30 s von selbst), Wurf mit Aufprall, Ergebnisfarben, Brummen und Hinweiston
 - **V01.1.037** KI-Dungeon-Master: Bühnenbilder je Ortsart und Raumart in jedem Weltstil (16:9, neutral, ohne Menschen), nachts und mit „Alle Bilder malen“; die Bühne zeigt sie, bis die Szene ihr eigenes Bild hat
 - **V01.1.036** KI-Dungeon-Master schneller über den Proxy: Vorlesen als MP3 und das nächste Stück lädt schon, während Vorlesen warten Bilder und Musik, kleine Bilder in Listen, Bilder bleiben im Browser, Katalog und Regeln komprimiert
 - **V01.1.035** KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.031** KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍
 - **V01.1.030** KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 - **V01.1.029** Gruß beim Öffnen: Selbsttest mit fester Uhr statt der echten (war in der Nacht der Zeitumstellung rot), dazu ein Fall genau in der doppelten Stunde; der Blick in den Kalender rechnet echte vier Stunden, auch über die Zeitumstellung
-- **V01.1.028** KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 
 
 

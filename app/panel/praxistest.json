@@ -3271,6 +3271,13 @@
 "titel": "Dungeon-Master: Bühnenbild je Ortsart",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Abschnitt Bilder: „Alle Bilder malen“, die Zahl der fehlenden Bilder ist größer als vorher (Ortsarten und Raumarten als Bühne). B: In einer Runde mit Karte ohne eigenes Szenenbild steht hinter der Erzählung das breite Bild der Ortsart, an der die Runde ist, ohne Menschen. C: Im Gewölbe wechselt es mit dem Raum (Eingang, Kammer, Schatz …). D: Sobald ein Szenenbild gemalt ist, zeigt die Bühne das Szenenbild.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P492",
+"v": 1038,
+"titel": "Dungeon-Master: Zeit zum Würfeln, Wurf mit Aufprall",
+"text": "A: Eine Probe auslösen und nicht würfeln, bis die Erzählung kommt: der Würfel bleibt im Verlauf mit einem ablaufenden Ring, die Erzählung dahinter ist verschwommen mit „Erst würfeln, dann geht es weiter“. B: Antippen: der Würfel fliegt, prallt auf, springt, rollt aus und landet auf der Zahl, die danach im Verlauf steht; Klack-Geräusche, grünes oder graues Leuchten, das Handy brummt kurz. C: Gedrückt halten und loslassen: er fliegt weiter. D: Nichts tun: nach 30 s wirft er sich von selbst. E: Ein Mitspieler sieht deinen Würfel nicht warten und liest die Erzählung sofort. F: Bei 20 golden mit Funken, bei 1 mit Riss. G: Erscheint dein Würfel, klingt einmal ein leiser Ton.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

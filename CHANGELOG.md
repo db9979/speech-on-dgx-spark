@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.038** · 2026-10-25 · KI-Dungeon-Master: eigener Würfel wartet im Verlauf bis zum Wurf (Erzählung dahinter verschwommen, nach 30 s Selbstwurf), Wurf mit Aufprall und Schatten, Ergebnisfarben (grün, grau, Gold mit Funken, Riss), Brummen, weiter werfen durch Halten, Hinweiston
 - **V01.1.037** · 2026-10-25 · KI-Dungeon-Master: Bühnenbilder je Ortsart und Raumart in jedem Weltstil (16:9, neutral, ohne Menschen), nachts und mit „Alle Bilder malen“; die Bühne zeigt sie, bis die Szene ihr eigenes Bild hat
 - **V01.1.036** · 2026-10-25 · KI-Dungeon-Master schneller über den Proxy: Vorlesen als MP3 und das nächste Stück lädt schon, während Vorlesen warten Bilder und Musik, kleine Bilder in Listen, Bilder bleiben im Browser, Katalog und Regeln komprimiert
 - **V01.1.035** · 2026-10-25 · KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne

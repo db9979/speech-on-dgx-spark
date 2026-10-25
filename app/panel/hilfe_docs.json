@@ -5573,6 +5573,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Zeit zum Würfeln und Wurf mit Aufprall (V01.1.038, Dominik 2026-10-25 „verschwindet so schnell, wenn man nicht rechtzeitig würfelt“, „1a 2a 3 4a b c“): Ist der eigene Würfel noch nicht geworfen, wenn die Erzählung kommt, bleibt er im Verlauf genau an seiner Stelle stehen, mit einem Ring, der 30 Sekunden abläuft. Die Erzählung dahinter ist so lange verschwommen („Erst würfeln, dann geht es weiter“), danach wirft er sich von selbst. Nur der eigene Platz sieht seinen Würfel warten, die anderen lesen weiter. Die Zahl hat das Panel vorher gewürfelt, der Tipp zeigt sie nur (rd[\"wurf_offen\"] mit Platz, Probe und Zug, nie die Zahl in der Ansicht). Der Wurf fliegt über die Karte, prallt mit Schatten auf, springt noch einmal, rollt aus und landet immer auf der Zahl des Panels, etwa 1,4 Sekunden lang mit einem Klack bei jedem Aufprall. Wer gedrückt hält und loslässt, wirft weiter (nur Anzeige). Beim Landen leuchtet der Würfel grün bei geschafft, wird grau bei verfehlt, golden mit Funken bei der 20 und bekommt einen Riss bei der 1; das Handy brummt kurz, wo der Browser das erlaubt. Erscheint ein eigener Würfel, klingt einmal ein leiser Hinweiston. Mit „Bewegung reduzieren“ e"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rscheint die Zahl sofort. Alles wird im Browser gezeichnet, ohne Bibliothek und ohne Dateien."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: eigene Stimmen für Erzähler und Figuren, klare Meldungen (V01.0.977, Dominik 2026-10-23 „erzähler stimmen und die der npc … generiert je nach stimmung und karakter, auch die des erzählers variieren von geschichte zu geschichte“ und „1-4“, dazu „das besetzt sieht verloren aus und ist auch nicht aussage kräftig“): Kann die Sprachausgabe Stimmen aus einer Beschreibung machen (Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“), liest der Dungeon-Master mit Stimmen aus festen Beschreibungen (dungeon_stimmen.json, dungeon_stimmen.py). Jede neue Geschichte bekommt eine Erzählerstimme ihrer Welt (sechs je Welt und vier für alle, etwa „alter Seebär, rau“ bei Piraten), nie eine der letzten drei Runden desselben Gastgebers; eine Kampagne behält sie von Kapitel zu Kapitel. Der Gastgeber wählt sie unter „🎙 Stimme des Erzählers“ aus der Liste, würfelt mit „🎲 Neu“ eine andere oder hört mit „▶ Probe“ hinein. Die Stimmung der Szene färbt den Erzähler: feste Schlüsselwörter (unheimlich, Kampf, spannend, traurig, fröhlich, ruhig) hängen einen festen Zusatz an, etwa leiser und langsamer im Unheimlichen. Jeder NSC spricht mit seiner eigenen Stimme: Beim ersten Auft"
 },
 {
@@ -18534,6 +18550,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "og: dungeon: wurf | geworfen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: time to throw and a throw that bounces (V01.1.038, Dominik 2026-10-25 \"it disappears so fast if you do not throw in time\", \"1a 2a 3 4a b c\"): If your own die is not thrown yet when the narration comes, it stays in the feed at its place, with a ring that runs down for 30 seconds. The narration after it is blurred until then (\"Throw first, then it goes on\"), afterwards it throws itself. Only your own seat sees its die waiting, the others read on. The panel rolled the number before, the tap only shows it (rd[\"wurf_offen\"] with seat, check and turn, never the number in the view). The throw flies over the card, hits with its shadow, hops once more, rolls out and always lands on the panel's number, about 1.4 seconds with a click on each impact. Holding before letting go throws further (display only). On landing the die glows green when made, turns grey when missed, gold with sparks on a 20 and cracks on a 1; the phone buzzes briefly where the browser allows it. When an own die appears, a soft chime sounds once. With \"reduce motion\" the number shows at once. Everything is drawn in the browser, no library and no files."
 },
 {
 "lang": "en",

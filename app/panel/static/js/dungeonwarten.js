@@ -2,7 +2,7 @@
 // the steps with a fixed sentence, the panel's dice before the narration, lore cards of the world and a hint; a new
 // narration appears sentence by sentence; „X schreibt …“ and the table talk are only between the players. Every
 // text here is fixed or the players' own, the panel picks it; the model never sees the table talk.
-const DMWT={seen:{},talk:{p:false,g:false},ping:0,thrown:{},shown:{},landT:{},shake:0};
+const DMWT={seen:{},talk:{p:false,g:false},ping:0,thrown:{},shown:{},landT:{},shake:0,auto:{}};
 function dmWait(v){const w=v.warten;if(!v.dm||!w)return '';
   if(w.wt&&w.wt!==DMWT.wt){DMWT.wt=w.wt;DMWT.thrown={};DMWT.shown={};DMWT.landT={}}   // a new turn's dice: the same check again is a new throw
   const st={lesen:t('Lesen','Reading'),wuerfeln:t('Würfeln','Dice'),erzaehlen:t('Erzählen','Narrating')},cur=w.s==='nachbessern'?'erzaehlen':w.s,ix=w.folge.indexOf(cur);
@@ -15,13 +15,29 @@ function dmWait(v){const w=v.warten;if(!v.dm||!w)return '';
 // close it was. Another seat's die shows „X würfelt …“ until it is thrown (or WURF_S passed, dungeon_warten).
 const dmWKey=(v,x)=>v.rid+':'+x.name+':'+x.wert+':'+x.schwer;
 function dmWDie(v,x){const W=v.werte||{},k=dmWKey(v,x),wert=esc(W[x.wert]||x.wert);
-  if(x.ich&&!DMWT.thrown[k]&&!x.geworfen)return `<div class="dm-wselbst" data-dmwkey="${esc(k)}"><b>${esc(x.name)} · ${wert}-${esc(t('Probe','check'))}</b>${x.wofuer?`<b class="dm-pkwas">${esc(x.wofuer)}</b>`:''}<small class="mut">${esc(t('Schwierigkeit','Difficulty'))} ${x.schwer}${x.werkzeug?' · 🔧 '+esc(x.werkzeug):''}${x.vt?' · '+esc(x.vt==='vorteil'?t('Vorteil: zwei Würfel, der höhere zählt','advantage: two dice, the higher counts'):t('Nachteil: zwei Würfel, der niedrigere zählt','disadvantage: two dice, the lower counts')):''}</small>
-    <button type="button" class="dm-wgross" data-dmwurf="1" aria-label="${esc(t('Würfel werfen','Throw the die'))}">${DMD20}<span>?</span></button><small class="mut">${esc(t('🎲 Antippen oder Handy schütteln','🎲 Tap or shake your phone'))}</small></div>`;
+  if(x.ich&&!DMWT.thrown[k]&&!x.geworfen)return dmWBox(v,x,k,-1);
   if(!('w' in x))return dmPK(v,x,'<span class="dm-d20 dm-wdreht">?</span>');
   const el=Date.now()-(DMWT.landT[k]||0),land=el<1300,fun=land&&x.w===20?`<span class="dm-funken" aria-hidden="true">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${30+(i%3)*14}px;animation-delay:${(-el/1000).toFixed(2)}s"></i>`).join('')}</span>`:'';
   if(land)setTimeout(()=>{if(Date.now()-DMWT.landT[k]>=1300)(v.mode==='g'?dgDraw:dmDraw)()},1350-el);
-  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland':''}`,` data-dmwkey="${esc(k)}"`)+dmLeiste(x,el)}
-const DMD20='<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
+  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland '+(typeof dmtErgebnis==='function'?dmtErgebnis(x):''):''}`,` data-dmwkey="${esc(k)}"`)+dmLeiste(x,el)}
+const DMD20=typeof DMT_D20==='string'?DMT_D20:'<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
+// the own die waiting for its tap: in the wait (rest -1) or in the feed after the narration came (1a, rest = seconds
+// left, a ring runs down and then it throws itself); never the number, only what is checked
+function dmWBox(v,x,k,rest){const W=v.werte||{},wert=esc(W[x.wert]||x.wert);if(typeof dmtDran==='function')setTimeout(()=>dmtDran(k),0);   // 4c: a chime once per die
+  const ring=rest>=0?`<svg class="dm-wring" viewBox="0 0 118 118" aria-hidden="true"><circle cx="59" cy="59" r="54"/><circle class="dm-wringlauf" cx="59" cy="59" r="54" style="animation-duration:${WURF_MAX}s;animation-delay:${rest-WURF_MAX}s"/></svg>`:'';
+  return `<div class="dm-wselbst${rest>=0?' dm-wwartet':''}" data-dmwkey="${esc(k)}"><b>${esc(x.name)} · ${wert}-${esc(t('Probe','check'))}</b>${x.wofuer?`<b class="dm-pkwas">${esc(x.wofuer)}</b>`:''}<small class="mut">${esc(t('Schwierigkeit','Difficulty'))} ${x.schwer}${x.werkzeug?' · 🔧 '+esc(x.werkzeug):''}${x.vt?' · '+esc(x.vt==='vorteil'?t('Vorteil: zwei Würfel, der höhere zählt','advantage: two dice, the higher counts'):t('Nachteil: zwei Würfel, der niedrigere zählt','disadvantage: two dice, the lower counts')):''}</small>
+    <span class="dm-wgrosswrap">${ring}<button type="button" class="dm-wgross" data-dmwurf="1" aria-label="${esc(t('Würfel werfen','Throw the die'))}">${DMD20}<span>?</span></button></span><small class="mut">${esc(t('🎲 Antippen, gedrückt halten für einen weiten Wurf, oder Handy schütteln','🎲 Tap, hold for a long throw, or shake your phone'))}</small>${rest>=0?`<small class="dm-wrest">${esc(t(`Wirft sich nach ${WURF_MAX} s von selbst`,`Throws itself after ${WURF_MAX} s`))}</small>`:''}</div>`}
+const WURF_MAX=30;   // dungeon_warten.WURF_MAX_S
+// the feed (dmTable): an own die not thrown when the narration came stays at its place, what follows is veiled until
+// the throw (1a); a die landing just now shows like in the wait (sparks, colour, the bar running up)
+const dmWOffen=(v,e)=>e.art==='wurf'&&!DMWT.thrown[dmWKey(v,e)]&&(v.wurf_offen||[]).find(o=>o.name===e.name&&o.wert===e.wert&&o.schwer===e.schwer&&o.n===e.n);
+function dmWFeed(v,col){let out='',veil='';
+  for(const e of v.log||[]){const k=e.art==='wurf'?dmWKey(v,e):'',o=k&&!veil?dmWOffen(v,e):null;
+    if(o){out+=dmWBox(v,e,k,o.rest);veil=' ';dmWAuto(v,k,o.rest);continue}
+    const h=k&&DMWT.landT[k]&&Date.now()-DMWT.landT[k]<1300?dmWDie(v,Object.assign({},e,{ich:true,geworfen:true})):dmLog(v,e,col);
+    if(veil)veil+=h;else out+=h}
+  return veil?out+`<div class="dm-verhuellt"><div aria-hidden="true">${veil}</div><em>🎲 ${esc(t('Erst würfeln, dann geht es weiter','Throw first, then it goes on'))}</em></div>`:out}
+function dmWAuto(v,k,rest){if(DMWT.auto[k])return;DMWT.auto[k]=setTimeout(()=>{const b=document.querySelector(`[data-dmwkey="${CSS.escape(k)}"] [data-dmwurf]`);if(b&&!b.disabled)dmThrow(b)},Math.max(0,rest)*1000)}
 // the bar of a check: the die, the bonus (with the tool's part) up to the red line of the difficulty
 function dmLeiste(x,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i=>an?` animation-delay:${([0,.35,.6][i]-el/1000).toFixed(2)}s`:'';const tool=x.werkzeug?(x.werkzeug_plus||0):0,rest=x.bonus-tool,max=Math.max(20,x.schwer,x.gesamt)+2,pc=n=>(100*Math.max(0,n)/max).toFixed(1)+'%';
   const seg=rest>=0?`<em class="dm-lw" style="width:${pc(x.w)};${dl(0)}"></em><em class="dm-lb" style="width:${pc(rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`
@@ -30,13 +46,14 @@ function dmLeiste(x,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i
   return `<div class="dm-leiste${x.ok?' ok':' bad'}${an?' dm-lan':''}" role="img" aria-label="${esc(t('Würfel ','Die ')+x.w+', Bonus '+dmSign(x.bonus)+' = '+x.gesamt+t(', Ziel ',', target ')+x.schwer)}"><div class="dm-lbar">${seg}<i class="dm-lziel" style="left:${pc(x.schwer)}"></i></div>
     <small class="mut">🎲 ${x.w} · ${esc(t('Bonus','bonus'))} ${dmSign(rest)}${tool?' · 🔧 +'+tool:''} = <b>${x.gesamt}</b> · ${esc(t('Ziel','target'))} ${x.schwer}${nat?' · '+esc(nat):knapp?' · '+esc(x.ok?t('ganz knapp!','just made it!'):t('knapp daneben','just missed')):''}</small></div>`}
 // the throw: the big die rolls about a second, lands on the panel's number with its sound, a 20 throws sparks
-function dmThrow(el){const box=el.closest('[data-dmwkey]'),mode=el.closest('#dgcard')?'g':'p',v=mode==='g'?DG.v:DM.v;if(!box||!v||!v.warten)return;
-  const k=box.dataset.dmwkey,x=v.warten.w.find(d=>dmWKey(v,d)===k);if(!x||DMWT.thrown[k])return;DMWT.thrown[k]=true;
+function dmThrow(el){const box=el.closest('[data-dmwkey]'),mode=el.closest('#dgcard')?'g':'p',v=mode==='g'?DG.v:DM.v;if(!box||!v)return;
+  const k=box.dataset.dmwkey,x=((v.warten&&v.warten.w)||[]).find(d=>dmWKey(v,d)===k)||(v.log||[]).find(e=>e.art==='wurf'&&dmWKey(v,e)===k);if(!x||DMWT.thrown[k])return;DMWT.thrown[k]=true;clearTimeout(DMWT.auto[k]);
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,num=el.querySelector('span');
   if(typeof dmtCtx==='function'){const c=dmtCtx();if(c&&c.state==='suspended')c.resume();if(typeof dmtPlay==='function')dmtPlay('wuerfel',0)}
   el.disabled=true;el.classList.add('dm-rollt');let n=0;
   const done=()=>{DMWT.shown[k]=true;dmWHit(x);(mode==='g'?dgPub('/api/dungeon/wurf',{code:DG.code}).then(d=>{DG.v=d;dgDraw()}):apiTry(`/api/profile/dungeon/${DM.rid}/wurf`,xjson('POST',{})).then(({r,d})=>{if(r.ok){DM.v=d;dmDraw()}})).catch(()=>{});
     DMWT.landT[k]=Date.now();mode==='g'?dgDraw():dmDraw()};
+  if(typeof dmtWurf==='function'){dmtWurf(el,num,x,dmtKraft(),done);return}   // 2a: flies, hits, hops, rolls out (dungeon-ton.js)
   if(reduce){num.textContent=x.w;done();return}
   // it slows down and its last face is the panel's number, never a random one (Dominik 2026-10-24 „zeigt 14, dann 9“)
   const tick=()=>{n++;if(n>=14){num.textContent=x.w;setTimeout(done,260);return}
@@ -47,7 +64,7 @@ function dmWHit(x){if(typeof dmtPlay==='function')setTimeout(()=>dmtPlay(x.w===2
 function dmWOthers(w,v){const ws=(v.warten&&v.warten.w)||[];ws.forEach(x=>{if(!('w' in x))return;const k=dmWKey(v,x);if(DMWT.shown[k])return;DMWT.shown[k]=true;
   if(x.ich)return;const el=w.querySelector(`.dm-wurf[data-dmwkey="${CSS.escape(k)}"]`);if(!el)return;dmWHit(x);const d=el.querySelector('.dm-d20');
   if(d&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){d.classList.add('dm-rollt');setTimeout(()=>{DMWT.landT[k]=Date.now();(v.mode==='g'?dgDraw:dmDraw)()},800)}})}
-window.dmWurfGesehen=(v,e)=>!!DMWT.shown[dmWKey(v,e)];
+window.dmWurfGesehen=(v,e)=>!!DMWT.shown[dmWKey(v,e)]||!!dmWOffen(v,e);   // a die waiting for its own tap rolls only then
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmwurf],#dgcard [data-dmwurf]');if(b)dmThrow(b)});
 // a shake throws too where the browser gives motion without asking (Android); the iPhone needs the tap
 window.addEventListener('devicemotion',e=>{const a=e.accelerationIncludingGravity||e.acceleration;if(!a)return;const f=Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0);

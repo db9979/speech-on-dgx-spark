@@ -13,6 +13,9 @@ State in the round (dungeon.py's rounds file):
                          a die has "geworfen" once its seat threw it (throw); the number is the panel's all along
     rd["warten_zuletzt"] {"satz": [...], "karte": [...], "tipp": [...]}  the keys shown last in this round
     rd["tisch"]          [{"n", "pid", "name", "text", "t"}]  the table talk, the last TISCH_MAX
+    rd["wurf_offen"]     [{"pid", "name", "wert", "schwer", "n", "t"}]  own dice not thrown when the narration came
+                         (Dominik 2026-10-25 „1a“): the seat's feed keeps the die at its place and the narration after it
+                         veiled until the throw, at most WURF_MAX_S; the number stays the panel's, only the showing waits
 """
 import json
 import os
@@ -32,6 +35,7 @@ TISCH_MAX = 40             # table talk lines kept per round
 TISCH_LEN = 200
 TIPPT_S = 6                # „X schreibt …“ while the last keystroke is this fresh
 WURF_S = 12                # a seat throws its own die (tap or shake); after this the others see it anyway
+WURF_MAX_S = 30            # an own die not thrown when the narration came waits this long in the feed (1a), then throws itself
 
 _data = {}
 _tippt = {}                # rid -> {pid: monotonic time of the last keystroke}; never written to disk
@@ -153,7 +157,23 @@ def throw(rd, pid):
     for x in (rd.get("warten") or {}).get("w") or []:
         if x.get("pid") == pid and not x.get("geworfen"):
             x["geworfen"] = hit = True
+    offen = rd.get("wurf_offen") or []
+    rest = [x for x in offen if x.get("pid") != pid]
+    if len(rest) != len(offen):
+        hit = True
+        if rest:
+            rd["wurf_offen"] = rest
+        else:
+            rd.pop("wurf_offen", None)
     return hit
+
+
+def waiting(rd, pid, now=None):
+    """The seat's own dice still waiting in its feed (1a): name, value, difficulty, turn and the seconds left."""
+    now = time.time() if now is None else now
+    return [{"name": x["name"], "wert": x["wert"], "schwer": x["schwer"], "n": x.get("n", 0),
+             "rest": max(0, round(WURF_MAX_S - (now - x.get("t", 0))))}
+            for x in rd.get("wurf_offen") or [] if x.get("pid") == pid and now - x.get("t", 0) <= WURF_MAX_S]
 
 
 def _die(x, pid, now, wt):
@@ -168,8 +188,21 @@ def _die(x, pid, now, wt):
     return out
 
 
-def end(rd):
-    rd.pop("warten", None)
+def end(rd, now=None):
+    """The narration came: the wait goes; an own die not thrown yet waits in its seat's feed (1a, WURF_MAX_S)."""
+    now = time.time() if now is None else now
+    left = [x for x in rd.get("wurf_offen") or [] if now - x.get("t", 0) <= WURF_MAX_S]
+    for x in (rd.pop("warten", None) or {}).get("w") or []:
+        if x.get("geworfen") or not x.get("pid"):
+            continue
+        e = next((e for e in reversed(rd.get("log") or []) if e.get("art") == "wurf" and e.get("pid") == x["pid"]
+                  and all(e.get(k) == x[k] for k in ("name", "wert", "schwer", "w"))), None)
+        if e:
+            left.append({"pid": x["pid"], "name": x["name"], "wert": x["wert"], "schwer": x["schwer"], "n": e.get("n", 0), "t": now})
+    if left:
+        rd["wurf_offen"] = left[-8:]
+    else:
+        rd.pop("wurf_offen", None)
 
 
 def typing(rid, pid):
@@ -215,7 +248,7 @@ def view(rd, rid, pid, lang):
     names = {p: (x.get("held") or {}).get("name", "") for p, x in rd["plaetze"].items()}
     out = {"tisch": [{"n": x["n"], "name": x["name"], "text": x["text"], "ich": x["pid"] == pid, "t": x["t"]} for x in rd.get("tisch") or [] if not x.get("weg")],
            "tippt": sorted(names[p] for p in typing_now(rid, pid) if names.get(p) and p not in rd.get("offen", {})),
-           "warten": None}
+           "warten": None, "wurf_offen": waiting(rd, pid)}
     w = rd.get("warten")
     if rd.get("dm") and w:
         satz = _text(d["schritte"].get(w["s"]) or {}, w["satz"]) if w.get("satz") else None

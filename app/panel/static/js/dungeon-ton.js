@@ -32,6 +32,8 @@ const DMT_FX={
   heilung:v=>{const t=dmtNow();[523,659,784,1047].forEach((f,i)=>dmtTone(f,t+i*.09,.03,.6,v*.18))},
   muenzen:v=>{const t=dmtNow();for(let i=0;i<6;i++)dmtTone(2200+Math.random()*1600,t+i*.07+Math.random()*.03,.002,.18,v*.12)},
   zauber:v=>{const t=dmtNow(),o=dmtTone(600,t,.15,1,v*.15);o.frequency.exponentialRampToValueAtTime(1800,t+1);dmtTone(1200,t+.1,.2,.9,v*.08,'triangle')},
+  klack:v=>{const t=dmtNow();dmtNoise(t,.04,v*.7,'bandpass',1400+Math.random()*900,4);dmtTone(180+Math.random()*60,t,.002,.08,v*.25,'triangle')},
+  dran:v=>{const t=dmtNow();dmtTone(784,t,.01,.18,v*.12,'sine');dmtTone(1175,t+.12,.01,.3,v*.1,'sine')},
   stufe:v=>{const t=dmtNow();[392,494,587,784].forEach((f,i)=>dmtTone(f,t+i*.12,.02,i===3?.9:.25,v*.14,'triangle'))}};
 function dmtPlay(k,w){if(!dmtFx())return;const c=dmtCtx();if(!c||c.state!=='running')return;try{DMT_FX[k](dmtLaut()/100,w)}catch{}}
 // the place's sound in the background: a filtered noise loop (regen, wind, feuer, wasser), quiet under the music
@@ -130,3 +132,33 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmu
   const o=k==='save'?{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({an:$('dmmusikan').checked,stuecke:+$('dmmusikn').value,mb:+$('dmmusikmb').value})}:k==='jetzt'?{method:'POST'}:{method:'DELETE'};
   const {r,d}=await apiTry('/api/admin/dungeon/musik'+(k==='jetzt'?'/jetzt':'')+q,o);if(r.ok){dmMusikDraw(d,'');if(k==='save')sayToast(t('Gespeichert','Saved'));return}
   const g=await apiTry('/api/admin/dungeon/musik'+q);if(g.r.ok)dmMusikDraw(g.d,errSay(r.status,d.detail,''))});
+// ---------------------------------------------------------------- the own throw (Dominik 2026-10-25 „1a 2a 3 4a b c“)
+// The die flies over the card, hits the table with its shadow, hops once, rolls out and lands on the panel's number
+// (the number was rolled before, this only shows it). Held longer before letting go it flies further (4b, display
+// only); landing buzzes the phone (4a); a die that waits for its seat chimes once (4c). Everything drawn here, no files.
+const DMT_D20='<svg viewBox="0 0 100 100" aria-hidden="true"><polygon class="dm-d20o" points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,24 75,66 25,66"/><polyline class="dm-d20k" points="50,3 50,24 93,27 75,66 93,73 50,97 25,66 7,73 25,66 7,27 50,24"/><polygon class="dm-d20h" points="50,3 93,27 50,24"/><polygon class="dm-d20s" points="7,73 25,66 50,97"/><polygon class="dm-d20s2" points="93,73 75,66 50,97"/></svg>';
+const DMT_HOLD={t:0},DMT_DRAN={},DMT_WURF_MS=1400;
+document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('[data-dmwurf]'))DMT_HOLD.t=Date.now()},true);
+function dmtKraft(){const k=DMT_HOLD.t?Math.min(1,(Date.now()-DMT_HOLD.t)/900):0;DMT_HOLD.t=0;return k}
+function dmtBrumm(w){try{if(navigator.vibrate)navigator.vibrate(w===20?[25,40,25,40,70]:w===1?[90]:[35])}catch{}}
+function dmtDran(k){if(!k||DMT_DRAN[k])return;DMT_DRAN[k]=1;dmtPlay('dran');try{if(navigator.vibrate)navigator.vibrate(15)}catch{}}
+const dmtErgebnis=x=>x.w===20?'dm-wkrit':x.w===1?'dm-wpatzer':x.ok?'dm-wok':'dm-wbad';   // 3: the landing's colour
+function dmtWurf(el,num,x,kraft,done){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fin=()=>{num.textContent=x.w;el.classList.add(dmtErgebnis(x));dmtBrumm(x.w);done()};
+  if(reduce||!el.animate){fin();return}
+  const d=40+70*(kraft||0),h=70+50*(kraft||0),sh=document.createElement('i');sh.className='dm-wschatten';el.appendChild(sh);el.classList.add('dm-wfliegt');
+  const k=[{transform:`translate(${-d}px,30px) rotate(-30deg) scale(.85)`,offset:0,easing:'cubic-bezier(.3,.6,.4,1)'},
+    {transform:`translate(${-d*.3}px,${-h}px) rotate(260deg) scale(1.05)`,offset:.3,easing:'cubic-bezier(.6,0,.9,.5)'},
+    {transform:'translate(0,0) rotate(400deg) scale(1.14,.84)',offset:.48,easing:'cubic-bezier(.2,.7,.4,1)'},
+    {transform:`translate(${d*.15}px,-26px) rotate(500deg) scale(1)`,offset:.62,easing:'cubic-bezier(.6,0,.9,.5)'},
+    {transform:`translate(${d*.2}px,0) rotate(560deg) scale(1.07,.93)`,offset:.76,easing:'ease-out'},
+    {transform:`translate(${d*.08}px,0) rotate(700deg) scale(1)`,offset:.9,easing:'ease-out'},
+    {transform:'translate(0,0) rotate(720deg) scale(1)',offset:1}];
+  const ks=[{transform:`translateX(${-d}px) scale(.7)`,opacity:.5},{transform:`translateX(${-d*.3}px) scale(.45)`,opacity:.2,offset:.3},{transform:'scale(1.15)',opacity:.6,offset:.48},
+    {transform:`translateX(${d*.15}px) scale(.8)`,opacity:.35,offset:.62},{transform:`translateX(${d*.2}px) scale(1.05)`,opacity:.55,offset:.76},{transform:'scale(1)',opacity:.5}];
+  el.animate(k,{duration:DMT_WURF_MS,fill:'none'});sh.animate(ks,{duration:DMT_WURF_MS});
+  [.48,.76,.9].forEach((o,i)=>setTimeout(()=>dmtPlay('klack'),DMT_WURF_MS*o-(i?0:20)));
+  const iv=setInterval(()=>{let f=1+Math.floor(Math.random()*20);if(f===x.w)f=f%20+1;num.textContent=String(f)},70);
+  setTimeout(()=>{clearInterval(iv);num.textContent=x.w},DMT_WURF_MS*.9);
+  setTimeout(()=>{sh.remove();el.classList.remove('dm-wfliegt');fin()},DMT_WURF_MS+40)}
+
