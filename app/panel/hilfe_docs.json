@@ -2509,7 +2509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Sprachmodell",
 "title": "Sprachmodell",
-"text": "Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 (nicht Teil dieses Repos). Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete."
+"text": "Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 (nicht Teil dieses Repos). Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell → Für kurze Texte schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große."
 },
 {
 "lang": "de",
@@ -10179,6 +10179,22 @@
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell erkennt Angriffe (Funktionen → Tempo und Genauigkeit → „Hilfsmodell erkennt Angriffe“; baut auf „Hilfsmodell“): Nach einer Antwort, für die ein Werkzeug Text von außen gelesen hat (Web, Mail, Dokument, Kalender), fragt das Panel im Hintergrund das Hilfsmodell, ob dieser Text eine Anweisung an den Assistenten enthielt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell für kurze Texte (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für kurze Texte“; baut auf „Hilfsmodell“): Kurze Texte im Hintergrund schreibt erst das Hilfsmodell: die Themen gemerkter Fakten im Gedächtnis sowie Antwortvorschläge und Nachfragen auf der Uhr."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gedächtnis (Funktionen → Meine Daten → „Gedächtnis“; Ich → Gedächtnis): Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen."
@@ -16429,7 +16445,7 @@
 "file": "Architecture and data flow",
 "head": "Language model",
 "title": "Language model",
-"text": "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete."
+"text": "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model → For short texts the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once."
 },
 {
 "lang": "en",
@@ -23814,6 +23830,22 @@
 "head": "Speed and accuracy",
 "title": "Speed and accuracy",
 "text": "- Helper model for mail (Features → Speed and accuracy → \"Helper model for mail\"; builds on \"Helper model\"): Sorting mail when tidying the inbox and recognizing important mail ask the helper model first."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model spots attacks (Features → Speed and accuracy → \"Helper model spots attacks\"; builds on \"Helper model\"): After an answer for which a tool read outside text (web, mail, document, calendar), the panel asks the helper model in the background whether that text held an order to the assistant."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model for short texts (Features → Speed and accuracy → \"Helper model for short texts\"; builds on \"Helper model\"): Short texts in the background are written by the helper model first: the topics of remembered facts in the memory as well as reply suggestions and follow-ups on the watch."
 },
 {
 "lang": "en",

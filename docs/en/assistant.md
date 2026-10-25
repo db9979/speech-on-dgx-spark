@@ -1038,6 +1038,10 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Helper model for mail** (Features → Speed and accuracy → "Helper model for mail"; builds on "Helper model"): Sorting mail when tidying the inbox and recognizing important mail ask the helper model first.
 
+- **Helper model spots attacks** (Features → Speed and accuracy → "Helper model spots attacks"; builds on "Helper model"): After an answer for which a tool read outside text (web, mail, document, calendar), the panel asks the helper model in the background whether that text held an order to the assistant.
+
+- **Helper model for short texts** (Features → Speed and accuracy → "Helper model for short texts"; builds on "Helper model"): Short texts in the background are written by the helper model first: the topics of remembered facts in the memory as well as reply suggestions and follow-ups on the watch.
+
 ### My data
 
 - **Memory** (Features → My data → "Memory"; Me → Memory): The assistant remembers things about you, such as names, preferences or where something is, and uses them later.

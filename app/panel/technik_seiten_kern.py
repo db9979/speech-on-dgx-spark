@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "1b12b5c748",
+        "stand": "4369c7ec11",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -17,12 +17,14 @@ SEITEN = {
                  "(nicht Teil dieses Repos). Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
                  "dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; "
-                 "jede Hintergrundaufgabe fragt über llm.complete.",
+                 "jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell → Für kurze Texte "
+                 "schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große.",
                  "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 "
                  "(not part of this repo). The panel "
                  "talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech "
                  "always comes before background work. Address, key and model name live only in llm.py; every "
-                 "background job asks through llm.complete."),
+                 "background job asks through llm.complete. With Features → Helper model → For short texts the small "
+                 "helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once."),
         "warum": ("Die GPU teilt sich das Modell mit der Sprachausgabe. Wartet eine Person, darf kein Lernen oder "
                   "Aufräumen im Hintergrund die Antwort bremsen. Und ein hängendes oder fehlendes Modell soll einen "
                   "klaren Satz ergeben, keine Minuten Stille.",

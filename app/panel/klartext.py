@@ -121,6 +121,9 @@ WAS = {
     "aussetzer": ("Die Sprachausgabe kam mit dem Text nicht hinterher, es gab Pausen.",
                   "The speech output could not keep up with the text; there were gaps."),
     "erfunden": ("Die Antwort nannte Angaben, die in keinem Ergebnis standen.", "The answer named details that were in no result."),
+    "angriff": ("Ein gelesener Text (Web, Mail, Dokument) enthielt wohl eine Anweisung an den Assistenten; die festen "
+                "Sperren galten trotzdem.", "A text that was read (web, mail, document) probably carried an order to "
+                "the assistant; the fixed locks held anyway."),
     "schlecht": ("Eine Person hat die Antwort mit 👎 bewertet.", "A person rated the answer 👎."),
     "weiche": ("Die Frage landete in der falschen Gruppe der Weiche.", "The question landed in the wrong group of the Weiche."),
     "melder": ("Ein fester Melder hat etwas bemerkt.", "A fixed detector noticed something."),

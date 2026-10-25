@@ -1038,6 +1038,10 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Hilfsmodell für Mails** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für Mails“; baut auf „Hilfsmodell“): Mails einordnen beim Postfach aufräumen und wichtige Mails erkennen fragt erst das Hilfsmodell.
 
+- **Hilfsmodell erkennt Angriffe** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell erkennt Angriffe“; baut auf „Hilfsmodell“): Nach einer Antwort, für die ein Werkzeug Text von außen gelesen hat (Web, Mail, Dokument, Kalender), fragt das Panel im Hintergrund das Hilfsmodell, ob dieser Text eine Anweisung an den Assistenten enthielt.
+
+- **Hilfsmodell für kurze Texte** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für kurze Texte“; baut auf „Hilfsmodell“): Kurze Texte im Hintergrund schreibt erst das Hilfsmodell: die Themen gemerkter Fakten im Gedächtnis sowie Antwortvorschläge und Nachfragen auf der Uhr.
+
 ### Meine Daten
 
 - **Gedächtnis** (Funktionen → Meine Daten → „Gedächtnis“; Ich → Gedächtnis): Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen.

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.089** Helper model spots attacks and writes short texts
 - **V01.1.088** AI Dungeon Master: fix narrator errors, a 👎 with a reason tells the last scene again, often reported reasons become a world's fixed hints, the bench plays the cases every night
 - **V01.1.087** AI Dungeon Master: whoever only asks rolls no sneaking check, the narration tells the question, and down stays down
 - **V01.1.086** AI Dungeon Master: a 👎 with a fixed reason becomes a narrator error without names, the admin takes it over as a scene of the narrator bench
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.082** AI Dungeon Master: when the narration does not name the new place, the group stays where it was (flag and narration agree); the map counts ways in stages and the way to the nearest settlement; occupied places carry their faction's arms
 - **V01.1.081** Helper model for simple classifications, Features → Helper model
 - **V01.1.080** AI Dungeon Master: real dice at the table (tap or say the number, after 30 s the Spark rolls, never in the car), fanfare for honours, critical card turns over, "Campfire" music
-- **V01.1.079** AI Dungeon Master: arms for group and factions: the panel draws every coat of arms itself as a checked SVG from shield, division, tinctures and 16 own charges, the host chooses colour and charge, every faction carries its own
 
 
 

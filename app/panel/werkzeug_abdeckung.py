@@ -141,6 +141,8 @@ WITHOUT = {
     "helferweiche": "Hilfsmodell für die Weiche, keine Bitte",
     "helferdungeon": "Hilfsmodell für den Dungeon-Richter, keine Bitte",
     "helfermail": "Hilfsmodell für Mails einordnen, keine Bitte",
+    "helferangriff": "Hilfsmodell prüft gelesenen Text im Hintergrund, keine Bitte",
+    "helferkurz": "Hilfsmodell schreibt kurze Hintergrundtexte, keine Bitte",
     "einordnungklage": "Signal fürs Panel, keine Bitte",
     "vorrang": "Schutzregel für Personen",
     "docpics": "wirkt beim Einlesen",

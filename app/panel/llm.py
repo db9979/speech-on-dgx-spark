@@ -11,6 +11,10 @@ import httpx
 from common import load_config, model_host, model_local, no_think
 
 _models = {}   # address -> the model it serves (when chat.llm_model is not set)
+HELFER = "helfer"   # the LLM-Tor's model name for the small helper model (systemone.HELFER)
+# the background jobs that write only a few words: with Funktionen → Hilfsmodell → Für kurze Texte (chat.helfer_kurz)
+# the helper model writes them first, and the language model at once when it is not ready (Dominik 2026-10-25, „3e“)
+HELFER_JOBS = ("Gedächtnis-Themen", "Uhr-Antworten", "Uhr-Nachfragen")
 
 
 def url(ccfg):
@@ -61,6 +65,11 @@ async def model(c, ccfg, hdrs=None):
     return _models[base]
 
 
+def helfer_kurz(ccfg, job):
+    """True when the helper model writes this job first: chat.helfer, chat.helfer_kurz and a job of HELFER_JOBS."""
+    return job in HELFER_JOBS and bool(ccfg.get("helfer")) and bool(ccfg.get("helfer_kurz"))
+
+
 def known_model():
     """The model name already asked for, without a request ("" before the first call)."""
     return next(iter(_models.values()), "")
@@ -93,9 +102,9 @@ async def complete(system, user, job, max_tokens, temperature=0.1, timeout=120, 
     msgs = messages if messages is not None else [{"role": "system", "content": system},
                                                    {"role": "user", "content": user}]
 
-    async def ask(cl):
-        payload = {"model": model_name or await model(cl, ccfg), "temperature": temperature, "max_tokens": max_tokens,
-                   "messages": msgs}
+    async def ask(cl, name=None):
+        payload = {"model": name or model_name or await model(cl, ccfg), "temperature": temperature,
+                   "max_tokens": max_tokens, "messages": msgs}
         if thinking is not None:
             payload["chat_template_kwargs"] = {"enable_thinking": bool(thinking)}
         payload.update(extra)
@@ -103,7 +112,25 @@ async def complete(system, user, job, max_tokens, temperature=0.1, timeout=120, 
         r.raise_for_status()
         return content(r)
 
-    if c is not None:
-        return await ask(c)
-    async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=5)) as cl:
+    async def first(cl):
+        if helfer_kurz(ccfg, job):   # the helper model first; loading (503), missing or broken: the language model
+            import systemone
+            try:
+                out = await ask(cl, HELFER)
+            except httpx.TimeoutException:
+                systemone.kurz_note(job, False, "zu langsam")
+            except httpx.HTTPStatusError as e:
+                systemone.kurz_note(job, False, f"HTTP {e.response.status_code}")
+            except httpx.HTTPError:
+                systemone.kurz_note(job, False, "nicht erreichbar")
+            except (ValueError, KeyError):
+                systemone.kurz_note(job, False, "unlesbar")
+            else:
+                systemone.kurz_note(job, True)
+                return out
         return await ask(cl)
+
+    if c is not None:
+        return await first(c)
+    async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=5)) as cl:
+        return await first(cl)

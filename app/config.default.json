@@ -150,6 +150,8 @@
     "helfer_weiche": false,
     "helfer_dungeon": false,
     "helfer_mail": false,
+    "helfer_angriff": false,
+    "helfer_kurz": false,
     "prefetch": true,
     "instant_ack": true,
     "spark_help": true,

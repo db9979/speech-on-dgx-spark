@@ -2617,7 +2617,7 @@ Self-tests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, 
 
 ### Language model
 
-The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete.
+The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model → For short texts the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once.
 
 **Why:** The GPU is shared between the model and speech output. While a person waits, no learning or tidying in the background may slow the answer. And a hanging or missing model should give a clear sentence, not minutes of silence.
 

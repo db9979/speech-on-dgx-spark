@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.089** · 2026-10-25 · Hilfsmodell: zwei weitere Einsätze mit eigenem Schalter, Angriffe erkennen (Fall bei vermuteter Anweisung in gelesenem Text, nur ein Hinweis neben den festen Sperren) und kurze Texte (Gedächtnis-Themen, Vorschläge auf der Uhr)
 - **V01.1.088** · 2026-10-25 · KI-Dungeon-Master: Erzähler-Fehler beheben, ein 👎 mit Grund erzählt die letzte Szene neu, oft gemeldete Gründe werden feste Hinweise der Welt, der Prüfstand spielt die Fälle jede Nacht
 - **V01.1.087** · 2026-10-25 · KI-Dungeon-Master: wer nur fragt, würfelt nicht aufs Schleichen, die Erzählung erzählt die Frage, und nach unten bleibt nach unten
 - **V01.1.086** · 2026-10-25 · KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
