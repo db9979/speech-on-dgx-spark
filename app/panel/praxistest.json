@@ -3516,6 +3516,13 @@
 "titel": "Dungeon-Master: der Tisch am Handy",
 "text": "Am iPhone eine laufende Runde im Panel öffnen. A: Oben steht nur eine Zeile mit Titel, Zug und „⋯“; „⋯“ zeigt ← Runden, So spielst du, Dunkel, Vollbild, Geräusche und beim Gastgeber das Spielleiter-Pult. B: Im Kampf steht ein Kasten mit einer Zeile je Gegner, er klebt beim Scrollen nicht über der Erzählung; die Begegnung ist eine Zeile, ein Tipp auf einen Gegner öffnet sein Fenster. C: In Geschichte, Gruppe, Held und Karte steht das Feld „Was macht …?“ über der unteren Leiste, darüber „● Du bist dran“; das Ende der Erzählung ist lesbar. D: Gruppe: eine Zeile je Held mit Lebensbalken, ein Tipp zeigt die Werte. E: Held: RK, „Schnell“ mit Heiltrank und Waffe (die Waffe schreibt den Angriff ins Feld), darunter die Tasche. F: In einem neuen Browser öffnet sich beim ersten Mal nur die Karte „So geht's“ mit „Mehr“. G: Etwas untersuchen lassen, bis die Probe misslingt: die Erzählung und die graue Zeile verraten keine Richtung und keinen Fund. H: „Du bist dran“ auf dem iPhone antippen: der Tisch dieser Runde öffnet sich. I: „Ich gehe nach <Nachbarort>“ schreiben: keine Würfelprobe, und die nächste Erzählung wiederholt nicht die alte Szene.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P527",
+"v": 1079,
+"titel": "Dungeon-Master: Wappen für Gruppe und Fraktionen",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Wappen für Gruppe und Fraktionen und Fraktionen mit Uhren an. A: Runde starten, Fenster „Fraktionen“ öffnen: oben steht „Euer Wappen“ als scharfes Schild. B: Als Gastgeber „Farbe und Zeichen wählen“, eine Farbe und ein Zeichen antippen: das Wappen ändert sich sofort, Schildform und Teilung bleiben. C: „?“ bei Farbe und Zeichen: das Wappen vom Anfang ist wieder da. D: Ein Mitspieler sieht das Wappen, aber keine Wahl. E: Eine Fraktion, die die Erzählung genannt hat, zeigt ihr eigenes Wappen neben der Uhr; eine noch unbekannte nur beim Gastgeber. F: Auf iPhone und Android ist das Wappen ebenso scharf. G: Schalter aus: keine Wappen, keine Wahl.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

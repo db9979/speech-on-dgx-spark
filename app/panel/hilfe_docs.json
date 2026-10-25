@@ -5429,6 +5429,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wappen für Gruppe und Fraktionen (V01.1.079, D&D-Idee 10, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“, Plan plaene/dungeon-dnd-ideen.md): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Wappen für Gruppe und Fraktionen* (chat.dungeon_wappen, ab Werk aus; dungeon_wappen.py, dungeonwappen.js). Das Panel zeichnet jedes Wappen selbst als SVG, ohne Bildmodell, immer gleich aus einem Startwert: Schildform (5), Teilung (10, etwa gespalten, geviert, Sparren, Schildhaupt, Bord), zwei Tinkturen nach der alten Regel (Metall neben Farbe: Gold oder Silber neben Rot, Blau, Grün, Purpur oder Schwarz) und ein Zeichen aus 16 eigenen Zeichnungen (Stern, Sonne, Mond, Kreuz, Raute, Ring, Herz, Schwert, Turm, Krone, Schlüssel, Baum, Berg, Blitz, Kelch, Fisch); auf einem geteilten Feld wechselt das Zeichen die Farben („verwechselt“), sonst steht es in einer Tinktur, die sich abhebt. Das Wappen der Gruppe hängt an der Kampagne (sonst an der Runde) und bleibt so von Kapitel zu Kapitel gleich; der Gastgeber wählt im Fenster „Fraktionen“ (mit „Fraktionen mit Uhren“) über „Farbe und Zeichen wählen“ Farbe und Zeichen („?“ = Zufall), der Rest bl"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "eibt. Die Wahl liegt in users/<id>/dungeon-wappen.json (höchstens 50, die stündliche Aufräumrunde entfernt die von Runden und Kampagnen, die es nicht mehr gibt). Jede Fraktion (dungeon_fraktionen) trägt ein eigenes Wappen aus ihrem Namen, nie Farbe und Zeichen der Gruppe zusammen. Sicherheit: Ein Code nennt ein Wappen nur mit Wörtern der festen Listen; svg(code) baut das Bild und prüft es (check, mit defusedxml): nur die Elemente und Attribute der Liste ERLAUBT, keine Skripte, keine Links, kein style, Verweise nur auf Teile desselben Bildes. Die Seite zeigt es nur als Bild (img oder image mit data:-Adresse), dort läuft nie etwas aus einem SVG. Sichtbarkeit: Jeder Platz bekommt in der Ansicht wappen das Wappen der Gruppe und die der Fraktionen, die er schon sieht (ihre Uhr, ihr Banner auf der Karte); nur der Gastgeber zusätzlich alle Fraktionen (fraktionen_geheim.alle[].wappen, Sichtfilter) und die Wahl. Andere Teile des Spiels nehmen gruppe(rd), fraktion(rd, name) und svg(code) (Mails, Kapiteldeckel, Chronik) oder in der Seite dmWappen, dmWappenFr, dmWappenGruppe und dmWappenHref (Karte). Endpunkt POST /api/profile/dungeon/{rid}/wappen (Anmeldung, browser_profile mit CSRF-Prüfung, "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Größenlimit dungeon.BODY, Rate-Limit dungeon, nur der Gastgeber einer laufenden Runde). Logzeilen dungeon: wappen | gewaehlt | eigen/zufall, | abgelehnt | aus/wert, | aufgeraeumt | N wahlen; Live-Übersicht: Runden mit Wappen, heute gewählt und abgelehnt. Lizenz: Der Aufbau eines Wappens aus Schild, Teilung, Tinkturen und Zeichen folgt dem Projekt Azgaar/Armoria (MIT-Lizenz, https://github.com/Azgaar/Armoria); Code und Zeichnungen sind eigene, keine Teile aus WappenWiki (CC BY-NC) und keine fremden Zeichen. Selbsttests test_dungeon_wappen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: NSC-Tabellen, Namenssilben und Orakel im Katalog (V01.1.060, Dominik 2026-10-25, Tabletop-Punkte 5 und 8, Daten): 15 feste Tabellen (tabellen) liefern Zufall nach festen Regeln: für Nebenfiguren Aussehen, Art, Wunsch, Geheimnis und Beruf, für das Orakel Handlung, Thema, Ort, Merkmal, Wendung, Komplikation, Hinweis, Gefahr, Gelegenheit und Ärger im Ort. Jede Zeile kann für einzelne Welten gelten (Augenklappe bei Piraten, Implantate bei Sci-Fi), jede Tabelle hat je Welt mindestens 6 Zeilen. Namenssilben (namensilben, nicht silben: das sind die Ortsnamen der Karte) je Volk und für Sci-Fi und Piraten setzen Namen aus Anfang, Mitte und Ende zusammen (Verfahren wie Syllabore, eigene Silben). Die Orakel- und viele NSC-Zeilen sind aus Datasworn übersetzt, nur aus Tabellen unter CC-BY-4.0, familientauglich umformuliert. Namensnennung: *This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.* Selbsttest test_dungeon_srd: mindestens 6 Zeilen je Welt, Silben für jedes Volk, Namensnennung in Datei und Doku."
 },
 {
@@ -10374,6 +10398,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gesichter für NSCs (Funktionen → Meine Daten → „Gesichter für NSCs“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jede Figur der Geschichte, die ihr trefft, bekommt einmal ein Porträt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Wappen für Gruppe und Fraktionen (Funktionen → Meine Daten → „Wappen für Gruppe und Fraktionen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Eure Gruppe bekommt ein Wappen, jede Fraktion der Geschichte ein eigenes."
 },
 {
 "lang": "de",
@@ -19045,6 +19077,30 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: arms for group and factions (V01.1.079, D&D idea 10, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.\", plan plaene/dungeon-dnd-ideen.md): Own admin switch *Features → AI Dungeon Master → Arms for group and factions* (chat.dungeon_wappen, off by default; dungeon_wappen.py, dungeonwappen.js). The panel draws every coat of arms itself as SVG, without a picture model, always the same from a start value: shield shape (5), division (10, such as per pale, quarterly, per chevron, chief, bordure), two tinctures by the old rule (metal next to colour: gold or silver next to red, blue, green, purple or black) and a charge of 16 own drawings (star, sun, moon, cross, lozenge, ring, heart, sword, tower, crown, key, tree, mountain, lightning, chalice, fish); on a divided field the charge swaps the tinctures (\"counterchanged\"), otherwise it stands in a tincture that stands out. The group's arms hang on the campaign (otherwise on the round) and so stay the same from chapter to chapter; the host chooses colour and charge in the \"Factions\" window (with \"Factions with clocks\") through \"Choose colour and charge\" (\"?\" = chance), the rest stays. The choi"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ce is kept in users/<id>/dungeon-wappen.json (at most 50, the hourly sweep removes those of rounds and campaigns that are gone). Every faction (dungeon_fraktionen) carries its own arms from its name, never the group's colour together with its charge. Security: A code names an arms only with words of the fixed lists; svg(code) builds the picture and checks it (check, with defusedxml): only the elements and attributes of the list ERLAUBT, no scripts, no links, no style, references only to parts of the same picture. The page shows it only as a picture (img or image with a data: address), where nothing of an SVG ever runs. Visibility: Every seat gets in the view wappen the group's arms and those of the factions it already sees (their clock, their banner on the map); only the host also every faction (fraktionen_geheim.alle[].wappen, sight filter) and the choice. Other parts of the game take gruppe(rd), fraktion(rd, name) and svg(code) (mails, chapter cover, chronicle) or in the page dmWappen, dmWappenFr, dmWappenGruppe and dmWappenHref (map). Endpoint POST /api/profile/dungeon/{rid}/wappen (login, browser_profile with CSRF check, size limit dungeon.BODY, rate limit dungeon, only the hos"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "t of a running round). Log lines dungeon: wappen | gewaehlt | eigen/zufall, | abgelehnt | aus/wert, | aufgeraeumt | N wahlen; Live overview: rounds with arms, chosen and refused today. Licence: Building an arms from shield, division, tinctures and charge follows the project Azgaar/Armoria (MIT licence, https://github.com/Azgaar/Armoria); code and drawings are our own, no parts of WappenWiki (CC BY-NC) and no foreign charges. Self-tests test_dungeon_wappen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: NPC tables, name syllables and oracle in the catalog (V01.1.060, Dominik 2026-10-25, tabletop points 5 and 8, data): 15 fixed tables (tabellen) give randomness by fixed rules: for side characters looks, manner, wish, secret and occupation, for the oracle action, theme, place, descriptor, plot twist, complication, clue, peril, opportunity and settlement trouble. Each row can apply to single worlds (eye patch for pirates, implants for sci-fi), each table has at least 6 rows per world. Name syllables (namensilben, not silben: those are the map's place names) per people and for sci-fi and pirates build names from start, middle and end (method like Syllabore, own syllables). The oracle rows and many NPC rows are translated from Datasworn, only from tables under CC-BY-4.0, reworded to be family-friendly. Attribution: *This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.* Self-test test_dungeon_srd: at least 6 rows per world, syllables for every people, attribution in file and docs."
 },
 {
@@ -23814,6 +23870,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Faces for NPCs (Features → My data → \"Faces for NPCs\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every person of the story you meet gets a portrait once."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Arms for group and factions (Features → My data → \"Arms for group and factions\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Your group gets a coat of arms, every faction of the story its own."
 },
 {
 "lang": "en",

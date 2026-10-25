@@ -55,6 +55,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
 import dungeon_gesicht
+import dungeon_wappen
 import dungeon_karte
 import features
 import guard
@@ -687,12 +688,13 @@ async def paint_find(n, p):
 
 # ---------------------------------------------------------------- the minute loop (panel.py every_minute)
 async def due():
-    """Each minute: the people's faces (dungeon_gesicht: „Bilder malen“ without this switch), the finds, the night's
-    run once a night, the sweep at most hourly."""
+    """Each minute: the people's faces (dungeon_gesicht: „Bilder malen“ without this switch), the sweep of the arms
+    (dungeon_wappen), the finds, the night's run once a night, the sweep at most hourly."""
     now = clock()
     for rid, k, n, p in await asyncio.to_thread(dungeon_gesicht.queue):
         spawn(dungeon_gesicht.paint(rid, k, n, p), name="dungeon-gesicht")
     await asyncio.to_thread(dungeon_gesicht.sweep, now)
+    await asyncio.to_thread(dungeon_wappen.sweep, now)     # the host's choices of arms of rounds that are gone
     if not on():
         return
     for n, p in await asyncio.to_thread(queue_finds):
@@ -791,7 +793,7 @@ def add(r, rd, out):
     out["buehne"] = {"ersatz": stage_pic(r, rd, have)}   # the stage's stand-in until the scene has its own picture
     if isinstance(out.get("siedlung"), dict):              # the settlement's head and service pictures, lines of life
         out["siedlung"] = settle_view(r, rd, out["siedlung"], have)
-    return dungeon_gesicht.add(rd, out)                   # the faces of the people met (Tabletop-Punkt 15)
+    return dungeon_wappen.add(rd, dungeon_gesicht.add(rd, out))   # the faces of the people met (Tabletop-Punkt 15), the arms (D&D-Idee 10)
 
 
 # ---------------------------------------------------------------- „Nochmal malen“ (the admin's rules page)

@@ -293,6 +293,9 @@ FEATURES = (
     # scene pictures take it as a reference picture
     F("dungeongesicht", "Gesichter für NSCs", "Faces for NPCs", "data", ("dungeon_gesicht",), parent="dungeon",
       me="dmbox", guide="dungeongesicht"),
+    # Wappen für Gruppe und Fraktionen (dungeon_wappen.py, D&D-Idee 10): SVG from a start value, own parts, checked
+    F("dungeonwappen", "Wappen für Gruppe und Fraktionen", "Arms for group and factions", "data", ("dungeon_wappen",),
+      parent="dungeon", me="dmbox", guide="dungeonwappen"),
     # Orakel (dungeon_orakel.py, Tabletop-Punkt 8): yes or no with a chaos grade and the catalog's tables for the host;
     # the panel rolls, the model only hears the answer as data
     F("dungeonorakel", "Orakel", "Oracle", "data", ("dungeon_orakel",), parent="dungeon", me="dmbox", guide="dungeonorakel"),

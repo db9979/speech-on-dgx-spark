@@ -298,6 +298,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
 | `app/panel/dungeon_tabellen.py` | KI-Dungeon-Master: the fixed tables of the catalog. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
+| `app/panel/dungeon_wappen.py` | KI-Dungeon-Master: Wappen für Gruppe und Fraktionen (D&D-Idee 10 of 2026-10-25, Dominik „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“, plan … |
 | `app/panel/dungeon_warten.py` | KI-Dungeon-Master: the wait between turns made pleasant. |
 | `app/panel/dungeon_zufall.py` | KI-Dungeon-Master: Zufallsregeln des Gastgebers. |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
@@ -589,6 +590,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
 | `users/ID/dungeon-helden.json` | AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only) | State | – | yes | – |
 | `users/ID/dungeon-kampagnen.json` | AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters | State | – | yes | – |
+| `users/ID/dungeon-wappen.json` | AI Dungeon Master: colour and charge you chose as host for your group's arms | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |

@@ -199,6 +199,7 @@
     "dungeon_zufall": false,
     "dungeon_nsc": false,
     "dungeon_gesicht": false,
+    "dungeon_wappen": false,
     "dungeon_orakel": false,
     "dungeon_fraktionen": false,
     "dungeon_quest": false,

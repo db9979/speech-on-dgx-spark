@@ -298,6 +298,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_tabellen.py` | Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
+| `app/panel/dungeon_wappen.py` | Dungeon-Master-Wappen: SVG für Gruppe und Fraktionen aus eigenen Teilen, geprüft, ohne Bildmodell |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |
 | `app/panel/dungeon_zufall.py` | Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
@@ -589,6 +590,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
 | `users/ID/dungeon-helden.json` | KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten) | Zustand | – | ja | – |
 | `users/ID/dungeon-kampagnen.json` | KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste | Zustand | – | ja | – |
+| `users/ID/dungeon-wappen.json` | KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast | Zustand | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |

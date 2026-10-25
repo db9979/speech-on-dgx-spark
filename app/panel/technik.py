@@ -192,6 +192,7 @@ MODULE = {
     "dungeon_zufall": ("dienste", "Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt"),
     "dungeon_nsc": ("dienste", "Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf"),
     "dungeon_gesicht": ("dienste", "Dungeon-Master-Gesichter: ein festes Porträt je Figur, Vorlage für spätere Szenenbilder"),
+    "dungeon_wappen": ("dienste", "Dungeon-Master-Wappen: SVG für Gruppe und Fraktionen aus eigenen Teilen, geprüft, ohne Bildmodell"),
     "dungeon_fraktionen": ("dienste", "Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln"),
     "dungeon_quest": ("dienste", "Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund"),
     "dungeon_orakel": ("dienste", "Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt"),

@@ -304,6 +304,7 @@ ADMIN_ON_OK = {
     "dungeon_dingbild.py:status": "the admin's page: Spark-wide switch and numbers",
     "dungeon_dingbild.py:for_live": "Zustand → Live: Spark-wide flag beside numbers",
     "dungeon_gesicht.py:for_live": "Zustand → Live: Spark-wide flag beside numbers",
+    "dungeon_wappen.py:for_live": "Zustand → Live: Spark-wide flag beside numbers",
     "dungeon.py:due_once": "the minute loop: Spark-wide flag before any round is read; send_notes asks features.allowed dungeon for every profile it notes",
     "dungeon_pruefstand.py:on": "the balance bench is admin-only and Spark-wide: it plays fights without any profile or round, its endpoints are /api/admin/ only",
     "dungeon_erzaehlstand.py:on": "the narrator bench is admin-only and Spark-wide: it plays fixed scenes on a round only in memory, no profile, its endpoints are /api/admin/ only",

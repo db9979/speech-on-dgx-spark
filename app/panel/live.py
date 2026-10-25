@@ -1397,6 +1397,11 @@ def snapshot(view="admin", now=None):
         dgn["gesicht"] = dungeon_gesicht.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["gesicht"] = {"on": False}
+    try:   # Wappen für Gruppe und Fraktionen (dungeon_wappen.py): numbers on the game's line
+        import dungeon_wappen
+        dgn["wappen"] = dungeon_wappen.for_live() if dgn.get("on") else {"on": False}
+    except Exception:
+        dgn["wappen"] = {"on": False}
     try:   # the admin's rules tab (dungeon_regelseite.py): own entries, hidden ones, pictures to choose
         import dungeon_regelseite
         dgn["regeln"] = dungeon_regelseite.counts() if dgn.get("on") else {}
@@ -1875,6 +1880,8 @@ def snapshot(view="admin", now=None):
                         + (f" · Gesichter {dgn['gesicht']['da']}, heute {dgn['gesicht']['gemalt']} gemalt, {dgn['gesicht']['weg']} nicht, "
                            f"{dgn['gesicht']['vorlagen']} Szenen mit Vorlage" + (f" · malt {dgn['gesicht']['malt']} Gesichter" if dgn['gesicht']['malt'] else "")
                            if dgn.get("gesicht", {}).get("on") else "")
+                        + (f" · Wappen in {dgn['wappen']['runden']} Runden, heute {dgn['wappen']['gewaehlt']} gewählt, {dgn['wappen']['abgelehnt']} abgelehnt"
+                           if dgn.get("wappen", {}).get("on") else "")
                         + (f" · {dgn['chronik_zeilen']} Zeilen Chronik" if dgn.get("chronik_zeilen") else "")
                         + (f" · heute {dgn.get('nsc_haltung', 0)} Haltungen und {dgn.get('nsc_kanten', 0)} Beziehungen geändert"
                            if dgn.get("nsc_haltung") or dgn.get("nsc_kanten") else "")

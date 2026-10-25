@@ -103,6 +103,8 @@ DATEIEN = [
            "AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only)", art="Zustand"),  # dungeon.py
     profil("dungeon-kampagnen.json", "KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste",
            "AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters", art="Zustand"),  # dungeon.py
+    profil("dungeon-wappen.json", "KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast",
+           "AI Dungeon Master: colour and charge you chose as host for your group's arms", art="Zustand"),  # dungeon_wappen.py
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
            "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
