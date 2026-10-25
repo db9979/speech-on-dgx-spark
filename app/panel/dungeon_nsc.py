@@ -8,13 +8,19 @@ a new relation), the panel takes them by fixed rules: only a person of this scen
 step per hero and turn. Only the people of the scene go to the model with their cards; the others only by name.
 The chronicle keeps what mattered (people met, fights won, heroes fallen, levels, threads closed, acts, chapters) by
 fixed rules from the round's log, the reputation of a hero is the mean attitude of the people who know them.
-Both go on in the next chapter. Only while „NSC-Gedächtnis und Chronik“ is allowed for the round's host (features
+Both go on in the next chapter. NSC-Ziele (Tabletop-Punkt 6, idea from NarrativeEngine-P, MIT, own code): every person
+also has six traits from −3 to +3 and a goal on three levels (today, soon, in life, from the wish table and the truth);
+between turns the panel rolls each person's progress on its nearest open goal, a reached one goes into the chronicle
+and, only as data, into the next narration. Only while „NSC-Gedächtnis und Chronik“ is allowed for the round's host (features
 "dungeonnsc"). The fields:
 
     rd["nsc"]     {name.lower(): {"name", "karte": {feld: [de, en]}, "kanten": [{"art", "ziel"}], "haltung": {held: −3..3},
-                   "gesehen": turn | None}}
+                   "gesehen": turn | None, "wesen": {zug: −3..3}, "ziele": [{"ebene", "t": [de, en], "stand", "voll"}]}}
+    rd["ziel_neu"] [{"name", "ebene", "t": [de, en]}]   the goals reached after the last told turn (for the next narration)
     rd["chronik"] [{"n": turn, "k": chapter, "t": [de, en]}]
 """
+import random
+
 import dungeon_tabellen as tabellen
 
 KARTE = ("aussehen", "art", "beruf", "wunsch", "geheimnis")      # tables nsc_<feld>
@@ -32,6 +38,14 @@ SZENE_ZUEGE = 2            # a person counts as in the scene when it spoke or wa
 CHRONIK_MAX = 40
 CHRONIK_FAKTEN = 6         # the last lines of the chronicle the model gets
 NAME_LEN = 40
+# NSC-Ziele (Tabletop-Punkt 6): six traits, each from −3 (the second word) to +3 (the first)
+WESEN = {"mut": (("mutig", "brave"), ("ängstlich", "fearful")), "ehrlich": (("ehrlich", "honest"), ("verschlagen", "sly")),
+         "freundlich": (("freundlich", "kind"), ("schroff", "gruff")), "grosszuegig": (("großzügig", "generous"), ("geizig", "stingy")),
+         "ruhig": (("besonnen", "calm"), ("hitzig", "hot-headed")), "treu": (("treu", "loyal"), ("wankelmütig", "fickle"))}
+WESEN_STUFE = {1: ("etwas ", "somewhat "), 2: ("", ""), 3: ("sehr ", "very ")}
+EBENEN = {"heute": (("Heute", "Today"), 2), "bald": (("Bald", "Soon"), 4), "leben": (("Im Leben", "In life"), 6)}   # steps to reach
+ZIEL_WURF = 5              # a d6 at or above this moves a person's nearest open goal a step between turns
+ZIEL_MUTIG = 4             # the same for a brave person (mut 2 or more)
 
 SCHEMA = {"type": "array", "maxItems": AENDERUNGEN_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["name"],
           "properties": {"name": {"type": "string", "maxLength": NAME_LEN}, "held": {"type": "string", "maxLength": NAME_LEN},
@@ -42,12 +56,14 @@ AUFGABE = {
            "besser oder schlechter, wenn ein Held (held) die Figur für sich gewinnt oder verärgert; kante schuldet, fürchtet, "
            "mag oder weiss mit ziel (ein Held oder eine Figur), wenn eine neue Beziehung entsteht. Bleib bei Aussehen, Art und "
            "Beruf einer Figur aus nsc_szene; Wunsch und Geheimnis treiben sie an, verrate das Geheimnis nicht ohne Grund. "
-           "Für eine neue Figur nimm einen Namen aus freie_namen."),
+           "Wesen und Ziele einer Figur bestimmen, was sie tut; nsc_ziel_erreicht nennt, wer gerade ein Ziel erreicht hat: "
+           "lass es in der Welt spürbar werden. Für eine neue Figur nimm einen Namen aus freie_namen."),
     "en": (f" In nsc report at most {AENDERUNGEN_MAX} changes for people of this scene (nsc_szene): haltung besser or "
            "schlechter when a hero (held) wins the person over or angers them; kante schuldet, fuerchtet, mag or weiss with "
            "ziel (a hero or a person) when a new relation begins. Keep to the looks, manner and occupation of a person from "
-           "nsc_szene; wish and secret drive them, do not give the secret away without a reason. For a new person take a "
-           "name from freie_namen."),
+           "nsc_szene; wish and secret drive them, do not give the secret away without a reason. Traits (wesen) and goals "
+           "(ziele) decide what a person does; nsc_ziel_erreicht names who just reached a goal: let the world feel it. For a "
+           "new person take a name from freie_namen."),
 }
 
 
@@ -66,6 +82,69 @@ def card(r, rd, rng=None):
     return out
 
 
+def traits(rng=None):
+    """Six traits, each 2W4−5 (−3..+3, the middle most often)."""
+    rng = rng or random
+    return {k: rng.randint(1, 4) + rng.randint(1, 4) - 5 for k in WESEN}
+
+
+def goals(r, rd, ziel="", rng=None):
+    """A goal on each level from the wish table of the round's world; „soon“ is the truth's goal of the person when it has one."""
+    out, seen = [], set()
+    for e, (_, voll) in EBENEN.items():
+        t = [ziel, ziel] if e == "bald" and ziel else None
+        for _ in range(6):
+            t = t or tabellen.roll(r, "nsc_wunsch", rd.get("welt"), rng)
+            if not t or t[0] not in seen:
+                break
+            t = None
+        if t:
+            seen.add(t[0])
+            out.append({"ebene": e, "t": t, "stand": 0, "voll": voll})
+    return out
+
+
+def trait_words(x, li):
+    """The traits that show (1 or more either way) as words: „sehr mutig“, „etwas geizig“."""
+    out = []
+    for k, v in (x.get("wesen") or {}).items():
+        if v and k in WESEN:
+            out.append(WESEN_STUFE[min(3, abs(v))][li] + WESEN[k][0 if v > 0 else 1][li])
+    return out
+
+
+def progress(dm, r, rd, rng=None):
+    """Between told turns every person moves its nearest open goal by a d6; a goal reached goes into the chronicle
+    (without what it was, that stays with host and model) and into rd["ziel_neu"]; a reached goal of today is
+    followed by a new one. Returns (moved, reached)."""
+    rng = rng or random
+    weiter = erreicht = nichts = 0
+    rd["ziel_neu"] = []
+    for x in (rd.get("nsc") or {}).values():
+        z = next((g for g in x.get("ziele") or [] if g["stand"] < g["voll"]), None)
+        if not z:
+            continue
+        if rng.randint(1, 6) < (ZIEL_MUTIG if (x.get("wesen") or {}).get("mut", 0) >= 2 else ZIEL_WURF):
+            nichts += 1
+            continue
+        z["stand"] += 1
+        weiter += 1
+        if z["stand"] >= z["voll"]:
+            erreicht += 1
+            rd["ziel_neu"].append({"name": x["name"], "ebene": z["ebene"], "t": list(z["t"])})
+            note(rd, f"{x['name']} hat ein Ziel erreicht.", f"{x['name']} has reached a goal.")
+            if z["ebene"] == "heute":
+                t = tabellen.roll(r, "nsc_wunsch", rd.get("welt"), rng)
+                if t and t[0] not in {g["t"][0] for g in x["ziele"]}:
+                    x["ziele"] = [g for g in x["ziele"] if g is not z] + [{"ebene": "heute", "t": t, "stand": 0, "voll": EBENEN["heute"][1]}]
+    if weiter:
+        dm._day.bump("nsc_ziel_weiter", weiter)
+    if erreicht:
+        dm._day.bump("nsc_ziel_erreicht", erreicht)
+    print(f"dungeon: nsc | ziele | {weiter} weiter | {erreicht} erreicht | {nichts} nichts", flush=True)
+    return weiter, erreicht
+
+
 def note(rd, de, en):
     """A line in the chronicle (fixed words of the panel and names the round checked)."""
     rd["chronik"] = ((rd.get("chronik") or []) + [{"n": rd.get("zug", 0), "k": rd.get("kapitel", 1), "t": [de, en]}])[-CHRONIK_MAX:]
@@ -81,6 +160,8 @@ def sync(r, rd, rng=None):
         if k not in ns:
             ns[k] = {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
             n += 1
+        if "wesen" not in ns[k]:                  # traits and goals (Tabletop-Punkt 6), also for cards made before
+            ns[k].update(wesen=traits(rng), ziele=goals(r, rd, p.get("ziel") or "", rng))
     return n
 
 
@@ -227,6 +308,8 @@ def learn(dm, r, rd, story, turn, rng=None):
     if neu:
         print(f"dungeon: nsc | karte | {neu}", flush=True)
     apply(dm, rd, (story or {}).get("nsc") or [])         # checked in dungeon.check_story (check)
+    if story:
+        progress(dm, r, rd, rng)                            # the people's goals move on (Tabletop-Punkt 6)
     zeilen = chronicle(rd, turn, (story.get("faeden") or {}).get("erledigt") or [] if story else [])
     if zeilen:
         dm._day.bump("chronik", zeilen)
@@ -247,9 +330,14 @@ def facts(r, rd, li, rng=None):
         szene.append({"name": x["name"], **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
                       **{f: v[li] for f, v in x["karte"].items()},
                       **({"kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]]} if x["kanten"] else {}),
-                      **({"haltung": {hn.get(h, h): word(v, li) for h, v in x["haltung"].items()}} if x["haltung"] else {})})
+                      **({"haltung": {hn.get(h, h): word(v, li) for h, v in x["haltung"].items()}} if x["haltung"] else {}),
+                      **({"wesen": trait_words(x, li)} if trait_words(x, li) else {}),
+                      **({"ziele": [{"ebene": EBENEN[g["ebene"]][0][li], "ziel": g["t"][li], "stand": f"{g['stand']}/{g['voll']}"}
+                                    for g in x.get("ziele") or [] if g["stand"] < g["voll"]]} if x.get("ziele") else {})})
     out = {"nsc_szene": szene, "nsc_fern": [x["name"] for k, x in ns.items() if k not in here],
            "freie_namen": tabellen.fresh_names(r, rd, rng)}
+    if rd.get("ziel_neu"):
+        out["nsc_ziel_erreicht"] = [{"name": z["name"], "ziel": z["t"][li]} for z in rd["ziel_neu"]]
     if rd.get("chronik"):
         out["chronik"] = [c["t"][li] for c in rd["chronik"][-CHRONIK_FAKTEN:]]
     if ruf(rd, li):
@@ -273,7 +361,9 @@ def view(rd, host, li):
     out = {"leute": leute, "chronik": [{"n": c["n"], "k": c["k"], "t": c["t"][li]} for c in rd.get("chronik") or []],
            "ruf": [[h, w] for h, w in ruf(rd, li).items()]}
     geheim = {x["name"]: {**{f: x["karte"][f][li] for f in KARTE if f not in OFFEN and f in x["karte"]},
-                          "kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]], "gesehen": x.get("gesehen") is not None}
+                          "kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]], "gesehen": x.get("gesehen") is not None,
+                          "wesen": trait_words(x, li),
+                          "ziele": [[EBENEN[g["ebene"]][0][li], g["t"][li], g["stand"], g["voll"]] for g in x.get("ziele") or []]}
               for x in ns.values()} if host else None
     return out, geheim
 

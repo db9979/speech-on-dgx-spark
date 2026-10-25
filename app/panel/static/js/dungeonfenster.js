@@ -30,7 +30,7 @@ function dmLeute(v){const N=v.nsc,G=v.nsc_geheim||{},chip=h=>`<span class="dm-ha
     zeile=(a,b)=>b?`<div class="dm-line"><span>${esc(a)}</span><span>${esc(b)}</span></div>`:'';
   const leute=N.leute.length?N.leute.map(p=>{const g=G[p.name];return `<div class="dm-nsc"><b>${esc(p.name)}</b>${p.beruf?` <small class="mut">${esc(p.beruf)}</small>`:''}
     ${zeile(t('Aussehen','Looks'),p.aussehen)}${zeile(t('Art','Manner'),p.art)}<div>${p.haltung.length?p.haltung.map(chip).join(' '):`<small class="mut">${esc(t('kennt euch noch kaum','hardly knows you yet'))}</small>`}</div>
-    ${g?`<div class="dm-geheim"><small class="mut">🔒 ${esc(t('nur du als Gastgeber','only you as host'))}</small>${zeile(t('Wunsch','Wish'),g.wunsch)}${zeile(t('Geheimnis','Secret'),g.geheimnis)}${zeile(t('Beziehungen','Relations'),g.kanten.join(', '))}</div>`:''}</div>`}).join('')
+    ${g?`<div class="dm-geheim"><small class="mut">🔒 ${esc(t('nur du als Gastgeber','only you as host'))}</small>${zeile(t('Wunsch','Wish'),g.wunsch)}${zeile(t('Geheimnis','Secret'),g.geheimnis)}${zeile(t('Beziehungen','Relations'),g.kanten.join(', '))}${zeile(t('Wesen','Traits'),(g.wesen||[]).join(', '))}${(g.ziele||[]).map(z=>`<div class="dm-line"><span>${esc(z[0])}</span><span>${esc(z[1])} <small class="dm-ziel" title="${z[2]}/${z[3]}">${'▰'.repeat(Math.min(z[2],z[3]))+'▱'.repeat(Math.max(0,z[3]-z[2]))}</small></span></div>`).join('')}</div>`:''}</div>`}).join('')
     :`<p class="mut">${esc(t('Ihr habt noch niemanden getroffen.','You have not met anyone yet.'))}</p>`;
   const fern=Object.entries(G).filter(([,g])=>!g.gesehen).map(([n])=>n);
   const ruf=N.ruf.length?`<h5>${esc(t('Ruf','Reputation'))}</h5>`+N.ruf.map(([h,w])=>zeile(h,w)).join(''):'';

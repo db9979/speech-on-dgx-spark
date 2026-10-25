@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.061** AI Dungeon Master: NPC goals: every person with six traits and goals for today, soon and their life; between turns the panel rolls the progress, a reached goal stands in the chronicle and goes as data into the next narration
 - **V01.1.060** AI Dungeon Master: NPC memory with cards from fixed tables, an attitude to each hero and relations, only the scene's people go to the model; chronicle and the heroes' reputation; NPC tables, name syllables and oracle in the catalog
 - **V01.1.059** AI Dungeon Master: the host's random rules, up to five per round with chance, trigger and effect; the panel rolls and applies them, the model only hears the hint as data
 - **V01.1.058** AI Dungeon Master: lines and veils per seat, anonymous for the whole table, and the X-card that tells the last scene again more calmly; fixed word lists of the panel, the model gets them only as data; a view filter with a leak self-test per secret; the scribe check notes by fixed limits what the narration changed
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.054** AI Dungeon Master: economy part 3: the bench measures income against spending per level, inn 10 gold times the level per hero, the smith improves weapons and armour by one rarity, oils on the weapon for 3 hits, effects thundering, corroding and withering
 - **V01.1.053** AI Dungeon Master: economy part 2: more coins from foes, merchants with a kind and a purse (half the price only for their own kind), rarity by a fixed find table per level, legendary things only from bosses
 - **V01.1.052** AI Dungeon Master: economy part 1: one price rule with price bands per rarity, legendary things not for sale, treasures by class and level, healing potions 2 gold per life, spell scrolls by grade, start gold 25; plus 12 new weapons and 19 protection things in the SRD catalog
-- **V01.1.051** AI Dungeon Master: the vault as a hand-drawn plan (ink walls, crosshatch, grid, furniture per room, numbers and a key), 🔥 switches to torchlight
 
 
 

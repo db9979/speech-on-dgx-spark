@@ -5157,6 +5157,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: NSC-Ziele (V01.1.061, Tabletop-Punkt 6, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Idee aus NarrativeEngine-P, MIT, eigener Code): Teil von *Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik* (chat.dungeon_nsc, dungeon_nsc.py). Jede Person bekommt mit ihrer Karte sechs Wesenszüge (WESEN: mutig/ängstlich, ehrlich/verschlagen, freundlich/schroff, großzügig/geizig, besonnen/hitzig, treu/wankelmütig), je 2W4−5, also −3 bis +3, die Mitte am häufigsten, und ein Ziel auf drei Ebenen (EBENEN): heute (2 Schritte), bald (4, das Ziel der Person aus der verborgenen Wahrheit, sonst aus der Wunsch-Tabelle) und im Leben (6), alle verschieden. Nach jedem erzählten Zug würfelt das Panel je Person einen W6 für ihr nächstes offenes Ziel: ab ZIEL_WURF (5) ein Schritt weiter, bei einer mutigen Person (mut 2 oder mehr) ab ZIEL_MUTIG (4). Ein erreichtes Ziel steht in der Chronik nur als „Oskar hat ein Ziel erreicht.“; was es war, geht nur als Daten in die nächste Erzählung (nsc_ziel_erreicht), und nach einem Ziel für heute folgt ein neues. Das Modell bekommt für die Personen der Szene Wesen als Wörter („sehr mutig“, „etwas g"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "eizig“) und die offenen Ziele mit Stand; nur der Gastgeber sieht beides im Fenster „👥 Leute und Chronik“ mit Fortschrittsbalken (dungeon_sicht: nsc_ziele nur Gastgeber und Modell). Live: Zustand → Überblick zählt am Tag Schritte zu Zielen und erreichte. Selbsttest test_npc_traits_and_goals_move_between_turns in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf (V01.1.060, Tabletop-Punkt 5 mit Stufe 5c, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Ideen aus loreweaver und NarrativeEngine-P, MIT, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik* (chat.dungeon_nsc, ab Werk aus; dungeon_nsc.py, dungeon_tabellen.py). Jede Person der verborgenen Wahrheit bekommt eine Karte, die das Panel aus den festen Tabellen der Welt würfelt: Aussehen, Art, Beruf, Wunsch und Geheimnis. Dazu merkt sie sich ihre Haltung zu jedem Helden (−3 verfeindet bis +3 treu ergeben) und bis zu KANTEN_MAX (4) Beziehungen: schuldet, fürchtet, mag, weiß von, jeweils zu einem Helden oder einer anderen Person. Das Modell meldet nur Änderungen (nsc, höchstens AENDERUNGEN_MAX = 3 je Erzählung); das Panel nimmt eine Haltung nur, wenn Person und Held mit Namen in der Erzählung stehen, einen Schritt je Held und Zug, und eine Beziehung nur zu einem Helden oder einer bekannten Person. Eine neue Haltung steht im Verlauf („🤝 Oskar ist Arvid gegenüber jetzt freundlich.“), Beziehungen sieht nur der Gastgeber. Nur die Szene ans Modell: Mit"
 },
 {
@@ -18478,6 +18494,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " test_dungeon: the boss test with multiattack, test_a_foes_life_is_a_word_for_the_players, test_dice_receipts_hold_the_numbers, the speaking test with the names, test_reading_aloud_piece_by_piece_on_this_device with the mark; test_angriffe_zwei_bis_fuenf in test_dungeon_srd."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: NPC goals (V01.1.061, tabletop point 6, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", idea from NarrativeEngine-P, MIT, own code): Part of *Features → AI Dungeon Master → NPC memory and chronicle* (chat.dungeon_nsc, dungeon_nsc.py). With its card every person gets six traits (WESEN: brave/fearful, honest/sly, kind/gruff, generous/stingy, calm/hot-headed, loyal/fickle), each 2d4−5, so −3 to +3, the middle most often, and a goal on three levels (EBENEN): today (2 steps), soon (4, the person's goal from the hidden truth, else from the wish table) and in life (6), all different. After every told turn the panel rolls a d6 per person for its next open goal: from ZIEL_WURF (5) one step on, for a brave person (mut 2 or more) from ZIEL_MUTIG (4). A reached goal stands in the chronicle only as \"Oskar has reached a goal.\"; what it was goes only as data into the next narration (nsc_ziel_erreicht), and a goal for today is followed by a new one. For the people of the scene the model gets the traits as words (\"very brave\", \"somewhat stingy\") and the open goals with their state; only the host sees both in the window \"👥 People and "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "chronicle\" with progress bars (dungeon_sicht: nsc_ziele host and model only). Live: Status → Live counts per day steps towards goals and goals reached. Self-test test_npc_traits_and_goals_move_between_turns in test_dungeon."
 },
 {
 "lang": "en",

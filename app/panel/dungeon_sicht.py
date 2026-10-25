@@ -45,9 +45,9 @@ def _tisch(rd, m):
     rd.setdefault("tisch", []).append({"n": 1, "pid": pid, "name": "Arvid", "text": m, "t": 0})
 
 
-def _nsc(rd, karte, kanten):
+def _nsc(rd, karte, kanten, **more):
     rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "", "ziel": "", "sprache": ""}]}
-    rd["nsc"] = {"oskar": {"name": "Oskar", "karte": karte, "kanten": kanten, "haltung": {}, "gesehen": rd.get("zug", 0)}}
+    rd["nsc"] = {"oskar": {"name": "Oskar", "karte": karte, "kanten": kanten, "haltung": {}, "gesehen": rd.get("zug", 0), **more}}
     rd["log"].append({"art": "dm", "text": "Oskar winkt der Gruppe zu.", "npc": [], "n": rd.get("zug", 0)})   # in the scene
 
 
@@ -75,6 +75,8 @@ GEHEIM = {
                       lambda rd, m: _nsc(rd, {"geheimnis": [m, m], "wunsch": [m, m]}, [])),
     "nsc_kanten": (("Die Beziehungen einer Figur", "A person's relations"), {"gastgeber", "modell"},
                    lambda rd, m: _nsc(rd, {}, [{"art": "weiss", "ziel": m}])),
+    "nsc_ziele": (("Die Ziele einer Figur", "A person's goals"), {"gastgeber", "modell"},
+                  lambda rd, m: _nsc(rd, {}, [], wesen={}, ziele=[{"ebene": "heute", "t": [m, m], "stand": 0, "voll": 2}])),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

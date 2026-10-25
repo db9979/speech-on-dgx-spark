@@ -5564,6 +5564,57 @@ class Fight(Turns):
         self.assertIn("Diebin im Hafen", dungeon.facts(r, rd))                          # off: the truth as before
         self.assertEqual(nsc.check(dungeon, r, rd, [{"name": "Oskar", "held": "Arvid", "haltung": "besser"}], text), [])
 
+    def test_npc_traits_and_goals_move_between_turns(self):
+        """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
+        every person has six traits from −3 to +3 and a goal on three levels (today 2 steps, soon 4 from the truth's
+        goal, in life 6); after a told turn the panel rolls a d6 per person for its nearest open goal (5 or more, a brave
+        one 4 or more); a reached goal goes into the chronicle without what it was and only as data into the next
+        narration, a reached goal of today is followed by a new one; only host and model see traits and goals."""
+        import dungeon_nsc as nsc
+        helpers.keep_chat(self, "dungeon_nsc")
+        helpers.set_config(dungeon_nsc=True)
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "die Schenke retten", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+            nsc.sync(r, rd, random.Random(3))
+            x = rd["nsc"]["oskar"]
+            self.assertEqual(set(x["wesen"]), set(nsc.WESEN))
+            self.assertTrue(all(-3 <= v <= 3 for v in x["wesen"].values()))
+            self.assertEqual([(g["ebene"], g["voll"], g["stand"]) for g in x["ziele"]], [("heute", 2, 0), ("bald", 4, 0), ("leben", 6, 0)])
+            self.assertEqual(x["ziele"][1]["t"], ["die Schenke retten", "die Schenke retten"])     # soon: the truth's goal
+            self.assertEqual(len({g["t"][0] for g in x["ziele"]}), 3)
+            x["wesen"]["mut"] = 0
+            heute = x["ziele"][0]["t"]
+            six, one, four = mock.Mock(randint=lambda a, b: 6), mock.Mock(randint=lambda a, b: 1), mock.Mock(randint=lambda a, b: 4)
+            self.assertEqual(nsc.progress(dungeon, r, rd, one), (0, 0))
+            self.assertEqual(nsc.progress(dungeon, r, rd, four), (0, 0))                 # 4 is not enough
+            x["wesen"]["mut"] = 2
+            self.assertEqual(nsc.progress(dungeon, r, rd, four), (1, 0))                 # for a brave one it is
+            with mock.patch("dungeon_tabellen.roll", lambda *a: ["eine Schuld begleichen", "settle a debt"]):
+                self.assertEqual(nsc.progress(dungeon, r, rd, six), (1, 1))
+            self.assertEqual(rd["ziel_neu"], [{"name": "Oskar", "ebene": "heute", "t": heute}])
+            self.assertEqual(rd["chronik"][-1]["t"][0], "Oskar hat ein Ziel erreicht.")    # without what it was
+            self.assertNotIn(heute[0], json.dumps(rd["chronik"], ensure_ascii=False))
+            self.assertEqual([(g["ebene"], g["stand"]) for g in x["ziele"]], [("bald", 0), ("leben", 0), ("heute", 0)])
+            self.assertEqual(x["ziele"][-1]["t"][0], "eine Schuld begleichen")             # a new goal for today
+            rd["log"].append({"art": "dm", "text": "Oskar wischt den Tresen.", "npc": [], "n": rd["zug"]})
+            dungeon._write(d)
+        f = json.loads(dungeon.facts(r, rd).split("\n<<<", 1)[0])
+        self.assertEqual(f["nsc_ziel_erreicht"], [{"name": "Oskar", "ziel": heute[0]}])     # only as data
+        o = f["nsc_szene"][0]
+        self.assertIn("mutig", o["wesen"])
+        self.assertEqual([z["ebene"] for z in o["ziele"]], ["Bald", "Im Leben", "Heute"])
+        self.assertNotIn(heute[0], dungeon.system_text(r, rd, "erzaehlen"))
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual([z[0] for z in v["nsc_geheim"]["Oskar"]["ziele"]], ["Bald", "Im Leben", "Heute"])
+        self.assertIn("mutig", v["nsc_geheim"]["Oskar"]["wesen"])
+        g = json.dumps(self.v.post("/api/dungeon/lage", json={"code": self.code}).json(), ensure_ascii=False)
+        self.assertNotIn("die Schenke retten", g)
+        self.assertNotIn("eine Schuld begleichen", g)
+        self.assertGreaterEqual(dungeon.for_live()["nsc_ziel_erreicht"], 1)
+
     def test_gold_with_a_purpose_in_a_settlement(self):
         """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by
         the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson

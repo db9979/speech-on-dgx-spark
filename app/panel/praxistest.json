@@ -3397,6 +3397,13 @@
 "titel": "NSC-Gedächtnis, Chronik und Ruf",
 "text": "A: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik an, eine neue Runde starten. B: Einige Züge mit einer Figur sprechen (freundlich, hilfsbereit): im Verlauf steht „🤝 … ist … gegenüber jetzt freundlich“. C: „👥 Leute und Chronik“ öffnen: die Figur mit Aussehen, Art, Beruf und Haltung; Ruf; Chronik mit „Begegnung: …“. D: Als Gastgeber zusätzlich Wunsch, Geheimnis, Beziehungen und „Noch nicht getroffen“; auf dem Gast-Gerät nicht. E: Neue Figuren heißen nicht immer gleich. F: Kapitel beenden und weiterspielen: Leute und Chronik sind noch da. G: Zustand → Überblick zeigt die Zählungen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P510",
+"v": 1061,
+"titel": "NSC-Ziele",
+"text": "A: NSC-Gedächtnis und Chronik an, eine neue Runde mit einigen Figuren spielen. B: Als Gastgeber „👥 Leute und Chronik“ öffnen: jede Figur zeigt Wesen und drei Ziele mit Balken. C: Nach einigen Zügen sind Balken gewachsen; erreicht eine Figur ein Ziel, steht „… hat ein Ziel erreicht.“ in der Chronik, und die nächste Erzählung greift es auf. D: Auf dem Gast-Gerät sind Wesen und Ziele nicht zu sehen. E: Zustand → Überblick zeigt die Schritte.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

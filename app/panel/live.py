@@ -1841,6 +1841,8 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['chronik_zeilen']} Zeilen Chronik" if dgn.get("chronik_zeilen") else "")
                         + (f" · heute {dgn.get('nsc_haltung', 0)} Haltungen und {dgn.get('nsc_kanten', 0)} Beziehungen geändert"
                            if dgn.get("nsc_haltung") or dgn.get("nsc_kanten") else "")
+                        + (f" · heute {dgn.get('nsc_ziel_weiter', 0)} Schritte zu Zielen von Figuren, {dgn.get('nsc_ziel_erreicht', 0)} erreicht"
+                           if dgn.get("nsc_ziel_weiter") else "")
                         + (f" · heute {dgn.get('schreiber_an', 0)} Änderungen vom Schreiber angenommen, {dgn.get('schreiber_weg', 0)} verworfen"
                            if dgn.get("schreiber_an") or dgn.get("schreiber_weg") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")
