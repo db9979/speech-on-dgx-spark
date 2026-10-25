@@ -1,0 +1,73 @@
+{
+  "_hinweis": "Ein Satz Leben je Dienst der Siedlung (dungeon_dingbild.zeile): feste Listen je Welt, 'alle' für jede andere Welt; [deutsch, englisch]. Dominik 2026-10-25 „so umsetzten“ (Siedlung mit Leben, 4a).",
+  "zeilen": {
+    "alle": {
+      "gasthaus": [["Die Wirtin wischt den Tresen und nickt zur Treppe.", "The landlady wipes the counter and nods towards the stairs."],
+                   ["Im Kamin knackt ein Scheit, es riecht nach Eintopf.", "A log cracks in the fireplace, it smells of stew."],
+                   ["Ein Hund schläft unter dem längsten Tisch.", "A dog sleeps under the longest table."]],
+      "schmied": [["Funken stieben, der Hammer hält kurz inne.", "Sparks fly, the hammer pauses for a moment."],
+                  ["Der Schmied wiegt eine Klinge prüfend in der Hand.", "The smith weighs a blade in his hand."],
+                  ["Die Esse glüht, Wasser zischt im Kübel.", "The forge glows, water hisses in the bucket."]],
+      "lehre": [["Eine alte Lehrerin rückt die Brille zurecht.", "An old teacher straightens her spectacles."],
+                ["Auf dem Pult liegt ein Buch, dick wie ein Ziegel.", "A book as thick as a brick lies on the desk."],
+                ["Draußen üben zwei Lehrlinge mit Holzschwertern.", "Outside two apprentices practise with wooden swords."]],
+      "geruecht": [["Am Kamin flüstert ein Fuhrmann von einem Turm im Moor.", "By the fire a carter whispers of a tower in the moor."],
+                   ["Zwei Händler verstummen, als ihr näher kommt.", "Two traders fall silent as you come closer."],
+                   ["Eine Bettlerin weiß mehr, als sie zugibt.", "A beggar knows more than she lets on."]],
+      "verbessern": [["Auf der Werkbank liegen Feilen, Nieten und feine Drähte.", "Files, rivets and fine wires lie on the workbench."],
+                     ["Die Meisterin fährt mit dem Daumen über eine Schneide.", "The master runs her thumb along an edge."],
+                     ["Ein Lehrling poliert, bis es glänzt.", "An apprentice polishes until it shines."]]
+    },
+    "horror": {
+      "gasthaus": [["Der Wirt zählt die Gäste zweimal und verriegelt die Tür.", "The innkeeper counts the guests twice and bolts the door."],
+                   ["Kerzen flackern, obwohl kein Luftzug geht.", "Candles flicker though there is no draught."],
+                   ["Über dem Tresen hängt Knoblauch, frisch gebunden.", "Garlic hangs over the counter, freshly tied."]],
+      "schmied": [["Der Schmied hämmert Silber und schaut oft zum Fenster.", "The smith hammers silver and often looks to the window."],
+                  ["Die Esse ist das einzige warme Licht in der Gasse.", "The forge is the only warm light in the lane."],
+                  ["An der Wand hängen Hufeisen, alle mit der Öffnung nach oben.", "Horseshoes hang on the wall, all open side up."]],
+      "lehre": [["Der Gelehrte schließt die Fensterläden, bevor er beginnt.", "The scholar closes the shutters before he begins."],
+                ["Zwischen den Büchern steht ein Glas mit etwas darin.", "Between the books stands a jar with something in it."],
+                ["Die Kreide kratzt, sonst ist es still.", "The chalk scratches, otherwise it is quiet."]],
+      "geruecht": [["Eine Frau im Trauerkleid spricht nur im Flüsterton.", "A woman in mourning speaks only in a whisper."],
+                   ["Der Totengräber trinkt allein und weiß von allen etwas.", "The gravedigger drinks alone and knows something of everyone."],
+                   ["Ein Kind singt ein Lied, das niemand ihm beigebracht hat.", "A child sings a song nobody taught it."]],
+      "verbessern": [["Der Meister ritzt Zeichen in den Stahl, die schützen sollen.", "The master scratches signs into the steel that are meant to protect."],
+                     ["Auf der Werkbank liegt geweihtes Wasser bereit.", "Holy water stands ready on the workbench."],
+                     ["Die Lampe brennt niedrig, die Hände arbeiten sicher.", "The lamp burns low, the hands work steadily."]]
+    },
+    "scifi": {
+      "gasthaus": [["Der Automat an der Bar summt ein altes Lied.", "The machine at the bar hums an old song."],
+                   ["Durch das Sichtfenster ziehen Frachter vorbei.", "Freighters drift past the viewport."],
+                   ["Die Kojen sind schmal, die Decken frisch gewaschen.", "The bunks are narrow, the blankets freshly washed."]],
+      "schmied": [["Der Schweißbrenner zischt blau, die Mechanikerin pfeift.", "The welding torch hisses blue, the mechanic whistles."],
+                  ["Ein Roboterarm reicht Werkzeug, bevor man fragt.", "A robot arm hands over tools before anyone asks."],
+                  ["Auf dem Boden glänzen Ölflecken wie Sternkarten.", "Oil stains on the floor shine like star charts."]],
+      "lehre": [["Ein Hologramm erklärt geduldig zum dritten Mal.", "A hologram explains patiently for the third time."],
+                ["Der Simulator piept, der nächste Durchgang beginnt.", "The simulator beeps, the next run begins."],
+                ["Die Ausbilderin trägt eine Narbe und lächelt trotzdem.", "The instructor wears a scar and smiles anyway."]],
+      "geruecht": [["Im Funkverkehr fällt immer wieder derselbe Name.", "The same name keeps coming up on the comms."],
+                   ["Ein Pilot zeigt auf eine Lücke in der Sternkarte.", "A pilot points at a gap in the star chart."],
+                   ["Der Händler senkt die Stimme und das Licht.", "The trader lowers his voice and the lights."]],
+      "verbessern": [["Auf dem Prüfstand leuchten neue Schaltkreise.", "New circuits glow on the test bench."],
+                     ["Die Technikerin lädt ein Update und nickt zufrieden.", "The technician loads an update and nods, pleased."],
+                     ["Ein Kalibrierlaser tastet jede Kante ab.", "A calibration laser traces every edge."]]
+    },
+    "piraten": {
+      "gasthaus": [["Die Wirtin stellt Rum hin, bevor jemand bestellt.", "The landlady puts down rum before anyone orders."],
+                   ["Ein Papagei flucht in drei Sprachen.", "A parrot swears in three languages."],
+                   ["Durchs Fenster hört man die Brandung und Möwen.", "Through the window you hear the surf and the gulls."]],
+      "schmied": [["Der Schmied repariert ein Enterbeil und einen Anker zugleich.", "The smith mends a boarding axe and an anchor at once."],
+                  ["Salz frisst am Eisen, der Hammer frisst am Salz.", "Salt eats the iron, the hammer eats the salt."],
+                  ["Kanonenkugeln stapeln sich neben der Esse.", "Cannonballs are stacked beside the forge."]],
+      "lehre": [["Ein alter Steuermann zeichnet Knoten in den Sand.", "An old helmsman draws knots in the sand."],
+                ["Die Kapitänin zeigt, wie man im Sturm steht.", "The captain shows how to stand in a storm."],
+                ["Auf dem Tisch liegen Sextant, Karte und ein Becher.", "A sextant, a chart and a mug lie on the table."]],
+      "geruecht": [["Ein Matrose schwört auf eine Insel, die auf keiner Karte steht.", "A sailor swears by an island no chart shows."],
+                   ["Die Hafenmeisterin weiß, welches Schiff zu spät kam.", "The harbour master knows which ship came in late."],
+                   ["Im Rauch der Pfeifen fällt ein Name: der Graue Kapitän.", "In the pipe smoke a name falls: the Grey Captain."]],
+      "verbessern": [["Der Meister tauscht rostige Nieten gegen Messing.", "The master swaps rusty rivets for brass."],
+                     ["Ein Schiffszimmermann prüft das Holz mit der Faust.", "A shipwright tests the wood with his fist."],
+                     ["Auf der Werkbank trocknet frischer Teer.", "Fresh tar dries on the workbench."]]
+    }
+  }
+}

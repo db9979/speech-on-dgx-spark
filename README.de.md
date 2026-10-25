@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.043** KI-Dungeon-Master: Bilder mit Flair und Abwechslung (Licht, Blickwinkel und Stimmung aus festen Listen, Gegenstände an passenden Orten, sichtbare Seltenheit, Gegner in Bewegung, Helden in ihrer Welt), Bühne bei Tag, bei Nacht und im Kampf, Siedlung mit Bildern je Dienst und einem Satz Leben, Bilder für die 62 neuen Gegner
 - **V01.1.042** KI-Dungeon-Master: Musikstücke 3 bis 6 Minuten, feste Tonart und festes Tempo je Stimmung, leiser Anfang und langes Ende, 12 s Überblendung
 - **V01.1.041** Selbsttest Suche: wartet auf den Treffer statt fest 300 ms
 - **V01.1.040** Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.036** KI-Dungeon-Master schneller über den Proxy: Vorlesen als MP3 und das nächste Stück lädt schon, während Vorlesen warten Bilder und Musik, kleine Bilder in Listen, Bilder bleiben im Browser, Katalog und Regeln komprimiert
 - **V01.1.035** KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne
 - **V01.1.034** KI-Dungeon-Master: Gegenstände Teil 2, Werkzeuge einfach +1, gut +2 oder meisterlich +3, Tränke, Rollen, Zauber und Werkzeuge günstiger, gewöhnlicher Schmuck ist ein Schatz, ▲/▼ besser als deins und „nicht für deine Klasse“ in Tasche, beim Händler und am Boden
-- **V01.1.033** KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
 
 
 

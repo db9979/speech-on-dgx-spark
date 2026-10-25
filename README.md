@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.043** AI Dungeon Master: pictures with flair and variety (light, angle and mood from fixed lists, items in fitting places, visible rarity, foes in motion, heroes in their world), the stage by day, at night and in a fight, the settlement with a picture and a line of life per service, pictures for the 62 new foes
 - **V01.1.042** AI Dungeon Master: music pieces of 3 to 6 minutes, fixed key and tempo per mood, soft start and long ending, 12 s crossfade
 - **V01.1.041** Search self-test: waits for the hit instead of a fixed 300 ms
 - **V01.1.040** Log errors: the answer broke off with "Rec.step() got multiple values for argument 'kind'" when the deed check stepped in; the relay for calls takes only the public IPv4 address, keeps the old one during a short outage and logs "relay refused" once per reason
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.036** AI Dungeon Master faster over the proxy: reading aloud as MP3 with the next piece loading ahead, pictures and music wait while it reads, small pictures in lists, pictures stay in the browser, catalog and rules compressed
 - **V01.1.035** AI Dungeon Master: legendary pieces, 20 per world with their own name, sentence and two effects, only from a boss, a reward or a chest, never at a merchant, each once a campaign
 - **V01.1.034** AI Dungeon Master: items part 2, tools simple +1, good +2 or masterwork +3, potions, scrolls, spells and tools cheaper, common jewellery is a treasure, ▲/▼ better than yours and „not for your class“ in the bag, at the merchant and on the ground
-- **V01.1.033** AI Dungeon Master: items with fixed effects, from „rare“ one effect of the panel (fire and others +1d6, life drain, luck, watchful or a value bonus), rarity bonus at most +3, legendary rarer than epic at every level
 
 
 

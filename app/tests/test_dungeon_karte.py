@@ -512,15 +512,15 @@ class Pictures(DingBase):
         w = dict(db.wanted(r))
         fan = dungeon.style(r, {"welt": "fantasy", "ton": None})
         kinds = K.bilder(r, fan)
-        self.assertTrue(kinds and all(n in w for n, _ in kinds))
+        self.assertTrue(kinds and all(n in w for n, _, _ in kinds))
         self.assertEqual(db.wanted(r)[0][1], db.prompt(db.styles(r)[0], r["gegenstaende"][0]))   # the items first
         dorf = next(e for e in r["ortsarten"] if e["id"] == "dorf")
         p = K.kind_prompt(fan, dorf)
-        self.assertEqual(p, f"{fan}, {K.ORT_EN}: {dorf['name'][1]}, {dungeon.BILD_ENDE}")
-        self.assertIn(db.name_of(p), dict(kinds))
+        self.assertEqual(p, f"{fan}, {K.ORT_EN}: {dorf['name'][1]}, {db.flair(fan, dorf, 'ortsart', True)}, {dungeon.BILD_ENDE}")
+        self.assertIn(db.name_of(p), {n for n, *_ in kinds})
         only = [e for e in r["ortsarten"] if e.get("welten") and "fantasy" not in e["welten"]]
         self.assertTrue(only)
-        self.assertNotIn(db.name_of(K.kind_prompt(fan, only[0])), dict(kinds))    # a kind of another world only
+        self.assertNotIn(db.name_of(K.kind_prompt(fan, only[0])), {n for n, *_ in kinds})    # a kind of another world only
         room = r["raeume"][0]
         self.assertIn(room["satz"][1], K.kind_prompt(fan, room, True))
 

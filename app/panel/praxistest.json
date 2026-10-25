@@ -3292,6 +3292,13 @@
 "titel": "Dungeon-Master: lange Musikstücke, weiche Übergänge",
 "text": "A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: Speicherplatz auf 2000 MB stellen (sonst steht dort ein Hinweis), „Musik jetzt vorbereiten“. B: Am Tisch dauert ein neues Stück 3 bis 6 Minuten. C: Der Wechsel zum nächsten Stück derselben Stimmung blendet über etwa 12 s, ohne harten Bruch, Tonart und Tempo passen. D: Nichts klingt hektisch.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P495",
+"v": 1043,
+"titel": "Dungeon-Master: Bilder mit Flair",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Abschnitt Bilder: „Alle Bilder malen“ (alle Bilder werden einmal neu gemalt, das alte bleibt sichtbar, bis das neue da ist). B: Gegenstände liegen an einem passenden Ort (Schmiede, Altar, Werkbank …), Licht und Blickwinkel wechseln von Bild zu Bild; legendäre leuchten. C: Gegner lauern, greifen an oder brüllen; Schmuggler und Seehexe sind gewöhnliche Menschen. D: Klassen und Völker stehen in ihrer Welt statt vor dunklem Grund. E: In einer Runde mit Karte zeigt die Bühne im Kampf das Kampfbild des Ortes. F: Ein vorher behaltenes Bild bleibt. G: In einer Siedlung (nach dem Umbau des Fensters) oben das Bild des Ortes, je Dienst ein Bild und ein Satz, der beim nächsten Zug wechselt.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

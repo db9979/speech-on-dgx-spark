@@ -76,31 +76,77 @@ ART_EN = {"waffe": "a weapon", "ruestung": "a piece of armour", "schmuck": "a pi
           "rolle": "a rolled parchment scroll", "werkzeug": "a tool or a piece of gear, the object itself",
           "schatz": "a precious gem or a small work of art"}
 ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜", "werkzeug": "🧰", "schatz": "💎"}
-ITEM_EN = "game item art, one single object in the centre, plain dark background"
+ITEM_EN = "game item art, one single object in sharp focus"   # in a place of its kind (ORT_EN), Dominik 2026-10-25
 # the world's style (welten[].bildstil) says fantasy, horror or science fiction, so these phrases name none (Dominik
 # 2026-10-24 „alles umsetzten“, Punkt 8a: a sci-fi people was painted as a fantasy adventurer)
-FOE_EN = "creature art for a bestiary, the whole creature in the centre, in a fitting place of its world"   # the Bestiarium (gegner);
+FOE_EN = "creature art for a bestiary, the whole creature"   # the Bestiarium (gegner);
 # no "plain dark background": the world's style asks for a detailed one (Dominik 2026-10-24 „2“: a foe from its name only
 # came out wrong, a Cultist as a horned demon), so the prompt has the English description (info), the size and what it is:
 GROESSE_EN = {"winzig": "tiny", "klein": "small", "mittel": "human-sized", "gross": "large", "riesig": "huge"}
 # what a foe is, by a fixed list of the panel (never the model's choice): people, and creatures shaped like people
 MENSCH = frozenset(("bandit", "banditenhauptmann", "schlaeger", "kultist", "kultfanatiker", "wache", "veteran", "ritter",
                     "berserker", "spion", "assassine", "magier_gegner", "priester", "gladiator", "erzmagier", "raumpirat",
-                    "cyborg_soeldner", "mutant", "meuterer", "piratenkapitaen", "puppenspieler"))
+                    "cyborg_soeldner", "mutant", "meuterer", "piratenkapitaen", "puppenspieler",
+                    # the bestiary's new foes (V01.1.039)
+                    "enterkommando", "psi_adept", "schmuggler", "seehexe", "marinekapitaen", "verfluchter_kapitaen",
+                    "puppenmacher", "seuchenarzt", "hexenmeister", "wegelagerer", "sternenfreibeuter"))
 HUMANOID = frozenset(("goblin", "kobold", "ork_krieger", "hobgoblin", "grottenschrat", "gnoll", "dunkelelf", "duergar",
                       "echsenmensch", "sahuagin", "meerhexe", "waldhexe", "nachtvettel", "doppelgaenger", "vampirbrut",
                       "meermensch", "oni", "geisterpirat", "klabautermann", "schattenkind", "oger", "troll", "huegelriese",
-                      "ettin", "azer", "dryade", "satyr", "zombie", "ghul", "grabschrecken", "grabunhold", "mumie"))
+                      "ettin", "azer", "dryade", "satyr", "zombie", "ghul", "grabschrecken", "grabunhold", "mumie",
+                      "kampfsynth", "sicherheitsdroide", "tarnjaeger", "schrottkrieger", "admiral_des_nichts", "geistermatrose",
+                      "die_bleiche_graefin", "lichkoenig", "frostriesin", "dunkelelf_klinge", "spiegelkoenigin", "schicksalsweber"))
 WESEN_EN = {"mensch": "an ordinary human person", "humanoid": "a humanoid with two arms and two legs"}
-HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders, plain dark background",   # Dominik 2026-10-24 „bilder keine icons“
-           "klasse": "character art, a {} of this world in a typical pose, the whole figure, plain dark background",
-           "kraft": "game ability art, one glowing moment of power, no person in the centre, plain dark background: {}",
+HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders",   # Dominik 2026-10-24 „bilder keine icons“
+           "klasse": "character art, a {} of this world, the whole figure, where such a person works in this world",
+           "kraft": "game ability art, one glowing moment of power in the middle of action, no person in the centre: {}",
            # Dominik 2026-10-24 „1a 2 und 3“: backgrounds and worlds get pictures too, renewed on the rules page
            "hintergrund": "character art, a {} of this world in a fitting place, the whole figure"}
 WELT_EN = "landscape art, a wide view of the world {}, no people"   # a world's title picture (its own style)
 # the stage behind the story (Dominik 2026-10-24 „alle umsetzen“, idea 10): one wide picture per kind of place and room
 # and style, shown until the scene has its own; neutral light and weather, the stage lays daytime and weather over it
-BUEHNE_EN = "scene art, a wide view of {}, in daylight and clear weather, no people"
+BUEHNE_EN = "scene art, a wide view of {}"
+# three of each (Dominik 2026-10-25 „alles nach empfehlung umsetzten“, plan „Bilder mit Flair“ 6a): the panel takes
+# kampf while rd["kampf"] is set, nacht for rd["tageszeit"] abend or nacht, else tag; weather is a layer of the stage
+LAGE_EN = {"tag": "atmospheric light and depth, mist in the distance, no people",
+           "nacht": "at night, moonlight, warm lit windows and torches, deep shadows, no people",
+           "kampf": "in the middle of a fight, sparks, smoke and dust, overturned things, hard dramatic light, "
+                    "fighters only as distant silhouettes without faces"}
+ABENDS = ("abend", "nacht")      # rd["tageszeit"] (dungeon.py: morgen, tag, abend, nacht) that shows the night picture
+# Flair (Dominik 2026-10-25 „alles nach empfehlung umsetzten“, plan „Bilder mit Flair“): every picture takes light,
+# angle and mood from fixed lists of the panel, one choice per entry and style (flair, never the model's), an item a
+# place of its kind, a foe a pose and surroundings by its size, a hero a place and a pose; a fixed rarity shows.
+LICHT_EN = ("morning light", "golden hour light", "moonlight", "candle glow", "storm light", "light falling through a window",
+            "the glow of magic")
+WINKEL_EN = ("close-up", "seen from a low angle", "seen from above", "three-quarter view", "seen through an archway")
+STIMMUNG_EN = ("calm mood", "mysterious mood", "menacing mood", "festive mood", "forgotten and dusty mood")
+SANFT = ("menacing mood", "storm light")          # never in the picture book (dungeon.BILD_KIND)
+DUESTER = ("gothic", "horror", "grim", "dark")    # a world style with one of these words is never festive
+ORT_EN = {"waffe": ("resting on an anvil in a smithy", "hanging on a weapon rack", "stuck in the ground of an old battlefield",
+                    "lying on a war table with maps"),
+          "ruestung": ("on an armour stand in an armoury", "lying on a soldier's bed in a barracks", "hanging in a tent of a camp"),
+          "schmuck": ("on a velvet cushion", "spilling from a treasure chest", "on a dressing table"),
+          "trank": ("on an alchemist's table between flasks", "on a dusty cellar shelf", "in a healer's open bag"),
+          "zauber": ("rising from an open spell book on a lectern", "above a circle of old stones", "in a tower room full of books"),
+          "rolle": ("on a writing desk beside a candle", "in a niche of a library", "lying on an old map"),
+          "werkzeug": ("on a workbench", "in an open bag of gear", "on a table in a camp"),
+          "schatz": ("on a pile of coins in a hoard", "in a display case", "in a hidden alcove")}
+SELTEN_EN = {"gewoehnlich": "plain and a little worn", "selten": "well made", "rar": "finely crafted with silver details",
+             "episch": "with glowing engravings", "legendaer": "with a radiant aura, glowing runes and drifting sparks"}
+HALTUNG_EN = ("lurking in the shadows", "in the middle of an attack", "roaring", "stepping out of the darkness",
+              "waiting for prey", "circling slowly")
+HALTUNG_KIND = ("standing proudly", "peeking out curiously", "waiting patiently")   # the picture book: nothing scary
+UMGEBUNG_EN = {"gross": ("in the open land of its world", "in a wide hall", "on a rocky slope"),   # large and huge
+               "klein": ("in a narrow passage", "in a ruin", "in a thicket")}                    # the rest
+HALTUNG_HELD = ("looking into the distance", "ready for action", "resting for a moment", "with a confident look")
+# the settlement (Dominik 2026-10-25 „so umsetzten“, Siedlung mit Leben 2a/4a): one picture per service and style,
+# no person in front, and a line of life per service and world from dungeon_siedlung.json (never the model's)
+DIENST_EN = {"gasthaus": "the common room of an inn of this world with a fireplace and long tables",
+             "schmied": "a smithy of this world, a glowing forge, an anvil and hanging tools",
+             "lehre": "a study room of this world with books, a lectern and a practice yard outside",
+             "geruecht": "a busy corner of a tavern or market of this world where rumours are told",
+             "verbessern": "a workbench of this world where gear is improved, fine tools and parts"}
+SIEDLUNG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_siedlung.json")
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
 NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
@@ -202,6 +248,24 @@ def styles(r):
     return out
 
 
+def _wahl(seq, *keys):
+    """One fixed choice from a list for an entry: the same every time (sha256 of the keys), never the model's."""
+    return seq[int(hashlib.sha256("|".join(str(k) for k in keys).encode()).hexdigest()[:8], 16) % len(seq)]
+
+
+def flair(style, c, teil, weit=False):
+    """The light, angle and mood of an entry's picture in a style from the fixed lists (plan „Bilder mit Flair“ 1a):
+    the picture book never menacing or stormy, a dark world style never festive; weit (places, worlds, the stage): no
+    close-up."""
+    low = style.lower()
+    no = set(SANFT) if style == dungeon.BILD_KIND else set()
+    no |= {"festive mood"} if any(w in low for w in DUESTER) else set()
+    key = (style, teil, c.get("id"))
+    licht = _wahl([x for x in LICHT_EN if x not in no], *key, "licht")
+    winkel = _wahl([x for x in WINKEL_EN if not (weit and x == "close-up")], *key, "winkel")
+    return f"{licht}, {winkel}, {_wahl([x for x in STIMMUNG_EN if x not in no], *key, 'stimmung')}"
+
+
 def prompt(style, c):
     """The fixed prompt of a catalog entry in a style: the English name, the kind's phrase, a spell's sentence; a foe
     of the Bestiarium (no "art") its own fixed phrase."""
@@ -211,10 +275,16 @@ def prompt(style, c):
         info = (c.get("info") or ["", ""])[1]
         info = "" if bilder.refuse_text("", info) else info          # a description the word list refuses stays out
         size = GROESSE_EN.get(c.get("groesse", "mittel"), "") if wesen or c.get("groesse", "mittel") != "mittel" else "medium-sized"
-        parts = [c["name"][1], wesen, size, info]
+        kid = style == dungeon.BILD_KIND
+        pose = _wahl(HALTUNG_KIND if kid else HALTUNG_EN, style, "gegner", c.get("id"), "haltung")
+        place = _wahl(UMGEBUNG_EN["gross" if c.get("groesse") in ("gross", "riesig") else "klein"], style, "gegner", c.get("id"), "ort")
+        parts = [c["name"][1], wesen, size, info, pose, place, flair(style, c, "gegner")]
         return f"{style}, {FOE_EN}: " + ", ".join(x.strip().rstrip(".") for x in parts if x and x.strip()) + f", {dungeon.BILD_ENDE}"
     extra = f", {c['satz'][1]}" if c["art"] == "zauber" and c.get("satz") else ""
-    return f"{style}, {ITEM_EN}: {c['name'][1]}, {ART_EN[c['art']]}{extra}, {dungeon.BILD_ENDE}"
+    selten = f", {SELTEN_EN[c['seltenheit']]}" if c.get("seltenheit") in SELTEN_EN else ""
+    where = _wahl(ORT_EN[c["art"]], style, "ding", c.get("id"), "ort")
+    return (f"{style}, {ITEM_EN}: {c['name'][1]}, {ART_EN[c['art']]}{extra}{selten}, {where} of this world, "
+            f"the place softly blurred behind it, {flair(style, c, 'ding')}, {dungeon.BILD_ENDE}")
 
 
 def hero_prompt(r, art, c, welt=""):
@@ -229,12 +299,14 @@ def _hero_text(style, art, c):
     info = (c.get("info") or ["", ""])[1].strip().rstrip(".") if art == "hintergrund" else ""
     if info and not bilder.refuse_text("", info):                      # a description the word list refuses stays out
         what += f", {info}"
-    return f"{style}, {HELD_EN[art].format(what)}, {dungeon.BILD_ENDE}"
+    pose = "" if art == "kraft" else f", {_wahl(HALTUNG_HELD, style, art, c.get('id'), 'haltung')}"
+    return f"{style}, {HELD_EN[art].format(what)}{pose}, {flair(style, c, art, art != 'kraft')}, {dungeon.BILD_ENDE}"
 
 
 def world_text(r, w):
     """A world's title picture in its own style: the English name and sentence, no people (Dominik 2026-10-24 „3“)."""
-    return f"{dungeon.style(r, {'welt': w['id'], 'ton': None})}, {WELT_EN.format(w['name'][1] + ', ' + w['satz'][1])}, {dungeon.BILD_ENDE}"
+    s = dungeon.style(r, {"welt": w["id"], "ton": None})
+    return f"{s}, {WELT_EN.format(w['name'][1] + ', ' + w['satz'][1])}, {flair(s, w, 'welt', True)}, {dungeon.BILD_ENDE}"
 
 
 def world_pic(r, w, have=None):
@@ -244,11 +316,17 @@ def world_pic(r, w, have=None):
     return n if n in have else ""
 
 
-def stage_text(style, e, room=False):
-    """The fixed prompt of a kind of place (ortsarten) or room (raeume) as the stage's backdrop: the English name, a
-    room's sentence too, never the model's words."""
+def stage_text(style, e, room=False, lage="tag"):
+    """The fixed prompt of a kind of place (ortsarten) or room (raeume) as the stage's backdrop in one of its three
+    situations (LAGE_EN): the English name, a room's sentence too, never the model's words; the day picture with a
+    light and mood of the lists."""
     what = f"{e['name'][1]}, {e['satz'][1]}" if room and e.get("satz") else e["name"][1]
-    return f"{style}, {BUEHNE_EN.format(what)}, {dungeon.BILD_ENDE}"
+    more = f", {flair(style, e, 'raum' if room else 'ortsart', True)}" if lage == "tag" else ""
+    return f"{style}, {BUEHNE_EN.format(what)}, {LAGE_EN[lage]}{more}, {dungeon.BILD_ENDE}"
+
+
+def stage_key(style, e, room, lage):
+    return key_of(style, e, f"buehne-{'raum' if room else 'ort'}-{lage}")
 
 
 def _is_stage(p):
@@ -256,17 +334,24 @@ def _is_stage(p):
 
 
 def stages(r, style):
-    """[(name, prompt)] of the stage pictures in one style: the kinds of places of its worlds, the rooms (a room
-    without worlds is in every vault)."""
+    """[(name, prompt, key)] of the stage pictures in one style: the kinds of places of its worlds, the rooms (a room
+    without worlds is in every vault), each by day, by night and in a fight."""
     ws = dungeon_karte._worlds(r, style)
-    return [(name_of(p), p) for k, room in (("ortsarten", False), ("raeume", True)) for e in r.get(k) or []
-            if not e.get("welten") or set(e["welten"]) & ws for p in [stage_text(style, e, room)]]
+    return [(name_of(p), p, stage_key(style, e, room, lage)) for k, room in (("ortsarten", False), ("raeume", True))
+            for e in r.get(k) or [] if not e.get("welten") or set(e["welten"]) & ws
+            for lage in LAGE_EN for p in [stage_text(style, e, room, lage)]]
+
+
+def lage(rd):
+    """The stage's situation by fixed rules: kampf while a fight runs, nacht in the evening and at night (an unknown
+    daytime counts as day)."""
+    return "kampf" if rd.get("kampf") else "nacht" if rd.get("tageszeit", "tag") in ABENDS else "tag"
 
 
 def stage_pic(r, rd, have=None):
     """The stage's stand-in picture of a round (dungeon.js shows it only while the scene has no picture of its own):
-    the kind of the place it is at, in a vault the kind of its room, in the round's style. The name once painted and
-    the pictures on, else ""."""
+    the kind of the place it is at, in a vault the kind of its room, in the round's style and situation (lage). The
+    name once painted (or the last one painted for it, _pick) and the pictures on, else ""."""
     k = rd.get("karte")
     if not k:
         return ""
@@ -286,8 +371,60 @@ def stage_pic(r, rd, have=None):
         except (KeyError, IndexError, TypeError):
             return ""
         e, room = next((x for x in r.get("ortsarten") or [] if x["id"] == art), None), False
-    n = name_of(stage_text(dungeon.style(r, rd), e, room)) if e else ""
+    if not e:
+        return ""
+    s, lg = dungeon.style(r, rd), lage(rd)
+    n = _pick(name_of(stage_text(s, e, room, lg)), stage_key(s, e, room, lg), have)
     return n if n in have else ""
+
+
+def service_text(style, d):
+    """The fixed prompt of a settlement's service (DIENST_EN) in a style, with light, angle and mood of the lists."""
+    return f"{style}, scene art, {DIENST_EN[d]}, no people in the foreground, {flair(style, {'id': d}, 'dienst', True)}, {dungeon.BILD_ENDE}"
+
+
+def service_key(style, d):
+    return key_of(style, {"id": d}, "dienst")
+
+
+def services(style):
+    """[(name, prompt, key)] of the settlement's service pictures in one style."""
+    return [(name_of(p), p, service_key(style, d)) for d in DIENST_EN for p in [service_text(style, d)]]
+
+
+_zeilen = {}
+
+
+def lines():
+    """{welt|"alle": {service: [[de, en], …]}} from dungeon_siedlung.json (read once)."""
+    if "z" not in _zeilen:
+        _zeilen["z"] = read_json(SIEDLUNG, {}).get("zeilen") or {}
+    return _zeilen["z"]
+
+
+def line(rd, d):
+    """A line of life for a service in the round's world and language: another one at every turn and place, the
+    same within one (sha256 of turn, place and service), never the model's; "" for a service without lines."""
+    z = lines()
+    pool = (z.get(rd.get("welt")) or {}).get(d) or (z.get("alle") or {}).get(d) or []
+    if not pool:
+        return ""
+    k = rd.get("karte") or {}
+    return _wahl(pool, rd.get("zug", 0), k.get("hier"), d)[1 if rd.get("lang") == "en" else 0]
+
+
+def settle_view(r, rd, sv, have):
+    """dungeon_gold.view's settlement for the own seat: "kopf" the place's stage picture (by day or at night), and
+    per service "bild" (its picture in the round's style once painted) and "zeile" (a line of life)."""
+    s = dungeon.style(r, rd)
+    sv = dict(sv, kopf=stage_pic(r, rd, have))
+    out = []
+    for x in sv.get("dienste") or []:
+        d = x.get("id")
+        n = _pick(name_of(service_text(s, d)), service_key(s, d), have) if d in DIENST_EN else ""
+        out.append(dict(x, bild=n if n in have else "", zeile=line(rd, d)))
+    sv["dienste"] = out
+    return sv
 
 
 def heroes(r):
@@ -336,7 +473,7 @@ def _want(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                [(n, p, None) for n, p in dungeon_karte.bilder(r, s) + stages(r, s)] + \
+                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
@@ -647,6 +784,8 @@ def add(r, rd, out):
     for k in list(out):
         out[k] = walk(out[k])
     out["buehne"] = {"ersatz": stage_pic(r, rd, have)}   # the stage's stand-in until the scene has its own picture
+    if isinstance(out.get("siedlung"), dict):              # the settlement's head and service pictures, lines of life
+        out["siedlung"] = settle_view(r, rd, out["siedlung"], have)
     return out
 
 

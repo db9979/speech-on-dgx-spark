@@ -1067,12 +1067,22 @@ def _worlds(r, style):
 def kind_prompt(style, e, room=False):
     """The fixed prompt of a kind of place or room: the English name (a room's sentence too), never the model's."""
     import dungeon
+    import dungeon_dingbild as db
     extra = f", {e['satz'][1]}" if room and e.get("satz") else ""
-    return f"{style}, {RAUM_EN if room else ORT_EN}: {e['name'][1]}{extra}, {dungeon.BILD_ENDE}"
+    flair = db.flair(style, e, "raum" if room else "ortsart", True)   # light, angle, mood (plan „Bilder mit Flair“ 6a)
+    return f"{style}, {RAUM_EN if room else ORT_EN}: {e['name'][1]}{extra}, {flair}, {dungeon.BILD_ENDE}"
+
+
+def kind_key(style, e, room=False):
+    """The key of a kind's picture whatever its prompt says (dungeon_dingbild.key_of; the last painted one stays shown
+    until the new prompt's is there)."""
+    import dungeon_dingbild as db
+    return db.key_of(style, e, "raum" if room else "ortsart")
 
 
 def bilder(r, style):
-    """[(name, prompt)] of the map's catalog pictures in one style (dungeon_dingbild.wanted adds them after the items)."""
+    """[(name, prompt, key)] of the map's catalog pictures in one style (dungeon_dingbild.wanted adds them after the
+    items)."""
     import dungeon_dingbild as db
     ws = _worlds(r, style)
     out = []
@@ -1080,7 +1090,7 @@ def bilder(r, style):
         for e in r.get(k) or []:
             if not e.get("welten") or set(e["welten"]) & ws:
                 p = kind_prompt(style, e, room)
-                out.append((db.name_of(p), p))
+                out.append((db.name_of(p), p, kind_key(style, e, room)))
     return out
 
 
@@ -1187,13 +1197,13 @@ def _pictures(r, rd, out):
         i = int(p["id"][1:]) - 1
         own = (bl.get(str(i)) or {}).get("n", "")
         kd = _kind(r, k["orte"][i]["art"])
-        kind = db.name_of(kind_prompt(style, kd)) if kd else ""
+        kind = db._pick(db.name_of(kind_prompt(style, kd)), kind_key(style, kd), have) if kd else ""
         p["b"] = own if own in have else kind if kind in have else ""
     v = vault(rd)
     if out.get("gewoelbe") and v:
         for p in out["gewoelbe"]["raeume"]:
             t = _table(r, "raeume", v["raeume"][int(p["id"][1:]) - 1]["t"]) if p["s"] == 2 else None
-            n = db.name_of(kind_prompt(style, t, True)) if t else ""
+            n = db._pick(db.name_of(kind_prompt(style, t, True)), kind_key(style, t, True), have) if t else ""
             p["b"] = n if n in have else ""
     return out
 

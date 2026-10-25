@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.043** · 2026-10-25 · KI-Dungeon-Master: Bilder mit Flair und Abwechslung (Licht, Blickwinkel und Stimmung aus festen Listen, Gegenstände an passenden Orten, sichtbare Seltenheit, Gegner in Bewegung, Helden in ihrer Welt), Bühne bei Tag, bei Nacht und im Kampf, Siedlung mit Bildern je Dienst und einem Satz Leben, Bilder für die 62 neuen Gegner
 - **V01.1.042** · 2026-10-25 · KI-Dungeon-Master: Musikstücke dreimal so lang (3 bis 6 Minuten), feste Tonart je Welt und festes Tempo je Stimmung, leiser Anfang und langes Ausklingen, Überblendung 12 s; 2 Stücke je Feld im Voraus, Speicher-Standard 2000 MB mit Hinweis, wenn er nicht reicht
 - **V01.1.041** · 2026-10-25 · Test-Härtung: test_suche_gesicht wartet auf den Suchtreffer aus den Ich-Einstellungen (bis 10 s) statt fest 300 ms; Prüfung unverändert
 - **V01.1.040** · 2026-10-25 · Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund

@@ -263,6 +263,11 @@ class Catalog(Base):
         self.assertTrue(all(db._ok_text(db.prompt(style, g), r) for g in r["gegner"]))
         bad = dict(kult, info=[kult["info"][0], f"A cultist, {r['nie'][0]}."])
         self.assertFalse(db._ok_text(db.prompt(style, bad), r))            # the game's list „nie“ holds too
+        want = dict(db.wanted(r))                                          # every foe (the 62 new of V01.1.039 too) is
+        for g in r["gegner"]:                                              # painted at night and with „Alle Bilder malen“
+            ws = [w["id"] for w in r["welten"] if "alle" in g.get("welten", ["alle"]) or w["id"] in g.get("welten", [])]
+            self.assertTrue(ws and all(db.name_of(db.prompt(dungeon.style(r, {"welt": w, "ton": None}), g)) in want for w in ws), g["id"])
+        self.assertIn(db.WESEN_EN["mensch"], db.prompt(style, next(g for g in r["gegner"] if g["id"] == "schmuggler")))
 
     def test_a_seat_sees_the_picture_as_a_copy(self):
         rid = self.new_round()
@@ -539,6 +544,7 @@ class Heroes(Base):
             self.assertNotIn("scroll", p.lower().replace(c["name"][1].lower(), ""))   # never painted as a scroll
         self.assertEqual(db.ZEICHEN["werkzeug"], "🧰")
         self.assertEqual(set(db.ART_EN), set(dungeon.ARTEN))
+        self.assertEqual(set(db.ORT_EN), set(dungeon.ARTEN))                    # every kind has its places (Flair 2a)
         self.assertEqual(set(db.ZEICHEN), set(dungeon.ARTEN))
         import dungeon_regelseite
         self.assertEqual(set(dungeon_regelseite.ART), set(dungeon.ARTEN))      # the rules page names every kind
@@ -612,15 +618,17 @@ class RulesPage(Base):
         self.assertTrue(all(x["bild"] == "" for x in dungeon._choices("de")["welten"]))
 
 class Stage(Base):
-    """The stage behind the story (Dominik 2026-10-24 „alle umsetzen“, idea 10): one wide picture per kind of place and
-    room in every style, painted at night and with „Alle Bilder malen“ in the scene's 16:9, neutral (daylight, clear
-    weather, no people); view() names it as out["buehne"]["ersatz"] once it is there, the place's kind outside, the
-    room's kind in a vault (a deleted entry: the first room of the same kind), "" without a map or with pictures off."""
-    def rd(self, art="dorf", drin=None, t="eingang", raum_art="eingang"):
+    """The stage behind the story (Dominik 2026-10-24 „alle umsetzen“, idea 10; 2026-10-25 plan „Bilder mit Flair“ 6a):
+    per kind of place and room in every style a day, a night and a fight picture, painted at night and with „Alle
+    Bilder malen“ in the scene's 16:9, without people (a fight: only distant silhouettes); view() names the one the
+    panel's rules pick as out["buehne"]["ersatz"] (kampf while rd["kampf"] is set, nacht for rd["tageszeit"] abend or
+    nacht, else tag), the place's kind outside, the room's kind in a vault (a deleted entry: the first room of the same
+    kind), "" without a map or with pictures off; the last painted one stays shown until the new prompt's is there."""
+    def rd(self, art="dorf", drin=None, t="eingang", raum_art="eingang", **kw):
         k = {"orte": [{"art": art, "name": "Erlenbrück"}], "hier": 0, "drin": drin, "gw": {}}
         if drin is not None:
             k["gw"][str(drin)] = {"raeume": [{"t": t, "art": raum_art}], "hier": 0}
-        return {"welt": "fantasy", "ton": 12, "karte": k}
+        return dict({"welt": "fantasy", "ton": 12, "karte": k}, **kw)
 
     def put(self, n):
         os.makedirs(dungeon.BILD_DIR, exist_ok=True)
@@ -628,25 +636,43 @@ class Stage(Base):
             f.write(PNG)
         db._files["m"] = None
 
-    def test_every_kind_in_every_style_neutral_and_wide(self):
+    def test_every_kind_three_ways_in_every_style_and_wide(self):
         r = dungeon.rules()
         want = dict(db.wanted(r))
-        for s in db.styles(r):
+        for s in db.styles(r) + [dungeon.BILD_KIND]:
             st = db.stages(r, s)
-            self.assertTrue(st)
-            for n, p in st:
-                self.assertIn(n, want)                                          # painted at night and with „Alle“
+            self.assertTrue(st and len(st) % 3 == 0)
+            for n, p, _ in st:
+                self.assertTrue(s == dungeon.BILD_KIND or n in want)            # painted at night and with „Alle“
                 self.assertTrue(p.startswith(s) and p.endswith(dungeon.BILD_ENDE), p)
-                self.assertIn("no people", p)
+                self.assertTrue("no people" in p or "silhouettes without faces" in p, p)
                 self.assertTrue(db._ok_text(p, r), p)                           # the shipped kinds pass the word list
         dorf = next(x for x in r["ortsarten"] if x["id"] == "dorf")
         style = dungeon.style(r, self.rd())
-        self.assertIn(db.name_of(db.stage_text(style, dorf)), dict(db.stages(r, style)))
+        three = {db.stage_text(style, dorf, False, lg) for lg in db.LAGE_EN}
+        self.assertEqual(len(three), 3)
+        self.assertLessEqual(three, {p for _, p, _ in db.stages(r, style)})
+        self.assertNotIn("clear weather", " ".join(three))                     # weather is the stage's layer
         self.assertNotEqual(db.stage_text(style, dorf), db.dungeon_karte.kind_prompt(style, dorf))   # not the map's vignette
         self.assertEqual(asyncio.run(db.paint_one("ding-00000000000000bb", db.stage_text(style, dorf))), "ok")
         self.assertEqual((self.calls[-1]["width"], self.calls[-1]["height"]), (dungeon.BILD_W, dungeon.BILD_H))
         self.assertEqual(asyncio.run(db.paint_one("ding-00000000000000cc", db.prompt(style, r["gegenstaende"][0]))), "ok")
         self.assertEqual((self.calls[-1]["width"], self.calls[-1]["height"]), (db.SIZE, db.SIZE))   # an item stays square
+
+    def test_the_panel_picks_day_night_or_fight(self):
+        self.assertEqual(db.lage(self.rd()), "tag")
+        self.assertEqual([db.lage(self.rd(tageszeit=t)) for t in ("morgen", "tag", "abend", "nacht", "quatsch")],
+                         ["tag", "tag", "nacht", "nacht", "tag"])                # an unknown daytime counts as day
+        self.assertEqual(db.lage(self.rd(tageszeit="nacht", kampf={"gegner": []})), "kampf")
+        r = dungeon.rules()
+        dorf = next(x for x in r["ortsarten"] if x["id"] == "dorf")
+        style = dungeon.style(r, self.rd())
+        day, night, fight = (db.name_of(db.stage_text(style, dorf, False, lg)) for lg in ("tag", "nacht", "kampf"))
+        for n in (day, night, fight):
+            self.put(n)
+        self.assertEqual(db.stage_pic(r, self.rd()), day)
+        self.assertEqual(db.stage_pic(r, self.rd(tageszeit="abend")), night)
+        self.assertEqual(db.stage_pic(r, self.rd(kampf={"gegner": []})), fight)
 
     def test_view_names_the_stand_in_of_place_and_room(self):
         r = dungeon.rules()
@@ -669,6 +695,128 @@ class Stage(Base):
         helpers.set_config(dungeon_bilder=True)
         db.sweep(force=True)
         self.assertIn(n, db.files())                                          # the sweep keeps it
+        old = "ding-00000000000000dd"                                         # painted under an older prompt
+        self.put(old)
+        st = db._state()
+        st["zuletzt"][db.stage_key(style, dorf, False, "nacht")] = old
+        db._save(st)
+        self.assertEqual(db.stage_pic(r, self.rd(tageszeit="nacht")), old)    # shown until the new one is there
+        db.sweep(force=True)
+        self.assertIn(old, db.files())
+
+
+class Flair(Base):
+    """Dominik 2026-10-25 „alles nach empfehlung umsetzten“ (plan „Bilder mit Flair“ 1a-5a): every picture takes light,
+    angle and mood from fixed lists, one choice per entry and style (the same every time, never the model's); the
+    picture book is never menacing or stormy, a dark world style never festive; an item lies in a place of its kind,
+    a fixed rarity shows, a foe has a pose and surroundings by its size, a hero a place and a pose instead of a plain
+    dark background; every shipped prompt passes the word list, and the choices vary."""
+    def test_fixed_choices_that_vary(self):
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": "fantasy", "ton": None})
+        items = r["gegenstaende"]
+        ps = [db.prompt(style, c) for c in items]
+        self.assertEqual(ps, [db.prompt(style, c) for c in items])           # the same every time
+        self.assertFalse(any("plain dark background" in p for p in ps))
+        for lst in (db.LICHT_EN, db.WINKEL_EN, db.STIMMUNG_EN):              # every list is used, none rules the catalog
+            n = [sum(1 for p in ps if x in p) for x in lst]
+            self.assertTrue(all(n), (lst, n))
+            self.assertLess(max(n), len(ps) * 0.5, (lst, n))
+        same = sum(1 for a, b in zip(items, items[1:]) if db.flair(style, a, "ding") == db.flair(style, b, "ding"))
+        self.assertLess(same, len(items) * 0.1)                               # neighbours rarely look alike
+        for c in items[:40]:
+            p = db.prompt(style, c)
+            self.assertTrue(any(o in p for o in db.ORT_EN[c["art"]]), p)     # a place of its kind
+        fixed = next(c for c in items if c.get("seltenheit") == "legendaer")
+        self.assertIn(db.SELTEN_EN["legendaer"], db.prompt(style, fixed))
+        self.assertFalse(any(v in db.prompt(style, c) for c in items if not c.get("seltenheit") for v in db.SELTEN_EN.values()))
+
+    def test_world_style_rules_and_word_list(self):
+        r = dungeon.rules()
+        kid = dungeon.BILD_KIND
+        horror = dungeon.style(r, {"welt": "horror", "ton": None})
+        for c in r["gegenstaende"] + r["gegner"]:
+            self.assertFalse(any(x in db.prompt(kid, c) for x in db.SANFT + db.HALTUNG_EN), c["id"])   # nothing scary
+            self.assertNotIn("festive", db.prompt(horror, c))
+        for s in db.styles(r) + [kid]:
+            for c in r["gegenstaende"] + r["gegner"]:
+                self.assertTrue(db._ok_text(db.prompt(s, c), r), (s, c["id"]))
+            for a, c in db.heroes(r):
+                self.assertTrue(db._ok_text(db._hero_text(s, a, c), r), (s, a, c["id"]))
+        self.assertTrue(all(db._ok_text(db.world_text(r, w), r) for w in r["welten"]))
+
+    def test_foes_and_heroes(self):
+        r = dungeon.rules()
+        style = dungeon.style(r, {"welt": "fantasy", "ton": None})
+        for g in r["gegner"][:60]:
+            p = db.prompt(style, g)
+            self.assertTrue(any(h in p for h in db.HALTUNG_EN), p)
+            big = g.get("groesse") in ("gross", "riesig")
+            self.assertTrue(any(u in p for u in db.UMGEBUNG_EN["gross" if big else "klein"]), p)
+        for a, c in db.heroes(r):
+            p = db._hero_text(style, a, c)
+            self.assertNotIn("plain dark background", p)
+            self.assertEqual(a != "kraft", any(h in p for h in db.HALTUNG_HELD), p)
+            if a != "kraft":
+                self.assertNotIn("close-up", p)                               # a whole figure or head and shoulders
+
+
+class Settlement(Base):
+    """Dominik 2026-10-25 „so umsetzten“ (Siedlung mit Leben 1a/2a/4a): the settlement's head is the place's stage
+    picture, every service (dungeon_gold.DIENSTE and „verbessern“) has a picture per style (painted at night and with
+    „Alle Bilder malen“, no person in front) and a line of life per world from dungeon_siedlung.json (every world falls
+    back to "alle"), chosen by fixed rules per turn and place, never by the model; with pictures off no names."""
+    def test_every_service_painted_and_lined(self):
+        import dungeon_gold
+        r = dungeon.rules()
+        self.assertLessEqual(set(dungeon_gold.DIENSTE), set(db.DIENST_EN))
+        self.assertIn("verbessern", db.DIENST_EN)
+        want = dict(db.wanted(r))
+        for st in db.styles(r) + [dungeon.BILD_KIND]:
+            for n, p, k in db.services(st):
+                self.assertTrue(st == dungeon.BILD_KIND or n in want)
+                self.assertTrue(db._ok_text(p, r), p)
+                self.assertIn("no people in the foreground", p)
+        z = db.lines()
+        self.assertEqual(set(z["alle"]), set(db.DIENST_EN))                   # every service has lines in every world
+        for welt, ds in z.items():
+            self.assertTrue(welt == "alle" or welt in {w["id"] for w in r["welten"]}, welt)
+            for d, pool in ds.items():
+                self.assertIn(d, db.DIENST_EN)
+                self.assertTrue(pool and all(len(x) == 2 and all(0 < len(t) <= 120 for t in x) for x in pool), (welt, d))
+
+    def test_lines_by_fixed_rules(self):
+        rd = {"welt": "piraten", "lang": "de", "zug": 4, "karte": {"hier": 2}}
+        a = db.line(rd, "gasthaus")
+        self.assertEqual(a, db.line(dict(rd), "gasthaus"))                     # the same within one turn and place
+        self.assertIn(a, [x[0] for x in db.lines()["piraten"]["gasthaus"]])
+        self.assertIn(db.line(dict(rd, lang="en"), "gasthaus"), [x[1] for x in db.lines()["piraten"]["gasthaus"]])
+        self.assertGreater(len({db.line(dict(rd, zug=z), "gasthaus") for z in range(30)}), 1)   # another one later
+        self.assertIn(db.line(dict(rd, welt="eigene"), "schmied"), [x[0] for x in db.lines()["alle"]["schmied"]])
+        self.assertEqual(db.line(rd, "unbekannt"), "")
+
+    def test_view_names_head_pictures_and_lines(self):
+        r = dungeon.rules()
+        k = {"orte": [{"art": "dorf", "name": "Erlenbrück"}], "hier": 0, "drin": None, "gw": {}}
+        rd = {"welt": "fantasy", "ton": 12, "lang": "de", "zug": 1, "karte": k}
+        style = dungeon.style(r, rd)
+        sv = {"name": "Erlenbrück", "dienste": [{"id": d, "satz": "x"} for d in ("gasthaus", "lehre", "neu_unbekannt")]}
+        out = db.add(r, rd, {"siedlung": sv})["siedlung"]
+        self.assertEqual(out["kopf"], "")
+        self.assertEqual([x["bild"] for x in out["dienste"]], ["", "", ""])
+        self.assertTrue(out["dienste"][0]["zeile"] and out["dienste"][0]["satz"] == "x")   # „satz“ stays the description
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        for n in (db.name_of(db.service_text(style, "gasthaus")), db.name_of(db.stage_text(style, next(x for x in r["ortsarten"] if x["id"] == "dorf")))):
+            with open(dungeon.bild_file(n), "wb") as f:
+                f.write(PNG)
+        db._files["m"] = None
+        out = db.add(r, rd, {"siedlung": sv})["siedlung"]
+        self.assertEqual(out["dienste"][0]["bild"], db.name_of(db.service_text(style, "gasthaus")))
+        self.assertTrue(out["kopf"])
+        self.assertIsNone(db.add(r, rd, {"siedlung": None})["siedlung"])      # outside a settlement nothing changes
+        helpers.set_config(dungeon_bilder=False)
+        out = db.add(r, rd, {"siedlung": sv})["siedlung"]
+        self.assertEqual((out["kopf"], out["dienste"][0]["bild"]), ("", ""))
 
 if __name__ == "__main__":
     unittest.main()
