@@ -1837,6 +1837,8 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['zufall_regeln']} Zufallsregeln" if dgn.get("zufall_regeln") else "")
                         + (f" · heute {dgn.get('zufall_treffer', 0)} Zufallsregeln getroffen, {dgn.get('zufall_daneben', 0)} nicht"
                            if dgn.get("zufall_treffer") or dgn.get("zufall_daneben") else "")
+                        + (f" · heute {dgn['orakel']} Mal das Orakel gefragt" if dgn.get("orakel") else "")
+                        + (f" · {dgn['orakel_chaos']} Runden mit eigenem Chaosgrad" if dgn.get("orakel_chaos") else "")
                         + (f" · {dgn['nsc_karten']} Figuren mit Karte" if dgn.get("nsc_karten") else "")
                         + (f" · {dgn['chronik_zeilen']} Zeilen Chronik" if dgn.get("chronik_zeilen") else "")
                         + (f" · heute {dgn.get('nsc_haltung', 0)} Haltungen und {dgn.get('nsc_kanten', 0)} Beziehungen geändert"

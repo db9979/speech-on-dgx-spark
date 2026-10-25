@@ -196,6 +196,7 @@
     "dungeon_schreiber": false,
     "dungeon_zufall": false,
     "dungeon_nsc": false,
+    "dungeon_orakel": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

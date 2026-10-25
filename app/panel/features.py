@@ -283,6 +283,9 @@ FEATURES = (
     # fixed rules, only the scene's people to the model; the chronicle and the heroes' reputation
     F("dungeonnsc", "NSC-Gedächtnis und Chronik", "NPC memory and chronicle", "data", ("dungeon_nsc",), parent="dungeon",
       me="dmbox", guide="dungeonnsc"),
+    # Orakel (dungeon_orakel.py, Tabletop-Punkt 8): yes or no with a chaos grade and the catalog's tables for the host;
+    # the panel rolls, the model only hears the answer as data
+    F("dungeonorakel", "Orakel", "Oracle", "data", ("dungeon_orakel",), parent="dungeon", me="dmbox", guide="dungeonorakel"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
     # level; fixed rules of the panel, never the model
     F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",

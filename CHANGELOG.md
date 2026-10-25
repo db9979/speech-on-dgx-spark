@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.062** · 2026-10-25 · KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
 - **V01.1.061** · 2026-10-25 · KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
 - **V01.1.060** · 2026-10-25 · KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog
 - **V01.1.059** · 2026-10-25 · KI-Dungeon-Master: Zufallsregeln des Gastgebers, bis zu fünf je Runde mit Chance, Auslöser und Wirkung; das Panel würfelt und wendet sie an, das Modell hört nur den Hinweis als Daten

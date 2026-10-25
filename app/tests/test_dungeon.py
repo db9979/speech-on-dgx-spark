@@ -5615,6 +5615,62 @@ class Fight(Turns):
         self.assertNotIn("eine Schuld begleichen", g)
         self.assertGreaterEqual(dungeon.for_live()["nsc_ziel_erreicht"], 1)
 
+    def test_the_oracle_answers_by_the_panels_dice(self):
+        """Tabletop-Punkt 8 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): the host asks yes or no with
+        a likelihood or rolls up to three tables; the panel rolls a d100 against the chance of likelihood and chaos grade
+        (an exceptional yes or no at a fifth of the way, a double up to the chaos grade an event); every answer a line
+        in the feed, the model gets it only as data; at most ZUG_MAX a turn; the admin's own tables join; off nothing."""
+        import dungeon_orakel as orakel
+        helpers.keep_chat(self, "dungeon_orakel")
+        url = f"/api/profile/dungeon/{self.rid}/orakel"
+        self.assertEqual(self.c.post(url, json={"frage": "Ist die Brücke bewacht?"}).json()["detail"], "orakel aus")   # off from the start
+        helpers.set_config(dungeon_orakel=True)
+        self.assertEqual([orakel.answer(w, 50) for w in (1, 10, 11, 50, 51, 90, 91)], ["ja_und", "ja_und", "ja", "ja", "nein", "nein", "nein_und"])
+        self.assertEqual((orakel.chance("sicher", 9), orakel.chance("kaum", 1), orakel.chance("offen", 7)), (95, 5, 60))
+        for bad in ({}, {"chaos": 0}, {"chaos": 10}, {"frage": "Gibt es Wachen?", "wahrscheinlichkeit": "gewiss"},
+                    {"tabellen": ["gibt_es_nicht"]}, {"tabellen": ["orakel_ort"] * 2}, {"tabellen": ["nsc_beruf"]},
+                    {"tabellen": ["orakel_ort", "orakel_thema", "orakel_aktion", "orakel_wendung"]}):
+            self.assertEqual(self.c.post(url, json=bad).status_code, 400, bad)
+        self.assertEqual(self.v.post(url, json={"frage": "Ist die Brücke bewacht?"}).status_code, 401)   # only the host
+        v = self.c.post(url, json={"chaos": 9}).json()
+        self.assertEqual(v["orakel"]["chaos"], 9)
+        self.assertIsNone(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["orakel"])
+        with mock.patch("random.randint", lambda a, b: 33 if b == 100 else a):
+            r = self.c.post(url, json={"frage": "Ist die Brücke bewacht?", "wahrscheinlichkeit": "offen", "tabellen": ["orakel_ort"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        e = [x for x in self.state(self.rid)["log"] if x["art"] == "orakel"][-1]
+        self.assertEqual((e["w"], e["chance"], e["antwort"]), (33, 70, "ja"))          # offen 50 + 4 steps of chaos × 5
+        self.assertTrue(e["ereignis"][0] and " · " in e["ereignis"][0])               # 33: a double up to the chaos grade
+        self.assertEqual([z["id"] for z in e["zuege"]], ["orakel_ort"])
+        rd = self.state(self.rid)
+        rules = dungeon.rules()
+        f = json.loads(dungeon.facts(rules, rd).split("\n<<<", 1)[0])
+        self.assertEqual(f["orakel"][0]["antwort"], "Ja")
+        self.assertIn("Ort", next(iter(f["orakel"][0]["tabellen"])))
+        self.assertIn("orakel", dungeon.system_text(rules, rd, "erzaehlen"))
+        self.assertNotIn("Brücke", dungeon.system_text(rules, rd, "erzaehlen"))     # the question only as data
+        for _ in range(orakel.ZUG_MAX - 1):
+            self.assertEqual(self.c.post(url, json={"tabellen": ["orakel_thema"]}).status_code, 200)
+        r = self.c.post(url, json={"tabellen": ["orakel_thema"]})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "orakel oft"))
+        eigen = {"id": "meine_wetter", "gruppe": "eigen", "name": ["Wetter", "Weather"],
+                 "zeilen": [{"t": ["Nebel zieht auf", "Fog rises"]}, {"t": ["Regen setzt ein", "Rain sets in"]}, {"t": ["Sturm", "Storm"], "welten": ["piraten"]}]}
+        k = ADMIN.post("/api/admin/dungeon/katalog/tabellen", json={"was": "setzen", "id": "meine_wetter", "eintrag": eigen})
+        self.addCleanup(lambda: ADMIN.post("/api/admin/dungeon/katalog/tabellen", json={"was": "zurueck", "id": "meine_wetter"}))
+        self.assertEqual(k.status_code, 200, k.text)
+        self.assertIn("eigen", {x["stand"] for x in k.json()["zeilen"] if x["id"] == "meine_wetter"})
+        bad = dict(eigen, id="kaputt", zeilen=[{"t": ["nur eine", "only one"]}])
+        self.assertEqual(ADMIN.post("/api/admin/dungeon/katalog/tabellen", json={"was": "setzen", "id": "kaputt", "eintrag": bad}).status_code, 422)
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertIn(["meine_wetter", "Wetter", "eigen"], v["orakel"]["tabellen"])
+        live = dungeon.for_live()
+        self.assertGreaterEqual(live["orakel"], orakel.ZUG_MAX)
+        self.assertGreaterEqual(live["orakel_chaos"], 1)
+        helpers.set_config(dungeon_orakel=False)
+        self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["orakel"])
+        self.assertEqual(orakel.facts(rd, 0)["orakel"][0]["antwort"], "Ja")           # what was asked stays in the feed
+        self.assertEqual(orakel.task(rd, "de"), "")
+
     def test_gold_with_a_purpose_in_a_settlement(self):
         """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by
         the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson

@@ -30,7 +30,8 @@ from common import write_json
 from core import app_version, auth, json_body
 
 router = APIRouter()
-TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende")
+TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende", "tabellen")
+GRUPPE = {"nsc": ("Figuren", "People"), "orakel": ("Orakel", "Oracle"), "eigen": ("Eigene", "Own")}   # tables (dungeon_tabellen)
 MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten")   # welten, peoples, classes,
 # backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above
 BODY = 16000              # one entry as JSON
@@ -76,6 +77,8 @@ def line(teil, x, r, li):
         if "preis" in x:
             out.append(f"{x['preis']} {'gold' if en else 'Gold'}")
         return " · ".join(out)
+    if teil == "tabellen":                     # Tabletop-Punkt 8: the admin's own tables next to the shipped ones
+        return f"{GRUPPE.get(x.get('gruppe'), ('', ''))[li]} · {len(x.get('zeilen') or [])} {'rows' if en else 'Zeilen'}"
     kurz = {w["id"]: _name(w, li)[:3].upper() for w in r["werte"]}
     if teil == "klassen":
         return " · ".join([" · ".join(kurz.get(k, k) for k in (x.get("reihe") or [])[:2]), ("Life " if en else "Leben ") + str(x.get("leben", 0)),
@@ -173,6 +176,12 @@ def werte(teil, x, r, li):
         out.append([L("Welten", "Worlds"), L("alle", "all") if len(wn) == len(r["welten"]) else ", ".join(wn)])
         if frisch(x):
             out.append([L("Neu", "New"), str(x["seit"])])
+    elif teil == "tabellen":
+        z = x.get("zeilen") or []
+        wn = {w["id"]: _name(w, li) for w in r["welten"]}
+        out += [[L("Gruppe", "Group"), GRUPPE.get(x.get("gruppe"), ("", ""))[li]], [L("Zeilen", "Rows"), str(len(z))],
+                [L("Beispiele", "Examples"), " · ".join(str(y["t"][li]) for y in z[:3] if isinstance(y, dict) and isinstance(y.get("t"), list))],
+                [L("Nur in Welten", "Only in worlds"), ", ".join(sorted({wn.get(w, w) for y in z if isinstance(y, dict) for w in y.get("welten") or []}))]]
     elif teil == "zustaende":
         out += [[L("Wirkung", "Effect"), ", ".join(v.replace("_", " ") for v in x.get("wirkung") or [])]]
         if x.get("runden"):

@@ -3404,6 +3404,13 @@
 "titel": "NSC-Ziele",
 "text": "A: NSC-Gedächtnis und Chronik an, eine neue Runde mit einigen Figuren spielen. B: Als Gastgeber „👥 Leute und Chronik“ öffnen: jede Figur zeigt Wesen und drei Ziele mit Balken. C: Nach einigen Zügen sind Balken gewachsen; erreicht eine Figur ein Ziel, steht „… hat ein Ziel erreicht.“ in der Chronik, und die nächste Erzählung greift es auf. D: Auf dem Gast-Gerät sind Wesen und Ziele nicht zu sehen. E: Zustand → Überblick zeigt die Schritte.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P511",
+"v": 1062,
+"titel": "Orakel",
+"text": "A: Funktionen → KI-Dungeon-Master → Orakel an. Als Gastgeber im Reiter „Leiten“ „🔮 Orakel“ öffnen. B: „Ist die Brücke bewacht?“ mit „Wahrscheinlich“ fragen: im Verlauf steht die Antwort mit Wurf und Chance, die nächste Erzählung hält sich daran. C: Chaos auf 9 stellen und mehrmals fragen: öfter Ja, manchmal ein ⚡ Ereignis. D: Zwei Tabellen ankreuzen und fragen: beide Ergebnisse stehen im Verlauf. E: Im Reiter „Regeln“ bei „Tabellen“ eine eigene Kopie anlegen: sie erscheint am Tisch mit ✎. F: Nach 6 Fragen in einem Zug: „Das Orakel hat in diesem Zug genug gesagt.“ G: Auf dem Gast-Gerät gibt es kein Orakel. H: Zustand → Überblick zeigt die Zählungen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

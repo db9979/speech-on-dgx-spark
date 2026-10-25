@@ -82,6 +82,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
     POST   /api/profile/dungeon/{rid}/grenzen     {linien, schleier}: the own seat's lines and veils; {x: true} the X-Karte (dungeon_grenzen)
     POST   /api/profile/dungeon/{rid}/zufall      host: {regeln} the round's own random rules (dungeon_zufall)
+    POST   /api/profile/dungeon/{rid}/orakel      host: {frage?, wahrscheinlichkeit?, tabellen?, chaos?} the oracle (dungeon_orakel)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
@@ -122,6 +123,8 @@ import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
 import dungeon_zufall as zufall
 import dungeon_nsc as nsc
+import dungeon_orakel as orakel
+import dungeon_tabellen as tabellen
 import dungeon_gold as gold
 import dungeon_legenden as legenden
 import dungeon_warten as warten
@@ -347,7 +350,7 @@ ERFOLG_ARTEN = ("ziel",)   # a defeated foe counts by the bestiary (dungeon_kamp
 ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "werkzeug", "schatz")   # schatz: gems and art, only to sell;
 # werkzeug: a tool (hilft) of its own kind, so it gets its own picture (Dominik 2026-10-24 „alles umsetzten“, Punkt 4)
 HILFT_ARTEN = ("werkzeug", "rolle")   # a scroll or map may help too, and the admin's older tools stay "rolle"
-LEER_OK = ("gegner", "zustaende", "hintergruende")   # lists of the SRD data (dungeon_srd.json): may be empty
+LEER_OK = ("gegner", "zustaende", "hintergruende", "tabellen")   # lists of the SRD data (dungeon_srd.json): may be empty
 WIRKUNGEN = ("nachteil_angriff", "vorteil_angriff", "nachteil_proben", "vorteil_gegen", "nachteil_gegen", "kein_zug",
              "halbe_bewegung", "schaden_pro_zug")   # what a condition does, fixed words only
 GROESSEN = ("winzig", "klein", "mittel", "gross", "riesig")
@@ -398,7 +401,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
                   oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
-                  nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0)
+                  nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0)
 
 
 def _go(coro, name):
@@ -690,7 +693,7 @@ def check_rules(r):
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
-    return err + dungeon_karte.check_rules(r)
+    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r)
 
 
 def own_rules():
@@ -3039,6 +3042,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(kampf.facts(_me, r, rd, _living(rd), li))
     fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
     fakten.update(zufall.facts(rd.get("zufall_hinweise") or []))   # the hints of the host's random rules (Tabletop-Punkt 9)
+    fakten.update(orakel.facts(rd, li))                  # this turn's oracle answers, only as data (Tabletop-Punkt 8)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3072,7 +3076,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -4858,6 +4862,7 @@ def view(rid, pid, now=None):
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
     out["grenzen"] = grenzen.view(rd, pid) if me.get("held") else None
     out["zufall"] = zufall.view(rd, host, lang)
+    out["orakel"] = orakel.view(rd, host, li)                   # the host's oracle (Tabletop-Punkt 8)
     out["nsc"], out["nsc_geheim"] = nsc.view(rd, host, li)      # the people met, chronicle, reputation (Tabletop-Punkt 5)
     out["siedlung"] = gold.view(_me, r, rd, pid)
     mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
@@ -5267,10 +5272,10 @@ def for_live():
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
-            **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs),
+            **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
-                                 "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht")}}
+                                 "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel")}}
 
 
 def own_count(uid):
@@ -5932,6 +5937,30 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
             rd["vorlesen"] = bool(b.get("an"))
             _write(d)
         print(f"dungeon: vorlesen | {'an' if b.get('an') else 'aus'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/orakel", dependencies=[Depends(assistant)])
+async def orakel_fragen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {frage?, wahrscheinlichkeit?, tabellen?, chaos?} asks the oracle or rolls its tables (Tabletop-Punkt 8,
+    dungeon_orakel.ask); the answer is a line in the feed."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            orakel.ask(_me, rules(), rd, b)
+            _write(d)
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)

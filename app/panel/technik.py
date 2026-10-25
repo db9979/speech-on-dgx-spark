@@ -189,6 +189,7 @@ MODULE = {
     "dungeon_schreiber": ("dienste", "Dungeon-Master-Schreiber: ein zweiter Modellaufruf schlägt Änderungen vor, das Panel nimmt sie nach festen Grenzen"),
     "dungeon_zufall": ("dienste", "Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt"),
     "dungeon_nsc": ("dienste", "Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf"),
+    "dungeon_orakel": ("dienste", "Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt"),
     "dungeon_tabellen": ("dienste", "Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben"),
     "dungeon_sicht": ("dienste", "Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht"),
     "dungeon_mut": ("dienste", "Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler"),

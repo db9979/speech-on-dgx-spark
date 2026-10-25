@@ -8,9 +8,47 @@ rolls goes to the model only as data. The oracle and many NPC rows are translate
 attribution stands in dungeon_srd.json "lizenz" and in the docs).
 """
 import random
+import re
 
 NAMEN_VORSCHLAG = 3        # fresh names the model may take for a new person
 NAME_LEN = 30
+GRUPPEN = ("nsc", "orakel", "eigen")   # "eigen": the admin's own tables (Regeln → Tabellen), rolled at the oracle
+ZEILEN = (2, 300)
+ZEILE_LEN = 160
+TITEL_LEN = 40
+_ID = re.compile(r"^[a-z0-9_]{2,40}$")
+
+
+def check_rules(r):
+    """The tables and the name syllables by fixed rules: German sentences of what is wrong (dungeon.check_rules adds
+    them). The admin's own tables pass the same rules."""
+    err = []
+    welten = {w.get("id") for w in r.get("welten") or [] if isinstance(w, dict)}
+    pair = lambda x, n: isinstance(x, list) and len(x) == 2 and all(isinstance(t, str) and 0 < len(t.strip()) <= n for t in x)  # noqa: E731
+    for t in r.get("tabellen") or []:
+        tid = t.get("id") if isinstance(t, dict) else None
+        if not isinstance(tid, str) or not _ID.match(tid):
+            err.append(f"tabellen: id {tid!r} nur aus a-z, 0-9 und _ (2 bis 40 Zeichen)")
+            continue
+        if t.get("gruppe") not in GRUPPEN:
+            err.append(f"tabellen {tid}: gruppe nur {', '.join(GRUPPEN)}")
+        if not pair(t.get("name"), TITEL_LEN):
+            err.append(f"tabellen {tid}: name als [deutsch, englisch], je bis {TITEL_LEN} Zeichen")
+        z = t.get("zeilen")
+        if not isinstance(z, list) or not ZEILEN[0] <= len(z) <= ZEILEN[1]:
+            err.append(f"tabellen {tid}: {ZEILEN[0]} bis {ZEILEN[1]} zeilen")
+            continue
+        for x in z:
+            if not isinstance(x, dict) or not pair(x.get("t"), ZEILE_LEN) or not set(x) <= {"t", "welten"} \
+                    or "welten" in x and not (isinstance(x["welten"], list) and x["welten"] and set(x["welten"]) <= welten):
+                err.append(f"tabellen {tid}: jede Zeile {{\"t\": [deutsch, englisch]}} bis {ZEILE_LEN} Zeichen, welten nur bekannte Welten")
+                break
+    s = r.get("namensilben")
+    if s is not None and not (isinstance(s, dict) and all(
+            isinstance(v, dict) and all(isinstance(v.get(k), list) and all(isinstance(y, str) and 0 < len(y) <= 12 for y in v[k])
+                                        for k in ("anfang", "mitte", "ende")) and v["anfang"] and v["ende"] for v in s.values())):
+        err.append("namensilben: je Volk oder welt:<id> anfang, mitte und ende als Listen kurzer Silben")
+    return err
 
 
 def table(r, tid):

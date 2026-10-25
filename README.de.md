@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.062** KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
 - **V01.1.061** KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
 - **V01.1.060** KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog
 - **V01.1.059** KI-Dungeon-Master: Zufallsregeln des Gastgebers, bis zu fünf je Runde mit Chance, Auslöser und Wirkung; das Panel würfelt und wendet sie an, das Modell hört nur den Hinweis als Daten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.055** KI-Dungeon-Master: Siedlung mit Leben: Kopf mit Bild, Tageszeit und Gold, Karten mit Bild und Satz, Rechnung und Verb je Dienst, zu Teures grau mit „Es fehlen N Gold“, Lehrstunde als sechs Werte vorher → nachher
 - **V01.1.054** KI-Dungeon-Master: Wirtschaft Teil 3: der Prüfstand misst Einnahmen gegen Ausgaben je Stufe, Gasthaus 10 Gold mal Stufe je Held, der Schmied verbessert Waffen und Rüstung um eine Seltenheit, Öle auf der Waffe für 3 Treffer, Wirkungen donnernd, ätzend und welkend
 - **V01.1.053** KI-Dungeon-Master: Wirtschaft Teil 2: mehr Münzen von Gegnern, Händler mit Art und Kasse (halber Preis nur für die eigene Art), Seltenheit nach einer festen Fundtabelle je Stufe, Legendäres nur noch von Bossen
-- **V01.1.052** KI-Dungeon-Master: Wirtschaft Teil 1: eine Preisregel mit Preisbändern je Seltenheit, Legendäres unverkäuflich, Schätze nach Klasse und Stufe, Heiltränke 2 Gold je Leben, Zauberrollen nach Grad, Startgold 25; dazu 12 neue Waffen und 19 Schutz-Dinge im SRD-Katalog
 
 
 
