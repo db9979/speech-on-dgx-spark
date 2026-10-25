@@ -5229,6 +5229,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Angriff auf mehrere Gegner einer Art (V01.1.071, Fehler vom 2026-10-25, Dominik: ein Zauber „geschafft“ gegen zwei Riesenratten, beide blieben bei 7/7): Ein Angriff entsteht nur, wenn eine Probe im Kampf ein Ziel hat, das einen Gegner nennt. Bisher musste ziel den Namen genau treffen („Riesenratte 1“); nannte das Modell „Riesenratten“ oder gar kein Ziel, blieb es eine gewöhnliche Probe ohne Schaden. Jetzt gilt nach festen Regeln (dungeon_kampf._named): erst der ganze Name, dann sein Anfang, dann die Art (der Name ohne Nummer, auch in der Mehrzahl oder nur sein letzter Teil: „Riesenratten“, „die Ratten“, „giant rats“); getroffen wird der erste, der in diesem Zug noch steht. Hat die Probe kein Ziel, greift sie trotzdem an, wenn die Aktion des Spielers ein Wort des Angreifens enthält (HIEB_WORTE: greifen, schlagen, stechen, schießen, attack …) und einen Gegner so nennt; „Ich lausche an der Tür“ bleibt eine Probe. Nennt die Aktion Magie (MAGIE_WORTE), aber keinen Zauber aus der Liste, und kann die Klasse des Helden zaubern, ist der Angriff ein Zaubertrick: 1W6 plus der bessere der Werte Intelligenz, Weisheit, Charisma, Art Energie, magisch; sonst greift der Held mit "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "der Waffe an. Das Modell liefert dafür nur Daten, Ziel und Schaden bestimmt das Panel."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
 },
 {
@@ -18758,6 +18774,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " it as quest_genommen); what the group carries (quest_gruppe) and what lies here (quest_hier) the model hears only as data. In the hero sheet, tab \"Bag\", \"✦ Special things\" lists the own things with \"Give …\" and \"Put down\", and what the others carry; under \"Lying here\" one picks up what the narration has named (POST /api/profile/dungeon/{rid}/held with questgeben, questablegen, questaufheben, for guests /api/dungeon/held). Doors and ways of the map open only when an action names the thing and the group carries it (dungeon.quest_genannt, dungeon.quest_haben); a used thing vanishes with a line in the feed (dungeon.quest_verbrauchen) and is never laid again. When a carrier dies or leaves the table, the thing lies where the group stands. Carried things go into the next chapter with their hero; things left lying stay behind. Players see a thing only once the narration has named it or someone carries it; the host sees all with their place (quest_geheim, host only; in the view filter quest_versteckt and quest_anderswo). Journal lines dungeon: quest | … with fixed words only; the live overview counts things, carried ones and today's taken, found, passed on and used ones."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: attacking several foes of one kind (V01.1.071, fault of 2026-10-25, Dominik: a spell rolled “geschafft” against two giant rats, both stayed at 7/7): An attack happens only when a check in a fight has a target naming a foe. Until now ziel had to match the name exactly (“Riesenratte 1”); when the model named “Riesenratten” or no target at all, it stayed an ordinary check without damage. Now fixed rules decide (dungeon_kampf._named): first the whole name, then its start, then the kind (the name without its number, also as a plural or only its last part: “Riesenratten”, “die Ratten”, “giant rats”); it hits the first one still standing this turn. A check without a target still attacks when the player's action holds a word of attacking (HIEB_WORTE: greifen, schlagen, stechen, schießen, attack …) and names a foe that way; “I listen at the door” stays a check. When the action names magic (MAGIE_WORTE) but no spell of the list, and the hero's class can cast, the attack is a cantrip: 1d6 plus the better of Intelligence, Wisdom, Charisma, kind force, magical; otherwise the hero attacks with the weapon. The model only gives data for it; target and damage come from the panel."
 },
 {
 "lang": "en",

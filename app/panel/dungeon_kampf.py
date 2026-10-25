@@ -10,7 +10,12 @@ what the dice say.
                experience (D&D multiplier by count) is at most SCHWER times the budget, GEGNER_MAX at most
     attack     a check with ziel (a foe's name) is an attack: d20 + the value's bonus + proficiency against the foe's
                armour class (ruestung); a hit costs the weapon's die + the value's bonus + its rarity (a spell cast
-               this turn: its die by grade); a natural 20 doubles the dice, a natural 1 misses
+               this turn: its die by grade); a natural 20 doubles the dice, a natural 1 misses. The ziel may name
+               several foes of one kind („Riesenratten“, „die Ratten“): the first of them still standing; a check in a
+               fight without ziel whose action attacks (HIEB_WORTE) and names a foe so is an attack on it too (Dominik
+               2026-10-25: a spell rolled „geschafft“ on two giant rats took no life). A hero whose class casts and
+               whose action is magic (MAGIE_WORTE) without a spell of its own attacks with a cantrip: ZAUBER_W[0] +
+               the better of the mind's values, kind energie
     foes       every foe still up attacks once: the hero who hit it this turn, else one of the standing heroes by the
                seed; d20 + angriff against the hero's armour class (rk), the bestiary's dice + schaden_plus; Eisenhaut
                and Schildwall work on it as on every hit (dungeon.consequences)
@@ -39,6 +44,7 @@ rd["kampf"] = {"gegner": [{k, id, name, zeichen, leben, max, rk, angriff, schade
 hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and calls in.
 """
 import random
+import re
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
@@ -69,6 +75,12 @@ ZAUBER_W = (6, 8, 8, 10, 10, 12)   # the die of an attack spell by its grade 0..
 ENDE = ("frieden", "flucht")       # the model may end a fight without a winner
 AUS = ("besiegt", "geflohen")
 ZIEL_MAX = 40
+HIEB_WORTE = re.compile(r"(?i)(?<!\w)(greif|angriff|angreif|attack|schlag|schläg|schlägt|stech|stich|stoß|stoss|schieß|schiess|schuss|"
+                        r"triff|treff|töte|erschlag|zerschmetter|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast)")   # an action that attacks
+MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
+ZAUBERWERTE = ("intelligenz", "weisheit", "charisma")   # a cantrip's value: the better of these
+_FUELL = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "beide", "beiden", "alle", "allen",
+          "the", "a", "an", "all", "both", "and", "und", "auf", "mit", "on", "at", "with"}
 EIGENSCHAFTEN = ("leicht", "finesse", "reichweite", "wurf", "schwer", "vielseitig")
 SCHADEN_ARTEN = ("hieb", "stich", "wucht", "feuer", "kaelte", "blitz", "saeure", "gift", "nekrotisch", "strahlend", "psychisch",
                  "donner", "energie")
@@ -377,10 +389,38 @@ def up(rd):
     return [g for g in (rd.get("kampf") or {}).get("gegner") or [] if not g["aus"]]
 
 
-def _named(rd, ziel):
-    z = str(ziel or "").strip().lower()[:ZIEL_MAX]
-    return next((g for g in up(rd) if g["name"].lower() == z), None) or \
-        next((g for g in up(rd) if z and g["name"].lower().startswith(z)), None)
+def _stems(word):
+    yield word
+    for suf in ("en", "n", "es", "s", "e"):
+        if word.endswith(suf) and len(word) - len(suf) >= 3:
+            yield word[:-len(suf)]
+
+
+def _kind_of(g, text):
+    """The text names the foe's kind (its name without the number, as a plural or its last part): „Riesenratten“,
+    „die Ratten“, „giant rats“."""
+    last = re.sub(r"\s+\d+$", "", g["name"].lower()).split()[-1:] or [""]
+    for w in re.findall(r"\w+", text):
+        if w in _FUELL:
+            continue
+        for s in _stems(w):
+            if s == last[0] or len(s) >= 4 and last[0].endswith(s):
+                return True
+    return False
+
+
+def _named(rd, ziel, life=None, text=False):
+    """The foe a ziel (or with text=True an attacking action) names, the first still standing (life: the life left this
+    turn): its whole name, the start of it, then its kind."""
+    z = str(ziel or "").strip().lower()
+    z = z if text else z[:ZIEL_MAX]
+    if not z:
+        return None
+    gs = [g for g in up(rd) if life is None or life.get(g["k"], 0) > 0]
+    whole = (lambda n: re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", z)) if text else (lambda n: n == z)
+    return next((g for g in gs if whole(g["name"].lower())), None) or \
+        next((g for g in gs if not text and g["name"].lower().startswith(z)), None) or \
+        next((g for g in gs if _kind_of(g, z)), None)
 
 
 def _weapon(dm, r, h):
@@ -401,21 +441,29 @@ def attacks(dm, r, rd, proben, rng=None):
     rest, out, life = [], [], {g["k"]: g["leben"] for g in up(rd)}
     li = 1 if rd["lang"] == "en" else 0
     for p in proben:
-        g = _named(rd, p.get("ziel")) if p.get("ziel") else None
-        if not g or life.get(g["k"], 0) <= 0:
+        a = rd["offen"].get(p["pid"]) or {}
+        g = _named(rd, p.get("ziel"), life) if p.get("ziel") else \
+            _named(rd, a.get("text"), life, text=True) if HIEB_WORTE.search(str(a.get("text", ""))) else None
+        if not g:
             rest.append({k: v for k, v in p.items() if k != "ziel"})
             continue
         h = rd["plaetze"][p["pid"]]["held"]
-        a = rd["offen"].get(p["pid"]) or {}
         spell = dm._by(r, "gegenstaende").get(a.get("kraft") or "")
         if spell and spell.get("art") == "zauber" and not spell.get("schaden_art"):
             rest.append({k: v for k, v in p.items() if k != "ziel"})   # Schild, Segnen, Schlaf …: a spell without damage is no attack
             continue
         wp = _weapon(dm, r, h)
         eig = ()
+        geist = [x for x in ZAUBERWERTE if x in h["werte"]]
+        trick = not spell and bool(geist) and bool(MAGIE_WORTE.search(str(a.get("text", "")))) and \
+            bool(dm._by(r, "klassen").get(h["klasse"], {}).get("zauber"))
         if spell and spell.get("segen"):
             wert, wuerfel, plus, mit = spell["segen"]["wert"], ZAUBER_W[min(5, spell.get("grad", 0))], spell["segen"]["bonus"], spell["name"][li].split(": ", 1)[-1]
             art = spell.get("schaden_art") or "energie"      # a scroll or ability without its own kind: force
+        elif trick:                                           # magic of a caster without a spell named: a cantrip
+            wert = max(geist, key=lambda x: (dm.total(r, h, x), x == p.get("wert")))
+            wuerfel, plus, mit, art = ZAUBER_W[0], 0, ("Zauber" if not li else "spell"), "energie"
+            spell = {"grad": 0}
         elif wp:
             c = dm._c(r, wp)
             wert, wuerfel, plus, mit = c["wert"], c["schaden"], 0 if wp.get("u") else wp.get("bonus", 0), wp.get("eigen") or c["name"][li]

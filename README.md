@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.071** AI Dungeon Master: fixed: an attack on several foes of one kind (“the rats”) or an attack without a named target only rolled a check and dealt no damage; now it hits the first still standing, and a caster's magic without a spell of its own is a cantrip
 - **V01.1.070** AI Dungeon Master: key doors in vaults: the key lies in a reachable room, the door opens only for whoever carries and names it
 - **V01.1.069** AI Dungeon Master: quest items: the story's keys, maps and seals without weight, from the story planner, the map or a checked find; whoever names them in the action takes them, doors open only with them
 - **V01.1.068** AI Dungeon Master: the same face for NPCs: every person met gets a fixed portrait from fixed parts, later scene pictures take it as a reference, the face in "People and chronicle" and at the person's line, the host paints it again
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.064** AI Dungeon Master: factions with clocks: the story's groups pursue their goal, the panel turns the clocks, the heroes' deeds help or hinder, a full clock changes the world; window ⏳ Factions
 - **V01.1.063** AI Dungeon Master: combat stages easy to deadly for the host by the SRD 5.2.1 budget table; 44 foes and 30 spells from the SRD 5.2.1; catalog without words of the children's word list
 - **V01.1.062** AI Dungeon Master: oracle for host and solo: yes or no with likelihood and chaos grade, events on a double, rolls on the catalog's tables; own tables in the Rules tab
-- **V01.1.061** AI Dungeon Master: NPC goals: every person with six traits and goals for today, soon and their life; between turns the panel rolls the progress, a reached goal stands in the chronicle and goes as data into the next narration
 
 
 

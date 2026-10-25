@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.071** KI-Dungeon-Master: Fehler behoben: ein Angriff auf mehrere Gegner einer Art („die Ratten“) oder ein Angriff ohne genanntes Ziel würfelte nur eine Probe und machte keinen Schaden; jetzt trifft er den ersten, der noch steht, und Magie eines Zauberkundigen ohne eigenen Zauber ist ein Zaubertrick
 - **V01.1.070** KI-Dungeon-Master: Schlüsseltüren im Gewölbe: der Schlüssel liegt in einem erreichbaren Raum, die Tür öffnet nur, wer ihn trägt und nennt
 - **V01.1.069** KI-Dungeon-Master: Quest-Gegenstände: Schlüssel, Karten und Siegel der Geschichte ohne Gewicht, aus dem Geschichten-Planer, der Karte oder einem geprüften Fund; wer sie in der Aktion nennt, nimmt sie, Türen öffnen sich nur mit ihnen
 - **V01.1.068** KI-Dungeon-Master: Gleiches Gesicht für NSCs: jede getroffene Figur bekommt ein festes Porträt aus festen Teilen, spätere Szenenbilder nehmen es als Vorlage, Gesicht in „Leute und Chronik“ und an der Sprechzeile, Gastgeber malt neu
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.064** KI-Dungeon-Master: Fraktionen mit Uhren: die Gruppen der Geschichte verfolgen ihr Ziel, das Panel dreht die Uhren, die Taten der Helden helfen oder stören, eine volle Uhr ändert die Welt; Fenster ⏳ Fraktionen
 - **V01.1.063** KI-Dungeon-Master: Kampfstufen leicht bis tödlich für den Gastgeber nach der Budget-Tabelle des SRD 5.2.1; 44 Gegner und 30 Zauber aus dem SRD 5.2.1; Katalog ohne Wörter der Kinder-Wortliste
 - **V01.1.062** KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
-- **V01.1.061** KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
 
 
 

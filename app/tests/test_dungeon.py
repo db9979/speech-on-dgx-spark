@@ -5088,6 +5088,47 @@ class Fight(Turns):
                                          "begegnung": [{"id": foe["id"], "anzahl": n}], "frage_an": ""}])
         return rd, foe
 
+    def test_an_attack_on_foes_of_one_kind_hits(self):
+        """Dominik 2026-10-25 (a spell rolled „geschafft“ on two giant rats, both stayed at 7/7): a ziel naming several
+        foes of one kind attacks the first still standing; a check without ziel whose action attacks and names a foe
+        attacks it; a caster's magic without a spell of its own is a cantrip with the better mind value."""
+        r = dungeon.rules()
+        rd, _ = self.encounter(2)
+        g1, g2 = rd["kampf"]["gegner"][:2]
+        for g in (g1, g2):
+            g.update(rk=2, immun=[], resistenz=[], schwaeche=[])
+        kind = re.sub(r"\s+\d+$", "", g1["name"])
+        h = rd["plaetze"][self.host]["held"]
+        h["klasse"] = "krieger"
+        rd["offen"][self.host] = {"text": "Ich lausche an der Tür."}
+        p = {"pid": self.host, "wert": "weisheit", "schwer": 10, "vt": ""}
+
+        def hit(probe):
+            rest, out = kampf.attacks(dungeon, r, rd, [probe], Dice(10, 3))
+            return out[0]["ziel"] if out else None
+        for ziel in (kind + "n", kind + "s", "die " + kind.lower(), f"{g1['name']} und {g2['name']}", g2["name"]):
+            self.assertEqual(hit(dict(p, ziel=ziel)), "g2" if ziel == g2["name"] else "g1", ziel)
+        self.assertIsNone(hit(dict(p, ziel="Wirt")))                                 # no foe: a check
+        self.assertIsNone(hit(p))                                                    # no ziel, no attack in the action
+        rd["offen"][self.host]["text"] = f"Ich greife die {kind}n mit einem Zauberspruch an."
+        self.assertEqual(hit(p), "g1")                                               # the action attacks and names them
+        rd["offen"][self.host]["text"] = "Ich greife an."
+        self.assertIsNone(hit(p))                                                    # names no foe
+        g1["aus"] = True
+        self.assertEqual(hit(dict(p, ziel=kind + "n")), "g2")                        # the first still standing
+        g1["aus"] = False
+        rd["offen"][self.host]["text"] = f"Ich verzaubere die {kind}n."
+        x = kampf.attacks(dungeon, r, rd, [dict(p, ziel=kind)], Dice(10, 3))[1][0]
+        self.assertNotEqual(x["mit"], "Zauber")                                      # a warrior: the weapon
+        h["klasse"] = "magier"
+        x = kampf.attacks(dungeon, r, rd, [dict(p, ziel=kind)], Dice(10, 3))[1][0]
+        wert = max(kampf.ZAUBERWERTE, key=lambda w: (dungeon.total(r, h, w), w == "weisheit"))
+        self.assertEqual((x["mit"], x["art"], x["wert"], x["treffer"]), ("Zauber", "energie", wert, True))
+        self.assertEqual(x["schaden"], max(1, 3 + dungeon.mod(h["werte"][wert])))   # a cantrip: 1W6 + the value
+        life = g1["leben"]
+        kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertEqual(g1["leben"], life - x["schaden"])                           # the rat loses it
+
     def test_the_narration_names_the_foes_of_the_card(self):
         """The card and the text tell the same encounter (Dominik 2026-10-24: the card showed Dunkelelfen, the text
         Schattenwächter): a foe not named by its bestiary name gets one rewrite with the names in the note."""
