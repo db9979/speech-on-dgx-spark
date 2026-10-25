@@ -90,7 +90,7 @@ def _spell(r, h):
     """The class's attack spell of grade 0 (a blessing with its own die in dungeon_kampf.attacks), "" for none."""
     cat = dungeon._by(r, "gegenstaende")
     z = (dungeon._by(r, "klassen")[h["klasse"]].get("zauber") or {}).get("0") or []
-    return next((x for x in z if x in cat and cat[x].get("segen")), "")
+    return next((x for x in z if x in cat and cat[x].get("segen") and cat[x].get("schaden_art")), "")
 
 
 # ---------------------------------------------------------------- an encounter

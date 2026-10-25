@@ -1818,6 +1818,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
                         + (f" · {dgn['kaempfe_laufen']} Kämpfe laufen, {dgn['gegner_stehen']} Gegner stehen" if dgn.get("kaempfe_laufen") else "")
+                        + (f" · {dgn.get('gegner_erkannt', 0)} Gegner durchschaut, heute {dgn.get('geschuetzt', 0)} Treffer durch Widerstand halbiert"
+                           if dgn.get("gegner_erkannt") or dgn.get("geschuetzt") else "")
                         + (f" · heute {dgn.get('begegnungen', 0)} Begegnungen, {dgn.get('kaempfe', 0)} Kämpfe vorbei, {dgn.get('treffer', 0)} Treffer, "
                            f"{dgn.get('daneben', 0)} daneben, {dgn.get('besiegt', 0)} Gegner besiegt, {dgn.get('geflohen', 0)} geflohen"
                            if dgn.get("begegnungen") or dgn.get("kaempfe") else "")

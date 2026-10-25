@@ -5133,6 +5133,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Schadensarten (V01.1.049, Dominik 2026-10-25 „Müssen wir Gegenstände und Waffen etc. noch erweitern gegen was und Zaubersprüche, gegen was sie Stärke bzw. Schwäche haben?“, „ja so umsetzten“ = Punkte 1, 2, 4, 6 und 8, Plan /mnt/project-files/plaene/dungeon-schadensarten/): Zauber mit eigener Art: 31 Zauber mit Schaden haben schaden_art (Feuerpfeil, Feuerball, Brennende Hände … 🔥 Feuer, Kältestrahl, Eislanze, Kältekegel ❄️ Kälte, Schockgriff, Blitzstrahl, Kettenblitz ⚡ Blitz, Donnerwelle, Donnernder Schlag 💥 Donner, Heilige Flamme, Göttliche Gunst ☀️ strahlend, Giftspritzer, Stinkwolke, Todeswolke 🐍 Gift, Lebensraub, Vampirgriff 🌑 nekrotisch, Schauerlicher Strahl, Magisches Geschoss, Geisterwaffe ✨ Energie). Vorher traf jeder Angriffszauber als Energie, auch gegen Feuer-immune Gegner. Ein Zauber ohne Schaden (Schild, Segnen, Schlaf …) greift nicht mehr an, er bleibt eine Probe. Die Gegenstandskarte zeigt die Art. Magie gegen Widerstand: Eine Waffe mit Bonus +1 oder mehr und jeder Zauber gehen durch einen Widerstand gegen Hieb, Stich und Wucht (kampf.against, KOERPER); gegen Immunität und andere Arten nicht. Schutz für Helden: Rüstung, Schmuck und Tränke können wid"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "erstand haben (WIDERSTAND_ARTEN). Getragen oder getrunken halbiert das einen Treffer eines Gegners dieser Art (resists, consequences), ein Trank für SCHUTZ_ZUEGE = 10 erzählte Züge (h[\"schutz\"]). Neu im Katalog: Ring des Frostschutzes, Ring des Feuerschutzes, Ring des Blitzableiters (Blitz und Donner), Amulett der Lebenskraft (nekrotisch und Gift), Trank des Feuerschutzes, Trank des Kälteschutzes, Gegengift-Trank (Gift und Säure). Der Heldenbogen zeigt 🛡 mit den Arten, der Verlauf „halbiert“. Erst entdecken: Am Tisch zeigt die Karte eines Gegners nur, was die Gruppe herausgefunden hat (kampf.known, rd[\"kennt\"]): ein Treffer mit „doppelt“, „halbiert“ oder „wirkungslos“ deckt diese Art auf, eine gelungene Intelligenz-Probe im Kampf (KENNER) alles der Gegner im Kampf; der Rest steht als „❔ noch unbekannt“. Das Bestiarium unter Regeln zeigt weiter alles. Abdeckung: Der Selbsttest test_every_common_weakness_has_its_weapons prüft je Welt: Gegen jede Schwäche, die mindestens drei Gegner dort haben, gibt es mindestens zwei Waffen, Zauber oder eine Waffen-Wirkung dieser Art. Tageszeit: Der Erzähler meldet szene.tageszeit (morgen, tag, abend, nacht); das Panel behält sie in rd[\"tageszeit\"] u"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nd gibt sie in den Fakten zurück, die Bühne wählt danach Tag- oder Nachtbild. Balance: Weil Zauber jetzt Schwächen treffen, gewinnt eine Gruppe leichter; die Begegnungen „mittel“ sind dafür auf Stufe 4, 5, 7 und 8 etwas größer (kampf.BUDGET 380, 450, 950, 1000), der Balance-Prüfstand hält 70 bis 90 Prozent; seine Zauberer nehmen nur Zauber mit Schadensart. Nichts springt (Dominik 2026-10-25 „das auswählen angriff oder heilen lässt das bild springen hoch und runter“, „die rechte seite springt immer wider hoch z.b. beim erzähler aussuchen“): Der Heldenbogen hat am großen Bildschirm eine feste Höhe (höchstens 900 Pixel), die Filter unter „Das kann ich“ ändern nur den Inhalt; Gruppe und rechte Spalte behalten beim Neuzeichnen des Tisches ihre Scroll-Stelle (dmColKeep). Selbsttest in test_hero_sheet_merchant_and_item_windows. Zustand → Überblick zählt durchschaute Gegner und durch Widerstand halbierte Treffer. „So spielst du“ erklärt es unter „Schadensarten“. Selbsttests test_damage_kinds_of_spells_weapons_and_heroes, test_every_common_weakness_has_its_weapons, test_the_time_of_day_by_the_narrator."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil (V01.1.048, Dominik 2026-10-25 „die E-Mails, die du verschickst, sind die auch so ein bisschen im Layout vom Dungeon Master gehalten?“, „1-3 und 5 umsetzten“, Entwurf /mnt/project-files/plaene/dungeon-mail/): Die Mails an Gäste mit Gast-Konto (dungeon_gast.message) haben neben dem Text einen HTML-Teil wie eine Seite des Spiels: Rahmen, Überschrift mit dem Zeichen der Welt, Schrift wie im Buch, nur Stile in der Mail selbst, kein Bild und nichts, was von außen geladen wird (kein Zählpixel), jeder Wert maskiert. Farben je Welt (FARBEN): Fantasy Pergament, Horror dunkelrot, Sci-Fi stahlblau, Piraten seegrün, jede andere Welt als Pergament. Letzter Satz: „Du bist dran“ zeigt unter „Zuletzt am Tisch“ den letzten Satz des Erzählers (teaser: höchstens VORSCHAU = 160 Zeichen, ohne Links und Adressen). Der Gastgeber schaltet das am Tisch unter „✉ Letzter Satz in der Mail“ ab (rd[\"mail_vorschau\"], ab Werk an; die Zeile steht nur, wenn ein Gast mit Konto am Tisch sitzt). Weiterspielen: Der Knopf ist ein Einmal-Link https://<panel>/#weiter=<t> (WEITER_S = 12 Stunden, gilt einmal, nur sein Hash liegt in dungeon-gaeste.json), nie der Schlüssel des Pl"
 },
 {
@@ -18206,6 +18230,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: damage kinds (V01.1.049, Dominik 2026-10-25 \"Müssen wir Gegenstände und Waffen etc. noch erweitern gegen was und Zaubersprüche, gegen was sie Stärke bzw. Schwäche haben?\", \"ja so umsetzten\" = points 1, 2, 4, 6 and 8, plan /mnt/project-files/plaene/dungeon-schadensarten/): Spells with their own kind: 31 damage spells have schaden_art (Fire bolt, Fireball, Burning hands … 🔥 fire, Ray of frost, Ice lance, Cone of cold ❄️ cold, Shocking grasp, Lightning bolt, Chain lightning ⚡ lightning, Thunderwave, Thunderous smite 💥 thunder, Sacred flame, Divine favour ☀️ radiant, Poison spray, Stinking cloud, Cloudkill 🐍 poison, Life drain, Vampiric touch 🌑 necrotic, Eldritch blast, Magic missile, Spiritual weapon ✨ force). Before, every attack spell hit as force, also against fire-immune foes. A spell without damage (Shield, Bless, Sleep …) no longer attacks, it stays a check. The item card shows the kind. Magic against resistance: a weapon with a bonus of +1 or more and every spell go through a resistance to slashing, piercing and bludgeoning (kampf.against, KOERPER); not through an immunity or other kinds. Protection for heroes: armour, jewellery and potions can have widerstan"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "d (WIDERSTAND_ARTEN). Worn or drunk it halves a foe's hit of that kind (resists, consequences), a potion for SCHUTZ_ZUEGE = 10 told turns (h[\"schutz\"]). New in the catalog: Ring of frost ward, Ring of fire ward, Ring of grounding (lightning and thunder), Amulet of vitality (necrotic and poison), Potion of fire resistance, Potion of cold resistance, Antitoxin (poison and acid). The hero sheet shows 🛡 with the kinds, the feed \"halved\". Found out first: at the table a foe's card shows only what the group found out (kampf.known, rd[\"kennt\"]): a hit with \"double\", \"halved\" or \"no effect\" reveals that kind, a passed Intelligence check in a fight (KENNER) everything of the foes in the fight; the rest shows as \"❔ still unknown\". The bestiary under Rules still shows everything. Coverage: the self-test test_every_common_weakness_has_its_weapons checks per world: against every weakness at least three foes there have, there are at least two weapons, spells or a weapon effect of that kind. Time of day: the narrator reports szene.tageszeit (morgen, tag, abend, nacht); the panel keeps it in rd[\"tageszeit\"] and gives it back in the facts, the stage picks the day or night picture by it. Balance: be"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "cause spells now hit weak spots, a group wins more easily; the \"medium\" encounters are a little bigger at level 4, 5, 7 and 8 for it (kampf.BUDGET 380, 450, 950, 1000), the balance bench holds 70 to 90 per cent; its casters take only spells with a damage kind. Nothing jumps (Dominik 2026-10-25 \"das auswählen angriff oder heilen lässt das bild springen hoch und runter\", \"die rechte seite springt immer wider hoch z.b. beim erzähler aussuchen\"): on a big screen the hero sheet has a fixed height (at most 900 pixels), the filters under \"What I can do\" change only its content; the group and the right column keep their scroll place when the table repaints (dmColKeep). Self-test in test_hero_sheet_merchant_and_item_windows. Status → Live counts foes found out and hits halved by resistance. \"How to play\" explains it under \"Damage kinds\". Self-tests test_damage_kinds_of_spells_weapons_and_heroes, test_every_common_weakness_has_its_weapons, test_the_time_of_day_by_the_narrator."
 },
 {
 "lang": "en",

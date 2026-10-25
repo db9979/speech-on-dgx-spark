@@ -41,7 +41,7 @@ import random
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
-BUDGET = (83, 121, 291, 342, 408, 532, 802, 907, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+BUDGET = (83, 121, 291, 380, 450, 532, 950, 1000, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
@@ -77,6 +77,8 @@ EIGENSCHAFT_REGEL = {                       # what each property does at the tab
     "wurf": ("Wurf: geworfen mit dem besseren von Stärke und Geschick", "thrown: thrown with the better of Strength and Dexterity"),
     "schwer": ("schwer: unter Stärke 13 mit Nachteil", "heavy: at a disadvantage below Strength 13"),
     "vielseitig": ("vielseitig: mit freier zweiter Hand ein größerer Würfel", "versatile: a bigger die with the off hand free")}
+KOERPER = ("hieb", "stich", "wucht")
+KENNT_MAX = 300            # foes whose weak spots a round remembers   # the weapons' kinds; a resistance against them does not hold against magic
 SCHWER_STAERKE = 13        # a heavy weapon wants this Stärke, else its attack is at a disadvantage
 LEICHT_KRIT = 19           # a light weapon is critical from this natural roll
 WURF_WORTE = ("wirf", "werf", "wurf", "schleuder", "throw", "hurl", "toss")   # an action that throws (eigenschaft wurf)
@@ -362,11 +364,14 @@ def attacks(dm, r, rd, proben, rng=None):
         h = rd["plaetze"][p["pid"]]["held"]
         a = rd["offen"].get(p["pid"]) or {}
         spell = dm._by(r, "gegenstaende").get(a.get("kraft") or "")
+        if spell and spell.get("art") == "zauber" and not spell.get("schaden_art"):
+            rest.append({k: v for k, v in p.items() if k != "ziel"})   # Schild, Segnen, Schlaf …: a spell without damage is no attack
+            continue
         wp = _weapon(dm, r, h)
         eig = ()
         if spell and spell.get("segen"):
             wert, wuerfel, plus, mit = spell["segen"]["wert"], ZAUBER_W[min(5, spell.get("grad", 0))], spell["segen"]["bonus"], spell["name"][li].split(": ", 1)[-1]
-            art = spell.get("schaden_art") or "energie"
+            art = spell.get("schaden_art") or "energie"      # a scroll or ability without its own kind: force
         elif wp:
             c = dm._c(r, wp)
             wert, wuerfel, plus, mit = c["wert"], c["schaden"], 0 if wp.get("u") else wp.get("bonus", 0), wp.get("eigen") or c["name"][li]
@@ -407,7 +412,7 @@ def attacks(dm, r, rd, proben, rng=None):
         n, wirkt, extra, raub = 0, "", [], 0
         if hit:
             n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.mod(h["werte"].get(wert, 10)) + (0 if spell else plus))
-            n, wirkt = against(g, art, n)
+            n, wirkt = against(g, art, n, magisch=bool(spell) or bool(wp and not wp.get("u") and wp.get("bonus", 0) >= 1))
             for e in effects(dm, r, h, "schaden", wp) if wp and not spell else ():   # a burning blade: its own kind, its own resistances
                 m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))
                 extra.append({"art": e["art"], "schaden": m})
@@ -423,11 +428,12 @@ def attacks(dm, r, rd, proben, rng=None):
     return rest, out
 
 
-def against(g, art, n):
-    """A hit's damage after the foe's resistances: (damage, "immun"|"resistenz"|"schwaeche"|"")."""
+def against(g, art, n, magisch=False):
+    """A hit's damage after the foe's resistances: (damage, "immun"|"resistenz"|"schwaeche"|""). A magic weapon (bonus
+    +1 or more) or a spell goes through a resistance against hieb, stich and wucht (Dominik 2026-10-25, Punkt 2)."""
     if art and art in g.get("immun", ()):
         return 0, "immun"
-    if art and art in g.get("resistenz", ()):
+    if art and art in g.get("resistenz", ()) and not (magisch and art in KOERPER):
         return max(1, n // 2), "resistenz"
     if art and art in g.get("schwaeche", ()):
         return n * 2, "schwaeche"
@@ -556,6 +562,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
                 sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
+        if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
+            learn(rd, g["id"], [x["art"]])
         held = (dict(dm.seated(rd)).get(x["pid"]) or {}).get("held")
         if x.get("raub") and held and not dm.zustand(held):     # life drain: the hero heals by the panel's die
             dm.heal(held, x["raub"])
@@ -579,7 +587,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         dm._log(rd, "angriff", gegner=g["name"], pid=x["pid"], name=x["name"], w=x["w"], ws=x.get("ws", [x["w"]]), vt=x.get("vt", ""),
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"], von_gegner=True)
         if x["treffer"]:
-            folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": g["name"]})
+            folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": g["name"], "sart": x.get("art", "")})
         rw = x.get("rettung")
         if rw:
             suffers(r, rd, seats[x["pid"]]["held"], rw)
@@ -702,9 +710,11 @@ def pictures(dm, r, rd, out):
 
 
 def card(dm, r, rd, gid, lang):
-    """One foe of the bestiary for its window at the table: picture, text and values."""
+    """One foe of the bestiary for its window at the table: picture, text and values; what hurts it more or less only as
+    far as the group found out (known)."""
     li = 1 if lang == "en" else 0
     c = dm._by(r, "gegner")[gid]
+    kennt = known(rd, gid)
     return {"id": c["id"], "name": c["name"][li], "info": c["info"][li], "zeichen": c.get("zeichen", ""), "stufe": c["stufe"],
             "leben": c["leben"], "rk": c["ruestung"], "angriff": c["angriff"], "groesse": c.get("groesse", "mittel"),
             "schaden": f"{c.get('anzahl_wuerfel', 1)}{'W' if not li else 'd'}{c['schaden']}" + (f"+{c['schaden_plus']}" if c.get("schaden_plus", 0) > 0 else
@@ -717,9 +727,29 @@ def card(dm, r, rd, gid, lang):
             "zustaende": [{"name": z["name"][li], "info": z["info"][li]} for z in r.get("zustaende") or [] if z["id"] in (c.get("zustaende") or [])],
             # Kampf Teil 2: its damage kind, what hurts it more or less, a boss
             "art": ART_NAME[c["schaden_art"]][li] if c.get("schaden_art") in ART_NAME else "",
-            **{x: [ART_NAME[a][li] for a in c.get(x) or [] if a in ART_NAME] for x in ("resistenz", "immun", "schwaeche")},
+            # Schadensarten Punkt 6: at the table only what the group found out (known), the rest counted as unknown
+            **{x: [ART_NAME[a][li] for a in c.get(x) or [] if a in ART_NAME and a in kennt] for x in ("resistenz", "immun", "schwaeche")},
+            "unbekannt": sum(1 for x in ("resistenz", "immun", "schwaeche") for a in c.get(x) or [] if a in ART_NAME and a not in kennt),
             "boss": bool(c.get("boss"))}
 
 
+def known(rd, gid):
+    """The damage kinds the group knows of a foe: found out by a hit (wirkt) or a passed Intelligenz check in a fight."""
+    return set((rd.get("kennt") or {}).get(gid) or [])
+
+
+def learn(rd, gid, arten):
+    """The group finds out how a foe takes these kinds (kept for the round, at most KENNT_MAX foes)."""
+    k = rd.setdefault("kennt", {})
+    neu = [a for a in arten if a in ART_NAME and a not in (k.get(gid) or [])]
+    if not neu:
+        return
+    k[gid] = (k.get(gid) or []) + neu
+    if len(k) > KENNT_MAX:
+        k.pop(next(iter(k)))
+    print(f"dungeon: kampf | erkannt | {len(neu)} arten", flush=True)
+
+
 def for_live(rs):
-    return {"kaempfe_laufen": sum(1 for v in rs if v.get("kampf")), "gegner_stehen": sum(len(up(v)) for v in rs)}
+    return {"kaempfe_laufen": sum(1 for v in rs if v.get("kampf")), "gegner_stehen": sum(len(up(v)) for v in rs),
+            "gegner_erkannt": sum(len(v.get("kennt") or {}) for v in rs)}

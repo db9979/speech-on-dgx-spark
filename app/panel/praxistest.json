@@ -3320,6 +3320,13 @@
 "titel": "Spiel-Mails im Dungeon-Stil",
 "text": "Mit einem Gast mit Gast-Konto und „Du bist dran per Mail“: A: Der Code kommt als Seite in den Farben der Welt. B: Nach 10 Minuten ohne Aktion kommt „Du bist dran“ mit dem letzten Satz des Erzählers und dem Knopf „Weiterspielen“. C: Den Knopf auf einem anderen Gerät öffnen: der Platz öffnet sich; ein zweites Mal geht er nicht mehr. D: Der Gastgeber schaltet am Tisch „✉ Letzter Satz in der Mail“ aus: die nächste Mail kommt ohne Satz. E: In der Mail steht nirgends der Platz-Link selbst.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P499",
+"v": 1049,
+"titel": "Schadensarten",
+"text": "A: Ein Magier wirkt den Feuerpfeil auf einen Gegner: der Verlauf zeigt 🔥 Feuer, gegen einen Feuer-immunen Gegner „wirkungslos“. B: Schild auf einen Gegner wirken: kein Angriff. C: Mit einer Waffe +1 einen Gegner mit Widerstand gegen Hieb treffen: voller Schaden. D: Den Gegner antippen: Schwächen erst „❔ noch unbekannt“, nach einem passenden Treffer sichtbar. E: Ring des Frostschutzes anlegen und von Kälte getroffen werden: „halbiert“, im Heldenbogen 🛡 Kälte. F: Zustand → Überblick zeigt die Zählungen. G: Im Heldenbogen unter „Das kann ich“ zwischen Alle, Angriff und Heilen wechseln: das Fenster bleibt gleich hoch. H: Als Gastgeber in der rechten Spalte nach unten scrollen und den Erzähler wählen: die Spalte bleibt an ihrer Stelle.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

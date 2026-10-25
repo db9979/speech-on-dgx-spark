@@ -3871,8 +3871,14 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt .dm-pic').length"),
                                          await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length"))   # a picture or its colour, no emoji
                         n_all = await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt').length")
+                        if w == 1280:                    # a fixed height, whatever the tab and filter hold
+                            await pg.set_viewport_size({"width": 1280, "height": 1400})
+                            self.assertEqual(await pg.evaluate("Math.round(document.querySelector('#dmview .dm-fen-bogen .dm-fen-box').getBoundingClientRect().height)"), 900)
+                            await pg.set_viewport_size({"width": 1280, "height": ht})
+                        rect = await pg.evaluate("(()=>{const r=document.querySelector('#dmview .dm-fen-bogen .dm-fen-box').getBoundingClientRect();return [Math.round(r.top),Math.round(r.height)]})()")
                         await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(2)")                         # a kind filters the tiles
                         await b.until(pg, "document.querySelector('#dmview .dm-kfilter .dm-kf:nth-child(2)').classList.contains('on')")
+                        self.assertEqual(await pg.evaluate("(()=>{const r=document.querySelector('#dmview .dm-fen-bogen .dm-fen-box').getBoundingClientRect();return [Math.round(r.top),Math.round(r.height)]})()"), rect, w)    # nothing jumps: the sheet keeps its place and height (Dominik 2026-10-25)
                         k = await pg.evaluate("document.querySelector('#dmview .dm-kfilter .dm-kf.on').className.match(/k-(\\w+)/)[1]")
                         self.assertEqual(await pg.evaluate(f"[...document.querySelectorAll('#dmview .dm-fen-bogen .dm-kt')].filter(x=>!x.classList.contains('k-{k}')).length"), 0)
                         await pg.click("#dmview .dm-kfilter .dm-kf:nth-child(1)")
@@ -3912,6 +3918,12 @@ class Windows(unittest.TestCase):
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-bogen')"))
                         await pg.click("#dmview .dm-fen-bogen [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        # nothing jumps (Dominik 2026-10-25 „die rechte Seite springt immer wieder hoch“): a repaint keeps the side's scroll
+                        keep = await pg.evaluate("(()=>{const c=document.createElement('style');c.textContent='#dmview .dm-side{max-height:200px!important;overflow:auto!important}';"
+                                                 "document.head.append(c);const s=document.querySelector('#dmview .dm-side');s.scrollTop=90;"
+                                                 "const a=s.scrollTop;dmDraw();const b=document.querySelector('#dmview .dm-side').scrollTop;c.remove();return [a,b]})()")
+                        self.assertGreater(keep[0], 0, w)
+                        self.assertEqual(keep[1], keep[0], w)
                         await pg.click("#dmview [data-dmfen=haendler]")
                         await b.until(pg, "document.querySelectorAll('#dmview .dm-fen-haendler .dm-ware').length>0")
                         self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-haendler .dm-ware')].filter(x=>!x.querySelector('.dm-iinfo')).length"), 0)
@@ -3920,7 +3932,7 @@ class Windows(unittest.TestCase):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"haendler-{w}.png"))
                         if w == 1280:                    # buying in the window: the bag grows, the window stays open
                             n = await pg.evaluate("DM.v.ich.tasche.length")
-                            await pg.click("#dmview .dm-fen-haendler .dm-ware [data-dmhero=kaufen]")
+                            await pg.click("#dmview .dm-fen-haendler .dm-ware [data-dmhero=kaufen]:not([disabled])")
                             await b.until(pg, f"DM.v.ich.tasche.length>{n}")
                             self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-haendler')"))
                         if w == 1280:
@@ -5602,7 +5614,8 @@ class Fight(Turns):
         self.assertEqual((z[0]["rk"], z[0]["treffer"], z[0]["krit"]), (kampf.rk(dungeon, r, h), True, True))
         self.assertEqual(z[0]["schaden"], max(1, 2 * g["wuerfel"] * g["schaden"] + g["plus"]))
         folgen = kampf.apply(dungeon, r, rd, [], z, "", {}, Dice(20))
-        self.assertEqual(folgen, [{"pid": z[0]["pid"], "art": "schaden", "zahl": z[0]["schaden"], "gegner": g["name"]}])
+        self.assertEqual(folgen, [{"pid": z[0]["pid"], "art": "schaden", "zahl": z[0]["schaden"], "gegner": g["name"],
+                                   "sart": z[0].get("art", "")}])
         self.assertTrue(rd["log"][-1]["von_gegner"])
         g["leben"] = max(1, g["max"] // kampf.FLUCHT)
         kampf.apply(dungeon, r, rd, [], [], "", {}, Dice(1))
@@ -5725,6 +5738,103 @@ class Fight(Turns):
         self.assertEqual((kampf.prof(1), kampf.prof(5), kampf.prof(9)), (2, 3, 4))
         self.assertEqual(r["stufen_ep"][4], 6500)                                        # level 5 from 6,500 as in D&D
         self.assertNotIn("gegner", r["ep"])                                                # a foe's experience is the bestiary's
+
+
+    def test_damage_kinds_of_spells_weapons_and_heroes(self):
+        """Dominik 2026-10-25 „ja so umsetzten“ (Schadensarten 1, 2, 4, 6): a spell hits with its own kind and one without
+        damage is no attack; a magic weapon goes through a resistance against hieb, stich and wucht; a ring, armour or
+        potion halves a foe's hit of its kind; the table knows a foe's weak spots only after a hit or a clever check."""
+        r = dungeon.rules()
+        cat = dungeon._by(r, "gegenstaende")
+        self.assertEqual(cat["feuerpfeil"]["schaden_art"], "feuer")
+        self.assertNotIn("schaden_art", cat["schildzauber"])
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=2, immun=["feuer"], resistenz=["hieb"], schwaeche=["kaelte"])
+        h = rd["plaetze"][self.host]["held"]
+        p = {"pid": self.host, "wert": "intelligenz", "schwer": 10, "vt": "", "ziel": g["name"]}
+        rd["offen"][self.host] = {"text": "Ich wirke den Feuerpfeil.", "kraft": "feuerpfeil", "t": 0}
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))[1][0]
+        self.assertEqual((x["art"], x["wirkt"], x["schaden"]), ("feuer", "immun", 0))       # was energie, full damage
+        rd["offen"][self.host]["kraft"] = "kaeltestrahl"
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))[1][0]
+        self.assertEqual((x["art"], x["wirkt"]), ("kaelte", "schwaeche"))
+        rd["offen"][self.host]["kraft"] = "schildzauber"
+        rest, hits = kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))
+        self.assertEqual((hits, [q.get("ziel") for q in rest]), ([], [None]))   # Schild is no attack, a plain check
+        # Punkt 2: a magic weapon through a resistance against hieb
+        axe = next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and c.get("schaden_art") == "hieb" and "seltenheit" not in c)
+        h["an"]["haupthand"] = dict(dungeon.item(r, axe, rng=random.Random(1)), bonus=0)
+        h["an"]["haupthand"].pop("eff", None)
+        rd["offen"][self.host] = {"text": "Ich schlage zu.", "t": 0}
+        p = dict(p, wert="staerke")
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))[1][0]["wirkt"], "resistenz")
+        h["an"]["haupthand"]["bonus"] = 1
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))[1][0]
+        self.assertEqual(x["wirkt"], "")
+        self.assertEqual(kampf.against({"resistenz": ["feuer"]}, "feuer", 10, magisch=True), (5, "resistenz"))   # only the weapons' kinds
+        # Punkt 6: a hit shows the kind, the card counts the rest as unknown
+        gid = next(c["id"] for c in r["gegner"] if len((c.get("schwaeche") or []) + (c.get("resistenz") or [])) >= 2)
+        c = dungeon._by(r, "gegner")[gid]
+        kinds = (c.get("schwaeche") or []) + (c.get("resistenz") or []) + (c.get("immun") or [])
+        card = kampf.card(dungeon, r, rd, gid, "de")
+        self.assertEqual((card["schwaeche"], card["resistenz"], card["immun"], card["unbekannt"]), ([], [], [], len(kinds)))
+        kampf.learn(rd, gid, kinds[:1])
+        self.assertEqual(kampf.card(dungeon, r, rd, gid, "de")["unbekannt"], len(kinds) - 1)
+        g["id"] = gid
+        hit = dict(kampf.attacks(dungeon, r, rd, [p], Dice(10, 6))[1][0], art="kaelte", wirkt="schwaeche")
+        kampf.apply(dungeon, r, rd, [hit], [], "", {})
+        self.assertIn("kaelte", kampf.known(rd, gid))
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeonfenster.js"), encoding="utf-8").read()
+        self.assertIn("dm-gres-unb", js)
+        # Punkt 4: a ring halves a foe's cold, a potion fire for SCHUTZ_ZUEGE turns
+        h["leben"] = h["leben_max"] = 30
+        h["an"]["ring1"] = dungeon.item(r, "ring_frostschutz", rng=random.Random(1))
+        self.assertEqual(dungeon.resists(r, h), {"kaelte"})
+        self.assertIn("Widerstand gegen", " ".join(dungeon.item_view(r, h["an"]["ring1"], "de")["zeilen"]))
+        dungeon.consequences(r, rd, [{"pid": self.host, "art": "schaden", "zahl": 9, "gegner": "Frost", "sart": "kaelte"}], dict(dungeon.seated(rd)))
+        self.assertEqual(h["leben"], 26)
+        self.assertEqual(rd["log"][-1].get("wirkt"), "resistenz")
+        dungeon.consequences(r, rd, [{"pid": self.host, "art": "schaden", "zahl": 9, "gegner": "Glut", "sart": "feuer"}], dict(dungeon.seated(rd)))
+        self.assertGreaterEqual(26 - h["leben"], 2 * 4)                          # fire without protection: the full hit
+        dungeon.shield(h, cat["trank_feuerschutz"]["widerstand"], "Trank")
+        self.assertEqual(dungeon.resists(r, h), {"kaelte", "feuer"})
+        for _ in range(dungeon.SCHUTZ_ZUEGE):
+            dungeon.wear_off(rd)
+        self.assertEqual(dungeon.resists(r, h), {"kaelte"})
+        bad = dungeon.merge(dungeon._base_rules(), {"gegenstaende": [dict(cat["ring_frostschutz"], widerstand=["wind"])]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "widerstand" in e])
+
+    def test_the_time_of_day_by_the_narrator(self):
+        """The stage's day or night picture (picture thread, 2026-10-25): the narrator reports szene.tageszeit from a fixed
+        list, the panel keeps it in rd["tageszeit"] and gives it back in the facts; anything else is ignored."""
+        self.act_all()
+        rd = self.play([{"proben": []}, {"erzaehlung": "Die Sonne sinkt hinter die Hügel, die Fackeln werden entzündet.",
+                                         "szene": {"ort": "Hügel", "stimmung": "still", "tageszeit": "nacht"}, "frage_an": ""}])
+        self.assertEqual(rd["tageszeit"], "nacht")
+        self.assertIn("nacht", re.search(r"tageszeit\W+(\w+)", dungeon.facts(dungeon.rules(), rd)).group(1))
+        self.spawned.clear()
+        for c, b in ((self.c, {}), (self.v, {"code": self.code})):
+            self.assertEqual(c.post(f"/api/profile/dungeon/{self.rid}/aktion" if not b else "/api/dungeon/aktion",
+                                    json=dict(b, text="Ich warte.", zug=rd["zug"])).status_code, 200)
+        rd = self.play([{"proben": []}, {"erzaehlung": "Der Wind dreht und trägt den Geruch von Rauch heran.",
+                                         "szene": {"ort": "Hügel", "stimmung": "still", "tageszeit": "mitternacht"}, "frage_an": ""}])
+        self.assertEqual(rd["tageszeit"], "nacht")
+
+    def test_every_common_weakness_has_its_weapons(self):
+        """Schadensarten Punkt 8: in every world, a kind that at least DREI foes there are weak against has at least ZWEI
+        ways to hit with it: weapons and spells of that kind, or a weapon effect of it."""
+        r = dungeon.rules()
+        eff = {e["art"] for e in r["effekte"] if e.get("art")}
+        for w in r["welten"]:
+            foes = [g for g in r["gegner"] if kampf.plays_in(r, g, w["id"])]
+            for art in kampf.SCHADEN_ARTEN:
+                weak = sum(1 for g in foes if art in (g.get("schwaeche") or []))
+                if weak < 3:
+                    continue
+                ways = sum(1 for c in r["gegenstaende"] if c["art"] in ("waffe", "zauber") and c.get("schaden_art") == art
+                           and dungeon.in_world(c, w["id"])) + (art in eff)
+                self.assertGreaterEqual(ways, 2, (w["id"], art, weak))
 
 
 if __name__ == "__main__":

@@ -344,6 +344,12 @@ LISTE_MAX = 500           # entries per list of the rules in force (shipped, SRD
 EIGENE_MAX = 200          # entries per list in the admin's own file
 ZIELE = ("selbst", "gruppe")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
+# Dominik 2026-10-25 „ja so umsetzten“ (Schadensarten Punkt 4): a worn thing or a potion with "widerstand" halves a
+# foe's hit of that kind, as a foe's resistance does; a potion's protection holds SCHUTZ_ZUEGE told turns
+SCHUTZ_ZUEGE = 10
+KENNER = "intelligenz"
+TAGESZEITEN = ("morgen", "tag", "abend", "nacht")   # rd["tageszeit"], told by the narrator in szene; the stage picks day or night    # a passed check of this value in a fight tells what hurts the foes more or less (Punkt 6)
+WIDERSTAND_ARTEN = ("ruestung", "schmuck", "trank")
 INFO_MAX = 160            # the fixed description of a catalog item or value (info): what it does, what it helps with
 WERKZEUG = (1, 2, 3)      # a tool (hilft) the action names adds this to a fitting check by its quality (Gegenstands-Punkt 7):
                           # einfach (common), gut (uncommon), meisterlich (rare and above); on a natural 1 it breaks
@@ -366,7 +372,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0)
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0)
 
 
 def _go(coro, name):
@@ -538,6 +544,9 @@ def check_rules(r):
              f"gegenstaende {x.get('id')}: eigenschaften nur bei waffe, aus {', '.join(kampf.EIGENSCHAFTEN)}")
         need("schaden_art" not in x or x.get("art") in ("waffe", "zauber", "rolle") and x["schaden_art"] in kampf.SCHADEN_ARTEN,
              f"gegenstaende {x.get('id')}: schaden_art aus {', '.join(kampf.SCHADEN_ARTEN)}")
+        need("widerstand" not in x or x.get("art") in WIDERSTAND_ARTEN and isinstance(x["widerstand"], list) and x["widerstand"]
+             and set(x["widerstand"]) <= set(kampf.SCHADEN_ARTEN) and len(set(x["widerstand"])) == len(x["widerstand"]),
+             f"gegenstaende {x.get('id')}: widerstand nur bei {', '.join(WIDERSTAND_ARTEN)}, Liste aus {', '.join(kampf.SCHADEN_ARTEN)}")
         need("kg" not in x or isinstance(x["kg"], (int, float)) and not isinstance(x["kg"], bool) and 0 <= x["kg"] <= 60,
              f"gegenstaende {x.get('id')}: kg 0 bis 60")
         need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
@@ -551,9 +560,9 @@ def check_rules(r):
              f"gegenstaende {x.get('id')}: hilft nur bei werkzeug oder rolle, {{werte, worte (1 bis 6, klein), fest true}}")
         if x.get("art") in ("trank", "zauber"):
             sg = x.get("segen")
-            need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg) and (sg is None or isinstance(sg, dict)
-                 and sg.get("wert") in werte and _int(sg.get("bonus"), 1, 4) and _int(sg.get("zuege"), 1, 5)),
-                 f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}}")
+            need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg or x.get("art") == "trank" and x.get("widerstand"))
+                 and (sg is None or isinstance(sg, dict) and sg.get("wert") in werte and _int(sg.get("bonus"), 1, 4) and _int(sg.get("zuege"), 1, 5)),
+                 f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}} (ein Trank auch nur widerstand)")
         if x.get("art") == "zauber":
             need(x.get("ziel") in ZIELE and _pair(x.get("satz")), f"gegenstaende {x.get('id')}: zauber braucht ziel (selbst oder gruppe) und satz")
         need("grad" not in x or x.get("art") == "zauber" and _int(x["grad"], 0, GRAD_MAX), f"gegenstaende {x.get('id')}: grad nur bei zauber, 0 bis {GRAD_MAX}")
@@ -1148,6 +1157,8 @@ def fix_hero(r, h):
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
+    h["schutz"] = [x for x in h.get("schutz") or [] if isinstance(x, dict) and x.get("art") in kampf.SCHADEN_ARTEN
+                   and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
     return h
 
 
@@ -1204,10 +1215,22 @@ def bless(h, sg, name):
 
 
 def wear_off(rd):
-    """After a narrated turn every blessing has one turn less."""
+    """After a narrated turn every blessing and a potion's protection has one turn less."""
     for _, p in seated(rd):
         h = p["held"]
         h["segen"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("segen") or [] if x["zuege"] > 1]
+        h["schutz"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("schutz") or [] if x["zuege"] > 1]
+
+
+def resists(r, h):
+    """The damage kinds a hero halves: what its worn things and its potions' protection give (Schadensarten Punkt 4)."""
+    out = {a for it in worn(h) for a in _c(r, it).get("widerstand") or []}
+    return out | {x["art"] for x in h.get("schutz") or []}
+
+
+def shield(h, arten, name):
+    """A potion's protection against damage kinds for SCHUTZ_ZUEGE told turns (a second of the same kind renews it)."""
+    h["schutz"] = [x for x in h.get("schutz") or [] if x["art"] not in arten] + [{"art": a, "zuege": SCHUTZ_ZUEGE, "von": name[:40]} for a in arten]
 
 
 def zustand(h):
@@ -1424,6 +1447,11 @@ def item_view(r, it, lang):
         zeilen.append(("Schaden 1W{} + {}" if not li else "Damage 1d{} + {}").format(c["schaden"], bonus) + (" · zweihändig" if not li else " · two-handed") * bool(c.get("zweihand")))
         if c.get("schaden_art"):                  # Kampf Teil 2: the damage kind and what each property does
             zeilen.append(kampf.ART_NAME[c["schaden_art"]][li] + "".join(" · " + kampf.EIGENSCHAFT_REGEL[e][li] for e in c.get("eigenschaften") or []))
+    if c["art"] == "zauber" and c.get("schaden_art"):   # Schadensarten Punkt 1: the kind a spell hits with
+        zeilen.append(("Schaden: " if not li else "Damage: ") + kampf.ART_ZEICHEN[c["schaden_art"]] + " " + kampf.ART_NAME[c["schaden_art"]][li])
+    if c.get("widerstand"):                      # Punkt 4: halves a foe's hit of these kinds
+        zeilen.append(("Widerstand gegen " if not li else "Resistance to ") + ", ".join(kampf.ART_ZEICHEN[a] + " " + kampf.ART_NAME[a][li] for a in c["widerstand"])
+                      + ((f" für {SCHUTZ_ZUEGE} Züge" if not li else f" for {SCHUTZ_ZUEGE} turns") if c["art"] == "trank" else ""))
     if c["art"] == "ruestung":
         zeilen.append(("Schutz {}" if not li else "Protection {}").format(c.get("schutz", 0) + bonus))
     if u:
@@ -1485,6 +1513,7 @@ def hero_view(r, h, lang, full=True, welt=""):
                kann=powers(r, h, lang, welt),
                segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
                       for x in h.get("segen") or []],
+               widerstand=[kampf.ART_ZEICHEN[a] + " " + kampf.ART_NAME[a][li] for a in sorted(resists(r, h))],
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa])
     return out
 
@@ -2811,7 +2840,8 @@ AUFGABE_ERZAEHLEN = {
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
-          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
+          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. Ändert sich die Tageszeit, "
+          "melde sie in szene.tageszeit (morgen, tag, abend, nacht). {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
@@ -2819,7 +2849,8 @@ AUFGABE_ERZAEHLEN = {
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
           "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
-          "sentence); the panel sets goods and prices, name none. {bild}"}
+          "sentence); the panel sets goods and prices, name none. When the time of day changes, report it in "
+          "szene.tageszeit (morgen, tag, abend, nacht). {bild}"}
 
 
 def schema_proben(r):
@@ -2847,6 +2878,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "begegnung": kampf.SCHEMA_BEGEGNUNG, "kampf_ende": kampf.SCHEMA_ENDE,
     "szene": {"type": "object", "additionalProperties": False, "properties": {"ort": {"type": "string", "maxLength": 60},
                                                                            "stimmung": {"type": "string", "maxLength": 30},
+                                                                           "tageszeit": {"type": "string", "enum": ["", *TAGESZEITEN]},
                                                                            "ort_id": dungeon_karte.SCHEMA}},
     "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
         "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
@@ -2894,7 +2926,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
               for p in names.values()]
     bisher = told_here(rd, 2 if rd.get("kurz") else BISHER)
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
-    fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": rd["szene"], "bisher": bisher, "still": still,
+    fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": dict(rd["szene"], tageszeit=rd.get("tageszeit", "tag")), "bisher": bisher, "still": still,
               **erz.facts_extra(rd, li)}
     zauber = [{"wer": x["name"], "zauber": x["zauber"], "wirkung": x["satz"]} for x in rd["log"] if x["art"] == "zauber" and x["n"] == rd["zug"]]
     for pid, a in rd["offen"].items():
@@ -3142,6 +3174,7 @@ def check_story(r, rd, obj):
         ziel = ziel or e["art"] == "ziel"
         out["erfolg"].append({"art": e["art"]})
     s = obj.get("szene")
+    out["tageszeit"] = s.get("tageszeit") if isinstance(s, dict) and s.get("tageszeit") in TAGESZEITEN else ""
     if isinstance(s, dict):
         ort, st = plain(s.get("ort"), 60), plain(s.get("stimmung"), 30)
         if not bad_words(r, rd, ort + " " + st):
@@ -3236,6 +3269,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
+        if story.get("tageszeit") and story["tageszeit"] != rd.get("tageszeit", "tag"):
+            rd["tageszeit"] = story["tageszeit"]   # the stage's day or night picture (dungeon_dingbild), the next narrations
+            print(f"dungeon: tageszeit | {story['tageszeit']}", flush=True)
         if story.get("haendler") and not rd.get("markt"):
             open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"], rng)
         names = dict(seated(rd))
@@ -3254,6 +3290,10 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         hiebe, war = [], bool(rd.get("kampf"))
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
             rd["kampf"]["geschafft"] = any(w["ok"] for w in wuerfe)   # a peace counts only with a check passed (Idee 7)
+            if any(w["ok"] and w.get("wert") == KENNER for w in wuerfe):   # Punkt 6: a passed Intelligenz check knows the foes
+                for g in kampf.up(rd):
+                    c = _by(r, "gegner").get(g["id"]) or {}
+                    kampf.learn(rd, g["id"], [a for x in ("resistenz", "immun", "schwaeche") for a in c.get(x) or []])
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
         folgen = story["folgen"]
         helfer = [q for q in rd["offen"] if q in names]
@@ -3336,9 +3376,14 @@ def consequences(r, rd, folgen, names):
             pid, h = g, gh
         minus = sum(KRAFT["weniger_schaden"] for _ in kraft(r, h, "weniger_schaden"))
         n = max(0, f["zahl"] - minus)          # armour works against the attack roll (dungeon_kampf.rk), not on the damage
+        halb = bool(f.get("sart")) and f["sart"] in resists(r, h)
+        if halb:                               # Schadensarten Punkt 4: a ring, armour or potion against this kind
+            n = max(1, n // 2) if n else 0
+            _day.bump("geschuetzt")
+            print("dungeon: schutz | halbiert", flush=True)
         h["leben"] = max(0, h["leben"] - n)
         _log(rd, "folge", pid=pid, name=h["name"], was="schaden", zahl=n, leben=h["leben"], **({"weniger": minus} if minus else {}),
-             **({"von": f["gegner"]} if f.get("gegner") else {}))
+             **({"von": f["gegner"]} if f.get("gegner") else {}), **({"sart": f["sart"], "wirkt": "resistenz"} if halb else {}))
         if minus:
             _day.bump("kraft_wirkt")
 
@@ -4810,6 +4855,9 @@ def hero_act(rid, pid, b):
                 stood_up(rd, zid, z, was0)
             if c.get("segen"):
                 bless(z, c["segen"], item_view(r, it, rd["lang"])["name"])
+            if c.get("widerstand"):
+                shield(z, c["widerstand"], item_view(r, it, rd["lang"])["name"])
+                print(f"dungeon: schutz | trank | {len(c['widerstand'])} arten", flush=True)
             if zid != pid:
                 keep_seat(zp)
         elif was == "wirken":
@@ -5058,7 +5106,7 @@ def for_live():
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
-            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"],
+            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade")}}

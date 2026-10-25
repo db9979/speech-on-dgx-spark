@@ -2513,6 +2513,8 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-fen{position:fixed;inset:0;z-index:70;background:#000a;display:flex;align-items:center;justify-content:center;padding:24px}.dm-fen-ding{z-index:72}
 .dm-fen-box{background:var(--t-grund,var(--bg));color:var(--t-text,var(--fg));border:1px solid var(--t-linie,var(--line));border-radius:16px;box-shadow:0 14px 50px #000c;width:min(1100px,100%);max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);display:flex;flex-direction:column;overflow:hidden}
 .dm-fen-ding .dm-fen-box{width:min(620px,100%)}.dm-fen-haendler .dm-fen-box{width:min(980px,100%)}
+/* the hero sheet keeps its height while its tabs and filters change (Dominik 2026-10-25 „lässt das bild springen“) */
+@media (min-width:761px){.dm-fen-bogen .dm-fen-box{height:min(900px,calc(100vh - 48px));height:min(900px,calc(100dvh - 48px))}}
 .dm-fen-kopf{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--t-linie,var(--line));background:color-mix(in srgb,var(--t-karte,var(--card)) 80%,transparent)}.dm-fen-kopf h3{margin:0 auto 0 0;font-size:18px;overflow-wrap:anywhere}
 .dm-fen-body{overflow:auto;overscroll-behavior:contain;padding:12px 18px 20px;min-height:0}
 .dm-fen-neu{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;font-size:13px;background:color-mix(in srgb,var(--t-gold,var(--accent)) 22%,transparent)}
@@ -2584,7 +2586,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-gtop{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-gtop h5{margin:0}
 /* the guide as a window, one part per page (Punkt 9) */
 .dm-fen-hilfe .dm-fen-box{width:min(560px,100%)}.dm-hseite{padding:14px 18px;min-height:150px;flex:1}.dm-hseite h4{margin:4px 0 8px;color:var(--t-gold,inherit);font-size:18px}.dm-hseite p{margin:0;line-height:1.55}
-.dm-hnav{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--t-linie,var(--line))}.dm-hpunkte{flex:1;display:flex;justify-content:center;gap:5px;min-width:0}
+.dm-hnav{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--t-linie,var(--line))}.dm-hpunkte{flex:1;display:flex;flex-wrap:wrap;justify-content:center;gap:5px;min-width:0}
 .dm-hpunkte button{width:8px;height:8px;flex:none;padding:0;border-radius:50%;border:0;background:var(--t-linie,var(--line));cursor:pointer}.dm-hpunkte button.on{background:var(--t-gold,var(--acc))}
 .dm-head .dm-ton{margin:0;padding:3px 8px;flex:0 1 auto;min-width:0;flex-wrap:nowrap}.dm-head .dm-tontxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}.dm-head .dm-tonsp{display:none}.dm-head .dm-laut{width:70px}
 .dm-tisch .dm-seat.dm-ichz{display:flex;align-items:center;gap:8px;padding:8px 12px}.dm-ichz>div{flex:1;min-width:0}.dm-ichz .dm-state{flex:none;margin:0}

@@ -3980,6 +3980,7 @@
     {
       "id": "feuerpfeil",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Feuerpfeil",
         "Spell: Fire bolt"
@@ -4009,6 +4010,7 @@
     {
       "id": "kaeltestrahl",
       "art": "zauber",
+      "schaden_art": "kaelte",
       "name": [
         "Zauber: Kältestrahl",
         "Spell: Ray of frost"
@@ -4038,6 +4040,7 @@
     {
       "id": "schockgriff",
       "art": "zauber",
+      "schaden_art": "blitz",
       "name": [
         "Zauber: Schockgriff",
         "Spell: Shocking grasp"
@@ -4067,6 +4070,7 @@
     {
       "id": "heilige_flamme",
       "art": "zauber",
+      "schaden_art": "strahlend",
       "name": [
         "Zauber: Heilige Flamme",
         "Spell: Sacred flame"
@@ -4095,6 +4099,7 @@
     {
       "id": "schauerstrahl",
       "art": "zauber",
+      "schaden_art": "energie",
       "name": [
         "Zauber: Schauerlicher Strahl",
         "Spell: Eldritch blast"
@@ -4123,6 +4128,7 @@
     {
       "id": "giftspritzer",
       "art": "zauber",
+      "schaden_art": "gift",
       "name": [
         "Zauber: Giftspritzer",
         "Spell: Poison spray"
@@ -4154,6 +4160,7 @@
     {
       "id": "magisches_geschoss",
       "art": "zauber",
+      "schaden_art": "energie",
       "name": [
         "Zauber: Magisches Geschoss",
         "Spell: Magic missile"
@@ -4183,6 +4190,7 @@
     {
       "id": "brennende_haende",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Brennende Hände",
         "Spell: Burning hands"
@@ -4271,6 +4279,7 @@
     {
       "id": "donnerwelle",
       "art": "zauber",
+      "schaden_art": "donner",
       "name": [
         "Zauber: Donnerwelle",
         "Spell: Thunderwave"
@@ -4504,6 +4513,7 @@
     {
       "id": "hoellischer_tadel",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Höllischer Tadel",
         "Spell: Hellish rebuke"
@@ -4688,6 +4698,7 @@
     {
       "id": "goettliche_gunst",
       "art": "zauber",
+      "schaden_art": "strahlend",
       "name": [
         "Zauber: Göttliche Gunst",
         "Spell: Divine favour"
@@ -4716,6 +4727,7 @@
     {
       "id": "donnerschlag",
       "art": "zauber",
+      "schaden_art": "donner",
       "name": [
         "Zauber: Donnernder Schlag",
         "Spell: Thunderous smite"
@@ -4948,6 +4960,7 @@
     {
       "id": "sengender_strahl",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Sengender Strahl",
         "Spell: Scorching ray"
@@ -5214,6 +5227,7 @@
     {
       "id": "flammenklinge",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Flammenklinge",
         "Spell: Flame blade"
@@ -5242,6 +5256,7 @@
     {
       "id": "geisterwaffe",
       "art": "zauber",
+      "schaden_art": "energie",
       "name": [
         "Zauber: Geisterwaffe",
         "Spell: Spiritual weapon"
@@ -5390,6 +5405,7 @@
     {
       "id": "blitzstrahl",
       "art": "zauber",
+      "schaden_art": "blitz",
       "name": [
         "Zauber: Blitzstrahl",
         "Spell: Lightning bolt"
@@ -5776,6 +5792,7 @@
     {
       "id": "vampirgriff",
       "art": "zauber",
+      "schaden_art": "nekrotisch",
       "name": [
         "Zauber: Vampirgriff",
         "Spell: Vampiric touch"
@@ -5806,6 +5823,7 @@
     {
       "id": "blitze_rufen",
       "art": "zauber",
+      "schaden_art": "blitz",
       "name": [
         "Zauber: Blitze herbeirufen",
         "Spell: Call lightning"
@@ -5866,6 +5884,7 @@
     {
       "id": "stinkwolke",
       "art": "zauber",
+      "schaden_art": "gift",
       "name": [
         "Zauber: Stinkende Wolke",
         "Spell: Stinking cloud"
@@ -5989,6 +6008,7 @@
     {
       "id": "eissturm",
       "art": "zauber",
+      "schaden_art": "kaelte",
       "name": [
         "Zauber: Eissturm",
         "Spell: Ice storm"
@@ -6019,6 +6039,7 @@
     {
       "id": "feuerschild",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Feuerschild",
         "Spell: Fire shield"
@@ -6170,6 +6191,7 @@
     {
       "id": "schwarze_tentakel",
       "art": "zauber",
+      "schaden_art": "wucht",
       "name": [
         "Zauber: Schwarze Tentakel",
         "Spell: Black tentacles"
@@ -6198,6 +6220,7 @@
     {
       "id": "kaeltekegel",
       "art": "zauber",
+      "schaden_art": "kaelte",
       "name": [
         "Zauber: Kältekegel",
         "Spell: Cone of cold"
@@ -6227,6 +6250,7 @@
     {
       "id": "flammenschlag",
       "art": "zauber",
+      "schaden_art": "feuer",
       "name": [
         "Zauber: Flammenschlag",
         "Spell: Flame strike"
@@ -6310,6 +6334,7 @@
     {
       "id": "todeswolke",
       "art": "zauber",
+      "schaden_art": "gift",
       "name": [
         "Zauber: Todeswolke",
         "Spell: Cloudkill"
