@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegenstände mit festen Wirkungen (V01.1.033, Gegenstands-Punkte 3 und 5 vom 2026-10-24, Dominik „Ja, alles umsetzen“): Seltenheitsbonus: gewöhnlich +0, selten +1, rar +2, episch und legendär +3, nie mehr (BONUS_MAX, check_rules lehnt mehr ab). Wirkungen: Ab „rar“ (EFFEKT_AB) bekommt ein tragbarer Gegenstand eine Wirkung aus effekte, und jede ist eine feste Regel des Panels (dungeon_kampf.WIRKUNG): schaden (nur Waffen) +1W6 Schaden ihrer Art bei jedem Treffer, bei einem kritischen zweimal, durch Resistenz, Immunität und Schwäche des Gegners wie jeder Schaden (Feuer, Kälte, Blitz, Gift, strahlend); lebensraub (Waffen) der Held heilt bei jedem Treffer 1W4; glueck eine natürliche 1 bei Probe oder Angriff wird einmal neu gewürfelt („🍀 Glück“ am Wurf); wachsam (Rüstung und Schmuck) Rüstungsklasse +1; sonst ein Wertbonus (+2 auf einen der sechs Werte). Wirkungen, die das Panel nicht ausrechnen konnte („1× je Szene unsichtbar“, „Atmet unter Wasser“ …), sind gestrichen; ein solcher alter Gegenstand zählt nur noch mit seinem Grundwert. Ein unerkannter Gegenstand wirkt erst, wenn er erkannt ist. check_rules verlangt für jede eigene Wirkung eine wirkung (bei schaden mit art)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " oder einen Bonus und erlaubt nur aus den tragbaren Arten. Seltenheit je Stufe: Der Fundwurf (W100 + Anlass + 2 je Stufe, FUND_STUFE) zählt für die seltenste Art ohne den Stufenbonus; so ist legendär auf jeder Stufe seltener als episch (vorher ab Stufe 5 häufiger). Ein Selbsttest prüft beides."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gold mit Zweck (V01.1.032, Idee 9 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Gold mit Zweck* (chat.dungeon_gold, ab Werk aus; dungeon_gold.py). In einer Siedlung (ein Ort der Karte der Arten Dorf, Stadt, Taverne, Station, Basar oder Hafen, SIEDLUNG, nicht in einem Gewölbe) oder wo ein Händler steht, zeigt die Heldenkarte „🏘 Siedlung“ mit vier festen Angeboten des Panels, nie des Modells, und nie im Kampf. Die Preise wachsen mit der Stufe der Gruppe (PREIS je Stufe): Gasthaus (3 Gold je Stufe und Held, zahlt einer für alle): volles Leben und alle Zauberladungen für jeden Helden, der nicht ohnmächtig oder gefallen ist, ein Held am Boden steht auf; einmal am Spielabend je Runde. Schmied (5 je Stufe): ein Werkzeug, das bei einer natürlichen 1 zerbrochen ist, kommt zurück in die Tasche; gemerkt werden die letzten 5, nur solange der Schalter an ist. Lehrstunde (20 je Stufe): +1 auf einen Wert, bis die Runde oder das Kapitel regulär endet, eine zur Zeit. Gerücht (3 je Stufe): das Panel nennt den ersten noch nicht besuchten Ort auf dem kürzesten Weg zum Ziel der Karte (sonst einen unbesuchten Nachbarn) mit Himmelsri"
 },
 {
@@ -18062,6 +18078,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: items with fixed effects (V01.1.033, item points 3 and 5 of 2026-10-24, Dominik \"Ja, alles umsetzen\"): Rarity bonus: common +0, uncommon +1, rare +2, epic and legendary +3, never more (BONUS_MAX, check_rules refuses more). Effects: from \"rare\" on (EFFEKT_AB) a wearable item gets an effect from effekte, and each is a fixed rule of the panel (dungeon_kampf.WIRKUNG): schaden (weapons only) +1d6 damage of its kind on every hit, twice on a critical, through the foe's resistance, immunity and weakness like any damage (fire, cold, lightning, poison, radiant); lebensraub (weapons) the hero heals 1d4 on every hit; glueck a natural 1 on a check or attack is rolled again once (\"🍀 Luck\" at the roll); wachsam (armour and jewellery) armour class +1; otherwise a value bonus (+2 on one of the six values). Effects the panel could not compute (\"once per scene invisible\", \"breathes under water\" …) are gone; such an old item counts only by its base. An unknown item works only once identified. check_rules asks every own effect for a wirkung (with art for schaden) or a bonus and allows nur only from the wearable kinds. Rarity per level: the find roll (d100 + occasion + 2 per level, FU"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ND_STUFE) counts for the rarest kind without the level bonus; so legendary is rarer than epic at every level (before, from level 5 it was more frequent). A self-test checks both."
 },
 {
 "lang": "en",

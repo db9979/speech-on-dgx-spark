@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.033** · 2026-10-25 · KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
 - **V01.1.032** · 2026-10-25 · KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
 - **V01.1.031** · 2026-10-25 · KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍
 - **V01.1.030** · 2026-10-25 · KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf

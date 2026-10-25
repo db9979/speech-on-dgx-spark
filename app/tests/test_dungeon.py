@@ -4851,6 +4851,58 @@ class Fight(Turns):
         dungeon.pay_ep(r, self.state(self.rid), self.rid)                          # a lesson lasts until the round ends
         self.assertGreater(dungeon.for_live()["dienste"], 0)
 
+    def test_item_effects_and_rarities_by_fixed_rules(self):
+        """Gegenstands-Punkte 3 and 5 of 2026-10-24 (Dominik „Ja, alles umsetzen“): a rarity's bonus at most +3; from
+        „rar“ on one effect the panel computes (burning +1d6 of its kind, life drain 1d4, luck rerolls a natural 1,
+        watchful +1 armour class, or a value's bonus), nothing it cannot; legendary stays rarer than epic at every level."""
+        r = dungeon.rules()
+        self.assertLessEqual(max(x["bonus"] for x in r["seltenheit"]), dungeon.BONUS_MAX)
+        bad = dungeon.merge(dungeon._base_rules(), {"seltenheit": [dict(r["seltenheit"][-1], bonus=4)]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "seltenheit" in e])
+        for e in r["effekte"]:                                                     # every effect is a rule of the panel
+            self.assertTrue(e.get("wirkung") in kampf.WIRKUNG or e["bonus"] > 0, e["id"])
+        bad = dungeon.merge(dungeon._base_rules(), {"effekte": [{"id": "x", "satz": ["a", "b"], "wert": "staerke", "bonus": 0}]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "effekte" in e])
+        ids = [x["id"] for x in r["seltenheit"]]
+        for stufe in range(1, r["grenzen"]["stufe_max"] + 1):
+            n = {k: 0 for k in ids}
+            for w in range(1, 101):
+                n[dungeon.rarity(r, stufe, w + dungeon.FUND_STUFE * stufe)[1]["id"]] += 1
+            self.assertLessEqual(n[ids[-1]], n[ids[-2]], stufe)                   # legendary never more often than epic
+        sword = next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c)
+        self.assertNotIn("eff", dungeon.item(r, sword, "selten", random.Random(1)))
+        for seed in range(20):
+            it = dungeon.item(r, sword, "rar", random.Random(seed))
+            e = dungeon._by(r, "effekte")[it["eff"]]
+            self.assertTrue(not e.get("nur") or "waffe" in e["nur"])
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=2, immun=[], resistenz=[], schwaeche=[])
+        h = rd["plaetze"][self.host]["held"]
+        h["an"]["haupthand"] = dict(dungeon.item(r, sword, "rar"), eff="feuer")
+        p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 6))[1][0]
+        self.assertEqual(x["extra"], [{"art": "feuer", "schaden": 6}])           # a burning blade: +1d6 fire
+        g["immun"] = ["feuer"]
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 6))[1][0]["extra"], [{"art": "feuer", "schaden": 0}])
+        h["an"]["haupthand"]["u"] = True                                           # unknown: only the base counts
+        self.assertNotIn("extra", kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 6))[1][0])
+        h["an"]["haupthand"] = dict(dungeon.item(r, sword, "rar"), eff="vampir")
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 3))[1][0]
+        self.assertEqual(x["raub"], 3)
+        h["leben"] = 1
+        kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertEqual(h["leben"], 4)                                            # life drain heals by the panel's die
+        h["an"]["haupthand"] = dict(dungeon.item(r, sword, "rar"), eff="glueck")
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(1, 15, 1, 1))[1][0]
+        self.assertEqual((x["w"], x["glueck"]), (15, True))                       # luck: a natural 1 rolled again
+        w = dungeon.roll(r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10}], Dice(1, 12))[0]
+        self.assertEqual((w["w"], w["glueck"]), (12, True))
+        ac = kampf.rk(dungeon, r, h)
+        armour = next(c["id"] for c in r["gegenstaende"] if c["art"] == "ruestung" and "kopf" in dungeon.places(r, c) and "seltenheit" not in c)
+        h["an"]["kopf"] = dict(dungeon.item(r, armour, "gewoehnlich"), eff="wachsam")
+        self.assertEqual(kampf.rk(dungeon, r, h), ac + dungeon._c(r, h["an"]["kopf"]).get("schutz", 0) + 1)
+
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()
         rd, held = self.held()

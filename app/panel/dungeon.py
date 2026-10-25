@@ -245,6 +245,9 @@ KEY = "\0dungeongast"     # one lockout entry for every wrong code from one addr
 WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
        "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst")
 TASCHE = 12               # items in one bag
+EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
+FUND_STUFE = 2            # a find's d100 + this per level of the group (rarity)
+BONUS_MAX = 3             # a rarity's bonus at most (Gegenstands-Punkt 3: selten +1, rar +2, episch and legendär +3)
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
 GOLD_MAX = 100000
@@ -544,6 +547,9 @@ def check_rules(r):
          f"ladungen: 10 Listen (Stufe 1 bis 10) mit je {GRAD_MAX} Zahlen 0 bis 9 (Grad 1 bis {GRAD_MAX})")
     for e in r.get("effekte") or []:
         need(_pair(e.get("satz")) and e.get("wert") in werte and _int(e.get("bonus"), 0, 4), f"effekte {e.get('id')}: satz, wert und bonus 0 bis 4")
+        need(e.get("wirkung", "") in ("",) + kampf.WIRKUNG and (e.get("wirkung") != "schaden" or e.get("art") in kampf.ART_NAME)
+             and (e.get("bonus") or e.get("wirkung")) and set(e.get("nur") or ()) <= set(PLATZ_ART),
+             f"effekte {e.get('id')}: wirkung eine von {', '.join(kampf.WIRKUNG)} (schaden mit art) oder ein bonus, nur aus {', '.join(PLATZ_ART)}")
     zids = set()
     for z in r.get("zustaende") or []:
         zids.add(z.get("id"))
@@ -575,7 +581,7 @@ def check_rules(r):
     s = r.get("seltenheit") or []
     need([x.get("ab") for x in s] == sorted(x.get("ab") for x in s if _int(x.get("ab"), 0, 100)) and s and s[0].get("ab") == 0,
          "seltenheit: ab aufsteigend von 0 bis 100")
-    need(all(_int(x.get("bonus"), 0, 6) and _int(x.get("stufe_min"), 1, 20) for x in s), "seltenheit: bonus 0 bis 6, stufe_min 1 bis 20")
+    need(all(_int(x.get("bonus"), 0, BONUS_MAX) and _int(x.get("stufe_min"), 1, 20) for x in s), f"seltenheit: bonus 0 bis {BONUS_MAX}, stufe_min 1 bis 20")
     for x in r.get("toene") or []:
         need(_int(x.get("id"), 0, 21) and _pair(x.get("regel"), 200) and isinstance(x.get("woerter"), list)
              and all(isinstance(w, str) and 2 <= len(w) <= 30 for w in x["woerter"]), f"toene {x.get('id')}: regel und woerter")
@@ -690,8 +696,10 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     elif c["art"] == "schmuck":
         it["wert"] = c.get("wert") or rng.choice(werte)
     rank = [x["id"] for x in r["seltenheit"]].index(s["id"])
+    pool = [e for e in r["effekte"] if not e.get("nur") or c["art"] in e["nur"]]
+    if rank >= EFFEKT_AB and c["art"] in PLATZ_ART and pool:    # from „rar“ on one effect by a fixed rule (Gegenstands-Punkt 3)
+        it["eff"] = rng.choice(pool)["id"]
     if rank >= len(r["seltenheit"]) - 2 and c["art"] in PLATZ_ART:
-        it["eff"] = rng.choice(r["effekte"])["id"]
         it["u"] = True                        # the two rarest kinds come unknown: only the base counts until named (5a)
     return it
 
@@ -1401,9 +1409,11 @@ def group_level(held):
 
 
 def rarity(r, stufe, roll):
-    """(the rarities the level allows, the one this roll reaches)."""
+    """(the rarities the level allows, the one this roll reaches). The rarest kind does not get the level's bonus of
+    the roll (2 a level, Gegenstands-Punkt 5): it stays rarer than the one before it at every level."""
     stufen = [x for x in r["seltenheit"] if x["stufe_min"] <= stufe] or r["seltenheit"][:1]
-    return stufen, [x for x in stufen if roll >= x["ab"]][-1]
+    top = r["seltenheit"][-1]["id"]
+    return stufen, [x for x in stufen if roll >= x["ab"] + (FUND_STUFE * stufe if x["id"] == top else 0)][-1]
 
 
 def open_market(r, rd, name="", satz="", rng=None):
@@ -1414,7 +1424,7 @@ def open_market(r, rd, name="", satz="", rng=None):
     stufe = group_level([p["held"] for _, p in seated(rd)])
     ware = []
     for _ in range(rng.randint(*WARE)):
-        s = rarity(r, stufe, rng.randint(1, 100) + 2 * stufe)[1]
+        s = rarity(r, stufe, rng.randint(1, 100) + FUND_STUFE * stufe)[1]
         it = item(r, rng.choice([c for c in r["gegenstaende"] if in_world(c, rd.get("welt")) and reaches(r, c, s)]
                                 or [c for c in r["gegenstaende"] if "seltenheit" not in c])["id"], s["id"], rng)
         it.pop("u", None)
@@ -1437,7 +1447,7 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt=""):
     above what the level allows, pity after pech_schutz finds without „selten“; the receiver is who went longest
     without a find (first seat on a tie); the item fits that hero's class."""
     rng = rng or random
-    roll = rng.randint(1, 100) + r["anlass"][anlass] + 2 * gruppe_stufe
+    roll = rng.randint(1, 100) + r["anlass"][anlass] + FUND_STUFE * gruppe_stufe
     rec = max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
     h = held[rec]
     stufen, s = rarity(r, gruppe_stufe, roll)
@@ -2829,6 +2839,10 @@ def roll(r, rd, proben, rng=None):
         for _ in range(2):
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
+            if not extra.get("glueck"):
+                w, gl = kampf.lucky(_me, r, h, w, rng)   # „glueck“ of a worn item: a natural 1 rolled again once
+                if gl:
+                    extra["glueck"] = True
             ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
             if ok or not mut.wants(rd, p["pid"]):
                 break
@@ -3002,7 +3016,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer", "mut") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer", "mut", "glueck") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):

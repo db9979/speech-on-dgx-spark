@@ -119,6 +119,25 @@ def prof(stufe):
     return 2 + (max(1, int(stufe)) - 1) // 4
 
 
+WIRKUNG = ("schaden", "lebensraub", "glueck", "wachsam")   # what an item's effect does by a fixed rule (Gegenstands-Punkt 3)
+WIRKUNG_W = 6             # „schaden“: +1d6 of its kind on a hit (twice on a critical)
+RAUB_W = 4                # „lebensraub“: the hero heals 1d4 on a hit
+
+
+def effects(dm, r, h, wirkung, it=None):
+    """The known effects with this wirkung the hero wears (or of the one item it); an unknown item counts only by its base."""
+    eff = dm._by(r, "effekte")
+    its = [it] if it else dm.worn(h)
+    return [eff[x["eff"]] for x in its if x and not x.get("u") and x.get("eff") in eff and eff[x["eff"]].get("wirkung") == wirkung]
+
+
+def lucky(dm, r, h, w, rng):
+    """„glueck“: a natural 1 is rolled again once. Returns (the roll, rolled again)."""
+    if w == 1 and effects(dm, r, h, "glueck"):
+        return rng.randint(1, 20), True
+    return w, False
+
+
 def rk(dm, r, h):
     """A hero's armour class (Gegenstands-Punkt 9): 10 + twice the body armour + the other pieces (shield, helmet,
     gauntlets, boots, each with its rarity) + the Geschick bonus, at most 2 in medium (body 2) and none in heavy armour
@@ -135,7 +154,7 @@ def rk(dm, r, h):
     g = dm.mod(h["werte"].get("geschick", 10))
     base = dm._c(r, h["an"]["koerper"]).get("schutz", 0) if (h.get("an") or {}).get("koerper") else 0
     g = g if base < 2 else min(g, 2) if base < 3 else min(g, 0)
-    return 10 + 2 * body + rest + g
+    return 10 + 2 * body + rest + g + len(effects(dm, r, h, "wachsam"))
 
 
 def _mal(n):
@@ -360,9 +379,12 @@ def attacks(dm, r, rd, proben, rng=None):
             continue
         bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (plus if spell else 0)
         mut = False
+        gl = False
         for _ in range(2):
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
+            if not gl:
+                w, gl = lucky(dm, r, h, w, rng)
             krit = w >= (LEICHT_KRIT if "leicht" in eig else 20)
             hit = krit or (w != 1 and w + bonus >= g["rk"])
             if krit or mut or not dm.mut.wants(rd, p["pid"]):
@@ -372,15 +394,22 @@ def attacks(dm, r, rd, proben, rng=None):
             if hit:
                 krit = True
                 break
-        n, wirkt = 0, ""
+        n, wirkt, extra, raub = 0, "", [], 0
         if hit:
             n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.mod(h["werte"].get(wert, 10)) + (0 if spell else plus))
             n, wirkt = against(g, art, n)
+            for e in effects(dm, r, h, "schaden", wp) if wp and not spell else ():   # a burning blade: its own kind, its own resistances
+                m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))
+                extra.append({"art": e["art"], "schaden": m})
+                n += m
+            if wp and not spell and effects(dm, r, h, "lebensraub", wp):
+                raub = rng.randint(1, RAUB_W)
             life[g["k"]] -= n
         out.append({"pid": p["pid"], "name": h["name"], "ziel": g["k"], "gegner": g["name"], "mit": mit, "wert": wert, "w": w,
                     "ws": ws, "vt": vt, "bonus": bonus, "gesamt": w + bonus, "rk": g["rk"], "treffer": hit, "krit": krit,
                     "schaden": n, "faellt": hit and life[g["k"]] <= 0, "art": art, "wirkt": wirkt,
-                    "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {})})
+                    "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {}),
+                    **({"extra": extra} if extra else {}), **({"raub": raub} if raub else {}), **({"glueck": True} if gl else {})})
     return rest, out
 
 
@@ -515,8 +544,12 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             continue
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
-                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **({"mut": True} if x.get("mut") else {}))
+                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
+        held = (dict(dm.seated(rd)).get(x["pid"]) or {}).get("held")
+        if x.get("raub") and held and not dm.zustand(held):     # life drain: the hero heals by the panel's die
+            dm.heal(held, x["raub"])
+            print("dungeon: kampf | lebensraub", flush=True)
         was = hurt(g, x["schaden"]) if x["treffer"] else ""
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
