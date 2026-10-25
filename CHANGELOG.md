@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.027** · 2026-10-24 · KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf
 - **V01.1.026** · 2026-10-24 · KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
 - **V01.1.025** · 2026-10-24 · KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
 - **V01.1.024** · 2026-10-24 · KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf

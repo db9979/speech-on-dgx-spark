@@ -39,7 +39,10 @@ hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and c
 import random
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
-BUDGET = (50, 100, 150, 250, 500, 600, 750, 1000, 1100, 1200, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
+# Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
+BUDGET = (83, 121, 291, 342, 408, 532, 802, 907, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+GRUPPE = (0.8, 0.35)       # the budget times 0.8 for one hero and 0.35 more for each further one (more heroes hit more often)
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
 ANZAHL_MAX = 4             # of one kind
@@ -136,8 +139,9 @@ def _mal(n):
 
 
 def budget(dm, r, rd, held):
-    """The experience a medium encounter of this group may have (D&D), half at the children's table."""
-    b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held)
+    """The experience a medium encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size,
+    half at the children's table."""
+    b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (GRUPPE[0] + GRUPPE[1] * (len(held) - 1))
     return int(b * (KIND if dm.kids(r, rd) else 1))
 
 
@@ -210,10 +214,9 @@ def check_encounter(dm, r, rd, held, obj):
     return [(g, n) for g, n in out]
 
 
-def start(dm, r, rd, held, wahl, li):
-    """An encounter into the round: the foes with their bestiary values, numbered when several of a kind come."""
-    if not wahl:
-        return None
+def lineup(wahl, li, n_held):
+    """The foes of an encounter with their bestiary values, numbered when several of a kind come; a boss has more life
+    the more heroes stand against it (start, and the balance bench dungeon_pruefstand)."""
     gegner = []
     for g, n in wahl:
         for j in range(n):
@@ -223,11 +226,23 @@ def start(dm, r, rd, held, wahl, li):
                            "wuerfel": g.get("anzahl_wuerfel", 1), "ep": g["ep"], "aus": "", "art": g.get("schaden_art", ""),
                            **{x: list(g.get(x) or []) for x in ("resistenz", "immun", "schwaeche", "zustaende")},
                            "boss": bool(g.get("boss")), "phase": 1})
-            if g.get("boss"):                     # more life the more heroes stand against it
-                gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * (1 + BOSS_LEBEN * max(0, len(held) - 1)))
+            if g.get("boss"):
+                gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * (1 + BOSS_LEBEN * max(0, n_held - 1)))
+    return gegner
+
+
+def danger(adj, b):
+    """The danger word of an encounter: its adjusted experience against the medium budget (GEFAHR)."""
+    return next(n for m, n in GEFAHR if adj / max(1, b) <= m)
+
+
+def start(dm, r, rd, held, wahl, li):
+    """An encounter into the round: the foes with their bestiary values, numbered when several of a kind come."""
+    if not wahl:
+        return None
+    gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
-    ratio = adjusted([{"ep": x["ep"]} for x in gegner]) / max(1, b)
-    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": next(n for m, n in GEFAHR if ratio <= m)}
+    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), b)}
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
         rd["kampf"]["raum"] = rd["raum_gegner"]["raum"]
     dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n) for g, n in wahl],
@@ -447,16 +462,13 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
                 sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []))
         dm._day.bump("treffer" if x["treffer"] else "daneben")
-        if x["treffer"]:
-            g["leben"] = max(0, g["leben"] - x["schaden"])
-            if g["leben"] <= 0:
-                g["aus"] = "besiegt"
-                dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
-                dm._day.bump("besiegt")
-            elif g.get("boss") and g.get("phase") == 1 and g["leben"] * 2 <= g["max"]:
-                g["phase"] = 2                    # a boss at half life: the second phase
-                dm._log(rd, "gegner", gegner=g["name"], was="phase2")
-                print("dungeon: kampf | boss | phase2", flush=True)
+        was = hurt(g, x["schaden"]) if x["treffer"] else ""
+        if was == "besiegt":
+            dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
+            dm._day.bump("besiegt")
+        elif was == "phase2":
+            dm._log(rd, "gegner", gegner=g["name"], was="phase2")
+            print("dungeon: kampf | boss | phase2", flush=True)
     seats = dict(dm.seated(rd))
     for x in zuege:
         if x.get("zustand_schaden") and x["pid"] in seats and not dm.zustand(seats[x["pid"]]["held"]):
@@ -472,10 +484,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": g["name"]})
         rw = x.get("rettung")
         if rw:
-            h = seats[x["pid"]]["held"]
-            z = next((z for z in r.get("zustaende") or [] if z["id"] == rw["zustand"]), None)
-            if z and not rw["ok"] and z["id"] not in {y["id"] for y in h.get("zust") or []}:
-                h.setdefault("zust", []).append({"id": z["id"], "bis": rd.get("zug", 0) + z["runden"]})
+            suffers(r, rd, seats[x["pid"]]["held"], rw)
             dm._log(rd, "rettung", pid=x["pid"], name=x["name"], gegner=g["name"], zustand=_zname(r, rd, rw["zustand"]), wert=rw["wert"],
                     w=rw["w"], gesamt=rw["gesamt"], gegen=rw["gegen"], ok=rw["ok"])
             if rw["ok"]:
@@ -483,13 +492,40 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             else:
                 print("dungeon: kampf | rettung | zustand", flush=True)
     for g in up(rd):
-        if 0 < g["leben"] * FLUCHT <= g["max"] and rng.randint(1, 20) <= FLUCHT_W:
-            g["aus"] = "geflohen"
+        if flees(g, rng):
             dm._log(rd, "gegner", gegner=g["name"], was="aufgegeben" if dm.kids(r, rd) else "geflohen")
             dm._day.bump("geflohen")
     if not up(rd) or ende in ENDE:
         end(dm, r, rd, ep, ende)
     return folgen
+
+
+def hurt(g, n):
+    """A hero's hit on a foe: its life down; "besiegt" at 0, "phase2" when a boss comes to half its life (its second
+    phase), else ""."""
+    g["leben"] = max(0, g["leben"] - n)
+    if g["leben"] <= 0:
+        g["aus"] = "besiegt"
+        return "besiegt"
+    if g.get("boss") and g.get("phase") == 1 and g["leben"] * 2 <= g["max"]:
+        g["phase"] = 2
+        return "phase2"
+    return ""
+
+
+def suffers(r, rd, h, rw):
+    """A failed save puts its state on the hero for the state's turns (once)."""
+    z = next((z for z in r.get("zustaende") or [] if z["id"] == rw["zustand"]), None)
+    if z and not rw["ok"] and z["id"] not in {y["id"] for y in h.get("zust") or []}:
+        h.setdefault("zust", []).append({"id": z["id"], "bis": rd.get("zug", 0) + z["runden"]})
+
+
+def flees(g, rng):
+    """A foe at a quarter of its life or less flees on a d20 of FLUCHT_W or less."""
+    if 0 < g["leben"] * FLUCHT <= g["max"] and rng.randint(1, 20) <= FLUCHT_W:
+        g["aus"] = "geflohen"
+        return True
+    return False
 
 
 def _zname(r, rd, zid):

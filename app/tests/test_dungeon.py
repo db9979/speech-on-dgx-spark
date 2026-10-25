@@ -4601,7 +4601,7 @@ class Fight(Turns):
         r = dungeon.rules()
         rd, held = self.held()
         b = kampf.budget(dungeon, r, rd, held)
-        self.assertEqual(b, sum(kampf.BUDGET[h["stufe"] - 1] for h in held))
+        self.assertEqual(b, int(sum(kampf.BUDGET[h["stufe"] - 1] for h in held) * (kampf.GRUPPE[0] + kampf.GRUPPE[1] * (len(held) - 1))))
         o = kampf.offer(dungeon, r, rd, held)
         self.assertTrue(0 < len(o) <= kampf.ANGEBOT)
         for g in o:

@@ -937,7 +937,7 @@ const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),
-  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
+  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
 const dmRTab=()=>!!(PROFILE&&DM.on&&ADMIN);
 async function dmRules(){if(dmRTab()&&$('dmroot')){icTabSet('dungeon','regeln');goSec('dungeon');return}
   let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
@@ -956,10 +956,11 @@ function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=
   const n={geschichten:(d.geschichten||[]).length,gegenstaende:S.gegenstaende,klassen:S.klassen,voelker:S.voelker,welten:S.welten,toene:S.toene};
   for(const k of DMRKAT)if(DMR.k[k])n[k]=DMR.k[k].zeilen.length;
   const nb=k=>`<button type="button" class="${DMR.teil===k?'on':''}" data-dmrteil="${k}"${DMR.teil===k?' aria-current="true"':''}><span>${esc(N[k])}</span>${n[k]!=null?`<small>${n[k]}</small>`:''}</button>`;
-  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt'].map(nb).join('')}<hr>${nb('json')}</nav>`;
+  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand'].map(nb).join('')}<hr>${nb('json')}</nav>`;
   c.innerHTML=`<div class="dm-rhead"><h2>${esc(t('Dungeon-Master: Regeln','Dungeon Master: rules'))}</h2>${tab?'':`<button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button>`}</div>
     <div class="dm-rlay">${nav}<div class="dm-rin">${dmRTeil(d,err)}</div></div>`;
   if(DMR.teil==='musik'&&window.dmMusikAdm)dmMusikAdm();
+  if(DMR.teil==='pruefstand')dmPruefLook();
   if(DMRKAT.includes(DMR.teil)&&!DMR.k[DMR.teil])dmKatLoad(DMR.teil)}
 function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N[k])}</h3>`,E=err?`<div class="err dm-adm-err">${err}</div>`:'';
   if(k==='geschichten')return DMP.g?dmPlanForm(d):dmPlans(d)+E;
@@ -970,6 +971,7 @@ function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N
     ${E}<div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Speichern','Save'))}</button></div>`;
   if(k==='bilder')return dmThumbsPics(d);
   if(k==='musik')return '<div id="dmmusikadm"></div>';
+  if(k==='pruefstand')return h+`<div id="dmpruef"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
   if(k==='gaeste')return h+dmGastAdm(d.gastmail)+E;
   if(k==='ankommt')return h+(dmThumbsAdmin(d.daumen)||`<div class="fh">${esc(t('Noch keine 👍 oder 👎 in einer Runde.','No 👍 or 👎 in a round yet.'))}</div>`);
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
@@ -1100,6 +1102,28 @@ function dmDingAdmin(x){if(!x)return '';const L0=x.letzter||{},warum={fertig:t('
     <div class="dm-sum"><span class="pill">${esc(t('heute','today'))} ${x.heute}</span> <span class="pill">${esc(t('Fundstücke','Finds'))} ${x.funde}</span>${x.abgelehnt?` <span class="pill warn">${esc(t('abgelehnt','refused'))} ${x.abgelehnt}</span>`:''}${x.laeuft?` <span class="pill on">${esc(x.grund==='alle'?t('malt alle, ohne Tageslimit','painting all, no day limit'):t('malt gerade','painting now'))} · ${x.gemalt} · ${esc(t('noch','left'))} ${x.von-x.fertig}</span>`:L0.ende?` <span class="pill">${esc(t('zuletzt','last'))} ${esc(new Date(L0.ende*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}))} · ${L0.gemalt} · ${esc(warum[L0.warum]||L0.warum||'')}</span>`:''}</div>
     <div class="row">${x.laeuft?`<button type="button" class="b" data-dmding="stop">${esc(x.grund==='alle'?t('Abbrechen','Cancel'):t('Anhalten','Stop'))}</button>`:`<button type="button" class="b p" data-dmding="start"${!x.an||!x.bilder||x.fertig>=x.von?' disabled':''}>${esc(t('Bilder jetzt erstellen','Create pictures now'))}</button>
       <button type="button" class="b" data-dmding="alle" title="${esc(t('Malt alle fehlenden Bilder (Gegenstände, Zauber, Gegner, Orts- und Raumarten, Völker, Klassen) ohne Tageslimit, eins nach dem anderen über die Warteschlange.','Paints every missing picture (items, spells, foes, kinds of places and rooms, peoples, classes) without the day limit, one after the other through the queue.'))}"${!x.an||!x.bilder||x.fertig>=x.von?' disabled':''}>${esc(t('Alle Bilder malen','Paint all pictures'))} · ${x.von-x.fertig}</button>`}</div></div>`}
+// Balance-Prüfstand (dungeon_pruefstand.py): how often a group wins a fight of „mittel“, per level, for the group size
+// chosen; the aim as a green band, a bar outside it red. Numbers from the panel's own fights, never the model.
+const DMPS={g:4,t:0};
+function dmPruefBox(x){const z=x.zellen||{},G=DMPS.g,lv=Object.keys(z).map(k=>k.split('/')).filter(([,g])=>+g===G).map(([s])=>+s).sort((a,b)=>a-b);
+  const [lo,hi]=x.ziel,W=520,H=230,B=196,sc=1.7,bw=Math.min(40,(W-60)/Math.max(1,lv.length)-8);
+  const bars=lv.map((s,i)=>{const c=z[s+'/'+G],hgt=c.siege*sc,xx=48+i*(bw+8),off=c.siege<lo||c.siege>hi;
+    return `<rect x="${xx}" y="${B-hgt}" width="${bw}" height="${hgt}" rx="4" class="${off?'dm-ps-aus':'dm-ps-in'}"><title>${esc(t('Stufe','Level'))} ${s}: ${c.siege} %</title></rect><text x="${xx+bw/2}" y="${B-hgt-5}" text-anchor="middle" class="dm-ps-z">${c.siege}</text><text x="${xx+bw/2}" y="${B+15}" text-anchor="middle">${s}</text>`}).join('');
+  const chart=lv.length?`<svg viewBox="0 0 ${W} ${H}" class="dm-ps-svg" role="img" aria-label="${esc(t(`Siege je Stufe, Gruppe aus ${G}`,`Wins per level, group of ${G}`))}"><rect x="40" y="${B-hi*sc}" width="${W-44}" height="${(hi-lo)*sc}" class="dm-ps-ziel"/><line x1="40" y1="${B}" x2="${W-4}" y2="${B}" class="dm-ps-ax"/><text x="2" y="${B-hi*sc+4}">${hi} %</text><text x="2" y="${B-lo*sc+4}">${lo} %</text><text x="2" y="${B+4}">0 %</text>${bars}<text x="${W/2}" y="${H-2}" text-anchor="middle">${esc(t('Stufe der Gruppe','Level of the group'))}</text></svg>`
+    :`<div class="fh">${esc(t('Noch kein Durchlauf.','No run yet.'))}</div>`;
+  const rows=lv.map(s=>{const c=z[s+'/'+G];return `<tr><td>${s}</td><td>${c.siege} %</td><td>${c.leben} %</td><td>${c.runden}</td></tr>`}).join('');
+  return `<div class="fh">${esc(x.an?t(`Der Spark spielt nachts je Stufe und Gruppengröße ${x.kaempfe||200} Kämpfe der Gefahr „mittel“ mit den echten Regeln und Würfeln durch, ohne Modell. Ziel: ${lo} bis ${hi} % Siege.`,`At night the Spark plays ${x.kaempfe||200} fights of danger "medium" per level and group size with the real rules and dice, without the model. Aim: ${lo} to ${hi} % wins.`):t('Aus. Einschalten unter Funktionen → KI-Dungeon-Master → Balance-Prüfstand.','Off. Switch it on under Features → AI Dungeon Master → Balance bench.'))}</div>
+    <div class="row dm-ps-g" role="group" aria-label="${esc(t('Gruppengröße','Group size'))}">${Array.from({length:x.gruppe_max},(_,i)=>i+1).map(g=>`<button type="button" class="b${g===G?' on':''}" data-dmps="${g}"${g===G?' aria-pressed="true"':' aria-pressed="false"'}>${g} ${esc(g===1?t('Held','hero'):t('Helden','heroes'))}</button>`).join('')}</div>
+    ${chart}${rows?`<table class="dm-ps-t"><thead><tr><th>${esc(t('Stufe','Level'))}</th><th>${esc(t('Siege','Wins'))}</th><th>${esc(t('Leben verloren','Life lost'))}</th><th>${esc(t('Runden','Turns'))}</th></tr></thead><tbody>${rows}</tbody></table>`:''}
+    <div class="dm-sum">${x.zeit?`<span class="pill">${esc(t('zuletzt','last'))} ${esc(new Date(x.zeit*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}))}</span>`:''}${x.laeuft?` <span class="pill on">${esc(t('spielt gerade','playing now'))}</span>`:''}</div>
+    <div class="row"><button type="button" class="b p" data-dmps="los"${!x.an||x.laeuft?' disabled':''}>${esc(t('Jetzt durchspielen','Play it through now'))}</button></div>`}
+async function dmPruefLook(){clearTimeout(DMPS.t);if(!$('dmpruef'))return;const {r,d}=await apiTry('/api/admin/dungeon/pruefstand');
+  if(!$('dmpruef'))return;if(!r.ok){$('dmpruef').innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
+  DMPS.d=d;$('dmpruef').innerHTML=dmPruefBox(d);if(d.laeuft)DMPS.t=setTimeout(dmPruefLook,3000)}
+document.addEventListener('click',async e=>{const b=e.target.closest('#dmpruef [data-dmps]');if(!b)return;const k=b.dataset.dmps;
+  if(k!=='los'){DMPS.g=+k;if(DMPS.d)$('dmpruef').innerHTML=dmPruefBox(DMPS.d);return}
+  b.disabled=true;const {r,d}=await apiTry('/api/admin/dungeon/pruefstand',xjson('POST',{}));
+  if(!r.ok){sayToast(dmErr(r.status,d.detail));b.disabled=false;return}DMPS.d=d;$('dmpruef').innerHTML=dmPruefBox(d);DMPS.t=setTimeout(dmPruefLook,3000)});
 let DMDT=0;
 async function dmDingLook(){clearTimeout(DMDT);const box=$('dmding');if(!box)return;const {r,d}=await apiTry('/api/admin/dungeon/dingbilder');
   if(!r.ok||!$('dmding'))return;$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)}

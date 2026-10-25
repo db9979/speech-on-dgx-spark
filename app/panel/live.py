@@ -235,6 +235,16 @@ def _gastkonten():
             f"{c['mails_heute']} Mails")
 
 
+def _pruefstand():
+    """The Dungeon-Master's balance bench (dungeon_pruefstand.counts): numbers only."""
+    import dungeon_pruefstand
+    if not dungeon_pruefstand.on():
+        return ""
+    c = dungeon_pruefstand.counts()
+    return (f" · Prüfstand {c['zellen']} Felder, {c['unter']} unter und {c['ueber']} über dem Ziel" if c["zellen"] else " · Prüfstand noch ohne Lauf") + \
+        (" · Prüfstand spielt gerade" if c["laeuft"] else "")
+
+
 def target(name):
     """The target of a tool: from TOOLS, MCP tools (named per service) by their beginning."""
     if name.startswith(("mcp_", "mcpu_")):
@@ -1821,6 +1831,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['kraefte']} Zauber aus Ladungen, {dgn.get('kann_nicht', 0)} unbekannte Kräfte abgewiesen"
                            if dgn.get("kraefte") or dgn.get("kann_nicht") else "")
                         + _gastkonten()
+                        + _pruefstand()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

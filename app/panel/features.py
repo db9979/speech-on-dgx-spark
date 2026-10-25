@@ -255,6 +255,10 @@ FEATURES = (
     # the admin's mailbox, and may get „Du bist dran“ by mail; only a hash of the address, the address sealed on wish
     F("dungeongast", "Gäste mit E-Mail", "Guests with e-mail", "data", ("dungeon_gast",), parent="dungeon", me="dmbox",
       guide="dungeongast"),
+    # Balance-Prüfstand (dungeon_pruefstand.py, Idee 5 of 2026-10-24): the panel plays fights alone with the real rules,
+    # at night or on the admin's button, and shows the wins per level under Regeln; no model, no profile's data
+    F("dungeonpruefstand", "Balance-Prüfstand", "Balance bench", "data", ("dungeon_pruefstand",), parent="dungeon",
+      me="dmbox", guide="dungeonpruefstand"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

@@ -178,6 +178,7 @@ MODULE = {
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),
     "dungeon_regelseite": ("dienste", "Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen"),
     "dungeon_balance": ("dienste", "Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark"),
+    "dungeon_pruefstand": ("dienste", "Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell"),
     "dungeon_gast": ("dienste", "Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse"),
     "dungeon_stimmen": ("dienste", "Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen"),
     "dungeon_auto": ("dienste", "Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde"),

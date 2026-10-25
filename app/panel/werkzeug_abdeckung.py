@@ -148,6 +148,7 @@ WITHOUT = {
     "wissensbuch": "arbeitet im Hintergrund, Fragen beantwortet document_search aus den Seiten",
     "wissenskarte": "arbeitet im Hintergrund, die Karte steht im Wissensbuch (Seite Karte)",
     "dungeon": "dungeon.py: kein Werkzeug, ein Spiel auf seiner eigenen Seite (Erzählung nur als Daten, Werte vom Panel)",
+    "dungeonpruefstand": "dungeon_pruefstand.py: kein Werkzeug, der Admin-Prüfstand spielt Kämpfe mit festen Regeln und Würfeln, ohne Modell",
     "dungeongast": "dungeon_gast.py: kein Werkzeug, Gast-Konten des Spiels mit festem Code per Mail und fester Zug-Mail, nie Modelltext",
     "dungeonbilder": "dungeon_dingbild.py: kein Werkzeug, Bilder für den Katalog des Spiels, gemalt nachts oder auf Knopf des Admins nach fester Regel",
     "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",

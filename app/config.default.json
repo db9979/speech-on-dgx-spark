@@ -188,6 +188,7 @@
     "dungeon": false,
     "dungeon_bilder": false,
     "dungeon_gast": false,
+    "dungeon_pruefstand": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

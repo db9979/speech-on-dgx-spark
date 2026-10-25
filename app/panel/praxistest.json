@@ -3201,6 +3201,13 @@
 "titel": "Kampf Teil 2: Waffen, Schadensarten, Zustände, Bosse",
 "text": "A: Heldenbogen → Ausrüstung, eine Waffe antippen: unter dem Schaden steht die Art (Hieb, Stich, Wucht) und was jede Eigenschaft tut. B: Im Kampf mit Dolch oder Rapier angreifen: der Verlauf zeigt „Finesse“, eine 19 mit dem Dolch ist kritisch. Mit „Ich werfe den Dolch“: „Wurf“. C: Gegen einen Gegner mit Schwäche (etwa ein Untoter gegen strahlend): „doppelt!“ im Verlauf; mit Resistenz „halbiert“. Das Gegner-Fenster zeigt, wogegen er schwach oder geschützt ist. D: Ein Gegner mit Gift oder Griff trifft: ein Rettungswurf steht im Verlauf; misslingt er, zeigt der Platz ☠ und den Zustand, Angriffe kommen mit Nachteil. Nach dem Kampf ist er weg. E: Ein Boss (👑 im Kampfkasten): ab halbem Leben die Zeile „zweite Phase“, er greift zweimal je Zug an, danach eine bessere Beute.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P482",
+"v": 1027,
+"titel": "Balance-Prüfstand",
+"text": "A: Funktionen → KI-Dungeon-Master → Balance-Prüfstand an. B: Regeln anpassen → Balance-Prüfstand: „Noch kein Durchlauf“, dann „Jetzt durchspielen“: nach höchstens einer Minute stehen Balken je Stufe, das grüne Band zeigt 70 bis 90 %. C: Gruppengröße 1 bis 5 umschalten: die Balken wechseln, die Tabelle zeigt Siege, verlorenes Leben und Runden. D: Ein zweites „Jetzt durchspielen“ sofort danach: Hinweis „zu oft“. E: Zustand → Überblick: beim Dungeon-Master „Prüfstand N Felder, M unter und K über dem Ziel“. F: Zustand → Logs, Filter „pruefstand“: start, fertig mit Zahlen. G: Eine Runde mit 4 Helden spielen: Begegnungen bei „mittel“ fordern spürbar mehr als vorher, ein Held allein kommt öfter durch. H: Am nächsten Morgen: „zuletzt“ zeigt den Lauf der Nacht.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
