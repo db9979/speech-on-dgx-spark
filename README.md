@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.056** AI Dungeon Master at the table: foes with several attacks, bosses at least two; a foe's life as a word (bruised, badly hurt, nearly beaten), states with "N turns left"; speech recognition knows the round's names; every roll with a dice receipt, the narration names only numbers on a receipt; reading aloud marks the sentence being spoken
 - **V01.1.055** AI Dungeon Master: a settlement with life: head with picture, time of day and gold, cards with picture and line, calculation and verb per service, what is too dear grey with "N gold short", the lesson as six values before → after
 - **V01.1.054** AI Dungeon Master: economy part 3: the bench measures income against spending per level, inn 10 gold times the level per hero, the smith improves weapons and armour by one rarity, oils on the weapon for 3 hits, effects thundering, corroding and withering
 - **V01.1.053** AI Dungeon Master: economy part 2: more coins from foes, merchants with a kind and a purse (half the price only for their own kind), rarity by a fixed find table per level, legendary things only from bosses
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.049** AI Dungeon Master: damage kinds: spells hit with their own kind, magic weapons go through resistance, rings and potions with resistance, weak spots shown only after a hit; time of day for the stage; hero sheet and right column no longer jump
 - **V01.1.048** AI Dungeon Master: game mails in the Dungeon style: code and "Your turn" as a page of the game in the world's colours, with the narrator's last sentence (can be switched off) and "Play on" as a one-time link without a permanent seat key; the Heroes tab shows equipment, bag and gold per hero
 - **V01.1.047** AI Dungeon Master: joining without cheating: whoever joins during a fight waits at the edge; in their first turn a new hero gives nobody anything; whoever leaves a fight has fled and the experience is shared by the group the fight began with; one device, one hero; when down, death saves as in D&D, and the only hero at the table is saved by a stranger instead of falling
-- **V01.1.046** AI Dungeon Master: listen to marked music pieces before they go (▶ Listen, admin only)
 
 
 

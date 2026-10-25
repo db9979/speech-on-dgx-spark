@@ -1291,7 +1291,7 @@ class Voice(Base):
         for n in (1, 2, 3, 4):
             asyncio.run(dungeon.speak_turn(rid, n, parts))
         self.assertEqual(self.state(rid)["ton_n"], [2, 3, 4])
-        self.assertEqual(self.state(rid)["lesung"], {"n": 4, "k": 2, "fertig": True, "fehler": 0})   # one piece each
+        self.assertEqual(self.state(rid)["lesung"], {"n": 4, "k": 2, "fertig": True, "fehler": 0, "texte": ["Die Krypta riecht nach Wachs.", "Halt!"]})   # one piece each, its words for the read-along mark
         self.assertEqual(sorted(os.listdir(dungeon.TON_DIR)), sorted(f"{rid}-{n}-{k}.{x}" for n in (2, 3, 4) for k in (0, 1) for x in ("wav", "mp3")))   # each also as MP3
         r = self.c.get(f"/api/profile/dungeon/{rid}/ton/4/1")
         self.assertEqual((r.status_code, r.content[:4]), (200, b"RIFF"))
@@ -1301,7 +1301,7 @@ class Voice(Base):
         for bad in (2, -1, "0", True):
             self.assertEqual(self.v.post("/api/dungeon/ton", json={"code": code, "zug": 4, "k": bad}).status_code, 404, bad)
         self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/ton/4/0").status_code, 404)   # not a seat
-        self.assertEqual(self.c.get(f"/api/profile/dungeon/{rid}").json()["lesung"], {"n": 4, "k": 2, "fertig": True})
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{rid}").json()["lesung"], {"n": 4, "k": 2, "fertig": True, "texte": ["Die Krypta riecht nach Wachs.", "Halt!"]})
         self.assertEqual(self.v.post(f"/api/profile/dungeon/{rid}/vorlesen", json={"an": False}).status_code, 401)
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/vorlesen", json={"an": False}).json()["vorlesen"], False)
         self.c.delete("/api/profile/dungeon/daten")
@@ -1313,7 +1313,10 @@ class Voice(Base):
         rid = v["rid"]
         code, gp = self.guest(rid)
 
-        async def asr(wav, lang):
+        heard = []
+
+        async def asr(wav, lang, prompt=""):
+            heard.append(prompt)
             return "<think>x</think>Ich hebe die Laterne."
         old = dungeon.ask_asr
         dungeon.ask_asr = asr
@@ -1328,6 +1331,22 @@ class Voice(Base):
         big = base64.b64encode(b"RIFF" + b"\0" * 4 + b"WAVE" + b"\0" * dungeon.HOER_BYTES).decode()
         self.assertIn(self.v.post("/api/dungeon/hoeren", json={"code": code, "wav": big}).status_code, (400, 413))
         self.assertEqual(self.c2.post(f"/api/profile/dungeon/{rid}/hoeren", json={"wav": b64}).status_code, 404)
+        # Tabletop-Punkt 14: the names the table knows go along as context, never a person of the story's truth
+        self.assertIn("Arvid", heard[0])
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["wahrheit"] = {"personen": [{"name": "Geheimrat Zorn", "rolle": "", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        r_ = dungeon.rules()
+        self.assertNotIn("Geheimrat Zorn", dungeon.heard_words(r_, self.state(rid), gp))
+        self.assertIn("Arvid", dungeon.heard_words(r_, self.state(rid), gp))
+        self.assertLessEqual(len(dungeon.heard_words(r_, self.state(rid), gp)), dungeon.HOER_WORTE)
+        import dungeon_auto                                                   # the car: only while it plays from there
+        self.assertEqual(dungeon_auto.words(self.uid), [])
+        dungeon_auto._im_auto[self.uid] = 1000.0
+        self.addCleanup(dungeon_auto._im_auto.clear)
+        self.assertIn("Arvid", dungeon_auto.words(self.uid, now=1000.0 + dungeon_auto.WORTE_S))
+        self.assertEqual(dungeon_auto.words(self.uid, now=1001.0 + dungeon_auto.WORTE_S), [])
 
     def test_hero_voices_speak_only_quotes(self):
         self.assertEqual(dungeon.says('Ich ziehe das Schwert. „Halt, wer da?“ Dann "Zurück!"'), "Halt, wer da? Zurück!")
@@ -1596,7 +1615,7 @@ class ReadAloud(Base):
         self.assertTrue(all(x.endswith(" ms") for x in lines))
         self.assertTrue(lines[-1].startswith("dungeon: vorlesen | teils | 3 teile"))
         self.assertEqual(("", "Zwei kommt."), said[4])                      # the speech output's own voice stood in
-        self.assertEqual(self.state(rid)["lesung"], {"n": 3, "k": 3, "fertig": True, "fehler": 1})
+        self.assertEqual(self.state(rid)["lesung"], {"n": 3, "k": 3, "fertig": True, "fehler": 1, "texte": ["Eins ist da.", "Zwei kommt.", "Vier ist da."]})   # piece k is texte[k], a missing one leaves no gap
         live = dungeon.for_live()
         self.assertEqual((live["vorlesen_fehler"], live["vorlesen_ersatz"]), (1, 2))
 
@@ -2622,6 +2641,30 @@ class BetterStories(Base):
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid lauscht, und hinter der Tür ist es plötzlich still wie in einem Grab.", "frage_an": "Arvid"},
                         {"erzaehlung": "kurz", "frage_an": ""}])
         self.assertIn("still wie in einem Grab", [x for x in rd["log"] if x["art"] == "dm"][-1]["text"])
+
+    def test_dice_receipts_hold_the_numbers(self):
+        """Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, from portents): every roll of the panel
+        gets an id W-n that counts on through the round; a number the narration tells in a dice context must stand on a
+        receipt of the turn, else the judge has it rewritten, and failing that the panel adds the receipts."""
+        erz = dungeon.erz
+        rd = self.state(self.rid)
+        rd["offen"] = {}
+        w = [{"pid": self.host, "name": "Arvid", "w": 12, "gesamt": 15, "schwer": 13, "bonus": 3, "ok": True, "wofuer": "Tür"}]
+        hits = [{"pid": self.host, "name": "Arvid", "w": 9, "gesamt": 14, "rk": 12, "schaden": 6, "treffer": True, "extra": [{"art": "feuer", "schaden": 4}]}]
+        zuege = [{"k": "g1", "name": "Arvid", "w": 18, "gesamt": 22, "rk": 16, "schaden": 7}, {"zustand_schaden": "brennend", "schaden": 2}]
+        self.assertEqual(erz.receipts(rd, w, hits, zuege), ["W-1", "W-2", "W-3"])
+        self.assertEqual(erz.receipts(rd, w[:1], [], []), ["W-4"])                 # it counts on through the round
+        base = "Arvid stemmt sich gegen die schwere Tür, das Holz knarrt, der Riegel gibt nach, und kalte Luft strömt herein. "
+        self.assertEqual(erz.numbers_off(base + "Er würfelt eine 15 und trifft mit 6 Schaden.", w, hits, zuege), [])
+        self.assertEqual(erz.numbers_off(base + "Er würfelt eine 17, der Hieb macht 11 Schaden.", w, hits, zuege), [11, 17])
+        self.assertEqual(erz.numbers_off(base + "Drei Wachen und 12 Fässer stehen im Hof.", [], [], []), [])   # no dice context
+        fault, missing = erz.judge(dungeon, rd, {"text": base + "Arvid würfelt eine 19.", "ooc": []}, w, hits, zuege)
+        self.assertEqual((fault, missing[0]), ("beleg", "19"))
+        self.assertIn("W-4", " ".join(missing))
+        fixed = erz.repair(rd, {"text": base + "Arvid würfelt eine 19."}, fault, missing)
+        self.assertIn("Es gelten die Würfel-Belege: W-4", fixed["text"])
+        self.assertIn("beleg", erz.HART)
+        self.assertIn("dmBeleg", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
 
     def test_repeating_counts_as_a_fault(self):
         rd = self.state(self.rid)
@@ -4434,6 +4477,16 @@ class Windows(unittest.TestCase):
                     await pg.click("#dmview [data-dmhear=aus]")                      # off for this device
                     self.assertEqual(await pg.evaluate("localStorage.getItem('dm-ton')"), "0")
                     await b.until(pg, "!!document.querySelector('#dmview [data-dmhear=an]')&&!document.querySelector('#dmview [data-dmhear=nochmal]')")
+                    # read along (Tabletop 16): the piece being read is marked by its words across markup and quote marks
+                    mit = await pg.evaluate("""()=>{const A=DMLES.p,w0=A.w,v0=DM.v,w=document.createElement('div'),z={};
+                      w.innerHTML='<div class="dm-dm" data-dmzug="4"><p>Die Krypta riecht nach Wachs.</p></div><div class="dm-dm" data-dmzug="5"><p><span class="dm-satz">Es ist kalt. Die <b>Krypta</b> riecht</span> nach „Wachs“. Dann Stille.</p></div>';
+                      DM.v=Object.assign({},v0,{lesung:{n:5,k:2,fertig:false,texte:['Es ist kalt.','Die Krypta riecht nach Wachs.']}});A.w=w;A.n=5;A.k=1;A.laeuft=true;dmMit('p');
+                      z.an=[...w.querySelectorAll('mark.dm-mit')].map(m=>m.textContent).join('|');z.wo=[...w.querySelectorAll('mark.dm-mit')].every(m=>m.closest('.dm-dm').dataset.dmzug==='5');
+                      A.k=0;dmMit('p');z.weiter=[...w.querySelectorAll('mark.dm-mit')].map(m=>m.textContent).join('|');
+                      A.laeuft=false;dmMit('p');z.aus=w.querySelectorAll('mark.dm-mit').length;z.text=w.querySelector('[data-dmzug="5"]').textContent;
+                      A.w=w0;DM.v=v0;return z}""")
+                    self.assertEqual(mit, {"an": "Die |Krypta| riecht| nach „Wachs", "wo": True, "weiter": "Es ist kalt", "aus": 0,
+                                           "text": "Es ist kalt. Die Krypta riecht nach „Wachs“. Dann Stille."})
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -5648,10 +5701,48 @@ class Fight(Turns):
         self.assertTrue(len(flat) == 1 or (len(flat) <= kampf.GEGNER_MAX and kampf.adjusted(flat) <= b))
         self.assertEqual(kampf.check_encounter(dungeon, r, dict(rd, kampf={"gegner": []}), held, [{"id": o[0]["id"]}]), [])
 
+    def test_a_foes_life_is_a_word_for_the_players(self):
+        """Tabletop-Punkt 11 (Dominik 2026-10-25 „alle punkte“, from improved-initiative): only the host sees a foe's life
+        in numbers; every other seat (guest, app, TV, car) gets its state as a word: unverletzt, angeschlagen, schwer
+        verletzt, fast besiegt; the encounter card keeps the bestiary's life for the host only. A hero's state shows the
+        turns it still lasts."""
+        import dungeon_auto
+        rd, _ = self.encounter()
+        with dungeon._lock:
+            d = dungeon._read()
+            g = d["runden"][self.rid]["kampf"]["gegner"][0]
+            g.update(max=40, leben=40)
+            dungeon._write(d)
+        host = dungeon.view(self.rid, self.host)
+        gast = dungeon.view(self.rid, self.gp)
+        self.assertEqual((host["kampf"]["gegner"][0]["leben"], host["kampf"]["gegner"][0]["max"]), (40, 40))
+        x = gast["kampf"]["gegner"][0]
+        self.assertNotIn("leben", x)
+        self.assertNotIn("max", x)
+        self.assertEqual((x["lage"], x["lage_name"]), ("unverletzt", "unverletzt"))
+        beg = lambda v: [g_ for e in v["log"] if e.get("art") == "begegnung" for g_ in e["gegner"]]
+        self.assertTrue(all("leben" in g_ for g_ in beg(host)) and beg(host))
+        self.assertFalse([g_ for g_ in beg(gast) if "leben" in g_])
+        for n, word in ((40, "unverletzt"), (39, "angeschlagen"), (21, "angeschlagen"), (20, "schwer"), (11, "schwer"), (10, "fast"), (0, "fast")):
+            self.assertEqual(kampf.lage({"leben": n, "max": 40})[0], word, n)
+        self.assertEqual(dungeon_auto.stand(self.state(self.rid), 0, host=False)[0], f"{x['name']} ist unverletzt")
+        self.assertIn("40 von 40", dungeon_auto.stand(self.state(self.rid), 0)[0])
+        with dungeon._lock:                                    # a state with its turns left
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            z = (dungeon.rules().get("zustaende") or [])[0]
+            rd["plaetze"][self.gp]["held"]["zust"] = [{"id": z["id"], "bis": rd["zug"] + 2}]
+            dungeon._write(d)
+        me = dungeon.view(self.rid, self.gp)["ich"]
+        self.assertEqual(me["zust"][0]["noch"], 3)
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("function dmLage(", js)
+
     def test_attack_rolls_by_the_panel_against_the_armour_class(self):
         r = dungeon.rules()
         rd, _ = self.encounter()
         g = rd["kampf"]["gegner"][0]
+        g.update(immun=[], resistenz=[], schwaeche=[])      # the rolls alone (the first foe offered may resist, SRD 5.2.1)
         h = rd["plaetze"][self.host]["held"]
         p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"].upper()}
         rest, hits = kampf.attacks(dungeon, r, rd, [p, {"pid": self.gp, "wert": "geschick", "schwer": 10, "vt": ""}], Dice(20))
@@ -5742,12 +5833,21 @@ class Fight(Turns):
         kampf.end(dungeon, r, rd, {})
         self.assertNotIn("zust", h)                                                                  # every state ends with the fight
         # a boss: life per hero, phase 2 at half life, two attacks a turn, a better find
-        cat = dict(foe, boss=True)
+        cat = {k_: v for k_, v in foe.items() if k_ != "angriffe"} | {"boss": True}
         k = kampf.start(dungeon, r, rd, [p_["held"] for _, p_ in dungeon.seated(rd)], [(cat, 1)], 0)
         b = k["gegner"][0]
         self.assertEqual(b["max"], int(foe["leben"] * (1 + kampf.BOSS_LEBEN * (len(dungeon.seated(rd)) - 1))))
         rd["kampf"] = k
         self.assertEqual(len([y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(1, 1)) if y.get("k")]), 2)
+        # multiattack (Tabletop-Punkt 12): a foe attacks as often as its "angriffe", a boss at least twice
+        for extra, n in (({"angriffe": 3}, 3), ({"angriffe": 3, "boss": True}, 3), ({}, 1)):
+            one = {k_: v for k_, v in foe.items() if k_ not in ("angriffe", "boss")} | extra
+            rd["kampf"] = kampf.start(dungeon, r, rd, [p_["held"] for _, p_ in dungeon.seated(rd)], [(one, 1)], 0)
+            self.assertEqual(len([y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(1, 1, 1)) if y.get("k")]), n, extra)
+        self.assertEqual(kampf.card(dungeon, r, rd, next(g_["id"] for g_ in r["gegner"] if g_.get("angriffe") == 3), "de")["angriffe"], 3)
+        bad = dungeon.merge(dungeon._base_rules(), {"gegner": [dict(r["gegner"][0], angriffe=6)]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "angriffe" in e])
+        rd["kampf"] = k
         b["leben"] = b["max"] // 2 + 1
         kampf.apply(dungeon, r, rd, [{"pid": self.host, "name": h["name"], "ziel": b["k"], "gegner": b["name"], "mit": "", "w": 15, "ws": [15],
                                       "vt": "", "bonus": 3, "gesamt": 18, "rk": b["rk"], "treffer": True, "krit": False, "schaden": 1,

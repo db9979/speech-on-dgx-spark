@@ -1243,9 +1243,13 @@ async def _test_asr(request, file, language, wake, room, opened="", heard=None):
     if wake and not me and not admin_cookie_ok(request):
         raise HTTPException(403, "the wake word is for profiles only")
     # Namen fürs Hören (hoerwoerter.py): the names this profile may use, the wake phrase and the admin's own context
+    import dungeon_auto
     import hoerwoerter
     ctx = hoerwoerter.prompt(cfg, me and me["id"], extra=f"{wake[:40]}." if wake else "")
-    if ctx and (wake or hoerwoerter.on(cfg)):
+    game = dungeon_auto.words(me["id"]) if me and not wake else []    # playing from the car: the round's names first (Tabletop-Punkt 14)
+    if game:
+        ctx = (", ".join(game) + ". " + ctx).strip()[:hoerwoerter.MAX_CHARS]
+    if ctx and (wake or hoerwoerter.on(cfg) or game):
         form["prompt"] = ctx
     # speaker identification runs on the CPU while the GPU transcribes
     spk = None

@@ -3369,6 +3369,13 @@
 "titel": "Siedlung mit Leben",
 "text": "Voraussetzung: Funktionen → KI-Dungeon-Master → Gold mit Zweck an, die Gruppe steht in einer Siedlung. A: „🏘 Siedlung“ öffnen: oben Bild, Name, Tageszeit, dein Gold und das der Gruppe. B: Jede Karte hat ein Bild oder Zeichen, einen Satz und einen Knopf mit Verb. C: Mit wenig Gold: der Knopf ist grau und sagt „Es fehlen N Gold“. D: Lehrstunde: sechs Werte mit vorher → nachher, Tippen lernt. E: Auf dem iPhone passt alles ohne seitliches Schieben.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P506",
+"v": 1056,
+"titel": "Tabletop Welle A",
+"text": "Mit zwei Geräten, ein Kampf gegen einen Boss. A: Der Boss greift im Zug der Gegner zweimal an, das Gegner-Fenster zeigt „2 × …“. B: Auf dem Gast-Gerät steht bei Gegnern nur unverletzt, angeschlagen, schwer verletzt oder fast besiegt, beim Gastgeber die Zahlen. C: Ein vergifteter Held zeigt „noch N Züge“. D: Neben jedem Wurf steht klein W-1, W-2 …; die Erzählung nennt keine anderen Würfelzahlen. E: Mit 🎤 den Namen eines Gegners oder Ortes sagen: er steht richtig geschrieben im Feld. F: Vorlesen an: der gerade gesprochene Satz ist in der Erzählung markiert und wandert mit. G: Zustand → Überblick zeigt die Zählungen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

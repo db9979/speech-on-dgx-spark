@@ -21,6 +21,7 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   (gewöhnlich bis 50, selten bis 250, rar bis 1000, episch bis 4000), Legendäres hat keinen Preis; jeder Schatz hat
   eine Klasse (klein, mittel, groß) und keinen eigenen Preis; Schutz nennt nur Schadensarten der Liste und ist nie
   mehr als halber Schaden (kein immun bei Helden-Dingen).
+- Mehrfachangriff (Dominik 2026-10-25, Tabletop-Punkt 12): "angriffe" nur 2 bis 5, fehlt = 1.
 """
 import json
 import os
@@ -165,6 +166,11 @@ class Srd(unittest.TestCase):
                 self.assertIn(x["art"], dungeon.WIDERSTAND_ARTEN, x["id"])
                 self.assertTrue(x["widerstand"] and set(x["widerstand"]) <= ARTEN, x["id"])
                 self.assertNotIn("immun", x, x["id"])
+
+    def test_angriffe_zwei_bis_fuenf(self):
+        for g in dungeon._base_rules()["gegner"]:
+            if "angriffe" in g:
+                self.assertIn(g["angriffe"], range(2, 6), g["id"])
 
 
 if __name__ == "__main__":

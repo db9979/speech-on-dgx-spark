@@ -262,6 +262,7 @@ KEY = "\0dungeongast"     # one lockout entry for every wrong code from one addr
 WAS = ("anlegen", "ablegen", "trinken", "auftragen", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
        "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst")
 TASCHE = 12               # items in one bag
+ANGRIFFE_MAX = 5          # a foe's multiattack at most (Tabletop-Punkt 12, "angriffe" 2 to 5 in the bestiary)
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
 NIE = 999                 # a threshold of the find table no roll reaches (d100 + at most 50 for the occasion)
 LEGENDEN_MAX = 200        # legends a campaign remembers as found (dungeon_legenden)
@@ -388,7 +389,8 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0)
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
+                  oel=0, beleg_falsch=0, hoer_namen=0)
 
 
 def _go(coro, name):
@@ -624,11 +626,13 @@ def check_rules(r):
              and x.get("groesse", "mittel") in GROESSEN
              and isinstance(x.get("zustaende", []), list) and set(x.get("zustaende", [])) <= zids
              and x.get("schaden_art", "hieb") in kampf.SCHADEN_ARTEN and x.get("boss", False) in (True, False)
+             and ("angriffe" not in x or _int(x["angriffe"], 2, ANGRIFFE_MAX))
              and all(isinstance(x.get(f, []), list) and set(x.get(f, [])) <= set(kampf.SCHADEN_ARTEN) for f in ("resistenz", "immun", "schwaeche"))
              and not (set(x.get("resistenz", [])) | set(x.get("immun", []))) & set(x.get("schwaeche", [])),
              f"gegner {x.get('id')}: zeichen, info, welten, stufe 0 bis 30, leben, ruestung, angriff, schaden, ep, "
              f"die sechs werte, groesse ({', '.join(GROESSEN)}), zustaende aus zustaende, schaden_art, resistenz, immun und "
-             f"schwaeche aus {', '.join(kampf.SCHADEN_ARTEN)} (nichts zugleich schwach und geschützt), boss true oder false")
+             f"schwaeche aus {', '.join(kampf.SCHADEN_ARTEN)} (nichts zugleich schwach und geschützt), boss true oder false, "
+             f"angriffe 2 bis {ANGRIFFE_MAX} (fehlt = 1)")
     for x in r.get("hintergruende") or []:
         need(_pair(x.get("info"), INFO_MAX) and isinstance(x.get("werte", {}), dict) and set(x.get("werte", {})) <= werte
              and all(_int(w, 0, 2) for w in x.get("werte", {}).values())
@@ -1540,12 +1544,14 @@ def tool_line(r, c, li, it):
                 else (" · bricht bei einer 1" if not li else " · breaks on a 1"))
 
 
-def hero_view(r, h, lang, full=True, welt=""):
+def hero_view(r, h, lang, full=True, welt="", zug=None):
     li = 1 if lang == "en" else 0
     k, v = _by(r, "klassen")[h["klasse"]], _by(r, "voelker")[h["volk"]]
     out = {"hid": h["hid"], "name": h["name"], "volk": v["name"][li], "klasse": k["name"][li], "stufe": h["stufe"],
            "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h),
-           "zust": [{"name": z["name"][li], "info": z["info"][li]} for z in kampf._states(r, h)]}   # from a foe's hit (Kampf Teil 2)
+           # from a foe's hit (Kampf Teil 2), with the turns left (Tabletop-Punkt 11) when the round's turn is known
+           "zust": [dict(name=z["name"][li], info=z["info"][li], **({"noch": kampf.left(x, zug)} if zug is not None else {}))
+                    for x, z in kampf.states_with(r, h)]}
     if out["zustand"] == "boden":
         ok, fail = h.get("rettung") or (0, 0)
         out.update(noch=BODEN_ZUEGE - fail, erfolge=ok)     # failed rescue rolls until it falls, successes so far
@@ -3313,7 +3319,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
@@ -3512,18 +3518,19 @@ async def run_turn(rid, turn):
             proben, hits = kampf.attacks(_me, r, rd, proben)
             wuerfe = roll(r, rd, proben)
             zuege = kampf.foes_turn(_me, r, rd, hits)
+            erz.receipts(rd, wuerfe, hits, zuege)     # Würfel-Beleg: W-n on every roll (Tabletop-Punkt 2)
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
-            facts_w = [{"name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
+            facts_w = [{"beleg": w["beleg"], "name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
                         "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
                         **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
                        for w in wuerfe]
-            facts_w += [{"angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
+            facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
                          "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
                          **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {})}
                         for x in hits]
-            facts_z = [kampf.zug_facts(r, rd, x) for x in zuege]
+            facts_z = [dict(kampf.zug_facts(r, rd, x), **({"beleg": x["beleg"]} if x.get("beleg") else {})) for x in zuege]
             rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
             print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
             story, best, extra = None, None, ""
@@ -3535,7 +3542,7 @@ async def run_turn(rid, turn):
                 drop += d2
                 if not s:
                     continue
-                fault, missing = erz.judge(_me, rd, s, wuerfe)
+                fault, missing = erz.judge(_me, rd, s, wuerfe, hits, zuege)
                 if not fault:
                     story = s
                     break
@@ -3561,6 +3568,7 @@ async def run_turn(rid, turn):
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
                 ort0, kampf0, akt0 = cur["szene"].get("ort"), bool(cur.get("kampf")), cur.get("akt", 0)
+                cur["beleg_n"] = max(int(cur.get("beleg_n") or 0), int(rd.get("beleg_n") or 0))
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
                       kampfwuerfe=([x for x in hits if x["pid"] in seats], [x for x in zuege if x["pid"] in seats]) if story else ([], []))
                 if story:
@@ -3981,7 +3989,9 @@ def klone_count():
 
 
 def _ton_set(rid, **kw):
-    """The round's reading state under the lock: rd["lesung"] {"n", "k" pieces ready, "fertig", "fehler"}."""
+    """The round's reading state under the lock: rd["lesung"] {"n", "k" pieces ready, "fertig", "fehler", "texte" the
+    ready pieces' words for the read-along mark (Tabletop 16; bounded by TON_ZEICHEN)}; text= adds one."""
+    text = kw.pop("text", None)
     with _lock:
         d = _read()
         rd = d["runden"].get(rid)
@@ -3993,6 +4003,8 @@ def _ton_set(rid, **kw):
             _ton_drop(rid, {n for n in rd["ton_n"]})
         else:
             rd.setdefault("lesung", {}).update(kw)
+        if text and kw.get("k"):           # piece k-1 is texte[k-1], so the mark follows the pieces played
+            rd["lesung"]["texte"] = (rd["lesung"].get("texte") or [])[:kw["k"] - 1] + [str(text)[:vortrag.TEIL_MAX]]
         if kw.get("fertig"):
             if rd.pop("spricht", None):
                 rd["zug_t"] = time.time()          # the reading time and the turn's time start after the reading
@@ -4052,7 +4064,7 @@ async def speak_turn(rid, n, parts):
             if not await asyncio.to_thread(keep):
                 print("dungeon: vorlesen | mp3 | fehler", flush=True)
             k += 1
-            await asyncio.to_thread(_ton_set, rid, k=k)
+            await asyncio.to_thread(_ton_set, rid, k=k, text=text)
             verbrauch.spoken("Dungeon-Master", wav=wav)
             if got[1] != "ok":
                 _day.bump("vorlesen_ersatz")
@@ -4169,15 +4181,35 @@ def mp3_of(wav):
     return p.stdout if p.returncode == 0 and p.stdout else None
 
 
-async def ask_asr(wav, lang):
-    """Text of a recording through the Spark's speech recognition (tests replace this)."""
+HOER_WORTE = 60           # names of the round the speech recognition gets as context (Tabletop-Punkt 14)
+
+
+def heard_words(r, rd, pid=None):
+    """Tabletop-Punkt 14 (Dominik 2026-10-25 „alle punkte“, idea from shadowrealms-ai): the names the table already
+    knows as context for the speech recognition, so „Grimm“ or „Dornenstadt“ come back right: the heroes, the people
+    met on the map, the known places, the foes of the fight and the things of the own seat. Nothing a seat has not
+    seen (no person or secret of the story's truth); names only, at most HOER_WORTE."""
+    import hoerwoerter
+    names = [p["held"]["name"] for _, p in seated(rd)]
+    k = rd.get("karte") or {}
+    names += list((k.get("leute") or {}))
+    if k.get("orte"):
+        names += [x["n"] for x in (dungeon_karte.view(r, rd) or {}).get("orte") or [] if x.get("n")]
+    names += [re.sub(r" \d+$", "", g["name"]) for g in (rd.get("kampf") or {}).get("gegner") or []]
+    h = ((rd["plaetze"].get(pid) or {}).get("held") or {}) if pid else {}
+    names += [item_view(r, x, rd["lang"])["name"] for x in worn(h) + (h.get("tasche") or [])] if h else []
+    return hoerwoerter._clean(names)[:HOER_WORTE]
+
+
+async def ask_asr(wav, lang, prompt=""):
+    """Text of a recording through the Spark's speech recognition (tests replace this); prompt: names to expect."""
     import httpx
     import verbrauch
     from core import api_headers
     cfg = load_config()
     async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S, connect=5)) as c:
         r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg), files={"file": ("aktion.wav", wav)},
-                         data={"language": lang, "response_format": "json"}, headers=api_headers())
+                         data={"language": lang, "response_format": "json", **({"prompt": prompt} if prompt else {})}, headers=api_headers())
     verbrauch.heard("Dungeon-Master", r)
     r.raise_for_status()
     return str(r.json().get("text", ""))
@@ -4195,8 +4227,10 @@ def _wav_in(b):
     return wav
 
 
-async def hear(rid, wav):
-    """Speak instead of type: the recording as text for the seat's own field (never sent by itself)."""
+async def hear(rid, wav, pid=None):
+    """Speak instead of type: the recording as text for the seat's own field (never sent by itself); the names the
+    table knows go along as context (heard_words)."""
+    import hoerwoerter
     import wartung
     rd = _round(await asyncio.to_thread(_read), rid)
     if rd["status"] != "laeuft":
@@ -4206,12 +4240,16 @@ async def hear(rid, wav):
         raise HTTPException(503, "Die Spracherkennung macht gerade Pause.")
     t0 = time.perf_counter()
     try:
-        text = _clean(no_think(await asyncio.wait_for(ask_asr(wav, "en" if rd["lang"] == "en" else "de"), DM_S)), TEXT_MAX)
+        worte = heard_words(rules(), rd, pid)
+        ctx = (", ".join(worte) + ".")[:hoerwoerter.MAX_CHARS] if worte else ""
+        text = _clean(no_think(await asyncio.wait_for(ask_asr(wav, "en" if rd["lang"] == "en" else "de", prompt=ctx), DM_S)), TEXT_MAX)
     except Exception:
         print("dungeon: hoeren | ausfall", flush=True)
         raise HTTPException(502, "Die Spracherkennung hat nicht geantwortet.")
     _day.bump("gehoert")
-    print(f"dungeon: hoeren | ok | {len(text)} zeichen | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    if worte:
+        _day.bump("hoer_namen")
+    print(f"dungeon: hoeren | ok | {len(text)} zeichen | {len(worte)} namen | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     return {"text": text}
 
 
@@ -4746,7 +4784,7 @@ def view(rid, pid, now=None):
             if host:
                 plaetze.append({"pid": p_id, "frei": True, "made": p.get("made", 0)})
             continue
-        plaetze.append(dict(hero_view(r, p["held"], lang, full=False), pid=p_id, gast=bool(p.get("gast")), karte=hero_card(r, p["held"], lang),
+        plaetze.append(dict(hero_view(r, p["held"], lang, full=False, zug=rd["zug"]), pid=p_id, gast=bool(p.get("gast")), karte=hero_card(r, p["held"], lang),
                             gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"], ruht=bool(p.get("ruht")), stumm=bool(p.get("stumm")),
                             online=p_id == pid or now - _seen.get(p_id, 0) < ONLINE_S,
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
@@ -4760,13 +4798,13 @@ def view(rid, pid, now=None):
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
             "erzaehlweise": rd.get("erzaehlweise") if rd.get("erzaehlweise") in WEISEN else "normal",
-            "lesung": {x: rd["lesung"].get(x) for x in ("n", "k", "fertig")} if rd.get("lesung") else None,
+            "lesung": {x: rd["lesung"].get(x) for x in ("n", "k", "fertig", "texte")} if rd.get("lesung") else None,
             "liest": rid in _speaking, "spricht": bool(rd.get("spricht")), "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),
             "rest": left, "zug_s": rd["zug_s"], "lesen": max(0, int(turn_start(rd) - now)) if not rd.get("dm") else 0, "gnade": gnade,
             "mehr": mehr, "mehr_ich": bool(pid) and pid in rd["plaetze"] and pid not in (rd.get("mehr") or {}) and not rd.get("dm"),
             "warn_s": WARN_S, "szene": rd["szene"], "gastgeber": host, "lang": lang,
-            "ich": hero_view(r, me["held"], lang, welt=rd["welt"]) if me.get("held") else None,
+            "ich": hero_view(r, me["held"], lang, welt=rd["welt"], zug=rd["zug"]) if me.get("held") else None,
             "wartet": hero_view(r, me["wartet"], lang, full=False) if me.get("wartet") else None,
             "am_rand": [{"pid": k, "name": q["wartet"]["name"], "gast": bool(q.get("gast"))}
                         for k, q in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if q.get("wartet")],
@@ -4786,7 +4824,7 @@ def view(rid, pid, now=None):
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
             "termin": rd.get("termin") or 0, "auftrag": {"text": rd["auftrag"], "ok": bool(rd.get("auftrag_ok"))} if rd.get("auftrag") else None, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
-    out["kampf"] = kampf.view(_me, r, rd)
+    out["kampf"] = kampf.view(_me, r, rd, host)
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
     out["siedlung"] = gold.view(_me, r, rd, pid)
     mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
@@ -4794,7 +4832,7 @@ def view(rid, pid, now=None):
     out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
-    kampf.pictures(_me, r, rd, out)
+    kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))
     import dungeon_dingbild
     import dungeon_musik
@@ -5196,7 +5234,7 @@ def for_live():
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade")}}
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen")}}
 
 
 def own_count(uid):
@@ -6053,8 +6091,8 @@ async def hoeren(rid: str, request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "dungeonohr", uid)
     b = await json_body(request, HOER_BYTES * 4 // 3 + BODY)
     try:
-        await asyncio.to_thread(_seat_uid, rid, uid)
-        return await hear(rid, _wav_in(b))
+        pid = await asyncio.to_thread(_seat_uid, rid, uid)
+        return await hear(rid, _wav_in(b), pid)
     except KNOWN as e:
         raise _http(e)
 
@@ -6533,7 +6571,7 @@ async def gast_hoeren(request: Request):
     guard.limit(request, "dungeonohr")
     try:
         wav = _wav_in(b)
-        return await hear(rid, wav)
+        return await hear(rid, wav, pid)
     except KNOWN as e:
         raise _http(e)
 

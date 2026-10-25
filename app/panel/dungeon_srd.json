@@ -9018,7 +9018,7 @@
       "ruestung": 15,
       "angriff": 5,
       "schaden": 6,
-      "schaden_plus": 3,
+      "schaden_plus": 2,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 15,
@@ -9030,7 +9030,8 @@
       },
       "ep": 450,
       "groesse": "mittel",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 3
     },
     {
       "id": "schlaeger",
@@ -9051,8 +9052,8 @@
       "ruestung": 11,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 15,
         "geschick": 11,
@@ -9063,7 +9064,8 @@
       },
       "ep": 100,
       "groesse": "mittel",
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 2
     },
     {
       "id": "kultist",
@@ -9119,8 +9121,8 @@
       "ruestung": 13,
       "angriff": 4,
       "schaden": 4,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 14,
@@ -9134,7 +9136,8 @@
       "zustaende": [
         "veraengstigt"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "wache",
@@ -9188,7 +9191,7 @@
       "ruestung": 17,
       "angriff": 5,
       "schaden": 8,
-      "schaden_plus": 3,
+      "schaden_plus": 2,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
@@ -9200,7 +9203,8 @@
       },
       "ep": 700,
       "groesse": "mittel",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "ritter",
@@ -9233,7 +9237,8 @@
       },
       "ep": 700,
       "groesse": "mittel",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "berserker",
@@ -9288,8 +9293,8 @@
       "ruestung": 12,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 10,
         "geschick": 15,
@@ -9300,7 +9305,8 @@
       },
       "ep": 200,
       "groesse": "mittel",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "assassine",
@@ -9320,9 +9326,9 @@
       "leben": 78,
       "ruestung": 15,
       "angriff": 6,
-      "schaden": 8,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 1,
+      "schaden": 4,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 16,
@@ -9339,7 +9345,8 @@
       "schaden_art": "stich",
       "resistenz": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "magier_gegner",
@@ -9440,7 +9447,8 @@
       },
       "ep": 1800,
       "groesse": "mittel",
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 3
     },
     {
       "id": "dunkelelf",
@@ -9534,8 +9542,8 @@
       "ruestung": 13,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 15,
         "geschick": 10,
@@ -9546,7 +9554,8 @@
       },
       "ep": 100,
       "groesse": "mittel",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "sahuagin",
@@ -9566,9 +9575,9 @@
       "leben": 22,
       "ruestung": 12,
       "angriff": 3,
-      "schaden": 6,
-      "schaden_plus": 1,
-      "anzahl_wuerfel": 1,
+      "schaden": 4,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 13,
         "geschick": 11,
@@ -9579,7 +9588,8 @@
       },
       "ep": 100,
       "groesse": "mittel",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "merrow",
@@ -9600,8 +9610,8 @@
       "ruestung": 13,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
         "geschick": 10,
@@ -9615,7 +9625,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "meerhexe",
@@ -10098,9 +10109,9 @@
       "leben": 45,
       "ruestung": 14,
       "angriff": 4,
-      "schaden": 8,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden": 4,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 15,
         "geschick": 14,
@@ -10120,7 +10131,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "todesalb",
@@ -10258,7 +10270,8 @@
         "hieb",
         "stich",
         "wucht"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "irrlicht",
@@ -10328,8 +10341,8 @@
       "ruestung": 12,
       "angriff": 4,
       "schaden": 4,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 15,
         "geschick": 13,
@@ -10345,7 +10358,8 @@
         "hieb",
         "stich",
         "wucht"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "werratte",
@@ -10366,8 +10380,8 @@
       "ruestung": 12,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 10,
         "geschick": 15,
@@ -10383,7 +10397,8 @@
         "hieb",
         "stich",
         "wucht"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "doppelgaenger",
@@ -10405,8 +10420,8 @@
       "ruestung": 14,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 18,
@@ -10417,7 +10432,8 @@
       },
       "ep": 700,
       "groesse": "mittel",
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 2
     },
     {
       "id": "mimik",
@@ -10669,8 +10685,8 @@
       "ruestung": 14,
       "angriff": 6,
       "schaden": 8,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
         "geschick": 11,
@@ -10684,7 +10700,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "chuul",
@@ -10724,7 +10741,8 @@
       "schaden_art": "wucht",
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "mantler",
@@ -10745,8 +10763,8 @@
       "ruestung": 14,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 17,
         "geschick": 15,
@@ -10760,7 +10778,8 @@
       "zustaende": [
         "blind"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "aboleth",
@@ -10783,7 +10802,7 @@
       "angriff": 9,
       "schaden": 6,
       "schaden_plus": 5,
-      "anzahl_wuerfel": 3,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 9,
@@ -10798,7 +10817,8 @@
         "bezaubert"
       ],
       "schaden_art": "wucht",
-      "boss": true
+      "boss": true,
+      "angriffe": 3
     },
     {
       "id": "belebte_ruestung",
@@ -10820,8 +10840,8 @@
       "ruestung": 18,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 14,
         "geschick": 11,
@@ -10836,7 +10856,8 @@
       "immun": [
         "gift",
         "psychisch"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "fliegendes_schwert",
@@ -10956,7 +10977,8 @@
       "immun": [
         "blitz",
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "steingolem",
@@ -10977,8 +10999,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 8,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 10,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 22,
         "geschick": 9,
@@ -10999,7 +11021,8 @@
         "gift",
         "psychisch"
       ],
-      "boss": true
+      "boss": true,
+      "angriffe": 2
     },
     {
       "id": "gargyl",
@@ -11021,8 +11044,8 @@
       "ruestung": 15,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 15,
         "geschick": 11,
@@ -11041,7 +11064,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "imp",
@@ -11281,9 +11305,9 @@
       "leben": 52,
       "ruestung": 13,
       "angriff": 5,
-      "schaden": 10,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 1,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 16,
         "geschick": 15,
@@ -11307,7 +11331,8 @@
       "immun": [
         "feuer",
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "stachelteufel",
@@ -11328,8 +11353,8 @@
       "ruestung": 15,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
         "geschick": 17,
@@ -11353,7 +11378,8 @@
       "immun": [
         "feuer",
         "gift"
-      ]
+      ],
+      "angriffe": 3
     },
     {
       "id": "dretch",
@@ -11374,7 +11400,7 @@
       "ruestung": 11,
       "angriff": 2,
       "schaden": 4,
-      "schaden_plus": 0,
+      "schaden_plus": -1,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
@@ -11397,7 +11423,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "vrock",
@@ -11418,7 +11445,7 @@
       "ruestung": 15,
       "angriff": 6,
       "schaden": 10,
-      "schaden_plus": 3,
+      "schaden_plus": 1,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 17,
@@ -11444,7 +11471,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "oger",
@@ -11498,8 +11526,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
         "geschick": 13,
@@ -11510,7 +11538,8 @@
       },
       "ep": 1800,
       "groesse": "gross",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 3
     },
     {
       "id": "huegelriese",
@@ -11531,8 +11560,8 @@
       "ruestung": 13,
       "angriff": 8,
       "schaden": 10,
-      "schaden_plus": 5,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 8,
@@ -11546,7 +11575,8 @@
       "zustaende": [
         "liegend"
       ],
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 2
     },
     {
       "id": "ettin",
@@ -11579,7 +11609,8 @@
       },
       "ep": 1100,
       "groesse": "gross",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "minotaurus",
@@ -11636,7 +11667,7 @@
       "ruestung": 13,
       "angriff": 7,
       "schaden": 8,
-      "schaden_plus": 5,
+      "schaden_plus": 3,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 20,
@@ -11651,7 +11682,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "harpyie",
@@ -11673,8 +11705,8 @@
       "ruestung": 11,
       "angriff": 3,
       "schaden": 4,
-      "schaden_plus": 1,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 12,
         "geschick": 13,
@@ -11688,7 +11720,8 @@
       "zustaende": [
         "bezaubert"
       ],
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "basilisk",
@@ -11746,7 +11779,7 @@
       "ruestung": 15,
       "angriff": 5,
       "schaden": 8,
-      "schaden_plus": 2,
+      "schaden_plus": 0,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 10,
@@ -11761,7 +11794,8 @@
       "zustaende": [
         "versteinert"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "mantikor",
@@ -11782,7 +11816,7 @@
       "ruestung": 14,
       "angriff": 5,
       "schaden": 8,
-      "schaden_plus": 3,
+      "schaden_plus": 2,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 17,
@@ -11794,7 +11828,8 @@
       },
       "ep": 700,
       "groesse": "gross",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "greif",
@@ -11815,8 +11850,8 @@
       "ruestung": 12,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
         "geschick": 15,
@@ -11827,7 +11862,8 @@
       },
       "ep": 450,
       "groesse": "gross",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "hydra",
@@ -11849,8 +11885,8 @@
       "ruestung": 15,
       "angriff": 8,
       "schaden": 10,
-      "schaden_plus": 5,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 20,
         "geschick": 12,
@@ -11861,7 +11897,8 @@
       },
       "ep": 3900,
       "groesse": "riesig",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 5
     },
     {
       "id": "chimaere",
@@ -11882,8 +11919,8 @@
       "ruestung": 14,
       "angriff": 7,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 19,
         "geschick": 11,
@@ -11897,7 +11934,8 @@
       "zustaende": [
         "brennend"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "bulette",
@@ -12028,8 +12066,8 @@
       "ruestung": 13,
       "angriff": 4,
       "schaden": 4,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 14,
         "geschick": 15,
@@ -12043,7 +12081,8 @@
       "zustaende": [
         "festgesetzt"
       ],
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "drider",
@@ -12065,8 +12104,8 @@
       "ruestung": 19,
       "angriff": 6,
       "schaden": 8,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 16,
         "geschick": 16,
@@ -12080,7 +12119,8 @@
       "zustaende": [
         "vergiftet"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "rostmonster",
@@ -12172,7 +12212,7 @@
       "ruestung": 14,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
+      "schaden_plus": 0,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 14,
@@ -12189,7 +12229,8 @@
         "hieb",
         "stich",
         "wucht"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "roper",
@@ -12319,8 +12360,8 @@
       "ruestung": 12,
       "angriff": 4,
       "schaden": 6,
-      "schaden_plus": 2,
-      "anzahl_wuerfel": 1,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 15,
         "geschick": 14,
@@ -12331,7 +12372,8 @@
       },
       "ep": 200,
       "groesse": "mittel",
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "wolf",
@@ -12645,7 +12687,7 @@
       "ruestung": 15,
       "angriff": 4,
       "schaden": 10,
-      "schaden_plus": 2,
+      "schaden_plus": 1,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 15,
@@ -12661,7 +12703,8 @@
         "gepackt",
         "vergiftet"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 3
     },
     {
       "id": "riesenkrabbe",
@@ -12982,7 +13025,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "feuerelementar",
@@ -13027,7 +13071,8 @@
       "immun": [
         "feuer",
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "erdelementar",
@@ -13071,7 +13116,8 @@
       ],
       "schwaeche": [
         "donner"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "luftelementar",
@@ -13118,7 +13164,8 @@
       ],
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "azer",
@@ -13205,7 +13252,8 @@
       ],
       "schwaeche": [
         "kaelte"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "xorn",
@@ -13226,8 +13274,8 @@
       "ruestung": 19,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 17,
         "geschick": 10,
@@ -13242,7 +13290,8 @@
       "resistenz": [
         "hieb",
         "stich"
-      ]
+      ],
+      "angriffe": 4
     },
     {
       "id": "dryade",
@@ -13398,7 +13447,8 @@
       ],
       "immun": [
         "blitz"
-      ]
+      ],
+      "angriffe": 3
     },
     {
       "id": "violetter_pilz",
@@ -13419,9 +13469,9 @@
       "leben": 18,
       "ruestung": 5,
       "angriff": 2,
-      "schaden": 8,
-      "schaden_plus": 0,
-      "anzahl_wuerfel": 1,
+      "schaden": 4,
+      "schaden_plus": -1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 3,
         "geschick": 1,
@@ -13432,7 +13482,8 @@
       },
       "ep": 50,
       "groesse": "mittel",
-      "schaden_art": "nekrotisch"
+      "schaden_art": "nekrotisch",
+      "angriffe": 2
     },
     {
       "id": "baumhirte",
@@ -13453,8 +13504,8 @@
       "ruestung": 16,
       "angriff": 10,
       "schaden": 10,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 23,
         "geschick": 8,
@@ -13472,7 +13523,8 @@
       ],
       "schwaeche": [
         "feuer"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "pseudodrache",
@@ -13642,7 +13694,7 @@
       "ruestung": 13,
       "angriff": 7,
       "schaden": 8,
-      "schaden_plus": 4,
+      "schaden_plus": 2,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 19,
@@ -13657,7 +13709,8 @@
       "zustaende": [
         "vergiftet"
       ],
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "junger_gruener_drache",
@@ -13678,8 +13731,8 @@
       "ruestung": 18,
       "angriff": 7,
       "schaden": 10,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 19,
         "geschick": 12,
@@ -13696,7 +13749,8 @@
       "schaden_art": "stich",
       "immun": [
         "gift"
-      ]
+      ],
+      "angriffe": 3
     },
     {
       "id": "junger_roter_drache",
@@ -13717,8 +13771,8 @@
       "ruestung": 18,
       "angriff": 10,
       "schaden": 10,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 9,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 23,
         "geschick": 10,
@@ -13736,7 +13790,8 @@
       "immun": [
         "feuer"
       ],
-      "boss": true
+      "boss": true,
+      "angriffe": 3
     },
     {
       "id": "junger_schwarzer_drache",
@@ -13758,8 +13813,8 @@
       "ruestung": 18,
       "angriff": 7,
       "schaden": 10,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 19,
         "geschick": 14,
@@ -13773,7 +13828,8 @@
       "schaden_art": "stich",
       "immun": [
         "saeure"
-      ]
+      ],
+      "angriffe": 3
     },
     {
       "id": "hippogreif",
@@ -13794,7 +13850,7 @@
       "ruestung": 11,
       "angriff": 5,
       "schaden": 6,
-      "schaden_plus": 3,
+      "schaden_plus": 2,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 17,
@@ -13806,7 +13862,8 @@
       },
       "ep": 200,
       "groesse": "gross",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "einhorn",
@@ -13827,8 +13884,8 @@
       "ruestung": 12,
       "angriff": 7,
       "schaden": 6,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
         "geschick": 14,
@@ -13843,7 +13900,8 @@
       "immun": [
         "gift"
       ],
-      "boss": true
+      "boss": true,
+      "angriffe": 2
     },
     {
       "id": "zentaur",
@@ -13864,7 +13922,7 @@
       "ruestung": 12,
       "angriff": 6,
       "schaden": 6,
-      "schaden_plus": 4,
+      "schaden_plus": 3,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 18,
@@ -13876,7 +13934,8 @@
       },
       "ep": 450,
       "groesse": "gross",
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 2
     },
     {
       "id": "lamia",
@@ -13898,8 +13957,8 @@
       "ruestung": 13,
       "angriff": 5,
       "schaden": 10,
-      "schaden_plus": 3,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
         "geschick": 13,
@@ -13913,7 +13972,8 @@
       "zustaende": [
         "bezaubert"
       ],
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "kokatrix",
@@ -13971,7 +14031,7 @@
       "ruestung": 12,
       "angriff": 9,
       "schaden": 6,
-      "schaden_plus": 18,
+      "schaden_plus": 8,
       "anzahl_wuerfel": 4,
       "werte": {
         "staerke": 23,
@@ -13983,7 +14043,8 @@
       },
       "ep": 2900,
       "groesse": "riesig",
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "angriffe": 2
     },
     {
       "id": "tyrannosaurus",
@@ -14006,7 +14067,7 @@
       "angriff": 10,
       "schaden": 12,
       "schaden_plus": 7,
-      "anzahl_wuerfel": 4,
+      "anzahl_wuerfel": 3,
       "werte": {
         "staerke": 25,
         "geschick": 10,
@@ -14020,7 +14081,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "schaden_art": "stich"
+      "schaden_art": "stich",
+      "angriffe": 2
     },
     {
       "id": "mammut",
@@ -14090,7 +14152,8 @@
       },
       "ep": 2900,
       "groesse": "gross",
-      "schaden_art": "hieb"
+      "schaden_art": "hieb",
+      "angriffe": 2
     },
     {
       "id": "erzmagier",
@@ -14189,8 +14252,8 @@
       "leben": 60,
       "ruestung": 17,
       "angriff": 5,
-      "schaden": 8,
-      "schaden_plus": 3,
+      "schaden": 4,
+      "schaden_plus": 1,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 18,
@@ -14213,7 +14276,8 @@
       ],
       "schwaeche": [
         "blitz"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "raumpirat",
@@ -14267,7 +14331,7 @@
       "ruestung": 16,
       "angriff": 5,
       "schaden": 10,
-      "schaden_plus": 3,
+      "schaden_plus": -1,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
@@ -14285,7 +14349,8 @@
       ],
       "schwaeche": [
         "blitz"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "xeno_kriecher",
@@ -14347,8 +14412,8 @@
       "ruestung": 17,
       "angriff": 8,
       "schaden": 10,
-      "schaden_plus": 5,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 22,
         "geschick": 14,
@@ -14375,7 +14440,8 @@
       "schwaeche": [
         "feuer"
       ],
-      "boss": true
+      "boss": true,
+      "angriffe": 3
     },
     {
       "id": "nanitenwolke",
@@ -14683,8 +14749,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 10,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 22,
         "geschick": 12,
@@ -14704,7 +14770,8 @@
       ],
       "schwaeche": [
         "blitz"
-      ]
+      ],
+      "angriffe": 2
     },
     {
       "id": "meuterer",
@@ -14758,8 +14825,8 @@
       "ruestung": 15,
       "angriff": 6,
       "schaden": 8,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 14,
         "geschick": 16,
@@ -14771,7 +14838,8 @@
       "ep": 1100,
       "groesse": "mittel",
       "schaden_art": "hieb",
-      "boss": true
+      "boss": true,
+      "angriffe": 2
     },
     {
       "id": "puppenspieler",
@@ -15243,8 +15311,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 10,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 17,
         "geschick": 13,
@@ -15269,7 +15337,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "xeno_brueter",
@@ -15290,8 +15359,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 10,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 20,
         "geschick": 12,
@@ -15312,7 +15381,8 @@
       "zustaende": [
         "vergiftet"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "kampfsynth",
@@ -15333,8 +15403,8 @@
       "ruestung": 16,
       "angriff": 8,
       "schaden": 8,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 20,
@@ -15355,7 +15425,8 @@
       "schwaeche": [
         "blitz"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "gravitationsgeist",
@@ -15421,9 +15492,9 @@
       "leben": 168,
       "ruestung": 17,
       "angriff": 9,
-      "schaden": 12,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 3,
+      "schaden": 4,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -15445,7 +15516,8 @@
       "zustaende": [
         "festgesetzt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "belagerungspanzer",
@@ -15466,8 +15538,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 12,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 19,
         "geschick": 15,
@@ -15494,7 +15566,8 @@
       "zustaende": [
         "liegend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "stationskern_ki",
@@ -15514,9 +15587,9 @@
       "leben": 219,
       "ruestung": 18,
       "angriff": 11,
-      "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 3,
+      "schaden": 4,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 18,
@@ -15542,7 +15615,8 @@
         "betaeubt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "leerenleviathan",
@@ -15563,8 +15637,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 12,
-      "schaden_plus": 9,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 22,
         "geschick": 14,
@@ -15590,7 +15664,8 @@
         "gepackt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "admiral_des_nichts",
@@ -15611,8 +15686,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 8,
-      "schaden_plus": 19,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 3,
       "werte": {
         "staerke": 13,
         "geschick": 19,
@@ -15638,7 +15713,8 @@
         "veraengstigt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "deckratte",
@@ -15770,7 +15846,7 @@
       "ruestung": 14,
       "angriff": 5,
       "schaden": 10,
-      "schaden_plus": 5,
+      "schaden_plus": 0,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
@@ -15792,7 +15868,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "geistermatrose",
@@ -15814,8 +15891,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 8,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 11,
         "geschick": 19,
@@ -15842,7 +15919,8 @@
       "zustaende": [
         "veraengstigt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "marinekapitaen",
@@ -15863,8 +15941,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 8,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 20,
@@ -15876,7 +15954,8 @@
       "ep": 2300,
       "groesse": "mittel",
       "schaden_art": "hieb",
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "korallengolem",
@@ -15897,8 +15976,8 @@
       "ruestung": 16,
       "angriff": 9,
       "schaden": 10,
-      "schaden_plus": 5,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 18,
         "geschick": 14,
@@ -15924,7 +16003,8 @@
       "zustaende": [
         "liegend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "riffschlange",
@@ -15945,8 +16025,8 @@
       "ruestung": 17,
       "angriff": 9,
       "schaden": 12,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -15967,7 +16047,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "verfluchter_kapitaen",
@@ -15988,8 +16069,8 @@
       "ruestung": 18,
       "angriff": 11,
       "schaden": 8,
-      "schaden_plus": 12,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 14,
         "geschick": 22,
@@ -16016,7 +16097,8 @@
         "veraengstigt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "tiefenkraken",
@@ -16037,8 +16119,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 23,
         "geschick": 15,
@@ -16064,7 +16146,8 @@
         "gepackt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 4
     },
     {
       "id": "puppenmacher",
@@ -16215,8 +16298,8 @@
       "ruestung": 16,
       "angriff": 8,
       "schaden": 10,
-      "schaden_plus": 8,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 12,
         "geschick": 20,
@@ -16240,7 +16323,8 @@
       "zustaende": [
         "festgesetzt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "kirchturmwaechter",
@@ -16262,8 +16346,8 @@
       "ruestung": 17,
       "angriff": 9,
       "schaden": 10,
-      "schaden_plus": 7,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 19,
         "geschick": 15,
@@ -16289,7 +16373,8 @@
       "zustaende": [
         "betaeubt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "albtraumreiter",
@@ -16310,8 +16395,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 10,
-      "schaden_plus": 10,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 13,
         "geschick": 21,
@@ -16335,7 +16420,8 @@
       "zustaende": [
         "veraengstigt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "die_bleiche_graefin",
@@ -16356,8 +16442,8 @@
       "ruestung": 18,
       "angriff": 12,
       "schaden": 8,
-      "schaden_plus": 15,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 18,
@@ -16385,7 +16471,8 @@
         "bezaubert"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "das_ding_im_brunnen",
@@ -16406,8 +16493,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 23,
         "geschick": 15,
@@ -16433,7 +16520,8 @@
         "veraengstigt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 4
     },
     {
       "id": "runenwaechter",
@@ -16454,8 +16542,8 @@
       "ruestung": 17,
       "angriff": 9,
       "schaden": 10,
-      "schaden_plus": 7,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 19,
         "geschick": 15,
@@ -16481,7 +16569,8 @@
       "zustaende": [
         "betaeubt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "frostriesin",
@@ -16502,8 +16591,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 12,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -16524,7 +16613,8 @@
       "zustaende": [
         "festgesetzt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "greifenkoenig",
@@ -16545,8 +16635,8 @@
       "ruestung": 17,
       "angriff": 11,
       "schaden": 12,
-      "schaden_plus": 9,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 13,
         "geschick": 21,
@@ -16564,7 +16654,8 @@
       "zustaende": [
         "liegend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "lichkoenig",
@@ -16586,8 +16677,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 8,
-      "schaden_plus": 17,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
       "werte": {
         "staerke": 12,
         "geschick": 18,
@@ -16614,7 +16705,8 @@
         "gelaehmt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "feuerdrache_alt",
@@ -16635,8 +16727,8 @@
       "ruestung": 19,
       "angriff": 13,
       "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 23,
         "geschick": 15,
@@ -16662,7 +16754,8 @@
         "brennend"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "dunkelelf_klinge",
@@ -16683,8 +16776,8 @@
       "ruestung": 14,
       "angriff": 6,
       "schaden": 8,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 10,
         "geschick": 18,
@@ -16702,7 +16795,8 @@
       "zustaende": [
         "vergiftet"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "waldwandler",
@@ -16723,7 +16817,7 @@
       "ruestung": 16,
       "angriff": 9,
       "schaden": 12,
-      "schaden_plus": 9,
+      "schaden_plus": -2,
       "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 20,
@@ -16746,7 +16840,8 @@
       "zustaende": [
         "festgesetzt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "hexenmeister",
@@ -16878,7 +16973,7 @@
       "ruestung": 14,
       "angriff": 5,
       "schaden": 10,
-      "schaden_plus": 5,
+      "schaden_plus": 0,
       "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
@@ -16894,7 +16989,8 @@
       "zustaende": [
         "gepackt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "spiegelwesen",
@@ -16915,8 +17011,8 @@
       "ruestung": 15,
       "angriff": 7,
       "schaden": 8,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 9,
         "geschick": 15,
@@ -16934,7 +17030,8 @@
       "schwaeche": [
         "donner"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "wachfels",
@@ -16955,8 +17052,8 @@
       "ruestung": 16,
       "angriff": 8,
       "schaden": 10,
-      "schaden_plus": 8,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 18,
         "geschick": 14,
@@ -16982,7 +17079,8 @@
       "zustaende": [
         "liegend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "chimaere_wild",
@@ -17002,9 +17100,9 @@
       "leben": 168,
       "ruestung": 17,
       "angriff": 9,
-      "schaden": 10,
-      "schaden_plus": 7,
-      "anzahl_wuerfel": 3,
+      "schaden": 4,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -17022,7 +17120,8 @@
       "zustaende": [
         "brennend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "weltenfresser",
@@ -17043,8 +17142,8 @@
       "ruestung": 18,
       "angriff": 12,
       "schaden": 12,
-      "schaden_plus": 7,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": -2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 18,
@@ -17070,7 +17169,8 @@
         "veraengstigt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "schicksalsweber",
@@ -17091,8 +17191,8 @@
       "ruestung": 17,
       "angriff": 11,
       "schaden": 8,
-      "schaden_plus": 10,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 17,
@@ -17114,7 +17214,8 @@
         "bezaubert"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "sternenfreibeuter",
@@ -17136,8 +17237,8 @@
       "ruestung": 16,
       "angriff": 8,
       "schaden": 8,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 20,
@@ -17152,7 +17253,8 @@
       "zustaende": [
         "betaeubt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "kometenkaperer",
@@ -17174,8 +17276,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 10,
-      "schaden_plus": 10,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -17199,7 +17301,8 @@
       "zustaende": [
         "brennend"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "minendrohne",
@@ -17264,8 +17367,8 @@
       "ruestung": 14,
       "angriff": 6,
       "schaden": 8,
-      "schaden_plus": 4,
-      "anzahl_wuerfel": 2,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
       "werte": {
         "staerke": 16,
         "geschick": 12,
@@ -17287,7 +17390,8 @@
       "schwaeche": [
         "blitz"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "nebelsammler",
@@ -17351,8 +17455,8 @@
       "ruestung": 17,
       "angriff": 9,
       "schaden": 10,
-      "schaden_plus": 7,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 17,
@@ -17373,7 +17477,8 @@
       "zustaende": [
         "betaeubt"
       ],
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "eisenkoloss",
@@ -17394,8 +17499,8 @@
       "ruestung": 17,
       "angriff": 10,
       "schaden": 12,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 19,
         "geschick": 15,
@@ -17422,7 +17527,8 @@
         "liegend"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "traumfresser",
@@ -17443,8 +17549,8 @@
       "ruestung": 17,
       "angriff": 11,
       "schaden": 10,
-      "schaden_plus": 6,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 11,
         "geschick": 17,
@@ -17469,7 +17575,8 @@
         "bewusstlos"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "glutwurm",
@@ -17490,8 +17597,8 @@
       "ruestung": 17,
       "angriff": 11,
       "schaden": 12,
-      "schaden_plus": 9,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 21,
         "geschick": 13,
@@ -17516,7 +17623,8 @@
         "gepackt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "spiegelkoenigin",
@@ -17537,8 +17645,8 @@
       "ruestung": 18,
       "angriff": 11,
       "schaden": 8,
-      "schaden_plus": 12,
-      "anzahl_wuerfel": 4,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 12,
         "geschick": 18,
@@ -17563,7 +17671,8 @@
         "bezaubert"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     },
     {
       "id": "sternenwal",
@@ -17584,8 +17693,8 @@
       "ruestung": 18,
       "angriff": 11,
       "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 3,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 22,
         "geschick": 14,
@@ -17610,7 +17719,8 @@
         "betaeubt"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 2
     },
     {
       "id": "uhrwerkdrache",
@@ -17630,9 +17740,9 @@
       "leben": 219,
       "ruestung": 18,
       "angriff": 11,
-      "schaden": 12,
-      "schaden_plus": 11,
-      "anzahl_wuerfel": 3,
+      "schaden": 4,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
       "werte": {
         "staerke": 20,
         "geschick": 16,
@@ -17659,7 +17769,8 @@
         "brennend"
       ],
       "boss": true,
-      "seit": "V01.1.039"
+      "seit": "V01.1.039",
+      "angriffe": 3
     }
   ]
 }

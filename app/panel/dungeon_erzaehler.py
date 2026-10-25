@@ -43,7 +43,11 @@ GELINGT = ("gibt nach", "geben nach", "bricht auf", "aufgebrochen", "zerbricht",
            "schafft es", "gibt den weg frei", "gives way", "give way", "bursts open", "breaks open", "swings open",
            "springs open", "flies open", "off its hinges", "succeeds", "manages to", "shatters", "splinters")
 HAELT = ("nicht", "kein", "vergeblich", "hält stand", "widersteht", "umsonst", "not ", "n't", "in vain", "holds", "resists")
-HART = ("probe", "gegner")      # faults that get a third try and, failing it, a fixed repair by the panel (repair)
+HART = ("probe", "gegner", "beleg")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
+# Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
+# id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
+_BELEG_WORT = r"(?:wurf|würf\w*|gewürfelt|schaden\w*|lebenspunkte|trefferpunkte|rolls?|rolled|damage|hit points)"
+_BELEG_ZAHL = re.compile(r"(?i)" + _BELEG_WORT + r"\W+(?:\w+\W+){0,3}?(\d{1,3})\b|\b(\d{1,3})\W+(?:\w+\W+){0,2}?" + _BELEG_WORT)
 # the thing memory (Dominik 2026-10-24 „1 a und b und c“, an iron box that later was a rotten wooden one): the model
 # reports a thing the first time with its features, the panel keeps them and checks every narration against them
 DINGE_MAX = 12             # things kept per round (and carried into the next chapter)
@@ -311,6 +315,10 @@ HINWEIS = {
                  "oder erzähle, wie die Gruppe zu ihnen geht.",
                  "Note: these characters are at another place and cannot speak here: {namen}. Leave them out or tell how "
                  "the group goes to them."),
+    "beleg": ("Hinweis: Diese Zahlen stehen in keinem Würfel-Beleg dieses Zugs: {namen}. Nenne Würfe und Schaden nur "
+              "so, wie die Belege (beleg) sie sagen, oder lass die Zahl weg.",
+              "Note: these numbers are on no dice receipt of this turn: {namen}. Tell rolls and damage only as the "
+              "receipts (beleg) say, or leave the number out."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -357,13 +365,44 @@ def repair(rd, story, fault, missing):
     elif fault == "gegner":
         add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
             f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
+    elif fault == "beleg":                       # the receipts say the numbers, not the narration
+        add = [("Es gelten die Würfel-Belege: " if not li else "The dice receipts count: ") + ", ".join(m for m in missing if m.startswith("W-")) + "."]
     else:
         return story
     print(f"dungeon: nachbessern | fest | {fault}", flush=True)
     return dict(story, text=(story["text"].rstrip() + " " + " ".join(add)).strip())
 
 
-def judge(dm, rd, story, wuerfe=()):
+def receipts(rd, wuerfe, hits, zuege):
+    """Every roll of this turn gets its receipt id W-n (the round counts on in rd["beleg_n"]); returns the ids."""
+    n, out = int(rd.get("beleg_n") or 0), []
+    for x in [*wuerfe, *hits, *[z for z in zuege if "w" in z]]:
+        n += 1
+        x["beleg"] = f"W-{n}"
+        out.append(x["beleg"])
+    rd["beleg_n"] = n
+    return out
+
+
+def _allowed(wuerfe, hits, zuege):
+    """The numbers the receipts of a turn hold: the dice, the sums, what was to beat, the damage."""
+    out = {1, 20}
+    for x in [*wuerfe, *hits, *zuege]:
+        for k in ("w", "gesamt", "schwer", "bonus", "rk", "schaden"):
+            if isinstance(x.get(k), int):
+                out.add(abs(x[k]))
+        out |= {v for v in x.get("ws") or [] if isinstance(v, int)}
+        out |= {e["schaden"] for e in x.get("extra") or [] if isinstance(e.get("schaden"), int)}
+    return out
+
+
+def numbers_off(text, wuerfe, hits=(), zuege=()):
+    """Numbers the narration tells in a dice context that no receipt of the turn holds (Würfel-Beleg)."""
+    ok = _allowed(wuerfe, hits, zuege)
+    return sorted({int(a or b) for a, b in _BELEG_ZAHL.findall(text)} - ok)
+
+
+def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
     (told_as_done, the check's wofuer), a foe of the encounter not named by
@@ -385,6 +424,10 @@ def judge(dm, rd, story, wuerfe=()):
     gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
     if gone:
         return "gegner", gone
+    off = numbers_off(text, wuerfe, hits, zuege)
+    if off:
+        dm._day.bump("beleg_falsch")
+        return "beleg", [str(n) for n in off] + [f"{x['beleg']} {x.get('name', '')}: {x.get('gesamt', '')}" for x in [*wuerfe, *hits, *zuege] if x.get("beleg")]
     far = far_places(rd, story, low)
     if far:
         return "karte", far

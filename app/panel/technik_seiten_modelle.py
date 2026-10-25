@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "032f1e9b97",
+        "stand": "ff201cc22f",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -35,11 +35,15 @@ SEITEN = {
               ("read_audio liest die Aufnahme in Stücken und bricht bei {admin.MAX_AUDIO|mb} ab. Ein Weckwort darf "
                "nur ein angemeldetes Profil mitschicken; es geht dann als Hinweis an das Modell. Mit „Namen fürs "
                "Hören“ legt hoerwoerter.prompt die Namen der Profile, Kontakte, Räume und Geräte des Profils bei "
-               "(höchstens {hoerwoerter.MAX_WORDS}, geteilte Lautsprecher nur Profilnamen).",
+               "(höchstens {hoerwoerter.MAX_WORDS}, geteilte Lautsprecher nur Profilnamen). Spielt das Profil gerade den "
+               "Dungeon-Master im Auto, stehen die Namen der Runde vorne (dungeon_auto.words), nie etwas aus ihrer "
+               "verborgenen Wahrheit.",
                "read_audio reads the recording in pieces and stops at {admin.MAX_AUDIO|mb}. Only a signed-in profile "
                "may send a wake word; it then goes to the model as a hint. With „Names for listening“ "
                "hoerwoerter.prompt adds the names of the profiles and the profile's contacts, rooms and devices (at "
-               "most {hoerwoerter.MAX_WORDS}, shared speakers only profile names)."),
+               "most {hoerwoerter.MAX_WORDS}, shared speakers only profile names). While the profile plays the Dungeon "
+               "Master in the car, the round's names come first (dungeon_auto.words), never anything from its hidden "
+               "truth."),
               ("stop", ("größer", "larger"), ("Abgelehnt (413)", "Refused (413)"))),
             S("s3", "schritt", ("Nebenbei auf dem Prozessor", "Alongside on the CPU"),
               ("Stimme, Stille, fremde Stimme", "voice, silence, other voice"),

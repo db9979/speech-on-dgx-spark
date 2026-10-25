@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "b4c08406b6",
+        "stand": "293f08e410",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -58,11 +58,13 @@ SEITEN = {
               ("als WAV, höchstens {admin.MAX_AUDIO|mb}", "as WAV, at most {admin.MAX_AUDIO|mb}"),
               ("Die Seite wandelt die Aufnahme in ein einfaches WAV in Mono (sonst geht das Original). Der Spark prüft "
                "das Rate-Limit ({guard.RATE.asr.1} pro Minute für ein Profil, Gäste höchstens {guard.BUSY.asr} "
-               "gleichzeitig), liest höchstens {admin.MAX_AUDIO|mb} und schickt den Ton an die Spracherkennung. "
+               "gleichzeitig), liest höchstens {admin.MAX_AUDIO|mb} und schickt den Ton an die Spracherkennung, beim "
+               "Dungeon-Master im Auto mit den Namen der Runde vorne. "
                "Nebenher misst er auf der CPU, wie viel davon Stimme ist und wessen Stimme es ist.",
                "The page turns the recording into a plain mono WAV (else the original goes). The Spark checks the rate "
                "limit ({guard.RATE.asr.1} per minute for a profile, guests at most {guard.BUSY.asr} at once), reads at "
-               "most {admin.MAX_AUDIO|mb} and sends the sound to speech recognition. Alongside it measures on the CPU "
+               "most {admin.MAX_AUDIO|mb} and sends the sound to speech recognition, for the Dungeon Master in the car "
+               "with the round's names first. Alongside it measures on the CPU "
                "how much of it is voice and whose voice it is.")),
             S("s5", "frage", ("Stille, eigene oder fremde Stimme?", "Silence, own or foreign voice?"),
               ("stille · echo · fremdstimme", "stille · echo · fremdstimme"),

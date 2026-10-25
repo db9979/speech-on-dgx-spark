@@ -161,11 +161,13 @@ def werte(teil, x, r, li):
         for f, de, enw in (("schwaeche", "Schwäche (doppelt)", "Weak to (double)"), ("resistenz", "Widerstand (halb)", "Resists (half)"),
                            ("immun", "Immun (kein Schaden)", "Immune (no damage)")):
             out.append([L(de, enw), ", ".join(k(i) for i in a[f])])
+        if kampf.blows(x) > 1:                   # Tabletop-Punkt 12: the multiattack
+            out.append([L("Angriffe je Zug", "Attacks a turn"), str(kampf.blows(x))])
         if x.get("boss"):
             out.append([L("Boss", "Boss"), L(f"+{int(kampf.BOSS_LEBEN * 100)} % Leben je Held ab dem zweiten, ab halbem Leben Phase 2 "
-                                             f"(+{kampf.BOSS_PHASE} zum Treffen), zwei Angriffe je Zug, Fund eine Seltenheit besser",
+                                             f"(+{kampf.BOSS_PHASE} zum Treffen), mindestens zwei Angriffe je Zug, Fund eine Seltenheit besser",
                                              f"+{int(kampf.BOSS_LEBEN * 100)} % life per hero beyond the first, phase 2 at half life "
-                                             f"(+{kampf.BOSS_PHASE} to hit), two attacks a turn, its find one rarity better")])
+                                             f"(+{kampf.BOSS_PHASE} to hit), at least two attacks a turn, its find one rarity better")])
         out.append([L("EP je Held", "EP per hero"), " · ".join(f"{n}: {int(x.get('ep', 0)) // n}" for n in HELDEN)])
         wn = [_name(w, li) for w in r["welten"] if kampf.plays_in(r, x, w["id"])]
         out.append([L("Welten", "Worlds"), L("alle", "all") if len(wn) == len(r["welten"]) else ", ".join(wn)])

@@ -106,6 +106,7 @@ SAGEN = {
     "keine_punkte": ("Du hast gerade keinen Wertpunkt.", "You have no value point right now."),
     "kein_kampf": ("Gerade gibt es keinen Kampf.", "There is no fight right now."),
     "gegner": ("{name} hat {leben} von {max} Leben", "{name} has {leben} of {max} life"),
+    "gegner_lage": ("{name} ist {lage}", "{name} is {lage}"),
     "gegner_aus": ("{name} ist besiegt", "{name} is defeated"),
     "geht_nicht": ("Das geht gerade nicht.", "That does not work right now."),
     "passt_nicht": ("Das passt deinem Helden gerade nicht.", "That does not fit your hero right now."),
@@ -154,9 +155,24 @@ SAGEN = {
 EREIGNIS_ARTEN = ("wurf", "angriff", "folge", "beute", "stufe", "zustand", "todeswurf", "zauber", "kampf")
 
 
+WORTE_S = 600             # Tabletop-Punkt 14: for so long after the car's last game request its recordings hear the round's names
+_im_auto = {}             # uid -> time of the last game request from the car (memory only)
+
+
 def _dm():
     import dungeon
     return dungeon
+
+
+def words(uid, now=None):
+    """The names of the profile's round (dungeon.heard_words) for the car's recordings while it plays from the car,
+    [] otherwise."""
+    now = time.time() if now is None else now
+    if not uid or now - _im_auto.get(uid, 0) > WORTE_S:
+        return []
+    dm = _dm()
+    rid, pid = _seat(dm, uid, "")
+    return dm.heard_words(dm.rules(), dm._read()["runden"][rid], pid) if rid else []
 
 
 def _say(k, li, **kw):
@@ -214,13 +230,16 @@ def summary(r, rd, pid, li, seit):
     return out
 
 
-def stand(rd, li):
-    """Punkt 10: every foe of the fight with its life, or None without a fight."""
+def stand(rd, li, host=True):
+    """Punkt 10: every foe of the fight with its life, or None without a fight; only the host hears the numbers, every
+    other seat its state as a word (Tabletop-Punkt 11)."""
+    import dungeon_kampf as kampf
     k = rd.get("kampf")
     if not k:
         return None
     return [_say("gegner_aus", li, name=g["name"]) if g.get("aus") or g.get("leben", 0) <= 0
-            else _say("gegner", li, name=g["name"], leben=max(0, g["leben"]), max=g["max"]) for g in k.get("gegner") or []]
+            else _say("gegner", li, name=g["name"], leben=max(0, g["leben"]), max=g["max"]) if host
+            else _say("gegner_lage", li, name=g["name"], lage=kampf.lage(g)[1][li]) for g in k.get("gegner") or []]
 
 
 def ton_ready(rd, e):
@@ -276,6 +295,7 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None)
     dm = _dm()
     r = dm.rules()
     li = 1 if lang == "en" else 0
+    _im_auto[uid] = time.time()
     text = dm._clean(text, dm.TEXT_MAX)
     if neu:
         return new_round(dm, r, uid, text, lang, li, wahl, ok)
@@ -326,7 +346,7 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None)
         w = dungeon_karte.wege(rd, rd["lang"])[:DINGE_MAX]
         return out("wege", wege=", ".join(_say("weg", li, **x) for x in w)) if w else out("keine_wege")
     if kind == "kampf":
-        s = stand(rd, li)
+        s = stand(rd, li, rd.get("owner") == uid)
         return {"sagen": ". ".join(s) + "." if s else _say("kein_kampf", li), "n": n, "warten": False, "aus": False, "rid": rid}
     if kind == "haendler":
         m = dm.market_view(r, rd, h, rd["lang"])

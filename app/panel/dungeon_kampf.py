@@ -30,10 +30,12 @@ Teil 2 (Kampf-Tiefe, Bestiarium-Punkte 4-6 and item point 2, Dominik 2026-10-24 
                against RETTUNG + a quarter of the foe's level; failed, the state lasts its runden turns and works by its
                wirkung (ZUSTAND_WIRKUNG); all end with the fight
     bosses     a foe with boss: more life per hero (BOSS_LEBEN), a second phase at half life (+BOSS_PHASE to hit, once
-               a log line), two attacks a turn, its find one rarity better (dungeon.give_loot „boss“)
+               a log line), at least two attacks a turn, its find one rarity better (dungeon.give_loot „boss“)
+    multiattack a foe with "angriffe" (2 to 5, Tabletop-Punkt 12, from the SRD's Multiattack) attacks that often a turn
+               (blows); its schaden is the mean of its damaging attacks, so the turn is as strong as in the SRD
 
 rd["kampf"] = {"gegner": [{k, id, name, zeichen, leben, max, rk, angriff, schaden, plus, wuerfel, ep, aus, art, resistenz,
-               immun, schwaeche, zustaende, boss, phase}], "seit": zug, "budget": n, "gefahr": "leicht"|"mittel"|"schwer"};
+               immun, schwaeche, zustaende, boss, phase, angriffe}], "seit": zug, "budget": n, "gefahr": "leicht"|"mittel"|"schwer"};
 hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and calls in.
 """
 import random
@@ -41,7 +43,7 @@ import random
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
-BUDGET = (95, 150, 291, 380, 450, 532, 950, 1000, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+BUDGET = (95, 135, 291, 380, 410, 490, 780, 880, 520, 560, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
@@ -301,7 +303,7 @@ def lineup(wahl, li, n_held):
                            "angriff": g["angriff"], "schaden": g["schaden"], "plus": g.get("schaden_plus", 0),
                            "wuerfel": g.get("anzahl_wuerfel", 1), "ep": g["ep"], "aus": "", "art": g.get("schaden_art", ""),
                            **{x: list(g.get(x) or []) for x in ("resistenz", "immun", "schwaeche", "zustaende")},
-                           "boss": bool(g.get("boss")), "phase": 1})
+                           "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1)})
             if g.get("boss"):
                 gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * (1 + BOSS_LEBEN * max(0, n_held - 1)))
     return gegner
@@ -444,6 +446,7 @@ def oil(dm, r, rd, pid, h, c):
     a = ART_NAME[c["oel"]]
     dm._log(rd, "system", text=[f"{h['name']} reibt die Waffe ein: {OEL_TREFFER} Treffer mit {a[0]}.",
                                 f"{h['name']} coats the weapon: {OEL_TREFFER} hits with {a[1]}."])
+    dm._day.bump("oel")
     print("dungeon: oel | aufgetragen", flush=True)
     return True
 
@@ -476,8 +479,18 @@ def against(g, art, n, magisch=False):
 
 def _states(r, h):
     """A hero's states in force: their catalog entries."""
+    return [z for _, z in states_with(r, h)]
+
+
+def states_with(r, h):
+    """A hero's states in force as (its entry in h["zust"], its catalog entry)."""
     by = {z["id"]: z for z in r.get("zustaende") or []}
-    return [by[x["id"]] for x in h.get("zust") or [] if x.get("id") in by]
+    return [(x, by[x["id"]]) for x in h.get("zust") or [] if x.get("id") in by]
+
+
+def left(x, zug):
+    """The turns a hero's state still lasts (expire keeps it while bis >= the round's turn), at least 1."""
+    return max(1, int(x.get("bis", 0)) - int(zug) + 1)
 
 
 def has(r, h, wirkung):
@@ -502,9 +515,15 @@ def _state_vt(r, h, vt, wofuer):
     return vt
 
 
+def blows(g):
+    """How often a foe of the encounter attacks in one turn: its multiattack, a boss at least twice."""
+    return max(int(g.get("angriffe") or 1), 2 if g.get("boss") else 1)
+
+
 def foes_turn(dm, r, rd, hits, rng=None):
-    """Every foe still up after the heroes' attacks attacks one hero (a boss twice): the last who hit it, else one
-    standing hero by the seed. A hit may cause one of the foe's states (save), a state that burns or bleeds costs
+    """Every foe still up after the heroes' attacks attacks: as often as its multiattack says (Tabletop-Punkt 12,
+    "angriffe" 2 to 5, missing 1), a boss at least twice; the first blow at the last who hit it, the others at a standing
+    hero by the seed. A hit may cause one of the foe's states (save), a state that burns or bleeds costs
     BRENNT at each turn. [{k, gegner, pid, name, w, ws, vt, gesamt, rk, treffer, schaden, art, zustand, rettung}]."""
     rng = rng or random
     if not rd.get("kampf"):
@@ -518,7 +537,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
     for g in up(rd):
         if g["k"] in down:
             continue
-        for zug in range(2 if g.get("boss") else 1):
+        for zug in range(blows(g)):
             by = [x["pid"] for x in hits if x["ziel"] == g["k"] and x["treffer"]]
             pid, h = (next(((q, hh) for q, hh in standing if by and q == by[-1]), None) if not zug else None) or standing[rng.randrange(len(standing))]
             vt = _state_vt(r, h, "", "gegen")
@@ -594,7 +613,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             continue
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
-                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck") if x.get(k)})
+                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "beleg") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
         if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
             learn(rd, g["id"], [x["art"]])
@@ -621,7 +640,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if not g or g["aus"] or x["pid"] not in seats or dm.zustand(seats[x["pid"]]["held"]):
             continue
         dm._log(rd, "angriff", gegner=g["name"], pid=x["pid"], name=x["name"], w=x["w"], ws=x.get("ws", [x["w"]]), vt=x.get("vt", ""),
-                bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"], von_gegner=True)
+                bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"], von_gegner=True,
+                **({"beleg": x["beleg"]} if x.get("beleg") else {}))
         if x["treffer"]:
             folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": g["name"], "sart": x.get("art", "")})
         rw = x.get("rettung")
@@ -717,8 +737,20 @@ def end(dm, r, rd, ep, why=""):
     return besiegt
 
 
-def view(dm, r, rd):
-    """The fight bar: every foe with its sign, picture, life and whether it is out. None without a fight."""
+LAGE = (("unverletzt", ("unverletzt", "unhurt")), ("angeschlagen", ("angeschlagen", "bruised")),
+        ("schwer", ("schwer verletzt", "badly hurt")), ("fast", ("fast besiegt", "nearly beaten")))   # Tabletop-Punkt 11
+
+
+def lage(g):
+    """A foe's life as a word for the players (Tabletop-Punkt 11, from improved-initiative): unverletzt at full life,
+    angeschlagen above half, schwer verletzt above a quarter, else fast besiegt."""
+    n, m = max(0, g["leben"]), max(1, g["max"])
+    return LAGE[0 if n >= m else 1 if 2 * n > m else 2 if 4 * n > m else 3]
+
+
+def view(dm, r, rd, host=True):
+    """The fight bar: every foe with its sign, picture, life and whether it is out. None without a fight. Only the host
+    sees the numbers of a foe's life; every other seat (and the TV, the app, the car) sees its state as a word (lage)."""
     k = rd.get("kampf")
     if not k:
         return None
@@ -726,7 +758,10 @@ def view(dm, r, rd):
     have = db.files() if db.on() else frozenset()
     lang, cat = "en" if rd.get("lang") == "en" else "de", dm._by(r, "gegner")
     out = [dict(card(dm, r, rd, g["id"], lang) if g["id"] in cat else {}, k=g["k"], id=g["id"], name=g["name"], zeichen=g["zeichen"],
-                leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], phase=g.get("phase", 1), bild=_picture(r, rd, g["id"], have)) for g in k["gegner"]]
+                leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], phase=g.get("phase", 1), bild=_picture(r, rd, g["id"], have),
+                lage=lage(g)[0], lage_name=lage(g)[1][1 if lang == "en" else 0]) for g in k["gegner"]]
+    if not host:
+        out = [{k_: v for k_, v in x.items() if k_ not in ("leben", "max")} for x in out]
     return {"gegner": out, "gefahr": k["gefahr"], "stehen": len(up(rd))}
 
 
@@ -737,11 +772,13 @@ def _picture(r, rd, gid, have):
     return n if n in have else ""
 
 
-def pictures(dm, r, rd, out):
-    """view's step for the log: every foe of an encounter card gets "bild" (its bestiary picture, "" while none)."""
+def pictures(dm, r, rd, out, host=True):
+    """view's step for the log: every foe of an encounter card gets "bild" (its bestiary picture, "" while none); its
+    life stays the host's (Tabletop-Punkt 11)."""
     import dungeon_dingbild as db
     have = db.files() if db.on() else frozenset()
-    out["log"] = [dict(e, gegner=[dict(g, bild=_picture(r, rd, g["id"], have)) for g in e["gegner"]]) if e.get("art") == "begegnung" else e
+    out["log"] = [dict(e, gegner=[{k_: v for k_, v in dict(g, bild=_picture(r, rd, g["id"], have)).items() if host or k_ != "leben"}
+                                  for g in e["gegner"]]) if e.get("art") == "begegnung" else e
                   for e in out.get("log") or []]
 
 
@@ -766,7 +803,7 @@ def card(dm, r, rd, gid, lang):
             # Schadensarten Punkt 6: at the table only what the group found out (known), the rest counted as unknown
             **{x: [ART_NAME[a][li] for a in c.get(x) or [] if a in ART_NAME and a in kennt] for x in ("resistenz", "immun", "schwaeche")},
             "unbekannt": sum(1 for x in ("resistenz", "immun", "schwaeche") for a in c.get(x) or [] if a in ART_NAME and a not in kennt),
-            "boss": bool(c.get("boss"))}
+            "boss": bool(c.get("boss")), "angriffe": blows(c)}
 
 
 def known(rd, gid):
@@ -788,4 +825,5 @@ def learn(rd, gid, arten):
 
 def for_live(rs):
     return {"kaempfe_laufen": sum(1 for v in rs if v.get("kampf")), "gegner_stehen": sum(len(up(v)) for v in rs),
-            "gegner_erkannt": sum(len(v.get("kennt") or {}) for v in rs)}
+            "gegner_erkannt": sum(len(v.get("kennt") or {}) for v in rs),
+            "gegner_mehrfach": sum(1 for v in rs for g in up(v) if blows(g) > 1)}
