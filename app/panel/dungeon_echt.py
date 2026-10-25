@@ -1,9 +1,10 @@
 """KI-Dungeon-Master: echte Würfel am Tisch (D&D idea 5, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“).
 
 Whoever sits at the real table throws their own d20: before the panel rolls a turn's checks, a seat the host gave its
-own dice (rd["echt"], the main thread's round switch) sees „Wirf W20 für Geschick gegen 14“ and taps or says the number.
-The panel then rolls on as always, only this seat's d20 is the number given; the Würfel-Beleg says "echt" (the main
-thread's). After WARTE_S without a number the panel rolls itself, as it always did. Never in the car (CarPlay): a seat
+own dice (rd["echt"], the host's choice in the console: choose) sees „Wirf W20 für Geschick gegen 14“ and taps or says
+the number. The panel then rolls on as always, only this seat's d20 is the number given (dungeon.roll and
+dungeon_kampf.attacks with the Hand); the Würfel-Beleg says "echt". After WARTE_S without a number the panel rolls
+itself, as it always did. Never in the car (CarPlay): a seat
 whose profile plays from the car is not asked (dungeon_auto.im_auto); a guest seat has no car.
 
 Off by default: the admin's switch dungeonechtwuerfel (features.py, chat.dungeon_echtwuerfel) for the round's host.
@@ -151,6 +152,30 @@ def give(rd, pid, zug, zahlen):
             or not all(isinstance(z, int) and not isinstance(z, bool) and 1 <= z <= SEITEN for z in zahlen):
         raise ValueError("eingabe")
     me["zahlen"] = list(zahlen)
+
+
+def choice(rd):
+    """The host's console (Am Tisch): the seats with a hero and whether each throws its own d20; None while the admin's
+    switch is off for the host."""
+    if not rd.get("owner") or not features.allowed(KEY, rd["owner"]):
+        return None
+    on_ = set(rd.get("echt") or [])
+    return [{"pid": pid, "name": p["held"]["name"], "an": pid in on_, "auto": _im_auto(p.get("uid"))}
+            for pid, p in rd["plaetze"].items() if p.get("held")]
+
+
+def choose(rd, pids):
+    """The host's choice {echt: [pid, …]}: only seats of the round with a hero, each once, only with the admin's switch
+    (a seat in the car stays chosen, it is only not asked while it drives)."""
+    ok = isinstance(pids, list) and len(pids) <= len(rd["plaetze"]) and all(isinstance(p, str) for p in pids) \
+        and len(set(pids)) == len(pids) and all((rd["plaetze"].get(p) or {}).get("held") for p in pids)
+    if not ok or not rd.get("owner") or not features.allowed(KEY, rd["owner"]):
+        print("dungeon: echt | plaetze | abgelehnt", flush=True)
+        raise ValueError("eingabe")
+    if pids:
+        rd["echt"] = list(pids)
+    else:
+        rd.pop("echt", None)
 
 
 def view(rd, pid, now=None):

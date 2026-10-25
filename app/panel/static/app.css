@@ -2802,6 +2802,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-gtabs{display:flex;gap:4px;margin:6px 0 10px;border-bottom:1px solid var(--t-linie,var(--line));overflow-x:auto;scrollbar-width:none}
 .dm-gtab{flex:none;padding:8px 12px;border:0;border-bottom:2px solid transparent;background:transparent;color:inherit;font:inherit;font-size:14px;opacity:.75;cursor:pointer;white-space:nowrap}.dm-gtab.on{opacity:1;font-weight:600;border-bottom-color:var(--t-gold,var(--acc));color:var(--t-gold,inherit)}
 .dm-gpane>details{margin:0;border:0;padding:0}.dm-gpane>details>summary{display:none}
+.dm-echtwahl{display:flex;flex-wrap:wrap;gap:6px}.dm-echtwahl button{border:1px solid var(--t-linie,var(--line));border-radius:999px;background:none;color:inherit;padding:6px 12px;font-size:13px;cursor:pointer;min-height:36px}.dm-echtwahl button.on{background:var(--t-gold,var(--acc));color:var(--t-grund,#fff);font-weight:600}
 .dm-pult .dm-pseg label,.dm-pult label.dm-schalt{margin:0;font-size:inherit;font-variant:normal;letter-spacing:normal;color:inherit}.dm-pult label.dm-schalt{font-size:14px}
 .dm-pult input.dm-swc{width:40px;min-width:0;height:23px;padding:0;border:0;box-shadow:none;background:color-mix(in srgb,var(--t-linie,var(--line)) 90%,transparent)}.dm-pult input.dm-swc:checked{background:#2f6b45}
 @media (max-width:860px){.dm-pult{grid-template-columns:1fr}}

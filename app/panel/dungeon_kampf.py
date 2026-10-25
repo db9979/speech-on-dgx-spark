@@ -432,9 +432,10 @@ def _dice(rng, n, w):
     return sum(rng.randint(1, w) for _ in range(n))
 
 
-def attacks(dm, r, rd, proben, rng=None):
+def attacks(dm, r, rd, proben, rng=None, hand=None):
     """The checks with ziel in a fight become attacks (taken out of proben). Returns (the rest, the attack results);
-    every number from here: the foe's life is only changed in apply (hit)."""
+    every number from here: the foe's life is only changed in apply (hit). hand (dungeon_echt.Hand): the d20 a seat
+    threw at the real table come first, the attack says "echt"."""
     rng = rng or random
     if not rd.get("kampf"):
         return [{k: v for k, v in p.items() if k != "ziel"} for p in proben], []
@@ -488,7 +489,7 @@ def attacks(dm, r, rd, proben, rng=None):
         mut = False
         gl = False
         for _ in range(2):
-            ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
+            ws = [hand.d20(p["pid"], rng) if hand else rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
             if not gl:
                 w, gl = lucky(dm, r, h, w, rng)
@@ -520,7 +521,8 @@ def attacks(dm, r, rd, proben, rng=None):
                     "ws": ws, "vt": vt, "bonus": bonus, "gesamt": w + bonus, "rk": g["rk"], "treffer": hit, "krit": krit,
                     "schaden": n, "faellt": hit and life[g["k"]] <= 0, "art": art, "wirkt": wirkt,
                     "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {}),
-                    **({"extra": extra} if extra else {}), **({"raub": raub} if raub else {}), **({"glueck": True} if gl else {})})
+                    **({"extra": extra} if extra else {}), **({"raub": raub} if raub else {}), **({"glueck": True} if gl else {}),
+                    **({"echt": True} if hand and hand.used(p["pid"]) else {})})
     return rest, out
 
 
@@ -702,7 +704,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             continue
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
-                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "beleg") if x.get(k)})
+                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "beleg") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
         if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
             learn(rd, g["id"], [x["art"]])

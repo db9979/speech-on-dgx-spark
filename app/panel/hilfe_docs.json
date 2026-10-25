@@ -6276,6 +6276,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "KI-Dungeon-Master: echte Würfel angeschlossen (V01.1.091, D&D-Idee 5)",
+"text": "KI-Dungeon-Master: echte Würfel angeschlossen (V01.1.091, D&D-Idee 5): Seit dieser Version wirken die echten Würfel im Spiel. Der Gastgeber wählt im Spielleiter-Pult unter „Am Tisch“ bei „🎲 Eigene Würfel“, welche Plätze ihren eigenen W20 werfen (ein Tipp je Name schaltet ihn an oder aus, ein 🚗 zeigt, wer gerade im Auto spielt und deshalb nicht gefragt wird). Nur Plätze der Runde mit Held, jeder einmal, nur mit dem Admin-Schalter, nur der Gastgeber sieht die Wahl (dungeon_echt.choose, POST /api/profile/dungeon/{rid}/erzaehler {echt: [Platz, …]}, Log dungeon: echt | plaetze | n oder … | abgelehnt). Schließt ein Zug, fragt run_turn diese Plätze nach den Proben und vor den Angriffen (dungeon_echt.real_ask); dungeon.roll und dungeon_kampf.attacks nehmen den W20 eines Platzes zuerst aus seinen Zahlen. Wurf und Angriff tragen dann „echt“ im Würfel-Beleg (W-n · echt), und der Würfel wartet am Tisch nicht noch einmal auf einen Tipp. Ohne Zahl nach 30 Sekunden würfelt das Panel wie immer."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: eigene Stimmen für Erzähler und Figuren, klare Meldungen (V01.0.977, Dominik 2026-10-23 „erzähler stimmen und die der npc … generiert je nach stimmung und karakter, auch die des erzählers variieren von geschichte zu geschichte“ und „1-4“, dazu „das besetzt sieht verloren aus und ist auch nicht aussage kräftig“): Kann die Sprachausgabe Stimmen aus einer Beschreibung machen (Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“), liest der Dungeon-Master mit Stimmen aus festen Beschreibungen (dungeon_stimmen.json, dungeon_stimmen.py). Jede neue Geschichte bekommt eine Erzählerstimme ihrer Welt (sechs je Welt und vier für alle, etwa „alter Seebär, rau“ bei Piraten), nie eine der letzten drei Runden desselben Gastgebers; eine Kampagne behält sie von Kapitel zu Kapitel. Der Gastgeber wählt sie unter „🎙 Stimme des Erzählers“ aus der Liste, würfelt mit „🎲 Neu“ eine andere oder hört mit „▶ Probe“ hinein. Die Stimmung der Szene färbt den Erzähler: feste Schlüsselwörter (unheimlich, Kampf, spannend, traurig, fröhlich, ruhig) hängen einen festen Zusatz an, etwa leiser und langsamer im Unheimlichen. Jeder NSC spricht mit seiner eigenen Stimme: Beim ersten Auft"
 },
@@ -20086,6 +20094,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " the car right now (dungeon_auto.im_auto), its seat is not asked; a guest has no car. Doors: POST /api/profile/dungeon/{rid}/echt {zug, zahlen} and POST /api/dungeon/echt {code, zug, zahlen}. Live: asked, real throws, rolled by the panel after 30 s, refused (numbers only); log dungeon: echt | frage | n plaetze, dungeon: echt | alle da …, dungeon: echt | rueckfall …, dungeon: echt | eingetragen, dungeon: echt | abgelehnt | …. Fanfare: when the narrator reads the honours of the evening (log kind ehrung), a short, soft fanfare sounds once (WebAudio, no file). Turning over: when a natural 20 or 1 sets off an entry of the critical or fumble table (krit_tabelle, patzer_tabelle on the throw, a fixed name of the panel), the die card visibly turns over on landing and shows \"Critical: …\" or \"Fumble: …\"; with \"reduce motion\" without turning. Campfire: while the group rests (rd[\"rast\"]), an own music mood \"Campfire\" per world plays (calm, 70 beats per minute, in the world's major key, with guitar, flute, soft hand drum and warm bass), and the fire crackles in the background. Only a fight comes first. The store now has eight moods per world; the storage defaults to 2400 MB."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "AI Dungeon Master: real dice wired in (V01.1.091, D&D idea 5)",
+"text": "AI Dungeon Master: real dice wired in (V01.1.091, D&D idea 5): From this version on the real dice work in the game. The host chooses in the game master console under \"At the table\" at \"🎲 Own dice\" which seats throw their own d20 (a tap on a name switches it on or off, a 🚗 shows who is playing in the car right now and is therefore not asked). Only seats of the round with a hero, each once, only with the admin switch, only the host sees the choice (dungeon_echt.choose, POST /api/profile/dungeon/{rid}/erzaehler {echt: [seat, …]}, log dungeon: echt | plaetze | n or … | abgelehnt). When a turn closes, run_turn asks these seats after the checks and before the attacks (dungeon_echt.real_ask); dungeon.roll and dungeon_kampf.attacks take a seat's d20 from its numbers first. The throw and the attack then carry \"real\" in the dice receipt (W-n · real), and the die does not wait for a second tap at the table. Without a number after 30 seconds the panel rolls as always."
 },
 {
 "lang": "en",

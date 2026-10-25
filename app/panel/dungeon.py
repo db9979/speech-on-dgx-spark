@@ -140,6 +140,7 @@ import dungeon_vorlesen as vortrag
 import dungeon_gast as gastkonto
 import dungeon_auto as auto_car
 import dungeon_gesicht as gesicht
+import dungeon_echt as echt
 import coadmin
 import features
 import guard
@@ -3257,9 +3258,10 @@ def wofuer(r, rd, pid, said):
     return a if len(a) <= WOFUER_MAX else a[:WOFUER_MAX].rsplit(" ", 1)[0] + " …"
 
 
-def roll(r, rd, proben, rng=None):
+def roll(r, rd, proben, rng=None, hand=None):
     """The panel rolls each check: d20 + the hero's value against the difficulty; with advantage (disadvantage) two
-    d20 and the higher (lower) counts. Returns the results as log entries."""
+    d20 and the higher (lower) counts; hand (dungeon_echt.Hand) holds the d20 a seat threw at the real table, the
+    roll takes those first and marks the result "echt". Returns the results as log entries."""
     rng = rng or random
     out = []
     schrei = KRAFT["gruppe_probe"] if any("gruppe_probe" in (a.get("wirkt") or {}) for a in rd["offen"].values()) else 0
@@ -3274,7 +3276,7 @@ def roll(r, rd, proben, rng=None):
         bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
         extra = {"belastet": True} if last else {}
         for _ in range(2):
-            ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
+            ws = [hand.d20(p["pid"], rng) if hand else rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
             if not extra.get("glueck"):
                 w, gl = kampf.lucky(_me, r, h, w, rng)   # „glueck“ of a worn item: a natural 1 rolled again once
@@ -3287,6 +3289,8 @@ def roll(r, rd, proben, rng=None):
             extra["mut"] = True
         if schrei:
             extra["schrei"] = True
+        if hand and hand.used(p["pid"]):
+            extra["echt"] = True                  # the seat's own d20 (dungeon_echt): the receipt says so
         if tool:
             c = _c(r, tool)
             extra["werkzeug"] = c["name"][1 if rd["lang"] == "en" else 0]
@@ -3458,7 +3462,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "beleg") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
@@ -3711,8 +3715,9 @@ async def run_turn(rid, turn):
             why = "pause"
         else:
             proben, drop = await ask_checks(r, rd)
-            proben, hits = kampf.attacks(_me, r, rd, proben)
-            wuerfe = roll(r, rd, proben)
+            hand = await echt.real_ask(_me, rid, turn, rd, proben)   # the seats with own dice at the real table (D&D idea 5)
+            proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand)
+            wuerfe = roll(r, rd, proben, hand=hand)
             zuege = kampf.foes_turn(_me, r, rd, hits)
             erz.receipts(rd, wuerfe, hits, zuege)     # Würfel-Beleg: W-n on every roll (Tabletop-Punkt 2)
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
@@ -5056,6 +5061,7 @@ def view(rid, pid, now=None):
     out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     out["kampfstufe"] = {"wert": kampf.stage(rd), "wahl": [[k, v[li]] for k, v in kampf.STUFEN.items()]} if host and kampf.stages_on(rd) else None
+    out["echt_plaetze"] = echt.choice(rd) if host else None    # which seats throw their own d20 (dungeon_echt, D&D idea 5)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))
@@ -6226,7 +6232,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
     way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
     or {kampfstufe} the stage of the next encounters (leicht, mittel, schwer, toedlich; Tabletop-Punkt 13);
-    or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off)."""
+    or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off);
+    or {echt: [pid, …]} the seats that throw their own d20 at the real table (dungeon_echt.choose, D&D idea 5)."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -6250,6 +6257,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 if not isinstance(b["mail_vorschau"], bool):
                     raise ValueError()
                 rd["mail_vorschau"] = b["mail_vorschau"]
+            elif "echt" in b:
+                echt.choose(rd, b["echt"])
             elif "weise" in b:
                 if b["weise"] not in WEISEN:
                     raise ValueError()
@@ -6263,6 +6272,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             print(f"dungeon: kampfstufe | {b['kampfstufe']}", flush=True)
         elif "mail_vorschau" in b:
             print(f"dungeon: gastmail | vorschau {'an' if b['mail_vorschau'] else 'aus'}", flush=True)
+        elif "echt" in b:
+            print(f"dungeon: echt | plaetze | {len(b['echt'])}", flush=True)
         elif "weise" in b:
             print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
         else:

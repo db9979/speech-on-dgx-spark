@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.091** KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
 - **V01.1.090** KI-Dungeon-Master: Inhalte der D&D-Ideen im SRD-Katalog: Krit-Tabellen für 13 Schadensarten, milde Patzer, Nachtwachen und Reise-Ereignisse für 13 Landschaften, 60 Lagerfeuer-Fragen, Reise-Rollen, Narben mit Pflastern für den Kindertisch und eine Sage für jeden der 268 Gegner
 - **V01.1.089** Hilfsmodell erkennt Angriffe und schreibt kurze Texte
 - **V01.1.088** KI-Dungeon-Master: Erzähler-Fehler beheben, ein 👎 mit Grund erzählt die letzte Szene neu, oft gemeldete Gründe werden feste Hinweise der Welt, der Prüfstand spielt die Fälle jede Nacht
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.084** KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
 - **V01.1.083** KI-Dungeon-Master: Spielleiter-Pult als Tafeln: oben „Jetzt weiter“ und wer gehandelt hat, vier gleich große Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit, Knopfbänder statt Listen, unten „Nur für dich“ mit Reitern; der Katalog prüft die Tabellen der D&D-Ideen
 - **V01.1.082** KI-Dungeon-Master: nennt die Erzählung den neuen Ort nicht, bleibt die Gruppe am alten Ort (Fahne und Erzählung stimmen überein); die Karte zählt Wege in Etappen und den Weg zur nächsten Siedlung; besetzte Orte tragen das Wappen ihrer Fraktion
-- **V01.1.081** Hilfsmodell für einfache Einordnungen, Funktionen → Hilfsmodell
 
 
 

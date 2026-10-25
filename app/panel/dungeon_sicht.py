@@ -13,7 +13,7 @@ import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
-                 "fraktionen_geheim", "quest_geheim")
+                 "fraktionen_geheim", "quest_geheim", "echt_plaetze")
 SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest")   # the admin switches of the secrets below: the self-test turns them on
 
 

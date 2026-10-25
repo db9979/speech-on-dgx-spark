@@ -6,6 +6,8 @@
 - The number is data: only the own seat, only the turn asked, only whole numbers 1 to 20, as many as asked, once.
 - The panel waits at most WARTE_S, then rolls itself; a seat's d20 comes from its numbers first, then from the dice.
 - Live and the journal: numbers and fixed words only.
+- The host chooses the seats in the console (only seats with a hero, only with the switch, only the host sees it);
+  a turn takes the seat's number into the roll and the receipt says "echt", without a second tap.
 
 No wall clock in the checks: every time is given, the waits are made short.
 """
@@ -17,7 +19,7 @@ import time
 import unittest
 
 from tests import helpers
-from tests.test_dungeon import Base
+from tests.test_dungeon import Base, fake
 
 import dungeon  # noqa: E402
 import dungeon_auto  # noqa: E402
@@ -209,6 +211,57 @@ class Table(Base):
             js = f.read()
         for s in ("data-dmechtz", "/api/dungeon/echt", "/echt`", "dmEchtZahlen", "siebzehn:17", "seventeen:17"):
             self.assertIn(s, js)
+
+    def test_host_chooses_the_seats(self):
+        url = f"/api/profile/dungeon/{self.rid}/erzaehler"
+        host = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual(sorted((x["name"], x["an"]) for x in host["echt_plaetze"]), [("Arvid", False), ("Bela", False)])
+        guest = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertIsNone(guest.get("echt_plaetze"))                     # only the host sees the choice
+        r = self.c.post(url, json={"echt": [self.gpid]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.state(self.rid)["echt"], [self.gpid])
+        self.assertEqual({x["pid"]: x["an"] for x in r.json()["echt_plaetze"]}, {self.gpid: True, self.host: False})
+        for bad in (["x" * 8], self.gpid, [self.gpid, self.gpid], [1], None):
+            self.assertEqual(self.c.post(url, json={"echt": bad}).status_code, 400, repr(bad))
+        self.assertEqual(self.state(self.rid)["echt"], [self.gpid])
+        self.assertEqual(self.c2.post(url, json={"echt": []}).status_code, 404)     # not the host
+        self.assertEqual(self.c.post(url, json={"echt": []}).status_code, 200)
+        self.assertNotIn("echt", self.state(self.rid))
+        helpers.set_config(dungeon_echtwuerfel=False)
+        self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["echt_plaetze"])
+        self.assertEqual(self.c.post(url, json={"echt": [self.gpid]}).status_code, 400)
+        with open(os.path.join(PANEL, "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        for s in ("data-dmechtsitz", "{echt:an}", "v.echt_plaetze"):
+            self.assertIn(s, js)
+
+    def test_the_turn_takes_the_number(self):
+        self.set_round(echt=[self.gpid])
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich öffne die Tür.", "zug": 1}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich schleiche am Regal vorbei.", "zug": 1}).status_code, 200)
+
+        def player():
+            self.wait_for_question()
+            r = self.v.post("/api/dungeon/echt", json={"code": self.code, "zug": 1, "zahlen": [20]})
+            self.assertEqual(r.status_code, 200, r.text)
+        old = dungeon.ask_model
+        dungeon.ask_model = fake([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 10}, {"wer": "Bela", "wert": "geschick", "schwer": 14}]},
+                                  {"erzaehlung": "Arvid stemmt die Tür auf, Bela gleitet lautlos am Regal vorbei.", "frage_an": ""}])
+        t = threading.Thread(target=player)
+        t.start()
+        try:
+            asyncio.run(dungeon.run_turn(self.rid, 1))
+        finally:
+            dungeon.ask_model = old
+            t.join()
+        rd = self.state(self.rid)
+        wurf = {e["name"]: e for e in rd["log"] if e["art"] == "wurf"}
+        self.assertEqual((wurf["Bela"]["w"], wurf["Bela"]["ws"], wurf["Bela"].get("echt")), (20, [20], True))
+        self.assertTrue(wurf["Bela"]["ok"])
+        self.assertNotIn("echt", wurf["Arvid"])                          # the host's seat: the panel's dice as always
+        self.assertFalse([x for x in rd.get("wurf_offen") or [] if x["pid"] == self.gpid])   # thrown at the table, no second tap
+        self.assertNotIn("echt_frage", rd)
 
 
 if __name__ == "__main__":

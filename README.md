@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.091** AI Dungeon Master: real dice now work, the host chooses in the game master console the seats with an own d20, the turn takes the number, the receipt says "real"
 - **V01.1.090** AI Dungeon Master: content of the D&D ideas in the SRD catalogue: critical tables for 13 damage kinds, mild fumbles, night watches and travel events for 13 landscapes, 60 campfire questions, travel roles, scars with plasters for the children's table and a legend for each of the 268 foes
 - **V01.1.089** Helper model spots attacks and writes short texts
 - **V01.1.088** AI Dungeon Master: fix narrator errors, a 👎 with a reason tells the last scene again, often reported reasons become a world's fixed hints, the bench plays the cases every night
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.084** AI Dungeon Master: more fixed checks of the narration (fallen foes, missing things, gold only told, other heroes, looks, time of day), each with a rescue by the panel
 - **V01.1.083** AI Dungeon Master: game master console as cards: “Go on now” and who acted on top, four equal cards turn, at the table, narrator, difficulty, bands of buttons instead of lists, “Only for you” with tabs below; the catalog checks the tables of the D&D ideas
 - **V01.1.082** AI Dungeon Master: when the narration does not name the new place, the group stays where it was (flag and narration agree); the map counts ways in stages and the way to the nearest settlement; occupied places carry their faction's arms
-- **V01.1.081** Helper model for simple classifications, Features → Helper model
 
 
 
