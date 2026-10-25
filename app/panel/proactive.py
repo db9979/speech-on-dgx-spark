@@ -739,7 +739,9 @@ async def greet(uid, now=None):
     import calendars
     if features.allowed("calendar", uid) and calendars.get(uid)["calendars"]:
         try:
-            res = await calendars.events(uid, now, now + datetime.timedelta(hours=4), zone)
+            # four real hours, also across a change of the clocks (wall-clock arithmetic would lose or add one)
+            end = (now.astimezone(datetime.timezone.utc) + datetime.timedelta(hours=4)).astimezone(zone)
+            res = await calendars.events(uid, now, end, zone)
             nxt = next((x for x in (res or ([], []))[0] if not x["allday"] and x["start"] > now), None)
             if nxt:
                 point, data = f"Um {nxt['start']:%H:%M} Uhr hast du {nxt['title']}.", calendars.line(nxt)

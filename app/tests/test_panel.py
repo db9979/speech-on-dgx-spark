@@ -1890,14 +1890,22 @@ class Proactive(unittest.TestCase):
         # greeting: nothing to say, nothing said; with a reminder today, one sentence
         self.assertIsNone(a.post("/api/proactive/greet").json()["item"])
         proactive._mut(uid, lambda st: st.update(greet_t=0))
-        now = chat.datetime.datetime.now(chat.user_zone("Europe/Berlin"))
-        if now.hour < 23:
-            due = (now + chat.datetime.timedelta(minutes=30)).replace(second=0, microsecond=0)
-            if due.date() == now.date():
-                profiles.add_reminder(uid, "Blumen gießen", due.timestamp() * 1000)
-                item = a.post("/api/proactive/greet").json()["item"]
-                self.assertEqual(item["text"], f"Hallo Lio. Heute um {due:%H:%M} Uhr erinnere ich dich an Blumen gießen.")
-                self.assertIsNone(a.post("/api/proactive/greet").json()["item"])     # not again soon
+        # a fixed clock: tomorrow at noon (never a doubled or skipped hour; red in the night the clocks went back,
+        # 2026-10-25, when now + 30 minutes lost the second 02:xx and the reminder seemed to lie in the past)
+        zone = chat.user_zone("Europe/Berlin")
+        day = chat.datetime.datetime.now(zone).date() + chat.datetime.timedelta(days=1)
+        now = chat.datetime.datetime.combine(day, chat.datetime.time(12, 0), zone)
+        due = now + chat.datetime.timedelta(minutes=30)
+        profiles.add_reminder(uid, "Blumen gießen", due.timestamp() * 1000)
+        item = asyncio.run(proactive.greet(uid, now))
+        self.assertEqual(item["text"], "Hallo Lio. Heute um 12:30 Uhr erinnere ich dich an Blumen gießen.")
+        self.assertIsNone(a.post("/api/proactive/greet").json()["item"])     # not again soon
+        # the doubled hour itself: at 02:30 the second time (winter time), a reminder half an hour later is ahead
+        proactive._mut(uid, lambda st: st.update(greet_t=0))
+        night = chat.datetime.datetime(2027, 10, 31, 2, 30, fold=1, tzinfo=zone)
+        later = (night.astimezone(chat.datetime.timezone.utc) + chat.datetime.timedelta(minutes=30)).astimezone(zone)
+        profiles.add_reminder(uid, "Fenster zu", later.timestamp() * 1000)
+        self.assertEqual(asyncio.run(proactive.greet(uid, night))["text"], "Hallo Lio. Heute um 03:00 Uhr erinnere ich dich an Fenster zu.")
         # mail: only from listed senders, only new ones, sender and subject only
         helpers.set_config(mail=True)
         old_get, old_find = mail.get, mail.find
