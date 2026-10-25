@@ -3208,6 +3208,13 @@
 "titel": "Balance-Prüfstand",
 "text": "A: Funktionen → KI-Dungeon-Master → Balance-Prüfstand an. B: Regeln anpassen → Balance-Prüfstand: „Noch kein Durchlauf“, dann „Jetzt durchspielen“: nach höchstens einer Minute stehen Balken je Stufe, das grüne Band zeigt 70 bis 90 %. C: Gruppengröße 1 bis 5 umschalten: die Balken wechseln, die Tabelle zeigt Siege, verlorenes Leben und Runden. D: Ein zweites „Jetzt durchspielen“ sofort danach: Hinweis „zu oft“. E: Zustand → Überblick: beim Dungeon-Master „Prüfstand N Felder, M unter und K über dem Ziel“. F: Zustand → Logs, Filter „pruefstand“: start, fertig mit Zahlen. G: Eine Runde mit 4 Helden spielen: Begegnungen bei „mittel“ fordern spürbar mehr als vorher, ein Held allein kommt öfter durch. H: Am nächsten Morgen: „zuletzt“ zeigt den Lauf der Nacht.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P483",
+"v": 1028,
+"titel": "Spielleiter-Regler",
+"text": "A: Funktionen → KI-Dungeon-Master → Spielleiter-Regler an. B: Als Gastgeber im Reiter „Leiten“: Zeile „🎚 Spielleiter-Regler · Gefahr 0 %“ mit „festhalten“. C: Einen Kampf fast ohne Schaden gewinnen: danach „Gefahr +10 %“, die nächste Begegnung hat etwas stärkere Gegner. D: Einen Kampf, in dem ein Held zu Boden geht: der Stand sinkt um 15. E: „festhalten“ an, noch ein Kampf: der Stand bleibt. F: Am Kindertisch geht er nie über 0 %. G: Ein Gast-Platz sieht keine Regler-Zeile. H: Zustand → Überblick: „heute Spielleiter-Regler N× schwerer, M× leichter“; Zustand → Logs, Filter „regler“: hoch, runter, gleich, fest.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spielleiter-Regler (V01.1.028, Idee 6 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Spielleiter-Regler* (chat.dungeon_regler, ab Werk aus; dungeon_kampf.turn_dial). Nach jedem Kampf, wenn sein letzter Schaden bei den Helden ist, stellt der Spark die nächsten Begegnungen der Runde nach festen Zahlen um: gewonnen mit weniger als einem Viertel verlorenem Leben der Gruppe 10 % schwerer, ein Held am Boden, ein verlorener Kampf oder eine Flucht 15 % leichter, sonst bleibt es; höchstens 25 % in jede Richtung, am Kindertisch nie über 0. Der Regler ändert die Erfahrung, die eine mittlere Begegnung haben darf (dungeon_kampf.budget), damit das Angebot an Gegnern und die Grenze der Begegnung; die Gefahr („leicht“, „mittel“, „schwer“) misst sich am verstellten Wert, die Spieler sehen nur sie. Der Gastgeber sieht im Reiter *Leiten* die Zeile *🎚 Spielleiter-Regler* mit dem Stand („Gefahr +10 %“) und *festhalten*, das ihn hält, wo er ist. Der Stand gehört zur Runde; Schalter aus heißt eingemessene Stärke ohne Regler. Das Modell bestimmt nichts davon. Live zählt die Schritte des Tages (schwerer, leichter); Logs dungeon: regler "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "| hoch | N, runter | N, gleich | N, fest, festgehalten, frei. API (Gastgeber): POST /api/profile/dungeon/{rid}/erzaehler mit {regler_fest: true|false} (Anmeldung, CSRF, Größen- und Rate-Limit wie bisher). Selbsttest Fight.test_the_game_master_dial_by_fixed_numbers in app/tests/test_dungeon.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Balance-Prüfstand (V01.1.027, Idee 5 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Balance-Prüfstand* (chat.dungeon_pruefstand, ab Werk aus; dungeon_pruefstand.py). Der Spark spielt Kämpfe allein durch, mit den echten Regeln und Würfeln von dungeon_kampf (Angriffe, Zug der Gegner, Schaden, Zustände, Flucht) und dem Katalog samt eigenen Regeln, ohne Sprachmodell und ohne Runde: je Stufe 1 bis 10 und Gruppengröße 1 bis 5 jeweils 200 Kämpfe der Gefahr „mittel“, einmal nachts zwischen 2 und 5 Uhr oder sofort mit *Jetzt durchspielen* (höchstens einmal in der Minute, nie zwei Läufe gleichzeitig). Die Gruppe ist fest: die Klassen der Reihe nach, das erste Volk, angelegt wie ein Spielerheld und auf die Stufe gehoben, die erste Waffe der Klasse und die beste Körperrüstung bis zum Preis der Stufe, beide in der Seltenheit eines mittleren Funds dieser Stufe. Jeder Held trinkt unter einem Drittel Leben seinen Heiltrank, sonst greift er den Gegner mit dem wenigsten Leben an (ein Zauberer mit seinem Angriffszauber Grad 0). Die Begegnung hat eine oder zwei Gegnerarten aus dem ganzen Bestiarium, genau mit der verlangten Gefahr."
 },
 {
@@ -9630,6 +9646,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Balance-Prüfstand (Funktionen → Meine Daten → „Balance-Prüfstand“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Spark spielt Kämpfe des KI-Dungeon-Masters allein durch, mit den echten Regeln und Würfeln und dem Katalog samt deinen eigenen Regeln, ohne Sprachmodell: je Stufe 1 bis 10 und Gruppengröße 1 bis 5 jeweils 200 Kämpfe der Gefahr „mittel“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Spielleiter-Regler (Funktionen → Meine Daten → „Spielleiter-Regler“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wie ein guter Spielleiter merkt der Spark, wenn eine Gruppe nur gewinnt oder ständig am Boden liegt."
 },
 {
 "lang": "de",
@@ -17989,6 +18013,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: game master dial (V01.1.028, idea 6 of 2026-10-24, Dominik \"alle umsetzen\"): Own admin switch *Features → AI Dungeon Master → Game master dial* (chat.dungeon_regler, off by default; dungeon_kampf.turn_dial). After every fight, once its last damage is with the heroes, the Spark sets the round's next encounters by fixed numbers: won with less than a quarter of the group's life lost 10 % harder, a hero down, a lost fight or a flight 15 % easier, else it stays; at most 25 % either way, at the children's table never above 0. The dial changes the experience a medium encounter may have (dungeon_kampf.budget), so the offer of foes and the limit of the encounter; the danger (\"easy\", \"medium\", \"hard\") is measured against the dialled value, and the players see only that. The host sees in the tab *Lead* the line *🎚 Game master dial* with the setting (\"danger +10 %\") and *hold*, which keeps it where it is. The setting belongs to the round; switch off means the measured strength without the dial. The model decides none of it. Live counts the day's steps (harder, easier); logs dungeon: regler | hoch | N, runter | N, gleich | N, fest, festgehalten, frei. API (host): POST /api/pr"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ofile/dungeon/{rid}/erzaehler with {regler_fest: true|false} (sign-in, CSRF, size and rate limit as before). Self-test Fight.test_the_game_master_dial_by_fixed_numbers in app/tests/test_dungeon.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: balance bench (V01.1.027, idea 5 of 2026-10-24, Dominik \"alle umsetzen\"): Own admin switch *Features → AI Dungeon Master → Balance bench* (chat.dungeon_pruefstand, off by default; dungeon_pruefstand.py). The Spark plays fights by itself, with the real rules and dice of dungeon_kampf (attacks, the foes' turn, damage, states, flight) and the catalogue including own rules, without the language model and without a round: per level 1 to 10 and group size 1 to 5, 200 fights of danger \"medium\" each, once a night between 2 and 5 or at once with *Play it through now* (at most once a minute, never two runs at a time). The group is fixed: the classes in turn, the first people, made like a player's hero and raised to the level, the class's first weapon and the best body armour up to the level's price, both of the rarity of a medium find of that level. Each hero drinks its healing potion below a third of its life, otherwise attacks the foe with the least life (a caster with its attack spell of grade 0). The encounter has one or two kinds of foes from the whole bestiary, exactly of the danger asked. Under *Adjust rules* the part *Balance bench* shows the wins per level as bars"
 },
 {
@@ -22302,6 +22342,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Balance bench (Features → My data → \"Balance bench\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The Spark plays fights of the AI Dungeon Master by itself, with the real rules and dice and the catalog including your own rules, without the language model: per level 1 to 10 and group size 1 to 5, 200 fights of danger \"medium\" each."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Game master dial (Features → My data → \"Game master dial\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Like a good game master the Spark notices when a group only wins or keeps lying on the floor."
 },
 {
 "lang": "en",

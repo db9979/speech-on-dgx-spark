@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.028** AI Dungeon Master: game master dial, after every fight the Spark sets the next encounters at most a quarter easier or harder by fixed numbers, the host sees the setting and can hold it, at the children's table only easier
 - **V01.1.027** AI Dungeon Master: balance bench, the Spark plays fights with the real rules by itself and shows the wins per level and group size under Rules; encounters are measured to it, at "medium" a group wins 70 to 90 %, a lone hero no longer only every second fight
 - **V01.1.026** AI Dungeon Master: fight part 2, weapons with properties (light, finesse, reach, thrown, heavy, versatile), damage kinds with weakness, resistance and immunity, states from hits with a save, real bosses with a second phase
 - **V01.1.025** AI Dungeon Master: SRD foes with damage type, resistance, immunity, vulnerability and boss, SRD weapons with damage type and properties (combat part 2, data)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.021** AI Dungeon Master: foes and loot open a big window to look at (picture, values, six scores, what it can cause, paging), side characters sound more varied with VoiceDesign (speaking pace, more timbres)
 - **V01.1.020** AI Dungeon Master: the ways from here with direction and goal for the voice too (dungeon_karte.wege, for CarPlay), never a place in the fog
 - **V01.1.019** AI Dungeon Master: a check shows large what it is for, characters speak quotes the way the text says (whispers, shouts, stammers …), values on people and class cards as chips, overview in the middle with full screen, equipment only on the fitting body part (a belt place of its own)
-- **V01.1.018** AI Dungeon Master: longer narrations at the moments (a new place, a fight, a 20 or a 1), way of telling per round brief, normal or rich; the encounter names the card's foes, a tap on a tile's picture opens its window, NPC lines read once, without names and in a fitting voice, scene pictures on their own, a find is no longer named after its chest
 
 
 

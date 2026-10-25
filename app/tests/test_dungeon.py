@@ -4597,6 +4597,64 @@ class Fight(Turns):
         self.assertIn(foe["name"][0], dungeon.erz.hint("gegner", [foe["name"][0]], "de"))
         self.assertIn("angebot", kampf.AUFGABE_ANGEBOT["de"])
 
+    def test_the_game_master_dial_by_fixed_numbers(self):
+        """Idee 6 of 2026-10-24 (Dominik „alle umsetzen“): after a fight the next encounters are set by fixed numbers,
+        won with little life lost REGLER_HOCH harder, a hero down REGLER_RUNTER easier, at most ±REGLER, at the
+        children's table never above 0; the host can hold it; off it changes nothing and shows nothing."""
+        helpers.keep_chat(self, "dungeon_regler")
+        r = dungeon.rules()
+        u = f"/api/profile/dungeon/{self.rid}/erzaehler"
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            held = dungeon._living(rd)
+            base = kampf.budget(dungeon, r, rd, held)
+            rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": ""}
+            self.assertEqual(kampf.turn_dial(dungeon, r, rd), 0)              # off: nothing turns
+            self.assertNotIn("regler", rd)
+        self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json().get("regler"))
+        self.assertEqual(self.c.post(u, json={"regler_fest": True}).status_code, 400)
+        helpers.set_config(dungeon_regler=True)
+        with dungeon._lock:
+            for want in (10, 20, 25, 25):                                        # won without a scratch, again and again
+                rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": ""}
+                kampf.turn_dial(dungeon, r, rd)
+                self.assertEqual(rd["regler"], want)
+            self.assertAlmostEqual(kampf.budget(dungeon, r, rd, held), base * 1.25, delta=1)
+            rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": "flucht"}
+            kampf.turn_dial(dungeon, r, rd)
+            self.assertEqual(rd["regler"], 10)                                   # a flight: easier
+            h = held[0]
+            keep, h["leben"] = h["leben"], 0
+            rd["kampf_aus"] = {"leben0": 40, "why": ""}
+            for want in (-5, -20, -25):                                          # a hero down: easier, down to -25
+                rd["kampf_aus"] = {"leben0": 40, "why": ""}
+                kampf.turn_dial(dungeon, r, rd)
+                self.assertEqual(rd["regler"], want)
+            h["leben"] = keep
+            ton, rd["ton"] = rd["ton"], min(x["id"] for x in r["toene"])         # the children's table: never above 0
+            rd["regler"] = -5
+            for _ in range(3):
+                rd["kampf_aus"] = {"leben0": sum(x["leben"] for x in held), "why": ""}
+                kampf.turn_dial(dungeon, r, rd)
+            self.assertEqual(rd["regler"], 0)
+            rd["ton"] = ton
+            rd["regler"] = 10
+            dungeon._write(d)
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}")
+        self.assertEqual(v.status_code, 200, v.text)
+        self.assertEqual(v.json()["regler"], {"wert": 10, "fest": False})
+        self.assertIsNone(self.v.post("/api/dungeon/platz", json={"code": self.code}).json().get("regler"))   # players see only the danger
+        self.assertEqual(self.v.post("/api/dungeon/erzaehler", json={"code": self.code, "regler_fest": True}).status_code // 100, 4)
+        self.assertEqual(self.c.post(u, json={"regler_fest": "ja"}).status_code, 400)
+        self.assertEqual(self.c.post(u, json={"regler_fest": True}).json()["regler"], {"wert": 10, "fest": True})
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": ""}
+            self.assertEqual(kampf.turn_dial(dungeon, r, rd), 0)              # held: it stays
+            self.assertEqual(rd["regler"], 10)
+
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()
         rd, held = self.held()

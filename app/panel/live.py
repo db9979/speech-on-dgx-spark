@@ -1831,6 +1831,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['kraefte']} Zauber aus Ladungen, {dgn.get('kann_nicht', 0)} unbekannte Kräfte abgewiesen"
                            if dgn.get("kraefte") or dgn.get("kann_nicht") else "")
                         + _gastkonten()
+                        + (f" · heute Spielleiter-Regler {dgn.get('regler_hoch', 0)}× schwerer, {dgn.get('regler_runter', 0)}× leichter"
+                           if dgn.get("regler_hoch") or dgn.get("regler_runter") else "")
                         + _pruefstand()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)

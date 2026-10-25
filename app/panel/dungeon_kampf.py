@@ -42,6 +42,10 @@ import random
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
 BUDGET = (83, 121, 291, 342, 408, 532, 802, 907, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
+REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
+REGLER_LEICHT = 0.25
+REGLER_RUNTER = 15         # after a fight with a hero down, lost or fled from: this much easier
 GRUPPE = (0.8, 0.35)       # the budget times 0.8 for one hero and 0.35 more for each further one (more heroes hit more often)
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
@@ -142,7 +146,48 @@ def budget(dm, r, rd, held):
     """The experience a medium encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size,
     half at the children's table."""
     b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (GRUPPE[0] + GRUPPE[1] * (len(held) - 1))
-    return int(b * (KIND if dm.kids(r, rd) else 1))
+    return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100))
+
+
+def dial_on(rd):
+    """The game master's dial works for this round: „Spielleiter-Regler“ allowed for its host."""
+    import features
+    return bool(rd.get("owner")) and features.allowed("dungeonregler", rd["owner"])
+
+
+def dial(rd):
+    """The dial's per cent (-REGLER..REGLER) for the next encounter, 0 while it is off."""
+    return max(-REGLER, min(REGLER, int(rd.get("regler", 0)))) if dial_on(rd) else 0
+
+
+def turn_dial(dm, r, rd):
+    """After a fight, once its last hits are in the heroes' life (dungeon.apply after consequences), by fixed numbers: won with little life lost → REGLER_HOCH harder, a hero down, a lost fight or
+    a flight → REGLER_RUNTER easier, else as it was; at most ±REGLER, at the children's table never above 0. The
+    host can hold it (rd["regler_fest"]). Returns the step (+, - or 0)."""
+    k = rd.pop("kampf_aus", None)
+    if not k or not dial_on(rd):
+        return 0
+    held, why = [p["held"] for _, p in dm.seated(rd)], k["why"]
+    if rd.get("regler_fest"):
+        print("dungeon: regler | fest", flush=True)
+        return 0
+    voll = k.get("leben0") or 0
+    lost = 1 - sum(max(0, h["leben"]) for h in held) / voll if voll else 0
+    down = any(dm.zustand(h) for h in held)
+    step = -REGLER_RUNTER if down or why == "flucht" else REGLER_HOCH if lost < REGLER_LEICHT else 0
+    top = 0 if dm.kids(r, rd) else REGLER
+    was = int(rd.get("regler", 0))
+    rd["regler"] = max(-REGLER, min(top, was + step))
+    step = rd["regler"] - was
+    if step > 0:
+        dm._day.bump("regler_hoch")
+        print(f"dungeon: regler | hoch | {rd['regler']}", flush=True)
+    elif step < 0:
+        dm._day.bump("regler_runter")
+        print(f"dungeon: regler | runter | {rd['regler']}", flush=True)
+    else:
+        print(f"dungeon: regler | gleich | {rd['regler']}", flush=True)
+    return step
 
 
 def _foes(dm, r, rd):
@@ -242,7 +287,8 @@ def start(dm, r, rd, held, wahl, li):
         return None
     gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
-    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), b)}
+    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), b),
+                   "leben0": sum(max(0, h["leben"]) for h in held)}
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
         rd["kampf"]["raum"] = rd["raum_gegner"]["raum"]
     dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n) for g, n in wahl],
@@ -561,6 +607,7 @@ def end(dm, r, rd, ep, why=""):
         rd["sieg"] = k["raum"]
         rd.pop("raum_gegner", None)
     dm._log(rd, "kampf", was=why or "sieg", besiegt=len(besiegt), geflohen=len(flohen), ep=each, boss=any(g.get("boss") for g in besiegt))
+    rd["kampf_aus"] = {"leben0": k.get("leben0", 0), "why": why}      # for the dial, after the last hits are in (turn_dial)
     dm._day.bump("kaempfe")
     print(f"dungeon: kampf | ende | {why or 'sieg'} | {len(besiegt)} besiegt | {len(flohen)} geflohen", flush=True)
     return besiegt

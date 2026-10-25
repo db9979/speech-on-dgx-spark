@@ -3028,6 +3028,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
         consequences(r, rd, story["folgen"] + hiebe, names)
         if war:
+            kampf.turn_dial(_me, r, rd)           # the game master's dial after the fight's end (Idee 6)
             dungeon_karte.won(rd)                # the fight won in a vault's room opens it in the same turn
         if war and not rd.get("kampf") and held and rd["log"][-1]["art"] == "kampf" and rd["log"][-1]["besiegt"]:
             give_loot(r, rd, held, "boss" if rd["log"][-1].get("boss") else "gegner", stufe, rng)   # a boss: its own better find
@@ -4346,6 +4347,7 @@ def view(rid, pid, now=None):
             "termin": rd.get("termin") or 0, "auftrag": {"text": rd["auftrag"], "ok": bool(rd.get("auftrag_ok"))} if rd.get("auftrag") else None, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
     out["kampf"] = kampf.view(_me, r, rd)
+    out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
     out["werkzeug_bonus"] = WERKZEUG
@@ -4715,6 +4717,7 @@ def for_live():
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
+            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0),
             **dungeon_karte.for_live(rs)}
 
 
@@ -5343,7 +5346,7 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
 @router.post("/api/profile/dungeon/{rid}/erzaehler", dependencies=[Depends(assistant)])
 async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
-    way of telling (WEISEN) from the next turn on."""
+    way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -5355,14 +5358,20 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             rd = _round(d, rid)
             if rd["owner"] != uid or rd["status"] == "ende":
                 raise LookupError("gastgeber")
-            if "weise" in b:
+            if "regler_fest" in b:
+                if not isinstance(b["regler_fest"], bool) or not kampf.dial_on(rd):
+                    raise ValueError()
+                rd["regler_fest"] = b["regler_fest"]
+            elif "weise" in b:
                 if b["weise"] not in WEISEN:
                     raise ValueError()
                 rd["erzaehlweise"] = b["weise"]
             else:
                 stimmen.choose(rd, str(b.get("k") or ""))
             _write(d)
-        if "weise" in b:
+        if "regler_fest" in b:
+            print(f"dungeon: regler | {'festgehalten' if b['regler_fest'] else 'frei'}", flush=True)
+        elif "weise" in b:
             print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
         else:
             print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)

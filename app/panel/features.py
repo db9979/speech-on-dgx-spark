@@ -259,6 +259,10 @@ FEATURES = (
     # at night or on the admin's button, and shows the wins per level under Regeln; no model, no profile's data
     F("dungeonpruefstand", "Balance-Prüfstand", "Balance bench", "data", ("dungeon_pruefstand",), parent="dungeon",
       me="dmbox", guide="dungeonpruefstand"),
+    # Spielleiter-Regler (dungeon_kampf.turn_dial, Idee 6): after every fight the next encounters at most ±25 % by fixed
+    # numbers, the host may hold it, the children's table only easier
+    F("dungeonregler", "Spielleiter-Regler", "Game master dial", "data", ("dungeon_regler",), parent="dungeon",
+      me="dmbox", guide="dungeonregler"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

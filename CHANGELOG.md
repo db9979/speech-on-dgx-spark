@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.028** · 2026-10-24 · KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 - **V01.1.027** · 2026-10-24 · KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf
 - **V01.1.026** · 2026-10-24 · KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
 - **V01.1.025** · 2026-10-24 · KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)

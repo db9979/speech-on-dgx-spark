@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.028** KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 - **V01.1.027** KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf
 - **V01.1.026** KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
 - **V01.1.025** KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.021** KI-Dungeon-Master: Gegner und Beute öffnen ein großes Fenster zum Betrachten (Bild, Werte, sechs Werte, was er bewirken kann, Blättern), Nebenfiguren klingen mit VoiceDesign verschiedener (Sprechtempo, mehr Klangfarben)
 - **V01.1.020** KI-Dungeon-Master: die Wege von hier mit Richtung und Ziel auch für die Sprache (dungeon_karte.wege, für CarPlay), nie ein Ort im Nebel
 - **V01.1.019** KI-Dungeon-Master: Würfelprobe zeigt groß, wofür gewürfelt wird, Figuren sprechen Zitate so, wie der Text es sagt (flüstert, ruft, stammelt …), Werte auf Volk- und Klassenkacheln als Chips, Übersicht mittig mit Vollbild, Ausrüstung nur am passenden Körperteil (eigener Gürtelplatz)
-- **V01.1.018** KI-Dungeon-Master: längere Erzählungen an den Momenten (neuer Ort, Kampf, eine 20 oder 1), Erzählweise je Runde knapp, normal oder ausführlich; Begegnung nennt die Gegner der Karte, Klick aufs Kachelbild öffnet das Fenster, NPC-Zeilen einmal, ohne Namen und mit passender Stimme vorgelesen, Szenenbilder von selbst, ein Fund heißt nicht mehr wie seine Truhe
 
 
 
