@@ -101,6 +101,11 @@ def way(rd, weiter=False):
     return next((w for w in ws if not w.get("besucht")), ws[0])["id"]
 
 
+def place(rd, oid):
+    """The map's name of the place oid ("o3"): a move's narration names it (V01.1.082, else the group stays)."""
+    return rd["karte"]["orte"][int(oid[1:]) - 1]["name"]
+
+
 def code_of(link):
     return link.split("#spiel=", 1)[1]
 
@@ -2092,8 +2097,9 @@ class Equipment(Base):
         self.assertEqual([len(p["held"]["tasche"]) for p in rd["plaetze"].values()], [dungeon.TASCHE] * 2)
 
         def move(rd):
-            story, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr zieht weiter durch das nasse Moor bis zur Furt.", "frage_an": "Arvid",
-                                                         "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": way(rd)}})
+            wid = way(rd)
+            story, _ = dungeon.check_story(self.r, rd, {"erzaehlung": f"Ihr zieht weiter durch das nasse Moor bis nach {place(rd, wid)}.", "frage_an": "Arvid",
+                                                         "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": wid}})
             dungeon.apply(self.r, rd, [], story, self.rid, random.Random(3))
             return rd
         self.assertEqual(self.edit(move)["boden"], [])
@@ -2105,7 +2111,8 @@ class Equipment(Base):
         r = self.r
         tisch = lambda rd: [p["held"].get("ep_tisch", 0) for _, p in dungeon.seated(rd)]
 
-        def go(rd, ort_id, text="Ihr zieht weiter durch das nasse Moor bis zur Furt."):
+        def go(rd, ort_id, text="Ihr zieht weiter durch das nasse Moor bis nach {}."):
+            text = text.format(place(rd, ort_id) if ort_id else "")
             story, _ = dungeon.check_story(r, rd, {"erzaehlung": text, "frage_an": "Arvid", "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": ort_id}})
             before = tisch(rd)
             dungeon.apply(r, rd, [], story, self.rid, random.Random(3))
@@ -2115,8 +2122,14 @@ class Equipment(Base):
             dungeon_karte.ensure(r, rd, random.Random(1))
             return rd["karte"]["hier"]
         start = self.edit(first)
+
+        def back(rd, start):
+            rd["offen"] = {next(iter(rd["plaetze"])): {"text": f"Wir gehen zurück nach {place(rd, f'o{start + 1}')}."}}
+            out = go(rd, f"o{start + 1}", "Ihr kehrt zurück nach {}, an den Anfang des Weges.")
+            assert rd["karte"]["hier"] == start
+            return out
         self.assertEqual(self.edit(lambda rd: go(rd, way(rd))), [r["ep"]["ort"]] * 2)            # a new place
-        self.assertEqual(self.edit(lambda rd: go(rd, f"o{start + 1}", "Ihr kehrt zurück zum Anfang des Weges.")), [0, 0])   # known
+        self.assertEqual(self.edit(lambda rd: back(rd, start)), [0, 0])   # known
         old = dungeon.step_act
         dungeon.step_act = lambda rd, fertig: "modell"
         try:
@@ -2203,8 +2216,9 @@ class Equipment(Base):
         self.assertEqual(self.held({"was": "kaufen", "i": mine}).status_code, 404)
         self.assertIsNotNone(self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True}).json()["markt"])
         def move(rd):
-            s, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr verlasst das Dorf und folgt der Straße nach Norden.", "frage_an": "Arvid",
-                                                    "szene": {"ort": "Nordstraße", "stimmung": "", "ort_id": way(rd)}})
+            wid = way(rd)
+            s, _ = dungeon.check_story(self.r, rd, {"erzaehlung": f"Ihr verlasst das Dorf und folgt der Straße nach {place(rd, wid)}.", "frage_an": "Arvid",
+                                                    "szene": {"ort": "Nordstraße", "stimmung": "", "ort_id": wid}})
             dungeon.apply(self.r, rd, [], s, self.rid, random.Random(4))
             return rd
         self.assertNotIn("markt", self.edit(move))
@@ -3271,7 +3285,8 @@ class Pictures(Base):
             rd = d["runden"][rid]
             for _ in range(2):
                 rd["karte"]["drin"] = None              # out of a vault the way led into
-                dungeon_karte.step(dungeon.rules(), rd, {"ort_id": way(rd, weiter=True), "erfolg": []}, {}, random.Random(5))
+                wid = way(rd, weiter=True)
+                dungeon_karte.step(dungeon.rules(), rd, {"ort_id": wid, "text": f"Ihr erreicht {place(rd, wid)}.", "erfolg": []}, {}, random.Random(5))
             rd["karte"]["drin"] = None
             rd["zug"] = 9
             job = dungeon.queue_scene(dungeon.rules(), d, rid, rd, "a crypt below a bell tower")

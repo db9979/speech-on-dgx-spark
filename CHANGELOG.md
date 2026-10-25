@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.082** · 2026-10-25 · KI-Dungeon-Master: nennt die Erzählung den neuen Ort nicht, bleibt die Gruppe am alten Ort (Fahne und Erzählung stimmen überein); die Karte zählt Wege in Etappen und den Weg zur nächsten Siedlung; besetzte Orte tragen das Wappen ihrer Fraktion
 - **V01.1.081** · 2026-10-25 · Hilfsmodell Qwen3 4B auf tars: beantwortet einfache Einordnungen für Weiche, Dungeon-Master und Mails zuerst, das große Sprachmodell springt sofort ein; je Einsatz ein Admin-Schalter, alle aus
 - **V01.1.080** · 2026-10-25 · KI-Dungeon-Master: echte Würfel am Tisch (dungeon_echt.py, Admin-Schalter aus, Zahl 1–20 vom eigenen Platz, 30 s dann Panel, nie im Auto), Fanfare bei Ehrungen, Umdreh-Effekt bei Krit-/Patzer-Tabelle, Musik-Stimmung „Lagerfeuer“ mit Feuer (D&D-Ideen 5, 1, 2, 4)
 - **V01.1.079** · 2026-10-25 · KI-Dungeon-Master: Wappen für Gruppe und Fraktionen: das Panel zeichnet jedes Wappen selbst als geprüfte SVG aus Schild, Teilung, Tinkturen und 16 eigenen Zeichen, der Gastgeber wählt Farbe und Zeichen, jede Fraktion trägt ein eigenes

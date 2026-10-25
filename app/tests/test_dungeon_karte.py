@@ -81,6 +81,13 @@ def rd_of(welt="fantasy", lang="de", **kw):
     return rd
 
 
+def told(k, oid):
+    """A narration that names the place of oid ("o3"); empty for anything else (V01.1.082: a move whose narration
+    does not name the new place keeps the group where it is)."""
+    i = int(oid[1:]) - 1 if str(oid)[:1] == "o" and str(oid)[1:].isdigit() else -1
+    return f"Ihr erreicht {k['orte'][i]['name']}." if 0 <= i < len(k["orte"]) else ""
+
+
 def unknown(k):
     nb = K._nb(k)
     seen = set(k["besucht"]) | {j for i in k["besucht"] for j in nb[i]}
@@ -164,7 +171,7 @@ class Moves(unittest.TestCase):
         self.k = self.rd["karte"]
 
     def story(self, ort_id="", ort="Irgendwo", **kw):
-        return dict({"ort_id": ort_id, "szene": {"ort": ort, "stimmung": "kalt"}, "erfolg": []}, **kw)
+        return dict({"ort_id": ort_id, "text": told(self.k, ort_id), "szene": {"ort": ort, "stimmung": "kalt"}, "erfolg": []}, **kw)
 
     def test_the_way_back_only_when_asked(self):
         """Back to the place the group came from only when an action names it, its direction or „zurück“."""
@@ -198,6 +205,28 @@ class Moves(unittest.TestCase):
             self.rd["offen"] = {"pa": {"text": go}}
             self.assertTrue(K._move_asked(self.r, self.rd), go)
         self.rd["offen"] = {"pa": {"text": "Wir folgen der Spur."}}
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], j)
+
+    def test_a_move_the_narration_does_not_tell_stays(self):
+        """Dominik 2026-10-25 („laut karte und fahne aber in wolfshafen“), the main thread's wish: a narration that does
+        not name the place of its ort_id tells another place than the map; ort_fehlt names it for the narrator's
+        „karte“ fault, and step keeps the group where it is."""
+        k = self.k
+        start, j = k["hier"], K._nb(k)[k["hier"]][0]
+        name = k["orte"][j]["name"]
+        lane = self.story(f"o{j + 1}", text="Ihr bleibt in der dunklen Gasse und lest den Brief noch einmal.")
+        self.assertEqual(K.ort_fehlt(self.rd, lane), name)
+        self.assertEqual(K.ort_fehlt(self.rd, self.story(f"o{j + 1}")), "")                  # named: may go
+        self.assertEqual(K.ort_fehlt(self.rd, dict(lane, ort_id="")), "")                     # no move
+        self.assertEqual(K.ort_fehlt(self.rd, dict(lane, ort_id=f"o{start + 1}")), "")        # where it stands
+        self.assertEqual(K.ort_fehlt(self.rd, dict(lane, ort_id="o99; los")), "")
+        self.rd["offen"] = {"pa": {"text": f"Wir gehen nach {name}."}}
+        with mock.patch("builtins.print") as out:
+            self.assertFalse(K.step(self.r, self.rd, lane, {}, random.Random(1)))
+        self.assertEqual(k["hier"], start)
+        self.assertIn("dungeon: karte | verworfen | nicht erzaehlt", [c.args[0] for c in out.call_args_list])
+        self.assertEqual(lane["szene"]["ort"], k["orte"][start]["name"])                      # flag and story stay alike
         self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
         self.assertEqual(k["hier"], j)
 
@@ -251,6 +280,43 @@ class Moves(unittest.TestCase):
         to = K._nb(k)[here][0]
         self.assertTrue(K.step(r, self.rd, self.story(f"o{to + 1}"), {}, random.Random(1)))
         self.assertEqual((k["hier"], k["schritte"], k["besucht"][-1]), (to, 1, to))
+
+    def test_ways_in_stages_and_the_nearest_settlement(self):
+        """D&D-Ideen 9 and 4 (Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): the map gives a way's stages by its
+        length and the land it leads through, and the way to the nearest settlement by stages, its name only when
+        known; numbers only, the rolls are the main thread's."""
+        k = self.k
+        here, j = k["hier"], K._nb(k)[k["hier"]][0]
+        w = K.weg(self.rd, f"o{j + 1}")
+        self.assertEqual(w["etappen"], K.etappen(k, here, j))
+        self.assertGreaterEqual(w["etappen"], 1)
+        self.assertIn(w["land"], set(K.LAND.values()) | {"gras"})
+        far = next(i for i in range(len(k["orte"])) if i != here and i not in K._nb(k)[here])
+        for bad in (f"o{far + 1}", "o99", "r1", "", None):
+            self.assertEqual(K.weg(self.rd, bad), {}, bad)
+        o = k["orte"]
+        o[j]["x"], o[j]["y"] = o[here]["x"] + 3 * K.ETAPPE, o[here]["y"]
+        o[j]["art"] = "sumpf"
+        self.assertEqual(K.weg(self.rd, f"o{j + 1}"), {"etappen": 3, "land": "sumpf"})
+        o[j]["x"] = o[here]["x"] + 5
+        self.assertEqual(K.weg(self.rd, f"o{j + 1}")["etappen"], 1)          # at least one stage
+        from dungeon_gold import SIEDLUNG
+        for i in range(len(o)):
+            o[i]["art"] = "ruine"
+        self.assertEqual(K.zur_siedlung(self.rd), {})                       # none on the map
+        o[here]["art"] = SIEDLUNG[0]
+        self.assertEqual(K.zur_siedlung(self.rd), {"etappen": 0, "schritte": 0, "ort": o[here]["name"]})
+        o[here]["art"] = "ruine"
+        hidden = next(i for i in range(len(o)) if i not in set(k["besucht"]) | {x for b in k["besucht"] for x in K._nb(k)[b]})
+        o[hidden]["art"] = "stadt"
+        z = K.zur_siedlung(self.rd)
+        self.assertEqual(z["ort"], "")                                       # unknown: numbers only
+        self.assertGreaterEqual(z["schritte"], 2)
+        o[j]["art"] = "dorf"
+        self.assertEqual(K.zur_siedlung(self.rd), {"etappen": 1, "schritte": 1, "ort": o[j]["name"]})
+        self.assertEqual(next(p for p in K.view(self.r, self.rd)["orte"] if p["id"] == f"o{j + 1}")["l"], "")
+        o[j]["art"] = "wald"
+        self.assertEqual(next(p for p in K.view(self.r, self.rd)["orte"] if p["id"] == f"o{j + 1}")["l"], "wald")
 
     def test_a_place_a_faction_holds(self):
         """Tabletop-Idee 7: a full clock (dungeon_fraktionen.occupied) puts the faction's banner on the place: in the
@@ -633,13 +699,13 @@ class Vaults(unittest.TestCase):
             rd = rd_of()
             k = K.make(r, rd, random.Random(seed), form="verstreut")
             a, b = k["hier"], K._nb(k)[k["hier"]][0]
-            K.step(r, rd, {"ort_id": f"o{b + 1}", "erfolg": []}, {}, random.Random(seed))
+            K.step(r, rd, {"ort_id": f"o{b + 1}", "text": told(k, f"o{b + 1}"), "erfolg": []}, {}, random.Random(seed))
             if k.get("unterwegs"):
                 seen.add(K._table(r, "begegnungen", k["unterwegs"]["t"])["art"])
                 self.assertEqual(K.facts(r, dict(rd, zug=2)).get("unterwegs", {}).get("art"), K._table(r, "begegnungen", k["unterwegs"]["t"])["art"])
             if K.vault(rd):
                 k["drin"] = None
-            K.step(r, rd, {"ort_id": f"o{a + 1}", "erfolg": []}, {}, random.Random(seed))
+            K.step(r, rd, {"ort_id": f"o{a + 1}", "text": told(k, f"o{a + 1}"), "erfolg": []}, {}, random.Random(seed))
             self.assertNotIn("unterwegs", k)                                       # the way back was gone already
         self.assertGreaterEqual(len(seen), 3)
 
@@ -812,6 +878,10 @@ class Table(unittest.TestCase):
         p_held = mock.patch("dungeon_fraktionen.occupied", return_value={str(nb): "Die Aschenhand"})
         p_held.start()
         self.addCleanup(p_held.stop)
+        import dungeon_wappen                           # its arms on the banner (D&D-Idee 10)
+        p_arms = mock.patch.object(dungeon_wappen, "on", lambda rd: True)
+        p_arms.start()
+        self.addCleanup(p_arms.stop)
 
         async def go():
             async with async_playwright() as p:
@@ -826,6 +896,8 @@ class Table(unittest.TestCase):
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dmk-wege [data-dmkid]').length"), 1)
                         if w == 1280:                    # the world (the wider run goes into a vault below)
                             self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dmk-banner title')"))
+                            self.assertTrue(await pg.evaluate("(document.querySelector('#dmview .dmk-banner image.dmk-wappenbild')||{getAttribute:()=>''}).getAttribute('href').startsWith('data:image/svg+xml')"))
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk-banner .dmk-wappen')"))
                             self.assertIn("⚑", await pg.evaluate(f"document.querySelector('#dmview .dmk-wege [data-dmkid=o{nb + 1}]').textContent"))
                         await helpers.dm_pane(pg, "karte")                           # the phone shows the map as its own pane
                         await pg.click("#dmview .dmk-wege [data-dmkid]")

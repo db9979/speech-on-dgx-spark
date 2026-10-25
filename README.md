@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.082** AI Dungeon Master: when the narration does not name the new place, the group stays where it was (flag and narration agree); the map counts ways in stages and the way to the nearest settlement; occupied places carry their faction's arms
 - **V01.1.081** Helper model for simple classifications, Features → Helper model
 - **V01.1.080** AI Dungeon Master: real dice at the table (tap or say the number, after 30 s the Spark rolls, never in the car), fanfare for honours, critical card turns over, "Campfire" music
 - **V01.1.079** AI Dungeon Master: arms for group and factions: the panel draws every coat of arms itself as a checked SVG from shield, division, tinctures and 16 own charges, the host chooses colour and charge, every faction carries its own
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.075** AI Dungeon Master: every round can be ended or deleted in the list, asking “Really?” first
 - **V01.1.074** AI Dungeon Master: game master console as a big window with three columns, the right column shows only the hero, Go on now and the map and can be dragged wider
 - **V01.1.073** AI Dungeon Master: faster on the Pi: one file per round with a cache, the poll gets “nothing new” while nothing changed, the game scripts load on the first opening
-- **V01.1.072** AI Dungeon Master: the tables under Rules now show every row with its number, the die and the worlds, every table has a sign in the list
 
 
 

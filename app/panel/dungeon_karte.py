@@ -93,6 +93,11 @@ NAME_MAX = 40
 SATZ_MAX = 160
 FRAGE_MAX = 240
 STUB = 0.42               # how far a way into the unknown is drawn
+ETAPPE = 80               # map units a stage of travel covers (D&D-Idee 9: the ways of 110 to 250 are 1 to 3 stages)
+# the land around a kind of place: drawn as ink signs on the map, and the land a way leads through (D&D-Idee 9)
+LAND = {"wald": "wald", "lager": "wald", "dschungel": "wald", "muehle": "wald", "berg": "berg", "hoehle": "berg",
+        "mine": "berg", "krater": "berg", "festung": "berg", "ruine": "huegel", "krypta": "huegel", "turm": "huegel",
+        "gruft": "huegel", "friedhof": "huegel", "sumpf": "sumpf", "lagune": "sumpf"}
 LEUTE_MAX = 40            # people the map remembers by place (the oldest go first)
 # people stay where the group met them (Dominik 2026-10-24 „1-5 umsetzten“): one comes along only when an action of
 # the turn names them with one of these words, and stays behind with the others (fixed words, never the model)
@@ -635,6 +640,53 @@ def _names(name, words):
     return bool(need) and all(any(x.startswith(w) for x in words) for w in need)
 
 
+def etappen(k, a, b):
+    """The stages of travel between the places a and b by their distance on the map, at least one (pure)."""
+    o = k["orte"]
+    return max(1, round(math.hypot(o[a]["x"] - o[b]["x"], o[a]["y"] - o[b]["y"]) / ETAPPE))
+
+
+def weg(rd, oid):
+    """A way from where the group stands to the neighbouring place oid ("o3") as numbers for the travel stages
+    (D&D-Idee 9, the rolls are the main thread's): {"etappen", "land"}, the land the target's, else the start's, else
+    "gras"; {} for no such way or inside a vault (pure)."""
+    k = rd.get("karte")
+    oid = str(oid or "")
+    if not k or not k.get("orte") or vault(rd) or oid[:1] != "o" or not oid[1:].isdigit():
+        return {}
+    j, here = int(oid[1:]) - 1, k["hier"]
+    if j not in _nb(k)[here]:
+        return {}
+    o = k["orte"]
+    return {"etappen": etappen(k, here, j), "land": LAND.get(o[j]["art"]) or LAND.get(o[here]["art"]) or "gras"}
+
+
+def zur_siedlung(rd):
+    """The way to the nearest settlement (dungeon_gold.SIEDLUNG) over the map's ways, by stages, as numbers for the
+    camp (D&D-Idee 4): {"etappen", "schritte", "ort"}, ort its name only when the players know it (visited or next to
+    a visited place), etappen 0 where the group stands in one; {} when none is reachable (pure)."""
+    import heapq
+    from dungeon_gold import SIEDLUNG
+    k = rd.get("karte")
+    if not k or not k.get("orte"):
+        return {}
+    nb, o = _nb(k), k["orte"]
+    known = set(k["besucht"]) | {j for i in k["besucht"] for j in nb[i]}
+    best, todo = {k["hier"]: (0, 0)}, [(0, 0, k["hier"])]
+    while todo:
+        e, n, i = heapq.heappop(todo)
+        if (e, n) > best[i]:
+            continue
+        if o[i]["art"] in SIEDLUNG:
+            return {"etappen": e, "schritte": n, "ort": o[i]["name"] if i in known else ""}
+        for j in sorted(nb[i]):
+            w = (e + etappen(k, i, j), n + 1)
+            if j not in best or w < best[j]:
+                best[j] = w
+                heapq.heappush(todo, (*w, j))
+    return {}
+
+
 def named_way(rd, text):
     """The way the turn named when the model left szene.ort_id empty (Dominik 2026-10-24 „in die alte Bibliothek
     bewegt, die Position ist nicht aktuell“): exactly one neighbouring place is named in the narration and asked for
@@ -651,6 +703,24 @@ def named_way(rd, text):
         return any(_names(o[j]["name"], w) or d in " " + " ".join(w) + " " for w in said)
     hits = [j for j in sorted(_nb(k)[here]) if _names(o[j]["name"], told) and asked(j)]
     return hits[0] if len(hits) == 1 else -1
+
+
+def ort_fehlt(rd, story):
+    """The name of the new place story's ort_id leads to when the narration does not name it (Dominik 2026-10-25
+    „laut karte und fahne aber in wolfshafen“): the story tells another place than the map would show; the narrator
+    (dungeon_erzaehler.judge) may send it back as „karte“, step keeps the group where it is. "" when the narration
+    names it, or for a vault, the place itself or no way there (pure)."""
+    k = rd.get("karte")
+    oid = str(story.get("ort_id") or "")
+    if not k or not k.get("orte") or vault(rd) or oid[:1] != "o" or not oid[1:].isdigit():
+        return ""
+    j = int(oid[1:]) - 1
+    if j == k["hier"] or j not in _nb(k)[k["hier"]]:
+        return ""
+    name = k["orte"][j]["name"]
+    if not any(len(w) >= 4 for w in _words(name)) or _names(name, _words(story.get("text"))):
+        return ""
+    return name
 
 
 def _said(rd):
@@ -1077,6 +1147,9 @@ def step(r, rd, story, ep, rng=None):
     if want and not _move_asked(r, rd):
         print("dungeon: karte | verworfen | ungefragt", flush=True)   # nobody wanted to go: the group stays
         want = ""
+    if not vault(rd) and want.startswith("o") and ort_fehlt(rd, dict(story, ort_id=want)):
+        print("dungeon: karte | verworfen | nicht erzaehlt", flush=True)   # the narration tells another place: the group stays
+        want = ""
     if not vault(rd) and want == f"o{k.get('vorher', -2) + 1}" and not _back_asked(rd):
         print("dungeon: karte | verworfen | rueckweg", flush=True)   # back to where the group came from: only when asked
         want = ""
@@ -1155,7 +1228,7 @@ def view(r, rd, host=False):
     def place(i):
         kd = _kind(r, o[i]["art"]) or {}
         return {"id": f"o{i + 1}", "n": o[i]["name"], "z": kd.get("zeichen", "◆"), "x": o[i]["x"], "y": o[i]["y"],
-                "s": 2 if i in k["besucht"] else 1, "gw": has_vault(r, k, i), "a": o[i]["art"], "fr": held.get(i, "")}
+                "s": 2 if i in k["besucht"] else 1, "gw": has_vault(r, k, i), "a": o[i]["art"], "l": LAND.get(o[i]["art"], ""), "fr": held.get(i, "")}
     wege = []
     for a, b in k["wege"]:
         if a in known and b in known:

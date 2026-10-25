@@ -6549,7 +6549,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "der nach Wolfshafen zeigt, bleibt die Gruppe in der Schattengasse, Fahne und Erzählung stimmen überein (Log dungeon: karte | verworfen | ungefragt). Ein Zug ohne Aktion bewegt nie."
+"text": "der nach Wolfshafen zeigt, bleibt die Gruppe in der Schattengasse, Fahne und Erzählung stimmen überein (Log dungeon: karte | verworfen | ungefragt). Ein Zug ohne Aktion bewegt nie. Die Erzählung nennt den neuen Ort (V01.1.082): Zeigt die ort_id auf einen Nachbarort, dessen Namen die Erzählung nicht nennt, erzählt sie einen anderen Ort als die Karte. dungeon_karte.ort_fehlt liefert dann diesen Namen (für den Fehler „karte“ des Erzählers, der den Zug neu schreiben lässt), und die Karte bleibt notfalls am alten Ort (Log dungeon: karte | verworfen | nicht erzaehlt)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wege in Etappen und der Weg zur nächsten Siedlung (V01.1.082, D&D-Ideen 9 und 4): Die Karte rechnet nur Zahlen, die Proben und Ereignisse würfelt das Panel an anderer Stelle. dungeon_karte.weg(rd, \"o3\") gibt für einen Weg von hier die Etappen nach seiner Länge auf der Karte (ETAPPE = 80 Einheiten, die Wege sind 1 bis 3 Etappen lang, mindestens eine) und die Landschaft, durch die er führt (LAND: Wald, Berg, Hügel, Sumpf, sonst Gras; dieselbe Tabelle zeichnet die Tuschezeichen um die Orte). dungeon_karte.zur_siedlung(rd) sucht über die Wege die nächste Siedlung (Dorf, Stadt, Taverne, Station, Basar, Hafen wie beim Handel) und gibt Etappen und Schritte, den Namen nur, wenn die Spieler den Ort schon kennen; steht die Gruppe in einer, sind es 0 Etappen."
 },
 {
 "lang": "de",
@@ -20205,7 +20213,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "(log dungeon: karte | verworfen | ungefragt). A turn without an action never moves."
+"text": "(log dungeon: karte | verworfen | ungefragt). A turn without an action never moves. The narration names the new place (V01.1.082): when the ort_id points to a neighbouring place the narration does not name, it tells another place than the map. dungeon_karte.ort_fehlt then returns that name (for the narrator's \"karte\" fault, which has the turn rewritten), and the map keeps the group where it was at worst (log dungeon: karte | verworfen | nicht erzaehlt)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: ways in stages and the way to the nearest settlement (V01.1.082, D&D ideas 9 and 4): The map only counts; the checks and events are rolled by the panel elsewhere. dungeon_karte.weg(rd, \"o3\") gives for a way from here its stages by its length on the map (ETAPPE = 80 units, the ways are 1 to 3 stages long, at least one) and the land it leads through (LAND: forest, mountain, hills, swamp, else grass; the same table draws the ink signs around the places). dungeon_karte.zur_siedlung(rd) searches the ways for the nearest settlement (village, town, tavern, station, bazaar, harbour as for trading) and gives stages and steps, the name only when the players already know the place; where the group stands in one, it is 0 stages."
 },
 {
 "lang": "en",
