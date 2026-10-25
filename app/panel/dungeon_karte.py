@@ -792,13 +792,15 @@ def _room_id(rd, j):
 
 
 def _room_foes(r, rd, boss, rng):
-    """The foes of a guardian's or the master's room from the Bestiarium of the world, by the group's level L: a
+    """The foes of a guardian's or the master's room from the Bestiarium of the world (dungeon_kampf.plays_in, the one
+    rule), by the group's level L: a
     guardian is one foe (two from 3 heroes on) of the challenge nearest L/2, the master one of the challenge nearest
     L+1 with up to two of the nearest L/4 at his side (from 2 heroes on); never more than 5."""
     import dungeon
     held = dungeon.seated(rd)
     lv = dungeon.group_level([p["held"] for _, p in held])
-    tab = [x for x in r.get("gegner") or [] if "alle" in x.get("welten", ["alle"]) or rd.get("welt") in x.get("welten", [])]
+    import dungeon_kampf
+    tab = [x for x in r.get("gegner") or [] if dungeon_kampf.plays_in(r, x, rd.get("welt", ""))]
 
     def near(t, n, but=()):
         c = [x for x in tab if x["id"] not in but]

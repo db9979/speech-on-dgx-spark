@@ -409,7 +409,8 @@ class Vaults(unittest.TestCase):
         """A guardian: one or two foes of the challenge nearest L/2; the master: the one nearest L+1 and helpers."""
         import dungeon
         lv = dungeon.group_level([p["held"] for _, p in dungeon.seated(self.rd)])
-        tab = [x for x in self.r["gegner"] if "alle" in x.get("welten", ["alle"]) or self.rd["welt"] in x.get("welten", [])]
+        import dungeon_kampf
+        tab = [x for x in self.r["gegner"] if dungeon_kampf.plays_in(self.r, x, self.rd["welt"])]
         by = {x["id"]: x for x in tab}
         best = lambda t: min(abs(x["stufe"] - t) for x in tab)
         for seed in range(20):
@@ -419,6 +420,9 @@ class Vaults(unittest.TestCase):
             b = K._room_foes(self.r, self.rd, True, random.Random(seed))
             self.assertTrue(1 <= len(b) <= 5 and len(set(b)) == len(b))
             self.assertEqual(abs(by[b[0]]["stufe"] - (lv + 1)), best(lv + 1))
+        own = dict(self.rd, welt="eigene")      # a world no foe names takes the fantasy foes (dungeon_kampf.plays_in)
+        g = K._room_foes(self.r, own, True, random.Random(1))
+        self.assertTrue(g and all(dungeon_kampf.plays_in(self.r, by.get(i) or next(x for x in self.r["gegner"] if x["id"] == i), "eigene") for i in g))
 
     def test_ways_for_a_voice(self):
         """wege (CarPlay): the same ways as „Von hier aus“, with direction and goal, in the asked language."""
@@ -447,7 +451,8 @@ class Vaults(unittest.TestCase):
         self.assertEqual(rd["raum_gegner"]["raum"], rid)
         foes = {x["id"]: x for x in self.r["gegner"]}
         self.assertTrue(1 <= len(rd["raum_gegner"]["ids"]) <= 5)
-        self.assertTrue(all(rd["welt"] in foes[i].get("welten", [rd["welt"]]) or "alle" in foes[i].get("welten", []) for i in rd["raum_gegner"]["ids"]))
+        import dungeon_kampf
+        self.assertTrue(all(dungeon_kampf.plays_in(self.r, foes[i], rd["welt"]) for i in rd["raum_gegner"]["ids"]))
         for wrong in ({"erfolg": [{"art": "gegner", "rang": 2}]}, {"sieg": "gw9-r1"}):   # only the fight's victory for this room
             rd.update({k: x for k, x in wrong.items() if k == "sieg"})
             K.step(self.r, rd, {"ort_id": "", "erfolg": wrong.get("erfolg", [])}, {}, random.Random(3))
