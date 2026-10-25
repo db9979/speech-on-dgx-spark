@@ -6213,7 +6213,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Musikstück nervt (V01.1.017, Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“, „alles wie vorgeschlagen“): In der Musikleiste steht neben ⏭ der Knopf 👎 für das Stück, das gerade läuft, für jeden Platz einer laufenden Runde, auch für Gäste. Eine Markierung reicht: Das Stück verschwindet sofort aus der Liste jedes Tisches, das nächste blendet ein, und sein Feld zählt es nicht mehr, sodass ein neues bestellt wird. Nachts (mit dem nächtlichen Auffüllen) wirft der Spark markierte Stücke samt Datei weg und macht neue. Jeder Platz markiert ein Stück nur einmal; gespeichert wird nur die Zahl der Markierungen, kein Name und kein Platz. Unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch zeigt die Liste „N markiert“ jedes Stück mit Welt, Stimmung und Zahl; Zurücknehmen lässt es bis zur Nacht wieder spielen. Wird ein Feld vorher voll, gehen markierte Stücke zuerst. Türen: POST /api/profile/dungeon/{rid}/musik/{sid}/nervt (Profil mit Platz) und POST /api/dungeon/musik/nervt (Gast mit Platz-Code), eigenes Rate-Limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck nur für den Admin. Live: markierte "
+"text": "KI-Dungeon-Master: Musikstück nervt (V01.1.017, Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“, „alles wie vorgeschlagen“): In der Musikleiste steht neben ⏭ der Knopf 👎 für das Stück, das gerade läuft, für jeden Platz einer laufenden Runde, auch für Gäste. Eine Markierung reicht: Das Stück verschwindet sofort aus der Liste jedes Tisches, das nächste blendet ein, und sein Feld zählt es nicht mehr, sodass ein neues bestellt wird. Nachts (mit dem nächtlichen Auffüllen) wirft der Spark markierte Stücke samt Datei weg und macht neue. Jeder Platz markiert ein Stück nur einmal; gespeichert wird nur die Zahl der Markierungen, kein Name und kein Platz. Unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch zeigt die Liste „N markiert“ jedes Stück mit Welt, Stimmung und Zahl; Zurücknehmen lässt es bis zur Nacht wieder spielen. ▶ Anhören (V01.1.046, Dominik 2026-10-25 „anhören können, um da nochmal zu entscheiden“) spielt das Stück dort ab, der Knopf wird zu „■ Stopp“; es spielt immer nur eines, und Anhören zählt nicht als gespielt und lässt die Markierung stehen. Wird ein Feld vorher voll, gehen markierte Stücke zuerst. Türe"
 },
 {
 "lang": "de",
@@ -6221,7 +6221,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Stücke und heutige Markierungen, Log dungeon: musik | nervt … nur mit festen Wörtern."
+"text": "n: POST /api/profile/dungeon/{rid}/musik/{sid}/nervt (Profil mit Platz) und POST /api/dungeon/musik/nervt (Gast mit Platz-Code), eigenes Rate-Limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck und GET /api/admin/dungeon/musik/{sid} (Anhören, auch markierte Stücke) nur für den Admin. Live: markierte Stücke und heutige Markierungen, Log dungeon: musik | nervt … nur mit festen Wörtern."
 },
 {
 "lang": "de",
@@ -19197,7 +19197,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: annoying piece (V01.1.017, Dominik 2026-10-24 \"mark pieces as bad or annoying, players too, renewed at night\", \"everything as proposed\"): Next to ⏭ the music bar has a 👎 button for the piece that is playing, for every seat of a running round, guests too. One mark is enough: the piece leaves every table's list at once, the next one fades in, and its field no longer counts it, so a new one is ordered. At night (with the nightly fill) the Spark throws marked pieces away with their files and makes new ones. Each seat marks a piece only once; only the number of marks is kept, no name and no seat. Under Features → AI Dungeon Master → Adjust rules → Music at the table the list \"N marked\" shows each piece with world, mood and count; Take back lets it play again until the night. If a field fills up before that, marked pieces go first. Doors: POST /api/profile/dungeon/{rid}/musik/{sid}/nervt (a profile with a seat) and POST /api/dungeon/musik/nervt (a guest with a seat code), own rate limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck for the admin only. Live: marked pieces and today's marks, log dungeon: musik | nervt … with fixed words only."
+"text": "AI Dungeon Master: annoying piece (V01.1.017, Dominik 2026-10-24 \"mark pieces as bad or annoying, players too, renewed at night\", \"everything as proposed\"): Next to ⏭ the music bar has a 👎 button for the piece that is playing, for every seat of a running round, guests too. One mark is enough: the piece leaves every table's list at once, the next one fades in, and its field no longer counts it, so a new one is ordered. At night (with the nightly fill) the Spark throws marked pieces away with their files and makes new ones. Each seat marks a piece only once; only the number of marks is kept, no name and no seat. Under Features → AI Dungeon Master → Adjust rules → Music at the table the list \"N marked\" shows each piece with world, mood and count; Take back lets it play again until the night. ▶ Listen (V01.1.046, Dominik 2026-10-25 \"listen to them to decide once more\") plays the piece right there, the button turns into \"■ Stop\"; only one plays at a time, and listening does not count as played and keeps the mark. If a field fills up before that, marked pieces go first. Doors: POST /api/profile/dungeon/{rid}/musik/{sid}/nervt (a profile with a seat) and POST /api/dungeon/musik/nervt (a g"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "uest with a seat code), own rate limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck and GET /api/admin/dungeon/musik/{sid} (listening, marked pieces too) for the admin only. Live: marked pieces and today's marks, log dungeon: musik | nervt … with fixed words only."
 },
 {
 "lang": "en",

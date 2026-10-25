@@ -462,6 +462,28 @@ class Nervt(MusicBase):
         self.assertTrue(dm.spielbar(dm._read()["stuecke"][0]))
         self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/m0000000000/zurueck").status_code, 404)
 
+    def test_admin_listens_to_a_marked_piece(self):
+        """Dominik 2026-10-25: a marked piece can be heard before it goes; only the admin, never counted as played."""
+        from tests.test_dungeon import ADMIN
+        self.music_on()
+        sid = self.put("fantasy", "taverne", 1)[0]
+        dm.nervt(sid, "r:a")
+        with self.assertRaises(LookupError):
+            dm.piece(sid)                                                 # no table plays it any more
+        self.assertEqual(self.c.get(f"/api/admin/dungeon/musik/{sid}").status_code, 401)
+        geholt = dm.for_live()["geholt"]
+        r = ADMIN.get(f"/api/admin/dungeon/musik/{sid}")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.headers["content-type"], "audio/mpeg")
+        self.assertEqual(r.content, open(dm.file_of(sid), "rb").read())
+        self.assertEqual(dm.for_live()["geholt"], geholt)
+        self.assertEqual(dm._plays.get(sid, 0), 0)
+        self.assertFalse(dm.spielbar(dm._read()["stuecke"][0]))          # listening keeps the mark
+        for bad in ("m0000000000", "..%2Findex", "x"):
+            self.assertEqual(ADMIN.get(f"/api/admin/dungeon/musik/{bad}").status_code, 404)
+        js = open(os.path.join(os.path.dirname(dm.__file__), "static", "js", "dungeon-ton.js"), encoding="utf-8").read()
+        self.assertIn('data-dmmusik="hoeren"', js)
+
     def test_rate_limit_live_and_button(self):
         import guard
         self.assertIn("dungeonnervt", guard.RATE)

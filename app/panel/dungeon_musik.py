@@ -629,14 +629,16 @@ def clear():
     return n
 
 
-def piece(sid):
-    """The MP3 of a piece of the store (any seat of a running round may hear any piece: nothing of it is personal)."""
-    if not isinstance(sid, str) or not ID.fullmatch(sid) or not any(x["id"] == sid and spielbar(x) for x in _read()["stuecke"]):
+def piece(sid, probe=False):
+    """The MP3 of a piece of the store (any seat of a running round may hear any piece: nothing of it is personal).
+    probe: the admin listens before deciding on a mark (Dominik 2026-10-25), a marked piece too, not counted as played."""
+    if not isinstance(sid, str) or not ID.fullmatch(sid) or not any(x["id"] == sid and (probe or spielbar(x)) for x in _read()["stuecke"]):
         raise LookupError("stueck")
     with open(file_of(sid), "rb") as f:
         mp3 = f.read()
-    _plays[sid] = _plays.get(sid, 0) + 1
-    _day.bump("geholt")
+    if not probe:
+        _plays[sid] = _plays.get(sid, 0) + 1
+        _day.bump("geholt")
     return mp3
 
 
@@ -794,6 +796,19 @@ async def admin_jetzt(request: Request):
     n = await asyncio.to_thread(fill_all)
     print(f"dungeon: musik | jetzt | {n} felder", flush=True)
     return admin_view("en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.get("/api/admin/dungeon/musik/{sid}", dependencies=[Depends(auth)])
+async def admin_hoeren(sid: str, request: Request):
+    """The admin listens to a piece (the marked list: does it really go, or does it stay?)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    try:
+        mp3 = await asyncio.to_thread(piece, sid, True)
+    except (LookupError, OSError):
+        print("dungeon: musik | anhoeren abgelehnt | unbekannt", flush=True)
+        raise HTTPException(404, "stueck")
+    print("dungeon: musik | anhoeren | admin", flush=True)
+    return _mp3(mp3)
 
 
 @router.post("/api/admin/dungeon/musik/{sid}/zurueck", dependencies=[Depends(auth)])

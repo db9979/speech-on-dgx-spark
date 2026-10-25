@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.046** · 2026-10-25 · KI-Dungeon-Master: in der Liste der markierten Stücke (👎 Nervt) spielt ▶ Anhören jedes Stück ab, bevor es nachts rausfliegt; nur Admin, zählt nicht als gespielt, Markierung bleibt
 - **V01.1.045** · 2026-10-25 · Selbsttest Dungeon-Bilder hängt nicht mehr an Testprofilen anderer Module
 - **V01.1.044** · 2026-10-24 · KI-Dungeon-Master: Wächter und Herr im Gewölbe nehmen ihre Gegner nach derselben Regel wie der Kampf, eine Welt ohne eigene Gegner bekommt die der Fantasy-Welt
 - **V01.1.043** · 2026-10-25 · KI-Dungeon-Master: Bilder mit Flair und Abwechslung (Licht, Blickwinkel und Stimmung aus festen Listen, Gegenstände an passenden Orten, sichtbare Seltenheit, Gegner in Bewegung, Helden in ihrer Welt), Bühne bei Tag, bei Nacht und im Kampf, Siedlung mit Bildern je Dienst und einem Satz Leben, Bilder für die 62 neuen Gegner

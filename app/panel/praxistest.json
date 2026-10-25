@@ -3299,6 +3299,13 @@
 "titel": "Dungeon-Master: Bilder mit Flair",
 "text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Abschnitt Bilder: „Alle Bilder malen“ (alle Bilder werden einmal neu gemalt, das alte bleibt sichtbar, bis das neue da ist). B: Gegenstände liegen an einem passenden Ort (Schmiede, Altar, Werkbank …), Licht und Blickwinkel wechseln von Bild zu Bild; legendäre leuchten. C: Gegner lauern, greifen an oder brüllen; Schmuggler und Seehexe sind gewöhnliche Menschen. D: Klassen und Völker stehen in ihrer Welt statt vor dunklem Grund. E: In einer Runde mit Karte zeigt die Bühne im Kampf das Kampfbild des Ortes. F: Ein vorher behaltenes Bild bleibt. G: In einer Siedlung (nach dem Umbau des Fensters) oben das Bild des Ortes, je Dienst ein Bild und ein Satz, der beim nächsten Zug wechselt.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P496",
+"v": 1046,
+"titel": "Dungeon-Master: markierte Musikstücke anhören",
+"text": "A: Am Tisch ein Stück mit 👎 markieren. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: unter „1 markiert“ auf ▶ Anhören tippen: das Stück spielt, der Knopf heißt „■ Stopp“. C: Ein zweites Anhören stoppt das erste. D: Stopp beendet es, die Markierung bleibt. E: Zurücknehmen stoppt und lässt es wieder spielen.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

@@ -123,16 +123,25 @@ function dmMusikDraw(d,err){const c=$('dmmusikadm');if(!c)return;const s=d.einst
     <label class="chk"><input type="checkbox" id="dmmusikan"${s.an?' checked':''}> ${esc(t('Musik vorbereiten','Prepare music'))}</label>
     <div class="dm-mfeld"><i></i>${d.stimmungen.map(m=>`<b title="${esc(m.name)}">${esc(m.name)}</b>`).join('')}${d.felder.map(f=>`<b>${esc((f.zeichen?f.zeichen+' ':'')+f.name)}</b>${d.stimmungen.map(m=>`<span class="${f.n[m.id]>=s.stuecke?'ok':'warn'}">${f.n[m.id]}${f.wartet.includes(m.id)?' ⏳':''}</span>`).join('')}`).join('')}</div>
     ${(d.markiert||[]).length?`<h4>${esc(t(`${d.markiert.length} markiert (👎 Nervt)`,`${d.markiert.length} marked (👎 annoying)`))}</h4><div class="pintro">${esc(t('Diese Stücke spielt kein Tisch mehr; nachts macht der Spark neue. Bis dahin lässt sich eine Markierung zurücknehmen.','No table plays these pieces any more; at night the Spark makes new ones. Until then a mark can be taken back.'))}</div>
-      ${d.markiert.map(x=>`<div class="setrow"><div class="lbl"><b>${esc(x.welt+' · '+x.st)}</b><span>${esc(t(`${x.s} s · ${x.nervt}× markiert`,`${x.s} s · marked ${x.nervt}×`))}</span></div><button type="button" class="b" data-dmmusik="zurueck" data-id="${esc(x.id)}">${esc(t('Zurücknehmen','Take back'))}</button></div>`).join('')}`:''}
+      ${d.markiert.map(x=>`<div class="setrow"><div class="lbl"><b>${esc(x.welt+' · '+x.st)}</b><span>${esc(t(`${x.s} s · ${x.nervt}× markiert`,`${x.s} s · marked ${x.nervt}×`))}</span></div><div class="row"><button type="button" class="b" data-dmmusik="hoeren" data-id="${esc(x.id)}">${esc(t('▶ Anhören','▶ Listen'))}</button><button type="button" class="b" data-dmmusik="zurueck" data-id="${esc(x.id)}">${esc(t('Zurücknehmen','Take back'))}</button></div></div>`).join('')}`:''}
     <small class="mut">${esc(t(`${L2.stuecke} Stücke, ${L2.mb} MB · heute ${L2.gemacht} gemacht, ${L2.weg} nicht gekommen`,`${L2.stuecke} pieces, ${L2.mb} MB · today ${L2.gemacht} made, ${L2.weg} did not come`))}${L2.macht?' · '+esc(t('macht gerade ein Stück','making a piece now')):''}</small>
     ${err?`<div class="err">${esc(err)}</div>`:''}
     <div class="row"><button type="button" class="b p" data-dmmusik="save">${esc(t('Speichern','Save'))}</button><button type="button" class="b" data-dmmusik="jetzt"${s.an&&d.installiert?'':' disabled'}>${esc(t('Musik jetzt vorbereiten','Prepare music now'))}</button><button type="button" class="b danger" data-dmmusik="weg">${esc(t('Alle Stücke löschen','Delete all pieces'))}</button></div>`}
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmusikadm [data-dmmusik]');if(!b)return;const k=b.dataset.dmmusik,q='?lang='+(L==='en'?'en':'de');
   if(k==='weg'&&b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich alle löschen?','Really delete all?');return}
-  if(k==='zurueck'){const {r,d}=await apiTry(`/api/admin/dungeon/musik/${encodeURIComponent(b.dataset.id)}/zurueck${q}`,{method:'POST'});if(r.ok){dmMusikDraw(d,'');sayToast(t('Spielt wieder','Plays again'))}return}
+  if(k==='hoeren'){dmtProbe(b);return}
+  if(k==='zurueck'){dmtProbe(null);const {r,d}=await apiTry(`/api/admin/dungeon/musik/${encodeURIComponent(b.dataset.id)}/zurueck${q}`,{method:'POST'});if(r.ok){dmMusikDraw(d,'');sayToast(t('Spielt wieder','Plays again'))}return}
   const o=k==='save'?{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({an:$('dmmusikan').checked,stuecke:+$('dmmusikn').value,mb:+$('dmmusikmb').value})}:k==='jetzt'?{method:'POST'}:{method:'DELETE'};
   const {r,d}=await apiTry('/api/admin/dungeon/musik'+(k==='jetzt'?'/jetzt':'')+q,o);if(r.ok){dmMusikDraw(d,'');if(k==='save')sayToast(t('Gespeichert','Saved'));return}
   const g=await apiTry('/api/admin/dungeon/musik'+q);if(g.r.ok)dmMusikDraw(g.d,errSay(r.status,d.detail,''))});
+// the admin listens to a marked piece before deciding (Dominik 2026-10-25 „anhören können, um da nochmal zu entscheiden“):
+// one at a time, the same button stops it; null stops whatever plays
+const DMT_PROBE={a:null,b:null,u:''};
+async function dmtProbe(b){const p=DMT_PROBE,was=p.b;if(p.a){p.a.pause();p.a=null}if(p.u){URL.revokeObjectURL(p.u);p.u=''}
+  if(was){was.textContent=t('▶ Anhören','▶ Listen');p.b=null}if(!b||b===was)return;
+  const r=await api(`/api/admin/dungeon/musik/${encodeURIComponent(b.dataset.id)}`);if(!r.ok){sayToast(t('Stück nicht gefunden','Piece not found'));return}
+  const u=URL.createObjectURL(await r.blob());p.u=u;p.a=new Audio(u);p.b=b;b.textContent=t('■ Stopp','■ Stop');
+  p.a.onended=()=>{if(p.b===b)dmtProbe(null)};p.a.play().catch(()=>dmtProbe(null))}
 // ---------------------------------------------------------------- the own throw (Dominik 2026-10-25 „1a 2a 3 4a b c“)
 // The die flies over the card, hits the table with its shadow, hops once, rolls out and lands on the panel's number
 // (the number was rolled before, this only shows it). Held longer before letting go it flies further (4b, display
