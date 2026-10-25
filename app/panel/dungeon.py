@@ -6001,9 +6001,12 @@ async def daten_loeschen(request: Request, prof=Depends(browser_profile)):
 async def beenden(rid: str, request: Request, prof=Depends(browser_profile)):
     """The host ends the round (also while blocked: own data); the heroes of profiles are kept. An ended round goes:
     the host deletes it with its sounds and pictures, a player only takes it off the own list (Dominik 2026-10-23
-    „alte runden sollen gelöscht werden können“)."""
+    „alte runden sollen gelöscht werden können“). ?loeschen=1: the host ends a running round and deletes it at once,
+    the heroes kept as on every end (Dominik 2026-10-25 „runden sollen immer löschbar bzw. beendbar sein. mit nachfrage
+    wirklich.“, the list asks first)."""
     uid = prof["id"]
     guard.limit(request, "dungeon", uid)
+    weg = request.query_params.get("loeschen") == "1"
 
     def go():
         with _lock:
@@ -6011,6 +6014,8 @@ async def beenden(rid: str, request: Request, prof=Depends(browser_profile)):
             rd = _round(d, rid)
             pid, _ = seat_of(rd, uid)
             what = ""
+            if weg and rd["owner"] == uid and rd["status"] != "ende":
+                _end(rd, time.time(), "geloescht", rid)
             if rd["status"] == "ende" and rd["owner"] == uid:
                 del d["runden"][rid]
                 _ton_drop(rid)

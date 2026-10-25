@@ -246,6 +246,26 @@ class OffAndDoors(Base):
         self.assertEqual(self.c.delete(f"/api/profile/dungeon/{v['rid']}").json()["runden"], [])
         self.assertNotIn(v["rid"], dungeon._read()["runden"])
 
+    def test_a_running_round_goes_at_once(self):
+        """Dominik 2026-10-25 „runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.“: ?loeschen=1
+        ends a running round and deletes it in one step, only for the host; the hero of a profile is kept as on every
+        end. The list offers „Beenden“ and „Löschen“ to the host, the second tap of each asks nothing more."""
+        v = self.new_round()
+        rid = v["rid"]
+        r = self.c.post(f"/api/profile/dungeon/{rid}/platz", json={"base": BASE})
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual(j.status_code, 200, j.text)
+        self.assertEqual(self.c2.delete(f"/api/profile/dungeon/{rid}?loeschen=1").status_code, 404)   # a player cannot
+        self.assertIn(rid, dungeon._read()["runden"])
+        heroes = len(self.c.get("/api/profile/dungeon").json().get("helden") or [])
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{rid}?loeschen=1").json()["runden"], [])
+        self.assertNotIn(rid, dungeon._read()["runden"])
+        self.assertGreaterEqual(len(self.c.get("/api/profile/dungeon").json().get("helden") or []), heroes)   # the hero stays
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        rule = re.search(r"function dmRowWeg\(x\)\{const w=([^;]*);", js).group(1)
+        self.assertEqual(rule, "x.status==='ende'?[x.gastgeber?'loeschen':'weg']:x.gastgeber?['ende','loeschen']:[]")
+        self.assertIn("if(DM.del!==k){DM.del=k;dmDraw();return}", js)                                 # the first tap only asks
+
 
 def fake(answers):
     """A model that answers in turn with the given objects (a string goes through as it is)."""

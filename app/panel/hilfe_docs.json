@@ -5285,6 +5285,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: jede Runde beenden oder löschen (V01.1.075, Dominik 2026-10-25 „runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.“): In der Liste „Deine Runden“ hat jede Runde neben „Öffnen“ ihre Knöpfe: der Gastgeber kann eine laufende Runde „Beenden“ oder gleich „Löschen“, eine beendete „Löschen“; ein Mitspieler blendet eine beendete Runde aus. Der erste Tipp fragt „Wirklich beenden?“, „Wirklich löschen?“ oder „Wirklich ausblenden?“, erst der zweite führt es aus. „Löschen“ einer laufenden Runde beendet sie erst wie jedes Ende (Erfahrung wird gezahlt, die Helden der Profile bleiben) und löscht sie dann mit ihren Geräuschen und Bildern (DELETE /api/profile/dungeon/{rid}?loeschen=1, nur der Gastgeber; ein Mitspieler bekommt 404). Eine laufende Runde eines anderen Gastgebers kann ein Mitspieler nicht beenden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
 },
 {
@@ -18862,6 +18870,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "rt; the width is kept per device (dm-breite), a double click sets it back. Where the table has only one column there is no edge. Only the view changes: every button sends the same request as before, the panel checks it as before."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: end or delete every round (V01.1.075, Dominik 2026-10-25 “runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.”): In the list “Your rounds” every round has its buttons next to “Open”: the host can “End” a running round or “Delete” it at once, and “Delete” an ended one; a player hides an ended round. The first tap asks “Really end?”, “Really delete?” or “Really hide?”, only the second does it. “Delete” on a running round first ends it like every end (experience is paid, the heroes of profiles stay) and then deletes it with its sounds and pictures (DELETE /api/profile/dungeon/{rid}?loeschen=1, host only; a player gets 404). A player cannot end a running round of another host."
 },
 {
 "lang": "en",
