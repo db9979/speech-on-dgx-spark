@@ -25,6 +25,7 @@ import datetime
 import io
 import json
 import os
+import shutil
 import unittest
 from unittest import mock
 
@@ -73,6 +74,7 @@ def wipe():
     for f in (dungeon.FILE, dungeon.FIGUREN, dungeon.EIGENE, db.FILE):
         if os.path.exists(f):
             os.remove(f)
+    shutil.rmtree(dungeon.ablage.DIR, ignore_errors=True)               # every round is a file of its own (Punkt 14)
     if os.path.isdir(dungeon.BILD_DIR):
         for f in os.listdir(dungeon.BILD_DIR):
             os.remove(os.path.join(dungeon.BILD_DIR, f))

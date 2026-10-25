@@ -833,12 +833,16 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
 function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe,p.zustand,p.noch].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.mut||null),JSON.stringify(v.siedlung||null),JSON.stringify(v.grenzen||null),JSON.stringify(v.zufall||null),JSON.stringify(v.orakel||null),JSON.stringify(v.kampfstufe||null),JSON.stringify(v.nsc||null),JSON.stringify(v.nsc_geheim||null),JSON.stringify(v.fraktionen||null),JSON.stringify(v.fraktionen_geheim||null),JSON.stringify(v.quest||null),JSON.stringify(v.quest_geheim||null),JSON.stringify(v.wahrheit||null),JSON.stringify(v.dinge||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null)].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
-  if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v);DM.at=Date.now();
-    const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}
+  if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v),at0=DM.at;DM.at=Date.now();
+    // „nichts neu“ (Punkt 14 of 2026-10-24): the panel answers {neu:false} while the seat's stand is the same; the clock keeps its start (t0)
+    const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid+'?stand='+encodeURIComponent(DM.v.stand||''));
+    if(r.ok&&DM.v&&d.neu===false){if(!DM.v.t0)DM.v.t0=at0;DM.at=Date.now();dmLeft(DM)}
+    else if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}
   else if(DM.v)dmLeft(DM);
   else if(!DM.v&&DM.data&&(DM.data.kampagnen||[]).some(k=>k.schreibt)&&$('dmview')&&Date.now()-DM.at>=3000){DM.at=Date.now();dmLoad()}
-  const m=$('dgmodal');if(DG.v&&m&&m.style.display==='grid'&&!DG.busy&&Date.now()-DG.at>=DG.v.poll*1000){const old=dmSig(DG.v);DG.at=Date.now();
-    try{const d=await dgPub('/api/dungeon/lage',{code:DG.code});DG.v=d;DG.at=Date.now();if(dmSig(d)!==old)dgDraw()}
+  const m=$('dgmodal');if(DG.v&&m&&m.style.display==='grid'&&!DG.busy&&Date.now()-DG.at>=DG.v.poll*1000){const old=dmSig(DG.v),at0=DG.at;DG.at=Date.now();
+    try{const d=await dgPub('/api/dungeon/lage',{code:DG.code,stand:DG.v.stand||''});
+      if(d.neu===false){if(!DG.v.t0)DG.v.t0=at0;DG.at=Date.now();dmLeft(DG)}else{DG.v=d;DG.at=Date.now();if(dmSig(d)!==old)dgDraw()}}
     catch(e){dmSay(DG,dgErr(e),true)}}},1000);
 // „✓ Gesendet“: the card pops in for a moment, a phone vibrates once
 function dmSent(){DMA.gesendet=Date.now();try{if(navigator.vibrate)navigator.vibrate(30)}catch(e){}}
@@ -860,7 +864,7 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
 // the turn's clock (Dominik 2026-10-24 „die interaktion geht zu schnell weg“, „1-5“): first the reading time, then the
 // turn's time; after the last action GNADE_S to change it; red from warn_s on, a phone vibrates once per turn
 const dmMS=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-function dmUhr(v,S){const el=(Date.now()-S.at)/1000,lese=Math.max(0,Math.round(v.lesen-el)),gn=Math.max(0,Math.round(v.gnade-el));
+function dmUhr(v,S){const el=(Date.now()-(v.t0||S.at))/1000,lese=Math.max(0,Math.round(v.lesen-el)),gn=Math.max(0,Math.round(v.gnade-el));
   const sek=Math.max(0,Math.round(v.rest-Math.max(0,el-v.lesen))),done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const warn=!!done&&!v.pause&&!v.spricht&&!gn&&!lese&&sek<=v.warn_s;
   const mehr=(v.mehr||[]).length?t(' · mehr Zeit für ',' · more time for ')+v.mehr.join(', '):'';

@@ -1862,6 +1862,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn.get('zufall_treffer', 0)} Zufallsregeln getroffen, {dgn.get('zufall_daneben', 0)} nicht"
                            if dgn.get("zufall_treffer") or dgn.get("zufall_daneben") else "")
                         + (f" · {dgn['kampfstufen']} Runden mit eigener Kampfstufe" if dgn.get("kampfstufen") else "")
+                        + (f" · heute {dgn['nichts_neu']} Mal „nichts neu“ an den Tisch" if dgn.get("nichts_neu") else "")
                         + (f" · {dgn['fraktionen']} Fraktionen, {dgn.get('fraktionen_voll', 0)} am Ziel" if dgn.get("fraktionen") else "")
                         + (f" · heute {dgn.get('fraktion_weiter', 0)} Felder gedreht, {dgn.get('fraktion_helden', 0)} durch die Helden, {dgn.get('fraktion_voll', 0)} Uhren voll"
                            if dgn.get("fraktion_weiter") or dgn.get("fraktion_helden") or dgn.get("fraktion_voll") else "")

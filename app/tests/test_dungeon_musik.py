@@ -386,7 +386,9 @@ class Doors(MusicBase):
     def test_table_plays_what_the_panel_says(self):
         js = open(os.path.join(os.path.dirname(dm.__file__), "static", "js", "dungeon-ton.js"), encoding="utf-8").read()
         html = open(os.path.join(os.path.dirname(dm.__file__), "static", "index.html"), encoding="utf-8").read()
-        self.assertIn('<script src="/static/js/dungeon-ton.js"></script>', html)
+        lader = open(os.path.join(os.path.dirname(dm.__file__), "static", "js", "dungeonlader.js"), encoding="utf-8").read()
+        self.assertIn('<script src="/static/js/dungeonlader.js"></script>', html)   # the game's scripts on first use (Punkt 14)
+        self.assertIn("'dungeon-ton.js'", re.search(r"const DM_SKRIPTE=\[([^\]]*)\]", lader).group(1))
         self.assertIn("d.textContent=real", js)                   # the d20 always stops on the panel's number
         self.assertNotRegex(js, r"new Audio\((?!u\))")             # music only from the store's pieces
         self.assertNotIn(".mp3", js)                               # sounds are made, no files

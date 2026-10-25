@@ -42,7 +42,8 @@ codes lock like wrong PINs (guard.failed), every request counts against guard.RA
 Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The journal gets fixed words and numbers only
 (dungeon: …), never an action, a name or a narration; Live only counts.
 
-    STATE/dungeon-runden.json    {"runden": {rid: round}}    rounds with their seats (hashes of the links), heroes, log
+    STATE/dungeon-runden/<rid>.json  one round with its seats (hashes of the links), heroes, log (dungeon_ablage)
+    STATE/dungeon-runden.json    {"bilder", "daumen_welt"}   the shared values of all rounds
     STATE/dungeon-figuren.json   {"figuren": {fid: {"h", "held", "until"}}}   heroes of guests taken along (hashes)
     STATE/dungeon-regeln.json    the admin's own rules and catalog entries (check_rules)
     STATE/dungeon-geschichten.json  {gid: story}   the admin's stories (check_plan)
@@ -116,6 +117,7 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import Response
 
+import dungeon_ablage as ablage
 import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
@@ -151,7 +153,7 @@ _me = sys.modules[__name__]   # dungeon_erzaehler reads the rounds through this 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_regeln.json")
 SRD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_srd.json")   # SRD 5.1/5.2 data (CC-BY-4.0), optional
 VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_geschichten.json")
-FILE = os.path.join(STATE, "dungeon-runden.json")
+FILE = ablage.FILE        # the shared values of all rounds; every round in its own file (dungeon_ablage.DIR)
 FIGUREN = os.path.join(STATE, "dungeon-figuren.json")
 EIGENE = os.path.join(STATE, "dungeon-regeln.json")
 HELDEN = "dungeon-helden.json"
@@ -255,6 +257,7 @@ FOLGEN_MAX = 6
 ERFOLG_MAX = 2
 POLL_S = 3
 ONLINE_S = 15
+STAND_S = 10              # „nichts neu“ (Punkt 14 of 2026-10-24): after this many seconds a poll gets the whole view again
 DM_S = 75                 # seconds one model answer may take
 ENDE_H = 24               # an ended round stays this long (Figur-Code, last look)
 FREI_H = 72               # a free seat nobody took goes after this long (Dominik 2026-10-24 „dass sich das nicht auffüllt“)
@@ -262,7 +265,7 @@ BODY = 4096
 ADMIN_BODY = 96 * 1024
 CODE = re.compile(r"[A-Za-z0-9_\-]{32}")
 WEITER_KEYS = 3          # extra keys a seat keeps from „Weiterspielen“ links of mails (play_on)
-_RID = re.compile(r"r[0-9a-f]{10}")
+_RID = ablage.RID
 _PID = re.compile(r"p[0-9a-f]{8}")
 _HID = re.compile(r"h[0-9a-f]{10}")
 _IID = re.compile(r"i[0-9a-f]{8}")
@@ -408,7 +411,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
-                  quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0)
+                  quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
 
 
 def _go(coro, name):
@@ -1762,40 +1765,39 @@ def keep_hero(uid, h):
 
 # ---------------------------------------------------------------- rounds
 def _read():
-    d = read_json(FILE, {})
-    rs = d.get("runden") if isinstance(d, dict) else None
-    out = {"runden": {k: v for k, v in (rs or {}).items() if _RID.fullmatch(k) and isinstance(v, dict)}}
-    for k in ("bilder", "daumen_welt"):
-        if isinstance(d, dict) and isinstance(d.get(k), dict):
-            out[k] = d[k]
+    """Every round and the shared values (dungeon_ablage: one file per round, a cache by change stamp; Punkt 14)."""
+    return ablage.lesen(_fix)
+
+
+def _fix(rd):
+    """A round of an older version, once when its file changed (dungeon_ablage): heroes at a table from before the six
+    values, worn things that do not fit their place, finds named after their chest."""
     r = None
-    for rd in out["runden"].values():                # heroes at a table from before the six values
-        for p in (rd.get("plaetze") or {}).values():
-            h = p.get("held") if isinstance(p, dict) else None
-            for it in ((h.get("tasche") or []) + list((h.get("an") or {}).values()) if isinstance(h, dict) else []) + list(rd.get("boden") or []):
-                if isinstance(it, dict) and it.get("eigen"):      # a find named after its chest or hiding place (own_name)
-                    r = r or rules()
-                    own_name(r, it)
-            if isinstance(h, dict) and isinstance(h.get("an"), dict) and isinstance(h.get("tasche", []), list):
+    for p in (rd.get("plaetze") or {}).values():
+        h = p.get("held") if isinstance(p, dict) else None
+        for it in ((h.get("tasche") or []) + list((h.get("an") or {}).values()) if isinstance(h, dict) else []) + list(rd.get("boden") or []):
+            if isinstance(it, dict) and it.get("eigen"):      # a find named after its chest or hiding place (own_name)
                 r = r or rules()
-                h["an"] = {k: h["an"].get(k) for k in SLOTS}
-                right_place(r, h)                    # worn where it does not fit: to its place or into the bag
-            if isinstance(h, dict) and isinstance(h.get("werte"), dict) and "verstand" in h["werte"]:
-                r = r or rules()
-                if h.get("klasse") in _by(r, "klassen") and h.get("volk") in _by(r, "voelker"):
-                    six(r, h)
-        for e in rd.get("log") or []:                # its loot line too: the catalog name, the chest as where it was found
-            v = e.get("item") if isinstance(e, dict) and e.get("art") == "beute" else None
-            if isinstance(v, dict) and not v.get("u") and not v.get("fund") and v.get("id"):
-                r = r or rules()
-                c = _by(r, "gegenstaende").get(v["id"])
-                if c and v.get("name") not in c["name"] and not name_fits(r, v["id"], v.get("name")):
-                    v["fund"], v["name"] = v["name"], c["name"][1 if rd.get("lang") == "en" else 0]
-    return out
+                own_name(r, it)
+        if isinstance(h, dict) and isinstance(h.get("an"), dict) and isinstance(h.get("tasche", []), list):
+            r = r or rules()
+            h["an"] = {k: h["an"].get(k) for k in SLOTS}
+            right_place(r, h)                    # worn where it does not fit: to its place or into the bag
+        if isinstance(h, dict) and isinstance(h.get("werte"), dict) and "verstand" in h["werte"]:
+            r = r or rules()
+            if h.get("klasse") in _by(r, "klassen") and h.get("volk") in _by(r, "voelker"):
+                six(r, h)
+    for e in rd.get("log") or []:                # its loot line too: the catalog name, the chest as where it was found
+        v = e.get("item") if isinstance(e, dict) and e.get("art") == "beute" else None
+        if isinstance(v, dict) and not v.get("u") and not v.get("fund") and v.get("id"):
+            r = r or rules()
+            c = _by(r, "gegenstaende").get(v["id"])
+            if c and v.get("name") not in c["name"] and not name_fits(r, v["id"], v.get("name")):
+                v["fund"], v["name"] = v["name"], c["name"][1 if rd.get("lang") == "en" else 0]
 
 
 def _write(d):
-    write_json(FILE, d, mode=0o600, dir_mode=0o700)
+    ablage.schreiben(d, _fix)
 
 
 def _hash(code):
@@ -3835,6 +3837,10 @@ def maybe_close(rid, now=None, force=False):
     """Closes the turn when it is due (or force: the host's „Jetzt weiter“ with at least one action) and starts the
     Dungeon Master in the background. Called on every request of the round (the timer is lazy)."""
     now = time.time() if now is None else now
+    one = ablage.runde(rid, _fix)          # one round from the cache first: most polls find nothing due (Punkt 14)
+    if not one or not (one["status"] == "laeuft" and one.get("until", 0) <= now or one.get("dm") and rid not in _running
+                       or rid not in _running and (due(one, now) or force and one["offen"] and one["status"] == "laeuft" and not one.get("dm"))):
+        return False
     with _lock:
         d = _read()
         rd = d["runden"].get(rid)
@@ -4874,9 +4880,32 @@ def look_back(rd, pid):
 
 
 # ---------------------------------------------------------------- what a seat sees
+def view_stand(rid, pid, now):
+    """A seat's stand for the poll (Punkt 14 of 2026-10-24, „nichts neu“): the round file's change stamp, the states
+    outside it the table shows (who is online, the reading aloud, the pictures on their way) and every STAND_S seconds
+    a new one for what other modules show (music, the voices); who types; while the Dungeon Master answers always a new
+    one (the wait's dice move). Taken before the round is read."""
+    on = tuple(sorted(k for k, t in _seen.items() if now - t < ONLINE_S))
+    key = (ablage.stand(rid), pid, on, rid in _speaking, tuple(sorted(_bilder_jobs)), tuple(sorted(warten.typing_now(rid, pid))),
+           now if rid in _running else int(now // STAND_S))      # while the Dungeon Master answers, the wait moves: always new
+    return hashlib.sha256(repr(key).encode()).hexdigest()[:16]
+
+
+def look(rid, pid, stand=""):
+    """The poll of a seat: {"neu": False, "stand"} while nothing changed since the stand the page has, else the view."""
+    now = time.time()
+    k = view_stand(rid, pid, now)
+    if isinstance(stand, str) and len(stand) == len(k) and hmac.compare_digest(stand, k):
+        _seen[pid] = now
+        _day.bump("nichts_neu")
+        return {"neu": False, "stand": k}
+    return view(rid, pid, now)
+
+
 def view(rid, pid, now=None):
     r = rules()
     now = time.time() if now is None else now
+    stand = view_stand(rid, pid, now)
     d = _read()
     rd = d["runden"].get(rid)
     if not rd or pid not in rd["plaetze"]:
@@ -4916,7 +4945,7 @@ def view(rid, pid, now=None):
             "am_rand": [{"pid": k, "name": q["wartet"]["name"], "gast": bool(q.get("gast"))}
                         for k, q in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if q.get("wartet")],
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
-            "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if shown(e, pid)][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
+            "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if shown(e, pid)][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S, "stand": stand,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
             **stimmen.view(rd, lang, host),
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
@@ -5356,7 +5385,7 @@ def for_live():
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
-                                 "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben")}}
+                                 "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu")}}
 
 
 def own_count(uid):
@@ -5469,7 +5498,10 @@ _GRUND = re.compile(r"[a-z]{2,12}( [a-z]{2,12})?")
 
 
 def _seat_uid(rid, uid):
-    pid, _ = seat_of(_round(_read(), rid), uid)
+    rd = ablage.runde(rid, _fix)            # one round, not all of them (Punkt 14)
+    if not rd:
+        raise LookupError("runde")
+    pid, _ = seat_of(rd, uid)
     if not pid:
         raise LookupError("platz")
     return pid
@@ -5526,7 +5558,7 @@ async def runde(rid: str, request: Request, prof=Depends(own_profile)):
         pid = await asyncio.to_thread(_seat_uid, rid, uid)
         await asyncio.to_thread(maybe_close, rid)
         _go(hero_voices(), name="dungeon")
-        return await asyncio.to_thread(view, rid, pid)
+        return await asyncio.to_thread(look, rid, pid, request.query_params.get("stand", "")[:32])
     except KNOWN as e:
         raise _http(e)
 
@@ -6575,7 +6607,7 @@ async def gast_lage(request: Request):
     await asyncio.to_thread(maybe_close, rid)
     _go(hero_voices(), name="dungeon")
     try:
-        return await asyncio.to_thread(view, rid, pid)
+        return await asyncio.to_thread(look, rid, pid, str(b.get("stand") or "")[:32])
     except KNOWN as e:
         raise _http(e)
 

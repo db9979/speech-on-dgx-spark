@@ -76,13 +76,18 @@ class Bench(Base):
         if os.path.exists(es.FILE):
             os.remove(es.FILE)
 
+    def _rounds(self):
+        """The rounds' files with their change times (one file per round, dungeon_ablage)."""
+        d = dungeon.ablage.DIR
+        return sorted((f, os.path.getmtime(os.path.join(d, f))) for f in os.listdir(d)) if os.path.isdir(d) else []
+
     def _play(self, good):
         r = dungeon.rules()
         with mock.patch("dungeon.ask_model", model(self.foe, good)):
             return {sid: asyncio.run(es.play(r, sid)) for sid in es.SZENEN}
 
     def test_every_scene_by_the_fixed_rules(self):
-        runden = os.path.getmtime(dungeon.FILE) if os.path.exists(dungeon.FILE) else None
+        runden = self._rounds()
         before = dict(dungeon._day)
         good = self._play(True)
         self.assertEqual({k: v["punkte"] for k, v in good.items()}, {k: 2 for k in es.SZENEN}, good)
@@ -95,7 +100,7 @@ class Bench(Base):
         self.assertEqual((bad["ruhe"]["punkte"], bad["ruhe"]["grund"]), (0, "probe"))        # a check for a good morning
         self.assertEqual(bad["probe"]["punkte"], 2)
         self.assertEqual(dict(dungeon._day), before)                    # nothing of the bench counts
-        self.assertEqual(os.path.getmtime(dungeon.FILE) if os.path.exists(dungeon.FILE) else None, runden)   # no round written
+        self.assertEqual(self._rounds(), runden)                         # no round written
         self.assertNotIn("einordnung", good["zwei"])                    # Einordnung off: none
 
     def test_only_the_admin_and_only_while_on(self):

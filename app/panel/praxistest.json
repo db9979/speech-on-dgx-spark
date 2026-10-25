@@ -3481,6 +3481,13 @@
 "titel": "Dungeon-Master: Tabellen ganz sehen",
 "text": "A: Als Admin im Dungeon-Master den Reiter „Regeln“ öffnen, Teil „Tabellen“: jede Tabelle hat links ein Zeichen statt eines Punktes. B: „Aussehen“ antippen: rechts stehen Würfel W61 und alle 61 Zeilen mit Nummer; der Kasten rollt für sich. C: „Ort“ antippen: Zeilen nur für manche Welten nennen diese Welten in der dritten Spalte. D: Die Seite auf Englisch: die Zeilen stehen auf Englisch, der Würfel heißt d61.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P522",
+"v": 1073,
+"titel": "Dungeon-Master schneller auf dem Pi",
+"text": "A: Nach dem Update eine laufende Runde öffnen: sie ist noch da, mit Helden, Verlauf und Karte (die alte Datei wurde aufgeteilt). B: Im Browser die Entwicklerwerkzeuge, Reiter Netzwerk: vor dem ersten Öffnen des Dungeon-Masters lädt die Seite kein dungeon.js; beim Öffnen kommen dungeon.js und die vier anderen Spiel-Skripte. C: Am Tisch nichts tun: die Abfragen alle 3 Sekunden antworten kurz mit „neu: false“, die Uhr des Zuges läuft weiter. D: Auf dem Gast-Gerät eine Aktion schreiben: beim Gastgeber erscheint sie beim nächsten Nachfragen. E: Während der Spielleiter antwortet, bewegen sich die Würfel und Schritte wie bisher. F: Ein Platz-Link (#spiel=…) auf einem neuen Gerät öffnet den Platz wie bisher. G: Zustand → Überblick nennt, wie oft heute „nichts neu“ an den Tisch ging.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

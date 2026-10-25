@@ -35,6 +35,7 @@ import json
 import os
 import random
 import re
+import shutil
 import threading
 import time
 import unittest
@@ -120,6 +121,7 @@ class Base(unittest.TestCase):
         for f in (dungeon.FILE, dungeon.FIGUREN, dungeon.EIGENE, dungeon.GESCHICHTEN):
             if os.path.exists(f):
                 os.remove(f)
+        shutil.rmtree(dungeon.ablage.DIR, ignore_errors=True)            # every round is a file of its own (Punkt 14)
         for uid in (self.uid, self.uid2):
             for f in (dungeon._hfile(uid), dungeon._kfile(uid)):
                 if os.path.exists(f):
@@ -200,7 +202,7 @@ class OffAndDoors(Base):
     def test_seat_link_hash_once_lockout_origin(self):
         v = self.new_round()
         code = self.invite(v["rid"])
-        with open(dungeon.FILE) as f:
+        with open(dungeon.ablage.datei(v["rid"])) as f:
             self.assertNotIn(code, f.read())
         self.assertNotIn(code, json.dumps(self.c.get(f"/api/profile/dungeon/{v['rid']}").json()))
         self.assertEqual(self.v.post("/api/dungeon/platz", json={"code": code},
@@ -1422,7 +1424,7 @@ class Voice(Base):
         v = self.new_round()
         rid = v["rid"]
         code = self.c.post(f"/api/profile/dungeon/{rid}/sitzcode", json={}).json()["code"]
-        with open(dungeon.FILE) as f:
+        with open(dungeon.ablage.datei(rid)) as f:
             self.assertNotIn(code, f.read())
         r = self.v.post("/api/dungeon/lage", json={"code": code})
         self.assertEqual((r.status_code, r.json()["gastgeber"]), (200, True))
