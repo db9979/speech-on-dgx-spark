@@ -3229,6 +3229,13 @@
 "titel": "Heldenmut",
 "text": "A: Funktionen → KI-Dungeon-Master → Heldenmut an. B: Am Spieltisch zu zweit: neben „Handeln“ steht „⭐ Heldenmut“; antippen, eine schwere Probe ansagen und handeln. Misslingt der erste Wurf, steht beim Wurf „⭐ Heldenmut: neu gewürfelt“. C: Danach ist der Knopf weg, auch im nächsten Zug. D: Im Kampf mit Heldenmut angreifen: ein Treffer wird „Kritischer Treffer!“. E: Auf dem zweiten Gerät beim Mitspieler an der Aktion des ersten 👍 tippen: beim ersten steht „⭐ Heldenmut“ wieder. F: Schalter aus: kein Knopf und kein 👍 an Aktionen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P486",
+"v": 1032,
+"titel": "Gold mit Zweck",
+"text": "A: Funktionen → KI-Dungeon-Master → Gold mit Zweck an. B: Eine Runde mit Karte, die Gruppe steht in einem Dorf oder einer Stadt: in der Heldenkarte „🏘 Siedlung“, das Fenster zeigt Gasthaus, Schmied, Lehrstunde und Gerücht mit Preisen. C: Nach einem Kampf „Gasthaus“ bezahlen: alle Helden haben volles Leben, ein zweites Mal am selben Abend ist grau. D: „Lehrstunde“ für Stärke: im Heldenbogen Stärke +1. E: „Gerücht“: im Verlauf ein Satz über einen Ort mit Himmelsrichtung. F: Ein Werkzeug bei einer 1 zerbrechen lassen, dann beim Schmied „Flicken“. G: Im Kampf oder im Gewölbe: kein „🏘 Siedlung“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

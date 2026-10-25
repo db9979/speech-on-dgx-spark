@@ -183,6 +183,7 @@ MODULE = {
     "dungeon_stimmen": ("dienste", "Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen"),
     "dungeon_auto": ("dienste", "Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde"),
     "dungeon_vorlesen": ("dienste", "Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet"),
+    "dungeon_gold": ("dienste", "Dungeon-Master-Gold mit Zweck: Gasthaus, Schmied, Lehrstunde und Gerücht in Siedlungen zu festen Preisen"),
     "dungeon_mut": ("dienste", "Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler"),
     "dungeon_kampf": ("dienste", "Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse"),
     "dungeon_erzaehler": ("dienste", "Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen"),

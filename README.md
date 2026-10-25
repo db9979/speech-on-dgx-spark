@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.032** AI Dungeon Master: gold with a purpose, in settlements an inn for the whole group, a smith for broken tools, a lesson +1 until the round ends and rumours of the next place, prices by the group's level
 - **V01.1.031** AI Dungeon Master: heroic courage, once a game evening roll a failed check again or make a hit critical, the other players give a second one with 👍
 - **V01.1.030** AI Dungeon Master: experience for more than fighting, fixed experience for every hero for a new place of the map, an act done and a fight ended in peace
 - **V01.1.029** Greeting on opening: self-test with a fixed clock instead of the real one (was red in the night the clocks went back), plus a case right in the doubled hour; the look into the calendar counts four real hours, also across the change of the clocks
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.025** AI Dungeon Master: SRD foes with damage type, resistance, immunity, vulnerability and boss, SRD weapons with damage type and properties (combat part 2, data)
 - **V01.1.024** AI Dungeon Master: every narration keeps its place, after a change of place the model only gets the new place's story so far, characters from elsewhere no longer just turn up
 - **V01.1.023** AI Dungeon Master: people stay at their place (only those an action takes along travel), back to the previous place only when an action asks, the map shows "Place not changed"
-- **V01.1.022** CarPlay Dungeon Master: pick and create a round in the car, "Is that right?" before every action, more voice commands, a summary, the round's voices, waiting without a time limit
 
 
 

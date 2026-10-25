@@ -113,6 +113,7 @@ import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
 import dungeon_mut as mut
+import dungeon_gold as gold
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
@@ -242,7 +243,7 @@ _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
 WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
-       "kaufen", "verkaufen", "erkennen", "aufheben", "fallen")
+       "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst")
 TASCHE = 12               # items in one bag
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
@@ -334,7 +335,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
-                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0)
+                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0)
 
 
 def _go(coro, name):
@@ -1146,6 +1147,7 @@ def total(r, h, wert):
             v += e["bonus"]
     v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
     v += sum(x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert)
+    v += 1 if (h.get("lehre") or {}).get("wert") == wert else 0     # a lesson in a settlement (dungeon_gold)
     return v
 
 
@@ -1244,6 +1246,7 @@ def pay_ep(r, rd, rid):
     for pid, p in seated(rd):
         h = p["held"]
         n = h.pop("ep_tisch", 0)
+        h.pop("lehre", None)                      # a lesson lasts until the round or chapter ends (dungeon_gold)
         if n <= 0 or h.get("tot"):
             continue
         n_helden += 1
@@ -3006,6 +3009,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             _day.bump("werkzeug")
         it = next((x for x in (h or {}).get("tasche") or [] if x["i"] == w.get("kaputt")), None)
         if it:
+            gold.broke(rd, h, it)                 # the smith of a settlement can mend it (dungeon_gold)
             use_one(h, it)
             _day.bump("kaputt")
             print("dungeon: werkzeug | kaputt", flush=True)
@@ -4368,6 +4372,7 @@ def view(rid, pid, now=None):
     out.update(erz.view(rd, pid, host))
     out["kampf"] = kampf.view(_me, r, rd)
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
+    out["siedlung"] = gold.view(_me, r, rd, pid)
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
@@ -4512,6 +4517,8 @@ def hero_act(rid, pid, b):
             keep_seat(an)
         elif was in ("kaufen", "verkaufen", "erkennen"):
             shop(r, rd, pid, h, was, b, it)
+        elif was == "dienst":                      # Gold mit Zweck (Idee 9): inn, smith, lesson, rumour
+            gold.serve(_me, r, rd, pid, h, b)
         elif was == "aufheben":
             if b.get("i") == "gold" and rd.get("boden_gold"):     # a fallen hero's gold
                 h["gold"] = min(GOLD_MAX, h["gold"] + rd.pop("boden_gold"))
@@ -4738,7 +4745,7 @@ def for_live():
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
-            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs),
+            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"],
             **dungeon_karte.for_live(rs)}
 
 

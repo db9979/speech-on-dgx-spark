@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.032** KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
 - **V01.1.031** KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍
 - **V01.1.030** KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 - **V01.1.029** Gruß beim Öffnen: Selbsttest mit fester Uhr statt der echten (war in der Nacht der Zeitumstellung rot), dazu ein Fall genau in der doppelten Stunde; der Blick in den Kalender rechnet echte vier Stunden, auch über die Zeitumstellung
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.025** KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
 - **V01.1.024** KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf
 - **V01.1.023** KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“
-- **V01.1.022** CarPlay Dungeon-Master: Runde im Auto wählen und neu anlegen, „Passt das?“ vor jeder Aktion, mehr Sprachbefehle, Zusammenfassung, Stimmen der Runde, Warten ohne Zeitgrenze
 
 
 

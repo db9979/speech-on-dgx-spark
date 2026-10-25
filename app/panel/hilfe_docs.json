@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gold mit Zweck (V01.1.032, Idee 9 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Gold mit Zweck* (chat.dungeon_gold, ab Werk aus; dungeon_gold.py). In einer Siedlung (ein Ort der Karte der Arten Dorf, Stadt, Taverne, Station, Basar oder Hafen, SIEDLUNG, nicht in einem Gewölbe) oder wo ein Händler steht, zeigt die Heldenkarte „🏘 Siedlung“ mit vier festen Angeboten des Panels, nie des Modells, und nie im Kampf. Die Preise wachsen mit der Stufe der Gruppe (PREIS je Stufe): Gasthaus (3 Gold je Stufe und Held, zahlt einer für alle): volles Leben und alle Zauberladungen für jeden Helden, der nicht ohnmächtig oder gefallen ist, ein Held am Boden steht auf; einmal am Spielabend je Runde. Schmied (5 je Stufe): ein Werkzeug, das bei einer natürlichen 1 zerbrochen ist, kommt zurück in die Tasche; gemerkt werden die letzten 5, nur solange der Schalter an ist. Lehrstunde (20 je Stufe): +1 auf einen Wert, bis die Runde oder das Kapitel regulär endet, eine zur Zeit. Gerücht (3 je Stufe): das Panel nennt den ersten noch nicht besuchten Ort auf dem kürzesten Weg zum Ziel der Karte (sonst einen unbesuchten Nachbarn) mit Himmelsri"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "chtung, einmal je Ort. Der Held bezahlt über seinen eigenen Zug (POST …/held mit {was: \"dienst\", id, i, wert}, für Gäste /api/dungeon/held). Sicherheit: kein neuer Endpunkt, nur feste Regeln und Preise des Panels; Logs dungeon: dienst | <angebot> | N gold und je Ablehnung ein festes Wort; die Live-Übersicht zählt nur die bezahlten Angebote des Tages."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Heldenmut (V01.1.031, Idee 8 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Heldenmut* (chat.dungeon_heldenmut, ab Werk aus; dungeon_mut.py). Einmal am Spielabend (Runde und Tag) darf jeder Held mit einer Aktion Heldenmut aufbieten: Er tippt vor „Handeln“ auf „⭐ Heldenmut“, die Aktion trägt mut: true, das Panel merkt es nur, solange ein Heldenmut frei ist. Misslingt eine Probe, würfelt das Panel sie einmal neu; trifft ein Angriff ohne kritisch zu sein, wird er kritisch (doppelte Schadenswürfel); geht er daneben, würfelt das Panel ihn einmal neu. Gelingt der erste Wurf, bleibt der Heldenmut für später; je Aktion wirkt er auf höchstens einen Wurf. Der Wurf zeigt „⭐ Heldenmut“. Vom Tisch: An den Aktionen der anderen aus den letzten drei Zügen steht ein 👍 (POST …/daumen mit {zug, aktion}, für Gäste /api/dungeon/daumen); geben mindestens die Hälfte der anderen Spieler (aufgerundet) einer Aktion ein 👍, bekommt ihr Held einen zweiten Heldenmut für den Abend (LOB_MAX = 1). Nie für sich selbst, allein am Tisch nicht. Der Stand liegt in der Runde (mut, mut_lob); am nächsten Abend gibt es einen neuen. Sicherheit: kein neue"
 },
 {
@@ -9686,6 +9702,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Heldenmut (Funktionen → Meine Daten → „Heldenmut“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Einmal am Spielabend darf jeder Held über sich hinauswachsen: Tippe vor „Handeln“ auf „⭐ Heldenmut“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Gold mit Zweck (Funktionen → Meine Daten → „Gold mit Zweck“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Gold bekommt einen Zweck: In einer Siedlung (Dorf, Stadt, Taverne, Hafen, Basar, Station der Karte) oder beim Händler gibt es feste Angebote."
 },
 {
 "lang": "de",
@@ -18045,6 +18069,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: gold with a purpose (V01.1.032, idea 9 of 2026-10-24, Dominik \"alle umsetzen\"): Own admin switch *Features → AI Dungeon Master → Gold with a purpose* (chat.dungeon_gold, off by default; dungeon_gold.py). In a settlement (a place of the map of the kinds village, town, tavern, station, bazaar or harbour, SIEDLUNG, not inside a vault) or where a merchant stands, the hero card shows \"🏘 Settlement\" with four fixed offers of the panel, never of the model, and never in a fight. Prices grow with the group's level (PREIS per level): Inn (3 gold per level and hero, one pays for all): full life and all spell charges for every hero not unconscious or fallen, a hero down stands up; once a game evening per round. Smith (5 per level): a tool that broke on a natural 1 comes back into the bag; the last 5 are kept, only while the switch is on. Lesson (20 per level): +1 on one value until the round or chapter ends regularly, one at a time. Rumour (3 per level): the panel names the first unvisited place on the shortest way to the map's goal (else an unvisited neighbour) with its direction, once per place. The hero pays with an own move (POST …/held with {was: \"dienst\", id, i, wert},"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " for guests /api/dungeon/held). Security: no new endpoint, only fixed rules and prices of the panel; logs dungeon: dienst | <offer> | N gold and a fixed word per refusal; the live overview only counts the offers paid today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: heroic courage (V01.1.031, idea 8 of 2026-10-24, Dominik \"alle umsetzen\"): Own admin switch *Features → AI Dungeon Master → Heroic courage* (chat.dungeon_heldenmut, off by default; dungeon_mut.py). Once a game evening (round and day) every hero may call on heroic courage with an action: tap \"⭐ Heroic courage\" before \"Act\", the action carries mut: true, the panel notes it only while a charge is free. If a check fails, the panel rolls it once more; if an attack hits without being critical, it becomes critical (double damage dice); if it misses, the panel rolls it once more. If the first roll succeeds, the courage stays for later; per action it works on one roll at most. The roll shows \"⭐ Heroic courage\". From the table: the other players' actions of the last three turns carry a 👍 (POST …/daumen with {zug, aktion}, for guests /api/dungeon/daumen); when at least half of the other players (rounded up) give an action a 👍, its hero gets a second charge for the evening (LOB_MAX = 1). Never for oneself, not alone at the table. The state lives in the round (mut, mut_lob); the next evening brings a new one. Security: no new endpoint (the existing thumbs endpoint with login,"
 },
 {
@@ -22414,6 +22454,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Heroic courage (Features → My data → \"Heroic courage\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Once a game evening every hero may rise above themselves: tap \"⭐ Heroic courage\" before \"Act\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Gold with a purpose (Features → My data → \"Gold with a purpose\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Gold gets a purpose: in a settlement (village, town, tavern, harbour, bazaar, station of the map) or at a merchant there are fixed offers."
 },
 {
 "lang": "en",

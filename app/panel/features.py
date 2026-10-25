@@ -267,6 +267,10 @@ FEATURES = (
     # the other players' 👍; fixed rules of the panel, never the model
     F("dungeonheldenmut", "Heldenmut", "Heroic courage", "data", ("dungeon_heldenmut",), parent="dungeon",
       me="dmbox", guide="dungeonheldenmut"),
+    # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
+    # level; fixed rules of the panel, never the model
+    F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",
+      me="dmbox", guide="dungeongold"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

@@ -160,6 +160,13 @@ const DMGRUND={
   'daumen':['Das ging nicht.','That did not work.'],
   'aktion':['Diese Aktion gibt es nicht mehr zum 👍, nur die der letzten drei Züge.','This action can no longer get a 👍, only those of the last three turns.'],
   'heldenmut':['Heldenmut ist gerade aus.','Heroic courage is off right now.'],
+  'gold':['Dafür reicht dein Gold nicht, oder „Gold mit Zweck“ ist gerade aus.','Your gold is not enough for that, or "Gold with a purpose" is off right now.'],
+  'dienst':['Dieses Angebot gibt es hier nicht.','That offer is not here.'],
+  'siedlung':['Das gibt es nur in einer Siedlung oder beim Händler, nicht im Kampf.','Only in a settlement or at a merchant, not in a fight.'],
+  'gasthaus':['Heute habt ihr schon im Gasthaus geruht.','You have rested at the inn today already.'],
+  'schmied':['Der Schmied kann das nicht flicken, oder deine Tasche ist voll.','The smith cannot mend that, or your bag is full.'],
+  'lehre':['Diese Lehrstunde hast du schon.','You have that lesson already.'],
+  'geruecht':['Hier gibt es kein neues Gerücht.','No new rumour here.'],
   'was':['Das ging nicht.','That did not work.'],
   'eingabe':['Die Eingabe passt nicht. Prüfe die Felder.','The input does not fit. Check the fields.'],
   'nicht da':['Das gibt es nicht mehr.','That is gone.']};
@@ -476,6 +483,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='markt')return `<div class="dm-akt">⚖ ${esc(e.name)} ${esc(e.auf?t('bietet hier Waren an.','offers goods here.'):t('zieht weiter.','moves on.'))}</div>`;
   if(e.art==='handel'){const w={kauf:t('kauft','buys'),verkauf:t('verkauft','sells'),erkannt:t('erkennt','identifies')}[e.was]||e.was;return `<div class="dm-sys mut">⚖ ${esc(e.name)} ${esc(w)} <b>${esc(e.ding)}</b>${e.gold?' · '+e.gold+' '+esc(t('Gold','gold')):''}</div>`}
   if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
+  if(e.art==='dienst')return `<div class="dm-sys ok dm-dienst">🏘 ${esc(sys)}</div>`;
   if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
   if(e.art==='bild')return !(v.bilder||[]).some(x=>x.b===e.b)?'':e.b===dmNewest(v)?dmBildGross(v.mode,v,e.b,e.ort):`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`;
   if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
@@ -688,7 +696,7 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
     catch(e){dmSay(S,mode==='p'?t('Das hat nicht geklappt.','That did not work.'):dgErr(e),true)}};
   rec.start();mode==='p'?dmDraw():dgDraw()}
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
-function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe,p.zustand,p.noch].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.mut||null),JSON.stringify(v.wahrheit||null),JSON.stringify(v.dinge||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null)].join('#'):''}
+function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe,p.zustand,p.noch].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.mut||null),JSON.stringify(v.siedlung||null),JSON.stringify(v.wahrheit||null),JSON.stringify(v.dinge||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null)].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
   if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v);DM.at=Date.now();
     const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}

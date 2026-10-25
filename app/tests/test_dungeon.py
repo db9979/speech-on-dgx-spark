@@ -4758,6 +4758,99 @@ class Fight(Turns):
         helpers.set_config(dungeon_heldenmut=False)
         self.assertEqual(self.v.post("/api/dungeon/daumen", json=lob).status_code, 400)
 
+    def test_gold_with_a_purpose_in_a_settlement(self):
+        """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by
+        the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson
+        gives +1 on one value until the round ends, a rumour names the next place on the way once per place; never in a
+        fight, never without the gold; off nothing of it."""
+        import dungeon_gold as gold
+        helpers.keep_chat(self, "dungeon_gold")
+        p = mock.patch.object(gold, "clock", lambda: 1_790_000_000)
+        p.start()
+        self.addCleanup(p.stop)
+        r = dungeon.rules()
+        url = f"/api/profile/dungeon/{self.rid}"
+        dienst = lambda **kw: self.c.post(url + "/held", json=dict(was="dienst", **kw))
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            dungeon_karte.make(r, rd, random.Random(3))
+            k = rd["karte"]
+            k["orte"][k["hier"]]["art"] = "dorf"
+            for _, x in dungeon.seated(rd):
+                x["held"]["gold"] = 500
+            dungeon._write(d)
+        g0 = self.c.get(url)
+        self.assertEqual(g0.status_code, 200, g0.text)
+        self.assertIsNone(g0.json()["siedlung"])                                   # off: nothing shown
+        self.assertEqual(dienst(id="gasthaus").status_code, 400)
+        helpers.set_config(dungeon_gold=True)
+        v = self.c.get(url).json()["siedlung"]
+        stufe = dungeon.group_level(dungeon._living(self.state(self.rid)))
+        self.assertEqual(v["name"], k["orte"][k["hier"]]["name"])
+        self.assertEqual({x["id"]: x["preis"] for x in v["dienste"]},
+                         {"gasthaus": gold.PREIS["gasthaus"] * stufe * 2, "schmied": gold.PREIS["schmied"] * stufe,
+                          "lehre": gold.PREIS["lehre"] * stufe, "geruecht": gold.PREIS["geruecht"] * stufe})
+        self.assertEqual(dienst(id="beten").status_code, 400)
+        # the inn: the whole group back to full life and charges, once an evening
+        with dungeon._lock:
+            d = dungeon._read()
+            for _, x in dungeon.seated(d["runden"][self.rid]):
+                x["held"]["leben"] = 1
+                x["held"]["ladungen"] = [0] * dungeon.GRAD_MAX
+            dungeon._write(d)
+        self.assertEqual(dienst(id="gasthaus").status_code, 200)
+        rd = self.state(self.rid)
+        for _, x in dungeon.seated(rd):
+            self.assertEqual((x["held"]["leben"], x["held"]["ladungen"]), (x["held"]["leben_max"], dungeon.full_charges(r, x["held"])))
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], 500 - gold.PREIS["gasthaus"] * stufe * 2)
+        self.assertEqual(dienst(id="gasthaus").status_code, 409)                  # once an evening
+        # the lesson: +1 on the value until the round ends
+        h = rd["plaetze"][self.host]["held"]
+        before = dungeon.total(r, h, "weisheit")
+        self.assertEqual(dienst(id="lehre", wert="zauberei").status_code, 400)
+        self.assertEqual(dienst(id="lehre", wert="weisheit").status_code, 200)
+        h = self.state(self.rid)["plaetze"][self.host]["held"]
+        self.assertEqual(dungeon.total(r, h, "weisheit"), before + 1)
+        self.assertEqual(dienst(id="lehre", wert="weisheit").status_code, 400)    # the same lesson twice: no
+        # the smith: only a tool that broke while the switch is on
+        tool = next(c for c in r["gegenstaende"] if c["art"] == "werkzeug" and not c.get("hilft", {}).get("fest"))
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            hh = rd["plaetze"][self.host]["held"]
+            it = dungeon.item(r, tool["id"], "gewoehnlich")
+            gold.broke(rd, hh, it)
+            dungeon._write(d)
+        self.assertEqual(dienst(id="schmied", i="x").status_code, 400)
+        self.assertEqual(dienst(id="schmied", i=it["i"]).status_code, 200)
+        h = self.state(self.rid)["plaetze"][self.host]["held"]
+        self.assertIn(it["i"], [x["i"] for x in h["tasche"]])
+        self.assertEqual(h["kaputt"], [])
+        # the rumour: the next place on the way to the goal, once per place
+        d = dienst(id="geruecht")
+        self.assertEqual(d.status_code, 200, d.text)
+        rd = self.state(self.rid)
+        e = [x for x in rd["log"] if x["art"] == "dienst"][-1]
+        i = gold._next_place(rd)
+        self.assertIn(rd["karte"]["orte"][i]["name"], e["text"][0])
+        self.assertEqual(dienst(id="geruecht").status_code, 409)
+        # too little gold, a fight, the guest the same rules
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.host]["held"]["gold"] = 0
+            dungeon._write(d)
+        self.assertEqual(dienst(id="lehre", wert="staerke").status_code, 400)
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": self.code, "was": "dienst", "id": "lehre", "wert": "staerke"}).status_code, 200)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["kampf"] = {"gegner": []}
+            dungeon._write(d)
+        self.assertIsNone(gold.view(dungeon, r, self.state(self.rid), self.host))   # never in a fight
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": self.code, "was": "dienst", "id": "geruecht"}).status_code, 404)
+        dungeon.pay_ep(r, self.state(self.rid), self.rid)                          # a lesson lasts until the round ends
+        self.assertGreater(dungeon.for_live()["dienste"], 0)
+
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()
         rd, held = self.held()
