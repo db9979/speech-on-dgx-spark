@@ -5357,6 +5357,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: der neue Ort steht in der Erzählung (V01.1.092, mit dem Karten-Thread): Führt ort_id die Gruppe an einen Nachbarort der Karte, den die Erzählung nicht nennt (dungeon_karte.ort_fehlt), ist das ein Fehler „neuer_ort“ der festen Prüfung (dungeon_erzaehler.judge). Das Modell schreibt einmal neu mit dem Hinweis „Mit ort_id geht die Gruppe nach …, deine Erzählung nennt den Ort aber nicht“ (der Name kommt von der Karte, als Daten). Klappt es wieder nicht, bleibt die Gruppe, wo sie ist (ort_id leer, Log dungeon: nachbessern | fest | neuer_ort), so passen Fahne und Erzählung zusammen. Live zählt es bei den nachgebesserten Erzählungen mit."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -19222,6 +19230,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "n and waits for the answer.\". Both with a fixed hint for the second try, day counters regel_richtung, regel_frage in the live line of narrations improved. Self-test test_a_question_stays_a_question_and_the_way_down_stays_down."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the new place is in the narration (V01.1.092, with the map thread): When ort_id leads the group to a neighbouring place of the map that the narration does not name (dungeon_karte.ort_fehlt), that is a fault \"neuer_ort\" of the fixed check (dungeon_erzaehler.judge). The model writes once more with the hint \"with ort_id the group goes to …, but your narration does not name the place\" (the name comes from the map, as data). If it fails again, the group stays where it is (ort_id empty, log dungeon: nachbessern | fest | neuer_ort), so flag and narration agree. Live counts it with the repaired narrations."
 },
 {
 "lang": "en",

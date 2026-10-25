@@ -3600,6 +3600,13 @@
 "titel": "Dungeon-Master: echte Würfel im Zug",
 "text": "Als Admin Funktionen → KI-Dungeon-Master → Echte Würfel am Tisch an. Eine Runde mit einem Gast öffnen, im Spielleiter-Pult unter Am Tisch bei Eigene Würfel den Gast antippen. A: Der Name ist markiert. B: Nach dem nächsten Zug mit einer Probe sieht der Gast „Wirf W20 für …“, tippt 17 und Übernehmen. C: Im Verlauf steht sein Wurf mit 17 und im Beleg „echt“, er muss den Würfel nicht noch einmal antippen. D: Unter Zustand → Logs steht „dungeon: echt | alle da“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P539",
+"v": 1092,
+"titel": "Dungeon-Master: neuer Ort in der Erzählung",
+"text": "Eine Runde spielen und schreiben, dass die Gruppe zu einem Nachbarort der Karte geht. A: Die Erzählung nennt den neuen Ort mit Namen, und die Fahne auf der Karte steht dort. B: Nie steht die Fahne an einem Ort, den die Erzählung nicht nennt; unter Zustand → Logs steht dann „dungeon: nachbessern | neuer_ort“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

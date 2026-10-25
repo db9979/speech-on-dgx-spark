@@ -362,6 +362,10 @@ HINWEIS = {
               "aus karte.wege; andere Orte erreicht sie erst über die Karte.",
               "Note: the group cannot be there: {namen}. Narrate only the place where it stands and the ways from "
               "karte.wege; other places it reaches only over the map."),
+    "neuer_ort": ("Hinweis: Mit ort_id geht die Gruppe nach {namen}, deine Erzählung nennt den Ort aber nicht. Geht sie "
+                  "dorthin, nenne den Ort mit diesem Namen; bleibt sie, lass ort_id leer.",
+                  "Note: with ort_id the group goes to {namen}, but your narration does not name the place. If it goes "
+                  "there, name the place by this name; if it stays, leave ort_id empty."),
     "anderswo": ("Hinweis: Diese Figuren sind an einem anderen Ort und können hier nicht sprechen: {namen}. Lass sie weg "
                  "oder erzähle, wie die Gruppe zu ihnen geht.",
                  "Note: these characters are at another place and cannot speak here: {namen}. Leave them out or tell how "
@@ -471,6 +475,9 @@ def repair(rd, story, fault, missing):
             return story
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=text)
+    elif fault == "neuer_ort":                   # the narration tells no new place: the group stays (dungeon_karte.step)
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, ort_id="")
     elif fault == "anderswo":                    # people at another place do not speak here
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, npc=[n for n in story.get("npc") or [] if n.get("name") not in missing])
@@ -666,6 +673,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
     (told_as_done, the check's wofuer), a foe of the encounter not named by
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
+    a new place of ort_id the narration does not name (dungeon_karte.ort_fehlt),
     a veil of the table more than once (dungeon_grenzen.veiled; the hint never repeats its words, they stay data),
     too much repeated from the last narrations."""
     text = story["text"]
@@ -704,6 +712,11 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     far = far_places(rd, story, low)
     if far:
         return "karte", far
+    import dungeon_karte
+    neu = dungeon_karte.ort_fehlt(rd, story)
+    if neu:                                      # ort_id leads to a place the narration does not name (Karten-Thread)
+        dm._day.bump("regel_neuer_ort")
+        return "neuer_ort", [neu]
     away = elsewhere(rd, story)
     if away:
         return "anderswo", away

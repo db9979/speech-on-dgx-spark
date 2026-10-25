@@ -1860,7 +1860,7 @@ def snapshot(view="admin", now=None):
                            if dgn.get("begegnungen") or dgn.get("kaempfe") else "")
                         + (f" · {dgn['dinge']} gemerkte Dinge" if dgn.get("dinge") else "")
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
-                        + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung oder Frage nachgebessert" if dgn.get("erz_regeln") else "")
+                        + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung, Frage oder neuem Ort nachgebessert" if dgn.get("erz_regeln") else "")
                         + (f" · heute {dgn['neu_erzaehlt']} Szenen nach einer Fehler-Meldung neu erzählt" if dgn.get("neu_erzaehlt") else "")
                         + (f" · {dgn['neu_laeuft']} Szenen werden gerade neu erzählt" if dgn.get("neu_laeuft") else "")
                         + (f" · heute {dgn['ding_fehlt']} Aktionen mit Dingen, die der Held nicht dabeihat" if dgn.get("ding_fehlt") else "")

@@ -2795,7 +2795,10 @@ class BetterStories(Base):
         with mock.patch.object(dungeon_karte, "leute", lambda rd: leute):
             self.assertEqual(dungeon.erz.judge(dungeon, rd, story), ("anderswo", ["Grimma"]))
             self.assertIn("Grimma", dungeon.erz.hint("anderswo", ["Grimma"], "de"))
-            self.assertEqual(dungeon.erz.judge(dungeon, rd, dict(story, ort_id=f"o{a + 1}"))[0], "")   # the group walks to her
+            back = dict(story, ort_id=f"o{a + 1}", text=text + f" Sie kehren um nach {k['orte'][a]['name']}.")
+            self.assertEqual(dungeon.erz.judge(dungeon, rd, back)[0], "")                              # the group walks to her
+            self.assertEqual(dungeon.erz.judge(dungeon, rd, dict(story, ort_id=f"o{a + 1}"))[0],      # untold, the place is a fault
+                             "neuer_ort" if dungeon_karte.ort_fehlt(rd, dict(story, ort_id=f"o{a + 1}")) else "")
             leute["mit"] = ["Grimma"]
             self.assertEqual(dungeon.erz.judge(dungeon, rd, story)[0], "")                             # she travels along
 
@@ -5522,6 +5525,29 @@ class Fight(Turns):
         self.assertNotIn("Oben angekommen", fixed["text"])
         self.assertTrue(asked["text"].endswith("Morpheus stellt seine Frage und wartet auf die Antwort."))
         self.assertEqual(out.getvalue().count("dungeon: nachbessern | fest"), 2)
+
+    def test_a_new_place_must_be_named(self):
+        """The map thread's rule (dungeon_karte.ort_fehlt): ort_id leads to a neighbouring place the narration does not
+        name. The judge sends it back as „neuer_ort“ with the place's name as data; failing again, the panel keeps the
+        group where it is (ort_id empty), so flag and narration agree."""
+        E = dungeon.erz
+        rd = self.state(self.rid)
+        k = rd["karte"]
+        j = next(j for j in sorted(dungeon_karte._nb(k)[k["hier"]]) if any(len(w) >= 4 for w in dungeon_karte._words(k["orte"][j]["name"])))
+        name = k["orte"][j]["name"]
+        heroes = " ".join(f"{p['held']['name']} sieht sich um." for p in rd["plaetze"].values() if p.get("held"))
+        text = heroes + " Der Wind trägt den Geruch von nassem Laub heran, irgendwo knackt ein Ast, und die Schatten werden länger."
+        story = {"text": text, "ort_id": f"o{j + 1}"}
+        full = dict(rd, offen={}, zug=5)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(E.judge(dungeon, full, story), ("neuer_ort", [name]))
+            self.assertNotEqual(E.judge(dungeon, full, dict(story, text=text + f" Vor ihnen liegt {name}."))[0], "neuer_ort")
+            self.assertNotEqual(E.judge(dungeon, full, dict(story, ort_id=""))[0], "neuer_ort")
+        self.assertIn(name, E.hint("neuer_ort", [name], "de"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = E.repair(full, story, "neuer_ort", [name])
+        self.assertEqual((fixed["ort_id"], fixed["text"]), ("", text))
+        self.assertIn("dungeon: nachbessern | fest | neuer_ort", out.getvalue())
 
     def test_more_fixed_rules_for_a_narration(self):
         """Dominik 2026-10-25 „1-3 und 1-7 umsetzten“: a fallen foe acting or a foe dying without a receipt (1), a thing

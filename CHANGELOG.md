@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.092** · 2026-10-25 · KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
 - **V01.1.091** · 2026-10-25 · KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
 - **V01.1.090** · 2026-10-25 · KI-Dungeon-Master: Inhalte der D&D-Ideen im SRD-Katalog: Krit-Tabellen für 13 Schadensarten, milde Patzer, Nachtwachen und Reise-Ereignisse für 13 Landschaften, 60 Lagerfeuer-Fragen, Reise-Rollen, Narben mit Pflastern für den Kindertisch und eine Sage für jeden der 268 Gegner
 - **V01.1.089** · 2026-10-25 · Hilfsmodell: zwei weitere Einsätze mit eigenem Schalter, Angriffe erkennen (Fall bei vermuteter Anweisung in gelesenem Text, nur ein Hinweis neben den festen Sperren) und kurze Texte (Gedächtnis-Themen, Vorschläge auf der Uhr)
