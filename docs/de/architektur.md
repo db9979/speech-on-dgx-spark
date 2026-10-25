@@ -275,6 +275,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_auto.py` | Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde |
 | `app/panel/dungeon_balance.py` | Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke |
+| `app/panel/dungeon_echt.py` | Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter |
 | `app/panel/dungeon_erzaehler.py` | Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen |
 | `app/panel/dungeon_erzaehlstand.py` | Dungeon-Master-Erzähler-Prüfstand: feste Szenen durch das laufende Modell, feste Regeln geben Punkte |
 | `app/panel/dungeon_fraktionen.py` | Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln |

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.080** AI Dungeon Master: real dice at the table (tap or say the number, after 30 s the Spark rolls, never in the car), fanfare for honours, critical card turns over, "Campfire" music
 - **V01.1.079** AI Dungeon Master: arms for group and factions: the panel draws every coat of arms itself as a checked SVG from shield, division, tinctures and 16 own charges, the host chooses colour and charge, every faction carries its own
 - **V01.1.078** AI Dungeon Master: the table on the phone with a one-row head and “⋯”, one fight box, the field to act in every pane, the group as a list, quick actions for the hero and a short guide; a failed examination gives nothing away, going needs no check, the panel cuts a repeated scene
 - **V01.1.077** AI Dungeon Master: the map moves on only when an action wants to go (flag and narration stay the same); place pictures check only their own round
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.073** AI Dungeon Master: faster on the Pi: one file per round with a cache, the poll gets “nothing new” while nothing changed, the game scripts load on the first opening
 - **V01.1.072** AI Dungeon Master: the tables under Rules now show every row with its number, the die and the worlds, every table has a sign in the list
 - **V01.1.071** AI Dungeon Master: fixed: an attack on several foes of one kind (“the rats”) or an attack without a named target only rolled a check and dealt no damage; now it hits the first still standing, and a caster's magic without a spell of its own is a cantrip
-- **V01.1.070** AI Dungeon Master: key doors in vaults: the key lies in a reachable room, the door opens only for whoever carries and names it
 
 
 

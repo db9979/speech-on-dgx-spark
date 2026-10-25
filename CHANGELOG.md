@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.080** · 2026-10-25 · KI-Dungeon-Master: echte Würfel am Tisch (dungeon_echt.py, Admin-Schalter aus, Zahl 1–20 vom eigenen Platz, 30 s dann Panel, nie im Auto), Fanfare bei Ehrungen, Umdreh-Effekt bei Krit-/Patzer-Tabelle, Musik-Stimmung „Lagerfeuer“ mit Feuer (D&D-Ideen 5, 1, 2, 4)
 - **V01.1.079** · 2026-10-25 · KI-Dungeon-Master: Wappen für Gruppe und Fraktionen: das Panel zeichnet jedes Wappen selbst als geprüfte SVG aus Schild, Teilung, Tinkturen und 16 eigenen Zeichen, der Gastgeber wählt Farbe und Zeichen, jede Fraktion trägt ein eigenes
 - **V01.1.078** · 2026-10-25 · KI-Dungeon-Master: der Tisch am Handy mit Kopf in einer Zeile und „⋯“, einem Kampfkasten, dem Feld zum Handeln in jedem Teil, der Gruppe als Liste, schnellen Aktionen beim Helden und einer kurzen Hilfe; eine misslungene Untersuchung verrät nichts, Gehen braucht keine Probe, eine wiederholte Szene kürzt das Panel
 - **V01.1.077** · 2026-10-25 · KI-Dungeon-Master: die Karte zieht nur weiter, wenn eine Aktion gehen will (Fahne und Erzählung bleiben gleich); Ortsbilder prüfen nur die eigene Runde

@@ -201,6 +201,18 @@ class Moods(MusicBase):
         self.assertEqual(dm.mood(dict(rd, karte={"drin": 0})), "taverne")
         self.assertEqual(dm.mood({"szene": {}}), "erkunden")               # no map, no vault
 
+    def test_campfire_rest_has_its_own_mood(self):
+        """D&D idea 4: while the group rests (rd["rast"], the main thread's) the campfire plays and crackles; a fight wins."""
+        rd = {"welt": "fantasy", "szene": {"ort": "Taverne", "stimmung": ""}, "rast": {"art": "lang"}}
+        self.assertEqual(dm.mood(rd), "lager")
+        self.assertEqual(dm.klang(rd), "feuer")
+        self.assertEqual(dm.mood(dict(rd, kampf={"x": 1})), "kampf")
+        self.assertEqual(dm.mood(dict(rd, rast=None)), "taverne")
+        self.assertIn("lager", dm.DUR)                                      # warm, in the world's major key
+        for welt in dm.THEMA:
+            self.assertIn("lager", dm.THEMA[welt])
+        self.assertIn("lager", dm.EIGEN_THEMA)
+
     def test_victory_and_door_turns(self):
         rd = {"log": [{"art": "dm", "text": "Die Tür knarrt.", "n": 2}, {"art": "stufe", "n": 3}, {"art": "dm", "text": "Stille.", "n": 4}],
               "status": "laeuft", "szene": {}}
@@ -218,6 +230,10 @@ class Ahead(MusicBase):
         dm._want.clear()
         dm.ask_round("r0", dict(rd, karte={"orte": []}))      # a round with a map asks for its vault too
         self.assertIn(("fantasy", "gewoelbe"), dm._want)
+        self.assertNotIn(("fantasy", "lager"), dm._want)
+        dm._want.clear()
+        dm.ask_round("r0", dict(rd, rast={"art": "kurz"}))    # a resting round asks for its campfire
+        self.assertIn(("fantasy", "lager"), dm._want)
         dm._want.clear()
         dm._akte.pop("r0", None)
         dm.ask_round("r1", rd)

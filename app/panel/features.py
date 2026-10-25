@@ -310,6 +310,10 @@ FEATURES = (
     # level; fixed rules of the panel, never the model
     F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",
       me="dmbox", guide="dungeongold"),
+    # Echte Würfel am Tisch (dungeon_echt.py, D&D idea 5): a seat throws its own d20 and gives the number, the panel
+    # checks it and rolls on; never in the car
+    F("dungeonechtwuerfel", "Echte Würfel am Tisch", "Real dice at the table", "data", ("dungeon_echtwuerfel",),
+      parent="dungeon", me="dmbox", guide="dungeonechtwuerfel"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

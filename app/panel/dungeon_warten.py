@@ -23,6 +23,8 @@ import random
 import threading
 import time
 
+import dungeon_echt
+
 QUELLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_warten.json")
 SCHRITTE = ("lesen", "wuerfeln", "erzaehlen", "nachbessern")
 FOLGE = ("lesen", "wuerfeln", "erzaehlen")  # the steps the bar shows; nachbessern stands on erzaehlen's place
@@ -147,7 +149,8 @@ def step(rd, s, wuerfe=None, rng=None):
         w["wt"] = time.time()
         w["w"] = [{"pid": x.get("pid", ""), "name": x["name"], "wert": x["wert"], "w": x["w"], "bonus": x.get("bonus", 0), "gesamt": x["gesamt"], "schwer": x["schwer"],
                    "ok": bool(x["ok"]), "vt": x.get("vt", ""), "ws": list(x.get("ws") or [])[:2], "belastet": bool(x.get("belastet")),
-                   "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", "")} for x in wuerfe]
+                   "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", ""),
+                   "krit_tabelle": x.get("krit_tabelle", ""), "patzer_tabelle": x.get("patzer_tabelle", "")} for x in wuerfe]
 
 
 def throw(rd, pid):
@@ -184,7 +187,8 @@ def _die(x, pid, now, wt):
            "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", "")}
     if offen:
         out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]),
-                   vt=x.get("vt", ""), ws=x.get("ws") or [], belastet=bool(x.get("belastet")))
+                   vt=x.get("vt", ""), ws=x.get("ws") or [], belastet=bool(x.get("belastet")),
+                   krit_tabelle=x.get("krit_tabelle", ""), patzer_tabelle=x.get("patzer_tabelle", ""))   # D&D idea 2: the table's entry, the panel's
     return out
 
 
@@ -248,7 +252,7 @@ def view(rd, rid, pid, lang):
     names = {p: (x.get("held") or {}).get("name", "") for p, x in rd["plaetze"].items()}
     out = {"tisch": [{"n": x["n"], "name": x["name"], "text": x["text"], "ich": x["pid"] == pid, "t": x["t"]} for x in rd.get("tisch") or [] if not x.get("weg")],
            "tippt": sorted(names[p] for p in typing_now(rid, pid) if names.get(p) and p not in rd.get("offen", {})),
-           "warten": None, "wurf_offen": waiting(rd, pid)}
+           "warten": None, "wurf_offen": waiting(rd, pid), "echt": dungeon_echt.view(rd, pid)}
     w = rd.get("warten")
     if rd.get("dm") and w:
         satz = _text(d["schritte"].get(w["s"]) or {}, w["satz"]) if w.get("satz") else None

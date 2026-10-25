@@ -34,7 +34,10 @@ const DMT_FX={
   zauber:v=>{const t=dmtNow(),o=dmtTone(600,t,.15,1,v*.15);o.frequency.exponentialRampToValueAtTime(1800,t+1);dmtTone(1200,t+.1,.2,.9,v*.08,'triangle')},
   klack:v=>{const t=dmtNow();dmtNoise(t,.04,v*.7,'bandpass',1400+Math.random()*900,4);dmtTone(180+Math.random()*60,t,.002,.08,v*.25,'triangle')},
   dran:v=>{const t=dmtNow();dmtTone(784,t,.01,.18,v*.12,'sine');dmtTone(1175,t+.12,.01,.3,v*.1,'sine')},
-  stufe:v=>{const t=dmtNow();[392,494,587,784].forEach((f,i)=>dmtTone(f,t+i*.12,.02,i===3?.9:.25,v*.14,'triangle'))}};
+  stufe:v=>{const t=dmtNow();[392,494,587,784].forEach((f,i)=>dmtTone(f,t+i*.12,.02,i===3?.9:.25,v*.14,'triangle'))},
+  // the honours of the evening (D&D idea 1): a short fanfare, two calls and a held chord, soft like the others
+  fanfare:v=>{const t=dmtNow();[[392,0,.16],[392,.18,.1],[523,.3,.5]].forEach(([f,d,l])=>{dmtTone(f,t+d,.02,l,v*.13,'sawtooth');dmtTone(f*2,t+d,.02,l,v*.04,'triangle')});
+    [523,659,784].forEach(f=>dmtTone(f,t+.86,.06,1.3,v*.09,'triangle'))}};
 function dmtPlay(k,w){if(!dmtFx())return;const c=dmtCtx();if(!c||c.state!=='running')return;try{DMT_FX[k](dmtLaut()/100,w)}catch{}}
 // the place's sound in the background: a filtered noise loop (regen, wind, feuer, wasser), quiet under the music
 function dmtAmb(k){if(!dmtFx())k='';if(k===DMT.ambK)return;DMT.ambK=k;if(DMT.amb){const a=DMT.amb;a.g.gain.setTargetAtTime(0.0001,dmtNow(),.6);setTimeout(()=>{try{a.s.stop();clearInterval(a.tick)}catch{}},2500);DMT.amb=null}
@@ -77,7 +80,7 @@ async function dmtNervt(){const id=DMT.id,v=DMT.v;if(!id||!v)return;
   const m=v.musik||{};['stuecke','sieg'].forEach(k=>{if(m[k])m[k]=m[k].filter(x=>x!==id)});
   if(DMT.urls[id]){URL.revokeObjectURL(DMT.urls[id]);delete DMT.urls[id]}sayToast(t('Kommt nicht wieder, nachts gibt es ein neues','Will not come again, a new one comes at night'));
   if((m.stuecke||[]).length)dmtStart(m.stuecke);else dmtStop()}
-const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe'};
+const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe',ehrung:()=>'fanfare'};   // ehrung: the evening's honours (D&D idea 1)
 function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dice=[...w.querySelectorAll('.dm-feed .dm-wurf .dm-d20')].slice(-news.length);
   dice.forEach(d=>{const real=d.textContent;if(reduce)return;d.classList.add('dm-rollt');let k=0;const iv=setInterval(()=>{d.textContent=String(1+Math.floor(Math.random()*20));if(++k>=12){clearInterval(iv);d.textContent=real;d.classList.remove('dm-rollt')}},66)})}

@@ -1402,6 +1402,11 @@ def snapshot(view="admin", now=None):
         dgn["wappen"] = dungeon_wappen.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["wappen"] = {"on": False}
+    try:   # Echte Würfel am Tisch (dungeon_echt.py): numbers on the game's line
+        import dungeon_echt
+        dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["echt"] = {}
     try:   # the admin's rules tab (dungeon_regelseite.py): own entries, hidden ones, pictures to choose
         import dungeon_regelseite
         dgn["regeln"] = dungeon_regelseite.counts() if dgn.get("on") else {}
@@ -1903,6 +1908,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute Spielleiter-Regler {dgn.get('regler_hoch', 0)}× schwerer, {dgn.get('regler_runter', 0)}× leichter"
                            if dgn.get("regler_hoch") or dgn.get("regler_runter") else "")
                         + (f" · heute {dgn['heldenmut']}× Heldenmut" if dgn.get("heldenmut") else "")
+                        + (f" · heute {dgn['echt']['echt']} echte Würfe, {dgn['echt']['rueckfall']} nach 30 s vom Panel, {dgn['echt']['abgelehnt']} abgelehnt"
+                           if (dgn.get("echt") or {}).get("gefragt") or (dgn.get("echt") or {}).get("abgelehnt") else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

@@ -7,7 +7,7 @@ function dmWait(v){const w=v.warten;if(!v.dm||!w)return '';
   if(w.wt&&w.wt!==DMWT.wt){DMWT.wt=w.wt;DMWT.thrown={};DMWT.shown={};DMWT.landT={}}   // a new turn's dice: the same check again is a new throw
   const st={lesen:t('Lesen','Reading'),wuerfeln:t('Würfeln','Dice'),erzaehlen:t('Erzählen','Narrating')},cur=w.s==='nachbessern'?'erzaehlen':w.s,ix=w.folge.indexOf(cur);
   const steps=`<ol class="dm-wsteps">${w.folge.map((s,i)=>`<li class="${i<ix?'ok':i===ix?'on':''}">${esc(st[s])}</li>`).join('')}</ol>`;
-  const dice=w.w.length?`<div class="dm-wdice">${w.w.map(x=>dmWDie(v,x)).join('')}</div>`:'';
+  const dice=v.echt?dmEcht(v):w.w.length?`<div class="dm-wdice">${w.w.map(x=>dmWDie(v,x)).join('')}</div>`:'';
   const cards=w.karten.length?`<div class="dm-wkarten">${w.karten.map(k=>`<div class="dm-wkarte"><b>${esc(k.titel)}</b><small>${esc(k.text)}</small></div>`).join('')}</div>`:'';
   return `<div class="dm-warten" role="status">${steps}<p class="dm-wsatz"><span class="dm-wpunkte" aria-hidden="true"></span>${esc(w.satz)}</p>${dice}${cards}${w.tipp?`<small class="dm-wtipp">💡 ${esc(t('Während du wartest: ','While you wait: '))}${esc(w.tipp)}</small>`:''}</div>`}
 // throwing the own die (Dominik 2026-10-23 „1 und 2 aber mit funken bei 20 und eigenes geräusch beim würfel ergebniss“):
@@ -19,7 +19,9 @@ function dmWDie(v,x){const W=v.werte||{},k=dmWKey(v,x),wert=esc(W[x.wert]||x.wer
   if(!('w' in x))return dmPK(v,x,'<span class="dm-d20 dm-wdreht">?</span>');
   const el=Date.now()-(DMWT.landT[k]||0),land=el<1300,fun=land&&x.w===20?`<span class="dm-funken" aria-hidden="true">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${30+(i%3)*14}px;animation-delay:${(-el/1000).toFixed(2)}s"></i>`).join('')}</span>`:'';
   if(land)setTimeout(()=>{if(Date.now()-DMWT.landT[k]>=1300)(v.mode==='g'?dgDraw:dmDraw)()},1350-el);
-  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland '+(typeof dmtErgebnis==='function'?dmtErgebnis(x):''):''}`,` data-dmwkey="${esc(k)}"`)+dmLeiste(x,el)}
+  const tab=x.krit_tabelle||x.patzer_tabelle;   // D&D idea 2: a table's entry turns the card over on landing
+  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland '+(typeof dmtErgebnis==='function'?dmtErgebnis(x):'')+(tab?' dm-wumdreh':''):''}`,` data-dmwkey="${esc(k)}"`)
+    +(tab?`<b class="dm-wtab${x.patzer_tabelle?' dm-wtabp':''}">${esc((x.krit_tabelle?t('Kritisch: ','Critical: '):t('Patzer: ','Fumble: '))+tab)}</b>`:'')+dmLeiste(x,el)}
 const DMD20=typeof DMT_D20==='string'?DMT_D20:'<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
 // the own die waiting for its tap: in the wait (rest -1) or in the feed after the narration came (1a, rest = seconds
 // left, a ring runs down and then it throws itself); never the number, only what is checked
@@ -75,6 +77,42 @@ if(typeof DMT_FX!=='undefined')Object.assign(DMT_FX,{
   verfehlt:v=>{const t=dmtNow(),o=dmtTone(330,t,.02,.55,v*.16,'triangle');o.frequency.exponentialRampToValueAtTime(220,t+.5)},
   krit:v=>{const t=dmtNow();[523,659,784,1047,1319].forEach((f,i)=>dmtTone(f,t+i*.08,.01,i===4?1.1:.3,v*.14,'triangle'));for(let i=0;i<8;i++)dmtTone(2600+Math.random()*2400,t+.45+i*.06,.002,.2,v*.06)},
   patzer:v=>{const t=dmtNow();[[294,0],[277,.22],[262,.44],[247,.66]].forEach(([f,d],i)=>{const o=dmtTone(f,t+d,.02,i===3?.8:.2,v*.14,'sawtooth');if(i===3)o.frequency.exponentialRampToValueAtTime(180,t+1.4)});dmtNoise(t+.66,.3,v*.25,'lowpass',260)}});
+// own dice at the real table (dungeon_echt.py, D&D idea 5): before the panel rolls, the seat throws its d20 and taps or
+// says the number; the panel checks it (1 to 20, own seat, this turn) and rolls on. Nothing comes: after max seconds the
+// panel rolls itself. The others see who still throws. The numbers are only kept here until „Übernehmen“.
+const DMECHT={zug:-1,z:[]};
+function dmEcht(v){const e=v.echt,W=v.werte||{};if(DMECHT.zug!==e.zug){DMECHT.zug=e.zug;DMECHT.z=[]}
+  const andere=e.andere.length?`<small class="mut">🎲 ${esc(e.andere.join(', '))} ${esc(e.andere.length===1?t('würfelt am Tisch …','is throwing at the table …'):t('würfeln am Tisch …','are throwing at the table …'))}</small>`:'';
+  if(!e.fragen.length)return `<div class="dm-echt">${e.fertig?`<b>✓ ${esc(t('Deine Zahl ist da, der Spark rechnet.','Your number is in, the Spark does the maths.'))}</b>`:''}${andere}</div>`;
+  const n=e.fragen.reduce((a,f)=>a+f.n,0),z=DMECHT.z,voll=z.length>=n;
+  const was=e.fragen.map(f=>`<b class="dm-echtwas">${esc(f.n>1?t('Wirf 2 W20','Throw 2 d20'):t('Wirf W20','Throw a d20'))} ${esc(t('für','for'))} ${esc(W[f.wert]||f.wert)} ${esc(t('gegen','against'))} ${f.schwer}</b>`).join('');
+  const pad=Array.from({length:e.seiten},(_,i)=>`<button type="button" class="b" data-dmechtz="${i+1}"${voll?' disabled':''}>${i+1}</button>`).join('');
+  const mic=typeof dmMic==='function'&&dmMic.length>1?`<button type="button" class="b" data-dmechtmic="1" aria-label="${esc(t('Zahl sagen','Say the number'))}">🎤</button>`:'';
+  return `<div class="dm-echt" role="group" aria-label="${esc(t('Eigener Würfel','Own die'))}">${was}
+    <div class="dm-echtz" aria-live="polite">${Array.from({length:n},(_,i)=>`<span class="dm-d20">${z[i]||'·'}</span>`).join('')}</div>
+    <div class="dm-echtpad">${pad}</div>
+    <div class="row">${mic}<button type="button" class="b" data-dmechtzur="1"${z.length?'':' disabled'}>↶ ${esc(t('Zurück','Back'))}</button><button type="button" class="b p" data-dmechtok="1"${voll?'':' disabled'}>${esc(t('Übernehmen','Take it'))}</button></div>
+    <i class="dm-echtzeit" style="animation-duration:${e.max}s;animation-delay:${e.rest-e.max}s" aria-hidden="true"></i>
+    <small class="mut">${esc(t(`Noch ${e.rest} s, dann würfelt der Spark selbst.`,`${e.rest} s left, then the Spark rolls itself.`))}</small>${andere}</div>`}
+// spoken numbers: digits or the words one to twenty (German and English), in the order said
+const DMECHT_W={eins:1,ein:1,eine:1,zwei:2,drei:3,vier:4,fuenf:5,fünf:5,sechs:6,sieben:7,acht:8,neun:9,zehn:10,elf:11,zwoelf:12,zwölf:12,dreizehn:13,vierzehn:14,
+  fuenfzehn:15,fünfzehn:15,sechzehn:16,siebzehn:17,achtzehn:18,neunzehn:19,zwanzig:20,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,
+  eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
+function dmEchtZahlen(text){return (String(text||'').toLowerCase().match(/\d+|[a-zäöü]+/g)||[]).map(x=>/^\d+$/.test(x)?+x:DMECHT_W[x]).filter(x=>x>=1&&x<=20)}
+function dmEchtDraw(mode){mode==='g'?dgDraw():dmDraw()}
+async function dmEchtSend(mode){const v=mode==='g'?DG.v:DM.v;if(!v||!v.echt)return;const body={zug:v.echt.zug,zahlen:DMECHT.z.slice()};
+  try{if(mode==='g'){DG.v=await dgPub('/api/dungeon/echt',Object.assign({code:DG.code},body));DG.at=Date.now()}
+    else{const {r,d}=await apiTry(`/api/profile/dungeon/${DM.rid}/echt`,xjson('POST',body));if(!r.ok){dmSay(DM,dmErr(r.status,d.detail),true);return}DM.v=d;DM.at=Date.now()}
+    if(typeof dmtPlay==='function')dmtPlay('wuerfel',0)}
+  catch(e){dmSay(mode==='g'?DG:DM,mode==='g'?dgErr(e):t('Das hat nicht geklappt.','That did not work.'),true)}
+  dmEchtDraw(mode)}
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview .dm-echt [data-dmechtz],#dgcard .dm-echt [data-dmechtz],#dmview .dm-echt [data-dmechtzur],#dgcard .dm-echt [data-dmechtzur],#dmview .dm-echt [data-dmechtok],#dgcard .dm-echt [data-dmechtok],#dmview .dm-echt [data-dmechtmic],#dgcard .dm-echt [data-dmechtmic]');
+  if(!b)return;const mode=b.closest('#dgcard')?'g':'p',v=mode==='g'?DG.v:DM.v,n=v&&v.echt?v.echt.fragen.reduce((a,f)=>a+f.n,0):0;
+  if(b.dataset.dmechtz){if(DMECHT.z.length<n)DMECHT.z.push(+b.dataset.dmechtz)}
+  else if(b.dataset.dmechtzur)DMECHT.z.pop();
+  else if(b.dataset.dmechtok){if(DMECHT.z.length===n)dmEchtSend(mode);return}
+  else if(b.dataset.dmechtmic){dmMic(mode,text=>{DMECHT.z=DMECHT.z.concat(dmEchtZahlen(text)).slice(0,n);dmEchtDraw(mode)});return}
+  dmEchtDraw(mode)});
 // a new narration comes sentence by sentence; the time counts from when this page first saw it, so a repaint goes on
 function dmSaetze(v,e){const key=v.rid+':'+(e.prolog?'p':'')+(e.n||1),S=DMWT.seen[v.rid]||(DMWT.seen[v.rid]={});
   if(!(key in S))S[key]=S._ready?Date.now():0;S._ready=true;

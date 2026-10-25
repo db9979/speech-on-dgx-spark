@@ -6141,6 +6141,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: echte Würfel am Tisch, Fanfare, Umdrehen und Lagerfeuer (V01.1.080, D&D-Ideen 5, 1, 2 und 4, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Echte Würfel (Admin-Schalter *Funktionen → KI-Dungeon-Master → Echte Würfel am Tisch*, chat.dungeon_echtwuerfel, standardmäßig aus): Der Gastgeber wählt in seiner Runde, welche Plätze eigene Würfel nutzen (rd[\"echt\"]). Bevor das Panel die Proben eines Zugs auswürfelt, fragt dungeon_echt.real_ask diese Plätze: Am Tisch steht groß „Wirf W20 für Geschick gegen 14“ (bei Vorteil oder Nachteil zwei W20), darunter ein Zahlenfeld von 1 bis 20, „↶ Zurück“, „Übernehmen“ und 🎤 (die Spracherkennung des Spiels, Zahlwörter von eins bis zwanzig und one bis twenty). Die anderen sehen „Mara würfelt am Tisch …“. Das Panel nimmt nur ganze Zahlen von 1 bis 20, nur vom eigenen Platz, nur für den gefragten Zug, genau so viele wie gefragt und nur einmal (eigenes Rate-Limit dungeonecht). Danach rechnet es wie immer, nur der W20 dieses Platzes ist die eingegebene Zahl (Hand.d20); Glück und Heldenmut würfelt weiter das Panel. Im Würfel-Beleg steht „echt“. Kommt nach 30 Sekunden (WARTE_S) keine Zahl, würfelt das Panel selbst. Nie im Auto: Spielt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ein Profil gerade aus dem Auto (dungeon_auto.im_auto), wird sein Platz nicht gefragt; ein Gast hat kein Auto. Türen: POST /api/profile/dungeon/{rid}/echt {zug, zahlen} und POST /api/dungeon/echt {code, zug, zahlen}. Live: gefragt, echte Würfe, nach 30 s vom Panel, abgelehnt (nur Zahlen); Log dungeon: echt | frage | n plaetze, dungeon: echt | alle da …, dungeon: echt | rueckfall …, dungeon: echt | eingetragen, dungeon: echt | abgelehnt | …. Fanfare: Liest der Erzähler die Ehrungen des Abends vor (Log-Art ehrung), klingt einmal eine kurze, leise Fanfare (WebAudio, keine Datei). Umdrehen: Löst eine natürliche 20 oder 1 einen Eintrag der Krit- oder Patzer-Tabelle aus (krit_tabelle, patzer_tabelle am Wurf, ein fester Name des Panels), dreht sich die Würfelkarte beim Landen sichtbar um und zeigt „Kritisch: …“ oder „Patzer: …“; mit „Bewegung reduzieren“ ohne Drehung. Lagerfeuer: Rastet die Gruppe (rd[\"rast\"]), spielt eine eigene Musik-Stimmung „Lagerfeuer“ je Welt (ruhig, 70 Schläge pro Minute, in der Dur-Tonart der Welt, mit Gitarre, Flöte, leiser Handtrommel und warmem Bass), und im Hintergrund knistert das Feuer. Nur ein Kampf geht vor. Der Vorrat hat damit acht Stimmungen je Welt; der"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Speicherplatz steht standardmäßig auf 2400 MB."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: eigene Stimmen für Erzähler und Figuren, klare Meldungen (V01.0.977, Dominik 2026-10-23 „erzähler stimmen und die der npc … generiert je nach stimmung und karakter, auch die des erzählers variieren von geschichte zu geschichte“ und „1-4“, dazu „das besetzt sieht verloren aus und ist auch nicht aussage kräftig“): Kann die Sprachausgabe Stimmen aus einer Beschreibung machen (Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“), liest der Dungeon-Master mit Stimmen aus festen Beschreibungen (dungeon_stimmen.json, dungeon_stimmen.py). Jede neue Geschichte bekommt eine Erzählerstimme ihrer Welt (sechs je Welt und vier für alle, etwa „alter Seebär, rau“ bei Piraten), nie eine der letzten drei Runden desselben Gastgebers; eine Kampagne behält sie von Kapitel zu Kapitel. Der Gastgeber wählt sie unter „🎙 Stimme des Erzählers“ aus der Liste, würfelt mit „🎲 Neu“ eine andere oder hört mit „▶ Probe“ hinein. Die Stimmung der Szene färbt den Erzähler: feste Schlüsselwörter (unheimlich, Kampf, spannend, traurig, fröhlich, ruhig) hängen einen festen Zusatz an, etwa leiser und langsamer im Unheimlichen. Jeder NSC spricht mit seiner eigenen Stimme: Beim ersten Auft"
 },
 {
@@ -6733,7 +6757,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "jetzt vorbereiten“ füllt der Spark alle Felder bis zur Zahl. Es entsteht immer nur ein Stück zur Zeit, über den Platz der Schweren Aufträge (schwer.run(\"musik\")), mit Vorrang für Sprache, und nur, solange kein anderer schwerer Auftrag wartet. Nach 3 Fehlern in Folge ruht der Vorrat eine Stunde. Voll: Je Feld gehen die meistgespielten Stücke zuerst (nie das neue), und der Vorrat bleibt im eingestellten Speicherplatz (Standard 2000 MB). Am Tisch steht eine Leiste über der Erzählung: Stimmung, Stück x von n, Musik an/aus, Geräusche an/aus, Lautstärke und ⏭. Jedes Gerät merkt sich das selbst. Die Musik läuft leise in Schleife (Standard 20 %) und blendet 12 s in das nächste Stück derselben Stimmung über, die letzten 3 nie wieder. Beim Wechsel der Stimmung wird sofort übergeblendet. Ein neuer Akt oder eine neue Stufe spielt einmal ein Sieg-Stück, und beim Vorlesen wird die Musik leiser. Geräusche entstehen im Browser (WebAudio, keine Dateien): Würfel, Tür (Tür oder Tor in der Erzählung), Treffer, Heilung, Münzen (Beute, Handel), Zauber, Stufe und als leiser Hintergrund Regen, Wind, Feuer oder Wasser (Wortliste über Ort und Stimmung, sonst die der Welt). Würfel: Bei jedem Wurf rollt der d"
+"text": "jetzt vorbereiten“ füllt der Spark alle Felder bis zur Zahl. Es entsteht immer nur ein Stück zur Zeit, über den Platz der Schweren Aufträge (schwer.run(\"musik\")), mit Vorrang für Sprache, und nur, solange kein anderer schwerer Auftrag wartet. Nach 3 Fehlern in Folge ruht der Vorrat eine Stunde. Voll: Je Feld gehen die meistgespielten Stücke zuerst (nie das neue), und der Vorrat bleibt im eingestellten Speicherplatz (Standard 2400 MB). Am Tisch steht eine Leiste über der Erzählung: Stimmung, Stück x von n, Musik an/aus, Geräusche an/aus, Lautstärke und ⏭. Jedes Gerät merkt sich das selbst. Die Musik läuft leise in Schleife (Standard 20 %) und blendet 12 s in das nächste Stück derselben Stimmung über, die letzten 3 nie wieder. Beim Wechsel der Stimmung wird sofort übergeblendet. Ein neuer Akt oder eine neue Stufe spielt einmal ein Sieg-Stück, und beim Vorlesen wird die Musik leiser. Geräusche entstehen im Browser (WebAudio, keine Dateien): Würfel, Tür (Tür oder Tor in der Erzählung), Treffer, Heilung, Münzen (Beute, Handel), Zauber, Stufe und als leiser Hintergrund Regen, Wind, Feuer oder Wasser (Wortliste über Ort und Stimmung, sonst die der Welt). Würfel: Bei jedem Wurf rollt der d"
 },
 {
 "lang": "de",
@@ -10446,6 +10470,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gold mit Zweck (Funktionen → Meine Daten → „Gold mit Zweck“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Gold bekommt einen Zweck: In einer Siedlung (Dorf, Stadt, Taverne, Hafen, Basar, Station der Karte) oder beim Händler gibt es feste Angebote."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Echte Würfel am Tisch (Funktionen → Meine Daten → „Echte Würfel am Tisch“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wer am echten Tisch sitzt, wirft seinen eigenen W20."
 },
 {
 "lang": "de",
@@ -19757,6 +19789,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: real dice at the table, fanfare, turning over and campfire (V01.1.080, D&D ideas 5, 1, 2 and 4, Dominik 2026-10-25 \"1-12 you decide the order\"): Real dice (admin switch *Features → AI Dungeon Master → Real dice at the table*, chat.dungeon_echtwuerfel, off by default): the host chooses in the round which seats use their own dice (rd[\"echt\"]). Before the panel rolls a turn's checks, dungeon_echt.real_ask asks these seats: the table shows in big letters \"Throw a d20 for Dexterity against 14\" (two d20 with advantage or disadvantage), below a number pad from 1 to 20, \"↶ Back\", \"Take it\" and 🎤 (the game's speech recognition, number words from eins to zwanzig and one to twenty). The others see \"Mara is throwing at the table …\". The panel takes only whole numbers from 1 to 20, only from the own seat, only for the turn asked, exactly as many as asked and only once (own rate limit dungeonecht). Then it goes on as always, only this seat's d20 is the number given (Hand.d20); luck and heroic courage are still rolled by the panel. The dice receipt says \"real\". If no number comes within 30 seconds (WARTE_S), the panel rolls itself. Never in the car: if a profile is playing from"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " the car right now (dungeon_auto.im_auto), its seat is not asked; a guest has no car. Doors: POST /api/profile/dungeon/{rid}/echt {zug, zahlen} and POST /api/dungeon/echt {code, zug, zahlen}. Live: asked, real throws, rolled by the panel after 30 s, refused (numbers only); log dungeon: echt | frage | n plaetze, dungeon: echt | alle da …, dungeon: echt | rueckfall …, dungeon: echt | eingetragen, dungeon: echt | abgelehnt | …. Fanfare: when the narrator reads the honours of the evening (log kind ehrung), a short, soft fanfare sounds once (WebAudio, no file). Turning over: when a natural 20 or 1 sets off an entry of the critical or fumble table (krit_tabelle, patzer_tabelle on the throw, a fixed name of the panel), the die card visibly turns over on landing and shows \"Critical: …\" or \"Fumble: …\"; with \"reduce motion\" without turning. Campfire: while the group rests (rd[\"rast\"]), an own music mood \"Campfire\" per world plays (calm, 70 beats per minute, in the world's major key, with guitar, flute, soft hand drum and warm bass), and the fire crackles in the background. Only a fight comes first. The store now has eight moods per world; the storage defaults to 2400 MB."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: own voices for narrator and characters, clear messages (V01.0.977, Dominik 2026-10-23 \"narrator voices and the NPCs' … made by mood and character, the narrator's varying from story to story\" and \"1-4\", plus \"the 'besetzt' looks lost and says nothing\"): When the speech output can make voices from a description (Settings → Speech output \"Also serve VoiceDesign\"), the Dungeon Master reads with voices from fixed descriptions (dungeon_stimmen.json, dungeon_stimmen.py). Every new story gets a narrator voice of its world (six per world and four for all, such as \"old sea dog, rough\" for pirates), never one of the same host's last three rounds; a campaign keeps it from chapter to chapter. The host picks it under \"🎙 Narrator's voice\" from the list, rolls another with \"🎲 New\" or listens with \"▶ Sample\". The scene's mood colours the narrator: fixed key words (eerie, battle, tense, sad, cheerful, calm) add a fixed addition, such as quieter and slower when eerie. Every NPC speaks with its own voice: on its first appearance the model only names traits from fixed lists (age, gender, sound, nature), the panel builds the description from fixed English words and keeps it for the ro"
 },
 {
@@ -20333,7 +20381,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " 3 failures in a row the store rests for an hour. Full: per field the most played pieces go first (never the new one), and the store stays within the set storage (default 2000 MB). At the table a bar sits above the story: mood, piece x of n, music on/off, sounds on/off, volume and ⏭. Each device remembers its own choice. The music loops quietly (default 20 %) and fades over 12 s into the next piece of the same mood, never one of the last 3. A change of mood fades over at once. A new act or a new level plays a victory piece once, and the music gets quieter while the narration is read aloud. Sounds are made in the browser (WebAudio, no files): dice, door (door or gate in the narration), hit, healing, coins (loot, trade), spell, level and, quietly in the background, rain, wind, fire or water (word list over place and mood, else the world's own). Dice: on every throw the d20 rolls for 0.8 s and always stops on the panel's number (display only), with a bright sound on 20 and a dull one on 1; with \"reduce motion\" the spin is left out. Guests fetch pieces with their seat code (POST /api/dungeon/musik), profiles with GET /api/profile/dungeon/{rid}/musik/{sid}, only a seat of a running roun"
+"text": " 3 failures in a row the store rests for an hour. Full: per field the most played pieces go first (never the new one), and the store stays within the set storage (default 2400 MB). At the table a bar sits above the story: mood, piece x of n, music on/off, sounds on/off, volume and ⏭. Each device remembers its own choice. The music loops quietly (default 20 %) and fades over 12 s into the next piece of the same mood, never one of the last 3. A change of mood fades over at once. A new act or a new level plays a victory piece once, and the music gets quieter while the narration is read aloud. Sounds are made in the browser (WebAudio, no files): dice, door (door or gate in the narration), hit, healing, coins (loot, trade), spell, level and, quietly in the background, rain, wind, fire or water (word list over place and mood, else the world's own). Dice: on every throw the d20 rolls for 0.8 s and always stops on the panel's number (display only), with a bright sound on 20 and a dull one on 1; with \"reduce motion\" the spin is left out. Guests fetch pieces with their seat code (POST /api/dungeon/musik), profiles with GET /api/profile/dungeon/{rid}/musik/{sid}, only a seat of a running roun"
 },
 {
 "lang": "en",
@@ -23918,6 +23966,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Gold with a purpose (Features → My data → \"Gold with a purpose\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Gold gets a purpose: in a settlement (village, town, tavern, harbour, bazaar, station of the map) or at a merchant there are fixed offers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Real dice at the table (Features → My data → \"Real dice at the table\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Whoever sits at the real table throws their own d20."
 },
 {
 "lang": "en",

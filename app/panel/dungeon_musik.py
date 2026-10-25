@@ -13,7 +13,7 @@ A store of music for the whole Spark, one field per world and mood (STIMMUNGEN),
   admin's „Musik jetzt vorbereiten“ at once); one piece at a time, only while no other heavy job waits;
 - the theme (Dominik 2026-10-24 „mehr mit den Themen zu tun, gerne mit Trommeln und Bässen“): every world and mood
   has its own scene and instruments (THEMA), drums and bass with measure, never hectic; a vault of the map has its own
-  mood (gewoelbe); a piece of an older style (STIL_V) plays until its field has new ones and then goes first;
+  mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older style (STIL_V) plays until its field has new ones and then goes first;
 - full: per field marked, then older, then the most played pieces go first, and the store stays within the megabytes;
 - „👎 Nervt“ (Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“): any
   seat of a running round (a profile or a guest) marks the piece playing; one mark is enough, the piece is never played
@@ -65,13 +65,13 @@ SETTINGS = os.path.join(STATE, "dungeon-musik.json")
 DIR = os.path.join(STATE, "dungeon-musik")
 INDEX = os.path.join(DIR, "index.json")
 
-STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe")
+STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager")
 NAMEN = {"erkunden": ("Erkunden", "Exploring"), "taverne": ("Taverne", "Tavern"), "spannung": ("Spannung", "Tension"),
          "kampf": ("Kampf", "Fight"), "finale": ("Finale", "Finale"), "sieg": ("Sieg", "Victory"),
-         "gewoelbe": ("Gewölbe", "Vault")}
+         "gewoelbe": ("Gewölbe", "Vault"), "lager": ("Lagerfeuer", "Campfire")}
 ZIEL = 12                  # Dominik 1a: pieces per world and mood
 ZIEL_SPANNE = (4, 30)
-MB = 2000                  # the store on the whole Spark (12 × 7 moods × 5 worlds of about 4.5 min at about 1 MB a minute)
+MB = 2400                  # the store on the whole Spark (12 × 8 moods × 5 worlds of about 4.5 min at about 1 MB a minute)
 MB_JE_MINUTE = 1.0         # an MP3 of the music model (for the admin's hint how much the number needs)
 MB_SPANNE = (100, 5000)
 BEREIT = 2                 # pieces the moods of the current and the next act get first (2a; long pieces, two last a while)
@@ -110,6 +110,8 @@ THEMA = {
         "sieg": ("victory, the heroes return to the village", ("horns, strings, festive drums and bass", "lute, fiddle, drums and bass")),
         "gewoelbe": ("deep dungeon vault, torches, dripping stone", ("low drums with echo, deep bass drone and dulcimer",
                      "frame drum in a cave, cello and bass", "distant taiko, harp and dark bass")),
+        "lager": ("campfire under the stars in the wild, rest", ("acoustic guitar, soft flute, gentle hand drum and warm bass",
+                  "lute, harp, brushed frame drum and upright bass")),
     },
     "horror": {
         "erkunden": ("misty graveyard and abandoned village", ("music box, low piano, soft drum and bass drone",
@@ -125,6 +127,8 @@ THEMA = {
         "sieg": ("dawn after the nightmare, relief", ("strings, soft bells, soft drums and warm bass", "piano, cello, soft drums and bass")),
         "gewoelbe": ("catacombs full of bones, echoing", ("low drums with long echo, deep drones and bass",
                      "dripping percussion, cello and sub bass")),
+        "lager": ("small fire in a dark forest, the night is quiet for now", ("acoustic guitar, music box, soft drum and warm bass",
+                  "cello, soft piano, gentle hand drum and bass")),
     },
     "scifi": {
         "erkunden": ("drifting past an alien planet, space station", ("warm synth pads, soft electronic drums and analog bass",
@@ -140,6 +144,8 @@ THEMA = {
         "sieg": ("mission complete, the crew celebrates", ("bright synths, drums and warm bass", "strings, pads, soft drums and bass")),
         "gewoelbe": ("inside an ancient alien vault", ("low electronic drums with echo, deep drones and bass",
                      "metallic percussion, pads and sub bass")),
+        "lager": ("resting at a camp beside the landing craft, alien night sky", ("warm synth pads, soft electronic drums and round bass",
+                  "soft keys, light percussion and warm synth bass")),
     },
     "piraten": {
         "erkunden": ("sailing on open sea, wind in the sails", ("accordion, fiddle, hand drum and upright bass",
@@ -155,6 +161,8 @@ THEMA = {
         "sieg": ("treasure found, cheering crew", ("accordion, fiddle, drums and bass", "horns, strings, festive drums and bass")),
         "gewoelbe": ("treasure cave under the island, dripping water", ("low drums with echo, ocean drum and deep bass",
                      "cello, steel drum and bass drone")),
+        "lager": ("campfire on a lonely beach, waves at night", ("acoustic guitar, concertina, soft hand drum and upright bass",
+                  "fiddle, guitar, gentle frame drum and bass")),
     },
 }
 EIGEN_THEMA = {
@@ -165,16 +173,17 @@ EIGEN_THEMA = {
     "finale": ("the last great battle", ("full orchestra, choir, huge drums and deep bass",)),
     "sieg": ("victory", ("horns, strings, festive drums and bass",)),
     "gewoelbe": ("dark dungeon vault", ("low drums with echo, deep drones and bass",)),
+    "lager": ("campfire at night, rest", ("acoustic guitar, flute, gentle hand drum and warm bass",)),
 }
 # one tempo per mood and one key per world (minor, the tavern and the victory in its relative major): two pieces of a
 # field share key and tempo, so the crossfade between them is smooth (Dominik 2026-10-25 „smoother Übergang …
 # eventuell gleiche Chord-Progression“); tempo at most 110 bpm, a fight included
 TEMPO = {"erkunden": "75 bpm", "taverne": "96 bpm", "spannung": "72 bpm", "kampf": "100 bpm", "finale": "92 bpm",
-         "sieg": "96 bpm", "gewoelbe": "66 bpm"}
+         "sieg": "96 bpm", "gewoelbe": "66 bpm", "lager": "70 bpm"}
 TONART = {"fantasy": ("in D minor", "in F major"), "horror": ("in C minor", "in E flat major"),
           "scifi": ("in A minor", "in C major"), "piraten": ("in E minor", "in G major")}
 TONART_EIGEN = ("in D minor", "in F major")
-DUR = ("taverne", "sieg")
+DUR = ("taverne", "sieg", "lager")
 ENDE = ("instrumental background music for a tabletop role-playing game, steady groove, never hectic, "
         "soft fade-in intro, long gentle fade-out ending, no sudden changes, no vocals, loops well")
 
@@ -339,12 +348,14 @@ def _im_gewoelbe(rd):
 
 
 def mood(rd):
-    """The round's mood now: a fight (5b's kampf or the scene's words) > in a vault > a merchant or a settlement > the finale >
+    """The round's mood now: a fight (5b's kampf or the scene's words) > a rest at the campfire > in a vault > a merchant or a settlement > the finale >
     tension in the scene's words > the act's mood > exploring."""
     sz = rd.get("szene") or {}
     text = f"{sz.get('ort') or ''} {sz.get('stimmung') or ''}"
     if rd.get("kampf") or KAMPF.search(text):
         return "kampf"
+    if rd.get("rast"):                         # resting at the campfire (D&D idea 4, the main thread sets rd["rast"])
+        return "lager"
     if _im_gewoelbe(rd):
         return "gewoelbe"
     if rd.get("markt") or TAVERNE.search(text):
@@ -359,6 +370,8 @@ def mood(rd):
 
 def klang(rd):
     """The ambient sound of the place: a word list over place and mood, else the world's own, else none."""
+    if rd.get("rast"):                         # the campfire crackles while the group rests
+        return "feuer"
     sz = rd.get("szene") or {}
     text = f"{sz.get('ort') or ''} {sz.get('stimmung') or ''}"
     for k, words in KLAENGE:
@@ -391,7 +404,7 @@ def ask_round(rid, rd, s=None):
     welt, plan, i = rd.get("welt"), rd.get("plan"), rd.get("akt", 0)
     now_m = mood(rd)
     nxt = act_mood(plan, i + 1)
-    for m in (now_m, act_mood(plan, i), nxt, "kampf", "sieg", "gewoelbe" if rd.get("karte") else ""):
+    for m in (now_m, act_mood(plan, i), nxt, "kampf", "sieg", "gewoelbe" if rd.get("karte") else "", "lager" if rd.get("rast") else ""):
         if m:
             want(welt, m, min(BEREIT, s["stuecke"]))
     seen = _akte.get(rid)
