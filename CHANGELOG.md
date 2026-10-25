@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.034** · 2026-10-25 · KI-Dungeon-Master: Gegenstände Teil 2, Werkzeuge einfach +1, gut +2 oder meisterlich +3, Tränke, Rollen, Zauber und Werkzeuge günstiger, gewöhnlicher Schmuck ist ein Schatz, ▲/▼ besser als deins und „nicht für deine Klasse“ in Tasche, beim Händler und am Boden
 - **V01.1.033** · 2026-10-25 · KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
 - **V01.1.032** · 2026-10-25 · KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
 - **V01.1.031** · 2026-10-25 · KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍

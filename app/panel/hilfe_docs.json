@@ -5133,6 +5133,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegenstände Teil 2 (V01.1.034, Gegenstands-Punkte 6, 7, 8 und 10 vom 2026-10-24, Dominik „Ja, alles umsetzen“): Werkzeug-Güte: Ein Werkzeug hilft nach seiner Güte (WERKZEUG): gewöhnlich „einfach“ +1, selten „gut“ +2, ab rar „meisterlich“ +3; die Zeile des Werkzeugs nennt Güte und Bonus, der Wurf trägt werkzeug_plus und die Proben-Leiste zeigt genau diesen Teil (vorher fest +2). Preise je Art: Tränke, Rollen, Zauber und Werkzeuge (GUENSTIG) kosten die Hälfte des Seltenheitsfaktors, Waffen, Rüstung und Schmuck den vollen. Schmuck: Gewöhnlicher Schmuck ist ein Schatz ohne Wert; magischer Schmuck (ab selten) hebt immer einen Wert um mindestens +1. ▲/▼: In der Tasche, beim Händler und am Boden steht an jedem tragbaren Gegenstand „▲ besser als deins“, „▼ schwächer als deins“ oder „= wie deins“ gegen das, was der Held dort trägt (der schwächste seiner Plätze; Waffe: mittlerer Schaden und Bonus, Rüstung: Schutz, am Körper doppelt, und Bonus, Schmuck: Bonus, Wirkungen mitgerechnet, unerkannt nur der Grundwert), dazu „✗ nicht für deine Klasse“. Die Zahlen rechnet das Panel (dungeon.strength, compare, Ansicht vergleich)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gegenstände mit festen Wirkungen (V01.1.033, Gegenstands-Punkte 3 und 5 vom 2026-10-24, Dominik „Ja, alles umsetzen“): Seltenheitsbonus: gewöhnlich +0, selten +1, rar +2, episch und legendär +3, nie mehr (BONUS_MAX, check_rules lehnt mehr ab). Wirkungen: Ab „rar“ (EFFEKT_AB) bekommt ein tragbarer Gegenstand eine Wirkung aus effekte, und jede ist eine feste Regel des Panels (dungeon_kampf.WIRKUNG): schaden (nur Waffen) +1W6 Schaden ihrer Art bei jedem Treffer, bei einem kritischen zweimal, durch Resistenz, Immunität und Schwäche des Gegners wie jeder Schaden (Feuer, Kälte, Blitz, Gift, strahlend); lebensraub (Waffen) der Held heilt bei jedem Treffer 1W4; glueck eine natürliche 1 bei Probe oder Angriff wird einmal neu gewürfelt („🍀 Glück“ am Wurf); wachsam (Rüstung und Schmuck) Rüstungsklasse +1; sonst ein Wertbonus (+2 auf einen der sechs Werte). Wirkungen, die das Panel nicht ausrechnen konnte („1× je Szene unsichtbar“, „Atmet unter Wasser“ …), sind gestrichen; ein solcher alter Gegenstand zählt nur noch mit seinem Grundwert. Ein unerkannter Gegenstand wirkt erst, wenn er erkannt ist. check_rules verlangt für jede eigene Wirkung eine wirkung (bei schaden mit art)"
 },
 {
@@ -18078,6 +18086,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: items part 2 (V01.1.034, item points 6, 7, 8 and 10 of 2026-10-24, Dominik \"Ja, alles umsetzen\"): Tool quality: a tool helps by its quality (WERKZEUG): common \"simple\" +1, uncommon \"good\" +2, from rare \"masterwork\" +3; the tool's line names quality and bonus, the roll carries werkzeug_plus and the check bar shows exactly that part (before a fixed +2). Prices per kind: potions, scrolls, spells and tools (GUENSTIG) cost half the rarity's factor, weapons, armour and jewellery the full one. Jewellery: common jewellery is a treasure without a value; magic jewellery (from uncommon) always raises a value by at least +1. ▲/▼: in the bag, at the merchant and on the ground every wearable item shows \"▲ better than yours\", \"▼ weaker than yours\" or \"= like yours\" against what the hero wears there (the weakest of its places; weapon: mean damage and bonus, armour: protection, twice on the body, and bonus, jewellery: bonus, effects counted, unknown only the base), and \"✗ not for your class\". The panel computes the numbers (dungeon.strength, compare, view vergleich)."
 },
 {
 "lang": "en",

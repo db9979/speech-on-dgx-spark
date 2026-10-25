@@ -3243,6 +3243,13 @@
 "titel": "Gegenstände mit festen Wirkungen",
 "text": "A: Regeln anpassen → Gegenstände: ein rarer Gegenstand zeigt eine Zeile wie „Treffer brennen: +1W6 Feuerschaden.“ B: Eine solche Waffe anlegen und im Kampf treffen: am Angriff „davon N Feuer“. C: Eine Lebensraub-Waffe: am Angriff „heilt N“, das Leben steigt. D: Mit einem Glücks-Gegenstand eine 1 würfeln: „🍀 Glück: die 1 neu gewürfelt“. E: Ein Wachsam-Helm: im Heldenbogen Rüstungsklasse +1. F: Ein legendärer Gegenstand zeigt höchstens +3.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P488",
+"v": 1034,
+"titel": "Gegenstände Teil 2",
+"text": "A: Ein Dietrich (gewöhnlich) zeigt „einfach: +1 bei Geschick-Proben“, ein rarer „meisterlich: +3“. B: Eine Probe mit dem Werkzeug: die Proben-Leiste zeigt genau +1, +2 oder +3 als Werkzeug-Teil. C: Beim Händler: ein Trank kostet weniger als eine Waffe derselben Seltenheit. D: Eine bessere Waffe in der Tasche: „▲ besser als deins“, eine schwächere „▼ schwächer als deins“. E: Ein Zweihänder beim Magier: „✗ nicht für deine Klasse“. F: Ein gewöhnlicher Ring hebt keinen Wert.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.034** AI Dungeon Master: items part 2, tools simple +1, good +2 or masterwork +3, potions, scrolls, spells and tools cheaper, common jewellery is a treasure, ▲/▼ better than yours and „not for your class“ in the bag, at the merchant and on the ground
 - **V01.1.033** AI Dungeon Master: items with fixed effects, from „rare“ one effect of the panel (fire and others +1d6, life drain, luck, watchful or a value bonus), rarity bonus at most +3, legendary rarer than epic at every level
 - **V01.1.032** AI Dungeon Master: gold with a purpose, in settlements an inn for the whole group, a smith for broken tools, a lesson +1 until the round ends and rumours of the next place, prices by the group's level
 - **V01.1.031** AI Dungeon Master: heroic courage, once a game evening roll a failed check again or make a hit critical, the other players give a second one with 👍
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.027** AI Dungeon Master: balance bench, the Spark plays fights with the real rules by itself and shows the wins per level and group size under Rules; encounters are measured to it, at "medium" a group wins 70 to 90 %, a lone hero no longer only every second fight
 - **V01.1.026** AI Dungeon Master: fight part 2, weapons with properties (light, finesse, reach, thrown, heavy, versatile), damage kinds with weakness, resistance and immunity, states from hits with a save, real bosses with a second phase
 - **V01.1.025** AI Dungeon Master: SRD foes with damage type, resistance, immunity, vulnerability and boss, SRD weapons with damage type and properties (combat part 2, data)
-- **V01.1.024** AI Dungeon Master: every narration keeps its place, after a change of place the model only gets the new place's story so far, characters from elsewhere no longer just turn up
 
 
 

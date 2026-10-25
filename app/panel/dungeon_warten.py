@@ -143,7 +143,7 @@ def step(rd, s, wuerfe=None, rng=None):
         w["wt"] = time.time()
         w["w"] = [{"pid": x.get("pid", ""), "name": x["name"], "wert": x["wert"], "w": x["w"], "bonus": x.get("bonus", 0), "gesamt": x["gesamt"], "schwer": x["schwer"],
                    "ok": bool(x["ok"]), "vt": x.get("vt", ""), "ws": list(x.get("ws") or [])[:2], "belastet": bool(x.get("belastet")),
-                   "werkzeug": x.get("werkzeug", ""), "wofuer": x.get("wofuer", "")} for x in wuerfe]
+                   "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", "")} for x in wuerfe]
 
 
 def throw(rd, pid):
@@ -161,7 +161,7 @@ def _die(x, pid, now, wt):
     ich = x.get("pid") == pid
     offen = ich or x.get("geworfen") or now - (wt or 0) > WURF_S
     out = {"name": x["name"], "wert": x["wert"], "schwer": x["schwer"], "ich": ich, "geworfen": bool(x.get("geworfen")) or not ich and offen,
-           "werkzeug": x.get("werkzeug", ""), "wofuer": x.get("wofuer", "")}
+           "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", "")}
     if offen:
         out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]),
                    vt=x.get("vt", ""), ws=x.get("ws") or [], belastet=bool(x.get("belastet")))

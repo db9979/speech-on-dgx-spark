@@ -20,10 +20,10 @@ function dmWDie(v,x){const W=v.werte||{},k=dmWKey(v,x),wert=esc(W[x.wert]||x.wer
   if(!('w' in x))return dmPK(v,x,'<span class="dm-d20 dm-wdreht">?</span>');
   const el=Date.now()-(DMWT.landT[k]||0),land=el<1300,fun=land&&x.w===20?`<span class="dm-funken" aria-hidden="true">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${30+(i%3)*14}px;animation-delay:${(-el/1000).toFixed(2)}s"></i>`).join('')}</span>`:'';
   if(land)setTimeout(()=>{if(Date.now()-DMWT.landT[k]>=1300)(v.mode==='g'?dgDraw:dmDraw)()},1350-el);
-  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland':''}`,` data-dmwkey="${esc(k)}"`)+dmLeiste(x,v.werkzeug_bonus,el)}
+  return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland':''}`,` data-dmwkey="${esc(k)}"`)+dmLeiste(x,el)}
 const DMD20='<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
 // the bar of a check: the die, the bonus (with the tool's part) up to the red line of the difficulty
-function dmLeiste(x,wz,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i=>an?` animation-delay:${([0,.35,.6][i]-el/1000).toFixed(2)}s`:'';const tool=x.werkzeug?(wz||0):0,rest=x.bonus-tool,max=Math.max(20,x.schwer,x.gesamt)+2,pc=n=>(100*Math.max(0,n)/max).toFixed(1)+'%';
+function dmLeiste(x,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i=>an?` animation-delay:${([0,.35,.6][i]-el/1000).toFixed(2)}s`:'';const tool=x.werkzeug?(x.werkzeug_plus||0):0,rest=x.bonus-tool,max=Math.max(20,x.schwer,x.gesamt)+2,pc=n=>(100*Math.max(0,n)/max).toFixed(1)+'%';
   const seg=rest>=0?`<em class="dm-lw" style="width:${pc(x.w)};${dl(0)}"></em><em class="dm-lb" style="width:${pc(rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`
     :`<em class="dm-lw" style="width:${pc(x.gesamt-tool)};${dl(0)}"></em><em class="dm-lm" style="width:${pc(-rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`;
   const knapp=Math.abs(x.gesamt-x.schwer)<=1,nat=x.w===20?t('natürliche 20: immer geschafft','natural 20: always a success'):x.w===1?t('natürliche 1: immer daneben','natural 1: always a miss'):'';

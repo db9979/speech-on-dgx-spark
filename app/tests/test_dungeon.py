@@ -2041,7 +2041,9 @@ class Explained(Equipment):
         self.assertEqual(next(x for x in self.r["gegenstaende"] if x["id"] == "dietrich")["art"], "werkzeug")
         it = dungeon.item_view(self.r, {"i": "x", "id": "dietrich", "s": "gewoehnlich"}, "de")
         self.assertIn("Schlösser", it["info"])
-        self.assertIn(f"+{dungeon.WERKZEUG} bei Geschick-Proben", " ".join(it["zeilen"]))
+        self.assertIn(f"einfach: +{dungeon.WERKZEUG[0]} bei Geschick-Proben", " ".join(it["zeilen"]))   # a tool's quality (Gegenstands-Punkt 7)
+        it = dungeon.item_view(self.r, {"i": "x", "id": "dietrich", "s": "rar"}, "de")
+        self.assertIn(f"meisterlich: +{dungeon.WERKZEUG[2]} bei Geschick-Proben", " ".join(it["zeilen"]))
         self.assertIn("never breaks", " ".join(dungeon.item_view(self.r, {"i": "y", "id": "kompass", "s": "gewoehnlich"}, "en")["zeilen"]))
 
     def test_the_rules_refuse_a_wrong_tool(self):
@@ -2063,7 +2065,7 @@ class Explained(Equipment):
         base = dungeon.total(self.r, h, "geschick")
         rd["offen"] = {self.host: {"text": "Ich knacke das Schloss mit meinem Dietrich.", "t": 0}}
         w = dungeon.roll(self.r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10}], _Die(12))[0]
-        self.assertEqual((w["bonus"], w["werkzeug"]), (base + dungeon.WERKZEUG, "Dietrich"))
+        self.assertEqual((w["bonus"], w["werkzeug"], w["werkzeug_plus"]), (base + dungeon.WERKZEUG[1], "Dietrich", dungeon.WERKZEUG[1]))   # „selten“: gut
         self.assertNotIn("kaputt", w)
         w = dungeon.roll(self.r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10}], _Die(12))[0]
         self.assertNotIn("werkzeug", w)                                  # the wrong value: no help
@@ -3094,7 +3096,7 @@ class Waiting(BetterStories):
             rd["dm"] = "denkt"
             dungeon.warten.start(rd, random.Random(1))
             dungeon.warten.step(rd, "wuerfeln", [{"pid": self.gp, "name": "Bela", "wert": "geschick", "w": 20, "bonus": 2, "gesamt": 22,
-                                                   "schwer": 12, "ok": True, "werkzeug": "Kletterseil"}])
+                                                   "schwer": 12, "ok": True, "werkzeug": "Kletterseil", "werkzeug_plus": 2}])
         with dungeon._lock:
             d = dungeon._read()
             put(d["runden"][self.rid])
@@ -3105,7 +3107,7 @@ class Waiting(BetterStories):
         self.assertEqual((own["ich"], own["w"], own["geworfen"], own["werkzeug"]), (True, 20, False, "Kletterseil"))
         other = dungeon.view(self.rid, self.host)["warten"]["w"][0]
         self.assertEqual((other["ich"], "w" in other, "gesamt" in other), (False, False, False))   # no peeking
-        self.assertEqual(dungeon.view(self.rid, self.host)["werkzeug_bonus"], dungeon.WERKZEUG)
+        self.assertEqual(own["werkzeug_plus"], 2)                                  # the tool's own quality, as rolled
         g = self.v.post("/api/dungeon/wurf", json={"code": self.code})
         self.assertEqual(g.status_code, 200, g.text)
         self.assertTrue(g.json()["warten"]["w"][0]["geworfen"])
@@ -4902,6 +4904,39 @@ class Fight(Turns):
         armour = next(c["id"] for c in r["gegenstaende"] if c["art"] == "ruestung" and "kopf" in dungeon.places(r, c) and "seltenheit" not in c)
         h["an"]["kopf"] = dict(dungeon.item(r, armour, "gewoehnlich"), eff="wachsam")
         self.assertEqual(kampf.rk(dungeon, r, h), ac + dungeon._c(r, h["an"]["kopf"]).get("schutz", 0) + 1)
+
+    def test_item_prices_jewellery_and_better_than_yours(self):
+        """Gegenstands-Punkte 6, 8 and 10 of 2026-10-24: potions, scrolls, spells and tools by half the rarity's price
+        factor; a common piece of jewellery is a treasure, a magic one raises a value by at least +1; the bag, the
+        merchant and the ground show ▲/▼ against what the hero wears there and whether it fits the class."""
+        r = dungeon.rules()
+        sel = dungeon._by(r, "seltenheit")
+        for art in ("trank", "waffe"):
+            c = next(x for x in r["gegenstaende"] if x["art"] == art and "seltenheit" not in x)
+            f = sel["rar"]["preis"]
+            want = c.get("preis", r["preise"][art]) * (max(1, f // 2) if art in dungeon.GUENSTIG else f)
+            self.assertEqual(dungeon.price(r, {"id": c["id"], "s": "rar"}), want, art)
+        ring = next(x["id"] for x in r["gegenstaende"] if x["art"] == "schmuck" and "seltenheit" not in x and not x.get("wert"))
+        self.assertNotIn("wert", dungeon.item(r, ring, "gewoehnlich", random.Random(1)))     # a treasure
+        magic = dungeon.item(r, ring, "selten", random.Random(1))
+        self.assertTrue(magic["wert"] and magic["bonus"] >= 1)
+        rd, _ = self.encounter()
+        h = rd["plaetze"][self.host]["held"]
+        cur = h["an"]["haupthand"]
+        weak = dict(cur, i="w1", bonus=cur.get("bonus", 0) - 1, u=False)
+        strong = dict(cur, i="w2", bonus=cur.get("bonus", 0) + 2, u=False)
+        self.assertEqual(dungeon.compare(r, h, strong)["besser"], 1)
+        self.assertEqual(dungeon.compare(r, h, weak)["besser"], -1)
+        self.assertEqual(dungeon.compare(r, h, dict(cur, i="w3"))["besser"], 0)
+        staff = next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and not dungeon.fits(r, h, c))
+        self.assertFalse(dungeon.compare(r, h, dungeon.item(r, staff, "gewoehnlich"))["passt"])
+        self.assertIsNone(dungeon.compare(r, h, dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "trank"), "gewoehnlich")))
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.host]["held"]["tasche"].append(strong)
+            dungeon._write(d)
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual(v["vergleich"]["w2"], {"besser": 1, "passt": True})
 
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()

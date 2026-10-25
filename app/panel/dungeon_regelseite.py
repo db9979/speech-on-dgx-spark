@@ -69,7 +69,7 @@ def line(teil, x, r, li):
             sw = next((_name(v, li)[:3].upper() for v in r["werte"] if v["id"] == x["segen"].get("wert")), "")
             out.append(f"{'Blessing' if en else 'Segen'} {sw} +{x['segen'].get('bonus', 0)} × {x['segen'].get('zuege', 1)}".replace("  ", " "))
         if isinstance(x.get("hilft"), dict):
-            out.append(("Tool +" if en else "Werkzeug +") + str(dungeon.WERKZEUG))
+            out.append(("Tool +" if en else "Werkzeug +") + "/".join(str(n) for n in dungeon.WERKZEUG))
         if "preis" in x:
             out.append(f"{x['preis']} {'gold' if en else 'Gold'}")
         return " · ".join(out)

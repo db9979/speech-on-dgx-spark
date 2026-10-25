@@ -448,7 +448,11 @@ async function dmDingFill(w,mode){for(const im of w.querySelectorAll('img[data-d
     try{const r=await /*raw: a guest seat's picture as a blob, api() would open the login on a 401*/fetch('/api/dungeon/ding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,name:n})});
       if(!r.ok){delete DMI[key];continue}DMI[key]=URL.createObjectURL(await r.blob())}catch(e){delete DMI[key];continue}
     document.querySelectorAll(`#dgcard img[data-dmdbild="${n}"]`).forEach(x=>x.src=DMI[key])}}
-function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"${it.i?` data-dmi="${esc(it.i)}"`:''}><div>${dmDing(it)}<b>${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.fund?`<small class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</small>`:''}${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(dmFx).join(' · ')}</small>${acts||''}</div>`}
+// ▲/▼ against what the hero wears and „passt“ for the class (Gegenstands-Punkt 10), from the panel's numbers of this view
+let DMCMP={};
+function dmCmp(it){const c=it&&DMCMP[it.i];if(!c)return '';
+  return ` <span class="dm-cmp ${c.besser>0?'up':c.besser<0?'dn':'eq'}">${c.besser>0?'▲ '+esc(t('besser als deins','better than yours')):c.besser<0?'▼ '+esc(t('schwächer als deins','weaker than yours')):'= '+esc(t('wie deins','like yours'))}</span>${c.passt?'':` <span class="dm-cmp no">✗ ${esc(t('nicht für deine Klasse','not for your class'))}</span>`}`}
+function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"${it.i?` data-dmi="${esc(it.i)}"`:''}><div>${dmDing(it)}<b>${esc(it.name)}</b>${dmCmp(it)}${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.fund?`<small class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</small>`:''}${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(dmFx).join(' · ')}</small>${acts||''}</div>`}
 // the prologue's hold (Dominik 2026-10-24 „keinerlei anhalts punkt was zu tun ist“): why each hero is here, and
 // „Was ihr tun könnt“ as buttons that write the possibility into the own field (own ideas go on as before)
 function dmProlog(v,e){const nm=pid=>((v.plaetze||[]).find(p=>p.pid===pid)||{}).name||'',hk=Object.entries(e.haken||{}).filter(([p])=>nm(p));
@@ -466,7 +470,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='dm'){const my=(v.daumen||{})[String(e.n||1)]||0,th=v.ich?`<span class="dm-thumbs">${[[1,'👍',t('Gut erzählt','Well told')],[-1,'👎',t('Nicht so gut','Not so good')]].map(([g,i,l])=>`<button type="button" class="ic-ib${my===g?' on':''}" data-dmdaumen="${g}" data-zug="${e.n||1}" title="${esc(l)}" aria-label="${esc(l)}" aria-pressed="${my===g}">${i}</button>`).join('')}</span>`:'';
     return `<div class="dm-dm"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${(e.npc||[]).filter(n=>!n.im_text).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}${e.prolog?dmProlog(v,e):''}</div>`}
   if(e.art==='aktion')return `<div class="dm-act">${dmAv(v.mode,v,Object.assign({name:e.name},(v.plaetze||[]).find(p=>p.pid===e.pid)||{}),col?col(e.pid):0)}<div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div>${dmLob(v,e)}${dmHide(v,'aktion',e.n,e.pid)}</div>`;
-  if(e.art==='wurf')return dmPK(v,e,`<span class="dm-d20">${e.w}</span>`)+dmLeiste(e,v.werkzeug_bonus);
+  if(e.art==='wurf')return dmPK(v,e,`<span class="dm-d20">${e.w}</span>`)+dmLeiste(e);
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})${e.weniger?' · '+esc(t(e.weniger+' weniger durch Eisenhaut',e.weniger+' less by iron skin')):''}${e.von?' · '+esc(t('von ','by ')+e.von):''}</div>`;
   if(e.art==='begegnung')return dmBegegnung(e);
   if(e.art==='angriff')return dmAngriff(e,W);
@@ -581,7 +585,7 @@ function dmAngriff(e,W){if(e.kann_nicht)return `<div class="dm-wurf bad">⛓ ${e
 function dmKampf(v){const k=v.kampf;if(!k)return '';
   return `<div class="dm-kampf" role="status"><div class="dm-n">⚔ ${esc(t('Kampf','Fight'))} <span class="pill" data-gefahr="${esc(k.gefahr)}">${esc(DMGEF()[k.gefahr]||k.gefahr)}</span> <small class="mut">${esc(t(k.stehen+' stehen noch',k.stehen+' still standing'))}</small></div>
     <div class="dm-kgs">${k.gegner.map(g=>`<div class="dm-kg${g.aus?' aus':''}" data-dmgeg="kg:${esc(g.k)}" role="button" tabindex="0">${dmDing(g)}<div><b>${g.boss?'👑 ':''}${esc(g.name)}</b>${g.aus?`<small class="mut">${esc(g.aus==='besiegt'?t('besiegt','defeated'):t('geflohen','fled'))}</small>`:`<span class="dm-line"><span></span><span>${g.leben} / ${g.max}</span></span>${dmBar(g.leben,g.max,g.leben*3<g.max?'low':'')}`}</div></div>`).join('')}</div></div>`}
-function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
+function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
   const st=v.status==='ende'?t('beendet','ended'):v.dm?t('der Dungeon-Master erzählt …','the Dungeon Master is narrating …'):v.pause?t('Pause','paused'):'';
   const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const seats=v.plaetze.filter(p=>!p.frei),col=pid=>Math.max(0,seats.findIndex(p=>p.pid===pid))%5;

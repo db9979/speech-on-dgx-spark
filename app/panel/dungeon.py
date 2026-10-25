@@ -321,7 +321,10 @@ EIGENE_MAX = 200          # entries per list in the admin's own file
 ZIELE = ("selbst", "gruppe")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
 INFO_MAX = 160            # the fixed description of a catalog item or value (info): what it does, what it helps with
-WERKZEUG = 2              # a tool (hilft) the action names adds this to a fitting check; on a natural 1 it breaks
+WERKZEUG = (1, 2, 3)      # a tool (hilft) the action names adds this to a fitting check by its quality (Gegenstands-Punkt 7):
+                          # einfach (common), gut (uncommon), meisterlich (rare and above); on a natural 1 it breaks
+GUETE = (("einfach", "simple"), ("gut", "good"), ("meisterlich", "masterwork"))
+GUENSTIG = ("trank", "rolle", "zauber", "werkzeug")   # used up or a helper: half the rarity's price factor (Gegenstands-Punkt 6)
 WERT_MAX = 20             # a value's score at most (as in D&D); every level's point raises one by 1
 KON = "konstitution"     # the value that adds to life (its bonus on every level, as in D&D)
 _lock = threading.RLock()   # _end and keep_hero run inside it
@@ -693,7 +696,7 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     own_name(r, it)
     if c["art"] == "waffe":
         it["wert"] = c["wert"]
-    elif c["art"] == "schmuck":
+    elif c["art"] == "schmuck" and s["bonus"]:     # magic jewellery always raises a value, at least +1 (Gegenstands-Punkt 8)
         it["wert"] = c.get("wert") or rng.choice(werte)
     rank = [x["id"] for x in r["seltenheit"]].index(s["id"])
     pool = [e for e in r["effekte"] if not e.get("nur") or c["art"] in e["nur"]]
@@ -1268,9 +1271,45 @@ def pay_ep(r, rd, rid):
 
 
 def price(r, it):
-    """What an item is worth by the rules (never the model): the art's price or its own, times its rarity, per piece."""
+    """What an item is worth by the rules (never the model): the art's price or its own, times its rarity, per piece;
+    potions, scrolls, spells and tools by half the rarity's factor (GUENSTIG)."""
     c, s = _c(r, it), _by(r, "seltenheit").get(it["s"]) or r["seltenheit"][0]
-    return max(1, c.get("preis", r["preise"][c["art"]]) * s.get("preis", 1))
+    f = s.get("preis", 1)
+    return max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f))
+
+
+def strength(r, it):
+    """How strong a wearable piece is by fixed numbers, for ▲/▼ (Gegenstands-Punkt 10): a weapon its mean damage and
+    bonus (+3.5 for a burning effect), armour its protection (twice on the body, as in the armour class) and bonus
+    (+1 watchful), jewellery its bonus; an unknown piece only its base. None for anything not worn."""
+    c = _c(r, it)
+    b = 0 if it.get("u") else it.get("bonus", 0)
+    e = None if it.get("u") else _by(r, "effekte").get(it.get("eff"))
+    w = (e or {}).get("wirkung")
+    if c["art"] == "waffe":
+        return (c["schaden"] + 1) / 2 + b + ((kampf.WIRKUNG_W + 1) / 2 if w == "schaden" else 0)
+    if c["art"] == "ruestung":
+        return (c.get("schutz", 0) + b) * (2 if places(r, c)[0] == "koerper" else 1) + (1 if w == "wachsam" else 0)
+    if c["art"] == "schmuck":
+        return b
+    return None
+
+
+def compare(r, h, it):
+    """{besser: 1 stronger than what the hero wears there (the weakest of its places), -1 weaker, 0 the same, passt: for
+    the hero's class} or None for an item not worn."""
+    c = _c(r, it)
+    n = strength(r, it)
+    if n is None or not places(r, c):
+        return None
+    cur = min(strength(r, h["an"][k]) if h["an"].get(k) else 0 for k in places(r, c))
+    return {"besser": (n > cur) - (n < cur), "passt": fits(r, h, c)}
+
+
+def tool_plus(r, it):
+    """A tool's bonus by its quality: the rank of its rarity, at most the last of WERKZEUG."""
+    rank = [x["id"] for x in r["seltenheit"]].index(it["s"]) if it.get("s") in [x["id"] for x in r["seltenheit"]] else 0
+    return WERKZEUG[min(rank, len(WERKZEUG) - 1)]
 
 
 def rabatt(r, h):
@@ -1321,7 +1360,7 @@ def item_view(r, it, lang):
     if e:
         zeilen.append(e["satz"][li])
     if c.get("hilft"):
-        zeilen.append(tool_line(r, c, li))
+        zeilen.append(tool_line(r, c, li, it))
     name = it.get("eigen") or c["name"][li]
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
             "satz": "" if u else it.get("satz", ""), "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
@@ -1330,10 +1369,12 @@ def item_view(r, it, lang):
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
 
 
-def tool_line(r, c, li):
-    """What a tool does at the table, in one fixed line."""
+def tool_line(r, c, li, it):
+    """What a tool does at the table, in one fixed line, with its quality."""
     w = " / ".join(_by(r, "werte")[x]["name"][li] for x in c["hilft"]["werte"])
-    t = (f"+{WERKZEUG} bei {w}-Proben, wenn deine Aktion es nennt" if not li else f"+{WERKZEUG} on {w} checks when your action names it")
+    n = tool_plus(r, it)
+    g = GUETE[WERKZEUG.index(n)][li]
+    t = (f"{g}: +{n} bei {w}-Proben, wenn deine Aktion es nennt" if not li else f"{g}: +{n} on {w} checks when your action names it")
     return t + ((" · geht nie kaputt" if not li else " · never breaks") if c["hilft"].get("fest")
                 else (" · bricht bei einer 1" if not li else " · breaks on a 1"))
 
@@ -2834,7 +2875,7 @@ def roll(r, rd, proben, rng=None):
             vt = "" if vt == "vorteil" else "nachteil"
         vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
-        bonus = total(r, h, p["wert"]) + (WERKZEUG if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
+        bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
         extra = {"belastet": True} if last else {}
         for _ in range(2):
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
@@ -2853,6 +2894,7 @@ def roll(r, rd, proben, rng=None):
         if tool:
             c = _c(r, tool)
             extra["werkzeug"] = c["name"][1 if rd["lang"] == "en" else 0]
+            extra["werkzeug_plus"] = tool_plus(r, tool)
             if w == 1 and not c["hilft"].get("fest"):   # a natural 1 breaks the tool (Dominik 2026-10-23 „1“), apply takes it
                 extra["kaputt"] = tool["i"]
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
@@ -3016,7 +3058,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer", "mut", "glueck") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
@@ -4387,10 +4429,12 @@ def view(rid, pid, now=None):
     out["kampf"] = kampf.view(_me, r, rd)
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
     out["siedlung"] = gold.view(_me, r, rd, pid)
+    mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
+    near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
+    out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
-    out["werkzeug_bonus"] = WERKZEUG
     import dungeon_dingbild
     import dungeon_musik
     out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
