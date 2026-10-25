@@ -539,6 +539,72 @@ class Vaults(unittest.TestCase):
         self.assertNotIn("x", rd["raum_gegner"]["ids"])
         self.assertIsNone(v.get("verlassen"))
 
+    def locked_vault(self):
+        """A vault with a locked door (SCHLOSS forced, „Quest-Gegenstände“ on)."""
+        for seed in range(200):
+            rd = copy.deepcopy(self.rd)
+            v = K.enter_vault(self.r, rd, random.Random(seed))
+            if v.get("schloss"):
+                return rd, v
+        self.fail("no locked vault")
+
+    def test_a_locked_door_opens_only_with_its_key(self):
+        """Key doors (Punkt 15 of 2026-10-24): the key lies in a room reachable without the door, the door is on the
+        way to the master; it opens only when an action names the key and the group carries it, the key is used up."""
+        with mock.patch("dungeon_quest.on", return_value=True), mock.patch.object(K, "SCHLOSS", 100):
+            rd, v = self.locked_vault()
+            s = v["schloss"]
+            boss = next(j for j, rm in enumerate(v["raeume"]) if rm["art"] == "boss")
+            dist, back, _ = K._hops(len(v["raeume"]), v["gaenge"], 0)
+            weg = K._path(back, 0, boss)
+            self.assertTrue(s["a"] in weg and s["b"] in weg and s["zu"])
+            x = rd["quest"][s["q"]]
+            self.assertEqual(x["von"], "karte")
+            j = int(x["ort"].split("-r")[1]) - 1
+            frei, _, _ = K._hops(len(v["raeume"]), [e for e in v["gaenge"] if sorted(e) != [s["a"], s["b"]]], 0)
+            self.assertIn(j, frei)                                       # reachable without the locked door
+            self.assertNotIn(j, (0, boss))
+            self.assertEqual(x["name"], list(K.SCHLUESSEL["fantasy"][0]))
+            near = s["a"] if dist[s["a"]] < dist[s["b"]] else s["b"]
+            far = s["b"] if near == s["a"] else s["a"]
+            v["hier"] = near
+            v["besucht"] = sorted(set(v["besucht"]) | set(weg[:weg.index(near) + 1]))
+            for rm in v["raeume"]:
+                rm["fertig"] = True                                      # nothing else shuts the way
+            self.assertNotIn(far, K._ways_in(v))
+            self.assertEqual(K.quest_orte(rd), [f"gw{rd['karte']['drin']}-r{near + 1}"])
+            view = K.view(self.r, rd)["gewoelbe"]
+            self.assertIn([f"r{s['a'] + 1}", f"r{s['b'] + 1}"], [g[:2] for g in view["gaenge"] if g[3] == 1])
+            self.assertTrue(any(w.get("zu") for w in K.view(self.r, rd)["von_hier"]))
+            self.assertIn("irgendwo im Gewölbe", K.view(self.r, rd)["zu"])
+            f = next(w for w in K.facts(self.r, rd)["wege"] if w.get("verschlossen"))
+            self.assertEqual((f["id"], f["schluessel"]), (f"r{far + 1}", "irgendwo im Gewölbe"))
+            rd["offen"] = {"pa": {"text": "Ich probiere den Eisenschlüssel."}}
+            with mock.patch("builtins.print") as out:                    # named, but nobody carries it
+                K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
+            said = [c.args[0] for c in out.call_args_list]
+            self.assertIn("dungeon: gewoelbe | schloss | ohne schluessel", said)
+            self.assertIn("dungeon: karte | verworfen | verschlossen", said)
+            self.assertEqual(v["hier"], near)
+            x.update(wer="pa", hid=rd["plaetze"]["pa"]["held"].get("hid"))
+            self.assertIn("Eisenschlüssel", K.view(self.r, rd)["zu"])
+            rd["offen"] = {"pa": {"text": "Wir gehen weiter."}}          # carried, but not named
+            K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
+            self.assertTrue(s["zu"])
+            rd["offen"] = {"pa": {"text": "Ich schließe mit dem Eisenschlüssel auf."}}
+            K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
+            self.assertFalse(s["zu"])
+            self.assertEqual(v["hier"], far)                             # opened and gone through in one turn
+            self.assertNotIn(s["q"], rd["quest"])
+            self.assertIn(s["q"], rd["quest_weg"])
+            rd, v = self.locked_vault()
+        rd["offen"] = {}
+        K.step(self.r, rd, {"ort_id": "", "erfolg": []}, {}, random.Random(3))   # „Quest-Gegenstände“ off: no lock
+        self.assertFalse(v["schloss"]["zu"])
+        with mock.patch.object(K, "SCHLOSS", 100):
+            v = K.enter_vault(self.r, dict(copy.deepcopy(self.rd), karte=copy.deepcopy(self.rd["karte"])), random.Random(1))
+        self.assertNotIn("schloss", v)                                  # off: never rolled
+
     def test_encounters_only_on_a_new_way(self):
         r = self.r
         seen = set()

@@ -3460,6 +3460,13 @@
 "titel": "Quest-Gegenstände",
 "text": "A: Funktionen → KI-Dungeon-Master → Quest-Gegenstände an. Im Reiter „Regeln“ bei einer Geschichte im ersten Akt „Besonderes Ding“ auf „Messingschlüssel“ setzen, speichern und eine Runde damit beginnen. B: Als Gastgeber im Heldenbogen, Reiter „Tasche“, steht unter „✦ Besondere Dinge“ der Schlüssel mit „liegt in der Szene · noch nicht erzählt“; auf dem Gast-Gerät steht nichts davon. C: In der Aktion „Ich nehme den Messingschlüssel“ schreiben: nach dem Zug steht im Verlauf „✦ Arvid nimmt Messingschlüssel“, er steht im Heldenbogen ohne Gewicht und ohne Verkaufen. D: „Geben …“ an den Gast: beim Gast steht er unter „✦ Besondere Dinge“; dort „Hinlegen“: er liegt unter „Liegt hier“ und lässt sich aufheben. E: Ein paar Züge spielen, bis die Erzählung einen neuen Schlüssel oder eine Karte findet: der Fund steht mit ✦ beim Finder. F: Schalter aus: keine besonderen Dinge mehr zu sehen. G: Zustand → Überblick nennt Quest-Gegenstände und heute genommene.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P519",
+"v": 1070,
+"titel": "Dungeon-Master: Schlüsseltüren",
+"text": "Voraussetzung: Funktionen → KI-Dungeon-Master → Quest-Gegenstände an. A: Eine Runde mit Karte, mehrere Gewölbe würfeln und betreten, bis eines eine Tür mit rotem Schloss auf dem Plan hat (etwa jedes zweite). B: Vor der Tür: „🔒 verschlossene Tür“ unter „Von hier aus“, über der Karte „Ein Schlüssel muss irgendwo im Gewölbe liegen.“ C: Einen Gang durch die Tür wählen: die Gruppe bleibt stehen. D: Den Schlüssel (z. B. Eisenschlüssel) in einem anderen Raum finden und in der Aktion nennen, dann trägt ihn ein Held. E: Zurück zur Tür, in der Aktion „Ich schließe mit dem Eisenschlüssel auf“: die Tür ist offen, die Gruppe geht hindurch, der Schlüssel ist verbraucht. F: Quest-Gegenstände aus: keine verschlossenen Türen.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

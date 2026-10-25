@@ -82,6 +82,13 @@ ALTAR = (1, 3)            # an altar's blessing: bonus 1 for 3 turns
 VERSUCHE = 3              # turns at a riddle before the hint is shown
 NEU_NACH = 6              # steps on the map after leaving a vault until it has new dwellers (Tabletop-Idee 7)
 NEU_ARTEN = ("waechter", "boss", "falle", "schatz")   # what comes back: guardians, the master, traps, a chest
+SCHLOSS = 50              # percent of vaults (5 rooms and more, „Quest-Gegenstände“ on) with a locked door and its key
+# the key of a locked door by world (a quest thing, dungeon_quest): fixed names, the first one no other quest thing has;
+# one word in German, so an action names it in every case („den Eisenschlüssel“, dungeon_quest.named)
+SCHLUESSEL = {"fantasy": (("Eisenschlüssel", "Iron key"), ("Bronzeschlüssel", "Bronze key"), ("Runensiegel", "Rune seal")),
+              "horror": (("Knochenschlüssel", "Bone key"), ("Kirchenschlüssel", "Church key"), ("Totenschlüssel", "Dead man's key")),
+              "piraten": (("Messingschlüssel", "Brass key"), ("Kapitänssiegel", "Captain's seal"), ("Kistenschlüssel", "Chest key")),
+              "scifi": (("Zugangskarte", "Access card"), ("Codechip", "Code chip"), ("Wartungsschlüssel", "Service key"))}
 NAME_MAX = 40
 SATZ_MAX = 160
 FRAGE_MAX = 240
@@ -106,11 +113,12 @@ AUFGABE = {
           "Wegs aus karte.wege und erzähle den Weg dorthin; andere Orte gibt es nicht, erfinde keine. Bleibt sie, lass "
           "ort_id leer. Nenne Orte und Räume nur mit ihren Namen aus der Karte. Steht in karte eine Falle, ein Rätsel "
           "oder Gegner, erzähle, was das Panel entschieden hat (Gegner kommen nur aus dem Angebot); die Lösung eines Rätsels kennst du nicht, verrate "
-          "keine.",
+          "keine. Eine verschlossene Tür öffnet nur das Panel.",
     "en": "The panel keeps the map (karte in the facts). When the group moves on, set szene.ort_id to the id of a way "
           "from karte.wege and narrate the way there; there are no other places, invent none. When it stays, leave "
           "ort_id empty. Name places and rooms only by their names from the map. When karte holds a trap, a riddle or "
-          "foes, narrate what the panel decided (foes come only from the offer); you do not know a riddle's answer, give none away."}
+          "foes, narrate what the panel decided (foes come only from the offer); you do not know a riddle's answer, give none away. "
+          "Only the panel opens a locked door."}
 
 
 # ---------------------------------------------------------------- the tables (shipped; the admin's own on top)
@@ -470,7 +478,98 @@ def roll_vault(r, rd, name, rng, form=""):
             qused.add(room["raetsel"])
         raeume.append(room)
     print(f"dungeon: gewoelbe | neu | {form} | {n} raeume", flush=True)
-    return {"name": name, "form": form, "raeume": raeume, "gaenge": [list(e) for e in sorted(gaenge)], "hier": 0, "besucht": [0], "gegangen": []}
+    v = {"name": name, "form": form, "raeume": raeume, "gaenge": [list(e) for e in sorted(gaenge)], "hier": 0, "besucht": [0], "gegangen": []}
+    _lock(rd, v, boss, rng)
+    return v
+
+
+def _lock(rd, v, boss, rng):
+    """Sometimes (SCHLOSS percent, only while „Quest-Gegenstände“ is on for the round) a door on the way to the master is
+    locked and its key (a quest thing, dungeon.quest_legen) lies in a room reachable without that door, off the way when
+    there is one: v["schloss"] = {a, b, q, zu}. The door opens only when an action names the key and the group carries
+    it (step); the key is used up."""
+    import dungeon
+    import dungeon_quest
+    n = len(v["raeume"])
+    if n < 5 or not dungeon_quest.on(rd) or rng.randint(1, 100) > SCHLOSS:
+        return
+    dist, back, _ = _hops(n, v["gaenge"], 0)
+    weg = _path(back, 0, boss)
+    choices = []
+    for i in range(1, len(weg) - 1):
+        a, b = weg[i], weg[i + 1]
+        frei, _, _ = _hops(n, [e for e in v["gaenge"] if sorted(e) != sorted([a, b])], 0)
+        keys = [j for j in frei if j not in (0, boss)]
+        side = [j for j in keys if j not in weg]
+        if keys:
+            choices.append((a, b, side or keys))
+    if not choices:
+        return
+    a, b, keys = rng.choice(choices)
+    j = max(keys, key=lambda x: (dist[x], x))
+    k = rd["karte"]
+    used = {tuple(x["name"]) for x in (rd.get("quest") or {}).values()}
+    name = next((p for p in SCHLUESSEL.get(rd.get("welt"), SCHLUESSEL["fantasy"]) if p not in used), None)
+    q = f"q_gw{k['hier']}_{min(a, b)}_{max(a, b)}"
+    if not name:
+        print("dungeon: gewoelbe | schloss | kein name", flush=True)
+        return
+    try:
+        dungeon.quest_legen(rd, f"gw{k['hier']}-r{j + 1}", {"id": q, "name": list(name)})
+    except (ValueError, OverflowError, PermissionError):
+        print("dungeon: gewoelbe | schloss | verworfen", flush=True)
+        return
+    v["schloss"] = {"a": min(a, b), "b": max(a, b), "q": q, "zu": True, "name": list(name)}
+    print("dungeon: gewoelbe | schloss", flush=True)
+
+
+def _locked(v, i, j):
+    s = v.get("schloss")
+    return bool(s and s["zu"] and sorted([i, j]) == [s["a"], s["b"]])
+
+
+def _unlock(rd, v):
+    """Standing at the locked door, the actions of the turn: one that names the key while the group carries it opens
+    the door and uses the key up (fixed rule; the model never opens it). With „Quest-Gegenstände“ off the door is open."""
+    import dungeon
+    import dungeon_quest
+    s = v.get("schloss")
+    if not s or not s["zu"]:
+        return
+    if not dungeon_quest.on(rd):
+        s["zu"] = False
+        print("dungeon: gewoelbe | schloss | aus", flush=True)
+        return
+    if v["hier"] not in (s["a"], s["b"]):
+        return
+    if not any(dungeon.quest_genannt(rd, s["q"], a.get("text")) for a in (rd.get("offen") or {}).values()):
+        return
+    pid = dungeon.quest_haben(rd, s["q"])
+    if not pid or not dungeon.quest_verbrauchen(rd, s["q"], pid):
+        print("dungeon: gewoelbe | schloss | ohne schluessel", flush=True)
+        return
+    s["zu"] = False
+    _say(rd, f"{s['name'][0]} passt: die Tür ist offen.", f"The {s['name'][1].lower()} fits: the door is open.")
+    print("dungeon: gewoelbe | schloss | offen", flush=True)
+
+
+def _door(rd, v):
+    """The locked door at the room the group stands in, for the model and the seats: its direction and the key's name
+    once the group carries it (where it lies stays the panel's)."""
+    import dungeon
+    s, li = v.get("schloss"), _li(rd)
+    if not s or not s["zu"] or v["hier"] not in (s["a"], s["b"]):
+        return None
+    j = s["b"] if v["hier"] == s["a"] else s["a"]
+    cur, nxt = v["raeume"][v["hier"]], v["raeume"][j]
+    return {"id": f"r{j + 1}", "richtung": _dir((cur["x"], cur["y"]), (nxt["x"], nxt["y"]), li), "verschlossen": True,
+            "schluessel": s["name"][li] if dungeon.quest_haben(rd, s["q"]) else ("irgendwo im Gewölbe", "somewhere in the vault")[li]}
+
+
+def quest_orte(rd):
+    """The hook of dungeon_quest: in a vault the room the group stands in (a key lies there, a thing put down stays there)."""
+    v = vault(rd)
+    return [_room_id(rd, v["hier"])] if v else []
 
 
 def _vnb(v):
@@ -489,7 +588,7 @@ def _shut(v, i):
 def _ways_in(v):
     """The rooms the group may go to from where it stands (and whether it may leave the vault)."""
     i = v["hier"]
-    nb = sorted(_vnb(v)[i])
+    nb = [j for j in sorted(_vnb(v)[i]) if not _locked(v, i, j)]
     if _shut(v, i):
         nb = [j for j in nb if j in v["besucht"]]
     return nb
@@ -622,6 +721,9 @@ def facts(r, rd):
                 for j in _ways_in(v)]
         if v["hier"] == 0:
             wege.append({"id": "aus", "richtung": ("hinaus", "outside")[li], "raum": o[k["drin"]]["name"]})
+        tuer = _door(rd, v)
+        if tuer:
+            wege.append(tuer)
         out = {"gewoelbe": v["name"], "raum": {"id": f"r{v['hier'] + 1}", "name": t["name"][li], "satz": t["satz"][li]},
                "wege": wege, "noch_zu": len(nb[v["hier"]]) - len(_ways_in(v)) if _shut(v, v["hier"]) else 0}
         if room["art"] == "falle":
@@ -955,6 +1057,7 @@ def step(r, rd, story, ep, rng=None):
     won(rd)
     v = vault(rd)
     if v:
+        _unlock(rd, v)
         room = v["raeume"][v["hier"]]
         if room["art"] == "raetsel" and not room["fertig"] and rd.get("offen"):
             if solved(r, rd):
@@ -972,6 +1075,8 @@ def step(r, rd, story, ep, rng=None):
             _say(rd, f"Ihr verlasst das Gewölbe {v['name']}.", f"You leave the vault {v['name']}.")
         elif want.startswith("r") and int(want[1:]) - 1 in _ways_in(v):
             _enter_room(r, rd, v, int(want[1:]) - 1, rng)
+        elif want.startswith("r") and _locked(v, v["hier"], int(want[1:]) - 1):
+            print("dungeon: karte | verworfen | verschlossen", flush=True)
         elif want:
             print("dungeon: karte | verworfen | weg", flush=True)
     elif want.startswith("o") and int(want[1:]) - 1 in _nb(k)[k["hier"]]:
@@ -1050,7 +1155,7 @@ def view(r, rd, host=False):
                           "t": rm["t"] if b else ""})
         boss = next(rm for rm in v["raeume"] if rm["art"] == "boss")
         out["gewoelbe"] = {"name": v["name"], "raeume": rooms, "hier": f"r{v['hier'] + 1}", "zahl": len(v["raeume"]),
-                           "gaenge": [[f"r{a + 1}", f"r{b + 1}", 2 if [a, b] in v["gegangen"] else 1] for a, b in v["gaenge"]
+                           "gaenge": [[f"r{a + 1}", f"r{b + 1}", 2 if [a, b] in v["gegangen"] else 1, 1 if _locked(v, a, b) else 0] for a, b in v["gaenge"]
                                       if a in seen and b in seen and (a in v["besucht"] or b in v["besucht"])],
                            "geschafft": boss["fertig"]}
         cur = v["raeume"][v["hier"]]
@@ -1059,6 +1164,11 @@ def view(r, rd, host=False):
             out["zu"] = {"raetsel": ("Die Tür bleibt zu, bis das Rätsel gelöst ist.", "The door stays shut until the riddle is solved."),
                          "waechter": ("Der Wächter versperrt den Weg.", "The guardian blocks the way."),
                          "boss": ("Der Herr des Gewölbes versperrt den Weg.", "The master of the vault blocks the way.")}[cur["art"]][li]
+        tuer = _door(rd, v)
+        if tuer:
+            out["zu"] = ((out.get("zu") or "") + " " + (f"Die Tür nach {tuer['richtung']} ist verschlossen. " if not li else f"The door to the {tuer['richtung']} is locked. ")
+                         + (("Nennt in eurer Aktion den Schlüssel: ", "Name the key in your action: ")[li] + tuer["schluessel"] if tuer["schluessel"] == v["schloss"]["name"][li]
+                            else ("Ein Schlüssel muss irgendwo im Gewölbe liegen.", "A key must lie somewhere in the vault.")[li])).strip()
         if cur["art"] == "raetsel":
             q = _table(r, "raetsel", cur.get("raetsel"))
             if q:
@@ -1082,6 +1192,9 @@ def _von_hier(r, rd):
                for j in _ways_in(v)]
         if v["hier"] == 0:
             out.append({"id": "aus", "n": ("hinaus", "outside")[li], "r": "", "b": True})
+        tuer = _door(rd, v)
+        if tuer:
+            out.append({"id": tuer["id"], "n": ("verschlossene Tür", "locked door")[li], "r": tuer["richtung"], "b": False, "zu": True})
         return out
     o = k["orte"]
     here = (o[k["hier"]]["x"], o[k["hier"]]["y"])

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.070** · 2026-10-25 · KI-Dungeon-Master: Schlüsseltüren im Gewölbe: der Schlüssel liegt in einem erreichbaren Raum, die Tür öffnet nur, wer ihn trägt und nennt
 - **V01.1.069** · 2026-10-25 · KI-Dungeon-Master: Quest-Gegenstände: Schlüssel, Karten und Siegel der Geschichte ohne Gewicht, aus dem Geschichten-Planer, der Karte oder einem geprüften Fund; wer sie in der Aktion nennt, nimmt sie, Türen öffnen sich nur mit ihnen
 - **V01.1.068** · 2026-10-25 · KI-Dungeon-Master: Gleiches Gesicht für NSCs: jede getroffene Figur bekommt ein festes Porträt aus festen Teilen, spätere Szenenbilder nehmen es als Vorlage, Gesicht in „Leute und Chronik“ und an der Sprechzeile, Gastgeber malt neu
 - **V01.1.067** · 2026-10-25 · KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
