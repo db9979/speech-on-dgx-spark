@@ -6405,6 +6405,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Stimme nur nach festen Merkmalen, auch beim Weiterreden (V01.1.085, Dominik 2026-10-25 „»Kein Fremder hier«, sagt er heiser … die stimme war weiblich obwohl er genannt ist“): Das Geschlecht der Stimme eines Zitats kommt nur aus festen Merkmalen: zuerst das gemerkte der Figur (npc_stimmen), sonst das Pronomen nach dem Zitat („…“, sagt er), sonst keines; dann spricht die NSC-Stimme als Person (offen), nie aus dem Namen geraten. Ein Zitat, das nur weitergeht (»Kein Fremder hier«, sagt er heiser. »Nur Schatten und Stille.«: kein Name danach, kein Pronomen, seit dem letzten Zitat niemand genannt), behält Sprecher und Geschlecht des vorigen (dungeon_vorlesen.rede); vorher sprach dieses zweite Zitat mit der Frauenstimme. Unter mehreren vorher Genannten nimmt das Panel zuerst den, dessen gemerktes Geschlecht zum Pronomen passt. Selbsttest ReadAloud.test_he_speaks_with_a_mans_voice_also_when_he_goes_on."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Vorlesen wieder hörbar, Tisch bei kleiner Breite, Prompt ohne JSON-Regel (V01.1.016, Dominik 2026-10-24 „Aktuell werden Texte nicht mehr gesprochen“, Chrome-Konsole „violates … media-src 'self' blob:“, „bei kleinerer auflösung sieht die seite schrecklich aus“, „1 2“): Vorlesen: Die kurze Stille, mit der „🔊 Ton an“ den Player freischaltet, kam als data:-Adresse. Die Sicherheitsregel des Panels (CSP media-src 'self' blob:) blockiert das in jedem Browser, der Player blieb gesperrt, und kein Teil wurde abgespielt, obwohl der Spark jeden fertig sprach. Jetzt entsteht die Stille beim Tippen als blob: (dmStill). Selbsttest Fight.test_table_sound_only_from_sources_the_csp_allows (kein data:audio in den Skripten des Tischs). Tisch bei kleiner Breite: Der Kopf bricht um, bevor der Titel schmaler als 320 px wird; Musik, Ton und Knöpfe rücken in eine zweite Zeile und liegen nie über dem Titel. Die drei Spalten richten sich nach der Breite des Tischs selbst, nicht des Fensters (neben dem Menü bleiben am Laptop rund 700 px): bis 1060 px zwei Spalten mit der Gruppe als Zeile oben, bis 720 px eine Spalte. Browser-Test bei 1280, 1000 und 390 px. Prompt: In den Regeln (Funktionen "
 },
 {
@@ -20094,6 +20102,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "nd their loot lines are repaired the same way when read. \"rare\" is the middle one of the five rarities (common, uncommon, rare, epic, legendary), not an old name. Self-test Equipment.test_a_find_keeps_its_name_only_when_it_names_the_thing."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the voice only by fixed traits, also when someone goes on talking (V01.1.085, Dominik 2026-10-25 \"»Kein Fremder hier«, sagt er heiser … die stimme war weiblich obwohl er genannt ist\"): The gender of a quote's voice comes only from fixed traits: first the character's kept one (npc_stimmen), else the pronoun after the quote (\"…\", says he), else none; then the NPC voice speaks as a person (offen), never guessed from the name. A quote that only goes on (»Kein Fremder hier«, sagt er heiser. »Nur Schatten und Stille.«: no name after it, no pronoun, nobody named since the last quote) keeps the speaker and gender of the one before (dungeon_vorlesen.rede); before, this second quote spoke in the women's voice. Among several named before, the panel first takes the one whose kept gender fits the pronoun. Self-test ReadAloud.test_he_speaks_with_a_mans_voice_also_when_he_goes_on."
 },
 {
 "lang": "en",

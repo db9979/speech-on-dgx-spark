@@ -1634,6 +1634,36 @@ class ReadAloud(Base):
         self.assertEqual(dungeon.vortrag.pronoun("„Halt“, ruft sie.", 6), "weiblich")
         self.assertEqual(dungeon.vortrag.pronoun("„Halt.“ Der Wind heult.", 7), "")
 
+    def test_he_speaks_with_a_mans_voice_also_when_he_goes_on(self):
+        """Dominik 2026-10-25 „»Kein Fremder hier«, sagt er heiser … die stimme war weiblich obwohl er genannt ist“: the
+        gender comes only from fixed traits (the kept one, else the pronoun after the quote, kept for a quote that goes
+        on), never from a guess by the name; with none the NPC voice as a person."""
+        v = self.new_round(vorlesen=True)
+        r = dungeon.rules()
+        vv = dungeon.voices(r)
+        text = ("Der alte Fischer Brann hebt den Kopf. Die Wirtin Mara wischt den Tresen. »Kein Fremder hier«, sagt er heiser, "
+                "die Stimme rau wie Schleifpapier. »Nur Schatten und Stille.«")
+        quotes = lambda rd: [p for p in dungeon.speak_parts(r, text, [], (), rd) if p[1] in ("Kein Fremder hier", "Nur Schatten und Stille.")]
+        for kept in ({}, {"mara": dict(dungeon.stimmen._traits("mara"), geschlecht="weiblich")},
+                     {"mara": dict(dungeon.stimmen._traits("mara"), geschlecht="maennlich")}):
+            rd = dict(self.state(v["rid"]), npc_stimmen=kept)
+            self.assertEqual([p[0] for p in quotes(rd)], [vv["npc"], vv["npc"]], kept)          # never the women's voice
+        rd = dict(self.state(v["rid"]), npc_stimmen={"mara": dict(dungeon.stimmen._traits("mara"), geschlecht="weiblich")})
+        self.assertEqual([x[0] for x in dungeon.vortrag.rede(text, ["Brann", "Mara"], lambda n: dungeon.stimmen.sex(rd, n)) if x[2]],
+                         ["brann", "brann"])                                                 # the woman is not taken, he goes on
+        for name in ("mara", "brann", "zora", "kai"):                                        # names a guess would make women
+            self.assertEqual(dungeon._npc_voice(r, dict(rd, npc_stimmen={}), name, False, "maennlich")[0], vv["npc"])
+        old = dungeon._stimmen["design"]
+        dungeon._stimmen["design"] = True
+        try:
+            said = [p for p in dungeon.speak_parts(r, text, [], (), dict(rd, npc_stimmen={})) if p[1] == "Nur Schatten und Stille."]
+            self.assertRegex(said[0][2], r"\bman\b")
+            self.assertNotIn("woman", said[0][2])
+            odd = dungeon.speak_parts(r, "Von irgendwo ruft es: „Lauft!“", [], (), dict(rd, npc_stimmen={}))
+            self.assertIn("person", next(p for p in odd if p[1] == "Lauft!")[2])                # nobody, no pronoun: no guess
+        finally:
+            dungeon._stimmen["design"] = old
+
     def test_a_second_try_then_the_fixed_voice_and_the_rest_goes_on(self):
         v = self.new_round(vorlesen=True)
         rid = v["rid"]

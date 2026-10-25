@@ -4029,7 +4029,8 @@ def hero_lines(r, rd, turn):
 
 def _npc_voice(r, rd, name, design, sex=""):
     """(fixed voice, description) of an NPC: by its gender the NPC voice or the female one; with VoiceDesign its own.
-    sex is the gender of one nobody named, from the pronoun after its quote."""
+    sex sets the gender (maennlich, weiblich, offen) over the one its name would give (speak_parts: kept, pronoun or
+    offen)."""
     v = voices(r)
     return (v["npc_w"] if rd and stimmen.weiblich(rd, name, sex) else v["npc"]), (stimmen.npc(rd, name, sex) if design else "")
 
@@ -4064,7 +4065,11 @@ def speak_parts(r, story_text, npc, helden=(), rd=None):
         if h and (h.get("stimme") or h.get("klang")):
             fest, klang = h.get("stimme", "") or v["npc"], h.get("klang", "") if design else ""
         else:
-            fest, klang = _npc_voice(r, rd, wer or "?", design, "" if wer else sex)
+            # the gender only from fixed traits: the NPC's kept one, else the pronoun after the quote (or the quote it
+            # goes on), else none: the NPC voice as a person, never a guess by the name (Dominik 2026-10-25 „die stimme
+            # war weiblich obwohl er genannt ist“)
+            g = (stimmen.sex(rd or {}, wer) if wer else "") or sex or "offen"
+            fest, klang = _npc_voice(r, rd, wer or "?", design, g)
         parts.append((fest, text, klang + ", " + art if klang and art else klang))
         weisen += bool(klang and art)
     if design:

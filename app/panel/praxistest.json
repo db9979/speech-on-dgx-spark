@@ -3558,6 +3558,13 @@
 "titel": "Dungeon-Master: mehr feste Prüfungen der Erzählung",
 "text": "Eine Runde spielen. A: „Ich trinke meinen Heiltrank“ ohne Trank in der Tasche: graue Zeile „… hat das nicht dabei“, die Erzählung lässt ihn nicht trinken. B: Nach einem Sieg handeln besiegte Gegner nicht mehr. C: Die Erzählung nennt keine Goldmenge. D: Ein Held, der nicht gehandelt hat, entscheidet in der Erzählung nichts. E: Eine Person behält Haar- und Augenfarbe ihrer Karte. F: Unter Zustand → Logs stehen bei Fehlern Zeilen „dungeon: nachbessern | fest“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P533",
+"v": 1085,
+"titel": "Dungeon-Master: Stimme passt zu „er“ und „sie“ beim Vorlesen",
+"text": "Eine Runde mit Vorlesen spielen, bis eine Person spricht. A: Ein Zitat mit „sagt er“ danach spricht eine Männerstimme, auch wenn vorher eine Frau genannt wurde. B: Redet er gleich weiter (zweites Zitat ohne Namen), bleibt es dieselbe Männerstimme. C: Ein Zitat ohne Namen und ohne „er“ oder „sie“ spricht die Stimme für Nebenfiguren, nie der Erzähler.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

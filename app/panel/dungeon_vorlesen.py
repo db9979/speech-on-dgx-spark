@@ -82,7 +82,7 @@ def pronoun(text, b):
 def _speaker(text, a, b, names, sex_of=None):
     """Who says the quote text[a:b]: a name right after it („…“, sagt Grimma), else the last one named before it
     whose gender does not contradict the pronoun after the quote („…“, warnt er: no woman, Dominik 2026-10-24 „wurde
-    von einer Frauenstimme gesagt - er ist aber männlich“)."""
+    von einer Frauenstimme gesagt - er ist aber männlich“), one whose kept gender is that of the pronoun first."""
     low = text.lower()
     after = _after(low, b)
     hit = [(after.find(n), n) for n in names if n and after.find(n) >= 0]
@@ -90,19 +90,22 @@ def _speaker(text, a, b, names, sex_of=None):
         return min(hit)[1]
     p = pronoun(text, b)
     before = low[max(0, a - VOR):a]
-    hit = [(before.rfind(n), n) for n in names if n and before.rfind(n) >= 0
+    hit = [(bool(p and sex_of and sex_of(n) == p), before.rfind(n), n) for n in names if n and before.rfind(n) >= 0
            and not (p and sex_of and sex_of(n) not in ("", p))]
-    return max(hit)[1] if hit else ""
+    return max(hit)[2] if hit else ""
 
 
 def rede(text, names, sex_of=None):
     """The narration as [(speaker, piece, quoted, gender, around)]: plain narration with speaker "", every quote with
     the name of who says it (lower case, one of names) or "" when nobody is named, the gender of the pronoun after it
-    ("maennlich", "weiblich" or "") for a voice when nobody is named, and the words around it that say how it is
-    spoken (around). sex_of(name) gives a name's gender or ""."""
+    ("maennlich", "weiblich" or "") for its voice, and the words around it that say how it is spoken (around).
+    sex_of(name) gives a name's gender or "". A quote that only goes on (no name after it, no pronoun, nobody named
+    since the last quote: »Kein Fremder hier«, sagt er heiser. »Nur Schatten.«) keeps the last quote's speaker and
+    gender (Dominik 2026-10-25 „die stimme war weiblich obwohl er genannt ist“)."""
     text = str(text or "")
+    low = text.lower()
     names = sorted({str(n).strip().lower() for n in names if str(n).strip()}, key=len, reverse=True)
-    out, i = [], 0
+    out, i, last = [], 0, None
     for m in _REDE.finditer(text):
         said = next(x for x in m.groups() if x).strip()
         if not re.search(r"\w", said):
@@ -110,7 +113,12 @@ def rede(text, names, sex_of=None):
         plain = text[i:m.start()].strip(" ,:–-")
         if re.search(r"\w", plain):
             out.append(("", plain, False, "", ""))
-        out.append((_speaker(text, m.start(), m.end(), names, sex_of), said, True, pronoun(text, m.end()), around(text, m.start(), m.end())))
+        wer, sex = _speaker(text, m.start(), m.end(), names, sex_of), pronoun(text, m.end())
+        if last and not sex and not any(n in _after(low, m.end()) for n in names) \
+                and not any(n in low[last[2]:m.start()] for n in names):
+            wer, sex = last[0], last[1]
+        out.append((wer, said, True, sex, around(text, m.start(), m.end())))
+        last = (wer, sex, m.end())
         i = m.end()
     rest = text[i:].strip(" ,:–-")
     if re.search(r"\w", rest):
