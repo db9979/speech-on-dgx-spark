@@ -188,7 +188,8 @@ class Browser(unittest.TestCase):
                         self.assertGreaterEqual(box[0], 0, w)
                         self.assertLessEqual(box[1], w, w)
                         await pg.fill("#palq", "Gesicht")
-                        await pg.wait_for_timeout(300)
+                        # the hit comes from the own Ich settings, drawn after a fetch (find.js palMe): wait for it, not for the clock
+                        await pg.wait_for_function("document.querySelectorAll('#palres .fit').length>0", timeout=10000)
                         self.assertGreater(await pg.evaluate("document.querySelectorAll('#palres .fit').length"), 0, w)
                         await pg.click("#palx")
                         self.assertTrue(await pg.evaluate("document.getElementById('fpal').hidden"), w)

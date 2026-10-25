@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.041** Search self-test: waits for the hit instead of a fixed 300 ms
 - **V01.1.040** Log errors: the answer broke off with "Rec.step() got multiple values for argument 'kind'" when the deed check stepped in; the relay for calls takes only the public IPv4 address, keeps the old one during a short outage and logs "relay refused" once per reason
 - **V01.1.039** AI Dungeon Master: bestiary with 62 new foes (every world has at least three on each level 1 to 12, the own world takes the fantasy ones), the rules show damage kind, weakness, resistance and immunity as symbols, boss mark, EP per hero and "new", filters by world, level, bosses and new ones; a failed check stays failed and the narration names the foes of the card
 - **V01.1.038** AI Dungeon Master: your own die waits in the feed until you throw it (narration blurred, by itself after 30 s), a throw that bounces, result colours, buzz and chime
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.034** AI Dungeon Master: items part 2, tools simple +1, good +2 or masterwork +3, potions, scrolls, spells and tools cheaper, common jewellery is a treasure, ▲/▼ better than yours and „not for your class“ in the bag, at the merchant and on the ground
 - **V01.1.033** AI Dungeon Master: items with fixed effects, from „rare“ one effect of the panel (fire and others +1d6, life drain, luck, watchful or a value bonus), rarity bonus at most +3, legendary rarer than epic at every level
 - **V01.1.032** AI Dungeon Master: gold with a purpose, in settlements an inn for the whole group, a smith for broken tools, a lesson +1 until the round ends and rumours of the next place, prices by the group's level
-- **V01.1.031** AI Dungeon Master: heroic courage, once a game evening roll a failed check again or make a hit critical, the other players give a second one with 👍
 
 
 
