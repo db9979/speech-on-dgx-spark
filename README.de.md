@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.031** KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍
 - **V01.1.030** KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 - **V01.1.029** Gruß beim Öffnen: Selbsttest mit fester Uhr statt der echten (war in der Nacht der Zeitumstellung rot), dazu ein Fall genau in der doppelten Stunde; der Blick in den Kalender rechnet echte vier Stunden, auch über die Zeitumstellung
 - **V01.1.028** KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.024** KI-Dungeon-Master: jede Erzählung merkt sich ihren Ort, nach einem Ortswechsel bekommt das Modell nur noch den Verlauf des neuen Orts, Figuren von anderswo tauchen nicht mehr einfach auf
 - **V01.1.023** KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“
 - **V01.1.022** CarPlay Dungeon-Master: Runde im Auto wählen und neu anlegen, „Passt das?“ vor jeder Aktion, mehr Sprachbefehle, Zusammenfassung, Stimmen der Runde, Warten ohne Zeitgrenze
-- **V01.1.021** KI-Dungeon-Master: Gegner und Beute öffnen ein großes Fenster zum Betrachten (Bild, Werte, sechs Werte, was er bewirken kann, Blättern), Nebenfiguren klingen mit VoiceDesign verschiedener (Sprechtempo, mehr Klangfarben)
 
 
 

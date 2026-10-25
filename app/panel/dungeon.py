@@ -79,7 +79,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
-    POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb)
+    POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
@@ -112,6 +112,7 @@ from fastapi.responses import Response
 import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
+import dungeon_mut as mut
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
@@ -2819,12 +2820,17 @@ def roll(r, rd, proben, rng=None):
         if last:                                 # burdened: Geschick with disadvantage, advantage cancels it (2a)
             vt = "" if vt == "vorteil" else "nachteil"
         vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
-        ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
-        w = max(ws) if vt == "vorteil" else min(ws)
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
         bonus = total(r, h, p["wert"]) + (WERKZEUG if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
-        ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
         extra = {"belastet": True} if last else {}
+        for _ in range(2):
+            ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
+            w = max(ws) if vt == "vorteil" else min(ws)
+            ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
+            if ok or not mut.wants(rd, p["pid"]):
+                break
+            mut.spend(rd, p["pid"])               # Heldenmut (Idee 8): a failed check rolled again once
+            extra["mut"] = True
         if schrei:
             extra["schrei"] = True
         if tool:
@@ -2989,8 +2995,11 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             if pid in rd["plaetze"] and rd["plaetze"][pid].get("held"):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, p in seated(rd) if not p["held"].get("tot")}
+    for x in list(wuerfe) + list(kampfwuerfe[0]):
+        if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
+            mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "schrei", "wofuer", "mut") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
@@ -4358,6 +4367,7 @@ def view(rid, pid, now=None):
             "termin": rd.get("termin") or 0, "auftrag": {"text": rd["auftrag"], "ok": bool(rd.get("auftrag_ok"))} if rd.get("auftrag") else None, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
     out["kampf"] = kampf.view(_me, r, rd)
+    out["mut"] = mut.view(rd, pid) if me.get("held") else None
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
@@ -4728,7 +4738,7 @@ def for_live():
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
-            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0),
+            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs),
             **dungeon_karte.for_live(rs)}
 
 
@@ -4958,6 +4968,7 @@ async def _act(rid, seat, b):
             if not rd["plaetze"][pid].get("held"):
                 raise LookupError("held")
             act(rd, pid, b.get("text"), b.get("zug"), time.time())
+            mut.ask(rd, pid, b.get("mut"))
             check_powers(rules(), rd, pid)
             _write(d)
         maybe_close(rid)
@@ -5071,9 +5082,22 @@ async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "dungeon", uid)
     b = await json_body(request, BODY)
     try:
+        if "aktion" in b:
+            return {"mut": await asyncio.to_thread(lambda: praise(rid, _seat_uid(rid, uid), b))}
         return {"daumen": await asyncio.to_thread(lambda: erz.thumb(_me, rid, _seat_uid(rid, uid), b.get("zug"), b.get("gut")))}
     except KNOWN as e:
         raise _http(e)
+
+
+def praise(rid, pid, b):
+    """{zug, aktion}: the seat's 👍 for another seat's action, for Heldenmut (dungeon_mut.praise). Returns the seat's
+    Heldenmut as the table shows it."""
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        mut.praise(rd, pid, b.get("zug"), b.get("aktion"), [p for p, _ in seated(rd)])
+        _write(d)
+        return mut.view(rd, pid)
 
 
 @router.post("/api/profile/dungeon/{rid}/tisch", dependencies=[Depends(assistant)])
@@ -5889,9 +5913,12 @@ async def gast_bild(request: Request):
 
 @router.post("/api/dungeon/daumen")
 async def gast_daumen(request: Request):
-    """{"code", "zug", "gut"}: the seat's 👍/👎 for a narration of its round."""
+    """{"code", "zug", "gut"}: the seat's 👍/👎 for a narration of its round; {"code", "zug", "aktion"} a 👍 for another
+    seat's action (Heldenmut)."""
     b, rid, pid = await _guest(request)
     try:
+        if "aktion" in b:
+            return {"mut": await asyncio.to_thread(praise, rid, pid, b)}
         return {"daumen": await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"))}
     except KNOWN as e:
         raise _http(e)

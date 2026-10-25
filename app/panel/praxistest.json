@@ -3222,6 +3222,13 @@
 "titel": "Erfahrung für mehr als Kämpfen",
 "text": "A: Eine Runde mit Karte: zu einem neuen Ort gehen, im Verlauf „+10 EP“ je Held. B: Zurück an einen bekannten Ort: keine Erfahrung dafür. C: Eine Geschichte mit Akten: wenn der Wendepunkt erzählt ist, „Akt 2 beginnt“ und „+100 EP“ je Held. D: In einem Kampf eine Überreden-Probe schaffen und die Gegner lassen ab: die Gruppe bekommt die Erfahrung der Gegner wie für einen Sieg. Ohne gelungene Probe gibt das friedliche Ende nichts. E: Zustand → Logs, Filter „ep“: ort und akt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P485",
+"v": 1031,
+"titel": "Heldenmut",
+"text": "A: Funktionen → KI-Dungeon-Master → Heldenmut an. B: Am Spieltisch zu zweit: neben „Handeln“ steht „⭐ Heldenmut“; antippen, eine schwere Probe ansagen und handeln. Misslingt der erste Wurf, steht beim Wurf „⭐ Heldenmut: neu gewürfelt“. C: Danach ist der Knopf weg, auch im nächsten Zug. D: Im Kampf mit Heldenmut angreifen: ein Treffer wird „Kritischer Treffer!“. E: Auf dem zweiten Gerät beim Mitspieler an der Aktion des ersten 👍 tippen: beim ersten steht „⭐ Heldenmut“ wieder. F: Schalter aus: kein Knopf und kein 👍 an Aktionen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

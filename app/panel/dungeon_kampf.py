@@ -358,11 +358,20 @@ def attacks(dm, r, rd, proben, rng=None):
                         "ws": [], "vt": "", "bonus": 0, "gesamt": 0, "rk": g["rk"], "treffer": False, "krit": False, "schaden": 0,
                         "faellt": False, "kann_nicht": blocked(r, h)})
             continue
-        ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
-        w = max(ws) if vt == "vorteil" else min(ws)
         bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (plus if spell else 0)
-        krit = w >= (LEICHT_KRIT if "leicht" in eig else 20)
-        hit = krit or (w != 1 and w + bonus >= g["rk"])
+        mut = False
+        for _ in range(2):
+            ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
+            w = max(ws) if vt == "vorteil" else min(ws)
+            krit = w >= (LEICHT_KRIT if "leicht" in eig else 20)
+            hit = krit or (w != 1 and w + bonus >= g["rk"])
+            if krit or mut or not dm.mut.wants(rd, p["pid"]):
+                break
+            dm.mut.spend(rd, p["pid"])            # Heldenmut (Idee 8): a hit becomes critical, a miss is rolled again once
+            mut = True
+            if hit:
+                krit = True
+                break
         n, wirkt = 0, ""
         if hit:
             n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.mod(h["werte"].get(wert, 10)) + (0 if spell else plus))
@@ -371,7 +380,7 @@ def attacks(dm, r, rd, proben, rng=None):
         out.append({"pid": p["pid"], "name": h["name"], "ziel": g["k"], "gegner": g["name"], "mit": mit, "wert": wert, "w": w,
                     "ws": ws, "vt": vt, "bonus": bonus, "gesamt": w + bonus, "rk": g["rk"], "treffer": hit, "krit": krit,
                     "schaden": n, "faellt": hit and life[g["k"]] <= 0, "art": art, "wirkt": wirkt,
-                    "eig": [x for x in eig if x != "wurf" or wirft]})
+                    "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {})})
     return rest, out
 
 
@@ -506,7 +515,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             continue
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
-                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []))
+                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **({"mut": True} if x.get("mut") else {}))
         dm._day.bump("treffer" if x["treffer"] else "daneben")
         was = hurt(g, x["schaden"]) if x["treffer"] else ""
         if was == "besiegt":

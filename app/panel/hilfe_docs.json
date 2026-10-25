@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Heldenmut (V01.1.031, Idee 8 vom 2026-10-24, Dominik „alle umsetzen“): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Heldenmut* (chat.dungeon_heldenmut, ab Werk aus; dungeon_mut.py). Einmal am Spielabend (Runde und Tag) darf jeder Held mit einer Aktion Heldenmut aufbieten: Er tippt vor „Handeln“ auf „⭐ Heldenmut“, die Aktion trägt mut: true, das Panel merkt es nur, solange ein Heldenmut frei ist. Misslingt eine Probe, würfelt das Panel sie einmal neu; trifft ein Angriff ohne kritisch zu sein, wird er kritisch (doppelte Schadenswürfel); geht er daneben, würfelt das Panel ihn einmal neu. Gelingt der erste Wurf, bleibt der Heldenmut für später; je Aktion wirkt er auf höchstens einen Wurf. Der Wurf zeigt „⭐ Heldenmut“. Vom Tisch: An den Aktionen der anderen aus den letzten drei Zügen steht ein 👍 (POST …/daumen mit {zug, aktion}, für Gäste /api/dungeon/daumen); geben mindestens die Hälfte der anderen Spieler (aufgerundet) einer Aktion ein 👍, bekommt ihr Held einen zweiten Heldenmut für den Abend (LOB_MAX = 1). Nie für sich selbst, allein am Tisch nicht. Der Stand liegt in der Runde (mut, mut_lob); am nächsten Abend gibt es einen neuen. Sicherheit: kein neue"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "r Endpunkt (der bestehende Daumen-Endpunkt mit Anmeldung, Profilbindung, CSRF, Größen- und Rate-Limit nimmt aktion), nur feste Regeln des Panels, nie das Modell; Logs dungeon: heldenmut | bereit|keiner frei|genutzt|lob|geschenkt|lob nein|lob alt|aus; die Live-Übersicht zählt nur, wie oft heute Heldenmut genutzt wurde."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Erfahrung für mehr als Kämpfen (V01.1.030, Idee 7 vom 2026-10-24, Dominik „alle umsetzen“): Das Panel gibt jedem Helden am Tisch feste Erfahrung, nie das Modell: für einen neuen Ort der Karte, den die Gruppe zum ersten Mal betritt, ep.ort (10), für einen abgeschlossenen Akt der Geschichte (dungeon.step_act, ob das Modell den Wendepunkt meldet oder das Panel weiterschaltet) ep.akt (100), und für einen friedlich beendeten Kampf (kampf_ende „frieden“) die Erfahrung der Gegner, die dann noch stehen, so wie für besiegte; das gilt nur, wenn im selben Zug eine Probe gelungen ist (etwa Überreden), sonst nicht. Ein gelöstes Rätsel der Karte gibt wie bisher die Hälfte von ep.ziel (50). Die Zahlen stehen in den Regeln unter ep und sind einstellbar (ort 0 bis 200, akt 0 bis 1000, geprüft von check_rules). Die Erfahrung sammelt sich wie jede andere als „+X EP noch am Tisch“ und kommt am Ende der Runde. Logs dungeon: ep | ort | N, dungeon: ep | akt; die Kampfzeile im Verlauf zählt frieden. Kein neuer Endpunkt. Selbsttest Equipment.test_experience_for_more_than_fighting in app/tests/test_dungeon.py."
 },
 {
@@ -9662,6 +9678,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Spielleiter-Regler (Funktionen → Meine Daten → „Spielleiter-Regler“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wie ein guter Spielleiter merkt der Spark, wenn eine Gruppe nur gewinnt oder ständig am Boden liegt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Heldenmut (Funktionen → Meine Daten → „Heldenmut“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Einmal am Spielabend darf jeder Held über sich hinauswachsen: Tippe vor „Handeln“ auf „⭐ Heldenmut“."
 },
 {
 "lang": "de",
@@ -18021,6 +18045,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: heroic courage (V01.1.031, idea 8 of 2026-10-24, Dominik \"alle umsetzen\"): Own admin switch *Features → AI Dungeon Master → Heroic courage* (chat.dungeon_heldenmut, off by default; dungeon_mut.py). Once a game evening (round and day) every hero may call on heroic courage with an action: tap \"⭐ Heroic courage\" before \"Act\", the action carries mut: true, the panel notes it only while a charge is free. If a check fails, the panel rolls it once more; if an attack hits without being critical, it becomes critical (double damage dice); if it misses, the panel rolls it once more. If the first roll succeeds, the courage stays for later; per action it works on one roll at most. The roll shows \"⭐ Heroic courage\". From the table: the other players' actions of the last three turns carry a 👍 (POST …/daumen with {zug, aktion}, for guests /api/dungeon/daumen); when at least half of the other players (rounded up) give an action a 👍, its hero gets a second charge for the evening (LOB_MAX = 1). Never for oneself, not alone at the table. The state lives in the round (mut, mut_lob); the next evening brings a new one. Security: no new endpoint (the existing thumbs endpoint with login,"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " profile binding, CSRF, size and rate limit takes aktion), only fixed rules of the panel, never the model; logs dungeon: heldenmut | bereit|keiner frei|genutzt|lob|geschenkt|lob nein|lob alt|aus; the live overview only counts how often courage was used today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: experience for more than fighting (V01.1.030, idea 7 of 2026-10-24, Dominik \"alle umsetzen\"): The panel gives every hero at the table fixed experience, never the model: for a new place of the map the group enters for the first time ep.ort (10), for an act of the story done (dungeon.step_act, whether the model reports the turning point or the panel moves on) ep.akt (100), and for a fight ended in peace (kampf_ende \"frieden\") the experience of the foes still standing then, as for defeated ones; that counts only when a check passed in the same turn (persuading, say), otherwise not. A solved riddle of the map gives half of ep.ziel (50) as before. The numbers are in the rules under ep and can be set (ort 0 to 200, akt 0 to 1000, checked by check_rules). The experience gathers like any other as \"+X EP still at the table\" and comes at the end of the round. Logs dungeon: ep | ort | N, dungeon: ep | akt; the fight line in the log counts frieden. No new endpoint. Self-test Equipment.test_experience_for_more_than_fighting in app/tests/test_dungeon.py."
 },
 {
@@ -22366,6 +22406,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Game master dial (Features → My data → \"Game master dial\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Like a good game master the Spark notices when a group only wins or keeps lying on the floor."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Heroic courage (Features → My data → \"Heroic courage\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Once a game evening every hero may rise above themselves: tap \"⭐ Heroic courage\" before \"Act\"."
 },
 {
 "lang": "en",

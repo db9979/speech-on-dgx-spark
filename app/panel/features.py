@@ -263,6 +263,10 @@ FEATURES = (
     # numbers, the host may hold it, the children's table only easier
     F("dungeonregler", "Spielleiter-Regler", "Game master dial", "data", ("dungeon_regler",), parent="dungeon",
       me="dmbox", guide="dungeonregler"),
+    # Heldenmut (dungeon_mut.py, Idee 8): once an evening a failed check again or a hit critical, a second charge from
+    # the other players' 👍; fixed rules of the panel, never the model
+    F("dungeonheldenmut", "Heldenmut", "Heroic courage", "data", ("dungeon_heldenmut",), parent="dungeon",
+      me="dmbox", guide="dungeonheldenmut"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

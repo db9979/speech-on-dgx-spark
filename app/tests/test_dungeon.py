@@ -4689,6 +4689,75 @@ class Fight(Turns):
             self.assertEqual(kampf.turn_dial(dungeon, r, rd), 0)              # held: it stays
             self.assertEqual(rd["regler"], 10)
 
+    def test_heroic_courage_once_an_evening_and_from_the_table(self):
+        """Idee 8 of 2026-10-24 (Dominik „alle umsetzen“): Heldenmut once a game evening; a failed check is rolled again
+        once, a hit becomes critical, a miss is rolled again once; a success keeps it. When half of the other players give
+        an action 👍, its hero gets one more (LOB_MAX); off nothing of it works. The panel counts, never the model."""
+        import dungeon_mut as mut
+        helpers.keep_chat(self, "dungeon_heldenmut")
+        p = mock.patch.object(mut, "clock", lambda: 1_790_000_000)
+        p.start()
+        self.addCleanup(p.stop)
+        r = dungeon.rules()
+        url = f"/api/profile/dungeon/{self.rid}"
+        self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich stemme das Tor auf.", "zug": 1, "mut": True}).status_code, 200)
+        self.assertNotIn("mut", self.state(self.rid)["offen"][self.host])             # off: nothing marked
+        self.assertIsNone(self.c.get(url).json()["mut"])
+        helpers.set_config(dungeon_heldenmut=True)
+        self.assertEqual(self.c.get(url).json()["mut"], {"frei": 1, "lob": [], "geschenkt": 0})
+        self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich stemme das Tor auf.", "zug": 1, "mut": "ja"}).status_code, 200)
+        self.assertNotIn("mut", self.state(self.rid)["offen"][self.host])             # only true counts
+        self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich stemme das Tor auf.", "zug": 1, "mut": True}).status_code, 200)
+        rd = self.state(self.rid)
+        self.assertIs(rd["offen"][self.host]["mut"], True)
+        probe = {"pid": self.host, "wert": "staerke", "schwer": 15}
+        ok = dungeon.roll(r, copy.deepcopy(rd), [probe], Dice(20))[0]                 # a success: the courage stays unused
+        self.assertEqual((ok["w"], ok.get("mut")), (20, None))
+        two = copy.deepcopy(rd)
+        x = dungeon.roll(r, two, [probe, probe], Dice(1, 20, 1, 1))
+        self.assertEqual([(w["w"], w["ok"], w.get("mut")) for w in x], [(20, True, True), (1, False, None)])   # once a turn
+        g = {"k": "g1", "name": "Ork", "rk": 30, "leben": 50, "aus": False}
+        fight = dict(copy.deepcopy(rd), kampf={"gegner": [g]})
+        hit = dict(probe, ziel="Ork")
+        g["rk"] = 2
+        x = kampf.attacks(dungeon, r, copy.deepcopy(fight), [hit], Dice(10, 1, 1, 1))[1][0]
+        self.assertEqual((x["treffer"], x["krit"], x["mut"]), (True, True, True))   # a hit becomes critical
+        g["rk"] = 30
+        fight = dict(copy.deepcopy(rd), kampf={"gegner": [g]})
+        x = kampf.attacks(dungeon, r, fight, [hit], Dice(5, 20, 1, 1))[1][0]
+        self.assertEqual((x["w"], x["krit"], x["mut"]), (20, True, True))           # a miss rolled again once
+        self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich halte die Fackel.", "zug": 1})
+        seq = [1]
+        with mock.patch("random.randint", lambda a, b: max(a, min(b, seq.pop(0))) if seq else b):
+            rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 15}]},
+                            {"erzaehlung": "Arvid stemmt sich mit aller Kraft gegen das Tor, und es gibt knirschend nach.", "frage_an": ""}])
+        w = [e for e in rd["log"] if e["art"] == "wurf"][-1]
+        self.assertEqual((w["w"], w["ok"], w["mut"]), (20, True, True))
+        self.assertEqual(rd["mut"][self.host]["genutzt"], 1)
+        self.assertEqual(self.c.get(url).json()["mut"]["frei"], 0)
+        self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich gehe weiter.", "zug": 2, "mut": True}).status_code, 200)
+        self.assertNotIn("mut", self.state(self.rid)["offen"][self.host])             # used up this evening
+        # the table: Bela's 👍 for Arvid's action of turn 1 is half of the others, Arvid gets one more
+        lob = {"code": self.code, "zug": 1, "aktion": self.host}
+        self.assertEqual(self.v.post("/api/dungeon/daumen", json=dict(lob, aktion=self.gp)).status_code, 400)   # never for oneself
+        self.assertEqual(self.v.post("/api/dungeon/daumen", json=dict(lob, zug=2)).status_code, 404)           # the open turn: no action yet
+        self.assertEqual(self.v.post("/api/dungeon/daumen", json=dict(lob, zug=0)).status_code, 404)           # no such action
+        self.assertEqual(self.c.post(url + "/daumen", json={"zug": 1, "aktion": self.gp}).status_code, 200)    # Arvid for Bela
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["mut"]["frei"], 2)
+        d = self.v.post("/api/dungeon/daumen", json=lob)
+        self.assertEqual(d.status_code, 200, d.text)
+        self.assertEqual(d.json()["mut"]["lob"], [f"1:{self.host}"])
+        self.assertEqual(self.c.get(url).json()["mut"], {"frei": 1, "lob": [f"1:{self.gp}"], "geschenkt": 1})
+        self.v.post("/api/dungeon/daumen", json=lob)
+        self.assertEqual(self.state(self.rid)["mut"][self.host]["lob"], mut.LOB_MAX)  # at most LOB_MAX from the table
+        self.assertEqual(mut.need({}, "a", ["a"]), 0)                                 # alone: no table to give one
+        self.assertEqual(mut.need({}, "a", ["a", "b", "c", "d", "e"]), 2)
+        self.assertEqual(dungeon.for_live()["heldenmut"], 1)                          # the live overview: numbers only
+        with mock.patch.object(mut, "clock", lambda: 1_790_000_000 + 86_400):
+            self.assertEqual(self.c.get(url).json()["mut"]["frei"], 1)                # the next evening: a new one
+        helpers.set_config(dungeon_heldenmut=False)
+        self.assertEqual(self.v.post("/api/dungeon/daumen", json=lob).status_code, 400)
+
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()
         rd, held = self.held()
