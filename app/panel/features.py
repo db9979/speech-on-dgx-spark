@@ -275,6 +275,10 @@ FEATURES = (
     # narration changed (gold, a thing from the ground, life outside a fight, place, person); the panel takes it by fixed limits
     F("dungeonschreiber", "Schreiber-Abgleich", "Scribe check", "data", ("dungeon_schreiber",), parent="dungeon",
       me="dmbox", guide="dungeonschreiber"),
+    # Zufallsregeln (dungeon_zufall.py, Tabletop-Punkt 9): the host's own rules with chance, trigger and effect; the
+    # panel rolls and applies them, the model only hears a hint as data
+    F("dungeonzufall", "Zufallsregeln", "Random rules", "data", ("dungeon_zufall",), parent="dungeon",
+      me="dmbox", guide="dungeonzufall"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
     # level; fixed rules of the panel, never the model
     F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",

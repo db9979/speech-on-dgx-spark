@@ -5157,6 +5157,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Zufallsregeln des Gastgebers (V01.1.059, Tabletop-Punkt 9, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Idee aus AnyWorld, MIT, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Zufallsregeln* (chat.dungeon_zufall, ab Werk aus; dungeon_zufall.py). Der Gastgeber gibt seiner Runde im Reiter „Leiten“ unter „🎲 Zufallsregeln“ bis zu ZUFALL_MAX (5) eigene Regeln (POST /api/profile/dungeon/{rid}/zufall, nur der Gastgeber): einen Namen, eine Chance in Prozent, einen Auslöser (jeder erzählte Zug, ein Kampf beginnt, ein neuer Ort), eine Wirkung (Schaden oder Heilung 1 bis 6, Gold dazu oder weg 1 bis 50, ein Hinweis an die Erzählung) und ob ein Wurf für alle oder einer je Held gilt. Name und Hinweis prüft die Wortliste der Runde. Kommt der Auslöser, würfelt das Panel einen W100 (ein Treffer bei höchstens der Chance), wendet die Wirkung nach seinen eigenen Regeln an (Schaden und Heilung wie jede Folge, Gold nie unter 0 und nie über das Höchste) und schreibt jeden Wurf in den Verlauf. Das Modell hört nur den Hinweis eines Treffers als Daten (zufall) und nie die Regeln; nur der Gastgeber sieht sie (dungeon"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "_sicht: zufall nur Gastgeber, zufall_hinweis nur Modell). Live: Zustand → Überblick zählt Zufallsregeln und am Tag getroffene und nicht getroffene. Selbsttest test_the_hosts_random_rules in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Grenzen, Schleier und X-Karte (V01.1.058, Tabletop-Punkt 18, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Plan /mnt/project-files/plaene/dungeon-tabletop-ideen.md; vor dem ersten Spiel mit einem unzensierten Modell): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Grenzen und X-Karte* (chat.dungeon_grenzen, dungeon_grenzen.py), als Schutz ab Werk an (features.DEFAULT_ON). Grenzen und Schleier: Unter „🛡 Grenzen“ neben dem Heldenbogen legt jeder Platz fest, was im Spiel nie vorkommt (Grenzen) und was nur angedeutet wird (Schleier), je bis zu GRENZEN_MAX (8) kurze Wörter mit Komma (POST /api/profile/dungeon/{rid}/grenzen, Gäste POST /api/dungeon/grenzen). Der Tisch sieht alle Wörter zusammen, nie, von wem sie sind. Eine Grenze zählt wie ein Wort der Wortliste (dungeon.bad_words): eine Aktion damit lehnt das Panel ab, eine Erzählung, ein NSC-Satz oder ein Name damit wird verworfen und neu erzählt. Ein Schleier darf in einer Erzählung nur einmal stehen; öfter ist der Fehler „schleier“ (dungeon_erzaehler.judge), das Modell erzählt mit einem festen Hinweis neu, beim letzten Versuch streicht das Panel die weitere"
 },
 {
@@ -10030,6 +10046,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Schreiber-Abgleich (Funktionen → Meine Daten → „Schreiber-Abgleich“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Manchmal erzählt der Dungeon-Master, dass ein Held Gold findet oder ein Ding vom Boden aufhebt, und zählt es nicht mit."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Zufallsregeln (Funktionen → Meine Daten → „Zufallsregeln“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Gastgeber gibst du deiner Runde bis zu 5 eigene Regeln: zum Beispiel „Steinschlag: in jedem Zug 10 %, 2 Schaden für alle“ oder „Taschendieb: an einem neuen Ort 20 % je Held, 5 Gold weg“."
 },
 {
 "lang": "de",
@@ -18421,6 +18445,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: the host's random rules (V01.1.059, tabletop point 9, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", idea from AnyWorld, MIT, own code): Own admin switch *Features → AI Dungeon Master → Random rules* (chat.dungeon_zufall, off from the start; dungeon_zufall.py). In the \"Host\" tab under \"🎲 Random rules\" the host gives the round up to ZUFALL_MAX (5) rules of their own (POST /api/profile/dungeon/{rid}/zufall, host only): a name, a chance in percent, a trigger (every told turn, a fight starts, a new place), an effect (damage or healing 1 to 6, gold won or lost 1 to 50, a hint for the narration) and whether one roll counts for all or one per hero. The round's word list checks name and hint. When the trigger comes the panel rolls a d100 (a hit at or below the chance), applies the effect by its own rules (damage and healing like every consequence, gold never below 0 and never above the most) and writes every roll into the feed. The model only hears the hint of a hit as data (zufall) and never the rules; only the host sees them (dungeon_sicht: zufall host only, zufall_hinweis model only). Live: Status → Live counts random ru"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "les and per day those that hit and missed. Self-test test_the_hosts_random_rules in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: lines, veils and the X-card (V01.1.058, tabletop point 18, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", plan /mnt/project-files/plaene/dungeon-tabletop-ideen.md; before the first game with an uncensored model): Own admin switch *Features → AI Dungeon Master → Lines and X-card* (chat.dungeon_grenzen, dungeon_grenzen.py), on from the start as protection (features.DEFAULT_ON). Lines and veils: under \"🛡 Lines\" next to the hero sheet every seat sets what never appears in the game (lines) and what is only hinted at (veils), up to GRENZEN_MAX (8) short words each, separated by commas (POST /api/profile/dungeon/{rid}/grenzen, guests POST /api/dungeon/grenzen). The table sees all the words together, never whose they are. A line counts like a word of the word list (dungeon.bad_words): the panel refuses an action with it, a narration, an NPC line or a name with it is thrown away and told again. A veil may stand only once in a narration; more often is the fault \"schleier\" (dungeon_erzaehler.judge), the model tells it again with a fixed hint, on the last try the panel strikes the further sentences with the veil (dungeon_grenze"
 },
 {
@@ -23110,6 +23150,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Scribe check (Features → My data → \"Scribe check\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Sometimes the Dungeon Master tells that a hero finds gold or picks a thing up from the ground, and does not count it."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Random rules (Features → My data → \"Random rules\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As host you give your round up to 5 rules of your own: for example \"Rockfall: every turn 10 %, 2 damage for all\" or \"Pickpocket: at a new place 20 % per hero, 5 gold lost\"."
 },
 {
 "lang": "en",

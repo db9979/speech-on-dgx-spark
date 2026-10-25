@@ -5355,6 +5355,8 @@ class Fight(Turns):
         dungeon_sicht.GEHEIM; a marker planted in it stands in what the host, another seat, the car and the model get
         exactly where GEHEIM allows it, nowhere else."""
         import dungeon_sicht as sicht
+        helpers.keep_chat(self, *sicht.SCHALTER)
+        helpers.set_config(**{k: True for k in sicht.SCHALTER})       # every switch whose secrets GEHEIM names
         self.assertEqual(set(sicht.BETRACHTER), {"gastgeber", "spieler", "auto", "modell"})
         for i, (gid, (was, sehen, plant)) in enumerate(sicht.GEHEIM.items()):
             self.assertTrue(sehen <= set(sicht.BETRACHTER) and all(len(x) > 5 for x in was))
@@ -5444,6 +5446,52 @@ class Fight(Turns):
         live = dungeon.for_live()
         self.assertGreaterEqual(live["schreiber_an"], 3)
         self.assertGreaterEqual(live["schreiber_weg"], 3)
+
+    def test_the_hosts_random_rules(self):
+        """Tabletop-Punkt 9 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from AnyWorld): the host
+        sets up to ZUFALL_MAX rules (chance, trigger, effect, one roll for all or per hero); the panel rolls a d100 at the
+        trigger and applies the effect by its own rules, every roll in the feed; a hint reaches the next narration only
+        as data; only the host sees the rules; off nothing is set and nothing rolled."""
+        import dungeon_zufall as zufall
+        helpers.keep_chat(self, "dungeon_zufall")
+        url = f"/api/profile/dungeon/{self.rid}"
+        regeln = [{"name": "Steinschlag", "prozent": 100, "ausloeser": "zug", "wirkung": "schaden", "zahl": 2, "wer": "alle"},
+                  {"name": "Taschendieb", "prozent": 1, "ausloeser": "zug", "wirkung": "verlust", "zahl": 5, "wer": "je"},
+                  {"name": "Flüstern", "prozent": 100, "ausloeser": "zug", "wirkung": "hinweis", "text": "Ein kalter Wind trägt ein Flüstern heran.", "wer": "alle"}]
+        self.assertEqual(self.c.post(url + "/zufall", json={"regeln": regeln}).json()["detail"], "zufall aus")   # off from the start
+        helpers.set_config(dungeon_zufall=True)
+        for bad in ([dict(regeln[0], prozent=0)], [dict(regeln[0], zahl=9)], [dict(regeln[0], ausloeser="mond")],
+                    [dict(regeln[2], text="")], regeln * 2, "Steinschlag"):
+            self.assertEqual(self.c.post(url + "/zufall", json={"regeln": bad}).status_code, 400, bad)
+        r = self.c.post(url + "/zufall", json={"regeln": regeln})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([x["name"] for x in r.json()["zufall"]["regeln"]], ["Steinschlag", "Taschendieb", "Flüstern"])
+        self.assertIsNone(self.v.post("/api/dungeon/lage", json={"code": self.code}).json().get("zufall"))   # only the host
+        self.assertEqual(self.v.post(f"/api/profile/dungeon/{self.rid}/zufall", json={"regeln": []}).status_code, 401)
+        leben0 = {p["held"]["name"]: p["held"]["leben"] for p in self.state(self.rid)["plaetze"].values() if p.get("held")}
+        self.spawned.clear()                                                          # the guest's look may warm the model up
+        self.act_all("Wir gehen durch die Schlucht.")
+        with mock.patch("random.randint", lambda a, b: 50 if b == 100 else b):
+            rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela gehen durch die enge Schlucht, über ihnen bröckelt der Fels, und Staub rieselt herab.", "frage_an": ""}])
+        rolls = [e for e in rd["log"] if e["art"] == "zufall"]
+        self.assertEqual([(e["regel"], e["w"], e["treffer"]) for e in rolls],
+                         [("Steinschlag", 50, True), ("Taschendieb", 50, False), ("Taschendieb", 50, False), ("Flüstern", 50, True)])   # one roll for all, one per hero
+        hurt = {e["name"]: e["zahl"] for e in rd["log"] if e["art"] == "folge" and e.get("was") == "schaden"}
+        self.assertEqual(hurt["Bela"], 2)                                             # damage by the panel's rules:
+        self.assertIn(hurt["Arvid"], (1, 2))                                          # an ability „weniger_schaden“ takes one off
+        self.assertEqual(next(p["held"]["leben"] for p in rd["plaetze"].values() if p.get("held") and p["held"]["name"] == "Bela"), leben0["Bela"] - 2)
+        self.assertEqual(rd["zufall_hinweise"], [{"regel": "Flüstern", "hinweis": "Ein kalter Wind trägt ein Flüstern heran."}])
+        rules = dungeon.rules()
+        self.assertIn('"zufall": [{"regel": "Flüstern", "hinweis": "Ein kalter Wind trägt ein Flüstern heran."}]', dungeon.facts(rules, rd))
+        self.assertNotIn("kalter Wind", dungeon.system_text(rules, rd, "erzaehlen"))   # only as data
+        self.assertEqual(zufall.roll(dungeon, rules, copy.deepcopy(rd), "kampf"), [])   # no rule for this trigger
+        live = dungeon.for_live()
+        self.assertEqual(live["zufall_regeln"], 3)
+        self.assertGreaterEqual(live["zufall_treffer"], 2)
+        self.assertGreaterEqual(live["zufall_daneben"], 2)
+        helpers.set_config(dungeon_zufall=False)
+        self.assertEqual(zufall.roll(dungeon, rules, copy.deepcopy(rd), "zug"), [])     # off: nothing rolled
+        self.assertIsNone(self.c.get(url).json()["zufall"])
 
     def test_gold_with_a_purpose_in_a_settlement(self):
         """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by

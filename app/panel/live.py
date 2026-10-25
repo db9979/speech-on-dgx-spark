@@ -1834,6 +1834,9 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['x_karte']} X-Karten gelegt" if dgn.get("x_karte") else "")
                         + (f" · {dgn['x_laeuft']} Szenen werden nach einer X-Karte neu erzählt" if dgn.get("x_laeuft") else "")
                         + (f" · heute {dgn['schleier']} Erzählungen wegen eines Schleiers nachgebessert" if dgn.get("schleier") else "")
+                        + (f" · {dgn['zufall_regeln']} Zufallsregeln" if dgn.get("zufall_regeln") else "")
+                        + (f" · heute {dgn.get('zufall_treffer', 0)} Zufallsregeln getroffen, {dgn.get('zufall_daneben', 0)} nicht"
+                           if dgn.get("zufall_treffer") or dgn.get("zufall_daneben") else "")
                         + (f" · heute {dgn.get('schreiber_an', 0)} Änderungen vom Schreiber angenommen, {dgn.get('schreiber_weg', 0)} verworfen"
                            if dgn.get("schreiber_an") or dgn.get("schreiber_weg") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")

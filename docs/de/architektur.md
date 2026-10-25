@@ -290,6 +290,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |
+| `app/panel/dungeon_zufall.py` | Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |

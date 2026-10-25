@@ -3383,6 +3383,13 @@
 "titel": "Grenzen, X-Karte, Sichtfilter und Schreiber",
 "text": "Mit zwei Geräten. A: Am Tisch „🛡 Grenzen“ öffnen, bei Grenzen „Spinnen“ eintragen, speichern; auf dem zweiten Gerät steht „spinnen“ unter „Am Tisch gilt“, ohne Namen. B: Eine Aktion mit „Spinnen“ wird abgelehnt. C: Einen Schleier eintragen: die Erzählung nennt ihn höchstens einmal. D: Nach einer Erzählung auf „✖ X-Karte“ tippen: im Verlauf nur „Jemand hat die X-Karte gelegt“, das Vorlesen stoppt, kurz danach steht die Szene ruhiger neu da. E: Sofort noch einmal tippen: „In einer Minute geht sie wieder“. F: Zustand → Überblick zeigt die Zählungen. G: Funktionen → KI-Dungeon-Master → Schreiber-Abgleich an; eine Erzählung sagt „findet 5 Gold“, ohne dass Gold kam: danach steht „📜 Nachgetragen: … +5 Gold“ im Verlauf. H: Auf dem Gast-Gerät stehen keine Zahlen beim Gegnerleben und kein Plan der Geschichte.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P508",
+"v": 1059,
+"titel": "Zufallsregeln des Gastgebers",
+"text": "A: Funktionen → KI-Dungeon-Master → Zufallsregeln an. Als Gastgeber im Reiter „Leiten“ „🎲 Zufallsregeln“ öffnen, eine Regel „Steinschlag“ mit 50 %, Jeder Zug, Schaden 2, ein Wurf je Held anlegen und speichern. B: Einige Züge spielen: im Verlauf steht je Held „🎲 Zufallsregel „Steinschlag““ mit dem Wurf, bei einem Treffer sinkt das Leben um 2. C: Eine Regel mit Hinweis „Ein Rabe beobachtet die Gruppe“ und 100 %: die nächste Erzählung greift ihn auf. D: Auf dem Gast-Gerät ist der Abschnitt Zufallsregeln nicht zu sehen. E: Zustand → Überblick zeigt die Zählungen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

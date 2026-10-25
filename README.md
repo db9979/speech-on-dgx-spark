@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.059** AI Dungeon Master: the host's random rules, up to five per round with chance, trigger and effect; the panel rolls and applies them, the model only hears the hint as data
 - **V01.1.058** AI Dungeon Master: lines and veils per seat, anonymous for the whole table, and the X-card that tells the last scene again more calmly; fixed word lists of the panel, the model gets them only as data; a view filter with a leak self-test per secret; the scribe check notes by fixed limits what the narration changed
 - **V01.1.057** AI Dungeon Master: five oils in the SRD catalogue (thunder, lightning, fire, frost, blessed) for 25 gold, so in every world each weakness to thunder, lightning, fire and cold can be hit
 - **V01.1.056** AI Dungeon Master at the table: foes with several attacks, bosses at least two; a foe's life as a word (bruised, badly hurt, nearly beaten), states with "N turns left"; speech recognition knows the round's names; every roll with a dice receipt, the narration names only numbers on a receipt; reading aloud marks the sentence being spoken
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.052** AI Dungeon Master: economy part 1: one price rule with price bands per rarity, legendary things not for sale, treasures by class and level, healing potions 2 gold per life, spell scrolls by grade, start gold 25; plus 12 new weapons and 19 protection things in the SRD catalog
 - **V01.1.051** AI Dungeon Master: the vault as a hand-drawn plan (ink walls, crosshatch, grid, furniture per room, numbers and a key), 🔥 switches to torchlight
 - **V01.1.050** Qwen3.6 without refusals can be measured: modelle messen qwen36frei
-- **V01.1.049** AI Dungeon Master: damage kinds: spells hit with their own kind, magic weapons go through resistance, rings and potions with resistance, weak spots shown only after a hit; time of day for the stage; hero sheet and right column no longer jump
 
 
 

@@ -194,6 +194,7 @@
     "dungeon_gold": false,
     "dungeon_grenzen": true,
     "dungeon_schreiber": false,
+    "dungeon_zufall": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

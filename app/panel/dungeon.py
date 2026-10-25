@@ -81,6 +81,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
     POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
     POST   /api/profile/dungeon/{rid}/grenzen     {linien, schleier}: the own seat's lines and veils; {x: true} the X-Karte (dungeon_grenzen)
+    POST   /api/profile/dungeon/{rid}/zufall      host: {regeln} the round's own random rules (dungeon_zufall)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
@@ -119,6 +120,7 @@ import dungeon_mut as mut
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
+import dungeon_zufall as zufall
 import dungeon_gold as gold
 import dungeon_legenden as legenden
 import dungeon_warten as warten
@@ -394,7 +396,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0)
+                  oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0)
 
 
 def _go(coro, name):
@@ -3031,6 +3033,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
         fakten["personen"] = dungeon_karte.leute(rd)     # who is here, elsewhere (with the place) and travels along (Punkt 2)
     fakten.update(kampf.facts(_me, r, rd, _living(rd), li))
     fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
+    fakten.update(zufall.facts(rd.get("zufall_hinweise") or []))   # the hints of the host's random rules (Tabletop-Punkt 9)
     if wuerfe is not None:
         fakten["proben"] = wuerfe
     if zuege:
@@ -3578,6 +3581,9 @@ async def run_turn(rid, turn):
                 cur["beleg_n"] = max(int(cur.get("beleg_n") or 0), int(rd.get("beleg_n") or 0))
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
                       kampfwuerfe=([x for x in hits if x["pid"] in seats], [x for x in zuege if x["pid"] in seats]) if story else ([], []))
+                if story:                         # the host's random rules (Tabletop-Punkt 9), their hints for the next narration
+                    cur["zufall_hinweise"] = (zufall.roll(_me, r, cur, "zug") + (zufall.roll(_me, r, cur, "ort") if cur["szene"].get("ort") != ort0 else [])
+                                              + (zufall.roll(_me, r, cur, "kampf") if cur.get("kampf") and not kampf0 else []))
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
@@ -4838,6 +4844,7 @@ def view(rid, pid, now=None):
     out["kampf"] = kampf.view(_me, r, rd, host)
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
     out["grenzen"] = grenzen.view(rd, pid) if me.get("held") else None
+    out["zufall"] = zufall.view(rd, host, lang)
     out["siedlung"] = gold.view(_me, r, rd, pid)
     mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
@@ -5246,9 +5253,9 @@ def for_live():
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
-            **grenzen.for_live(rs),
+            **grenzen.for_live(rs), **zufall.for_live(rs),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
-                                 "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg")}}
+                                 "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben")}}
 
 
 def own_count(uid):
@@ -5910,6 +5917,29 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
             rd["vorlesen"] = bool(b.get("an"))
             _write(d)
         print(f"dungeon: vorlesen | {'an' if b.get('an') else 'aus'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/zufall", dependencies=[Depends(assistant)])
+async def zufall_setzen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {regeln} the round's own random rules (Tabletop-Punkt 9, dungeon_zufall.put), all of them replaced."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            zufall.put(_me, rd, b)
+            _write(d)
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)

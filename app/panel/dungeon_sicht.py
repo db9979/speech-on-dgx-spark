@@ -12,7 +12,8 @@ A new secret of the game comes into GEHEIM in the same commit as the secret itse
 import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
-NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund")
+NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall")
+SCHALTER = ("dungeon_zufall",)   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -59,6 +60,11 @@ GEHEIM = {
     "ooc": (("Eine Frage an den Spielleiter außerhalb des Spiels", "A question to the game master outside the game"),
             {"gastgeber"}, _ooc),
     "tisch": (("Das Tischgespräch", "The table talk"), {"gastgeber", "spieler"}, _tisch),
+    "zufall": (("Die Zufallsregeln des Gastgebers", "The host's random rules"), {"gastgeber"},
+               lambda rd, m: rd.update(zufall=[{"name": "Steinschlag", "prozent": 10, "ausloeser": "zug", "wirkung": "hinweis",
+                                                "zahl": 0, "text": m, "wer": "alle"}])),
+    "zufall_hinweis": (("Der Hinweis einer getroffenen Zufallsregel", "The hint of a random rule that hit"), {"modell"},
+                       lambda rd, m: rd.update(zufall_hinweise=[{"regel": "Steinschlag", "hinweis": m}])),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

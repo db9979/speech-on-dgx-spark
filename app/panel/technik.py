@@ -187,6 +187,7 @@ MODULE = {
     "dungeon_legenden": ("dienste", "Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne"),
     "dungeon_grenzen": ("dienste", "Dungeon-Master-Grenzen: Grenzen und Schleier je Platz als Wortlisten, anonyme X-Karte erzählt die letzte Szene neu"),
     "dungeon_schreiber": ("dienste", "Dungeon-Master-Schreiber: ein zweiter Modellaufruf schlägt Änderungen vor, das Panel nimmt sie nach festen Grenzen"),
+    "dungeon_zufall": ("dienste", "Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt"),
     "dungeon_sicht": ("dienste", "Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht"),
     "dungeon_mut": ("dienste", "Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler"),
     "dungeon_kampf": ("dienste", "Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse"),
