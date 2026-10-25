@@ -277,6 +277,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_erzaehler.py` | Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen |
 | `app/panel/dungeon_gast.py` | Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse |
 | `app/panel/dungeon_gold.py` | Dungeon-Master-Gold mit Zweck: Gasthaus, Schmied, Lehrstunde und Gerücht in Siedlungen zu festen Preisen |
+| `app/panel/dungeon_grenzen.py` | Dungeon-Master-Grenzen: Grenzen und Schleier je Platz als Wortlisten, anonyme X-Karte erzählt die letzte Szene neu |
 | `app/panel/dungeon_kampf.py` | Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse |
 | `app/panel/dungeon_karte.py` | Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort |
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
@@ -284,6 +285,8 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
 | `app/panel/dungeon_pruefstand.py` | Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell |
 | `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen |
+| `app/panel/dungeon_schreiber.py` | Dungeon-Master-Schreiber: ein zweiter Modellaufruf schlägt Änderungen vor, das Panel nimmt sie nach festen Grenzen |
+| `app/panel/dungeon_sicht.py` | Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht |
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |

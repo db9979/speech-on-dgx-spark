@@ -108,6 +108,7 @@ OPEN = {
     "/api/dungeon/ding": "Dungeon-Master seat link: a picture (PNG) of an item or spell by its fixed name (ding-<hash> or fund-<iid>, pattern checked), no personal data, own rate limit dungeonding; same door as /api/dungeon/platz",
     "/api/dungeon/daumen": "Dungeon-Master seat link: the seat's 👍/👎 for a narration of its own round (a number, no text), counted per world and tone; same door as /api/dungeon/platz",
     "/api/dungeon/weiter": "Dungeon-Master „Weiterspielen“ link of a guest's mail: a short-lived one-time token (dungeon_gast.redeem, only its hash kept, used once), 404 unless guest accounts are on, Origin check, rate limit and lockout like a PIN (dungeon._door), answers only one fresh key for that seat",
+    "/api/dungeon/grenzen": "Dungeon-Master seat link: the seat's own lines and veils (short plain words, GRENZEN_MAX each) or the anonymous X-card of its own round, once a minute (dungeon_grenzen); same door as /api/dungeon/platz",
     "/api/dungeon/tisch": "Dungeon-Master seat link: one line of table talk to the other seats of its own round, cleaned and cut to 200 characters, never given to the model; same door as /api/dungeon/platz",
     "/api/dungeon/tippt": "Dungeon-Master seat link: a keystroke of the seat, so the others see „X schreibt …“ for 6 seconds (memory only); same door as /api/dungeon/platz",
     "/api/dungeon/gast": "Dungeon-Master seat link: the guest account of the seat (code by mail, sign in, keep heroes, turn mail, delete); own switch dungeongast, rate limit dungeonkonto, same door as /api/dungeon/platz",

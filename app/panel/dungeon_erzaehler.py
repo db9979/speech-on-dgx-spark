@@ -43,7 +43,7 @@ GELINGT = ("gibt nach", "geben nach", "bricht auf", "aufgebrochen", "zerbricht",
            "schafft es", "gibt den weg frei", "gives way", "give way", "bursts open", "breaks open", "swings open",
            "springs open", "flies open", "off its hinges", "succeeds", "manages to", "shatters", "splinters")
 HAELT = ("nicht", "kein", "vergeblich", "hält stand", "widersteht", "umsonst", "not ", "n't", "in vain", "holds", "resists")
-HART = ("probe", "gegner", "beleg")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
+HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 # Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
 # id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
 _BELEG_WORT = r"(?:wurf|würf\w*|gewürfelt|schaden\w*|lebenspunkte|trefferpunkte|rolls?|rolled|damage|hit points)"
@@ -76,7 +76,7 @@ _SATZ = re.compile(r"[.!?;:]+")
 SAMPLING = {"erzaehlen": {"temperature": 0.85, "top_p": 0.95, "presence_penalty": 0.4, "frequency_penalty": 0.3},
             "prolog": {"temperature": 0.85, "top_p": 0.95, "presence_penalty": 0.4, "frequency_penalty": 0.3},
             "proben": {"temperature": 0.3}, "wahrheit": {"temperature": 0.9, "top_p": 0.95},
-            "kurz": {"temperature": 0.3}}
+            "kurz": {"temperature": 0.3}, "schreiber": {"temperature": 0.2}}
 SAMPLING_SONST = {"temperature": 0.8}
 
 
@@ -289,6 +289,10 @@ def style_text(dm, r, rd, lang):
 
 # ---------------------------------------------------------------- fixed checks with one rewrite
 HINWEIS = {
+    "schleier": ("Hinweis: Deine Erzählung malt aus, was am Tisch nur angedeutet werden soll (in den Daten „grenzen“ unter "
+                 "„nur_andeuten“). Nenne es höchstens einmal in einem Satz und blende dann ab, ohne Einzelheiten.",
+                 "Note: your narration paints out what at this table is only to be hinted at (in the data \"grenzen\" "
+                 "under \"nur_andeuten\"). Name it at most once in one sentence, then fade out, without details."),
     "widerspruch": ("Hinweis: Deine Erzählung widerspricht Dingen mit festen Merkmalen: {namen}. Beschreibe sie genau so "
                     "weiter, mit demselben Stoff, derselben Farbe, demselben Zustand.",
                     "Note: your narration contradicts things with fixed features: {namen}. Describe them exactly so, with "
@@ -365,6 +369,10 @@ def repair(rd, story, fault, missing):
     elif fault == "gegner":
         add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
             f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
+    elif fault == "schleier":                    # of the sentences with a veil only the first stays
+        import dungeon_grenzen
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, text=dungeon_grenzen.cut(rd, story["text"]))
     elif fault == "beleg":                       # the receipts say the numbers, not the narration
         add = [("Es gelten die Würfel-Belege: " if not li else "The dice receipts count: ") + ", ".join(m for m in missing if m.startswith("W-")) + "."]
     else:
@@ -407,6 +415,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
     (told_as_done, the check's wofuer), a foe of the encounter not named by
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
+    a veil of the table more than once (dungeon_grenzen.veiled; the hint never repeats its words, they stay data),
     too much repeated from the last narrations."""
     text = story["text"]
     if len(text) < ZU_KURZ:
@@ -428,6 +437,11 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     if off:
         dm._day.bump("beleg_falsch")
         return "beleg", [str(n) for n in off] + [f"{x['beleg']} {x.get('name', '')}: {x.get('gesamt', '')}" for x in [*wuerfe, *hits, *zuege] if x.get("beleg")]
+    import dungeon_grenzen
+    veil = dungeon_grenzen.veiled(rd, text)
+    if veil:                                     # a veil of the table more than once (Tabletop-Punkt 18)
+        dm._day.bump("schleier")
+        return "schleier", veil
     far = far_places(rd, story, low)
     if far:
         return "karte", far

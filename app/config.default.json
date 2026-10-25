@@ -192,6 +192,8 @@
     "dungeon_regler": false,
     "dungeon_heldenmut": false,
     "dungeon_gold": false,
+    "dungeon_grenzen": true,
+    "dungeon_schreiber": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

@@ -5258,6 +5258,193 @@ class Fight(Turns):
         helpers.set_config(dungeon_heldenmut=False)
         self.assertEqual(self.v.post("/api/dungeon/daumen", json=lob).status_code, 400)
 
+    def test_lines_veils_and_the_x_card(self):
+        """Tabletop-Punkt 18 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, before the uncensored model):
+        every seat sets lines and veils; the table sees them together without names; a line refuses an action and a
+        narration, a veil may stand once (else told again, at last cut); the model gets them only as data. The X-card is
+        anonymous, stops the reading and retells the last scene, without the model or with a line in fixed words."""
+        import dungeon_grenzen as grenzen
+        helpers.keep_chat(self, "dungeon_grenzen")
+        helpers.set_config(dungeon_grenzen=True)
+        self.assertIn("chat.dungeon_grenzen", dungeon.features.DEFAULT_ON)          # protection at the table from the start
+        url = f"/api/profile/dungeon/{self.rid}"
+        r = self.c.post(url + "/grenzen", json={"linien": "Spinnen, spinnen, x, " + ", ".join(f"W{i}x" for i in range(12)), "schleier": ["Ratten"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        g = r.json()["grenzen"]
+        self.assertEqual(g["meine"]["linien"][:2], ["Spinnen", "W0x"])               # no doubles, nothing under two letters
+        self.assertEqual(len(g["meine"]["linien"]), grenzen.GRENZEN_MAX)
+        self.assertEqual(self.c.post(url + "/grenzen", json={"linien": {"a": 1}}).status_code, 400)
+        self.assertEqual(self.c.post(url + "/grenzen", json={"linien": "Spinnen", "schleier": "Ratten"}).status_code, 200)
+        r = self.v.post("/api/dungeon/grenzen", json={"code": self.code, "schleier": "Nebel"})
+        self.assertEqual(r.status_code, 200, r.text)
+        g = r.json()["grenzen"]
+        self.assertEqual(g["meine"], {"linien": [], "schleier": ["Nebel"]})            # the guest's own only
+        self.assertEqual(g["tisch"], {"linien": ["spinnen"], "schleier": ["ratten", "nebel"]})
+        self.assertFalse({"Arvid", "Bela", self.host, self.gp} & set(json.dumps(g["tisch"]).split('"')))   # never whose
+        r = self.c.post(url + "/aktion", json={"text": "Ich suche nach Spinnen.", "zug": 1})
+        self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"))  # a line refuses an action
+        rd, rules = self.state(self.rid), dungeon.rules()
+        self.assertIn('"grenzen": {"nie": ["spinnen"], "nur_andeuten": ["ratten", "nebel"]}', dungeon.facts(rules, rd))
+        sys_ = dungeon.system_text(rules, rd, "erzaehlen")
+        self.assertIn(grenzen.GRENZEN_REGEL["de"], sys_)
+        self.assertFalse(any(w in sys_.lower() for w in ("spinnen", "ratten", "nebel")))   # the words only as data
+        self.act_all("Wir schleichen in den Kerker.")
+        rd = self.play([{"proben": []},
+                        {"erzaehlung": "Arvid und Bela schleichen in den Kerker, und überall krabbeln Spinnen über die feuchten Steine.", "frage_an": ""},
+                        {"erzaehlung": "Arvid und Bela schleichen in den Kerker, wo nur das Tropfen des Wassers die kalte Stille bricht.", "frage_an": ""}])
+        told = [e for e in rd["log"] if e["art"] == "dm"][-1]
+        self.assertNotIn("spinnen", told["text"].lower())                             # a line in the narration: told again
+        for pid, code in ((self.host, None), (self.gp, self.code)):
+            body = {"text": "Wir gehen weiter.", "zug": 2}
+            r = self.c.post(url + "/aktion", json=body) if not code else self.v.post("/api/dungeon/aktion", json=dict(body, code=code))
+            self.assertEqual(r.status_code, 200, r.text)
+        veil = ("Arvid und Bela finden die alte Kammer im Kerker. Man erzählt sich von Ratten an diesem Ort. Die Ratten huschten "
+                "Tage und Nächte. Dann gehen sie weiter in den Gang.")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rd = self.play([{"proben": []}] + [{"erzaehlung": veil, "frage_an": ""}] * 3)
+        told = [e for e in rd["log"] if e["art"] == "dm"][-1]
+        self.assertEqual(told["text"], "Arvid und Bela finden die alte Kammer im Kerker. Man erzählt sich von Ratten an diesem Ort. Dann gehen sie weiter in den Gang.")
+        self.assertIn("dungeon: nachbessern | fest | schleier", out.getvalue())       # three tries, then the fixed cut
+        self.assertGreaterEqual(dungeon.for_live()["schleier"], 1)
+        # the X-card: anonymous, the reading stops, the scene is told again
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["lesung"] = {"n": told["n"], "k": 2, "fertig": False, "fehler": 0, "texte": ["a", "b"]}
+            dungeon._write(d)
+        self.spawned.clear()
+        r = self.v.post("/api/dungeon/grenzen", json={"code": self.code, "x": True})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.spawned, ["dungeon"])
+        rd = self.state(self.rid)
+        self.assertEqual(rd["log"][-1]["text"], list(grenzen.X_LOG))                  # nobody's name in the feed
+        self.assertNotIn("pid", rd["log"][-1])
+        self.assertEqual((rd["lesung"]["k"], rd["lesung"]["x"]), (0, True))
+        self.assertTrue(r.json()["grenzen"]["x"]["laeuft"])
+        r = self.c.post(url + "/grenzen", json={"x": True})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "xkarte wartet"))   # once at a time
+        dungeon._ton_set(self.rid, k=3, text="c")                                     # a reading still running counts no more
+        self.assertEqual(self.state(self.rid)["lesung"]["k"], 0)
+        calm = "Arvid und Bela lassen die Kammer hinter sich. Der Gang liegt ruhig vor ihnen, und nur das Wasser tropft leise."
+        old = dungeon.ask_model
+        self.addCleanup(setattr, dungeon, "ask_model", old)
+        dungeon.ask_model = fake([{"text": calm}])
+        asyncio.run(grenzen.retell(dungeon, self.rid, told["n"]))
+        rd = self.state(self.rid)
+        again = [e for e in rd["log"] if e["art"] == "dm"][-1]
+        self.assertEqual((again["text"], again["x"]), (calm, True))
+        self.assertTrue(rd["x"]["fertig"])
+        self.assertIn(grenzen.X_FOLGE["de"], dungeon.system_text(dungeon.rules(), rd, "erzaehlen"))
+        r = self.c.post(url + "/grenzen", json={"x": True})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "xkarte oft"))      # at most once a minute
+        with mock.patch.object(grenzen, "clock", lambda: time.time() + grenzen.X_S + 1):
+            self.assertEqual(self.c.post(url + "/grenzen", json={"x": True}).status_code, 200)
+        dungeon.ask_model = fake([{"text": "Arvid und Bela sehen, wie Spinnen aus der Kammer kriechen, doch sie gehen ruhig weiter."}])
+        asyncio.run(grenzen.retell(dungeon, self.rid, told["n"]))
+        self.assertEqual([e for e in self.state(self.rid)["log"] if e["art"] == "dm"][-1]["text"], grenzen.X_AUS[0])   # a line: fixed words
+        live = dungeon.for_live()
+        self.assertEqual((live["grenzen_plaetze"], live["x_laeuft"]), (2, 0))
+        self.assertGreaterEqual(live["x_karte"], 2)
+        helpers.set_config(dungeon_grenzen=False)                                    # off: nothing counts, nothing to set
+        self.assertIsNone(self.c.get(url).json()["grenzen"])
+        self.assertEqual(self.c.post(url + "/grenzen", json={"x": True}).json()["detail"], "grenzen aus")
+        self.assertFalse(dungeon.bad_words(dungeon.rules(), self.state(self.rid), "Spinnen"))
+
+    def test_every_secret_stays_with_its_viewers(self):
+        """Tabletop-Punkt 3 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): one leak test per secret of
+        dungeon_sicht.GEHEIM; a marker planted in it stands in what the host, another seat, the car and the model get
+        exactly where GEHEIM allows it, nowhere else."""
+        import dungeon_sicht as sicht
+        self.assertEqual(set(sicht.BETRACHTER), {"gastgeber", "spieler", "auto", "modell"})
+        for i, (gid, (was, sehen, plant)) in enumerate(sicht.GEHEIM.items()):
+            self.assertTrue(sehen <= set(sicht.BETRACHTER) and all(len(x) > 5 for x in was))
+            mark = 4711000 + i if gid == "gegner_leben" else f"Geheimnis{gid.replace('_', '')}Q{i}"
+            with dungeon._lock:
+                d = dungeon._read()
+                before = copy.deepcopy(d["runden"][self.rid])
+                plant(d["runden"][self.rid], mark)
+                dungeon._write(d)
+            try:
+                got = sicht.docs(dungeon, self.rid, self.host, self.gp)
+            finally:
+                with dungeon._lock:
+                    d = dungeon._read()
+                    d["runden"][self.rid] = before
+                    dungeon._write(d)
+            for wer in sicht.BETRACHTER:
+                self.assertEqual(str(mark) in got[wer], wer in sehen, f"{gid} bei {wer}")
+        view = {"plan": {"ziel": "x"}, "wahrheit": {}, "kampf": {"gegner": [{"name": "Ork", "leben": 3, "max": 9, "lage": "schwer"}]}, "zug": 2}
+        self.assertEqual(sicht.sicht(view, "spieler"), {"plan": None, "wahrheit": {}, "kampf": {"gegner": [{"name": "Ork", "lage": "schwer"}]}, "zug": 2})
+        self.assertIs(sicht.sicht(view, "gastgeber"), view)
+
+    def test_the_scribe_proposes_and_the_panel_takes_by_fixed_limits(self):
+        """Tabletop-Punkt 1 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): after a told turn a second
+        small model call proposes what the narration changed; the panel takes only what stands in it, within fixed limits
+        (gold up to 10 × level, a thing only from the ground, life never in a fight nor down to 0, the place only without
+        a map, a person only new), at most NEHMEN_MAX, once a turn; every proposal is logged, taken or dropped."""
+        import dungeon_schreiber as schreiber
+        helpers.keep_chat(self, "dungeon_schreiber")
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            dolch = dungeon.item(r, "dolch", "gewoehnlich", rng=random.Random(1))
+            rd["boden"] = [dolch]
+            rd["wahrheit"] = {"personen": []}
+            dungeon._write(d)
+        name = dungeon.item_view(r, dolch, "de")["name"]
+        self.act_all("Wir durchsuchen die Kammer.")
+        rd = self.play([{"proben": []}, {"erzaehlung": f"Arvid findet in der Truhe 7 Goldmünzen, und Bela hebt {name} vom Boden auf. "
+                                                       "Der alte Wirt Gerold winkt ihnen aus der Taverne zu.", "frage_an": ""}])
+        turn = [e for e in rd["log"] if e["art"] == "dm"][-1]["n"]
+        gold0 = {p["held"]["name"]: p["held"]["gold"] for p in rd["plaetze"].values() if p.get("held")}
+        self.assertFalse(schreiber.on(rd))                                             # off from the start
+        vor = {"aenderungen": [{"art": "gold", "wer": "Arvid", "zahl": 7}, {"art": "gold", "wer": "Bela", "zahl": 50},
+                               {"art": "ding", "wer": "Bela", "name": name}, {"art": "person", "name": "Gerold"},
+                               {"art": "leben", "wer": "Arvid", "zahl": -9}, {"art": "ort", "name": "Taverne"}]}
+        old = dungeon.ask_model
+        self.addCleanup(setattr, dungeon, "ask_model", old)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            dungeon.ask_model = fake([vor])
+            asyncio.run(schreiber.abgleich(dungeon, self.rid, turn))
+        self.assertIn("dungeon: schreiber | aus", out.getvalue())
+        helpers.set_config(dungeon_schreiber=True)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            dungeon.ask_model = fake([vor, vor])
+            asyncio.run(schreiber.abgleich(dungeon, self.rid, turn))
+            asyncio.run(schreiber.abgleich(dungeon, self.rid, turn))               # once a turn
+        rd = self.state(self.rid)
+        held = {p["held"]["name"]: p["held"] for p in rd["plaetze"].values() if p.get("held")}
+        self.assertEqual(held["Arvid"]["gold"], gold0["Arvid"] + 7)
+        self.assertEqual(held["Bela"]["gold"], gold0["Bela"])                         # 50 is over the limit and not in the text
+        self.assertIn(dolch["i"], [x["i"] for x in held["Bela"]["tasche"]])
+        self.assertEqual(rd["boden"], [])
+        self.assertEqual([p["name"] for p in rd["wahrheit"]["personen"]], ["Gerold"])
+        lines = [x for x in out.getvalue().splitlines() if x.startswith("dungeon: schreiber")]
+        self.assertEqual(lines[:6], ["dungeon: schreiber | angenommen | gold", "dungeon: schreiber | verworfen | gold | grenze",
+                                     "dungeon: schreiber | angenommen | ding", "dungeon: schreiber | angenommen | person",
+                                     "dungeon: schreiber | verworfen | leben | grenze", "dungeon: schreiber | verworfen | ort | karte"])
+        self.assertTrue(lines[6].startswith("dungeon: schreiber | ok | 3 angenommen | 3 verworfen"))
+        self.assertTrue(lines[7].startswith("dungeon: schreiber | ok | 0 angenommen | 0 verworfen"))
+        self.assertEqual(sum(1 for e in rd["log"] if e.get("schreiber")), 3)          # „📜 Nachgetragen“ in the feed
+        # the fixed limits on their own
+        cur = copy.deepcopy(rd)
+        text = "Arvid wird leicht verletzt und verliert 2 Gold, dann geht Arvid in den Hain."
+        self.assertEqual(schreiber.take(dungeon, r, dict(cur, kampf={"gegner": []}), turn + 1, text, {"art": "leben", "wer": "Arvid", "zahl": -2}), (False, "kampf"))
+        held["Arvid"]["leben"] = 2
+        cur = copy.deepcopy(rd)
+        ok, _ = schreiber.take(dungeon, r, cur, turn + 1, text, {"art": "leben", "wer": "Arvid", "zahl": -3})
+        self.assertEqual((ok, next(p["held"]["leben"] for p in cur["plaetze"].values() if p.get("held") and p["held"]["name"] == "Arvid")), (True, 1))   # never to 0
+        self.assertEqual(schreiber.take(dungeon, r, cur, turn + 1, text, {"art": "gold", "wer": "Bela", "zahl": 2}), (False, "wer"))   # not in the text
+        self.assertEqual(schreiber.take(dungeon, r, cur, turn + 1, text, {"art": "ding", "wer": "Arvid", "name": "Schwert"}), (False, "nicht am boden"))
+        self.assertEqual(schreiber.take(dungeon, r, dict(cur, karte=None), turn + 1, text, {"art": "ort", "name": "Hain"})[0], True)   # without a map
+        self.assertEqual(schreiber.take(dungeon, r, cur, turn + 1, text, {"art": "zauber"}), (False, "art"))
+        live = dungeon.for_live()
+        self.assertGreaterEqual(live["schreiber_an"], 3)
+        self.assertGreaterEqual(live["schreiber_weg"], 3)
+
     def test_gold_with_a_purpose_in_a_settlement(self):
         """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by
         the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson

@@ -80,11 +80,12 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
     POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
+    POST   /api/profile/dungeon/{rid}/grenzen     {linien, schleier}: the own seat's lines and veils; {x: true} the X-Karte (dungeon_grenzen)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
-    POST   /api/dungeon/platz|beitreten|lage|aktion|mehrzeit|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/dungeon/platz|beitreten|lage|aktion|mehrzeit|held|figur|ton|hoeren|termin|daumen|grenzen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
     POST   /api/dungeon/weiter       {t}: the one-time „Weiterspielen“ link of a guest's mail, a fresh key for its seat (play_on)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
@@ -115,6 +116,9 @@ import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
 import dungeon_mut as mut
+import dungeon_grenzen as grenzen
+import dungeon_sicht as sicht
+import dungeon_schreiber as schreiber
 import dungeon_gold as gold
 import dungeon_legenden as legenden
 import dungeon_warten as warten
@@ -390,7 +394,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, hoer_namen=0)
+                  oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0)
 
 
 def _go(coro, name):
@@ -3026,6 +3030,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
         fakten["karte"] = dungeon_karte.facts(r, rd)
         fakten["personen"] = dungeon_karte.leute(rd)     # who is here, elsewhere (with the place) and travels along (Punkt 2)
     fakten.update(kampf.facts(_me, r, rd, _living(rd), li))
+    fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
     if wuerfe is not None:
         fakten["proben"] = wuerfe
     if zuege:
@@ -3055,6 +3060,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
+        t += grenzen.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3082,10 +3088,11 @@ def plain(text, n):
 
 
 def bad_words(r, rd, text):
-    """Whether a text holds a word the round's tone, the list „nie“ or the taboos of its story refuse (lower case, part
-    of a word)."""
+    """Whether a text holds a word the round's tone, the list „nie“, the taboos of its story or the lines of its seats
+    (dungeon_grenzen) refuse (lower case, part of a word)."""
     low = " " + text.lower() + " "
-    return any(w.lower() in low for w in list(_ton(r, rd)["woerter"]) + list(r["nie"]) + list((rd.get("plan") or {}).get("tabus") or []))
+    return any(w.lower() in low for w in list(_ton(r, rd)["woerter"]) + list(r["nie"]) + list((rd.get("plan") or {}).get("tabus") or [])
+               + grenzen.lines(rd))            # the lines of the seats at the table (Tabletop-Punkt 18)
 
 
 def _name_map(rd):
@@ -3597,6 +3604,8 @@ async def run_turn(rid, turn):
         await asyncio.to_thread(keep)
         if said:
             _go(speak_turn(rid, turn, said), name="dungeon")
+        if story and schreiber.on(rd):           # Schreiber-Abgleich (Tabletop-Punkt 1): what the narration changed
+            _go(schreiber.abgleich(_me, rid, turn), name="dungeon")
         if any(kurz):
             _go(erz.summarize(_me, rid), name="dungeon")
         if bild:
@@ -4002,6 +4011,8 @@ def _ton_set(rid, **kw):
             rd["lesung"] = {"n": kw["n"], "k": 0, "fertig": False, "fehler": 0}
             _ton_drop(rid, {n for n in rd["ton_n"]})
         else:
+            if (rd.get("lesung") or {}).get("x"):     # an X-Karte stopped this reading: only its end still counts
+                kw, text = {k: v for k, v in kw.items() if k == "fertig"}, None
             rd.setdefault("lesung", {}).update(kw)
         if text and kw.get("k"):           # piece k-1 is texte[k-1], so the mark follows the pieces played
             rd["lesung"]["texte"] = (rd["lesung"].get("texte") or [])[:kw["k"] - 1] + [str(text)[:vortrag.TEIL_MAX]]
@@ -4826,6 +4837,7 @@ def view(rid, pid, now=None):
     out.update(erz.view(rd, pid, host))
     out["kampf"] = kampf.view(_me, r, rd, host)
     out["mut"] = mut.view(rd, pid) if me.get("held") else None
+    out["grenzen"] = grenzen.view(rd, pid) if me.get("held") else None
     out["siedlung"] = gold.view(_me, r, rd, pid)
     mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
@@ -4837,7 +4849,7 @@ def view(rid, pid, now=None):
     import dungeon_dingbild
     import dungeon_musik
     out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
-    return dungeon_dingbild.add(r, rd, out)
+    return sicht.sicht(dungeon_dingbild.add(r, rd, out), "gastgeber" if host else "spieler")   # the last step (Tabletop-Punkt 3)
 
 
 BILD_NEIN = {"aus": ("Für diese Runde ist „Bilder malen“ nicht freigegeben.", "Painting pictures is not released for this round."),
@@ -5234,7 +5246,9 @@ def for_live():
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen")}}
+            **grenzen.for_live(rs),
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
+                                 "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg")}}
 
 
 def own_count(uid):
@@ -5586,6 +5600,32 @@ async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
         return {"daumen": await asyncio.to_thread(lambda: erz.thumb(_me, rid, _seat_uid(rid, uid), b.get("zug"), b.get("gut")))}
     except KNOWN as e:
         raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/grenzen", dependencies=[Depends(assistant)])
+async def grenzen_setzen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """{linien, schleier}: the own seat's lines and veils (Tabletop-Punkt 18); {x: true} lays the X-Karte."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        return await asyncio.to_thread(limits_of, rid, _seat_uid(rid, uid), b)
+    except KNOWN as e:
+        raise _http(e)
+
+
+def limits_of(rid, pid, b):
+    """{x: true}: the X-Karte (dungeon_grenzen.lay), else the seat's two lists; returns the table's view."""
+    if b.get("x") is True:
+        grenzen.lay(_me, rid, pid)
+        return view(rid, pid)
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        grenzen.put(_me, rd, pid, b)
+        _write(d)
+    return view(rid, pid)
 
 
 def praise(rid, pid, b):
@@ -6491,6 +6531,16 @@ async def gast_daumen(request: Request):
         if "aktion" in b:
             return {"mut": await asyncio.to_thread(praise, rid, pid, b)}
         return {"daumen": await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"))}
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/dungeon/grenzen")
+async def gast_grenzen(request: Request):
+    """{"code", "linien", "schleier"}: the seat's lines and veils; {"code", "x": true} lays the X-Karte."""
+    b, rid, pid = await _guest(request)
+    try:
+        return await asyncio.to_thread(limits_of, rid, pid, b)
     except KNOWN as e:
         raise _http(e)
 

@@ -1829,6 +1829,13 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['oel']} Öle aufgetragen" if dgn.get("oel") else "")
                         + (f" · heute {dgn['beleg_falsch']} Erzählungen mit Zahlen ohne Würfel-Beleg nachgebessert" if dgn.get("beleg_falsch") else "")
                         + (f" · heute {dgn['hoer_namen']} Aufnahmen mit den Namen der Runde gehört" if dgn.get("hoer_namen") else "")
+                        + (f" · {dgn['grenzen_plaetze']} Plätze mit Grenzen oder Schleiern" if dgn.get("grenzen_plaetze") else "")
+                        + (f" · heute {dgn['grenzen']} Grenzen gesetzt" if dgn.get("grenzen") else "")
+                        + (f" · heute {dgn['x_karte']} X-Karten gelegt" if dgn.get("x_karte") else "")
+                        + (f" · {dgn['x_laeuft']} Szenen werden nach einer X-Karte neu erzählt" if dgn.get("x_laeuft") else "")
+                        + (f" · heute {dgn['schleier']} Erzählungen wegen eines Schleiers nachgebessert" if dgn.get("schleier") else "")
+                        + (f" · heute {dgn.get('schreiber_an', 0)} Änderungen vom Schreiber angenommen, {dgn.get('schreiber_weg', 0)} verworfen"
+                           if dgn.get("schreiber_an") or dgn.get("schreiber_weg") else "")
                         + (f" · heute {dgn.get('daumen_hoch', 0)} 👍, {dgn.get('daumen_runter', 0)} 👎" if dgn.get("daumen_hoch") or dgn.get("daumen_runter") else "")
                         + (f" · {dgn['warten']} Runden warten auf die Erzählung" if dgn.get("warten") else "")
                         + (f" · heute {dgn['tisch']} Zeilen Tischgespräch" if dgn.get("tisch") else "")

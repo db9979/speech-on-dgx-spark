@@ -267,6 +267,14 @@ FEATURES = (
     # the other players' 👍; fixed rules of the panel, never the model
     F("dungeonheldenmut", "Heldenmut", "Heroic courage", "data", ("dungeon_heldenmut",), parent="dungeon",
       me="dmbox", guide="dungeonheldenmut"),
+    # Grenzen und X-Karte (dungeon_grenzen.py, Tabletop-Punkt 18): lines and veils per seat as word lists, an anonymous
+    # X-card retells the last scene; fixed rules of the panel, never the model; on from the start (DEFAULT_ON)
+    F("dungeongrenzen", "Grenzen und X-Karte", "Lines and X-card", "data", ("dungeon_grenzen",), parent="dungeon",
+      me="dmbox", guide="dungeongrenzen"),
+    # Schreiber-Abgleich (dungeon_schreiber.py, Tabletop-Punkt 1): after each turn a small model call proposes what the
+    # narration changed (gold, a thing from the ground, life outside a fight, place, person); the panel takes it by fixed limits
+    F("dungeonschreiber", "Schreiber-Abgleich", "Scribe check", "data", ("dungeon_schreiber",), parent="dungeon",
+      me="dmbox", guide="dungeonschreiber"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
     # level; fixed rules of the panel, never the model
     F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",
@@ -693,6 +701,7 @@ DEFAULT_ON = {
     "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",
+    "chat.dungeon_grenzen": "Schutz am Spieltisch (Tabletop-Punkt 18): Grenzen, Schleier und X-Karte gelten, bevor ein Modell erzählt",
     "chat.esp32_ota_http": "Dominik 2026-10-11: Lautsprecher-Updates über http bleiben erlaubt (sonst nur per USB)",
 }
 # Grundausstattung (Dominik 2026-10-17, plan grundeinstellungen/plan.md): what makes a newcomer's chat good from the

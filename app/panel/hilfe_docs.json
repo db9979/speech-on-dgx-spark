@@ -5157,6 +5157,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Grenzen, Schleier und X-Karte (V01.1.058, Tabletop-Punkt 18, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Plan /mnt/project-files/plaene/dungeon-tabletop-ideen.md; vor dem ersten Spiel mit einem unzensierten Modell): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Grenzen und X-Karte* (chat.dungeon_grenzen, dungeon_grenzen.py), als Schutz ab Werk an (features.DEFAULT_ON). Grenzen und Schleier: Unter „🛡 Grenzen“ neben dem Heldenbogen legt jeder Platz fest, was im Spiel nie vorkommt (Grenzen) und was nur angedeutet wird (Schleier), je bis zu GRENZEN_MAX (8) kurze Wörter mit Komma (POST /api/profile/dungeon/{rid}/grenzen, Gäste POST /api/dungeon/grenzen). Der Tisch sieht alle Wörter zusammen, nie, von wem sie sind. Eine Grenze zählt wie ein Wort der Wortliste (dungeon.bad_words): eine Aktion damit lehnt das Panel ab, eine Erzählung, ein NSC-Satz oder ein Name damit wird verworfen und neu erzählt. Ein Schleier darf in einer Erzählung nur einmal stehen; öfter ist der Fehler „schleier“ (dungeon_erzaehler.judge), das Modell erzählt mit einem festen Hinweis neu, beim letzten Versuch streicht das Panel die weitere"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n Sätze mit dem Schleier (dungeon_grenzen.cut). Das Modell bekommt beide Listen nur als Daten (grenzen mit nie und nur_andeuten) und dazu die feste Regel GRENZEN_REGEL, nie die Wörter als Anweisung; auch der Hinweis beim Nachbessern nennt sie nicht. X-Karte: „✖ X-Karte“ sagt mit einem Tipp, ohne Begründung und ohne Namen: das war zu viel. Im Verlauf steht nur „Jemand hat die X-Karte gelegt.“; das Vorlesen dieses Zuges stoppt auf jedem Gerät, das Modell erzählt die letzte Szene ruhiger neu (dungeon_grenzen.retell, die alte Szene nur als Daten), mit denselben Wortlisten geprüft, sonst blendet ein fester Satz ab; ihre Szenenbilder und Tonstücke fallen weg, und die nächsten X_ZUEGE (3) Erzählungen hören, dass sie davon wegführen sollen. Höchstens eine X-Karte je Minute und Runde, nicht während erzählt wird. Live: Zustand → Überblick zählt Plätze mit Grenzen oder Schleiern, laufende Neu-Erzählungen und am Tag gesetzte Grenzen, gelegte X-Karten und Nachbesserungen wegen eines Schleiers. „So spielst du“ hat eine Seite „Grenzen und X-Karte“. Selbsttest test_lines_veils_and_the_x_card in test_dungeon. Sichtfilter (Punkt 3, Idee aus loreweaver, MIT, eigener Code): Jedes Geheimnis der Runde s"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "teht einmal in dungeon_sicht.GEHEIM mit seinen Betrachtern: Gastgeber, ein anderer Platz (Gast, Fernseher und App zeigen die Ansicht eines Platzes), das Auto und das Sprachmodell. Die verborgene Wahrheit, der Plan der Geschichte und die Merkmale der Dinge sehen nur Gastgeber und Modell, das Leben eines Gegners als Zahl ebenso, die offene Aktion eines anderen Platzes nur er selbst und das Modell, eine Frage außerhalb des Spiels nur der eigene Platz, das Tischgespräch nur die Plätze und nie das Modell, Schlüssel und Gerät eines Platzes niemand. sicht(doc, betrachter) ist der letzte Schritt jeder Ansicht des Tisches (dungeon.view). Der Selbsttest test_every_secret_stays_with_its_viewers legt in jedes Geheimnis eine Marke und sucht sie in dem, was jeder Betrachter bekommt (dungeon_sicht.docs): sie muss genau dort stehen, wo GEHEIM es erlaubt. Ein neues Geheimnis kommt im selben Commit dazu. Schreiber-Abgleich (Punkt 1, Idee aus loreweaver, MIT, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Schreiber-Abgleich* (chat.dungeon_schreiber, ab Werk aus: jeder Zug ein Modellaufruf mehr; dungeon_schreiber.py). Nach jedem erzählten Zug liest ein kleiner zweiter Aufruf d"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ie Erzählung (nur als Daten) und schlägt bis zu VORSCHLAG_MAX (6) Änderungen vor, die das Panel noch nicht gezählt hat. Das Panel nimmt nach festen Grenzen höchstens NEHMEN_MAX (4) je Zug, einmal je Zug: Gold nur, wenn Zahl und ein Gold-Wort in der Erzählung stehen, höchstens GOLD_JE_STUFE (10) mal Stufe und nicht, wenn das Panel diesem Helden schon Gold gab; ein Ding nur vom Boden, wenn es in der Erzählung steht und in die Tasche passt; Leben nie im Kampf (dort zählen die Würfel), höchstens LEBEN_MAX (3) und nie auf 0; der Ort nur ohne Karte (sonst zieht die Karte); eine Person nur neu und mit Wahrheit der Runde. Der Held muss mit Namen in der Erzählung stehen. Jeder Vorschlag schreibt eine Logzeile („angenommen“ oder „verworfen“ mit Grund), jeder angenommene eine Zeile „📜 Nachgetragen“ im Verlauf. Zustand → Überblick zählt angenommene und verworfene am Tag. Selbsttest test_the_scribe_proposes_and_the_panel_takes_by_fixed_limits."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Siedlung mit Leben (V01.1.055, Dominik 2026-10-25 „so umsetzten“ zum Entwurf, 1a 2a 3a 4a 5b): Das Fenster „🏘 Siedlung“ zeigt oben das Bild des Ortes (bei Tag oder Nacht, vom Bilder-Thread) mit Name, Tageszeit und Gold: das eigene groß, das der Gruppe nur zur Ansicht, denn jeder zahlt aus seinem eigenen Gold. Jeder Dienst ist eine Karte mit seinem Bild oben (bis es gemalt ist, sein Zeichen), einem Satz Leben aus festen Listen je Welt (nie vom Modell), der Rechnung klein darüber (zum Beispiel „10 × Stufe 2 × 4 Helden = 80 Gold“) und einem Knopf mit Verb: Übernachten, Flicken, Zuhören, Verbessern. Was das eigene Gold nicht deckt, ist grau und sagt „Es fehlen N Gold“; ein Dienst, der gerade nicht geht (schon übernachtet, nichts zerbrochen), ist blass. Die Lehrstunde zeigt die sechs Werte als 3 × 2 Raster mit vorher → nachher (zum Beispiel STÄ +3 → +4), der Preis steht einmal darunter. Die Ansicht der Siedlung (dungeon_gold.view) bringt dafür tageszeit, gold_gruppe, stufe, helden und je Dienst je (Gold je Stufe). Selbsttests test_gold_with_a_purpose_in_a_settlement und test_hero_sheet_merchant_and_item_windows (Fenster auf drei Breiten, grau ohne Gold). Ohne „Gold mi"
 },
 {
@@ -9982,6 +10014,22 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Heldenmut (Funktionen → Meine Daten → „Heldenmut“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Einmal am Spielabend darf jeder Held über sich hinauswachsen: Tippe vor „Handeln“ auf „⭐ Heldenmut“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Grenzen und X-Karte (Funktionen → Meine Daten → „Grenzen und X-Karte“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jeder am Tisch legt fest, was im Spiel nie vorkommt (Grenzen) und was nur angedeutet wird (Schleier), je bis zu 8 kurze Wörter."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Schreiber-Abgleich (Funktionen → Meine Daten → „Schreiber-Abgleich“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Manchmal erzählt der Dungeon-Master, dass ein Held Gold findet oder ein Ding vom Boden aufhebt, und zählt es nicht mit."
 },
 {
 "lang": "de",
@@ -18373,6 +18421,38 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: lines, veils and the X-card (V01.1.058, tabletop point 18, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", plan /mnt/project-files/plaene/dungeon-tabletop-ideen.md; before the first game with an uncensored model): Own admin switch *Features → AI Dungeon Master → Lines and X-card* (chat.dungeon_grenzen, dungeon_grenzen.py), on from the start as protection (features.DEFAULT_ON). Lines and veils: under \"🛡 Lines\" next to the hero sheet every seat sets what never appears in the game (lines) and what is only hinted at (veils), up to GRENZEN_MAX (8) short words each, separated by commas (POST /api/profile/dungeon/{rid}/grenzen, guests POST /api/dungeon/grenzen). The table sees all the words together, never whose they are. A line counts like a word of the word list (dungeon.bad_words): the panel refuses an action with it, a narration, an NPC line or a name with it is thrown away and told again. A veil may stand only once in a narration; more often is the fault \"schleier\" (dungeon_erzaehler.judge), the model tells it again with a fixed hint, on the last try the panel strikes the further sentences with the veil (dungeon_grenze"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "n.cut). The model gets both lists only as data (grenzen with nie and nur_andeuten) plus the fixed rule GRENZEN_REGEL, never the words as an instruction; the hint when telling again does not name them either. X-card: \"✖ X-card\" says with one tap, without a reason and without a name: that was too much. The feed only says \"Someone laid the X-card.\"; the reading of this turn stops on every device, the model tells the last scene again more calmly (dungeon_grenzen.retell, the old scene only as data), checked by the same word lists, else a fixed sentence fades out; its scene pictures and sound pieces go, and the next X_ZUEGE (3) narrations hear that they should lead away from it. At most one X-card a minute per round, not while a narration is being made. Live: Status → Live counts seats with lines or veils, retellings running and per day lines set, X-cards laid and narrations repaired for a veil. \"How to play\" has a page \"Lines and X-card\". Self-test test_lines_veils_and_the_x_card in test_dungeon. View filter (point 3, idea from loreweaver, MIT, own code): every secret of a round stands once in dungeon_sicht.GEHEIM with its viewers: the host, another seat (guest, TV and app show a seat's"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " view), the car and the language model. The hidden truth, the story's plan and the things' features are seen only by the host and the model, a foe's life as a number too, another seat's open action only by itself and the model, a question outside the game only by its own seat, the table talk only by the seats and never the model, a seat's key and device by nobody. sicht(doc, betrachter) is the last step of every view of the table (dungeon.view). The self-test test_every_secret_stays_with_its_viewers plants a marker in each secret and looks for it in what each viewer gets (dungeon_sicht.docs): it must stand exactly where GEHEIM allows it. A new secret joins in the same commit. Scribe check (point 1, idea from loreweaver, MIT, own code): own admin switch *Features → AI Dungeon Master → Scribe check* (chat.dungeon_schreiber, off from the start: one more model call each turn; dungeon_schreiber.py). After every told turn a small second call reads the narration (only as data) and proposes up to VORSCHLAG_MAX (6) changes the panel has not counted yet. The panel takes by fixed limits at most NEHMEN_MAX (4) a turn, once a turn: gold only when the number and a gold word stand in the narratio"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "n, at most GOLD_JE_STUFE (10) times the level and not when the panel gave this hero gold already; a thing only from the ground, when it stands in the narration and fits into the bag; life never in a fight (there the dice count), at most LEBEN_MAX (3) and never down to 0; the place only without a map (else the map moves); a person only new and with the round's truth. The hero must stand by name in the narration. Every proposal writes a log line (\"angenommen\" or \"verworfen\" with its reason), every one taken a line \"📜 Noted\" in the feed. Status → Live counts those taken and dropped per day. Self-test test_the_scribe_proposes_and_the_panel_takes_by_fixed_limits."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: a settlement with life (V01.1.055, Dominik 2026-10-25 \"so umsetzten\" on the draft, 1a 2a 3a 4a 5b): The \"🏘 Settlement\" window shows the place's picture on top (by day or at night, from the picture thread) with its name, the time of day and gold: one's own large, the group's only to look at, since everyone pays from their own gold. Every service is a card with its picture on top (its sign until it is painted), a line of life from fixed lists per world (never the model's), the calculation small above (for example \"10 × level 2 × 4 heroes = 80 gold\") and a button with a verb: stay the night, mend, listen, improve. What one's own gold does not cover is grey and says \"N gold short\"; a service that does not work right now (already slept, nothing broken) is pale. The lesson shows the six values as a 3 × 2 grid with before → after (for example STR +3 → +4), the price once below. The settlement's view (dungeon_gold.view) brings tageszeit, gold_gruppe, stufe, helden and per service je (gold per level) for it. Self-tests test_gold_with_a_purpose_in_a_settlement and test_hero_sheet_merchant_and_item_windows (window at three widths, grey without gold). Without \"Gold with a pu"
 },
 {
@@ -23014,6 +23094,22 @@
 "head": "My data",
 "title": "My data",
 "text": "- Heroic courage (Features → My data → \"Heroic courage\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Once a game evening every hero may rise above themselves: tap \"⭐ Heroic courage\" before \"Act\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Lines and X-card (Features → My data → \"Lines and X-card\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Everyone at the table sets what never appears in the game (lines) and what is only hinted at (veils), up to 8 short words each."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Scribe check (Features → My data → \"Scribe check\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Sometimes the Dungeon Master tells that a hero finds gold or picks a thing up from the ground, and does not count it."
 },
 {
 "lang": "en",

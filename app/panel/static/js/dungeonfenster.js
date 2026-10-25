@@ -11,7 +11,19 @@ function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='e
     ${h.punkte||h.wahl.length?`<button type="button" class="dm-hint dm-hintb" data-dmfen="bogen" data-dmbt="werte">${esc(t('Neue Stufe: im Heldenbogen verteilen.','New level: spend it in the hero sheet.'))}</button>`:''}
     ${mir?`<div class="dm-hint">${esc(mir===1?t('Ein Tauschangebot wartet.','A trade offer is waiting.'):t(mir+' Tauschangebote warten.',mir+' trade offers are waiting.'))}</div>`:''}
     ${boden?`<small class="mut">${esc(boden===1?t('Hier liegt 1 Ding.','1 thing lies here.'):t('Hier liegen '+boden+' Dinge.',boden+' things lie here.'))}</small>`:''}
-    <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}</div></div>`}
+    <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}${v.grenzen?`<button type="button" class="b" data-dmfen="grenzen">🛡 ${esc(t('Grenzen','Lines'))}</button>${dmXKnopf(v)}`:''}</div></div>`}
+// Grenzen, Schleier und X-Karte (Tabletop-Punkt 18): the seat's own two lists, the table's together without names, the
+// X-Karte one tap without a question (the panel checks everything by fixed word lists, dungeon_grenzen.py)
+const dmXKnopf=v=>{const x=v.grenzen&&v.grenzen.x,l=t('Die letzte Szene war zu viel: sie wird ruhiger neu erzählt. Niemand sieht, wer sie gelegt hat.','The last scene was too much: it is told again more calmly. Nobody sees who laid it.');
+  return `<button type="button" class="b dm-xkarte" data-dmx="1" title="${esc(l)}"${x&&x.laeuft?' disabled':''}>${esc(x&&x.laeuft?'✖ '+t('Wird neu erzählt …','Being told again …'):'✖ '+t('X-Karte','X-card'))}</button>`};
+function dmGrenzen(v){const g=v.grenzen,T=g.tisch,chips=l=>l.length?l.map(w=>`<span class="pill">${esc(w)}</span>`).join(' '):`<small class="mut">${esc(t('noch nichts','nothing yet'))}</small>`;
+  const feld=(k,l,sub)=>`<label class="dm-grenze"><b>${esc(l)}</b><small class="mut">${esc(sub)}</small><input data-dmgfeld="${k}" maxlength="${(g.laenge+2)*g.max}" value="${esc((g.meine[k]||[]).join(', '))}" placeholder="${esc(t('mit Komma getrennt','separated by commas'))}"></label>`;
+  return `<p class="mut">${esc(t('Was du hier einträgst, gilt für den ganzen Tisch. Die anderen sehen die Wörter, nie, von wem sie sind. Bis zu '+g.max+' je Liste.','What you enter here counts for the whole table. The others see the words, never whose they are. Up to '+g.max+' per list.'))}</p>
+    ${feld('linien',t('Grenzen: kommt nie vor','Lines: never appears'),t('Eine Aktion damit geht nicht, eine Erzählung damit wird neu erzählt.','An action with it does not work, a narration with it is told again.'))}
+    ${feld('schleier',t('Schleier: nur angedeutet','Veils: only hinted at'),t('Darf geschehen, aber die Szene blendet ab.','May happen, but the scene fades out.'))}
+    <div class="dm-hostb"><button type="button" class="b p" data-dmgrenzen="1">${esc(t('Für mich speichern','Save for me'))}</button></div>
+    <h5>${esc(t('Am Tisch gilt','At the table'))}</h5><div class="dm-line"><span>${esc(t('Nie','Never'))}</span><span>${chips(T.linien)}</span></div><div class="dm-line"><span>${esc(t('Nur angedeutet','Only hinted'))}</span><span>${chips(T.schleier)}</span></div>
+    <h5>✖ ${esc(t('X-Karte','X-card'))}</h5><p class="mut">${esc(t('Ein Tipp genügt, ohne Begründung: die letzte Szene wird ruhiger neu erzählt, ihre Bilder und das Vorlesen fallen weg, und die Geschichte führt davon weg. Niemand sieht, wer sie gelegt hat.','One tap is enough, without a reason: the last scene is told again more calmly, its pictures and the reading go, and the story leads away from it. Nobody sees who laid it.'))}</p>${dmXKnopf(v)}`}
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
 const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒'};
 // Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
@@ -83,16 +95,16 @@ function dmDetail(v,f){const it=f.it,h=v.ich,open=v.status!=='ende',kg=it.kg?Str
     <div><b class="dm-detail-n">${esc(it.name)}</b>${dmCmp(it)}${it.n>1?` <span class="pill">×${it.n}</span>`:''}</div><small>${esc(it.selten_name||'')}${kg?' · '+kg:''}</small>
     ${it.fund?`<p class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</p>`:''}${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${dmFx(z)}</li>`).join('')}</ul>`:''}
     ${it.u?`<small class="mut">${esc(t('Noch nicht erkannt: was es kann, zeigt sich erst, wenn es jemand erkennt.','Not yet identified: what it does shows only once someone identifies it.'))}</small>`:''}${acts}</div></div>`}
-const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',siedlung:'dm-fen dm-fen-haendler',ding:'dm-fen dm-fen-ding'};
+const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',siedlung:'dm-fen dm-fen-haendler',grenzen:'dm-fen dm-fen-haendler',ding:'dm-fen dm-fen-ding'};
 function dmFenBox(kind,title,body,neu){return `<div class="${DMFENK[kind]}" data-dmfenbg="${kind==='ding'?'ding':'w'}"><div class="dm-fen-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">
   <div class="dm-fen-kopf"><h3>${esc(title)}</h3><button type="button" class="ic-ib" data-dmfenzu="${kind==='ding'?'ding':'w'}" title="${esc(t('Schließen','Close'))}" aria-label="${esc(t('Schließen','Close'))}">✕</button></div>${neu||''}<div class="dm-fen-body">${body}</div></div></div>`}
 function dmFenster(v,mode){DMCMP=v.vergleich||{};const W=DMW[mode],h=v.ich;if(!h){W.w=W.ding='';return ''}
-  if(W.w==='haendler'&&!(v.markt&&v.status!=='ende')||W.w==='siedlung'&&!v.siedlung)W.w='';
+  if(W.w==='haendler'&&!(v.markt&&v.status!=='ende')||W.w==='siedlung'&&!v.siedlung||W.w==='grenzen'&&!v.grenzen)W.w='';
   const f=dmFind(v,W.ding);if(!f)W.ding='';if(!W.w&&!W.ding)return '';
   const neu=W.zug&&v.zug>W.zug?`<div class="dm-fen-neu" role="status">${esc(t('Neuer Zug '+v.zug+': der Dungeon-Master hat weitererzählt.','New turn '+v.zug+': the Dungeon Master has told on.'))}<button type="button" class="b" data-dmfenzu="alle">${esc(t('Zum Tisch','To the table'))}</button></div>`:'';
   // the table's last message also in the window, so an answer (a refused portrait, a full bag) is never hidden behind it
   const S=mode==='g'?DG:DM,say=`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.msg||'')}</div>`;
-  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):'';
+  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):W.w==='grenzen'?dmFenBox('grenzen','🛡 '+t('Grenzen und X-Karte','Lines and X-card'),say+dmGrenzen(v),neu):'';
   const det=f&&(f.gegner?dmFoeDet(f):f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
   return main+(f?dmFenBox('ding',f.it.name,det,main?'':neu):'')}
 // the window's own scroll stays across the table's repaints
@@ -152,3 +164,10 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
 // advantage or disadvantage: both dice and which one counts, so a 14 next to a 9 is never a riddle (Dominik 2026-10-24)
 function dmVt(e){const ws=e.ws||[];return (e.vt&&ws.length===2?`<small class="pill ${e.vt==='vorteil'?'ok':'warn'}">${esc(e.vt==='vorteil'?t('Vorteil','Advantage'):t('Nachteil','Disadvantage'))}: ${ws[0]} ${esc(t('und','and'))} ${ws[1]}, ${esc(t('es zählt die','counts:'))} ${e.w}</small> `:'')+(e.belastet?`<small class="pill warn">${esc(t('belastet','burdened'))}</small> `:'')}
 function dmTool(e){return e.werkzeug?`<small class="pill ${e.kaputt?'warn':'ok'}">🔧 ${esc(e.werkzeug)}${e.werkzeug_plus?' +'+e.werkzeug_plus:''} ${esc(e.kaputt?t('zerbrochen','broke'):t('hilft','helps'))}</small> `:''}
+// the two lists and the X-Karte: the own seat's call, the answer is the table's view
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmgrenzen],#dgcard [data-dmgrenzen],#dmview [data-dmx],#dgcard [data-dmx]');if(!b)return;
+  const mode=dmFenMode(b),S=mode==='g'?DG:DM,box=b.closest('.dm-fen-box'),val=k=>{const i=box&&box.querySelector(`[data-dmgfeld="${k}"]`);return i?i.value:''};
+  const body=b.dataset.dmx?{x:true}:{linien:val('linien'),schleier:val('schleier')};b.disabled=true;
+  try{let d;if(mode==='g')d=await dgPub('/api/dungeon/grenzen',Object.assign({code:DG.code},body));else{d=await dmSend(`/api/profile/dungeon/${DM.rid}/grenzen`,body,DM);if(!d){b.disabled=false;return}}
+    S.v=d;S.at=Date.now();if(b.dataset.dmx)dmLesStopp(mode);dmSay(S,b.dataset.dmx?t('Die X-Karte liegt. Die letzte Szene wird neu erzählt.','The X-card is laid. The last scene is told again.'):t('Gespeichert. Das gilt jetzt am ganzen Tisch.','Saved. It now counts at the whole table.'),false);dmFenDraw(mode)}
+  catch(x){b.disabled=false;dmSay(S,dgErr(x),true);dmFenDraw(mode)}});

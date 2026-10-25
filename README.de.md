@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.058** KI-Dungeon-Master: Grenzen und Schleier je Platz, anonym für den ganzen Tisch, und die X-Karte, die die letzte Szene ruhiger neu erzählt; feste Wortlisten des Panels, das Modell bekommt sie nur als Daten; ein Sichtfilter mit Leck-Selbsttest je Geheimnis; der Schreiber-Abgleich trägt nach festen Grenzen nach, was die Erzählung änderte
 - **V01.1.057** KI-Dungeon-Master: fünf Öle im SRD-Katalog (Donner, Blitz, Feuer, Frost, Weihe) für 25 Gold, so trifft in jeder Welt jede Schwäche gegen Donner, Blitz, Feuer und Kälte
 - **V01.1.056** KI-Dungeon-Master am Tisch: Gegner mit mehreren Angriffen, Bosse mindestens zwei; Gegnerleben als Wort (angeschlagen, schwer verletzt, fast besiegt), Zustände mit „noch N Züge“; die Spracherkennung kennt die Namen der Runde; jeder Wurf mit Würfel-Beleg, die Erzählung nennt nur belegte Zahlen; beim Vorlesen wird der gesprochene Satz markiert
 - **V01.1.055** KI-Dungeon-Master: Siedlung mit Leben: Kopf mit Bild, Tageszeit und Gold, Karten mit Bild und Satz, Rechnung und Verb je Dienst, zu Teures grau mit „Es fehlen N Gold“, Lehrstunde als sechs Werte vorher → nachher
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.051** KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein
 - **V01.1.050** Qwen3.6 ohne Ablehnungen messbar: modelle messen qwen36frei
 - **V01.1.049** KI-Dungeon-Master: Schadensarten: Zauber treffen mit ihrer eigenen Art, magische Waffen gehen durch Widerstand, Ringe und Tränke mit Widerstand, Schwächen erst nach einem Treffer sichtbar; Tageszeit für die Bühne; Heldenbogen und rechte Spalte springen nicht mehr
-- **V01.1.048** KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil: Code und „Du bist dran“ als Seite des Spiels in den Farben der Welt, mit dem letzten Satz des Erzählers (abschaltbar) und „Weiterspielen“ als Einmal-Link ohne dauerhaften Platz-Schlüssel; im Reiter Helden Ausrüstung, Tasche und Gold je Held
 
 
 

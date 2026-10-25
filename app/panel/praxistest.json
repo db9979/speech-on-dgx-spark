@@ -3376,6 +3376,13 @@
 "titel": "Tabletop Welle A",
 "text": "Mit zwei Geräten, ein Kampf gegen einen Boss. A: Der Boss greift im Zug der Gegner zweimal an, das Gegner-Fenster zeigt „2 × …“. B: Auf dem Gast-Gerät steht bei Gegnern nur unverletzt, angeschlagen, schwer verletzt oder fast besiegt, beim Gastgeber die Zahlen. C: Ein vergifteter Held zeigt „noch N Züge“. D: Neben jedem Wurf steht klein W-1, W-2 …; die Erzählung nennt keine anderen Würfelzahlen. E: Mit 🎤 den Namen eines Gegners oder Ortes sagen: er steht richtig geschrieben im Feld. F: Vorlesen an: der gerade gesprochene Satz ist in der Erzählung markiert und wandert mit. G: Zustand → Überblick zeigt die Zählungen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P507",
+"v": 1058,
+"titel": "Grenzen, X-Karte, Sichtfilter und Schreiber",
+"text": "Mit zwei Geräten. A: Am Tisch „🛡 Grenzen“ öffnen, bei Grenzen „Spinnen“ eintragen, speichern; auf dem zweiten Gerät steht „spinnen“ unter „Am Tisch gilt“, ohne Namen. B: Eine Aktion mit „Spinnen“ wird abgelehnt. C: Einen Schleier eintragen: die Erzählung nennt ihn höchstens einmal. D: Nach einer Erzählung auf „✖ X-Karte“ tippen: im Verlauf nur „Jemand hat die X-Karte gelegt“, das Vorlesen stoppt, kurz danach steht die Szene ruhiger neu da. E: Sofort noch einmal tippen: „In einer Minute geht sie wieder“. F: Zustand → Überblick zeigt die Zählungen. G: Funktionen → KI-Dungeon-Master → Schreiber-Abgleich an; eine Erzählung sagt „findet 5 Gold“, ohne dass Gold kam: danach steht „📜 Nachgetragen: … +5 Gold“ im Verlauf. H: Auf dem Gast-Gerät stehen keine Zahlen beim Gegnerleben und kein Plan der Geschichte.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

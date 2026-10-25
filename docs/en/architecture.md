@@ -277,6 +277,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_erzaehler.py` | Better stories for the KI-Dungeon-Master: the chapter's fixed truth (people, groups, secrets), the running summary and the open threads, the world's style ex … |
 | `app/panel/dungeon_gast.py` | KI-Dungeon-Master: Gäste mit E-Mail. |
 | `app/panel/dungeon_gold.py` | KI-Dungeon-Master: Gold mit Zweck. |
+| `app/panel/dungeon_grenzen.py` | KI-Dungeon-Master: Grenzen, Schleier und X-Karte. |
 | `app/panel/dungeon_kampf.py` | The fight of the KI-Dungeon-Master: the panel sets the encounter by a budget, rolls every attack and keeps the foes' life; the model only picks foes from the … |
 | `app/panel/dungeon_karte.py` | Die Karte des KI-Dungeon-Masters: a net of places per chapter and random vaults as a grid of rooms, rolled and kept by the panel, never by the model. |
 | `app/panel/dungeon_legenden.py` | KI-Dungeon-Master: legendäre Einzelstücke je Welt. |
@@ -284,6 +285,8 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_mut.py` | KI-Dungeon-Master: Heldenmut. |
 | `app/panel/dungeon_pruefstand.py` | KI-Dungeon-Master: the balance bench „Balance-Prüfstand“: the panel plays thousands of fights alone, with the real rules and dice of dungeon_kampf (attacks, … |
 | `app/panel/dungeon_regelseite.py` | KI-Dungeon-Master: the admin's rules page as its own tab „Regeln“. |
+| `app/panel/dungeon_schreiber.py` | KI-Dungeon-Master: Schreiber-Abgleich. |
+| `app/panel/dungeon_sicht.py` | KI-Dungeon-Master: Sichtfilter. |
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
 | `app/panel/dungeon_warten.py` | KI-Dungeon-Master: the wait between turns made pleasant. |
