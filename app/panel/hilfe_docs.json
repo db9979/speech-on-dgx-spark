@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 44), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 92). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 45), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 92). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 44 Dateien in jeder Sicherung (Schritt 7) - 92 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 45 Dateien in jeder Sicherung (Schritt 7) - 92 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5182,6 +5182,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "twortet beim Namen, eine englische Runde wird englisch erzählt (höchstens ENGLISCH_MAX deutsche Wörter), eine riskante Aktion verlangt eine Probe, eine harmlose keine. Je Szene 2 Punkte, wenn der erste Versuch passt, 1 nach dem Nachbessern, 0 wenn abgelehnt oder nur die Reparatur des Panels bleibt. Ist „Einordnung mit Wahrscheinlichkeit“ an, steht daneben die eigene Einschätzung des Modells (systemone mit der Verwendung erzaehler: wie lebendig, wie genau es den Aktionen und Würfen folgt), sie gibt keine Punkte. Das Ergebnis steht je Modellname (llm.known_model) in STATE/dungeon-erzaehlstand.json, die letzten MODELLE_MAX (8) Modelle nebeneinander, nur Punkte, Gründe und Zeiten, nie Erzähltext. Ablauf beim Modellwechsel: messen, wechseln, dann „Jetzt prüfen“. Der Zug am Tisch nutzt seit dieser Version dieselben Schritte (ask_checks, roll_facts, tell), es gibt nur noch eine Quelle. Live: Zustand → Überblick nennt die gemessenen Modelle und die beste Punktzahl. Selbsttests in test_dungeon_erzaehlstand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Erzähler-Fehler aus 👎 mit Grund, als Prüfstand-Szene übernehmen (V01.1.086, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, „1-3 und 1-7 umsetzten“, Punkte 2 und 3): Gehört zum Schalter *Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand* (chat.dungeon_erzaehlstand, ab Werk aus), kein eigener Schalter. Solange er an ist, zeigt der Tisch nach einem 👎 auf einen der letzten drei Züge die Frage „Was war falsch?“ mit festen Gründen (dungeon_erzaehlstand.GRUENDE: misslungene Probe trotzdem geschafft oder etwas verraten, für eine andere Figur entschieden, Ding oder Zauber fehlt, Kampf stimmt nicht, Gold oder Beute nur erzählt, falscher Ort, Person sieht anders aus oder ist woanders, wiederholt sich, etwas anderes; nie ein freier Text). Der Grund geht mit dem 👎 (POST /api/profile/dungeon/{rid}/daumen bzw. /api/dungeon/daumen mit grund), das Panel legt den Zug als Fall ab (dungeon_erzaehlstand.case): die Aktionen, die Würfe des Panels mit ihrem Ausgang und die Erzählung dieses Zugs, jeder Held mit einem Namen des Prüfstands (Arvid, Bela, Cora, Dario, Ella, auch im Genitiv), ohne Profil, Platz oder Runden-ID, nur ein Hash von Ru"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nde und Zug, damit ein zweites 👎 desselben Zugs den Fall ersetzt. Die neuesten FAELLE_MAX (40) stehen in STATE/dungeon-erzaehlfehler.json. Im Dungeon-Master-Reiter „Regeln“ bei „Erzähler-Fehler“ sieht der Admin jeden Fall (GET /api/admin/dungeon/erzaehlfehler), löscht ihn oder übernimmt ihn mit „Als Prüfstand-Szene übernehmen“ (POST mit {fall, aktion: szene|loeschen} bzw. {szene, aktion: loeschen}, höchstens EIGENE_MAX (12) Szenen, Löschen geht auch bei ausgeschaltetem Schalter). Jeder Lauf des Erzähler-Prüfstands spielt die übernommenen Szenen nach den festen Szenen: dieselben Aktionen auf einer frischen Runde derselben Welt, desselben Tons und derselben Sprache, jede Probe mit demselben Ausgang (same_dice: 20 für eine geschaffte, 2 für eine misslungene, notfalls die Schwierigkeit eins über dem Ergebnis); Karte, Kampf und Personen der Runde kommen nicht mit. Punkte wie bei den festen Szenen, das Höchste wächst mit. Die Ergebnisdatei bleibt ohne Erzähltext. Live: Zustand → Überblick nennt die Zahl der Fälle und der übernommenen Szenen. Log-Zeilen „dungeon: erzaehlstand | fall | neu/ersetzt/leer/aus/uebernommen/geloescht/fehlt/voll/ungueltig“. Selbsttests NarratorCases in test_dunge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "on."
 },
 {
 "lang": "de",
@@ -17021,7 +17045,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 44), otherwise the line gives its reason (dateien.STATE_LOCAL, 92). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 45), otherwise the line gives its reason (dateien.STATE_LOCAL, 92). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -17037,7 +17061,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 44 files in every backup (step 7) - 92 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 45 files in every backup (step 7) - 92 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -18966,6 +18990,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AX German words), a risky action asks for a check, a harmless one does not. Per scene 2 points when the first try passes, 1 after a rewrite, 0 when refused or only the panel's repair is left. With \"Classification with probabilities\" on, the model's own view stands beside it (systemone with the use erzaehler: how vivid, how closely it follows the actions and rolls), it gives no points. The result per model name (llm.known_model) is in STATE/dungeon-erzaehlstand.json, the last MODELLE_MAX (8) models side by side, only points, reasons and times, never narration text. When changing models: measure, switch, then \"Check now\". Since this version the turn at the table uses the same steps (ask_checks, roll_facts, tell), there is only one source. Live: Status → Live names the models measured and the best score. Self-tests in test_dungeon_erzaehlstand."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: narrator errors from a 👎 with a reason, taken over as bench scenes (V01.1.086, Dominik 2026-10-25 \"können wir diese fehler für die zukunf immer abfangen und verbessern?\", \"1-3 und 1-7 umsetzten\", points 2 and 3): Part of the switch *Features → AI Dungeon Master → Narrator bench* (chat.dungeon_erzaehlstand, off by default), no switch of its own. While it is on, the table shows after a 👎 on one of the last three turns the question \"What was wrong?\" with fixed reasons (dungeon_erzaehlstand.GRUENDE: a failed check done anyway or something revealed, decided for another character, an item or spell missing, the fight does not match, gold or loot only told, wrong place, a person looks different or is elsewhere, repeats itself, something else; never free text). The reason goes with the 👎 (POST /api/profile/dungeon/{rid}/daumen or /api/dungeon/daumen with grund), the panel keeps the turn as a case (dungeon_erzaehlstand.case): the actions, the panel's dice with their outcome and the narration of that turn, every hero with a name of the bench (Arvid, Bela, Cora, Dario, Ella, also in the genitive), without profile, seat or round id, only a hash of round and turn, so a second "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "👎 of the same turn replaces the case. The newest FAELLE_MAX (40) stand in STATE/dungeon-erzaehlfehler.json. In the Dungeon Master tab \"Rules\" at \"Narrator errors\" the admin sees every case (GET /api/admin/dungeon/erzaehlfehler), deletes it or takes it over with \"Take over as a bench scene\" (POST with {fall, aktion: szene|loeschen} or {szene, aktion: loeschen}, at most EIGENE_MAX (12) scenes, deleting works with the switch off too). Every run of the narrator bench plays the scenes taken over after the fixed ones: the same actions on a fresh round of the same world, tone and language, every check with the same outcome (same_dice: 20 for a passed one, 2 for a failed one, if need be the difficulty one above the total); the round's map, fight and people are not carried. Points as for the fixed scenes, the most grows with them. The result file stays without narration text. Live: Status → Live names the number of cases and of scenes taken over. Log lines \"dungeon: erzaehlstand | fall | neu/ersetzt/leer/aus/uebernommen/geloescht/fehlt/voll/ungueltig\". Self-tests NarratorCases in test_dungeon."
 },
 {
 "lang": "en",

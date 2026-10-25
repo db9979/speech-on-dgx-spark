@@ -472,7 +472,16 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/dinge`,body,DM);if(d){DM.v=d;DM.at=Date.now();DM.ding=null}dmDraw()});
 document.body.addEventListener('click',async e=>{const b=e.target.closest('[data-dmdaumen]');if(!b)return;const g=!!b.closest('#dgcard'),body={zug:+b.dataset.zug,gut:b.dataset.dmdaumen==='1'};
   try{let d;if(g)d=await dgPub('/api/dungeon/daumen',Object.assign({code:DG.code},body));else{const x=await apiTry(`/api/profile/dungeon/${DM.rid}/daumen`,xjson('POST',body));if(!x.r.ok)throw new Error();d=x.d}
-    const v=g?DG.v:DM.v;if(v){v.daumen=d.daumen;g?dgDraw():dmDraw()}}catch(x){dmSay(g?DG:DM,t('Das hat nicht geklappt.','That did not work.'),true)}});
+    const v=g?DG.v:DM.v;if(v){v.daumen=d.daumen;v.fall=d.fall;g?dgDraw():dmDraw()}}catch(x){dmSay(g?DG:DM,t('Das hat nicht geklappt.','That did not work.'),true)}});
+// „Erzähler-Fehler“ (dungeon_erzaehlstand.py): after a 👎 of one of the last turns a fixed reason, the turn becomes a case
+function dmGrund(v,e){const z=String(e.n||1),f=(v.fall||{})[z];if(!v.ich||!v.gruende||e.prolog||(v.daumen||{})[z]!==-1)return '';
+  if(f){const g=v.gruende.find(x=>x[0]===f);return `<div class="dm-grund"><span class="pill">${esc(t('Als Erzähler-Fehler gemeldet','Reported as a narrator error'))}: ${esc(g?g[1]:f)}</span></div>`}
+  if(!(e.n>=v.zug-3))return '';
+  return `<div class="dm-grund" role="group" aria-label="${esc(t('Was war falsch?','What was wrong?'))}"><span>${esc(t('Was war falsch?','What was wrong?'))}</span>${v.gruende.map(([k,l])=>`<button type="button" data-dmgrund="${esc(k)}" data-zug="${z}">${esc(l)}</button>`).join('')}</div>`}
+document.body.addEventListener('click',async e=>{const b=e.target.closest('[data-dmgrund]');if(!b)return;const g=!!b.closest('#dgcard'),body={zug:+b.dataset.zug,gut:false,grund:b.dataset.dmgrund};
+  b.closest('.dm-grund').querySelectorAll('button').forEach(x=>x.disabled=true);
+  try{let d;if(g)d=await dgPub('/api/dungeon/daumen',Object.assign({code:DG.code},body));else{const x=await apiTry(`/api/profile/dungeon/${DM.rid}/daumen`,xjson('POST',body));if(!x.r.ok)throw new Error();d=x.d}
+    const v=g?DG.v:DM.v;if(v){v.daumen=d.daumen;v.fall=d.fall;g?dgDraw():dmDraw()}}catch(x){dmSay(g?DG:DM,t('Das hat nicht geklappt.','That did not work.'),true)}});
 // staying with it (Stufe 5a): the game date, „🔔 Mitteilungen“ of the own seat, the look back after a longer break
 const DMRB={};
 function dmDate(v,mode){const host=mode==='p'&&v.gastgeber&&v.status!=='ende',has=v.termin*1000>Date.now();if(!has&&!host&&v.melden==null)return '';
@@ -523,7 +532,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('[data
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmmut]');if(!b)return;const m=b.dataset.dmmut;DMA.mut[m]=DMA.mut[m]?0:1;b.classList.toggle('on',!!DMA.mut[m]);b.setAttribute('aria-pressed',String(!!DMA.mut[m]))});
 function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en'?1:0]:e.text;
   if(e.art==='dm'){const my=(v.daumen||{})[String(e.n||1)]||0,th=v.ich?`<span class="dm-thumbs">${[[1,'👍',t('Gut erzählt','Well told')],[-1,'👎',t('Nicht so gut','Not so good')]].map(([g,i,l])=>`<button type="button" class="ic-ib${my===g?' on':''}" data-dmdaumen="${g}" data-zug="${e.n||1}" title="${esc(l)}" aria-label="${esc(l)}" aria-pressed="${my===g}">${i}</button>`).join('')}</span>`:'';
-    return `<div class="dm-dm" data-dmzug="${e.prolog?0:(e.n||1)}"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${(e.npc||[]).filter(n=>!n.im_text).map(n=>`<div class="dm-npc">${dmGesicht(v,n.name)}<em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}${e.prolog?dmProlog(v,e):''}</div>`}
+    return `<div class="dm-dm" data-dmzug="${e.prolog?0:(e.n||1)}"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${dmGrund(v,e)}${(e.npc||[]).filter(n=>!n.im_text).map(n=>`<div class="dm-npc">${dmGesicht(v,n.name)}<em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}${e.prolog?dmProlog(v,e):''}</div>`}
   if(e.art==='aktion')return `<div class="dm-act">${dmAv(v.mode,v,Object.assign({name:e.name},(v.plaetze||[]).find(p=>p.pid===e.pid)||{}),col?col(e.pid):0)}<div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div>${dmLob(v,e)}${dmHide(v,'aktion',e.n,e.pid)}</div>`;
   if(e.art==='wurf')return dmPK(v,e,`<span class="dm-d20">${e.w}</span>${dmBeleg(e)}`)+dmLeiste(e);
   if(e.art==='folge'&&e.was==='heilung'&&!e.zahl)return `<div class="dm-sys mut">${esc(t(e.name+': schon volles Leben ('+e.leben+')',e.name+': already at full life ('+e.leben+')'))}</div>`;
@@ -894,7 +903,7 @@ async function dmMic(mode,fertig){const S=mode==='p'?DM:DG;
     catch(e){dmSay(S,mode==='p'?t('Das hat nicht geklappt.','That did not work.'):dgErr(e),true)}};
   rec.start();mode==='p'?dmDraw():dgDraw()}
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
-function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe,p.zustand,p.noch].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.mut||null),JSON.stringify(v.siedlung||null),JSON.stringify(v.grenzen||null),JSON.stringify(v.zufall||null),JSON.stringify(v.orakel||null),JSON.stringify(v.kampfstufe||null),JSON.stringify(v.nsc||null),JSON.stringify(v.nsc_geheim||null),JSON.stringify(v.fraktionen||null),JSON.stringify(v.fraktionen_geheim||null),JSON.stringify(v.quest||null),JSON.stringify(v.quest_geheim||null),JSON.stringify(v.wahrheit||null),JSON.stringify(v.dinge||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null),JSON.stringify(v.echt||null)].join('#'):''}
+function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,v.spricht,v.lesung?[v.lesung.n,v.lesung.k,v.lesung.fertig].join():'',v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe,p.zustand,p.noch].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,JSON.stringify(v.karte||null),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden,JSON.stringify(v.musik||null),(v.faeden||[]).join('|'),JSON.stringify(v.auftrag||null),JSON.stringify(v.daumen||{}),JSON.stringify(v.fall||{}),JSON.stringify(v.mut||null),JSON.stringify(v.siedlung||null),JSON.stringify(v.grenzen||null),JSON.stringify(v.zufall||null),JSON.stringify(v.orakel||null),JSON.stringify(v.kampfstufe||null),JSON.stringify(v.nsc||null),JSON.stringify(v.nsc_geheim||null),JSON.stringify(v.fraktionen||null),JSON.stringify(v.fraktionen_geheim||null),JSON.stringify(v.quest||null),JSON.stringify(v.quest_geheim||null),JSON.stringify(v.wahrheit||null),JSON.stringify(v.dinge||null),(v.tisch||[]).length,(v.tippt||[]).join(),JSON.stringify(v.warten||null),JSON.stringify(v.echt||null)].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
   if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v),at0=DM.at;DM.at=Date.now();
     // „nichts neu“ (Punkt 14 of 2026-10-24): the panel answers {neu:false} while the seat's stand is the same; the clock keeps its start (t0)
@@ -1164,7 +1173,7 @@ const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende','tabellen'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),tabellen:t('Tabellen','Tables'),
-  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),erzaehlstand:t('Erzähler-Prüfstand','Narrator bench'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
+  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),erzaehlstand:t('Erzähler-Prüfstand','Narrator bench'),erzaehlfehler:t('Erzähler-Fehler','Narrator errors'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
 const dmRTab=()=>!!(PROFILE&&DM.on&&ADMIN);
 async function dmRules(){if(dmRTab()&&$('dmroot')){icTabSet('dungeon','regeln');goSec('dungeon');return}
   let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
@@ -1183,12 +1192,13 @@ function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=
   const n={geschichten:(d.geschichten||[]).length,gegenstaende:S.gegenstaende,klassen:S.klassen,voelker:S.voelker,welten:S.welten,toene:S.toene};
   for(const k of DMRKAT)if(DMR.k[k])n[k]=DMR.k[k].zeilen.length;
   const nb=k=>`<button type="button" class="${DMR.teil===k?'on':''}" data-dmrteil="${k}"${DMR.teil===k?' aria-current="true"':''}><span>${esc(N[k])}</span>${n[k]!=null?`<small>${n[k]}</small>`:''}</button>`;
-  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand','erzaehlstand'].map(nb).join('')}<hr>${nb('json')}</nav>`;
+  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand','erzaehlstand','erzaehlfehler'].map(nb).join('')}<hr>${nb('json')}</nav>`;
   c.innerHTML=`<div class="dm-rhead"><h2>${esc(t('Dungeon-Master: Regeln','Dungeon Master: rules'))}</h2>${tab?'':`<button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button>`}</div>
     <div class="dm-rlay">${nav}<div class="dm-rin">${dmRTeil(d,err)}</div></div>`;
   if(DMR.teil==='musik'&&window.dmMusikAdm)dmMusikAdm();
   if(DMR.teil==='pruefstand')dmPruefLook();
   if(DMR.teil==='erzaehlstand')dmErzLook();
+  if(DMR.teil==='erzaehlfehler')dmFallLook();
   if(DMRKAT.includes(DMR.teil)&&!DMR.k[DMR.teil])dmKatLoad(DMR.teil)}
 function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N[k])}</h3>`,E=err?`<div class="err dm-adm-err">${err}</div>`:'';
   if(k==='geschichten')return DMP.g?dmPlanForm(d):dmPlans(d)+E;
@@ -1201,6 +1211,7 @@ function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N
   if(k==='musik')return '<div id="dmmusikadm"></div>';
   if(k==='pruefstand')return h+`<div id="dmpruef"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
   if(k==='erzaehlstand')return h+`<div id="dmerzst"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
+  if(k==='erzaehlfehler')return h+`<div id="dmfall"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
   if(k==='gaeste')return h+dmGastAdm(d.gastmail)+E;
   if(k==='ankommt')return h+(dmThumbsAdmin(d.daumen)||`<div class="fh">${esc(t('Noch keine 👍 oder 👎 in einer Runde.','No 👍 or 👎 in a round yet.'))}</div>`);
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
@@ -1395,6 +1406,25 @@ async function dmErzLook(){clearTimeout(DMES.t);if(!$('dmerzst'))return;const {r
 document.addEventListener('click',async e=>{const b=e.target.closest('#dmerzst [data-dmes]');if(!b)return;b.disabled=true;
   const {r,d}=await apiTry('/api/admin/dungeon/erzaehlstand',xjson('POST',{}));
   if(!r.ok){sayToast(dmErr(r.status,d.detail));b.disabled=false;return}$('dmerzst').innerHTML=dmErzBox(d);DMES.t=setTimeout(dmErzLook,5000)});
+// „Erzähler-Fehler“ (dungeon_erzaehlstand.py): the turns a seat gave a 👎 with a fixed reason, heroes with the bench's
+// names; „Als Prüfstand-Szene übernehmen“ makes one a scene of the narrator bench
+function dmFallBox(x){const G=x.gruende||{},gl=k=>(G[k]||G.sonst||['',''])[L==='en'?1:0],when=z=>new Date(z*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'});
+  const taken=new Set((x.szenen||[]).map(s=>s.id.slice(1)));
+  const fall=f=>`<details class="dm-fall"><summary><b>${esc(gl(f.grund))}</b> <span class="mut">${esc(when(f.zeit))} · ${esc(f.lang==='en'?'English':'Deutsch')}</span>${taken.has(f.id)?` <span class="pill ok">${esc(t('im Prüfstand','in the bench'))}</span>`:''}</summary>
+    ${f.taten.map(a=>`<div class="dm-fall-tat"><b>${esc((x.namen||[])[a.held]||'')}</b>: ${esc(a.text)}</div>`).join('')}
+    ${f.wuerfe.length?`<div class="dm-sum">${f.wuerfe.map(w=>`<span class="pill${w.ok?' ok':' warn'}">${esc(w.wofuer||w.wert)}: ${w.w} ${esc(w.ok?t('geschafft','passed'):t('misslungen','failed'))}</span>`).join(' ')}</div>`:''}
+    <p class="dm-fall-text">${esc(f.text)}</p>
+    <div class="row">${taken.has(f.id)?'':`<button type="button" class="b p" data-dmfall="szene" data-id="${esc(f.id)}"${x.an?'':' disabled'}>${esc(t('Als Prüfstand-Szene übernehmen','Take over as a bench scene'))}</button>`}<button type="button" class="b" data-dmfall="loeschen" data-id="${esc(f.id)}">${esc(t('Löschen','Delete'))}</button></div></details>`;
+  const own=(x.szenen||[]).length?`<h4>${esc(t('Eigene Szenen im Erzähler-Prüfstand','Own scenes in the narrator bench'))} <small class="mut">${x.szenen.length} / ${x.eigene_max}</small></h4>${x.szenen.map(s=>`<div class="dm-fall-sz"><span>${esc(s.name[L==='en'?1:0])}</span><button type="button" class="b" data-dmfall="szeneweg" data-id="${esc(s.id)}">${esc(t('Entfernen','Remove'))}</button></div>`).join('')}`:'';
+  return `<div class="fh">${esc(x.an?t(`Hier landet jeder Zug, den ein Platz mit 👎 und einem Grund markiert hat (höchstens ${x.max}, die neuesten zuerst). Die Helden heißen hier wie im Prüfstand, Namen von Spielern stehen nie darin. „Als Prüfstand-Szene übernehmen“ spielt den Zug bei jedem Lauf des Erzähler-Prüfstands nach, mit demselben Ausgang jeder Probe.`,`Every turn a seat marked with 👎 and a reason lands here (at most ${x.max}, the newest first). The heroes carry the bench's names, players' names never stand here. "Take over as a bench scene" replays the turn on every run of the narrator bench, with the same outcome of every check.`):t('Aus. Fälle entstehen nur, solange der Erzähler-Prüfstand an ist (Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand). Löschen geht immer.','Off. Cases only come while the narrator bench is on (Features → AI Dungeon Master → Narrator bench). Deleting always works.'))}</div>
+    ${(x.faelle||[]).length?x.faelle.map(fall).join(''):`<div class="fh">${esc(t('Noch kein Fall.','No case yet.'))}</div>`}${own}`}
+async function dmFallLook(){if(!$('dmfall'))return;const {r,d}=await apiTry('/api/admin/dungeon/erzaehlfehler');if(!$('dmfall'))return;
+  $('dmfall').innerHTML=r.ok?dmFallBox(d):`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`}
+document.addEventListener('click',async e=>{const b=e.target.closest('#dmfall [data-dmfall]');if(!b)return;const a=b.dataset.dmfall;b.disabled=true;
+  const body=a==='szeneweg'?{szene:b.dataset.id,aktion:'loeschen'}:{fall:b.dataset.id,aktion:a};
+  const {r,d}=await apiTry('/api/admin/dungeon/erzaehlfehler',xjson('POST',body));
+  if(!r.ok){sayToast(r.status===409&&d.detail==='voll'?t('Schon so viele eigene Szenen, wie der Prüfstand nimmt. Entferne erst eine.','Already as many own scenes as the bench takes. Remove one first.'):dmErr(r.status,d.detail));b.disabled=false;return}
+  $('dmfall').innerHTML=dmFallBox(d)});
 let DMDT=0;
 async function dmDingLook(){clearTimeout(DMDT);const box=$('dmding');if(!box)return;const {r,d}=await apiTry('/api/admin/dungeon/dingbilder');
   if(!r.ok||!$('dmding'))return;$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)}

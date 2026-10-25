@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.086** AI Dungeon Master: a 👎 with a fixed reason becomes a narrator error without names, the admin takes it over as a scene of the narrator bench
 - **V01.1.085** AI Dungeon Master: reading aloud takes a voice's gender only from fixed traits, "says he" never again speaks in the women's voice, also not when he goes on
 - **V01.1.084** AI Dungeon Master: more fixed checks of the narration (fallen foes, missing things, gold only told, other heroes, looks, time of day), each with a rescue by the panel
 - **V01.1.083** AI Dungeon Master: game master console as cards: “Go on now” and who acted on top, four equal cards turn, at the table, narrator, difficulty, bands of buttons instead of lists, “Only for you” with tabs below; the catalog checks the tables of the D&D ideas
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.079** AI Dungeon Master: arms for group and factions: the panel draws every coat of arms itself as a checked SVG from shield, division, tinctures and 16 own charges, the host chooses colour and charge, every faction carries its own
 - **V01.1.078** AI Dungeon Master: the table on the phone with a one-row head and “⋯”, one fight box, the field to act in every pane, the group as a list, quick actions for the hero and a short guide; a failed examination gives nothing away, going needs no check, the panel cuts a repeated scene
 - **V01.1.077** AI Dungeon Master: the map moves on only when an action wants to go (flag and narration stay the same); place pictures check only their own round
-- **V01.1.076** Test fix: the page test "delete and move mail" waits up to a minute under load for the rule hint and the mailbox instead of giving up after 10 or 20 seconds; it checks the same
 
 
 

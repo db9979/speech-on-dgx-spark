@@ -261,7 +261,8 @@ def _erzaehlstand():
         return ""
     c = dungeon_erzaehlstand.counts()
     return (f" · Erzähler-Prüfstand {c['modelle']} Modelle, bestes {c['beste']} von {c['max']} Punkten" if c["modelle"] else " · Erzähler-Prüfstand noch ohne Lauf") + \
-        (" · Erzähler-Prüfstand prüft gerade" if c["laeuft"] else "")
+        (" · Erzähler-Prüfstand prüft gerade" if c["laeuft"] else "") + \
+        (f" · Erzähler-Fehler {c['faelle']} Fälle, {c['eigene']} als Szene im Prüfstand" if c["faelle"] or c["eigene"] else "")
 
 
 def target(name):

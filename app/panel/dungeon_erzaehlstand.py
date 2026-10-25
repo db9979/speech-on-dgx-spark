@@ -25,12 +25,27 @@ side by side. Only while „Erzähler-Prüfstand“ is on (features.py, below th
     GET  /api/admin/dungeon/erzaehlstand     the models measured, the scenes, whether it is on and running
     POST /api/admin/dungeon/erzaehlstand     „Jetzt prüfen“ (rate-limited, one run at a time)
 
+The cases „Erzähler-Fehler“ (Dominik 2026-10-25 „1-3 und 1-7 umsetzten“, Punkte 2 und 3): while the bench is on, a
+seat's 👎 may carry one reason of GRUENDE (a fixed list, never a text); the panel then keeps that turn as a case
+(case(): the actions, the panel's dice and the narration of that turn, every hero's name swapped for a bench name of
+NAMEN, no profile, no seat, no round id, only a hash of it so a second 👎 of the same turn replaces the case), the
+newest FAELLE_MAX in STATE/dungeon-erzaehlfehler.json (dateien.py). The admin sees them on the page „Erzähler-Fehler“
+and takes one over „Als Prüfstand-Szene übernehmen“: the scene replays the actions with the same outcome of every
+check (passed or failed) on a fresh round of the same world, tone and language (the round's map, fight and people are
+not carried), at most EIGENE_MAX, scored like the fixed scenes.
+
+    GET  /api/admin/dungeon/erzaehlfehler    the cases, the scenes taken over, the reasons
+    POST /api/admin/dungeon/erzaehlfehler    {fall, aktion: szene|loeschen} or {szene, aktion: loeschen}
+
 Journal lines „dungeon: erzaehlstand | …“ with fixed words and numbers only.
 """
 import asyncio
+import hashlib
 import os
 import random
 import re
+import secrets
+import threading
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -62,6 +77,25 @@ SZENEN = {
 }
 LEVELS = ["gar nicht", "teilweise", "ganz"]
 _run = {"laeuft": False, "seit": 0.0, "task": None}
+FALL_FILE = os.path.join(STATE, "dungeon-erzaehlfehler.json")
+FAELLE_MAX = 40            # cases kept, the newest first
+EIGENE_MAX = 12            # scenes taken over from cases
+TEXT_MAX = 1500            # a case's narration, per character
+TAT_MAX = 300              # an action and a check's wofuer of a case
+NAMEN = ("Arvid", "Bela", "Cora", "Dario", "Ella")   # the bench's heroes; a case keeps no player's hero name
+# a 👎's fixed reasons: (German, English, the fixed rule of erz.judge it belongs to, "" for none)
+GRUENDE = {
+    "probe": ("Misslungene Probe trotzdem geschafft oder etwas verraten", "A failed check done anyway or something revealed", "probe"),
+    "fremd": ("Hat für eine andere Figur entschieden", "Decided for another character", "fremd"),
+    "ding": ("Ding oder Zauber, den die Figur nicht hat", "An item or spell the character does not have", "fehlt"),
+    "kampf": ("Kampf stimmt nicht (Gegner, Treffer, Gefallene)", "The fight does not match (foes, hits, the fallen)", "gefallen"),
+    "gold": ("Gold oder Beute nur erzählt", "Gold or loot only told", "gold"),
+    "ort": ("Falscher Ort", "Wrong place", "karte"),
+    "person": ("Person sieht anders aus oder ist woanders", "A person looks different or is elsewhere", "aussehen"),
+    "wiederholung": ("Wiederholt sich", "Repeats itself", "wiederholung"),
+    "sonst": ("Etwas anderes", "Something else", ""),
+}
+_flock = threading.Lock()
 
 
 def on():
@@ -82,18 +116,19 @@ class _Fest:
         return 0
 
 
-def _round(r, lang="de", ton=None, taten=(("Arvid", ""),)):
-    """A round only in memory: the first world, the tone (else the first one above the children's), a seat per hero
-    with its action this turn."""
+def _round(r, lang="de", ton=None, taten=(("Arvid", ""),), welt=None):
+    """A round only in memory: the world (else the first), the tone (else the first one above the children's), a seat
+    per hero (name, action this turn, class else the classes in turn)."""
     toene = [t["id"] for t in r["toene"]]
     ton = ton if ton in toene else next((t for t in toene if t != min(toene)), toene[0])
+    welten = [w["id"] for w in r["welten"]]
     ks, volk = [k["id"] for k in r["klassen"]], r["voelker"][0]["id"]
-    rd = {"owner": "", "titel": "Prüfstand", "welt": r["welten"][0]["id"], "ton": ton, "zug_s": 0, "lang": lang, "einstieg": "",
+    rd = {"owner": "", "titel": "Prüfstand", "welt": welt if welt in welten else welten[0], "ton": ton, "zug_s": 0, "lang": lang, "einstieg": "",
           "prompt": "", "made": 0, "until": 0, "status": "laeuft", "zug": 2, "zug_t": 0, "pause": False, "offen": {}, "still": {},
           "szene": {"ort": "", "stimmung": ""}, "log": [], "dm": "", "stunden": 1, "vorlesen": False, "erzaehlweise": "normal",
           "plaetze": {}}
-    for i, (name, tat) in enumerate(taten):
-        h = dungeon.new_hero(r, {"name": name, "volk": volk, "klasse": ks[i % len(ks)]}, random.Random(i))
+    for i, (name, tat, *kl) in enumerate(taten):
+        h = dungeon.new_hero(r, {"name": name, "volk": volk, "klasse": kl[0] if kl and kl[0] in ks else ks[i % len(ks)]}, random.Random(i))
         h["leben"] = h["leben_max"] = dungeon.life(r, h)
         pid = f"p{i}"
         rd["plaetze"][pid] = {"h": "", "uid": "", "held": h, "made": 0, "gast": i > 0}
@@ -129,10 +164,54 @@ def scene(r, sid):
     return _round(r, taten=(("Arvid", "Ich wünsche den anderen einen guten Morgen und packe mein Brot aus."),)), None
 
 
-async def play(r, sid):
-    """One scene through the real steps of a turn; returns its result."""
-    rd, proben = scene(r, sid)
+class _Wurf:
+    """A die that always shows n on a d20 (a scene taken over from a case: 20 for a passed check, 2 for a failed one)."""
+
+    def __init__(self, n):
+        self.n = n
+
+    def randint(self, a, b):
+        return self.n if b == 20 else (a + b) // 2
+
+    def randrange(self, n):
+        return 0
+
+
+def own_scene(r, s):
+    """(the round, the checks, their outcomes) of a scene taken over from a case."""
+    tat = {x["held"]: x["text"] for x in s["taten"]}
+    helden = s.get("helden") or [{"held": x["held"], "klasse": x.get("klasse")} for x in s["taten"]]
+    rd = _round(r, lang=s.get("lang", "de"), ton=s.get("ton"), welt=s.get("welt"),
+                taten=[(NAMEN[x["held"]], tat.get(x["held"], ""), x.get("klasse")) for x in sorted(helden, key=lambda x: x["held"])] or (("Arvid", ""),))
+    proben = [{"pid": f"p{x['held']}", "wert": x["wert"], "schwer": x["schwer"], "vt": "", "wofuer": x["wofuer"]}
+              for x in s["wuerfe"] if f"p{x['held']}" in rd["plaetze"]]
+    return rd, proben, [bool(x["ok"]) for x in s["wuerfe"] if f"p{x['held']}" in rd["plaetze"]]
+
+
+def same_dice(r, rd, proben, oks):
+    """The panel's dice with the case's outcome of every check: 20 for a passed one; 2 for a failed one, and when the
+    bench hero's bonus would still pass it, the difficulty one above the total."""
+    out = []
+    for p, ok in zip(proben, oks):
+        x = dungeon.roll(r, rd, [p], _Wurf(20 if ok else 2))[0]
+        if x["ok"] != ok:
+            x = dungeon.roll(r, rd, [dict(p, schwer=x["gesamt"] + 1)], _Wurf(2))[0]
+        out.append(x)
+    return out
+
+
+async def play(r, sid, own=None):
+    """One scene through the real steps of a turn (own: a scene taken over from a case); returns its result."""
     t0 = time.monotonic()
+    if own:
+        rd, proben, oks = own_scene(r, own)
+        wuerfe = same_dice(r, rd, proben, oks)
+        erz.receipts(rd, wuerfe, [], [])
+        story, _, tries = await dungeon.tell(r, rd, wuerfe, [], [], count=False)
+        punkte = 2 if tries[:1] == [""] else 1 if "" in tries else 0
+        return {"punkte": punkte, "grund": "ok" if punkte else next((f for f in reversed(tries) if f), "abgelehnt"),
+                "versuche": len(tries), "laenge": len((story or {}).get("text") or ""), "sekunden": round(time.monotonic() - t0, 1)}
+    rd, proben = scene(r, sid)
     if proben is None:                                    # the checks scenes: does the model ask for one
         got, _ = await dungeon.ask_checks(r, rd)
         ok = bool(got) if sid == "probe" else not got
@@ -191,10 +270,13 @@ async def _go():
         for sid in SZENEN:
             szenen[sid] = await play(r, sid)
             print(f"dungeon: erzaehlstand | szene | {sid} | {szenen[sid]['punkte']} punkte", flush=True)
+        for s in own_scenes():
+            szenen[s["id"]] = await play(r, s["id"], s)
+            print(f"dungeon: erzaehlstand | szene | eigene | {szenen[s['id']]['punkte']} punkte", flush=True)
         name = (llm.known_model() or "unbekannt")[:80]
         d = last()
         ms = dict(d.get("modelle") or {})
-        ms[name] = {"zeit": int(clock()), "punkte": sum(x["punkte"] for x in szenen.values()), "max": 2 * len(SZENEN),
+        ms[name] = {"zeit": int(clock()), "punkte": sum(x["punkte"] for x in szenen.values()), "max": 2 * len(szenen),
                     "sekunden": round(time.monotonic() - t0, 1), "szenen": szenen}
         ms = dict(sorted(ms.items(), key=lambda kv: -kv[1]["zeit"])[:MODELLE_MAX])
         await asyncio.to_thread(write_json, FILE, {"modelle": ms})
@@ -211,7 +293,8 @@ def _spawn():
 
 def view():
     d = last()
-    return {"an": on(), "laeuft": _run["laeuft"], "szenen": [[k, list(v)] for k, v in SZENEN.items()],
+    return {"an": on(), "laeuft": _run["laeuft"],
+            "szenen": [[k, list(v)] for k, v in SZENEN.items()] + [[s["id"], s["name"]] for s in own_scenes()],
             "modelle": d.get("modelle") or {}, "einordnung": features.admin_on("einordnung")}
 
 
@@ -241,7 +324,145 @@ async def now(request: Request):
 
 
 def counts():
-    """For the live overview: the models measured, the best points, whether a run is on."""
+    """For the live overview: the models measured, the best points (of the best model's own most), whether a run is
+    on, the cases and the scenes taken over from them."""
     ms = last().get("modelle") or {}
-    return {"modelle": len(ms), "beste": max((m["punkte"] for m in ms.values()), default=0), "max": 2 * len(SZENEN),
-            "laeuft": _run["laeuft"]}
+    best = max(ms.values(), key=lambda m: m["punkte"], default=None)
+    f = cases()
+    return {"modelle": len(ms), "beste": best["punkte"] if best else 0, "max": best.get("max", 2 * len(SZENEN)) if best else 2 * len(SZENEN),
+            "laeuft": _run["laeuft"], "faelle": len(f.get("faelle") or []), "eigene": len(f.get("szenen") or [])}
+
+
+# ---------------------------------------------------------------- the cases „Erzähler-Fehler“
+def reasons(lang):
+    """The 👎's fixed reasons for a seat: [[id, label]]."""
+    return [[k, v[1 if lang == "en" else 0]] for k, v in GRUENDE.items()]
+
+
+def cases():
+    return read_json(FALL_FILE, {}) or {}
+
+
+def own_scenes():
+    return [s for s in cases().get("szenen") or [] if isinstance(s, dict) and s.get("id")]
+
+
+def _swap(names):
+    """A function that puts the bench's names for the heroes' names (the longest first, whole words with a genitive s,
+    any case)."""
+    if not names:
+        return lambda t: str(t or "")
+    rx = re.compile(r"(?<!\w)(" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True)) + r")(?=(?:s|'s|’s)?(?!\w))", re.I)
+    low = {k.lower(): v for k, v in names.items()}
+    return lambda t: rx.sub(lambda m: low[m.group(1).lower()], str(t or ""))
+
+
+def case(rid, rd, zug, grund):
+    """The case of a 👎 with a reason: the turn's actions, the panel's dice and the narration, the heroes as NAMEN (those
+    who acted first, then the other seats), no profile, no seat, no round id. None when the turn has no narration."""
+    log = [e for e in rd.get("log") or [] if e.get("n") == zug]
+    erz_text = next((e["text"] for e in reversed(log) if e.get("art") == "dm" and isinstance(e.get("text"), str)), "")
+    if not erz_text:
+        return None
+    pids = list(dict.fromkeys([e["pid"] for e in log if e.get("art") in ("aktion", "wurf") and e.get("pid") in rd["plaetze"]]
+                              + [pid for pid, p in rd["plaetze"].items() if p.get("held")]))[:len(NAMEN)]
+    idx = {pid: i for i, pid in enumerate(pids)}
+    names = {}
+    for pid in pids:
+        n = ((rd["plaetze"][pid].get("held") or {}).get("name") or "").strip()
+        if len(n) >= 2:
+            names[n] = NAMEN[idx[pid]]
+    swap = _swap(names)
+
+    def held(pid):
+        return rd["plaetze"][pid].get("held") or {}
+    return {"id": secrets.token_hex(4), "quelle": hashlib.sha256(f"{rid}|{zug}".encode()).hexdigest()[:16], "zeit": int(clock()),
+            "grund": grund, "welt": rd.get("welt", ""), "ton": rd.get("ton"), "lang": "en" if rd.get("lang") == "en" else "de",
+            "helden": [{"held": idx[pid], "klasse": held(pid).get("klasse", "")} for pid in pids],
+            "taten": [{"held": idx[e["pid"]], "klasse": held(e["pid"]).get("klasse", ""), "text": swap(e.get("text"))[:TAT_MAX]}
+                      for e in log if e.get("art") == "aktion" and e.get("pid") in idx],
+            "wuerfe": [{"held": idx[e["pid"]], "wert": e.get("wert", ""), "schwer": e.get("schwer", 10), "w": e.get("w", 0),
+                        "ok": bool(e.get("ok")), "wofuer": swap(e.get("wofuer"))[:TAT_MAX]}
+                       for e in log if e.get("art") == "wurf" and e.get("pid") in idx],
+            "text": swap(erz_text)[:TEXT_MAX]}
+
+
+def keep(c):
+    """Keeps a case, the newest first; a second 👎 with a reason of the same turn replaces it. Returns neu|ersetzt."""
+    with _flock:
+        d = cases()
+        old = [x for x in d.get("faelle") or [] if isinstance(x, dict)]
+        rest = [x for x in old if x.get("quelle") != c["quelle"]]
+        d["faelle"] = ([c] + rest)[:FAELLE_MAX]
+        write_json(FALL_FILE, d)
+    return "ersetzt" if len(rest) < len(old) else "neu"
+
+
+def take(fid):
+    """„Als Prüfstand-Szene übernehmen“: a case becomes a scene of the bench (at most EIGENE_MAX, the newest first)."""
+    with _flock:
+        d = cases()
+        c = next((x for x in d.get("faelle") or [] if x.get("id") == fid), None)
+        if not c:
+            raise LookupError("fall")
+        sz = [x for x in d.get("szenen") or [] if x.get("quelle") != c["quelle"]]
+        g = GRUENDE.get(c["grund"], GRUENDE["sonst"])
+        tat = next((x["text"] for x in c["taten"]), "")[:40]
+        s = {"id": "f" + c["id"], "quelle": c["quelle"], "grund": c["grund"], "regel": g[2],
+             "name": [f"{g[0]}: {tat}" if tat else g[0], f"{g[1]}: {tat}" if tat else g[1]],
+             **{k: c.get(k) or [] for k in ("helden", "taten", "wuerfe")}, **{k: c[k] for k in ("welt", "ton", "lang")}}
+        if len(sz) >= EIGENE_MAX:
+            raise OverflowError("voll")
+        d["szenen"] = [s] + sz
+        write_json(FALL_FILE, d)
+
+
+def drop(key, fid):
+    """Deletes a case (key faelle) or a scene taken over (key szenen)."""
+    with _flock:
+        d = cases()
+        old = d.get(key) or []
+        d[key] = [x for x in old if x.get("id") != fid]
+        if len(d[key]) == len(old):
+            raise LookupError(key)
+        write_json(FALL_FILE, d)
+
+
+def cases_view():
+    d = cases()
+    return {"an": on(), "gruende": {k: list(v[:2]) for k, v in GRUENDE.items()}, "faelle": d.get("faelle") or [],
+            "szenen": [{k: s[k] for k in ("id", "name", "grund", "lang")} for s in own_scenes()], "max": FAELLE_MAX, "namen": list(NAMEN),
+            "eigene_max": EIGENE_MAX}
+
+
+@router.get("/api/admin/dungeon/erzaehlfehler", dependencies=[Depends(auth)])
+async def show_cases(request: Request):
+    guard.limit(request, "dungeonpruef", admin=True)
+    return await asyncio.to_thread(cases_view)
+
+
+@router.post("/api/admin/dungeon/erzaehlfehler", dependencies=[Depends(auth)])
+async def change_case(request: Request):
+    """{fall, aktion: szene|loeschen} or {szene, aktion: loeschen}; taking a case over only while the bench is on."""
+    guard.limit(request, "dungeonpruef", admin=True)
+    b = await json_body(request, 200)
+    a, fall, sz = b.get("aktion"), b.get("fall"), b.get("szene")
+    if a not in ("szene", "loeschen") or not isinstance(fall or sz, str) or bool(fall) == bool(sz) or (sz and a != "loeschen"):
+        print("dungeon: erzaehlstand | fall | ungueltig", flush=True)
+        raise HTTPException(400, "aktion")
+    if a == "szene" and not on():
+        print("dungeon: erzaehlstand | fall | aus", flush=True)
+        raise HTTPException(409, "aus")
+    try:
+        if a == "szene":
+            await asyncio.to_thread(take, fall)
+        else:
+            await asyncio.to_thread(drop, "faelle" if fall else "szenen", fall or sz)
+    except LookupError:
+        print("dungeon: erzaehlstand | fall | fehlt", flush=True)
+        raise HTTPException(404, "fall")
+    except OverflowError:
+        print("dungeon: erzaehlstand | fall | voll", flush=True)
+        raise HTTPException(409, "voll")
+    print(f"dungeon: erzaehlstand | fall | {'uebernommen' if a == 'szene' else 'geloescht'}", flush=True)
+    return await asyncio.to_thread(cases_view)

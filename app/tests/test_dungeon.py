@@ -7121,5 +7121,98 @@ class Fight(Turns):
                 self.assertGreaterEqual(ways, 2, (w["id"], art, weak))
 
 
+
+class NarratorCases(Base):
+    """Erzähler-Fehler (Dominik 2026-10-25 „1-3 und 1-7 umsetzten“, Punkte 2 und 3): while the narrator bench is on, a
+    👎 with a fixed reason keeps the turn as a case without names (heroes as the bench's, no profile, no round id); the
+    admin takes it over as a bench scene, which replays it with the same outcome of every check, or deletes it."""
+    def setUp(self):
+        super().setUp()
+        import dungeon_erzaehlstand as es
+        import live
+        self.es, self.live = es, live
+        helpers.keep_chat(self, "dungeon_erzaehlstand")
+        helpers.set_config(dungeon_erzaehlstand=False)
+        for f in (es.FALL_FILE, es.FILE):
+            if os.path.exists(f):
+                os.remove(f)
+            self.addCleanup(lambda f=f: os.path.exists(f) and os.remove(f))
+        v = self.new_round(held=dict(HERO, name="Kordula"))
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid, name="Wendelin")
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            dungeon._log(rd, "aktion", pid=self.host, name="Kordula", text="Ich durchsuche Wendelins Rucksack nach der Karte.")
+            dungeon._log(rd, "wurf", pid=self.host, name="Kordula", wert="weisheit", w=4, bonus=1, gesamt=5, schwer=12, ok=False,
+                         wofuer="den Rucksack durchsuchen")
+            dungeon._log(rd, "dm", text="Kordula findet die Karte trotzdem, Wendelin nickt. KORDULA sagt: „Nach Norden!“", npc=[], frage="")
+            dungeon._write(d)
+        self.n = self.state(self.rid)["log"][-1]["n"]
+        self.u = f"/api/profile/dungeon/{self.rid}/daumen"
+        self.P = "/api/admin/dungeon/erzaehlfehler"
+
+    def test_a_thumb_down_with_a_reason_becomes_a_case_without_names(self):
+        es = self.es
+        down = {"zug": self.n, "gut": False, "grund": "probe"}
+        d = self.c.post(self.u, json=down).json()                           # off: a plain 👎, no case
+        self.assertEqual((d["daumen"], d["fall"]), ({str(self.n): -1}, {}))
+        self.assertFalse(os.path.exists(es.FALL_FILE))
+        self.assertNotIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())
+        helpers.set_config(dungeon_erzaehlstand=True)
+        self.assertEqual([g[0] for g in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["gruende"]], list(es.GRUENDE))
+        for bad in (dict(down, grund="quatsch"), dict(down, gut=True), dict(down, grund=["probe"])):
+            self.assertEqual(self.c.post(self.u, json=bad).status_code, 400, bad)
+        d = self.c.post(self.u, json=down).json()
+        self.assertEqual(d["fall"], {str(self.n): "probe"})
+        with open(es.FALL_FILE, encoding="utf-8") as fh:
+            raw = fh.read()
+        for leak in ("Kordula", "kordula", "KORDULA", "Wendelin", "Dungeon Dora", self.rid, self.uid, self.host):
+            self.assertNotIn(leak, raw)                                     # no hero's, profile's or round's name
+        f = es.cases()["faelle"]
+        self.assertEqual(len(f), 1)
+        self.assertEqual((f[0]["grund"], f[0]["taten"][0]["held"], f[0]["wuerfe"][0]["ok"]), ("probe", 0, False))
+        self.assertIn("Arvid findet die Karte trotzdem, Bela nickt. Arvid sagt", f[0]["text"])
+        self.assertIn("Belas Rucksack", f[0]["taten"][0]["text"])
+        g = self.v.post("/api/dungeon/daumen", json={"code": self.code, "zug": self.n, "gut": False, "grund": "fremd"}).json()
+        self.assertEqual(g["fall"], {str(self.n): "fremd"})
+        self.assertEqual([x["grund"] for x in es.cases()["faelle"]], ["fremd"])   # the same turn: one case, the newest reason
+        self.assertEqual(self.c.post(self.u, json={"zug": self.n, "gut": True}).json()["fall"], {})   # a 👍 takes the mark back
+        self.assertRegex(self.live._erzaehlstand(), r"Erzähler-Fehler 1 Fälle, 0 als Szene im Prüfstand$")
+
+    def test_the_admin_takes_a_case_over_as_a_bench_scene(self):
+        es = self.es
+        helpers.set_config(dungeon_erzaehlstand=True)
+        self.c.post(self.u, json={"zug": self.n, "gut": False, "grund": "probe"})
+        self.assertIn(self.c.get(self.P).status_code, (401, 403))
+        self.assertIn(self.c.post(self.P, json={}).status_code, (401, 403))
+        fid = ADMIN.get(self.P).json()["faelle"][0]["id"]
+        for bad in ({"fall": fid}, {"fall": fid, "aktion": "weg"}, {"szene": "f" + fid, "aktion": "szene"}, {"fall": fid, "szene": "x", "aktion": "loeschen"}):
+            self.assertEqual(ADMIN.post(self.P, json=bad).status_code, 400, bad)
+        self.assertEqual(ADMIN.post(self.P, json={"fall": "nichtda", "aktion": "szene"}).status_code, 404)
+        d = ADMIN.post(self.P, json={"fall": fid, "aktion": "szene"}).json()
+        self.assertEqual([s["id"] for s in d["szenen"]], ["f" + fid])
+        self.assertEqual(len(ADMIN.post(self.P, json={"fall": fid, "aktion": "szene"}).json()["szenen"]), 1)   # once per turn
+        self.assertIn("f" + fid, [k for k, _ in ADMIN.get("/api/admin/dungeon/erzaehlstand").json()["szenen"]])
+        r = dungeon.rules()
+        s = es.own_scenes()[0]
+        rd, proben, oks = es.own_scene(r, s)
+        self.assertEqual([p["held"]["name"] for p in rd["plaetze"].values()][:2], ["Arvid", "Bela"])
+        self.assertEqual([x["ok"] for x in es.same_dice(r, rd, proben, oks)], [False])      # the failed check stays failed
+        self.assertEqual([x["ok"] for x in es.same_dice(r, rd, [dict(proben[0], schwer=2)], [False])], [False])   # even an easy one
+
+        async def ask(system, user, schema, name, tokens):
+            return json.dumps({"erzaehlung": "Arvid wühlt im Rucksack, doch die Karte bleibt verschwunden. Bela zuckt mit den "
+                                             "Schultern und schaut zum Fenster hinaus in den Regen.", "frage_an": ""})
+        with mock.patch("dungeon.ask_model", ask):
+            self.assertEqual(asyncio.run(es.play(r, s["id"], s))["punkte"], 2)
+        self.assertRegex(self.live._erzaehlstand(), r"Erzähler-Fehler 1 Fälle, 1 als Szene im Prüfstand$")
+        helpers.set_config(dungeon_erzaehlstand=False)
+        self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "szene"}).status_code, 409)   # off: no new scene
+        self.assertEqual(ADMIN.post(self.P, json={"szene": "f" + fid, "aktion": "loeschen"}).json()["szenen"], [])   # deleting always
+        self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "loeschen"}).json()["faelle"], [])
+        self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "loeschen"}).status_code, 404)
+
+
 if __name__ == "__main__":
     unittest.main()

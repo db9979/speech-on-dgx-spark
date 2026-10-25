@@ -80,7 +80,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
-    POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
+    POST   /api/profile/dungeon/{rid}/daumen      {zug, gut, grund?}: 👍/👎 for a narration, a 👎 with a fixed reason becomes a case „Erzähler-Fehler“ (dungeon_erzaehler.thumb); {zug, aktion}: 👍 for another seat's action (Heldenmut, dungeon_mut)
     POST   /api/profile/dungeon/{rid}/grenzen     {linien, schleier}: the own seat's lines and veils; {x: true} the X-Karte (dungeon_grenzen)
     POST   /api/profile/dungeon/{rid}/zufall      host: {regeln} the round's own random rules (dungeon_zufall)
     POST   /api/profile/dungeon/{rid}/orakel      host: {frage?, wahrscheinlichkeit?, tabellen?, chaos?} the oracle (dungeon_orakel)
@@ -5800,7 +5800,8 @@ async def melden(rid: str, request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/dungeon/{rid}/daumen", dependencies=[Depends(assistant)])
 async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
-    """{zug, gut}: the own seat's 👍/👎 for the narration of that turn (numbers for the admin, the model learns nothing)."""
+    """{zug, gut, grund?}: the own seat's 👍/👎 for the narration of that turn (numbers for the admin, the model learns nothing;
+    a 👎 with a fixed reason becomes a case while the narrator bench is on)."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -5808,7 +5809,7 @@ async def daumen(rid: str, request: Request, prof=Depends(browser_profile)):
     try:
         if "aktion" in b:
             return {"mut": await asyncio.to_thread(lambda: praise(rid, _seat_uid(rid, uid), b))}
-        return {"daumen": await asyncio.to_thread(lambda: erz.thumb(_me, rid, _seat_uid(rid, uid), b.get("zug"), b.get("gut")))}
+        return await asyncio.to_thread(lambda: erz.thumb(_me, rid, _seat_uid(rid, uid), b.get("zug"), b.get("gut"), b.get("grund")))
     except KNOWN as e:
         raise _http(e)
 
@@ -6820,13 +6821,13 @@ async def gast_bild(request: Request):
 
 @router.post("/api/dungeon/daumen")
 async def gast_daumen(request: Request):
-    """{"code", "zug", "gut"}: the seat's 👍/👎 for a narration of its round; {"code", "zug", "aktion"} a 👍 for another
+    """{"code", "zug", "gut", "grund"?}: the seat's 👍/👎 for a narration of its round (a 👎 with a fixed reason: a case); {"code", "zug", "aktion"} a 👍 for another
     seat's action (Heldenmut)."""
     b, rid, pid = await _guest(request)
     try:
         if "aktion" in b:
             return {"mut": await asyncio.to_thread(praise, rid, pid, b)}
-        return {"daumen": await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"))}
+        return await asyncio.to_thread(erz.thumb, _me, rid, pid, b.get("zug"), b.get("gut"), b.get("grund"))
     except KNOWN as e:
         raise _http(e)
 

@@ -698,11 +698,16 @@ def hint(why, missing, lang):
 
 
 # ---------------------------------------------------------------- 👍/👎 per narration
-def thumb(dm, rid, pid, zug, gut):
+def thumb(dm, rid, pid, zug, gut, grund=None):
     """A seat's thumb for the narration of turn zug (one per seat and turn, a new one replaces it); counted per world
-    and tone over all rounds for the admin. Returns the seat's thumbs of the round."""
-    if not isinstance(zug, int) or isinstance(zug, bool) or not isinstance(gut, bool):
+    and tone over all rounds for the admin. A 👎 may carry a fixed reason (dungeon_erzaehlstand.GRUENDE): while the
+    narrator bench is on, the turn becomes a case „Erzähler-Fehler“ (dungeon_erzaehlstand.case, no names). Returns the
+    seat's thumbs and reasons of the round."""
+    import dungeon_erzaehlstand as es
+    if not isinstance(zug, int) or isinstance(zug, bool) or not isinstance(gut, bool) \
+            or grund is not None and (gut or not isinstance(grund, str) or grund not in es.GRUENDE):
         raise ValueError("daumen")
+    fall = None
     with dm._lock:
         d = dm._read()
         rd = dm._round(d, rid)
@@ -711,9 +716,17 @@ def thumb(dm, rid, pid, zug, gut):
         votes = rd.setdefault("daumen", {}).setdefault(str(zug), {})
         old, new = votes.get(pid), 1 if gut else -1
         votes[pid] = new
-        if len(rd["daumen"]) > dm.LOG_MAX:
-            for k in sorted(rd["daumen"], key=int)[:-dm.LOG_MAX]:
-                rd["daumen"].pop(k)
+        marks = rd.setdefault("daumen_fall", {})
+        if gut:
+            (marks.get(str(zug)) or {}).pop(pid, None)
+        elif grund and es.on():
+            fall = es.case(rid, rd, zug, grund)
+            if fall:
+                marks.setdefault(str(zug), {})[pid] = grund
+        for key in ("daumen", "daumen_fall"):
+            if len(rd[key]) > dm.LOG_MAX:
+                for k in sorted(rd[key], key=int)[:-dm.LOG_MAX]:
+                    rd[key].pop(k)
         stats = d.setdefault("daumen_welt", {}).setdefault(f"{rd['welt']}|{rd['ton']}", [0, 0])
         if old != new:
             if old:
@@ -721,13 +734,20 @@ def thumb(dm, rid, pid, zug, gut):
             stats[0 if new > 0 else 1] += 1
             dm._day.bump("daumen_hoch" if gut else "daumen_runter")
         dm._write(d)
-        out = mine(rd, pid)
+        out = {"daumen": mine(rd, pid), "fall": mine_cases(rd, pid)}
     print(f"dungeon: daumen | {'hoch' if gut else 'runter'}", flush=True)
+    if grund:
+        print(f"dungeon: erzaehlstand | fall | {es.keep(fall) if fall else 'leer' if es.on() else 'aus'}", flush=True)
     return out
 
 
 def mine(rd, pid):
     return {k: v[pid] for k, v in (rd.get("daumen") or {}).items() if pid in v}
+
+
+def mine_cases(rd, pid):
+    """The seat's reasons per turn (a 👎 that became a case)."""
+    return {k: v[pid] for k, v in (rd.get("daumen_fall") or {}).items() if pid in v}
 
 
 def stats(dm, r):
@@ -903,7 +923,10 @@ def carry(kampagne):
 
 
 def view(rd, pid, host):
-    out = {"faeden": list(rd.get("faeden") or []), "daumen": mine(rd, pid)}
+    import dungeon_erzaehlstand as es
+    out = {"faeden": list(rd.get("faeden") or []), "daumen": mine(rd, pid), "fall": mine_cases(rd, pid)}
+    if es.on():
+        out["gruende"] = es.reasons(rd.get("lang"))
     if host:
         out["wahrheit"] = rd.get("wahrheit")
         out["dinge"] = [{"name": x["name"], "merkmale": x.get("merkmale", ""), "ort": x.get("ort", "")} for x in rd.get("dinge") or []]

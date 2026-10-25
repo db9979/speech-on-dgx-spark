@@ -3565,6 +3565,13 @@
 "titel": "Dungeon-Master: Stimme passt zu „er“ und „sie“ beim Vorlesen",
 "text": "Eine Runde mit Vorlesen spielen, bis eine Person spricht. A: Ein Zitat mit „sagt er“ danach spricht eine Männerstimme, auch wenn vorher eine Frau genannt wurde. B: Redet er gleich weiter (zweites Zitat ohne Namen), bleibt es dieselbe Männerstimme. C: Ein Zitat ohne Namen und ohne „er“ oder „sie“ spricht die Stimme für Nebenfiguren, nie der Erzähler.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P534",
+"v": 1086,
+"titel": "Dungeon-Master: Erzähler-Fehler aus 👎 mit Grund",
+"text": "Als Admin Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an. Eine Runde spielen, auf eine Erzählung 👎 tippen. A: Darunter steht „Was war falsch?“ mit festen Gründen; einen wählen, es steht „Als Erzähler-Fehler gemeldet“. B: Im Reiter Regeln bei Erzähler-Fehler steht der Fall, die Helden heißen Arvid, Bela …, kein Name eines Spielers. C: „Als Prüfstand-Szene übernehmen“, dann beim Erzähler-Prüfstand „Jetzt prüfen“: die neue Szene steht in der Tabelle. D: Fall und Szene löschen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

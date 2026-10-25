@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.086** · 2026-10-25 · KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
 - **V01.1.085** · 2026-10-25 · KI-Dungeon-Master: Vorlesen nimmt das Geschlecht einer Stimme nur aus festen Merkmalen, „sagt er“ spricht nie mehr mit der Frauenstimme, auch nicht beim Weiterreden
 - **V01.1.084** · 2026-10-25 · KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
 - **V01.1.083** · 2026-10-25 · KI-Dungeon-Master: Spielleiter-Pult als Tafeln: oben „Jetzt weiter“ und wer gehandelt hat, vier gleich große Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit, Knopfbänder statt Listen, unten „Nur für dich“ mit Reitern; der Katalog prüft die Tabellen der D&D-Ideen

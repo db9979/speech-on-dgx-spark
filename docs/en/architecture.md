@@ -670,6 +670,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-bild` | AI Dungeon Master: scene pictures of a round (at most 12, they go with the round), hero portraits, chapter covers and pictures for gear and spells (PNG) | – | no |
 | `state/dungeon-bild-klein` | AI Dungeon Master: small copies of the pictures for lists (96 pixels at most, they go with their picture) | – | no |
 | `state/dungeon-dingbilder.json` | AI Dungeon Master: state of the pictures for gear and spells (last run, count of the day, refused entries, painted finds) | – | no |
+| `state/dungeon-erzaehlfehler.json` | AI Dungeon Master: narrator errors (turns with 👎 and a fixed reason: actions, dice and narration, heroes with the bench's names, without profile and round) and the bench scenes taken over from them | – | yes |
 | `state/dungeon-erzaehlstand.json` | AI Dungeon Master: the narrator bench's result (points, reasons and times per scene and model, without narration text) | – | yes |
 | `state/dungeon-figuren.json` | AI Dungeon Master: heroes of guests to take along (hashes of the hero codes) | hashes only | yes |
 | `state/dungeon-gaeste.json` | AI Dungeon Master: guest accounts (hash of the address, hashes of the devices, heroes; the address only sealed for turn mails) | sealed | yes |
@@ -3384,7 +3385,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 44), otherwise the line gives its reason (dateien.STATE_LOCAL, 92). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 45), otherwise the line gives its reason (dateien.STATE_LOCAL, 92). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3394,7 +3395,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **44** files in every backup ([step 7](#kn-state-s7))
+- **45** files in every backup ([step 7](#kn-state-s7))
 - **92** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
