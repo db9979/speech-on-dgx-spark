@@ -173,7 +173,7 @@ MODULE = {
     "calendars": ("post", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
     "dungeon_dingbild": ("dienste", "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke"),
     "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen"),
-    "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe-Raster (Fallen, Rätsel); Bilder je Ortsart und Ort"),
+    "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort"),
     "dungeon_musik": ("dienste", "KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser"),
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),
     "dungeon_regelseite": ("dienste", "Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen"),

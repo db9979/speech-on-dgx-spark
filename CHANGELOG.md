@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.051** · 2026-10-25 · KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein
 - **V01.1.050** · 2026-10-25 · Qwen3.6 frei (Heretic, ohne Ablehnungen) als messbares Katalogmodell, nativ in vLLM ohne fremden Code
 - **V01.1.049** · 2026-10-25 · KI-Dungeon-Master: Schadensarten: Zauber treffen mit ihrer eigenen Art, magische Waffen gehen durch Widerstand, Ringe und Tränke mit Widerstand, Schwächen erst nach einem Treffer sichtbar; Tageszeit für die Bühne; Heldenbogen und rechte Spalte springen nicht mehr
 - **V01.1.048** · 2026-10-25 · KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil: Code und „Du bist dran“ als Seite des Spiels in den Farben der Welt, mit dem letzten Satz des Erzählers (abschaltbar) und „Weiterspielen“ als Einmal-Link ohne dauerhaften Platz-Schlüssel; im Reiter Helden Ausrüstung, Tasche und Gold je Held

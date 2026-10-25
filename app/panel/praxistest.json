@@ -3334,6 +3334,13 @@
 "titel": "Qwen3.6 frei messen",
 "text": "A: Update (tars zuerst). B: Auf tars sudo speech-spark modelle messen qwen36frei (lädt etwa 22 GB). C: Beide Ergebnisse stehen auf der Modell-Seite beim Eintrag „Qwen3.6 35B A3B frei“: tok/s, Werkzeug ok, Text und Szene ok; mit MTP entweder schneller als ohne oder „abgebrochen“, falls die MTP-Schichten fehlen.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P501",
+"v": 1051,
+"titel": "Dungeon-Master: Gewölbe als Plan",
+"text": "A: Eine Runde mit Karte, der Gastgeber würfelt ein Gewölbe, die Gruppe geht hinein. B: Unter „Karte“ → „Gewölbe“ steht ein gezeichneter Plan: schwarze Wände, Schraffur im Gestein, Raster, Nummern, Spielfigur im aktuellen Raum, darunter die Legende. C: Jeder betretene Raum zeigt passende Ausstattung (Treppe, Becken, Grube, Truhe, Säulen …). D: Neu laden: die Schraffur steht genau gleich. E: 🔥 schaltet auf den Fackelschein, 📜 zurück; nach dem Neuladen bleibt die Wahl. F: Dunkler Tisch: das Papier ist gedämpft, Sci-Fi ist eine Blaupause. G: Auf dem Telefon passt der Plan ohne seitliches Schieben.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

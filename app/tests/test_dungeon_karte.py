@@ -699,10 +699,41 @@ class Table(unittest.TestCase):
                                 K.step(dungeon.rules(), d["runden"][rid], {"ort_id": "ein", "erfolg": []}, {}, random.Random(1))
                                 dungeon._write(d)
                             await pg.evaluate("dmRound()")
-                            await b.until(pg, "!!document.querySelector('#dmview .dmk-tief')")
+                            await b.until(pg, "!!document.querySelector('#dmview .dmp .dmp-strich')")   # the drawn plan first
                             self.assertIn("out", await pg.evaluate("[...document.querySelectorAll('#dmview .dmk-wege [data-dmkid]')].map(x=>x.dataset.dmkid==='aus'?'out':'').join()"))
+                            self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dmp .dmp-strich').getAttribute('d').length>200"))   # crosshatch around the rooms
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dmp .dmp-figur')"))
+                            self.assertTrue(await pg.evaluate("(()=>{const d=document.querySelector('#dmview .dmp-strich').getAttribute('d');DMK.schraffur={};dmDraw();return document.querySelector('#dmview .dmp-strich').getAttribute('d')===d})()"))   # nothing jumps
+                            self.assertIn("1", await pg.evaluate("document.querySelector('#dmview .dmp-legende').textContent"))
+                            await pg.click("#dmview .dmk [data-dmklook]")                    # one tap: the torch look, kept
+                            await b.until(pg, "!!document.querySelector('#dmview .dmk-tief')")
+                            self.assertEqual(await pg.evaluate("localStorage.getItem('dm-gwlook')"), "fackel")
                             if os.environ.get("DMK_SHOT"):
                                 await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], "gewoelbe.png"))
+                            await pg.click("#dmview .dmk [data-dmklook]")
+                            await b.until(pg, "!!document.querySelector('#dmview .dmp')")
+                            if os.environ.get("DMK_SHOT"):    # every room open, every world, both modes, the phone: only for the pictures
+                                with dungeon._lock:
+                                    d = dungeon._read()
+                                    v = d["runden"][rid]["karte"]["gw"][str(d["runden"][rid]["karte"]["drin"])]
+                                    v["besucht"] = list(range(len(v["raeume"])))
+                                    dungeon._write(d)
+                                await pg.evaluate("dmRound()")
+                                await pg.wait_for_timeout(300)
+                                for x in dungeon.rules()["welten"]:
+                                    await pg.evaluate(f"DM.v.farben={json.dumps(x['farben'])};DM.v.karte.welt='{x['id']}';dmDraw()")
+                                    for m in ("a", "b"):
+                                        await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"plan-{x['id']}-{m}.png"))
+                                        await pg.click("#dmview [data-dmmodus]")
+                                await pg.click("#dmview .dmk [data-dmkgross]")
+                                await pg.wait_for_timeout(300)
+                                await pg.screenshot(path=os.path.join(os.environ["DMK_SHOT"], "plan-gross.png"))
+                                await pg.click("#dmview .dmk.gross [data-dmkgross]")
+                                await pg.set_viewport_size({"width": 390, "height": 844})
+                                await pg.evaluate("dmDraw()")
+                                await helpers.dm_pane(pg, "karte")
+                                await pg.wait_for_timeout(300)
+                                await pg.screenshot(path=os.path.join(os.environ["DMK_SHOT"], "plan-390.png"), full_page=True)
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

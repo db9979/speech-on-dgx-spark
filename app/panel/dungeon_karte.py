@@ -987,7 +987,8 @@ def view(r, rd, host=False):
             t = _table(r, "raeume", rm["t"]) or {}
             b = i in v["besucht"]
             rooms.append({"id": f"r{i + 1}", "x": rm["x"] - x0, "y": rm["y"] - y0, "s": 2 if b else 1, "a": rm["art"],
-                          "z": t.get("zeichen", "") if b else "", "n": (t.get("name") or ["", ""])[li] if b else "", "f": rm["fertig"]})
+                          "z": t.get("zeichen", "") if b else "", "n": (t.get("name") or ["", ""])[li] if b else "", "f": rm["fertig"],
+                          "t": rm["t"] if b else ""})
         boss = next(rm for rm in v["raeume"] if rm["art"] == "boss")
         out["gewoelbe"] = {"name": v["name"], "raeume": rooms, "hier": f"r{v['hier'] + 1}", "zahl": len(v["raeume"]),
                            "gaenge": [[f"r{a + 1}", f"r{b + 1}", 2 if [a, b] in v["gegangen"] else 1] for a, b in v["gaenge"]
