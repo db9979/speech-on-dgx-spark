@@ -232,6 +232,46 @@ class Srd(unittest.TestCase):
                         low = " " + text.lower() + " "       # as dungeon.bad_words reads it
                         self.assertEqual([w for w in woerter if w in low], [], (k, x["id"], f))
 
+    def test_ideen_tabellen_und_sagen(self):
+        """D&D-Ideen 2, 4, 8, 9, 12 (Dominik 2026-10-25 „1-12“): „ideen“ und „sage“ an den Gegnern prüft
+        dungeon_ideen.check_rules; fehlt etwas, sagt es was. Steht „ideen“ in der Datei, hat jeder Gegner eine Sage, und
+        kein Satz trägt ein Wort des Kindertons."""
+        import dungeon_ideen as ideen
+        r = dungeon._base_rules()
+        zust = r["zustaende"][0]["id"] if r.get("zustaende") else None
+        wert = r["werte"][0]["id"]
+        w12 = [{"w": n, "t": [f"Satz {n}", f"Line {n}"]} for n in range(1, 13)]
+        good = {"krit": {"hieb": w12}, "patzer": {"zauber": w12},
+                "landschaften": [{"id": "weg", "name": ["Unterwegs", "On the road"], "ortsarten": []}],
+                "nachtwachen": {"weg": [{"von": 1, "bis": 2, "art": "ueberfall", "t": ["a", "a"]}, {"von": 3, "bis": 20, "art": "ruhig", "t": ["b", "b"]}]},
+                "reise_ereignisse": {"weg": [{"ergebnis": "verirrt", "t": ["c", "c"]}]},
+                "fragekarten": {"alle": [["Was vermisst du?", "What do you miss?"]]},
+                "reise_rollen": [{"id": "wache", "wert": wert, "name": {"alle": ["Wache", "Guard"]}, "gelingt": ["ja", "yes"],
+                                  "misslingt": ["nein", "no"], "folge_misslingt": "ueberrascht"}],
+                "narben": [{"von": 1, "bis": 1, "t": ["Knie", "Knee"], "folge": {"wert": wert, "minus": 1}}, {"von": 2, "bis": 20, "t": ["Narbe", "Scar"]}],
+                "narben_kinder": [["Pflaster", "Plaster"]], "narben_sprueche": [["„{narbe}?“", "\"{narbe}?\""], ["Prost", "Cheers"]]}
+        self.assertEqual(ideen.check_rules(dict(r, ideen=good)), [])
+        if zust:
+            good["krit"]["hieb"] = [dict(w12[0], zustand=zust, zuege=2)] + w12[1:]
+            self.assertEqual(ideen.check_rules(dict(r, ideen=good)), [])
+        bad = {"krit": {"laser": w12}, "patzer": {"nahkampf": w12[:11]}, "nachtwachen": {"weg": [{"von": 1, "bis": 19, "art": "ruhig", "t": ["a", "a"]}]},
+               "narben": [{"von": 1, "bis": 20, "t": ["x", "x"], "folge": {"wert": wert, "minus": 3}}], "narben_sprueche": [["{narbe}", "no"]],
+               "landschaften": [{"id": "weg", "name": ["U", "O"], "ortsarten": []}], "reise_rollen": [dict(good["reise_rollen"][0], folge_misslingt="tot")],
+               "geheim": []}
+        err = " ".join(ideen.check_rules(dict(r, ideen=bad)))
+        for teil in ("ideen: nur", "ideen.krit:", "ideen.patzer nahkampf", "ideen.nachtwachen weg", "ideen.narben:", "ideen.narben_sprueche",
+                     "ideen.reise_rollen"):
+            self.assertIn(teil, err)
+        g = dict(r["gegner"][0], sage=["", "x"])
+        self.assertIn("sage", " ".join(ideen.check_rules(dict(r, gegner=[g]))))
+        self.assertIn("ideen.krit", " ".join(dungeon.check_rules(dict(r, ideen=bad))))   # part of the rules' check
+        s = srd()
+        if "ideen" in s:                         # the catalog's own tables: every foe with a saying, the children's tone kept
+            self.assertEqual([x["id"] for x in s["gegner"] if "sage" not in x], [])
+            woerter = next(t for t in r["toene"] if t["id"] == 8)["woerter"]
+            texte = re.findall(r'"((?:[^"\\]|\\.)*)"', json.dumps([s["ideen"], [x.get("sage") for x in s["gegner"]]], ensure_ascii=False))
+            self.assertEqual([t for t in texte if any(w in " " + t.lower() + " " for w in woerter)], [])
+
 
 if __name__ == "__main__":
     unittest.main()

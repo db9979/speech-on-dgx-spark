@@ -120,6 +120,7 @@ from fastapi.responses import Response
 import dungeon_ablage as ablage
 import dungeon_karte
 import dungeon_erzaehler as erz
+import dungeon_ideen as ideen
 import dungeon_kampf as kampf
 import dungeon_mut as mut
 import dungeon_grenzen as grenzen
@@ -703,7 +704,7 @@ def check_rules(r):
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
-    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r)
+    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r) + ideen.check_rules(r)
 
 
 def own_rules():

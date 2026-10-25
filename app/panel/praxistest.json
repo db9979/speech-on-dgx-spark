@@ -3544,6 +3544,13 @@
 "titel": "Dungeon-Master: Erzählung nennt den neuen Ort",
 "text": "A: In einer Runde mit Karte „Wir gehen nach …“ (Nachbarort) schreiben. B: Die Erzählung nennt den neuen Ort, Fahne und „Ihr seid in …“ zeigen ihn. C: Unter Zustand → Logs nach „karte | verworfen | nicht erzaehlt“ schauen: kommt es vor, blieb die Gruppe am alten Ort und die Erzählung sprach auch von dort. D: Mit „Wappen für Gruppe und Fraktionen“ an trägt das Banner eines besetzten Orts auf der Karte das Wappen der Fraktion, ebenso die Zeile „Besetzt von …“.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P531",
+"v": 1083,
+"titel": "Dungeon-Master: Spielleiter-Pult als Tafeln",
+"text": "Als Gastgeber eine laufende Runde öffnen und „🎲 Spielleiter-Pult öffnen“. A: Oben „Jetzt weiter“ und je Held ein Chip mit ✓ oder …. B: Vier gleich hohe Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit; nichts ist abgeschnitten, kein leerer Platz unter einer Tafel. C: Pause und Markt als Schalter, Erzählweise und Kampfstufe als Knopfband; ein Tipp ändert sie sofort. D: Unten „Nur für dich“ mit Reitern; ein Reiter zeigt Geschichte, Wahrheit, Dinge, Zufallsregeln oder Orakel. E: Am Handy stehen die Tafeln untereinander.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

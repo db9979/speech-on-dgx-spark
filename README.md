@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.083** AI Dungeon Master: game master console as cards: “Go on now” and who acted on top, four equal cards turn, at the table, narrator, difficulty, bands of buttons instead of lists, “Only for you” with tabs below; the catalog checks the tables of the D&D ideas
 - **V01.1.082** AI Dungeon Master: when the narration does not name the new place, the group stays where it was (flag and narration agree); the map counts ways in stages and the way to the nearest settlement; occupied places carry their faction's arms
 - **V01.1.081** Helper model for simple classifications, Features → Helper model
 - **V01.1.080** AI Dungeon Master: real dice at the table (tap or say the number, after 30 s the Spark rolls, never in the car), fanfare for honours, critical card turns over, "Campfire" music
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.076** Test fix: the page test "delete and move mail" waits up to a minute under load for the rule hint and the mailbox instead of giving up after 10 or 20 seconds; it checks the same
 - **V01.1.075** AI Dungeon Master: every round can be ended or deleted in the list, asking “Really?” first
 - **V01.1.074** AI Dungeon Master: game master console as a big window with three columns, the right column shows only the hero, Go on now and the map and can be dragged wider
-- **V01.1.073** AI Dungeon Master: faster on the Pi: one file per round with a cache, the poll gets “nothing new” while nothing changed, the game scripts load on the first opening
 
 
 

@@ -283,6 +283,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_gesicht.py` | KI-Dungeon-Master: Gleiches Gesicht für NSCs. |
 | `app/panel/dungeon_gold.py` | KI-Dungeon-Master: Gold mit Zweck. |
 | `app/panel/dungeon_grenzen.py` | KI-Dungeon-Master: Grenzen, Schleier und X-Karte. |
+| `app/panel/dungeon_ideen.py` | KI-Dungeon-Master: the tables of the D&D ideas: critical hits and fumbles (idea 2), landscapes with night watches and question cards for a rest (4), travel r … |
 | `app/panel/dungeon_import.py` | KI-Dungeon-Master: „Abenteuer-Import“. |
 | `app/panel/dungeon_kampf.py` | The fight of the KI-Dungeon-Master: the panel sets the encounter by a budget, rolls every attack and keeps the foes' life; the model only picks foes from the … |
 | `app/panel/dungeon_karte.py` | Die Karte des KI-Dungeon-Masters: a net of places per chapter and random vaults as a grid of rooms, rolled and kept by the panel, never by the model. |

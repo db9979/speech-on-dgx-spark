@@ -4360,8 +4360,10 @@ class Windows(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#dmview .dm-tiles .dm-tile')")
                         same = "(()=>{const a=getComputedStyle(document.querySelector('#dmview .dm-tile')).fontFamily,b=getComputedStyle(document.querySelector('#dmview .dm-tisch,#dmview.dm-tisch')).fontFamily;return a===b})()"
                         self.assertTrue(await pg.evaluate(same), w)
+                        # the tiles of a card fill their row without a hole (since the console's „Tafeln“: one row of equal tiles)
                         gap = ("(()=>{const t=[...document.querySelectorAll('#dmview .dm-tiles .dm-tile')],g=document.querySelector('#dmview .dm-tiles').getBoundingClientRect();"
-                               "const l=t[t.length-1].getBoundingClientRect();return t.length%2===0||Math.abs(l.width-g.width)<1})()")
+                               "const l=t[t.length-1].getBoundingClientRect(),w=t.map(x=>Math.round(x.getBoundingClientRect().width));"
+                               "return Math.abs(l.right-g.right)<1&&Math.max(...w)-Math.min(...w)<=1&&new Set(t.map(x=>Math.round(x.getBoundingClientRect().top))).size===1})()")
                         self.assertTrue(await pg.evaluate(gap), w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"ruhig-{w}.png"), full_page=True)
@@ -4410,8 +4412,9 @@ class Windows(unittest.TestCase):
                         await pg.keyboard.press("Escape")
                     await helpers.dm_pult(pg)                                                      # the things are in the console (2026-10-25)
                     await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-dinge')")
-                    await pg.click("#dmview .dm-dinge summary")
-                    self.assertIn("nur du siehst das", await pg.inner_text("#dmview .dm-dinge summary"))
+                    await pg.click("#dmview [data-dmgtab=dinge]")                                     # a tab of „Nur für dich“ (Tafeln)
+                    await b.until(pg, "!!document.querySelector('#dmview .dm-gpane .dm-dinge[open]')")
+                    self.assertIn("NUR FÜR DICH", (await pg.inner_text("#dmview .dm-pgeheim>h5")).upper())
                     await pg.click("#dmview [data-dmding='0']")
                     await b.until(pg, "!!document.querySelector('#dmview .dm-dname')")
                     await pg.fill("#dmview .dm-dmerk", "verrostet, mit Silberschloss")
@@ -4905,8 +4908,9 @@ class Windows(unittest.TestCase):
         the powers by grade. No page wider than the screen at 1280, 390 and 320 px."""
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
-        helpers.keep_chat(self, "dungeon")
-        helpers.set_config(dungeon=True)
+        for k in ("dungeon", "dungeon_stufen", "dungeon_regler"):
+            helpers.keep_chat(self, k)
+        helpers.set_config(dungeon=True, dungeon_stufen=True, dungeon_regler=True)   # the card „Schwierigkeit“ of the console
         uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
         rid = dungeon.make_round(uid, {"titel": "Spaltentisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
         dungeon._running.discard(rid)
@@ -4981,12 +4985,27 @@ class Windows(unittest.TestCase):
                         await helpers.dm_pult(pg)                                                      # on the phone under „⋯“
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-go[data-dmweiter]')")
                         self.assertTrue(await pg.evaluate(fits), w)
-                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)"), ["zug", "tisch", "erz"])
-                        if w == 1280:                                                                  # three columns side by side
-                            self.assertEqual(await pg.evaluate("new Set([...document.querySelectorAll('#dmview .dm-pult-sp')].map(x=>Math.round(x.getBoundingClientRect().top))).size"), 1)
+                        # „Tafeln“ (Dominik 2026-10-25 „empfehlung umsetzten für das spielleiter pult“): four equal cards, two by two
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)"), ["zug", "tisch", "erz", "schwer"])
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pkopf .dm-go[data-dmweiter]')"))   # on top, with who acted
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pkopf .dm-pwer')"))
+                        if w == 1280:                                                                  # two by two, each row of one height
+                            rows = await pg.evaluate("[...document.querySelectorAll('#dmview .dm-pult-sp')].map(x=>{const r=x.getBoundingClientRect();return [Math.round(r.top),Math.round(r.height)]})")
+                            self.assertEqual((rows[0], rows[2]), (rows[1], rows[3]), rows)
+                            self.assertLess(rows[0][0], rows[2][0])
+                        # a choice is a band of buttons, never a cut list (the voice „Wanderer am Feu…“)
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pult select')"))
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult [data-pult=schwer] input[type=radio][data-dmkstufe]')"))
+                        # „Nur für dich“: one strip of tabs instead of loose boxes; a tab shows its part
+                        tabs_g = await pg.evaluate("[...document.querySelectorAll('#dmview .dm-pgeheim [data-dmgtab]')].map(x=>x.dataset.dmgtab)")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult .dm-gpane>details[open]').length"), min(1, len(tabs_g)))
+                        if "zufall" in tabs_g:
+                            await pg.click("#dmview [data-dmgtab=zufall]")
+                            await b.until(pg, "!!document.querySelector('#dmview .dm-gpane [data-dmauf=zufall][open]')")
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-side .dm-mek')"))  # the own hero stays
                         # the console calm (Dominik 2026-10-24 „wirkt unruhig“): one main action, tiles alike, rare ones behind „⋯ Mehr“
-                        self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult .dm-tiles .dm-tile').length"), 3)
+                        self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult .dm-tiles .dm-tile').length"), 2)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult [data-pult=zug] .dm-schalt[role=switch]:is([data-dmpause],[data-dmmarkt])').length"), 2)
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult [data-pult=erz] [data-dmweise]')"))
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=karte]')"))   # the map is a tab
                         self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-seite button')].filter(x=>x.scrollWidth>x.clientWidth+1).length"), 0, w)

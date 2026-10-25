@@ -196,6 +196,7 @@ MODULE = {
     "dungeon_wappen": ("dienste", "Dungeon-Master-Wappen: SVG für Gruppe und Fraktionen aus eigenen Teilen, geprüft, ohne Bildmodell"),
     "dungeon_fraktionen": ("dienste", "Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln"),
     "dungeon_quest": ("dienste", "Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund"),
+    "dungeon_ideen": ("dienste", "Dungeon-Master-Ideen-Tabellen: Krit und Patzer, Landschaften, Nachtwachen, Reise, Narben und Sagen aus dem Katalog, geprüft nach festen Regeln"),
     "dungeon_orakel": ("dienste", "Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt"),
     "dungeon_tabellen": ("dienste", "Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben"),
     "dungeon_ablage": ("dienste", "Dungeon-Master-Ablage: eine Datei je Runde, Zwischenspeicher nach Änderungszeit"),

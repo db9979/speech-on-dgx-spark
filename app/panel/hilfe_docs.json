@@ -5269,7 +5269,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Spielleiter-Pult als Fenster und ziehbare Spalte (V01.1.074, Dominik 2026-10-25 „die rechte spalte ist zu klein und unübersichtlich“, gewählt „vorschlag 2 mit vorschlag 3 kombiniert“): Die rechte Spalte des Tisches zeigt nur noch Auftrag, den eigenen Helden mit seinen Knöpfen, für den Gastgeber „▶ Jetzt weiter“ (mit „wartet auf …“) und „🎲 Spielleiter-Pult öffnen“, darunter die Reiter Karte, Fäden und Termin; der Reiter „Leiten“ fällt weg. Das Spielleiter-Pult ist ein großes Fenster in der Art des Tisches mit drei Spalten: „Dieser Zug“ (Pause, Markt, hinter „⋯“ Kapitel oder Runde beenden), „Am Tisch“ (Vorlesen, Szenenbild, Einladen mit dem Link, Letzter Satz in der Mail) und „Erzähler“ (Erzählweise, Stimme des Erzählers, Kampfstufe, Spielleiter-Regler); darunter stehen Geschichte, Zufallsregeln, Orakel, Wahrheit dieses Kapitels und die Dinge. „Jetzt weiter“ steht auch oben im Pult und schließt es, damit der Gastgeber die Erzählung sieht; ✕, Esc oder ein Tipp daneben schließen es wie jedes Fenster. Am Handy steht alles untereinander. Die Kante zwischen Geschichte und rechter Spalte lässt sich ziehen (oder mit den Pfeiltasten verschieben), von 260 bis 560 Pixel, ab "
+"text": "KI-Dungeon-Master: Spielleiter-Pult als Fenster und ziehbare Spalte (V01.1.074, Dominik 2026-10-25 „die rechte spalte ist zu klein und unübersichtlich“, gewählt „vorschlag 2 mit vorschlag 3 kombiniert“): Die rechte Spalte des Tisches zeigt nur noch Auftrag, den eigenen Helden mit seinen Knöpfen, für den Gastgeber „▶ Jetzt weiter“ (mit „wartet auf …“) und „🎲 Spielleiter-Pult öffnen“, darunter die Reiter Karte, Fäden und Termin; der Reiter „Leiten“ fällt weg. Das Spielleiter-Pult ist ein großes Fenster in der Art des Tisches (seit V01.1.079 als Tafeln, siehe unten) mit drei Spalten: „Dieser Zug“ (Pause, Markt, hinter „⋯“ Kapitel oder Runde beenden), „Am Tisch“ (Vorlesen, Szenenbild, Einladen mit dem Link, Letzter Satz in der Mail) und „Erzähler“ (Erzählweise, Stimme des Erzählers, Kampfstufe, Spielleiter-Regler); darunter stehen Geschichte, Zufallsregeln, Orakel, Wahrheit dieses Kapitels und die Dinge. „Jetzt weiter“ steht auch oben im Pult und schließt es, damit der Gastgeber die Erzählung sieht; ✕, Esc oder ein Tipp daneben schließen es wie jedes Fenster. Am Handy steht alles untereinander. Die Kante zwischen Geschichte und rechter Spalte lässt sich ziehen (oder mit den Pfeiltasten"
 },
 {
 "lang": "de",
@@ -5277,7 +5277,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Werk 320 statt 290; die Breite bleibt je Gerät gemerkt (dm-breite), ein Doppelklick stellt sie zurück. Wo der Tisch nur eine Spalte hat, gibt es keine Kante. Nur die Ansicht ändert sich: jeder Knopf schickt dieselbe Anfrage wie vorher, das Panel prüft sie wie bisher."
+"text": " verschieben), von 260 bis 560 Pixel, ab Werk 320 statt 290; die Breite bleibt je Gerät gemerkt (dm-breite), ein Doppelklick stellt sie zurück. Wo der Tisch nur eine Spalte hat, gibt es keine Kante. Nur die Ansicht ändert sich: jeder Knopf schickt dieselbe Anfrage wie vorher, das Panel prüft sie wie bisher."
 },
 {
 "lang": "de",
@@ -5286,6 +5286,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: jede Runde beenden oder löschen (V01.1.075, Dominik 2026-10-25 „runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.“): In der Liste „Deine Runden“ hat jede Runde neben „Öffnen“ ihre Knöpfe: der Gastgeber kann eine laufende Runde „Beenden“ oder gleich „Löschen“, eine beendete „Löschen“; ein Mitspieler blendet eine beendete Runde aus. Der erste Tipp fragt „Wirklich beenden?“, „Wirklich löschen?“ oder „Wirklich ausblenden?“, erst der zweite führt es aus. „Löschen“ einer laufenden Runde beendet sie erst wie jedes Ende (Erfahrung wird gezahlt, die Helden der Profile bleiben) und löscht sie dann mit ihren Geräuschen und Bildern (DELETE /api/profile/dungeon/{rid}?loeschen=1, nur der Gastgeber; ein Mitspieler bekommt 404). Eine laufende Runde eines anderen Gastgebers kann ein Mitspieler nicht beenden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spielleiter-Pult als Tafeln (V01.1.083, Dominik 2026-10-25 „muss alles besser angeordnet und geaphsh aufgewertet werden“, gewählt „empfehlung umsetzten für das spielleiter pult“, Vorschlag 1 „Tafeln“): Oben im Pult steht das große „▶ Jetzt weiter“, daneben je Held ein Chip, wer schon gehandelt hat (✓) und wer noch fehlt. Darunter vier gleich hohe Tafeln, zwei nebeneinander: „Zug“ mit Pause und Markt als Schalter und hinter „⋯“ Kapitel oder Runde beenden (mit Nachfrage), „Am Tisch“ mit den Kacheln Vorlesen, Szenenbild und Einladen in einer Reihe und dem Schalter „Letzter Satz in der Mail“, „Erzähler“ mit der Erzählweise als Knopfband knapp, normal, ausführlich und darunter die Stimme mit Probe und Ändern, „Schwierigkeit“ mit der Kampfstufe als Knopfband Leicht bis Tödlich und dem Spielleiter-Regler als Schalter „festhalten“ mit einer Leiste der Gefahr. Was nur der Gastgeber sieht, steht unten in einem Streifen „Nur für dich“ mit Reitern Geschichte, Wahrheit, Dinge, Zufallsregeln und Orakel statt in losen Kästen. Kapitälchen nur noch für die Überschriften der Tafeln, keine abgeschnittene Auswahlliste mehr. Am Handy stehen die Tafeln untereinander. Nur die Ansicht ä"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ndert sich: jeder Knopf schickt dieselbe Anfrage wie vorher, das Panel prüft sie wie bisher. Dazu prüft der Katalog die Tabellen der D&D-Ideen (Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“) nach festen Regeln, bevor eine Runde sie sieht (dungeon_ideen.check_rules): unter „ideen“ in dungeon_srd.json Krit-Tabellen je Schadensart und Patzer für Nahkampf, Fernkampf und Zauber (W12, Zustände nur aus der Liste, 1 bis 3 Züge), Landschaften mit Nachtwachen (W20 lückenlos) und Reise-Ereignissen, Fragekarten, Reise-Rollen, Narben (W20, höchstens −1 auf einen Wert) mit Pflastern und Sprüchen, dazu die Sage an jedem Gegner (sage). Gespielt wird damit erst in den nächsten Versionen."
 },
 {
 "lang": "de",
@@ -18997,7 +19013,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: game master console as a window and a draggable column (V01.1.074, Dominik 2026-10-25 “die rechte spalte ist zu klein und unübersichtlich”, chosen “vorschlag 2 mit vorschlag 3 kombiniert”): The table's right column now shows only the quest, the own hero with its buttons, for the host “▶ Go on now” (with “waiting for …”) and “🎲 Open the game master console”, below them the tabs Map, Threads and Date; the tab “Host” is gone. The game master console is a big window in the table's look with three columns: “This turn” (pause, market, behind “⋯” end chapter or round), “At the table” (read aloud, scene picture, invite with the link, last sentence in the mail) and “Narrator” (way of telling, narrator's voice, combat stage, game master dial); below them stand the story, random rules, oracle, truth of this chapter and the things. “Go on now” also stands on top of the console and closes it, so the host sees the narration; ✕, Esc or a tap beside it close it like every window. On the phone everything stands one below the other. The edge between the story and the right column can be dragged (or moved with the arrow keys), from 260 to 560 pixels, 320 instead of 290 from the sta"
+"text": "AI Dungeon Master: game master console as a window and a draggable column (V01.1.074, Dominik 2026-10-25 “die rechte spalte ist zu klein und unübersichtlich”, chosen “vorschlag 2 mit vorschlag 3 kombiniert”): The table's right column now shows only the quest, the own hero with its buttons, for the host “▶ Go on now” (with “waiting for …”) and “🎲 Open the game master console”, below them the tabs Map, Threads and Date; the tab “Host” is gone. The game master console is a big window in the table's look (since V01.1.079 as cards, see below) with three columns: “This turn” (pause, market, behind “⋯” end chapter or round), “At the table” (read aloud, scene picture, invite with the link, last sentence in the mail) and “Narrator” (way of telling, narrator's voice, combat stage, game master dial); below them stand the story, random rules, oracle, truth of this chapter and the things. “Go on now” also stands on top of the console and closes it, so the host sees the narration; ✕, Esc or a tap beside it close it like every window. On the phone everything stands one below the other. The edge between the story and the right column can be dragged (or moved with the arrow keys), from 260 to 560 p"
 },
 {
 "lang": "en",
@@ -19005,7 +19021,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "rt; the width is kept per device (dm-breite), a double click sets it back. Where the table has only one column there is no edge. Only the view changes: every button sends the same request as before, the panel checks it as before."
+"text": "ixels, 320 instead of 290 from the start; the width is kept per device (dm-breite), a double click sets it back. Where the table has only one column there is no edge. Only the view changes: every button sends the same request as before, the panel checks it as before."
 },
 {
 "lang": "en",
@@ -19014,6 +19030,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: end or delete every round (V01.1.075, Dominik 2026-10-25 “runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.”): In the list “Your rounds” every round has its buttons next to “Open”: the host can “End” a running round or “Delete” it at once, and “Delete” an ended one; a player hides an ended round. The first tap asks “Really end?”, “Really delete?” or “Really hide?”, only the second does it. “Delete” on a running round first ends it like every end (experience is paid, the heroes of profiles stay) and then deletes it with its sounds and pictures (DELETE /api/profile/dungeon/{rid}?loeschen=1, host only; a player gets 404). A player cannot end a running round of another host."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: game master console as cards (V01.1.083, Dominik 2026-10-25 “muss alles besser angeordnet und geaphsh aufgewertet werden”, chosen “empfehlung umsetzten für das spielleiter pult”, proposal 1 “cards”): On top of the console stands the big “▶ Go on now”, beside it one chip per hero showing who has acted (✓) and who is still missing. Below it four cards of equal height, two side by side: “Turn” with pause and market as switches and behind “⋯” end chapter or round (asking again), “At the table” with the tiles read aloud, scene picture and invite in one row and the switch “Last sentence in the mail”, “Narrator” with the way of telling as a band of buttons brief, normal, rich and below it the voice with sample and change, “Difficulty” with the combat stage as a band of buttons easy to deadly and the game master dial as a switch “hold” with a bar of the danger. What only the host sees stands at the bottom in one strip “Only for you” with tabs story, truth, things, random rules and oracle instead of loose boxes. Small caps only for the cards' headings, no cut-off choice list any more. On the phone the cards stand one below the other. Only the view changes: every button se"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nds the same request as before, the panel checks it as before. With it the catalog checks the tables of the D&D ideas (Dominik 2026-10-25 “1-12 reihenfolge bestimmst du”) by fixed rules before a round sees them (dungeon_ideen.check_rules): under “ideen” in dungeon_srd.json critical hit tables per damage type and fumbles for melee, ranged and spells (d12, states only from the list, 1 to 3 turns), landscapes with night watches (d20 without gaps) and travel events, question cards, travel roles, scars (d20, at most −1 on one value) with plasters and sayings, and the saying on every foe (sage). They are played only in the next versions."
 },
 {
 "lang": "en",

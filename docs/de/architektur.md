@@ -283,6 +283,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_gesicht.py` | Dungeon-Master-Gesichter: ein festes Porträt je Figur, Vorlage für spätere Szenenbilder |
 | `app/panel/dungeon_gold.py` | Dungeon-Master-Gold mit Zweck: Gasthaus, Schmied, Lehrstunde und Gerücht in Siedlungen zu festen Preisen |
 | `app/panel/dungeon_grenzen.py` | Dungeon-Master-Grenzen: Grenzen und Schleier je Platz als Wortlisten, anonyme X-Karte erzählt die letzte Szene neu |
+| `app/panel/dungeon_ideen.py` | Dungeon-Master-Ideen-Tabellen: Krit und Patzer, Landschaften, Nachtwachen, Reise, Narben und Sagen aus dem Katalog, geprüft nach festen Regeln |
 | `app/panel/dungeon_import.py` | Dungeon-Master-Abenteuer-Import: ein geschriebenes Abenteuer wird ein Entwurf im Geschichten-Planer, feste Regeln prüfen |
 | `app/panel/dungeon_kampf.py` | Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse |
 | `app/panel/dungeon_karte.py` | Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort |
