@@ -163,6 +163,13 @@ class Record(unittest.TestCase):
         r.fail("Bad Code!")
         self.assertEqual(r.errors, ["tts_error"])
 
+    def test_a_detail_named_like_an_argument_never_breaks_the_answer(self):
+        # V01.1.040: the Taten-Prüfung sent kind=… as a detail, step() failed and the whole answer with it (llm_error)
+        r = tracelog.Rec(1000.0, "web")
+        r.step("check", "Taten-Prüfung", 1000.0, held=1, kind="erledigt", name="x", start=2, end=3)
+        self.assertEqual(r.steps[0]["k"], "check")
+        self.assertEqual(r.steps[0]["x"], {"held": 1, "kind": "erledigt", "name": "x", "start": 2, "end": 3})
+
     def test_status(self):
         r = tracelog.Rec(0.0, "web")
         r.mark("sound", 2.0)

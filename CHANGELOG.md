@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.040** · 2026-10-25 · Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
 - **V01.1.039** · 2026-10-25 · KI-Dungeon-Master: Bestiarium mit 62 neuen Gegnern (jede Welt hat auf Stufe 1 bis 12 mindestens drei, die eigene Welt nimmt die aus Fantasy), Regeln zeigt Schadensart, Schwäche, Widerstand und Immunität als Symbole, Boss-Marke, EP je Held und „neu“, Filter nach Welt, Stufe, Bossen und neuen; eine misslungene Probe bleibt misslungen und die Erzählung nennt die Gegner der Karte
 - **V01.1.038** · 2026-10-25 · KI-Dungeon-Master: eigener Würfel wartet im Verlauf bis zum Wurf (Erzählung dahinter verschwommen, nach 30 s Selbstwurf), Wurf mit Aufprall und Schatten, Ergebnisfarben (grün, grau, Gold mit Funken, Riss), Brummen, weiter werfen durch Halten, Hinweiston
 - **V01.1.037** · 2026-10-25 · KI-Dungeon-Master: Bühnenbilder je Ortsart und Raumart in jedem Weltstil (16:9, neutral, ohne Menschen), nachts und mit „Alle Bilder malen“; die Bühne zeigt sie, bis die Szene ihr eigenes Bild hat

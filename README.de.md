@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.040** Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
 - **V01.1.039** KI-Dungeon-Master: Bestiarium mit 62 neuen Gegnern (jede Welt hat auf Stufe 1 bis 12 mindestens drei, die eigene Welt nimmt die aus Fantasy), Regeln zeigt Schadensart, Schwäche, Widerstand und Immunität als Symbole, Boss-Marke, EP je Held und „neu“, Filter nach Welt, Stufe, Bossen und neuen; eine misslungene Probe bleibt misslungen und die Erzählung nennt die Gegner der Karte
 - **V01.1.038** KI-Dungeon-Master: der eigene Würfel wartet im Verlauf bis zum Wurf (Erzählung verschwommen, nach 30 s von selbst), Wurf mit Aufprall, Ergebnisfarben, Brummen und Hinweiston
 - **V01.1.037** KI-Dungeon-Master: Bühnenbilder je Ortsart und Raumart in jedem Weltstil (16:9, neutral, ohne Menschen), nachts und mit „Alle Bilder malen“; die Bühne zeigt sie, bis die Szene ihr eigenes Bild hat
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.033** KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
 - **V01.1.032** KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
 - **V01.1.031** KI-Dungeon-Master: Heldenmut, einmal am Spielabend eine misslungene Probe neu würfeln oder einen Treffer kritisch machen, einen zweiten schenken die Mitspieler mit 👍
-- **V01.1.030** KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 
 
 

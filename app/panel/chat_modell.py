@@ -444,7 +444,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             trace["calls"].append({"name": "Taten-Prüfung", "args": "", "result": f"{len(st['held_acts'])} Satz/Sätze "
                                    "nicht gesagt: Tat ohne geklapptes Werkzeug (" + ", ".join(a or "erledigt" for a in st["held_acts"]) + ")"})
             if tr:
-                tr.step("check", "Taten-Prüfung", time.time(), held=len(st["held_acts"]), kind=art or "erledigt",
+                tr.step("check", "Taten-Prüfung", time.time(), held=len(st["held_acts"]), art=art or "erledigt",
                         why="fehler" if ran else "nicht_gelaufen")
         if who and own_browser:   # „Beschwerde erkennen“: the next message may say this did not work (taten.last)
             taten.note_last(who["id"], st["acts"])

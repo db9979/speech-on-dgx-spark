@@ -75,7 +75,8 @@ class Rec:
     def ms(self, t):
         return max(0, int(round((float(t) - self.t0) * 1000)))
 
-    def step(self, kind, name, start, end=None, **info):
+    def step(self, kind, name, start, end=None, /, **info):
+        # positional only: an info word like kind= or name= is a detail of the step, never a second value (V01.1.040)
         if kind not in KINDS or len(self.steps) >= MAX_STEPS:
             return
         name = safe(str(name)[:60]) or "unbekannt"

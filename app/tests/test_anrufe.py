@@ -260,7 +260,7 @@ class Vermittler(Base):
         with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \
                 mock.patch.object(anrufe, "_installed", return_value=True), \
                 mock.patch.object(anrufe, "_state_dir", return_value=tempfile.mkdtemp()), \
-                mock.patch("netguard.resolve", return_value="203.0.113.9"):
+                mock.patch.object(anrufe, "outside_ip", return_value=("203.0.113.9", "")):
             self.assertEqual(anrufe.apply_turn(), "off")
             sc.assert_not_called()
             helpers.set_config(calls_turn=True, calls_turn_host="spark.example.de")
@@ -276,6 +276,60 @@ class Vermittler(Base):
             self.assertEqual(anrufe.apply_turn(), "off")
             sc.assert_called_with("stop")
             self.assertFalse(os.path.exists(path))
+
+    def test_outside_address_only_public_ipv4(self):
+        def gai(addrs):
+            return lambda *a, **k: [(2, 2, 17, "", (x, 3478)) for x in addrs]
+        with mock.patch("socket.getaddrinfo", gai(["192.168.178.20", "93.184.216.34"])):
+            self.assertEqual(anrufe.outside_ip("spark.example.de"), ("93.184.216.34", ""))
+        with mock.patch("socket.getaddrinfo", gai(["192.168.178.20"])):
+            self.assertEqual(anrufe.outside_ip("spark.example.de"), ("", "home address"))
+        with mock.patch("socket.getaddrinfo", side_effect=OSError("no")):
+            self.assertEqual(anrufe.outside_ip("spark.example.de"), ("", "not found"))
+        with mock.patch("socket.getaddrinfo") as g:   # IPv4 only: a home-only IPv6 record never stops the relay
+            g.return_value = []
+            anrufe.outside_ip("spark.example.de")
+            self.assertEqual(g.call_args[0][2], __import__("socket").AF_INET)
+
+    def test_refused_logs_once_per_reason_and_a_running_relay_keeps_its_address(self):
+        state = tempfile.mkdtemp()
+        with mock.patch.object(anrufe, "_systemctl", return_value=True), \
+                mock.patch.object(anrufe, "_installed", return_value=True), \
+                mock.patch.object(anrufe, "_state_dir", return_value=state), \
+                mock.patch.object(anrufe, "_active", return_value=False), \
+                mock.patch.object(anrufe, "outside_ip", return_value=("", "home address")):
+            helpers.set_config(calls_turn=True, calls_turn_host="spark.example.de")
+            anrufe._turn.update(conf="", ip="", on=False, why="")
+            out = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(out):
+                    for _ in range(3):   # every minute: one line, not three
+                        self.assertEqual(anrufe.apply_turn(), "noip")
+            finally:
+                helpers.set_config(calls_turn=False)
+            self.assertEqual(out.getvalue().count("chats: call relay refused | why home address"), 1)
+            self.assertEqual(anrufe._turn["why"], "Adresse von außen zeigt ins Heimnetz")
+            self.assertFalse(anrufe.relay_ok())
+        with open(os.path.join(state, "turn.conf"), "w") as f:   # written before the panel restarted
+            f.write("listening-port=3478\nexternal-ip=93.184.216.34\n")
+        with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \
+                mock.patch.object(anrufe, "_installed", return_value=True), \
+                mock.patch.object(anrufe, "_state_dir", return_value=state), \
+                mock.patch.object(anrufe, "_active", return_value=True), \
+                mock.patch.object(anrufe, "outside_ip", return_value=("", "not found")):
+            helpers.set_config(calls_turn=True, calls_turn_host="spark.example.de")
+            out = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(anrufe.apply_turn(), "on")
+                    self.assertTrue(anrufe.relay_ok())
+                    self.assertEqual(anrufe._turn["ip"], "93.184.216.34")
+            finally:
+                helpers.set_config(calls_turn=False)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    anrufe.apply_turn()
+            self.assertIn("chats: call relay kept | why not found", out.getvalue())
+            sc.assert_any_call("stop")                       # switched off at the end: the unit stops
 
     def test_without_coturn_nothing_starts_and_the_reason_shows(self):
         with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \

@@ -500,6 +500,36 @@ def _active():
     return run(["systemctl", "is-active", TURN_UNIT])[1].split("\n")[0].strip() == "active"
 
 
+def outside_ip(host):
+    """The public IPv4 address coturn names as its own (external-ip) and "", or "" and the reason in fixed words.
+    Only IPv4: an extra IPv6 record of the name (often a home-only fd… address) must not stop the relay. Nothing
+    connects to this address, so one public address among them is enough; the relay's peers stay limited by DENIED."""
+    import socket
+    import netguard
+    try:
+        found = sorted({i[4][0] for i in socket.getaddrinfo(host, TURN_PORT, socket.AF_INET, socket.SOCK_DGRAM)})
+    except (OSError, UnicodeError):
+        return "", "not found"
+    whys = [netguard.allowed(a, TURN_PORT, netguard.PUBLIC) for a in found]
+    for a, w in zip(found, whys):
+        if not w:
+            return a, ""
+    if not found:
+        return "", "not found"
+    return "", "notaus" if any(str(w).startswith("Notaus") for w in whys) else "home address"
+
+
+def _conf_ip(path):
+    """external-ip of the settings written before (after a panel restart), only a public IPv4 address."""
+    import ipaddress
+    try:
+        with open(path) as f:
+            m = re.search(r"^external-ip=([0-9.]{7,15})$", f.read(), re.M)
+        return m.group(1) if m and ipaddress.ip_address(m.group(1)).is_global else ""
+    except (OSError, ValueError):
+        return ""
+
+
 def relay_ok():
     """For the Dienst-Wächter: the Vermittler runs with the settings written here."""
     return bool(_turn["on"]) and _active()
@@ -507,7 +537,6 @@ def relay_ok():
 
 def apply_turn():
     """Brings the unit to what the switches say: settings written and running, or stopped. Returns the state word."""
-    import netguard
     path = os.path.join(_state_dir(), "turn.conf")
     if not turn_on():
         _turn.update(on=False, why="")
@@ -526,11 +555,19 @@ def apply_turn():
         _turn.update(on=False, why="coturn fehlt")
         return "missing"
     host = turn_host()
-    try:
-        ip = netguard.resolve(host, TURN_PORT, netguard.PUBLIC)
-    except Exception as e:
-        _turn.update(on=False, why="Adresse von außen nicht gefunden")
-        _log("relay refused", why=type(e).__name__)
+    ip, why = outside_ip(host)
+    if not ip:
+        old = _turn["ip"] or _conf_ip(path)
+        if old and _active():   # the name fails for a moment (or shows an odd address): the running relay keeps its last one
+            if _turn["why"] != "alte Adresse":
+                _log("relay kept", why=why)
+            _turn.update(on=True, ip=old, why="alte Adresse")
+            return "on"
+        text = {"home address": "Adresse von außen zeigt ins Heimnetz",
+                "notaus": "Notaus: kein Internet"}.get(why, "Adresse von außen nicht gefunden")
+        if _turn["why"] != text:   # once per reason, not every minute
+            _log("relay refused", why=why)
+        _turn.update(on=False, why=text)
         return "noip"
     conf = turn_conf(host, ip, _state_dir())
     if conf != _turn["conf"] or not _active():
@@ -549,6 +586,8 @@ def apply_turn():
         _turn.update(conf=conf if ok else "", ip=ip, on=ok, why="" if ok else "Vermittler startet nicht")
         _log("relay started" if ok else "relay failed", changed=int(old != conf))
         return "on" if ok else "failed"
+    if _turn["why"]:
+        _log("relay back")
     _turn.update(on=True, why="")
     return "on"
 
