@@ -68,6 +68,14 @@ def profile(name):
     return _PROFILES[name]
 
 
+def tearDownModule():
+    """No test profile stays behind: another module's name rule would see „Dungeon Dora“ (main red at V01.1.043)."""
+    for _c, uid in _PROFILES.values():
+        guard.reset()
+        ADMIN.delete("/api/admin/profiles/" + uid)
+    _PROFILES.clear()
+
+
 def _login(name):
     guard.reset()
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": "1234"})
@@ -5212,7 +5220,7 @@ class Fight(Turns):
         self.assertEqual(v["name"], k["orte"][k["hier"]]["name"])
         self.assertEqual({x["id"]: x["preis"] for x in v["dienste"]},
                          {"gasthaus": gold.PREIS["gasthaus"] * stufe * 2, "schmied": gold.PREIS["schmied"] * stufe,
-                          "lehre": gold.PREIS["lehre"] * stufe, "geruecht": gold.PREIS["geruecht"] * stufe})
+                          "lehre": gold.PREIS["lehre"] * stufe, "geruecht": gold.PREIS["geruecht"] * stufe, "verbessern": 0})
         self.assertEqual(dienst(id="beten").status_code, 400)
         # the inn: the whole group back to full life and charges, once an evening
         with dungeon._lock:
@@ -5257,6 +5265,30 @@ class Fight(Turns):
         i = gold._next_place(rd)
         self.assertIn(rd["karte"]["orte"][i]["name"], e["text"][0])
         self.assertEqual(dienst(id="geruecht").status_code, 409)
+        # „Ausrüstung verbessern“ (Wirtschaft Punkt 7): a weapon or armour one rarity better for its full new price, known
+        # from then on, up to epic; not a fixed rarity, not jewellery
+        with dungeon._lock:
+            d = dungeon._read()
+            hh = d["runden"][self.rid]["plaetze"][self.host]["held"]
+            sw = dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c), "rar")
+            sw["u"] = True
+            fixed = dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and c.get("seltenheit")), "gewoehnlich")
+            ring = dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "schmuck" and "seltenheit" not in c), "selten")
+            hh["tasche"] += [sw, fixed, ring]
+            hh["gold"] = 5000
+            dungeon._write(d)
+        v = self.c.get(url).json()["siedlung"]
+        self.assertEqual({x["i"]: x["preis"] for x in v["verbessern"] if x["i"] == sw["i"]}, {sw["i"]: dungeon.price(r, dict(sw, s="episch"))})
+        self.assertNotIn(fixed["i"], [x["i"] for x in v["verbessern"]])
+        self.assertEqual(dienst(id="verbessern", i=fixed["i"]).status_code, 400)
+        self.assertEqual(dienst(id="verbessern", i=ring["i"]).status_code, 400)
+        self.assertEqual(dienst(id="verbessern", i=sw["i"]).status_code, 200)
+        h = self.state(self.rid)["plaetze"][self.host]["held"]
+        neu = next(x for x in h["tasche"] if x["i"] == sw["i"])
+        self.assertEqual((neu["s"], neu["bonus"], neu.get("u")), ("episch", dungeon._by(r, "seltenheit")["episch"]["bonus"], None))
+        self.assertTrue(neu.get("eff"))
+        self.assertEqual(h["gold"], 5000 - dungeon.price(r, dict(sw, s="episch")))
+        self.assertEqual(dienst(id="verbessern", i=sw["i"]).status_code, 400)     # never a legend
         # too little gold, a fight, the guest the same rules
         with dungeon._lock:
             d = dungeon._read()
@@ -5272,6 +5304,55 @@ class Fight(Turns):
         self.assertEqual(self.v.post("/api/dungeon/held", json={"code": self.code, "was": "dienst", "id": "geruecht"}).status_code, 404)
         dungeon.pay_ep(r, self.state(self.rid), self.rid)                          # a lesson lasts until the round ends
         self.assertGreater(dungeon.for_live()["dienste"], 0)
+
+    def test_an_oil_on_the_weapon_for_three_hits(self):
+        """Wirtschaft Punkt 9 (Dominik 2026-10-25 „1-12“): an oil (a flask with "oel", one kind other than hieb, stich
+        and wucht) goes on the weapon in the main hand: its kind +1d6 for OEL_TREFFER hits, the last one leaves the blade
+        clean; without a weapon nothing is used up, and an oil is never drunk."""
+        oel = {"id": "blitzoel", "art": "trank", "name": ["Blitzöl", "Lightning oil"], "oel": "blitz", "kg": 0.5,
+               "info": ["Ein Fläschchen, das auf der Klinge knistert.", "A flask that crackles on the blade."]}
+        for bad in (dict(oel, oel="hieb"), dict(oel, art="werkzeug"), dict(oel, heilung=4)):
+            self.assertTrue([e for e in dungeon.check_rules(dungeon.merge(dungeon._base_rules(), {"gegenstaende": [bad]})) if "oel" in e], bad)
+        os.makedirs(os.path.dirname(dungeon.EIGENE), exist_ok=True)
+        with open(dungeon.EIGENE, "w") as f:
+            json.dump({"gegenstaende": [oel]}, f)
+        dungeon._rules["r"] = None
+        r = dungeon.rules()
+        self.assertIn("blitzoel", dungeon._by(r, "gegenstaende"))
+        sword = next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c and not c.get("zweihand"))
+        i = self.give(self.rid, self.gp, "blitzoel", "gewoehnlich")
+        x = self.v.post("/api/dungeon/held", json={"code": self.code, "was": "trinken", "i": i})
+        self.assertEqual((x.status_code, x.json()["detail"]), (400, "kein trank"))
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.gp]["held"]["an"]["haupthand"] = None
+            dungeon._write(d)
+        x = self.v.post("/api/dungeon/held", json={"code": self.code, "was": "auftragen", "i": i})
+        self.assertEqual((x.status_code, x.json()["detail"]), (400, "keine waffe"))
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.gp]["held"]["an"]["haupthand"] = dungeon.item(r, sword, "gewoehnlich")
+            dungeon._write(d)
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": self.code, "was": "auftragen", "i": i}).status_code, 200)
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.gp]["held"]
+        self.assertNotIn(i, [x["i"] for x in h["tasche"]])                         # used up
+        self.assertEqual(h["an"]["haupthand"]["oel"], {"art": "blitz", "n": kampf.OEL_TREFFER})
+        self.assertIn("Öl: ⚡ Blitz, noch 3 Treffer", dungeon.item_view(r, h["an"]["haupthand"], "de")["zeilen"])
+        self.assertIn("auftragen", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
+        rd, _ = self.encounter()
+        h = rd["plaetze"][self.gp]["held"]
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=2, immun=[], resistenz=[], schwaeche=["blitz"], leben=999)
+        p = {"pid": self.gp, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
+        for left in range(kampf.OEL_TREFFER - 1, -1, -1):
+            x = kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 5))[1][0]
+            self.assertEqual(x["extra"], [{"art": "blitz", "schaden": 10, "oel": True}])   # weak against it: twice
+            kampf.apply(dungeon, r, rd, [x], [], "", {})
+            self.assertEqual((h["an"]["haupthand"].get("oel") or {}).get("n", 0), left)
+        self.assertNotIn("oel", h["an"]["haupthand"])
+        self.assertNotIn("extra", kampf.attacks(dungeon, r, rd, [p], Dice(10, 1, 5))[1][0])      # the blade is clean
+        self.assertIn("ist verbraucht", " ".join(e["text"][0] for e in rd["log"] if e["art"] == "system"))
 
     def test_item_effects_and_rarities_by_fixed_rules(self):
         """Gegenstands-Punkte 3 and 5 of 2026-10-24 (Dominik „Ja, alles umsetzen“): a rarity's bonus at most +3; from
@@ -5921,6 +6002,25 @@ class Fight(Turns):
         rd = self.play([{"proben": []}, {"erzaehlung": "Der Wind dreht und trägt den Geruch von Rauch heran.",
                                          "szene": {"ort": "Hügel", "stimmung": "still", "tageszeit": "mitternacht"}, "frage_an": ""}])
         self.assertEqual(rd["tageszeit"], "nacht")
+
+    def test_every_common_kind_of_attack_has_its_protection(self):
+        """Wirtschaft Punkt 12 (Dominik 2026-10-25 „1-12“): in every world, a kind other than hieb, stich and wucht (those
+        are the armour's) that at least FUENF foes there attack with has at least one protection thing there (widerstand)."""
+        r = dungeon.rules()
+        for w in r["welten"]:
+            foes = [g for g in r["gegner"] if kampf.plays_in(r, g, w["id"])]
+            for art in set(kampf.SCHADEN_ARTEN) - set(kampf.KOERPER):
+                n = sum(1 for g in foes if g.get("schaden_art", "hieb") == art)
+                if n < 5:
+                    continue
+                schutz = [c["id"] for c in r["gegenstaende"] if art in (c.get("widerstand") or []) and dungeon.in_world(c, w["id"])]
+                self.assertTrue(schutz, (w["id"], art, n))
+
+    def test_weapon_effects_for_thunder_acid_and_withering(self):
+        """Wirtschaft Punkt 11: the effects donnernd, aetzend and welkend burn like fire, each with its own kind."""
+        eff = dungeon._by(dungeon.rules(), "effekte")
+        for e, art in (("donnernd", "donner"), ("aetzend", "saeure"), ("welkend", "nekrotisch")):
+            self.assertEqual((eff[e]["wirkung"], eff[e]["art"], eff[e]["nur"]), ("schaden", art, ["waffe"]))
 
     def test_every_common_weakness_has_its_weapons(self):
         """Schadensarten Punkt 8: in every world, a kind that at least DREI foes there are weak against has at least ZWEI

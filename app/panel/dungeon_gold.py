@@ -5,20 +5,27 @@ hero may pay for fixed offers of the panel, never of the model, priced by the gr
 - Gasthaus: a night at the inn, a full rest for the whole group (life and spell charges), once a game evening;
 - Schmied: a tool that broke on a natural 1 is mended and back in the bag (the last KAPUTT_MAX broken ones are kept);
 - Lehrstunde: +1 on one value until the round or chapter ends (one at a time);
-- Gerücht: a hint at the next place of the map toward the goal, once per place.
+- Gerücht: a hint at the next place of the map toward the goal, once per place;
+- Ausrüstung verbessern (Wirtschaft Punkt 7, Dominik 2026-10-25 „1-12“): a weapon or armour of the hero one rarity
+  better, up to „episch“, for its full price at the new rarity; known from then on.
+The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
+(dungeon_pruefstand.economy) and its self-test keeps income to expenses between 1.2 and 2.
 Only while „Gold mit Zweck“ is allowed for the round's host (features "dungeongold"). The hero's move goes through the
 seat's „held“ endpoint ({was: "dienst", id, i, wert}).
 """
 import time
 
 SIEDLUNG = ("dorf", "stadt", "taverne", "station", "basar", "hafen")
-DIENSTE = ("gasthaus", "schmied", "lehre", "geruecht")
-PREIS = {"gasthaus": 3, "schmied": 5, "lehre": 20, "geruecht": 3}   # gold per level of the group (the inn: per hero)
+DIENSTE = ("gasthaus", "schmied", "lehre", "geruecht", "verbessern")
+PREIS = {"gasthaus": 10, "schmied": 5, "lehre": 20, "geruecht": 3}   # gold per level of the group (the inn: per hero)
+VERBESSERN_ARTEN = ("waffe", "ruestung")
+VERBESSERN_BIS = "episch"   # the smith never makes a legend
 KAPUTT_MAX = 5
 NAMEN = {"gasthaus": (("Gasthaus", "Inn"), ("Eine Nacht für alle: volles Leben und alle Zauber wieder da.", "A night for everyone: full life and all spells back.")),
          "schmied": (("Schmied", "Smith"), ("Ein zerbrochenes Werkzeug wird wieder ganz.", "A broken tool is made whole again.")),
          "lehre": (("Lehrstunde", "Lesson"), ("+1 auf einen Wert bis zum Ende der Runde.", "+1 on one value until the round ends.")),
-         "geruecht": (("Gerücht", "Rumour"), ("Ein Hinweis auf den nächsten Ort.", "A hint at the next place."))}
+         "geruecht": (("Gerücht", "Rumour"), ("Ein Hinweis auf den nächsten Ort.", "A hint at the next place.")),
+         "verbessern": (("Ausrüstung verbessern", "Improve gear"), ("Eine Waffe oder Rüstung wird eine Seltenheit besser, bis episch.", "A weapon or armour gets one rarity better, up to epic."))}
 RICHTUNG = (("im Osten", "to the east"), ("im Südosten", "to the south-east"), ("im Süden", "to the south"), ("im Südwesten", "to the south-west"),
             ("im Westen", "to the west"), ("im Nordwesten", "to the north-west"), ("im Norden", "to the north"), ("im Nordosten", "to the north-east"))
 clock = time.time
@@ -42,8 +49,28 @@ def here(rd):
 
 
 def price(dm, rd, was):
+    """A service's price by the group's level (the inn per hero); „verbessern“ goes by the piece (better_price)."""
+    if was == "verbessern":
+        return 0
     level = dm.group_level(dm._living(rd))
     return PREIS[was] * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
+
+
+def better(dm, r, it):
+    """The rarity one better for the smith, or None: only a weapon or armour without a fixed rarity, never a legend,
+    at most VERBESSERN_BIS."""
+    c = dm._c(r, it)
+    ids = [x["id"] for x in r["seltenheit"]]
+    if c["art"] not in VERBESSERN_ARTEN or c.get("seltenheit") or it.get("leg") or it["s"] not in ids:
+        return None
+    k = ids.index(it["s"]) + 1
+    return ids[k] if k <= ids.index(VERBESSERN_BIS) else None
+
+
+def better_price(dm, r, it):
+    """The full price of the piece at its better rarity (Wirtschaft Punkt 7: dear, so gold stays useful later)."""
+    s = better(dm, r, it)
+    return dm.price(r, dict(it, s=s)) if s else 0
 
 
 def broke(rd, h, it):
@@ -97,7 +124,12 @@ def serve(dm, r, rd, pid, h, b):
     if not here(rd) or rd.get("kampf"):
         print(f"dungeon: dienst | {was} | keine siedlung", flush=True)
         raise LookupError("siedlung")
-    preis = price(dm, rd, was)
+    pieces = dm.worn(h) + h["tasche"]
+    teil = next((x for x in pieces if x["i"] == b.get("i")), None) if was == "verbessern" else None
+    if was == "verbessern" and (not teil or not better(dm, r, teil)):
+        print("dungeon: dienst | verbessern | nein", flush=True)
+        raise ValueError("verbessern")
+    preis = better_price(dm, r, teil) if teil else price(dm, rd, was)
     if h["gold"] < preis:
         print(f"dungeon: dienst | {was} | zu wenig gold", flush=True)
         raise ValueError("gold")
@@ -135,6 +167,14 @@ def serve(dm, r, rd, pid, h, b):
         h["lehre"] = {"wert": b["wert"]}
         wn = dm._by(r, "werte")[b["wert"]]["name"][li]
         text = (f"{h['name']} nimmt eine Lehrstunde: {wn} +1 bis zum Ende der Runde.", f"{h['name']} takes a lesson: {wn} +1 until the round ends.")
+    elif was == "verbessern":
+        alt = dm.item_view(r, teil, rd["lang"])["name"]
+        teil["s"] = better(dm, r, teil)
+        teil["bonus"] = dm._by(r, "seltenheit")[teil["s"]]["bonus"]
+        teil.pop("u", None)                   # the smith knows what it made
+        dm.draw_effect(r, teil, dm.random)
+        neu = dm._by(r, "seltenheit")[teil["s"]]["name"]
+        text = (f"Der Schmied macht {alt} von {h['name']} besser: jetzt {neu[0]}.", f"The smith makes {h['name']}'s {alt} better: now {neu[1]}.")
     else:
         k = rd.get("karte")
         if not k or k.get("geruecht") == k["hier"]:
@@ -162,8 +202,11 @@ def view(dm, r, rd, pid):
         return None
     li = 1 if rd["lang"] == "en" else 0
     k = rd.get("karte") or {}
+    besser = [x for x in dm.worn(h) + h["tasche"] if better(dm, r, x)]
     frei = {"gasthaus": rd.get("gasthaus") != evening(), "schmied": bool(h.get("kaputt")),
-            "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0}
+            "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser)}
     return {"name": here(rd), "gold": h["gold"], "lehre": (h.get("lehre") or {}).get("wert", ""),
             "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x]} for x in DIENSTE],
-            "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []]}
+            "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
+            "verbessern": [dict(dm.item_view(r, x, rd["lang"]), preis=better_price(dm, r, x),
+                                neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser]}

@@ -358,7 +358,7 @@ def do(dm, r, rd, rid, pid, h, kind, text, ok, li, n, names, out, uid):
     elif dm.zustand(h):
         return out("am_boden", name=h["name"])
     elif kind in ("trinken", "trank_an"):
-        tr = sorted((x for x in h["tasche"] if dm._c(r, x)["art"] == "trank"), key=lambda x: not dm._c(r, x).get("heilung"))
+        tr = sorted((x for x in h["tasche"] if dm._c(r, x)["art"] == "trank" and not dm._c(r, x).get("oel")), key=lambda x: not dm._c(r, x).get("heilung"))
         if not tr:
             return out("kein_trank")
         b, ding = {"was": "trinken", "i": tr[0]["i"]}, view(tr[0])["name"]

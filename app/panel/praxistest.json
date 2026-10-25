@@ -3355,6 +3355,13 @@
 "titel": "Wirtschaft Teil 2",
 "text": "A: Ein Händler öffnet: das Fenster nennt Schmied, Alchemist oder Krämer, was er zum halben Wert nimmt, und seine Kasse. B: Beim Schmied ein Schwert verkaufen: halber Wert; einen Trank: ein Viertel. C: So lange verkaufen, bis die Kasse leer ist: der Knopf wird grau, er lehnt ab. D: Etwas bei ihm kaufen: die Kasse wächst. E: Regeln → Seltenheit: „ab Stufe 5“ bei legendär, keine Schwelle mehr.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P504",
+"v": 1054,
+"titel": "Wirtschaft Teil 3",
+"text": "A: Funktionen → KI-Dungeon-Master → Balance-Prüfstand → Prüfen: die Wirtschaft zeigt je Stufe Einnahmen, Ausgaben und ein Verhältnis zwischen 1,2 und 2. B: In einer Siedlung kostet das Gasthaus 10 Gold mal Stufe je Held. C: Beim Schmied „Verbessern“: eine gewöhnliche Waffe wird selten, der Preis steht vorher dabei. D: Ein Öl in der Tasche: „Auf die Waffe“, drei Treffer zeigen die Extra-Art, danach meldet der Verlauf das Öl als verbraucht. E: Ohne Waffe in der Hand: das Öl bleibt in der Tasche.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -126,6 +126,7 @@ def prof(stufe):
 WIRKUNG = ("schaden", "lebensraub", "glueck", "wachsam")   # what an item's effect does by a fixed rule (Gegenstands-Punkt 3)
 WIRKUNG_W = 6             # „schaden“: +1d6 of its kind on a hit (twice on a critical)
 RAUB_W = 4                # „lebensraub“: the hero heals 1d4 on a hit
+OEL_TREFFER = 3           # „oel“ (Wirtschaft Punkt 9): a coated weapon hits with its kind +1d6 for this many hits
 
 
 def effects(dm, r, h, wirkung, it=None):
@@ -417,6 +418,10 @@ def attacks(dm, r, rd, proben, rng=None):
                 m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))
                 extra.append({"art": e["art"], "schaden": m})
                 n += m
+            if wp and not spell and (wp.get("oel") or {}).get("n", 0) > 0:     # an oil on the blade: one hit of its kind
+                m, _ = against(g, wp["oel"]["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))
+                extra.append({"art": wp["oel"]["art"], "schaden": m, "oel": True})
+                n += m
             if wp and not spell and effects(dm, r, h, "lebensraub", wp):
                 raub = rng.randint(1, RAUB_W)
             life[g["k"]] -= n
@@ -426,6 +431,35 @@ def attacks(dm, r, rd, proben, rng=None):
                     "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {}),
                     **({"extra": extra} if extra else {}), **({"raub": raub} if raub else {}), **({"glueck": True} if gl else {})})
     return rest, out
+
+
+def oil(dm, r, rd, pid, h, c):
+    """Wirtschaft Punkt 9: an oil from the bag on the weapon in the main hand: its kind for OEL_TREFFER hits, a new oil
+    replaces the old. Returns False without a weapon (nothing used up)."""
+    wp = _weapon(dm, r, h)
+    if not wp:
+        print("dungeon: oel | keine waffe", flush=True)
+        return False
+    wp["oel"] = {"art": c["oel"], "n": OEL_TREFFER}
+    a = ART_NAME[c["oel"]]
+    dm._log(rd, "system", text=[f"{h['name']} reibt die Waffe ein: {OEL_TREFFER} Treffer mit {a[0]}.",
+                                f"{h['name']} coats the weapon: {OEL_TREFFER} hits with {a[1]}."])
+    print("dungeon: oel | aufgetragen", flush=True)
+    return True
+
+
+def used_oil(dm, r, rd, pid, h):
+    """One hit of the oil is spent; the last one leaves the blade clean."""
+    wp = _weapon(dm, r, h)
+    if not wp or not wp.get("oel"):
+        return
+    wp["oel"]["n"] -= 1
+    if wp["oel"]["n"] <= 0:
+        del wp["oel"]
+        dm._log(rd, "system", text=[f"Das Öl auf der Waffe von {h['name']} ist verbraucht.", f"The oil on {h['name']}'s weapon is spent."])
+        print("dungeon: oel | verbraucht", flush=True)
+    else:
+        print("dungeon: oel | treffer", flush=True)
 
 
 def against(g, art, n, magisch=False):
@@ -568,6 +602,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if x.get("raub") and held and not dm.zustand(held):     # life drain: the hero heals by the panel's die
             dm.heal(held, x["raub"])
             print("dungeon: kampf | lebensraub", flush=True)
+        if any(e.get("oel") for e in x.get("extra") or ()) and held:
+            used_oil(dm, r, rd, x["pid"], held)
         was = hurt(g, x["schaden"]) if x["treffer"] else ""
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")

@@ -13,10 +13,11 @@ function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='e
     ${boden?`<small class="mut">${esc(boden===1?t('Hier liegt 1 Ding.','1 thing lies here.'):t('Hier liegen '+boden+' Dinge.',boden+' things lie here.'))}</small>`:''}
     <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}</div></div>`}
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
-const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣'};
+const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒'};
 function dmSiedlung(v){const s=v.siedlung,W=v.werte||{},knopf=(d,attr,label)=>`<button type="button" class="b p" data-dmhero="dienst" data-id="${d.id}"${attr||''}${!d.frei||s.gold<d.preis?' disabled':''}>${esc(label||t('Bezahlen','Pay'))} · ${d.preis} ${esc(t('Gold','gold'))}</button>`;
   const card=d=>`<div class="dm-ware dm-dienstk"><span class="dm-ware-b" aria-hidden="true">${DMDIENST[d.id]}</span><b>${esc(d.name)}</b><small>${esc(d.satz)}</small>${
     d.id==='schmied'?(s.kaputt.length?s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
+    :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{preis:it.preis}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
     :d.id==='lehre'?`<div class="dm-iacts">${Object.keys(W).map(k=>knopf(Object.assign({},d,{frei:s.lehre!==k}),` data-wert="${esc(k)}"`,W[k])).join('')}</div>${s.lehre?`<small class="mut">${esc(t('Jetzt: '+(W[s.lehre]||s.lehre)+' +1','Now: '+(W[s.lehre]||s.lehre)+' +1'))}</small>`:''}`
     :knopf(d)}</div>`;
   return `<small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest.','The panel sets the prices by the group\'s level.'))} · ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b></small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}

@@ -63,6 +63,19 @@ class Bench(unittest.TestCase):
         self.assertEqual(off, {}, "Stufe/Gruppe außerhalb des Ziels")
 
 
+    def test_the_economy_keeps_its_aim(self):
+        """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
+        costs (median), and no find sells for more than ten times a level's income; the inn grows with the level."""
+        import dungeon_gold as gold
+        w = ps.economy(dungeon.rules())
+        self.assertEqual(len(w), dungeon.rules()["grenzen"]["stufe_max"])
+        off = {k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}
+        self.assertEqual(off, {}, "Stufe außerhalb des Ziels")
+        self.assertEqual({k: c["fund_max"] for k, c in w.items() if c["fund_max"] > ps.JACKPOT * c["einnahmen"]}, {})
+        self.assertEqual(gold.PREIS["gasthaus"], 10)
+        self.assertEqual(ps.economy(dungeon.rules(), laeufe=5, stufen=[2]), ps.economy(dungeon.rules(), laeufe=5, stufen=[2]))
+
+
 class Page(Base):
     def setUp(self):
         super().setUp()

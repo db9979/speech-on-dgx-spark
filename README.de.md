@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.054** KI-Dungeon-Master: Wirtschaft Teil 3: der Prüfstand misst Einnahmen gegen Ausgaben je Stufe, Gasthaus 10 Gold mal Stufe je Held, der Schmied verbessert Waffen und Rüstung um eine Seltenheit, Öle auf der Waffe für 3 Treffer, Wirkungen donnernd, ätzend und welkend
 - **V01.1.053** KI-Dungeon-Master: Wirtschaft Teil 2: mehr Münzen von Gegnern, Händler mit Art und Kasse (halber Preis nur für die eigene Art), Seltenheit nach einer festen Fundtabelle je Stufe, Legendäres nur noch von Bossen
 - **V01.1.052** KI-Dungeon-Master: Wirtschaft Teil 1: eine Preisregel mit Preisbändern je Seltenheit, Legendäres unverkäuflich, Schätze nach Klasse und Stufe, Heiltränke 2 Gold je Leben, Zauberrollen nach Grad, Startgold 25; dazu 12 neue Waffen und 19 Schutz-Dinge im SRD-Katalog
 - **V01.1.051** KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.047** KI-Dungeon-Master: Beitreten ohne Schummeln: wer im Kampf dazukommt, wartet am Rand; im ersten Zug gibt ein neuer Held niemandem etwas; wer im Kampf geht, flieht und die Erfahrung teilt die Gruppe vom Kampfstart; ein Gerät, ein Held; am Boden Rettungswürfe wie bei D&D, und der einzige Held am Tisch wird von einem Fremden gerettet statt zu fallen
 - **V01.1.046** KI-Dungeon-Master: markierte Musikstücke vor dem Aussortieren anhören (▶ Anhören, nur Admin)
 - **V01.1.045** Selbsttest Dungeon-Bilder hängt nicht mehr an Testprofilen anderer Module
-- **V01.1.044** KI-Dungeon-Master: Wächter und Herr im Gewölbe nehmen ihre Gegner nach derselben Regel wie der Kampf, eine Welt ohne eigene Gegner bekommt die der Fantasy-Welt
 
 
 

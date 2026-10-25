@@ -259,7 +259,7 @@ _ZEICHEN = re.compile(r"[^\w<>&\"'\s]{1,8}")
 _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
-WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
+WAS = ("anlegen", "ablegen", "trinken", "auftragen", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
        "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst")
 TASCHE = 12               # items in one bag
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
@@ -560,6 +560,9 @@ def check_rules(r):
              f"gegenstaende {x.get('id')}: eigenschaften nur bei waffe, aus {', '.join(kampf.EIGENSCHAFTEN)}")
         need("schaden_art" not in x or x.get("art") in ("waffe", "zauber", "rolle") and x["schaden_art"] in kampf.SCHADEN_ARTEN,
              f"gegenstaende {x.get('id')}: schaden_art aus {', '.join(kampf.SCHADEN_ARTEN)}")
+        need("oel" not in x or x.get("art") == "trank" and x["oel"] in kampf.SCHADEN_ARTEN and x["oel"] not in kampf.KOERPER
+             and not (x.get("heilung") or x.get("segen") or x.get("widerstand")),
+             f"gegenstaende {x.get('id')}: oel nur bei trank, ohne heilung, segen und widerstand, eine Art ausser {', '.join(kampf.KOERPER)}")
         need("widerstand" not in x or x.get("art") in WIDERSTAND_ARTEN and isinstance(x["widerstand"], list) and x["widerstand"]
              and set(x["widerstand"]) <= set(kampf.SCHADEN_ARTEN) and len(set(x["widerstand"])) == len(x["widerstand"]),
              f"gegenstaende {x.get('id')}: widerstand nur bei {', '.join(WIDERSTAND_ARTEN)}, Liste aus {', '.join(kampf.SCHADEN_ARTEN)}")
@@ -579,9 +582,9 @@ def check_rules(r):
              f"gegenstaende {x.get('id')}: hilft nur bei werkzeug oder rolle, {{werte, worte (1 bis 6, klein), fest true}}")
         if x.get("art") in ("trank", "zauber"):
             sg = x.get("segen")
-            need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg or x.get("art") == "trank" and x.get("widerstand"))
+            need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg or x.get("art") == "trank" and (x.get("widerstand") or x.get("oel")))
                  and (sg is None or isinstance(sg, dict) and sg.get("wert") in werte and _int(sg.get("bonus"), 1, 4) and _int(sg.get("zuege"), 1, 5)),
-                 f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}} (ein Trank auch nur widerstand)")
+                 f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}} (ein Trank auch nur widerstand oder oel)")
         if x.get("art") == "zauber":
             need(x.get("ziel") in ZIELE and _pair(x.get("satz")), f"gegenstaende {x.get('id')}: zauber braucht ziel (selbst oder gruppe) und satz")
         need("grad" not in x or x.get("art") == "zauber" and _int(x["grad"], 0, GRAD_MAX), f"gegenstaende {x.get('id')}: grad nur bei zauber, 0 bis {GRAD_MAX}")
@@ -753,13 +756,21 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
         it["wert"] = c["wert"]
     elif c["art"] == "schmuck" and s["bonus"]:     # magic jewellery always raises a value, at least +1 (Gegenstands-Punkt 8)
         it["wert"] = c.get("wert") or rng.choice(werte)
+    draw_effect(r, it, rng)
     rank = [x["id"] for x in r["seltenheit"]].index(s["id"])
-    pool = [e for e in r["effekte"] if not e.get("nur") or c["art"] in e["nur"]]
-    if rank >= EFFEKT_AB and c["art"] in PLATZ_ART and pool:    # from „rar“ on one effect by a fixed rule (Gegenstands-Punkt 3)
-        it["eff"] = rng.choice(pool)["id"]
     if rank >= len(r["seltenheit"]) - 2 and c["art"] in PLATZ_ART:
         it["u"] = True                        # the two rarest kinds come unknown: only the base counts until named (5a)
     return it
+
+
+def draw_effect(r, it, rng):
+    """From „rar“ on one effect by a fixed rule (Gegenstands-Punkt 3), drawn once: at the find or when the smith
+    makes it better (dungeon_gold „verbessern“)."""
+    c = _c(r, it)
+    rank = [x["id"] for x in r["seltenheit"]].index(it["s"])
+    pool = [e for e in r["effekte"] if not e.get("nur") or c["art"] in e["nur"]]
+    if rank >= EFFEKT_AB and c["art"] in PLATZ_ART and pool and not it.get("eff"):
+        it["eff"] = rng.choice(pool)["id"]
 
 
 _NAMWORT = re.compile(r"[^\W\d_]{4,}")
@@ -1485,6 +1496,12 @@ def item_view(r, it, lang):
             zeilen.append(kampf.ART_NAME[c["schaden_art"]][li] + "".join(" · " + kampf.EIGENSCHAFT_REGEL[e][li] for e in c.get("eigenschaften") or []))
     if c["art"] == "zauber" and c.get("schaden_art"):   # Schadensarten Punkt 1: the kind a spell hits with
         zeilen.append(("Schaden: " if not li else "Damage: ") + kampf.ART_ZEICHEN[c["schaden_art"]] + " " + kampf.ART_NAME[c["schaden_art"]][li])
+    if c.get("oel"):                             # Wirtschaft Punkt 9: what the flask does
+        a = c["oel"]
+        zeilen.append(("Auf die Waffe: {} Treffer +1W6 {} {}" if not li else "On the weapon: {} hits +1d6 {} {}").format(kampf.OEL_TREFFER, kampf.ART_ZEICHEN[a], kampf.ART_NAME[a][li]))
+    if it.get("oel"):                            # the oil on this weapon
+        a = it["oel"]["art"]
+        zeilen.append(("Öl: {} {}, noch {} Treffer" if not li else "Oil: {} {}, {} hits left").format(kampf.ART_ZEICHEN[a], kampf.ART_NAME[a][li], it["oel"]["n"]))
     if c.get("widerstand"):                      # Punkt 4: halves a foe's hit of these kinds
         zeilen.append(("Widerstand gegen " if not li else "Resistance to ") + ", ".join(kampf.ART_ZEICHEN[a] + " " + kampf.ART_NAME[a][li] for a in c["widerstand"])
                       + ((f" für {SCHUTZ_ZUEGE} Züge" if not li else f" for {SCHUTZ_ZUEGE} turns") if c["art"] == "trank" else ""))
@@ -1508,7 +1525,7 @@ def item_view(r, it, lang):
     name, satz = legenden.text(it, li) or (it.get("eigen") or c["name"][li], it.get("satz", ""))
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
             "satz": "" if u else satz, "legende": bool(it.get("leg")) and not u, "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
-            "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")),
+            "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")), "oel": bool(c.get("oel")),
             "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li],
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
 
@@ -4890,7 +4907,7 @@ def hero_act(rid, pid, b):
             h["an"][k] = None
         elif was == "trinken":
             c = _c(r, it) if it else None
-            if not c or c["art"] != "trank":
+            if not c or c["art"] != "trank" or c.get("oel"):
                 raise ValueError("kein trank")
             zid = b.get("an") if b.get("an") and b.get("an") != pid else pid   # a friend's potion for a hero down
             zp = rd["plaetze"].get(zid)
@@ -4913,6 +4930,13 @@ def hero_act(rid, pid, b):
                 print(f"dungeon: schutz | trank | {len(c['widerstand'])} arten", flush=True)
             if zid != pid:
                 keep_seat(zp)
+        elif was == "auftragen":                  # Wirtschaft Punkt 9: an oil on one's own weapon
+            c = _c(r, it) if it else None
+            if not c or not c.get("oel"):
+                raise ValueError("kein oel")
+            if not kampf.oil(_me, r, rd, pid, h, c):
+                raise ValueError("keine waffe")
+            use_one(h, it)
         elif was == "wirken":
             # a spell from the bag, used up: its healing and blessing for the hero or the whole group, by the catalog;
             # the model only hears that it was cast (facts) and narrates it

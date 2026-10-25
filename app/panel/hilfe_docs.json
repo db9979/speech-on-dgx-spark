@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wirtschaft Teil 3 (V01.1.054, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 6, 7, 9, 11 und 12): Wirtschaft im Prüfstand: Der Balance-Prüfstand (Funktionen → KI-Dungeon-Master → Balance-Prüfstand) rechnet je Stufe 200 Läufe einer Vierergruppe mit den echten Funden, Preisen und Diensten (dungeon_pruefstand.economy): Kämpfe bis zur nächsten Stufe aus dem Budget, eine Truhe je drei Kämpfe, eine Belohnung, jeder zweite Lauf ein Boss, ein Händler je vier Kämpfe mit seiner Kasse. Gezeigt werden Einnahmen eines Helden (Median und schlechtestes Zehntel), Ausgaben (Gasthaus, Heiltränke, Gerüchte, Schmied), das Verhältnis und der teuerste Einzelfund. Ziel ist ein Verhältnis von 1,2 bis 2 (WIRTSCHAFT); liegt eine Stufe außerhalb, schreibt das Log „stufen wirtschaft ausserhalb“. Gold behält seinen Wert: Das Gasthaus kostet 10 Gold mal Stufe je Held (vorher fest). Der Schmied verbessert in der Siedlung eine Waffe oder Rüstung ohne feste Seltenheit um eine Stufe bis „episch“ (dungeon_gold.better), nie eine Legende; der Preis ist der volle Wert des Stücks danach (better_price), ab „rar“ bekommt es eine Wirkung. Öle: Ein Fläschchen mit oel (eine Schadensart außer "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hieb, Stich und Wucht) kommt in der Tasche mit „Auf die Waffe“ auf die Waffe in der Haupthand: die nächsten 3 Treffer (OEL_TREFFER) machen +1W6 dieser Art, danach ist die Klinge wieder sauber; ohne Waffe wird nichts verbraucht, getrunken wird ein Öl nie. Der Gegenstand zeigt „Öl: … noch N Treffer“. Neue Wirkungen: donnernd (Donner), ätzend (Säure) und welkend (nekrotisch) brennen wie Feuer, je mit ihrer Art. Selbsttests test_the_economy_keeps_its_aim, test_gold_with_a_purpose_in_a_settlement, test_an_oil_on_the_weapon_for_three_hits, test_weapon_effects_for_thunder_acid_and_withering, test_every_common_kind_of_attack_has_its_protection (in jeder Welt hat jede Art außer Hieb, Stich und Wucht, mit der mindestens fünf Gegner angreifen, ein Schutz-Ding dort)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Wirtschaft Teil 2 (V01.1.053, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 3 und 5): Münzen: Ein Gegner gibt der Gruppe 5 bis 15 Gold mal Stufe (vorher 2 bis 10), Münzen werden so die Haupteinnahme. Händler mit Art: Jeder Händler ist Schmied (Waffen, Rüstung), Alchemist (Tränke, Zauber) oder Krämer (Schmuck, Werkzeug, Rollen, Schätze) (HAENDLER) und verkauft nur seine Art. Er zahlt für seine Art den halben Wert, für alles andere und für Unerkanntes ein Viertel (sell_price). Seine Kasse hat 50 Gold mal Stufe der Gruppe je Besuch (KASSE), was Helden bei ihm kaufen, füllt sie wieder; ist sie leer, lehnt er mit eigenem Satz ab. Das Händlerfenster nennt Art, was er zum halben Wert nimmt, und die Kasse. Fundtabelle: Die Seltenheit eines Funds kommt aus einer festen Tabelle je Stufe (fundtabelle in den Regeln, find_row, NIE = nie) statt aus Schwellen plus zweimal Stufe. Von einem Gegner wird keine Seltenheit von „selten“ bis „episch“ mit der Stufe seltener (vorher fiel „rar“ von 19 auf 12 Prozent, als „episch“ dazukam); Legendäres kommt ab Stufe 5 nur von Bossen, höchstens 10 von 100 (vorher 27), aus Truhen und Belohnungen nicht mehr. Unter Regeln steht "
 },
 {
@@ -18278,6 +18294,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: economy part 3 (V01.1.054, Dominik 2026-10-25 \"1-12\" on the review of the economy, points 6, 7, 9, 11 and 12): Economy on the bench: the balance bench (Features → AI Dungeon Master → Balance bench) runs 200 runs of a group of four per level with the real finds, prices and services (dungeon_pruefstand.economy): fights up to the next level from the budget, a chest every three fights, a reward, a boss in every second run, a merchant every four fights with its purse. It shows a hero's income (median and worst tenth), spending (inn, healing potions, rumours, smith), the ratio and the dearest single find. The aim is a ratio of 1.2 to 2 (WIRTSCHAFT); when a level lies outside, the log writes \"stufen wirtschaft ausserhalb\". Gold keeps its worth: the inn costs 10 gold times the level per hero (before fixed). In a settlement the smith improves a weapon or armour without a fixed rarity by one step up to \"epic\" (dungeon_gold.better), never a legend; the price is the full worth of the piece afterwards (better_price), from \"rare\" on it gets an effect. Oils: a flask with oel (a damage kind other than slashing, piercing and bludgeoning) goes from the bag with \"On the weapon\" ont"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "o the weapon in the main hand: the next 3 hits (OEL_TREFFER) do +1d6 of that kind, then the blade is clean again; without a weapon nothing is used up, an oil is never drunk. The item shows \"Oil: … N hits left\". New effects: thundering (thunder), corroding (acid) and withering (necrotic) burn like fire, each with its own kind. Self-tests test_the_economy_keeps_its_aim, test_gold_with_a_purpose_in_a_settlement, test_an_oil_on_the_weapon_for_three_hits, test_weapon_effects_for_thunder_acid_and_withering, test_every_common_kind_of_attack_has_its_protection (in every world each kind other than slashing, piercing and bludgeoning that at least five foes attack with has a protection thing there)."
 },
 {
 "lang": "en",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.054** · 2026-10-25 · KI-Dungeon-Master: Wirtschaft Teil 3: der Prüfstand misst Einnahmen gegen Ausgaben je Stufe, Gasthaus 10 Gold mal Stufe je Held, der Schmied verbessert Waffen und Rüstung um eine Seltenheit, Öle auf der Waffe für 3 Treffer, Wirkungen donnernd, ätzend und welkend
 - **V01.1.053** · 2026-10-25 · KI-Dungeon-Master: Wirtschaft Teil 2: mehr Münzen von Gegnern, Händler mit Art und Kasse (halber Preis nur für die eigene Art), Seltenheit nach einer festen Fundtabelle je Stufe, Legendäres nur noch von Bossen
 - **V01.1.052** · 2026-10-25 · KI-Dungeon-Master: Wirtschaft Teil 1: eine Preisregel mit Preisbändern je Seltenheit, Legendäres unverkäuflich, Schätze nach Klasse und Stufe, Heiltränke 2 Gold je Leben, Zauberrollen nach Grad, Startgold 25; dazu 12 neue Waffen und 19 Schutz-Dinge im SRD-Katalog
 - **V01.1.051** · 2026-10-25 · KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein

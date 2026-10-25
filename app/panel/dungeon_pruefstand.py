@@ -14,8 +14,17 @@ per cent wins at „mittel“).
   with the least life (a class with an attack spell of grade 0 casts it); then the foes' turn. Won when no foe is
   up, lost when no hero stands, RUNDEN turns at most.
 
+The economy (Wirtschaft Punkt 6, Dominik 2026-10-25 „1-12“, economy()): per level LAEUFE runs of a group of GRUPPE_W
+heroes through the fights a level takes (the experience to the next level, a quarter from riddles, places and acts),
+a chest every third fight, a reward and every other level a boss, every find by dungeon.loot and sold to a merchant of
+a drawn kind, never more than its purse holds; against it what a hero spends in normal play: the inn every fourth
+fight, a healing potion for a third of its life every second fight, two rumours and a smith shared by the group. A
+lesson and „Ausrüstung verbessern“ are what the surplus is for. The self-test keeps income to expenses (median) within
+WIRTSCHAFT and no find worth more than JACKPOT times a level's income.
+
 The night's run (NACHT, once a night) and the admin's „Jetzt durchspielen“ write the table into STATE/dungeon-pruefstand.json
-(dateien.py): {"zeit", "kaempfe", "gefahr", "zellen": {"stufe/gruppe": {"siege", "leben", "runden"}}}. Only while
+(dateien.py): {"zeit", "kaempfe", "gefahr", "zellen": {"stufe/gruppe": {"siege", "leben", "runden"}},
+"wirtschaft": {"stufe": {"kaempfe", "einnahmen", "zehntel", "ausgaben", "verhaeltnis", "fund_max"}}}. Only while
 „Balance-Prüfstand“ is on (features.py, below the Dungeon-Master).
 
     GET  /api/admin/dungeon/pruefstand         the last table, the aim, whether it is on and running
@@ -32,6 +41,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_gold as gold
 import dungeon_kampf as kampf
 import features
 import guard
@@ -50,6 +60,11 @@ GEAR = ((1, 20), (3, 45), (6, 80), (9, 120))   # (from level, the dearest body a
 # the rarity of the gear a group of a level typically wears (levels 1 to 10, beyond the last); a fixed assumption of
 # the bench, apart from the find table (dungeon.find_row), so a new table never moves the aim by itself
 GEAR_SELTEN = ("gewoehnlich", "gewoehnlich", "selten", "selten", "selten", "selten", "rar", "rar", "episch", "episch")
+WIRTSCHAFT = (1.2, 2.0)        # income ÷ expenses of a hero per level (median) the self-test keeps (Wirtschaft Punkt 6)
+JACKPOT = 10                   # no single find sells for more than this many times a level's income
+LAEUFE = 200                   # runs per level of the economy
+GRUPPE_W = 4                   # heroes of the economy's group
+RAETSEL = 0.25                 # the part of the experience from riddles, places and acts (no fight, no find)
 KNOPF_S = 60                   # „Jetzt durchspielen“ at most once a minute
 clock = time.time              # the tests set it (no wall clock in a test)
 _lock = threading.Lock()
@@ -191,6 +206,39 @@ def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, g
     return out
 
 
+def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None):
+    """The economy per level {"stufe": {"kaempfe", "einnahmen" (median of a hero), "zehntel" (the worst tenth),
+    "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services."""
+    out = {}
+    welt = r["welten"][0]["id"]
+    ep = r["stufen_ep"]
+    for stufe in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
+        rng = random.Random(f"{seed}|{stufe}")
+        dxp = ep[stufe] - ep[stufe - 1] if stufe < len(ep) else ep[-1] - ep[-2]
+        kaempfe = max(1, round((1 - RAETSEL) * dxp / kampf.BUDGET[stufe - 1]))
+        kasse = kaempfe / 4 * dungeon.KASSE * stufe          # a merchant every fourth fight
+        ein, top, leben = [], 0, 0
+        for _ in range(laeufe):
+            held = party(r, GRUPPE_W, stufe, rng)
+            for h in held:
+                h["gold"] = 0
+            verkauf = 0
+            for anlass in ["gegner"] * kaempfe + ["truhe"] * (kaempfe // 3) + ["belohnung"] + (["boss"] if rng.random() < 0.5 else []):
+                _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt)
+                x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
+                verkauf += x
+                top = max(top, x)
+            ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / GRUPPE_W)
+            leben = sum(h["leben_max"] for h in held) / GRUPPE_W
+        aus = (kaempfe / 4 * gold.PREIS["gasthaus"] * stufe + kaempfe / 2 * dungeon.HEIL_GOLD * leben / 3
+               + (2 * gold.PREIS["geruecht"] + gold.PREIS["schmied"]) * stufe / GRUPPE_W)
+        ein.sort()
+        med = ein[len(ein) // 2]
+        out[str(stufe)] = {"kaempfe": kaempfe, "einnahmen": round(med), "zehntel": round(ein[len(ein) // 10]),
+                           "ausgaben": round(aus), "verhaeltnis": round(med / max(1, aus), 2), "fund_max": top}
+    return out
+
+
 # ---------------------------------------------------------------- the run, the night, the page
 def last():
     return read_json(FILE, {}) or {}
@@ -205,11 +253,14 @@ def _go(grund):
     print(f"dungeon: pruefstand | start | {grund}", flush=True)
     try:
         t0 = time.monotonic()
-        z = bench(dungeon.rules())
-        write_json(FILE, {"zeit": int(clock()), "kaempfe": KAEMPFE, "gefahr": "mittel", "zellen": z,
+        r = dungeon.rules()
+        z = bench(r)
+        w = economy(r)
+        write_json(FILE, {"zeit": int(clock()), "kaempfe": KAEMPFE, "gefahr": "mittel", "zellen": z, "wirtschaft": w,
                           "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
         unter = sum(1 for c in z.values() if c["siege"] < AIM[0])
-        print(f"dungeon: pruefstand | fertig | {len(z)} zellen | {unter} unter dem ziel | {int(time.monotonic() - t0)} s", flush=True)
+        aussen = sum(1 for c in w.values() if not WIRTSCHAFT[0] <= c["verhaeltnis"] <= WIRTSCHAFT[1])
+        print(f"dungeon: pruefstand | fertig | {len(z)} zellen | {unter} unter dem ziel | {aussen} stufen wirtschaft ausserhalb | {int(time.monotonic() - t0)} s", flush=True)
     except Exception as e:
         print(f"dungeon: pruefstand | fehler | {type(e).__name__}", flush=True)
     finally:
@@ -237,7 +288,8 @@ def view():
     """The page's data: the last table, the aim, on/running."""
     d = last()
     return {"an": on(), "laeuft": _run["laeuft"], "ziel": list(AIM), "gruppe_max": GRUPPE_MAX, "zeit": d.get("zeit", 0),
-            "kaempfe": d.get("kaempfe", 0), "gefahr": d.get("gefahr", "mittel"), "zellen": d.get("zellen", {})}
+            "kaempfe": d.get("kaempfe", 0), "gefahr": d.get("gefahr", "mittel"), "zellen": d.get("zellen", {}),
+            "wirtschaft": d.get("wirtschaft", {}), "wirtschaft_ziel": list(WIRTSCHAFT)}
 
 
 @router.get("/api/admin/dungeon/pruefstand", dependencies=[Depends(auth)])
