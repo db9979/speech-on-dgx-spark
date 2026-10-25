@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.067** KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
 - **V01.1.066** KI-Dungeon-Master: Abenteuer-Import: ein geschriebenes Abenteuer (PDF, Word, Markdown) wird im Geschichten-Planer ein Entwurf mit Akten, Schauplätzen und Gegenspieler; das Panel prüft ihn wie eine getippte Geschichte
 - **V01.1.065** KI-Dungeon-Master: Erzähler-Prüfstand: acht feste Szenen durch das laufende Sprachmodell mit den Regeln des Tisches, feste Regeln geben Punkte, Modelle nebeneinander; der Zug am Tisch nutzt dieselben Schritte
 - **V01.1.064** KI-Dungeon-Master: Fraktionen mit Uhren: die Gruppen der Geschichte verfolgen ihr Ziel, das Panel dreht die Uhren, die Taten der Helden helfen oder stören, eine volle Uhr ändert die Welt; Fenster ⏳ Fraktionen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.060** KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog
 - **V01.1.059** KI-Dungeon-Master: Zufallsregeln des Gastgebers, bis zu fünf je Runde mit Chance, Auslöser und Wirkung; das Panel würfelt und wendet sie an, das Modell hört nur den Hinweis als Daten
 - **V01.1.058** KI-Dungeon-Master: Grenzen und Schleier je Platz, anonym für den ganzen Tisch, und die X-Karte, die die letzte Szene ruhiger neu erzählt; feste Wortlisten des Panels, das Modell bekommt sie nur als Daten; ein Sichtfilter mit Leck-Selbsttest je Geheimnis; der Schreiber-Abgleich trägt nach festen Grenzen nach, was die Erzählung änderte
-- **V01.1.057** KI-Dungeon-Master: fünf Öle im SRD-Katalog (Donner, Blitz, Feuer, Frost, Weihe) für 25 Gold, so trifft in jeder Welt jede Schwäche gegen Donner, Blitz, Feuer und Kälte
 
 
 

@@ -232,6 +232,29 @@ class Moves(unittest.TestCase):
         self.assertTrue(K.step(r, self.rd, self.story(f"o{to + 1}"), {}, random.Random(1)))
         self.assertEqual((k["hier"], k["schritte"], k["besucht"][-1]), (to, 1, to))
 
+    def test_a_place_a_faction_holds(self):
+        """Tabletop-Idee 7: a full clock (dungeon_fraktionen.occupied) puts the faction's banner on the place: in the
+        view, the ways from here and the facts; arriving the table is told once; places of no map are dropped."""
+        k = self.k
+        j = K._nb(k)[k["hier"]][0]
+        held = {str(j): "Die Aschenhand", "Nirgendwo": "Niemand", "99": "Niemand", str(k["hier"]): " "}
+        with mock.patch("dungeon_fraktionen.occupied", return_value=held):
+            self.assertEqual(K.besetzt(self.rd), {j: "Die Aschenhand"})
+            f = K.facts(self.r, self.rd)
+            self.assertEqual(next(w for w in f["wege"] if w["id"] == f"o{j + 1}")["besetzt_von"], "Die Aschenhand")
+            self.assertNotIn("besetzt_von", f["ort"])
+            v = K.view(self.r, self.rd)
+            self.assertEqual(next(o for o in v["orte"] if o["id"] == f"o{j + 1}")["fr"], "Die Aschenhand")
+            self.assertEqual(next(w for w in v["von_hier"] if w["id"] == f"o{j + 1}")["fr"], "Die Aschenhand")
+            K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1))
+            told = [e for e in self.rd["log"] if "besetzt" in str(e.get("text", ""))]
+            self.assertEqual(len(told), 1)
+            self.assertEqual(K.facts(self.r, self.rd)["ort"]["besetzt_von"], "Die Aschenhand")
+            K.step(self.r, self.rd, self.story(""), {}, random.Random(1))
+            self.assertEqual(len([e for e in self.rd["log"] if "besetzt" in str(e.get("text", ""))]), 1)
+        with mock.patch("dungeon_fraktionen.occupied", return_value={k["orte"][k["hier"]]["name"]: "Rote Klinge"}):
+            self.assertEqual(K.besetzt(self.rd), {k["hier"]: "Rote Klinge"})     # by name as well
+
     def test_a_named_way_moves_when_the_model_forgot_the_id(self):
         """Dominik 2026-10-24: „in die alte Bibliothek bewegt, keine Grafik, die Position ist nicht aktuell“: the
         model told the way but left ort_id empty. The panel moves only when exactly one neighbour's name stands in an
@@ -482,6 +505,40 @@ class Vaults(unittest.TestCase):
         K.step(self.r, rd, {"ort_id": "aus", "erfolg": []}, {}, random.Random(3))
         self.assertIsNone(rd["karte"]["drin"])
 
+    def test_a_vault_left_long_enough_fills_again(self):
+        """Tabletop-Idee 7: NEU_NACH steps after leaving, guardians, the master, traps and a chest come back, their
+        rooms unknown again; riddles, springs and altars stay; inside or too early nothing changes."""
+        rd, v, j = self.vault_with("waechter")
+        k = rd["karte"]
+        for i, rm in enumerate(v["raeume"]):
+            rm["fertig"] = True
+            rm["gegner"] = ["x"]
+            if i not in v["besucht"]:
+                v["besucht"].append(i)
+        K.step(self.r, rd, {"ort_id": "aus", "erfolg": []}, {}, random.Random(3))
+        self.assertIsNone(k["drin"])
+        self.assertEqual(v["verlassen"], k["schritte"])
+        k["schritte"] += K.NEU_NACH - 1                   # too early: as the group left it
+        K.step(self.r, rd, {"ort_id": "ein", "erfolg": []}, {}, random.Random(3))
+        self.assertTrue(all(rm["fertig"] for rm in v["raeume"]))
+        self.assertEqual(K.refill(rd, v), 0)              # inside: nothing (the step left „verlassen“ behind)
+        K.step(self.r, rd, {"ort_id": "aus", "erfolg": []}, {}, random.Random(3))
+        k["schritte"] += K.NEU_NACH
+        with mock.patch("builtins.print") as out:
+            K.step(self.r, rd, {"ort_id": "ein", "erfolg": []}, {}, random.Random(3))
+        back = [i for i, rm in enumerate(v["raeume"]) if rm["art"] in K.NEU_ARTEN]
+        self.assertTrue(back)
+        for i, rm in enumerate(v["raeume"]):
+            self.assertEqual(rm["fertig"], rm["art"] not in K.NEU_ARTEN, rm["art"])
+            self.assertEqual(i in v["besucht"], i not in back)
+            self.assertEqual("gegner" in rm, rm["art"] not in K.NEU_ARTEN)
+        self.assertIn(f"dungeon: gewoelbe | neu belebt | {len(back)} raeume", [c.args[0] for c in out.call_args_list])
+        self.assertIn("Neues eingenistet", rd["log"][-1]["text"][0])
+        K.step(self.r, rd, {"ort_id": f"r{j + 1}", "erfolg": []}, {}, random.Random(3))
+        self.assertEqual(rd["raum_gegner"]["raum"], f"gw{k['drin']}-r{j + 1}")   # new foes at the group's level
+        self.assertNotIn("x", rd["raum_gegner"]["ids"])
+        self.assertIsNone(v.get("verlassen"))
+
     def test_encounters_only_on_a_new_way(self):
         r = self.r
         seen = set()
@@ -654,6 +711,11 @@ class Table(unittest.TestCase):
         self.addCleanup(dungeon._bild_rm, db.name_of(p))
         b = Browser("run")
         b.port = self.port
+        k = dungeon._read()["runden"][rid]["karte"]
+        nb = K._nb(k)[k["hier"]][0]                     # a faction holds a neighbour (Tabletop-Idee 7)
+        p_held = mock.patch("dungeon_fraktionen.occupied", return_value={str(nb): "Die Aschenhand"})
+        p_held.start()
+        self.addCleanup(p_held.stop)
 
         async def go():
             async with async_playwright() as p:
@@ -666,6 +728,9 @@ class Table(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#dmview .dmk svg')")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dmk-wege [data-dmkid]').length"), 1)
+                        if w == 1280:                    # the world (the wider run goes into a vault below)
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dmk-banner title')"))
+                            self.assertIn("⚑", await pg.evaluate(f"document.querySelector('#dmview .dmk-wege [data-dmkid=o{nb + 1}]').textContent"))
                         await helpers.dm_pane(pg, "karte")                           # the phone shows the map as its own pane
                         await pg.click("#dmview .dmk-wege [data-dmkid]")
                         self.assertIn("Wir gehen", await pg.evaluate("document.querySelector('#dmview .dm-in').value"))

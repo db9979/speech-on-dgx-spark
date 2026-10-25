@@ -26,6 +26,10 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   Bestiarium of the world by the group's level (_room_foes) and offers only them (rd["raum_gegner"]); the fight's
   victory (rd["sieg"], dungeon_kampf) opens the room; a treasure room gives
   the catalog's loot „truhe“ once, a spring heals every hero (QUELLE), an altar blesses one value (ALTAR). The answer never reaches the model, only whether it was found.
+- A world that goes on (Tabletop-Idee 7): a vault left NEU_NACH steps ago has new dwellers when the group comes back
+  (refill: guardians, the master, traps and a chest come back, their rooms unknown again); a place a faction holds
+  (dungeon_fraktionen.occupied, a full clock) carries its banner on the map, the model hears „besetzt_von“ and the
+  table is told once on arriving.
 
 Pictures instead of signs (Dominik 2026-10-23 „sollten wir auch bilder generieren und keine emojies verwenden“, option
 2), with „Bilder für Ausrüstung und Zauber“ (dungeon_dingbild.py: its switch, „Bilder malen“, the night, the button,
@@ -76,6 +80,8 @@ UNTERWEGS = 40            # percent: an encounter on a way gone for the first ti
 QUELLE = (2, 6)           # life a spring gives every hero
 ALTAR = (1, 3)            # an altar's blessing: bonus 1 for 3 turns
 VERSUCHE = 3              # turns at a riddle before the hint is shown
+NEU_NACH = 6              # steps on the map after leaving a vault until it has new dwellers (Tabletop-Idee 7)
+NEU_ARTEN = ("waechter", "boss", "falle", "schatz")   # what comes back: guardians, the master, traps, a chest
 NAME_MAX = 40
 SATZ_MAX = 160
 FRAGE_MAX = 240
@@ -638,9 +644,12 @@ def facts(r, rd):
     here = k["hier"]
     p = (o[here]["x"], o[here]["y"])
     kd = _kind(r, o[here]["art"])
+    held = besetzt(rd)
     out = {"ort": {"id": f"o{here + 1}", "name": o[here]["name"], "art": kd["name"][li] if kd else o[here]["art"]},
            "wege": [{"id": f"o{j + 1}", "name": o[j]["name"], "richtung": _dir(p, (o[j]["x"], o[j]["y"]), li),
-                     "besucht": j in k["besucht"]} for j in sorted(_nb(k)[here])]}
+                     "besucht": j in k["besucht"]} | ({"besetzt_von": held[j]} if j in held else {}) for j in sorted(_nb(k)[here])]}
+    if here in held:
+        out["ort"]["besetzt_von"] = held[here]
     akt = min(rd.get("akt", 0), len(k["akte"]) - 1)
     goal = k["akte"][akt] if k["akte"] else k["ziel"]
     if goal == here:
@@ -833,6 +842,30 @@ def on_the_way(r, rd, rng):
     print(f"dungeon: unterwegs | {b['art']}", flush=True)
 
 
+def besetzt(rd):
+    """The places a faction holds (Tabletop-Idee 7): dungeon_fraktionen.occupied gives {place: faction} for full clocks,
+    the place as dungeon.where's „ort“ (its number as text) or its name; here {index: name}, names cut to NAME_MAX,
+    only places of this map."""
+    import dungeon_fraktionen
+    o, out = rd["karte"]["orte"], {}
+    for key, name in (dungeon_fraktionen.occupied(rd) or {}).items():
+        i = int(key) if str(key).isdigit() else next((j for j, x in enumerate(o) if x["name"] == key), -1)
+        if 0 <= i < len(o) and isinstance(name, str) and name.strip():
+            out[i] = name.strip()[:NAME_MAX]
+    return out
+
+
+def _held_by(rd):
+    """Arriving at a place a faction holds: told once per place and faction (the narration hears it in the facts)."""
+    k = rd["karte"]
+    who = besetzt(rd).get(k["hier"])
+    seen = k.setdefault("besetzt", {})
+    if who and seen.get(str(k["hier"])) != who:
+        seen[str(k["hier"])] = who
+        _say(rd, f"{k['orte'][k['hier']]['name']} ist von {who} besetzt.", f"{k['orte'][k['hier']]['name']} is held by {who}.")
+        print("dungeon: karte | besetzt", flush=True)
+
+
 def has_vault(r, k, i):
     """A place leads into a vault: by its kind, or the host rolled one there."""
     return bool((_kind(r, k["orte"][i]["art"]) or {}).get("gewoelbe") or str(i) in k["gw"])
@@ -859,7 +892,31 @@ def enter_vault(r, rd, rng):
     v = k["gw"][key]
     v["hier"] = 0
     _say(rd, f"Ihr betretet das Gewölbe: {v['name']}.", f"You enter the vault: {v['name']}.")
+    refill(rd, v)
     return v
+
+
+def refill(rd, v):
+    """A vault the group left NEU_NACH steps ago has new dwellers (Tabletop-Idee 7, Dominik 2026-10-25 „alle punkte“):
+    every beaten guardian, the master, a sprung trap and an emptied chest come back and their rooms are unknown again
+    (the foes are rolled anew at the group's level on entering, a trap and a chest act again); riddles, springs and
+    altars stay as they were. Fixed rule of the panel, the same for every round."""
+    k = rd["karte"]
+    if v.get("verlassen") is None or k["schritte"] - v["verlassen"] < NEU_NACH:
+        return 0
+    v.pop("verlassen")
+    neu = [j for j, rm in enumerate(v["raeume"]) if rm["art"] in NEU_ARTEN and rm["fertig"]]
+    for j in neu:
+        rm = v["raeume"][j]
+        rm["fertig"] = False
+        for x in ("gegner", "getroffen", "bemerkt"):
+            rm.pop(x, None)
+        if j in v["besucht"]:
+            v["besucht"].remove(j)
+    if neu:
+        _say(rd, f"Im Gewölbe {v['name']} hat sich Neues eingenistet.", f"Something new has moved into the vault {v['name']}.")
+    print(f"dungeon: gewoelbe | neu belebt | {len(neu)} raeume", flush=True)
+    return len(neu)
 
 
 def place_name(r, rd):
@@ -910,7 +967,7 @@ def step(r, rd, story, ep, rng=None):
                 room["versuche"] = room.get("versuche", 0) + 1
                 print(f"dungeon: raetsel | offen | {room['versuche']} versuche", flush=True)
         if want == "aus" and v["hier"] == 0:
-            k["drin"] = None
+            k["drin"], v["verlassen"] = None, k["schritte"]
             rd.pop("raum_gegner", None)
             _say(rd, f"Ihr verlasst das Gewölbe {v['name']}.", f"You leave the vault {v['name']}.")
         elif want.startswith("r") and int(want[1:]) - 1 in _ways_in(v):
@@ -926,6 +983,7 @@ def step(r, rd, story, ep, rng=None):
             on_the_way(r, rd, rng)
         if j not in k["besucht"]:
             k["besucht"].append(j)
+        _held_by(rd)
     elif want == "ein" and has_vault(r, k, k["hier"]):
         enter_vault(r, rd, rng)
     elif want:
@@ -959,11 +1017,12 @@ def view(r, rd, host=False):
     o, nb = k["orte"], _nb(k)
     known = set(k["besucht"]) | {j for i in k["besucht"] for j in nb[i]}
     gegangen = {tuple(e) for e in k["gegangen"]}
+    held = besetzt(rd)
 
     def place(i):
         kd = _kind(r, o[i]["art"]) or {}
         return {"id": f"o{i + 1}", "n": o[i]["name"], "z": kd.get("zeichen", "◆"), "x": o[i]["x"], "y": o[i]["y"],
-                "s": 2 if i in k["besucht"] else 1, "gw": has_vault(r, k, i), "a": o[i]["art"]}
+                "s": 2 if i in k["besucht"] else 1, "gw": has_vault(r, k, i), "a": o[i]["art"], "fr": held.get(i, "")}
     wege = []
     for a, b in k["wege"]:
         if a in known and b in known:
@@ -1026,7 +1085,8 @@ def _von_hier(r, rd):
         return out
     o = k["orte"]
     here = (o[k["hier"]]["x"], o[k["hier"]]["y"])
-    out = [{"id": f"o{j + 1}", "n": o[j]["name"], "r": _dir(here, (o[j]["x"], o[j]["y"]), li), "b": j in k["besucht"]}
+    held = besetzt(rd)
+    out = [{"id": f"o{j + 1}", "n": o[j]["name"], "r": _dir(here, (o[j]["x"], o[j]["y"]), li), "b": j in k["besucht"], "fr": held.get(j, "")}
            for j in sorted(_nb(k)[k["hier"]])]
     if has_vault(r, k, k["hier"]):
         out.append({"id": "ein", "n": ("ins Gewölbe", "into the vault")[li], "r": "", "b": str(k["hier"]) in k["gw"]})

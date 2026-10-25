@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.067** · 2026-10-25 · KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
 - **V01.1.066** · 2026-10-25 · KI-Dungeon-Master: Abenteuer-Import: ein geschriebenes Abenteuer (PDF, Word, Markdown) wird im Geschichten-Planer ein Entwurf mit Akten, Schauplätzen und Gegenspieler; das Panel prüft ihn wie eine getippte Geschichte
 - **V01.1.065** · 2026-10-25 · KI-Dungeon-Master: Erzähler-Prüfstand: acht feste Szenen durch das laufende Sprachmodell mit den Regeln des Tisches, feste Regeln geben Punkte, Modelle nebeneinander; der Zug am Tisch nutzt dieselben Schritte
 - **V01.1.064** · 2026-10-25 · KI-Dungeon-Master: Fraktionen mit Uhren: die Gruppen der Geschichte verfolgen ihr Ziel, das Panel dreht die Uhren, die Taten der Helden helfen oder stören, eine volle Uhr ändert die Welt; Fenster ⏳ Fraktionen

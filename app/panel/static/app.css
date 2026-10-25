@@ -2432,6 +2432,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dmk-ort .dmk-ring{fill:none;stroke:none}.dmk-ort.on .dmk-c{fill:color-mix(in srgb,#fff 55%,var(--mg));stroke:var(--mi);stroke-width:calc(var(--u,1)*1.6);stroke-dasharray:none}.dmk-ort.on .dmk-ring{stroke:color-mix(in srgb,var(--mi) 35%,transparent);stroke-width:calc(var(--u,1)*.7)}
 .dmk-ort.hier .dmk-c{stroke:var(--mo);stroke-width:calc(var(--u,1)*3)}.dmk-schein{fill:color-mix(in srgb,var(--mo) 30%,transparent);stroke:none}
 .dmk-land .dmk-z{font-size:calc(var(--u,1)*14px)}.dmk-z{text-anchor:middle}.dmk-ort:not(.on) .dmk-z{opacity:.55}
+.dmk-banner path{fill:none;stroke:var(--mi);stroke-width:calc(var(--u,1)*1.6);stroke-linecap:round}.dmk-banner .dmk-wimpel{fill:color-mix(in srgb,var(--mi) 88%,#4a1a5a);stroke:var(--mo);stroke-width:calc(var(--u,1)*1)}.dmk-wappen{fill:var(--mo)}
 .dmk-gwk{fill:var(--mf);stroke:var(--mg);stroke-width:calc(var(--u,1)*1.2)}.dmk-gw{font-size:calc(var(--u,1)*8.5px);fill:#fff;text-anchor:middle}
 .dmk-n{font:calc(var(--u,1)*12.5px) Georgia,serif;fill:var(--mi);paint-order:stroke;stroke:var(--mg);stroke-width:calc(var(--u,1)*3px);stroke-linejoin:round}.dmk-ort.hier .dmk-n{font-weight:700}.dmk-ort:not(.on) .dmk-n{font-style:italic;opacity:.75}
 .dmk-ort:not(.on) .dmk-bild{opacity:.6}

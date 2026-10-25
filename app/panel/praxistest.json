@@ -3439,6 +3439,13 @@
 "titel": "Abenteuer-Import",
 "text": "A: Funktionen → KI-Dungeon-Master → Abenteuer-Import an. Im Dungeon-Master-Reiter „Regeln“ bei „Geschichten“ „Neue Geschichte“ tippen: oben steht „📄 Abenteuer aus einer Datei“. B: Ein Abenteuer als PDF oder Word mit Kapitel-Überschriften wählen, Welt und Ton einstellen und „Übernehmen“ tippen: „Das Modell liest …“, dann stehen Titel, Grundidee, Schauplätze und je Kapitel ein Akt im Formular, eine Meldung nennt die Kapitel. C: Nichts ist gespeichert, bis „Prüfen und speichern“; danach steht die Geschichte in der Liste. D: Ein gescanntes PDF ohne Text: „Die Datei ist nicht lesbar“. E: Eine .exe-Datei: „Diese Dateiart geht nicht“. F: Zahl der Akte auf 4 stellen und noch einmal übernehmen: vier Akte. G: Zustand → Überblick nennt übernommene und abgelehnte Abenteuer.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P516",
+"v": 1067,
+"titel": "Dungeon-Master: die Welt lebt weiter",
+"text": "A: Eine Runde mit Karte, ein Gewölbe betreten, einen Wächter besiegen, hinaus und mindestens 6 Orte weiterziehen. B: Zurück ins Gewölbe: am Tisch steht „Im Gewölbe … hat sich Neues eingenistet.“, der Wächterraum ist wieder unbekannt und hat neue Gegner. C: Rätsel und Quelle bleiben gelöst bzw. benutzt. D: Wird die Uhr einer Fraktion voll: auf der Karte ein dunkles Banner am besetzten Ort, unter „Von hier aus“ ein ⚑ am Weg. E: Dort ankommen: einmal „… ist von … besetzt.“, über der Karte „⚑ Besetzt von …“, die Erzählung kennt die Besatzer.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }
