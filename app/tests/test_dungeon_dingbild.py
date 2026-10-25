@@ -98,7 +98,12 @@ class Base(unittest.TestCase):
             if os.path.exists(f):
                 os.remove(f)
         self.now = [NOON]
-        for target, new in (("dungeon_dingbild.clock", lambda: self.now[0]), ("dungeon_dingbild.TAG_MAX", 3)):
+        # the names rule (bilder.names) refuses words of every profile's name; the profiles other modules leave
+        # behind ("Dungeon Dora" of test_dungeon) would refuse "Dungeon cells", so the shipped prompts are checked
+        # against the word lists and „nie“ as in an installation without such names (red to V01.1.043); the names
+        # rule itself is tested in test_bilder, here it is empty only because of profiles other modules left behind
+        for target, new in (("dungeon_dingbild.clock", lambda: self.now[0]), ("dungeon_dingbild.TAG_MAX", 3),
+                            ("bilder.names", lambda uid: set())):
             p = mock.patch(target, new)
             p.start()
             self.addCleanup(p.stop)
