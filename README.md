@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.050** Qwen3.6 without refusals can be measured: modelle messen qwen36frei
 - **V01.1.049** AI Dungeon Master: damage kinds: spells hit with their own kind, magic weapons go through resistance, rings and potions with resistance, weak spots shown only after a hit; time of day for the stage; hero sheet and right column no longer jump
 - **V01.1.048** AI Dungeon Master: game mails in the Dungeon style: code and "Your turn" as a page of the game in the world's colours, with the narrator's last sentence (can be switched off) and "Play on" as a one-time link without a permanent seat key; the Heroes tab shows equipment, bag and gold per hero
 - **V01.1.047** AI Dungeon Master: joining without cheating: whoever joins during a fight waits at the edge; in their first turn a new hero gives nobody anything; whoever leaves a fight has fled and the experience is shared by the group the fight began with; one device, one hero; when down, death saves as in D&D, and the only hero at the table is saved by a stranger instead of falling
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.043** AI Dungeon Master: pictures with flair and variety (light, angle and mood from fixed lists, items in fitting places, visible rarity, foes in motion, heroes in their world), the stage by day, at night and in a fight, the settlement with a picture and a line of life per service, pictures for the 62 new foes
 - **V01.1.042** AI Dungeon Master: music pieces of 3 to 6 minutes, fixed key and tempo per mood, soft start and long ending, 12 s crossfade
 - **V01.1.041** Search self-test: waits for the hit instead of a fixed 300 ms
-- **V01.1.040** Log errors: the answer broke off with "Rec.step() got multiple values for argument 'kind'" when the deed check stepped in; the relay for calls takes only the public IPv4 address, keeps the old one during a short outage and logs "relay refused" once per reason
 
 
 

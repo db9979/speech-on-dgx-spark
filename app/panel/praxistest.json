@@ -3327,6 +3327,13 @@
 "titel": "Schadensarten",
 "text": "A: Ein Magier wirkt den Feuerpfeil auf einen Gegner: der Verlauf zeigt 🔥 Feuer, gegen einen Feuer-immunen Gegner „wirkungslos“. B: Schild auf einen Gegner wirken: kein Angriff. C: Mit einer Waffe +1 einen Gegner mit Widerstand gegen Hieb treffen: voller Schaden. D: Den Gegner antippen: Schwächen erst „❔ noch unbekannt“, nach einem passenden Treffer sichtbar. E: Ring des Frostschutzes anlegen und von Kälte getroffen werden: „halbiert“, im Heldenbogen 🛡 Kälte. F: Zustand → Überblick zeigt die Zählungen. G: Im Heldenbogen unter „Das kann ich“ zwischen Alle, Angriff und Heilen wechseln: das Fenster bleibt gleich hoch. H: Als Gastgeber in der rechten Spalte nach unten scrollen und den Erzähler wählen: die Spalte bleibt an ihrer Stelle.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P500",
+"v": 1050,
+"titel": "Qwen3.6 frei messen",
+"text": "A: Update (tars zuerst). B: Auf tars sudo speech-spark modelle messen qwen36frei (lädt etwa 22 GB). C: Beide Ergebnisse stehen auf der Modell-Seite beim Eintrag „Qwen3.6 35B A3B frei“: tok/s, Werkzeug ok, Text und Szene ok; mit MTP entweder schneller als ohne oder „abgebrochen“, falls die MTP-Schichten fehlen.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

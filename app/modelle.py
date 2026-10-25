@@ -428,12 +428,15 @@ def wahl_zeilen(art, kat=None):
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
     vl30, dspark (one entry each that is measured only on request), qwen36 (Qwen3.6 35B A3B NVFP4 with and without MTP),
-    flash (Qwen3.8 Flash Next in Docker at both memory shares); no word means llm and sehen."""
+    qwen36frei (the same without refusals), flash (Qwen3.8 Flash Next in Docker); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
               "vl30": ("qwen3-vl-30b-a3b-fp8",), "dspark": ("qwen38-27b-nvfp4-dspark",),
               "qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
+              # Qwen3.6 without refusals (Heretic), with and without MTP: its NVFP4 comes from llmcompressor and may
+              # lack the MTP layers; for the assistant too (Dominik 2026-10-25 „alles für erwachsene ok“)
+              "qwen36frei": ("qwen36-35b-a3b-frei-nvfp4", "qwen36-35b-a3b-frei-nvfp4-ohne-mtp"),
               "flash": ("qwen38-flash-next-fp4",)}     # Docker; share 0.65 never started (tars 2026-10-21)
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.050** Qwen3.6 ohne Ablehnungen messbar: modelle messen qwen36frei
 - **V01.1.049** KI-Dungeon-Master: Schadensarten: Zauber treffen mit ihrer eigenen Art, magische Waffen gehen durch Widerstand, Ringe und Tränke mit Widerstand, Schwächen erst nach einem Treffer sichtbar; Tageszeit für die Bühne; Heldenbogen und rechte Spalte springen nicht mehr
 - **V01.1.048** KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil: Code und „Du bist dran“ als Seite des Spiels in den Farben der Welt, mit dem letzten Satz des Erzählers (abschaltbar) und „Weiterspielen“ als Einmal-Link ohne dauerhaften Platz-Schlüssel; im Reiter Helden Ausrüstung, Tasche und Gold je Held
 - **V01.1.047** KI-Dungeon-Master: Beitreten ohne Schummeln: wer im Kampf dazukommt, wartet am Rand; im ersten Zug gibt ein neuer Held niemandem etwas; wer im Kampf geht, flieht und die Erfahrung teilt die Gruppe vom Kampfstart; ein Gerät, ein Held; am Boden Rettungswürfe wie bei D&D, und der einzige Held am Tisch wird von einem Fremden gerettet statt zu fallen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.043** KI-Dungeon-Master: Bilder mit Flair und Abwechslung (Licht, Blickwinkel und Stimmung aus festen Listen, Gegenstände an passenden Orten, sichtbare Seltenheit, Gegner in Bewegung, Helden in ihrer Welt), Bühne bei Tag, bei Nacht und im Kampf, Siedlung mit Bildern je Dienst und einem Satz Leben, Bilder für die 62 neuen Gegner
 - **V01.1.042** KI-Dungeon-Master: Musikstücke 3 bis 6 Minuten, feste Tonart und festes Tempo je Stimmung, leiser Anfang und langes Ende, 12 s Überblendung
 - **V01.1.041** Selbsttest Suche: wartet auf den Treffer statt fest 300 ms
-- **V01.1.040** Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
 
 
 

@@ -199,6 +199,23 @@
       "vllm": {"mtp": 0}
     },
     {
+      "id": "qwen36-35b-a3b-frei-nvfp4",
+      "basis": "qwen36-35b-a3b-nvfp4",
+      "name": {"de": "Qwen3.6 35B A3B frei (Heretic, ohne Ablehnungen)", "en": "Qwen3.6 35B A3B free (Heretic, no refusals)"},
+      "repo": "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4",
+      "revision": "a483749169933e3fc5a4f48a5979effeba093192",
+      "platte_gb": 22
+    },
+    {
+      "id": "qwen36-35b-a3b-frei-nvfp4-ohne-mtp",
+      "basis": "qwen36-35b-a3b-nvfp4",
+      "name": {"de": "Qwen3.6 35B A3B frei ohne MTP", "en": "Qwen3.6 35B A3B free without MTP"},
+      "repo": "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4",
+      "revision": "a483749169933e3fc5a4f48a5979effeba093192",
+      "platte_gb": 22,
+      "vllm": {"mtp": 0}
+    },
+    {
       "id": "qwen38-flash-next-fp4",
       "art": "llm",
       "name": {

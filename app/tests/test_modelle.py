@@ -302,6 +302,22 @@ class Pruefen(unittest.TestCase):
             with self.assertRaisesRegex(modelle.Fehler, "revision"):
                 modelle.pruefen(d, "../../etc")
 
+    def qwen36_frei(self):
+        """Dominik 2026-10-25: Qwen3.6 without refusals (Heretic) for everything, measured first; natively in vLLM,
+        never with trust_remote_code or Docker, pinned, with and without MTP."""
+        self.assertEqual(modelle.messliste(["qwen36frei"]), ["qwen36-35b-a3b-frei-nvfp4", "qwen36-35b-a3b-frei-nvfp4-ohne-mtp"])
+        frei, ohne = (modelle.katalog()[i] for i in modelle.messliste(["qwen36frei"]))
+        self.assertEqual((frei["repo"], frei["revision"]), (ohne["repo"], ohne["revision"]))
+        self.assertRegex(frei["revision"], modelle.REV)
+        a = modelle.vllm_args(frei)
+        self.assertNotIn("--trust-remote-code", a)
+        self.assertIn("--speculative-config", a)
+        self.assertNotIn("--speculative-config", modelle.vllm_args(ohne))
+        self.assertEqual((frei["lizenz"], modelle.docker_bild(frei), frei["art"]), ("Apache-2.0", "", "llm"))
+
+    def test_qwen36_frei(self):
+        self.qwen36_frei()
+
     def test_download_takes_only_allowed_kinds(self):
         for pat in modelle.ERLAUBT:
             self.assertFalse(modelle.VERBOTEN.search(pat.replace("*", "x")), pat)
