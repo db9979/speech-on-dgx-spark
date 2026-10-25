@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.077** KI-Dungeon-Master: die Karte zieht nur weiter, wenn eine Aktion gehen will (Fahne und Erzählung bleiben gleich); Ortsbilder prüfen nur die eigene Runde
 - **V01.1.076** Test-Fix: der Seitentest „Mails löschen und verschieben“ wartet unter Last bis zu einer Minute auf den Regel-Hinweis und das Postfach, statt nach 10 oder 20 Sekunden aufzugeben; geprüft wird dasselbe
 - **V01.1.075** KI-Dungeon-Master: jede Runde lässt sich in der Liste beenden oder löschen, mit Nachfrage „Wirklich?“
 - **V01.1.074** KI-Dungeon-Master: Spielleiter-Pult als großes Fenster mit drei Spalten, die rechte Spalte zeigt nur noch Held, Jetzt weiter und Karte und lässt sich breiter ziehen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.070** KI-Dungeon-Master: Schlüsseltüren im Gewölbe: der Schlüssel liegt in einem erreichbaren Raum, die Tür öffnet nur, wer ihn trägt und nennt
 - **V01.1.069** KI-Dungeon-Master: Quest-Gegenstände: Schlüssel, Karten und Siegel der Geschichte ohne Gewicht, aus dem Geschichten-Planer, der Karte oder einem geprüften Fund; wer sie in der Aktion nennt, nimmt sie, Türen öffnen sich nur mit ihnen
 - **V01.1.068** KI-Dungeon-Master: Gleiches Gesicht für NSCs: jede getroffene Figur bekommt ein festes Porträt aus festen Teilen, spätere Szenenbilder nehmen es als Vorlage, Gesicht in „Leute und Chronik“ und an der Sprechzeile, Gastgeber malt neu
-- **V01.1.067** KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
 
 
 

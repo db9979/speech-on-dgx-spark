@@ -88,7 +88,10 @@ def _login(name):
 
 def way(rd, weiter=False):
     """The id of a way from where the group stands to a place not yet visited (the map decides, dungeon_karte);
-    weiter: to one that leads on to a further new place (a dead end would send the next step back)."""
+    weiter: to one that leads on to a further new place (a dead end would send the next step back). A hero's action
+    asks to go too, for only who wants to go goes (V01.1.077)."""
+    pid = next(iter(rd.get("plaetze") or {}), "pa")
+    rd.setdefault("offen", {}).setdefault(pid, {"text": "Wir gehen weiter."})
     ws = [w for w in dungeon_karte.facts(dungeon.rules(), rd)["wege"] if w["id"] != "ein"]
     k = rd["karte"]
     nb = dungeon_karte._nb(k)

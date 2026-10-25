@@ -74,7 +74,7 @@ def fake(answers):
 def rd_of(welt="fantasy", lang="de", **kw):
     """A round as dungeon.make_round leaves it, with two heroes (no file)."""
     r = dungeon.rules()
-    rd = {"welt": welt, "lang": lang, "zug": 1, "offen": {}, "log": [], "still": {}, "ton": 12, "szene": {"ort": "", "stimmung": ""}, "owner": "u",
+    rd = {"welt": welt, "lang": lang, "zug": 1, "offen": {"pa": {"text": "Wir gehen weiter."}}, "log": [], "still": {}, "ton": 12, "szene": {"ort": "", "stimmung": ""}, "owner": "u",
           "plaetze": {"pa": {"held": dungeon.new_hero(r, HERO, random.Random(1)), "made": 1},
                       "pb": {"held": dungeon.new_hero(r, dict(HERO, name="Lio", klasse="magier"), random.Random(2)), "made": 2}}}
     rd.update(kw)
@@ -180,6 +180,26 @@ class Moves(unittest.TestCase):
             self.assertTrue(K._back_asked(self.rd), asked)
         self.assertTrue(K.step(self.r, self.rd, self.story(f"o{start + 1}"), {}, random.Random(1)))
         self.assertEqual(k["hier"], start)
+
+    def test_the_model_alone_never_moves_the_group(self):
+        """Dominik 2026-10-25 („laut karte und fahne aber in wolfshafen“): the action searched a letter, the narration
+        stayed in the lane, the model set ort_id to the place the letter points to. Only an action that wants to go
+        (a word of going, a neighbour's name, a direction) lets the map move."""
+        k = self.k
+        start, j = k["hier"], K._nb(k)[k["hier"]][0]
+        for still in ("Den zerrissenen Brief im Schlamm genauer untersuchen", "Ich frage die Wirtin nach dem Brief.", ""):
+            self.rd["offen"] = {"pa": {"text": still}} if still else {}
+            with mock.patch("builtins.print") as out:
+                self.assertFalse(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)), still)
+            self.assertEqual(k["hier"], start)
+            self.assertIn("dungeon: karte | verworfen | ungefragt", [c.args[0] for c in out.call_args_list])
+        d = K._dir((k["orte"][start]["x"], k["orte"][start]["y"]), (k["orte"][j]["x"], k["orte"][j]["y"]), 0)
+        for go in ("Wir folgen der Spur.", f"Ab nach {d}!", f"{k['orte'][j]['name']}, wir kommen.", "We head out."):
+            self.rd["offen"] = {"pa": {"text": go}}
+            self.assertTrue(K._move_asked(self.r, self.rd), go)
+        self.rd["offen"] = {"pa": {"text": "Wir folgen der Spur."}}
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], j)
 
     def test_people_stay_where_they_were_met(self):
         """leute: a new NPC is put where the group is; along only by an action with MIT, back with BLEIB."""
@@ -350,6 +370,7 @@ class Moves(unittest.TestCase):
         with dungeon._lock:                                            # in only by the action's way
             d = dungeon._read()
             st = {"ort_id": "ein", "erfolg": []}
+            d["runden"][rid]["offen"] = {"pa": {"text": "Wir gehen ins Gewölbe."}}
             K.step(dungeon.rules(), d["runden"][rid], st, {}, random.Random(1))
             dungeon._write(d)
         v = c.get(f"/api/profile/dungeon/{rid}").json()
@@ -579,7 +600,7 @@ class Vaults(unittest.TestCase):
             self.assertIn("irgendwo im Gewölbe", K.view(self.r, rd)["zu"])
             f = next(w for w in K.facts(self.r, rd)["wege"] if w.get("verschlossen"))
             self.assertEqual((f["id"], f["schluessel"]), (f"r{far + 1}", "irgendwo im Gewölbe"))
-            rd["offen"] = {"pa": {"text": "Ich probiere den Eisenschlüssel."}}
+            rd["offen"] = {"pa": {"text": "Ich probiere den Eisenschlüssel und gehe hindurch."}}
             with mock.patch("builtins.print") as out:                    # named, but nobody carries it
                 K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
             said = [c.args[0] for c in out.call_args_list]
@@ -591,7 +612,7 @@ class Vaults(unittest.TestCase):
             rd["offen"] = {"pa": {"text": "Wir gehen weiter."}}          # carried, but not named
             K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
             self.assertTrue(s["zu"])
-            rd["offen"] = {"pa": {"text": "Ich schließe mit dem Eisenschlüssel auf."}}
+            rd["offen"] = {"pa": {"text": "Ich schließe mit dem Eisenschlüssel auf, dann gehen wir hindurch."}}
             K.step(self.r, rd, {"ort_id": f"r{far + 1}", "erfolg": []}, {}, random.Random(3))
             self.assertFalse(s["zu"])
             self.assertEqual(v["hier"], far)                             # opened and gone through in one turn
@@ -698,6 +719,15 @@ class Pictures(DingBase):
         self.assertEqual(c2.get(f"/api/profile/dungeon/ding/{n}").status_code, 404)
         self.assertEqual(self.c.get("/api/profile/dungeon/ding/ort-0123456789abcdeg").status_code, 404)
         self.assertEqual(K.for_live(list(dungeon._read()["runden"].values()))["ortsbilder"], 1)
+        owner = dungeon._read()["runden"][rid]["owner"]
+        with mock.patch.object(dungeon, "_read", side_effect=AssertionError("all rounds read")):   # one round at a time (Punkt 14)
+            self.assertTrue(K.may_see(n, rid=rid))
+            self.assertTrue(K.may_see(n, uid=owner))
+            self.assertFalse(K.may_see(n, rid=other))
+            self.assertFalse(K.may_see(n, uid="nobody"))
+            self.assertFalse(K.may_see(n))
+            self.assertFalse(K.may_see(n, rid="../x"))
+            self.assertTrue(K.may_see("ding-abc", rid=other))           # not this module's
 
     def test_limits_refusal_and_sweep(self):
         rid = self.new_round()
@@ -827,6 +857,7 @@ class Table(unittest.TestCase):
                             self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk-tief')"))   # not inside yet
                             with dungeon._lock:                  # the next turn's narration takes the way in
                                 d = dungeon._read()
+                                d["runden"][rid]["offen"] = {"pa": {"text": "Wir gehen ins Gewölbe."}}
                                 K.step(dungeon.rules(), d["runden"][rid], {"ort_id": "ein", "erfolg": []}, {}, random.Random(1))
                                 dungeon._write(d)
                             await pg.evaluate("dmRound()")

@@ -3502,6 +3502,13 @@
 "titel": "Dungeon-Master: Runden beenden und löschen",
 "text": "A: Unter „Deine Runden“ steht bei einer laufenden eigenen Runde neben „Öffnen“ „Beenden“ und „Löschen“. B: „Beenden“ tippen: der Knopf fragt „Wirklich beenden?“; nochmal tippen: die Runde steht als beendet da, mit „Löschen“. C: Bei einer zweiten laufenden Runde „Löschen“ zweimal tippen: sie ist weg, der Held steht weiter unter Helden. D: Als Mitspieler einer fremden laufenden Runde: kein Knopf; ist sie beendet: „Ausblenden“ mit Nachfrage.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P525",
+"v": 1077,
+"titel": "Dungeon-Master: Nur wer gehen will, geht",
+"text": "A: Eine Runde mit Karte, die Aktion untersucht nur etwas am Ort (z. B. „Den Brief im Schlamm untersuchen“). B: Auch wenn die Erzählung von einem anderen Ort spricht, bleiben Fahne und „Ihr seid in …“ beim alten Ort. C: „Wir gehen nach …“ oder ein Weg unter „Von hier aus“: die Gruppe zieht weiter, Fahne und Erzählung zeigen den neuen Ort.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

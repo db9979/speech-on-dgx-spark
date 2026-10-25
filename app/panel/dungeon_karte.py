@@ -101,6 +101,15 @@ MIT = ("mit uns", "kommt mit", "komm mit", "mitkommen", "folgt uns", "folge uns"
 BLEIB = ("bleib hier", "bleibt hier", "bleib zurueck", "warte hier", "wartet hier", "verabschied", "lebe wohl",
          "stay here", "stay behind", "wait here", "farewell", "goodbye")
 ZURUECK = ("zurueck", "umkehren", "kehren um", "kehrt um", "back", "turn around", "return")   # a way back must be asked
+# a move only when an action of the turn wants one (Dominik 2026-10-25 „laut karte und fahne aber in wolfshafen“): a
+# word of going (the start of a word; English short words whole), a neighbouring place or room, or a direction
+GEHEN = ("geh", "ging", "weiter", "reis", "brech", "zieh", "zog", "lauf", "renn", "folg", "betret", "eintret", "hinein",
+         "hinaus", "raus", "rein", "verlass", "klett", "schleich", "wander", "marschier", "reit", "ritt", "fahr", "segel",
+         "flieh", "floh", "eil", "steig", "kehr", "zurueck", "richtung", "aufbruch", "unterwegs",
+         "travel", "walk", "head", "follow", "enter", "leav", "mov", "sail", "climb", "sneak", "flee", "fled", "return",
+         "continu", "proceed", "march", "hurr", "wander", "journey")
+GEHEN_WORT = ("go", "goes", "going", "went", "gone", "run", "runs", "ran", "ride", "rides", "rode", "back", "out",
+              "weg", "wege", "weges")
 BLICK = 560               # the seat's view of the plane is at least this wide (view: box)
 ORT_EN = "map vignette art, one single place seen from a high angle, a small round scene, plain light background"
 RAUM_EN = "dungeon art, one room of an underground vault seen from a high angle, no people"
@@ -649,6 +658,22 @@ def _said(rd):
     return [" " + " ".join(_words(a.get("text"))) + " " for a in (rd.get("offen") or {}).values() if isinstance(a, dict)]
 
 
+def _move_asked(r, rd):
+    """Whether an action of this turn wants to go somewhere: a word of GEHEN or GEHEN_WORT, the name of a neighbouring
+    place or room, or a direction (pure; the model's ort_id alone never moves the group)."""
+    k, v = rd.get("karte") or {}, vault(rd)
+    if v:
+        names = [(_table(r, "raeume", v["raeume"][j]["t"]) or {"name": ["", ""]})["name"][_li(rd)] for j in _vnb(v)[v["hier"]]]
+    else:
+        names = [k["orte"][j]["name"] for j in _nb(k)[k["hier"]]] if k.get("orte") else []
+    dirs = {w for pair in RICHTUNG for x in pair for w in _words(x)}
+    for a in (rd.get("offen") or {}).values():
+        w = _words(a.get("text")) if isinstance(a, dict) else []
+        if any(x.startswith(GEHEN) or x in GEHEN_WORT or x in dirs for x in w) or any(n and _names(n, w) for n in names):
+            return True
+    return False
+
+
 def _back_asked(rd):
     """Whether an action of the turn asks for the way back: the name of the place the group came from, its
     direction or a word of ZURUECK (pure)."""
@@ -1049,6 +1074,9 @@ def step(r, rd, story, ep, rng=None):
     if not want and named_way(rd, story.get("text")) >= 0:
         want = f"o{named_way(rd, story.get('text')) + 1}"
         print("dungeon: karte | name statt id", flush=True)
+    if want and not _move_asked(r, rd):
+        print("dungeon: karte | verworfen | ungefragt", flush=True)   # nobody wanted to go: the group stays
+        want = ""
     if not vault(rd) and want == f"o{k.get('vorher', -2) + 1}" and not _back_asked(rd):
         print("dungeon: karte | verworfen | rueckweg", flush=True)   # back to where the group came from: only when asked
         want = ""
@@ -1346,12 +1374,17 @@ def keep(d):
 
 def may_see(name, uid=None, rid=None):
     """An ort- picture only for the round whose map names it: a guest's seat of that round (rid), or a profile that
-    hosts or sits in it (uid). Any other name pattern is not this module's (True: dungeon_dingbild decides)."""
+    hosts or sits in it (uid). Any other name pattern is not this module's (True: dungeon_dingbild decides). Reads only
+    those rounds (dungeon_ablage.runde, rids_von; Punkt 14), never all of them; without uid and rid nobody sees it."""
     import dungeon
+    import dungeon_ablage as ablage
     if not str(name).startswith("ort-"):
         return True
-    for r_id, v in dungeon._read()["runden"].items():
-        if rid is not None and r_id != rid:
+    if rid is None and uid is None:
+        return False
+    for r_id in [rid] if rid is not None else ablage.rids_von(uid, dungeon._fix):
+        v = ablage.runde(r_id, dungeon._fix)
+        if not v:
             continue
         if uid is not None and v.get("owner") != uid and not any(p.get("uid") == uid for p in v["plaetze"].values()):
             continue
