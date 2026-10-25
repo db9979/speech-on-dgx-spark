@@ -205,8 +205,14 @@ def view(dm, r, rd, pid):
     besser = [x for x in dm.worn(h) + h["tasche"] if better(dm, r, x)]
     frei = {"gasthaus": rd.get("gasthaus") != evening(), "schmied": bool(h.get("kaputt")),
             "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser)}
+    held = dm._living(rd)
+    # Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 3a 5b): the time of day for the head, the group's gold only
+    # shown, and per service the calculation of its price (gold per level, level, heroes for the inn)
     return {"name": here(rd), "gold": h["gold"], "lehre": (h.get("lehre") or {}).get("wert", ""),
-            "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x]} for x in DIENSTE],
+            "gold_gruppe": sum(p["held"]["gold"] for _, p in dm.seated(rd)), "tageszeit": rd.get("tageszeit") or "tag",
+            "stufe": dm.group_level(held), "helden": len(held),
+            "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x],
+                         "je": PREIS.get(x, 0)} for x in DIENSTE],
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
             "verbessern": [dict(dm.item_view(r, x, rd["lang"]), preis=better_price(dm, r, x),
                                 neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser]}

@@ -3800,7 +3800,7 @@ class Windows(unittest.TestCase):
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
         helpers.keep_chat(self, "dungeon")
-        helpers.set_config(dungeon=True)
+        helpers.set_config(dungeon=True, dungeon_gold=True)
         uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
         old_ask = dungeon.ask_model
 
@@ -3947,6 +3947,23 @@ class Windows(unittest.TestCase):
                             await pg.mouse.click(3, ht - 3)                                               # a tap beside it closes
                         else:                                                                             # on a phone it fills the screen: ✕
                             await pg.click("#dmview .dm-fen [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
+                        # Siedlung mit Leben (1a 2a 3a 5b): a head with name, time of day and the purse (the group's only
+                        # shown), a card per service with a verb, the lesson as six values before → after, too dear grey
+                        await pg.click("#dmview [data-dmfen=siedlung]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen .dm-sied-kopf')")
+                        self.assertEqual(await pg.evaluate("[document.querySelectorAll('#dmview .dm-fen .dm-dienstk').length,"
+                                                           "document.querySelectorAll('#dmview .dm-fen .dm-lehre .dm-lwert').length]"), [5, 6])
+                        self.assertRegex(await pg.evaluate("document.querySelector('#dmview .dm-sied-titel').textContent"), r"Tag.*Dein Gold.*Gruppe")
+                        self.assertIn("Übernachten", await pg.evaluate("document.querySelector('#dmview [data-dmdienst=gasthaus]').textContent"))
+                        self.assertTrue(await pg.evaluate(fits), w)
+                        poor = await pg.evaluate("(()=>{const v=structuredClone(DM.v);v.siedlung.gold=0;const d=document.createElement('div');"
+                                                 "d.innerHTML=dmSiedlung(v);return [d.querySelectorAll('.dm-fehlt').length>0,"
+                                                 "d.querySelectorAll('[data-dmhero=dienst]:not([disabled])').length]})()")
+                        self.assertEqual(poor, [True, 0])
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"siedlung-{w}.png"))
+                        await pg.click("#dmview .dm-fen [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
                         self.assertEqual(errors, [])
                     finally:
@@ -5221,6 +5238,9 @@ class Fight(Turns):
         self.assertEqual({x["id"]: x["preis"] for x in v["dienste"]},
                          {"gasthaus": gold.PREIS["gasthaus"] * stufe * 2, "schmied": gold.PREIS["schmied"] * stufe,
                           "lehre": gold.PREIS["lehre"] * stufe, "geruecht": gold.PREIS["geruecht"] * stufe, "verbessern": 0})
+        # Siedlung mit Leben (1a 3a 5b): the head's time of day and the group's gold, the calculation of each price
+        self.assertEqual((v["tageszeit"], v["gold_gruppe"], v["stufe"], v["helden"]), ("tag", 1000, stufe, 2))
+        self.assertEqual({x["id"]: x["je"] for x in v["dienste"]}, dict(gold.PREIS, verbessern=0))
         self.assertEqual(dienst(id="beten").status_code, 400)
         # the inn: the whole group back to full life and charges, once an evening
         with dungeon._lock:

@@ -3362,6 +3362,13 @@
 "titel": "Wirtschaft Teil 3",
 "text": "A: Funktionen → KI-Dungeon-Master → Balance-Prüfstand → Prüfen: die Wirtschaft zeigt je Stufe Einnahmen, Ausgaben und ein Verhältnis zwischen 1,2 und 2. B: In einer Siedlung kostet das Gasthaus 10 Gold mal Stufe je Held. C: Beim Schmied „Verbessern“: eine gewöhnliche Waffe wird selten, der Preis steht vorher dabei. D: Ein Öl in der Tasche: „Auf die Waffe“, drei Treffer zeigen die Extra-Art, danach meldet der Verlauf das Öl als verbraucht. E: Ohne Waffe in der Hand: das Öl bleibt in der Tasche.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P505",
+"v": 1055,
+"titel": "Siedlung mit Leben",
+"text": "Voraussetzung: Funktionen → KI-Dungeon-Master → Gold mit Zweck an, die Gruppe steht in einer Siedlung. A: „🏘 Siedlung“ öffnen: oben Bild, Name, Tageszeit, dein Gold und das der Gruppe. B: Jede Karte hat ein Bild oder Zeichen, einen Satz und einen Knopf mit Verb. C: Mit wenig Gold: der Knopf ist grau und sagt „Es fehlen N Gold“. D: Lehrstunde: sechs Werte mit vorher → nachher, Tippen lernt. E: Auf dem iPhone passt alles ohne seitliches Schieben.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

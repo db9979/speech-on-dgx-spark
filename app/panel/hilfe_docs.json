@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Siedlung mit Leben (V01.1.055, Dominik 2026-10-25 „so umsetzten“ zum Entwurf, 1a 2a 3a 4a 5b): Das Fenster „🏘 Siedlung“ zeigt oben das Bild des Ortes (bei Tag oder Nacht, vom Bilder-Thread) mit Name, Tageszeit und Gold: das eigene groß, das der Gruppe nur zur Ansicht, denn jeder zahlt aus seinem eigenen Gold. Jeder Dienst ist eine Karte mit seinem Bild oben (bis es gemalt ist, sein Zeichen), einem Satz Leben aus festen Listen je Welt (nie vom Modell), der Rechnung klein darüber (zum Beispiel „10 × Stufe 2 × 4 Helden = 80 Gold“) und einem Knopf mit Verb: Übernachten, Flicken, Zuhören, Verbessern. Was das eigene Gold nicht deckt, ist grau und sagt „Es fehlen N Gold“; ein Dienst, der gerade nicht geht (schon übernachtet, nichts zerbrochen), ist blass. Die Lehrstunde zeigt die sechs Werte als 3 × 2 Raster mit vorher → nachher (zum Beispiel STÄ +3 → +4), der Preis steht einmal darunter. Die Ansicht der Siedlung (dungeon_gold.view) bringt dafür tageszeit, gold_gruppe, stufe, helden und je Dienst je (Gold je Stufe). Selbsttests test_gold_with_a_purpose_in_a_settlement und test_hero_sheet_merchant_and_item_windows (Fenster auf drei Breiten, grau ohne Gold). Ohne „Gold mi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "t Zweck“ bleibt alles aus."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Wirtschaft Teil 3 (V01.1.054, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 6, 7, 9, 11 und 12): Wirtschaft im Prüfstand: Der Balance-Prüfstand (Funktionen → KI-Dungeon-Master → Balance-Prüfstand) rechnet je Stufe 200 Läufe einer Vierergruppe mit den echten Funden, Preisen und Diensten (dungeon_pruefstand.economy): Kämpfe bis zur nächsten Stufe aus dem Budget, eine Truhe je drei Kämpfe, eine Belohnung, jeder zweite Lauf ein Boss, ein Händler je vier Kämpfe mit seiner Kasse. Gezeigt werden Einnahmen eines Helden (Median und schlechtestes Zehntel), Ausgaben (Gasthaus, Heiltränke, Gerüchte, Schmied), das Verhältnis und der teuerste Einzelfund. Ziel ist ein Verhältnis von 1,2 bis 2 (WIRTSCHAFT); liegt eine Stufe außerhalb, schreibt das Log „stufen wirtschaft ausserhalb“. Gold behält seinen Wert: Das Gasthaus kostet 10 Gold mal Stufe je Held (vorher fest). Der Schmied verbessert in der Siedlung eine Waffe oder Rüstung ohne feste Seltenheit um eine Stufe bis „episch“ (dungeon_gold.better), nie eine Legende; der Preis ist der volle Wert des Stücks danach (better_price), ab „rar“ bekommt es eine Wirkung. Öle: Ein Fläschchen mit oel (eine Schadensart außer "
 },
 {
@@ -18294,6 +18310,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a settlement with life (V01.1.055, Dominik 2026-10-25 \"so umsetzten\" on the draft, 1a 2a 3a 4a 5b): The \"🏘 Settlement\" window shows the place's picture on top (by day or at night, from the picture thread) with its name, the time of day and gold: one's own large, the group's only to look at, since everyone pays from their own gold. Every service is a card with its picture on top (its sign until it is painted), a line of life from fixed lists per world (never the model's), the calculation small above (for example \"10 × level 2 × 4 heroes = 80 gold\") and a button with a verb: stay the night, mend, listen, improve. What one's own gold does not cover is grey and says \"N gold short\"; a service that does not work right now (already slept, nothing broken) is pale. The lesson shows the six values as a 3 × 2 grid with before → after (for example STR +3 → +4), the price once below. The settlement's view (dungeon_gold.view) brings tageszeit, gold_gruppe, stufe, helden and per service je (gold per level) for it. Self-tests test_gold_with_a_purpose_in_a_settlement and test_hero_sheet_merchant_and_item_windows (window at three widths, grey without gold). Without \"Gold with a pu"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "rpose\" everything stays off."
 },
 {
 "lang": "en",

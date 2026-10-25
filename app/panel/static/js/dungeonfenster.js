@@ -14,13 +14,27 @@ function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='e
     <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}</div></div>`}
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
 const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒'};
-function dmSiedlung(v){const s=v.siedlung,W=v.werte||{},knopf=(d,attr,label)=>`<button type="button" class="b p" data-dmhero="dienst" data-id="${d.id}"${attr||''}${!d.frei||s.gold<d.preis?' disabled':''}>${esc(label||t('Bezahlen','Pay'))} · ${d.preis} ${esc(t('Gold','gold'))}</button>`;
-  const card=d=>`<div class="dm-ware dm-dienstk"><span class="dm-ware-b" aria-hidden="true">${DMDIENST[d.id]}</span><b>${esc(d.name)}</b><small>${esc(d.satz)}</small>${
-    d.id==='schmied'?(s.kaputt.length?s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
-    :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{preis:it.preis}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
-    :d.id==='lehre'?`<div class="dm-iacts">${Object.keys(W).map(k=>knopf(Object.assign({},d,{frei:s.lehre!==k}),` data-wert="${esc(k)}"`,W[k])).join('')}</div>${s.lehre?`<small class="mut">${esc(t('Jetzt: '+(W[s.lehre]||s.lehre)+' +1','Now: '+(W[s.lehre]||s.lehre)+' +1'))}</small>`:''}`
-    :knopf(d)}</div>`;
-  return `<small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest.','The panel sets the prices by the group\'s level.'))} · ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b></small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
+// Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
+// purse; a card per service with its picture on top and a line of life; the price's calculation small above a verb
+// button; what the hero cannot pay is grey with how much is missing; the lesson as six values before → after
+const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve']};
+const DMZEIT={morgen:['🌅','Morgen','Morning'],tag:['☀️','Tag','Day'],abend:['🌇','Abend','Evening'],nacht:['🌙','Nacht','Night']};
+const dmPlus=n=>(n>=0?'+':'')+n;
+function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0,p-s.gold),
+    knopf=(d,attr,label,preis)=>{const p=preis==null?d.preis:preis,f=d.frei?fehlt(p):0;
+      return `<button type="button" class="b p" data-dmhero="dienst" data-id="${d.id}"${attr||''}${!d.frei||f?' disabled':''}>${esc(label||t(...DMVERB[d.id]))} · ${p} ${esc(G)}</button>${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}`},
+    rech=d=>d.je?`<small class="mut dm-rech">${d.je} × ${esc(t('Stufe','level'))} ${s.stufe}${d.id==='gasthaus'?` × ${s.helden} ${esc(t('Helden','heroes'))}`:''} = ${d.preis} ${esc(G)}</small>`:'',
+    werte=(v.ich&&v.ich.werte)||[],
+    lehre=d=>{const f=fehlt(d.preis);return `<small class="mut">${esc(t('Lernen: tippe auf einen Wert.','Learn: tap a value.'))}</small><div class="dm-lehre">${werte.map(w=>{const an=s.lehre===w.id;
+      return `<button type="button" class="b dm-lwert${an?' an':''}" data-dmhero="dienst" data-id="lehre" data-wert="${esc(w.id)}" title="${esc(w.name)}"${an||f?' disabled':''}><b>${esc(w.kurz)}</b><span>${an?esc(t('gelernt','learned')):dmPlus(w.gesamt)+' → '+dmPlus(w.gesamt+1)}</span></button>`}).join('')}</div>${rech(d)}${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}`},
+    card=d=>`<div class="dm-ware dm-dienstk${d.frei?'':' dm-zu'}" data-dmdienst="${d.id}">${d.bild?`<span class="dm-dienst-bild">${dmDing({bild:d.bild},1)}</span>`:`<span class="dm-dienst-bild dm-dz" aria-hidden="true">${DMDIENST[d.id]}</span>`}<b>${esc(d.name)}</b>${d.zeile?`<small class="dm-isatz">„${esc(d.zeile)}“</small>`:''}<small>${esc(d.satz)}</small>${
+    d.id==='schmied'?(s.kaputt.length?rech(d)+s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
+    :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{frei:true}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu,it.preis)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
+    :d.id==='lehre'?lehre(d)
+    :rech(d)+knopf(d)}</div>`,
+    z=DMZEIT[s.tageszeit]||DMZEIT.tag;
+  return `<div class="dm-sied-kopf${s.kopf?'':' leer'}">${s.kopf?dmDing({bild:s.kopf},1):''}<div class="dm-sied-titel"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span>💰 ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b> · ${esc(t('Gruppe','Group'))}: ${s.gold_gruppe}</span></div></div>
+    <small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest. Jeder zahlt aus seinem eigenen Gold.','The panel sets the prices by the group\'s level. Everyone pays from their own gold.'))}</small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
 // the merchant as big cards: picture in the rarity's frame, lines, price; below what the own bag can sell or have named
 function dmShop(v){const h=v.ich,m=v.markt;
   const ware=m.ware.map(it=>`<div class="dm-ware ${DMSEL[it.selten]||''}" data-dmi="${esc(it.i)}"><span class="dm-ware-b">${dmDing(it,1)}</span><b>${esc(it.name)}</b>${dmCmp(it)}<small>${esc(it.selten_name)}${it.kg?' · '+String(it.kg).replace('.',L==='en'?'.':',')+' kg':''}</small>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>
