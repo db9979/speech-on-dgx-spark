@@ -1848,6 +1848,40 @@ class Equipment(Base):
             return rd
         self.assertEqual(self.edit(move)["boden"], [])
 
+    def test_experience_for_more_than_fighting(self):
+        """Idee 7 of 2026-10-24 (Dominik „alle umsetzen“): fixed experience by the panel for every hero for a new place
+        of the map (ep.ort), an act of the story done (ep.akt) and a fight ended in peace in a turn with a check
+        passed (the foes' experience); an old place, a peace without a check give nothing. Riddles give theirs on the map."""
+        r = self.r
+        tisch = lambda rd: [p["held"].get("ep_tisch", 0) for _, p in dungeon.seated(rd)]
+
+        def go(rd, ort_id, text="Ihr zieht weiter durch das nasse Moor bis zur Furt."):
+            story, _ = dungeon.check_story(r, rd, {"erzaehlung": text, "frage_an": "Arvid", "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": ort_id}})
+            before = tisch(rd)
+            dungeon.apply(r, rd, [], story, self.rid, random.Random(3))
+            return [b - a for a, b in zip(before, tisch(rd))]
+
+        def first(rd):
+            dungeon_karte.ensure(r, rd, random.Random(1))
+            return rd["karte"]["hier"]
+        start = self.edit(first)
+        self.assertEqual(self.edit(lambda rd: go(rd, way(rd))), [r["ep"]["ort"]] * 2)            # a new place
+        self.assertEqual(self.edit(lambda rd: go(rd, f"o{start + 1}", "Ihr kehrt zurück zum Anfang des Weges.")), [0, 0])   # known
+        old = dungeon.step_act
+        dungeon.step_act = lambda rd, fertig: "modell"
+        try:
+            self.assertEqual(self.edit(lambda rd: go(rd, "", "Der Küster schweigt, die Glocke ist still, der Akt ist vorbei.")),
+                             [r["ep"]["akt"]] * 2)
+        finally:
+            dungeon.step_act = old
+        foes = [{"k": "g1", "ep": 50, "aus": ""}, {"k": "g2", "ep": 25, "aus": "besiegt"}]
+        for geschafft, want in ((True, 38), (False, 13)):                                       # 75 or 25 by two heroes
+            rd = {"kampf": {"gegner": [dict(g) for g in foes], "geschafft": geschafft}, "log": [], "plaetze": {}, "zug": 1}
+            ep = {"pa": 0, "pb": 0}
+            kampf.end(dungeon, r, rd, ep, "frieden")
+            self.assertEqual(ep, {"pa": want, "pb": want})
+            self.assertEqual(rd["log"][-1]["frieden"], 1 if geschafft else 0)
+
     def test_a_find_keeps_its_name_only_when_it_names_the_thing(self):
         """Dominik 2026-10-24 (screenshots: a belt as „Versiegelte Truhe“ worn at the neck, a short sword as „Verlassenes
         Versteck“): the model's name stays only when it names the catalog thing; else it is where it was found."""

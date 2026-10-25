@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.030** · 2026-10-25 · KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 - **V01.1.029** · 2026-10-25 · Gruß beim Öffnen: Selbsttest mit fester Uhr statt der echten (war in der Nacht der Zeitumstellung rot), dazu ein Fall genau in der doppelten Stunde; der Blick in den Kalender rechnet echte vier Stunden, auch über die Zeitumstellung
 - **V01.1.028** · 2026-10-24 · KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 - **V01.1.027** · 2026-10-24 · KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf

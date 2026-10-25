@@ -590,7 +590,8 @@ def expire(dm, rd, all_=False):
 
 
 def end(dm, r, rd, ep, why=""):
-    """The fight is over: the defeated foes' experience (half for the fled ones) divided by the living heroes into ep
+    """The fight is over: the defeated foes' experience (half for the fled ones; Idee 7: all of the foes still up when
+    it ends in peace in a turn with a check passed, k["geschafft"], dungeon.apply) divided by the living heroes into ep
     (pid -> number, apply gives it to the table), one find for the group, a line for the log. A won fight of a room
     of the map leaves rd["sieg"] = the room's tag for dungeon_karte (the way is free)."""
     k = rd.pop("kampf", None)
@@ -599,14 +600,16 @@ def end(dm, r, rd, ep, why=""):
     expire(dm, rd, all_=True)
     besiegt = [g for g in k["gegner"] if g["aus"] == "besiegt"]
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
-    alle = sum(g["ep"] for g in besiegt) + sum(g["ep"] // 2 for g in flohen)
+    frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7
+    alle = sum(g["ep"] for g in besiegt + frieden) + sum(g["ep"] // 2 for g in flohen)
     each = -(-alle // max(1, len(ep))) if ep else 0
     for pid in ep:
         ep[pid] += each
     if k.get("raum") and not why:
         rd["sieg"] = k["raum"]
         rd.pop("raum_gegner", None)
-    dm._log(rd, "kampf", was=why or "sieg", besiegt=len(besiegt), geflohen=len(flohen), ep=each, boss=any(g.get("boss") for g in besiegt))
+    dm._log(rd, "kampf", was=why or "sieg", besiegt=len(besiegt), geflohen=len(flohen), ep=each, boss=any(g.get("boss") for g in besiegt),
+            frieden=len(frieden))
     rd["kampf_aus"] = {"leben0": k.get("leben0", 0), "why": why}      # for the dial, after the last hits are in (turn_dial)
     dm._day.bump("kaempfe")
     print(f"dungeon: kampf | ende | {why or 'sieg'} | {len(besiegt)} besiegt | {len(flohen)} geflohen", flush=True)

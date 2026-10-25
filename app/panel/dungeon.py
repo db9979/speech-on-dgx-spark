@@ -583,8 +583,9 @@ def check_rules(r):
          and se == sorted(se) and len(set(se)) == len(se), "stufen_ep: aufsteigende Zahlen ab 0, mindestens so viele wie grenzen.stufe_max")
     need(isinstance(r.get("faehigkeit_auf"), list) and all(_int(x, 2, 20) for x in r["faehigkeit_auf"]), "faehigkeit_auf: Stufen 2 bis 20")
     ep = r.get("ep") or {}
-    need(_int(ep.get("probe"), 0, 100) and _int(ep.get("ziel"), 0, 1000) and _int(ep.get("idee"), 0, 200),
-         "ep: probe 0 bis 100, ziel 0 bis 1000, idee 0 bis 200 (Gegner zählen nach dem Bestiarium)")
+    need(_int(ep.get("probe"), 0, 100) and _int(ep.get("ziel"), 0, 1000) and _int(ep.get("idee"), 0, 200)
+         and _int(ep.get("ort"), 0, 200) and _int(ep.get("akt"), 0, 1000),
+         "ep: probe 0 bis 100, ziel 0 bis 1000, idee 0 bis 200, ort 0 bis 200, akt 0 bis 1000 (Gegner zählen nach dem Bestiarium)")
     need(set(r.get("anlass") or {}) == set(FUNDE) and all(_int(x, 0, 50) for x in r["anlass"].values()), "anlass: gegner, truhe, belohnung, boss je 0 bis 50")
     need(set(r.get("gold") or {}) == set(FUNDE) and all(isinstance(x, list) and len(x) == 2 and _int(x[0], 0, 1000)
                                                            and _int(x[1], x[0], 5000) for x in r["gold"].values()), "gold: je [von, bis]")
@@ -3002,8 +3003,14 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
+        orte = len(rd["karte"]["besucht"]) if rd.get("karte") else None
         if dungeon_karte.step(r, rd, story, ep, rng):   # the map moves the group (a new place: merchant and ground stay behind)
             rd.pop("boden_gold", None)
+        neu = len(rd["karte"]["besucht"]) - orte if orte is not None and rd.get("karte") else 0
+        if neu > 0:                              # Idee 7: a new place of the map found, fixed experience for every hero
+            for pid in ep:
+                ep[pid] += r["ep"]["ort"] * neu
+            print(f"dungeon: ep | ort | {neu}", flush=True)
         if story.get("bild"):
             rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
@@ -3025,6 +3032,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                 _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
         hiebe, war = [], bool(rd.get("kampf"))
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
+            rd["kampf"]["geschafft"] = any(w["ok"] for w in wuerfe)   # a peace counts only with a check passed (Idee 7)
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
         consequences(r, rd, story["folgen"] + hiebe, names)
         if war:
@@ -3046,6 +3054,10 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                     print("dungeon: auftrag | zu frueh", flush=True)
                 for pid in ep:
                     ep[pid] += r["ep"]["ziel"]
+        if step_act(rd, story.get("akt_fertig")):   # Idee 7: an act of the story done, fixed experience for every hero
+            for pid in ep:
+                ep[pid] += r["ep"]["akt"]
+            print("dungeon: ep | akt", flush=True)
     else:
         _log(rd, "dm", text=r["ausfall"][li], npc=[], frage="")
     for pid, n in ep.items():
@@ -3060,7 +3072,6 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         cast_powers(r, rd)
         down(r, rd)
         wear_off(rd)
-        step_act(rd, story.get("akt_fertig"))
         for pid, _ in seated(rd):
             rd["still"][pid] = 0 if pid in rd["offen"] else rd["still"].get(pid, 0) + 1
         rd["offen"] = {}

@@ -82,7 +82,7 @@
   "stufen_ep": [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000],
   "faehigkeit_auf": [2, 4, 6, 8, 10],
   "ladungen": [[2, 0, 0, 0, 0], [3, 0, 0, 0, 0], [4, 2, 0, 0, 0], [4, 3, 0, 0, 0], [4, 3, 2, 0, 0], [4, 3, 3, 0, 0], [4, 3, 3, 1, 0], [4, 3, 3, 2, 0], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2]],
-  "ep": {"probe": 10, "ziel": 100, "idee": 20},
+  "ep": {"probe": 10, "ziel": 100, "idee": 20, "ort": 10, "akt": 100},
   "seltenheit": [
     {"id": "gewoehnlich", "name": ["gewöhnlich", "common"], "ab": 0, "bonus": 0, "stufe_min": 1, "preis": 1},
     {"id": "selten", "name": ["selten", "uncommon"], "ab": 55, "bonus": 1, "stufe_min": 1, "preis": 3},

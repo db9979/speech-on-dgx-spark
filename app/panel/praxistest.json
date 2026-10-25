@@ -3215,6 +3215,13 @@
 "titel": "Spielleiter-Regler",
 "text": "A: Funktionen → KI-Dungeon-Master → Spielleiter-Regler an. B: Als Gastgeber im Reiter „Leiten“: Zeile „🎚 Spielleiter-Regler · Gefahr 0 %“ mit „festhalten“. C: Einen Kampf fast ohne Schaden gewinnen: danach „Gefahr +10 %“, die nächste Begegnung hat etwas stärkere Gegner. D: Einen Kampf, in dem ein Held zu Boden geht: der Stand sinkt um 15. E: „festhalten“ an, noch ein Kampf: der Stand bleibt. F: Am Kindertisch geht er nie über 0 %. G: Ein Gast-Platz sieht keine Regler-Zeile. H: Zustand → Überblick: „heute Spielleiter-Regler N× schwerer, M× leichter“; Zustand → Logs, Filter „regler“: hoch, runter, gleich, fest.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P484",
+"v": 1030,
+"titel": "Erfahrung für mehr als Kämpfen",
+"text": "A: Eine Runde mit Karte: zu einem neuen Ort gehen, im Verlauf „+10 EP“ je Held. B: Zurück an einen bekannten Ort: keine Erfahrung dafür. C: Eine Geschichte mit Akten: wenn der Wendepunkt erzählt ist, „Akt 2 beginnt“ und „+100 EP“ je Held. D: In einem Kampf eine Überreden-Probe schaffen und die Gegner lassen ab: die Gruppe bekommt die Erfahrung der Gegner wie für einen Sieg. Ohne gelungene Probe gibt das friedliche Ende nichts. E: Zustand → Logs, Filter „ep“: ort und akt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.030** KI-Dungeon-Master: Erfahrung für mehr als Kämpfen, feste Erfahrung für jeden Helden für einen neuen Ort der Karte, einen abgeschlossenen Akt und einen friedlich beendeten Kampf
 - **V01.1.029** Gruß beim Öffnen: Selbsttest mit fester Uhr statt der echten (war in der Nacht der Zeitumstellung rot), dazu ein Fall genau in der doppelten Stunde; der Blick in den Kalender rechnet echte vier Stunden, auch über die Zeitumstellung
 - **V01.1.028** KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 - **V01.1.027** KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.023** KI-Dungeon-Master: Figuren bleiben an ihrem Ort (mit reist nur, wen eine Aktion mitnimmt), zurück an den vorigen Ort nur auf Wunsch einer Aktion, die Karte zeigt „Ort nicht gewechselt“
 - **V01.1.022** CarPlay Dungeon-Master: Runde im Auto wählen und neu anlegen, „Passt das?“ vor jeder Aktion, mehr Sprachbefehle, Zusammenfassung, Stimmen der Runde, Warten ohne Zeitgrenze
 - **V01.1.021** KI-Dungeon-Master: Gegner und Beute öffnen ein großes Fenster zum Betrachten (Bild, Werte, sechs Werte, was er bewirken kann, Blättern), Nebenfiguren klingen mit VoiceDesign verschiedener (Sprechtempo, mehr Klangfarben)
-- **V01.1.020** KI-Dungeon-Master: die Wege von hier mit Richtung und Ziel auch für die Sprache (dungeon_karte.wege, für CarPlay), nie ein Ort im Nebel
 
 
 
