@@ -3357,7 +3357,7 @@ class SrdLayer(Base):
         self.srd = {
             "gegenstaende": [dict(ring, id="laser", name=["Laserring", "Laser ring"], welten=["scifi"]),
                              dict(ring, id="ogerhand", name=["Ogerhand", "Ogre hand"], wert="staerke", seltenheit="rar"),
-                             {"id": "rubin", "art": "schatz", "name": ["Rubin", "Ruby"], "kg": 0.1, "preis": 500,
+                             {"id": "rubin", "art": "schatz", "name": ["Rubin", "Ruby"], "kg": 0.1, "klasse": "gross",
                               "info": ["Ein roter Edelstein, nur zum Verkaufen.", "A red gem, only to sell."]}]
                             + [dict(sword, id=f"klinge{i}", name=[f"Klinge {i}", f"Blade {i}"]) for i in range(300)],
             "zustaende": [{"id": "vergiftet", "name": ["Vergiftet", "Poisoned"], "info": ["Gift.", "Poison."],
@@ -5388,7 +5388,7 @@ class Fight(Turns):
         r = dungeon.rules()
         sel = dungeon._by(r, "seltenheit")
         for art in ("trank", "waffe"):
-            c = next(x for x in r["gegenstaende"] if x["art"] == art and "seltenheit" not in x)
+            c = next(x for x in r["gegenstaende"] if x["art"] == art and "seltenheit" not in x and (art != "trank" or x.get("segen")))
             f = sel["rar"]["preis"]
             want = c.get("preis", r["preise"][art]) * (max(1, f // 2) if art in dungeon.GUENSTIG else f)
             self.assertEqual(dungeon.price(r, {"id": c["id"], "s": "rar"}), want, art)
@@ -5413,6 +5413,53 @@ class Fight(Turns):
             dungeon._write(d)
         v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
         self.assertEqual(v["vergleich"]["w2"], {"besser": 1, "passt": True})
+
+    def test_every_price_lies_in_its_band(self):
+        """Wirtschaft (Dominik 2026-10-25 „1-12“), Punkte 1, 2 and 4: one price rule. Every thing at every rarity it can
+        come in lies in that rarity's band (a fixed rarity's own price is final, never times the rarity again); a legend
+        is not sold; a treasure is its class times the level it was found at, a big one only from a chest or a boss; a
+        healing potion 2 gold per life, a spell scroll 25 times its grade + 1; a hero starts with 25 gold."""
+        r = dungeon.rules()
+        ids = [x["id"] for x in r["seltenheit"]]
+        top = ids[-1]
+        for c in r["gegenstaende"]:
+            if c["art"] == "schatz":
+                self.assertIn(c.get("klasse"), dungeon.SCHATZ, c["id"])
+                self.assertNotIn("preis", c, c["id"])
+                continue
+            if c["art"] == "zauber" and "preis" not in c:                      # a scroll by its grade (Punkt 4), whatever its frame
+                self.assertEqual({dungeon.price(r, {"id": c["id"], "s": s}) for s in ids[:-1]}, {25 * (c.get("grad", 0) + 1)}, c["id"])
+                continue
+            for s in ([c["seltenheit"]] if c.get("seltenheit") else ids):
+                p = dungeon.price(r, {"id": c["id"], "s": s})
+                if s == top:
+                    self.assertEqual(p, 0, c["id"])
+                    if c.get("seltenheit") == top:
+                        self.assertNotIn("preis", c, c["id"])                   # a fixed legend has no price
+                else:
+                    self.assertTrue(1 <= p <= dungeon.PREISBAND[s], (c["id"], s, p))
+            if c.get("seltenheit") and "preis" in c:
+                self.assertEqual(dungeon.price(r, {"id": c["id"], "s": c["seltenheit"]}), c["preis"], c["id"])
+        heal = next(c for c in r["gegenstaende"] if c["art"] == "trank" and c.get("heilung") and not c.get("segen") and "preis" not in c)
+        self.assertEqual(dungeon.price(r, {"id": heal["id"], "s": "rar"}), 2 * heal["heilung"])
+        scroll = next(c for c in r["gegenstaende"] if c["art"] == "zauber" and c.get("grad") and "preis" not in c)
+        self.assertEqual(dungeon.price(r, {"id": scroll["id"], "s": "selten"}), 25 * (scroll["grad"] + 1))
+        self.assertEqual(r["start"]["gold"], 25)
+        gem = next(c for c in r["gegenstaende"] if c.get("klasse") == "mittel")
+        self.assertEqual(dungeon.price(r, {"id": gem["id"], "s": "gewoehnlich", "st": 8}), 8 * dungeon.SCHATZ["mittel"])
+        self.assertEqual(dungeon.sell_price(r, {"id": gem["id"], "s": "gewoehnlich", "st": 8}), 4 * dungeon.SCHATZ["mittel"])
+        self.assertEqual(dungeon.sell_price(r, {"id": next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe"), "s": top}), 0)
+        held = [dungeon.new_hero(r, dict(HERO), rng=random.Random(1))]
+        found = set()
+        for i in range(600):                                                    # a big treasure only from a chest or a boss
+            for anlass in ("gegner", "belohnung", "truhe", "boss"):
+                _, it, _ = dungeon.loot(r, held, anlass, 3, random.Random(i), welt="fantasy")
+                c = dungeon._c(r, it)
+                if c["art"] == "schatz":
+                    self.assertEqual(it["st"], 3)
+                    found.add((anlass, c["klasse"]))
+        self.assertFalse({("gegner", "gross"), ("belohnung", "gross")} & found, found)
+        self.assertTrue({("truhe", "gross"), ("boss", "gross")} & found, found)
 
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()

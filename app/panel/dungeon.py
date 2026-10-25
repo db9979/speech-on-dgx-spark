@@ -355,6 +355,17 @@ WERKZEUG = (1, 2, 3)      # a tool (hilft) the action names adds this to a fitti
                           # einfach (common), gut (uncommon), meisterlich (rare and above); on a natural 1 it breaks
 GUETE = (("einfach", "simple"), ("gut", "good"), ("meisterlich", "masterwork"))
 GUENSTIG = ("trank", "rolle", "zauber", "werkzeug")   # used up or a helper: half the rarity's price factor (Gegenstands-Punkt 6)
+# Wirtschaft (Dominik 2026-10-25 „1-12“), Punkt 1: one price rule. The art's price (or the thing's own) times its rarity;
+# a thing with a fixed rarity and its own price has its final price already (never times the rarity again). Every
+# price lies in the band of its rarity (PREISBAND, test_every_price_lies_in_its_band); a legend is never sold.
+PREISBAND = {"gewoehnlich": 50, "selten": 250, "rar": 1000, "episch": 4000}
+# Punkt 2: a treasure is worth its class times the group's level when it was found (it["st"]); a big one only from a
+# chest or a boss (SCHATZ_GROSS)
+SCHATZ = {"klein": 10, "mittel": 25, "gross": 60}
+SCHATZ_GROSS = ("truhe", "boss")
+# Punkt 4: a healing potion costs HEIL_GOLD per life it heals, a spell scroll ROLLE_GOLD times (its grade + 1)
+HEIL_GOLD = 2
+ROLLE_GOLD = 25
 WERT_MAX = 20             # a value's score at most (as in D&D); every level's point raises one by 1
 KON = "konstitution"     # the value that adds to life (its bonus on every level, as in D&D)
 _lock = threading.RLock()   # _end and keep_hero run inside it
@@ -550,6 +561,9 @@ def check_rules(r):
         need("kg" not in x or isinstance(x["kg"], (int, float)) and not isinstance(x["kg"], bool) and 0 <= x["kg"] <= 60,
              f"gegenstaende {x.get('id')}: kg 0 bis 60")
         need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
+        need(x.get("art") != "schatz" or x.get("klasse") in SCHATZ and "preis" not in x and "seltenheit" not in x,
+             f"gegenstaende {x.get('id')}: schatz mit klasse ({', '.join(SCHATZ)}), ohne preis und seltenheit")
+        need("klasse" not in x or x.get("art") == "schatz", f"gegenstaende {x.get('id')}: klasse nur bei schatz")
         need("erkennt" not in x or x.get("art") == "rolle" and x["erkennt"] is True, f"gegenstaende {x.get('id')}: erkennt nur bei rolle, true")
         need("info" not in x or _pair(x["info"], INFO_MAX), f"gegenstaende {x.get('id')}: info als [deutsch, englisch], je höchstens {INFO_MAX} Zeichen")
         hf = x.get("hilft")
@@ -1377,9 +1391,21 @@ def pay_ep(r, rd, rid):
 
 
 def price(r, it):
-    """What an item is worth by the rules (never the model): the art's price or its own, times its rarity, per piece;
-    potions, scrolls, spells and tools by half the rarity's factor (GUENSTIG)."""
+    """What an item is worth by the rules (never the model), per piece (Wirtschaft Punkt 1, 2 and 4): a treasure its
+    class times the level it was found at; a healing potion HEIL_GOLD per life, a spell scroll ROLLE_GOLD times its
+    grade + 1; a thing of fixed rarity with its own price that price; else the art's price or its own times the
+    rarity, potions, scrolls, spells and tools by half the rarity's factor (GUENSTIG). A legend: 0, it is not sold."""
     c, s = _c(r, it), _by(r, "seltenheit").get(it["s"]) or r["seltenheit"][0]
+    if c["art"] == "schatz" and c.get("klasse") in SCHATZ:
+        return SCHATZ[c["klasse"]] * max(1, it.get("st", 1))
+    if it.get("leg") or s["id"] == r["seltenheit"][-1]["id"]:
+        return 0
+    if c["art"] == "trank" and c.get("heilung") and not c.get("segen") and not c.get("widerstand") and "preis" not in c:
+        return HEIL_GOLD * c["heilung"]
+    if c["art"] == "zauber" and "preis" not in c:
+        return ROLLE_GOLD * (c.get("grad", 0) + 1)
+    if c.get("seltenheit") and "preis" in c:
+        return c["preis"]
     f = s.get("preis", 1)
     return max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f))
 
@@ -1428,8 +1454,9 @@ def buy_price(r, h, it):
 
 
 def sell_price(r, it):
-    """Half its worth, a quarter while unknown, for every piece of a stack."""
-    return max(1, price(r, it) // (4 if it.get("u") else 2)) * it.get("n", 1)
+    """Half its worth, a quarter while unknown, for every piece of a stack; 0 for a legend (not sold)."""
+    p = price(r, it)
+    return max(1, p // (4 if it.get("u") else 2)) * it.get("n", 1) if p else 0
 
 
 def name_price(r, it):
@@ -1580,6 +1607,8 @@ def open_market(r, rd, name="", satz="", rng=None):
         it = item(r, rng.choice([c for c in r["gegenstaende"] if in_world(c, rd.get("welt")) and reaches(r, c, s)]
                                 or [c for c in r["gegenstaende"] if "seltenheit" not in c])["id"], s["id"], rng)
         it.pop("u", None)
+        if _c(r, it)["art"] == "schatz":
+            it["st"] = stufe
         ware.append(it)
     rd["markt"] = {"name": name or HAENDLER[li], "satz": satz, "ware": ware}
     _log(rd, "markt", name=rd["markt"]["name"], auf=True)
@@ -1610,10 +1639,13 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd
     if s["id"] == r["seltenheit"][-1]["id"]:
         leg = legenden.pick(_me, r, rd, h, welt, rng) if anlass in legenden.ANLASS else None
         s = s if leg else stufen[-2]
-    here = [c for c in r["gegenstaende"] if in_world(c, welt) and reaches(r, c, s)] or \
-        [c for c in r["gegenstaende"] if "seltenheit" not in c]
+    here = [c for c in r["gegenstaende"] if in_world(c, welt) and reaches(r, c, s)
+            and (c.get("klasse") != "gross" or anlass in SCHATZ_GROSS)] or \
+        [c for c in r["gegenstaende"] if "seltenheit" not in c and c["art"] != "schatz"]
     pool = [c for c in here if fits(r, h, c)] or here
     it = legenden.make(_me, r, leg, rng) if leg else item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
+    if _c(r, it)["art"] == "schatz":
+        it["st"] = max(1, gruppe_stufe)          # Punkt 2: its worth by the level it was found at
     for i, x in enumerate(held):
         x["seit_fund"] = 0 if i == rec else x.get("seit_fund", 0) + 1
     h["ohne_selten"] = 0 if stufen.index(s) > 0 else h.get("ohne_selten", 0) + 1
@@ -4960,7 +4992,8 @@ def shop(r, rd, pid, h, was, b, it):
         bag_add(r, h, w)
         _day.bump("kaeufe")
     else:
-        if not it:
+        if not it or not sell_price(r, it):
+            print("dungeon: handel | verkauf | abgelehnt", flush=True)
             raise ValueError("verkaufen")
         preis = sell_price(r, it)
         h["tasche"].remove(it)

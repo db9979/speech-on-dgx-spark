@@ -41,7 +41,7 @@ import random
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
-BUDGET = (83, 121, 291, 380, 450, 532, 950, 1000, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+BUDGET = (95, 150, 291, 380, 450, 532, 950, 1000, 600, 648, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25

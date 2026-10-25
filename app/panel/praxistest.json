@@ -3341,6 +3341,13 @@
 "titel": "Dungeon-Master: Gewölbe als Plan",
 "text": "A: Eine Runde mit Karte, der Gastgeber würfelt ein Gewölbe, die Gruppe geht hinein. B: Unter „Karte“ → „Gewölbe“ steht ein gezeichneter Plan: schwarze Wände, Schraffur im Gestein, Raster, Nummern, Spielfigur im aktuellen Raum, darunter die Legende. C: Jeder betretene Raum zeigt passende Ausstattung (Treppe, Becken, Grube, Truhe, Säulen …). D: Neu laden: die Schraffur steht genau gleich. E: 🔥 schaltet auf den Fackelschein, 📜 zurück; nach dem Neuladen bleibt die Wahl. F: Dunkler Tisch: das Papier ist gedämpft, Sci-Fi ist eine Blaupause. G: Auf dem Telefon passt der Plan ohne seitliches Schieben.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P502",
+"v": 1052,
+"titel": "Wirtschaft Teil 1",
+"text": "A: Neuer Held: 25 Gold. B: Beim Händler kostet ein Heiltrank 12 Gold, eine Zauberrolle Grad 1 50 Gold. C: Regeln → Gegenstände → Vorpalschwert: „unverkäuflich“; Mithrilhemd: fester Preis statt „×Faktor“. D: Einen gefundenen Edelstein verkaufen: der Preis wächst mit der Stufe der Gruppe beim Fund. E: Ein legendäres Ding zeigt beim Händler keinen Verkaufen-Knopf.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

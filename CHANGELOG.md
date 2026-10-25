@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.052** · 2026-10-25 · KI-Dungeon-Master: Wirtschaft Teil 1: eine Preisregel mit Preisbändern je Seltenheit, Legendäres unverkäuflich, Schätze nach Klasse und Stufe, Heiltränke 2 Gold je Leben, Zauberrollen nach Grad, Startgold 25; dazu 12 neue Waffen und 19 Schutz-Dinge im SRD-Katalog
 - **V01.1.051** · 2026-10-25 · KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein
 - **V01.1.050** · 2026-10-25 · Qwen3.6 frei (Heretic, ohne Ablehnungen) als messbares Katalogmodell, nativ in vLLM ohne fremden Code
 - **V01.1.049** · 2026-10-25 · KI-Dungeon-Master: Schadensarten: Zauber treffen mit ihrer eigenen Art, magische Waffen gehen durch Widerstand, Ringe und Tränke mit Widerstand, Schwächen erst nach einem Treffer sichtbar; Tageszeit für die Bühne; Heldenbogen und rechte Spalte springen nicht mehr

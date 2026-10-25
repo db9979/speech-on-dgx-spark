@@ -5133,6 +5133,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wirtschaft Teil 1 (V01.1.052, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 1, 2 und 4): Eine Preisregel (dungeon.price): Grundpreis der Art (oder der eigene) mal Faktor der Seltenheit; ein Ding mit fester Seltenheit und eigenem Preis hat damit schon seinen Endpreis und wird nicht noch einmal multipliziert (vorher kostete das Vorpalschwert 125 000). Jeder Preis liegt im Band seiner Seltenheit (PREISBAND: gewöhnlich bis 50, selten bis 250, rar bis 1000, episch bis 4000); Legendäres hat keinen Preis und ist unverkäuflich. Was ohne feste Seltenheit mehr kostete (Plattenpanzer, Brustplatte, Drachenpanzer, Elfenbogen, Zweihänder und andere), kostet jetzt 50. Weil gute Rüstung damit früher erschwinglich ist, sind die Begegnungen „mittel“ auf Stufe 1 und 2 etwas größer (kampf.BUDGET 95 und 150); der Balance-Prüfstand hält weiter 70 bis 90 Prozent. Schätze nach Stufe: Ein Schatz hat statt eines Preises eine Klasse (klasse, SCHATZ: klein 10, mittel 25, groß 60 Gold) mal Stufe der Gruppe beim Fund (it[\"st\"]); große Schätze nur aus Truhen und von Bossen (SCHATZ_GROSS). Tränke und Rollen nach Stärke: Ein Heiltrank kostet 2 Gold je geheiltem Leben (HEIL_GOLD), "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "eine Zauberrolle 25 × (Grad + 1) (ROLLE_GOLD); ein Held startet mit 25 Gold. Unter Regeln → Gegenstände steht bei fester Seltenheit der Endpreis oder „unverkäuflich“. Selbsttest test_every_price_lies_in_its_band."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Preise, Schätze, Waffen und Schutz im SRD-Katalog (V01.1.052, Dominik 2026-10-25 „1-12“, Daten): Jeder eigene Preis liegt im Band seiner Seltenheit (gewöhnlich bis 50, selten bis 250, rar bis 1000, episch bis 4000). Legendäres wie Vorpalschwert oder Zwergenplatte hat keinen Preis mehr und ist unverkäuflich. Ausrüstung ohne feste Seltenheit kostet höchstens 50 (Muskete, Laserwaffen, Kampfanzug, Hackmodul), damit sie keinen Bonus bekommt. Jeder der 38 Schätze hat statt eines Preises eine Klasse (klasse: klein, mittel, groß), seinen Wert rechnet das Panel aus Klasse und Stufe der Gruppe. 24 SRD-Zauber tragen ihre Schadensart (Feuerpfeil Feuer, Donnerwelle Donner, Vampirgriff nekrotisch). 12 neue Waffen schließen die Lücken: Donnerhammer und Sturmspeer (Fantasy), Glockenkeule (Horror), Schockstab, Bogenwerfer und Schallkanone (Sci-Fi), Donnerbüchse, Aalharpune und Sturmsäbel (Piraten), Flammenschwert, Frostdolch und Pechfackel. 18 Schutz-Dinge (widerstand) halbieren eine Art, nie mehr: 7 Ringe (Feuer, Kälte, Blitz, Gift, Verfall, Geist, Säure), 6 Tränke für 10 Züge, Schildgürtel gegen Energie (Sci-Fi), Amulett des Lebenslichts gegen nekrotisch (Horror, Piraten), Sala"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "manderumhang, Hitzeschutzanzug und Korallenhelm; der alte Trank des Widerstands schützt jetzt wirklich vor Feuer, Kälte und Gift. Selbsttest test_dungeon_srd: Preise im Band, Schätze mit Klasse, Schutz nur aus der Liste der Schadensarten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Schadensarten (V01.1.049, Dominik 2026-10-25 „Müssen wir Gegenstände und Waffen etc. noch erweitern gegen was und Zaubersprüche, gegen was sie Stärke bzw. Schwäche haben?“, „ja so umsetzten“ = Punkte 1, 2, 4, 6 und 8, Plan /mnt/project-files/plaene/dungeon-schadensarten/): Zauber mit eigener Art: 31 Zauber mit Schaden haben schaden_art (Feuerpfeil, Feuerball, Brennende Hände … 🔥 Feuer, Kältestrahl, Eislanze, Kältekegel ❄️ Kälte, Schockgriff, Blitzstrahl, Kettenblitz ⚡ Blitz, Donnerwelle, Donnernder Schlag 💥 Donner, Heilige Flamme, Göttliche Gunst ☀️ strahlend, Giftspritzer, Stinkwolke, Todeswolke 🐍 Gift, Lebensraub, Vampirgriff 🌑 nekrotisch, Schauerlicher Strahl, Magisches Geschoss, Geisterwaffe ✨ Energie). Vorher traf jeder Angriffszauber als Energie, auch gegen Feuer-immune Gegner. Ein Zauber ohne Schaden (Schild, Segnen, Schlaf …) greift nicht mehr an, er bleibt eine Probe. Die Gegenstandskarte zeigt die Art. Magie gegen Widerstand: Eine Waffe mit Bonus +1 oder mehr und jeder Zauber gehen durch einen Widerstand gegen Hieb, Stich und Wucht (kampf.against, KOERPER); gegen Immunität und andere Arten nicht. Schutz für Helden: Rüstung, Schmuck und Tränke können wid"
 },
 {
@@ -18230,6 +18262,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: economy part 1 (V01.1.052, Dominik 2026-10-25 \"1-12\" on the review of the economy, points 1, 2 and 4): One price rule (dungeon.price): the art's base price (or the thing's own) times the rarity's factor; a thing with a fixed rarity and its own price already has its final price and is not multiplied again (before, the vorpal sword cost 125 000). Every price lies within the band of its rarity (PREISBAND: common up to 50, uncommon up to 250, rare up to 1000, epic up to 4000); legendary things have no price and cannot be sold. What cost more without a fixed rarity (plate armour, breastplate, dragon armour, elven bow, greatsword and others) now costs 50. Since good armour is affordable earlier with it, the \"medium\" encounters at level 1 and 2 are a little bigger (kampf.BUDGET 95 and 150); the balance bench still holds 70 to 90 per cent. Treasures by level: a treasure has a class instead of a price (klasse, SCHATZ: small 10, medium 25, large 60 gold) times the group's level when found (it[\"st\"]); large treasures only from chests and bosses (SCHATZ_GROSS). Potions and scrolls by strength: a healing potion costs 2 gold per life healed (HEIL_GOLD), a spell scroll 25 × (gr"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ade + 1) (ROLLE_GOLD); a hero starts with 25 gold. Under Rules → Items a fixed rarity shows its final price or \"not for sale\". Self-test test_every_price_lies_in_its_band."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: prices, treasures, weapons and protection in the SRD catalog (V01.1.052, Dominik 2026-10-25 \"1-12\", data): Every own price lies within the band of its rarity (common up to 50, uncommon up to 250, rare up to 1000, epic up to 4000). Legendary things like the vorpal sword or dwarven plate have no price any more and cannot be sold. Gear without a fixed rarity costs at most 50 (musket, laser weapons, combat suit, hacking module), so it gets no bonus. Each of the 38 treasures has a class instead of a price (klasse: small, medium, large); the panel computes its value from the class and the group's level. 24 SRD spells carry their damage type (fire bolt fire, thunderwave thunder, vampiric touch necrotic). 12 new weapons close the gaps: thunder hammer and storm spear (fantasy), bell mace (horror), shock baton, arc thrower and sonic cannon (sci-fi), blunderbuss, eel harpoon and storm sabre (pirates), flame sword, frost dagger and pitch torch. 18 protection things (widerstand) halve one type, never more: 7 rings (fire, cold, lightning, poison, necrotic, psychic, acid), 6 potions for 10 turns, shield belt against force (sci-fi), amulet of the living light against necrotic (h"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "orror, pirates), salamander cloak, heat suit and coral helm; the old potion of resistance now really protects against fire, cold and poison. Self-test test_dungeon_srd: prices within the band, treasures with a class, protection only from the list of damage types."
 },
 {
 "lang": "en",

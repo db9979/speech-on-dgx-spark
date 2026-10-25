@@ -17,6 +17,10 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - Kampf Teil 2: Schadensart, Resistenz, Immunität und Schwäche jedes Gegners nur aus der festen Liste der
   Schadensarten, keine Art zugleich in zwei dieser Listen, „boss“ nur als true; jede Waffe der SRD-Datei hat eine Schadensart und
   Eigenschaften nur aus der festen Liste.
+- Wirtschaft und Schadensarten (Dominik 2026-10-25 „1-12“): ein eigener Preis liegt im Band seiner Seltenheit
+  (gewöhnlich bis 50, selten bis 250, rar bis 1000, episch bis 4000), Legendäres hat keinen Preis; jeder Schatz hat
+  eine Klasse (klein, mittel, groß) und keinen eigenen Preis; Schutz nennt nur Schadensarten der Liste und ist nie
+  mehr als halber Schaden (kein immun bei Helden-Dingen).
 """
 import json
 import os
@@ -27,13 +31,13 @@ from tests import helpers
 
 helpers.start()
 import dungeon  # noqa: E402
+import dungeon_kampf as kampf  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRD = os.path.join(os.path.dirname(HERE), "panel", "dungeon_srd.json")
 DOCS = os.path.join(os.path.dirname(os.path.dirname(HERE)), "docs")
-ARTEN = {"hieb", "stich", "wucht", "feuer", "kaelte", "blitz", "saeure", "gift", "nekrotisch", "strahlend", "psychisch",
-         "donner", "energie"}
-EIGENSCHAFTEN = {"leicht", "finesse", "reichweite", "wurf", "schwer", "vielseitig"}
+ARTEN = set(kampf.SCHADEN_ARTEN)
+EIGENSCHAFTEN = set(kampf.EIGENSCHAFTEN)
 
 
 def srd():
@@ -142,6 +146,25 @@ class Srd(unittest.TestCase):
             if x.get("art") == "waffe":
                 self.assertIn(x.get("schaden_art"), ARTEN, x["id"])
                 self.assertTrue(set(x.get("eigenschaften") or []) <= EIGENSCHAFTEN, x["id"])
+
+    def test_preise_im_band_und_schaetze_nach_klasse(self):
+        for x in srd()["gegenstaende"]:
+            if "dazu" in x:
+                continue
+            if x["art"] == "schatz":
+                self.assertIn(x.get("klasse"), dungeon.SCHATZ, x["id"])
+                self.assertNotIn("preis", x, x["id"])
+            elif x.get("seltenheit") == "legendaer":
+                self.assertNotIn("preis", x, x["id"])
+            elif "preis" in x:
+                self.assertLessEqual(x["preis"], dungeon.PREISBAND[x.get("seltenheit", "gewoehnlich")], x["id"])
+
+    def test_schutz_nur_aus_der_liste(self):
+        for x in srd()["gegenstaende"]:
+            if "widerstand" in x:
+                self.assertIn(x["art"], dungeon.WIDERSTAND_ARTEN, x["id"])
+                self.assertTrue(x["widerstand"] and set(x["widerstand"]) <= ARTEN, x["id"])
+                self.assertNotIn("immun", x, x["id"])
 
 
 if __name__ == "__main__":

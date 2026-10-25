@@ -628,7 +628,13 @@
         "berserkeraxt",
         "riesentoeter",
         "enterbeil",
-        "harpune"
+        "harpune",
+        "donnerhammer",
+        "sturmspeer",
+        "schallkanone",
+        "donnerbuechse",
+        "aalharpune",
+        "pechfackel"
       ],
       "faehigkeiten": [
         {
@@ -742,7 +748,10 @@
         "schleuder",
         "entermesser",
         "steinschlosspistole",
-        "laserpistole"
+        "laserpistole",
+        "schockstab",
+        "sturmsaebel",
+        "frostdolch"
       ],
       "faehigkeiten": [
         {
@@ -1064,7 +1073,8 @@
         "pilgerstab",
         "keule",
         "sichel",
-        "blasrohr"
+        "blasrohr",
+        "schockstab"
       ],
       "faehigkeiten": [
         {
@@ -1180,7 +1190,10 @@
         "morgenstern",
         "silberschwert",
         "heiliger_raecher",
-        "zerschmetterer"
+        "zerschmetterer",
+        "donnerhammer",
+        "glockenkeule",
+        "flammenschwert"
       ],
       "faehigkeiten": [
         {
@@ -1324,7 +1337,8 @@
         "kristallstab",
         "sternenszepter",
         "energiestab",
-        "leichter_hammer"
+        "leichter_hammer",
+        "frostdolch"
       ],
       "faehigkeiten": [
         {
@@ -1506,7 +1520,8 @@
         "grimoire",
         "zauberstab",
         "sichel",
-        "leichter_hammer"
+        "leichter_hammer",
+        "frostdolch"
       ],
       "faehigkeiten": [
         {
@@ -1656,7 +1671,17 @@
           "plasmawerfer",
           "betaeubungsstab",
           "berserkeraxt",
-          "wurfspeer"
+          "wurfspeer",
+          "donnerhammer",
+          "sturmspeer",
+          "glockenkeule",
+          "bogenwerfer",
+          "schallkanone",
+          "donnerbuechse",
+          "aalharpune",
+          "sturmsaebel",
+          "flammenschwert",
+          "pechfackel"
         ]
       }
     },
@@ -1665,7 +1690,8 @@
       "dazu": {
         "waffen": [
           "energiestab",
-          "leichter_hammer"
+          "leichter_hammer",
+          "frostdolch"
         ],
         "zauber": {
           "0": [
@@ -1749,7 +1775,11 @@
           "vibroklinge",
           "laserpistole",
           "holzpflock",
-          "belegnagel"
+          "belegnagel",
+          "schockstab",
+          "sturmsaebel",
+          "frostdolch",
+          "pechfackel"
         ]
       }
     },
@@ -1763,7 +1793,8 @@
           "holzpflock",
           "kriegshammer",
           "betaeubungsstab",
-          "leichter_hammer"
+          "leichter_hammer",
+          "glockenkeule"
         ],
         "zauber": {
           "0": [
@@ -1824,7 +1855,12 @@
           "silberdolch",
           "blitzspeer",
           "sichel",
-          "vibroklinge"
+          "vibroklinge",
+          "sturmspeer",
+          "bogenwerfer",
+          "donnerbuechse",
+          "aalharpune",
+          "pechfackel"
         ],
         "zauber": {
           "1": [
@@ -2065,7 +2101,7 @@
       "schaden": 12,
       "wert": "staerke",
       "kg": 3,
-      "preis": 60,
+      "preis": 50,
       "schaden_art": "stich",
       "eigenschaften": [
         "reichweite"
@@ -2149,7 +2185,7 @@
       "schaden": 10,
       "wert": "geschick",
       "kg": 8,
-      "preis": 55,
+      "preis": 50,
       "zweihand": true,
       "schaden_art": "stich",
       "eigenschaften": [
@@ -2282,7 +2318,7 @@
       "schaden": 10,
       "wert": "geschick",
       "kg": 1.5,
-      "preis": 120,
+      "preis": 50,
       "welten": [
         "piraten"
       ],
@@ -2305,7 +2341,7 @@
       "schaden": 12,
       "wert": "geschick",
       "kg": 5,
-      "preis": 150,
+      "preis": 50,
       "zweihand": true,
       "welten": [
         "piraten"
@@ -2352,7 +2388,7 @@
       "schaden": 4,
       "wert": "geschick",
       "kg": 1,
-      "preis": 60,
+      "preis": 50,
       "welten": [
         "horror",
         "fantasy"
@@ -2378,7 +2414,7 @@
       "schaden": 8,
       "wert": "staerke",
       "kg": 3,
-      "preis": 150,
+      "preis": 50,
       "welten": [
         "horror",
         "fantasy"
@@ -2425,7 +2461,7 @@
       "schaden": 8,
       "wert": "geschick",
       "kg": 1,
-      "preis": 120,
+      "preis": 50,
       "welten": [
         "scifi"
       ],
@@ -2448,7 +2484,7 @@
       "schaden": 10,
       "wert": "geschick",
       "kg": 3,
-      "preis": 200,
+      "preis": 50,
       "zweihand": true,
       "welten": [
         "scifi"
@@ -2472,7 +2508,7 @@
       "schaden": 12,
       "wert": "staerke",
       "kg": 6,
-      "preis": 300,
+      "preis": 50,
       "zweihand": true,
       "welten": [
         "scifi"
@@ -2496,7 +2532,7 @@
       "schaden": 8,
       "wert": "geschick",
       "kg": 1,
-      "preis": 150,
+      "preis": 50,
       "welten": [
         "scifi"
       ],
@@ -2520,7 +2556,7 @@
       "schaden": 6,
       "wert": "intelligenz",
       "kg": 2,
-      "preis": 120,
+      "preis": 50,
       "zweihand": true,
       "welten": [
         "scifi"
@@ -2544,7 +2580,7 @@
       "schaden": 4,
       "wert": "staerke",
       "kg": 1,
-      "preis": 60,
+      "preis": 50,
       "welten": [
         "scifi"
       ],
@@ -2820,7 +2856,6 @@
       "schaden": 12,
       "wert": "staerke",
       "kg": 1.5,
-      "preis": 2000,
       "seltenheit": "legendaer",
       "schaden_art": "hieb",
       "eigenschaften": [
@@ -2841,7 +2876,6 @@
       "schaden": 12,
       "wert": "staerke",
       "kg": 1.5,
-      "preis": 2500,
       "seltenheit": "legendaer",
       "schaden_art": "hieb",
       "eigenschaften": [
@@ -2921,7 +2955,7 @@
       ],
       "schutz": 3,
       "kg": 25,
-      "preis": 75,
+      "preis": 50,
       "klassen": [
         "krieger",
         "paladin"
@@ -2940,7 +2974,7 @@
       ],
       "schutz": 3,
       "kg": 27,
-      "preis": 90,
+      "preis": 50,
       "klassen": [
         "krieger",
         "paladin"
@@ -2959,7 +2993,7 @@
       ],
       "schutz": 3,
       "kg": 18,
-      "preis": 100,
+      "preis": 50,
       "klassen": [
         "krieger",
         "paladin",
@@ -2982,7 +3016,7 @@
       ],
       "schutz": 3,
       "kg": 4,
-      "preis": 500,
+      "preis": 250,
       "seltenheit": "selten"
     },
     {
@@ -3018,7 +3052,6 @@
       ],
       "schutz": 4,
       "kg": 25,
-      "preis": 2000,
       "klassen": [
         "krieger",
         "paladin"
@@ -3055,7 +3088,7 @@
       ],
       "schutz": 1,
       "kg": 1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten"
     },
     {
@@ -3071,7 +3104,7 @@
       ],
       "schutz": 1,
       "kg": 4,
-      "preis": 60,
+      "preis": 50,
       "welten": [
         "piraten"
       ]
@@ -3127,7 +3160,7 @@
       ],
       "schutz": 3,
       "kg": 12,
-      "preis": 300,
+      "preis": 50,
       "welten": [
         "scifi"
       ]
@@ -3145,7 +3178,7 @@
       ],
       "schutz": 2,
       "kg": 1,
-      "preis": 250,
+      "preis": 50,
       "platz": "nebenhand",
       "welten": [
         "scifi"
@@ -3164,7 +3197,7 @@
       ],
       "schutz": 1,
       "kg": 2,
-      "preis": 120,
+      "preis": 50,
       "platz": "kopf",
       "welten": [
         "scifi"
@@ -3183,7 +3216,7 @@
       ],
       "schutz": 1,
       "kg": 3,
-      "preis": 100,
+      "preis": 50,
       "platz": "fuesse",
       "welten": [
         "scifi"
@@ -3218,7 +3251,7 @@
       ],
       "wert": "staerke",
       "kg": 0.5,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "haende"
     },
@@ -3235,7 +3268,7 @@
       ],
       "wert": "intelligenz",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "kopf"
     },
@@ -3286,7 +3319,7 @@
       ],
       "wert": "geschick",
       "kg": 0.5,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "hals"
     },
@@ -3337,7 +3370,6 @@
       ],
       "wert": "staerke",
       "kg": 0.5,
-      "preis": 1500,
       "seltenheit": "legendaer",
       "platz": "guertel"
     },
@@ -3388,7 +3420,7 @@
       ],
       "wert": "weisheit",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "ring"
     },
@@ -3405,7 +3437,7 @@
       ],
       "wert": "intelligenz",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "hals"
     },
@@ -3422,7 +3454,7 @@
       ],
       "wert": "konstitution",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "hals"
     },
@@ -3473,7 +3505,7 @@
       ],
       "wert": "konstitution",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten",
       "platz": "hals"
     },
@@ -3490,7 +3522,7 @@
       ],
       "wert": "intelligenz",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten"
     },
     {
@@ -3506,7 +3538,6 @@
       ],
       "wert": "weisheit",
       "kg": 0.1,
-      "preis": 2000,
       "seltenheit": "legendaer",
       "platz": "hals"
     },
@@ -3523,7 +3554,7 @@
       ],
       "wert": "charisma",
       "kg": 0.1,
-      "preis": 300,
+      "preis": 250,
       "seltenheit": "selten"
     },
     {
@@ -3674,12 +3705,11 @@
         "Fire, ice or poison hit you only half as hard."
       ],
       "kg": 0.5,
-      "heilung": 2,
-      "segen": {
-        "wert": "konstitution",
-        "bonus": 2,
-        "zuege": 3
-      }
+      "widerstand": [
+        "feuer",
+        "kaelte",
+        "gift"
+      ]
     },
     {
       "id": "klettertrank",
@@ -3980,7 +4010,6 @@
     {
       "id": "feuerpfeil",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Feuerpfeil",
         "Spell: Fire bolt"
@@ -4005,12 +4034,12 @@
         "wert": "intelligenz",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "kaeltestrahl",
       "art": "zauber",
-      "schaden_art": "kaelte",
       "name": [
         "Zauber: Kältestrahl",
         "Spell: Ray of frost"
@@ -4035,12 +4064,12 @@
         "wert": "intelligenz",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "schaden_art": "kaelte"
     },
     {
       "id": "schockgriff",
       "art": "zauber",
-      "schaden_art": "blitz",
       "name": [
         "Zauber: Schockgriff",
         "Spell: Shocking grasp"
@@ -4065,12 +4094,12 @@
         "wert": "intelligenz",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "schaden_art": "blitz"
     },
     {
       "id": "heilige_flamme",
       "art": "zauber",
-      "schaden_art": "strahlend",
       "name": [
         "Zauber: Heilige Flamme",
         "Spell: Sacred flame"
@@ -4094,12 +4123,12 @@
         "wert": "weisheit",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "schaden_art": "strahlend"
     },
     {
       "id": "schauerstrahl",
       "art": "zauber",
-      "schaden_art": "energie",
       "name": [
         "Zauber: Schauerlicher Strahl",
         "Spell: Eldritch blast"
@@ -4123,12 +4152,12 @@
         "wert": "charisma",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "energie"
     },
     {
       "id": "giftspritzer",
       "art": "zauber",
-      "schaden_art": "gift",
       "name": [
         "Zauber: Giftspritzer",
         "Spell: Poison spray"
@@ -4155,12 +4184,12 @@
         "wert": "konstitution",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "schaden_art": "gift"
     },
     {
       "id": "magisches_geschoss",
       "art": "zauber",
-      "schaden_art": "energie",
       "name": [
         "Zauber: Magisches Geschoss",
         "Spell: Magic missile"
@@ -4185,12 +4214,12 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "energie"
     },
     {
       "id": "brennende_haende",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Brennende Hände",
         "Spell: Burning hands"
@@ -4215,7 +4244,8 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "schildzauber",
@@ -4279,7 +4309,6 @@
     {
       "id": "donnerwelle",
       "art": "zauber",
-      "schaden_art": "donner",
       "name": [
         "Zauber: Donnerwelle",
         "Spell: Thunderwave"
@@ -4306,7 +4335,8 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "donner"
     },
     {
       "id": "heilendes_wort",
@@ -4513,7 +4543,6 @@
     {
       "id": "hoellischer_tadel",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Höllischer Tadel",
         "Spell: Hellish rebuke"
@@ -4537,7 +4566,8 @@
         "wert": "charisma",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "federfall",
@@ -4698,7 +4728,6 @@
     {
       "id": "goettliche_gunst",
       "art": "zauber",
-      "schaden_art": "strahlend",
       "name": [
         "Zauber: Göttliche Gunst",
         "Spell: Divine favour"
@@ -4722,12 +4751,12 @@
         "wert": "staerke",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "schaden_art": "strahlend"
     },
     {
       "id": "donnerschlag",
       "art": "zauber",
-      "schaden_art": "donner",
       "name": [
         "Zauber: Donnernder Schlag",
         "Spell: Thunderous smite"
@@ -4751,7 +4780,8 @@
         "wert": "staerke",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "schaden_art": "donner"
     },
     {
       "id": "tierfreundschaft",
@@ -4960,7 +4990,6 @@
     {
       "id": "sengender_strahl",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Sengender Strahl",
         "Spell: Scorching ray"
@@ -4985,7 +5014,8 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "person_festhalten",
@@ -5227,7 +5257,6 @@
     {
       "id": "flammenklinge",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Flammenklinge",
         "Spell: Flame blade"
@@ -5251,12 +5280,12 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "geisterwaffe",
       "art": "zauber",
-      "schaden_art": "energie",
       "name": [
         "Zauber: Geisterwaffe",
         "Spell: Spiritual weapon"
@@ -5280,7 +5309,8 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "schaden_art": "energie"
     },
     {
       "id": "eigenschaft_staerken",
@@ -5405,7 +5435,6 @@
     {
       "id": "blitzstrahl",
       "art": "zauber",
-      "schaden_art": "blitz",
       "name": [
         "Zauber: Blitzstrahl",
         "Spell: Lightning bolt"
@@ -5430,7 +5459,8 @@
         "wert": "intelligenz",
         "bonus": 4,
         "zuege": 1
-      }
+      },
+      "schaden_art": "blitz"
     },
     {
       "id": "gegenzauber",
@@ -5792,7 +5822,6 @@
     {
       "id": "vampirgriff",
       "art": "zauber",
-      "schaden_art": "nekrotisch",
       "name": [
         "Zauber: Vampirgriff",
         "Spell: Vampiric touch"
@@ -5818,12 +5847,12 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "schaden_art": "nekrotisch"
     },
     {
       "id": "blitze_rufen",
       "art": "zauber",
-      "schaden_art": "blitz",
       "name": [
         "Zauber: Blitze herbeirufen",
         "Spell: Call lightning"
@@ -5847,7 +5876,8 @@
         "wert": "weisheit",
         "bonus": 3,
         "zuege": 2
-      }
+      },
+      "schaden_art": "blitz"
     },
     {
       "id": "tageslicht",
@@ -5884,7 +5914,6 @@
     {
       "id": "stinkwolke",
       "art": "zauber",
-      "schaden_art": "gift",
       "name": [
         "Zauber: Stinkende Wolke",
         "Spell: Stinking cloud"
@@ -6008,7 +6037,6 @@
     {
       "id": "eissturm",
       "art": "zauber",
-      "schaden_art": "kaelte",
       "name": [
         "Zauber: Eissturm",
         "Spell: Ice storm"
@@ -6034,12 +6062,12 @@
         "wert": "intelligenz",
         "bonus": 4,
         "zuege": 1
-      }
+      },
+      "schaden_art": "wucht"
     },
     {
       "id": "feuerschild",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Feuerschild",
         "Spell: Fire shield"
@@ -6063,7 +6091,8 @@
         "wert": "konstitution",
         "bonus": 3,
         "zuege": 3
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "verwirrung",
@@ -6191,7 +6220,6 @@
     {
       "id": "schwarze_tentakel",
       "art": "zauber",
-      "schaden_art": "wucht",
       "name": [
         "Zauber: Schwarze Tentakel",
         "Spell: Black tentacles"
@@ -6215,12 +6243,12 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 2
-      }
+      },
+      "schaden_art": "wucht"
     },
     {
       "id": "kaeltekegel",
       "art": "zauber",
-      "schaden_art": "kaelte",
       "name": [
         "Zauber: Kältekegel",
         "Spell: Cone of cold"
@@ -6245,12 +6273,12 @@
         "wert": "intelligenz",
         "bonus": 4,
         "zuege": 1
-      }
+      },
+      "schaden_art": "kaelte"
     },
     {
       "id": "flammenschlag",
       "art": "zauber",
-      "schaden_art": "feuer",
       "name": [
         "Zauber: Flammenschlag",
         "Spell: Flame strike"
@@ -6274,7 +6302,8 @@
         "wert": "weisheit",
         "bonus": 4,
         "zuege": 1
-      }
+      },
+      "schaden_art": "feuer"
     },
     {
       "id": "massenheilung",
@@ -6334,7 +6363,6 @@
     {
       "id": "todeswolke",
       "art": "zauber",
-      "schaden_art": "gift",
       "name": [
         "Zauber: Todeswolke",
         "Spell: Cloudkill"
@@ -6359,7 +6387,8 @@
         "wert": "intelligenz",
         "bonus": 4,
         "zuege": 2
-      }
+      },
+      "schaden_art": "gift"
     },
     {
       "id": "ausspaehen",
@@ -6929,7 +6958,7 @@
         "Shows clues the eye misses."
       ],
       "kg": 0.1,
-      "preis": 100,
+      "preis": 50,
       "hilft": {
         "werte": [
           "intelligenz"
@@ -7078,7 +7107,7 @@
         "A handheld device that scans walls, creatures and radiation."
       ],
       "kg": 0.5,
-      "preis": 150,
+      "preis": 50,
       "hilft": {
         "werte": [
           "intelligenz"
@@ -7109,7 +7138,7 @@
         "Plugs into any terminal and cracks locks."
       ],
       "kg": 0.3,
-      "preis": 200,
+      "preis": 50,
       "hilft": {
         "werte": [
           "intelligenz"
@@ -7139,7 +7168,7 @@
         "Screwdriver, pliers and welder in one."
       ],
       "kg": 0.5,
-      "preis": 80,
+      "preis": 50,
       "hilft": {
         "werte": [
           "geschick"
@@ -7169,7 +7198,7 @@
         "Filters gas, smoke and thin air."
       ],
       "kg": 0.5,
-      "preis": 60,
+      "preis": 50,
       "hilft": {
         "werte": [
           "konstitution"
@@ -7200,7 +7229,7 @@
         "Deep blue mottled stone."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "tigerauge",
@@ -7214,7 +7243,7 @@
         "Brown with a golden centre, shimmers like a cat's eye."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "haematit",
@@ -7228,7 +7257,7 @@
         "Grey stone with a metallic sheen."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "lapislazuli",
@@ -7242,7 +7271,7 @@
         "Blue with golden flecks."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "malachit",
@@ -7256,7 +7285,7 @@
         "Green with pale bands."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "obsidian",
@@ -7270,7 +7299,7 @@
         "Black volcanic glass."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "tuerkis",
@@ -7284,7 +7313,7 @@
         "Pale blue-green, soft and matte."
       ],
       "kg": 0.1,
-      "preis": 10
+      "klasse": "klein"
     },
     {
       "id": "blutstein",
@@ -7298,7 +7327,7 @@
         "Dark grey with red specks."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "karneol",
@@ -7312,7 +7341,7 @@
         "Orange to red-brown."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "mondstein",
@@ -7326,7 +7355,7 @@
         "White with a bluish glow."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "onyx",
@@ -7340,7 +7369,7 @@
         "Banded black and white."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "citrin",
@@ -7354,7 +7383,7 @@
         "Clear and pale yellow."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "jaspis",
@@ -7368,7 +7397,7 @@
         "Opaque red or brown."
       ],
       "kg": 0.1,
-      "preis": 50
+      "klasse": "klein"
     },
     {
       "id": "bernstein",
@@ -7382,7 +7411,7 @@
         "Golden resin stone, sometimes with an insect inside."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "amethyst",
@@ -7396,7 +7425,7 @@
         "Clear deep purple."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "granat",
@@ -7410,7 +7439,7 @@
         "Dark red like wine."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "jade",
@@ -7424,7 +7453,7 @@
         "Light to deep green."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "perle",
@@ -7438,7 +7467,7 @@
         "Lustrous white from a shell."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "koralle",
@@ -7452,7 +7481,7 @@
         "Bright red sea coral."
       ],
       "kg": 0.1,
-      "preis": 100
+      "klasse": "mittel"
     },
     {
       "id": "aquamarin",
@@ -7466,7 +7495,7 @@
         "Clear blue-green like shallow sea."
       ],
       "kg": 1,
-      "preis": 500
+      "klasse": "mittel"
     },
     {
       "id": "schwarze_perle",
@@ -7480,7 +7509,7 @@
         "Rare and glossy black."
       ],
       "kg": 1,
-      "preis": 500
+      "klasse": "mittel"
     },
     {
       "id": "topas",
@@ -7494,7 +7523,7 @@
         "Golden yellow and sparkling."
       ],
       "kg": 1,
-      "preis": 500
+      "klasse": "mittel"
     },
     {
       "id": "smaragd",
@@ -7508,7 +7537,7 @@
         "Clear, brilliant green."
       ],
       "kg": 1,
-      "preis": 1000
+      "klasse": "gross"
     },
     {
       "id": "saphir",
@@ -7522,7 +7551,7 @@
         "Clear blue, harder than almost any stone."
       ],
       "kg": 1,
-      "preis": 1000
+      "klasse": "gross"
     },
     {
       "id": "feueropal",
@@ -7536,7 +7565,7 @@
         "Flickers red and orange like a flame."
       ],
       "kg": 1,
-      "preis": 1000
+      "klasse": "gross"
     },
     {
       "id": "rubin",
@@ -7550,7 +7579,7 @@
         "Clear and blood red, a treasure for kings."
       ],
       "kg": 1,
-      "preis": 5000
+      "klasse": "gross"
     },
     {
       "id": "diamant",
@@ -7564,7 +7593,7 @@
         "Sparkles in every light."
       ],
       "kg": 1,
-      "preis": 5000
+      "klasse": "gross"
     },
     {
       "id": "silberkelch",
@@ -7578,7 +7607,7 @@
         "A plain silver drinking cup."
       ],
       "kg": 0.1,
-      "preis": 25
+      "klasse": "klein"
     },
     {
       "id": "knochenfigur",
@@ -7592,7 +7621,7 @@
         "A small animal finely carved from bone."
       ],
       "kg": 0.1,
-      "preis": 25
+      "klasse": "klein"
     },
     {
       "id": "goldarmreif",
@@ -7606,7 +7635,7 @@
         "Plain but heavy."
       ],
       "kg": 0.1,
-      "preis": 25
+      "klasse": "klein"
     },
     {
       "id": "samtmaske",
@@ -7620,7 +7649,7 @@
         "Black velvet embroidered with silver thread."
       ],
       "kg": 0.1,
-      "preis": 25
+      "klasse": "klein"
     },
     {
       "id": "wandteppich",
@@ -7634,7 +7663,7 @@
         "A woven picture of an old battle."
       ],
       "kg": 5,
-      "preis": 250
+      "klasse": "mittel"
     },
     {
       "id": "goldkrone",
@@ -7648,7 +7677,7 @@
         "The crown of a forgotten king."
       ],
       "kg": 1,
-      "preis": 750
+      "klasse": "gross"
     },
     {
       "id": "juwelendolch",
@@ -7662,7 +7691,7 @@
         "Too beautiful to fight with, full of gems."
       ],
       "kg": 1,
-      "preis": 750
+      "klasse": "gross"
     },
     {
       "id": "goldidol",
@@ -7676,7 +7705,7 @@
         "A small idol of pure gold."
       ],
       "kg": 1,
-      "preis": 2500
+      "klasse": "gross"
     },
     {
       "id": "dublonen",
@@ -7690,10 +7719,10 @@
         "Old gold doubloons."
       ],
       "kg": 0.1,
-      "preis": 100,
       "welten": [
         "piraten"
-      ]
+      ],
+      "klasse": "mittel"
     },
     {
       "id": "datenkristall",
@@ -7707,10 +7736,10 @@
         "Stored blueprints, worth a lot to traders."
       ],
       "kg": 0.1,
-      "preis": 300,
       "welten": [
         "scifi"
-      ]
+      ],
+      "klasse": "mittel"
     },
     {
       "id": "energiezelle",
@@ -7724,10 +7753,10 @@
         "A full cell of an old design."
       ],
       "kg": 0.1,
-      "preis": 150,
       "welten": [
         "scifi"
-      ]
+      ],
+      "klasse": "mittel"
     },
     {
       "id": "schild",
@@ -8079,6 +8108,663 @@
           "barde"
         ]
       }
+    },
+    {
+      "id": "ring_schutz_feuer",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Feuer",
+        "Ring of fire resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Feuer nur halb.",
+        "While you wear it, fire damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "feuer"
+      ]
+    },
+    {
+      "id": "ring_schutz_kaelte",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Kälte",
+        "Ring of cold resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Kälte nur halb.",
+        "While you wear it, cold damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "kaelte"
+      ]
+    },
+    {
+      "id": "ring_schutz_blitz",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Blitz",
+        "Ring of lightning resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Blitz nur halb.",
+        "While you wear it, lightning damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "blitz"
+      ]
+    },
+    {
+      "id": "ring_schutz_gift",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Gift",
+        "Ring of poison resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Gift nur halb.",
+        "While you wear it, poison damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "gift"
+      ]
+    },
+    {
+      "id": "ring_schutz_nekrotisch",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Verfall",
+        "Ring of necrotic resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Verfall nur halb.",
+        "While you wear it, necrotic damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "nekrotisch"
+      ]
+    },
+    {
+      "id": "ring_schutz_psychisch",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Geist",
+        "Ring of psychic resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Geist nur halb.",
+        "While you wear it, psychic damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "psychisch"
+      ]
+    },
+    {
+      "id": "ring_schutz_saeure",
+      "art": "schmuck",
+      "name": [
+        "Ring gegen Säure",
+        "Ring of acid resistance"
+      ],
+      "info": [
+        "Solange du ihn trägst, trifft dich Säure nur halb.",
+        "While you wear it, acid damage hits you only half as hard."
+      ],
+      "wert": "konstitution",
+      "kg": 0.1,
+      "preis": 600,
+      "seltenheit": "rar",
+      "platz": "ring",
+      "widerstand": [
+        "saeure"
+      ]
+    },
+    {
+      "id": "trank_schutz_feuer",
+      "art": "trank",
+      "name": [
+        "Trank gegen Feuer",
+        "Potion of fire resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Feuer nur halb.",
+        "For ten turns fire damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "feuer"
+      ],
+      "preis": 40
+    },
+    {
+      "id": "trank_schutz_kaelte",
+      "art": "trank",
+      "name": [
+        "Trank gegen Kälte",
+        "Potion of cold resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Kälte nur halb.",
+        "For ten turns cold damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "kaelte"
+      ],
+      "preis": 40
+    },
+    {
+      "id": "trank_schutz_blitz",
+      "art": "trank",
+      "name": [
+        "Trank gegen Blitz",
+        "Potion of lightning resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Blitz nur halb.",
+        "For ten turns lightning damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "blitz"
+      ],
+      "preis": 40
+    },
+    {
+      "id": "trank_schutz_gift",
+      "art": "trank",
+      "name": [
+        "Trank gegen Gift",
+        "Potion of poison resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Gift nur halb.",
+        "For ten turns poison damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "gift"
+      ],
+      "preis": 40
+    },
+    {
+      "id": "trank_schutz_nekrotisch",
+      "art": "trank",
+      "name": [
+        "Trank gegen Verfall",
+        "Potion of necrotic resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Verfall nur halb.",
+        "For ten turns necrotic damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "nekrotisch"
+      ],
+      "preis": 40,
+      "welten": [
+        "horror",
+        "piraten",
+        "fantasy"
+      ]
+    },
+    {
+      "id": "trank_schutz_energie",
+      "art": "trank",
+      "name": [
+        "Trank gegen Energie",
+        "Potion of force resistance"
+      ],
+      "info": [
+        "Zehn Züge lang trifft dich Energie nur halb.",
+        "For ten turns force damage hits you only half as hard."
+      ],
+      "kg": 0.3,
+      "widerstand": [
+        "energie"
+      ],
+      "preis": 40,
+      "welten": [
+        "scifi"
+      ]
+    },
+    {
+      "id": "schildguertel",
+      "art": "schmuck",
+      "name": [
+        "Schildgürtel",
+        "Shield belt"
+      ],
+      "info": [
+        "Ein Feldgenerator am Gürtel, der Energiestrahlen abschwächt.",
+        "A field generator on the belt that weakens energy beams."
+      ],
+      "wert": "konstitution",
+      "kg": 1,
+      "preis": 500,
+      "seltenheit": "rar",
+      "platz": "guertel",
+      "welten": [
+        "scifi"
+      ],
+      "widerstand": [
+        "energie"
+      ]
+    },
+    {
+      "id": "lebenslicht_amulett",
+      "art": "schmuck",
+      "name": [
+        "Amulett des Lebenslichts",
+        "Amulet of the living light"
+      ],
+      "info": [
+        "Ein warmes Licht, das dunkle Kräfte von dir fernhält.",
+        "A warm light that keeps dark powers away from you."
+      ],
+      "wert": "weisheit",
+      "kg": 0.1,
+      "preis": 250,
+      "seltenheit": "selten",
+      "platz": "hals",
+      "welten": [
+        "horror",
+        "piraten"
+      ],
+      "widerstand": [
+        "nekrotisch"
+      ]
+    },
+    {
+      "id": "salamanderumhang",
+      "art": "schmuck",
+      "name": [
+        "Salamanderumhang",
+        "Salamander cloak"
+      ],
+      "info": [
+        "Ein Umhang aus Salamanderhaut, der Flammen abhält.",
+        "A cloak of salamander hide that keeps flames away."
+      ],
+      "wert": "konstitution",
+      "kg": 1,
+      "preis": 250,
+      "seltenheit": "selten",
+      "platz": "hals",
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "widerstand": [
+        "feuer"
+      ]
+    },
+    {
+      "id": "hitzeschutzanzug",
+      "art": "ruestung",
+      "name": [
+        "Hitzeschutzanzug",
+        "Heat suit"
+      ],
+      "info": [
+        "Ein silbriger Anzug gegen Laser und Flammen.",
+        "A silvery suit against lasers and flames."
+      ],
+      "schutz": 1,
+      "kg": 6,
+      "preis": 200,
+      "seltenheit": "selten",
+      "welten": [
+        "scifi"
+      ],
+      "widerstand": [
+        "feuer"
+      ]
+    },
+    {
+      "id": "korallenhelm",
+      "art": "ruestung",
+      "name": [
+        "Korallenhelm",
+        "Coral helm"
+      ],
+      "info": [
+        "Ein Helm aus Meereskorallen, an dem Fluch und Kälte abperlen.",
+        "A helm of sea coral that curses and cold run off."
+      ],
+      "schutz": 1,
+      "kg": 2,
+      "preis": 250,
+      "seltenheit": "selten",
+      "platz": "kopf",
+      "welten": [
+        "piraten"
+      ],
+      "widerstand": [
+        "kaelte",
+        "nekrotisch"
+      ]
+    },
+    {
+      "id": "donnerhammer",
+      "art": "waffe",
+      "name": [
+        "Donnerhammer",
+        "Thunder hammer"
+      ],
+      "info": [
+        "Jeder Schlag hallt wie ein Donnerschlag.",
+        "Every blow booms like a thunderclap."
+      ],
+      "schaden": 8,
+      "wert": "staerke",
+      "kg": 4,
+      "preis": 150,
+      "seltenheit": "selten",
+      "welten": [
+        "fantasy"
+      ],
+      "schaden_art": "donner",
+      "eigenschaften": [
+        "vielseitig"
+      ]
+    },
+    {
+      "id": "sturmspeer",
+      "art": "waffe",
+      "name": [
+        "Sturmspeer",
+        "Storm spear"
+      ],
+      "info": [
+        "Die Spitze knistert vor Blitzen.",
+        "Its tip crackles with lightning."
+      ],
+      "schaden": 6,
+      "wert": "staerke",
+      "kg": 1.5,
+      "preis": 150,
+      "seltenheit": "selten",
+      "welten": [
+        "fantasy"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "wurf",
+        "vielseitig"
+      ]
+    },
+    {
+      "id": "glockenkeule",
+      "art": "waffe",
+      "name": [
+        "Glockenkeule",
+        "Bell mace"
+      ],
+      "info": [
+        "Eine Keule mit Glockenkopf, ihr Klang dröhnt durch Mark und Bein.",
+        "A mace with a bell head, its toll shakes to the bone."
+      ],
+      "schaden": 6,
+      "wert": "staerke",
+      "kg": 2,
+      "preis": 30,
+      "welten": [
+        "horror",
+        "fantasy"
+      ],
+      "schaden_art": "donner"
+    },
+    {
+      "id": "schockstab",
+      "art": "waffe",
+      "name": [
+        "Schockstab",
+        "Shock baton"
+      ],
+      "info": [
+        "Kurzer Stab, der beim Treffer einen Stromstoß gibt.",
+        "Short baton that gives an electric jolt on a hit."
+      ],
+      "schaden": 6,
+      "wert": "geschick",
+      "kg": 1,
+      "preis": 45,
+      "welten": [
+        "scifi"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "leicht",
+        "finesse"
+      ]
+    },
+    {
+      "id": "bogenwerfer",
+      "art": "waffe",
+      "name": [
+        "Bogenwerfer",
+        "Arc thrower"
+      ],
+      "info": [
+        "Schleudert einen Lichtbogen auf Roboter und Drohnen.",
+        "Hurls an electric arc at robots and drones."
+      ],
+      "schaden": 10,
+      "wert": "geschick",
+      "kg": 4,
+      "preis": 200,
+      "seltenheit": "selten",
+      "welten": [
+        "scifi"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "schwer"
+      ]
+    },
+    {
+      "id": "schallkanone",
+      "art": "waffe",
+      "name": [
+        "Schallkanone",
+        "Sonic cannon"
+      ],
+      "info": [
+        "Ein Stoß aus reinem Schall, der Panzer erzittern lässt.",
+        "A blast of pure sound that makes armour shudder."
+      ],
+      "schaden": 10,
+      "wert": "staerke",
+      "kg": 6,
+      "preis": 200,
+      "seltenheit": "selten",
+      "welten": [
+        "scifi"
+      ],
+      "schaden_art": "donner",
+      "eigenschaften": [
+        "schwer"
+      ]
+    },
+    {
+      "id": "donnerbuechse",
+      "art": "waffe",
+      "name": [
+        "Donnerbüchse",
+        "Blunderbuss"
+      ],
+      "info": [
+        "Ein Trichterlauf, der mit lautem Knall streut.",
+        "A flared barrel that scatters with a loud bang."
+      ],
+      "schaden": 10,
+      "wert": "geschick",
+      "kg": 5,
+      "preis": 50,
+      "welten": [
+        "piraten"
+      ],
+      "schaden_art": "donner",
+      "eigenschaften": [
+        "schwer"
+      ]
+    },
+    {
+      "id": "aalharpune",
+      "art": "waffe",
+      "name": [
+        "Aalharpune",
+        "Eel harpoon"
+      ],
+      "info": [
+        "Eine Harpune mit dem Funken eines Zitteraals.",
+        "A harpoon carrying the spark of an electric eel."
+      ],
+      "schaden": 8,
+      "wert": "staerke",
+      "kg": 3,
+      "preis": 120,
+      "seltenheit": "selten",
+      "welten": [
+        "piraten"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "wurf"
+      ]
+    },
+    {
+      "id": "sturmsaebel",
+      "art": "waffe",
+      "name": [
+        "Sturmsäbel",
+        "Storm sabre"
+      ],
+      "info": [
+        "Ein Säbel, um den bei jedem Hieb Funken tanzen.",
+        "A sabre with sparks dancing round every stroke."
+      ],
+      "schaden": 6,
+      "wert": "geschick",
+      "kg": 1.5,
+      "preis": 150,
+      "seltenheit": "selten",
+      "welten": [
+        "piraten"
+      ],
+      "schaden_art": "blitz",
+      "eigenschaften": [
+        "finesse"
+      ]
+    },
+    {
+      "id": "flammenschwert",
+      "art": "waffe",
+      "name": [
+        "Flammenschwert",
+        "Flame sword"
+      ],
+      "info": [
+        "Die Klinge glüht und schneidet mit Feuer.",
+        "The blade glows and cuts with fire."
+      ],
+      "schaden": 8,
+      "wert": "staerke",
+      "kg": 1.5,
+      "preis": 200,
+      "seltenheit": "selten",
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "schaden_art": "feuer",
+      "eigenschaften": [
+        "vielseitig"
+      ]
+    },
+    {
+      "id": "frostdolch",
+      "art": "waffe",
+      "name": [
+        "Frostdolch",
+        "Frost dagger"
+      ],
+      "info": [
+        "Ein Dolch aus ewigem Eis, kalt wie ein Wintermorgen.",
+        "A dagger of everlasting ice, cold as a winter morning."
+      ],
+      "schaden": 4,
+      "wert": "geschick",
+      "kg": 0.5,
+      "preis": 150,
+      "seltenheit": "selten",
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "schaden_art": "kaelte",
+      "eigenschaften": [
+        "finesse",
+        "leicht",
+        "wurf"
+      ]
+    },
+    {
+      "id": "pechfackel",
+      "art": "waffe",
+      "name": [
+        "Pechfackel",
+        "Pitch torch"
+      ],
+      "info": [
+        "Eine Fackel mit Pech, die Spinnweben und Schatten vertreibt.",
+        "A pitch torch that drives off webs and shadows."
+      ],
+      "schaden": 4,
+      "wert": "staerke",
+      "kg": 1,
+      "preis": 5,
+      "welten": [
+        "horror",
+        "piraten",
+        "fantasy"
+      ],
+      "schaden_art": "feuer",
+      "eigenschaften": [
+        "leicht"
+      ]
     }
   ],
   "gegner": [

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.052** KI-Dungeon-Master: Wirtschaft Teil 1: eine Preisregel mit Preisbändern je Seltenheit, Legendäres unverkäuflich, Schätze nach Klasse und Stufe, Heiltränke 2 Gold je Leben, Zauberrollen nach Grad, Startgold 25; dazu 12 neue Waffen und 19 Schutz-Dinge im SRD-Katalog
 - **V01.1.051** KI-Dungeon-Master: das Gewölbe als handgezeichneter Plan (Tintenwände, Schraffur, Raster, Ausstattung je Raum, Nummern und Legende), 🔥 schaltet auf den Fackelschein
 - **V01.1.050** Qwen3.6 ohne Ablehnungen messbar: modelle messen qwen36frei
 - **V01.1.049** KI-Dungeon-Master: Schadensarten: Zauber treffen mit ihrer eigenen Art, magische Waffen gehen durch Widerstand, Ringe und Tränke mit Widerstand, Schwächen erst nach einem Treffer sichtbar; Tageszeit für die Bühne; Heldenbogen und rechte Spalte springen nicht mehr
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.045** Selbsttest Dungeon-Bilder hängt nicht mehr an Testprofilen anderer Module
 - **V01.1.044** KI-Dungeon-Master: Wächter und Herr im Gewölbe nehmen ihre Gegner nach derselben Regel wie der Kampf, eine Welt ohne eigene Gegner bekommt die der Fantasy-Welt
 - **V01.1.043** KI-Dungeon-Master: Bilder mit Flair und Abwechslung (Licht, Blickwinkel und Stimmung aus festen Listen, Gegenstände an passenden Orten, sichtbare Seltenheit, Gegner in Bewegung, Helden in ihrer Welt), Bühne bei Tag, bei Nacht und im Kampf, Siedlung mit Bildern je Dienst und einem Satz Leben, Bilder für die 62 neuen Gegner
-- **V01.1.042** KI-Dungeon-Master: Musikstücke 3 bis 6 Minuten, feste Tonart und festes Tempo je Stimmung, leiser Anfang und langes Ende, 12 s Überblendung
 
 
 

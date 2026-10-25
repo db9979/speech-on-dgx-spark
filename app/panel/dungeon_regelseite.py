@@ -209,6 +209,8 @@ def view(teil, lang="de", welt=""):
         elif teil == "gegenstaende":
             row["marke"] = balance.item(x, lang)
             row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled
+            if row["selten"] and x.get("art") in r["preise"]:   # Wirtschaft Punkt 1: a fixed rarity has its final price (0: a legend)
+                row["preis"] = dungeon.price(r, {"id": i, "s": row["selten"]})
         if teil in MIT_BILD:
             n, _ = dingbild.entry_pic(r, teil, x, welt)
             row["bild"] = n if n in have else ""
