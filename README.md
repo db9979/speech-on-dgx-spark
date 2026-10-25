@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.076** Test fix: the page test "delete and move mail" waits up to a minute under load for the rule hint and the mailbox instead of giving up after 10 or 20 seconds; it checks the same
 - **V01.1.075** AI Dungeon Master: every round can be ended or deleted in the list, asking “Really?” first
 - **V01.1.074** AI Dungeon Master: game master console as a big window with three columns, the right column shows only the hero, Go on now and the map and can be dragged wider
 - **V01.1.073** AI Dungeon Master: faster on the Pi: one file per round with a cache, the poll gets “nothing new” while nothing changed, the game scripts load on the first opening
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.069** AI Dungeon Master: quest items: the story's keys, maps and seals without weight, from the story planner, the map or a checked find; whoever names them in the action takes them, doors open only with them
 - **V01.1.068** AI Dungeon Master: the same face for NPCs: every person met gets a fixed portrait from fixed parts, later scene pictures take it as a reference, the face in "People and chronicle" and at the person's line, the host paints it again
 - **V01.1.067** AI Dungeon Master: vaults left behind fill again after 6 steps, places a faction holds carry its banner on the map
-- **V01.1.066** AI Dungeon Master: adventure import: a written adventure (PDF, Word, Markdown) becomes a draft with acts, places and foe in the story planner; the panel checks it like a typed story
 
 
 

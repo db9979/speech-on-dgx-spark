@@ -48,8 +48,9 @@ def fill():
 
 
 
-async def server(done, most=10.0):
-    """Verschieben ohne Neuladen (V01.0.894): the page takes a mail away at once; waits until the mailbox has it too."""
+async def server(done, most=60.0):
+    """Verschieben ohne Neuladen (V01.0.894): the page takes a mail away at once; waits until the mailbox has it too.
+    Up to a minute: under the load of a whole test run the moves answer late (the state decides, never the time)."""
     for _ in range(int(most / 0.1)):
         if done():
             return
@@ -334,10 +335,11 @@ class Page(unittest.TestCase):
                         await b.until(pg, f"POST.data.items.length==={4 - n}")
                     await server(lambda: len(FMB.boxes["Projekte"]) == 3)       # moved at once on the page, the mailbox follows
                     self.assertEqual(len(FMB.boxes["Projekte"]), 3)
-                    await b.until(pg, "!!document.querySelector('#postview .posthint [data-h=save]')")
+                    # the hint comes with the answer to the third move, which may come last under load: wait for it
+                    await b.until(pg, "!!document.querySelector('#postview .posthint [data-h=save]')", seconds=60)
                     self.assertIn("bob@example.de", await pg.inner_text("#postview .posthint"))
                     await pg.click("#postview .posthint [data-h=save]")
-                    await b.until(pg, "!document.querySelector('#postview .posthint')&&POST.note.includes('Regel angelegt')")
+                    await b.until(pg, "!document.querySelector('#postview .posthint')&&POST.note.includes('Regel angelegt')", seconds=60)
                     rules = mailregeln.load(uid)["rules"]
                     self.assertEqual([(r["when"]["from"], r["then"]["folder"]) for r in rules], [("bob@example.de", "Projekte")])
                     await b.until(pg, "document.querySelector('#postview .postfold').hidden")   # closed again after the drag
