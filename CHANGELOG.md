@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.084** · 2026-10-25 · KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
 - **V01.1.083** · 2026-10-25 · KI-Dungeon-Master: Spielleiter-Pult als Tafeln: oben „Jetzt weiter“ und wer gehandelt hat, vier gleich große Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit, Knopfbänder statt Listen, unten „Nur für dich“ mit Reitern; der Katalog prüft die Tabellen der D&D-Ideen
 - **V01.1.082** · 2026-10-25 · KI-Dungeon-Master: nennt die Erzählung den neuen Ort nicht, bleibt die Gruppe am alten Ort (Fahne und Erzählung stimmen überein); die Karte zählt Wege in Etappen und den Weg zur nächsten Siedlung; besetzte Orte tragen das Wappen ihrer Fraktion
 - **V01.1.081** · 2026-10-25 · Hilfsmodell Qwen3 4B auf tars: beantwortet einfache Einordnungen für Weiche, Dungeon-Master und Mails zuerst, das große Sprachmodell springt sofort ein; je Einsatz ein Admin-Schalter, alle aus

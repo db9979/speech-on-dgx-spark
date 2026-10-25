@@ -54,6 +54,24 @@ FORSCHEN = ("untersuch", "durchsuch", "absuch", "such", "lies", "lese", "entziff
 ERFAEHRT = ("verrät", "verraten", "enthüll", "entdeck", "erkennt", "erkennen", "findet", "erfährt", "erfahrt", "zeigt",
             "weist", "deutet", "führt nach", "führt zu", "führen nach", "richtung", "spur", "offenbar", "verweist",
             "reveal", "discover", "learns", "finds", "shows", "points", "leads to", "lead to", "direction", "trail", "recogni")
+# more fixed checks (Dominik 2026-10-25 „1-3 und 1-7 umsetzten“): a fallen foe still acting or a foe falling without
+# a receipt, gold only told, a hero acting who did not act this turn, a thing or power the hero has not told as used, a
+# person's hair, eyes or beard against the panel's card; each fault gets a rescue by the panel (repair)
+AKTIV = ("greift", "schlägt", "springt", "stürmt", "brüllt", "hebt", "zielt", "beißt", "sticht", "schießt", "faucht",
+         "attacks", "strikes", "lunges", "charges", "roars", "raises", "bites", "stabs", "shoots", "hisses")
+TOT = ("tot", "regungslos", "leblos", "liegt", "gefallen", "leiche", "reglos", "dead", "lifeless", "lies", "fallen",
+       "corpse", "still")
+STIRBT = ("stirbt", "tot zusammen", "fällt tot", "ist tot", "sinkt leblos", "haucht", "regt sich nicht mehr", "dies",
+          "falls dead", "is dead", "drops dead", "breathes its last")
+GOLD = re.compile(r"(?i)\b\d{1,5}\s*(gold|goldstück\w*|goldmünze\w*|münze\w*|taler|silberling\w*|coins?|gold pieces)\b")
+FINDET = ("findet", "finden", "erhält", "erhalten", "bekommt", "steckt", "nimmt", "sammelt", "klimpert", "finds", "receives",
+          "gets", "pockets", "takes", "collects")
+ENTSCHEIDET = ("entscheidet", "beschließt", "greift", "zieht", "rennt", "läuft", "öffnet", "nimmt", "packt", "springt",
+               "decides", "attacks", "draws", "runs", "opens", "takes", "grabs", "jumps")
+NEIN = HAELT + ("leer", "fehlt", "vergebens", "ins leere", "keine", "empty", "missing")
+KOERPER = {"haar": ("haar", "haare", "haaren", "hair"), "augen": ("augen", "auge", "eyes", "eye"), "bart": ("bart", "beard")}
+_TEIL = {w: k for k, ws in KOERPER.items() for w in ws}
+WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 # Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
 # id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
@@ -336,6 +354,20 @@ HINWEIS = {
               "so, wie die Belege (beleg) sie sagen, oder lass die Zahl weg.",
               "Note: these numbers are on no dice receipt of this turn: {namen}. Tell rolls and damage only as the "
               "receipts (beleg) say, or leave the number out."),
+    "gefallen": ("Hinweis: Das stimmt nicht mit dem Kampf überein: {namen}. Wer gefallen ist, handelt nicht mehr; ein "
+                 "Gegner fällt nur, wenn ein Treffer-Beleg es sagt (faellt).",
+                 "Note: this does not match the fight: {namen}. Whoever has fallen acts no more; a foe falls only when a "
+                 "hit receipt says so (faellt)."),
+    "gold": ("Hinweis: Gold und Beute legt das Panel fest, nenne keine Menge: {namen}.",
+             "Note: the panel sets gold and loot, name no amount: {namen}."),
+    "fremd": ("Hinweis: Diese Figuren haben in diesem Zug nicht gehandelt, entscheide nicht für sie: {namen}. Sie dürfen "
+              "nur zusehen oder reagieren.",
+              "Note: these characters did not act this turn, do not decide for them: {namen}. They may only watch or "
+              "react."),
+    "fehlt": ("Hinweis: Das hat die Figur nicht oder kann es nicht: {namen}. Erzähle, dass es nicht geht.",
+              "Note: the character does not have or cannot do this: {namen}. Narrate that it does not work."),
+    "aussehen": ("Hinweis: So sieht diese Person nicht aus, halte dich an ihre Karte: {namen}.",
+                 "Note: this person does not look like that, keep to their card: {namen}."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -392,7 +424,9 @@ def rank(fault):
 
 
 def repair(rd, story, fault, missing):
-    """A narration that failed a hard check (HART) on every try: the panel says the truth in a fixed sentence after it."""
+    """A narration that failed a check on every try: the panel says the truth in a fixed sentence after it, or strikes
+    the sentences with the fault (WEG_SATZ, a repetition, a finding the failed check did not earn) when enough stays;
+    people at another place lose their lines. Every rescue writes a line „nachbessern | fest“ or „| bleibt“."""
     li = 1 if rd.get("lang") == "en" else 0
     if fault == "probe":
         add = [("Doch die Probe „{n}“ ist misslungen: das gelingt in diesem Zug nicht.",
@@ -400,6 +434,23 @@ def repair(rd, story, fault, missing):
         if any(_forscht({"wofuer": n}) for n in missing):   # a finding the failed check did not earn leaves the text
             story = dict(story, text=" ".join(x for x in re.split(r"(?<=[.!?…])\s+", story["text"]) if not _verraten(x)),
                          ooc=[o for o in story.get("ooc") or [] if not _verraten(o.get("text", ""))])
+    elif fault in WEG_SATZ:                      # the sentences with the fault leave, when enough new ones stay (Regeln 1-5)
+        bad = {"gold": lambda x: bool(GOLD.search(x)) and _hat(x, FINDET), "widerspruch": lambda x: bool(contradicts(rd, x)),
+               "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
+               "gefallen": lambda x: bool(fight_off(rd, x)),
+               "karte": lambda x: any(re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", x.lower()) for n in missing)
+               }.get(fault, lambda x: any(_name_in(n, x) and not _hat(x, NEIN) for n in missing))
+        text = " ".join(x for x in _saetze(story["text"]) if not bad(x))
+        if len(text) < ZU_KURZ:
+            print(f"dungeon: nachbessern | bleibt | {fault}", flush=True)
+            return story
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, text=text)
+    elif fault == "anderswo":                    # people at another place do not speak here
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, npc=[n for n in story.get("npc") or [] if n.get("name") not in missing])
+    elif fault == "namen":
+        add = [("{n} wartet ab, was als Nächstes geschieht.", "{n} waits to see what happens next.")[li].format(n=n) for n in missing]
     elif fault == "gegner":
         add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
             f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
@@ -453,6 +504,102 @@ def numbers_off(text, wuerfe, hits=(), zuege=()):
     return sorted({int(a or b) for a, b in _BELEG_ZAHL.findall(text)} - ok)
 
 
+def _saetze(text):
+    return [x for x in re.split(r"(?<=[.!?…])\s+", str(text)) if x.strip()]
+
+
+def _hat(x, words):
+    low = x.lower()
+    return any(w in low for w in words)
+
+
+def _name_in(name, satz):
+    n = str(name).lower()
+    return len(n) >= 3 and re.search(r"(?<!\w)" + re.escape(n[:max(4, len(n) - 2)]), satz.lower()) is not None
+
+
+def fight_off(rd, text, hits=()):
+    """Foes the narration lets act although they fell before this turn, or lets die although no receipt says so
+    (Regel 1): only names that all foes of that name share, a fallen one with a word of AKTIV and none of TOT, a
+    standing one with a word of STIRBT and none of NEIN."""
+    k = rd.get("kampf")
+    if not k:
+        return []
+    jetzt = {x.get("gegner") for x in hits or () if x.get("faellt")}
+    by = {}
+    for g in k.get("gegner") or []:
+        by.setdefault(re.sub(r" \d+$", "", str(g["name"])), []).append(g)
+    out = []
+    for n, gs in by.items():
+        weg = all(g["leben"] <= 0 for g in gs) and not any(g["name"] in jetzt for g in gs)
+        steht = all(g["leben"] > 0 for g in gs)
+        for x in _saetze(text):
+            if not _name_in(n, x):
+                continue
+            if weg and _hat(x, AKTIV) and not _hat(x, TOT) or steht and _hat(x, STIRBT) and not _hat(x, NEIN):
+                out.append(n)
+                break
+    return out[:3]
+
+
+def gold_told(text):
+    """Sentences that hand out an amount of gold or coins (Regel 3): the panel sets loot, the narration names none."""
+    return [x.strip()[:60] for x in _saetze(text) if GOLD.search(x) and _hat(x, FINDET) and not _hat(x, HAELT)][:3]
+
+
+def for_others(rd, text, ooc=()):
+    """Seated heroes who did not act this turn and still decide something in the narration (Regel 4): the name, then
+    within four words a word of ENTSCHEIDET."""
+    out = []
+    for pid, p in (rd.get("plaetze") or {}).items():
+        h = p.get("held")
+        if not h or pid in (rd.get("offen") or {}) or pid in ooc or p.get("frei"):
+            continue
+        n = re.escape(str(h["name"]).lower())
+        verbs = "|".join(re.escape(v) for v in ENTSCHEIDET)
+        if re.search(r"(?<!\w)" + n + r"(?!\w)(?:\W+\w+){0,4}?\W+(?:" + verbs + r")", str(text).lower()):
+            out.append(h["name"])
+    return out[:3]
+
+
+def told_unknown(rd, text):
+    """What a seat's action named and its hero has not or cannot use (the panel's „nicht“: a power not known, a spell
+    without a charge, a thing not carried) and the narration still tells used (Regel 2)."""
+    out = []
+    for a in (rd.get("offen") or {}).values():
+        for n in a.get("nicht") or []:
+            if any(_name_in(n, x) and not _hat(x, NEIN) for x in _saetze(text)):
+                out.append(n)
+    return list(dict.fromkeys(out))[:3]
+
+
+def _koerper(text):
+    """{part: colour} from „rote Haare“, „graues Haar“, „blue eyes“ (a colour word right before a part of KOERPER)."""
+    ws = _WORT.findall(str(text).lower())
+    out = {}
+    for a, b in zip(ws, ws[1:]):
+        hit = _feature(a)
+        if hit and hit[0] == "farbe" and b in _TEIL:
+            out[_TEIL[b]] = hit[1]
+    return out
+
+
+def looks_off(rd, text):
+    """People the narration describes against their card (Regel 5, the NSC memory of dungeon_nsc): a sentence with the
+    person's name and a colour of hair, eyes or beard that differs from the card's „aussehen“."""
+    out = []
+    for x in (rd.get("nsc") or {}).values():
+        a = (x.get("karte") or {}).get("aussehen")
+        kept = _koerper(" ".join(a) if isinstance(a, list) else str(a or ""))
+        if not kept:
+            continue
+        for satz in _saetze(text):
+            if _name_in(x["name"], satz) and any(kept.get(k, v) != v for k, v in _koerper(satz).items()):
+                out.append(x["name"])
+                break
+    return out[:3]
+
+
 def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
@@ -472,6 +619,13 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     done = told_as_done(rd, text, wuerfe, [o.get("text", "") for o in story.get("ooc") or []])
     if done:
         return "probe", done
+    for why, found in (("fehlt", lambda: told_unknown(rd, text)), ("gefallen", lambda: fight_off(rd, text, hits)),
+                       ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
+                       ("aussehen", lambda: looks_off(rd, text))):
+        x = found()
+        if x:
+            dm._day.bump("regel_" + why)
+            return why, x
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
     gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
     if gone:

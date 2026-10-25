@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.084** KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
 - **V01.1.083** KI-Dungeon-Master: Spielleiter-Pult als Tafeln: oben „Jetzt weiter“ und wer gehandelt hat, vier gleich große Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit, Knopfbänder statt Listen, unten „Nur für dich“ mit Reitern; der Katalog prüft die Tabellen der D&D-Ideen
 - **V01.1.082** KI-Dungeon-Master: nennt die Erzählung den neuen Ort nicht, bleibt die Gruppe am alten Ort (Fahne und Erzählung stimmen überein); die Karte zählt Wege in Etappen und den Weg zur nächsten Siedlung; besetzte Orte tragen das Wappen ihrer Fraktion
 - **V01.1.081** Hilfsmodell für einfache Einordnungen, Funktionen → Hilfsmodell
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.077** KI-Dungeon-Master: die Karte zieht nur weiter, wenn eine Aktion gehen will (Fahne und Erzählung bleiben gleich); Ortsbilder prüfen nur die eigene Runde
 - **V01.1.076** Test-Fix: der Seitentest „Mails löschen und verschieben“ wartet unter Last bis zu einer Minute auf den Regel-Hinweis und das Postfach, statt nach 10 oder 20 Sekunden aufzugeben; geprüft wird dasselbe
 - **V01.1.075** KI-Dungeon-Master: jede Runde lässt sich in der Liste beenden oder löschen, mit Nachfrage „Wirklich?“
-- **V01.1.074** KI-Dungeon-Master: Spielleiter-Pult als großes Fenster mit drei Spalten, die rechte Spalte zeigt nur noch Held, Jetzt weiter und Karte und lässt sich breiter ziehen
 
 
 

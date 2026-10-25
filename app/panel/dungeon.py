@@ -409,7 +409,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -1030,6 +1030,35 @@ def _named(text, names):
     """The names (of the catalog's spells and the classes' abilities) a typed action mentions as whole words."""
     low = " " + text.lower() + " "
     return [n for n in names if re.search(r"(?<![\w])" + re.escape(n) + r"(?![\w])", low)]
+
+
+_DING_VERB = re.compile(r"(?i)\b(trink|benutz|wirf|werf|lies|les|use|drink|throw|read|quaff)")
+
+
+def check_items(r, rd, pid):
+    """A seat's action that uses a thing of the catalog its hero does not carry (Dominik 2026-10-25 „1-7“, Regel 2;
+    fixed rules, never the model): an OOC line „… hat das nicht dabei“, the thing goes to nicht_bekannt like an unknown
+    power, and the narration may not tell it used (erz.told_unknown). Runs after check_powers."""
+    a, h = rd["offen"].get(pid), rd["plaetze"][pid]["held"]
+    if not a or not _DING_VERB.search(a["text"]):
+        return
+    li = 1 if rd["lang"] == "en" else 0
+    bag, ways = {it["id"] for it in h["tasche"]}, {}
+    for c in r["gegenstaende"]:
+        if c.get("art") and c["art"] != "zauber":
+            for n in c["name"]:
+                if len(n) >= 4:
+                    ways.setdefault(n.lower(), set()).add(c["id"])
+    gone = list(dict.fromkeys(n[:1].upper() + n[1:] for n in _named(a["text"], list(ways)) if not bag & ways[n]))[:3]
+    if not gone:
+        print("dungeon: ding | dabei", flush=True)
+        return
+    a["nicht"] = (a.get("nicht") or []) + gone
+    _day.bump("ding_fehlt")
+    t = (f"{h['name']} hat das nicht dabei: {', '.join(gone)}." if not li else f"{h['name']} does not carry that: {', '.join(gone)}.")
+    if not any(e["art"] == "ooc" and e.get("pid") == pid and e.get("text") == t and e["n"] == rd["zug"] for e in rd["log"]):
+        _log(rd, "ooc", pid=pid, text=t, panel=True)
+    print("dungeon: ding | fehlt", flush=True)
 
 
 def check_powers(r, rd, pid):
@@ -1859,6 +1888,13 @@ def where(rd):
     if not k or not isinstance(k.get("orte"), list) or not 0 <= k.get("hier", -1) < len(k["orte"]):
         return {}
     return {"ort": str(k["hier"]), "ort_name": k["orte"][k["hier"]]["name"]}
+
+
+def tageszeit_ok(alt, neu):
+    """The time of day only goes forward (morgen → tag → abend → nacht), a new morning only after the night; never back
+    (Dominik 2026-10-25 „1-7“, Regel 6: evening never turns into morning)."""
+    i = TAGESZEITEN.index(alt) if alt in TAGESZEITEN else 1
+    return neu in TAGESZEITEN and (TAGESZEITEN.index(neu) >= i or alt == TAGESZEITEN[-1] and neu == TAGESZEITEN[0])
 
 
 def quest_legen(rd, ort_id, ding):
@@ -3436,8 +3472,12 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
         if story.get("tageszeit") and story["tageszeit"] != rd.get("tageszeit", "tag"):
-            rd["tageszeit"] = story["tageszeit"]   # the stage's day or night picture (dungeon_dingbild), the next narrations
-            print(f"dungeon: tageszeit | {story['tageszeit']}", flush=True)
+            if tageszeit_ok(rd.get("tageszeit", "tag"), story["tageszeit"]):
+                rd["tageszeit"] = story["tageszeit"]   # the stage's day or night picture (dungeon_dingbild), the next narrations
+                print(f"dungeon: tageszeit | {story['tageszeit']}", flush=True)
+            else:                                # only one step forward (Regel 6): evening never turns into morning
+                _day.bump("tageszeit_weg")
+                print("dungeon: tageszeit | verworfen", flush=True)
         if story.get("haendler") and not rd.get("markt"):
             open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"], rng)
         names = dict(seated(rd))
@@ -5409,7 +5449,8 @@ def for_live():
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
-                                 "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu")}}
+                                 "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg")},
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen"))}
 
 
 def own_count(uid):
@@ -5647,6 +5688,7 @@ async def _act(rid, seat, b):
             act(rd, pid, b.get("text"), b.get("zug"), time.time())
             mut.ask(rd, pid, b.get("mut"))
             check_powers(rules(), rd, pid)
+            check_items(rules(), rd, pid)
             _write(d)
         maybe_close(rid)
         return view(rid, pid)

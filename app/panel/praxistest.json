@@ -3551,6 +3551,13 @@
 "titel": "Dungeon-Master: Spielleiter-Pult als Tafeln",
 "text": "Als Gastgeber eine laufende Runde öffnen und „🎲 Spielleiter-Pult öffnen“. A: Oben „Jetzt weiter“ und je Held ein Chip mit ✓ oder …. B: Vier gleich hohe Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit; nichts ist abgeschnitten, kein leerer Platz unter einer Tafel. C: Pause und Markt als Schalter, Erzählweise und Kampfstufe als Knopfband; ein Tipp ändert sie sofort. D: Unten „Nur für dich“ mit Reitern; ein Reiter zeigt Geschichte, Wahrheit, Dinge, Zufallsregeln oder Orakel. E: Am Handy stehen die Tafeln untereinander.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P532",
+"v": 1084,
+"titel": "Dungeon-Master: mehr feste Prüfungen der Erzählung",
+"text": "Eine Runde spielen. A: „Ich trinke meinen Heiltrank“ ohne Trank in der Tasche: graue Zeile „… hat das nicht dabei“, die Erzählung lässt ihn nicht trinken. B: Nach einem Sieg handeln besiegte Gegner nicht mehr. C: Die Erzählung nennt keine Goldmenge. D: Ein Held, der nicht gehandelt hat, entscheidet in der Erzählung nichts. E: Eine Person behält Haar- und Augenfarbe ihrer Karte. F: Unter Zustand → Logs stehen bei Fehlern Zeilen „dungeon: nachbessern | fest“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

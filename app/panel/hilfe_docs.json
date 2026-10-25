@@ -5293,6 +5293,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "lung bleibt, nimmt Personen an einem anderen Ort die Rede oder schreibt einen festen Satz dazu (ein fehlender Held „wartet ab“). Jede Rettung schreibt eine Zeile „nachbessern | fest“ oder „| bleibt“, die Live-Übersicht zählt die Rettungen, Dinge ohne Tasche und verworfene Tageszeiten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spielleiter-Pult als Tafeln (V01.1.083, Dominik 2026-10-25 „muss alles besser angeordnet und geaphsh aufgewertet werden“, gewählt „empfehlung umsetzten für das spielleiter pult“, Vorschlag 1 „Tafeln“): Oben im Pult steht das große „▶ Jetzt weiter“, daneben je Held ein Chip, wer schon gehandelt hat (✓) und wer noch fehlt. Darunter vier gleich hohe Tafeln, zwei nebeneinander: „Zug“ mit Pause und Markt als Schalter und hinter „⋯“ Kapitel oder Runde beenden (mit Nachfrage), „Am Tisch“ mit den Kacheln Vorlesen, Szenenbild und Einladen in einer Reihe und dem Schalter „Letzter Satz in der Mail“, „Erzähler“ mit der Erzählweise als Knopfband knapp, normal, ausführlich und darunter die Stimme mit Probe und Ändern, „Schwierigkeit“ mit der Kampfstufe als Knopfband Leicht bis Tödlich und dem Spielleiter-Regler als Schalter „festhalten“ mit einer Leiste der Gefahr. Was nur der Gastgeber sieht, steht unten in einem Streifen „Nur für dich“ mit Reitern Geschichte, Wahrheit, Dinge, Zufallsregeln und Orakel statt in losen Kästen. Kapitälchen nur noch für die Überschriften der Tafeln, keine abgeschnittene Auswahlliste mehr. Am Handy stehen die Tafeln untereinander. Nur die Ansicht ä"
 },
 {
@@ -19030,6 +19046,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: end or delete every round (V01.1.075, Dominik 2026-10-25 “runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.”): In the list “Your rounds” every round has its buttons next to “Open”: the host can “End” a running round or “Delete” it at once, and “Delete” an ended one; a player hides an ended round. The first tap asks “Really end?”, “Really delete?” or “Really hide?”, only the second does it. “Delete” on a running round first ends it like every end (experience is paid, the heroes of profiles stay) and then deletes it with its sounds and pictures (DELETE /api/profile/dungeon/{rid}?loeschen=1, host only; a player gets 404). A player cannot end a running round of another host."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "tence (a missing hero “waits to see”). Every rescue writes a line “nachbessern | fest” or “| bleibt”, the live overview counts the rescues, things not carried and discarded times of day."
 },
 {
 "lang": "en",

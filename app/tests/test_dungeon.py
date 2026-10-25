@@ -5446,6 +5446,68 @@ class Fight(Turns):
             self.assertEqual(dungeon.erz.repair(rd, {"text": alt}, "wiederholung", []), {"text": alt})   # nothing new: kept
         self.assertIn("dungeon: nachbessern | bleibt | wiederholung", out.getvalue())
 
+    def test_more_fixed_rules_for_a_narration(self):
+        """Dominik 2026-10-25 „1-3 und 1-7 umsetzten“: a fallen foe acting or a foe dying without a receipt (1), a thing
+        the hero does not carry or a power it cannot use told as used (2), gold only told (3), a hero who did not act
+        deciding (4), a person's hair or eyes against the card (5), the time of day only forward, a new morning only after the night (6). Each is a
+        fault of erz.judge with its hint, and each gets a rescue by the panel with a line."""
+        E = dungeon.erz
+        rd = {"lang": "de", "kampf": {"gegner": [{"name": "Goblin 1", "leben": 0}, {"name": "Goblin 2", "leben": 0},
+                                                 {"name": "Dunkelelf", "leben": 7}]}}
+        self.assertEqual(E.fight_off(rd, "Der Goblin springt vor und greift Uma an."), ["Goblin"])
+        self.assertEqual(E.fight_off(rd, "Die Goblins liegen regungslos im Staub."), [])
+        self.assertEqual(E.fight_off(rd, "Der Goblin greift an.", [{"gegner": "Goblin 2", "faellt": True}]), [])   # fell this turn
+        self.assertEqual(E.fight_off(rd, "Der Dunkelelf stirbt mit einem Seufzer."), ["Dunkelelf"])
+        self.assertEqual(E.fight_off(rd, "Der Dunkelelf stirbt nicht, er weicht zurück."), [])
+        self.assertEqual(E.gold_told("Uma findet 30 Goldmünzen unter dem Stein."), ["Uma findet 30 Goldmünzen unter dem Stein."])
+        self.assertEqual(E.gold_told("Die Wirtin verlangt keine 5 Taler, sie nimmt nichts."), [])
+        seats = {"plaetze": {"a": {"held": {"name": "Bela"}}, "b": {"held": {"name": "Uma"}}}, "offen": {"b": {"text": "x"}}}
+        self.assertEqual(E.for_others(seats, "Bela entscheidet sich, das Tor zu öffnen."), ["Bela"])
+        self.assertEqual(E.for_others(seats, "Bela sieht zu, wie Uma das Tor öffnet."), [])
+        self.assertEqual(E.for_others(seats, "Bela greift an.", {"a"}), [])           # answered out of the game
+        rd2 = {"offen": {"b": {"text": "Ich trinke meinen Heiltrank", "nicht": ["Heiltrank"]}}}
+        self.assertEqual(E.told_unknown(rd2, "Uma trinkt den Heiltrank in einem Zug."), ["Heiltrank"])
+        self.assertEqual(E.told_unknown(rd2, "Uma greift nach dem Heiltrank, doch die Tasche ist leer."), [])
+        rd3 = {"nsc": {"mara": {"name": "Mara", "karte": {"aussehen": ["graues Haar, grüne Augen", "grey hair, green eyes"]}}}}
+        self.assertEqual(E.looks_off(rd3, "Mara streicht sich die roten Haare aus dem Gesicht."), ["Mara"])
+        self.assertEqual(E.looks_off(rd3, "Mara mustert euch mit grünen Augen."), [])
+        self.assertEqual(E.looks_off(rd3, "Ein Fremder mit roten Haaren lacht."), [])
+        self.assertEqual([dungeon.tageszeit_ok(a, b) for a, b in (("abend", "morgen"), ("nacht", "morgen"), ("tag", "nacht"), ("abend", "tag"), ("tag", "tag"))],
+                         [False, True, True, False, True])
+        r = dungeon.rules()                        # Regel 2 at the action: a potion not carried
+        trank = next(c for c in r["gegenstaende"] if c.get("art") == "trank")
+        rdi = {"lang": "de", "zug": 3, "log": [], "offen": {"p1": {"text": f"Ich trinke schnell den {trank['name'][0]}."}},
+               "plaetze": {"p1": {"held": {"name": "Uma", "tasche": []}}}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.check_items(r, rdi, "p1")
+        self.assertEqual(rdi["offen"]["p1"]["nicht"], [trank["name"][0]])
+        self.assertIn("Uma hat das nicht dabei", [e for e in rdi["log"] if e["art"] == "ooc"][-1]["text"])
+        self.assertIn("dungeon: ding | fehlt", out.getvalue())
+        rdi["offen"]["p1"].pop("nicht")
+        rdi["plaetze"]["p1"]["held"]["tasche"] = [{"id": trank["id"], "i": 1}]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.check_items(r, rdi, "p1")
+        self.assertNotIn("nicht", rdi["offen"]["p1"])
+        self.assertIn("dungeon: ding | dabei", out.getvalue())
+        for why in ("gefallen", "gold", "fremd", "fehlt", "aussehen"):
+            self.assertIn("Hinweis", E.hint(why, ["X"], "de"))
+            self.assertIn("Note", E.hint(why, ["X"], "en"))
+        lang = ("Der Regen trommelt auf das Dach der Taverne, und die Lampen flackern im Zug, der durch die Ritzen fährt. "
+                "Uma findet 30 Goldmünzen unter dem Stein. Draußen bellt ein Hund, irgendwo schlägt eine Tür.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = E.repair({"lang": "de"}, {"text": lang}, "gold", ["Uma findet 30 Goldmünzen"])
+            same = E.repair({"lang": "de"}, {"text": "Uma findet 30 Goldmünzen."}, "gold", ["x"])
+            npc = E.repair({"lang": "de"}, {"text": lang, "npc": [{"name": "Mara", "text": "Hallo"}, {"name": "Ole", "text": "Ja"}]}, "anderswo", ["Mara"])
+            named = E.repair({"lang": "de"}, {"text": lang}, "namen", ["Bela"])
+        self.assertNotIn("Goldmünzen", fixed["text"])
+        self.assertIn("Draußen bellt ein Hund", fixed["text"])
+        self.assertEqual(same["text"], "Uma findet 30 Goldmünzen.")                     # too little would stay: kept
+        self.assertEqual([n["name"] for n in npc["npc"]], ["Ole"])
+        self.assertTrue(named["text"].endswith("Bela wartet ab, was als Nächstes geschieht."))
+        self.assertIn("dungeon: nachbessern | fest | gold", out.getvalue())
+        self.assertIn("dungeon: nachbessern | bleibt | gold", out.getvalue())
+        self.assertIn("dungeon: nachbessern | fest | anderswo", out.getvalue())
+
     def test_foes_not_named_three_times_the_panel_names_them(self):
         """The card and the text tell the same foes even when the model misses them on all three tries: the panel adds
         a fixed sentence with their names (erz.repair)."""
