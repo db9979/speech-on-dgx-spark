@@ -342,7 +342,7 @@ class Turns(Base):
         self.assertIn("wofuer", json.dumps(dungeon.schema_proben(dungeon.rules())))
 
     def test_advantage_ooc_and_length(self):
-        self.act_all("Ich will mal kurz was fragen, wie spät ist es?")
+        self.act_all("Ich stemme mich gegen das Tor. Wie spät ist es eigentlich?")   # no action that only asks (erz.asks)
         rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 10, "vorteil": "vorteil"},
                                     {"wer": "Bela", "wert": "staerke", "schwer": 10, "vorteil": "gottmodus"}]},
                         {"erzaehlung": "Arvid stemmt das Tor auf, kalte Luft riecht nach Moos und Eisen.", "frage_an": "",
@@ -7178,8 +7178,8 @@ class NarratorCases(Base):
         import dungeon_erzaehlstand as es
         import live
         self.es, self.live = es, live
-        helpers.keep_chat(self, "dungeon_erzaehlstand")
-        helpers.set_config(dungeon_erzaehlstand=False)
+        helpers.keep_chat(self, "dungeon_erzaehlstand", "dungeon_erzfehler")
+        helpers.set_config(dungeon_erzaehlstand=False, dungeon_erzfehler=False)
         for f in (es.FALL_FILE, es.FILE):
             if os.path.exists(f):
                 os.remove(f)
@@ -7259,6 +7259,107 @@ class NarratorCases(Base):
         self.assertEqual(ADMIN.post(self.P, json={"szene": "f" + fid, "aktion": "loeschen"}).json()["szenen"], [])   # deleting always
         self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "loeschen"}).json()["faelle"], [])
         self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "loeschen"}).status_code, 404)
+
+    def test_a_reason_tells_the_last_scene_again_once(self):
+        """Dominik 2026-10-25 „empfehlung“ für 1 bis 5, Vorschlag 1: with „Erzähler-Fehler beheben“ a 👎 with a reason on
+        the last narration tells it again once, with the reason's fixed hint, the turn's actions and checks as data; the new
+        text must pass the fixed checks, else the old one stays."""
+        es, E = self.es, dungeon.erz
+        helpers.set_config(dungeon_erzfehler=True)
+        self.assertIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())     # cases without the bench too
+        self.c.post(self.u, json={"zug": self.n, "gut": False, "grund": "frage"})
+        rd = self.state(self.rid)
+        self.assertEqual((rd["neu_erzaehlt"], E.running(rd)), ([self.n], self.n))
+        self.assertIn("dungeon", self.spawned)
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["neu_laeuft"], self.n)
+        self.v.post("/api/dungeon/daumen", json={"code": self.code, "zug": self.n, "gut": False, "grund": "probe"})
+        self.assertEqual(sum(1 for e in self.state(self.rid)["log"] if e.get("neu")), 1)    # once per turn
+        seen = []
+
+        def model(text):
+            async def ask(system, user, schema, name, tokens):
+                seen.append((system, user))
+                return json.dumps({"text": text})
+            return ask
+        bad = "Kordula greift in Wendelins Rucksack und findet die Karte sofort, sie zeigt den Weg nach Norden zum alten Turm."
+        with mock.patch("dungeon.ask_model", model(bad)), contextlib.redirect_stdout(io.StringIO()) as out:
+            asyncio.run(E.retell_fixed(dungeon, self.rid, self.n, "frage"))
+        dm = next(e for e in self.state(self.rid)["log"] if e["art"] == "dm" and e["n"] == self.n)
+        self.assertNotIn("findet die Karte sofort", dm["text"])                            # failed the fixed checks: the old one stays
+        self.assertIn("dungeon: erzaehlfehler | neu erzaehlt | bleibt", out.getvalue())
+        self.assertFalse(E.running(self.state(self.rid)))
+        system, user = seen[0]
+        self.assertIn(es.GRUENDE["frage"][3], system)
+        self.assertIn("Kordula: Ich durchsuche Wendelins Rucksack", user)
+        self.assertIn("den Rucksack durchsuchen: misslungen", user)
+        good = ("Kordula durchwühlt Wendelins Rucksack Fach für Fach, doch die Karte bleibt verschwunden. Wendelin zuckt mit den "
+                "Schultern und schaut hinaus in den Regen, der gegen die Scheiben trommelt.")
+        with mock.patch("dungeon.ask_model", model(good)), contextlib.redirect_stdout(io.StringIO()) as out:
+            asyncio.run(E.retell_fixed(dungeon, self.rid, self.n, "frage"))
+        dm = next(e for e in self.state(self.rid)["log"] if e["art"] == "dm" and e["n"] == self.n)
+        self.assertEqual((dm["text"], dm["neu"], dm["npc"]), (good, "frage", []))
+        self.assertIn("dungeon: erzaehlfehler | neu erzaehlt | ok", out.getvalue())
+        helpers.set_config(dungeon_erzfehler=False)                                          # off: a case, no new telling
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["neu_erzaehlt"] = []
+            dungeon._write(d)
+        self.spawned.clear()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.c.post(self.u, json={"zug": self.n, "gut": False, "grund": "ort"})
+        self.assertEqual((self.spawned, self.state(self.rid)["neu_erzaehlt"]), ([], []))
+        self.assertNotIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())
+
+    def test_often_reported_reasons_become_a_worlds_hints_and_the_weeks_count(self):
+        """Vorschläge 2 bis 4: a reason reported WELT_SCHWELLE times in a world within WELT_TAGE becomes a fixed hint of
+        that world's narrator (only with „Erzähler-Fehler beheben“, only fixed texts); the reports per week; the bench
+        plays once a night when it has scenes taken over from cases."""
+        es = self.es
+        t0 = time.mktime((2026, 10, 21, 12, 0, 0, 0, 0, -1))                                # a Wednesday noon, local time
+        now = [t0]
+        p = mock.patch("dungeon_erzaehlstand.clock", lambda: now[0])
+        p.start()
+        self.addCleanup(p.stop)
+        rd = self.state(self.rid)
+        for i in range(es.WELT_SCHWELLE):
+            now[0] = t0 - i * 86400 * 7                                                      # three weeks, one each
+            self.assertEqual(es.keep(dict(es.case(self.rid, rd, self.n, "frage"), quelle=f"q{i}")), "neu")
+        now[0] = t0
+        self.assertEqual(es.world_reasons(rd["welt"]), ["frage"])
+        self.assertEqual(es.world_reasons("andere"), [])
+        r = dungeon.rules()
+        self.assertNotIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "erzaehlen"))   # off: no hint
+        helpers.set_config(dungeon_erzfehler=True)
+        self.assertIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertNotIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "proben"))
+        self.assertNotIn("Kordula", es.world_task(rd, "de"))
+        now[0] = t0 + es.WELT_TAGE * 86400                                                   # the oldest leaves the window
+        self.assertEqual(es.world_reasons(rd["welt"]), [])
+        now[0] = t0
+        w = es.weeks()
+        self.assertEqual([x["gruende"] for x in w], [{"frage": 1}] * 3)
+        self.assertEqual(w[0]["woche"], "2026-W43")
+        v = ADMIN.get(self.P).json()
+        self.assertEqual((len(v["wochen"]), v["welten"][rd["welt"]], v["beheben"]), (3, ["frage"], True))
+        helpers.set_config(dungeon_erzaehlstand=True)                                         # the night's run
+        runs = []
+
+        async def go(nacht=False):
+            runs.append(nacht)
+            es._run["laeuft"] = False
+        nacht = time.mktime((2026, 10, 22, 3, 0, 0, 0, 0, -1))
+        with mock.patch("dungeon_erzaehlstand._go", go):
+            now[0] = nacht
+            asyncio.run(es.due())
+            self.assertEqual(runs, [])                                                        # no scene from a case yet
+            es.take(es.cases()["faelle"][0]["id"])
+            asyncio.run(es.due())
+            self.assertEqual(runs, [True])
+            es.write_json(es.FILE, {"modelle": {}, "nacht": es._date()})
+            asyncio.run(es.due())
+            now[0] = nacht + 3 * 3600                                                         # by day: none
+            asyncio.run(es.due())
+        self.assertEqual(runs, [True])
 
 
 if __name__ == "__main__":

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.088** AI Dungeon Master: fix narrator errors, a 👎 with a reason tells the last scene again, often reported reasons become a world's fixed hints, the bench plays the cases every night
 - **V01.1.087** AI Dungeon Master: whoever only asks rolls no sneaking check, the narration tells the question, and down stays down
 - **V01.1.086** AI Dungeon Master: a 👎 with a fixed reason becomes a narrator error without names, the admin takes it over as a scene of the narrator bench
 - **V01.1.085** AI Dungeon Master: reading aloud takes a voice's gender only from fixed traits, "says he" never again speaks in the women's voice, also not when he goes on
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.081** Helper model for simple classifications, Features → Helper model
 - **V01.1.080** AI Dungeon Master: real dice at the table (tap or say the number, after 30 s the Spark rolls, never in the car), fanfare for honours, critical card turns over, "Campfire" music
 - **V01.1.079** AI Dungeon Master: arms for group and factions: the panel draws every coat of arms itself as a checked SVG from shield, division, tinctures and 16 own charges, the host chooses colour and charge, every faction carries its own
-- **V01.1.078** AI Dungeon Master: the table on the phone with a one-row head and “⋯”, one fight box, the field to act in every pane, the group as a list, quick actions for the hero and a short guide; a failed examination gives nothing away, going needs no check, the panel cuts a repeated scene
 
 
 

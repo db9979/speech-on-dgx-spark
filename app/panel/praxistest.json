@@ -3579,6 +3579,13 @@
 "titel": "Dungeon-Master: eine Frage bleibt eine Frage",
 "text": "In einer Schenke als Aktion „frage den Wirt, ob ich in den Keller darf“ schreiben. A: Keine Geschick-Probe fürs Schleichen, höchstens Charisma. B: Die Erzählung erzählt die Frage und die Antwort des Wirts. C: Geht es weiter, dann nach unten in den Keller, nicht die Treppe hinauf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P536",
+"v": 1088,
+"titel": "Dungeon-Master: Erzähler-Fehler beheben",
+"text": "Als Admin Funktionen → KI-Dungeon-Master → Erzähler-Fehler beheben an. Eine Runde spielen, auf die letzte Erzählung 👎 tippen und einen Grund wählen. A: Am Zug steht „wird neu erzählt …“, kurz danach „neu erzählt“ mit einer neuen Erzählung, Würfel und Leben bleiben gleich. B: Ein zweites 👎 auf denselben Zug erzählt nicht noch einmal. C: Im Reiter Regeln bei Erzähler-Fehler steht die Übersicht „Meldungen je Woche“. D: Unter Zustand → Logs steht „dungeon: erzaehlfehler | neu erzaehlt“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -5213,6 +5213,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Erzähler-Fehler beheben, die Erzählung lernt aus Meldungen (V01.1.088, Dominik 2026-10-25 „können wir solche fehler in zukunkt direkt über das spiel melden und es wird im hintergrund automatisch korrigiert“, „empfehlung“ für 1 bis 5): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Erzähler-Fehler beheben* (chat.dungeon_erzfehler, ab Werk aus, gilt für jedes Profil, das der Admin nicht sperrt; dungeon_erzaehlstand.FIX). Mit ihm (oder dem Erzähler-Prüfstand) bietet der Tisch nach einem 👎 die festen Gründe an, neu dabei „Aktion falsch verstanden (Frage, Richtung)“; jeder Grund hat einen festen Hinweis (GRUENDE, deutsch und englisch). 1 Neu erzählen: Ein 👎 mit Grund auf die letzte Erzählung lässt sie einmal neu erzählen (dungeon_erzaehler.retell_fixed, je Zug höchstens einmal, nicht während ein Zug, eine X-Karte oder eine andere Neu-Erzählung läuft, eine hängende gibt nach NEU_S (300) Sekunden frei). Das Modell bekommt den Hinweis des Grunds als Aufgabe, die alte Szene, die Aktionen des Zugs und den Ausgang jeder Probe nur als Daten; die neue Erzählung muss die Wortlisten, die Schleier und dieselben festen Prüfungen bestehen (erz.judge auf dem Zug, wie er w"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ar, höchstens nach der Rettung des Panels), sonst bleibt die alte. Würfel, Leben, Funde und Ort ändern sich nie; Bilder und Tondateien des Zugs gehen nur mit einem neuen Text (dungeon_grenzen.replace, dieselbe Quelle wie die X-Karte). Am Tisch steht „wird neu erzählt …“, danach „neu erzählt“ am Zug. 2 Hinweise der Welt: Jede Meldung zählt mit Zeit, Welt und Grund (nur Zahlen, meldungen, höchstens MELDUNGEN_MAX); kommt ein Grund in einer Welt binnen WELT_TAGE (30) Tagen WELT_SCHWELLE (3) Mal vor, bekommt der Erzähler dieser Welt seinen festen Hinweis dauerhaft in die Aufgabe (world_task, nie Worte einer Meldung). 3 Jede Nacht: Solange der Erzähler-Prüfstand an ist und übernommene Szenen hat, spielt er einmal je Nacht (2 bis 5 Uhr) alle Szenen (due), so trifft jedes neue Modell und jede neue Version die gemeldeten Fehler. 4 Wochen: Die Seite „Erzähler-Fehler“ zeigt die Meldungen je Woche und Grund der letzten WOCHEN (6) Wochen und die Gründe, die in einer Welt zum Hinweis wurden. 5 Neue Regeln: Häufungen stehen auf der Seite; eine neue feste Regel baut der Dungeon-Thread, nie das System selbst. Live: Zustand → Überblick nennt die neu erzählten Szenen des Tages und die, die gerade neu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " erzählt werden. Log-Zeilen „dungeon: erzaehlfehler | neu erzaehlt | ok/bleibt/ausfall“ und „| neu erzaehlen | aus/nein“, „dungeon: erzaehlstand | nacht | start“. Selbsttests NarratorCases in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Abenteuer-Import (V01.1.066, Tabletop-Punkt 10, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“; nur die Idee aus open-tabletop-gm, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Abenteuer-Import* (chat.dungeon_import, ab Werk aus; dungeon_import.py). Im Geschichten-Planer (Dungeon-Master-Reiter „Regeln“ → „Geschichten“ → „Neue Geschichte“) steht oben „📄 Abenteuer aus einer Datei“: ein geschriebenes Abenteuer als PDF, Word, OpenDocument, Markdown, Text oder HTML (TYPEN, höchstens MAX_BYTES = 10 MB) wird ein Entwurf (POST /api/admin/dungeon/geschichte/import, Formular mit Datei, Welt, Ton, Akte, Tabus und Sprache; nur der Admin, Rate-Limit dungeonplan wie der Planer). Das Panel liest den Text mit der Dokument-Pipeline (documents.extract; die Datei wird nicht behalten und kommt nicht ins Wissen), schneidet ihn an den Überschriften nach denselben festen Regeln wie die Dokumentsuche (documents.heading) und gibt dem Modell einen Auszug: jede Überschrift mit dem Anfang ihres Abschnitts, höchstens ABSCHNITTE_MAX (60) Abschnitte und DIGEST_MAX (12000) Zeichen, als Daten im Block <<< … >>> (Marker ents"
 },
 {
@@ -10478,6 +10502,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Erzähler-Prüfstand (Funktionen → Meine Daten → „Erzähler-Prüfstand“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Admin spielt acht feste Szenen durch das laufende Sprachmodell, mit denselben Regeln wie am Tisch: eine gescheiterte Probe, zwei Helden, ein Kampf mit Würfel-Belegen, der Kinderton, eine Figur beim Namen, eine englische Runde, eine r …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Erzähler-Fehler beheben (Funktionen → Meine Daten → „Erzähler-Fehler beheben“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Nach einem 👎 auf die letzte Erzählung wählt ein Platz einen festen Grund (zum Beispiel „Aktion falsch verstanden“ oder „Falscher Ort“)."
 },
 {
 "lang": "de",
@@ -19029,6 +19061,30 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: fix narrator errors, the narration learns from reports (V01.1.088, Dominik 2026-10-25 \"können wir solche fehler in zukunkt direkt über das spiel melden und es wird im hintergrund automatisch korrigiert\", \"empfehlung\" for 1 to 5): Own admin switch *Features → AI Dungeon Master → Fix narrator errors* (chat.dungeon_erzfehler, off by default, counts for every profile the admin does not block; dungeon_erzaehlstand.FIX). With it (or the narrator bench) the table offers the fixed reasons after a 👎, new among them \"Action misunderstood (question, direction)\"; every reason has a fixed hint (GRUENDE, German and English). 1 Tell again: a 👎 with a reason on the last narration has it told again once (dungeon_erzaehler.retell_fixed, at most once per turn, not while a turn, an X-card or another new telling runs, a stuck one frees after NEU_S (300) seconds). The model gets the reason's hint as its task, the old scene, the turn's actions and the outcome of every check only as data; the new narration must pass the word lists, the veils and the same fixed checks (erz.judge on the turn as it was, at most after the panel's rescue), else the old one stays. Dice, life, finds and place "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "never change; the turn's pictures and sound files go only with a new text (dungeon_grenzen.replace, the same source as the X-card). The table shows \"being told again …\", then \"told again\" at the turn. 2 A world's hints: every report counts with time, world and reason (numbers only, meldungen, at most MELDUNGEN_MAX); when a reason comes WELT_SCHWELLE (3) times within WELT_TAGE (30) days in a world, that world's narrator gets its fixed hint in its task for good (world_task, never words of a report). 3 Every night: while the narrator bench is on and has scenes taken over, it plays all scenes once a night (2 to 5 o'clock, due), so every new model and version meets the reported errors. 4 Weeks: the page \"Narrator errors\" shows the reports per week and reason of the last WOCHEN (6) weeks and the reasons that became a world's hint. 5 New rules: clusters show on the page; a new fixed rule is built by the Dungeon thread, never by the system itself. Live: Status → Live names the scenes told again today and those being told again now. Log lines \"dungeon: erzaehlfehler | neu erzaehlt | ok/bleibt/ausfall\" and \"| neu erzaehlen | aus/nein\", \"dungeon: erzaehlstand | nacht | start\". Self-tests Narr"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "atorCases in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: adventure import (V01.1.066, tabletop point 10, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\"; only the idea from open-tabletop-gm, own code): Own admin switch *Features → AI Dungeon Master → Adventure import* (chat.dungeon_import, off by default; dungeon_import.py). In the story planner (Dungeon Master tab \"Rules\" → \"Stories\" → \"New story\") \"📄 Adventure from a file\" stands at the top: a written adventure as PDF, Word, OpenDocument, Markdown, text or HTML (TYPEN, at most MAX_BYTES = 10 MB) becomes a draft (POST /api/admin/dungeon/geschichte/import, a form with file, world, tone, acts, taboos and language; admin only, rate limit dungeonplan like the planner). The panel reads the text with the document pipeline (documents.extract; the file is not kept and does not go into the knowledge), cuts it at its headings by the same fixed rules as the document search (documents.heading) and gives the model a digest: every heading with the start of its section, at most ABSCHNITTE_MAX (60) sections and DIGEST_MAX (12000) characters, as data in the block <<< … >>> (markers defused, the file cannot close the block). The first headi"
 },
 {
@@ -24086,6 +24142,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Narrator bench (Features → My data → \"Narrator bench\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The admin plays eight fixed scenes through the running language model, with the same rules as at the table: a failed check, two heroes, a fight with dice receipts, the children's tone, a person by name, an English round, a risky and a ha …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Fix narrator errors (Features → My data → \"Fix narrator errors\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): After a 👎 on the last narration a seat picks a fixed reason (for example \"Action misunderstood\" or \"Wrong place\")."
 },
 {
 "lang": "en",

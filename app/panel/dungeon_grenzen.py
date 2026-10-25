@@ -201,6 +201,28 @@ def lay(dm, rid, pid):
     return n
 
 
+def replace(dm, rid, n, text, mark, also=None):
+    """The narration of turn n gets a new text (the X-Karte, a new telling after a 👎 with a reason): its NPC lines below,
+    scene pictures and sound files go; mark goes onto its log entry, also(round) runs in the same lock."""
+    with dm._lock:
+        d = dm._read()
+        cur = d["runden"].get(rid)
+        if not cur:
+            return
+        for x in cur["log"]:
+            if x["art"] == "dm" and x["n"] == n:
+                x.update(text=text, npc=[], **mark)
+        bilder = [b for b in cur.get("bilder") or [] if b.get("n") != n]
+        if len(bilder) != len(cur.get("bilder") or []):
+            cur["bilder"] = bilder
+            dm._bild_drop(rid, {b["b"] for b in bilder})
+        if also:
+            also(cur)
+        keep_ton = {t for t in cur.get("ton_n") or [] if t != n}
+        dm._write(d)
+    dm._ton_drop(rid, keep_ton)
+
+
 async def retell(dm, rid, n):
     """The narration of turn n told again more gently by the model (X_AUFGABE, the old text only as data), checked by
     the same word lists; without the model or failing them the fixed X_AUS. Its scene pictures and sound files go."""
@@ -221,24 +243,8 @@ async def retell(dm, rid, n):
         why = "ok" if text else "fest"
         text = text or X_AUS[1 if lang == "en" else 0]
 
-        def keep():
-            with dm._lock:
-                d = dm._read()
-                cur = d["runden"].get(rid)
-                if not cur:
-                    return
-                for x in cur["log"]:
-                    if x["art"] == "dm" and x["n"] == n:
-                        x.update(text=text, x=True, npc=[])
-                bilder = [b for b in cur.get("bilder") or [] if b.get("n") != n]
-                if len(bilder) != len(cur.get("bilder") or []):
-                    cur["bilder"] = bilder
-                    dm._bild_drop(rid, {b["b"] for b in bilder})
-                cur["x"] = dict(cur.get("x") or {"n": n}, fertig=True)
-                keep_ton = {t for t in cur.get("ton_n") or [] if t != n}
-                dm._write(d)
-            dm._ton_drop(rid, keep_ton)
-        await asyncio.to_thread(keep)
+        await asyncio.to_thread(replace, dm, rid, n, text, {"x": True},
+                                lambda cur: cur.update(x=dict(cur.get("x") or {"n": n}, fertig=True)))
     except Exception:
         why = "ausfall"
         try:

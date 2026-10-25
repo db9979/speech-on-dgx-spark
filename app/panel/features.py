@@ -271,6 +271,10 @@ FEATURES = (
     # Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the real narration of the running model
     F("dungeonerzaehlstand", "Erzähler-Prüfstand", "Narrator bench", "data", ("dungeon_erzaehlstand",), parent="dungeon",
       me="dmbox", guide="dungeonerzaehlstand"),
+    # Erzähler-Fehler beheben (dungeon_erzaehlstand.FIX): a 👎 with a fixed reason tells the last scene again with the
+    # reason's fixed hint, often reported reasons become fixed hints of a world; fixed texts, never a report's words
+    F("dungeonerzfehler", "Erzähler-Fehler beheben", "Fix narrator errors", "data", ("dungeon_erzfehler",), parent="dungeon",
+      me="dmbox", guide="dungeonerzfehler"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

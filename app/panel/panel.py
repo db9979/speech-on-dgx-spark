@@ -448,6 +448,10 @@ async def stability():
                     await dungeon_pruefstand.due()
                 except Exception as e:
                     print("dungeon: pruefstand | due", type(e).__name__, flush=True)
+                try:   # Dungeon-Master: the narrator bench once a night with the scenes from reported errors (dungeon_erzaehlstand.py)
+                    await dungeon_erzaehlstand.due()
+                except Exception as e:
+                    print("dungeon: erzaehlstand | due", type(e).__name__, flush=True)
                 try:
                     await agent.due_once()
                 except Exception as e:

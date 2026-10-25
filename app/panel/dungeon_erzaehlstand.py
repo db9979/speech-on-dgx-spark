@@ -40,6 +40,7 @@ not carried), at most EIGENE_MAX, scored like the fixed scenes.
 Journal lines „dungeon: erzaehlstand | …“ with fixed words and numbers only.
 """
 import asyncio
+import datetime
 import hashlib
 import os
 import random
@@ -83,23 +84,50 @@ EIGENE_MAX = 12            # scenes taken over from cases
 TEXT_MAX = 1500            # a case's narration, per character
 TAT_MAX = 300              # an action and a check's wofuer of a case
 NAMEN = ("Arvid", "Bela", "Cora", "Dario", "Ella")   # the bench's heroes; a case keeps no player's hero name
-# a 👎's fixed reasons: (German, English, the fixed rule of erz.judge it belongs to, "" for none)
+# a 👎's fixed reasons: (German, English, the fixed rule of erz.judge it belongs to or "", the fixed hint a new telling
+# and a world's narrator get, German and English; Dominik 2026-10-25 „empfehlung“ für 1 bis 5)
 GRUENDE = {
-    "probe": ("Misslungene Probe trotzdem geschafft oder etwas verraten", "A failed check done anyway or something revealed", "probe"),
-    "fremd": ("Hat für eine andere Figur entschieden", "Decided for another character", "fremd"),
-    "ding": ("Ding oder Zauber, den die Figur nicht hat", "An item or spell the character does not have", "fehlt"),
-    "kampf": ("Kampf stimmt nicht (Gegner, Treffer, Gefallene)", "The fight does not match (foes, hits, the fallen)", "gefallen"),
-    "gold": ("Gold oder Beute nur erzählt", "Gold or loot only told", "gold"),
-    "ort": ("Falscher Ort", "Wrong place", "karte"),
-    "person": ("Person sieht anders aus oder ist woanders", "A person looks different or is elsewhere", "aussehen"),
-    "wiederholung": ("Wiederholt sich", "Repeats itself", "wiederholung"),
-    "sonst": ("Etwas anderes", "Something else", ""),
+    "probe": ("Misslungene Probe trotzdem geschafft oder etwas verraten", "A failed check done anyway or something revealed", "probe",
+              "Eine misslungene Probe bleibt misslungen: es gelingt nicht, und wer etwas untersucht, erfährt nichts Neues.",
+              "A failed check stays failed: it does not happen, and whoever examines something learns nothing new."),
+    "frage": ("Aktion falsch verstanden (Frage, Richtung)", "Action misunderstood (question, direction)", "frage",
+              "Erzähle genau die Aktion: wer fragt, fragt und bekommt eine Antwort; ein Weg nach unten bleibt nach unten.",
+              "Tell exactly the action: whoever asks asks and gets an answer; a way down stays down."),
+    "fremd": ("Hat für eine andere Figur entschieden", "Decided for another character", "fremd",
+              "Jede Figur tut nur, was ihr Spieler geschrieben hat; entscheide für niemanden sonst.",
+              "Every character does only what its player wrote; decide for nobody else."),
+    "ding": ("Ding oder Zauber, den die Figur nicht hat", "An item or spell the character does not have", "fehlt",
+             "Eine Figur benutzt nur Dinge und Zauber, die sie hat.", "A character uses only things and spells it has."),
+    "kampf": ("Kampf stimmt nicht (Gegner, Treffer, Gefallene)", "The fight does not match (foes, hits, the fallen)", "gefallen",
+              "Halte dich im Kampf genau an die Gegner und Treffer der Würfel-Belege; Gefallene handeln nicht mehr.",
+              "In a fight keep exactly to the foes and hits of the dice receipts; the fallen act no more."),
+    "gold": ("Gold oder Beute nur erzählt", "Gold or loot only told", "gold",
+             "Nenne keine Menge Gold oder Beute; das legt das Panel fest.", "Name no amount of gold or loot; the panel sets it."),
+    "ort": ("Falscher Ort", "Wrong place", "karte",
+            "Die Gruppe bleibt an ihrem Ort und geht nur dorthin, wohin eine Aktion sie schickt.",
+            "The group stays at its place and goes only where an action sends it."),
+    "person": ("Person sieht anders aus oder ist woanders", "A person looks different or is elsewhere", "aussehen",
+               "Personen sehen so aus und sind dort, wie die Fakten sagen.", "People look and are where the facts say."),
+    "wiederholung": ("Wiederholt sich", "Repeats itself", "wiederholung",
+                     "Erzähle Neues und wiederhole nichts aus den letzten Zügen.", "Tell something new and repeat nothing of the last turns."),
+    "sonst": ("Etwas anderes", "Something else", "",
+              "Folge genau den Aktionen der Spieler und den Würfen.", "Follow the players' actions and the dice exactly."),
 }
+MELDUNGEN_MAX = 600        # reports kept (time, world, reason; numbers only) for the world's hints and the weeks
+WELT_SCHWELLE = 3          # reports of one reason in a world within WELT_TAGE make its hint a standing one there
+WELT_TAGE = 30
+WOCHEN = 6                 # weeks the overview shows
 _flock = threading.Lock()
 
 
 def on():
     return features.admin_on("dungeonerzaehlstand")
+
+
+def cases_on(owner):
+    """A 👎 may carry a reason and becomes a case while the bench or „Erzähler-Fehler beheben“ (FIX, for the round's
+    host: a new telling, the world's hints) is on."""
+    return on() or features.allowed(FIX, owner)
 
 
 def clock():
@@ -259,8 +287,8 @@ def last():
     return read_json(FILE, {}) or {}
 
 
-async def _go():
-    """One run: every scene, then the model's line in the file; one at a time."""
+async def _go(nacht=False):
+    """One run: every scene, then the model's line in the file; one at a time (nacht: the night's run, its date kept)."""
     import llm
     t0 = time.monotonic()
     print("dungeon: erzaehlstand | start", flush=True)
@@ -279,12 +307,32 @@ async def _go():
         ms[name] = {"zeit": int(clock()), "punkte": sum(x["punkte"] for x in szenen.values()), "max": 2 * len(szenen),
                     "sekunden": round(time.monotonic() - t0, 1), "szenen": szenen}
         ms = dict(sorted(ms.items(), key=lambda kv: -kv[1]["zeit"])[:MODELLE_MAX])
-        await asyncio.to_thread(write_json, FILE, {"modelle": ms})
+        await asyncio.to_thread(write_json, FILE, {"modelle": ms, "nacht": _date() if nacht else d.get("nacht", "")})
         print(f"dungeon: erzaehlstand | fertig | {ms[name]['punkte']} von {ms[name]['max']} | {int(time.monotonic() - t0)} s", flush=True)
     except Exception as e:
         print(f"dungeon: erzaehlstand | fehler | {type(e).__name__}", flush=True)
     finally:
         _run["laeuft"] = False
+
+
+FIX = "dungeonerzfehler"    # the switch „Erzähler-Fehler beheben“ (features.py)
+NACHT = (2, 5)             # the night window, local hours [from, to), for the scenes taken over from cases (Vorschlag 3)
+
+
+def _date():
+    return time.strftime("%Y-%m-%d", time.localtime(clock()))
+
+
+async def due():
+    """Each minute from the panel's loop: once a night, while the bench is on and has scenes taken over from cases, a
+    run of all scenes, so every new model and version meets the reported errors."""
+    if not on() or _run["laeuft"] or not NACHT[0] <= time.localtime(clock()).tm_hour < NACHT[1]:
+        return
+    if await asyncio.to_thread(lambda: last().get("nacht") == _date() or not own_scenes()):
+        return
+    _run.update(laeuft=True, seit=clock())
+    print("dungeon: erzaehlstand | nacht | start", flush=True)
+    _run["task"] = asyncio.create_task(_go(nacht=True))   # kept, so the run is not collected; the loop goes on
 
 
 def _spawn():
@@ -388,14 +436,49 @@ def case(rid, rd, zug, grund):
 
 
 def keep(c):
-    """Keeps a case, the newest first; a second 👎 with a reason of the same turn replaces it. Returns neu|ersetzt."""
+    """Keeps a case, the newest first; a second 👎 with a reason of the same turn replaces it, and counts the report
+    (time, world, reason) for the world's hints and the weeks. Returns neu|ersetzt."""
     with _flock:
         d = cases()
         old = [x for x in d.get("faelle") or [] if isinstance(x, dict)]
         rest = [x for x in old if x.get("quelle") != c["quelle"]]
         d["faelle"] = ([c] + rest)[:FAELLE_MAX]
+        if len(rest) == len(old):
+            d["meldungen"] = ([{"zeit": c["zeit"], "welt": c["welt"], "grund": c["grund"]}] + (d.get("meldungen") or []))[:MELDUNGEN_MAX]
         write_json(FALL_FILE, d)
     return "ersetzt" if len(rest) < len(old) else "neu"
+
+
+def world_reasons(welt, now=None):
+    """The reasons reported at least WELT_SCHWELLE times in this world within WELT_TAGE (Vorschlag 2)."""
+    now = clock() if now is None else now
+    n = {}
+    for m in cases().get("meldungen") or []:
+        if m.get("welt") == welt and now - m.get("zeit", 0) <= WELT_TAGE * 86400 and m.get("grund") in GRUENDE:
+            n[m["grund"]] = n.get(m["grund"], 0) + 1
+    return [g for g in GRUENDE if n.get(g, 0) >= WELT_SCHWELLE]
+
+
+def world_task(rd, lang):
+    """The standing hints of a world for its narrator: fixed texts of GRUENDE, never words of a report."""
+    if not features.allowed(FIX, rd.get("owner")):
+        return ""
+    hints = [GRUENDE[g][4 if lang == "en" else 3] for g in world_reasons(rd.get("welt"))]
+    return (" " + ("Often reported in this world, keep to it: " if lang == "en" else "In dieser Welt oft gemeldet, halte dich daran: ")
+            + " ".join(hints)) if hints else ""
+
+
+def weeks(now=None):
+    """The reports per week and reason (Vorschlag 4): [{"woche": "2026-W43", "gruende": {grund: n}}], the newest first."""
+    now = clock() if now is None else now
+    out = {}
+    for m in cases().get("meldungen") or []:
+        if now - m.get("zeit", 0) > WOCHEN * 7 * 86400 or m.get("grund") not in GRUENDE:
+            continue
+        y, w, _ = datetime.datetime.fromtimestamp(m["zeit"], datetime.timezone.utc).isocalendar()
+        g = out.setdefault(f"{y}-W{w:02d}", {})
+        g[m["grund"]] = g.get(m["grund"], 0) + 1
+    return [{"woche": k, "gruende": v} for k, v in sorted(out.items(), reverse=True)]
 
 
 def take(fid):
@@ -430,7 +513,9 @@ def drop(key, fid):
 
 def cases_view():
     d = cases()
-    return {"an": on(), "gruende": {k: list(v[:2]) for k, v in GRUENDE.items()}, "faelle": d.get("faelle") or [],
+    return {"an": on(), "beheben": features.admin_on(FIX), "gruende": {k: list(v[:2]) for k, v in GRUENDE.items()},
+            "wochen": weeks(), "welten": {w: world_reasons(w) for w in sorted({m.get("welt") for m in d.get("meldungen") or []} - {None})},
+            "faelle": d.get("faelle") or [],
             "szenen": [{k: s[k] for k in ("id", "name", "grund", "lang")} for s in own_scenes()], "max": FAELLE_MAX, "namen": list(NAMEN),
             "eigene_max": EIGENE_MAX}
 
