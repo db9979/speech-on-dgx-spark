@@ -156,7 +156,8 @@ class Base(unittest.TestCase):
 
     def guest(self, rid, name="Bela", klasse="magier"):
         code = self.invite(rid)
-        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": name, "volk": "elf", "klasse": klasse}})
+        # every guest on a device of its own (one device, one hero: dungeon.GERAET); after the join the code is the key
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": name, "volk": "elf", "klasse": klasse}})
         self.assertEqual(r.status_code, 200, r.text)
         return code, r.json()["pid"]
 
@@ -435,13 +436,16 @@ class Permadeath(Turns):
         r = self.v.post("/api/dungeon/held", json={"code": self.code, "was": "fallen", "i": bela["tasche"][0]["i"]})
         self.assertEqual((r.status_code, r.json()["detail"]), (400, "boden"))
         lage = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
-        self.assertEqual((lage["ich"]["zustand"], lage["ich"]["noch"]), ("boden", dungeon.BODEN_ZUEGE))
+        self.assertEqual((lage["ich"]["zustand"], lage["ich"]["noch"], lage["ich"]["erfolge"]), ("boden", dungeon.BODEN_ZUEGE, 0))
         dinge = len(dungeon.worn(bela)) + len(bela["tasche"])
         gold = bela["gold"]
-        for i in range(dungeon.BODEN_ZUEGE):
-            self.spawned.clear()
-            rd = self.host_turn(i)
-            self.assertIn("dungeon", self.spawned)               # the host alone closed the turn
+        with mock.patch.object(dungeon, "save_roll", return_value=dungeon.RETTUNG - 1):   # every rescue roll fails
+            for i in range(dungeon.BODEN_ZUEGE):
+                self.spawned.clear()
+                rd = self.host_turn(i)
+                self.assertIn("dungeon", self.spawned)           # the host alone closed the turn
+        self.assertEqual([(e["wurf"], e["ok"], e["fehl"]) for e in rd["log"] if e["art"] == "todeswurf"],
+                         [(dungeon.RETTUNG - 1, False, n) for n in range(1, dungeon.BODEN_ZUEGE + 1)])
         bela = rd["plaetze"][self.gp]["held"]
         self.assertEqual(dungeon.zustand(bela), "tot")
         self.assertEqual((bela["tasche"], dungeon.worn(bela), bela["gold"]), ([], [], 0))
@@ -478,10 +482,82 @@ class Permadeath(Turns):
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich ducke mich.", "zug": z}).status_code, 200)
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich decke Bela.", "zug": z}).status_code, 200)
         rd = self.play([{"proben": []}, {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
-        self.assertEqual(rd["plaetze"][self.gp]["held"]["boden"], 0)
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [0, 0])
         # healing by the story gets it up too
         rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
         self.assertEqual(dungeon.zustand(rd["plaetze"][self.gp]["held"]), "")
+
+    def test_rescue_rolls_get_a_hero_up(self):
+        """Dominik 2026-10-25 „1 und 2“, Punkt 1: rescue rolls by the panel as in D&D, from the second told turn down. RETTUNG
+        or more succeeds, a 1 counts as two failures, a 20 gets it up at once, BODEN_ZUEGE successes too, with 1 life."""
+        r = dungeon.rules()
+        self.down_bela()
+
+        def roll(*wuerfe):
+            with dungeon._lock, mock.patch.object(dungeon, "save_roll", side_effect=list(wuerfe)):
+                d = dungeon._read()
+                for _ in wuerfe:
+                    dungeon.down(r, d["runden"][self.rid])
+                dungeon._write(d)
+            return self.state(self.rid)
+
+        rd = roll(12, 1)
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual((dungeon.zustand(bela), bela["rettung"]), ("boden", [1, 2]))
+        lage = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertEqual((lage["ich"]["noch"], lage["ich"]["erfolge"]), (1, 1))
+        rd = roll(20)
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual((dungeon.zustand(bela), bela["leben"]), ("", 1))
+        self.assertNotIn("rettung", bela)
+        self.assertEqual([(e["wurf"], e["ok"], e["erfolge"], e["fehl"]) for e in rd["log"] if e["art"] == "todeswurf"],
+                         [(12, True, 1, 0), (1, False, 1, 2), (20, True, 3, 2)])
+        self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "zustand"][-1], "auf")
+        # down again: the first turn lies without a roll, then three successes get it up
+        self.set_hero(self.gp, leben=0)
+        rd = roll(dungeon.RETTUNG, dungeon.RETTUNG, 19)          # the first call starts the count, it rolls nothing
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [2, 0])
+        rd = roll(dungeon.RETTUNG)
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], 1)
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("if(e.art==='todeswurf')return", js)
+
+    def test_the_only_hero_is_spared(self):
+        """Punkt 2 (Gnade): the only living hero at the table does not fall. It wakes with 1 life, the fight ends without
+        experience, it loses half its gold and one thing from the bag; the next narration is told the rescue."""
+        r = dungeon.rules()
+        self.c.delete(f"/api/profile/dungeon/{self.rid}")
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.set_hero(self.host, gold=41)
+        with dungeon._lock, mock.patch.object(dungeon, "save_roll", return_value=dungeon.RETTUNG - 1):
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            foe = kampf.offer(dungeon, r, rd, dungeon._living(rd))[0]
+            kampf.start(dungeon, r, rd, dungeon._living(rd), [(foe, 1)], 0)
+            h = rd["plaetze"][self.host]["held"]
+            h["leben"] = 0
+            dinge = sum(x.get("n", 1) for x in h["tasche"])
+            self.assertTrue(dungeon.alone(rd, self.host))
+            for _ in range(dungeon.BODEN_ZUEGE + 1):
+                dungeon.down(r, rd, random.Random(3))
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual((dungeon.zustand(h), h["leben"], h["gold"]), ("", 1, 20))
+        self.assertEqual(sum(x.get("n", 1) for x in h["tasche"]), dinge - 1)
+        self.assertNotIn("kampf", rd)
+        ende = [e for e in rd["log"] if e["art"] == "kampf"][-1]
+        self.assertEqual((ende["was"], ende["ep"]), ("gnade", 0))
+        g = [e for e in rd["log"] if e["art"] == "zustand"][-1]
+        self.assertEqual((g["was"], g["gold"]), ("gnade", 21))
+        self.assertTrue(g["ding"])
+        self.assertFalse(rd.get("boden"))                    # nothing lies here: it did not fall
+        rd["zug"] += 1
+        self.assertIn(dungeon.GNADE_FAKT[0], dungeon.facts(r, rd))
+        # with a friend still up the hero falls as before (test_down_three_turns_then_dead_and_things_lie_here)
+        self.guest(self.rid)
+        self.assertFalse(dungeon.alone(self.state(self.rid), self.host))
 
     def test_childrens_table_only_unconscious_and_wakes_without_gold(self):
         r = dungeon.rules()
@@ -496,9 +572,10 @@ class Permadeath(Turns):
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid rutscht vom nassen Ast und landet weich im Moos.",
                                          "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(dungeon.zustand(rd["plaetze"][self.host]["held"]), "boden")
-        with dungeon._lock:                                  # nobody is up: the clock tells the turns
+        self.guest(self.rid)                                 # not alone at the table: no Gnade (test_the_only_hero_is_spared)
+        with dungeon._lock, mock.patch.object(dungeon, "save_roll", return_value=1):   # a 1 counts as two failures
             d = dungeon._read()
-            for _ in range(dungeon.BODEN_ZUEGE):
+            for _ in range(2):
                 dungeon.down(r, d["runden"][self.rid])
             dungeon._write(d)
         rd = self.state(self.rid)
@@ -4693,6 +4770,114 @@ class Fight(Turns):
         z = self.state(self.rid)["zug"]
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": z}).status_code, 200)
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": text, "zug": z}).status_code, 200)
+
+    def fight(self):
+        """A running fight of the foes the panel offers (straight into the round)."""
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            foe = kampf.offer(dungeon, r, rd, dungeon._living(rd))[0]
+            kampf.start(dungeon, r, rd, dungeon._living(rd), [(foe, 1)], 0)
+            dungeon._write(d)
+        return foe
+
+    def test_join_during_a_fight_waits_at_the_edge(self):
+        """Dominik 2026-10-25 „Held am Boden → neuen Charakter erstellen, beitreten, heilen, wieder raus“ (Punkt 1): a hero
+        who joins during a fight waits at the edge: no action, no move of its own, not waited for, not in the fight's
+        group; once the fight is over it comes to the table and its first turn is the open one."""
+        self.fight()
+        code = self.invite(self.rid)
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        pid = r.json()["pid"]
+        self.assertEqual((r.json()["ich"], r.json()["wartet"]["name"]), (None, "Cora"))
+        rd = self.state(self.rid)
+        self.assertNotIn(pid, dict(dungeon.seated(rd)))
+        self.assertNotIn(pid, rd["kampf"]["helden"])
+        self.assertEqual([x["name"] for x in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["am_rand"]], ["Cora"])
+        a = self.v.post("/api/dungeon/aktion", json={"code": code, "text": "Ich heile Arvid.", "zug": rd["zug"]})
+        self.assertEqual((a.status_code, a.json()["detail"]), (400, "rand"))
+        h = self.v.post("/api/dungeon/held", json={"code": code, "was": "trinken", "i": 0})
+        self.assertEqual((h.status_code, h.json()["detail"]), (400, "rand"))
+        self.assertIn("rand", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
+        with dungeon._lock:                       # the fight ends with the turn
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            kampf.end(dungeon, dungeon.rules(), rd, {})
+            dungeon.arrive(rd)
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        self.assertEqual(rd["plaetze"][pid]["held"]["name"], "Cora")
+        self.assertTrue(dungeon.fresh(rd, pid))
+        self.assertIn("Cora kommt dazu.", [e["text"][0] for e in rd["log"] if e["art"] == "system"])
+
+    def test_the_first_turn_gives_nothing_to_others(self):
+        """Punkt 2: in its first turn at the table a hero gives no potion to a friend, trades nothing and casts no spell
+        on the group; a healing the model tells for a friend in a turn only new heroes acted in does not count. A hero
+        sitting down before the round's second turn is not new (the table starts together)."""
+        self.assertFalse(dungeon.fresh(self.state(self.rid), self.gp))
+        with dungeon._lock:                       # a round under way
+            d = dungeon._read()
+            d["runden"][self.rid]["zug"] = 3
+            dungeon._write(d)
+        code = self.invite(self.rid)
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        pid = r.json()["pid"]
+        i = self.give(self.rid, pid, "heiltrank")
+        self.assertTrue(dungeon.fresh(self.state(self.rid), pid))
+        x = self.v.post("/api/dungeon/held", json={"code": code, "was": "trinken", "i": i, "an": self.host})
+        self.assertEqual((x.status_code, x.json()["detail"]), (400, "neu"))
+        x = self.v.post("/api/dungeon/held", json={"code": code, "was": "schenken", "i": i, "an": self.host})
+        self.assertEqual((x.status_code, x.json()["detail"]), (400, "neu"))
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": code, "was": "trinken", "i": i}).status_code, 200)   # for itself: yes
+        with dungeon._lock:                       # Arvid hurt, only Cora acts and the model heals Arvid
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["plaetze"][self.host]["held"]["leben"] = 1
+            rd["offen"] = {pid: {"text": "Ich heile Arvid.", "t": 0}}
+            dungeon.apply(dungeon.rules(), rd, [], {"text": "Cora legt die Hände auf Arvid.", "folgen": [{"pid": self.host, "art": "heilung", "zahl": 5}],
+                                                     "frage": "", "npc": [], "ooc": [], "szene": None, "beute": None, "erfolg": [],
+                                                     "begegnung": [], "kampf_ende": "", "bild": ""}, self.rid)
+            self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 1)
+            self.assertFalse(dungeon.fresh(rd, pid))          # the next turn it may help
+        facts = dungeon.facts(dungeon.rules(), dict(rd, zug=rd["plaetze"][pid]["neu_zug"]))
+        self.assertIn(dungeon.NEU_FAKT[0], facts)
+
+    def test_leaving_a_fight_is_fleeing_and_the_share_stays_out(self):
+        """Punkt 3: the experience of a fight is divided by the heroes it began with; a seat that left during it has fled
+        (its share stays out, a line in the log), a hero who came later gets none."""
+        self.fight()
+        rd = self.state(self.rid)
+        self.assertEqual(sorted(rd["kampf"]["helden"]), sorted([self.host, self.gp]))
+        self.assertTrue(dungeon.drop_seat(rd["owner"], self.rid, self.gp))
+        rd = self.state(self.rid)
+        self.assertIn("Bela flieht aus dem Kampf und verlässt den Tisch.", [e["text"][0] for e in rd["log"] if e["art"] == "system"])
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            for g in rd["kampf"]["gegner"]:
+                g["aus"] = "besiegt"
+            alle = sum(g["ep"] for g in rd["kampf"]["gegner"])
+            ep = {self.host: 0}
+            kampf.end(dungeon, dungeon.rules(), rd, ep)
+        self.assertEqual(ep[self.host], -(-alle // 2))      # half: Bela's share stays out
+
+    def test_one_device_one_hero(self):
+        """Punkt 6: a device (its cookie, only the hash at the seat) holds one seat of a round, a guest's as a profile's."""
+        dev = TestClient(panel.app)
+        a, b = self.invite(self.rid), self.invite(self.rid)
+        r = dev.post("/api/dungeon/beitreten", json={"code": a, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        tok = dev.cookies.get(dungeon.GERAET)
+        self.assertTrue(tok and dungeon._GERAET.fullmatch(tok))
+        self.assertEqual(self.state(self.rid)["plaetze"][r.json()["pid"]]["geraet"], dungeon.device(tok))
+        self.assertNotIn(tok, json.dumps(self.state(self.rid)))           # never the token itself
+        r = dev.post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb"}})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "geraet"))
+        self.assertIn("'geraet':[", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
+        self.assertEqual(TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb"}}).status_code, 200)
+        self.assertTrue({"am_rand", "rand", "held_geflohen", "neu_gesperrt", "geraet"} <= set(dungeon.for_live()))
 
     def set_foe(self, k, **kw):
         with dungeon._lock:

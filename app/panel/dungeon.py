@@ -107,7 +107,7 @@ import sys
 import time
 from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import Response
 
 import dungeon_karte
@@ -154,6 +154,15 @@ KLEIN = 96                # pixels of a small copy at most (a 44 px picture on a
 RUNDEN_MAX = 3            # open rounds per host
 ALLE_MAX = 20             # open rounds on the Spark
 HELDEN_MAX = 8            # kept heroes per profile
+# joining without cheating (Dominik 2026-10-25 „Held am Boden → neuen Charakter erstellen, beitreten, heilen, wieder raus“, „ok“
+# to 1+2+3+6+7): a hero who joins during a fight waits at the edge (p["wartet"]) until it is over; a hero's first turn
+# at the table (p["neu_zug"]) gives nothing to others; a seat that leaves during a fight has fled; one device, one hero
+GERAET = "dmgeraet"       # the cookie of a device that took a seat (only its hash stays at the seat)
+_GERAET = re.compile(r"[A-Za-z0-9_\-]{32}")
+NEU_GEBEN = ("schenken", "tauschen", "annehmen")     # moves of a new hero's first turn that give to others
+GNADE_FAKT = ("lag allein am Boden, ein Fremder hat ihn gefunden und in Sicherheit gebracht; der Kampf ist vorbei, er hat dabei Gold und ein Ding verloren",
+              "lay alone on the ground, a stranger found them and brought them to safety; the fight is over, they lost gold and a thing")
+NEU_FAKT = ("gerade angekommen: hilft, heilt und gibt in diesem Zug noch niemandem", "just arrived: helps, heals and gives nobody anything this turn")
 FIGUREN_MAX = 200         # Figur-Codes on the Spark
 FIGUR_TAGE = 30
 KAMPAGNEN_MAX = 10        # campaigns per host
@@ -298,9 +307,15 @@ STAPEL = 3                # potions, spells and scrolls of one kind stack on one
 STAPEL_ARTEN = ("trank", "zauber", "rolle", "werkzeug", "schatz")
 BODEN_MAX = 12            # items lying at a place for the group (until the place changes)
 # Punkt 1 of 2026-10-24 (Dominik „1“, „nur ohnmächtig“): at 0 life a hero is down („am Boden“), it can neither act nor
-# be waited for; BODEN_ZUEGE told turns without healing (a potion, a spell, a friend's help) and it is dead for good,
-# its things and gold lie at the place; at the children's table it is only unconscious until the next chapter
+# be waited for; without healing (a potion, a spell, a friend's help) its rescue rolls decide, and after BODEN_ZUEGE
+# failed ones it is dead for good, its things and gold lie at the place; at the children's table it is only
+# unconscious until the next chapter
+# Dominik 2026-10-25 „1 und 2“: rescue rolls as in D&D, by the panel. Each told turn down after the first one d20: RETTUNG
+# or more succeeds, a 20 gets it up at once, a 1 counts as two failures; BODEN_ZUEGE successes up with 1 life, BODEN_ZUEGE
+# failures and it falls. The only living hero at the table does not fall (Gnade): it wakes with 1 life, the fight ends
+# without experience, it loses half its gold and one thing from the bag
 BODEN_ZUEGE = 3
+RETTUNG = 10
 ZUSTAENDE = ("boden", "ohnmacht", "tot")
 # Punkt 3: what an ability does by the panel (faehigkeiten[].wirkung, fixed words): every hit 1 less, a friend's hit
 # taken once a scene, +1 on the group's checks of that turn; "immer": true marks one that always works (no „Einsetzen“)
@@ -348,7 +363,8 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
-                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0)
+                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0)
 
 
 def _go(coro, name):
@@ -1117,9 +1133,14 @@ def fix_hero(r, h):
     for z in ("tot", "ohnmacht"):
         if h.get(z) is not True:
             h.pop(z, None)
-    for k, hi in (("boden", BODEN_ZUEGE), ("ep_tisch", 10 ** 7)):
-        if not _int(h.get(k), 0, hi):
-            h.pop(k, None)
+    if "boden" in h and "rettung" not in h and _int(h["boden"], 0, BODEN_ZUEGE - 1):
+        h["rettung"] = [0, h["boden"]]          # an older version counted the turns down: they count as failures
+    h.pop("boden", None)
+    rt = h.get("rettung")
+    if not (isinstance(rt, list) and len(rt) == 2 and all(_int(x, 0, BODEN_ZUEGE - 1) for x in rt)):
+        h.pop("rettung", None)
+    if not _int(h.get("ep_tisch"), 0, 10 ** 7):
+        h.pop("ep_tisch", None)
     sk = h.get("szene_kraft")
     h["szene_kraft"] = {k: v[:60] for k, v in sk.items() if k in fa and isinstance(v, str)} if isinstance(sk, dict) else {}
     werte = {w["id"] for w in r["werte"]}
@@ -1217,34 +1238,81 @@ def heal(h, n):
 def stood_up(rd, pid, h, was):
     """A hero down with life again stands up: the count of its turns down starts anew."""
     if was <= 0 < h["leben"]:
-        h.pop("boden", None)
+        h.pop("rettung", None)
         _log(rd, "zustand", pid=pid, name=h["name"], was="auf")
         _day.bump("aufgestanden")
         print("dungeon: zustand | auf", flush=True)
 
 
-def down(r, rd):
-    """After a told turn: a hero at 0 life lies down, one down lies a turn longer; after BODEN_ZUEGE told turns
-    without healing it falls (fall)."""
+def save_roll(rng=None):
+    """One rescue roll, a d20 (tests replace it)."""
+    return (rng or random).randint(1, 20)
+
+
+def down(r, rd, rng=None):
+    """After a told turn: a hero at 0 life lies down; each told turn after that it makes a rescue roll (RETTUNG). With
+    BODEN_ZUEGE successes or a 20 it stands up with 1 life, with BODEN_ZUEGE failures it falls (fall), unless it is the
+    only living hero at the table (spare)."""
     for pid, p in seated(rd):
         h = p["held"]
         if zustand(h) != "boden":
             continue
-        h["boden"] = h["boden"] + 1 if "boden" in h else 0
-        if h["boden"] >= BODEN_ZUEGE:
-            fall(r, rd, pid, h)
-            continue
-        _log(rd, "zustand", pid=pid, name=h["name"], was="boden", noch=BODEN_ZUEGE - h["boden"])
-        if not h["boden"]:
+        if "rettung" not in h:
+            h["rettung"] = [0, 0]
+            _log(rd, "zustand", pid=pid, name=h["name"], was="boden", noch=BODEN_ZUEGE)
             _day.bump("zu_boden")
-        print(f"dungeon: zustand | boden | noch {BODEN_ZUEGE - h['boden']}", flush=True)
+            print(f"dungeon: zustand | boden | noch {BODEN_ZUEGE}", flush=True)
+            continue
+        w = save_roll(rng)
+        ok, fail = h["rettung"]
+        ok, fail = (BODEN_ZUEGE, fail) if w == 20 else (ok + 1, fail) if w >= RETTUNG else (ok, fail + (2 if w == 1 else 1))
+        _log(rd, "todeswurf", pid=pid, name=h["name"], wurf=w, ok=w >= RETTUNG, erfolge=min(ok, BODEN_ZUEGE), fehl=min(fail, BODEN_ZUEGE))
+        _day.bump("rettungswurf")
+        print(f"dungeon: rettung | {'gelungen' if w >= RETTUNG else 'misslungen'} | {min(ok, BODEN_ZUEGE)} zu {min(fail, BODEN_ZUEGE)}", flush=True)
+        if ok >= BODEN_ZUEGE:
+            h["leben"] = 1
+            stood_up(rd, pid, h, 0)
+        elif fail >= BODEN_ZUEGE:
+            spare(r, rd, pid, h, rng) if alone(rd, pid) else fall(r, rd, pid, h)
+        else:
+            h["rettung"] = [ok, fail]
+
+
+def alone(rd, pid):
+    """The only living hero at the table (Gnade): nobody else seated is up or down."""
+    return not any(q != pid and zustand(p["held"]) in ("", "boden") for q, p in seated(rd))
+
+
+def spare(r, rd, pid, h, rng=None):
+    """Gnade (Dominik 2026-10-25 „1 und 2“, Punkt 2): the only living hero does not fall. A stranger finds it, it wakes
+    with 1 life, the fight ends without experience, it loses half its gold and one thing from its bag."""
+    rng = rng or random
+    h.pop("rettung", None)
+    rd["offen"].pop(pid, None)
+    if rd.get("kampf"):
+        kampf.end(_me, r, rd, {}, "gnade")
+    gold = (h["gold"] + 1) // 2
+    h["gold"] -= gold
+    ding = ""
+    if h["tasche"]:
+        k = rng.randrange(len(h["tasche"]))
+        ding = item_view(r, h["tasche"][k], rd.get("lang"))["name"]
+        if h["tasche"][k].get("n", 1) > 1:
+            h["tasche"][k]["n"] -= 1
+        else:
+            h["tasche"].pop(k)
+    h["leben"] = 1
+    rd["plaetze"][pid]["gnade_zug"] = rd.get("zug", 0) + 1     # the next narration tells the rescue (facts)
+    _log(rd, "zustand", pid=pid, name=h["name"], was="gnade", gold=gold, ding=ding)
+    _day.bump("gnade")
+    print(f"dungeon: zustand | gnade | {gold} gold | {1 if ding else 0} ding", flush=True)
 
 
 def fall(r, rd, pid, h):
-    """BODEN_ZUEGE turns down without healing: dead for good, everything it wore and carried and its gold lie at the
+    """BODEN_ZUEGE failed rescue rolls: dead for good, everything it wore and carried and its gold lie at the
     place for the others („Liegt hier“), the experience of this table is gone; at the children's table only
     unconscious until its next table, where it wakes without its gold (join)."""
-    h.pop("boden", None)
+    h.pop("rettung", None)
     rd["offen"].pop(pid, None)
     if kids(r, rd):
         h["ohnmacht"] = True
@@ -1396,7 +1464,8 @@ def hero_view(r, h, lang, full=True, welt=""):
            "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h),
            "zust": [{"name": z["name"][li], "info": z["info"][li]} for z in kampf._states(r, h)]}   # from a foe's hit (Kampf Teil 2)
     if out["zustand"] == "boden":
-        out["noch"] = BODEN_ZUEGE - h.get("boden", 0)       # told turns until it falls (or lies unconscious)
+        ok, fail = h.get("rettung") or (0, 0)
+        out.update(noch=BODEN_ZUEGE - fail, erfolge=ok)     # failed rescue rolls until it falls, successes so far
     if not full:
         return out
     se = r["stufen_ep"]
@@ -1637,6 +1706,7 @@ def _prune(d, now):
 
 
 def _end(rd, now, why, rid):
+    arrive(rd, force=True)                       # a hero still waiting at the edge is kept like every seated one
     rd["status"] = "ende"
     rd["ende_t"] = now
     pay_ep(rules(), rd, rid)
@@ -1710,10 +1780,35 @@ def seated(rd):
     return [(pid, p) for pid, p in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if p.get("held")]
 
 
+def fresh(rd, pid):
+    """A hero's first turn at the table (joined, or arrived after a fight): it heals, gives and trades nothing for others."""
+    return (rd["plaetze"].get(pid) or {}).get("neu_zug") == rd.get("zug")
+
+
+def arrive(rd, force=False):
+    """The heroes waiting at the edge come to the table once no fight runs (or the round ends): their first turn is the
+    open one, the log says so."""
+    if rd.get("kampf") and not force:
+        return
+    for pid, p in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)):
+        h = p.pop("wartet", None)
+        if not h:
+            continue
+        p["held"], p["neu_zug"] = h, rd.get("zug")
+        rd["still"][pid] = 0
+        _log(rd, "system", text=[f"{h['name']} kommt dazu.", f"{h['name']} joins."])
+        print("dungeon: beitritt | angekommen", flush=True)
+
+
+def device(token):
+    """The hash a seat keeps of its device's cookie ("" for none)."""
+    return hashlib.sha256(token.encode()).hexdigest()[:32] if token and _GERAET.fullmatch(token) else ""
+
+
 def _in_play(d, hid):
     """Whether a kept hero sits in a running round already: one hero plays in one round at a time, so nothing of
     its bag can be doubled by trading in two rounds."""
-    return any(p.get("held") and p["held"]["hid"] == hid for v in d["runden"].values() if v.get("status") != "ende"
+    return any((p.get("held") or p.get("wartet") or {}).get("hid") == hid for v in d["runden"].values() if v.get("status") != "ende"
                for p in v["plaetze"].values())
 
 
@@ -1832,7 +1927,12 @@ def drop_seat(owner, rid, pid):
             return False
         if p.get("held"):
             p["held"].pop("ep_tisch", None)      # left before the end: back with the experience it came with (pay_ep)
-        keep_seat(p)
+            if rd.get("kampf"):                  # left during a fight: fled, its share of the fight stays out (Punkt 3)
+                _log(rd, "system", text=[f"{p['held']['name']} flieht aus dem Kampf und verlässt den Tisch.",
+                                         f"{p['held']['name']} flees the fight and leaves the table."])
+                _day.bump("held_geflohen")
+                print("dungeon: platz weg | geflohen", flush=True)
+        keep_seat(p, p.get("held") or p.get("wartet"))
         rd["plaetze"].pop(pid)
         rd["offen"].pop(pid, None)
         rd["angebote"] = {k: t for k, t in (rd.get("angebote") or {}).items() if pid not in (t["von"], t["an"])}
@@ -1918,15 +2018,16 @@ def sit_down(r, h):
     wach = bool(h.pop("ohnmacht", None))
     if wach:
         h["gold"] = 0
-    for k in ("boden", "ep_tisch", "szene_kraft"):
+    for k in ("rettung", "ep_tisch", "szene_kraft"):
         h.pop(k, None)
     h["leben"] = h["leben_max"]
     h["ladungen"] = full_charges(r, h)
     return wach
 
 
-def join(rid, pid, b, uid="", now=None):
-    """A hero takes a free seat: a new one, a kept one of the profile (uid) or a Figur-Code (guest or profile)."""
+def join(rid, pid, b, uid="", now=None, geraet=""):
+    """A hero takes a free seat: a new one, a kept one of the profile (uid) or a Figur-Code (guest or profile). During a
+    fight it waits at the edge (arrive); a device (geraet, the hash of its cookie) holds one seat of a round."""
     r = rules()
     now = time.time() if now is None else now
     h, konto = None, ""
@@ -1960,16 +2061,20 @@ def join(rid, pid, b, uid="", now=None):
         if not p or rd["status"] == "ende":
             raise LookupError("runde")
         if h == "kampagne":
-            if p.get("held"):
+            if p.get("held") or p.get("wartet"):
                 raise FileExistsError("besetzt")
             h = take_campaign_hero(rd, b["kampagne"])
             if not h:
                 raise LookupError("held")
-        if p.get("held") or (uid and seat_of(rd, uid)[0]):
+        if p.get("held") or p.get("wartet") or (uid and seat_of(rd, uid)[0]):
             raise FileExistsError("besetzt")
+        if geraet and any(q.get("geraet") == geraet and (q.get("held") or q.get("wartet")) for k, q in rd["plaetze"].items() if k != pid):
+            print("dungeon: beitritt | geraet", flush=True)       # one device, one hero (Punkt 6)
+            _day.bump("geraet")
+            raise FileExistsError("geraet")
         if _in_play(d, h["hid"]):
             raise FileExistsError("held spielt")
-        if any(x["held"]["name"].lower() == h["name"].lower() for _, x in seated(rd)):
+        if any((x.get("held") or x.get("wartet") or {}).get("name", "").lower() == h["name"].lower() for x in rd["plaetze"].values()):
             raise NameError("name")
         if bad_words(r, rd, h["name"]):        # a kept hero or a hero code from a rougher table (Punkt 13)
             print("dungeon: beitreten | wortliste", flush=True)
@@ -1978,15 +2083,28 @@ def join(rid, pid, b, uid="", now=None):
         wach = sit_down(r, h)
         if not h.get("stimme") and not h.get("klang"):
             h["stimme"] = voice_for(r, rd, h)
-        p["held"] = h
+        rand = bool(rd.get("kampf"))
+        if rand:                                   # during a fight: at the edge until it is over (Punkt 1)
+            p["wartet"] = h
+            _log(rd, "system", text=[f"{h['name']} kommt dazu und wartet am Rand, bis der Kampf vorbei ist.",
+                                     f"{h['name']} arrives and waits at the edge until the fight is over."])
+            _day.bump("rand")
+        else:
+            p["held"] = h
+            if rd["zug"] > 1:                    # joined a round under way: its first turn gives nothing (Punkt 2)
+                p["neu_zug"] = rd["zug"]
+            _log(rd, "system", text=[f"{h['name']} kommt dazu.", f"{h['name']} joins."])
         if uid:
             p.update(uid=uid, h="", gast=False)
         elif konto:
             p["konto"] = konto
+        if geraet:
+            p["geraet"] = geraet
         rd["still"][pid] = 0
-        _log(rd, "system", text=[f"{h['name']} kommt dazu.", f"{h['name']} joins."])
         _write(d)
-    print(f"dungeon: beitritt | {'profil' if uid else 'gast'}{' | wach' if wach else ''}", flush=True)
+    if rand:
+        keep_seat(p, h)
+    print(f"dungeon: beitritt | {'profil' if uid else 'gast'}{' | wach' if wach else ''}{' | rand' if rand else ''}", flush=True)
     return h
 
 
@@ -2585,6 +2703,9 @@ def act(rd, pid, text, turn, now):
         raise LookupError("runde")
     if turn != rd["zug"] or rd.get("dm"):
         raise TimeoutError("zug")
+    if (rd["plaetze"].get(pid) or {}).get("wartet"):     # at the edge until the fight is over (Punkt 1 of 2026-10-25)
+        print("dungeon: aktion | rand", flush=True)
+        raise PermissionError("rand")
     z = zustand((rd["plaetze"].get(pid) or {}).get("held") or {})
     if z:                                         # down, unconscious or dead: no action (Punkt 1 of 2026-10-24)
         print(f"dungeon: aktion | {z}", flush=True)
@@ -2761,7 +2882,9 @@ def facts(r, rd, wuerfe=None, zuege=None):
                "klasse": _by(r, "klassen")[p["held"]["klasse"]]["name"][li], "stufe": p["held"]["stufe"],
                "leben": f"{p['held']['leben']}/{p['held']['leben_max']}", "kann": kann_facts(r, p["held"], rd["lang"]),
                **({"zustand": ZUSTAND_WORT[zustand(p["held"])][li]} if zustand(p["held"]) else {}),
-               **({"zustaende": [z["name"][li] for z in kampf._states(r, p["held"])]} if p["held"].get("zust") else {})}
+               **({"zustaende": [z["name"][li] for z in kampf._states(r, p["held"])]} if p["held"].get("zust") else {}),
+               **({"neu": NEU_FAKT[li]} if p.get("neu_zug") == rd.get("zug") else {}),
+               **({"gerettet": GNADE_FAKT[li]} if p.get("gnade_zug") == rd.get("zug") else {})}
               for p in names.values()]
     bisher = told_here(rd, 2 if rd.get("kurz") else BISHER)
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
@@ -3126,7 +3249,13 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
             rd["kampf"]["geschafft"] = any(w["ok"] for w in wuerfe)   # a peace counts only with a check passed (Idee 7)
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
-        consequences(r, rd, story["folgen"] + hiebe, names)
+        folgen = story["folgen"]
+        helfer = [q for q in rd["offen"] if q in names]
+        if helfer and all(fresh(rd, q) for q in helfer) and any(f["art"] == "heilung" and f["pid"] not in helfer for f in folgen):
+            folgen = [f for f in folgen if not (f["art"] == "heilung" and f["pid"] not in helfer)]    # Punkt 2: no rescue on arrival
+            _day.bump("neu_gesperrt")
+            print("dungeon: folgen | heilung | neu", flush=True)
+        consequences(r, rd, folgen + hiebe, names)
         if war:
             kampf.turn_dial(_me, r, rd)           # the game master's dial after the fight's end (Idee 6)
             dungeon_karte.won(rd)                # the fight won in a vault's room opens it in the same turn
@@ -3162,12 +3291,13 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         rd["auftrag_ok"] = False                 # a quest an older version closed too early is open again
     if story:
         cast_powers(r, rd)
-        down(r, rd)
+        down(r, rd, rng)
         wear_off(rd)
         for pid, _ in seated(rd):
             rd["still"][pid] = 0 if pid in rd["offen"] else rd["still"].get(pid, 0) + 1
         rd["offen"] = {}
         rd["zug"] += 1
+        arrive(rd)                               # the fight is over: the ones at the edge come to the table
     _narrated(rd)
 
 
@@ -4516,6 +4646,9 @@ def view(rid, pid, now=None):
             "mehr": mehr, "mehr_ich": bool(pid) and pid in rd["plaetze"] and pid not in (rd.get("mehr") or {}) and not rd.get("dm"),
             "warn_s": WARN_S, "szene": rd["szene"], "gastgeber": host, "lang": lang,
             "ich": hero_view(r, me["held"], lang, welt=rd["welt"]) if me.get("held") else None,
+            "wartet": hero_view(r, me["wartet"], lang, full=False) if me.get("wartet") else None,
+            "am_rand": [{"pid": k, "name": q["wartet"]["name"], "gast": bool(q.get("gast"))}
+                        for k, q in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if q.get("wartet")],
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if shown(e, pid)][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
@@ -4606,9 +4739,18 @@ def hero_act(rid, pid, b):
         if rd["status"] == "ende":
             raise LookupError("runde")
         p = rd["plaetze"].get(pid)
+        if p and p.get("wartet"):
+            print(f"dungeon: held | {was} | rand", flush=True)
+            raise PermissionError("rand")
         h = p and p.get("held")
         if not h:
             raise LookupError("held")
+        it0 = next((x for x in h["tasche"] if x["i"] == b.get("i")), None)
+        if fresh(rd, pid) and (was in NEU_GEBEN or was == "trinken" and b.get("an") and b.get("an") != pid
+                               or was == "wirken" and it0 and _c(r, it0).get("ziel") == "gruppe"):
+            print(f"dungeon: held | {was} | neu", flush=True)     # the first turn gives nothing to others (Punkt 2)
+            _day.bump("neu_gesperrt")
+            raise PermissionError("neu")
         if zustand(h) and was != "stimme":       # down, unconscious or dead: a friend helps (Punkt 1 of 2026-10-24)
             print(f"dungeon: held | {was} | {zustand(h)}", flush=True)
             raise PermissionError(zustand(h))
@@ -4910,7 +5052,9 @@ def for_live():
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"],
-            **dungeon_karte.for_live(rs)}
+            **dungeon_karte.for_live(rs),
+            "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade")}}
 
 
 def own_count(uid):
@@ -5037,7 +5181,7 @@ def show(request: Request, prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/dungeon/runde", dependencies=[Depends(assistant)])
-async def neue_runde(request: Request, prof=Depends(browser_profile)):
+async def neue_runde(request: Request, response: Response, prof=Depends(browser_profile)):
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -5046,6 +5190,7 @@ async def neue_runde(request: Request, prof=Depends(browser_profile)):
         rid = await asyncio.to_thread(make_round, uid, b, _lang(b))
     except KNOWN as e:
         raise _http(e)
+    await asyncio.to_thread(mark_device, rid, uid, device(_device_cookie(request, response)))
     _go(run_prolog(rid), name="dungeon-prolog")
     return await asyncio.to_thread(view, rid, _seat_uid(rid, uid))
 
@@ -5136,6 +5281,9 @@ async def _act(rid, seat, b):
         with _lock:
             d = _read()
             rd = _round(d, rid)
+            if rd["plaetze"][pid].get("wartet"):
+                print("dungeon: aktion | rand", flush=True)
+                raise PermissionError("rand")       # at the edge until the fight is over (Punkt 1 of 2026-10-25)
             if not rd["plaetze"][pid].get("held"):
                 raise LookupError("held")
             act(rd, pid, b.get("text"), b.get("zug"), time.time())
@@ -5860,7 +6008,7 @@ async def kampagne_weg(kid: str, request: Request, prof=Depends(browser_profile)
 
 
 @router.post("/api/profile/dungeon/beitreten", dependencies=[Depends(assistant)])
-async def beitreten_profil(request: Request, prof=Depends(browser_profile)):
+async def beitreten_profil(request: Request, response: Response, prof=Depends(browser_profile)):
     """{"code", "held": hid | {name, volk, klasse, satz}}: a profile takes a seat link for its own login."""
     uid = prof["id"]
     _need(uid)
@@ -5873,8 +6021,9 @@ async def beitreten_profil(request: Request, prof=Depends(browser_profile)):
         _day.bump("abgelehnt")
         print("dungeon: abgelehnt | falscher code", flush=True)
         raise HTTPException(400, "Der Link passt nicht oder ist abgelaufen.")
+    tok = _device_cookie(request, response)
     try:
-        await asyncio.to_thread(join, rid, pid, b, uid)
+        await asyncio.to_thread(join, rid, pid, b, uid, None, device(tok))
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
         raise _http(e)
@@ -5940,12 +6089,32 @@ async def gast_platz(request: Request):
     return out
 
 
+def mark_device(rid, uid, geraet):
+    """The host's seat keeps the hash of the device it was made on, so a seat link opened there takes no second hero."""
+    with _lock:
+        d = _read()
+        pid, p = seat_of(_round(d, rid), uid)
+        if pid and geraet:
+            p["geraet"] = geraet
+            _write(d)
+
+
+def _device_cookie(request, response):
+    """This device's token (the cookie GERAET, made once, HttpOnly): the seat keeps only its hash (Punkt 6)."""
+    tok = request.cookies.get(GERAET, "")
+    if not _GERAET.fullmatch(tok):
+        tok = secrets.token_urlsafe(24)
+    response.set_cookie(GERAET, tok, max_age=365 * 86400, httponly=True, samesite="strict")
+    return tok
+
+
 @router.post("/api/dungeon/beitreten")
-async def gast_beitreten(request: Request):
-    """{"code", "held": {name, volk, klasse, satz}} or {"code", "figur"}: a guest takes the seat."""
+async def gast_beitreten(request: Request, response: Response):
+    """{"code", "held": {name, volk, klasse, satz}} or {"code", "figur"}: a guest takes the seat (one seat per device)."""
     b, rid, pid = await _guest(request)
+    tok = _device_cookie(request, response)
     try:
-        await asyncio.to_thread(join, rid, pid, b)
+        await asyncio.to_thread(join, rid, pid, b, "", None, device(tok))
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
         raise _http(e)

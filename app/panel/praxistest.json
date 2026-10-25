@@ -3306,6 +3306,13 @@
 "titel": "Dungeon-Master: markierte Musikstücke anhören",
 "text": "A: Am Tisch ein Stück mit 👎 markieren. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: unter „1 markiert“ auf ▶ Anhören tippen: das Stück spielt, der Knopf heißt „■ Stopp“. C: Ein zweites Anhören stoppt das erste. D: Stopp beendet es, die Markierung bleibt. E: Zurücknehmen stoppt und lässt es wieder spielen.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P497",
+"v": 1047,
+"titel": "Beitreten ohne Schummeln",
+"text": "Mit zwei Geräten: A: Ein Kampf läuft, ein zweiter Held tritt über einen neuen Platz-Link bei: er wartet am Rand (⏳), kann nicht handeln und keinen Trank geben. B: Nach dem Kampf kommt er dazu; in seinem ersten Zug kann er niemandem einen Trank geben (Meldung), sich selbst schon. C: Der Gastgeber nimmt mitten im Kampf einen Platz zurück: im Verlauf „flieht aus dem Kampf“, die Erfahrung des Kampfes bleibt für die anderen gleich. D: Auf demselben Gerät einen zweiten Platz-Link derselben Runde öffnen und beitreten: abgelehnt. E: Zustand → Überblick zeigt die Zählungen. F: Mit zwei Helden fällt einer auf 0: ab dem nächsten Zug steht je Zug ein 🎲-Rettungswurf im Verlauf, der Heldenbogen zeigt ✓ und die übrigen Fehlwürfe. G: Allein spielen und auf 0 fallen: nach drei misslungenen Würfen rettet ein Fremder den Helden, er hat 1 Leben, der Kampf ist vorbei, die Hälfte des Goldes und ein Ding fehlen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

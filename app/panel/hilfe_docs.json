@@ -5133,6 +5133,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Beitreten ohne Schummeln (V01.1.047, Dominik 2026-10-25 „Held am Boden → neuen Charakter erstellen, beitreten, heilen, wieder raus“, „ok“ zu 1+2+3+6+7, Plan /mnt/project-files/plaene/dungeon-beitritt-schutz.md): Am Rand warten: Wer während eines Kampfes einem Platz beitritt, sitzt am Tisch, wartet aber am Rand (p[\"wartet\"]): keine Aktion, keine eigenen Züge mit Tasche und Tränken, nicht in der Gruppe des Kampfes, der Zug wartet nicht auf ihn. Der Verlauf sagt „… kommt dazu und wartet am Rand, bis der Kampf vorbei ist.“, die Gruppe zeigt ihn mit ⏳, der Gastgeber kann den Platz zurücknehmen. Ist der Kampf vorbei (oder endet die Runde), kommt er an den Tisch (dungeon.arrive). Erster Zug: Im ersten Zug am Tisch (p[\"neu_zug\"], auch nach dem Warten) gibt ein Held niemandem etwas: kein Trank für einen Freund, nichts schenken, nicht tauschen, kein Zauber auf die Gruppe; das Modell hört „gerade angekommen“, und eine Heilung, die es für einen Freund erzählt, zählt nicht, wenn in diesem Zug nur neue Helden gehandelt haben. Fliehen: Die Gruppe eines Kampfes steht beim Start fest (kampf[\"helden\"]). Die Erfahrung des Kampfes wird durch sie geteilt; wer währenddessen den Tisch "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "verlässt, ist geflohen (eine Zeile im Verlauf, sein Anteil bleibt draußen, die Erfahrung des Tisches verliert er wie bisher), wer später kam, bekommt nichts. Ein Gerät, ein Held: Ein Gerät, das einen Platz nimmt, bekommt das Cookie dmgeraet (zufällig, HttpOnly, SameSite=Strict); der Platz behält nur seinen Hash. Ein zweiter Platz derselben Runde auf diesem Gerät wird abgelehnt, auch neben dem Platz des Gastgebers. Live: Zustand → Überblick zählt „warten am Rand“ und am Tag Beitritte im Kampf, im Kampf gegangene, im ersten Zug gesperrte Hilfen und abgelehnte zweite Helden. „So spielst du“ erklärt es unter „Wann es weitergeht“. Selbsttests in test_dungeon (Fight): test_join_during_a_fight_waits_at_the_edge, test_the_first_turn_gives_nothing_to_others, test_leaving_a_fight_is_fleeing_and_the_share_stays_out, test_one_device_one_hero. Rettungswürfe wie bei D&D (Dominik 2026-10-25 „was kann ich in diesem Fall im Singleplayer machen? aktuell geht nichts mehr“, „1 und 2“): Liegt ein Held am Boden, würfelt das Panel ab dem nächsten erzählten Zug für ihn jeden Zug einen W20 (dungeon.save_roll, h[\"rettung\"] = gelungen, misslungen): ab RETTUNG (10) gelingt er, eine 1 zählt als zwei Fehlschläg"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e, eine 20 bringt ihn sofort mit 1 Leben auf die Beine, ebenso drei gelungene; nach drei misslungenen fällt er wie bisher (am Kindertisch ohnmächtig). Jeder Wurf steht als Zeile mit 🎲 im Verlauf, der Heldenbogen zeigt „Rettung ✓ … · noch … Fehlwürfe“. Ältere Stände zählen ihre Züge am Boden als Fehlschläge. Gnade: Ist er der einzige lebende Held am Tisch (dungeon.alone), fällt er nicht (dungeon.spare): ein Fremder bringt ihn in Sicherheit, er erwacht mit 1 Leben, ein laufender Kampf endet ohne Erfahrung („Der Kampf ist verloren, aber niemand stirbt.“), er verliert die Hälfte seines Goldes (aufgerundet) und ein Ding aus der Tasche; die nächste Erzählung hört davon (GNADE_FAKT). Die Gegner greifen ohnehin nur Helden an, die stehen. Zustand → Überblick zählt Rettungswürfe und Rettungen durch Gnade. Selbsttests test_rescue_rolls_get_a_hero_up, test_the_only_hero_is_spared, dazu test_down_three_turns_then_dead_and_things_lie_here mit misslungenen Würfen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bestiarium mit 62 neuen Gegnern (V01.1.039, Bestiarium-Punkte 3 und 9 vom 2026-10-24, Dominik „Ja, alles nach Empfehlung umsetzen“): Der Katalog app/panel/dungeon_srd.json hat 62 eigene Gegner mehr, jetzt 224 (142 aus dem SRD, 82 eigene): 19 für Sci-Fi (etwa Reparaturbot, Tarnjäger, Stationskern-KI), 10 für Piraten (Deckratte, Seehexe, Tiefenkraken), 8 für Horror (Puppenmacher, Seuchenarzt, die bleiche Gräfin), 8 für Fantasy (Runenwächter, Frostriesin, alter Feuerdrache), 2 für Sci-Fi und Piraten (Sternenfreibeuter, Kometenkaperer) und 15 für jede Welt (Wegelagerer, Sturmhüter, Eisenkoloss, Sternenwal). Ihre Werte folgen der Gleichgewichtsformel je Stufe (dungeon_balance), Texte im Ton des Kindertischs, Schadensart, Schwäche, Widerstand und Immunität aus der festen Liste, 17 Bosse der Stufen 10 bis 15. Damit hat jede Welt auf jeder Stufe 1 bis 12 mindestens drei Gegner. Eine Welt, für die kein Gegner eigens steht (die eigene Welt, eine neue des Admins), trifft die Gegner aus Fantasy und die für jede Welt (dungeon_kampf.plays_in, dieselbe Regel für Begegnung und Liste). Im Reiter „Regeln“, Teil „Gegner (Bestiarium)“, zeigt jede Zeile die Schadensart als Symbol (🗡️"
 },
 {
@@ -18166,6 +18190,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: joining without cheating (V01.1.047, Dominik 2026-10-25 \"Held am Boden → neuen Charakter erstellen, beitreten, heilen, wieder raus\", \"ok\" to 1+2+3+6+7, plan /mnt/project-files/plaene/dungeon-beitritt-schutz.md): Waiting at the edge: whoever takes a seat during a fight sits at the table but waits at the edge (p[\"wartet\"]): no action, no moves of their own with bag and potions, not in the fight's group, the turn does not wait for them. The feed says \"… arrives and waits at the edge until the fight is over.\", the group shows them with ⏳, the host can take the seat back. Once the fight is over (or the round ends), they come to the table (dungeon.arrive). First turn: in their first turn at the table (p[\"neu_zug\"], also after waiting) a hero gives nobody anything: no potion for a friend, no gift, no trade, no spell on the group; the model hears \"just arrived\", and a healing it tells for a friend does not count when only new heroes acted that turn. Fleeing: a fight's group is fixed at its start (kampf[\"helden\"]). The fight's experience is shared by it; whoever leaves the table meanwhile has fled (a line in the feed, their share stays out, they lose the table's experienc"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e as before), whoever came later gets none. One device, one hero: a device that takes a seat gets the cookie dmgeraet (random, HttpOnly, SameSite=Strict); the seat keeps only its hash. A second seat of the same round on that device is refused, also next to the host's seat. Live: Status → Live counts \"waiting at the edge\" and per day joins during a fight, heroes who left a fight, help blocked in a first turn and refused second heroes. \"How to play\" explains it under \"When it goes on\". Self-tests in test_dungeon (Fight): test_join_during_a_fight_waits_at_the_edge, test_the_first_turn_gives_nothing_to_others, test_leaving_a_fight_is_fleeing_and_the_share_stays_out, test_one_device_one_hero. Death saves as in D&D (Dominik 2026-10-25 \"was kann ich in diesem Fall im Singleplayer machen? aktuell geht nichts mehr\", \"1 und 2\"): when a hero is down, from the next told turn the panel rolls a d20 for them each turn (dungeon.save_roll, h[\"rettung\"] = successes, failures): RETTUNG (10) or more succeeds, a 1 counts as two failures, a 20 gets them up at once with 1 life, as do three successes; after three failures they fall as before (unconscious at the children's table). Every roll is a line with"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " 🎲 in the feed, the hero sheet shows \"saves ✓ … · … failures left\". Older states count their turns down as failures. Mercy: if they are the only living hero at the table (dungeon.alone), they do not fall (dungeon.spare): a stranger brings them to safety, they wake with 1 life, a running fight ends without experience (\"The fight is lost, but nobody dies.\"), they lose half their gold (rounded up) and one thing from the bag; the next narration hears of it (GNADE_FAKT). Foes attack only heroes who stand anyway. Status → Live counts death saves and rescues by mercy. Self-tests test_rescue_rolls_get_a_hero_up, test_the_only_hero_is_spared, plus test_down_three_turns_then_dead_and_things_lie_here with failed rolls."
 },
 {
 "lang": "en",

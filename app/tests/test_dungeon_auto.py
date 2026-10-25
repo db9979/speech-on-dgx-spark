@@ -99,13 +99,14 @@ class InTheCar(Base):
             ("folge", {"pid": host, "name": "Arvid", "was": "schaden", "zahl": 3, "leben": 11}),
             ("beute", {"name": "Arvid", "item": {"name": "Dietrich"}, "gold": 0}),
             ("stufe", {"pid": host, "name": "Arvid", "stufe": 2}),
-            ("zustand", {"pid": host, "name": "Bela", "was": "boden", "noch": 2}),
+            ("zustand", {"pid": host, "name": "Bela", "was": "boden", "noch": 3}),
+            ("todeswurf", {"pid": host, "name": "Bela", "wurf": 7, "ok": False, "erfolge": 0, "fehl": 1}),
             ("ooc", {"pid": "pfremd", "text": "nur für einen anderen Platz"})])
         a = self.car(nach=n)
         self.assertEqual(a["sagen"], "Die Goblins greifen an.")
         self.assertEqual(a["danach"], "Arvid schafft die Geschick-Probe mit 16 gegen 12. Arvid trifft Goblin 1 für 6. "
                                       "Goblin 2 trifft Arvid für 3. Arvid verliert 3 Leben, noch 11. Beute für Arvid: Dietrich. "
-                                      "Arvid erreicht Stufe 2. Bela liegt am Boden, noch 2 Züge. Arvid ist dran. Was tust du?")
+                                      "Arvid erreicht Stufe 2. Bela liegt am Boden. Bela würfelt einen Rettungswurf: 7. Arvid ist dran. Was tust du?")
         # only what came after the previous narration, and never more than EREIGNIS_MAX sentences
         self.narrate(rid, "Stille.", before=[("folge", {"pid": host, "name": "Arvid", "was": "heilung", "zahl": 2, "leben": 13})] * 12)
         a = self.car(nach=a["n"])

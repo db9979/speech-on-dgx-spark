@@ -17,7 +17,7 @@ what the dice say.
     flight     a foe at a quarter of its life or less flees on a d20 of FLUCHT_W or less (never at the children's table:
                there it gives up)
     end        all foes down or fled, or the model's kampf_ende („frieden“, „flucht“): the experience of the defeated
-               (half for the fled) divided by the living heroes, one find (anlass „gegner“) for the group
+               (half for the fled) divided by the heroes the fight began with (a seat that left counts, its share stays out), one find (anlass „gegner“) for the group
 
 Teil 2 (Kampf-Tiefe, Bestiarium-Punkte 4-6 and item point 2, Dominik 2026-10-24 „alles nach empfehlung umsetzten“):
     weapons    eigenschaften of the catalog, each a fixed rule (EIGENSCHAFT_REGEL): finesse and a throw take the better
@@ -316,7 +316,8 @@ def start(dm, r, rd, held, wahl, li):
     gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
     rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), b),
-                   "leben0": sum(max(0, h["leben"]) for h in held)}
+                   "leben0": sum(max(0, h["leben"]) for h in held),
+                   "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")]}   # the group the fight was made for
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
         rd["kampf"]["raum"] = rd["raum_gegner"]["raum"]
     dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n) for g, n in wahl],
@@ -642,7 +643,7 @@ def expire(dm, rd, all_=False):
 
 def end(dm, r, rd, ep, why=""):
     """The fight is over: the defeated foes' experience (half for the fled ones; Idee 7: all of the foes still up when
-    it ends in peace in a turn with a check passed, k["geschafft"], dungeon.apply) divided by the living heroes into ep
+    it ends in peace in a turn with a check passed, k["geschafft"], dungeon.apply) divided by the heroes it began with (k["helden"], living or gone, never one who came later) into ep
     (pid -> number, apply gives it to the table), one find for the group, a line for the log. A won fight of a room
     of the map leaves rd["sieg"] = the room's tag for dungeon_karte (the way is free)."""
     k = rd.pop("kampf", None)
@@ -653,8 +654,13 @@ def end(dm, r, rd, ep, why=""):
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7
     alle = sum(g["ep"] for g in besiegt + frieden) + sum(g["ep"] // 2 for g in flohen)
-    each = -(-alle // max(1, len(ep))) if ep else 0
-    for pid in ep:
+    # divided by the group the fight was made for (Dominik 2026-10-25, Punkt 3): a hero who left has fled and its share
+    # stays out, one who arrived later (dungeon.arrive) gets none
+    start = k.get("helden")
+    teil = [pid for pid in ep if start is None or pid in start]
+    zahl = len(teil) if start is None else len([pid for pid in start if pid in ep or pid not in rd["plaetze"]])   # the fallen out
+    each = -(-alle // max(1, zahl)) if teil else 0
+    for pid in teil:
         ep[pid] += each
     if k.get("raum") and not why:
         rd["sieg"] = k["raum"]

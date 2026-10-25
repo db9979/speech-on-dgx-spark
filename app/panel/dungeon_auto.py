@@ -141,15 +141,17 @@ SAGEN = {
     "beute": ("Beute für {name}: {ding}.", "Loot for {name}: {ding}."),
     "beute_gold": ("Beute für {name}: {gold} Gold.", "Loot for {name}: {gold} gold."),
     "stufe": ("{name} erreicht Stufe {stufe}.", "{name} reaches level {stufe}."),
-    "boden": ("{name} liegt am Boden, noch {noch} Züge.", "{name} is down, {noch} turns left."),
+    "boden": ("{name} liegt am Boden.", "{name} is down."),
     "ohnmacht": ("{name} ist ohnmächtig.", "{name} is unconscious."),
+    "gnade": ("Ein Fremder rettet {name}.", "A stranger saves {name}."),
+    "todeswurf": ("{name} würfelt einen Rettungswurf: {wurf}.", "{name} rolls a death save: {wurf}."),
     "tot": ("{name} ist gefallen.", "{name} has fallen."),
     "auf": ("{name} steht wieder.", "{name} is up again."),
     "zauber": ("{name} wirkt {zauber}.", "{name} casts {zauber}."),
     "sieg": ("Der Kampf ist gewonnen.", "The fight is won."),
     "kampf_ende": ("Der Kampf ist vorbei.", "The fight is over."),
     "mehr": ("Und mehr, am Tisch zu sehen.", "And more, to see at the table.")}
-EREIGNIS_ARTEN = ("wurf", "angriff", "folge", "beute", "stufe", "zustand", "zauber", "kampf")
+EREIGNIS_ARTEN = ("wurf", "angriff", "folge", "beute", "stufe", "zustand", "todeswurf", "zauber", "kampf")
 
 
 def _dm():
@@ -199,8 +201,10 @@ def summary(r, rd, pid, li, seit):
                 out.append(_say("beute_gold", li, name=n, gold=e["gold"]))
         elif a == "stufe":
             out.append(_say("stufe", li, name=n, stufe=e.get("stufe", 0)))
-        elif a == "zustand" and e.get("was") in ("boden", "ohnmacht", "tot", "auf"):
+        elif a == "zustand" and e.get("was") in ("boden", "ohnmacht", "tot", "auf", "gnade"):
             out.append(_say(e["was"], li, name=n, noch=e.get("noch", 0)))
+        elif a == "todeswurf":
+            out.append(_say("todeswurf", li, name=n, wurf=e.get("wurf", 0)))
         elif a == "zauber":
             out.append(_say("zauber", li, name=n, zauber=e.get("zauber", "")))
         elif a == "kampf":
