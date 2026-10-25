@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.060** · 2026-10-25 · KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog
 - **V01.1.059** · 2026-10-25 · KI-Dungeon-Master: Zufallsregeln des Gastgebers, bis zu fünf je Runde mit Chance, Auslöser und Wirkung; das Panel würfelt und wendet sie an, das Modell hört nur den Hinweis als Daten
 - **V01.1.058** · 2026-10-25 · KI-Dungeon-Master: Grenzen und Schleier je Platz, anonym für den ganzen Tisch, und die X-Karte, die die letzte Szene ruhiger neu erzählt; feste Wortlisten des Panels, das Modell bekommt sie nur als Daten; ein Sichtfilter mit Leck-Selbsttest je Geheimnis; der Schreiber-Abgleich trägt nach festen Grenzen nach, was die Erzählung änderte
 - **V01.1.057** · 2026-10-25 · KI-Dungeon-Master: fünf Öle im SRD-Katalog (Donner, Blitz, Feuer, Frost, Weihe) für 25 Gold, so trifft in jeder Welt jede Schwäche gegen Donner, Blitz, Feuer und Kälte

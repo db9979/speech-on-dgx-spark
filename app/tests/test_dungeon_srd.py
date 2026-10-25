@@ -22,6 +22,8 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   eine Klasse (klein, mittel, groß) und keinen eigenen Preis; Schutz nennt nur Schadensarten der Liste und ist nie
   mehr als halber Schaden (kein immun bei Helden-Dingen).
 - Mehrfachangriff (Dominik 2026-10-25, Tabletop-Punkt 12): "angriffe" nur 2 bis 5, fehlt = 1.
+- NSC-Tabellen, Silben und Orakel (Tabletop-Punkte 5 und 8): jede Tabelle mindestens 6 Zeilen je Welt, jedes Volk hat
+  Silben („namensilben“, nicht „silben“: das sind die Ortsnamen der Karte), die Orakel-Zeilen aus Datasworn nur aus CC-BY-4.0 mit Namensnennung.
 """
 import json
 import os
@@ -58,6 +60,7 @@ class Srd(unittest.TestCase):
                 text = f.read()
             self.assertIn("SRD 5.1", text, name)
             self.assertIn("CC-BY-4.0", text, name)
+            self.assertIn("Ironsworn", text, name)
 
     def test_schicht_besteht_die_regeln(self):
         self.assertEqual(dungeon.check_rules(dungeon._base_rules(srd=False)), [], "die Grundregeln bestehen allein")
@@ -186,6 +189,23 @@ class Srd(unittest.TestCase):
         for g in dungeon._base_rules()["gegner"]:
             if "angriffe" in g:
                 self.assertIn(g["angriffe"], range(2, 6), g["id"])
+
+    def test_tabellen_und_silben(self):
+        r = dungeon._base_rules()
+        welten = [w["id"] for w in r["welten"]]
+        ids = [t["id"] for t in r["tabellen"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        for t in r["tabellen"]:
+            self.assertIn(t["gruppe"], ("nsc", "orakel"), t["id"])
+            for w in welten:
+                self.assertGreaterEqual(sum(1 for z in t["zeilen"] if w in (z.get("welten") or welten)), 6, (t["id"], w))
+            for z in t["zeilen"]:
+                self.assertTrue(set(z.get("welten") or []) <= set(welten), t["id"])
+        voelker = {v["id"] for v in r["voelker"]}
+        self.assertTrue(voelker <= set(r["namensilben"]), "jedes Volk hat Silben")
+        for k, s in r["namensilben"].items():
+            self.assertTrue(len(s["anfang"]) >= 6 and len(s["ende"]) >= 6, k)
+        self.assertIn("Ironsworn", srd()["lizenz"])
 
 
 if __name__ == "__main__":

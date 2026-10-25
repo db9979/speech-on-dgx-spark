@@ -5493,6 +5493,77 @@ class Fight(Turns):
         self.assertEqual(zufall.roll(dungeon, rules, copy.deepcopy(rd), "zug"), [])     # off: nothing rolled
         self.assertIsNone(self.c.get(url).json()["zufall"])
 
+    def test_npc_memory_cards_attitudes_and_chronicle(self):
+        """Tabletop-Punkt 5 of 2026-10-25 with Stufe 5c (Dominik „ich hätte gerne alle punkte umgesetzt“): every person of
+        the truth gets a card the panel rolls from the fixed tables; the narration only reports changes, the panel takes
+        an attitude step only for a person and a hero named in it, one step per hero and turn, a relation only to a hero
+        or a known person; only the scene's people go to the model with their cards; the chronicle and the reputation
+        by fixed rules, wish, secret and relations only for the host; all of it goes on into the next chapter; off none."""
+        import dungeon_nsc as nsc
+        import dungeon_tabellen as tabellen
+        helpers.keep_chat(self, "dungeon_nsc")
+        url = f"/api/profile/dungeon/{self.rid}"
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""},
+                                                              {"name": "Mira", "rolle": "Diebin im Hafen", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        self.assertIsNone(self.c.get(url).json()["nsc"])                               # off from the start
+        self.assertEqual(nsc.facts(dungeon.rules(), self.state(self.rid), 0), {})
+        helpers.set_config(dungeon_nsc=True)
+        self.spawned.clear()
+        self.act_all("Wir betreten die Schenke.")
+        text = ("Arvid und Bela betreten die verrauchte Schenke. Oskar mustert Arvid zuerst streng, dann lacht er über "
+                "seinen Witz und schenkt ihm ein. Oskar schuldet Bela noch einen Gefallen aus alten Tagen.")
+        rd = self.play([{"proben": []}, {"erzaehlung": text, "frage_an": "", "nsc": [
+            {"name": "Oskar", "held": "Arvid", "haltung": "besser"}, {"name": "Oskar", "kante": "schuldet", "ziel": "Bela"},
+            {"name": "Mira", "held": "Arvid", "haltung": "schlechter"}]}])                # Mira is not in this narration
+        r = dungeon.rules()
+        self.assertEqual(set(rd["nsc"]), {"oskar", "mira"})
+        for x in rd["nsc"].values():
+            self.assertTrue(set(x["karte"]) <= set(nsc.KARTE) and "aussehen" in x["karte"] and "geheimnis" in x["karte"])
+            self.assertIn(x["karte"]["beruf"], tabellen.rows(r, "nsc_beruf", rd["welt"]))
+        self.assertEqual(rd["nsc"]["oskar"]["haltung"], {"arvid": 1})
+        self.assertEqual(rd["nsc"]["oskar"]["kanten"], [{"art": "schuldet", "ziel": "Bela"}])
+        self.assertEqual(rd["nsc"]["mira"]["haltung"], {})
+        self.assertEqual([e["text"][0] for e in rd["log"] if e["art"] == "nsc"], ["Oskar ist Arvid gegenüber jetzt freundlich."])
+        self.assertTrue(any(c["t"][0].startswith("Begegnung: Oskar") for c in rd["chronik"]))
+        self.assertFalse(any("Mira" in c["t"][0] for c in rd["chronik"]))           # not met yet
+        f = json.loads(dungeon.facts(r, rd).split("\n<<<", 1)[0])
+        self.assertEqual([x["name"] for x in f["nsc_szene"]], ["Oskar"])               # only the scene's people with their cards
+        self.assertEqual(f["nsc_fern"], ["Mira"])
+        self.assertEqual(f["nsc_szene"][0]["haltung"], {"Arvid": "freundlich"})
+        self.assertNotIn("Diebin im Hafen", json.dumps(f, ensure_ascii=False))
+        self.assertNotIn("personen", f.get("wahrheit", {}))
+        self.assertEqual(f["ruf"], {"Arvid": "geachtet"})
+        self.assertEqual(len(f["freie_namen"]), tabellen.NAMEN_VORSCHLAG)
+        self.assertTrue(all(n[0].isupper() and n.lower() not in ("arvid", "bela", "oskar", "mira") for n in f["freie_namen"]))
+        self.assertIn("nsc_szene", dungeon.system_text(r, rd, "erzaehlen"))
+        v = self.c.get(url).json()
+        self.assertEqual([p["name"] for p in v["nsc"]["leute"]], ["Oskar"])
+        self.assertEqual(v["nsc"]["leute"][0]["haltung"], [["Arvid", "freundlich", 1]])
+        self.assertEqual(v["nsc_geheim"]["Oskar"]["kanten"], ["schuldet Bela"])
+        self.assertFalse(v["nsc_geheim"]["Mira"]["gesehen"])
+        g = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertIsNone(g["nsc_geheim"])                                              # wish, secret, relations: only the host
+        self.assertNotIn(rd["nsc"]["oskar"]["karte"]["geheimnis"][0], json.dumps(g, ensure_ascii=False))
+        rd2 = copy.deepcopy(rd)
+        n = len(rd2["chronik"])
+        rd2["log"].append({"art": "kampf", "was": "sieg", "besiegt": 2, "n": rd2["zug"]})
+        self.assertEqual(nsc.chronicle(rd2, rd2["zug"]), 1)
+        self.assertEqual(nsc.chronicle(rd2, rd2["zug"]), 0)                            # once
+        self.assertEqual(rd2["chronik"][n]["t"][0], "Sieg im Kampf über 2 Gegner.")
+        self.assertEqual(nsc.carry(nsc.keep(rd2)), {"nsc": rd2["nsc"], "chronik": rd2["chronik"]})   # into the next chapter
+        live = dungeon.for_live()
+        self.assertEqual(live["nsc_karten"], 2)
+        self.assertGreaterEqual(live["nsc_haltung"], 1)
+        self.assertGreaterEqual(live["nsc_kanten"], 1)
+        helpers.set_config(dungeon_nsc=False)
+        self.assertEqual(nsc.facts(r, rd, 0), {})
+        self.assertIn("Diebin im Hafen", dungeon.facts(r, rd))                          # off: the truth as before
+        self.assertEqual(nsc.check(dungeon, r, rd, [{"name": "Oskar", "held": "Arvid", "haltung": "besser"}], text), [])
+
     def test_gold_with_a_purpose_in_a_settlement(self):
         """Idee 9 of 2026-10-24 (Dominik „alle umsetzen“): in a settlement of the map or at a merchant fixed offers by
         the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson

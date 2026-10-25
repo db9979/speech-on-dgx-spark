@@ -12,8 +12,8 @@ A new secret of the game comes into GEHEIM in the same commit as the secret itse
 import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
-NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall")
-SCHALTER = ("dungeon_zufall",)   # the admin switches of the secrets below: the self-test turns them on
+NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim")
+SCHALTER = ("dungeon_zufall", "dungeon_nsc")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -45,6 +45,12 @@ def _tisch(rd, m):
     rd.setdefault("tisch", []).append({"n": 1, "pid": pid, "name": "Arvid", "text": m, "t": 0})
 
 
+def _nsc(rd, karte, kanten):
+    rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "", "ziel": "", "sprache": ""}]}
+    rd["nsc"] = {"oskar": {"name": "Oskar", "karte": karte, "kanten": kanten, "haltung": {}, "gesehen": rd.get("zug", 0)}}
+    rd["log"].append({"art": "dm", "text": "Oskar winkt der Gruppe zu.", "npc": [], "n": rd.get("zug", 0)})   # in the scene
+
+
 # id: (what, who may see it, how the self-test plants a marker in a round)
 GEHEIM = {
     "wahrheit": (("Die verborgene Wahrheit der Runde", "The round's hidden truth"), {"gastgeber", "modell"},
@@ -65,6 +71,10 @@ GEHEIM = {
                                                 "zahl": 0, "text": m, "wer": "alle"}])),
     "zufall_hinweis": (("Der Hinweis einer getroffenen Zufallsregel", "The hint of a random rule that hit"), {"modell"},
                        lambda rd, m: rd.update(zufall_hinweise=[{"regel": "Steinschlag", "hinweis": m}])),
+    "nsc_geheimnis": (("Wunsch und Geheimnis einer Figur", "A person's wish and secret"), {"gastgeber", "modell"},
+                      lambda rd, m: _nsc(rd, {"geheimnis": [m, m], "wunsch": [m, m]}, [])),
+    "nsc_kanten": (("Die Beziehungen einer Figur", "A person's relations"), {"gastgeber", "modell"},
+                   lambda rd, m: _nsc(rd, {}, [{"art": "weiss", "ziel": m}])),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

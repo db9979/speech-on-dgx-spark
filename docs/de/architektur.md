@@ -283,11 +283,13 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
+| `app/panel/dungeon_nsc.py` | Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf |
 | `app/panel/dungeon_pruefstand.py` | Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell |
 | `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen |
 | `app/panel/dungeon_schreiber.py` | Dungeon-Master-Schreiber: ein zweiter Modellaufruf schlägt Änderungen vor, das Panel nimmt sie nach festen Grenzen |
 | `app/panel/dungeon_sicht.py` | Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht |
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
+| `app/panel/dungeon_tabellen.py` | Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |
 | `app/panel/dungeon_zufall.py` | Dungeon-Master-Zufallsregeln: eigene Regeln des Gastgebers mit Chance, Auslöser und Wirkung, das Panel würfelt |

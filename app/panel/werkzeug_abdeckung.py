@@ -152,6 +152,7 @@ WITHOUT = {
     "dungeongrenzen": "dungeon_grenzen.py: kein Werkzeug, Grenzen und X-Karte prüft das Panel mit festen Wortlisten, nie das Modell",
     "dungeonschreiber": "dungeon_schreiber.py: kein Werkzeug, das Modell schlägt nur vor, das Panel nimmt nach festen Grenzen",
     "dungeonzufall": "dungeon_zufall.py: kein Werkzeug, der Gastgeber legt Regeln fest, das Panel würfelt, nie das Modell",
+    "dungeonnsc": "dungeon_nsc.py: kein Werkzeug, das Panel würfelt die Karten und nimmt Änderungen nach festen Regeln an",
     "dungeonheldenmut": "dungeon_mut.py: kein Werkzeug, Heldenmut zählt das Panel nach festen Regeln, nie das Modell",
     "dungeonregler": "dungeon_kampf.py: kein Werkzeug, der Regler stellt Begegnungen nach festen Zahlen um, nie das Modell",
     "dungeonpruefstand": "dungeon_pruefstand.py: kein Werkzeug, der Admin-Prüfstand spielt Kämpfe mit festen Regeln und Würfeln, ohne Modell",

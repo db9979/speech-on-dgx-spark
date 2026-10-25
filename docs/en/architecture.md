@@ -283,11 +283,13 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_legenden.py` | KI-Dungeon-Master: legendäre Einzelstücke je Welt. |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik, Geräusche, Würfel. |
 | `app/panel/dungeon_mut.py` | KI-Dungeon-Master: Heldenmut. |
+| `app/panel/dungeon_nsc.py` | KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf. |
 | `app/panel/dungeon_pruefstand.py` | KI-Dungeon-Master: the balance bench „Balance-Prüfstand“: the panel plays thousands of fights alone, with the real rules and dice of dungeon_kampf (attacks, … |
 | `app/panel/dungeon_regelseite.py` | KI-Dungeon-Master: the admin's rules page as its own tab „Regeln“. |
 | `app/panel/dungeon_schreiber.py` | KI-Dungeon-Master: Schreiber-Abgleich. |
 | `app/panel/dungeon_sicht.py` | KI-Dungeon-Master: Sichtfilter. |
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
+| `app/panel/dungeon_tabellen.py` | KI-Dungeon-Master: the fixed tables of the catalog. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
 | `app/panel/dungeon_warten.py` | KI-Dungeon-Master: the wait between turns made pleasant. |
 | `app/panel/dungeon_zufall.py` | KI-Dungeon-Master: Zufallsregeln des Gastgebers. |

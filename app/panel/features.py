@@ -279,6 +279,10 @@ FEATURES = (
     # panel rolls and applies them, the model only hears a hint as data
     F("dungeonzufall", "Zufallsregeln", "Random rules", "data", ("dungeon_zufall",), parent="dungeon",
       me="dmbox", guide="dungeonzufall"),
+    # NSC-Gedächtnis und Chronik (dungeon_nsc.py, Tabletop-Punkt 5): cards from fixed tables, attitudes and relations by
+    # fixed rules, only the scene's people to the model; the chronicle and the heroes' reputation
+    F("dungeonnsc", "NSC-Gedächtnis und Chronik", "NPC memory and chronicle", "data", ("dungeon_nsc",), parent="dungeon",
+      me="dmbox", guide="dungeonnsc"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
     # level; fixed rules of the panel, never the model
     F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",

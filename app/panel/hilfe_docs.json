@@ -5157,6 +5157,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf (V01.1.060, Tabletop-Punkt 5 mit Stufe 5c, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Ideen aus loreweaver und NarrativeEngine-P, MIT, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik* (chat.dungeon_nsc, ab Werk aus; dungeon_nsc.py, dungeon_tabellen.py). Jede Person der verborgenen Wahrheit bekommt eine Karte, die das Panel aus den festen Tabellen der Welt würfelt: Aussehen, Art, Beruf, Wunsch und Geheimnis. Dazu merkt sie sich ihre Haltung zu jedem Helden (−3 verfeindet bis +3 treu ergeben) und bis zu KANTEN_MAX (4) Beziehungen: schuldet, fürchtet, mag, weiß von, jeweils zu einem Helden oder einer anderen Person. Das Modell meldet nur Änderungen (nsc, höchstens AENDERUNGEN_MAX = 3 je Erzählung); das Panel nimmt eine Haltung nur, wenn Person und Held mit Namen in der Erzählung stehen, einen Schritt je Held und Zug, und eine Beziehung nur zu einem Helden oder einer bekannten Person. Eine neue Haltung steht im Verlauf („🤝 Oskar ist Arvid gegenüber jetzt freundlich.“), Beziehungen sieht nur der Gastgeber. Nur die Szene ans Modell: Mit"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " dem Schalter gehen nur die Personen der Szene mit ihrer Karte, ihren Beziehungen und Haltungen ans Modell (nsc_szene: am Ort der Gruppe auf der Karte, mit ihr unterwegs, oder in den letzten SZENE_ZUEGE (2) Zügen genannt), alle anderen nur mit Namen (nsc_fern); die Personenliste der Wahrheit entfällt dann. Dazu bekommt das Modell NAMEN_VORSCHLAG (3) freie Namen aus den Silben der Welt oder eines Volkes (freie_namen), damit neue Figuren nicht immer gleich heißen. Chronik und Ruf (Stufe 5c): Das Panel schreibt nach festen Regeln in die Chronik, was zählte: Begegnungen, gewonnene Kämpfe, gefallene Helden, neue Stufen, erledigte Fäden, Akte, das Ende eines Kapitels, eine Haltung bei ±3; bis zu CHRONIK_MAX (40) Zeilen, die letzten CHRONIK_FAKTEN (6) als Daten fürs Modell. Der Ruf eines Helden ist der Mittelwert der Haltungen aller, die ihn kennen (berüchtigt, beargwöhnt, unbekannt, geachtet, gefeiert). Leute, Chronik und Ruf gehen ins nächste Kapitel mit. Am Tisch öffnet „👥 Leute und Chronik“ neben dem Heldenbogen ein Fenster mit den getroffenen Leuten (Aussehen, Art, Beruf, Haltung zu jedem Helden), dem Ruf und der Chronik je Kapitel; der Gastgeber sieht zusätzlich Wunsch, Geheimnis un"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "d Beziehungen jeder Person und, wen die Gruppe noch nicht getroffen hat (nsc_geheim, dungeon_sicht: nur Gastgeber und Modell). Live: Zustand → Überblick zählt Personen mit Karte, Zeilen der Chronik und am Tag geänderte Haltungen und Beziehungen. Selbsttest test_npc_memory_cards_attitudes_and_chronicle in test_dungeon, die Geheimnisse im Leck-Selbsttest test_every_secret_stays_with_its_viewers."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: NSC-Tabellen, Namenssilben und Orakel im Katalog (V01.1.060, Dominik 2026-10-25, Tabletop-Punkte 5 und 8, Daten): 15 feste Tabellen (tabellen) liefern Zufall nach festen Regeln: für Nebenfiguren Aussehen, Art, Wunsch, Geheimnis und Beruf, für das Orakel Handlung, Thema, Ort, Merkmal, Wendung, Komplikation, Hinweis, Gefahr, Gelegenheit und Ärger im Ort. Jede Zeile kann für einzelne Welten gelten (Augenklappe bei Piraten, Implantate bei Sci-Fi), jede Tabelle hat je Welt mindestens 6 Zeilen. Namenssilben (namensilben, nicht silben: das sind die Ortsnamen der Karte) je Volk und für Sci-Fi und Piraten setzen Namen aus Anfang, Mitte und Ende zusammen (Verfahren wie Syllabore, eigene Silben). Die Orakel- und viele NSC-Zeilen sind aus Datasworn übersetzt, nur aus Tabellen unter CC-BY-4.0, familientauglich umformuliert. Namensnennung: *This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.* Selbsttest test_dungeon_srd: mindestens 6 Zeilen je Welt, Silben für jedes Volk, Namensnennung in Datei und Doku."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Zufallsregeln des Gastgebers (V01.1.059, Tabletop-Punkt 9, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Idee aus AnyWorld, MIT, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Zufallsregeln* (chat.dungeon_zufall, ab Werk aus; dungeon_zufall.py). Der Gastgeber gibt seiner Runde im Reiter „Leiten“ unter „🎲 Zufallsregeln“ bis zu ZUFALL_MAX (5) eigene Regeln (POST /api/profile/dungeon/{rid}/zufall, nur der Gastgeber): einen Namen, eine Chance in Prozent, einen Auslöser (jeder erzählte Zug, ein Kampf beginnt, ein neuer Ort), eine Wirkung (Schaden oder Heilung 1 bis 6, Gold dazu oder weg 1 bis 50, ein Hinweis an die Erzählung) und ob ein Wurf für alle oder einer je Held gilt. Name und Hinweis prüft die Wortliste der Runde. Kommt der Auslöser, würfelt das Panel einen W100 (ein Treffer bei höchstens der Chance), wendet die Wirkung nach seinen eigenen Regeln an (Schaden und Heilung wie jede Folge, Gold nie unter 0 und nie über das Höchste) und schreibt jeden Wurf in den Verlauf. Das Modell hört nur den Hinweis eines Treffers als Daten (zufall) und nie die Regeln; nur der Gastgeber sieht sie (dungeon"
 },
 {
@@ -10054,6 +10086,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Zufallsregeln (Funktionen → Meine Daten → „Zufallsregeln“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Gastgeber gibst du deiner Runde bis zu 5 eigene Regeln: zum Beispiel „Steinschlag: in jedem Zug 10 %, 2 Schaden für alle“ oder „Taschendieb: an einem neuen Ort 20 % je Held, 5 Gold weg“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- NSC-Gedächtnis und Chronik (Funktionen → Meine Daten → „NSC-Gedächtnis und Chronik“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jede Figur der Geschichte bekommt eine Karte, die das Panel aus festen Tabellen würfelt: Aussehen, Art, Beruf, Wunsch und Geheimnis."
 },
 {
 "lang": "de",
@@ -18445,6 +18485,38 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: NPC memory, chronicle and reputation (V01.1.060, tabletop point 5 with stage 5c, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", ideas from loreweaver and NarrativeEngine-P, MIT, own code): Own admin switch *Features → AI Dungeon Master → NPC memory and chronicle* (chat.dungeon_nsc, off from the start; dungeon_nsc.py, dungeon_tabellen.py). Every person of the hidden truth gets a card the panel rolls from the world's fixed tables: looks, manner, occupation, wish and secret. It also keeps its attitude to each hero (−3 hostile to +3 devoted) and up to KANTEN_MAX (4) relations: owes, fears, likes, knows about, each to a hero or another person. The model only reports changes (nsc, at most AENDERUNGEN_MAX = 3 per narration); the panel takes an attitude only when person and hero stand by name in the narration, one step per hero and turn, and a relation only to a hero or a known person. A new attitude stands in the feed (\"🤝 Oskar is now friendly towards Arvid.\"), relations only the host sees. Only the scene to the model: with the switch only the people of the scene go to the model with their card, relations and attitudes (ns"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "c_szene: at the group's place on the map, travelling with it, or named in the last SZENE_ZUEGE (2) turns), all others only by name (nsc_fern); the truth's list of people is left out then. The model also gets NAMEN_VORSCHLAG (3) free names from the syllables of the world or a people (freie_namen), so new people are not always called the same. Chronicle and reputation (stage 5c): by fixed rules the panel writes into the chronicle what mattered: meetings, fights won, heroes fallen, new levels, threads closed, acts, a chapter's end, an attitude at ±3; up to CHRONIK_MAX (40) lines, the last CHRONIK_FAKTEN (6) as data for the model. A hero's reputation is the mean attitude of all who know them (notorious, distrusted, unknown, respected, celebrated). People, chronicle and reputation go on into the next chapter. At the table \"👥 People and chronicle\" next to the hero sheet opens a window with the people met (looks, manner, occupation, attitude to each hero), the reputation and the chronicle per chapter; the host also sees wish, secret and relations of each person and whom the group has not met yet (nsc_geheim, dungeon_sicht: host and model only). Live: Status → Live counts people with a car"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "d, lines of the chronicle and per day attitudes and relations changed. Self-test test_npc_memory_cards_attitudes_and_chronicle in test_dungeon, the secrets in the leak self-test test_every_secret_stays_with_its_viewers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: NPC tables, name syllables and oracle in the catalog (V01.1.060, Dominik 2026-10-25, tabletop points 5 and 8, data): 15 fixed tables (tabellen) give randomness by fixed rules: for side characters looks, manner, wish, secret and occupation, for the oracle action, theme, place, descriptor, plot twist, complication, clue, peril, opportunity and settlement trouble. Each row can apply to single worlds (eye patch for pirates, implants for sci-fi), each table has at least 6 rows per world. Name syllables (namensilben, not silben: those are the map's place names) per people and for sci-fi and pirates build names from start, middle and end (method like Syllabore, own syllables). The oracle rows and many NPC rows are translated from Datasworn, only from tables under CC-BY-4.0, reworded to be family-friendly. Attribution: *This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.* Self-test test_dungeon_srd: at least 6 rows per world, syllables for every people, attribution in file and docs."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: the host's random rules (V01.1.059, tabletop point 9, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", idea from AnyWorld, MIT, own code): Own admin switch *Features → AI Dungeon Master → Random rules* (chat.dungeon_zufall, off from the start; dungeon_zufall.py). In the \"Host\" tab under \"🎲 Random rules\" the host gives the round up to ZUFALL_MAX (5) rules of their own (POST /api/profile/dungeon/{rid}/zufall, host only): a name, a chance in percent, a trigger (every told turn, a fight starts, a new place), an effect (damage or healing 1 to 6, gold won or lost 1 to 50, a hint for the narration) and whether one roll counts for all or one per hero. The round's word list checks name and hint. When the trigger comes the panel rolls a d100 (a hit at or below the chance), applies the effect by its own rules (damage and healing like every consequence, gold never below 0 and never above the most) and writes every roll into the feed. The model only hears the hint of a hit as data (zufall) and never the rules; only the host sees them (dungeon_sicht: zufall host only, zufall_hinweis model only). Live: Status → Live counts random ru"
 },
 {
@@ -23158,6 +23230,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Random rules (Features → My data → \"Random rules\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As host you give your round up to 5 rules of your own: for example \"Rockfall: every turn 10 %, 2 damage for all\" or \"Pickpocket: at a new place 20 % per hero, 5 gold lost\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- NPC memory and chronicle (Features → My data → \"NPC memory and chronicle\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every person of the story gets a card the panel rolls from fixed tables: looks, manner, occupation, wish and secret."
 },
 {
 "lang": "en",

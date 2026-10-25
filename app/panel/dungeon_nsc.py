@@ -1,0 +1,296 @@
+"""KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf (Tabletop-Punkt 5 of 2026-10-25 with Stufe 5c of 2026-10-23,
+Dominik „ich hätte gerne alle punkte umgesetzt“; idea from loreweaver and NarrativeEngine-P, MIT, own code).
+
+Every person of the round's truth gets a card the panel rolls from the fixed tables (dungeon_tabellen: looks, manner,
+occupation, wish, secret), relations to heroes and other people (owes, fears, likes, knows about) and an attitude
+towards each hero from −3 to +3. The model only reports changes (story "nsc": a hero won someone over or angered them,
+a new relation), the panel takes them by fixed rules: only a person of this scene, only by name in the narration, one
+step per hero and turn. Only the people of the scene go to the model with their cards; the others only by name.
+The chronicle keeps what mattered (people met, fights won, heroes fallen, levels, threads closed, acts, chapters) by
+fixed rules from the round's log, the reputation of a hero is the mean attitude of the people who know them.
+Both go on in the next chapter. Only while „NSC-Gedächtnis und Chronik“ is allowed for the round's host (features
+"dungeonnsc"). The fields:
+
+    rd["nsc"]     {name.lower(): {"name", "karte": {feld: [de, en]}, "kanten": [{"art", "ziel"}], "haltung": {held: −3..3},
+                   "gesehen": turn | None}}
+    rd["chronik"] [{"n": turn, "k": chapter, "t": [de, en]}]
+"""
+import dungeon_tabellen as tabellen
+
+KARTE = ("aussehen", "art", "beruf", "wunsch", "geheimnis")      # tables nsc_<feld>
+OFFEN = ("aussehen", "art", "beruf")                            # what the table sees once met; wish and secret: host and model
+KANTEN = {"schuldet": ("schuldet", "owes"), "fuerchtet": ("fürchtet", "fears"), "mag": ("mag", "likes"),
+          "weiss": ("weiß von", "knows about")}
+KANTEN_MAX = 4             # relations kept per person (the oldest goes)
+AENDERUNGEN_MAX = 3        # changes one narration may report
+HALTUNG = (-3, 3)
+HALTUNG_WORT = {-3: ("verfeindet", "hostile"), -2: ("feindselig", "unfriendly"), -1: ("misstrauisch", "wary"),
+                0: ("neutral", "neutral"), 1: ("freundlich", "friendly"), 2: ("herzlich", "warm"), 3: ("treu ergeben", "devoted")}
+RUF = ((-1.5, ("berüchtigt", "notorious")), (-0.5, ("beargwöhnt", "distrusted")), (0.5, ("unbekannt", "unknown")),
+       (1.5, ("geachtet", "respected")), (99, ("gefeiert", "celebrated")))
+SZENE_ZUEGE = 2            # a person counts as in the scene when it spoke or was named in the last this many turns
+CHRONIK_MAX = 40
+CHRONIK_FAKTEN = 6         # the last lines of the chronicle the model gets
+NAME_LEN = 40
+
+SCHEMA = {"type": "array", "maxItems": AENDERUNGEN_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["name"],
+          "properties": {"name": {"type": "string", "maxLength": NAME_LEN}, "held": {"type": "string", "maxLength": NAME_LEN},
+                         "haltung": {"type": "string", "enum": ["", "besser", "schlechter"]},
+                         "kante": {"type": "string", "enum": ["", *KANTEN]}, "ziel": {"type": "string", "maxLength": NAME_LEN}}}}
+AUFGABE = {
+    "de": (f" In nsc meldest du höchstens {AENDERUNGEN_MAX} Änderungen bei Figuren dieser Szene (nsc_szene): haltung "
+           "besser oder schlechter, wenn ein Held (held) die Figur für sich gewinnt oder verärgert; kante schuldet, fürchtet, "
+           "mag oder weiss mit ziel (ein Held oder eine Figur), wenn eine neue Beziehung entsteht. Bleib bei Aussehen, Art und "
+           "Beruf einer Figur aus nsc_szene; Wunsch und Geheimnis treiben sie an, verrate das Geheimnis nicht ohne Grund. "
+           "Für eine neue Figur nimm einen Namen aus freie_namen."),
+    "en": (f" In nsc report at most {AENDERUNGEN_MAX} changes for people of this scene (nsc_szene): haltung besser or "
+           "schlechter when a hero (held) wins the person over or angers them; kante schuldet, fuerchtet, mag or weiss with "
+           "ziel (a hero or a person) when a new relation begins. Keep to the looks, manner and occupation of a person from "
+           "nsc_szene; wish and secret drive them, do not give the secret away without a reason. For a new person take a "
+           "name from freie_namen."),
+}
+
+
+def on(rd):
+    import features
+    return bool(rd.get("owner")) and features.allowed("dungeonnsc", rd["owner"])
+
+
+def card(r, rd, rng=None):
+    """A new person's card, rolled by the panel from the tables of the round's world."""
+    out = {}
+    for k in KARTE:
+        x = tabellen.roll(r, "nsc_" + k, rd.get("welt"), rng)
+        if x:
+            out[k] = x
+    return out
+
+
+def note(rd, de, en):
+    """A line in the chronicle (fixed words of the panel and names the round checked)."""
+    rd["chronik"] = ((rd.get("chronik") or []) + [{"n": rd.get("zug", 0), "k": rd.get("kapitel", 1), "t": [de, en]}])[-CHRONIK_MAX:]
+
+
+def sync(r, rd, rng=None):
+    """Every person of the truth gets a card; returns how many are new."""
+    w = rd.get("wahrheit") or {}
+    ns = rd.setdefault("nsc", {})
+    n = 0
+    for p in w.get("personen") or []:
+        k = p["name"].lower()
+        if k not in ns:
+            ns[k] = {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
+            n += 1
+    return n
+
+
+def scene(rd):
+    """The people of the scene: at the group's place on the map, along with it, or speaking or named in the last
+    SZENE_ZUEGE turns."""
+    ns = rd.get("nsc") or {}
+    if not ns:
+        return []
+    zug = rd.get("zug", 0)
+    near = set()
+    k = rd.get("karte")
+    if k:
+        le = k.get("leute") or {}
+        near |= {n.lower() for n, p in le.items() if p.get("ort") == k.get("hier") or p.get("mit")}
+    for e in rd.get("log") or []:
+        if e.get("art") == "dm" and e.get("n", 0) > zug - SZENE_ZUEGE:
+            near |= {str(x.get("name", "")).lower() for x in e.get("npc") or []}
+            low = str(e.get("text", "")).lower()
+            near |= {n for n in ns if n in low}
+    return [n for n in ns if n in near]
+
+
+def word(v, li):
+    return HALTUNG_WORT[max(HALTUNG[0], min(HALTUNG[1], v))][li]
+
+
+def ruf(rd, li):
+    """A hero's reputation: the mean attitude of the people who know them, as a word; None when nobody knows them."""
+    out = {}
+    for _, p in _heroes(rd):
+        name = p["held"]["name"]
+        vs = [x["haltung"][name.lower()] for x in (rd.get("nsc") or {}).values() if name.lower() in x.get("haltung", {})]
+        if vs:
+            m = sum(vs) / len(vs)
+            out[name] = next(w[li] for lim, w in RUF if m <= lim)
+    return out
+
+
+def _heroes(rd):
+    return [(pid, p) for pid, p in rd["plaetze"].items() if p.get("held")]
+
+
+def _shown(rd):
+    """The attitudes are kept by the hero's name in small letters; shown with the name as the hero bears it."""
+    return {p["held"]["name"].lower(): p["held"]["name"] for _, p in _heroes(rd)}
+
+
+def check(dm, r, rd, obj, text):
+    """The narration's nsc changes by fixed rules: a known person named in the narration (so in its scene), a hero of
+    the table named there too, one attitude step per hero and turn, a relation only to a hero or a known person."""
+    if not on(rd) or not isinstance(obj, list):
+        return []
+    ns = {k: x["name"] for k, x in (rd.get("nsc") or {}).items()}
+    ns.update({p["name"].lower(): p["name"] for p in (rd.get("wahrheit") or {}).get("personen") or []})   # a card comes in learn
+    low = text.lower()
+    heroes = {p["held"]["name"].lower(): p["held"]["name"] for _, p in _heroes(rd)}
+    out, pairs = [], set()
+    for x in obj[:AENDERUNGEN_MAX]:
+        if not isinstance(x, dict):
+            continue
+        k = str(x.get("name") or "").strip().lower()
+        if k not in ns or k not in low:              # named in this narration: in its scene
+            continue
+        held = str(x.get("held") or "").strip().lower()
+        if x.get("haltung") in ("besser", "schlechter") and held in heroes and held in low and (k, held) not in pairs:
+            pairs.add((k, held))
+            out.append({"name": k, "held": held, "schritt": 1 if x["haltung"] == "besser" else -1})
+        ziel = str(x.get("ziel") or "").strip().lower()
+        if x.get("kante") in KANTEN and ziel != k and (ziel in heroes or ziel in ns) and ziel in low:
+            out.append({"name": k, "kante": x["kante"], "ziel": heroes.get(ziel) or ns[ziel]})
+    return out
+
+
+def apply(dm, rd, changes):
+    """The checked changes into the round: an attitude a step (the feed says it), a relation (only host and model)."""
+    ns = rd.get("nsc") or {}
+    heroes = {p["held"]["name"].lower(): (pid, p["held"]["name"]) for pid, p in _heroes(rd)}
+    for c in changes:
+        x = ns.get(c["name"])
+        if not x or "schritt" in c and c["held"] not in heroes:
+            print("dungeon: nsc | verworfen | weg", flush=True)
+            continue
+        if "schritt" in c:
+            was = x["haltung"].get(c["held"], 0)
+            neu = max(HALTUNG[0], min(HALTUNG[1], was + c["schritt"]))
+            if neu == was:
+                print("dungeon: nsc | haltung | grenze", flush=True)
+                continue
+            x["haltung"][c["held"]] = neu
+            pid, name = heroes[c["held"]]
+            dm._log(rd, "nsc", pid=pid, name=name, nsc=x["name"], haltung=neu,
+                    text=[f"{x['name']} ist {name} gegenüber jetzt {word(neu, 0)}.", f"{x['name']} is now {word(neu, 1)} towards {name}."])
+            dm._day.bump("nsc_haltung")
+            print(f"dungeon: nsc | haltung | {'besser' if neu > was else 'schlechter'}", flush=True)
+            if abs(neu) == HALTUNG[1]:
+                note(rd, f"{x['name']} ist {name} {word(neu, 0)}.", f"{x['name']} is {word(neu, 1)} towards {name}.")
+        else:
+            kante = {"art": c["kante"], "ziel": c["ziel"]}
+            if kante in x["kanten"]:
+                print("dungeon: nsc | kante | schon", flush=True)
+                continue
+            x["kanten"] = (x["kanten"] + [kante])[-KANTEN_MAX:]
+            dm._day.bump("nsc_kanten")
+            print(f"dungeon: nsc | kante | {c['kante']}", flush=True)
+
+
+def chronicle(rd, turn, closed=()):
+    """The chronicle lines of this turn by fixed rules from the round's log; returns how many were written."""
+    n0 = len(rd.get("chronik") or [])
+    ns = rd.get("nsc") or {}
+    for k in scene(rd):
+        x = ns[k]
+        if x.get("gesehen") is None:
+            x["gesehen"] = turn
+            b = x["karte"].get("beruf") or ["", ""]
+            note(rd, f"Begegnung: {x['name']}" + (f" ({b[0]})" if b[0] else ""), f"Met: {x['name']}" + (f" ({b[1]})" if b[1] else ""))
+    for e in rd.get("log") or []:
+        if e.get("n") != turn or e.get("chronik"):
+            continue
+        a = e.get("art")
+        if a == "kampf" and e.get("was") == "sieg" and e.get("besiegt"):
+            note(rd, "Ein mächtiger Gegner ist besiegt." if e.get("boss") else f"Sieg im Kampf über {e['besiegt']} Gegner.",
+                 "A mighty foe is defeated." if e.get("boss") else f"Won a fight against {e['besiegt']} foes.")
+        elif a == "zustand" and e.get("was") == "tot":
+            note(rd, f"{e['name']} ist gefallen.", f"{e['name']} has fallen.")
+        elif a == "stufe":
+            note(rd, f"{e['name']} erreicht Stufe {e['stufe']}.", f"{e['name']} reaches level {e['stufe']}.")
+        elif a == "akt" and e.get("text"):
+            note(rd, *e["text"])
+        else:
+            continue
+        e["chronik"] = True
+    for f in closed:
+        note(rd, f"Erledigt: {f}", f"Done: {f}")
+    return len(rd.get("chronik") or []) - n0
+
+
+def learn(dm, r, rd, story, turn, rng=None):
+    """After a told turn: cards for new people, the narration's changes, the chronicle's lines."""
+    if not on(rd):
+        return
+    neu = sync(r, rd, rng)
+    if neu:
+        print(f"dungeon: nsc | karte | {neu}", flush=True)
+    apply(dm, rd, (story or {}).get("nsc") or [])         # checked in dungeon.check_story (check)
+    zeilen = chronicle(rd, turn, (story.get("faeden") or {}).get("erledigt") or [] if story else [])
+    if zeilen:
+        dm._day.bump("chronik", zeilen)
+        print(f"dungeon: chronik | {zeilen} zeilen", flush=True)
+
+
+def facts(r, rd, li, rng=None):
+    """For the model, as data: the people of the scene with their cards, relations and attitudes; the others only
+    by name; the last lines of the chronicle, the heroes' reputation and fresh names. {} when off."""
+    if not on(rd):
+        return {}
+    ns = rd.get("nsc") or {}
+    w = {p["name"].lower(): p for p in (rd.get("wahrheit") or {}).get("personen") or []}
+    here, hn = scene(rd), _shown(rd)
+    szene = []
+    for k in here:
+        x, p = ns[k], w.get(k) or {}
+        szene.append({"name": x["name"], **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
+                      **{f: v[li] for f, v in x["karte"].items()},
+                      **({"kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]]} if x["kanten"] else {}),
+                      **({"haltung": {hn.get(h, h): word(v, li) for h, v in x["haltung"].items()}} if x["haltung"] else {})})
+    out = {"nsc_szene": szene, "nsc_fern": [x["name"] for k, x in ns.items() if k not in here],
+           "freie_namen": tabellen.fresh_names(r, rd, rng)}
+    if rd.get("chronik"):
+        out["chronik"] = [c["t"][li] for c in rd["chronik"][-CHRONIK_FAKTEN:]]
+    if ruf(rd, li):
+        out["ruf"] = ruf(rd, li)
+    return out
+
+
+def task(rd, lang):
+    return AUFGABE[lang] if on(rd) else ""
+
+
+def view(rd, host, li):
+    """The people the table met (looks, manner, occupation, attitude to each hero), the chronicle and the reputation;
+    the host also wish, secret and relations of each (nsc_geheim, dungeon_sicht.NUR_GASTGEBER). None when off."""
+    if not on(rd):
+        return None, None
+    ns, hn = rd.get("nsc") or {}, _shown(rd)
+    leute = [{"name": x["name"], **{f: x["karte"][f][li] for f in OFFEN if f in x["karte"]},
+              "haltung": [[hn.get(h, h), word(v, li), v] for h, v in sorted(x["haltung"].items())]}
+             for x in ns.values() if x.get("gesehen") is not None]
+    out = {"leute": leute, "chronik": [{"n": c["n"], "k": c["k"], "t": c["t"][li]} for c in rd.get("chronik") or []],
+           "ruf": [[h, w] for h, w in ruf(rd, li).items()]}
+    geheim = {x["name"]: {**{f: x["karte"][f][li] for f in KARTE if f not in OFFEN and f in x["karte"]},
+                          "kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]], "gesehen": x.get("gesehen") is not None}
+              for x in ns.values()} if host else None
+    return out, geheim
+
+
+def for_live(rs):
+    return {"nsc_karten": sum(len(v.get("nsc") or {}) for v in rs), "chronik_zeilen": sum(len(v.get("chronik") or []) for v in rs)}
+
+
+def keep(rd):
+    """What the next chapter takes over (dungeon_erzaehler.keep_chapter)."""
+    return {k: rd[k] for k in ("nsc", "chronik") if rd.get(k)}
+
+
+def carry(kampagne):
+    out = {}
+    if isinstance(kampagne.get("nsc"), dict):
+        out["nsc"] = kampagne["nsc"]
+    if isinstance(kampagne.get("chronik"), list):
+        out["chronik"] = kampagne["chronik"][-CHRONIK_MAX:]
+    return out

@@ -1,6 +1,6 @@
 {
   "zweck": "KI-Dungeon-Master (dungeon.py): Erweiterung des Katalogs aus dem System Reference Document 5.1 (SRD 5.1) von Wizards of the Coast unter CC-BY-4.0, gekürzt, umgerechnet und ins Deutsche übertragen, dazu eigene Einträge für Horror, Sci-Fi und Piraten. Feste Daten: dungeon.py legt sie als Schicht zwischen dungeon_regeln.json und die Regeln des Admins; nichts wird zur Laufzeit nachgeladen.",
-  "lizenz": "This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+  "lizenz": "This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode. This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.",
   "sg": {
     "sehr_leicht": 5,
     "leicht": 10,
@@ -17847,5 +17847,6149 @@
       "seit": "V01.1.039",
       "angriffe": 3
     }
-  ]
+  ],
+  "tabellen": [
+    {
+      "id": "nsc_aussehen",
+      "gruppe": "nsc",
+      "name": [
+        "Aussehen",
+        "Looks"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "spricht mit Akzent",
+            "speaks with an accent"
+          ]
+        },
+        {
+          "t": [
+            "hat stets Begleitung",
+            "is always accompanied"
+          ]
+        },
+        {
+          "t": [
+            "trägt viel Schmuck",
+            "wears a lot of jewellery"
+          ]
+        },
+        {
+          "t": [
+            "ist schon recht alt",
+            "is quite old"
+          ]
+        },
+        {
+          "t": [
+            "hat eine einnehmende Art",
+            "has a winning manner"
+          ]
+        },
+        {
+          "t": [
+            "ist gut bewaffnet",
+            "is well armed"
+          ]
+        },
+        {
+          "t": [
+            "trägt eine Rüstung",
+            "wears armour"
+          ]
+        },
+        {
+          "t": [
+            "ist sportlich und kräftig",
+            "is athletic and strong"
+          ]
+        },
+        {
+          "t": [
+            "sieht sehr gut aus",
+            "is very good-looking"
+          ]
+        },
+        {
+          "t": [
+            "verbirgt das Gesicht unter einer Kapuze",
+            "hides the face under a hood"
+          ]
+        },
+        {
+          "t": [
+            "wirkt zerstreut",
+            "seems distracted"
+          ]
+        },
+        {
+          "t": [
+            "ist herrlich schrullig",
+            "is delightfully eccentric"
+          ]
+        },
+        {
+          "t": [
+            "sprüht vor Energie",
+            "bursts with energy"
+          ]
+        },
+        {
+          "t": [
+            "ist auffällig gekleidet",
+            "is flashily dressed"
+          ]
+        },
+        {
+          "t": [
+            "bewegt sich anmutig",
+            "moves gracefully"
+          ]
+        },
+        {
+          "t": [
+            "schaut ernst drein",
+            "looks stern"
+          ]
+        },
+        {
+          "t": [
+            "wirkt müde und abgekämpft",
+            "looks tired and worn out"
+          ]
+        },
+        {
+          "t": [
+            "ist schlecht ausgerüstet",
+            "is poorly equipped"
+          ]
+        },
+        {
+          "t": [
+            "ist eine eindrucksvolle Erscheinung",
+            "has an imposing presence"
+          ]
+        },
+        {
+          "t": [
+            "ist sehr groß",
+            "is very tall"
+          ]
+        },
+        {
+          "t": [
+            "sieht ganz gewöhnlich aus",
+            "looks quite ordinary"
+          ]
+        },
+        {
+          "t": [
+            "ist ruhig und gefasst",
+            "is calm and poised"
+          ]
+        },
+        {
+          "t": [
+            "hat eine Narbe im Gesicht",
+            "has a scar on the face"
+          ]
+        },
+        {
+          "t": [
+            "ist etwas zerzaust",
+            "is a bit scruffy"
+          ]
+        },
+        {
+          "t": [
+            "hat einen unsteten Blick",
+            "has a shifty look"
+          ]
+        },
+        {
+          "t": [
+            "sieht blass und kränklich aus",
+            "looks pale and sickly"
+          ]
+        },
+        {
+          "t": [
+            "ist klein und zierlich",
+            "is small and slight"
+          ]
+        },
+        {
+          "t": [
+            "tritt großspurig auf",
+            "swaggers"
+          ]
+        },
+        {
+          "t": [
+            "ist tätowiert",
+            "is tattooed"
+          ]
+        },
+        {
+          "t": [
+            "wirkt bedrängt und nervös",
+            "seems hard-pressed and nervous"
+          ]
+        },
+        {
+          "t": [
+            "hat etwas Unheimliches an sich",
+            "has something uncanny about them"
+          ]
+        },
+        {
+          "t": [
+            "ist wettergegerbt",
+            "is weathered"
+          ]
+        },
+        {
+          "t": [
+            "ist bestens ausgerüstet",
+            "is very well equipped"
+          ]
+        },
+        {
+          "t": [
+            "ist drahtig und zäh",
+            "is wiry and tough"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen Verband",
+            "wears a bandage"
+          ]
+        },
+        {
+          "t": [
+            "ist noch sehr jung",
+            "is still very young"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen Federhut",
+            "wears a feathered hat"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "hat spitze Ohren und silbernes Haar",
+            "has pointed ears and silver hair"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "riecht nach Kräutern und Rauch",
+            "smells of herbs and smoke"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen bestickten Umhang",
+            "wears an embroidered cloak"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "hat Erde an den Stiefeln",
+            "has soil on the boots"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "trägt ein Amulett mit Runen",
+            "wears an amulet with runes"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "ist blass wie Mondlicht",
+            "is pale as moonlight"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "trägt altmodische schwarze Kleidung",
+            "wears old-fashioned black clothes"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "hat dunkle Ringe unter den Augen",
+            "has dark rings under the eyes"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "trägt eine Laterne bei sich",
+            "carries a lantern"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "flüstert beim Sprechen",
+            "whispers when speaking"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "hat eiskalte Hände",
+            "has ice-cold hands"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "hat ein künstliches Auge",
+            "has an artificial eye"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen ölverschmierten Overall",
+            "wears an oil-stained jumpsuit"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat leuchtende Implantate",
+            "has glowing implants"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "trägt ein Funkgerät am Ohr",
+            "wears a comm unit at the ear"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat silberne Haut",
+            "has silver skin"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "trägt eine Atemmaske um den Hals",
+            "wears a breathing mask round the neck"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat Abzeichen vieler Stationen",
+            "has patches from many stations"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "trägt eine Augenklappe",
+            "wears an eye patch"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "hat einen Papagei auf der Schulter",
+            "has a parrot on the shoulder"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "hat ein Holzbein",
+            "has a wooden leg"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "trägt goldene Ohrringe",
+            "wears golden earrings"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "riecht nach Salz und Teer",
+            "smells of salt and tar"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen breiten Dreispitz",
+            "wears a wide tricorn hat"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_art",
+      "gruppe": "nsc",
+      "name": [
+        "Art",
+        "Manner"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "unerschütterlich",
+            "stoic"
+          ]
+        },
+        {
+          "t": [
+            "zurückhaltend",
+            "aloof"
+          ]
+        },
+        {
+          "t": [
+            "herzlich",
+            "affectionate"
+          ]
+        },
+        {
+          "t": [
+            "großzügig",
+            "generous"
+          ]
+        },
+        {
+          "t": [
+            "selbstgefällig",
+            "smug"
+          ]
+        },
+        {
+          "t": [
+            "schlau",
+            "clever"
+          ]
+        },
+        {
+          "t": [
+            "mutig",
+            "brave"
+          ]
+        },
+        {
+          "t": [
+            "gesellig",
+            "sociable"
+          ]
+        },
+        {
+          "t": [
+            "gut vernetzt",
+            "well connected"
+          ]
+        },
+        {
+          "t": [
+            "kühn",
+            "bold"
+          ]
+        },
+        {
+          "t": [
+            "eifersüchtig",
+            "jealous"
+          ]
+        },
+        {
+          "t": [
+            "zornig",
+            "angry"
+          ]
+        },
+        {
+          "t": [
+            "misstrauisch",
+            "suspicious"
+          ]
+        },
+        {
+          "t": [
+            "feindselig",
+            "hostile"
+          ]
+        },
+        {
+          "t": [
+            "hartherzig",
+            "hardhearted"
+          ]
+        },
+        {
+          "t": [
+            "erfolgreich",
+            "successful"
+          ]
+        },
+        {
+          "t": [
+            "begabt",
+            "talented"
+          ]
+        },
+        {
+          "t": [
+            "erfahren",
+            "experienced"
+          ]
+        },
+        {
+          "t": [
+            "verlogen",
+            "deceitful"
+          ]
+        },
+        {
+          "t": [
+            "ehrgeizig",
+            "ambitious"
+          ]
+        },
+        {
+          "t": [
+            "eingebildet",
+            "conceited"
+          ]
+        },
+        {
+          "t": [
+            "stolz",
+            "proud"
+          ]
+        },
+        {
+          "t": [
+            "streng",
+            "stern"
+          ]
+        },
+        {
+          "t": [
+            "vorsichtig",
+            "wary"
+          ]
+        },
+        {
+          "t": [
+            "scharfsinnig",
+            "insightful"
+          ]
+        },
+        {
+          "t": [
+            "eigenartig",
+            "quirky"
+          ]
+        },
+        {
+          "t": [
+            "fröhlich",
+            "cheery"
+          ]
+        },
+        {
+          "t": [
+            "unduldsam",
+            "intolerant"
+          ]
+        },
+        {
+          "t": [
+            "geschickt",
+            "capable"
+          ]
+        },
+        {
+          "t": [
+            "geizig",
+            "stingy"
+          ]
+        },
+        {
+          "t": [
+            "schüchtern",
+            "timid"
+          ]
+        },
+        {
+          "t": [
+            "taktlos",
+            "insensitive"
+          ]
+        },
+        {
+          "t": [
+            "wild",
+            "wild"
+          ]
+        },
+        {
+          "t": [
+            "verbittert",
+            "bitter"
+          ]
+        },
+        {
+          "t": [
+            "gerissen",
+            "cunning"
+          ]
+        },
+        {
+          "t": [
+            "reumütig",
+            "remorseful"
+          ]
+        },
+        {
+          "t": [
+            "freundlich",
+            "kind"
+          ]
+        },
+        {
+          "t": [
+            "charmant",
+            "charming"
+          ]
+        },
+        {
+          "t": [
+            "ahnungslos",
+            "oblivious"
+          ]
+        },
+        {
+          "t": [
+            "kritisch",
+            "critical"
+          ]
+        },
+        {
+          "t": [
+            "findig",
+            "resourceful"
+          ]
+        },
+        {
+          "t": [
+            "müde",
+            "weary"
+          ]
+        },
+        {
+          "t": [
+            "ängstlich",
+            "anxious"
+          ]
+        },
+        {
+          "t": [
+            "mächtig",
+            "powerful"
+          ]
+        },
+        {
+          "t": [
+            "getrieben",
+            "driven"
+          ]
+        },
+        {
+          "t": [
+            "still",
+            "quiet"
+          ]
+        },
+        {
+          "t": [
+            "ehrlich",
+            "honest"
+          ]
+        },
+        {
+          "t": [
+            "berüchtigt",
+            "infamous"
+          ]
+        },
+        {
+          "t": [
+            "einsiedlerisch",
+            "reclusive"
+          ]
+        },
+        {
+          "t": [
+            "künstlerisch",
+            "artistic"
+          ]
+        },
+        {
+          "t": [
+            "verwirrt",
+            "confused"
+          ]
+        },
+        {
+          "t": [
+            "berechnend",
+            "manipulative"
+          ]
+        },
+        {
+          "t": [
+            "gelassen",
+            "relaxed"
+          ]
+        },
+        {
+          "t": [
+            "leise und unauffällig",
+            "stealthy"
+          ]
+        },
+        {
+          "t": [
+            "selbstsicher",
+            "confident"
+          ]
+        },
+        {
+          "t": [
+            "weise",
+            "wise"
+          ]
+        },
+        {
+          "t": [
+            "einflussreich",
+            "influential"
+          ]
+        },
+        {
+          "t": [
+            "abenteuerlustig",
+            "adventurous"
+          ]
+        },
+        {
+          "t": [
+            "rachsüchtig",
+            "vengeful"
+          ]
+        },
+        {
+          "t": [
+            "hilfsbereit",
+            "cooperative"
+          ]
+        },
+        {
+          "t": [
+            "gleichgültig",
+            "apathetic"
+          ]
+        },
+        {
+          "t": [
+            "entschlossen",
+            "determined"
+          ]
+        },
+        {
+          "t": [
+            "treu",
+            "loyal"
+          ]
+        },
+        {
+          "t": [
+            "fromm",
+            "religious"
+          ]
+        },
+        {
+          "t": [
+            "selbstsüchtig",
+            "selfish"
+          ]
+        },
+        {
+          "t": [
+            "leidenschaftlich",
+            "fervent"
+          ]
+        },
+        {
+          "t": [
+            "umgänglich",
+            "agreeable"
+          ]
+        },
+        {
+          "t": [
+            "hitzköpfig",
+            "hot-tempered"
+          ]
+        },
+        {
+          "t": [
+            "stur",
+            "stubborn"
+          ]
+        },
+        {
+          "t": [
+            "ungeschickt",
+            "incompetent"
+          ]
+        },
+        {
+          "t": [
+            "gierig",
+            "greedy"
+          ]
+        },
+        {
+          "t": [
+            "feige",
+            "cowardly"
+          ]
+        },
+        {
+          "t": [
+            "besessen von einer Idee",
+            "obsessed"
+          ]
+        },
+        {
+          "t": [
+            "leichtsinnig",
+            "careless"
+          ]
+        },
+        {
+          "t": [
+            "prahlerisch",
+            "boastful"
+          ]
+        },
+        {
+          "t": [
+            "laut",
+            "boisterous"
+          ]
+        },
+        {
+          "t": [
+            "trotzig",
+            "defiant"
+          ]
+        },
+        {
+          "t": [
+            "neidisch",
+            "envious"
+          ]
+        },
+        {
+          "t": [
+            "gläubig",
+            "faithful"
+          ]
+        },
+        {
+          "t": [
+            "handwerklich geschickt",
+            "handy"
+          ]
+        },
+        {
+          "t": [
+            "ehrenhaft",
+            "honorable"
+          ]
+        },
+        {
+          "t": [
+            "ungestüm",
+            "impulsive"
+          ]
+        },
+        {
+          "t": [
+            "unabhängig",
+            "independent"
+          ]
+        },
+        {
+          "t": [
+            "klug",
+            "intelligent"
+          ]
+        },
+        {
+          "t": [
+            "gesetzestreu",
+            "law-abiding"
+          ]
+        },
+        {
+          "t": [
+            "einsam",
+            "lonely"
+          ]
+        },
+        {
+          "t": [
+            "liebevoll",
+            "loving"
+          ]
+        },
+        {
+          "t": [
+            "aufmüpfig",
+            "rebellious"
+          ]
+        },
+        {
+          "t": [
+            "verschwiegen",
+            "secretive"
+          ]
+        },
+        {
+          "t": [
+            "zäh",
+            "tough"
+          ]
+        },
+        {
+          "t": [
+            "duldsam",
+            "tolerant"
+          ]
+        },
+        {
+          "t": [
+            "wachsam",
+            "watchful"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_wunsch",
+      "gruppe": "nsc",
+      "name": [
+        "Wunsch",
+        "Wish"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "einen Gegenstand beschaffen",
+            "obtain an object"
+          ]
+        },
+        {
+          "t": [
+            "eine Abmachung treffen",
+            "make an agreement"
+          ]
+        },
+        {
+          "t": [
+            "eine Freundschaft knüpfen",
+            "build a relationship"
+          ]
+        },
+        {
+          "t": [
+            "eine Freundschaft auseinanderbringen",
+            "undermine a relationship"
+          ]
+        },
+        {
+          "t": [
+            "eine Wahrheit herausfinden",
+            "seek a truth"
+          ]
+        },
+        {
+          "t": [
+            "eine Schuld begleichen",
+            "pay a debt"
+          ]
+        },
+        {
+          "t": [
+            "eine Lüge widerlegen",
+            "refute a falsehood"
+          ]
+        },
+        {
+          "t": [
+            "einen Rivalen übertrumpfen",
+            "outdo a rival"
+          ]
+        },
+        {
+          "t": [
+            "eine Krankheit heilen",
+            "cure an ill"
+          ]
+        },
+        {
+          "t": [
+            "jemanden wiederfinden",
+            "find a person"
+          ]
+        },
+        {
+          "t": [
+            "ein Zuhause finden",
+            "find a home"
+          ]
+        },
+        {
+          "t": [
+            "die Macht ergreifen",
+            "seize power"
+          ]
+        },
+        {
+          "t": [
+            "eine alte Freundschaft kitten",
+            "restore a relationship"
+          ]
+        },
+        {
+          "t": [
+            "etwas Besonderes herstellen",
+            "create an item"
+          ]
+        },
+        {
+          "t": [
+            "an einen fernen Ort reisen",
+            "travel to a place"
+          ]
+        },
+        {
+          "t": [
+            "Vorräte sichern",
+            "secure provisions"
+          ]
+        },
+        {
+          "t": [
+            "sich gegen die Obrigkeit auflehnen",
+            "rebel against power"
+          ]
+        },
+        {
+          "t": [
+            "eine Schuld eintreiben",
+            "collect a debt"
+          ]
+        },
+        {
+          "t": [
+            "ein Geheimnis bewahren",
+            "protect a secret"
+          ]
+        },
+        {
+          "t": [
+            "den eigenen Glauben verbreiten",
+            "spread faith"
+          ]
+        },
+        {
+          "t": [
+            "reich werden",
+            "enrich themselves"
+          ]
+        },
+        {
+          "t": [
+            "jemanden beschützen",
+            "protect a person"
+          ]
+        },
+        {
+          "t": [
+            "alles so lassen, wie es ist",
+            "protect the status quo"
+          ]
+        },
+        {
+          "t": [
+            "im Ansehen steigen",
+            "advance status"
+          ]
+        },
+        {
+          "t": [
+            "einen Ort verteidigen",
+            "defend a place"
+          ]
+        },
+        {
+          "t": [
+            "ein Unrecht wiedergutmachen",
+            "right a wrong"
+          ]
+        },
+        {
+          "t": [
+            "eine Pflicht erfüllen",
+            "fulfill a duty"
+          ]
+        },
+        {
+          "t": [
+            "Wissen sammeln",
+            "gain knowledge"
+          ]
+        },
+        {
+          "t": [
+            "sich als würdig erweisen",
+            "prove worthiness"
+          ]
+        },
+        {
+          "t": [
+            "einen Fehler wiedergutmachen",
+            "find redemption"
+          ]
+        },
+        {
+          "t": [
+            "vor etwas fliehen",
+            "escape from something"
+          ]
+        },
+        {
+          "t": [
+            "einen Streit schlichten",
+            "resolve a dispute"
+          ]
+        },
+        {
+          "t": [
+            "ein Bündnis schmieden",
+            "forge an alliance"
+          ]
+        },
+        {
+          "t": [
+            "ein Rätsel lösen",
+            "solve a mystery"
+          ]
+        },
+        {
+          "t": [
+            "für Gerechtigkeit sorgen",
+            "fight injustice"
+          ]
+        },
+        {
+          "t": [
+            "Ordnung halten",
+            "maintain order"
+          ]
+        },
+        {
+          "t": [
+            "eine Technik reparieren",
+            "repair a technology"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "eine Technik sabotieren",
+            "sabotage a technology"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "ein fremdes Lebewesen schützen",
+            "protect a lifeform"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "eine Rohstoffquelle beanspruchen",
+            "claim a resource"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "einer Gefangenschaft entkommen",
+            "escape a captor"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "einen Konflikt beenden",
+            "end a conflict"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_geheimnis",
+      "gruppe": "nsc",
+      "name": [
+        "Geheimnis",
+        "Secret"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "hat heimlich Schulden bei der falschen Person",
+            "secretly owes money to the wrong person"
+          ]
+        },
+        {
+          "t": [
+            "ist nicht der, für den alle ihn halten",
+            "is not who everyone thinks"
+          ]
+        },
+        {
+          "t": [
+            "kennt einen geheimen Weg aus dem Ort",
+            "knows a secret way out of town"
+          ]
+        },
+        {
+          "t": [
+            "hat einen wertvollen Fund versteckt",
+            "has hidden a valuable find"
+          ]
+        },
+        {
+          "t": [
+            "arbeitet heimlich für eine Rivalin",
+            "secretly works for a rival"
+          ]
+        },
+        {
+          "t": [
+            "hat Angst vor etwas ganz Alltäglichem",
+            "is afraid of something quite ordinary"
+          ]
+        },
+        {
+          "t": [
+            "kann nicht lesen und verbirgt es",
+            "cannot read and hides it"
+          ]
+        },
+        {
+          "t": [
+            "hat einen Brief nie abgeschickt",
+            "never sent an important letter"
+          ]
+        },
+        {
+          "t": [
+            "hat als Kind etwas Seltsames gesehen",
+            "saw something strange as a child"
+          ]
+        },
+        {
+          "t": [
+            "ist eigentlich von edler Herkunft",
+            "is actually of noble birth"
+          ]
+        },
+        {
+          "t": [
+            "hat ein Versprechen gebrochen",
+            "broke a promise"
+          ]
+        },
+        {
+          "t": [
+            "sammelt Gerüchte über die Helden",
+            "collects rumours about the heroes"
+          ]
+        },
+        {
+          "t": [
+            "hat eine Zwillingsschwester, von der niemand weiß",
+            "has a twin sister nobody knows about"
+          ]
+        },
+        {
+          "t": [
+            "hat den Schlüssel zu einem verschlossenen Raum",
+            "has the key to a locked room"
+          ]
+        },
+        {
+          "t": [
+            "ist auf der Flucht vor alten Freunden",
+            "is on the run from old friends"
+          ]
+        },
+        {
+          "t": [
+            "hat eine Wette verloren und muss etwas tun",
+            "lost a bet and must do something"
+          ]
+        },
+        {
+          "t": [
+            "hat ein verbotenes Buch gelesen",
+            "has read a forbidden book"
+          ]
+        },
+        {
+          "t": [
+            "weiß, wo ein Schatz liegt, traut sich aber nicht hin",
+            "knows where a treasure lies but dares not go"
+          ]
+        },
+        {
+          "t": [
+            "hat den Streit im Ort selbst angefangen",
+            "started the town's quarrel themselves"
+          ]
+        },
+        {
+          "t": [
+            "plant, bald für immer fortzugehen",
+            "plans to leave for good soon"
+          ]
+        },
+        {
+          "t": [
+            "schreibt heimlich Gedichte",
+            "secretly writes poems"
+          ]
+        },
+        {
+          "t": [
+            "hat einen Fehler gemacht, den ein anderer ausbadet",
+            "made a mistake someone else pays for"
+          ]
+        },
+        {
+          "t": [
+            "verehrt die Helden insgeheim",
+            "secretly admires the heroes"
+          ]
+        },
+        {
+          "t": [
+            "hat ein Haustier, das eigentlich verboten ist",
+            "has a pet that is actually forbidden"
+          ]
+        },
+        {
+          "t": [
+            "hat einen Pakt mit einem Waldgeist",
+            "has a pact with a forest spirit"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "trägt einen gestohlenen Ring",
+            "wears a stolen ring"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "kann ein wenig zaubern",
+            "can do a little magic"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "stammt von Drachenhütern ab",
+            "descends from dragon keepers"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "kennt die wahre Geschichte des alten Königs",
+            "knows the true story of the old king"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "hat einen Zwerg als Ziehvater",
+            "was raised by a dwarf"
+          ],
+          "welten": [
+            "fantasy",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "hört nachts Stimmen im Keller",
+            "hears voices in the cellar at night"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "hat das Tagebuch des alten Hausherrn",
+            "has the old master's diary"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "war schon einmal im verbotenen Flügel",
+            "has been in the forbidden wing before"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "sieht im Spiegel manchmal jemand anderen",
+            "sometimes sees someone else in the mirror"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "bewahrt ein verfluchtes Erbstück auf",
+            "keeps a cursed heirloom"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "weiß, warum die Glocke nachts läutet",
+            "knows why the bell rings at night"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "ist in Wahrheit ein Android",
+            "is really an android"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat die Bordlogs gefälscht",
+            "forged the ship's logs"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hört heimlich den Funk der Station ab",
+            "secretly listens to the station's comms"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "versteckt ein fremdes Wesen in der Kabine",
+            "hides an alien creature in the cabin"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat Zugangscodes, die niemand kennen sollte",
+            "has access codes nobody should know"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "wird von einem Konzern gesucht",
+            "is wanted by a corporation"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "hat die halbe Schatzkarte",
+            "has half of the treasure map"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "war früher bei der Marine",
+            "used to serve in the navy"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "hat heimlich Rum unter Deck versteckt",
+            "has hidden rum below deck"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "kann gar nicht schwimmen",
+            "cannot swim at all"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "ist die Tochter des Gouverneurs",
+            "is the governor's daughter"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "hat die Meuterei geplant",
+            "planned the mutiny"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_beruf",
+      "gruppe": "nsc",
+      "name": [
+        "Beruf",
+        "Occupation"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Heilerin",
+            "healer"
+          ]
+        },
+        {
+          "t": [
+            "Führer",
+            "guide"
+          ]
+        },
+        {
+          "t": [
+            "Gauklerin",
+            "performer"
+          ]
+        },
+        {
+          "t": [
+            "Bergmann",
+            "miner"
+          ]
+        },
+        {
+          "t": [
+            "Söldnerin",
+            "mercenary"
+          ]
+        },
+        {
+          "t": [
+            "Ausgestoßener",
+            "outcast"
+          ]
+        },
+        {
+          "t": [
+            "Landstreicher",
+            "vagrant"
+          ]
+        },
+        {
+          "t": [
+            "Reisende",
+            "traveller"
+          ]
+        },
+        {
+          "t": [
+            "Mystikerin",
+            "mystic"
+          ]
+        },
+        {
+          "t": [
+            "Pilger",
+            "pilgrim"
+          ]
+        },
+        {
+          "t": [
+            "Abenteurerin",
+            "adventurer"
+          ]
+        },
+        {
+          "t": [
+            "Anführer",
+            "leader"
+          ]
+        },
+        {
+          "t": [
+            "Wache",
+            "guard"
+          ]
+        },
+        {
+          "t": [
+            "Handwerkerin",
+            "artisan"
+          ]
+        },
+        {
+          "t": [
+            "Kundschafter",
+            "scout"
+          ]
+        },
+        {
+          "t": [
+            "Jägerin",
+            "hunter"
+          ]
+        },
+        {
+          "t": [
+            "Händler",
+            "trader"
+          ]
+        },
+        {
+          "t": [
+            "Bäuerin",
+            "farmer"
+          ]
+        },
+        {
+          "t": [
+            "Gelehrter",
+            "scholar"
+          ]
+        },
+        {
+          "t": [
+            "Botin",
+            "courier"
+          ]
+        },
+        {
+          "t": [
+            "Ermittler",
+            "investigator"
+          ]
+        },
+        {
+          "t": [
+            "Diplomatin",
+            "diplomat"
+          ]
+        },
+        {
+          "t": [
+            "Forscher",
+            "researcher"
+          ]
+        },
+        {
+          "t": [
+            "Diebin",
+            "thief"
+          ]
+        },
+        {
+          "t": [
+            "Schmuggler",
+            "smuggler"
+          ]
+        },
+        {
+          "t": [
+            "Wirtin",
+            "innkeeper"
+          ]
+        },
+        {
+          "t": [
+            "Förster",
+            "forester"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hirte",
+            "herder"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Priesterin",
+            "priest"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Sammlerin",
+            "forager"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Schmied",
+            "smith"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Barde",
+            "bard"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Ritterin",
+            "knight"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Kräuterhexe",
+            "herb witch"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Laternenanzünder",
+            "lamplighter"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Glöckner",
+            "bell ringer"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Nachtwächterin",
+            "night watch"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Uhrmacher",
+            "clockmaker"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Geisterjägerin",
+            "ghost hunter"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Hausdiener",
+            "butler"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Agentin",
+            "agent"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Bord-KI",
+            "ship AI"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Kopfgeldjäger",
+            "bounty hunter"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Crewmitglied",
+            "crew member"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ingenieurin",
+            "engineer"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Entdecker",
+            "explorer"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Gesetzeshüterin",
+            "lawkeeper"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Navigator",
+            "navigator"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Pilotin",
+            "pilot"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Schrottsammler",
+            "scavenger"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Schiffsbauerin",
+            "shipwright"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Raumfahrer",
+            "spacer"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Technikerin",
+            "technician"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Historiker",
+            "historian"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Kanonier",
+            "gunner"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Steuerfrau",
+            "helmswoman"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Smutje",
+            "ship's cook"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Kartenzeichner",
+            "cartographer"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Schiffsjunge",
+            "cabin boy"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Hafenmeisterin",
+            "harbour master"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Fischer",
+            "fisher"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Matrosin",
+            "sailor"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_aktion",
+      "gruppe": "orakel",
+      "name": [
+        "Handlung",
+        "Action"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "aufgeben",
+            "abandon"
+          ]
+        },
+        {
+          "t": [
+            "erwerben",
+            "acquire"
+          ]
+        },
+        {
+          "t": [
+            "vorrücken",
+            "advance"
+          ]
+        },
+        {
+          "t": [
+            "beeinflussen",
+            "affect"
+          ]
+        },
+        {
+          "t": [
+            "helfen",
+            "aid"
+          ]
+        },
+        {
+          "t": [
+            "ankommen",
+            "arrive"
+          ]
+        },
+        {
+          "t": [
+            "rächen",
+            "avenge"
+          ]
+        },
+        {
+          "t": [
+            "meiden",
+            "avoid"
+          ]
+        },
+        {
+          "t": [
+            "abwarten",
+            "await"
+          ]
+        },
+        {
+          "t": [
+            "beginnen",
+            "begin"
+          ]
+        },
+        {
+          "t": [
+            "verraten",
+            "betray"
+          ]
+        },
+        {
+          "t": [
+            "stärken",
+            "bolster"
+          ]
+        },
+        {
+          "t": [
+            "durchbrechen",
+            "breach"
+          ]
+        },
+        {
+          "t": [
+            "zerbrechen",
+            "break"
+          ]
+        },
+        {
+          "t": [
+            "fangen",
+            "capture"
+          ]
+        },
+        {
+          "t": [
+            "herausfordern",
+            "challenge"
+          ]
+        },
+        {
+          "t": [
+            "verändern",
+            "change"
+          ]
+        },
+        {
+          "t": [
+            "anstürmen",
+            "charge"
+          ]
+        },
+        {
+          "t": [
+            "aneinandergeraten",
+            "clash"
+          ]
+        },
+        {
+          "t": [
+            "befehlen",
+            "command"
+          ]
+        },
+        {
+          "t": [
+            "sich verständigen",
+            "communicate"
+          ]
+        },
+        {
+          "t": [
+            "bauen",
+            "construct"
+          ]
+        },
+        {
+          "t": [
+            "lenken",
+            "control"
+          ]
+        },
+        {
+          "t": [
+            "abstimmen",
+            "coordinate"
+          ]
+        },
+        {
+          "t": [
+            "erschaffen",
+            "create"
+          ]
+        },
+        {
+          "t": [
+            "streiten",
+            "debate"
+          ]
+        },
+        {
+          "t": [
+            "besiegen",
+            "defeat"
+          ]
+        },
+        {
+          "t": [
+            "verteidigen",
+            "defend"
+          ]
+        },
+        {
+          "t": [
+            "ablenken",
+            "deflect"
+          ]
+        },
+        {
+          "t": [
+            "trotzen",
+            "defy"
+          ]
+        },
+        {
+          "t": [
+            "überbringen",
+            "deliver"
+          ]
+        },
+        {
+          "t": [
+            "fordern",
+            "demand"
+          ]
+        },
+        {
+          "t": [
+            "aufbrechen",
+            "depart"
+          ]
+        },
+        {
+          "t": [
+            "zerstören",
+            "destroy"
+          ]
+        },
+        {
+          "t": [
+            "ablenken",
+            "distract"
+          ]
+        },
+        {
+          "t": [
+            "ausschalten",
+            "eliminate"
+          ]
+        },
+        {
+          "t": [
+            "ertragen",
+            "endure"
+          ]
+        },
+        {
+          "t": [
+            "verschärfen",
+            "escalate"
+          ]
+        },
+        {
+          "t": [
+            "geleiten",
+            "escort"
+          ]
+        },
+        {
+          "t": [
+            "entwischen",
+            "evade"
+          ]
+        },
+        {
+          "t": [
+            "erkunden",
+            "explore"
+          ]
+        },
+        {
+          "t": [
+            "zögern",
+            "falter"
+          ]
+        },
+        {
+          "t": [
+            "finden",
+            "find"
+          ]
+        },
+        {
+          "t": [
+            "beenden",
+            "finish"
+          ]
+        },
+        {
+          "t": [
+            "sich konzentrieren",
+            "focus"
+          ]
+        },
+        {
+          "t": [
+            "folgen",
+            "follow"
+          ]
+        },
+        {
+          "t": [
+            "befestigen",
+            "fortify"
+          ]
+        },
+        {
+          "t": [
+            "sammeln",
+            "gather"
+          ]
+        },
+        {
+          "t": [
+            "bewachen",
+            "guard"
+          ]
+        },
+        {
+          "t": [
+            "verstecken",
+            "hide"
+          ]
+        },
+        {
+          "t": [
+            "festhalten",
+            "hold"
+          ]
+        },
+        {
+          "t": [
+            "jagen",
+            "hunt"
+          ]
+        },
+        {
+          "t": [
+            "beeindrucken",
+            "impress"
+          ]
+        },
+        {
+          "t": [
+            "anstoßen",
+            "initiate"
+          ]
+        },
+        {
+          "t": [
+            "prüfen",
+            "inspect"
+          ]
+        },
+        {
+          "t": [
+            "untersuchen",
+            "investigate"
+          ]
+        },
+        {
+          "t": [
+            "reisen",
+            "journey"
+          ]
+        },
+        {
+          "t": [
+            "lernen",
+            "learn"
+          ]
+        },
+        {
+          "t": [
+            "verlassen",
+            "leave"
+          ]
+        },
+        {
+          "t": [
+            "aufspüren",
+            "locate"
+          ]
+        },
+        {
+          "t": [
+            "verlieren",
+            "lose"
+          ]
+        },
+        {
+          "t": [
+            "manipulieren",
+            "manipulate"
+          ]
+        },
+        {
+          "t": [
+            "trauern",
+            "mourn"
+          ]
+        },
+        {
+          "t": [
+            "bewegen",
+            "move"
+          ]
+        },
+        {
+          "t": [
+            "sich widersetzen",
+            "oppose"
+          ]
+        },
+        {
+          "t": [
+            "überwältigen",
+            "overwhelm"
+          ]
+        },
+        {
+          "t": [
+            "durchhalten",
+            "persevere"
+          ]
+        },
+        {
+          "t": [
+            "bewahren",
+            "preserve"
+          ]
+        },
+        {
+          "t": [
+            "schützen",
+            "protect"
+          ]
+        },
+        {
+          "t": [
+            "überfallen",
+            "raid"
+          ]
+        },
+        {
+          "t": [
+            "verringern",
+            "reduce"
+          ]
+        },
+        {
+          "t": [
+            "verweigern",
+            "refuse"
+          ]
+        },
+        {
+          "t": [
+            "ablehnen",
+            "reject"
+          ]
+        },
+        {
+          "t": [
+            "freilassen",
+            "release"
+          ]
+        },
+        {
+          "t": [
+            "entfernen",
+            "remove"
+          ]
+        },
+        {
+          "t": [
+            "erforschen",
+            "research"
+          ]
+        },
+        {
+          "t": [
+            "widerstehen",
+            "resist"
+          ]
+        },
+        {
+          "t": [
+            "wiederherstellen",
+            "restore"
+          ]
+        },
+        {
+          "t": [
+            "enthüllen",
+            "reveal"
+          ]
+        },
+        {
+          "t": [
+            "wagen",
+            "risk"
+          ]
+        },
+        {
+          "t": [
+            "aushecken",
+            "scheme"
+          ]
+        },
+        {
+          "t": [
+            "suchen",
+            "search"
+          ]
+        },
+        {
+          "t": [
+            "sichern",
+            "secure"
+          ]
+        },
+        {
+          "t": [
+            "ergreifen",
+            "seize"
+          ]
+        },
+        {
+          "t": [
+            "dienen",
+            "serve"
+          ]
+        },
+        {
+          "t": [
+            "teilen",
+            "share"
+          ]
+        },
+        {
+          "t": [
+            "kräftigen",
+            "strengthen"
+          ]
+        },
+        {
+          "t": [
+            "herbeirufen",
+            "summon"
+          ]
+        },
+        {
+          "t": [
+            "unterstützen",
+            "support"
+          ]
+        },
+        {
+          "t": [
+            "unterdrücken",
+            "suppress"
+          ]
+        },
+        {
+          "t": [
+            "sich ergeben",
+            "surrender"
+          ]
+        },
+        {
+          "t": [
+            "schwören",
+            "swear"
+          ]
+        },
+        {
+          "t": [
+            "drohen",
+            "threaten"
+          ]
+        },
+        {
+          "t": [
+            "verwandeln",
+            "transform"
+          ]
+        },
+        {
+          "t": [
+            "aufdecken",
+            "uncover"
+          ]
+        },
+        {
+          "t": [
+            "aufrechterhalten",
+            "uphold"
+          ]
+        },
+        {
+          "t": [
+            "schwächen",
+            "weaken"
+          ]
+        },
+        {
+          "t": [
+            "sich zurückziehen",
+            "withdraw"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_thema",
+      "gruppe": "orakel",
+      "name": [
+        "Thema",
+        "Theme"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Fähigkeit",
+            "ability"
+          ]
+        },
+        {
+          "t": [
+            "Vorteil",
+            "advantage"
+          ]
+        },
+        {
+          "t": [
+            "Bündnis",
+            "alliance"
+          ]
+        },
+        {
+          "t": [
+            "Obrigkeit",
+            "authority"
+          ]
+        },
+        {
+          "t": [
+            "Gleichgewicht",
+            "balance"
+          ]
+        },
+        {
+          "t": [
+            "Hindernis",
+            "barrier"
+          ]
+        },
+        {
+          "t": [
+            "Glaube",
+            "belief"
+          ]
+        },
+        {
+          "t": [
+            "Band",
+            "bond"
+          ]
+        },
+        {
+          "t": [
+            "Last",
+            "burden"
+          ]
+        },
+        {
+          "t": [
+            "Handel",
+            "commerce"
+          ]
+        },
+        {
+          "t": [
+            "Gemeinschaft",
+            "community"
+          ]
+        },
+        {
+          "t": [
+            "Verderbnis",
+            "corruption"
+          ]
+        },
+        {
+          "t": [
+            "Schöpfung",
+            "creation"
+          ]
+        },
+        {
+          "t": [
+            "Verbrechen",
+            "crime"
+          ]
+        },
+        {
+          "t": [
+            "Kultur",
+            "culture"
+          ]
+        },
+        {
+          "t": [
+            "Heilmittel",
+            "cure"
+          ]
+        },
+        {
+          "t": [
+            "Gefahr",
+            "danger"
+          ]
+        },
+        {
+          "t": [
+            "Schuld",
+            "debt"
+          ]
+        },
+        {
+          "t": [
+            "Verfall",
+            "decay"
+          ]
+        },
+        {
+          "t": [
+            "Täuschung",
+            "deception"
+          ]
+        },
+        {
+          "t": [
+            "Verteidigung",
+            "defense"
+          ]
+        },
+        {
+          "t": [
+            "Schicksal",
+            "destiny"
+          ]
+        },
+        {
+          "t": [
+            "Unglück",
+            "disaster"
+          ]
+        },
+        {
+          "t": [
+            "Entdeckung",
+            "discovery"
+          ]
+        },
+        {
+          "t": [
+            "Krankheit",
+            "disease"
+          ]
+        },
+        {
+          "t": [
+            "Herrschaft",
+            "dominion"
+          ]
+        },
+        {
+          "t": [
+            "Traum",
+            "dream"
+          ]
+        },
+        {
+          "t": [
+            "Pflicht",
+            "duty"
+          ]
+        },
+        {
+          "t": [
+            "Feind",
+            "enemy"
+          ]
+        },
+        {
+          "t": [
+            "Expedition",
+            "expedition"
+          ]
+        },
+        {
+          "t": [
+            "Fraktion",
+            "faction"
+          ]
+        },
+        {
+          "t": [
+            "Ruhm",
+            "fame"
+          ]
+        },
+        {
+          "t": [
+            "Familie",
+            "family"
+          ]
+        },
+        {
+          "t": [
+            "Furcht",
+            "fear"
+          ]
+        },
+        {
+          "t": [
+            "Gefährten",
+            "fellowship"
+          ]
+        },
+        {
+          "t": [
+            "Freiheit",
+            "freedom"
+          ]
+        },
+        {
+          "t": [
+            "Gier",
+            "greed"
+          ]
+        },
+        {
+          "t": [
+            "Not",
+            "hardship"
+          ]
+        },
+        {
+          "t": [
+            "Hass",
+            "hate"
+          ]
+        },
+        {
+          "t": [
+            "Gesundheit",
+            "health"
+          ]
+        },
+        {
+          "t": [
+            "Geschichte",
+            "history"
+          ]
+        },
+        {
+          "t": [
+            "Zuhause",
+            "home"
+          ]
+        },
+        {
+          "t": [
+            "Ehre",
+            "honor"
+          ]
+        },
+        {
+          "t": [
+            "Hoffnung",
+            "hope"
+          ]
+        },
+        {
+          "t": [
+            "Menschlichkeit",
+            "humanity"
+          ]
+        },
+        {
+          "t": [
+            "Unschuld",
+            "innocence"
+          ]
+        },
+        {
+          "t": [
+            "Wissen",
+            "knowledge"
+          ]
+        },
+        {
+          "t": [
+            "Arbeit",
+            "labor"
+          ]
+        },
+        {
+          "t": [
+            "Sprache",
+            "language"
+          ]
+        },
+        {
+          "t": [
+            "Gesetz",
+            "law"
+          ]
+        },
+        {
+          "t": [
+            "Erbe",
+            "legacy"
+          ]
+        },
+        {
+          "t": [
+            "Leben",
+            "life"
+          ]
+        },
+        {
+          "t": [
+            "Liebe",
+            "love"
+          ]
+        },
+        {
+          "t": [
+            "Erinnerung",
+            "memory"
+          ]
+        },
+        {
+          "t": [
+            "Natur",
+            "nature"
+          ]
+        },
+        {
+          "t": [
+            "Gelegenheit",
+            "opportunity"
+          ]
+        },
+        {
+          "t": [
+            "Durchgang",
+            "passage"
+          ]
+        },
+        {
+          "t": [
+            "Frieden",
+            "peace"
+          ]
+        },
+        {
+          "t": [
+            "Erscheinung",
+            "phenomenon"
+          ]
+        },
+        {
+          "t": [
+            "Besitz",
+            "possession"
+          ]
+        },
+        {
+          "t": [
+            "Macht",
+            "power"
+          ]
+        },
+        {
+          "t": [
+            "Preis",
+            "price"
+          ]
+        },
+        {
+          "t": [
+            "Stolz",
+            "pride"
+          ]
+        },
+        {
+          "t": [
+            "Belohnung",
+            "prize"
+          ]
+        },
+        {
+          "t": [
+            "Prophezeiung",
+            "prophecy"
+          ]
+        },
+        {
+          "t": [
+            "Schutz",
+            "protection"
+          ]
+        },
+        {
+          "t": [
+            "Suche",
+            "quest"
+          ]
+        },
+        {
+          "t": [
+            "Beziehung",
+            "relationship"
+          ]
+        },
+        {
+          "t": [
+            "Religion",
+            "religion"
+          ]
+        },
+        {
+          "t": [
+            "Ruf",
+            "reputation"
+          ]
+        },
+        {
+          "t": [
+            "Rohstoff",
+            "resource"
+          ]
+        },
+        {
+          "t": [
+            "Rache",
+            "revenge"
+          ]
+        },
+        {
+          "t": [
+            "Rivale",
+            "rival"
+          ]
+        },
+        {
+          "t": [
+            "Gerücht",
+            "rumor"
+          ]
+        },
+        {
+          "t": [
+            "Sicherheit",
+            "safety"
+          ]
+        },
+        {
+          "t": [
+            "Zuflucht",
+            "sanctuary"
+          ]
+        },
+        {
+          "t": [
+            "Geheimnis",
+            "secret"
+          ]
+        },
+        {
+          "t": [
+            "Lösung",
+            "solution"
+          ]
+        },
+        {
+          "t": [
+            "Geist",
+            "spirit"
+          ]
+        },
+        {
+          "t": [
+            "Fremder",
+            "stranger"
+          ]
+        },
+        {
+          "t": [
+            "Plan",
+            "strategy"
+          ]
+        },
+        {
+          "t": [
+            "Stärke",
+            "strength"
+          ]
+        },
+        {
+          "t": [
+            "Aberglaube",
+            "superstition"
+          ]
+        },
+        {
+          "t": [
+            "Vorrat",
+            "supply"
+          ]
+        },
+        {
+          "t": [
+            "Überleben",
+            "survival"
+          ]
+        },
+        {
+          "t": [
+            "Zeit",
+            "time"
+          ]
+        },
+        {
+          "t": [
+            "Werkzeug",
+            "tool"
+          ]
+        },
+        {
+          "t": [
+            "Tausch",
+            "trade"
+          ]
+        },
+        {
+          "t": [
+            "Wahrheit",
+            "truth"
+          ]
+        },
+        {
+          "t": [
+            "Gelübde",
+            "vow"
+          ]
+        },
+        {
+          "t": [
+            "Warnung",
+            "warning"
+          ]
+        },
+        {
+          "t": [
+            "Schwäche",
+            "weakness"
+          ]
+        },
+        {
+          "t": [
+            "Reichtum",
+            "wealth"
+          ]
+        },
+        {
+          "t": [
+            "Waffe",
+            "weapon"
+          ]
+        },
+        {
+          "t": [
+            "Welt",
+            "world"
+          ]
+        },
+        {
+          "t": [
+            "Technik",
+            "technology"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_ort",
+      "gruppe": "orakel",
+      "name": [
+        "Ort",
+        "Place"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Versteck",
+            "hideout"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Ruine",
+            "ruin"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Mine",
+            "mine"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Ödland",
+            "waste"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "magischer Ort",
+            "mystical site"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Pfad",
+            "path"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Außenposten",
+            "outpost"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Mauer",
+            "wall"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hütte",
+            "hovel"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Quelle",
+            "spring"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Höhle eines Tiers",
+            "lair"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Festung",
+            "fort"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Brücke",
+            "bridge"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Lager",
+            "camp"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Karawane",
+            "caravan"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Wasserfall",
+            "waterfall"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Höhle",
+            "cave"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Sumpf",
+            "swamp"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Schlucht",
+            "ravine"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Straße",
+            "road"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "uralter Baum",
+            "ancient tree"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Teich",
+            "pond"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Felder",
+            "fields"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Gehöft",
+            "steading"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Stromschnellen",
+            "rapids"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Pass",
+            "pass"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Lichtung",
+            "glade"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Ebene",
+            "plain"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Grat",
+            "ridge"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Klippe",
+            "cliff"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hain",
+            "grove"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Dorf",
+            "village"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Moor",
+            "moor"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Dickicht",
+            "thicket"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Furt",
+            "river ford"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Tal",
+            "valley"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Bucht",
+            "bay"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hügelland",
+            "foothills"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "See",
+            "lake"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Fluss",
+            "river"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Wald",
+            "forest"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Küste",
+            "coast"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hügel",
+            "hill"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Berg",
+            "mountain"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "seltsame Erscheinung",
+            "anomaly"
+          ],
+          "welten": [
+            "fantasy",
+            "horror",
+            "piraten",
+            "eigene"
+          ]
+        },
+        {
+          "t": [
+            "Hangar",
+            "hangar"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Andockbucht",
+            "docking bay"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Reaktorraum",
+            "reactor room"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Hydrokulturgarten",
+            "hydroponics garden"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Frachtraum",
+            "cargo hold"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Brücke",
+            "bridge"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Lüftungsschacht",
+            "air duct"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Kuppelstadt",
+            "dome city"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Asteroidenmine",
+            "asteroid mine"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "verlassenes Wrack",
+            "abandoned wreck"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Funkstation",
+            "relay station"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Marktdeck",
+            "market deck"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Labor",
+            "laboratory"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Mondbasis",
+            "moon base"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Hafen",
+            "harbour"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Riff",
+            "reef"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Schmugglerbucht",
+            "smugglers' cove"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Leuchtturm",
+            "lighthouse"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Wrack",
+            "wreck"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Sandbank",
+            "sandbank"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Hafenkneipe",
+            "harbour tavern"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Palmeninsel",
+            "palm island"
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Herrenhaus",
+            "manor"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Glockenturm",
+            "bell tower"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "verlassene Mühle",
+            "abandoned mill"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Nebelgasse",
+            "foggy alley"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Gewächshaus",
+            "greenhouse"
+          ],
+          "welten": [
+            "horror"
+          ]
+        },
+        {
+          "t": [
+            "Dachboden",
+            "attic"
+          ],
+          "welten": [
+            "horror"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_merkmal",
+      "gruppe": "orakel",
+      "name": [
+        "Merkmal",
+        "Descriptor"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "verlassen",
+            "abandoned"
+          ]
+        },
+        {
+          "t": [
+            "reich an Vorräten",
+            "abundant"
+          ]
+        },
+        {
+          "t": [
+            "belebt",
+            "active"
+          ]
+        },
+        {
+          "t": [
+            "uralt",
+            "ancient"
+          ]
+        },
+        {
+          "t": [
+            "altmodisch",
+            "archaic"
+          ]
+        },
+        {
+          "t": [
+            "karg",
+            "barren"
+          ]
+        },
+        {
+          "t": [
+            "versperrt",
+            "blocked"
+          ]
+        },
+        {
+          "t": [
+            "beschädigt",
+            "broken"
+          ]
+        },
+        {
+          "t": [
+            "chaotisch",
+            "chaotic"
+          ]
+        },
+        {
+          "t": [
+            "zivilisiert",
+            "civilized"
+          ]
+        },
+        {
+          "t": [
+            "eingestürzt",
+            "collapsed"
+          ]
+        },
+        {
+          "t": [
+            "riesig",
+            "colossal"
+          ]
+        },
+        {
+          "t": [
+            "eng",
+            "confined"
+          ]
+        },
+        {
+          "t": [
+            "auffällig",
+            "conspicuous"
+          ]
+        },
+        {
+          "t": [
+            "umkämpft",
+            "contested"
+          ]
+        },
+        {
+          "t": [
+            "verdorben",
+            "corrupted"
+          ]
+        },
+        {
+          "t": [
+            "verfallen",
+            "decaying"
+          ]
+        },
+        {
+          "t": [
+            "verteidigt",
+            "defended"
+          ]
+        },
+        {
+          "t": [
+            "erschöpft",
+            "depleted"
+          ]
+        },
+        {
+          "t": [
+            "öde",
+            "desolate"
+          ]
+        },
+        {
+          "t": [
+            "vielfältig",
+            "diverse"
+          ]
+        },
+        {
+          "t": [
+            "leer",
+            "empty"
+          ]
+        },
+        {
+          "t": [
+            "weitläufig",
+            "expansive"
+          ]
+        },
+        {
+          "t": [
+            "ungeschützt",
+            "exposed"
+          ]
+        },
+        {
+          "t": [
+            "feurig",
+            "fiery"
+          ]
+        },
+        {
+          "t": [
+            "bedrohlich",
+            "foreboding"
+          ]
+        },
+        {
+          "t": [
+            "vergessen",
+            "forgotten"
+          ]
+        },
+        {
+          "t": [
+            "befestigt",
+            "fortified"
+          ]
+        },
+        {
+          "t": [
+            "übel riechend",
+            "foul"
+          ]
+        },
+        {
+          "t": [
+            "zerbrechlich",
+            "fragile"
+          ]
+        },
+        {
+          "t": [
+            "gefroren",
+            "frozen"
+          ]
+        },
+        {
+          "t": [
+            "düster",
+            "grim"
+          ]
+        },
+        {
+          "t": [
+            "bewacht",
+            "guarded"
+          ]
+        },
+        {
+          "t": [
+            "spukhaft",
+            "haunted"
+          ]
+        },
+        {
+          "t": [
+            "verborgen",
+            "hidden"
+          ]
+        },
+        {
+          "t": [
+            "schwer erreichbar",
+            "inaccessible"
+          ]
+        },
+        {
+          "t": [
+            "bewohnt",
+            "inhabited"
+          ]
+        },
+        {
+          "t": [
+            "abgelegen",
+            "isolated"
+          ]
+        },
+        {
+          "t": [
+            "üppig",
+            "lush"
+          ]
+        },
+        {
+          "t": [
+            "behelfsmäßig",
+            "makeshift"
+          ]
+        },
+        {
+          "t": [
+            "irreführend",
+            "misleading"
+          ]
+        },
+        {
+          "t": [
+            "in Bewegung",
+            "moving"
+          ]
+        },
+        {
+          "t": [
+            "geheimnisvoll",
+            "mysterious"
+          ]
+        },
+        {
+          "t": [
+            "natürlich",
+            "natural"
+          ]
+        },
+        {
+          "t": [
+            "neu",
+            "new"
+          ]
+        },
+        {
+          "t": [
+            "verhüllt",
+            "obscured"
+          ]
+        },
+        {
+          "t": [
+            "offen",
+            "open"
+          ]
+        },
+        {
+          "t": [
+            "friedlich",
+            "peaceful"
+          ]
+        },
+        {
+          "t": [
+            "gefährlich",
+            "perilous"
+          ]
+        },
+        {
+          "t": [
+            "geplündert",
+            "pillaged"
+          ]
+        },
+        {
+          "t": [
+            "gut erhalten",
+            "preserved"
+          ]
+        },
+        {
+          "t": [
+            "geschützt",
+            "protected"
+          ]
+        },
+        {
+          "t": [
+            "strahlend",
+            "radiant"
+          ]
+        },
+        {
+          "t": [
+            "selten",
+            "rare"
+          ]
+        },
+        {
+          "t": [
+            "fern",
+            "remote"
+          ]
+        },
+        {
+          "t": [
+            "reich",
+            "rich"
+          ]
+        },
+        {
+          "t": [
+            "zerfallen",
+            "ruined"
+          ]
+        },
+        {
+          "t": [
+            "heilig",
+            "sacred"
+          ]
+        },
+        {
+          "t": [
+            "sicher",
+            "safe"
+          ]
+        },
+        {
+          "t": [
+            "versiegelt",
+            "sealed"
+          ]
+        },
+        {
+          "t": [
+            "geheim",
+            "secret"
+          ]
+        },
+        {
+          "t": [
+            "besiedelt",
+            "settled"
+          ]
+        },
+        {
+          "t": [
+            "seltsam",
+            "strange"
+          ]
+        },
+        {
+          "t": [
+            "unterirdisch",
+            "subsurface"
+          ]
+        },
+        {
+          "t": [
+            "giftig",
+            "toxic"
+          ]
+        },
+        {
+          "t": [
+            "mit Fallen gesichert",
+            "trapped"
+          ]
+        },
+        {
+          "t": [
+            "unentdeckt",
+            "undiscovered"
+          ]
+        },
+        {
+          "t": [
+            "unnatürlich",
+            "unnatural"
+          ]
+        },
+        {
+          "t": [
+            "instabil",
+            "unstable"
+          ]
+        },
+        {
+          "t": [
+            "ungezähmt",
+            "untamed"
+          ]
+        },
+        {
+          "t": [
+            "wertvoll",
+            "valuable"
+          ]
+        },
+        {
+          "t": [
+            "fortschrittlich",
+            "advanced"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "fremdartig",
+            "alien"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "automatisch",
+            "automated"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "mechanisch",
+            "mechanical"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_wendung",
+      "gruppe": "orakel",
+      "name": [
+        "Wendung",
+        "Plot twist"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Alles war nur ein Ablenkungsmanöver.",
+            "It was all a diversion."
+          ]
+        },
+        {
+          "t": [
+            "Ein dunkles Geheimnis kommt ans Licht.",
+            "A dark secret is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Eine Falle schnappt zu.",
+            "A trap is sprung."
+          ]
+        },
+        {
+          "t": [
+            "Eine Annahme stellt sich als falsch heraus.",
+            "An assumption is revealed to be false."
+          ]
+        },
+        {
+          "t": [
+            "Ein geheimes Bündnis wird bekannt.",
+            "A secret alliance is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Eure Taten nützen einem Feind.",
+            "Your actions benefit an enemy."
+          ]
+        },
+        {
+          "t": [
+            "Jemand kehrt unerwartet zurück.",
+            "Someone returns unexpectedly."
+          ]
+        },
+        {
+          "t": [
+            "Ein gefährlicherer Gegner zeigt sich.",
+            "A more dangerous foe is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Ihr und ein Feind habt dasselbe Ziel.",
+            "You and an enemy share a common goal."
+          ]
+        },
+        {
+          "t": [
+            "Eine wahre Identität wird enthüllt.",
+            "A true identity is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Jemand, dem ihr vertraut habt, verrät euch.",
+            "You are betrayed by someone who was trusted."
+          ]
+        },
+        {
+          "t": [
+            "Ihr kommt zu spät.",
+            "You are too late."
+          ]
+        },
+        {
+          "t": [
+            "Der wahre Feind zeigt sich.",
+            "The true enemy is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Der Feind gewinnt neue Verbündete.",
+            "The enemy gains new allies."
+          ]
+        },
+        {
+          "t": [
+            "Eine neue Gefahr taucht auf.",
+            "A new danger appears."
+          ]
+        },
+        {
+          "t": [
+            "Jemand oder etwas verschwindet.",
+            "Someone or something goes missing."
+          ]
+        },
+        {
+          "t": [
+            "Die Wahrheit über eine Beziehung kommt heraus.",
+            "The truth of a relationship is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Zwei scheinbar getrennte Dinge hängen zusammen.",
+            "Two seemingly unrelated situations are shown to be connected."
+          ]
+        },
+        {
+          "t": [
+            "Unerwartete Kräfte oder Fähigkeiten zeigen sich.",
+            "Unexpected powers or abilities are revealed."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_komplikation",
+      "gruppe": "orakel",
+      "name": [
+        "Komplikation",
+        "Complication"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Ein wichtiges Gerät fällt aus.",
+            "Crucial equipment or device fails."
+          ]
+        },
+        {
+          "t": [
+            "Ein wichtiges Gerät wurde sabotiert.",
+            "Crucial equipment or device is sabotaged."
+          ]
+        },
+        {
+          "t": [
+            "Eine Schuld oder ein Versprechen wird fällig.",
+            "Debt or promise comes due."
+          ]
+        },
+        {
+          "t": [
+            "Der Feind zeigt unerwartete Macht oder Einfluss.",
+            "Enemy reveals unexpected powers, abilities, or influence."
+          ]
+        },
+        {
+          "t": [
+            "Der Feind zeigt seine wahren Absichten.",
+            "Enemy reveals their true agenda or nature."
+          ]
+        },
+        {
+          "t": [
+            "Der Feind zieht unerwartet Nutzen aus euren Taten.",
+            "Enemy unexpectedly benefits from your actions."
+          ]
+        },
+        {
+          "t": [
+            "Ein wichtiger Ort wird unerreichbar.",
+            "Key location is made inaccessible."
+          ]
+        },
+        {
+          "t": [
+            "Ein wichtiger Ort wird unsicher.",
+            "Key location is threatened or made unsafe."
+          ]
+        },
+        {
+          "t": [
+            "Ein Unwetter steht kurz bevor.",
+            "Natural disaster is imminent."
+          ]
+        },
+        {
+          "t": [
+            "Etwas Benötigtes ist nicht zu bekommen.",
+            "Needed item or resource is unavailable."
+          ]
+        },
+        {
+          "t": [
+            "Das Ziel der Suche ist anders als gedacht.",
+            "Object of a quest is not what you assumed."
+          ]
+        },
+        {
+          "t": [
+            "Ein alter Feind taucht wieder auf.",
+            "Old enemy resurfaces."
+          ]
+        },
+        {
+          "t": [
+            "Zwei Probleme zugleich erzwingen eine schwere Wahl.",
+            "Simultaneous problems force a hard choice."
+          ]
+        },
+        {
+          "t": [
+            "Jemand Wichtiges bricht euer Vertrauen.",
+            "Someone important betrays your trust."
+          ]
+        },
+        {
+          "t": [
+            "Jemand Wichtiges gerät in Gefahr.",
+            "Someone important is threatened or endangered."
+          ]
+        },
+        {
+          "t": [
+            "Jemand Wichtiges hat ein heikles Geheimnis.",
+            "Someone important reveals their problematic secret or history."
+          ]
+        },
+        {
+          "t": [
+            "Etwas Wichtiges verschwindet.",
+            "Something important goes missing."
+          ]
+        },
+        {
+          "t": [
+            "Die Zeit wird plötzlich knapp.",
+            "Time pressure suddenly increases."
+          ]
+        },
+        {
+          "t": [
+            "Eine Falle schnappt zu.",
+            "Trap is sprung."
+          ]
+        },
+        {
+          "t": [
+            "Ein Auftraggeber zeigt seine wahren Absichten.",
+            "True agenda of a connection or patron is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Eine sichere Nachricht stellt sich als falsch heraus.",
+            "Trusted information is shown to be false."
+          ]
+        },
+        {
+          "t": [
+            "Zwei Probleme hängen zusammen.",
+            "Two seemingly unrelated problems are shown to be connected."
+          ]
+        },
+        {
+          "t": [
+            "Zweifel und Schwächen holen euch ein.",
+            "Undermined by self-doubt or vulnerabilities."
+          ]
+        },
+        {
+          "t": [
+            "Unerwartete Gegner tauchen auf.",
+            "Unexpected enemies appear."
+          ]
+        },
+        {
+          "t": [
+            "Eine dringende Nachricht lenkt euch ab.",
+            "Urgent message distracts you from your quest."
+          ]
+        },
+        {
+          "t": [
+            "Jemand folgt euch.",
+            "You are tracked or followed."
+          ]
+        },
+        {
+          "t": [
+            "Ihr wurdet von der eigentlichen Gefahr weggelockt.",
+            "You were diverted from the true crisis."
+          ]
+        },
+        {
+          "t": [
+            "Ein Gerät hat unerwartete Nebenwirkungen.",
+            "Technology or device is shown to have unexpected effects."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_hinweis",
+      "gruppe": "orakel",
+      "name": [
+        "Hinweis",
+        "Clue"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "bestätigt, was ihr schon wisst",
+            "affirms a previously understood fact or clue"
+          ]
+        },
+        {
+          "t": [
+            "passt zu einem bekannten Gerücht",
+            "connects to a known rumor or scandal"
+          ]
+        },
+        {
+          "t": [
+            "führt zu einem anderen Rätsel",
+            "connects to a previously unrelated mystery or quest"
+          ]
+        },
+        {
+          "t": [
+            "passt zu dem, was ihr gut könnt",
+            "connects to your own expertise or interests"
+          ]
+        },
+        {
+          "t": [
+            "widerspricht dem, was ihr wisst",
+            "contradicts a previously understood fact or clue"
+          ]
+        },
+        {
+          "t": [
+            "weckt eine eigene Erinnerung",
+            "evokes a personal memory"
+          ]
+        },
+        {
+          "t": [
+            "erinnert an eine seltsame Erscheinung",
+            "evokes a remarkable anomaly or phenomenon"
+          ]
+        },
+        {
+          "t": [
+            "erinnert an eine Vision oder Prophezeiung",
+            "evokes a vision or prophecy"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einem alten Brauch zu tun",
+            "involves a cultural touchstone"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer geheimen Gruppe zu tun",
+            "involves a hidden or mysterious faction"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer geheimnisvollen Person zu tun",
+            "involves a hidden or mysterious person"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einem Schlüssel oder Zugang zu tun",
+            "involves a key or means of access"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einem Wesen zu tun, das kein Mensch ist",
+            "involves a non-human being or creature"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer bekannten Gruppe zu tun",
+            "involves a notable faction"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer bekannten Person zu tun",
+            "involves a notable person"
+          ]
+        },
+        {
+          "t": [
+            "hat mit jemandem aus eurer Vergangenheit zu tun",
+            "involves a person or faction from your background"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einem persönlichen Gegenstand zu tun",
+            "involves a personal item"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einem Feind oder Rivalen zu tun",
+            "involves an enemy or rival"
+          ]
+        },
+        {
+          "t": [
+            "hat mit Spuren eines Tiers oder einer Pflanze zu tun",
+            "involves an organism or biological evidence"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer ungewöhnlichen Fähigkeit zu tun",
+            "involves an unusual ability or power"
+          ]
+        },
+        {
+          "t": [
+            "hat mit jemandem zu tun, dem ihr vertraut",
+            "involves someone you trust"
+          ]
+        },
+        {
+          "t": [
+            "hat mit etwas Seltenem und Kostbarem zu tun",
+            "involves something rare, expensive, or precious"
+          ]
+        },
+        {
+          "t": [
+            "führt an einen fernen Ort",
+            "leads to a distant or unfamiliar place"
+          ]
+        },
+        {
+          "t": [
+            "führt an einen vergessenen Ort",
+            "leads to a hidden or forgotten place"
+          ]
+        },
+        {
+          "t": [
+            "führt an einen nahen Ort",
+            "leads to a nearby or familiar place"
+          ]
+        },
+        {
+          "t": [
+            "führt an einen wichtigen Ort",
+            "leads to a notable or central place"
+          ]
+        },
+        {
+          "t": [
+            "zeigt, dass so etwas schon öfter geschah",
+            "suggests a history of similar incidents"
+          ]
+        },
+        {
+          "t": [
+            "deutet auf eine nahe Frist hin",
+            "suggests a looming event or due date"
+          ]
+        },
+        {
+          "t": [
+            "deutet auf eine Fälschung hin",
+            "suggests an imposter or forgery"
+          ]
+        },
+        {
+          "t": [
+            "hat mit einer Maschine zu tun",
+            "involves a machine or technology"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_gefahr",
+      "gruppe": "orakel",
+      "name": [
+        "Gefahr",
+        "Peril"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Ein feindseliger Bewohner taucht auf.",
+            "You encounter a hostile denizen."
+          ]
+        },
+        {
+          "t": [
+            "Gelände oder Gemäuer werden gefährlich.",
+            "You face an environmental or architectural hazard."
+          ]
+        },
+        {
+          "t": [
+            "Eine Entdeckung macht die Suche schwerer.",
+            "A discovery undermines or complicates your quest."
+          ]
+        },
+        {
+          "t": [
+            "Etwas Unheimliches liegt in der Luft.",
+            "You confront a harrowing situation or sensation."
+          ]
+        },
+        {
+          "t": [
+            "Eine frühere Entscheidung hat Folgen.",
+            "You face the consequences of an earlier choice or approach."
+          ]
+        },
+        {
+          "t": [
+            "Der Weg ist versperrt oder mit einer Falle gesichert.",
+            "Your way is blocked or trapped."
+          ]
+        },
+        {
+          "t": [
+            "Etwas Nützliches geht kaputt oder verloren.",
+            "A resource is diminished, broken, or lost."
+          ]
+        },
+        {
+          "t": [
+            "Ein Rätsel oder eine schwere Wahl steht an.",
+            "You face a perplexing mystery or tough choice."
+          ]
+        },
+        {
+          "t": [
+            "Ihr verirrt euch oder werdet aufgehalten.",
+            "You lose your way or are delayed."
+          ]
+        },
+        {
+          "t": [
+            "Die künstliche Schwerkraft fällt aus.",
+            "Artificial gravity generator malfunctions."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Selbstschussanlagen schützen den Bereich.",
+            "Automated defenses protect this area."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein Abteil fängt Feuer oder verliert Luft.",
+            "Compartment catches fire or is breached."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein Energiesturm zieht auf.",
+            "Energy storm looms."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Die Lebenserhaltung stottert.",
+            "Life support system malfunctions."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein Meteoritenschauer füllt den Himmel.",
+            "Meteoroid storm fills the sky."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein blinder Passagier macht Ärger.",
+            "Intruder or stowaway creates trouble."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Der Strom fällt aus.",
+            "Power fails."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Geistersignale deuten auf einen lauernden Feind.",
+            "Phantom signals suggest a lurking foe."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Raumpiraten suchen Beute.",
+            "Pirates hunt for prey."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein Sturm zieht auf.",
+            "A storm is coming."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Ein fremdes Schiff hält auf euch zu.",
+            "A strange ship heads for you."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Das Schiff schlägt leck.",
+            "The ship springs a leak."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Eine Flaute hält euch fest.",
+            "A calm holds you fast."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Ein Riff taucht vor dem Bug auf.",
+            "A reef appears ahead of the bow."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Die Mannschaft murrt.",
+            "The crew grumbles."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_chance",
+      "gruppe": "orakel",
+      "name": [
+        "Gelegenheit",
+        "Opportunity"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Das Gelände hilft euch, oder ihr findet einen versteckten Weg.",
+            "The terrain favors you, or you find a hidden path."
+          ]
+        },
+        {
+          "t": [
+            "Ihr erfahrt etwas über die Geschichte dieses Orts.",
+            "An aspect of the history or nature of this place is revealed."
+          ]
+        },
+        {
+          "t": [
+            "Ihr findet einen sicheren Platz.",
+            "You locate a secure area."
+          ]
+        },
+        {
+          "t": [
+            "Ein Hinweis zeigt euch die Richtung.",
+            "A clue offers insight or direction."
+          ]
+        },
+        {
+          "t": [
+            "Ihr überrascht einen Bewohner.",
+            "You get the drop on a denizen."
+          ]
+        },
+        {
+          "t": [
+            "Hier gibt es etwas zu sammeln oder zu jagen.",
+            "This area provides an opportunity to scavenge, forage, or hunt."
+          ]
+        },
+        {
+          "t": [
+            "Ihr findet einen nützlichen Gegenstand.",
+            "You locate an interesting or helpful object."
+          ]
+        },
+        {
+          "t": [
+            "Ihr bemerkt eine Gefahr rechtzeitig.",
+            "You are alerted to a potential threat."
+          ]
+        },
+        {
+          "t": [
+            "Ihr trefft jemanden, der euch helfen könnte.",
+            "You encounter a denizen who might support you."
+          ]
+        },
+        {
+          "t": [
+            "Ihr trefft jemanden, der Hilfe braucht.",
+            "You encounter a denizen in need of help."
+          ]
+        },
+        {
+          "t": [
+            "Ein Signal warnt euch vor einer Gefahr.",
+            "Automated signal offers a helpful message or warning."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ihr findet ein Lager mit Vorräten.",
+            "Cache of cargo or supplies."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein Wrack wartet darauf, durchsucht zu werden.",
+            "Derelict ripe for the picking."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Eine freundliche Station ist in Reichweite.",
+            "Friendly settlement in range."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Ein freundliches Schiff kreuzt euren Weg.",
+            "Friendly starship crosses your path."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Eine Sonde liefert nützliche Daten.",
+            "Probe or beacon with useful data."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Die Sensoren finden einen lauernden Feind.",
+            "Sensors pinpoint a lurking foe."
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Günstiger Wind bringt euch schnell voran.",
+            "A fair wind speeds you on."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Eine Flaschenpost treibt heran.",
+            "A message in a bottle drifts by."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Ein Fischerboot bietet Hilfe an.",
+            "A fishing boat offers help."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        },
+        {
+          "t": [
+            "Eine Insel mit frischem Wasser taucht auf.",
+            "An island with fresh water appears."
+          ],
+          "welten": [
+            "piraten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orakel_aerger",
+      "gruppe": "orakel",
+      "name": [
+        "Ärger im Ort",
+        "Settlement trouble"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "Fremde werden abgewiesen",
+            "outsiders rejected"
+          ]
+        },
+        {
+          "t": [
+            "eine gefährliche Entdeckung",
+            "dangerous discovery"
+          ]
+        },
+        {
+          "t": [
+            "düstere Vorzeichen",
+            "dreadful omens"
+          ]
+        },
+        {
+          "t": [
+            "ein Unwetter",
+            "natural disaster"
+          ]
+        },
+        {
+          "t": [
+            "alte Streitigkeiten brechen auf",
+            "old wounds reopened"
+          ]
+        },
+        {
+          "t": [
+            "ein wichtiger Gegenstand ist verloren",
+            "important object is lost"
+          ]
+        },
+        {
+          "t": [
+            "jemand wurde entführt",
+            "someone is captured"
+          ]
+        },
+        {
+          "t": [
+            "eine rätselhafte Erscheinung",
+            "mysterious phenomenon"
+          ]
+        },
+        {
+          "t": [
+            "Aufstand gegen die Anführerin",
+            "revolt against a leader"
+          ]
+        },
+        {
+          "t": [
+            "ein rachsüchtiger Ausgestoßener",
+            "vengeful outcast"
+          ]
+        },
+        {
+          "t": [
+            "ein Nachbarort ist Rivale",
+            "rival settlement"
+          ]
+        },
+        {
+          "t": [
+            "jemand wird vermisst",
+            "someone is missing"
+          ]
+        },
+        {
+          "t": [
+            "die Arbeit steht still",
+            "production halts"
+          ]
+        },
+        {
+          "t": [
+            "eine Schuld wird fällig",
+            "debt comes due"
+          ]
+        },
+        {
+          "t": [
+            "ungerechte Herrschaft",
+            "unjust leadership"
+          ]
+        },
+        {
+          "t": [
+            "ein schlimmer Unfall",
+            "disastrous accident"
+          ]
+        },
+        {
+          "t": [
+            "im Bund mit dem Feind",
+            "in league with the enemy"
+          ]
+        },
+        {
+          "t": [
+            "Räuber plagen die Schwachen",
+            "raiders prey on the weak"
+          ]
+        },
+        {
+          "t": [
+            "ein Fluch aus alter Zeit",
+            "cursed past"
+          ]
+        },
+        {
+          "t": [
+            "ein Unschuldiger wird beschuldigt",
+            "an innocent is accused"
+          ]
+        },
+        {
+          "t": [
+            "abgeschnitten durch schlimmes Wetter",
+            "isolated by brutal weather"
+          ]
+        },
+        {
+          "t": [
+            "die Vorräte werden knapp",
+            "provisions are scarce"
+          ]
+        },
+        {
+          "t": [
+            "eine Krankheit geht um",
+            "sickness runs amok"
+          ]
+        },
+        {
+          "t": [
+            "Freunde werden zu Feinden",
+            "allies become enemies"
+          ]
+        },
+        {
+          "t": [
+            "ein Angriff steht bevor",
+            "attack is imminent"
+          ]
+        },
+        {
+          "t": [
+            "eine Karawane ist verschollen",
+            "lost caravan"
+          ]
+        },
+        {
+          "t": [
+            "Familien im Streit",
+            "families in conflict"
+          ]
+        },
+        {
+          "t": [
+            "Verrat von innen",
+            "betrayed from within"
+          ]
+        },
+        {
+          "t": [
+            "ein Waffenstillstand bricht",
+            "broken truce"
+          ]
+        },
+        {
+          "t": [
+            "ein Spuk",
+            "wrathful haunt"
+          ]
+        },
+        {
+          "t": [
+            "der Handelsweg ist versperrt",
+            "trade route blocked"
+          ]
+        },
+        {
+          "t": [
+            "ein Fremder sät Zwietracht",
+            "stranger causes discord"
+          ]
+        },
+        {
+          "t": [
+            "ein wichtiges Fest ist bedroht",
+            "important event threatened"
+          ]
+        },
+        {
+          "t": [
+            "die Technik versagt",
+            "failing technology"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "fremde Lebewesen breiten sich aus",
+            "invasive organisms"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "eine Energiequelle ist instabil",
+            "volatile energy source"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "eine Lieferung ist überfällig",
+            "overdue delivery"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Giftmüll verschmutzt alles",
+            "toxic waste or pollution"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "Technik wurde gestohlen",
+            "stolen technology or object"
+          ],
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    }
+  ],
+  "namensilben": {
+    "mensch": {
+      "anfang": [
+        "Al",
+        "Bert",
+        "Cla",
+        "Din",
+        "Ed",
+        "Fri",
+        "Gun",
+        "Hel",
+        "Ing",
+        "Kar",
+        "Lu",
+        "Mar",
+        "Ot",
+        "Ro",
+        "Se",
+        "Wil"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "i",
+        "o"
+      ],
+      "ende": [
+        "bert",
+        "da",
+        "fried",
+        "gard",
+        "helm",
+        "lin",
+        "mund",
+        "rich",
+        "run",
+        "ta",
+        "win"
+      ]
+    },
+    "zwerg": {
+      "anfang": [
+        "Bal",
+        "Bor",
+        "Dur",
+        "Gim",
+        "Grom",
+        "Kaz",
+        "Thor",
+        "Brok",
+        "Dain",
+        "Hal",
+        "Thra",
+        "Norn"
+      ],
+      "mitte": [
+        "a",
+        "i",
+        "o",
+        "u"
+      ],
+      "ende": [
+        "dur",
+        "grim",
+        "li",
+        "mak",
+        "nar",
+        "rak",
+        "rin",
+        "thor",
+        "bur",
+        "dok"
+      ]
+    },
+    "elf": {
+      "anfang": [
+        "Ae",
+        "Cel",
+        "El",
+        "Gal",
+        "Ith",
+        "Lae",
+        "Mel",
+        "Nim",
+        "Sil",
+        "Tha",
+        "Fae",
+        "Ari"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "i",
+        "ia"
+      ],
+      "ende": [
+        "dil",
+        "endra",
+        "iel",
+        "ion",
+        "las",
+        "lith",
+        "riel",
+        "thas",
+        "wen",
+        "wyn"
+      ]
+    },
+    "halbling": {
+      "anfang": [
+        "Bil",
+        "Dro",
+        "Fro",
+        "Mer",
+        "Pip",
+        "Sam",
+        "Ros",
+        "Til",
+        "Bun",
+        "Hob",
+        "Nel",
+        "Wil"
+      ],
+      "mitte": [
+        "a",
+        "o",
+        "i"
+      ],
+      "ende": [
+        "bo",
+        "dy",
+        "go",
+        "kin",
+        "lo",
+        "mo",
+        "ry",
+        "wise",
+        "ster"
+      ]
+    },
+    "ork": {
+      "anfang": [
+        "Gro",
+        "Kru",
+        "Mog",
+        "Rok",
+        "Ug",
+        "Zug",
+        "Bash",
+        "Gor",
+        "Dro",
+        "Thak",
+        "Ur",
+        "Grak"
+      ],
+      "mitte": [
+        "a",
+        "u",
+        "o"
+      ],
+      "ende": [
+        "dak",
+        "gar",
+        "gash",
+        "muk",
+        "nak",
+        "rog",
+        "tusk",
+        "zug"
+      ]
+    },
+    "drachenbluetig": {
+      "anfang": [
+        "Ar",
+        "Bal",
+        "Dra",
+        "Kri",
+        "Mez",
+        "Nar",
+        "Rho",
+        "Sha",
+        "Tor",
+        "Vyr",
+        "Kav",
+        "Ghe"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "i",
+        "u"
+      ],
+      "ende": [
+        "jhan",
+        "kar",
+        "nax",
+        "rash",
+        "thar",
+        "vok",
+        "zan",
+        "xis"
+      ]
+    },
+    "gnom": {
+      "anfang": [
+        "Bim",
+        "Fil",
+        "Gim",
+        "Nam",
+        "Pip",
+        "Tik",
+        "Wux",
+        "Zook",
+        "Bro",
+        "Dim",
+        "Fen",
+        "Jeb"
+      ],
+      "mitte": [
+        "a",
+        "i",
+        "o"
+      ],
+      "ende": [
+        "bert",
+        "ble",
+        "kin",
+        "la",
+        "nik",
+        "ri",
+        "wick",
+        "zle"
+      ]
+    },
+    "halbelf": {
+      "anfang": [
+        "Ae",
+        "Cel",
+        "Dar",
+        "Ela",
+        "Gar",
+        "Lia",
+        "Mar",
+        "Sel",
+        "Tor",
+        "Ven",
+        "Rhi",
+        "Ana"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "i"
+      ],
+      "ende": [
+        "dor",
+        "iel",
+        "ion",
+        "len",
+        "ra",
+        "rin",
+        "wen",
+        "dris"
+      ]
+    },
+    "tiefling": {
+      "anfang": [
+        "Ak",
+        "Bar",
+        "Cri",
+        "Dam",
+        "Ek",
+        "Kal",
+        "Mor",
+        "Nem",
+        "Ori",
+        "Ska",
+        "Zev",
+        "Lera"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "i",
+        "o"
+      ],
+      "ende": [
+        "mos",
+        "nis",
+        "riel",
+        "thos",
+        "vax",
+        "zar",
+        "kai",
+        "ros"
+      ]
+    },
+    "welt:scifi": {
+      "anfang": [
+        "Ax",
+        "Cal",
+        "Dex",
+        "Ez",
+        "Jax",
+        "Kai",
+        "Lyn",
+        "Nova",
+        "Orr",
+        "Quin",
+        "Rex",
+        "Tal",
+        "Vex",
+        "Zed"
+      ],
+      "mitte": [
+        "a",
+        "i",
+        "o"
+      ],
+      "ende": [
+        "an",
+        "ex",
+        "ion",
+        "is",
+        "on",
+        "ra",
+        "tek",
+        "us",
+        "yx"
+      ]
+    },
+    "welt:piraten": {
+      "anfang": [
+        "Bart",
+        "Cal",
+        "Fin",
+        "Jack",
+        "Mar",
+        "Ned",
+        "Ros",
+        "Sal",
+        "Tom",
+        "Will",
+        "Ann",
+        "Bess"
+      ],
+      "mitte": [
+        "a",
+        "e",
+        "o"
+      ],
+      "ende": [
+        "by",
+        "ey",
+        "kin",
+        "ley",
+        "rick",
+        "sy",
+        "ton",
+        "wick"
+      ]
+    }
+  }
 }

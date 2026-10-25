@@ -3390,6 +3390,13 @@
 "titel": "Zufallsregeln des Gastgebers",
 "text": "A: Funktionen → KI-Dungeon-Master → Zufallsregeln an. Als Gastgeber im Reiter „Leiten“ „🎲 Zufallsregeln“ öffnen, eine Regel „Steinschlag“ mit 50 %, Jeder Zug, Schaden 2, ein Wurf je Held anlegen und speichern. B: Einige Züge spielen: im Verlauf steht je Held „🎲 Zufallsregel „Steinschlag““ mit dem Wurf, bei einem Treffer sinkt das Leben um 2. C: Eine Regel mit Hinweis „Ein Rabe beobachtet die Gruppe“ und 100 %: die nächste Erzählung greift ihn auf. D: Auf dem Gast-Gerät ist der Abschnitt Zufallsregeln nicht zu sehen. E: Zustand → Überblick zeigt die Zählungen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P509",
+"v": 1060,
+"titel": "NSC-Gedächtnis, Chronik und Ruf",
+"text": "A: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik an, eine neue Runde starten. B: Einige Züge mit einer Figur sprechen (freundlich, hilfsbereit): im Verlauf steht „🤝 … ist … gegenüber jetzt freundlich“. C: „👥 Leute und Chronik“ öffnen: die Figur mit Aussehen, Art, Beruf und Haltung; Ruf; Chronik mit „Begegnung: …“. D: Als Gastgeber zusätzlich Wunsch, Geheimnis, Beziehungen und „Noch nicht getroffen“; auf dem Gast-Gerät nicht. E: Neue Figuren heißen nicht immer gleich. F: Kapitel beenden und weiterspielen: Leute und Chronik sind noch da. G: Zustand → Überblick zeigt die Zählungen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
