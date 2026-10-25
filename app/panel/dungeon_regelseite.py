@@ -24,15 +24,18 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import dungeon
 import dungeon_balance as balance
 import dungeon_dingbild as dingbild
+import dungeon_kampf as kampf
 import guard
 from common import write_json
-from core import auth, json_body
+from core import app_version, auth, json_body
 
 router = APIRouter()
 TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende")
 MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten")   # welten, peoples, classes,
 # backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above
 BODY = 16000              # one entry as JSON
+NEU_FUER = 30             # a foe of the bestiary is „neu“ for this many versions after its „seit“ (Bestiarium-Punkt 9)
+HELDEN = (2, 3, 4, 5)     # the group sizes the detail shares a foe's EP among
 
 
 def _lang(request):
@@ -90,6 +93,23 @@ ART = {"waffe": ("Waffe", "Weapon"), "ruestung": ("Rüstung", "Armour"), "schmuc
        "werkzeug": ("Werkzeug", "Tool"), "schatz": ("Schatz", "Treasure")}
 
 
+def _vnum(v):
+    """V01.1.038 → 1038 (the series after V01.0.999 goes on at V01.1.000); None for anything else."""
+    p = str(v or "").lstrip("Vv").split(".")
+    return int(p[1]) * 1000 + int(p[2]) if len(p) == 3 and all(n.isdigit() for n in p) else None
+
+
+def frisch(x, jetzt=None):
+    """A foe added in the last NEU_FUER versions (its „seit“), shown as „neu“ in the bestiary."""
+    a, b = _vnum(x.get("seit")), _vnum(jetzt if jetzt is not None else app_version())
+    return a is not None and b is not None and 0 <= b - a < NEU_FUER
+
+
+def arten(x):
+    """A foe's damage kind and what hurts it more or less, as kind ids (only known ones)."""
+    return {"art": x.get("schaden_art", "hieb"), **{k: [a for a in x.get(k) or [] if a in kampf.ART_NAME] for k in ("resistenz", "immun", "schwaeche")}}
+
+
 def werte(teil, x, r, li):
     """What an entry does, as [label, value] pairs for the detail (Dominik 2026-10-24 „sollten immer auch Werte
     anzeigen wie stark, was sie bewirken“): the catalog's numbers in fixed words, the same lines the table shows."""
@@ -135,6 +155,22 @@ def werte(teil, x, r, li):
             out.append([L("Kann bewirken", "Can cause"), ", ".join(z.get(c, c) for c in x["zustaende"])])
         if x.get("groesse"):
             out.append([L("Größe", "Size"), str(x["groesse"])])
+        a = arten(x)
+        k = lambda i: f"{kampf.ART_ZEICHEN.get(i, '')} {kampf.ART_NAME[i][li]}".strip()       # noqa: E731
+        out.append([L("Schadensart", "Damage kind"), k(a["art"]) if a["art"] in kampf.ART_NAME else ""])
+        for f, de, enw in (("schwaeche", "Schwäche (doppelt)", "Weak to (double)"), ("resistenz", "Widerstand (halb)", "Resists (half)"),
+                           ("immun", "Immun (kein Schaden)", "Immune (no damage)")):
+            out.append([L(de, enw), ", ".join(k(i) for i in a[f])])
+        if x.get("boss"):
+            out.append([L("Boss", "Boss"), L(f"+{int(kampf.BOSS_LEBEN * 100)} % Leben je Held ab dem zweiten, ab halbem Leben Phase 2 "
+                                             f"(+{kampf.BOSS_PHASE} zum Treffen), zwei Angriffe je Zug, Fund eine Seltenheit besser",
+                                             f"+{int(kampf.BOSS_LEBEN * 100)} % life per hero beyond the first, phase 2 at half life "
+                                             f"(+{kampf.BOSS_PHASE} to hit), two attacks a turn, its find one rarity better")])
+        out.append([L("EP je Held", "EP per hero"), " · ".join(f"{n}: {int(x.get('ep', 0)) // n}" for n in HELDEN)])
+        wn = [_name(w, li) for w in r["welten"] if kampf.plays_in(r, x, w["id"])]
+        out.append([L("Welten", "Worlds"), L("alle", "all") if len(wn) == len(r["welten"]) else ", ".join(wn)])
+        if frisch(x):
+            out.append([L("Neu", "New"), str(x["seit"])])
     elif teil == "zustaende":
         out += [[L("Wirkung", "Effect"), ", ".join(v.replace("_", " ") for v in x.get("wirkung") or [])]]
         if x.get("runden"):
@@ -169,6 +205,7 @@ def view(teil, lang="de", welt=""):
         if teil == "gegner":
             row["marke"] = balance.foe(x, lang)
             row["stufe"] = x.get("stufe", 0)
+            row.update(welten=[w["id"] for w in r["welten"] if kampf.plays_in(r, x, w["id"])], boss=bool(x.get("boss")), frisch=frisch(x), arten=arten(x))
         elif teil == "gegenstaende":
             row["marke"] = balance.item(x, lang)
             row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled
@@ -183,6 +220,9 @@ def view(teil, lang="de", welt=""):
     out = {"teil": teil, "zeilen": rows, "eintraege": entries, "bilder_an": dingbild.on()}
     if teil in dingbild.HELD_TEILE:     # the world the pictures are in, and the worlds to choose from (dungeon.js)
         out.update(welt=welt, welten=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]])
+    if teil == "gegner":             # the filters (worlds) and the symbols of the damage kinds (dungeon.js dmRArt)
+        out.update(weltfilter=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]],
+                   arten={a: {"zeichen": kampf.ART_ZEICHEN.get(a, ""), "name": kampf.ART_NAME[a][li]} for a in kampf.SCHADEN_ARTEN})
     if teil == "gegenstaende":       # the ladder a rolled item climbs (dungeon.rarity: W100 + 2 × level)
         out["seltenheiten"] = [{"id": s["id"], "name": _name(s, li), "ab": s["ab"], "bonus": s["bonus"],
                                 "stufe": s["stufe_min"], "preis": s["preis"]} for s in r["seltenheit"]]

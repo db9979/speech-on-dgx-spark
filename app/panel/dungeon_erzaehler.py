@@ -36,6 +36,14 @@ STIL_LEN = 400
 WIEDERHOLT = 0.35          # share of word triples already in the last narrations that counts as repeating
 WIEDER_ZURUECK = 3         # narrations a new one is compared with
 ZU_KURZ = 80               # a narration under this many characters is too short
+# a failed check told as done (Dominik 2026-10-25: „Holztür aufbrechen“ not passed, the door still burst open): a sentence
+# that names the check's thing and says it gave way, without a word that it held
+GELINGT = ("gibt nach", "geben nach", "bricht auf", "aufgebrochen", "zerbricht", "zersplitter", "springt auf", "öffnet sich",
+           "schwingt auf", "fliegt auf", "aus den angeln", "aus ihren angeln", "aus seinen angeln", "gelingt", "geschafft",
+           "schafft es", "gibt den weg frei", "gives way", "give way", "bursts open", "breaks open", "swings open",
+           "springs open", "flies open", "off its hinges", "succeeds", "manages to", "shatters", "splinters")
+HAELT = ("nicht", "kein", "vergeblich", "hält stand", "widersteht", "umsonst", "not ", "n't", "in vain", "holds", "resists")
+HART = ("probe", "gegner")      # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 # the thing memory (Dominik 2026-10-24 „1 a und b und c“, an iron box that later was a rotten wooden one): the model
 # reports a thing the first time with its features, the panel keeps them and checks every narration against them
 DINGE_MAX = 12             # things kept per round (and carried into the next chapter)
@@ -288,6 +296,10 @@ HINWEIS = {
     "namen": ("Hinweis: Jede Figur, die gehandelt hat, muss mit ihrem Namen vorkommen und eine Folge ihrer Aktion "
               "erleben: {namen}.",
               "Note: every character that acted must appear by name and meet a consequence of its action: {namen}."),
+    "probe": ("Hinweis: Diese Probe ist misslungen: {namen}. Erzähle, dass es in diesem Zug nicht gelingt (es hält, "
+              "bleibt zu, rutscht ab); niemand und kein Zufall holt es nach.",
+              "Note: this check failed: {namen}. Narrate that it does not happen this turn (it holds, stays shut, "
+              "slips); nobody and no chance makes up for it."),
     "gegner": ("Hinweis: Die Gegner der Begegnung müssen mit ihrem Namen aus angebot vorkommen: {namen}. Erfinde keine "
                "anderen Gegner.",
                "Note: the encounter's foes must appear by their name from angebot: {namen}. Invent no other foes."),
@@ -311,9 +323,50 @@ def _triples(text):
     return {tuple(w[i:i + 3]) for i in range(len(w) - 2)}
 
 
-def judge(dm, rd, story):
+def _things(wofuer, en):
+    """The words of a check that name its thing: the nouns in German, the longer words in English (stems)."""
+    w = _WORT.findall(wofuer or "")
+    return [x.lower()[:max(4, len(x) - 2)] for x in w if len(x) >= 4 and (en or x[:1].isupper())]
+
+
+def told_as_done(rd, text, wuerfe):
+    """The failed checks (their wofuer) the narration tells as done, by the fixed word lists GELINGT and HAELT."""
+    en = rd.get("lang") == "en"
+    saetze = [x.lower() for x in re.split(r"[.!?…]+", text)]
+    out = []
+    for w in wuerfe or ():
+        stems = _things(w.get("wofuer"), en)
+        if w.get("ok") or not stems:
+            continue
+        if any(any(st in x for st in stems) and any(g in x for g in GELINGT) and not any(h in x for h in HAELT) for x in saetze):
+            out.append(w["wofuer"])
+    return out
+
+
+def rank(fault):
+    """How bad a fault is for keeping a try: a hard one (HART, the first worst) below every other."""
+    return HART.index(fault) if fault in HART else len(HART)
+
+
+def repair(rd, story, fault, missing):
+    """A narration that failed a hard check (HART) on every try: the panel says the truth in a fixed sentence after it."""
+    li = 1 if rd.get("lang") == "en" else 0
+    if fault == "probe":
+        add = [("Doch die Probe „{n}“ ist misslungen: das gelingt in diesem Zug nicht.",
+                "But the check \"{n}\" failed: it does not happen this turn.")[li].format(n=n) for n in missing]
+    elif fault == "gegner":
+        add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
+            f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
+    else:
+        return story
+    print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+    return dict(story, text=(story["text"].rstrip() + " " + " ".join(add)).strip())
+
+
+def judge(dm, rd, story, wuerfe=()):
     """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
-    and is missing (one the model answered out of the game, ooc, may be missing), a foe of the encounter not named by
+    and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
+    (told_as_done, the check's wofuer), a foe of the encounter not named by
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
     too much repeated from the last narrations."""
     text = story["text"]
@@ -325,6 +378,9 @@ def judge(dm, rd, story):
                and rd["plaetze"][pid]["held"]["name"].lower() not in low]
     if missing:
         return "namen", missing
+    done = told_as_done(rd, text, wuerfe)
+    if done:
+        return "probe", done
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
     gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
     if gone:

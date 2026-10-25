@@ -2672,8 +2672,12 @@ AUFGABE_MOMENT = {      # moment_of: the turn carries the mood, tell it fully
     "wurf": ("Ein Wurf war eine 20 oder eine 1: erzähle diesen Augenblick ausführlich in 3 Absätzen.",
              "A roll was a 20 or a 1: tell this moment fully in 3 paragraphs."),
 }
+# a check's outcome in words for the narration (Dominik 2026-10-25: a failed „Holztür aufbrechen“ was told as done)
+ERGEBNIS = {True: ("gelungen", "passed"),
+            False: ("misslungen: das gelingt in diesem Zug nicht, niemand holt es nach", "failed: it does not happen this turn, nobody makes up for it")}
 AUFGABE_ERZAEHLEN = {
-    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
+    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen); eine "
+          "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
           "Erzählung), gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, ein erreichtes Ziel als ziel in erfolg. Ende mit einer Frage an die Gruppe; "
@@ -2681,7 +2685,8 @@ AUFGABE_ERZAEHLEN = {
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
-    "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
+    "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters); a check holds "
+          "as ergebnis says, a failed one does not happen. Let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
@@ -3259,8 +3264,8 @@ async def run_turn(rid, turn):
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
-            facts_w = [{"name": w["name"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
-                        "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {}),
+            facts_w = [{"name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
+                        "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
                         **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
                        for w in wuerfe]
             facts_w += [{"angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
@@ -3271,22 +3276,25 @@ async def run_turn(rid, turn):
             rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
             print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
             story, best, extra = None, None, ""
-            for _ in range(2):                    # a second try when the first fails the checks (erz.judge: one rewrite)
+            for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
+                if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
+                    break
                 obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
                 s, d2 = check_story(r, rd, obj)
                 drop += d2
                 if not s:
                     continue
-                fault, missing = erz.judge(_me, rd, s)
+                fault, missing = erz.judge(_me, rd, s, wuerfe)
                 if not fault:
                     story = s
                     break
-                best = best or s
+                if not best or erz.rank(fault) > erz.rank(best[1]):     # keep the try with the mildest fault
+                    best = (s, fault, missing)
                 extra = erz.hint(fault, missing, rd["lang"])
                 await asyncio.to_thread(wait_step, rid, turn, "nachbessern")
                 _day.bump("nachgebessert")
                 print(f"dungeon: nachbessern | {fault}", flush=True)
-            story = story or best
+            story = story or (erz.repair(rd, *best) if best else None)
             if drop:
                 _day.bump("verworfen", drop)
             why = "ok" if story else "ausfall"

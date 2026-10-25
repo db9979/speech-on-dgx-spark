@@ -68,6 +68,8 @@ ART_NAME = {"hieb": ("Hieb", "slashing"), "stich": ("Stich", "piercing"), "wucht
             "kaelte": ("Kälte", "cold"), "blitz": ("Blitz", "lightning"), "saeure": ("Säure", "acid"), "gift": ("Gift", "poison"),
             "nekrotisch": ("nekrotisch", "necrotic"), "strahlend": ("strahlend", "radiant"), "psychisch": ("psychisch", "psychic"),
             "donner": ("Donner", "thunder"), "energie": ("Energie", "force")}
+ART_ZEICHEN = {"hieb": "🗡️", "stich": "🏹", "wucht": "🔨", "feuer": "🔥", "kaelte": "❄️", "blitz": "⚡", "saeure": "🧪", "gift": "🐍",
+               "nekrotisch": "🌑", "strahlend": "☀️", "psychisch": "🧠", "donner": "💥", "energie": "✨"}   # the bestiary's symbols
 EIGENSCHAFT_REGEL = {                       # what each property does at the table, as the item's line says it
     "leicht": ("leicht: kritisch schon ab 19", "light: critical from 19"),
     "finesse": ("Finesse: trifft mit Stärke oder Geschick, dem besseren", "finesse: hits with Strength or Dexterity, the better"),
@@ -208,9 +210,17 @@ def turn_dial(dm, r, rd):
     return step
 
 
+def plays_in(r, g, welt):
+    """Whether a foe of the bestiary meets heroes in the world: „alle“ everywhere, else its worlds; a world no foe names
+    for itself (the own world, a new one of the admin) takes the foes of dungeon_legenden.SONST (Bestiarium-Punkt 3)."""
+    from dungeon_legenden import SONST
+    w = welt if any(welt in x["welten"] for x in r.get("gegner") or []) else SONST
+    return "alle" in g["welten"] or w in g["welten"]
+
+
 def _foes(dm, r, rd):
     welt = rd.get("welt", "")
-    return [g for g in r.get("gegner") or [] if welt in g["welten"] or "alle" in g["welten"]]
+    return [g for g in r.get("gegner") or [] if plays_in(r, g, welt)]
 
 
 def _seed(rd, held, *more):

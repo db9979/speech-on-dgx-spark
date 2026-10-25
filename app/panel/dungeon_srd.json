@@ -14230,6 +14230,2725 @@
       "schwaeche": [
         "strahlend"
       ]
+    },
+    {
+      "id": "reparaturbot",
+      "zeichen": "🔧",
+      "name": [
+        "Reparaturbot",
+        "Repair bot"
+      ],
+      "info": [
+        "Schweißt alles zusammen, auch Eindringlinge.",
+        "Welds everything together, intruders too."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 0.5,
+      "leben": 24,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 16,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 10,
+        "charisma": 1
+      },
+      "ep": 100,
+      "groesse": "klein",
+      "schaden_art": "feuer",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "sicherheitsdroide",
+      "zeichen": "🤖",
+      "name": [
+        "Sicherheitsdroide",
+        "Security droid"
+      ],
+      "info": [
+        "Fragt einmal nach dem Ausweis, dann nie wieder.",
+        "Asks for ID once, then never again."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 1,
+      "leben": 32,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 16,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 10,
+        "charisma": 1
+      },
+      "ep": 200,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "leerenparasit",
+      "zeichen": "🦠",
+      "name": [
+        "Leerenparasit",
+        "Void parasite"
+      ],
+      "info": [
+        "Kriecht durch Lüftungsschächte und sucht einen Wirt.",
+        "Crawls through vents looking for a host."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 1,
+      "leben": 32,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 6,
+        "geschick": 18,
+        "konstitution": 10,
+        "intelligenz": 4,
+        "weisheit": 12,
+        "charisma": 4
+      },
+      "ep": 200,
+      "groesse": "klein",
+      "schaden_art": "saeure",
+      "resistenz": [
+        "saeure"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "vergiftet"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "enterkommando",
+      "zeichen": "🪖",
+      "name": [
+        "Enterkommando",
+        "Boarding trooper"
+      ],
+      "info": [
+        "Kommt durch die Schleuse, bevor sie ganz offen ist.",
+        "Comes through the airlock before it is fully open."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 2,
+      "leben": 49,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 450,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "plasmakaefer",
+      "zeichen": "🪲",
+      "name": [
+        "Plasmakäfer",
+        "Plasma beetle"
+      ],
+      "info": [
+        "Sein Panzer glüht, kurz bevor er spuckt.",
+        "Its shell glows just before it spits."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 2,
+      "leben": 49,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 6,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 6,
+        "geschick": 18,
+        "konstitution": 10,
+        "intelligenz": 4,
+        "weisheit": 12,
+        "charisma": 4
+      },
+      "ep": 450,
+      "groesse": "klein",
+      "schaden_art": "feuer",
+      "immun": [
+        "feuer"
+      ],
+      "schwaeche": [
+        "kaelte"
+      ],
+      "zustaende": [
+        "brennend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "psi_adept",
+      "zeichen": "🧠",
+      "name": [
+        "Psi-Adept",
+        "Psi adept"
+      ],
+      "info": [
+        "Hört Gedanken und antwortet mit Kopfweh.",
+        "Hears thoughts and answers with headaches."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 3,
+      "leben": 66,
+      "ruestung": 14,
+      "angriff": 5,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 8,
+        "geschick": 14,
+        "konstitution": 12,
+        "intelligenz": 18,
+        "weisheit": 16,
+        "charisma": 16
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "schaden_art": "psychisch",
+      "resistenz": [
+        "psychisch"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "tarnjaeger",
+      "zeichen": "👁️",
+      "name": [
+        "Tarnjäger",
+        "Cloaked hunter"
+      ],
+      "info": [
+        "Nur ein Flimmern in der Luft, dann der Schuss.",
+        "Only a shimmer in the air, then the shot."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 4,
+      "leben": 83,
+      "ruestung": 14,
+      "angriff": 6,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "blutend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "frachtlader_mech",
+      "zeichen": "🦾",
+      "name": [
+        "Frachtlader-Mech",
+        "Cargo loader mech"
+      ],
+      "info": [
+        "Für Container gebaut, nicht für Gnade.",
+        "Built for containers, not for mercy."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 5,
+      "leben": 100,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 10,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 17,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 11,
+        "charisma": 2
+      },
+      "ep": 1800,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "xeno_brueter",
+      "zeichen": "🐛",
+      "name": [
+        "Xeno-Brüter",
+        "Xeno breeder"
+      ],
+      "info": [
+        "Legt Eier in alles, was warm ist.",
+        "Lays eggs in anything warm."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 6,
+      "leben": 117,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 10,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 20,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 12,
+        "charisma": 10
+      },
+      "ep": 2300,
+      "groesse": "gross",
+      "schaden_art": "saeure",
+      "immun": [
+        "saeure"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "vergiftet"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "kampfsynth",
+      "zeichen": "🦿",
+      "name": [
+        "Kampfsynth",
+        "Combat synth"
+      ],
+      "info": [
+        "Sieht aus wie ein Mensch, quietscht aber beim Laufen.",
+        "Looks human, but squeaks when it walks."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 7,
+      "leben": 134,
+      "ruestung": 16,
+      "angriff": 8,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 12,
+        "geschick": 20,
+        "konstitution": 14,
+        "intelligenz": 12,
+        "weisheit": 16,
+        "charisma": 12
+      },
+      "ep": 2900,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "immun": [
+        "gift"
+      ],
+      "resistenz": [
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "gravitationsgeist",
+      "zeichen": "🌀",
+      "name": [
+        "Gravitationsgeist",
+        "Gravity wraith"
+      ],
+      "info": [
+        "Wo er schwebt, fällt alles nach oben.",
+        "Where it floats, everything falls upward."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 8,
+      "leben": 151,
+      "ruestung": 16,
+      "angriff": 9,
+      "schaden": 8,
+      "schaden_plus": 8,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 10,
+        "geschick": 16,
+        "konstitution": 14,
+        "intelligenz": 20,
+        "weisheit": 18,
+        "charisma": 18
+      },
+      "ep": 3900,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "immun": [
+        "gift"
+      ],
+      "resistenz": [
+        "energie"
+      ],
+      "schwaeche": [
+        "psychisch"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "schwarmmutter",
+      "zeichen": "🕷️",
+      "name": [
+        "Schwarmmutter",
+        "Swarm mother"
+      ],
+      "info": [
+        "Tausend kleine Beine unter einem Panzer.",
+        "A thousand small legs beneath one shell."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 12,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 5000,
+      "groesse": "riesig",
+      "schaden_art": "stich",
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "festgesetzt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "belagerungspanzer",
+      "zeichen": "🚜",
+      "name": [
+        "Belagerungspanzer",
+        "Siege walker"
+      ],
+      "info": [
+        "Läuft auf vier Beinen durch Mauern.",
+        "Walks through walls on four legs."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 10,
+      "leben": 185,
+      "ruestung": 17,
+      "angriff": 10,
+      "schaden": 12,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 19,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 13,
+        "charisma": 4
+      },
+      "ep": 5900,
+      "groesse": "riesig",
+      "schaden_art": "feuer",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb",
+        "wucht"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "stationskern_ki",
+      "zeichen": "💠",
+      "name": [
+        "Stationskern-KI",
+        "Station core AI"
+      ],
+      "info": [
+        "Die Station selbst hat beschlossen, dass ihr stört.",
+        "The station itself has decided you are a nuisance."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 12,
+      "leben": 219,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 12,
+        "geschick": 18,
+        "konstitution": 16,
+        "intelligenz": 22,
+        "weisheit": 20,
+        "charisma": 20
+      },
+      "ep": 8400,
+      "groesse": "riesig",
+      "schaden_art": "blitz",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "energie"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "leerenleviathan",
+      "zeichen": "🐋",
+      "name": [
+        "Leerenleviathan",
+        "Void leviathan"
+      ],
+      "info": [
+        "Schwimmt zwischen den Sternen und frisst Schiffe.",
+        "Swims between the stars and eats ships."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 14,
+      "leben": 253,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 12,
+      "schaden_plus": 9,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 22,
+        "geschick": 14,
+        "konstitution": 20,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 12
+      },
+      "ep": 11500,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "immun": [
+        "kaelte"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "admiral_des_nichts",
+      "zeichen": "🛰️",
+      "name": [
+        "Admiral des Nichts",
+        "Admiral of Nothing"
+      ],
+      "info": [
+        "Befehligt eine Flotte, die es nicht mehr gibt.",
+        "Commands a fleet that no longer exists."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 15,
+      "leben": 270,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 8,
+      "schaden_plus": 19,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 13,
+        "geschick": 19,
+        "konstitution": 17,
+        "intelligenz": 23,
+        "weisheit": 21,
+        "charisma": 21
+      },
+      "ep": 13000,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "immun": [
+        "gift"
+      ],
+      "resistenz": [
+        "psychisch",
+        "energie"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "deckratte",
+      "zeichen": "🐀",
+      "name": [
+        "Deckratte",
+        "Deck rat"
+      ],
+      "info": [
+        "Frisst den Zwieback und manchmal die Zehen.",
+        "Eats the hardtack and sometimes the toes."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 0.25,
+      "leben": 19,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 6,
+        "geschick": 18,
+        "konstitution": 10,
+        "intelligenz": 4,
+        "weisheit": 12,
+        "charisma": 4
+      },
+      "ep": 50,
+      "groesse": "winzig",
+      "schaden_art": "stich",
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "schmuggler",
+      "zeichen": "🧔",
+      "name": [
+        "Schmuggler",
+        "Smuggler"
+      ],
+      "info": [
+        "Kennt jede Bucht und jeden Zöllner.",
+        "Knows every cove and every customs man."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 1,
+      "leben": 32,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 200,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "seehexe",
+      "zeichen": "🧜",
+      "name": [
+        "Seehexe",
+        "Sea witch"
+      ],
+      "info": [
+        "Ruft den Nebel und flüstert mit den Wellen.",
+        "Calls the fog and whispers with the waves."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 4,
+      "leben": 83,
+      "ruestung": 14,
+      "angriff": 6,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 8,
+        "geschick": 14,
+        "konstitution": 12,
+        "intelligenz": 18,
+        "weisheit": 16,
+        "charisma": 16
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "schaden_art": "kaelte",
+      "resistenz": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "bezaubert"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "scherenkoenigin",
+      "zeichen": "🦀",
+      "name": [
+        "Scherenkönigin",
+        "Claw queen"
+      ],
+      "info": [
+        "Ihre Schere knackt Planken wie Nüsse.",
+        "Its claw cracks planks like nuts."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 3,
+      "leben": 66,
+      "ruestung": 14,
+      "angriff": 5,
+      "schaden": 10,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 18,
+        "geschick": 10,
+        "konstitution": 16,
+        "intelligenz": 6,
+        "weisheit": 10,
+        "charisma": 8
+      },
+      "ep": 700,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "geistermatrose",
+      "zeichen": "👻",
+      "name": [
+        "Geistermatrose",
+        "Ghost sailor"
+      ],
+      "info": [
+        "Schrubbt noch immer das Deck, seit hundert Jahren.",
+        "Still scrubbing the deck, for a hundred years."
+      ],
+      "welten": [
+        "piraten",
+        "horror"
+      ],
+      "stufe": 5,
+      "leben": 100,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 11,
+        "geschick": 19,
+        "konstitution": 13,
+        "intelligenz": 11,
+        "weisheit": 15,
+        "charisma": 11
+      },
+      "ep": 1800,
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "immun": [
+        "gift",
+        "nekrotisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb",
+        "wucht"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "marinekapitaen",
+      "zeichen": "🎖️",
+      "name": [
+        "Marinekapitän",
+        "Navy captain"
+      ],
+      "info": [
+        "Jagt Piraten für Krone und Kopfgeld.",
+        "Hunts pirates for crown and bounty."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 6,
+      "leben": 117,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 12,
+        "geschick": 20,
+        "konstitution": 14,
+        "intelligenz": 12,
+        "weisheit": 16,
+        "charisma": 12
+      },
+      "ep": 2300,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "korallengolem",
+      "zeichen": "🪸",
+      "name": [
+        "Korallengolem",
+        "Coral golem"
+      ],
+      "info": [
+        "Ein Riff, das aufgestanden ist.",
+        "A reef that stood up."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 8,
+      "leben": 151,
+      "ruestung": 16,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 18,
+        "geschick": 14,
+        "konstitution": 20,
+        "intelligenz": 10,
+        "weisheit": 12,
+        "charisma": 3
+      },
+      "ep": 3900,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "riffschlange",
+      "zeichen": "🐍",
+      "name": [
+        "Riffschlange",
+        "Reef serpent"
+      ],
+      "info": [
+        "Windet sich um den Rumpf, bis er bricht.",
+        "Coils around the hull until it breaks."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 12,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 5000,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "verfluchter_kapitaen",
+      "zeichen": "🏴‍☠️",
+      "name": [
+        "Verfluchter Kapitän",
+        "Cursed captain"
+      ],
+      "info": [
+        "Kein Fluch hält ihn auf, kein Gold genügt ihm.",
+        "No curse stops him, no gold is enough for him."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 12,
+      "leben": 219,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 8,
+      "schaden_plus": 12,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 14,
+        "geschick": 22,
+        "konstitution": 16,
+        "intelligenz": 14,
+        "weisheit": 18,
+        "charisma": 14
+      },
+      "ep": 8400,
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "immun": [
+        "gift",
+        "nekrotisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "tiefenkraken",
+      "zeichen": "🦑",
+      "name": [
+        "Tiefenkraken",
+        "Deep kraken"
+      ],
+      "info": [
+        "Seine Arme reichen vom Grund bis zum Mast.",
+        "Its arms reach from the seabed to the mast."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 15,
+      "leben": 270,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 23,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 15,
+        "charisma": 13
+      },
+      "ep": 13000,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "immun": [
+        "kaelte"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "puppenmacher",
+      "zeichen": "🪆",
+      "name": [
+        "Puppenmacher",
+        "Dollmaker"
+      ],
+      "info": [
+        "Seine Puppen tragen Gesichter, die ihr kennt.",
+        "His dolls wear faces you know."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 3,
+      "leben": 66,
+      "ruestung": 14,
+      "angriff": 5,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 8,
+        "geschick": 14,
+        "konstitution": 12,
+        "intelligenz": 18,
+        "weisheit": 16,
+        "charisma": 16
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "resistenz": [
+        "psychisch"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "bezaubert"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "knochenhund",
+      "zeichen": "🐕",
+      "name": [
+        "Knochenhund",
+        "Bone hound"
+      ],
+      "info": [
+        "Bellt nicht. Klappert nur.",
+        "Does not bark. Only rattles."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 2,
+      "leben": 49,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 450,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "immun": [
+        "gift"
+      ],
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "wucht",
+        "strahlend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "seuchenarzt",
+      "zeichen": "🐦‍⬛",
+      "name": [
+        "Seuchenarzt",
+        "Plague doctor"
+      ],
+      "info": [
+        "Heilt niemanden, aber sammelt fleißig.",
+        "Heals no one, but collects diligently."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 5,
+      "leben": 100,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 9,
+        "geschick": 15,
+        "konstitution": 13,
+        "intelligenz": 19,
+        "weisheit": 17,
+        "charisma": 17
+      },
+      "ep": 1800,
+      "groesse": "mittel",
+      "schaden_art": "gift",
+      "immun": [
+        "gift"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "vergiftet"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "schattenweber",
+      "zeichen": "🕸️",
+      "name": [
+        "Schattenweber",
+        "Shadow weaver"
+      ],
+      "info": [
+        "Spinnt Fäden aus der Dunkelheit selbst.",
+        "Spins threads out of darkness itself."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 7,
+      "leben": 134,
+      "ruestung": 16,
+      "angriff": 8,
+      "schaden": 10,
+      "schaden_plus": 8,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 12,
+        "geschick": 20,
+        "konstitution": 14,
+        "intelligenz": 12,
+        "weisheit": 16,
+        "charisma": 12
+      },
+      "ep": 2900,
+      "groesse": "gross",
+      "schaden_art": "nekrotisch",
+      "immun": [
+        "nekrotisch"
+      ],
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "festgesetzt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "kirchturmwaechter",
+      "zeichen": "🔔",
+      "name": [
+        "Kirchturmwächter",
+        "Belfry warden"
+      ],
+      "info": [
+        "Ein Wasserspeier, der jede Stunde schlägt.",
+        "A gargoyle that strikes every hour."
+      ],
+      "welten": [
+        "horror",
+        "fantasy"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 19,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 13,
+        "charisma": 4
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "albtraumreiter",
+      "zeichen": "🐎",
+      "name": [
+        "Albtraumreiter",
+        "Nightmare rider"
+      ],
+      "info": [
+        "Reitet durch Träume und hinterlässt Hufspuren.",
+        "Rides through dreams and leaves hoofprints."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 10,
+      "leben": 185,
+      "ruestung": 17,
+      "angriff": 10,
+      "schaden": 10,
+      "schaden_plus": 10,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 13,
+        "geschick": 21,
+        "konstitution": 15,
+        "intelligenz": 13,
+        "weisheit": 17,
+        "charisma": 13
+      },
+      "ep": 5900,
+      "groesse": "gross",
+      "schaden_art": "feuer",
+      "immun": [
+        "feuer"
+      ],
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "die_bleiche_graefin",
+      "zeichen": "🧛",
+      "name": [
+        "Die bleiche Gräfin",
+        "The Pale Countess"
+      ],
+      "info": [
+        "Seit dreihundert Jahren Herrin des Hauses.",
+        "Mistress of the house for three hundred years."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 13,
+      "leben": 236,
+      "ruestung": 18,
+      "angriff": 12,
+      "schaden": 8,
+      "schaden_plus": 15,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 12,
+        "geschick": 18,
+        "konstitution": 16,
+        "intelligenz": 22,
+        "weisheit": 20,
+        "charisma": 20
+      },
+      "ep": 10000,
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "immun": [
+        "gift",
+        "nekrotisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "strahlend",
+        "feuer"
+      ],
+      "zustaende": [
+        "bezaubert"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "das_ding_im_brunnen",
+      "zeichen": "🕳️",
+      "name": [
+        "Das Ding im Brunnen",
+        "The Thing in the Well"
+      ],
+      "info": [
+        "Niemand hat es je ganz gesehen.",
+        "No one has ever seen all of it."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 15,
+      "leben": 270,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 23,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 15,
+        "charisma": 13
+      },
+      "ep": 13000,
+      "groesse": "riesig",
+      "schaden_art": "psychisch",
+      "immun": [
+        "psychisch"
+      ],
+      "resistenz": [
+        "kaelte",
+        "nekrotisch"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "runenwaechter",
+      "zeichen": "🗿",
+      "name": [
+        "Runenwächter",
+        "Rune guardian"
+      ],
+      "info": [
+        "Erwacht, wenn jemand die falsche Rune berührt.",
+        "Wakes when someone touches the wrong rune."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 19,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 13,
+        "charisma": 4
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "schaden_art": "energie",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "frostriesin",
+      "zeichen": "🧊",
+      "name": [
+        "Frostriesin",
+        "Frost giantess"
+      ],
+      "info": [
+        "Ihr Atem lässt Bäche stehen bleiben.",
+        "Her breath makes streams stand still."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 10,
+      "leben": 185,
+      "ruestung": 17,
+      "angriff": 10,
+      "schaden": 12,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 5900,
+      "groesse": "riesig",
+      "schaden_art": "kaelte",
+      "immun": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "festgesetzt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "greifenkoenig",
+      "zeichen": "🦅",
+      "name": [
+        "Greifenkönig",
+        "Griffin king"
+      ],
+      "info": [
+        "Herrscht über die Gipfel und alles darunter.",
+        "Rules the peaks and everything below them."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 11,
+      "leben": 202,
+      "ruestung": 17,
+      "angriff": 11,
+      "schaden": 12,
+      "schaden_plus": 9,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 13,
+        "geschick": 21,
+        "konstitution": 15,
+        "intelligenz": 13,
+        "weisheit": 17,
+        "charisma": 13
+      },
+      "ep": 7200,
+      "groesse": "riesig",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "donner"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "lichkoenig",
+      "zeichen": "💀",
+      "name": [
+        "Lichkönig",
+        "Lich king"
+      ],
+      "info": [
+        "Hat die Zeit überlistet und langweilt sich.",
+        "Outwitted time and is bored."
+      ],
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "stufe": 14,
+      "leben": 253,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 8,
+      "schaden_plus": 17,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 12,
+        "geschick": 18,
+        "konstitution": 16,
+        "intelligenz": 22,
+        "weisheit": 20,
+        "charisma": 20
+      },
+      "ep": 11500,
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "immun": [
+        "gift",
+        "nekrotisch"
+      ],
+      "resistenz": [
+        "kaelte",
+        "blitz"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "gelaehmt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "feuerdrache_alt",
+      "zeichen": "🐉",
+      "name": [
+        "Alter Feuerdrache",
+        "Ancient fire dragon"
+      ],
+      "info": [
+        "Schläft auf dem Gold von sieben Königreichen.",
+        "Sleeps on the gold of seven kingdoms."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 15,
+      "leben": 270,
+      "ruestung": 19,
+      "angriff": 13,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 23,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 15,
+        "charisma": 13
+      },
+      "ep": 13000,
+      "groesse": "riesig",
+      "schaden_art": "feuer",
+      "immun": [
+        "feuer"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "kaelte"
+      ],
+      "zustaende": [
+        "brennend"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "dunkelelf_klinge",
+      "zeichen": "🗡️",
+      "name": [
+        "Dunkelelfen-Klinge",
+        "Dark elf blade"
+      ],
+      "info": [
+        "Kommt aus dem Unterreich, wenn die Fackeln ausgehen.",
+        "Comes from the underworld when the torches go out."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 4,
+      "leben": 83,
+      "ruestung": 14,
+      "angriff": 6,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "schaden_art": "gift",
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "vergiftet"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "waldwandler",
+      "zeichen": "🌳",
+      "name": [
+        "Waldwandler",
+        "Forest walker"
+      ],
+      "info": [
+        "Ein Wald, der gelernt hat zu gehen.",
+        "A forest that learned to walk."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 8,
+      "leben": 151,
+      "ruestung": 16,
+      "angriff": 9,
+      "schaden": 12,
+      "schaden_plus": 9,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 20,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 12,
+        "charisma": 10
+      },
+      "ep": 3900,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "stich",
+        "wucht"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "festgesetzt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "hexenmeister",
+      "zeichen": "🧙",
+      "name": [
+        "Hexenmeister",
+        "Warlock"
+      ],
+      "info": [
+        "Hat einen Pakt geschlossen und bereut nichts.",
+        "Made a pact and regrets nothing."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 6,
+      "leben": 117,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 10,
+        "geschick": 16,
+        "konstitution": 14,
+        "intelligenz": 20,
+        "weisheit": 18,
+        "charisma": 18
+      },
+      "ep": 2300,
+      "groesse": "mittel",
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "wegelagerer",
+      "zeichen": "🪓",
+      "name": [
+        "Wegelagerer",
+        "Highwayman"
+      ],
+      "info": [
+        "Wartet hinter der nächsten Biegung.",
+        "Waits behind the next bend."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 0.5,
+      "leben": 24,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "tollwuetiger_wolf",
+      "zeichen": "🐺",
+      "name": [
+        "Tollwütiger Wolf",
+        "Rabid wolf"
+      ],
+      "info": [
+        "Schaum vor dem Maul, Wahnsinn im Blick.",
+        "Foam at the mouth, madness in its eyes."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 1,
+      "leben": 32,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 10
+      },
+      "ep": 200,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "zustaende": [
+        "vergiftet"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "hoehlenbaer",
+      "zeichen": "🐻",
+      "name": [
+        "Höhlenbär",
+        "Cave bear"
+      ],
+      "info": [
+        "Verteidigt seine Höhle gegen alles.",
+        "Defends its cave against anything."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 3,
+      "leben": 66,
+      "ruestung": 14,
+      "angriff": 5,
+      "schaden": 10,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 18,
+        "geschick": 10,
+        "konstitution": 16,
+        "intelligenz": 6,
+        "weisheit": 10,
+        "charisma": 8
+      },
+      "ep": 700,
+      "groesse": "gross",
+      "schaden_art": "hieb",
+      "zustaende": [
+        "gepackt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "spiegelwesen",
+      "zeichen": "🪞",
+      "name": [
+        "Spiegelwesen",
+        "Mirror being"
+      ],
+      "info": [
+        "Sieht aus wie ihr, kämpft wie ihr, nur besser.",
+        "Looks like you, fights like you, only better."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 5,
+      "leben": 100,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 9,
+        "geschick": 15,
+        "konstitution": 13,
+        "intelligenz": 19,
+        "weisheit": 17,
+        "charisma": 17
+      },
+      "ep": 1800,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "immun": [
+        "psychisch"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "wachfels",
+      "zeichen": "🪨",
+      "name": [
+        "Wachfels",
+        "Watch rock"
+      ],
+      "info": [
+        "Gebaut, um zu bewachen. Sonst nichts.",
+        "Built to guard. Nothing else."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 7,
+      "leben": 134,
+      "ruestung": 16,
+      "angriff": 8,
+      "schaden": 10,
+      "schaden_plus": 8,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 18,
+        "geschick": 14,
+        "konstitution": 20,
+        "intelligenz": 10,
+        "weisheit": 12,
+        "charisma": 3
+      },
+      "ep": 2900,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "chimaere_wild",
+      "zeichen": "🦁",
+      "name": [
+        "Wilde Chimäre",
+        "Wild chimera"
+      ],
+      "info": [
+        "Drei Köpfe, drei Launen, ein Hunger.",
+        "Three heads, three moods, one hunger."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "schaden_art": "feuer",
+      "resistenz": [
+        "feuer"
+      ],
+      "zustaende": [
+        "brennend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "weltenfresser",
+      "zeichen": "🌑",
+      "name": [
+        "Weltenfresser",
+        "World eater"
+      ],
+      "info": [
+        "Wo er war, ist danach nichts mehr.",
+        "Where it has been, nothing is left."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 13,
+      "leben": 236,
+      "ruestung": 18,
+      "angriff": 12,
+      "schaden": 12,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 12,
+        "geschick": 18,
+        "konstitution": 16,
+        "intelligenz": 22,
+        "weisheit": 20,
+        "charisma": 20
+      },
+      "ep": 10000,
+      "groesse": "riesig",
+      "schaden_art": "energie",
+      "immun": [
+        "psychisch"
+      ],
+      "resistenz": [
+        "energie",
+        "nekrotisch"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "veraengstigt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "schicksalsweber",
+      "zeichen": "🧵",
+      "name": [
+        "Schicksalsweber",
+        "Fate weaver"
+      ],
+      "info": [
+        "Kennt das Ende eurer Geschichte und mag es nicht.",
+        "Knows the end of your story and does not like it."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 11,
+      "leben": 202,
+      "ruestung": 17,
+      "angriff": 11,
+      "schaden": 8,
+      "schaden_plus": 10,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 11,
+        "geschick": 17,
+        "konstitution": 15,
+        "intelligenz": 21,
+        "weisheit": 19,
+        "charisma": 19
+      },
+      "ep": 7200,
+      "groesse": "mittel",
+      "schaden_art": "psychisch",
+      "immun": [
+        "psychisch"
+      ],
+      "resistenz": [
+        "energie"
+      ],
+      "zustaende": [
+        "bezaubert"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "sternenfreibeuter",
+      "zeichen": "🏴",
+      "name": [
+        "Sternenfreibeuter",
+        "Star buccaneer"
+      ],
+      "info": [
+        "Kapert Frachter zwischen den Monden und singt dabei.",
+        "Raids freighters between the moons and sings while doing it."
+      ],
+      "welten": [
+        "scifi",
+        "piraten"
+      ],
+      "stufe": 7,
+      "leben": 134,
+      "ruestung": 16,
+      "angriff": 8,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 12,
+        "geschick": 20,
+        "konstitution": 14,
+        "intelligenz": 12,
+        "weisheit": 16,
+        "charisma": 12
+      },
+      "ep": 2900,
+      "groesse": "mittel",
+      "schaden_art": "energie",
+      "zustaende": [
+        "betaeubt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "kometenkaperer",
+      "zeichen": "☄️",
+      "name": [
+        "Kometenkaperer",
+        "Comet raider"
+      ],
+      "info": [
+        "Reitet auf einem Kometen und entert alles, was glänzt.",
+        "Rides a comet and boards anything that shines."
+      ],
+      "welten": [
+        "scifi",
+        "piraten"
+      ],
+      "stufe": 10,
+      "leben": 185,
+      "ruestung": 17,
+      "angriff": 10,
+      "schaden": 10,
+      "schaden_plus": 10,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 5900,
+      "groesse": "gross",
+      "schaden_art": "feuer",
+      "immun": [
+        "feuer"
+      ],
+      "resistenz": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "brennend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "minendrohne",
+      "zeichen": "🛸",
+      "name": [
+        "Minendrohne",
+        "Mine drone"
+      ],
+      "info": [
+        "Summt leise und piept, bevor sie zuschlägt.",
+        "Hums quietly and beeps before it strikes."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 4,
+      "leben": 83,
+      "ruestung": 14,
+      "angriff": 6,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 16,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 10,
+        "charisma": 1
+      },
+      "ep": 1100,
+      "groesse": "klein",
+      "schaden_art": "donner",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "schrottkrieger",
+      "zeichen": "⚙️",
+      "name": [
+        "Schrottkrieger",
+        "Scrap warrior"
+      ],
+      "info": [
+        "Aus alten Raumschiffteilen gebaut, klappert bei jedem Schritt.",
+        "Built from old starship parts, rattles with every step."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 4,
+      "leben": 83,
+      "ruestung": 14,
+      "angriff": 6,
+      "schaden": 8,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 16,
+        "geschick": 12,
+        "konstitution": 18,
+        "intelligenz": 8,
+        "weisheit": 10,
+        "charisma": 1
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "nebelsammler",
+      "zeichen": "🌫️",
+      "name": [
+        "Nebelsammler",
+        "Nebula collector"
+      ],
+      "info": [
+        "Saugt Sternennebel ein und pustet ihn als Sturm wieder aus.",
+        "Breathes in star mist and blows it out again as a storm."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 6,
+      "leben": 117,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 10,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 10,
+        "geschick": 16,
+        "konstitution": 14,
+        "intelligenz": 20,
+        "weisheit": 18,
+        "charisma": 18
+      },
+      "ep": 2300,
+      "groesse": "gross",
+      "schaden_art": "kaelte",
+      "immun": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "feuer"
+      ],
+      "zustaende": [
+        "blind"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "sturmhueter",
+      "zeichen": "🌩️",
+      "name": [
+        "Sturmhüter",
+        "Storm keeper"
+      ],
+      "info": [
+        "Hält Gewitter in Flaschen und lässt sie frei, wenn er wütend ist.",
+        "Keeps thunderstorms in bottles and lets them out when angry."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 11,
+        "geschick": 17,
+        "konstitution": 15,
+        "intelligenz": 21,
+        "weisheit": 19,
+        "charisma": 19
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "schaden_art": "blitz",
+      "immun": [
+        "blitz"
+      ],
+      "resistenz": [
+        "donner"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "eisenkoloss",
+      "zeichen": "🛡️",
+      "name": [
+        "Eisenkoloss",
+        "Iron colossus"
+      ],
+      "info": [
+        "So groß wie ein Turm und genauso stur.",
+        "As tall as a tower and just as stubborn."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 10,
+      "leben": 185,
+      "ruestung": 17,
+      "angriff": 10,
+      "schaden": 12,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 19,
+        "geschick": 15,
+        "konstitution": 21,
+        "intelligenz": 11,
+        "weisheit": 13,
+        "charisma": 4
+      },
+      "ep": 5900,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "stich",
+        "hieb"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "liegend"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "traumfresser",
+      "zeichen": "🌙",
+      "name": [
+        "Traumfresser",
+        "Dream eater"
+      ],
+      "info": [
+        "Nascht an schönen Träumen und lässt nur Gähnen zurück.",
+        "Nibbles on sweet dreams and leaves only yawns behind."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 11,
+      "leben": 202,
+      "ruestung": 17,
+      "angriff": 11,
+      "schaden": 10,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 11,
+        "geschick": 17,
+        "konstitution": 15,
+        "intelligenz": 21,
+        "weisheit": 19,
+        "charisma": 19
+      },
+      "ep": 7200,
+      "groesse": "gross",
+      "schaden_art": "psychisch",
+      "immun": [
+        "psychisch"
+      ],
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "schwaeche": [
+        "strahlend"
+      ],
+      "zustaende": [
+        "bewusstlos"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "glutwurm",
+      "zeichen": "🪱",
+      "name": [
+        "Glutwurm",
+        "Ember worm"
+      ],
+      "info": [
+        "Gräbt sich durch Fels, als wäre es Butter.",
+        "Burrows through rock as if it were butter."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 11,
+      "leben": 202,
+      "ruestung": 17,
+      "angriff": 11,
+      "schaden": 12,
+      "schaden_plus": 9,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 21,
+        "geschick": 13,
+        "konstitution": 19,
+        "intelligenz": 9,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 7200,
+      "groesse": "riesig",
+      "schaden_art": "feuer",
+      "immun": [
+        "feuer"
+      ],
+      "resistenz": [
+        "stich"
+      ],
+      "schwaeche": [
+        "kaelte"
+      ],
+      "zustaende": [
+        "gepackt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "spiegelkoenigin",
+      "zeichen": "👑",
+      "name": [
+        "Spiegelkönigin",
+        "Mirror queen"
+      ],
+      "info": [
+        "Herrscht über ein Reich hinter jedem Spiegel.",
+        "Rules a realm behind every mirror."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 12,
+      "leben": 219,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 8,
+      "schaden_plus": 12,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 12,
+        "geschick": 18,
+        "konstitution": 16,
+        "intelligenz": 22,
+        "weisheit": 20,
+        "charisma": 20
+      },
+      "ep": 8400,
+      "groesse": "mittel",
+      "schaden_art": "strahlend",
+      "immun": [
+        "psychisch"
+      ],
+      "resistenz": [
+        "strahlend"
+      ],
+      "schwaeche": [
+        "donner"
+      ],
+      "zustaende": [
+        "bezaubert"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "sternenwal",
+      "zeichen": "🐳",
+      "name": [
+        "Sternenwal",
+        "Star whale"
+      ],
+      "info": [
+        "Singt so laut, dass Berge zittern.",
+        "Sings so loudly that mountains tremble."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 12,
+      "leben": 219,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 22,
+        "geschick": 14,
+        "konstitution": 20,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 12
+      },
+      "ep": 8400,
+      "groesse": "riesig",
+      "schaden_art": "donner",
+      "immun": [
+        "donner"
+      ],
+      "resistenz": [
+        "kaelte"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "betaeubt"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
+    },
+    {
+      "id": "uhrwerkdrache",
+      "zeichen": "🕰️",
+      "name": [
+        "Uhrwerkdrache",
+        "Clockwork dragon"
+      ],
+      "info": [
+        "Tickt bei jedem Atemzug und vergisst nie eine Stunde.",
+        "Ticks with every breath and never forgets an hour."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 12,
+      "leben": 219,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 12,
+      "schaden_plus": 11,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 20,
+        "geschick": 16,
+        "konstitution": 22,
+        "intelligenz": 12,
+        "weisheit": 14,
+        "charisma": 5
+      },
+      "ep": 8400,
+      "groesse": "riesig",
+      "schaden_art": "feuer",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "resistenz": [
+        "hieb",
+        "stich"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "zustaende": [
+        "brennend"
+      ],
+      "boss": true,
+      "seit": "V01.1.039"
     }
   ]
 }

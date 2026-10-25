@@ -2324,6 +2324,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-figur{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .dm-form{display:flex;flex-direction:column;gap:6px;max-width:620px}.dmp-form{max-width:none}.dmp-form textarea{width:100%}.dmp-form .row select{width:auto}.dm-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dm-seg{flex-wrap:wrap;align-self:flex-start;max-width:100%}.dmmsg{margin-top:8px;font-size:13px}
+.dm-fen-body>.dmmsg:empty{display:none}.dm-fen-body>.dmmsg{margin:0 0 8px}
 .dmmsg.err:not(:empty){display:flex;gap:8px;align-items:flex-start;padding:9px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--badt) 45%,transparent);background:color-mix(in srgb,var(--badt) 9%,transparent);color:inherit;line-height:1.4}
 .dmmsg.err:not(:empty)::before{content:'⚠';color:var(--badt);flex:none}
 .dm-sum{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.dm-adm-err{margin:8px 0;font-size:13px}
@@ -2672,6 +2673,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-rrow{display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;border-bottom:1px solid var(--line)}.dm-rrow:last-child{border-bottom:0}.dm-rrow.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}.dm-raus{opacity:.55}
 .dm-rmain{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:4px;cursor:pointer}
 .dm-rtxt{display:flex;flex-direction:column;min-width:0}.dm-rtxt b{font-weight:600;overflow-wrap:anywhere}.dm-rtxt small{color:var(--mut);font-size:12.5px;overflow-wrap:anywhere}
+.dm-rart{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:13px;line-height:1.3;margin-top:2px}.dm-rak{color:var(--mut);white-space:nowrap}.dm-rart span[title]{cursor:help}
 .dm-rpills{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}.dm-rpills .pill{font-size:11.5px}
 .dm-rth{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:8px;overflow:hidden;background:#0d0d10;font-size:20px}.dm-rth img{width:100%;height:100%;object-fit:cover;display:block}
 .dm-rth.dm-dz{background:transparent}

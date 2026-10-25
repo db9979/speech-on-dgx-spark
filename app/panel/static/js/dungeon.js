@@ -472,12 +472,14 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
     return `<div class="dm-dm"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${(e.npc||[]).filter(n=>!n.im_text).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}${e.prolog?dmProlog(v,e):''}</div>`}
   if(e.art==='aktion')return `<div class="dm-act">${dmAv(v.mode,v,Object.assign({name:e.name},(v.plaetze||[]).find(p=>p.pid===e.pid)||{}),col?col(e.pid):0)}<div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div>${dmLob(v,e)}${dmHide(v,'aktion',e.n,e.pid)}</div>`;
   if(e.art==='wurf')return dmPK(v,e,`<span class="dm-d20">${e.w}</span>`)+dmLeiste(e);
+  if(e.art==='folge'&&e.was==='heilung'&&!e.zahl)return `<div class="dm-sys mut">${esc(t(e.name+': schon volles Leben ('+e.leben+')',e.name+': already at full life ('+e.leben+')'))}</div>`;
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})${e.weniger?' · '+esc(t(e.weniger+' weniger durch Eisenhaut',e.weniger+' less by iron skin')):''}${e.von?' · '+esc(t('von ','by ')+e.von):''}</div>`;
   if(e.art==='begegnung')return dmBegegnung(e);
   if(e.art==='angriff')return dmAngriff(e,W);
   if(e.art==='gegner'&&e.was==='phase2')return `<div class="dm-sys dm-phase2">👑 ${esc(t(e.gegner+' ist schwer getroffen und wird wütend: zweite Phase, trifft leichter.',e.gegner+' is badly hurt and turns furious: second phase, hits more easily.'))}</div>`;
   if(e.art==='rettung')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${esc(t('Rettungswurf ','Save '))}${esc(e.name)} · ${esc(W[e.wert]||e.wert)} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.gegen} · ${e.ok?esc(t('widersteht: ','resists: ')+e.zustand):`<b>${esc(e.zustand)}</b>`}</div>`;
-  if(e.art==='zustand')return `<div class="dm-sys bad">🔥 ${esc(t(e.name+' leidet: '+e.zustand+', −'+e.schaden+' Leben.',e.name+' suffers: '+e.zustand+', −'+e.schaden+' life.'))}</div>`;
+  // a state's damage carries zustand; a hero's state (boden, auf, ohnmacht, tot) carries was and is drawn below
+  if(e.art==='zustand'&&e.zustand)return `<div class="dm-sys bad">🔥 ${esc(t(e.name+' leidet: '+e.zustand+', −'+e.schaden+' Leben.',e.name+' suffers: '+e.zustand+', −'+e.schaden+' life.'))}</div>`;
   if(e.art==='gegner')return `<div class="dm-sys ${e.was==='besiegt'?'ok':'mut'}">${e.was==='besiegt'?'✝':'🏃'} ${esc({besiegt:t(e.gegner+' ist besiegt.',e.gegner+' is defeated.'),geflohen:t(e.gegner+' flieht.',e.gegner+' flees.'),aufgegeben:t(e.gegner+' gibt auf und läuft davon.',e.gegner+' gives up and runs off.')}[e.was]||e.gegner)}</div>`;
   if(e.art==='kampf')return `<div class="dm-akt">⚔ ${esc({sieg:t('Der Kampf ist gewonnen.','The fight is won.'),frieden:t('Der Kampf endet ohne Sieger.','The fight ends without a winner.'),flucht:t('Die Gruppe entkommt.','The group gets away.')}[e.was]||'')} <small class="mut">${esc(t(e.besiegt+' besiegt, '+e.geflohen+' geflohen',e.besiegt+' defeated, '+e.geflohen+' fled'))}${e.ep?' · +'+e.ep+' '+esc(t('EP für jeden','XP each')):''}</small></div>`;
   if(e.art==='zustand')return `<div class="dm-zstz" data-z="${esc(e.was)}">${{boden:'⚠',auf:'✚',ohnmacht:'💤',tot:'✝'}[e.was]||''} ${esc(e.was==='boden'?t(e.name+' liegt am Boden. Noch '+e.noch+(e.noch===1?' Zug':' Züge')+' ohne Heilung.',e.name+' is down. '+e.noch+(e.noch===1?' turn':' turns')+' left without healing.')
@@ -529,7 +531,7 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';
     ${mode==='g'?`<div class="dm-figur"><button type="button" class="b" data-dmfigur="1">${esc(t('Figur-Code holen','Get a hero code'))}</button>${DG.figur?`<input readonly value="${esc(DG.figur)}" aria-label="${esc(t('Figur-Code','Hero code'))}"><small class="mut">${esc(t('Nur einmal zu sehen. Damit nimmst du deinen Helden in eine andere Runde mit (30 Tage, einmal).','Shown once. Take your hero into another round with it (30 days, once).'))}</small>`:''}</div>`:''}`;
   const body=tab==='kann'?dmKann(h):tab==='tasche'?bag+dmTrade(v,mode):tab==='werte'?werte:`<div class="dm-doll">${doll}</div>${ground}`;
   return `<div class="dm-me dm-bogen">${port}<div class="dm-bkopf"><h4>${esc(h.name)} <small class="mut">${esc(h.volk)} · ${esc(h.klasse)} · ${esc(t('Stufe','Level'))} ${h.stufe}</small></h4>${h.satz?`<small class="mut">${esc(h.satz)}</small>`:''}
-    ${dmErkBtn(mode,'b:leben',`<span class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben} / ${h.leben_max}</span></span>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}`,t('Leben erklären','Explain life'))}
+    ${dmErkBtn(mode,'b:leben',`<span class="dm-line"><span>${esc(t('Leben','Life'))} ${dmZust(h)}</span><span>${h.leben} / ${h.leben_max}</span></span>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}`,t('Leben erklären','Explain life'))}
     ${dmErkBtn(mode,'b:stufe',`<span class="dm-line"><span>${esc(t('Erfahrung','Experience'))}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></span>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}${h.ep_tisch?`<small class="dm-eptisch">+${h.ep_tisch} ${esc(t('EP noch am Tisch: zählen am Ende der Runde','EP still at the table: they count at the end of the round'))}</small>`:''}`,t('Stufe erklären','Explain level'))}
     ${tiles}<div class="dm-line dm-bsum"><span>${dmErkBtn(mode,'b:rk',`${esc(t('Rüstungsklasse','Armour class'))} <b>${h.rk}</b>`,t('Rüstungsklasse','Armour class'))} · ${dmErkBtn(mode,'b:gold',`${esc(t('Gold','Gold'))} <b>${h.gold}</b>`,t('Gold','Gold'))}</span><span class="mut">${esc(t('Tasche','Bag'))} ${h.tasche.length}/${h.tasche_max} · ${kg(h.kg)} kg</span></div>
     ${dmErkBox(mode,'b:',{...Object.fromEntries(Object.entries(dmErkFix()).map(([k,x])=>[k,esc(x)])),...Object.fromEntries(h.werte.map(x=>['w:'+x.id,dmErkWert(x,x.gesamt)]))})}
@@ -966,7 +968,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 // Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „unübersichtlich“: the sections on the left,
 // the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
 // detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
-const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{}};
+const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{}};
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),
@@ -1022,14 +1024,19 @@ async function dmKatLoad(teil){const {r,d}=await apiTry('/api/admin/dungeon/kata
 const DMRMARKE={schwach:'',ok:'ok',stark:'warn',zu_stark:'bad'};
 const DMRSTAND=()=>({grund:t('Grundregel','Base'),srd:'SRD',eigen:t('eigen','own'),geaendert:t('geändert','changed'),aus:t('ausgeblendet','hidden')});
 function dmRFilter(teil){if(teil==='gegenstaende')return [['alle',t('Alle','All')],['waffe',t('Waffen','Weapons')],['ruestung',t('Rüstung','Armour')],['zauber',t('Zauber','Spells')],['trank',t('Tränke','Potions')],['werkzeug',t('Werkzeug','Tools')],['schatz',t('Schätze','Treasure')]];
-  if(teil==='gegner')return [['alle',t('Alle','All')],['s0',t('Stufe 0-4','Level 0-4')],['s5',t('Stufe 5-10','Level 5-10')],['s11',t('Stufe 11+','Level 11+')]];return null}
+  if(teil==='gegner')return [['alle',t('Alle','All')],['s0',t('Stufe 0-4','Level 0-4')],['s5',t('Stufe 5-10','Level 5-10')],['s11',t('Stufe 11+','Level 11+')],['boss',t('Bosse','Bosses')],['frisch',t('Neu','New')]];return null}
 function dmRPass(x){const f=DMR.f,q=DMR.q.trim().toLowerCase();
   if(q&&!(x.name.toLowerCase().includes(q)||String(x.id).toLowerCase().includes(q)))return false;
   if(DMR.m!=='alle'&&!(x.marke&&(DMR.m==='stark'?['stark','zu_stark'].includes(x.marke.marke):x.marke.marke===DMR.m)))return false;
-  if(f==='alle')return true;
+  if(x.welten&&DMR.gw!=='alle'&&!x.welten.includes(DMR.gw))return false;
+  if(f==='alle')return true;if(f==='boss')return !!x.boss;if(f==='frisch')return !!x.frisch;
   if(f==='zauber')return ['zauber','rolle'].includes(x.art);if(f==='schatz')return ['schatz','schmuck'].includes(x.art);
   if(f[0]==='s'&&x.stufe!=null){const s=+x.stufe;return f==='s0'?s<5:f==='s5'?s>=5&&s<=10:s>10}
   return x.art===f}
+// a foe's damage kind and what hurts it more (▲ double), less (▼ half) or not at all (✕), as symbols (Bestiarium-Punkt 9)
+function dmRArt(K,x){const A=K.arten||{},a=x.arten,z=i=>A[i]?`<span title="${esc(A[i].name)}">${A[i].zeichen}</span>`:'';if(!a)return '';
+  const g=(k,s,l)=>a[k]&&a[k].length?`<span class="dm-rak" title="${esc(l)}">${s}${a[k].map(z).join('')}</span>`:'';
+  return `<span class="dm-rart">${z(a.art)}${g('schwaeche','▲',t('Schwäche: doppelter Schaden','Weak: double damage'))}${g('resistenz','▼',t('Widerstand: halber Schaden','Resists: half damage'))}${g('immun','✕',t('Immun: kein Schaden','Immune: no damage'))}</span>`}
 // v: the picture's own version (row bv/nv, its file time) so the browser keeps it; k: the small copy for the list
 const dmRImg=(n,v,k)=>`<img alt="" loading="lazy" decoding="async" src="/api/admin/dungeon/bild/${encodeURIComponent(n)}?v=${v||DMR.v}${k?'&klein=1':''}">`;
 // an item's picture in its rarity's frame, as in the bag (DMSEL; Dominik 2026-10-24 „farblich anders umrandet“)
@@ -1042,12 +1049,13 @@ function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
   const F=dmRFilter(teil),hasM=K.zeilen.some(x=>x.marke),rows=K.zeilen.filter(dmRPass),MAX=200;
   const nm={alle:t('Alle','All'),stark:t('stark und zu stark','strong and too strong'),zu_stark:t('zu stark','too strong'),schwach:t('schwach','weak')};
   const list=rows.slice(0,MAX).map(x=>{const m=x.marke&&x.marke.marke!=='ok'?`<span class="pill ${DMRMARKE[x.marke.marke]}" title="${esc(x.marke.grund)}">${esc(x.marke.name)}</span>`:'';
-    return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}${x.selten?' dm-rsel '+(DMSEL[x.selten]||''):'selten' in x?' dm-rsel dm-sx':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small></span></button>
-      <span class="dm-rpills">${m}${x.stand!=='grund'&&x.stand!=='srd'?`<span class="pill">${esc(St[x.stand])}</span>`:''}${x.neu?`<span class="pill warn">${esc(t('neues Bild','new picture'))}</span>`:''}</span>
+    return `<div class="dm-rrow${String(x.id)===DMR.sel?' on':''}${x.stand==='aus'?' dm-raus':''}${x.selten?' dm-rsel '+(DMSEL[x.selten]||''):'selten' in x?' dm-rsel dm-sx':''}"><button type="button" class="dm-rmain" data-dmrsel="${esc(x.id)}">${dmRThumb(x,K)}<span class="dm-rtxt"><b>${esc(x.name)}</b><small>${esc(x.zeile)}</small>${dmRArt(K,x)}</span></button>
+      <span class="dm-rpills">${x.boss?`<span class="pill warn">👑 ${esc(t('Boss','Boss'))}</span>`:''}${x.frisch?`<span class="pill ok">${esc(t('neu','new'))}</span>`:''}${m}${x.stand!=='grund'&&x.stand!=='srd'?`<span class="pill">${esc(St[x.stand])}</span>`:''}${x.neu?`<span class="pill warn">${esc(t('neues Bild','new picture'))}</span>`:''}</span>
       ${'bild' in x&&!x.bild&&K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(t('Malen','Paint'))}</button>`:''}</div>`}).join('');
   const wsel=K.welten?`<select class="dmr-w" aria-label="${esc(t('Bilder in der Welt','Pictures in the world'))}">${K.welten.map(w=>`<option value="${esc(w.id)}"${w.id===K.welt?' selected':''}>${esc(t('Bilder in: ','Pictures in: ')+w.name)}</option>`).join('')}</select>`:'';
+  const gsel=K.weltfilter?`<select class="dmr-gw" aria-label="${esc(t('Welt','World'))}"><option value="alle">${esc(t('Alle Welten','All worlds'))}</option>${K.weltfilter.map(w=>`<option value="${esc(w.id)}"${w.id===DMR.gw?' selected':''}>${esc(w.name)}</option>`).join('')}</select>`:'';
   return `<h3 class="sec">${esc(N[teil])} · ${K.zeilen.length}</h3>
-    <div class="dm-rsrch">${wsel}<input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
+    <div class="dm-rsrch">${wsel}${gsel}<input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
       ${F?`<div class="lseg dm-rseg">${F.map(([v,l])=>`<button type="button" class="${DMR.f===v?'on':''}" data-dmrf="${v}">${esc(l)}</button>`).join('')}</div>`:''}
       ${hasM?`<select class="dmr-m" aria-label="${esc(t('Gleichgewicht','Balance'))}">${['alle','stark','zu_stark','schwach'].map(v=>`<option value="${v}"${DMR.m===v?' selected':''}>${esc(v==='alle'?t('Gleichgewicht: alle','Balance: all'):nm[v])}</option>`).join('')}</select>`:''}</div>
     ${K.seltenheiten?dmRSelLeg(K):''}<div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
@@ -1090,9 +1098,10 @@ const DMRWARUM=()=>({aus:t('Die Bilder sind aus.','Pictures are off.'),tag:t('Da
   missing:t('Das Bildmodell fehlt.','The picture model is missing.'),ohne_pruefung:t('Die Bildprüfung fehlt.','The image check is missing.'),belegt:t('Das Bildmodell ist gerade belegt.','The picture model is busy right now.')});
 document.body.addEventListener('input',e=>{const q=e.target.closest('#dmadmcard .dmr-q');if(!q)return;DMR.q=q.value;const p=q.selectionStart;dmRDraw();const n=document.querySelector('#dmadmcard .dmr-q');if(n){n.focus();n.setSelectionRange(p,p)}});
 document.body.addEventListener('change',e=>{const w=e.target.closest('#dmadmcard .dmr-w');if(w){DMR.welt[DMR.teil]=w.value;DMR.neu={};dmKatLoad(DMR.teil);return}
+  const g=e.target.closest('#dmadmcard .dmr-gw');if(g){DMR.gw=g.value;dmRDraw();return}
   const s=e.target.closest('#dmadmcard .dmr-m');if(!s)return;DMR.m=s.value;dmRDraw()});
 document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmadmcard');if(!c)return;const teil=DMR.teil;
-  const nb=e.target.closest('[data-dmrteil]');if(nb){DMR.teil=nb.dataset.dmrteil;DMR.sel='';DMR.q='';DMR.f='alle';DMR.m='alle';DMR.edit=null;DMR.err='';DMP.g=null;dmRDraw();return}
+  const nb=e.target.closest('[data-dmrteil]');if(nb){DMR.teil=nb.dataset.dmrteil;DMR.sel='';DMR.q='';DMR.f='alle';DMR.m='alle';DMR.gw='alle';DMR.edit=null;DMR.err='';DMP.g=null;dmRDraw();return}
   const fb=e.target.closest('[data-dmrf]');if(fb){DMR.f=fb.dataset.dmrf;dmRDraw();return}
   const sb=e.target.closest('[data-dmrsel]');if(sb){DMR.sel=sb.dataset.dmrsel;DMR.edit=null;DMR.err='';dmRPick();const d=$('dmrdet');if(d&&window.innerWidth<900)d.scrollIntoView({block:'start',behavior:'smooth'});return}
   const db=e.target.closest('[data-dmrdo]');if(db){const K=DMR.k[teil],x=K&&K.zeilen.find(z=>String(z.id)===DMR.sel);if(!x)return;const was=db.dataset.dmrdo;

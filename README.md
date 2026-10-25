@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.039** AI Dungeon Master: bestiary with 62 new foes (every world has at least three on each level 1 to 12, the own world takes the fantasy ones), the rules show damage kind, weakness, resistance and immunity as symbols, boss mark, EP per hero and "new", filters by world, level, bosses and new ones; a failed check stays failed and the narration names the foes of the card
 - **V01.1.038** AI Dungeon Master: your own die waits in the feed until you throw it (narration blurred, by itself after 30 s), a throw that bounces, result colours, buzz and chime
 - **V01.1.037** AI Dungeon Master: stage pictures per kind of place and room in every world style (16:9, neutral, no people), at night and with "Paint all pictures"; the stage shows them until the scene has its own picture
 - **V01.1.036** AI Dungeon Master faster over the proxy: reading aloud as MP3 with the next piece loading ahead, pictures and music wait while it reads, small pictures in lists, pictures stay in the browser, catalog and rules compressed
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.032** AI Dungeon Master: gold with a purpose, in settlements an inn for the whole group, a smith for broken tools, a lesson +1 until the round ends and rumours of the next place, prices by the group's level
 - **V01.1.031** AI Dungeon Master: heroic courage, once a game evening roll a failed check again or make a hit critical, the other players give a second one with 👍
 - **V01.1.030** AI Dungeon Master: experience for more than fighting, fixed experience for every hero for a new place of the map, an act done and a fight ended in peace
-- **V01.1.029** Greeting on opening: self-test with a fixed clock instead of the real one (was red in the night the clocks went back), plus a case right in the doubled hour; the look into the calendar counts four real hours, also across the change of the clocks
 
 
 

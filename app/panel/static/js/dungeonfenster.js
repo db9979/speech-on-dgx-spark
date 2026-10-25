@@ -74,7 +74,9 @@ function dmFenster(v,mode){DMCMP=v.vergleich||{};const W=DMW[mode],h=v.ich;if(!h
   if(W.w==='haendler'&&!(v.markt&&v.status!=='ende')||W.w==='siedlung'&&!v.siedlung)W.w='';
   const f=dmFind(v,W.ding);if(!f)W.ding='';if(!W.w&&!W.ding)return '';
   const neu=W.zug&&v.zug>W.zug?`<div class="dm-fen-neu" role="status">${esc(t('Neuer Zug '+v.zug+': der Dungeon-Master hat weitererzählt.','New turn '+v.zug+': the Dungeon Master has told on.'))}<button type="button" class="b" data-dmfenzu="alle">${esc(t('Zum Tisch','To the table'))}</button></div>`:'';
-  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):'';
+  // the table's last message also in the window, so an answer (a refused portrait, a full bag) is never hidden behind it
+  const S=mode==='g'?DG:DM,say=`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.msg||'')}</div>`;
+  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):'';
   const det=f&&(f.gegner?dmFoeDet(f):f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
   return main+(f?dmFenBox('ding',f.it.name,det,main?'':neu):'')}
 // the window's own scroll stays across the table's repaints

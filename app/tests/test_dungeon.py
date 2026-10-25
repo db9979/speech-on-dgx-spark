@@ -416,6 +416,19 @@ class Permadeath(Turns):
         self.assertEqual((bela["leben"], dungeon.zustand(bela)), (0, "boden"))
         z = [e for e in rd["log"] if e["art"] == "zustand"]
         self.assertEqual((z[-1]["was"], z[-1]["noch"]), ("boden", dungeon.BODEN_ZUEGE))
+        # Dominik 2026-10-25 „gandalf undef ?“: a hero's state carries was and never zustand, so the feed does not draw
+        # it as a state's damage („leidet: undefined“); that line needs zustand, a heal of 0 says full life
+        self.assertTrue(all("zustand" not in e for e in z))
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("if(e.art==='zustand'&&e.zustand)return", js)
+        self.assertNotIn("if(e.art==='zustand')return `<div class=\"dm-sys bad\">", js)
+        self.assertIn("if(e.art==='folge'&&e.was==='heilung'&&!e.zahl)", js)
+        # Dominik 2026-10-25 „bei gästen passiert nichts wenn man auf porträt malen klickt“: the table's answer (a refused
+        # portrait) also stands in the hero sheet and at the merchant, which lie over the table; the sheet says down
+        fen = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeonfenster.js"), encoding="utf-8").read()
+        self.assertIn("dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode)", fen)
+        self.assertIn("dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v)", fen)
+        self.assertIn("${esc(t('Leben','Life'))} ${dmZust(h)}</span>", js)
         # down: no action, no move of its own; the turn does not wait for it
         r = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich stehe auf.", "zug": rd["zug"]})
         self.assertEqual((r.status_code, r.json()["detail"]), (400, "boden"))
@@ -4722,6 +4735,40 @@ class Fight(Turns):
         self.assertIn(foe["name"][0], [e for e in rd["log"] if e["art"] == "dm"][-1]["text"])
         self.assertIn(foe["name"][0], dungeon.erz.hint("gegner", [foe["name"][0]], "de"))
         self.assertIn("angebot", kampf.AUFGABE_ANGEBOT["de"])
+
+    def test_a_failed_check_stays_failed(self):
+        """Dominik 2026-10-25: „Holztür aufbrechen“ 5 gegen 15 not passed, yet the door burst open. A failed check told
+        as done (its thing named with a word of erz.GELINGT and none of erz.HAELT) gets a rewrite; the facts carry
+        wofuer and ergebnis in words."""
+        rd = {"lang": "de"}
+        fail = [{"wofuer": "Holztür aufbrechen", "ok": False}]
+        text = ("Gandalfs Hand umklammert das verwitterte Holz. Doch die Scharniere geben nach – mit einem lauten Knarren "
+                "reißt die Holztür aus ihren Angeln und fällt in den dunklen Gang.")
+        self.assertEqual(dungeon.erz.told_as_done(rd, text, fail), ["Holztür aufbrechen"])
+        self.assertEqual(dungeon.erz.told_as_done(rd, "Gandalf wirft sich gegen die Holztür, doch sie hält stand.", fail), [])
+        self.assertEqual(dungeon.erz.told_as_done(rd, text, [dict(fail[0], ok=True)]), [])
+        self.assertEqual(dungeon.erz.told_as_done({"lang": "en"}, "The wooden door bursts open.", [{"wofuer": "break the wooden door", "ok": False}]),
+                         ["break the wooden door"])
+        self.assertIn("nicht gelingt", dungeon.erz.hint("probe", ["Holztür aufbrechen"], "de"))
+        self.assertEqual(dungeon.ERGEBNIS[False][0].split(":")[0], "misslungen")
+        fixed = dungeon.erz.repair(rd, {"text": text}, "probe", ["Holztür aufbrechen"])
+        self.assertTrue(fixed["text"].endswith("Doch die Probe „Holztür aufbrechen“ ist misslungen: das gelingt in diesem Zug nicht."))
+        self.assertLess(dungeon.erz.rank("probe"), dungeon.erz.rank("gegner"))
+        self.assertLess(dungeon.erz.rank("gegner"), dungeon.erz.rank("wiederholung"))
+
+    def test_foes_not_named_three_times_the_panel_names_them(self):
+        """The card and the text tell the same foes even when the model misses them on all three tries: the panel adds
+        a fixed sentence with their names (erz.repair)."""
+        r = dungeon.rules()
+        rd, held = self.held()
+        foe = kampf.offer(dungeon, r, rd, held)[0]
+        self.act_all()
+        wrong = {"erzaehlung": "Arvid und Bela stoßen die Tür auf. Ein großer Mann mit rostigem Schwert schiebt sich nach vorn, "
+                               "seine Augen glühen im Fackellicht, und der Gang hallt von seinen Schritten.",
+                 "begegnung": [{"id": foe["id"], "anzahl": 2}], "frage_an": ""}
+        rd = self.play([{"proben": []}, wrong, wrong, wrong])
+        text = [e for e in rd["log"] if e["art"] == "dm"][-1]["text"]
+        self.assertTrue(text.endswith(f"Vor euch: 2 × {foe['name'][0]}."), text)
 
     def test_the_game_master_dial_by_fixed_numbers(self):
         """Idee 6 of 2026-10-24 (Dominik „alle umsetzen“): after a fight the next encounters are set by fixed numbers,
