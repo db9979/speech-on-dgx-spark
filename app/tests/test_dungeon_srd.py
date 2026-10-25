@@ -24,6 +24,9 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - Mehrfachangriff (Dominik 2026-10-25, Tabletop-Punkt 12): "angriffe" nur 2 bis 5, fehlt = 1.
 - NSC-Tabellen, Silben und Orakel (Tabletop-Punkte 5 und 8): jede Tabelle mindestens 6 Zeilen je Welt, jedes Volk hat
   Silben („namensilben“, nicht „silben“: das sind die Ortsnamen der Karte), die Orakel-Zeilen aus Datasworn nur aus CC-BY-4.0 mit Namensnennung.
+- SRD 5.2.1 (Tabletop-Punkt 13): die Tabelle „budget“ (leicht, mittel, schwer, je 10 Stufen, steigend) mit Namensnennung
+  in der Datei und der Doku; kein Name und kein Text eines Gegners, Dings, Zustands, Volks, einer Klasse oder eines
+  Hintergrunds trägt ein Wort aus der Wortliste des Kindertons (der Erzähler dürfte ihn am Kindertisch nie sagen).
 """
 import json
 import os
@@ -206,6 +209,28 @@ class Srd(unittest.TestCase):
         for k, s in r["namensilben"].items():
             self.assertTrue(len(s["anfang"]) >= 6 and len(s["ende"]) >= 6, k)
         self.assertIn("Ironsworn", srd()["lizenz"])
+
+    def test_budget_aus_dem_srd_521(self):
+        b = srd()["budget"]
+        self.assertEqual(set(b), {"leicht", "mittel", "schwer"})
+        for k, v in b.items():
+            self.assertEqual(len(v), 10, k)
+            self.assertTrue(all(a < c for a, c in zip(v, v[1:])), k)
+        self.assertTrue(all(l < m < s for l, m, s in zip(b["leicht"], b["mittel"], b["schwer"])))
+        self.assertIn("SRD 5.2.1", srd()["lizenz"])
+        for name in ("de/assistent.md", "en/assistant.md"):
+            with open(os.path.join(DOCS, name), encoding="utf-8") as f:
+                self.assertIn("SRD 5.2.1", f.read(), name)
+
+    def test_kinderton_im_katalog(self):
+        r = dungeon._base_rules()
+        woerter = next(t for t in r["toene"] if t["id"] == 8)["woerter"]
+        for k in ("gegner", "gegenstaende", "zustaende", "voelker", "klassen", "hintergruende"):
+            for x in r[k]:
+                for f in ("name", "info"):
+                    for text in x.get(f) or []:
+                        low = " " + text.lower() + " "       # as dungeon.bad_words reads it
+                        self.assertEqual([w for w in woerter if w in low], [], (k, x["id"], f))
 
 
 if __name__ == "__main__":

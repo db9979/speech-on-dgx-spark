@@ -4832,7 +4832,7 @@ class Windows(unittest.TestCase):
                         self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#dmadmcard .dm-rrow .pill.bad')].length===" + n))
                         await pg.select_option("#dmadmcard .dmr-m", "alle")
                         await pg.click("#dmadmcard [data-dmrf=alle]")
-                        await pg.fill("#dmadmcard .dmr-q", "Goblin")
+                        await pg.fill("#dmadmcard .dmr-q", "Goblinboss")      # the SRD 5.2.1 brought more goblins
                         await b.until(pg, f"{n}>=1&&{n}<5")
                         await pg.click("#dmadmcard .dm-rrow [data-dmrsel]")
                         await b.until(pg, "/Goblin/.test((document.querySelector('#dmrdet .dm-rname')||{}).textContent||'')")
@@ -5188,6 +5188,48 @@ class Fight(Turns):
             rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": ""}
             self.assertEqual(kampf.turn_dial(dungeon, r, rd), 0)              # held: it stays
             self.assertEqual(rd["regler"], 10)
+
+    def test_combat_stages_by_the_srd_table(self):
+        """Tabletop-Punkt 13 of 2026-10-25: the host chooses leicht, mittel, schwer or toedlich; the budget of the next
+        encounters is the medium times the SRD 5.2.1 ratio of the heroes' levels (deadly the hard one times TOEDLICH), the
+        danger still against the medium; only the host, only a stage of the list; off it changes nothing and shows nothing."""
+        helpers.keep_chat(self, "dungeon_stufen")
+        r = dungeon.rules()
+        u = f"/api/profile/dungeon/{self.rid}/erzaehler"
+        self.assertEqual(self.c.post(u, json={"kampfstufe": "schwer"}).status_code, 400)            # off
+        self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json().get("kampfstufe"))
+        with dungeon._lock:
+            rd = dungeon._read()["runden"][self.rid]
+            held = dungeon._living(rd)
+            base = kampf.budget(dungeon, r, rd, held)
+            rd["kampfstufe"] = "toedlich"
+            self.assertEqual(kampf.budget(dungeon, r, rd, held), base, "off: always the medium")
+        helpers.set_config(dungeon_stufen=True)
+        self.assertEqual(self.c.post(u, json={"kampfstufe": "brutal"}).status_code, 400)
+        self.assertEqual(self.v.post("/api/dungeon/erzaehler", json={"code": self.code, "kampfstufe": "toedlich"}).status_code // 100, 4)
+        v = self.c.post(u, json={"kampfstufe": "schwer"})
+        self.assertEqual(v.status_code, 200, v.text)
+        self.assertEqual(v.json()["kampfstufe"]["wert"], "schwer")
+        self.assertEqual([k for k, _ in v.json()["kampfstufe"]["wahl"]], list(kampf.STUFEN))
+        self.assertIsNone(self.v.post("/api/dungeon/platz", json={"code": self.code}).json().get("kampfstufe"))
+        t = r["budget"]
+        with dungeon._lock:
+            rd = dungeon._read()["runden"][self.rid]
+            held = dungeon._living(rd)
+            lv = [min(10, max(1, h["stufe"])) - 1 for h in held]
+            for s, key, mal in (("leicht", "leicht", 1), ("schwer", "schwer", 1), ("toedlich", "schwer", kampf.TOEDLICH)):
+                rd["kampfstufe"] = s
+                f = sum(t[key][i] / t["mittel"][i] for i in lv) / len(lv) * mal
+                self.assertAlmostEqual(kampf.budget(dungeon, r, rd, held), base * f, delta=1, msg=s)
+            self.assertLess(kampf.budget(dungeon, r, dict(rd, kampfstufe="leicht"), held), base)
+            self.assertGreater(kampf.budget(dungeon, r, rd, held), kampf.budget(dungeon, r, dict(rd, kampfstufe="schwer"), held))
+            self.assertEqual(kampf.budget(dungeon, r, rd, held, False), base)
+            rd["kampfstufe"] = "mittel"
+            self.assertEqual(kampf.budget(dungeon, r, rd, held), base)
+        self.assertEqual(kampf.stage_factor({}, dict(rd, kampfstufe="leicht"), held), kampf.STUFE_OHNE["leicht"])   # no table: fixed
+        self.assertEqual(kampf.check_rules({"budget": {"leicht": [1] * 10, "mittel": [1] * 10, "schwer": [2] * 10}}),
+                         ["budget: leicht, mittel und schwer mit je 10 Zahlen (Stufe 1 bis 10), leicht < mittel < schwer"])
+        self.assertEqual(kampf.check_rules({}), [])
 
     def test_heroic_courage_once_an_evening_and_from_the_table(self):
         """Idee 8 of 2026-10-24 (Dominik „alle umsetzen“): Heldenmut once a game evening; a failed check is rolled again
@@ -6204,6 +6246,7 @@ class Fight(Turns):
         rd, foe = self.encounter()
         h = rd["plaetze"][self.host]["held"]
         g = rd["kampf"]["gegner"][0]
+        g.update(resistenz=[], immun=[], schwaeche=[])                  # whichever foe came first: its own defences out of the way
         p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
         h["werte"].update(staerke=8, geschick=16)
         h["an"]["haupthand"], h["an"]["nebenhand"] = dungeon.item(r, "rapier"), None             # finesse: the better value
@@ -6229,7 +6272,7 @@ class Fight(Turns):
         g["resistenz"] = []
         # a state from a foe's hit: failed save, then the hero attacks and checks at a disadvantage
         g["zustaende"] = ["vergiftet"]
-        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20, 99, 99, 1))
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20, *[99] * (2 * g["wuerfel"]), 1))   # a critical hit: twice its dice, then the save
         hit = next(y for y in z if y.get("pid") == self.host or y.get("k"))
         self.assertEqual((hit["rettung"]["zustand"], hit["rettung"]["ok"], hit["rettung"]["wert"]), ("vergiftet", False, "konstitution"))
         folgen = kampf.apply(dungeon, r, rd, [], [dict(y, pid=self.host, name=h["name"]) for y in z if y.get("k")][:1], "", {})

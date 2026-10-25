@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.063** · 2026-10-25 · KI-Dungeon-Master: Kampfstufen leicht bis tödlich für den Gastgeber nach der Budget-Tabelle des SRD 5.2.1; 44 Gegner und 30 Zauber aus dem SRD 5.2.1; Katalog ohne Wörter der Kinder-Wortliste
 - **V01.1.062** · 2026-10-25 · KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
 - **V01.1.061** · 2026-10-25 · KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
 - **V01.1.060** · 2026-10-25 · KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog

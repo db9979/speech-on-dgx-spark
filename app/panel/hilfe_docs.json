@@ -5173,6 +5173,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampfstufen leicht bis tödlich (V01.1.063, Tabletop-Punkt 13, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, eigener Code; die Tabelle aus dem SRD 5.2.1, CC-BY-4.0): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Kampfstufen* (chat.dungeon_stufen, ab Werk aus; dungeon_kampf.STUFEN). Der Gastgeber wählt im Reiter „Leiten“ bei „⚔ Kampfstufe“ Leicht, Mittel, Schwer oder Tödlich (POST /api/profile/dungeon/{rid}/erzaehler mit kampfstufe, nur der Gastgeber, nur ein Wert der Liste). Mittel bleibt das gemessene Budget (BUDGET, 70 bis 90 Siege in 100). Für Leicht und Schwer nimmt das Panel das Verhältnis der Budget-Tabelle des SRD 5.2.1 (budget im Katalog: leicht, mittel, schwer, EP je Held für Stufe 1 bis 10) zu Mittel, gemittelt über die Stufen der Helden; Tödlich ist Schwer mal TOEDLICH (1,5), denn die Tabelle kennt kein Tödlich. Ohne Tabelle gelten feste Verhältnisse (STUFE_OHNE: 0,67 und 1,4). Die Stufe wirkt ab der nächsten Begegnung zusammen mit Kindertisch und Spielleiter-Regler; die Gefahr, die die Spieler sehen, misst weiter gegen Mittel. dungeon_kampf.check_rules prüft die Tabelle (je 10 Zahlen, leicht <"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " mittel < schwer). Live: Zustand → Überblick zählt Runden mit eigener Kampfstufe. Selbsttest test_combat_stages_by_the_srd_table in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegner, Zauber und Kampfbudget aus dem SRD 5.2.1 (V01.1.063, Dominik 2026-10-25, Tabletop-Punkt 13, Daten aus dem Thread „DnDAppFiles für den Dungeon-Master“): Der Katalog wächst um 44 Gegner und 30 Zauber aus dem System Reference Document 5.2.1 (CC-BY-4.0). Bei den Gegnern sind das zum Beispiel Goblinkrieger, Pegasus, Wichtel, Werbär, junge Messing-, Silber- und weiße Drachen, Stein-, Frost- und Feuerriese, Roch, Seeräuber, Freibeuter-Kapitän, Meervolk, Riffhai, Vampirdiener sowie Allerweltsleute wie Späher, Wachhauptmann und Raufbold; bei den Zaubern unter anderem Wunden heilen, Lenkender Blitz, Eismesser, Zerspringen, Mondstrahl, Feuerwand und Große Genesung. Alle Gegner tragen Schadensart, Widerstand, Immunität, Boss und Mehrfachangriff wie die übrigen. Die Erfahrung (ep) von 21 neuen Gegnern, die mit den Regeln des Spiels stärker kämpfen als ihr Herausforderungsgrad sagt (etwa Wachhauptmann, Archelon, Feuerriese, junger Messingdrache, Akolyth, Axtschnabel), ist eine bis drei Stufen höher eingemessen, bis der Balance-Prüfstand bei „mittel“ in jeder Stufe und Gruppengröße wieder 70 bis 90 % Siege zeigt (test_the_aim_at_medium_for_every_level_and_group); sie ko"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "mmen damit erst bei passenderen Gruppen und bringen mehr Erfahrung. Die Tabelle „Kampfbudget“ (budget) stammt aus dem SRD 5.2.1. Kinderton: Kein Name und kein Text eines Gegners, Dings, Zustands, Volks, einer Klasse oder eines Hintergrunds trägt ein Wort der Wortliste des Kindertons, sonst dürfte der Erzähler ihn am Kindertisch nie nennen; dafür heißen alte Einträge jetzt anders (zum Beispiel „Riesenmücke“, „Drachenbezwinger“, „Heliotrop“, der Trank „Drachenglut“, der Zustand „verwundet“). Selbsttests test_budget_aus_dem_srd_521 und test_kinderton_im_katalog in test_dungeon_srd. Namensnennung: *This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: NSC-Ziele (V01.1.061, Tabletop-Punkt 6, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Idee aus NarrativeEngine-P, MIT, eigener Code): Teil von *Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik* (chat.dungeon_nsc, dungeon_nsc.py). Jede Person bekommt mit ihrer Karte sechs Wesenszüge (WESEN: mutig/ängstlich, ehrlich/verschlagen, freundlich/schroff, großzügig/geizig, besonnen/hitzig, treu/wankelmütig), je 2W4−5, also −3 bis +3, die Mitte am häufigsten, und ein Ziel auf drei Ebenen (EBENEN): heute (2 Schritte), bald (4, das Ziel der Person aus der verborgenen Wahrheit, sonst aus der Wunsch-Tabelle) und im Leben (6), alle verschieden. Nach jedem erzählten Zug würfelt das Panel je Person einen W6 für ihr nächstes offenes Ziel: ab ZIEL_WURF (5) ein Schritt weiter, bei einer mutigen Person (mut 2 oder mehr) ab ZIEL_MUTIG (4). Ein erreichtes Ziel steht in der Chronik nur als „Oskar hat ein Ziel erreicht.“; was es war, geht nur als Daten in die nächste Erzählung (nsc_ziel_erreicht), und nach einem Ziel für heute folgt ein neues. Das Modell bekommt für die Personen der Szene Wesen als Wörter („sehr mutig“, „etwas g"
 },
 {
@@ -10134,6 +10166,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Orakel (Funktionen → Meine Daten → „Orakel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Gastgeber, auch allein am Tisch, fragst du das Orakel: eine Ja-oder-Nein-Frage mit „Sicher“ bis „Kaum“ oder bis zu 3 Tabellen wie Handlung und Thema, Ort, Wendung, Komplikation."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Kampfstufen (Funktionen → Meine Daten → „Kampfstufen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Gastgeber wählst du, wie schwer die nächsten Begegnungen sind: leicht, mittel, schwer oder tödlich."
 },
 {
 "lang": "de",
@@ -18541,6 +18581,38 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: combat stages easy to deadly (V01.1.063, tabletop point 13, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", own code; the table from the SRD 5.2.1, CC-BY-4.0): Own admin switch *Features → AI Dungeon Master → Combat stages* (chat.dungeon_stufen, off from the start; dungeon_kampf.STUFEN). The host chooses in the \"Host\" tab at \"⚔ Combat stage\" Easy, Medium, Hard or Deadly (POST /api/profile/dungeon/{rid}/erzaehler with kampfstufe, host only, only a value of the list). Medium stays the measured budget (BUDGET, 70 to 90 wins in 100). For Easy and Hard the panel takes the ratio of the SRD 5.2.1 budget table (budget in the catalog: low, moderate, high, XP per hero for levels 1 to 10) to Medium, averaged over the heroes' levels; Deadly is Hard times TOEDLICH (1.5), since the table has no deadly. Without the table fixed ratios hold (STUFE_OHNE: 0.67 and 1.4). The stage works from the next encounter on together with the children's table and the game master dial; the danger the players see still measures against Medium. dungeon_kampf.check_rules checks the table (10 numbers each, low < moderate < high). Live: Status → Live cou"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nts rounds with an own combat stage. Self-test test_combat_stages_by_the_srd_table in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: foes, spells and combat budget from the SRD 5.2.1 (V01.1.063, Dominik 2026-10-25, tabletop point 13, data from the thread \"DnDAppFiles für den Dungeon-Master\"): The catalog grows by 44 foes and 30 spells from the System Reference Document 5.2.1 (CC-BY-4.0). Among the foes are goblin warrior, pegasus, sprite, werebear, young brass, silver and white dragons, stone, frost and fire giant, roc, pirate, freebooter captain, merfolk, reef shark, vampire familiar and everyday people like scout, guard captain and tough; among the spells cure wounds, guiding bolt, ice knife, shatter, moonbeam, wall of fire and greater restoration. All foes carry damage type, resistance, immunity, boss and multiattack like the others. The experience (ep) of 21 new foes that fight harder with the game's rules than their challenge rating says (such as guard captain, archelon, fire giant, young brass dragon, acolyte, axe beak) is calibrated one to three steps higher, until the balance bench shows 70 to 90 % wins at \"medium\" for every level and group size again (test_the_aim_at_medium_for_every_level_and_group); so they come only for fitting groups and give more experience. The table \"combat bud"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "get\" (budget) comes from the SRD 5.2.1. Children's tone: no name and no text of a foe, item, condition, people, class or background holds a word of the children's tone word list, else the narrator could never name it at the children's table; old entries are renamed for it (for example \"giant gnat\", \"dragon slayer\", \"heliotrope\", the potion \"Dragon's ember\", the condition \"wounded\"). Self-tests test_budget_aus_dem_srd_521 and test_kinderton_im_katalog in test_dungeon_srd. Attribution: *This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.*"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: NPC goals (V01.1.061, tabletop point 6, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", idea from NarrativeEngine-P, MIT, own code): Part of *Features → AI Dungeon Master → NPC memory and chronicle* (chat.dungeon_nsc, dungeon_nsc.py). With its card every person gets six traits (WESEN: brave/fearful, honest/sly, kind/gruff, generous/stingy, calm/hot-headed, loyal/fickle), each 2d4−5, so −3 to +3, the middle most often, and a goal on three levels (EBENEN): today (2 steps), soon (4, the person's goal from the hidden truth, else from the wish table) and in life (6), all different. After every told turn the panel rolls a d6 per person for its next open goal: from ZIEL_WURF (5) one step on, for a brave person (mut 2 or more) from ZIEL_MUTIG (4). A reached goal stands in the chronicle only as \"Oskar has reached a goal.\"; what it was goes only as data into the next narration (nsc_ziel_erreicht), and a goal for today is followed by a new one. For the people of the scene the model gets the traits as words (\"very brave\", \"somewhat stingy\") and the open goals with their state; only the host sees both in the window \"👥 People and "
 },
 {
@@ -23318,6 +23390,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Oracle (Features → My data → \"Oracle\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As host, also alone at the table, you ask the oracle: a yes-or-no question from \"Certain\" to \"Hardly\" or up to 3 tables like action and theme, place, twist, complication."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Combat stages (Features → My data → \"Combat stages\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As host you choose how hard the next encounters are: easy, medium, hard or deadly."
 },
 {
 "lang": "en",

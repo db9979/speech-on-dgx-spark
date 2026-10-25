@@ -12,7 +12,7 @@ A new secret of the game comes into GEHEIM in the same commit as the secret itse
 import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
-NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim")
+NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe")
 SCHALTER = ("dungeon_zufall", "dungeon_nsc")   # the admin switches of the secrets below: the self-test turns them on
 
 

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.063** AI Dungeon Master: combat stages easy to deadly for the host by the SRD 5.2.1 budget table; 44 foes and 30 spells from the SRD 5.2.1; catalog without words of the children's word list
 - **V01.1.062** AI Dungeon Master: oracle for host and solo: yes or no with likelihood and chaos grade, events on a double, rolls on the catalog's tables; own tables in the Rules tab
 - **V01.1.061** AI Dungeon Master: NPC goals: every person with six traits and goals for today, soon and their life; between turns the panel rolls the progress, a reached goal stands in the chronicle and goes as data into the next narration
 - **V01.1.060** AI Dungeon Master: NPC memory with cards from fixed tables, an attitude to each hero and relations, only the scene's people go to the model; chronicle and the heroes' reputation; NPC tables, name syllables and oracle in the catalog
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.056** AI Dungeon Master at the table: foes with several attacks, bosses at least two; a foe's life as a word (bruised, badly hurt, nearly beaten), states with "N turns left"; speech recognition knows the round's names; every roll with a dice receipt, the narration names only numbers on a receipt; reading aloud marks the sentence being spoken
 - **V01.1.055** AI Dungeon Master: a settlement with life: head with picture, time of day and gold, cards with picture and line, calculation and verb per service, what is too dear grey with "N gold short", the lesson as six values before → after
 - **V01.1.054** AI Dungeon Master: economy part 3: the bench measures income against spending per level, inn 10 gold times the level per hero, the smith improves weapons and armour by one rarity, oils on the weapon for 3 hits, effects thundering, corroding and withering
-- **V01.1.053** AI Dungeon Master: economy part 2: more coins from foes, merchants with a kind and a purse (half the price only for their own kind), rarity by a fixed find table per level, legendary things only from bosses
 
 
 

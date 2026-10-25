@@ -1,6 +1,6 @@
 {
   "zweck": "KI-Dungeon-Master (dungeon.py): Erweiterung des Katalogs aus dem System Reference Document 5.1 (SRD 5.1) von Wizards of the Coast unter CC-BY-4.0, gekürzt, umgerechnet und ins Deutsche übertragen, dazu eigene Einträge für Horror, Sci-Fi und Piraten. Feste Daten: dungeon.py legt sie als Schicht zwischen dungeon_regeln.json und die Regeln des Admins; nichts wird zur Laufzeit nachgeladen.",
-  "lizenz": "This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode. This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license.",
+  "lizenz": "This work includes material taken from the System Reference Document 5.1 (\"SRD 5.1\") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode. This work is based on Ironsworn, Ironsworn: Delve and Ironsworn: Starforged (found at www.ironswornrpg.com), created by Shawn Tomkin, and licensed for our use under the Creative Commons Attribution 4.0 International license. This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
   "sg": {
     "sehr_leicht": 5,
     "leicht": 10,
@@ -265,8 +265,8 @@
     {
       "id": "blutend",
       "name": [
-        "blutend",
-        "bleeding"
+        "verwundet",
+        "wounded"
       ],
       "info": [
         "Eine tiefe Wunde, die jeden Zug schmerzt.",
@@ -838,7 +838,9 @@
       ],
       "zauber": {
         "0": [
-          "lichtzauber"
+          "lichtzauber",
+          "sternenfunke",
+          "bissiger_spott"
         ],
         "1": [
           "schlaf",
@@ -855,7 +857,10 @@
           "heilende_haende",
           "kampfruf",
           "blick_voraus",
-          "tiersprache"
+          "tiersprache",
+          "wunden_heilen",
+          "misstoene",
+          "feenfeuer"
         ],
         "2": [
           "person_festhalten",
@@ -864,7 +869,11 @@
           "eigenschaft_staerken",
           "einfluesterung",
           "unsichtbarkeit",
-          "gedanken_lesen"
+          "gedanken_lesen",
+          "beistand",
+          "zerspringen",
+          "metall_erhitzen",
+          "kleine_genesung"
         ],
         "3": [
           "furcht",
@@ -884,7 +893,8 @@
           "massenheilung",
           "person_beherrschen",
           "ausspaehen",
-          "tote_erwecken"
+          "tote_erwecken",
+          "grosse_genesung"
         ]
       }
     },
@@ -1002,7 +1012,10 @@
       ],
       "zauber": {
         "0": [
-          "giftspritzer"
+          "giftspritzer",
+          "flamme_erzeugen",
+          "sternenfunke",
+          "fuehrung"
         ],
         "1": [
           "donnerwelle",
@@ -1016,21 +1029,30 @@
           "heilende_haende",
           "tiersprache",
           "dornenranken",
-          "nebelschleier"
+          "nebelschleier",
+          "wunden_heilen",
+          "eismesser",
+          "feenfeuer"
         ],
         "2": [
           "person_festhalten",
           "dunkelsicht",
           "rindenhaut",
           "flammenklinge",
-          "eigenschaft_staerken"
+          "eigenschaft_staerken",
+          "beistand",
+          "flammenkugel",
+          "mondstrahl",
+          "metall_erhitzen",
+          "kleine_genesung"
         ],
         "3": [
           "magie_bannen",
           "wasseratmung",
           "wasserlaufen",
           "blitze_rufen",
-          "tageslicht"
+          "tageslicht",
+          "schutz_vor_energie"
         ],
         "4": [
           "eissturm",
@@ -1038,13 +1060,16 @@
           "verwandlung",
           "bewegungsfreiheit",
           "hauch_des_lebens",
-          "steinhaut"
+          "steinhaut",
+          "feuerwand",
+          "verdorren"
         ],
         "5": [
           "massenheilung",
           "ausspaehen",
           "baumschreiten",
-          "erdbeben"
+          "erdbeben",
+          "grosse_genesung"
         ]
       }
     },
@@ -1290,11 +1315,16 @@
           "befehl",
           "heilende_haende",
           "segen_des_lichts",
-          "kampfruf"
+          "kampfruf",
+          "wunden_heilen",
+          "glaubensschild",
+          "sengender_schlag"
         ],
         "2": [
           "magische_waffe",
-          "berserkerwut"
+          "berserkerwut",
+          "beistand",
+          "kleine_genesung"
         ],
         "3": [
           "wiederbeleben",
@@ -1308,7 +1338,8 @@
         ],
         "5": [
           "tote_erwecken",
-          "boeses_bannen"
+          "boeses_bannen",
+          "grosse_genesung"
         ]
       }
     },
@@ -1429,7 +1460,9 @@
           "kaeltestrahl",
           "schockgriff",
           "giftspritzer",
-          "lichtzauber"
+          "lichtzauber",
+          "saeurespritzer",
+          "kalte_beruehrung"
         ],
         "1": [
           "magisches_geschoss",
@@ -1443,7 +1476,9 @@
           "sprachen_verstehen",
           "selbstverkleidung",
           "farbspray",
-          "nebelschleier"
+          "nebelschleier",
+          "eismesser",
+          "magierruestung"
         ],
         "2": [
           "nebelschritt",
@@ -1459,7 +1494,10 @@
           "einfluesterung",
           "eislanze",
           "unsichtbarkeit",
-          "gedanken_lesen"
+          "gedanken_lesen",
+          "flammenkugel",
+          "zerspringen",
+          "gedankenstachel"
         ],
         "3": [
           "blitzstrahl",
@@ -1474,7 +1512,8 @@
           "tageslicht",
           "stinkwolke",
           "feuerball",
-          "hast"
+          "hast",
+          "schutz_vor_energie"
         ],
         "4": [
           "verbannung",
@@ -1483,7 +1522,10 @@
           "eissturm",
           "verwirrung",
           "verwandlung",
-          "steinhaut"
+          "steinhaut",
+          "saeurekugel",
+          "feuerwand",
+          "verdorren"
         ],
         "5": [
           "kaeltekegel",
@@ -1491,7 +1533,8 @@
           "todeswolke",
           "telekinese",
           "kettenblitz",
-          "erdbeben"
+          "erdbeben",
+          "arkane_hand"
         ]
       }
     },
@@ -1609,14 +1652,16 @@
       "zauber": {
         "0": [
           "schauerstrahl",
-          "giftspritzer"
+          "giftspritzer",
+          "kalte_beruehrung"
         ],
         "1": [
           "schutz_boese",
           "hoellischer_tadel",
           "sprachen_verstehen",
           "selbstverkleidung",
-          "blick_voraus"
+          "blick_voraus",
+          "verhexen"
         ],
         "2": [
           "nebelschritt",
@@ -1625,7 +1670,8 @@
           "dunkelheit",
           "spinnenklettern",
           "einfluesterung",
-          "unsichtbarkeit"
+          "unsichtbarkeit",
+          "gedankenstachel"
         ],
         "3": [
           "gegenzauber",
@@ -1639,7 +1685,8 @@
         ],
         "4": [
           "verbannung",
-          "dimensionstuer"
+          "dimensionstuer",
+          "verdorren"
         ],
         "5": [
           "ausspaehen"
@@ -1698,7 +1745,9 @@
             "feuerpfeil",
             "kaeltestrahl",
             "schockgriff",
-            "giftspritzer"
+            "giftspritzer",
+            "saeurespritzer",
+            "kalte_beruehrung"
           ],
           "1": [
             "magisches_geschoss",
@@ -1713,7 +1762,9 @@
             "magie_entdecken",
             "sprachen_verstehen",
             "selbstverkleidung",
-            "farbspray"
+            "farbspray",
+            "eismesser",
+            "magierruestung"
           ],
           "2": [
             "nebelschritt",
@@ -1726,7 +1777,11 @@
             "klopfen",
             "schweben",
             "magische_waffe",
-            "einfluesterung"
+            "einfluesterung",
+            "saeurepfeil",
+            "flammenkugel",
+            "zerspringen",
+            "gedankenstachel"
           ],
           "3": [
             "blitzstrahl",
@@ -1739,7 +1794,8 @@
             "fluch_brechen",
             "wasseratmung",
             "vampirgriff",
-            "stinkwolke"
+            "stinkwolke",
+            "schutz_vor_energie"
           ],
           "4": [
             "verbannung",
@@ -1749,13 +1805,17 @@
             "feuerschild",
             "verwirrung",
             "verwandlung",
-            "schwarze_tentakel"
+            "schwarze_tentakel",
+            "saeurekugel",
+            "feuerwand",
+            "verdorren"
           ],
           "5": [
             "kaeltekegel",
             "todeswolke",
             "ausspaehen",
-            "telekinese"
+            "telekinese",
+            "arkane_hand"
           ]
         }
       }
@@ -1798,7 +1858,8 @@
         ],
         "zauber": {
           "0": [
-            "heilige_flamme"
+            "heilige_flamme",
+            "fuehrung"
           ],
           "1": [
             "heilendes_wort",
@@ -1806,14 +1867,19 @@
             "unheil",
             "schutz_boese",
             "magie_entdecken",
-            "befehl"
+            "befehl",
+            "wunden_heilen",
+            "lenkender_blitz",
+            "glaubensschild"
           ],
           "2": [
             "person_festhalten",
             "stille",
             "heilgebet",
             "geisterwaffe",
-            "eigenschaft_staerken"
+            "eigenschaft_staerken",
+            "beistand",
+            "kleine_genesung"
           ],
           "3": [
             "wiederbeleben",
@@ -1822,7 +1888,9 @@
             "fluch_brechen",
             "wasserlaufen",
             "totensprechen",
-            "tageslicht"
+            "tageslicht",
+            "hoffnungsschimmer",
+            "schutz_vor_energie"
           ],
           "4": [
             "verbannung",
@@ -1834,7 +1902,8 @@
             "massenheilung",
             "ausspaehen",
             "tote_erwecken",
-            "boeses_bannen"
+            "boeses_bannen",
+            "grosse_genesung"
           ]
         }
       }
@@ -1869,23 +1938,28 @@
             "lange_schritte",
             "magie_entdecken",
             "tierfreundschaft",
-            "gute_beeren"
+            "gute_beeren",
+            "wunden_heilen"
           ],
           "2": [
             "stille",
             "dunkelsicht",
-            "rindenhaut"
+            "rindenhaut",
+            "beistand",
+            "kleine_genesung"
           ],
           "3": [
             "wasseratmung",
             "wasserlaufen",
-            "tageslicht"
+            "tageslicht",
+            "schutz_vor_energie"
           ],
           "4": [
             "bewegungsfreiheit"
           ],
           "5": [
-            "baumschreiten"
+            "baumschreiten",
+            "grosse_genesung"
           ]
         }
       }
@@ -2679,7 +2753,7 @@
       "id": "drachentoeter",
       "art": "waffe",
       "name": [
-        "Drachentöter",
+        "Drachenbezwinger",
         "Dragon slayer"
       ],
       "info": [
@@ -2700,7 +2774,7 @@
       "id": "riesentoeter",
       "art": "waffe",
       "name": [
-        "Riesentöter",
+        "Riesenbezwinger",
         "Giant slayer"
       ],
       "info": [
@@ -6426,7 +6500,7 @@
       "id": "tote_erwecken",
       "art": "zauber",
       "name": [
-        "Zauber: Tote erwecken",
+        "Zauber: Wiedererweckung",
         "Spell: Raise dead"
       ],
       "ziel": "selbst",
@@ -7319,8 +7393,8 @@
       "id": "blutstein",
       "art": "schatz",
       "name": [
-        "Blutstein",
-        "Bloodstone"
+        "Heliotrop",
+        "Heliotrope"
       ],
       "info": [
         "Dunkelgrau mit roten Punkten.",
@@ -8840,6 +8914,894 @@
       "kg": 0.3,
       "oel": "strahlend",
       "preis": 25
+    },
+    {
+      "id": "saeurespritzer",
+      "art": "zauber",
+      "name": [
+        "Zauber: Säurespritzer",
+        "Spell: Acid splash"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine Blase Säure platzt über dem Feind.",
+        "A bubble of acid bursts over the foe."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 1,
+        "zuege": 1
+      },
+      "schaden_art": "saeure"
+    },
+    {
+      "id": "kalte_beruehrung",
+      "art": "zauber",
+      "name": [
+        "Zauber: Kalte Berührung",
+        "Spell: Chill touch"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine Geisterhand lässt den Feind frösteln.",
+        "A ghostly hand makes the foe shiver."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "zauberer",
+        "hexenmeister",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 1,
+        "zuege": 1
+      },
+      "schaden_art": "nekrotisch"
+    },
+    {
+      "id": "flamme_erzeugen",
+      "art": "zauber",
+      "name": [
+        "Zauber: Flamme erzeugen",
+        "Spell: Produce flame"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine Flamme tanzt auf deiner Hand und fliegt los.",
+        "A flame dances on your hand and flies off."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 1,
+        "zuege": 1
+      },
+      "schaden_art": "feuer"
+    },
+    {
+      "id": "sternenfunke",
+      "art": "zauber",
+      "name": [
+        "Zauber: Sternenfunke",
+        "Spell: Starry wisp"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein Funke Sternenlicht trifft und leuchtet nach.",
+        "A mote of starlight hits and keeps glowing."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "barde",
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 1,
+        "zuege": 1
+      },
+      "schaden_art": "strahlend"
+    },
+    {
+      "id": "bissiger_spott",
+      "art": "zauber",
+      "name": [
+        "Zauber: Bissiger Spott",
+        "Spell: Vicious mockery"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein so gemeiner Witz, dass der Feind ins Stolpern kommt.",
+        "A joke so mean the foe stumbles."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "barde"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "charisma",
+        "bonus": 1,
+        "zuege": 1
+      },
+      "schaden_art": "psychisch"
+    },
+    {
+      "id": "fuehrung",
+      "art": "zauber",
+      "name": [
+        "Zauber: Führung",
+        "Spell: Guidance"
+      ],
+      "ziel": "gruppe",
+      "satz": [
+        "Ein guter Rat zur rechten Zeit.",
+        "Good advice at the right moment."
+      ],
+      "info": [
+        "Zaubertrick, Grad 0.",
+        "Cantrip, level 0."
+      ],
+      "klassen": [
+        "heiler",
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 0,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 1,
+        "zuege": 1
+      }
+    },
+    {
+      "id": "wunden_heilen",
+      "art": "zauber",
+      "name": [
+        "Zauber: Wunden heilen",
+        "Spell: Cure wounds"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Deine Hand schließt Schnitte und Prellungen.",
+        "Your hand closes cuts and bruises."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "barde",
+        "heiler",
+        "druide",
+        "paladin",
+        "waldlaeufer"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "heilung": 8
+    },
+    {
+      "id": "lenkender_blitz",
+      "art": "zauber",
+      "name": [
+        "Zauber: Lenkender Blitz",
+        "Spell: Guiding bolt"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein Lichtstrahl trifft und markiert den Feind.",
+        "A beam of light hits and marks the foe."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "heiler"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 2,
+        "zuege": 1
+      },
+      "schaden_art": "strahlend"
+    },
+    {
+      "id": "eismesser",
+      "art": "zauber",
+      "name": [
+        "Zauber: Eismesser",
+        "Spell: Ice knife"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein Eissplitter fliegt und zerspringt in Frost.",
+        "A shard of ice flies and bursts into frost."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "druide",
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 2,
+        "zuege": 1
+      },
+      "schaden_art": "kaelte"
+    },
+    {
+      "id": "misstoene",
+      "art": "zauber",
+      "name": [
+        "Zauber: Missklang",
+        "Spell: Dissonant whispers"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein schiefes Lied, das nur der Feind hört.",
+        "A crooked tune only the foe can hear."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "barde"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "charisma",
+        "bonus": 2,
+        "zuege": 1
+      },
+      "schaden_art": "psychisch"
+    },
+    {
+      "id": "magierruestung",
+      "art": "zauber",
+      "name": [
+        "Zauber: Magierrüstung",
+        "Spell: Mage armor"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein schimmerndes Feld legt sich um dich.",
+        "A shimmering field settles around you."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "geschick",
+        "bonus": 2,
+        "zuege": 3
+      }
+    },
+    {
+      "id": "glaubensschild",
+      "art": "zauber",
+      "name": [
+        "Zauber: Schild des Glaubens",
+        "Spell: Shield of faith"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein heiliges Leuchten schützt einen Gefährten.",
+        "A holy glow protects a companion."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "heiler",
+        "paladin"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 2,
+        "zuege": 3
+      }
+    },
+    {
+      "id": "feenfeuer",
+      "art": "zauber",
+      "name": [
+        "Zauber: Feenfeuer",
+        "Spell: Faerie fire"
+      ],
+      "ziel": "gruppe",
+      "satz": [
+        "Bunte Lichter zeigen jeden Feind, auch versteckte.",
+        "Coloured lights show every foe, even hidden ones."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "barde",
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 1,
+        "zuege": 3
+      }
+    },
+    {
+      "id": "sengender_schlag",
+      "art": "zauber",
+      "name": [
+        "Zauber: Sengender Schlag",
+        "Spell: Searing smite"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Deine Waffe glüht beim nächsten Treffer auf.",
+        "Your weapon flares on the next hit."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "paladin"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "staerke",
+        "bonus": 2,
+        "zuege": 1
+      },
+      "schaden_art": "feuer"
+    },
+    {
+      "id": "verhexen",
+      "art": "zauber",
+      "name": [
+        "Zauber: Verhexen",
+        "Spell: Hex"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein Fluch macht den Feind verwundbar.",
+        "A curse makes the foe vulnerable."
+      ],
+      "info": [
+        "Zauber vom Grad 1.",
+        "Spell of level 1."
+      ],
+      "klassen": [
+        "hexenmeister"
+      ],
+      "kg": 0.1,
+      "seltenheit": "gewoehnlich",
+      "grad": 1,
+      "segen": {
+        "wert": "charisma",
+        "bonus": 2,
+        "zuege": 2
+      },
+      "schaden_art": "nekrotisch"
+    },
+    {
+      "id": "beistand",
+      "art": "zauber",
+      "name": [
+        "Zauber: Beistand",
+        "Spell: Aid"
+      ],
+      "ziel": "gruppe",
+      "satz": [
+        "Neue Kraft stärkt die ganze Gruppe.",
+        "New strength bolsters the whole group."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "barde",
+        "heiler",
+        "druide",
+        "paladin",
+        "waldlaeufer"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "heilung": 5
+    },
+    {
+      "id": "saeurepfeil",
+      "art": "zauber",
+      "name": [
+        "Zauber: Säurepfeil",
+        "Spell: Acid arrow"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein grüner Pfeil, dessen Säure lange zischt.",
+        "A green arrow whose acid hisses for a long time."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "saeure"
+    },
+    {
+      "id": "flammenkugel",
+      "art": "zauber",
+      "name": [
+        "Zauber: Flammenkugel",
+        "Spell: Flaming sphere"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine rollende Feuerkugel folgt deinem Wink.",
+        "A rolling ball of fire follows your gesture."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "druide",
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "feuer"
+    },
+    {
+      "id": "zerspringen",
+      "art": "zauber",
+      "name": [
+        "Zauber: Zerspringen",
+        "Spell: Shatter"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein schriller Ton lässt Stein und Glas bersten.",
+        "A shrill tone makes stone and glass crack."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "barde",
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "donner"
+    },
+    {
+      "id": "mondstrahl",
+      "art": "zauber",
+      "name": [
+        "Zauber: Mondstrahl",
+        "Spell: Moonbeam"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein Strahl aus Mondlicht fällt auf die Feinde.",
+        "A beam of moonlight falls on the foes."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "strahlend"
+    },
+    {
+      "id": "gedankenstachel",
+      "art": "zauber",
+      "name": [
+        "Zauber: Gedankenstachel",
+        "Spell: Mind spike"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Ein stechender Gedanke im Kopf des Feindes.",
+        "A stabbing thought in the foe's head."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "zauberer",
+        "hexenmeister",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "psychisch"
+    },
+    {
+      "id": "metall_erhitzen",
+      "art": "zauber",
+      "name": [
+        "Zauber: Metall erhitzen",
+        "Spell: Heat metal"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Die Rüstung des Feindes wird glühend heiß.",
+        "The foe's armour turns red-hot."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "barde",
+        "druide"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 3,
+        "zuege": 1
+      },
+      "schaden_art": "feuer"
+    },
+    {
+      "id": "kleine_genesung",
+      "art": "zauber",
+      "name": [
+        "Zauber: Kleine Genesung",
+        "Spell: Lesser restoration"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Gift und Krankheit weichen aus dem Körper.",
+        "Poison and sickness leave the body."
+      ],
+      "info": [
+        "Zauber vom Grad 2.",
+        "Spell of level 2."
+      ],
+      "klassen": [
+        "barde",
+        "heiler",
+        "druide",
+        "paladin",
+        "waldlaeufer"
+      ],
+      "kg": 0.1,
+      "seltenheit": "selten",
+      "grad": 2,
+      "heilung": 4
+    },
+    {
+      "id": "hoffnungsschimmer",
+      "art": "zauber",
+      "name": [
+        "Zauber: Hoffnungsschimmer",
+        "Spell: Beacon of hope"
+      ],
+      "ziel": "gruppe",
+      "satz": [
+        "Neue Zuversicht erfüllt die Gruppe.",
+        "New confidence fills the group."
+      ],
+      "info": [
+        "Zauber vom Grad 3.",
+        "Spell of level 3."
+      ],
+      "klassen": [
+        "heiler"
+      ],
+      "kg": 0.1,
+      "seltenheit": "rar",
+      "grad": 3,
+      "segen": {
+        "wert": "weisheit",
+        "bonus": 2,
+        "zuege": 3
+      }
+    },
+    {
+      "id": "schutz_vor_energie",
+      "art": "zauber",
+      "name": [
+        "Zauber: Schutz vor Energie",
+        "Spell: Protection from energy"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Feuer, Eis oder Blitz prallen ab.",
+        "Fire, ice or lightning bounce off."
+      ],
+      "info": [
+        "Zauber vom Grad 3.",
+        "Spell of level 3."
+      ],
+      "klassen": [
+        "heiler",
+        "druide",
+        "waldlaeufer",
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "rar",
+      "grad": 3,
+      "segen": {
+        "wert": "konstitution",
+        "bonus": 2,
+        "zuege": 3
+      }
+    },
+    {
+      "id": "saeurekugel",
+      "art": "zauber",
+      "name": [
+        "Zauber: Säurekugel",
+        "Spell: Vitriolic sphere"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine Kugel aus Säure platzt über den Feinden.",
+        "A sphere of acid bursts over the foes."
+      ],
+      "info": [
+        "Zauber vom Grad 4.",
+        "Spell of level 4."
+      ],
+      "klassen": [
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "episch",
+      "grad": 4,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 4,
+        "zuege": 1
+      },
+      "schaden_art": "saeure"
+    },
+    {
+      "id": "feuerwand",
+      "art": "zauber",
+      "name": [
+        "Zauber: Feuerwand",
+        "Spell: Wall of fire"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine Mauer aus Flammen trennt euch vom Feind.",
+        "A wall of flames separates you from the foe."
+      ],
+      "info": [
+        "Zauber vom Grad 4.",
+        "Spell of level 4."
+      ],
+      "klassen": [
+        "druide",
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "episch",
+      "grad": 4,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 4,
+        "zuege": 1
+      },
+      "schaden_art": "feuer"
+    },
+    {
+      "id": "verdorren",
+      "art": "zauber",
+      "name": [
+        "Zauber: Verdorren",
+        "Spell: Blight"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Pflanzen welken, und der Feind wird schwach.",
+        "Plants wither, and the foe grows weak."
+      ],
+      "info": [
+        "Zauber vom Grad 4.",
+        "Spell of level 4."
+      ],
+      "klassen": [
+        "druide",
+        "zauberer",
+        "hexenmeister",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "episch",
+      "grad": 4,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 4,
+        "zuege": 1
+      },
+      "schaden_art": "nekrotisch"
+    },
+    {
+      "id": "grosse_genesung",
+      "art": "zauber",
+      "name": [
+        "Zauber: Große Genesung",
+        "Spell: Greater restoration"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Selbst Flüche und tiefe Erschöpfung vergehen.",
+        "Even curses and deep exhaustion fade."
+      ],
+      "info": [
+        "Zauber vom Grad 5.",
+        "Spell of level 5."
+      ],
+      "klassen": [
+        "barde",
+        "heiler",
+        "druide",
+        "paladin",
+        "waldlaeufer"
+      ],
+      "kg": 0.1,
+      "seltenheit": "legendaer",
+      "grad": 5,
+      "heilung": 15
+    },
+    {
+      "id": "arkane_hand",
+      "art": "zauber",
+      "name": [
+        "Zauber: Arkane Hand",
+        "Spell: Arcane hand"
+      ],
+      "ziel": "selbst",
+      "satz": [
+        "Eine riesige Hand aus Kraft packt und schiebt.",
+        "A huge hand of force grabs and pushes."
+      ],
+      "info": [
+        "Zauber vom Grad 5.",
+        "Spell of level 5."
+      ],
+      "klassen": [
+        "zauberer",
+        "magier"
+      ],
+      "kg": 0.1,
+      "seltenheit": "legendaer",
+      "grad": 5,
+      "segen": {
+        "wert": "intelligenz",
+        "bonus": 4,
+        "zuege": 1
+      },
+      "schaden_art": "energie"
     }
   ],
   "gegner": [
@@ -9016,8 +9978,8 @@
         "Gnoll"
       ],
       "info": [
-        "Hyänenköpfiger Plünderer, lacht schrill, wenn er Blut riecht.",
-        "Hyena-headed raider, cackles shrilly when it smells blood."
+        "Hyänenköpfiger Plünderer, lacht schrill, wenn er Beute wittert.",
+        "Hyena-headed raider, cackles shrilly when it scents prey."
       ],
       "welten": [
         "fantasy"
@@ -9939,8 +10901,8 @@
         "Ghoul"
       ],
       "info": [
-        "Leichenfresser, dessen Klauen lähmen.",
-        "Corpse eater whose claws paralyse."
+        "Gieriger Grabräuber, dessen Klauen lähmen.",
+        "Greedy grave robber whose claws paralyse."
       ],
       "welten": [
         "fantasy",
@@ -11020,8 +11982,8 @@
         "Flesh golem"
       ],
       "info": [
-        "Aus Leichenteilen zusammengenäht, wild bei Feuer.",
-        "Stitched from corpses, goes wild near fire."
+        "Aus vielen Teilen zusammengenäht, wild bei Feuer.",
+        "Stitched together from many parts, goes wild near fire."
       ],
       "welten": [
         "horror"
@@ -12710,12 +13672,12 @@
       "id": "stirge",
       "zeichen": "🦟",
       "name": [
-        "Blutmücke",
-        "Stirge"
+        "Riesenmücke",
+        "Giant mosquito"
       ],
       "info": [
-        "Saugt sich fest und trinkt Blut.",
-        "Latches on and drinks blood."
+        "Saugt sich fest wie eine riesige Mücke.",
+        "Latches on like a giant mosquito."
       ],
       "welten": [
         "fantasy",
@@ -12861,8 +13823,8 @@
         "Hunter shark"
       ],
       "info": [
-        "Riecht Blut über Meilen hinweg.",
-        "Smells blood for miles."
+        "Wittert Beute über Meilen hinweg.",
+        "Scents prey for miles."
       ],
       "welten": [
         "piraten"
@@ -17846,6 +18808,1614 @@
       "boss": true,
       "seit": "V01.1.039",
       "angriffe": 3
+    },
+    {
+      "id": "goblinkrieger",
+      "zeichen": "👺",
+      "name": [
+        "Goblinkrieger",
+        "Goblin warrior"
+      ],
+      "info": [
+        "Flink, frech und immer in kleinen Banden unterwegs.",
+        "Quick, cheeky and always about in small gangs."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.25,
+      "leben": 10,
+      "ruestung": 15,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 8,
+        "geschick": 15,
+        "konstitution": 10,
+        "intelligenz": 10,
+        "weisheit": 8,
+        "charisma": 8
+      },
+      "ep": 50,
+      "groesse": "klein",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "goblinboss",
+      "zeichen": "👺",
+      "name": [
+        "Goblinboss",
+        "Goblin boss"
+      ],
+      "info": [
+        "Der Lauteste der Bande, schickt gern andere vor.",
+        "The loudest of the gang, likes to send others first."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 1,
+      "leben": 21,
+      "ruestung": 17,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 15,
+        "konstitution": 10,
+        "intelligenz": 10,
+        "weisheit": 8,
+        "charisma": 10
+      },
+      "ep": 200,
+      "groesse": "klein",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "hobgoblin_hauptmann",
+      "zeichen": "🪖",
+      "name": [
+        "Hobgoblin-Hauptmann",
+        "Hobgoblin captain"
+      ],
+      "info": [
+        "Führt seine Truppe mit Drill und lauter Stimme.",
+        "Leads the troop with drill and a loud voice."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 3,
+      "leben": 58,
+      "ruestung": 17,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 15,
+        "geschick": 14,
+        "konstitution": 14,
+        "intelligenz": 12,
+        "weisheit": 10,
+        "charisma": 13
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "angriffe": 2
+    },
+    {
+      "id": "koboldkrieger",
+      "zeichen": "🦎",
+      "name": [
+        "Koboldkrieger",
+        "Kobold warrior"
+      ],
+      "info": [
+        "Klein, schuppig und voller Fallenideen.",
+        "Small, scaly and full of trap ideas."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.125,
+      "leben": 7,
+      "ruestung": 14,
+      "angriff": 4,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 7,
+        "geschick": 15,
+        "konstitution": 9,
+        "intelligenz": 8,
+        "weisheit": 7,
+        "charisma": 8
+      },
+      "ep": 50,
+      "groesse": "klein",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "gnollkrieger",
+      "zeichen": "🐺",
+      "name": [
+        "Gnollkrieger",
+        "Gnoll warrior"
+      ],
+      "info": [
+        "Ein hyänenköpfiger Jäger, der kichernd angreift.",
+        "A hyena-headed hunter that attacks with a cackle."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.5,
+      "leben": 27,
+      "ruestung": 15,
+      "angriff": 3,
+      "schaden": 10,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 14,
+        "geschick": 12,
+        "konstitution": 11,
+        "intelligenz": 6,
+        "weisheit": 10,
+        "charisma": 7
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "pegasus",
+      "zeichen": "🪽",
+      "name": [
+        "Pegasus",
+        "Pegasus"
+      ],
+      "info": [
+        "Ein geflügeltes Pferd, stolz und schwer zu zähmen.",
+        "A winged horse, proud and hard to tame."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 2,
+      "leben": 59,
+      "ruestung": 12,
+      "angriff": 6,
+      "schaden": 6,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 18,
+        "geschick": 15,
+        "konstitution": 16,
+        "intelligenz": 10,
+        "weisheit": 15,
+        "charisma": 13
+      },
+      "ep": 450,
+      "groesse": "gross",
+      "schaden_art": "wucht"
+    },
+    {
+      "id": "wichtel",
+      "zeichen": "🧚",
+      "name": [
+        "Wichtel",
+        "Sprite"
+      ],
+      "info": [
+        "Ein winziges Flügelwesen, das Lügen spürt.",
+        "A tiny winged being that senses lies."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.25,
+      "leben": 10,
+      "ruestung": 15,
+      "angriff": 6,
+      "schaden": 4,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 3,
+        "geschick": 18,
+        "konstitution": 10,
+        "intelligenz": 14,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 100,
+      "groesse": "winzig",
+      "zustaende": [
+        "vergiftet"
+      ],
+      "schaden_art": "stich"
+    },
+    {
+      "id": "blinkhund",
+      "zeichen": "🐕",
+      "name": [
+        "Blinkhund",
+        "Blink dog"
+      ],
+      "info": [
+        "Springt wie ein Funke von Ort zu Ort.",
+        "Leaps like a spark from place to place."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.25,
+      "leben": 22,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 12,
+        "geschick": 17,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "couatl",
+      "zeichen": "🐍",
+      "name": [
+        "Couatl",
+        "Couatl"
+      ],
+      "info": [
+        "Eine gefiederte Schlange voller himmlischer Weisheit.",
+        "A feathered serpent full of heavenly wisdom."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 4,
+      "leben": 60,
+      "ruestung": 19,
+      "angriff": 7,
+      "schaden": 12,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 16,
+        "geschick": 20,
+        "konstitution": 17,
+        "intelligenz": 18,
+        "weisheit": 20,
+        "charisma": 18
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "zustaende": [
+        "gepackt"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ],
+      "immun": [
+        "psychisch",
+        "strahlend"
+      ]
+    },
+    {
+      "id": "werbaer",
+      "zeichen": "🐻",
+      "name": [
+        "Werbär",
+        "Werebear"
+      ],
+      "info": [
+        "Halb Mensch, halb Bär, sanft bis zum Vollmond.",
+        "Half human, half bear, gentle until the full moon."
+      ],
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "stufe": 5,
+      "leben": 135,
+      "ruestung": 15,
+      "angriff": 7,
+      "schaden": 12,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 19,
+        "geschick": 10,
+        "konstitution": 17,
+        "intelligenz": 11,
+        "weisheit": 12,
+        "charisma": 12
+      },
+      "ep": 2900,
+      "groesse": "gross",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "wertiger",
+      "zeichen": "🐯",
+      "name": [
+        "Wertiger",
+        "Weretiger"
+      ],
+      "info": [
+        "Ein Jäger mit Tigerstreifen und Katzenaugen.",
+        "A hunter with tiger stripes and cat eyes."
+      ],
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "stufe": 4,
+      "leben": 120,
+      "ruestung": 12,
+      "angriff": 5,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 17,
+        "geschick": 15,
+        "konstitution": 16,
+        "intelligenz": 10,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 1800,
+      "groesse": "gross",
+      "zustaende": [
+        "liegend"
+      ],
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "lehmgolem",
+      "zeichen": "🗿",
+      "name": [
+        "Lehmgolem",
+        "Clay golem"
+      ],
+      "info": [
+        "Aus Lehm geformt und von Runen bewegt.",
+        "Shaped from clay and moved by runes."
+      ],
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "stufe": 9,
+      "leben": 123,
+      "ruestung": 14,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 20,
+        "geschick": 9,
+        "konstitution": 18,
+        "intelligenz": 3,
+        "weisheit": 8,
+        "charisma": 1
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "schaden_art": "wucht",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ],
+      "immun": [
+        "saeure",
+        "gift",
+        "psychisch"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "gorgone",
+      "zeichen": "🐂",
+      "name": [
+        "Gorgone",
+        "Gorgon"
+      ],
+      "info": [
+        "Ein Stier aus Eisenplatten, dessen Atem versteinert.",
+        "A bull of iron plates whose breath turns to stone."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 5,
+      "leben": 114,
+      "ruestung": 19,
+      "angriff": 8,
+      "schaden": 12,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 20,
+        "geschick": 11,
+        "konstitution": 18,
+        "intelligenz": 2,
+        "weisheit": 12,
+        "charisma": 7
+      },
+      "ep": 2300,
+      "groesse": "gross",
+      "zustaende": [
+        "versteinert"
+      ],
+      "schaden_art": "stich"
+    },
+    {
+      "id": "junger_messingdrache",
+      "zeichen": "🐉",
+      "name": [
+        "Junger Messingdrache",
+        "Young brass dragon"
+      ],
+      "info": [
+        "Plaudert gern und lange, aber reizt man ihn, wird es heiß.",
+        "Loves a long chat, but annoy it and things get hot."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 6,
+      "leben": 110,
+      "ruestung": 17,
+      "angriff": 7,
+      "schaden": 10,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 19,
+        "geschick": 10,
+        "konstitution": 17,
+        "intelligenz": 12,
+        "weisheit": 11,
+        "charisma": 15
+      },
+      "ep": 5000,
+      "groesse": "gross",
+      "zustaende": [
+        "bewusstlos"
+      ],
+      "schaden_art": "hieb",
+      "immun": [
+        "feuer"
+      ],
+      "angriffe": 3
+    },
+    {
+      "id": "junger_silberdrache",
+      "zeichen": "🐉",
+      "name": [
+        "Junger Silberdrache",
+        "Young silver dragon"
+      ],
+      "info": [
+        "Ein freundlicher Drache mit eisigem Atem.",
+        "A friendly dragon with icy breath."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 9,
+      "leben": 168,
+      "ruestung": 18,
+      "angriff": 10,
+      "schaden": 8,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 23,
+        "geschick": 10,
+        "konstitution": 21,
+        "intelligenz": 14,
+        "weisheit": 11,
+        "charisma": 19
+      },
+      "ep": 5900,
+      "groesse": "gross",
+      "zustaende": [
+        "gelaehmt"
+      ],
+      "schaden_art": "hieb",
+      "immun": [
+        "kaelte"
+      ],
+      "angriffe": 3
+    },
+    {
+      "id": "junger_weisser_drache",
+      "zeichen": "🐉",
+      "name": [
+        "Junger weißer Drache",
+        "Young white dragon"
+      ],
+      "info": [
+        "Lebt im ewigen Eis und vergisst nie einen Feind.",
+        "Lives in the eternal ice and never forgets a foe."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 6,
+      "leben": 123,
+      "ruestung": 17,
+      "angriff": 7,
+      "schaden": 4,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 18,
+        "geschick": 10,
+        "konstitution": 18,
+        "intelligenz": 6,
+        "weisheit": 11,
+        "charisma": 12
+      },
+      "ep": 2900,
+      "groesse": "gross",
+      "schaden_art": "hieb",
+      "immun": [
+        "kaelte"
+      ],
+      "angriffe": 3
+    },
+    {
+      "id": "steinriese",
+      "zeichen": "🪨",
+      "name": [
+        "Steinriese",
+        "Stone giant"
+      ],
+      "info": [
+        "Wirft Felsen so leicht wie Kiesel.",
+        "Throws boulders as easily as pebbles."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 7,
+      "leben": 126,
+      "ruestung": 17,
+      "angriff": 9,
+      "schaden": 10,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 23,
+        "geschick": 15,
+        "konstitution": 20,
+        "intelligenz": 10,
+        "weisheit": 12,
+        "charisma": 9
+      },
+      "ep": 3900,
+      "groesse": "riesig",
+      "zustaende": [
+        "liegend"
+      ],
+      "schaden_art": "wucht",
+      "angriffe": 2
+    },
+    {
+      "id": "frostriese",
+      "zeichen": "❄️",
+      "name": [
+        "Frostriese",
+        "Frost giant"
+      ],
+      "info": [
+        "Ein Hüne aus dem Norden mit Eisbart.",
+        "A giant from the north with an icy beard."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 8,
+      "leben": 149,
+      "ruestung": 15,
+      "angriff": 9,
+      "schaden": 12,
+      "schaden_plus": 5,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 23,
+        "geschick": 9,
+        "konstitution": 21,
+        "intelligenz": 9,
+        "weisheit": 10,
+        "charisma": 12
+      },
+      "ep": 5000,
+      "groesse": "riesig",
+      "schaden_art": "hieb",
+      "immun": [
+        "kaelte"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "feuerriese",
+      "zeichen": "🔥",
+      "name": [
+        "Feuerriese",
+        "Fire giant"
+      ],
+      "info": [
+        "Schmiedet an Lavaströmen riesige Klingen.",
+        "Forges huge blades by rivers of lava."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 9,
+      "leben": 162,
+      "ruestung": 18,
+      "angriff": 11,
+      "schaden": 10,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 25,
+        "geschick": 9,
+        "konstitution": 23,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 13
+      },
+      "ep": 5900,
+      "groesse": "riesig",
+      "schaden_art": "wucht",
+      "immun": [
+        "feuer"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "axtschnabel",
+      "zeichen": "🐦",
+      "name": [
+        "Axtschnabel",
+        "Axe beak"
+      ],
+      "info": [
+        "Ein großer Laufvogel mit scharfem Schnabel.",
+        "A large running bird with a sharp beak."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 0.25,
+      "leben": 19,
+      "ruestung": 11,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 14,
+        "geschick": 12,
+        "konstitution": 12,
+        "intelligenz": 2,
+        "weisheit": 10,
+        "charisma": 5
+      },
+      "ep": 100,
+      "groesse": "gross",
+      "schaden_art": "hieb"
+    },
+    {
+      "id": "wundersphinx",
+      "zeichen": "🐱",
+      "name": [
+        "Wundersphinx",
+        "Sphinx of wonder"
+      ],
+      "info": [
+        "Eine kleine geflügelte Sphinx, die Rätsel liebt.",
+        "A small winged sphinx that loves riddles."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 1,
+      "leben": 24,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 6,
+        "geschick": 17,
+        "konstitution": 13,
+        "intelligenz": 15,
+        "weisheit": 12,
+        "charisma": 11
+      },
+      "ep": 200,
+      "groesse": "winzig",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "nekrotisch",
+        "psychisch",
+        "strahlend"
+      ]
+    },
+    {
+      "id": "schildwaechter",
+      "zeichen": "🛡️",
+      "name": [
+        "Schildwächter",
+        "Shield guardian"
+      ],
+      "info": [
+        "Ein Wächterkonstrukt, das seinen Herrn beschützt.",
+        "A guardian construct that protects its master."
+      ],
+      "welten": [
+        "fantasy",
+        "scifi"
+      ],
+      "stufe": 7,
+      "leben": 142,
+      "ruestung": 17,
+      "angriff": 7,
+      "schaden": 6,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 18,
+        "geschick": 8,
+        "konstitution": 18,
+        "intelligenz": 7,
+        "weisheit": 10,
+        "charisma": 3
+      },
+      "ep": 2900,
+      "groesse": "gross",
+      "zustaende": [
+        "gepackt"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "roc",
+      "zeichen": "🦅",
+      "name": [
+        "Roch",
+        "Roc"
+      ],
+      "info": [
+        "Ein Riesenvogel, der Wale aus dem Meer hebt.",
+        "A giant bird that lifts whales from the sea."
+      ],
+      "welten": [
+        "fantasy",
+        "piraten"
+      ],
+      "stufe": 11,
+      "leben": 248,
+      "ruestung": 15,
+      "angriff": 13,
+      "schaden": 12,
+      "schaden_plus": 6,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 28,
+        "geschick": 10,
+        "konstitution": 20,
+        "intelligenz": 3,
+        "weisheit": 10,
+        "charisma": 9
+      },
+      "ep": 7200,
+      "groesse": "riesig",
+      "zustaende": [
+        "gepackt"
+      ],
+      "schaden_art": "stich",
+      "boss": true,
+      "angriffe": 2
+    },
+    {
+      "id": "remorhaz",
+      "zeichen": "🐛",
+      "name": [
+        "Remorhaz",
+        "Remorhaz"
+      ],
+      "info": [
+        "Ein glühender Eiswurm, dessen Rücken Feuer speit.",
+        "A glowing ice worm whose back burns with fire."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 11,
+      "leben": 195,
+      "ruestung": 17,
+      "angriff": 11,
+      "schaden": 10,
+      "schaden_plus": 7,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 24,
+        "geschick": 13,
+        "konstitution": 21,
+        "intelligenz": 4,
+        "weisheit": 10,
+        "charisma": 5
+      },
+      "ep": 7200,
+      "groesse": "riesig",
+      "zustaende": [
+        "gepackt",
+        "brennend"
+      ],
+      "schaden_art": "stich",
+      "immun": [
+        "kaelte",
+        "feuer"
+      ],
+      "boss": true
+    },
+    {
+      "id": "seeraeuber",
+      "zeichen": "🏴‍☠️",
+      "name": [
+        "Seeräuber",
+        "Pirate"
+      ],
+      "info": [
+        "Schnell mit dem Säbel und noch schneller mit Ausreden.",
+        "Quick with the cutlass and quicker with excuses."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 1,
+      "leben": 33,
+      "ruestung": 14,
+      "angriff": 5,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 16,
+        "konstitution": 12,
+        "intelligenz": 8,
+        "weisheit": 12,
+        "charisma": 14
+      },
+      "ep": 200,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "freibeuter_kapitaen",
+      "zeichen": "🏴‍☠️",
+      "name": [
+        "Freibeuter-Kapitän",
+        "Freebooter captain"
+      ],
+      "info": [
+        "Rapier in der einen, Pistole in der anderen Hand.",
+        "Rapier in one hand, pistol in the other."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 6,
+      "leben": 84,
+      "ruestung": 17,
+      "angriff": 7,
+      "schaden": 10,
+      "schaden_plus": 3,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 10,
+        "geschick": 18,
+        "konstitution": 14,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 17
+      },
+      "ep": 2900,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "angriffe": 3
+    },
+    {
+      "id": "meervolk",
+      "zeichen": "🧜",
+      "name": [
+        "Meervolk-Späher",
+        "Merfolk skirmisher"
+      ],
+      "info": [
+        "Taucht mit dem Dreizack aus den Wellen auf.",
+        "Rises from the waves with a trident."
+      ],
+      "welten": [
+        "piraten",
+        "fantasy"
+      ],
+      "stufe": 0.125,
+      "leben": 11,
+      "ruestung": 11,
+      "angriff": 2,
+      "schaden": 6,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 13,
+        "konstitution": 12,
+        "intelligenz": 11,
+        "weisheit": 14,
+        "charisma": 12
+      },
+      "ep": 50,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "sahuagin_krieger",
+      "zeichen": "🦈",
+      "name": [
+        "Sahuagin-Krieger",
+        "Sahuagin warrior"
+      ],
+      "info": [
+        "Ein Fischmensch, der Schiffe für sein Riff hält.",
+        "A fish-folk warrior who thinks ships are its reef."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 0.5,
+      "leben": 22,
+      "ruestung": 12,
+      "angriff": 3,
+      "schaden": 6,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 13,
+        "geschick": 11,
+        "konstitution": 12,
+        "intelligenz": 12,
+        "weisheit": 13,
+        "charisma": 9
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "resistenz": [
+        "saeure",
+        "kaelte"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "riffhai",
+      "zeichen": "🦈",
+      "name": [
+        "Riffhai",
+        "Reef shark"
+      ],
+      "info": [
+        "Zieht in Schwärmen ums Korallenriff.",
+        "Circles the coral reef in schools."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 0.5,
+      "leben": 22,
+      "ruestung": 12,
+      "angriff": 4,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 14,
+        "geschick": 15,
+        "konstitution": 13,
+        "intelligenz": 1,
+        "weisheit": 10,
+        "charisma": 4
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "riesenseepferd",
+      "zeichen": "🐴",
+      "name": [
+        "Riesenseepferd",
+        "Giant seahorse"
+      ],
+      "info": [
+        "Reittier des Meervolks, scheu und schnell.",
+        "Mount of the merfolk, shy and fast."
+      ],
+      "welten": [
+        "piraten",
+        "fantasy"
+      ],
+      "stufe": 0.5,
+      "leben": 16,
+      "ruestung": 14,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 15,
+        "geschick": 12,
+        "konstitution": 11,
+        "intelligenz": 2,
+        "weisheit": 12,
+        "charisma": 5
+      },
+      "ep": 100,
+      "groesse": "gross",
+      "schaden_art": "wucht"
+    },
+    {
+      "id": "archelon",
+      "zeichen": "🐢",
+      "name": [
+        "Archelon",
+        "Archelon"
+      ],
+      "info": [
+        "Eine Schildkröte so groß wie ein Beiboot.",
+        "A turtle as big as a rowing boat."
+      ],
+      "welten": [
+        "piraten"
+      ],
+      "stufe": 4,
+      "leben": 90,
+      "ruestung": 17,
+      "angriff": 6,
+      "schaden": 6,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 3,
+      "werte": {
+        "staerke": 18,
+        "geschick": 16,
+        "konstitution": 13,
+        "intelligenz": 4,
+        "weisheit": 14,
+        "charisma": 6
+      },
+      "ep": 1800,
+      "groesse": "riesig",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "vampirdiener",
+      "zeichen": "🧛",
+      "name": [
+        "Vampirdiener",
+        "Vampire familiar"
+      ],
+      "info": [
+        "Dient seinem Herrn bei Tag und hofft auf ewiges Leben.",
+        "Serves its master by day and hopes for eternal life."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 3,
+      "leben": 65,
+      "ruestung": 15,
+      "angriff": 5,
+      "schaden": 4,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 17,
+        "geschick": 16,
+        "konstitution": 15,
+        "intelligenz": 10,
+        "weisheit": 10,
+        "charisma": 14
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "zustaende": [
+        "bezaubert"
+      ],
+      "schaden_art": "stich",
+      "resistenz": [
+        "nekrotisch"
+      ],
+      "angriffe": 2
+    },
+    {
+      "id": "kriechklauen",
+      "zeichen": "🖐️",
+      "name": [
+        "Kriechende Klauen",
+        "Swarm of crawling claws"
+      ],
+      "info": [
+        "Ein Schwarm flinker Hände, die kitzeln und kneifen.",
+        "A swarm of nimble hands that tickle and pinch."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 3,
+      "leben": 49,
+      "ruestung": 12,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 4,
+      "werte": {
+        "staerke": 14,
+        "geschick": 14,
+        "konstitution": 11,
+        "intelligenz": 5,
+        "weisheit": 10,
+        "charisma": 4
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "zustaende": [
+        "gepackt"
+      ],
+      "schaden_art": "nekrotisch",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ],
+      "immun": [
+        "nekrotisch",
+        "gift"
+      ]
+    },
+    {
+      "id": "minotaurusskelett",
+      "zeichen": "💀",
+      "name": [
+        "Minotaurusskelett",
+        "Minotaur skeleton"
+      ],
+      "info": [
+        "Ein klapperndes Gerippe mit gewaltigen Hörnern.",
+        "A rattling skeleton with mighty horns."
+      ],
+      "welten": [
+        "horror",
+        "fantasy"
+      ],
+      "stufe": 2,
+      "leben": 45,
+      "ruestung": 12,
+      "angriff": 6,
+      "schaden": 10,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 18,
+        "geschick": 11,
+        "konstitution": 15,
+        "intelligenz": 6,
+        "weisheit": 8,
+        "charisma": 5
+      },
+      "ep": 450,
+      "groesse": "gross",
+      "zustaende": [
+        "liegend"
+      ],
+      "schaden_art": "wucht",
+      "immun": [
+        "gift"
+      ],
+      "schwaeche": [
+        "wucht"
+      ]
+    },
+    {
+      "id": "grimlock",
+      "zeichen": "🦇",
+      "name": [
+        "Grimlock",
+        "Grimlock"
+      ],
+      "info": [
+        "Blind, aber hört jeden Schritt im Dunkeln.",
+        "Blind, but hears every step in the dark."
+      ],
+      "welten": [
+        "horror"
+      ],
+      "stufe": 0.25,
+      "leben": 11,
+      "ruestung": 11,
+      "angriff": 5,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 16,
+        "geschick": 12,
+        "konstitution": 12,
+        "intelligenz": 9,
+        "weisheit": 8,
+        "charisma": 6
+      },
+      "ep": 50,
+      "groesse": "mittel",
+      "schaden_art": "wucht"
+    },
+    {
+      "id": "unsichtbarer_jaeger",
+      "zeichen": "👻",
+      "name": [
+        "Unsichtbarer Pirscher",
+        "Invisible stalker"
+      ],
+      "info": [
+        "Ein Windgeist, den man nur am Luftzug bemerkt.",
+        "A wind spirit you notice only by the draught."
+      ],
+      "welten": [
+        "horror",
+        "fantasy"
+      ],
+      "stufe": 6,
+      "leben": 97,
+      "ruestung": 14,
+      "angriff": 7,
+      "schaden": 6,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 16,
+        "geschick": 19,
+        "konstitution": 14,
+        "intelligenz": 10,
+        "weisheit": 15,
+        "charisma": 11
+      },
+      "ep": 2300,
+      "groesse": "gross",
+      "schaden_art": "energie",
+      "resistenz": [
+        "wucht",
+        "stich",
+        "hieb"
+      ],
+      "immun": [
+        "gift"
+      ],
+      "angriffe": 3
+    },
+    {
+      "id": "dorfbewohner",
+      "zeichen": "🧑",
+      "name": [
+        "Dorfbewohner",
+        "Commoner"
+      ],
+      "info": [
+        "Ein einfacher Mensch, der eigentlich keinen Streit will.",
+        "A simple person who doesn't really want a fight."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 0,
+      "leben": 4,
+      "ruestung": 10,
+      "angriff": 2,
+      "schaden": 4,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 10,
+        "geschick": 10,
+        "konstitution": 10,
+        "intelligenz": 10,
+        "weisheit": 10,
+        "charisma": 10
+      },
+      "ep": 10,
+      "groesse": "mittel",
+      "schaden_art": "wucht"
+    },
+    {
+      "id": "adliger",
+      "zeichen": "🎩",
+      "name": [
+        "Adliger",
+        "Noble"
+      ],
+      "info": [
+        "Fein gekleidet, mit Degen und Dünkel.",
+        "Finely dressed, with rapier and airs."
+      ],
+      "welten": [
+        "fantasy",
+        "horror",
+        "piraten"
+      ],
+      "stufe": 0.125,
+      "leben": 9,
+      "ruestung": 15,
+      "angriff": 3,
+      "schaden": 8,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 11,
+        "geschick": 12,
+        "konstitution": 11,
+        "intelligenz": 12,
+        "weisheit": 14,
+        "charisma": 16
+      },
+      "ep": 50,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "spaeher",
+      "zeichen": "🏹",
+      "name": [
+        "Späher",
+        "Scout"
+      ],
+      "info": [
+        "Kennt jeden Pfad und sieht euch zuerst.",
+        "Knows every path and sees you first."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 0.5,
+      "leben": 16,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 8,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 11,
+        "geschick": 14,
+        "konstitution": 12,
+        "intelligenz": 11,
+        "weisheit": 13,
+        "charisma": 11
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "wachhauptmann",
+      "zeichen": "💂",
+      "name": [
+        "Wachhauptmann",
+        "Guard captain"
+      ],
+      "info": [
+        "Hält die Stadtwache zusammen, streng aber gerecht.",
+        "Keeps the city watch together, strict but fair."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 4,
+      "leben": 75,
+      "ruestung": 18,
+      "angriff": 6,
+      "schaden": 10,
+      "schaden_plus": 4,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 18,
+        "geschick": 14,
+        "konstitution": 16,
+        "intelligenz": 12,
+        "weisheit": 14,
+        "charisma": 13
+      },
+      "ep": 1800,
+      "groesse": "mittel",
+      "schaden_art": "hieb",
+      "angriffe": 2
+    },
+    {
+      "id": "raufbold",
+      "zeichen": "💪",
+      "name": [
+        "Raufbold",
+        "Tough"
+      ],
+      "info": [
+        "Breite Schultern, kurze Geduld.",
+        "Broad shoulders, short patience."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 0.5,
+      "leben": 32,
+      "ruestung": 12,
+      "angriff": 3,
+      "schaden": 10,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 15,
+        "geschick": 12,
+        "konstitution": 14,
+        "intelligenz": 10,
+        "weisheit": 10,
+        "charisma": 11
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "stich"
+    },
+    {
+      "id": "kriegsveteran",
+      "zeichen": "⚔️",
+      "name": [
+        "Kriegsveteran",
+        "Warrior veteran"
+      ],
+      "info": [
+        "Hat viele Feldzüge gesehen und kennt jeden Trick.",
+        "Has seen many campaigns and knows every trick."
+      ],
+      "welten": [
+        "alle"
+      ],
+      "stufe": 3,
+      "leben": 65,
+      "ruestung": 17,
+      "angriff": 3,
+      "schaden": 10,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 16,
+        "geschick": 13,
+        "konstitution": 14,
+        "intelligenz": 10,
+        "weisheit": 11,
+        "charisma": 10
+      },
+      "ep": 1100,
+      "groesse": "mittel",
+      "schaden_art": "stich",
+      "angriffe": 2
+    },
+    {
+      "id": "druidin",
+      "zeichen": "🌿",
+      "name": [
+        "Druidin",
+        "Druid"
+      ],
+      "info": [
+        "Spricht mit Bäumen und lässt Ranken wachsen.",
+        "Speaks with trees and makes vines grow."
+      ],
+      "welten": [
+        "fantasy"
+      ],
+      "stufe": 2,
+      "leben": 44,
+      "ruestung": 13,
+      "angriff": 5,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 10,
+        "geschick": 12,
+        "konstitution": 13,
+        "intelligenz": 12,
+        "weisheit": 16,
+        "charisma": 11
+      },
+      "ep": 700,
+      "groesse": "mittel",
+      "zustaende": [
+        "festgesetzt"
+      ],
+      "schaden_art": "strahlend",
+      "angriffe": 2
+    },
+    {
+      "id": "akolyth",
+      "zeichen": "⛪",
+      "name": [
+        "Akolyth",
+        "Priest acolyte"
+      ],
+      "info": [
+        "Ein junger Tempeldiener mit heiligem Licht.",
+        "A young temple servant with holy light."
+      ],
+      "welten": [
+        "fantasy",
+        "horror"
+      ],
+      "stufe": 0.25,
+      "leben": 11,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 2,
+      "werte": {
+        "staerke": 14,
+        "geschick": 10,
+        "konstitution": 12,
+        "intelligenz": 10,
+        "weisheit": 14,
+        "charisma": 11
+      },
+      "ep": 100,
+      "groesse": "mittel",
+      "schaden_art": "strahlend"
     }
   ],
   "tabellen": [
@@ -23991,5 +26561,43 @@
         "wick"
       ]
     }
+  },
+  "budget": {
+    "leicht": [
+      50,
+      100,
+      150,
+      250,
+      500,
+      600,
+      750,
+      1000,
+      1300,
+      1600
+    ],
+    "mittel": [
+      75,
+      150,
+      225,
+      375,
+      750,
+      1000,
+      1300,
+      1700,
+      2000,
+      2300
+    ],
+    "schwer": [
+      100,
+      200,
+      400,
+      500,
+      1100,
+      1400,
+      1700,
+      2100,
+      2600,
+      3100
+    ]
   }
 }

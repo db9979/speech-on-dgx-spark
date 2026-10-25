@@ -58,6 +58,12 @@ KIND = 0.5                 # the children's table: half the budget
 FLUCHT = 4                 # a foe at a quarter of its life or less …
 FLUCHT_W = 9               # … flees on a d20 of this or less
 GEFAHR = ((0.75, "leicht"), (1.25, "mittel"), (99.0, "schwer"))
+# Budget-Stufen (Tabletop-Punkt 13 of 2026-10-25): the host chooses how hard the encounters are; the SRD 5.2.1 table
+# (the catalog's "budget": experience per hero for levels 1 to 10, leicht, mittel, schwer) gives the ratio to „mittel“,
+# the measured BUDGET above stays the medium
+STUFEN = {"leicht": ("Leicht", "Easy"), "mittel": ("Mittel", "Medium"), "schwer": ("Schwer", "Hard"), "toedlich": ("Tödlich", "Deadly")}
+TOEDLICH = 1.5             # deadly: the hard budget times this (the SRD 5.2.1 table has no deadly)
+STUFE_OHNE = {"leicht": 0.67, "schwer": 1.4}   # the ratios when the catalog has no table
 FAUST = 2                  # an attack without a weapon: 1W2 + Stärke
 ZAUBER_W = (6, 8, 8, 10, 10, 12)   # the die of an attack spell by its grade 0..5
 ENDE = ("frieden", "flucht")       # the model may end a fight without a winner
@@ -167,11 +173,46 @@ def _mal(n):
     return next(m for k, m in MAL if n >= k)
 
 
-def budget(dm, r, rd, held):
-    """The experience a medium encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size,
-    half at the children's table."""
+def budget(dm, r, rd, held, stufe=True):
+    """The experience an encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size, half at
+    the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium)."""
     b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (GRUPPE[0] + GRUPPE[1] * (len(held) - 1))
-    return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100))
+    return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100) * (stage_factor(r, rd, held) if stufe else 1))
+
+
+def stages_on(rd):
+    """The host may choose the stage: „Kampfstufen“ allowed for the round's host."""
+    import features
+    return bool(rd.get("owner")) and features.allowed("dungeonstufen", rd["owner"])
+
+
+def stage(rd):
+    s = rd.get("kampfstufe")
+    return s if s in STUFEN and stages_on(rd) else "mittel"
+
+
+def stage_factor(r, rd, held):
+    """The stage against the medium: the mean over the heroes of the SRD 5.2.1 budget of their level (1 to 10), deadly
+    the hard one times TOEDLICH; 1 for the medium."""
+    s = stage(rd)
+    if s == "mittel":
+        return 1.0
+    key = "schwer" if s == "toedlich" else s
+    t = r.get("budget") or {}
+    fs = [t[key][min(10, max(1, h["stufe"])) - 1] / t["mittel"][min(10, max(1, h["stufe"])) - 1] for h in held] if t else []
+    f = sum(fs) / len(fs) if fs else STUFE_OHNE[key]
+    return f * (TOEDLICH if s == "toedlich" else 1)
+
+
+def check_rules(r):
+    """The catalog's budget table by fixed rules (dungeon.check_rules adds the sentences)."""
+    t = r.get("budget")
+    if t is None:
+        return []
+    ok = isinstance(t, dict) and set(t) == {"leicht", "mittel", "schwer"} and all(
+        isinstance(v, list) and len(v) == 10 and all(isinstance(n, int) and not isinstance(n, bool) and n > 0 for n in v) for v in t.values())
+    ok = ok and all(a < b < c for a, b, c in zip(t["leicht"], t["mittel"], t["schwer"]))
+    return [] if ok else ["budget: leicht, mittel und schwer mit je 10 Zahlen (Stufe 1 bis 10), leicht < mittel < schwer"]
 
 
 def dial_on(rd):
@@ -320,7 +361,7 @@ def start(dm, r, rd, held, wahl, li):
         return None
     gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
-    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), b),
+    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), budget(dm, r, rd, held, False)),
                    "leben0": sum(max(0, h["leben"]) for h in held),
                    "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")]}   # the group the fight was made for
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):

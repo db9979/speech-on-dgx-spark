@@ -263,7 +263,8 @@ class Catalog(Base):
         self.assertFalse(any(w in wolf for w in db.WESEN_EN.values()))
         ids = {g["id"] for g in r["gegner"]}
         self.assertTrue(db.MENSCH <= ids and db.HUMANOID <= ids and not db.MENSCH & db.HUMANOID)
-        ghul = next(g for g in r["gegner"] if g["id"] == "ghul")       # a description the word list refuses stays out
+        ghul = dict(next(g for g in r["gegner"] if g["id"] == "ghul"),   # a description the word list refuses stays out (the
+                    info=["Ein Ghul voller Blut.", "A ghoul covered in gore."])   # catalog's own is child-safe since the SRD 5.2.1)
         self.assertNotIn(ghul["info"][1].rstrip("."), db.prompt(style, ghul))
         self.assertTrue(all(db._ok_text(db.prompt(style, g), r) for g in r["gegner"]))
         bad = dict(kult, info=[kult["info"][0], f"A cultist, {r['nie'][0]}."])

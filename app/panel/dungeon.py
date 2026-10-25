@@ -693,7 +693,7 @@ def check_rules(r):
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
-    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r)
+    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r)
 
 
 def own_rules():
@@ -4869,6 +4869,7 @@ def view(rid, pid, now=None):
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
     out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
+    out["kampfstufe"] = {"wert": kampf.stage(rd), "wahl": [[k, v[li]] for k, v in kampf.STUFEN.items()]} if host and kampf.stages_on(rd) else None
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))
@@ -5273,6 +5274,7 @@ def for_live():
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs),
+            "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel")}}
@@ -5995,6 +5997,7 @@ async def zufall_setzen(rid: str, request: Request, prof=Depends(browser_profile
 async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
     way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
+    or {kampfstufe} the stage of the next encounters (leicht, mittel, schwer, toedlich; Tabletop-Punkt 13);
     or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off)."""
     uid = prof["id"]
     _need(uid)
@@ -6011,6 +6014,10 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 if not isinstance(b["regler_fest"], bool) or not kampf.dial_on(rd):
                     raise ValueError()
                 rd["regler_fest"] = b["regler_fest"]
+            elif "kampfstufe" in b:                   # Budget-Stufen (Tabletop-Punkt 13): how hard the next encounters are
+                if b["kampfstufe"] not in kampf.STUFEN or not kampf.stages_on(rd):
+                    raise ValueError()
+                rd["kampfstufe"] = b["kampfstufe"]
             elif "mail_vorschau" in b:
                 if not isinstance(b["mail_vorschau"], bool):
                     raise ValueError()
@@ -6024,6 +6031,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             _write(d)
         if "regler_fest" in b:
             print(f"dungeon: regler | {'festgehalten' if b['regler_fest'] else 'frei'}", flush=True)
+        elif "kampfstufe" in b:
+            print(f"dungeon: kampfstufe | {b['kampfstufe']}", flush=True)
         elif "mail_vorschau" in b:
             print(f"dungeon: gastmail | vorschau {'an' if b['mail_vorschau'] else 'aus'}", flush=True)
         elif "weise" in b:

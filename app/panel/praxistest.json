@@ -3411,6 +3411,13 @@
 "titel": "Orakel",
 "text": "A: Funktionen → KI-Dungeon-Master → Orakel an. Als Gastgeber im Reiter „Leiten“ „🔮 Orakel“ öffnen. B: „Ist die Brücke bewacht?“ mit „Wahrscheinlich“ fragen: im Verlauf steht die Antwort mit Wurf und Chance, die nächste Erzählung hält sich daran. C: Chaos auf 9 stellen und mehrmals fragen: öfter Ja, manchmal ein ⚡ Ereignis. D: Zwei Tabellen ankreuzen und fragen: beide Ergebnisse stehen im Verlauf. E: Im Reiter „Regeln“ bei „Tabellen“ eine eigene Kopie anlegen: sie erscheint am Tisch mit ✎. F: Nach 6 Fragen in einem Zug: „Das Orakel hat in diesem Zug genug gesagt.“ G: Auf dem Gast-Gerät gibt es kein Orakel. H: Zustand → Überblick zeigt die Zählungen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P512",
+"v": 1063,
+"titel": "Kampfstufen und SRD 5.2.1",
+"text": "A: Funktionen → KI-Dungeon-Master → Kampfstufen an. Als Gastgeber im Reiter „Leiten“ bei „⚔ Kampfstufe“ „Leicht“ wählen: die nächste Begegnung hat weniger oder schwächere Gegner. B: „Tödlich“ wählen: deutlich mehr Gegner, die Gefahr auf der Karte zeigt meist „schwer“. C: Auf dem Gast-Gerät gibt es keine Auswahl. D: Neue Gegner aus dem SRD 5.2.1 tauchen auf (zum Beispiel Goblinkrieger, Pegasus, Riffhai) und Zauber wie Lenkender Blitz oder Eismesser stehen bei den Klassen. E: Am Kindertisch nennt der Erzähler den Trank „Drachenglut“ und den Zustand „verwundet“ ohne Abbruch. F: Zustand → Überblick zählt Runden mit eigener Kampfstufe.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
