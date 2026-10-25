@@ -259,6 +259,9 @@ FEATURES = (
     # at night or on the admin's button, and shows the wins per level under Regeln; no model, no profile's data
     F("dungeonpruefstand", "Balance-Prüfstand", "Balance bench", "data", ("dungeon_pruefstand",), parent="dungeon",
       me="dmbox", guide="dungeonpruefstand"),
+    # Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the real narration of the running model
+    F("dungeonerzaehlstand", "Erzähler-Prüfstand", "Narrator bench", "data", ("dungeon_erzaehlstand",), parent="dungeon",
+      me="dmbox", guide="dungeonerzaehlstand"),
     # Spielleiter-Regler (dungeon_kampf.turn_dial, Idee 6): after every fight the next encounters at most ±25 % by fixed
     # numbers, the host may hold it, the children's table only easier
     F("dungeonregler", "Spielleiter-Regler", "Game master dial", "data", ("dungeon_regler",), parent="dungeon",

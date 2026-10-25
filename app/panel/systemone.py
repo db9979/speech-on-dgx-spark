@@ -22,6 +22,8 @@ Uses, each with its own admin switch below chat.systemone (all off) and the prof
              „Erfundenes vermutet“ in the case inbox, never before the answer is spoken (chat.systemone_check)
   klage      Beschwerde erkennen: „geht immer noch nicht“ after a deed, when taten.COMPLAINT does not match
              (chat.systemone_klage), from 80 %; the panel then only lets the model look (taten.locked)
+  erzaehler  Erzähler-Prüfstand (dungeon_erzaehlstand, chat.dungeon_erzaehlstand, admin only, on its button): the
+             model's own view of each fixed scene, shown beside the fixed rules' points, never points itself
   messen     Funktionen → … → „Einordnung messen“: the Weiche's test sentences (intent_bench.BENCH) through the switch
              question, hit rate per threshold and a suggested threshold (chat.systemone_min), on a button only
 
@@ -50,7 +52,7 @@ MODEL = "jev-latest"
 MAX_BYTES = 64 * 1024         # of the answer
 USES = {"weiche": "Werkzeugwahl", "mail": "Postfach aufräumen", "wichtig": "Wichtige Mail",
         "qualitaet": "Qualitätstest", "test": "Prüfen", "messen": "Messen", "berater": "Einstellungs-Assistent",
-        "pruefen": "Antwort prüfen", "klage": "Beschwerde"}
+        "pruefen": "Antwort prüfen", "klage": "Beschwerde", "erzaehler": "Erzähler-Prüfstand"}
 # the panel's thresholds (Dominik 2026-10-10: "wie empfohlen")
 ROUTE_MIN = 0.80              # the switch narrows only from here (chat.systemone_min, after a measurement)
 ROUTE_STEPS = (0.6, 0.7, 0.8, 0.9)   # the thresholds an admin may choose for the switch

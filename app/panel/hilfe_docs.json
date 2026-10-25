@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 43), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 91). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 44), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 91). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 43 Dateien in jeder Sicherung (Schritt 7) - 91 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 44 Dateien in jeder Sicherung (Schritt 7) - 91 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5166,6 +5166,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Fragen je Zug. Jede Antwort steht im Verlauf mit Wurf und Chance; das Modell bekommt die Antworten dieses Zuges nur als Daten (orakel) und die feste Regel, sich daran zu halten. Eigene Tabellen: Im Dungeon-Master-Reiter „Regeln“ steht der Teil „Tabellen“ mit allen Tabellen des Katalogs; „Eigene Kopie“ und „Ändern“ legen eine eigene Tabelle an (Gruppe orakel oder eigen, 2 bis 300 Zeilen je [deutsch, englisch], auf Wunsch nur für einzelne Welten), dungeon_tabellen.check_rules prüft sie wie alle Regeln. Live: Zustand → Überblick zählt am Tag gestellte Fragen und Runden mit eigenem Chaosgrad. Selbsttest test_the_oracle_answers_by_the_panels_dice in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Erzähler-Prüfstand (V01.1.065, Tabletop-Punkt 4, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, abgestimmt mit dem Thread „Eigene Modell-Installation statt qwen38“: gegen das laufende Modell im Panel, nicht in „modelle messen“, feste Regeln entscheiden): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand* (chat.dungeon_erzaehlstand, ab Werk aus; dungeon_erzaehlstand.py). Im Dungeon-Master-Reiter „Regeln“ bei „Erzähler-Prüfstand“ spielt „Jetzt prüfen“ (POST /api/admin/dungeon/erzaehlstand, nur der Admin, höchstens alle KNOPF_S (120) Sekunden, ein Lauf zur Zeit) acht feste Szenen durch dieselben Schritte wie ein Zug am Tisch (dungeon.ask_checks und dungeon.tell: Systemtext, Fakten, Schema, Prüfungen und Nachbessern sind dieselben) auf einer Runde, die nur im Speicher lebt: nichts wird gespeichert, kein Platz, kein Profil, kein Tageszähler. Die Szenen: eine gescheiterte Probe (fester Würfel) darf nicht gelingen, zwei Helden kommen beide vor, ein Kampf mit den Würfen des Panels nennt die Gegner beim Namen und keine Zahl ohne Beleg, der Kinderton ohne Wort seiner Liste, eine Figur der Wahrheit an"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "twortet beim Namen, eine englische Runde wird englisch erzählt (höchstens ENGLISCH_MAX deutsche Wörter), eine riskante Aktion verlangt eine Probe, eine harmlose keine. Je Szene 2 Punkte, wenn der erste Versuch passt, 1 nach dem Nachbessern, 0 wenn abgelehnt oder nur die Reparatur des Panels bleibt. Ist „Einordnung mit Wahrscheinlichkeit“ an, steht daneben die eigene Einschätzung des Modells (systemone mit der Verwendung erzaehler: wie lebendig, wie genau es den Aktionen und Würfen folgt), sie gibt keine Punkte. Das Ergebnis steht je Modellname (llm.known_model) in STATE/dungeon-erzaehlstand.json, die letzten MODELLE_MAX (8) Modelle nebeneinander, nur Punkte, Gründe und Zeiten, nie Erzähltext. Ablauf beim Modellwechsel: messen, wechseln, dann „Jetzt prüfen“. Der Zug am Tisch nutzt seit dieser Version dieselben Schritte (ask_checks, roll_facts, tell), es gibt nur noch eine Quelle. Live: Zustand → Überblick nennt die gemessenen Modelle und die beste Punktzahl. Selbsttests in test_dungeon_erzaehlstand."
 },
 {
 "lang": "de",
@@ -8997,7 +9013,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Einordnung mit Wahrscheinlichkeit (V01.0.340, `systemone.py`)",
-"text": "HECK_MIN) entsteht ein Fall „Erfundenes vermutet“ (faelle.KINDS[\"erfunden\"], Befund „Antwort nennt Angaben, die in keinem Ergebnis stehen“, Vorschläge Antwort-Prüfung, Temperatur, Qualitätstest). Läuft über vorrang („Antwort prüfen“, wartet, solange jemand spricht), höchstens 50-mal am Tag, nie vor dem Sprechen; Sätze mit Codewort nie. - Beschwerde erkennen (chat.systemone_klage, braucht „Fehlerschleife stoppen“): die Taten der letzten Antwort eines Profils bleiben 10 Minuten im Arbeitsspeicher (taten.note_last, nur Art, geklappt, kurzer Name). Sagt die nächste Nachricht „geht immer noch nicht“, „ist noch an“ (feste Liste taten.COMPLAINT) oder, wenn die Liste nichts findet, die Einordnung ab 80 % (systemone.KLAGE_MIN, Frist 1,5 s), bekommt das Modell einen festen Hinweis, erst nachzusehen und den Stand ehrlich zu sagen, und die Werkzeuge, die Dinge dieser Art ändern (taten.locked), sind in dieser Antwort nicht angeboten. Bittet die Nachricht selbst darum („… mach es nochmal aus“, taten.RETRY), bleibt alles angeboten. Logs → Anfragen zeigt „Beschwerde (Panel)“ mit „Liste“ oder „Einordnung“; Live am Knoten Taten „n Beschwerden erkannt“. - Label-Masse und zwei Reihenfolgen (qwen38 ab "
+"text": "HECK_MIN) entsteht ein Fall „Erfundenes vermutet“ (faelle.KINDS[\"erfunden\"], Befund „Antwort nennt Angaben, die in keinem Ergebnis stehen“, Vorschläge Antwort-Prüfung, Temperatur, Qualitätstest). Läuft über vorrang („Antwort prüfen“, wartet, solange jemand spricht), höchstens 50-mal am Tag, nie vor dem Sprechen; Sätze mit Codewort nie. - Beschwerde erkennen (chat.systemone_klage, braucht „Fehlerschleife stoppen“): die Taten der letzten Antwort eines Profils bleiben 10 Minuten im Arbeitsspeicher (taten.note_last, nur Art, geklappt, kurzer Name). Sagt die nächste Nachricht „geht immer noch nicht“, „ist noch an“ (feste Liste taten.COMPLAINT) oder, wenn die Liste nichts findet, die Einordnung ab 80 % (systemone.KLAGE_MIN, Frist 1,5 s), bekommt das Modell einen festen Hinweis, erst nachzusehen und den Stand ehrlich zu sagen, und die Werkzeuge, die Dinge dieser Art ändern (taten.locked), sind in dieser Antwort nicht angeboten. Bittet die Nachricht selbst darum („… mach es nochmal aus“, taten.RETRY), bleibt alles angeboten. Logs → Anfragen zeigt „Beschwerde (Panel)“ mit „Liste“ oder „Einordnung“; Live am Knoten Taten „n Beschwerden erkannt“. - Erzähler-Prüfstand (chat.dungeon_erzaehlstand"
 },
 {
 "lang": "de",
@@ -9005,7 +9021,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Einordnung mit Wahrscheinlichkeit (V01.0.340, `systemone.py`)",
-"text": "v1.15): x-systemone-label-mass sagt, wie viel Wahrscheinlichkeit überhaupt auf die Antwortmöglichkeiten fiel. Unter 50 % (systemone.MIN_MASS) gilt die Antwort als unsicher und der Aufrufer macht ohne weiter (feste Regel, Live zählt „unsicher“). x-systemone-branches zeigt, ob qwen38 jede Frage in zwei Reihenfolgen stellt (SYSTEMONE_PERMUTATIONS=2, laut qwen38-Messung genauer und besser kalibriert); „Einordnung prüfen“ und Live zeigen es. Einschalten auf dem Spark: sudo systemctl edit qwen38-keepalive.service, darin [Service] und Environment=SYSTEMONE_PERMUTATIONS=2, dann sudo systemctl restart qwen38-keepalive.service. - Einordnung messen (Knopf unter Funktionen → Weiche bei „Fragen, die keine Regel erkennt“, POST/GET /api/admin/systemone/messen, nur Admin): die Testsätze der Weiche (intent_bench.BENCH ohne Sätze mit zwei Gruppen, dazu die eigenen aus Funktionen → Weiche, höchstens 200) gehen einzeln als Hintergrundarbeit („Einordnung messen“) durch die Frage der Werkzeugwahl. Ergebnis je Schwelle 60/70/80/90 %: wie viele Sätze eingegrenzt würden und wie viele davon falsch, Label-Masse, Mitte der Zeit, Verwechslungen nach Gruppe. Vorschlag: die niedrigste Schwelle mit mindestens 10 "
+"text": ", nur Admin, auf Knopf): zu jeder festen Szene die eigene Einschätzung des Modells, „lebendig“ und „folgt den Aktionen“ in Prozent (Verwendung erzaehler); gibt nie Punkte, die geben die festen Regeln. - Label-Masse und zwei Reihenfolgen (qwen38 ab v1.15): x-systemone-label-mass sagt, wie viel Wahrscheinlichkeit überhaupt auf die Antwortmöglichkeiten fiel. Unter 50 % (systemone.MIN_MASS) gilt die Antwort als unsicher und der Aufrufer macht ohne weiter (feste Regel, Live zählt „unsicher“). x-systemone-branches zeigt, ob qwen38 jede Frage in zwei Reihenfolgen stellt (SYSTEMONE_PERMUTATIONS=2, laut qwen38-Messung genauer und besser kalibriert); „Einordnung prüfen“ und Live zeigen es. Einschalten auf dem Spark: sudo systemctl edit qwen38-keepalive.service, darin [Service] und Environment=SYSTEMONE_PERMUTATIONS=2, dann sudo systemctl restart qwen38-keepalive.service. - Einordnung messen (Knopf unter Funktionen → Weiche bei „Fragen, die keine Regel erkennt“, POST/GET /api/admin/systemone/messen, nur Admin): die Testsätze der Weiche (intent_bench.BENCH ohne Sätze mit zwei Gruppen, dazu die eigenen aus Funktionen → Weiche, höchstens 200) gehen einzeln als Hintergrundarbeit („Einordnung mess"
 },
 {
 "lang": "de",
@@ -10126,6 +10142,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Balance-Prüfstand (Funktionen → Meine Daten → „Balance-Prüfstand“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Spark spielt Kämpfe des KI-Dungeon-Masters allein durch, mit den echten Regeln und Würfeln und dem Katalog samt deinen eigenen Regeln, ohne Sprachmodell: je Stufe 1 bis 10 und Gruppengröße 1 bis 5 jeweils 200 Kämpfe der Gefahr „mittel“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Erzähler-Prüfstand (Funktionen → Meine Daten → „Erzähler-Prüfstand“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Admin spielt acht feste Szenen durch das laufende Sprachmodell, mit denselben Regeln wie am Tisch: eine gescheiterte Probe, zwei Helden, ein Kampf mit Würfel-Belegen, der Kinderton, eine Figur beim Namen, eine englische Runde, eine r …"
 },
 {
 "lang": "de",
@@ -16669,7 +16693,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 43), otherwise the line gives its reason (dateien.STATE_LOCAL, 91). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 44), otherwise the line gives its reason (dateien.STATE_LOCAL, 91). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -16685,7 +16709,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 43 files in every backup (step 7) - 91 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 44 files in every backup (step 7) - 91 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -18598,6 +18622,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ance; the model gets this turn's answers only as data (orakel) and the fixed rule to hold to them. Own tables: the Dungeon Master tab \"Rules\" has the part \"Tables\" with all tables of the catalog; \"Own copy\" and \"Edit\" add an own table (group orakel or eigen, 2 to 300 rows of [German, English] each, if wanted only for single worlds), dungeon_tabellen.check_rules checks it like all rules. Live: Status → Live counts per day questions asked and rounds with an own chaos grade. Self-test test_the_oracle_answers_by_the_panels_dice in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: narrator bench (V01.1.065, tabletop point 4, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", agreed with the thread \"Eigene Modell-Installation statt qwen38\": against the running model in the panel, not in \"modelle messen\", fixed rules decide): Own admin switch *Features → AI Dungeon Master → Narrator bench* (chat.dungeon_erzaehlstand, off from the start; dungeon_erzaehlstand.py). In the Dungeon Master tab \"Rules\" at \"Narrator bench\", \"Check now\" (POST /api/admin/dungeon/erzaehlstand, admin only, at most every KNOPF_S (120) seconds, one run at a time) plays eight fixed scenes through the same steps as a turn at the table (dungeon.ask_checks and dungeon.tell: system text, facts, schema, checks and rewrites are the same) on a round that lives only in memory: nothing is saved, no seat, no profile, no day counter. The scenes: a failed check (a fixed die) must not succeed, two heroes both appear, a fight with the panel's rolls names the foes by name and no number without a receipt, the children's tone without a word of its list, a person of the truth answers by name, an English round is told in English (at most ENGLISCH_M"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AX German words), a risky action asks for a check, a harmless one does not. Per scene 2 points when the first try passes, 1 after a rewrite, 0 when refused or only the panel's repair is left. With \"Classification with probabilities\" on, the model's own view stands beside it (systemone with the use erzaehler: how vivid, how closely it follows the actions and rolls), it gives no points. The result per model name (llm.known_model) is in STATE/dungeon-erzaehlstand.json, the last MODELLE_MAX (8) models side by side, only points, reasons and times, never narration text. When changing models: measure, switch, then \"Check now\". Since this version the turn at the table uses the same steps (ask_checks, roll_facts, tell), there is only one source. Live: Status → Live names the models measured and the best score. Self-tests in test_dungeon_erzaehlstand."
 },
 {
 "lang": "en",
@@ -22261,7 +22301,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Classification with probabilities (V01.0.340, `systemone.py`)",
-"text": "t 50 times a day, never before speaking; sentences with the code word never. - Recognize complaints (chat.systemone_klage, needs \"Stop error loops\"): the deeds of a profile's last answer stay in memory for 10 minutes (taten.note_last, only kind, worked, a short name). When the next message says \"still does not work\", \"it is still on\" (fixed list taten.COMPLAINT) or, when the list finds nothing, the classification from 80 % (systemone.KLAGE_MIN, 1.5 s limit), the model gets a fixed note to look first and say the state honestly, and the tools that change things of that kind (taten.locked) are not offered in this answer. When the message itself asks for it (\"… turn it off again\", taten.RETRY), everything stays offered. Logs → Requests shows \"Beschwerde (Panel)\" with \"Liste\" or \"Einordnung\"; Live shows \"n Beschwerden erkannt\" at the Taten node. - Label mass and two orders (qwen38 v1.15 and later): x-systemone-label-mass says how much probability fell on the options at all. Below 50 % (systemone.MIN_MASS) the answer counts as unsure and the caller goes on without it (fixed rule, Live counts \"unsure\"). x-systemone-branches shows whether qwen38 asks every question in two orders (SYSTEMONE"
+"text": "t 50 times a day, never before speaking; sentences with the code word never. - Recognize complaints (chat.systemone_klage, needs \"Stop error loops\"): the deeds of a profile's last answer stay in memory for 10 minutes (taten.note_last, only kind, worked, a short name). When the next message says \"still does not work\", \"it is still on\" (fixed list taten.COMPLAINT) or, when the list finds nothing, the classification from 80 % (systemone.KLAGE_MIN, 1.5 s limit), the model gets a fixed note to look first and say the state honestly, and the tools that change things of that kind (taten.locked) are not offered in this answer. When the message itself asks for it (\"… turn it off again\", taten.RETRY), everything stays offered. Logs → Requests shows \"Beschwerde (Panel)\" with \"Liste\" or \"Einordnung\"; Live shows \"n Beschwerden erkannt\" at the Taten node. - Narrator bench (chat.dungeon_erzaehlstand, admin only, on the button): for every fixed scene the model's own view, \"vivid\" and \"follows the actions\" in per cent (use erzaehler); never gives points, the fixed rules do. - Label mass and two orders (qwen38 v1.15 and later): x-systemone-label-mass says how much probability fell on the options at a"
 },
 {
 "lang": "en",
@@ -22269,7 +22309,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Classification with probabilities (V01.0.340, `systemone.py`)",
-"text": "_PERMUTATIONS=2, more accurate and better calibrated by qwen38's measurement); \"Check classification\" and Live show it. Switching it on at the Spark: sudo systemctl edit qwen38-keepalive.service, in it [Service] and Environment=SYSTEMONE_PERMUTATIONS=2, then sudo systemctl restart qwen38-keepalive.service. - Measure classification (button under Features → Routing at \"Questions no rule recognizes\", POST/GET /api/admin/systemone/messen, admin only): the switch's test sentences (intent_bench.BENCH without sentences of two groups, plus the own ones from Features → Routing, at most 200) go one by one as background work (\"Einordnung messen\") through the tool-choice question. Result per threshold 60/70/80/90 %: how many sentences would be narrowed and how many of them wrongly, label mass, median time, mix-ups per group. Suggestion: the lowest threshold with at least 10 narrowings and at most 3 % wrong; \"Take the suggestion\" sets \"Tool choice narrows from\" (chat.systemone_min, only 0.6/0.7/0.8/0.9, default 0.8), saved like any setting. Memory only, one journal line per measurement. Journal: systemone: lines with use and milliseconds, weiche: systemone wetter 0.91; never text. Status → Live"
+"text": "ll. Below 50 % (systemone.MIN_MASS) the answer counts as unsure and the caller goes on without it (fixed rule, Live counts \"unsure\"). x-systemone-branches shows whether qwen38 asks every question in two orders (SYSTEMONE_PERMUTATIONS=2, more accurate and better calibrated by qwen38's measurement); \"Check classification\" and Live show it. Switching it on at the Spark: sudo systemctl edit qwen38-keepalive.service, in it [Service] and Environment=SYSTEMONE_PERMUTATIONS=2, then sudo systemctl restart qwen38-keepalive.service. - Measure classification (button under Features → Routing at \"Questions no rule recognizes\", POST/GET /api/admin/systemone/messen, admin only): the switch's test sentences (intent_bench.BENCH without sentences of two groups, plus the own ones from Features → Routing, at most 200) go one by one as background work (\"Einordnung messen\") through the tool-choice question. Result per threshold 60/70/80/90 %: how many sentences would be narrowed and how many of them wrongly, label mass, median time, mix-ups per group. Suggestion: the lowest threshold with at least 10 narrowings and at most 3 % wrong; \"Take the suggestion\" sets \"Tool choice narrows from\" (chat.systemone_m"
 },
 {
 "lang": "en",
@@ -23374,6 +23414,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Balance bench (Features → My data → \"Balance bench\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The Spark plays fights of the AI Dungeon Master by itself, with the real rules and dice and the catalog including your own rules, without the language model: per level 1 to 10 and group size 1 to 5, 200 fights of danger \"medium\" each."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Narrator bench (Features → My data → \"Narrator bench\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The admin plays eight fixed scenes through the running language model, with the same rules as at the table: a failed check, two heroes, a fight with dice receipts, the children's tone, a person by name, an English round, a risky and a ha …"
 },
 {
 "lang": "en",

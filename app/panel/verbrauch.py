@@ -109,7 +109,7 @@ AUFGABEN = {
     "Verbessern": "assistent", "Einstellungs-Assistent": "assistent",
     # checks
     "Prüffrage": "pruefen", "Qualitätstest": "pruefen", "Prüfen": "pruefen", "Messen": "pruefen",
-    "Antwort prüfen": "pruefen", "Einordnung messen": "pruefen", "Dienst prüfen": "pruefen", "Suchprüfung": "pruefen",
+    "Antwort prüfen": "pruefen", "Einordnung messen": "pruefen", "Erzähler-Prüfstand": "pruefen", "Dienst prüfen": "pruefen", "Suchprüfung": "pruefen",
     # agent, MCP, companion, documents
     "Agent": "agent", "MCP": "agent", "Schreibhilfe": "begleiter", "Begleiter": "begleiter",
     "Dokument erstellen": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente", "Musik machen": "dokumente",

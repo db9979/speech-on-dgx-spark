@@ -245,6 +245,16 @@ def _pruefstand():
         (" · Prüfstand spielt gerade" if c["laeuft"] else "")
 
 
+def _erzaehlstand():
+    """The Dungeon-Master's narrator bench (dungeon_erzaehlstand.counts): numbers only."""
+    import dungeon_erzaehlstand
+    if not dungeon_erzaehlstand.on():
+        return ""
+    c = dungeon_erzaehlstand.counts()
+    return (f" · Erzähler-Prüfstand {c['modelle']} Modelle, bestes {c['beste']} von {c['max']} Punkten" if c["modelle"] else " · Erzähler-Prüfstand noch ohne Lauf") + \
+        (" · Erzähler-Prüfstand prüft gerade" if c["laeuft"] else "")
+
+
 def target(name):
     """The target of a tool: from TOOLS, MCP tools (named per service) by their beginning."""
     if name.startswith(("mcp_", "mcpu_")):
@@ -1867,7 +1877,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['heldenmut']}× Heldenmut" if dgn.get("heldenmut") else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
-                        + _pruefstand()
+                        + _pruefstand() + _erzaehlstand()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

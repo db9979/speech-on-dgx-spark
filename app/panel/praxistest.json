@@ -3425,6 +3425,13 @@
 "titel": "Fraktionen mit Uhren",
 "text": "A: Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren an. Eine neue Runde beginnen: nach dem Prolog zeigt „⏳ Fraktionen“ dem Gastgeber die Gruppen der Geschichte mit Ziel und Uhr. B: Ein paar Züge spielen: manche Uhren rücken zwischen den Zügen vor; die Spieler sehen eine Uhr erst, wenn die Erzählung die Gruppe nennt, nie ihr Ziel. C: Eine Gruppe in der Geschichte behindern (zum Beispiel ihre Schläger vertreiben): im Verlauf steht, dass ihre Uhr zurückfällt. D: Als Gastgeber eine eigene Gruppe anlegen, Ziel und Felder ändern, mit + bis voll drehen: im Verlauf steht, dass sie ihr Ziel erreicht hat, die nächste Erzählung zeigt die Folgen. E: Auf dem Gast-Gerät gibt es keine Ziele und keine Knöpfe. F: Zustand → Überblick zählt Fraktionen und volle Uhren.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P514",
+"v": 1065,
+"titel": "Erzähler-Prüfstand",
+"text": "A: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an. Im Dungeon-Master-Reiter „Regeln“ „Erzähler-Prüfstand“ öffnen und „Jetzt prüfen“ tippen: „prüft gerade“, nach ein paar Minuten steht eine Spalte mit dem Namen des laufenden Modells und Punkten je Szene. B: Über einer Zahl steht der Grund (zum Beispiel „probe“ oder „deutsch“). C: Gleich noch einmal tippen: „zu oft“. D: Nach einem Modellwechsel noch einmal prüfen: beide Modelle stehen nebeneinander. E: Mit Einordnung mit Wahrscheinlichkeit stehen kleine Prozentzahlen daneben. F: Am Tisch spielt eine Runde wie vorher (gleiche Schritte). G: Zustand → Überblick nennt Modelle und beste Punktzahl.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

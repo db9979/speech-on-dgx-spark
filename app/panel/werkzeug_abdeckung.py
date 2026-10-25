@@ -158,6 +158,7 @@ WITHOUT = {
     "dungeonnsc": "dungeon_nsc.py: kein Werkzeug, das Panel würfelt die Karten und nimmt Änderungen nach festen Regeln an",
     "dungeonheldenmut": "dungeon_mut.py: kein Werkzeug, Heldenmut zählt das Panel nach festen Regeln, nie das Modell",
     "dungeonregler": "dungeon_kampf.py: kein Werkzeug, der Regler stellt Begegnungen nach festen Zahlen um, nie das Modell",
+    "dungeonerzaehlstand": "dungeon_erzaehlstand.py: kein Werkzeug, der Admin-Prüfstand spielt feste Szenen durch das laufende Modell, feste Regeln werten",
     "dungeonpruefstand": "dungeon_pruefstand.py: kein Werkzeug, der Admin-Prüfstand spielt Kämpfe mit festen Regeln und Würfeln, ohne Modell",
     "dungeongast": "dungeon_gast.py: kein Werkzeug, Gast-Konten des Spiels mit festem Code per Mail und fester Zug-Mail, nie Modelltext",
     "dungeonbilder": "dungeon_dingbild.py: kein Werkzeug, Bilder für den Katalog des Spiels, gemalt nachts oder auf Knopf des Admins nach fester Regel",

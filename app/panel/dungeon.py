@@ -3526,6 +3526,60 @@ async def _ask_json(system, user, schema, name, tokens):
         return None
 
 
+async def ask_checks(r, rd):
+    """The checks the model asks for this turn, by fixed rules (check_proben). Returns (checks, dropped)."""
+    obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd), schema_proben(r), "proben", 300)
+    return check_proben(r, rd, obj)
+
+
+def roll_facts(r, rd, wuerfe, hits, zuege):
+    """The turn's receipts for the model: the checks, the heroes' attacks and the foes' turn."""
+    facts_w = [{"beleg": w["beleg"], "name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
+                "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
+                **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
+               for w in wuerfe]
+    facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
+                 "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
+                 **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {})}
+                for x in hits]
+    facts_z = [dict(kampf.zug_facts(r, rd, x), **({"beleg": x["beleg"]} if x.get("beleg") else {})) for x in zuege]
+    return facts_w, facts_z
+
+
+async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
+    """The narration of a closed turn: up to three tries against the fixed checks (check_story, erz.judge: a rewrite
+    with a hint, a third only for a hard fault, erz.HART), else the mildest try repaired (erz.repair). step(name) shows
+    the table the stage; count=False for the Erzähler-Prüfstand (no day counters). Returns (story or None, dropped,
+    the faults of the tries: "" passed, None refused)."""
+    facts_w, facts_z = roll_facts(r, rd, wuerfe, hits, zuege)
+    rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
+    print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
+    story, best, extra, drop, tries = None, None, "", 0, []
+    for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
+        if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
+            break
+        obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
+        s, d2 = check_story(r, rd, obj)
+        drop += d2
+        if not s:
+            tries.append(None)
+            continue
+        fault, missing = erz.judge(_me, rd, s, wuerfe, hits, zuege)
+        tries.append(fault)
+        if not fault:
+            story = s
+            break
+        if not best or erz.rank(fault) > erz.rank(best[1]):     # keep the try with the mildest fault
+            best = (s, fault, missing)
+        extra = erz.hint(fault, missing, rd["lang"])
+        if step:
+            await step("nachbessern")
+        if count:
+            _day.bump("nachgebessert")
+        print(f"dungeon: nachbessern | {fault}", flush=True)
+    return story or (erz.repair(rd, *best) if best else None), drop, tries
+
+
 async def run_turn(rid, turn):
     """The Dungeon Master's answer to a closed turn: checks, the panel's rolls, the narration, the panel's rules."""
     import wartung
@@ -3541,8 +3595,7 @@ async def run_turn(rid, turn):
         if wartung.paused("llm"):
             why = "pause"
         else:
-            obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd), schema_proben(r), "proben", 300)
-            proben, drop = check_proben(r, rd, obj)
+            proben, drop = await ask_checks(r, rd)
             proben, hits = kampf.attacks(_me, r, rd, proben)
             wuerfe = roll(r, rd, proben)
             zuege = kampf.foes_turn(_me, r, rd, hits)
@@ -3550,37 +3603,8 @@ async def run_turn(rid, turn):
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
-            facts_w = [{"beleg": w["beleg"], "name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
-                        "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
-                        **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
-                       for w in wuerfe]
-            facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
-                         "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
-                         **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {})}
-                        for x in hits]
-            facts_z = [dict(kampf.zug_facts(r, rd, x), **({"beleg": x["beleg"]} if x.get("beleg") else {})) for x in zuege]
-            rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
-            print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
-            story, best, extra = None, None, ""
-            for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
-                if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
-                    break
-                obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
-                s, d2 = check_story(r, rd, obj)
-                drop += d2
-                if not s:
-                    continue
-                fault, missing = erz.judge(_me, rd, s, wuerfe, hits, zuege)
-                if not fault:
-                    story = s
-                    break
-                if not best or erz.rank(fault) > erz.rank(best[1]):     # keep the try with the mildest fault
-                    best = (s, fault, missing)
-                extra = erz.hint(fault, missing, rd["lang"])
-                await asyncio.to_thread(wait_step, rid, turn, "nachbessern")
-                _day.bump("nachgebessert")
-                print(f"dungeon: nachbessern | {fault}", flush=True)
-            story = story or (erz.repair(rd, *best) if best else None)
+            story, d2, _ = await tell(r, rd, wuerfe, hits, zuege, lambda s: asyncio.to_thread(wait_step, rid, turn, s))
+            drop += d2
             if drop:
                 _day.bump("verworfen", drop)
             why = "ok" if story else "ausfall"

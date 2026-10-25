@@ -1080,7 +1080,7 @@ const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende','tabellen'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),tabellen:t('Tabellen','Tables'),
-  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
+  stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),erzaehlstand:t('Erzähler-Prüfstand','Narrator bench'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
 const dmRTab=()=>!!(PROFILE&&DM.on&&ADMIN);
 async function dmRules(){if(dmRTab()&&$('dmroot')){icTabSet('dungeon','regeln');goSec('dungeon');return}
   let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
@@ -1099,11 +1099,12 @@ function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=
   const n={geschichten:(d.geschichten||[]).length,gegenstaende:S.gegenstaende,klassen:S.klassen,voelker:S.voelker,welten:S.welten,toene:S.toene};
   for(const k of DMRKAT)if(DMR.k[k])n[k]=DMR.k[k].zeilen.length;
   const nb=k=>`<button type="button" class="${DMR.teil===k?'on':''}" data-dmrteil="${k}"${DMR.teil===k?' aria-current="true"':''}><span>${esc(N[k])}</span>${n[k]!=null?`<small>${n[k]}</small>`:''}</button>`;
-  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand'].map(nb).join('')}<hr>${nb('json')}</nav>`;
+  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${DMRKAT.map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand','erzaehlstand'].map(nb).join('')}<hr>${nb('json')}</nav>`;
   c.innerHTML=`<div class="dm-rhead"><h2>${esc(t('Dungeon-Master: Regeln','Dungeon Master: rules'))}</h2>${tab?'':`<button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button>`}</div>
     <div class="dm-rlay">${nav}<div class="dm-rin">${dmRTeil(d,err)}</div></div>`;
   if(DMR.teil==='musik'&&window.dmMusikAdm)dmMusikAdm();
   if(DMR.teil==='pruefstand')dmPruefLook();
+  if(DMR.teil==='erzaehlstand')dmErzLook();
   if(DMRKAT.includes(DMR.teil)&&!DMR.k[DMR.teil])dmKatLoad(DMR.teil)}
 function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N[k])}</h3>`,E=err?`<div class="err dm-adm-err">${err}</div>`:'';
   if(k==='geschichten')return DMP.g?dmPlanForm(d):dmPlans(d)+E;
@@ -1115,6 +1116,7 @@ function dmRTeil(d,err){const k=DMR.teil,N=dmRNamen(),h=`<h3 class="sec">${esc(N
   if(k==='bilder')return dmThumbsPics(d);
   if(k==='musik')return '<div id="dmmusikadm"></div>';
   if(k==='pruefstand')return h+`<div id="dmpruef"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
+  if(k==='erzaehlstand')return h+`<div id="dmerzst"><div class="mut">${esc(t('Lade …','Loading …'))}</div></div>`;
   if(k==='gaeste')return h+dmGastAdm(d.gastmail)+E;
   if(k==='ankommt')return h+(dmThumbsAdmin(d.daumen)||`<div class="fh">${esc(t('Noch keine 👍 oder 👎 in einer Runde.','No 👍 or 👎 in a round yet.'))}</div>`);
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
@@ -1285,6 +1287,26 @@ document.addEventListener('click',async e=>{const b=e.target.closest('#dmpruef [
   if(k!=='los'){DMPS.g=+k;if(DMPS.d)$('dmpruef').innerHTML=dmPruefBox(DMPS.d);return}
   b.disabled=true;const {r,d}=await apiTry('/api/admin/dungeon/pruefstand',xjson('POST',{}));
   if(!r.ok){sayToast(dmErr(r.status,d.detail));b.disabled=false;return}DMPS.d=d;$('dmpruef').innerHTML=dmPruefBox(d);DMPS.t=setTimeout(dmPruefLook,3000)});
+// Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the running model, points by fixed
+// rules per scene and model side by side; the model's own Einordnung only as a hint beside it
+const DMES={t:0};
+function dmErzBox(x){const ms=Object.entries(x.modelle||{}).sort((a,b)=>b[1].zeit-a[1].zeit),mx=2*x.szenen.length;
+  const dot=s=>s?`<span class="dm-es-p" data-p="${s.punkte}" title="${esc(s.grund)}${s.versuche?' · '+s.versuche+' '+esc(t('Versuche','tries')):''} · ${s.sekunden} s">${s.punkte}</span>${s.einordnung?`<small class="mut" title="${esc(t('eigene Einschätzung des Modells','the model\'s own view'))}"> ${Math.round(s.einordnung.lebendig*100)}/${Math.round(s.einordnung.folgt*100)}</small>`:''}`:'–';
+  const tab=ms.length?`<div class="dm-ps-w"><table class="dm-ps-t dm-es-t"><thead><tr><th>${esc(t('Szene','Scene'))}</th>${ms.map(([n])=>`<th>${esc(n)}</th>`).join('')}</tr></thead><tbody>
+    ${x.szenen.map(([id,nm])=>`<tr><td>${esc(nm[L==='en'?1:0])}</td>${ms.map(([,m])=>`<td>${dot((m.szenen||{})[id])}</td>`).join('')}</tr>`).join('')}
+    <tr class="dm-es-sum"><td>${esc(t('Punkte','Points'))}</td>${ms.map(([,m])=>`<td><b>${m.punkte}</b> / ${m.max||mx}</td>`).join('')}</tr>
+    <tr><td>${esc(t('Dauer','Time'))}</td>${ms.map(([,m])=>`<td>${Math.round(m.sekunden)} s</td>`).join('')}</tr>
+    <tr><td>${esc(t('zuletzt','last'))}</td>${ms.map(([,m])=>`<td>${esc(new Date(m.zeit*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}))}</td>`).join('')}</tr></tbody></table></div>`
+    :`<div class="fh">${esc(t('Noch kein Lauf.','No run yet.'))}</div>`;
+  return `<div class="fh">${esc(x.an?t(`Der Spark spielt ${x.szenen.length} feste Szenen durch das laufende Sprachmodell, mit denselben Regeln wie am Tisch. Je Szene 2 Punkte, wenn der erste Versuch passt, 1 nach dem Nachbessern, 0 sonst.`,`The Spark plays ${x.szenen.length} fixed scenes through the running language model, with the same rules as at the table. Per scene 2 points when the first try passes, 1 after a rewrite, 0 otherwise.`):t('Aus. Einschalten unter Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand.','Off. Switch it on under Features → AI Dungeon Master → Narrator bench.'))}${x.einordnung?' '+esc(t('Die kleinen Zahlen sind die eigene Einschätzung des Modells (lebendig / folgt den Aktionen, in Prozent), sie geben keine Punkte.','The small numbers are the model\'s own view (vivid / follows the actions, in per cent), they give no points.')):''}</div>
+    ${tab}<div class="dm-sum">${x.laeuft?`<span class="pill on">${esc(t('prüft gerade','checking now'))}</span>`:''}</div>
+    <div class="row"><button type="button" class="b p" data-dmes="los"${!x.an||x.laeuft?' disabled':''}>${esc(t('Jetzt prüfen','Check now'))}</button></div>`}
+async function dmErzLook(){clearTimeout(DMES.t);if(!$('dmerzst'))return;const {r,d}=await apiTry('/api/admin/dungeon/erzaehlstand');
+  if(!$('dmerzst'))return;if(!r.ok){$('dmerzst').innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
+  $('dmerzst').innerHTML=dmErzBox(d);if(d.laeuft)DMES.t=setTimeout(dmErzLook,5000)}
+document.addEventListener('click',async e=>{const b=e.target.closest('#dmerzst [data-dmes]');if(!b)return;b.disabled=true;
+  const {r,d}=await apiTry('/api/admin/dungeon/erzaehlstand',xjson('POST',{}));
+  if(!r.ok){sayToast(dmErr(r.status,d.detail));b.disabled=false;return}$('dmerzst').innerHTML=dmErzBox(d);DMES.t=setTimeout(dmErzLook,5000)});
 let DMDT=0;
 async function dmDingLook(){clearTimeout(DMDT);const box=$('dmding');if(!box)return;const {r,d}=await apiTry('/api/admin/dungeon/dingbilder');
   if(!r.ok||!$('dmding'))return;$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)}
