@@ -279,6 +279,10 @@ FEATURES = (
     # reason's fixed hint, often reported reasons become fixed hints of a world; fixed texts, never a report's words
     F("dungeonerzfehler", "Erzähler-Fehler beheben", "Fix narrator errors", "data", ("dungeon_erzfehler",), parent="dungeon",
       me="dmbox", guide="dungeonerzfehler"),
+    # Dungeon-Richter (dungeon_erzaehler.RICHTER, systemone use "richter"): after the fixed checks the model only gives the
+    # probability of a contradiction, the panel writes anew from a fixed threshold; needs Einordnung mit Wahrscheinlichkeit
+    F("dungeonrichter", "Dungeon-Richter", "Dungeon judge", "data", ("dungeon_richter",), parent="dungeon",
+      me="dmbox", guide="dungeonrichter"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

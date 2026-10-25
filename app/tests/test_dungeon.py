@@ -5549,6 +5549,57 @@ class Fight(Turns):
         self.assertEqual((fixed["ort_id"], fixed["text"]), ("", text))
         self.assertIn("dungeon: nachbessern | fest | neuer_ort", out.getvalue())
 
+    def test_the_judge_gives_a_number_the_panel_decides(self):
+        """Dungeon-Richter (systemone use "richter"): off by default; on, the model only gives the probability of a
+        contradiction after the fixed checks passed, the panel writes anew from RICHTER_MIN, once, and keeps the first
+        try when the rewrite fails a fixed check; unsure or slow, the turn goes on as without."""
+        import features
+        import systemone
+        E = dungeon.erz
+        self.assertNotIn(E.RICHTER, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_richter"], False)
+        rd = self.state(self.rid)
+        asked = []
+
+        def answer(p):
+            async def ask(ccfg, use, state, questions, timeout=4.0, info=None):
+                asked.append((use, state))
+                if p is None:
+                    raise systemone.Unavailable("zu langsam")
+                return {"widerspruch": {"yes": p}}
+            return ask
+        story = {"text": "Arvid stemmt die Tür auf."}
+        with mock.patch.object(systemone, "ask", answer(0.99)), contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(asyncio.run(E.richter(dungeon, rd, story)))        # switch off: never asked
+        self.assertEqual(asked, [])
+        helpers.keep_chat(self, "dungeon_richter")
+        helpers.keep_chat(self, "systemone")
+        helpers.set_config(dungeon_richter=True, systemone=True)
+        for p, want in ((0.99, True), (E.RICHTER_MIN, True), (0.5, False), (None, False)):
+            with mock.patch.object(systemone, "ask", answer(p)), contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertIs(asyncio.run(E.richter(dungeon, rd, story)), want, p)
+            self.assertIn("dungeon: richter | " + ("ausfall" if p is None else "neu" if want else "ok"), out.getvalue())
+        self.assertEqual(asked[-1][0], "richter")
+        self.assertIn("Erzählung: Arvid stemmt die Tür auf.", asked[-1][1])    # the narration as data in the state
+        self.act_all()
+        calls = []
+
+        async def judge(dm, rd, s, wuerfe=(), hits=()):
+            calls.append(s["text"])
+            return True
+        first = "Arvid und Bela öffnen die Tür, dahinter liegt ein stiller Gang voller Staub und alter Spinnweben."
+        second = "Arvid und Bela drücken die Tür auf, kalte Luft weht ihnen aus dem dunklen Gang entgegen."
+        with mock.patch.object(E, "richter", judge), contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, {"erzaehlung": first, "frage_an": ""}, {"erzaehlung": second, "frage_an": ""}])
+        self.assertEqual(calls, [first])                                         # asked once, on the first try
+        self.assertEqual([e["text"] for e in rd["log"] if e["art"] == "dm"][-1], second)
+        self.assertIn("dungeon: nachbessern | richter", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kept = E.repair(rd, {"text": first}, "richter", [])
+        self.assertEqual(kept["text"], first)
+        self.assertIn("dungeon: richter | bleibt", out.getvalue())
+
     def test_more_fixed_rules_for_a_narration(self):
         """Dominik 2026-10-25 „1-3 und 1-7 umsetzten“: a fallen foe acting or a foe dying without a receipt (1), a thing
         the hero does not carry or a power it cannot use told as used (2), gold only told (3), a hero who did not act

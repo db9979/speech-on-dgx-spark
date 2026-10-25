@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.093** KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu
 - **V01.1.092** KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
 - **V01.1.091** KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
 - **V01.1.090** KI-Dungeon-Master: Inhalte der D&D-Ideen im SRD-Katalog: Krit-Tabellen für 13 Schadensarten, milde Patzer, Nachtwachen und Reise-Ereignisse für 13 Landschaften, 60 Lagerfeuer-Fragen, Reise-Rollen, Narben mit Pflastern für den Kindertisch und eine Sage für jeden der 268 Gegner
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.086** KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
 - **V01.1.085** KI-Dungeon-Master: Vorlesen nimmt das Geschlecht einer Stimme nur aus festen Merkmalen, „sagt er“ spricht nie mehr mit der Frauenstimme, auch nicht beim Weiterreden
 - **V01.1.084** KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
-- **V01.1.083** KI-Dungeon-Master: Spielleiter-Pult als Tafeln: oben „Jetzt weiter“ und wer gehandelt hat, vier gleich große Tafeln Zug, Am Tisch, Erzähler, Schwierigkeit, Knopfbänder statt Listen, unten „Nur für dich“ mit Reitern; der Katalog prüft die Tabellen der D&D-Ideen
 
 
 

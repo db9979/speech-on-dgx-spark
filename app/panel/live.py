@@ -1862,6 +1862,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
                         + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung, Frage oder neuem Ort nachgebessert" if dgn.get("erz_regeln") else "")
                         + (f" · heute {dgn['neu_erzaehlt']} Szenen nach einer Fehler-Meldung neu erzählt" if dgn.get("neu_erzaehlt") else "")
+                        + (f" · Richter heute {dgn.get('richter_ok', 0)} ok, {dgn.get('richter_neu', 0)} neu geschrieben, {dgn.get('richter_aus', 0)} ohne Antwort"
+                           if dgn.get("richter_ok") or dgn.get("richter_neu") or dgn.get("richter_aus") else "")
                         + (f" · {dgn['neu_laeuft']} Szenen werden gerade neu erzählt" if dgn.get("neu_laeuft") else "")
                         + (f" · heute {dgn['ding_fehlt']} Aktionen mit Dingen, die der Held nicht dabeihat" if dgn.get("ding_fehlt") else "")
                         + (f" · heute {dgn['tageszeit_weg']} Sprünge der Tageszeit verworfen" if dgn.get("tageszeit_weg") else "")

@@ -89,6 +89,9 @@ OBEN = ("nach oben", "hinauf", "herauf", "oben angekommen", "treppe hoch", "empo
         "upstairs", "up the stairs", "goes up", "go up", "attic", "upper floor")
 WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
+RICHTER = "dungeonrichter"   # the switch „Dungeon-Richter“ (features.py): the model's second opinion after the fixed checks
+RICHTER_MIN = 0.9            # the panel writes anew only from this probability of a contradiction (a fixed threshold)
+RICHTER_S = 8.0              # how long a turn waits for the judge, then it goes on as without
 # Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
 # id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
 _BELEG_WORT = r"(?:wurf|würf\w*|gewürfelt|schaden\w*|lebenspunkte|trefferpunkte|rolls?|rolled|damage|hit points)"
@@ -396,6 +399,10 @@ HINWEIS = {
               "des Gefragten; tu nichts anderes an ihrer Stelle.",
               "Note: these characters ask or talk in their action: {namen}. Tell the question and the answer of the one asked "
               "first; do nothing else in their place."),
+    "richter": ("Hinweis: Die Prüfung sieht einen Widerspruch zu den Aktionen oder den Würfen. Erzähle genau, was die "
+                "Figuren tun wollten, und halte dich an den Ausgang jeder Probe.",
+                "Note: the check sees a contradiction to the actions or the dice. Tell exactly what the characters wanted "
+                "to do, and keep to the outcome of every check."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -475,6 +482,9 @@ def repair(rd, story, fault, missing):
             return story
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=text)
+    elif fault == "richter":                     # only the model's opinion: the try passed every fixed check, it stays
+        print("dungeon: richter | bleibt", flush=True)
+        return story
     elif fault == "neuer_ort":                   # the narration tells no new place: the group stays (dungeon_karte.step)
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, ort_id="")
@@ -507,6 +517,41 @@ def repair(rd, story, fault, missing):
         return story
     print(f"dungeon: nachbessern | fest | {fault}", flush=True)
     return dict(story, text=(story["text"].rstrip() + " " + " ".join(add)).strip())
+
+
+def richter_questions():
+    import systemone
+    return {"widerspruch": systemone.noul("Widerspricht die Erzählung den Aktionen der Spieler oder dem Ausgang der Würfe? "
+                                          "Etwa ein misslungener Wurf als Erfolg erzählt, eine andere Richtung, eine Frage ohne Antwort "
+                                          "oder eine Figur, die etwas anderes tut, als sie wollte.")}
+
+
+async def richter(dm, rd, story, wuerfe=(), hits=()):
+    """The Dungeon-Richter (Tabletop-Punkt 2, systemone use "richter", the helper model first where its switch says so):
+    after the fixed checks passed, the model only gives the probability of a contradiction; the panel writes anew from
+    RICHTER_MIN, a fixed threshold. Actions, checks and the narration are data. False when off, unsure or too slow."""
+    import features
+    import systemone
+    from common import load_config
+    if not rd.get("owner") or not features.allowed(RICHTER, rd["owner"]) or not features.allowed("einordnung", rd["owner"]):
+        return False
+    li = 1 if rd.get("lang") == "en" else 0
+    taten = [f"{rd['plaetze'][pid]['held']['name']}: {a.get('text', '')}" for pid, a in (rd.get("offen") or {}).items()
+             if (rd["plaetze"].get(pid) or {}).get("held")]
+    proben = [f"{w['name']}: {w.get('wofuer') or w['wert']} " + (("misslungen", "failed"), ("gelungen", "succeeded"))[bool(w["ok"])][li] for w in wuerfe]
+    proben += [f"{x['name']} → {x['gegner']}: " + (("daneben", "missed"), ("Treffer", "hit"))[bool(x.get("treffer"))][li] for x in hits]
+    state = "Aktionen:\n" + "\n".join(taten) + "\nProben:\n" + "\n".join(proben) + "\nErzählung: " + str(story.get("text", ""))
+    try:
+        ans = await systemone.ask(load_config().get("chat", {}), "richter", state, richter_questions(), timeout=RICHTER_S)
+    except systemone.Unavailable as e:
+        dm._day.bump("richter_aus")
+        print(f"dungeon: richter | ausfall | {e.why}", flush=True)
+        return False
+    p = ans["widerspruch"]["yes"]
+    neu = p >= RICHTER_MIN
+    dm._day.bump("richter_neu" if neu else "richter_ok")
+    print(f"dungeon: richter | {'neu' if neu else 'ok'} | {round(p * 100)} %", flush=True)
+    return neu
 
 
 def receipts(rd, wuerfe, hits, zuege):

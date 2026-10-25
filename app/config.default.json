@@ -200,6 +200,7 @@
     "dungeon_pruefstand": false,
     "dungeon_erzaehlstand": false,
     "dungeon_erzfehler": false,
+    "dungeon_richter": false,
     "dungeon_import": false,
     "dungeon_regler": false,
     "dungeon_heldenmut": false,

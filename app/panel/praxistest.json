@@ -3607,6 +3607,13 @@
 "titel": "Dungeon-Master: neuer Ort in der Erzählung",
 "text": "Eine Runde spielen und schreiben, dass die Gruppe zu einem Nachbarort der Karte geht. A: Die Erzählung nennt den neuen Ort mit Namen, und die Fahne auf der Karte steht dort. B: Nie steht die Fahne an einem Ort, den die Erzählung nicht nennt; unter Zustand → Logs steht dann „dungeon: nachbessern | neuer_ort“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P540",
+"v": 1093,
+"titel": "Dungeon-Master: Dungeon-Richter",
+"text": "Als Admin Funktionen → KI-Dungeon-Master → Dungeon-Richter an (Einordnung mit Wahrscheinlichkeit muss an sein). Ein paar Züge spielen. A: Unter Zustand → Logs steht nach jedem Zug „dungeon: richter | ok“ oder „| neu“ mit einer Prozentzahl. B: Bei „neu“ kommt die Erzählung etwas später, aber nur einmal. C: Unter Zustand → Überblick steht beim Dungeon-Master „Richter heute …“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
