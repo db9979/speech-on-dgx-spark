@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.072** · 2026-10-25 · KI-Dungeon-Master: die Tabellen unter Regeln zeigen jetzt alle Zeilen mit Nummer, Würfel und Welten, jede Tabelle hat in der Liste ein Zeichen
 - **V01.1.071** · 2026-10-25 · KI-Dungeon-Master: Fehler behoben: ein Angriff auf mehrere Gegner einer Art („die Ratten“) oder ein Angriff ohne genanntes Ziel würfelte nur eine Probe und machte keinen Schaden; jetzt trifft er den ersten, der noch steht, und Magie eines Zauberkundigen ohne eigenen Zauber ist ein Zaubertrick
 - **V01.1.070** · 2026-10-25 · KI-Dungeon-Master: Schlüsseltüren im Gewölbe: der Schlüssel liegt in einem erreichbaren Raum, die Tür öffnet nur, wer ihn trägt und nennt
 - **V01.1.069** · 2026-10-25 · KI-Dungeon-Master: Quest-Gegenstände: Schlüssel, Karten und Siegel der Geschichte ohne Gewicht, aus dem Geschichten-Planer, der Karte oder einem geprüften Fund; wer sie in der Aktion nennt, nimmt sie, Türen öffnen sich nur mit ihnen

@@ -3474,6 +3474,13 @@
 "titel": "Dungeon-Master: Angriff auf mehrere Ratten",
 "text": "A: Eine Runde mit einem Kampf gegen zwei gleiche Gegner (etwa zwei Riesenratten) spielen. B: Als Krieger schreiben „Ich greife die Ratten an“: der Würfel zeigt einen Angriff gegen die Rüstung der ersten Ratte, bei einem Treffer verliert sie Leben. C: Als Magier oder Heiler schreiben „Ich greife die Ratten mit einem Zauberspruch an“ (ohne einen Zauber aus der Liste zu nennen): ein Angriff „mit Zauber“, Schaden Energie, die Ratte verliert Leben. D: Fällt die erste Ratte, trifft der nächste Angriff auf „die Ratten“ die zweite. E: „Ich lausche an der Tür“ im Kampf bleibt eine Probe ohne Angriff.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P521",
+"v": 1072,
+"titel": "Dungeon-Master: Tabellen ganz sehen",
+"text": "A: Als Admin im Dungeon-Master den Reiter „Regeln“ öffnen, Teil „Tabellen“: jede Tabelle hat links ein Zeichen statt eines Punktes. B: „Aussehen“ antippen: rechts stehen Würfel W61 und alle 61 Zeilen mit Nummer; der Kasten rollt für sich. C: „Ort“ antippen: Zeilen nur für manche Welten nennen diese Welten in der dritten Spalte. D: Die Seite auf Englisch: die Zeilen stehen auf Englisch, der Würfel heißt d61.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

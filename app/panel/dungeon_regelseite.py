@@ -32,6 +32,10 @@ from core import app_version, auth, json_body
 router = APIRouter()
 TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende", "tabellen")
 GRUPPE = {"nsc": ("Figuren", "People"), "orakel": ("Orakel", "Oracle"), "eigen": ("Eigene", "Own")}   # tables (dungeon_tabellen)
+TAB_ZEICHEN = {"nsc": "👤", "orakel": "🔮", "eigen": "✎",      # a table's sign in the list: its own, else its group's
+               "nsc_aussehen": "👁️", "nsc_art": "🎭", "nsc_wunsch": "💭", "nsc_geheimnis": "🤫", "nsc_beruf": "🛠️",
+               "orakel_aktion": "⚡", "orakel_thema": "📜", "orakel_ort": "🗺️", "orakel_merkmal": "🔍", "orakel_wendung": "🔀",
+               "orakel_komplikation": "⚠️", "orakel_hinweis": "💡", "orakel_gefahr": "☠️", "orakel_chance": "🍀", "orakel_aerger": "🏘️"}
 MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten")   # welten, peoples, classes,
 # backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above
 BODY = 16000              # one entry as JSON
@@ -180,13 +184,22 @@ def werte(teil, x, r, li):
         z = x.get("zeilen") or []
         wn = {w["id"]: _name(w, li) for w in r["welten"]}
         out += [[L("Gruppe", "Group"), GRUPPE.get(x.get("gruppe"), ("", ""))[li]], [L("Zeilen", "Rows"), str(len(z))],
-                [L("Beispiele", "Examples"), " · ".join(str(y["t"][li]) for y in z[:3] if isinstance(y, dict) and isinstance(y.get("t"), list))],
+                [L("Würfel", "Die"), (f"W{len(z)}" if not en else f"d{len(z)}") + L(", jede Zeile gleich oft; in einer Welt nur die Zeilen für sie",
+                                                                                    ", every row as often; in a world only the rows for it")],
                 [L("Nur in Welten", "Only in worlds"), ", ".join(sorted({wn.get(w, w) for y in z if isinstance(y, dict) for w in y.get("welten") or []}))]]
     elif teil == "zustaende":
         out += [[L("Wirkung", "Effect"), ", ".join(v.replace("_", " ") for v in x.get("wirkung") or [])]]
         if x.get("runden"):
             out.append([L("Dauer", "Lasts"), f"{x['runden']} " + L("Runden", "rounds")])
     return [z for z in out if z[1]]
+
+
+def tafel(x, r, li):
+    """A table's rows for the detail (Dominik 2026-10-25 „ich sehe gar nicht die tabellen“): the number, the text in the
+    page's language and the worlds of a row that only counts in some."""
+    wn = {w["id"]: _name(w, li) for w in r["welten"]}
+    return [{"n": i + 1, "t": str(y["t"][li] if len(y["t"]) > li else y["t"][0]), "w": ", ".join(wn.get(w, w) for w in y.get("welten") or [])}
+            for i, y in enumerate(x.get("zeilen") or []) if isinstance(y, dict) and isinstance(y.get("t"), list) and y["t"]]
 
 
 def _welt_of(r, welt):
@@ -211,12 +224,15 @@ def view(teil, lang="de", welt=""):
         i = x["id"]
         o = own.get(i)
         stand = "aus" if o and o.get("aus") else "geaendert" if o and i in base else "eigen" if o else "grund" if i in grund else "srd"
-        row = {"id": i, "name": _name(x, li), "zeichen": x.get("zeichen") or dingbild.ZEICHEN.get(x.get("art"), ""),
+        row = {"id": i, "name": _name(x, li), "zeichen": x.get("zeichen") or dingbild.ZEICHEN.get(x.get("art"), "")
+               or (TAB_ZEICHEN.get(i) or TAB_ZEICHEN.get(x.get("gruppe"), "") if teil == "tabellen" else ""),
                "zeile": line(teil, x, r, li), "werte": werte(teil, x, r, li), "stand": stand, "art": x.get("art", "")}
         if teil == "gegner":
             row["marke"] = balance.foe(x, lang)
             row["stufe"] = x.get("stufe", 0)
             row.update(welten=[w["id"] for w in r["welten"] if kampf.plays_in(r, x, w["id"])], boss=bool(x.get("boss")), frisch=frisch(x), arten=arten(x))
+        elif teil == "tabellen":
+            row["tafel"] = tafel(x, r, li)
         elif teil == "gegenstaende":
             row["marke"] = balance.item(x, lang)
             row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled

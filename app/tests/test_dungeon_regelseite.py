@@ -57,6 +57,24 @@ class Page(Base):
         items, _ = self.rows("gegenstaende")
         self.assertTrue(all("marke" in x and "bild" in x for x in items.values()))
 
+    def test_a_table_shows_every_row_and_its_sign(self):
+        """Dominik 2026-10-25 „ich sehe gar nicht die tabellen“: the detail holds every row with its number and the
+        worlds of a row that counts only in some, the die is the number of rows, every table has a sign."""
+        r = dungeon.rules()
+        rows, _ = self.rows("tabellen")
+        for x in r["tabellen"]:
+            row = rows[x["id"]]
+            self.assertTrue(row["zeichen"] and row["zeichen"] != "·", x["id"])
+            self.assertEqual([z["n"] for z in row["tafel"]], list(range(1, len(x["zeilen"]) + 1)))
+            self.assertEqual([z["t"] for z in row["tafel"]], [y["t"][0] for y in x["zeilen"]])
+            self.assertIn(["Würfel", f"W{len(x['zeilen'])}"], [[a, v.split(",")[0]] for a, v in row["werte"]])
+        wn = {w["id"]: w["name"][0] for w in r["welten"]}
+        ort = next(x for x in r["tabellen"] if any(y.get("welten") for y in x["zeilen"]))
+        i, y = next((i, y) for i, y in enumerate(ort["zeilen"]) if y.get("welten"))
+        self.assertEqual(rows[ort["id"]]["tafel"][i]["w"], ", ".join(wn[w] for w in y["welten"]))
+        en = {str(x["id"]): x for x in ADMIN.get(K + "tabellen?lang=en").json()["zeilen"]}
+        self.assertEqual(en[ort["id"]]["tafel"][0]["t"], ort["zeilen"][0]["t"][1])
+
     def test_every_foe_and_item_shows_what_it_does(self):
         """Dominik 2026-10-24 „sollten immer auch Werte anzeigen wie stark, was sie bewirken“: every foe and item
         has its values in the row and a list of what it does in the detail, in fixed words from the catalog."""
