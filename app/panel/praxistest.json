@@ -3432,6 +3432,13 @@
 "titel": "Erzähler-Prüfstand",
 "text": "A: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an. Im Dungeon-Master-Reiter „Regeln“ „Erzähler-Prüfstand“ öffnen und „Jetzt prüfen“ tippen: „prüft gerade“, nach ein paar Minuten steht eine Spalte mit dem Namen des laufenden Modells und Punkten je Szene. B: Über einer Zahl steht der Grund (zum Beispiel „probe“ oder „deutsch“). C: Gleich noch einmal tippen: „zu oft“. D: Nach einem Modellwechsel noch einmal prüfen: beide Modelle stehen nebeneinander. E: Mit Einordnung mit Wahrscheinlichkeit stehen kleine Prozentzahlen daneben. F: Am Tisch spielt eine Runde wie vorher (gleiche Schritte). G: Zustand → Überblick nennt Modelle und beste Punktzahl.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P515",
+"v": 1066,
+"titel": "Abenteuer-Import",
+"text": "A: Funktionen → KI-Dungeon-Master → Abenteuer-Import an. Im Dungeon-Master-Reiter „Regeln“ bei „Geschichten“ „Neue Geschichte“ tippen: oben steht „📄 Abenteuer aus einer Datei“. B: Ein Abenteuer als PDF oder Word mit Kapitel-Überschriften wählen, Welt und Ton einstellen und „Übernehmen“ tippen: „Das Modell liest …“, dann stehen Titel, Grundidee, Schauplätze und je Kapitel ein Akt im Formular, eine Meldung nennt die Kapitel. C: Nichts ist gespeichert, bis „Prüfen und speichern“; danach steht die Geschichte in der Liste. D: Ein gescanntes PDF ohne Text: „Die Datei ist nicht lesbar“. E: Eine .exe-Datei: „Diese Dateiart geht nicht“. F: Zahl der Akte auf 4 stellen und noch einmal übernehmen: vier Akte. G: Zustand → Überblick nennt übernommene und abgelehnte Abenteuer.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

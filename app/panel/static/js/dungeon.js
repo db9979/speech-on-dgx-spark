@@ -1330,7 +1330,11 @@ function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
     <label>${esc(t('Was geschieht','What happens'))}</label><textarea class="dmp-ai" rows="3" maxlength="${P.inhalt}">${esc(a.inhalt||'')}</textarea>
     <div class="dm-two"><div><label>${esc(t('Wendepunkt am Ende','Turning point at the end'))}</label><input class="dmp-aw" maxlength="${P.wende}" value="${esc(a.wende||'')}"></div>
     <div><label>${esc(t('Geplante Züge','Planned turns'))}</label><input class="dmp-az" type="number" min="${P.zuege[0]}" max="${P.zuege[1]}" value="${a.zuege||6}"></div></div></div>`;
+  const I=P.import||{};
   return `<h2>${esc(DMP.gid?t('Geschichte bearbeiten','Edit the story'):t('Neue Geschichte','New story'))}</h2><div class="dm-form dmp-form">
+    ${I.an?`<div class="dm-k"><div class="lbl">📄 ${esc(t('Abenteuer aus einer Datei','Adventure from a file'))}</div>
+      <div class="row"><input type="file" class="dmp-datei" accept="${esc(I.typen.join(','))}" aria-label="${esc(t('Datei mit dem Abenteuer','File with the adventure'))}"><button type="button" class="b p" data-dmadm="gimp"${DMP.busy?' disabled':''}>${esc(DMP.busy?t('Das Modell liest …','The model is reading …'):t('Übernehmen','Import'))}</button></div>
+      <small class="mut">${esc(t(`PDF, Word, OpenDocument, Markdown, Text oder HTML bis ${I.mb} MB. Welt, Ton, Tabus und die Zahl der Akte unten gelten; das Modell fasst die Kapitel zu Akten zusammen, das Panel prüft den Entwurf. Erst „Speichern“ behält ihn, die Datei behält der Spark nicht.`,`PDF, Word, OpenDocument, Markdown, text or HTML up to ${I.mb} MB. World, tone, taboos and the number of acts below count; the model joins the chapters into acts, the panel checks the draft. Only "Save" keeps it, the Spark does not keep the file.`))}</small></div>`:''}
     <div class="dm-k"><div class="lbl">✨ ${esc(t('Vom Sprachmodell entwerfen lassen','Let the language model draft it'))}</div>
       <textarea class="dmp-stich" rows="2" maxlength="${P.stichworte}" placeholder="${esc(t('verfluchtes Bergdorf, ein Drache, der nur bewacht, eher düster','a cursed mountain village, a dragon that only guards, rather dark'))}">${esc(DMP.stich)}</textarea>
       <div class="row"><select class="dmp-n" aria-label="${esc(t('Akte','Acts'))}">${nums.map(n=>`<option value="${n}"${n===g.akte.length?' selected':''}>${n} ${esc(t('Akte','acts'))}</option>`).join('')}</select><button type="button" class="b p" data-dmadm="gvor"${DMP.busy?' disabled':''}>${esc(DMP.busy?t('Das Modell schreibt …','The model is writing …'):t('Vorschlag erzeugen','Create a proposal'))}</button></div>
@@ -1355,7 +1359,11 @@ function dmPlanRead(){const c=$('dmadmcard'),q=x=>(c.querySelector(x)||{}).value
       wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0)}))}}
 const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>')
   :d.detail==='kein vorschlag'?esc(t('Das Modell hat keinen brauchbaren Vorschlag geliefert. Bitte noch einmal oder mit anderen Stichworten.','The model gave no usable proposal. Please try again or with other keywords.'))
-  :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.')):esc(dmErr(r.status,d.detail));
+  :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.'))
+  :d.detail==='unlesbar'?esc(t('Die Datei ist nicht lesbar (ein PDF ohne Textschicht oder eine kaputte Datei).','The file cannot be read (a PDF without a text layer or a broken file).'))
+  :d.detail==='leer'?esc(t('In der Datei steht zu wenig Text für ein Abenteuer.','The file holds too little text for an adventure.'))
+  :d.detail==='zu gross'?esc(t('Die Datei ist zu groß.','The file is too big.'))
+  :d.detail==='dateiart'?esc(t('Diese Dateiart geht nicht: PDF, Word, OpenDocument, Markdown, Text oder HTML.','This file type does not work: PDF, Word, OpenDocument, Markdown, text or HTML.')):esc(dmErr(r.status,d.detail));
 async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   if(k==='gneu'){DMP.gid='';DMP.err='';DMP.stich='';DMP.hint='';DMP.g={titel:'',welt:w.welten[0].id,ton:(w.toene[1]||w.toene[0]).id,idee:'',ziel:'',gegner:'',orte:[],tabus:[],
     akte:Array.from({length:d.planer.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))};dmRulesDraw(d,'');return}
@@ -1369,6 +1377,13 @@ async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   if(k==='gsave'){const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(DMP.gid||'neu')+'?lang='+dmLang(),xjson('PUT',g));
     if(r.ok){DMP.g=null;dmRulesDraw(x,'');sayToast(t('Geschichte gespeichert','Story saved'));return}DMP.err=dmPlanErr(r,x);dmRulesDraw(d,'');return}
   const n=Math.floor(+((($('dmadmcard').querySelector('.dmp-n'))||{}).value||g.akte.length));
+  if(k==='gimp'){const f=(($('dmadmcard').querySelector('.dmp-datei')||{}).files||[])[0];
+    if(!f){DMP.err=esc(t('Bitte zuerst eine Datei wählen.','Please pick a file first.'));dmRulesDraw(d,'');return}
+    const fd=new FormData();fd.append('file',f,f.name);fd.append('welt',g.welt);fd.append('ton',String(g.ton));fd.append('akte',String(n));fd.append('tabus',g.tabus.join(','));fd.append('lang',g.lang);
+    DMP.busy=true;DMP.err='';dmRulesDraw(d,'');
+    const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/import',{method:'POST',body:fd});DMP.busy=false;
+    if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang});sayToast(t(`Entwurf aus ${x.kapitel} Kapiteln, bitte prüfen und speichern`,`Draft from ${x.kapitel} chapters, please check and save`))}else DMP.err=dmPlanErr(r,x);
+    if(DMP.g&&$('dmadmcard'))dmRulesDraw(DMP.d,'');return}
   const body=k==='gvor'?{welt:g.welt,ton:g.ton,akte:n,stichworte:DMP.stich,tabus:g.tabus,lang:g.lang}:{plan:g,n:+b.dataset.n,hinweis:DMP.hint};
   if(k==='gvor'&&DMP.stich.trim().length<3){DMP.err=esc(t('Bitte ein paar Stichworte eingeben.','Please enter a few keywords.'));dmRulesDraw(d,'');return}
   DMP.busy=true;DMP.err='';dmRulesDraw(d,'');

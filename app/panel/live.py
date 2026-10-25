@@ -245,6 +245,15 @@ def _pruefstand():
         (" · Prüfstand spielt gerade" if c["laeuft"] else "")
 
 
+def _abenteuerimport():
+    """The Dungeon-Master's adventure import (dungeon_import.counts): numbers only, never a file's name."""
+    import dungeon_import
+    c = dungeon_import.counts()
+    if not c["an"]:
+        return ""
+    return f" · Abenteuer-Import an, heute {c['importe']} übernommen, {c['abgelehnt']} abgelehnt"
+
+
 def _erzaehlstand():
     """The Dungeon-Master's narrator bench (dungeon_erzaehlstand.counts): numbers only."""
     import dungeon_erzaehlstand
@@ -1877,7 +1886,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['heldenmut']}× Heldenmut" if dgn.get("heldenmut") else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
-                        + _pruefstand() + _erzaehlstand()
+                        + _pruefstand() + _erzaehlstand() + _abenteuerimport()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

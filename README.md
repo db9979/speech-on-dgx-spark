@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.066** AI Dungeon Master: adventure import: a written adventure (PDF, Word, Markdown) becomes a draft with acts, places and foe in the story planner; the panel checks it like a typed story
 - **V01.1.065** AI Dungeon Master: narrator bench: eight fixed scenes through the running language model with the table's rules, fixed rules give points, models side by side; the turn at the table uses the same steps
 - **V01.1.064** AI Dungeon Master: factions with clocks: the story's groups pursue their goal, the panel turns the clocks, the heroes' deeds help or hinder, a full clock changes the world; window ⏳ Factions
 - **V01.1.063** AI Dungeon Master: combat stages easy to deadly for the host by the SRD 5.2.1 budget table; 44 foes and 30 spells from the SRD 5.2.1; catalog without words of the children's word list
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.059** AI Dungeon Master: the host's random rules, up to five per round with chance, trigger and effect; the panel rolls and applies them, the model only hears the hint as data
 - **V01.1.058** AI Dungeon Master: lines and veils per seat, anonymous for the whole table, and the X-card that tells the last scene again more calmly; fixed word lists of the panel, the model gets them only as data; a view filter with a leak self-test per secret; the scribe check notes by fixed limits what the narration changed
 - **V01.1.057** AI Dungeon Master: five oils in the SRD catalogue (thunder, lightning, fire, frost, blessed) for 25 gold, so in every world each weakness to thunder, lightning, fire and cold can be hit
-- **V01.1.056** AI Dungeon Master at the table: foes with several attacks, bosses at least two; a foe's life as a word (bruised, badly hurt, nearly beaten), states with "N turns left"; speech recognition knows the round's names; every roll with a dice receipt, the narration names only numbers on a receipt; reading aloud marks the sentence being spoken
 
 
 

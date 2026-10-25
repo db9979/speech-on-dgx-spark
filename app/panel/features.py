@@ -262,6 +262,9 @@ FEATURES = (
     # Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the real narration of the running model
     F("dungeonerzaehlstand", "Erzähler-Prüfstand", "Narrator bench", "data", ("dungeon_erzaehlstand",), parent="dungeon",
       me="dmbox", guide="dungeonerzaehlstand"),
+    # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
+    F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
+      guide="dungeonimport"),
     # Spielleiter-Regler (dungeon_kampf.turn_dial, Idee 6): after every fight the next encounters at most ±25 % by fixed
     # numbers, the host may hold it, the children's table only easier
     F("dungeonregler", "Spielleiter-Regler", "Game master dial", "data", ("dungeon_regler",), parent="dungeon",

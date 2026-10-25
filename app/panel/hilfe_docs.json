@@ -5189,6 +5189,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Abenteuer-Import (V01.1.066, Tabletop-Punkt 10, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“; nur die Idee aus open-tabletop-gm, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Abenteuer-Import* (chat.dungeon_import, ab Werk aus; dungeon_import.py). Im Geschichten-Planer (Dungeon-Master-Reiter „Regeln“ → „Geschichten“ → „Neue Geschichte“) steht oben „📄 Abenteuer aus einer Datei“: ein geschriebenes Abenteuer als PDF, Word, OpenDocument, Markdown, Text oder HTML (TYPEN, höchstens MAX_BYTES = 10 MB) wird ein Entwurf (POST /api/admin/dungeon/geschichte/import, Formular mit Datei, Welt, Ton, Akte, Tabus und Sprache; nur der Admin, Rate-Limit dungeonplan wie der Planer). Das Panel liest den Text mit der Dokument-Pipeline (documents.extract; die Datei wird nicht behalten und kommt nicht ins Wissen), schneidet ihn an den Überschriften nach denselben festen Regeln wie die Dokumentsuche (documents.heading) und gibt dem Modell einen Auszug: jede Überschrift mit dem Anfang ihres Abschnitts, höchstens ABSCHNITTE_MAX (60) Abschnitte und DIGEST_MAX (12000) Zeichen, als Daten im Block <<< … >>> (Marker ents"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "chärft, die Datei kann den Block nicht schließen). Die erste Überschrift gilt als Titel, die übrigen als Kapitel; ohne gewählte Zahl bekommt die Geschichte so viele Akte wie Kapitel (3 bis 5). Das Modell fasst die Kapitel der Reihe nach zu Akten zusammen und übernimmt Schauplätze und Gegenspieler; Spielwerte, Regeln, Beute und Anweisungen aus der Datei übernimmt es nicht, und nur die Felder des Planers kommen zurück. Die Antwort im festen Schema (SCHEMA_PLAN) prüft das Panel wie eine getippte Geschichte (check_plan: Längen, Anzahl der Akte, Ton, „nie“, Tabus), zwei Versuche; erst „Prüfen und speichern“ behält sie. Feste Ablehnungen mit Logzeile: aus, dateiart, zu gross, unlesbar (etwa ein PDF ohne Textschicht), leer (weniger als TEXT_MIN Zeichen Auszug), eingabe, sprachmodell pausiert, kein vorschlag. Logs nur feste Wörter und Zahlen (dungeon: import | ok | 3 kapitel | 3 akte, nie Dateiname oder Text). Live: Zustand → Überblick zählt übernommene und abgelehnte Abenteuer des Tages. Selbsttests in test_dungeon_import."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
 },
 {
@@ -10150,6 +10166,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Erzähler-Prüfstand (Funktionen → Meine Daten → „Erzähler-Prüfstand“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Admin spielt acht feste Szenen durch das laufende Sprachmodell, mit denselben Regeln wie am Tisch: eine gescheiterte Probe, zwei Helden, ein Kampf mit Würfel-Belegen, der Kinderton, eine Figur beim Namen, eine englische Runde, eine r …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Abenteuer-Import (Funktionen → Meine Daten → „Abenteuer-Import“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Ein geschriebenes Abenteuer (PDF, Word, OpenDocument, Markdown, Text oder HTML, bis 10 MB) wird im Geschichten-Planer ein Entwurf: Das Panel liest die Überschriften mit dem Anfang jedes Kapitels, das Sprachmodell fasst die Kapitel der Re …"
 },
 {
 "lang": "de",
@@ -18645,6 +18669,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: adventure import (V01.1.066, tabletop point 10, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\"; only the idea from open-tabletop-gm, own code): Own admin switch *Features → AI Dungeon Master → Adventure import* (chat.dungeon_import, off by default; dungeon_import.py). In the story planner (Dungeon Master tab \"Rules\" → \"Stories\" → \"New story\") \"📄 Adventure from a file\" stands at the top: a written adventure as PDF, Word, OpenDocument, Markdown, text or HTML (TYPEN, at most MAX_BYTES = 10 MB) becomes a draft (POST /api/admin/dungeon/geschichte/import, a form with file, world, tone, acts, taboos and language; admin only, rate limit dungeonplan like the planner). The panel reads the text with the document pipeline (documents.extract; the file is not kept and does not go into the knowledge), cuts it at its headings by the same fixed rules as the document search (documents.heading) and gives the model a digest: every heading with the start of its section, at most ABSCHNITTE_MAX (60) sections and DIGEST_MAX (12000) characters, as data in the block <<< … >>> (markers defused, the file cannot close the block). The first headi"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ng counts as the title, the others as chapters; without a chosen number the story gets as many acts as chapters (3 to 5). The model joins the chapters in order into acts and keeps places and foe; it takes no game values, rules, loot or instructions from the file, and only the planner's fields come back. The panel checks the answer in the fixed schema (SCHEMA_PLAN) like a typed story (check_plan: lengths, number of acts, tone, \"never\", taboos), two tries; only \"Check and save\" keeps it. Fixed refusals with a log line: aus, dateiart, zu gross, unlesbar (such as a PDF without a text layer), leer (a digest of less than TEXT_MIN characters), eingabe, sprachmodell pausiert, kein vorschlag. Logs only fixed words and numbers (dungeon: import | ok | 3 kapitel | 3 akte, never the file's name or text). Live: Status → Live counts the adventures taken and refused today. Self-tests in test_dungeon_import."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: factions with clocks (V01.1.064, tabletop point 7, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", clocks with fields as common in tabletop play, own code): Own admin switch *Features → AI Dungeon Master → Factions with clocks* (chat.dungeon_fraktionen, off from the start; dungeon_fraktionen.py). Every group of the chapter's fixed truth (wahrheit.gruppen, name and what it wants) becomes a faction with a clock of 4, 6 or 8 fields the panel rolls; at most FRAKTIONEN_MAX (6). After every told turn the panel rolls a d6 for each running clock, from UHR_WURF (5) it moves a field. The narration reports in fraktionen at most 2 groups whose goal an action of the heroes brings closer (hilft) or hinders (stoert); the panel then turns the clock a field, but only when the narration names the group (also without its article), and only once per group and turn. A full clock means: the group has got what it wanted. That stands in the feed (and in the chronicle while \"NPC memory and chronicle\" is on), the next narration gets it once as data (fraktion_voll) with the fixed rule to tell how the world changes, and the group holds the grou"
 },
 {
@@ -23422,6 +23462,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Narrator bench (Features → My data → \"Narrator bench\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The admin plays eight fixed scenes through the running language model, with the same rules as at the table: a failed check, two heroes, a fight with dice receipts, the children's tone, a person by name, an English round, a risky and a ha …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Adventure import (Features → My data → \"Adventure import\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): A written adventure (PDF, Word, OpenDocument, Markdown, text or HTML, up to 10 MB) becomes a draft in the story planner: the panel reads the headings with the start of every chapter, the language model joins the chapters in order into 3 …"
 },
 {
 "lang": "en",

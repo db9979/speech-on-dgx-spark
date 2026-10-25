@@ -307,6 +307,7 @@ ADMIN_ON_OK = {
     "dungeon_erzaehlstand.py:on": "the narrator bench is admin-only and Spark-wide: it plays fixed scenes on a round only in memory, no profile, its endpoints are /api/admin/ only",
     "dungeon_erzaehlstand.py:_einordnung": "the narrator bench asks the Einordnung only on the admin's button, Spark-wide (no profile, no round)",
     "dungeon_erzaehlstand.py:view": "the narrator bench's admin view says whether the Einordnung is on (admin-only, /api/admin/)",
+    "dungeon_import.py:on": "the adventure import is admin-only: it makes a draft for the admin's story planner, no profile, its endpoint is /api/admin/ only",
     "dungeon_gast.py:on": "a guest account has no profile: Spark-wide door; a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",
     "dungeon.py:_door": "a guest seat has no profile: Spark-wide door before the code is known; find() then asks features.allowed dungeon for the host",
     "mitschreiblink.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each link asks features.allowed listlink for its owner",

@@ -190,6 +190,7 @@
     "dungeon_gast": false,
     "dungeon_pruefstand": false,
     "dungeon_erzaehlstand": false,
+    "dungeon_import": false,
     "dungeon_regler": false,
     "dungeon_heldenmut": false,
     "dungeon_gold": false,

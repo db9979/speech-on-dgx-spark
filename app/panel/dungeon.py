@@ -92,6 +92,8 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
+    POST   /api/admin/dungeon/geschichte/import      a written adventure (form: file, welt, ton, akte, tabus, lang) becomes
+                                                     a draft of the planner (dungeon_import.py, only while „Abenteuer-Import“ is on)
     POST   /api/admin/dungeon/geschichte/akt      {plan, n, hinweis}: the model writes act n again
 """
 import asyncio
@@ -6776,13 +6778,15 @@ def _summary(r):
 def admin_show(request: Request = None):
     """The admin's own rules (as written), what is in force (counts), the stories with the limits of the planner and Live."""
     import dungeon_dingbild
+    import dungeon_import
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
     return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
-                                               "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX},
+                                               "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX,
+                                               "import": dungeon_import.view()},
             "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()})
 
 
