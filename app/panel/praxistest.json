@@ -3264,6 +3264,13 @@
 "titel": "Schneller über den Proxy",
 "text": "Über den Proxy (speech…i234.me): A: Eine Runde mit Vorlesen: zwischen den Sätzen keine lange Pause mehr. B: Während des Vorlesens startet kein Szenenbild und keine Musik (Zustand → Logs: vorrang wartet). C: Regeln → Gegenstände: die Liste ist sofort da, die kleinen Bilder kommen schnell; ein zweites Öffnen lädt die Bilder nicht neu. D: Tasche und Händler: kleine Bilder in der Tasche, groß beim Händler und im Detailfenster. E: In den Entwicklertools: Katalog mit content-encoding gzip, Vorlesen als audio/mpeg.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P491",
+"v": 1037,
+"titel": "Dungeon-Master: Bühnenbild je Ortsart",
+"text": "Voraussetzung: Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen, Abschnitt Bilder: „Alle Bilder malen“, die Zahl der fehlenden Bilder ist größer als vorher (Ortsarten und Raumarten als Bühne). B: In einer Runde mit Karte ohne eigenes Szenenbild steht hinter der Erzählung das breite Bild der Ortsart, an der die Runde ist, ohne Menschen. C: Im Gewölbe wechselt es mit dem Raum (Eingang, Kammer, Schatz …). D: Sobald ein Szenenbild gemalt ist, zeigt die Bühne das Szenenbild.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

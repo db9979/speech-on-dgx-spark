@@ -98,6 +98,9 @@ HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoul
            # Dominik 2026-10-24 „1a 2 und 3“: backgrounds and worlds get pictures too, renewed on the rules page
            "hintergrund": "character art, a {} of this world in a fitting place, the whole figure"}
 WELT_EN = "landscape art, a wide view of the world {}, no people"   # a world's title picture (its own style)
+# the stage behind the story (Dominik 2026-10-24 „alle umsetzen“, idea 10): one wide picture per kind of place and room
+# and style, shown until the scene has its own; neutral light and weather, the stage lays daytime and weather over it
+BUEHNE_EN = "scene art, a wide view of {}, in daylight and clear weather, no people"
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
 NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
@@ -241,6 +244,52 @@ def world_pic(r, w, have=None):
     return n if n in have else ""
 
 
+def stage_text(style, e, room=False):
+    """The fixed prompt of a kind of place (ortsarten) or room (raeume) as the stage's backdrop: the English name, a
+    room's sentence too, never the model's words."""
+    what = f"{e['name'][1]}, {e['satz'][1]}" if room and e.get("satz") else e["name"][1]
+    return f"{style}, {BUEHNE_EN.format(what)}, {dungeon.BILD_ENDE}"
+
+
+def _is_stage(p):
+    return BUEHNE_EN.split("{}")[0] in p
+
+
+def stages(r, style):
+    """[(name, prompt)] of the stage pictures in one style: the kinds of places of its worlds, the rooms (a room
+    without worlds is in every vault)."""
+    ws = dungeon_karte._worlds(r, style)
+    return [(name_of(p), p) for k, room in (("ortsarten", False), ("raeume", True)) for e in r.get(k) or []
+            if not e.get("welten") or set(e["welten"]) & ws for p in [stage_text(style, e, room)]]
+
+
+def stage_pic(r, rd, have=None):
+    """The stage's stand-in picture of a round (dungeon.js shows it only while the scene has no picture of its own):
+    the kind of the place it is at, in a vault the kind of its room, in the round's style. The name once painted and
+    the pictures on, else ""."""
+    k = rd.get("karte")
+    if not k:
+        return ""
+    have = (files() if on() else frozenset()) if have is None else have
+    v = dungeon_karte.vault(rd)
+    if v:
+        try:
+            here = v["raeume"][v["hier"]]
+        except (KeyError, IndexError, TypeError):
+            return ""
+        rs = r.get("raeume") or []      # an entry the admin deleted: the first room of the same kind (boss, falle …)
+        e = next((x for x in rs if x["id"] == here.get("t")), None) or next((x for x in rs if x.get("art") == here.get("art")), None)
+        room = True
+    else:
+        try:
+            art = k["orte"][k["hier"]]["art"]
+        except (KeyError, IndexError, TypeError):
+            return ""
+        e, room = next((x for x in r.get("ortsarten") or [] if x["id"] == art), None), False
+    n = name_of(stage_text(dungeon.style(r, rd), e, room)) if e else ""
+    return n if n in have else ""
+
+
 def heroes(r):
     """[(art, entry)] of every people, class, class ability and background there is a picture for."""
     return [("volk", v) for v in r["voelker"]] + [("klasse", k) for k in r["klassen"]] + \
@@ -287,7 +336,7 @@ def _want(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                [(n, p, None) for n, p in dungeon_karte.bilder(r, s)] + \
+                [(n, p, None) for n, p in dungeon_karte.bilder(r, s) + stages(r, s)] + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
@@ -364,11 +413,13 @@ def _end_why(grund):
 
 
 async def paint_one(n, p):
-    """One picture through the game's painter (dungeon._paint), kept at half size with its AI marks. Returns "ok"
-    or the reason it did not come (dungeon.BILD_GRUENDE)."""
+    """One picture through the game's painter (dungeon._paint), kept at half size with its AI marks; a stage picture
+    (BUEHNE_EN) in the scene's 16:9 (dungeon.BILD_W × BILD_H). Returns "ok" or the reason it did not come
+    (dungeon.BILD_GRUENDE)."""
     import bilder
+    w, h = (dungeon.BILD_W, dungeon.BILD_H) if _is_stage(p) else (SIZE, SIZE)
     try:
-        png = await dungeon._paint(secrets.token_hex(6), p, SIZE, SIZE)
+        png = await dungeon._paint(secrets.token_hex(6), p, w, h)
         png, _, _ = await asyncio.to_thread(bilder.quick_png, png, "kleiner")
         await asyncio.to_thread(dungeon._bild_save, n, png)
         return "ok"
@@ -595,6 +646,7 @@ def add(r, rd, out):
         return v
     for k in list(out):
         out[k] = walk(out[k])
+    out["buehne"] = {"ersatz": stage_pic(r, rd, have)}   # the stage's stand-in until the scene has its own picture
     return out
 
 

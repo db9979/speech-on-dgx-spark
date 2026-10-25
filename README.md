@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.037** AI Dungeon Master: stage pictures per kind of place and room in every world style (16:9, neutral, no people), at night and with "Paint all pictures"; the stage shows them until the scene has its own picture
 - **V01.1.036** AI Dungeon Master faster over the proxy: reading aloud as MP3 with the next piece loading ahead, pictures and music wait while it reads, small pictures in lists, pictures stay in the browser, catalog and rules compressed
 - **V01.1.035** AI Dungeon Master: legendary pieces, 20 per world with their own name, sentence and two effects, only from a boss, a reward or a chest, never at a merchant, each once a campaign
 - **V01.1.034** AI Dungeon Master: items part 2, tools simple +1, good +2 or masterwork +3, potions, scrolls, spells and tools cheaper, common jewellery is a treasure, ▲/▼ better than yours and „not for your class“ in the bag, at the merchant and on the ground
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.030** AI Dungeon Master: experience for more than fighting, fixed experience for every hero for a new place of the map, an act done and a fight ended in peace
 - **V01.1.029** Greeting on opening: self-test with a fixed clock instead of the real one (was red in the night the clocks went back), plus a case right in the doubled hour; the look into the calendar counts four real hours, also across the change of the clocks
 - **V01.1.028** AI Dungeon Master: game master dial, after every fight the Spark sets the next encounters at most a quarter easier or harder by fixed numbers, the host sees the setting and can hold it, at the children's table only easier
-- **V01.1.027** AI Dungeon Master: balance bench, the Spark plays fights with the real rules by itself and shows the wins per level and group size under Rules; encounters are measured to it, at "medium" a group wins 70 to 90 %, a lone hero no longer only every second fight
 
 
 

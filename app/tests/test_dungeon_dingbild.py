@@ -611,5 +611,64 @@ class RulesPage(Base):
         helpers.set_config(dungeon_bilder=False)                               # off: the sign again
         self.assertTrue(all(x["bild"] == "" for x in dungeon._choices("de")["welten"]))
 
+class Stage(Base):
+    """The stage behind the story (Dominik 2026-10-24 „alle umsetzen“, idea 10): one wide picture per kind of place and
+    room in every style, painted at night and with „Alle Bilder malen“ in the scene's 16:9, neutral (daylight, clear
+    weather, no people); view() names it as out["buehne"]["ersatz"] once it is there, the place's kind outside, the
+    room's kind in a vault (a deleted entry: the first room of the same kind), "" without a map or with pictures off."""
+    def rd(self, art="dorf", drin=None, t="eingang", raum_art="eingang"):
+        k = {"orte": [{"art": art, "name": "Erlenbrück"}], "hier": 0, "drin": drin, "gw": {}}
+        if drin is not None:
+            k["gw"][str(drin)] = {"raeume": [{"t": t, "art": raum_art}], "hier": 0}
+        return {"welt": "fantasy", "ton": 12, "karte": k}
+
+    def put(self, n):
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        with open(dungeon.bild_file(n), "wb") as f:
+            f.write(PNG)
+        db._files["m"] = None
+
+    def test_every_kind_in_every_style_neutral_and_wide(self):
+        r = dungeon.rules()
+        want = dict(db.wanted(r))
+        for s in db.styles(r):
+            st = db.stages(r, s)
+            self.assertTrue(st)
+            for n, p in st:
+                self.assertIn(n, want)                                          # painted at night and with „Alle“
+                self.assertTrue(p.startswith(s) and p.endswith(dungeon.BILD_ENDE), p)
+                self.assertIn("no people", p)
+                self.assertTrue(db._ok_text(p, r), p)                           # the shipped kinds pass the word list
+        dorf = next(x for x in r["ortsarten"] if x["id"] == "dorf")
+        style = dungeon.style(r, self.rd())
+        self.assertIn(db.name_of(db.stage_text(style, dorf)), dict(db.stages(r, style)))
+        self.assertNotEqual(db.stage_text(style, dorf), db.dungeon_karte.kind_prompt(style, dorf))   # not the map's vignette
+        self.assertEqual(asyncio.run(db.paint_one("ding-00000000000000bb", db.stage_text(style, dorf))), "ok")
+        self.assertEqual((self.calls[-1]["width"], self.calls[-1]["height"]), (dungeon.BILD_W, dungeon.BILD_H))
+        self.assertEqual(asyncio.run(db.paint_one("ding-00000000000000cc", db.prompt(style, r["gegenstaende"][0]))), "ok")
+        self.assertEqual((self.calls[-1]["width"], self.calls[-1]["height"]), (db.SIZE, db.SIZE))   # an item stays square
+
+    def test_view_names_the_stand_in_of_place_and_room(self):
+        r = dungeon.rules()
+        rd = self.rd()
+        style = dungeon.style(r, rd)
+        dorf = next(x for x in r["ortsarten"] if x["id"] == "dorf")
+        n = db.name_of(db.stage_text(style, dorf))
+        self.assertEqual(db.add(r, rd, {})["buehne"], {"ersatz": ""})        # not painted yet
+        self.put(n)
+        self.assertEqual(db.add(r, rd, {})["buehne"], {"ersatz": n})
+        self.assertEqual(db.stage_pic(r, {"welt": "fantasy", "ton": 12}), "")   # an old round without a map
+        self.assertEqual(db.stage_pic(r, self.rd(art="geloescht")), "")       # a deleted kind of place
+        ein = next(x for x in r["raeume"] if x["id"] == "eingang")
+        m = db.name_of(db.stage_text(style, ein, True))
+        self.put(m)
+        self.assertEqual(db.stage_pic(r, self.rd(drin=0)), m)                 # in a vault: its room's kind
+        self.assertEqual(db.stage_pic(r, self.rd(drin=0, t="geloescht")), m)  # a deleted room: the same kind's first
+        helpers.set_config(dungeon_bilder=False)                              # off: no name
+        self.assertEqual(db.add(r, rd, {})["buehne"], {"ersatz": ""})
+        helpers.set_config(dungeon_bilder=True)
+        db.sweep(force=True)
+        self.assertIn(n, db.files())                                          # the sweep keeps it
+
 if __name__ == "__main__":
     unittest.main()
