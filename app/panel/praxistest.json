@@ -3313,6 +3313,13 @@
 "titel": "Beitreten ohne Schummeln",
 "text": "Mit zwei Geräten: A: Ein Kampf läuft, ein zweiter Held tritt über einen neuen Platz-Link bei: er wartet am Rand (⏳), kann nicht handeln und keinen Trank geben. B: Nach dem Kampf kommt er dazu; in seinem ersten Zug kann er niemandem einen Trank geben (Meldung), sich selbst schon. C: Der Gastgeber nimmt mitten im Kampf einen Platz zurück: im Verlauf „flieht aus dem Kampf“, die Erfahrung des Kampfes bleibt für die anderen gleich. D: Auf demselben Gerät einen zweiten Platz-Link derselben Runde öffnen und beitreten: abgelehnt. E: Zustand → Überblick zeigt die Zählungen. F: Mit zwei Helden fällt einer auf 0: ab dem nächsten Zug steht je Zug ein 🎲-Rettungswurf im Verlauf, der Heldenbogen zeigt ✓ und die übrigen Fehlwürfe. G: Allein spielen und auf 0 fallen: nach drei misslungenen Würfen rettet ein Fremder den Helden, er hat 1 Leben, der Kampf ist vorbei, die Hälfte des Goldes und ein Ding fehlen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P498",
+"v": 1048,
+"titel": "Spiel-Mails im Dungeon-Stil",
+"text": "Mit einem Gast mit Gast-Konto und „Du bist dran per Mail“: A: Der Code kommt als Seite in den Farben der Welt. B: Nach 10 Minuten ohne Aktion kommt „Du bist dran“ mit dem letzten Satz des Erzählers und dem Knopf „Weiterspielen“. C: Den Knopf auf einem anderen Gerät öffnen: der Platz öffnet sich; ein zweites Mal geht er nicht mehr. D: Der Gastgeber schaltet am Tisch „✉ Letzter Satz in der Mail“ aus: die nächste Mail kommt ohne Satz. E: In der Mail steht nirgends der Platz-Link selbst.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.048** · 2026-10-25 · KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil: Code und „Du bist dran“ als Seite des Spiels in den Farben der Welt, mit dem letzten Satz des Erzählers (abschaltbar) und „Weiterspielen“ als Einmal-Link ohne dauerhaften Platz-Schlüssel; im Reiter Helden Ausrüstung, Tasche und Gold je Held
 - **V01.1.047** · 2026-10-25 · KI-Dungeon-Master: Beitreten ohne Schummeln: wer im Kampf dazukommt, wartet am Rand; im ersten Zug gibt ein neuer Held niemandem etwas; wer im Kampf geht, flieht und die Erfahrung teilt die Gruppe vom Kampfstart; ein Gerät, ein Held; am Boden Rettungswürfe wie bei D&D, und der einzige Held am Tisch wird von einem Fremden gerettet statt zu fallen
 - **V01.1.046** · 2026-10-25 · KI-Dungeon-Master: in der Liste der markierten Stücke (👎 Nervt) spielt ▶ Anhören jedes Stück ab, bevor es nachts rausfliegt; nur Admin, zählt nicht als gespielt, Markierung bleibt
 - **V01.1.045** · 2026-10-25 · Selbsttest Dungeon-Bilder hängt nicht mehr an Testprofilen anderer Module

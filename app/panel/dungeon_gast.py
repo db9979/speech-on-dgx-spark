@@ -16,6 +16,12 @@ What lies on the Spark (STATE/dungeon-gaeste.json, 0600):
 Every mail is a fixed text of the panel (code, „Du bist dran“), never a model's or a player's words; at most TAG_MAX
 mails a day in all, ZUG_TAG „Du bist dran“ per account and day, one per turn, only while the guest is not at the
 table. The Notaus holds mails off. Logs: fixed words and numbers, never an address.
+
+The look (Dominik 2026-10-25 „1-3 und 5 umsetzten“): next to the text part an HTML part like a page of the game,
+inline styles only, no picture, nothing loaded from outside (no tracking), the colours of the round's world (FARBEN).
+„Du bist dran“ may carry the narrator's last sentence (vorschau: at most VORSCHAU chars, no links, escaped; the host
+switches it off at the table) and a button „Weiterspielen“: a one-time link (#weiter=<token>, WEITER_S, used once, only
+its hash kept) that gives that device a fresh key for its seat (dungeon.weiter). No permanent seat key in any mail.
 """
 import copy
 import email.message
@@ -23,6 +29,7 @@ import email.policy
 import email.utils
 import hashlib
 import hmac
+import html
 import os
 import re
 import secrets
@@ -48,6 +55,12 @@ ADDR = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0
                   r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+")
 TOKEN = re.compile(r"[A-Za-z0-9_\-]{43}")
 PIN = re.compile(r"[0-9]{6}")
+WEITER_S = 12 * 3600       # a „Weiterspielen“ link of a mail is valid this long, and only once
+VORSCHAU = 160             # chars of the narrator's last sentence in „Du bist dran“
+_LINKISH = re.compile(r"(?i)\b(?:[a-z][a-z0-9+.-]*://|www\.)\S*|\S+@\S+|\b[\w-]+(?:\.[\w-]+)*\.(?:[a-z]{2,24})(?:/\S*)?\b")
+# per world (dungeon_regeln.json „welten“): page, ink, accent, sign; any other world reads as parchment
+FARBEN = {"fantasy": ("#f4e9d0", "#3b2a1a", "#8a5a2b", "📜"), "horror": ("#1f1515", "#eadede", "#9b2226", "🕯"),
+          "scifi": ("#e6edf3", "#16232f", "#2f6690", "🛰"), "piraten": ("#e2f0ea", "#14352d", "#1f7a63", "⚓")}
 _lock = threading.Lock()
 clock = time.time          # the one clock of this module (tests set it)
 
@@ -60,6 +73,9 @@ TEXTE = {
               "um weiterzuspielen. Abbestellen: am Tisch unter „Gast-Konto“ „Du bist dran per Mail“ ausschalten.\n"),
              ("Your turn: {titel}", "In \"{titel}\" turn {zug} is open and waits for {held}.\n\nOpen your seat link to play "
               "on. To stop these mails: at the table under \"Guest account\" switch off \"Your turn by mail\".\n"))}
+KNOPF = ("Weiterspielen", "Play on")
+KNOPF_TEXT = ("Weiterspielen (einmal, {stunden} Stunden gültig): {link}\n", "Play on (once, valid for {stunden} hours): {link}\n")
+ZULETZT = ("Zuletzt am Tisch", "Last at the table")
 
 
 def on():
@@ -69,7 +85,7 @@ def on():
 def _read():
     d = read_json(FILE, {})
     d = d if isinstance(d, dict) else {}
-    for k in ("konten", "codes"):
+    for k in ("konten", "codes", "weiter"):
         d[k] = {a: v for a, v in (d.get(k) or {}).items() if isinstance(v, dict)} if isinstance(d.get(k), dict) else {}
     d["tag"] = d["tag"] if isinstance(d.get("tag"), dict) else {}
     return d
@@ -178,20 +194,59 @@ def _send(to, kind, lang, **kw):
         raise LookupError("postfach")
     uid, acct = s
     notaus.stop("aktion", uid)
-    subj, text = TEXTE[kind][1 if lang == "en" else 0]
+    senden._smtp(acct, message(acct["user"], to, kind, lang, **kw))
+
+
+def teaser(text):
+    """The narrator's last sentence for „Du bist dran“: no link, no address, at most VORSCHAU chars on a word's end."""
+    t = " ".join(_LINKISH.sub(" ", str(text or "")).split())
+    parts = [x for x in re.split(r"(?<=[.!?…])\s+", t) if len(x) > 2]
+    t = parts[-1] if parts else ""
+    if len(t) > VORSCHAU:
+        t = t[:VORSCHAU].rsplit(" ", 1)[0].rstrip(",;:–-") + " …"
+    return t
+
+
+def message(sender_addr, to, kind, lang, welt="", vorschau="", link="", **kw):
+    """The mail itself: the fixed text and, as its alternative, the same as a page of the game (inline styles only,
+    nothing from outside, every value escaped). vorschau and link only for „Du bist dran“."""
+    li = 1 if lang == "en" else 0
+    subj, text = TEXTE[kind][li]
     msg = email.message.EmailMessage(policy=email.policy.SMTP)
-    msg["From"] = email.utils.formataddr(("Dungeon-Master", acct["user"]))
+    msg["From"] = email.utils.formataddr(("Dungeon-Master", sender_addr))
     msg["To"] = to
     msg["Subject"] = subj.format(**kw)
     msg["Date"] = email.utils.formatdate(localtime=True)
-    msg["Message-ID"] = email.utils.make_msgid(domain=acct["user"].rpartition("@")[2] or None)
+    msg["Message-ID"] = email.utils.make_msgid(domain=sender_addr.rpartition("@")[2] or None)
     msg["Auto-Submitted"] = "auto-generated"
-    msg.set_content(text.format(**kw))
-    senden._smtp(acct, msg)
+    vorschau = teaser(vorschau) if kind == "dran" else ""
+    link = link if kind == "dran" and re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/#weiter=[A-Za-z0-9_\-]{43}", link or "") else ""
+    body = text.format(**kw)
+    plain = (f"{ZULETZT[li]}: „{vorschau}“\n\n" if vorschau else "") + body \
+        + ("\n" + KNOPF_TEXT[li].format(stunden=WEITER_S // 3600, link=link) if link else "")
+    msg.set_content(plain)
+    page, ink, accent, sign = FARBEN.get(welt, FARBEN["fantasy"])
+    e = html.escape
+    paras = "".join(f'<p style="margin:0 0 12px 0">{e(x).replace(chr(10), "<br>")}</p>' for x in body.strip().split("\n\n"))
+    if kind == "code":
+        paras = paras.replace(e(kw["pin"]), f'<b style="font-size:26px;letter-spacing:4px">{e(kw["pin"])}</b>', 1)
+    quote = (f'<p style="margin:0 0 16px 0;padding:10px 14px;border-left:3px solid {accent};font-style:italic">'
+             f'<span style="font-size:12px;font-style:normal;opacity:.75">{e(ZULETZT[li])}</span><br>{e(vorschau)}</p>') if vorschau else ""
+    button = (f'<p style="margin:18px 0 6px 0"><a href="{e(link, quote=True)}" style="display:inline-block;padding:10px 22px;'
+              f'background:{accent};color:{page};text-decoration:none;border-radius:6px;font-weight:bold">{e(KNOPF[li])}</a></p>'
+              f'<p style="margin:0;font-size:12px;opacity:.75">{e(KNOPF_TEXT[li].split(":")[0].strip())}</p>') if link else ""
+    msg.add_alternative(
+        f'<!doctype html><html lang="{"en" if li else "de"}"><head><meta charset="utf-8"></head>'
+        f'<body style="margin:0;padding:24px 12px;background:{page};color:{ink}">'
+        f'<div style="max-width:520px;margin:0 auto;padding:22px 24px;border:2px solid {accent};border-radius:10px;'
+        f'font-family:Georgia,\'Times New Roman\',serif;font-size:16px;line-height:1.5">'
+        f'<div style="font-size:20px;font-weight:bold;color:{accent};margin:0 0 14px 0">{sign} {e(msg["Subject"])}</div>'
+        f'{quote}{paras}{button}</div></body></html>', subtype="html")
+    return msg
 
 
 # ---------------------------------------------------------------- code and account
-def ask_code(addr, titel, lang, now=None):
+def ask_code(addr, titel, lang, now=None, welt=""):
     """A 6-digit code to the address (hash kept, never the address). Silent about whether an account exists."""
     if not on():
         raise LookupError("aus")
@@ -214,7 +269,7 @@ def ask_code(addr, titel, lang, now=None):
         day["codes"] += 1
         _write(d)
     try:
-        _send(a, "code", lang, titel=titel[:80], pin=pin)
+        _send(a, "code", lang, titel=titel[:80], pin=pin, welt=welt)
     except Exception as e:      # noqa: BLE001 - the guest gets the reason word, the journal a fixed line
         print(f"dungeon: gastmail | code nicht gesendet | {_why(e)}", flush=True)
         if isinstance(e, notaus.NotausAktiv):
@@ -363,14 +418,17 @@ def due(rd, now, seen):
         if p.get("konto") and p.get("held") and pid not in rd["offen"] and sent.get(pid) != rd["zug"] \
                 and now - seen.get(pid, 0) > ZUG_NACH:
             sent[pid] = rd["zug"]
-            out.append((p["konto"], p["held"]["name"]))
+            out.append((p["konto"], p["held"]["name"], pid))
     return out
 
 
 def send_turns(rd, todo, now=None):
-    """The „Du bist dran“ mails (blocking; called in a thread). Never raises."""
+    """The „Du bist dran“ mails (blocking; called in a thread), each with a one-time „Weiterspielen“ link when the round
+    knows the panel's address (rd["base"]) and, unless the host switched it off, the narrator's last sentence. Never raises."""
     now = clock() if now is None else now
-    for kid, held in todo:
+    vorschau = next((e.get("text", "") for e in reversed(rd.get("log") or []) if e.get("art") == "dm"), "") \
+        if rd.get("mail_vorschau", True) else ""
+    for kid, held, pid in todo:
         with _lock:
             d = _read()
             k = d["konten"].get(kid)
@@ -381,14 +439,38 @@ def send_turns(rd, todo, now=None):
                 continue
             addr = vault.open_(k["seal"])
             k["dran"] = {"t": day["t"], "n": (n.get("n", 0) if n.get("t") == day["t"] else 0) + 1}
+            link = ""
+            if rd.get("base") and rd.get("rid"):
+                tok = secrets.token_urlsafe(32)
+                d["weiter"] = {h: w for h, w in d["weiter"].items() if w.get("until", 0) > now}
+                d["weiter"][_hash(d, "weiter:" + tok)] = {"kid": kid, "rid": rd["rid"], "pid": pid, "until": now + WEITER_S}
+                link = f"{rd['base']}/#weiter={tok}"
             day["mails"] += 1
             day["dran"] += 1
             _write(d)
         try:
-            _send(addr, "dran", rd.get("lang", "de"), titel=rd.get("titel", "")[:80], zug=rd.get("zug", 0), held=held)
+            _send(addr, "dran", rd.get("lang", "de"), titel=rd.get("titel", "")[:80], zug=rd.get("zug", 0), held=held,
+                  welt=rd.get("welt", ""), vorschau=vorschau, link=link)
             print("dungeon: gastmail | dran | gesendet", flush=True)
         except Exception as e:  # noqa: BLE001
             print(f"dungeon: gastmail | dran | nicht gesendet | {_why(e)}", flush=True)
+
+
+def redeem(tok, now=None):
+    """A „Weiterspielen“ link opened: (account, round, seat) once, while WEITER_S holds; else PermissionError."""
+    now = clock() if now is None else now
+    if not isinstance(tok, str) or not TOKEN.fullmatch(tok):
+        raise PermissionError("weiter")
+    with _lock:
+        d = _read()
+        w = d["weiter"].pop(_hash(d, "weiter:" + tok), None)
+        d["weiter"] = {h: x for h, x in d["weiter"].items() if x.get("until", 0) > now}
+        _write(d)
+    if not w or w.get("until", 0) <= now or w.get("kid") not in _read()["konten"]:
+        print("dungeon: gastmail | weiter | abgelehnt", flush=True)
+        raise PermissionError("weiter")
+    print("dungeon: gastmail | weiter | eingeloest", flush=True)
+    return w["kid"], w["rid"], w["pid"]
 
 
 def counts():

@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil (V01.1.048, Dominik 2026-10-25 „die E-Mails, die du verschickst, sind die auch so ein bisschen im Layout vom Dungeon Master gehalten?“, „1-3 und 5 umsetzten“, Entwurf /mnt/project-files/plaene/dungeon-mail/): Die Mails an Gäste mit Gast-Konto (dungeon_gast.message) haben neben dem Text einen HTML-Teil wie eine Seite des Spiels: Rahmen, Überschrift mit dem Zeichen der Welt, Schrift wie im Buch, nur Stile in der Mail selbst, kein Bild und nichts, was von außen geladen wird (kein Zählpixel), jeder Wert maskiert. Farben je Welt (FARBEN): Fantasy Pergament, Horror dunkelrot, Sci-Fi stahlblau, Piraten seegrün, jede andere Welt als Pergament. Letzter Satz: „Du bist dran“ zeigt unter „Zuletzt am Tisch“ den letzten Satz des Erzählers (teaser: höchstens VORSCHAU = 160 Zeichen, ohne Links und Adressen). Der Gastgeber schaltet das am Tisch unter „✉ Letzter Satz in der Mail“ ab (rd[\"mail_vorschau\"], ab Werk an; die Zeile steht nur, wenn ein Gast mit Konto am Tisch sitzt). Weiterspielen: Der Knopf ist ein Einmal-Link https://<panel>/#weiter=<t> (WEITER_S = 12 Stunden, gilt einmal, nur sein Hash liegt in dungeon-gaeste.json), nie der Schlüssel des Pl"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "atzes. /api/dungeon/weiter gibt dem Gerät dafür einen frischen Schlüssel für genau diesen Platz (play_on, p[\"hx\"], höchstens WEITER_KEYS = 3), solange der Platz noch zum Gast-Konto gehört; ein neuer Platz-Link des Gastgebers nimmt alle zurück. Die Adresse des Panels kommt vom Platz-Link des Gastgebers (rd[\"base\"]). Selbsttest test_turn_mail_looks_like_the_game_with_a_one_time_link. Reiter Helden (Dominik 2026-10-25 „unter dem Reiter Helden … was hat er denn für Gegenstände, Gold und so weiter“): Jeder Held hat unter „🎒 Ausrüstung und Tasche“ aufklappbar, was er trägt (je Platz), seine Tasche mit Fundort jedes Dings, sein Gold und seine Zauber; ändern geht weiter nur am Tisch. Selbsttest test_the_heroes_tab_shows_what_a_hero_has."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Beitreten ohne Schummeln (V01.1.047, Dominik 2026-10-25 „Held am Boden → neuen Charakter erstellen, beitreten, heilen, wieder raus“, „ok“ zu 1+2+3+6+7, Plan /mnt/project-files/plaene/dungeon-beitritt-schutz.md): Am Rand warten: Wer während eines Kampfes einem Platz beitritt, sitzt am Tisch, wartet aber am Rand (p[\"wartet\"]): keine Aktion, keine eigenen Züge mit Tasche und Tränken, nicht in der Gruppe des Kampfes, der Zug wartet nicht auf ihn. Der Verlauf sagt „… kommt dazu und wartet am Rand, bis der Kampf vorbei ist.“, die Gruppe zeigt ihn mit ⏳, der Gastgeber kann den Platz zurücknehmen. Ist der Kampf vorbei (oder endet die Runde), kommt er an den Tisch (dungeon.arrive). Erster Zug: Im ersten Zug am Tisch (p[\"neu_zug\"], auch nach dem Warten) gibt ein Held niemandem etwas: kein Trank für einen Freund, nichts schenken, nicht tauschen, kein Zauber auf die Gruppe; das Modell hört „gerade angekommen“, und eine Heilung, die es für einen Freund erzählt, zählt nicht, wenn in diesem Zug nur neue Helden gehandelt haben. Fliehen: Die Gruppe eines Kampfes steht beim Start fest (kampf[\"helden\"]). Die Erfahrung des Kampfes wird durch sie geteilt; wer währenddessen den Tisch "
 },
 {
@@ -18190,6 +18206,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: game mails in the Dungeon style (V01.1.048, Dominik 2026-10-25 \"die E-Mails, die du verschickst, sind die auch so ein bisschen im Layout vom Dungeon Master gehalten?\", \"1-3 und 5 umsetzten\", draft /mnt/project-files/plaene/dungeon-mail/): The mails to guests with a guest account (dungeon_gast.message) have, next to the text, an HTML part like a page of the game: a frame, a heading with the world's sign, a book-like font, only styles inside the mail, no picture and nothing loaded from outside (no tracking pixel), every value escaped. Colours per world (FARBEN): fantasy parchment, horror dark red, sci-fi steel blue, pirates sea green, any other world as parchment. Last sentence: \"Your turn\" shows under \"Last at the table\" the narrator's last sentence (teaser: at most VORSCHAU = 160 characters, without links and addresses). The host switches it off at the table under \"✉ Last sentence in the mail\" (rd[\"mail_vorschau\"], on by default; the line shows only when a guest with an account sits at the table). Play on: the button is a one-time link https://<panel>/#weiter=<t> (WEITER_S = 12 hours, valid once, only its hash lies in dungeon-gaeste.json), never the seat's key. /"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "api/dungeon/weiter gives the device a fresh key for exactly that seat instead (play_on, p[\"hx\"], at most WEITER_KEYS = 3), while the seat still belongs to the guest account; a new seat link of the host takes all of them back. The panel's address comes from the host's seat link (rd[\"base\"]). Self-test test_turn_mail_looks_like_the_game_with_a_one_time_link. Heroes tab (Dominik 2026-10-25 \"unter dem Reiter Helden … was hat er denn für Gegenstände, Gold und so weiter\"): every hero has under \"🎒 Equipment and bag\", folded, what it wears (per place), its bag with where each thing was found, its gold and its spells; changes still only at the table. Self-test test_the_heroes_tab_shows_what_a_hero_has."
 },
 {
 "lang": "en",

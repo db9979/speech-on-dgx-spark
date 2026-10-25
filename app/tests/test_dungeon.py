@@ -606,6 +606,20 @@ class Permadeath(Turns):
         mine = self.c.get("/api/profile/dungeon").json()
         self.assertEqual(next(x for x in mine["helden"] if x["hid"] == hid)["zustand"], "tot")
 
+    def test_the_heroes_tab_shows_what_a_hero_has(self):
+        """Dominik 2026-10-25 „unter dem Reiter Helden … was hat er denn für Gegenstände, Gold und so weiter“: a kept hero
+        comes with what it wears, its bag and its gold; the tab draws it under „Ausrüstung und Tasche“."""
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}").status_code, 200)
+        mine = next(x for x in self.c.get("/api/profile/dungeon").json()["helden"] if x["hid"] == h["hid"])
+        self.assertEqual(len(mine["tasche"]), len(h["tasche"]))
+        self.assertEqual(sum(1 for x in mine["an"].values() if x), len(dungeon.worn(h)))
+        self.assertTrue(all(x["name"] for x in mine["tasche"]))
+        self.assertIn("gold", mine)
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("${dmHeroThings(h)}<div class=\"dm-hostb\">", js)
+
     def test_iron_skin_shield_wall_and_battle_cry_by_the_panel(self):
         r = dungeon.rules()
         krieger = next(k for k in r["klassen"] if k["id"] == "krieger")
@@ -3635,7 +3649,7 @@ class GuestMail(Base):
         rd = self.state(self.rid)
         now = rd["zug_t"] + dungeon_gast.ZUG_NACH + 5
         todo = dungeon_gast.due(rd, now, {})
-        self.assertEqual(todo, [(rd["plaetze"][self.gp]["konto"], "Bela")])
+        self.assertEqual(todo, [(rd["plaetze"][self.gp]["konto"], "Bela", self.gp)])
         self.assertEqual(dungeon_gast.due(rd, now, {}), [])          # once per turn
         dungeon_gast.send_turns(rd, todo, now)
         self.assertEqual(self.sent[-1][:2], ("Bela.Gast@example.org", "dran"))
@@ -3654,6 +3668,78 @@ class GuestMail(Base):
         self.assertTrue(self.v.post("/api/dungeon/gast", json={"code": code2, "was": "loeschen", "token": tok}).json()["geloescht"])
         self.assertNotIn("konto", self.state(v["rid"])["plaetze"][r.json()["pid"]])
         self.assertEqual(dungeon_gast.counts()["konten"], 0)
+
+    def test_turn_mail_looks_like_the_game_with_a_one_time_link(self):
+        """Dominik 2026-10-25 „1-3 und 5 umsetzten“: the mail as a page of the game (HTML next to the text, inline styles,
+        nothing from outside, the world's colours), the narrator's last sentence without links (the host can switch it
+        off), and „Weiterspielen“ as a one-time link that is never the seat's key (Sicherheits-Checkliste „Wege hinein“)."""
+        tok = self.sign_in()["token"]
+        self.gast(was="zugmail", token=tok, an=True, adresse=self.ADR)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["log"].append({"art": "dm", "n": 1, "text": "Die Tür knarrt. Lies www.boese.example/x und "
+                                                 "schreib an hilfe@boese.example! Ein Schatten wartet hinter dem Tor <b>und</b> flüstert leise deinen Namen."})
+            dungeon._write(d)
+        rd = dict(self.state(self.rid), rid=self.rid)
+        now = rd["zug_t"] + dungeon_gast.ZUG_NACH + 5
+        dungeon_gast.send_turns(rd, dungeon_gast.due(rd, now, {}), now)
+        to, kind, kw = self.sent[-1]
+        self.assertEqual(kind, "dran")
+        self.assertRegex(kw["link"], r"^" + re.escape(BASE) + r"/#weiter=[A-Za-z0-9_\-]{43}$")
+        self.assertNotIn(self.code, kw["link"])
+        once = kw["link"].rpartition("=")[2]
+        self.assertNotIn(once.lower(), self.raw())                   # only its hash is kept
+        msg = dungeon_gast.message("spiel@example.org", to, kind, "de", **kw)
+        self.assertEqual(msg.get_content_type(), "multipart/alternative")
+        text, page = (msg.get_body(("plain",)).get_content(), msg.get_body(("html",)).get_content())
+        for part in (text, page):
+            self.assertIn("Ein Schatten wartet hinter dem Tor", part)
+            self.assertNotIn("boese", part)                          # no link and no address of the model's text
+            self.assertIn(kw["link"], part)
+        self.assertIn("&lt;b&gt;", page)                             # escaped, never markup of the model
+        self.assertNotRegex(page, r"(?i)<img|<script|src=|url\(|@import")
+        self.assertEqual(re.findall(r"https?://[^\"'<\s]+", page), [kw["link"]])
+        self.assertIn(dungeon_gast.FARBEN["fantasy"][0], page)
+        self.assertIn(dungeon_gast.FARBEN["horror"][0], dungeon_gast.message("s@example.org", to, kind, "de", **dict(kw, welt="horror")).get_body(("html",)).get_content())
+        self.assertLessEqual(len(dungeon_gast.teaser("x " * 400)), dungeon_gast.VORSCHAU + 2)
+        # the link once: a fresh key for this seat on this device, the seat's own link stays, a second try fails
+        other = TestClient(panel.app)
+        r = other.post("/api/dungeon/weiter", json={"t": once})
+        self.assertEqual(r.status_code, 200, r.text)
+        neu = r.json()["code"]
+        self.assertNotEqual(neu, self.code)
+        self.assertEqual(other.post("/api/dungeon/lage", json={"code": neu}).json()["pid"], self.gp)
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": self.code}).status_code, 200)
+        self.assertEqual(TestClient(panel.app).post("/api/dungeon/weiter", json={"t": once}).status_code, 400)
+        self.assertEqual(TestClient(panel.app).post("/api/dungeon/weiter", json={"t": "x" * 43}).status_code, 400)
+        # too late: WEITER_S
+        dungeon_gast.send_turns(dict(rd, gastmail={}), dungeon_gast.due(dict(rd, gastmail={}), now, {}), now)
+        late = self.sent[-1][2]["link"].rpartition("=")[2]
+        with mock.patch.object(dungeon_gast, "clock", return_value=now + dungeon_gast.WEITER_S + 1):
+            self.assertEqual(TestClient(panel.app).post("/api/dungeon/weiter", json={"t": late}).status_code, 400)
+        # a new seat link of the host takes back every key, the mail's too
+        r = self.c.put(f"/api/profile/dungeon/{self.rid}/platz/{self.gp}", json={"was": "link", "base": BASE})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(other.post("/api/dungeon/lage", json={"code": neu}).status_code, 400)
+        # the host switches the narrator's sentence off
+        self.assertTrue(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["mail_vorschau"])
+        r = self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"mail_vorschau": False})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIs(r.json()["mail_vorschau"], False)
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"mail_vorschau": "ja"}).status_code, 400)
+        self.assertNotIn("Schatten", dungeon_gast.message("s@example.org", to, kind, "de", **dict(kw, vorschau="")).get_body(("plain",)).get_content())
+        rd = dict(self.state(self.rid), rid=self.rid, gastmail={})
+        with mock.patch.object(dungeon_gast, "ZUG_TAG", 9):
+            dungeon_gast.send_turns(rd, dungeon_gast.due(rd, now, {}), now)
+        self.assertEqual(self.sent[-1][2]["vorschau"], "")
+        # the code mail looks the same, in the world's colours
+        self.assertEqual(self.sent[0][2]["welt"], self.state(self.rid)["welt"])      # sign_in's code mail
+        page = dungeon_gast.message("s@example.org", to, "code", "de", titel="Runde", pin="123456", welt="piraten",
+                                    link=kw["link"], vorschau="Ein Satz.").get_body(("html",)).get_content()
+        self.assertIn("123456", page)
+        self.assertIn(dungeon_gast.FARBEN["piraten"][0], page)
+        self.assertNotIn("weiter=", page)                            # a code mail never carries the link or a sentence
+        self.assertNotIn("Ein Satz", page)
 
     def test_admin_mailbox(self):
         r = ADMIN.put("/api/admin/dungeon/gastmail", json={"absender": "nope/x"})

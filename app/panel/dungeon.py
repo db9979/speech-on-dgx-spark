@@ -85,6 +85,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
     POST   /api/dungeon/platz|beitreten|lage|aktion|mehrzeit|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/dungeon/weiter       {t}: the one-time „Weiterspielen“ link of a guest's mail, a fresh key for its seat (play_on)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
@@ -245,6 +246,7 @@ FREI_H = 72               # a free seat nobody took goes after this long (Domini
 BODY = 4096
 ADMIN_BODY = 96 * 1024
 CODE = re.compile(r"[A-Za-z0-9_\-]{32}")
+WEITER_KEYS = 3          # extra keys a seat keeps from „Weiterspielen“ links of mails (play_on)
 _RID = re.compile(r"r[0-9a-f]{10}")
 _PID = re.compile(r"p[0-9a-f]{8}")
 _HID = re.compile(r"h[0-9a-f]{10}")
@@ -1899,8 +1901,9 @@ def seat_of(rd, uid):
     return next(((pid, p) for pid, p in rd["plaetze"].items() if p.get("uid") == uid), (None, None))
 
 
-def make_seat(owner, rid, now=None):
-    """(pid, code) of a new seat link; the code is shown once, only its hash kept."""
+def make_seat(owner, rid, now=None, base=""):
+    """(pid, code) of a new seat link; the code is shown once, only its hash kept. base: the panel's address the host
+    sees, kept for the „Weiterspielen“ link of a guest's mail (dungeon_gast.send_turns)."""
     now = int(time.time() if now is None else now)
     code = secrets.token_urlsafe(24)
     with _lock:
@@ -1912,6 +1915,8 @@ def make_seat(owner, rid, now=None):
             raise OverflowError("voll")
         pid = "p" + os.urandom(4).hex()
         rd["plaetze"][pid] = {"h": _hash(code), "uid": "", "held": None, "made": now, "gast": True}
+        if base:
+            rd["base"] = base
         _write(d)
     print(f"dungeon: platz neu | {profiles.log_name(profiles.by_id(owner))}", flush=True)
     return pid, code
@@ -1984,6 +1989,7 @@ def manage_seat(owner, rid, pid, was, name=""):
                 raise LookupError("profil")
             code = secrets.token_urlsafe(24)
             p["h"] = _hash(code)
+            p.pop("hx", None)                    # a new link takes back every key of the seat, the mail's ones too
         elif was == "ruhen":
             p["ruht"] = True
         else:
@@ -2001,7 +2007,7 @@ def find(code, now=None):
     h = _hash(code)
     for rid, rd in _read()["runden"].items():
         for pid, p in rd["plaetze"].items():
-            if p.get("h") and hmac.compare_digest(str(p["h"]), h):
+            if any(hmac.compare_digest(str(x), h) for x in [p.get("h")] + list(p.get("hx") or []) if x):
                 if not profiles.by_id(rd.get("owner")) or not features.allowed("dungeon", rd["owner"]):
                     return None, None
                 return rid, pid
@@ -4557,7 +4563,7 @@ async def due_once(now=None):
                     changed = True
                 mails = gastkonto.due(rd, now, _seen)
                 if mails:
-                    post.append((copy.deepcopy(rd), mails))
+                    post.append((dict(copy.deepcopy(rd), rid=rid), mails))
                     changed = True
             if changed:
                 _write(d)
@@ -4672,6 +4678,7 @@ def view(rid, pid, now=None):
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
     out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
+    out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out)
     out.update(warten.view(rd, rid, pid, lang))
     import dungeon_dingbild
@@ -5570,7 +5577,7 @@ async def platz(rid: str, request: Request, prof=Depends(browser_profile)):
     b = await json_body(request, BODY)
     base = _base(b)
     try:
-        pid, code = await asyncio.to_thread(make_seat, uid, rid)
+        pid, code = await asyncio.to_thread(make_seat, uid, rid, None, base)
     except KNOWN as e:
         raise _http(e)
     link = f"{base}/#spiel={code}"
@@ -5700,7 +5707,8 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
 @router.post("/api/profile/dungeon/{rid}/erzaehler", dependencies=[Depends(assistant)])
 async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
-    way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go."""
+    way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
+    or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off)."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -5716,6 +5724,10 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 if not isinstance(b["regler_fest"], bool) or not kampf.dial_on(rd):
                     raise ValueError()
                 rd["regler_fest"] = b["regler_fest"]
+            elif "mail_vorschau" in b:
+                if not isinstance(b["mail_vorschau"], bool):
+                    raise ValueError()
+                rd["mail_vorschau"] = b["mail_vorschau"]
             elif "weise" in b:
                 if b["weise"] not in WEISEN:
                     raise ValueError()
@@ -5725,6 +5737,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             _write(d)
         if "regler_fest" in b:
             print(f"dungeon: regler | {'festgehalten' if b['regler_fest'] else 'frei'}", flush=True)
+        elif "mail_vorschau" in b:
+            print(f"dungeon: gastmail | vorschau {'an' if b['mail_vorschau'] else 'aus'}", flush=True)
         elif "weise" in b:
             print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
         else:
@@ -6051,13 +6065,13 @@ async def held_weg(hid: str, request: Request, prof=Depends(browser_profile)):
 
 
 # ---------------------------------------------------------------- a guest's seat (#spiel=<code>, dungeon.js)
-def _door(request):
+def _door(request, rate="dungeongast"):
     if not features.admin_on("dungeon"):
         raise HTTPException(404, "Not Found")
     origin = request.headers.get("origin")
     if origin and origin != "null" and urlsplit(origin).netloc.lower() != (request.headers.get("host") or "").lower():
         raise HTTPException(403, "not from another site")
-    guard.limit(request, "dungeongast")
+    guard.limit(request, rate)
     guard.check(request, KEY)
 
 
@@ -6106,6 +6120,40 @@ def _device_cookie(request, response):
         tok = secrets.token_urlsafe(24)
     response.set_cookie(GERAET, tok, max_age=365 * 86400, httponly=True, samesite="strict")
     return tok
+
+
+@router.post("/api/dungeon/weiter")
+async def gast_weiter(request: Request):
+    """{"t"}: the „Weiterspielen“ link of a guest's mail (#weiter=<t>, dungeon_gast.redeem, used once): a fresh key for
+    that seat on this device ({"code"}); the seat keeps at most WEITER_KEYS of them, a new seat link takes them back."""
+    _door(request, "dungeonkonto")
+    if not gastkonto.on():
+        raise HTTPException(404, "Not Found")
+    b = await json_body(request, BODY)
+    try:
+        code = await asyncio.to_thread(play_on, b.get("t"))
+    except PermissionError:
+        _day.bump("abgelehnt")
+        guard.failed(request, KEY, what="dungeon_link")
+        raise HTTPException(400, "Der Link passt nicht oder ist abgelaufen.")
+    return {"code": code}
+
+
+def play_on(tok):
+    """The seat of a redeemed „Weiterspielen“ link gets one more key (hx), if it is still the account's seat."""
+    kid, rid, pid = gastkonto.redeem(tok)
+    code = secrets.token_urlsafe(24)
+    with _lock:
+        d = _read()
+        rd = d["runden"].get(rid)
+        p = (rd or {}).get("plaetze", {}).get(pid)
+        if not rd or rd.get("status") == "ende" or not p or p.get("konto") != kid:
+            print("dungeon: gastmail | weiter | platz weg", flush=True)
+            raise PermissionError("weiter")
+        p["hx"] = (list(p.get("hx") or []) + [_hash(code)])[-WEITER_KEYS:]
+        _write(d)
+    print("dungeon: gastmail | weiter | neuer schluessel", flush=True)
+    return code
 
 
 @router.post("/api/dungeon/beitreten")
@@ -6187,7 +6235,7 @@ def guest_account(rid, pid, b):
     if p.get("uid"):                                   # a profile's seat keeps its heroes in the profile
         raise LookupError("profil")
     if was == "code":
-        gastkonto.ask_code(b.get("adresse"), rd["titel"], rd["lang"])
+        gastkonto.ask_code(b.get("adresse"), rd["titel"], rd["lang"], welt=rd.get("welt", ""))
         return {"gesendet": True}
     if was == "anmelden":
         tok = gastkonto.login(b.get("adresse"), b.get("pin"))

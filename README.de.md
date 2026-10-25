@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.048** KI-Dungeon-Master: Spiel-Mails im Dungeon-Stil: Code und „Du bist dran“ als Seite des Spiels in den Farben der Welt, mit dem letzten Satz des Erzählers (abschaltbar) und „Weiterspielen“ als Einmal-Link ohne dauerhaften Platz-Schlüssel; im Reiter Helden Ausrüstung, Tasche und Gold je Held
 - **V01.1.047** KI-Dungeon-Master: Beitreten ohne Schummeln: wer im Kampf dazukommt, wartet am Rand; im ersten Zug gibt ein neuer Held niemandem etwas; wer im Kampf geht, flieht und die Erfahrung teilt die Gruppe vom Kampfstart; ein Gerät, ein Held; am Boden Rettungswürfe wie bei D&D, und der einzige Held am Tisch wird von einem Fremden gerettet statt zu fallen
 - **V01.1.046** KI-Dungeon-Master: markierte Musikstücke vor dem Aussortieren anhören (▶ Anhören, nur Admin)
 - **V01.1.045** Selbsttest Dungeon-Bilder hängt nicht mehr an Testprofilen anderer Module
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.041** Selbsttest Suche: wartet auf den Treffer statt fest 300 ms
 - **V01.1.040** Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
 - **V01.1.039** KI-Dungeon-Master: Bestiarium mit 62 neuen Gegnern (jede Welt hat auf Stufe 1 bis 12 mindestens drei, die eigene Welt nimmt die aus Fantasy), Regeln zeigt Schadensart, Schwäche, Widerstand und Immunität als Symbole, Boss-Marke, EP je Held und „neu“, Filter nach Welt, Stufe, Bossen und neuen; eine misslungene Probe bleibt misslungen und die Erzählung nennt die Gegner der Karte
-- **V01.1.038** KI-Dungeon-Master: der eigene Würfel wartet im Verlauf bis zum Wurf (Erzählung verschwommen, nach 30 s von selbst), Wurf mit Aufprall, Ergebnisfarben, Brummen und Hinweiston
 
 
 

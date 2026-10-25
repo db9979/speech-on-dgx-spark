@@ -91,6 +91,7 @@ const DMGRUND={
   'rand':['Dein Held wartet am Rand, bis der Kampf vorbei ist. Danach kommt er an den Tisch und kann handeln.','Your hero waits at the edge until the fight is over. Then they come to the table and can act.'],
   'neu':['Im ersten Zug am Tisch kann dein Held noch niemandem etwas geben, keinen Trank für andere und keinen Tausch. Ab dem nächsten Zug geht es.','In their first turn at the table your hero cannot give anyone anything yet, no potion for others and no trade. From the next turn on it works.'],
   'geraet':['Auf diesem Gerät spielt schon ein Held in dieser Runde. Jedes Gerät hat einen Platz.','A hero of this round already plays on this device. Every device has one seat.'],
+  'weiter':['Dieser Mail-Link galt nur einmal und nur kurz. Öffne deinen Platz-Link oder warte auf die nächste Mail.','This mail link was valid only once and only for a while. Open your seat link or wait for the next mail.'],
   'boden':['Dein Held liegt am Boden und kann gerade nichts tun. Ein Freund kann ihm einen Heiltrank geben oder ihm aufhelfen.','Your hero is down and cannot do anything right now. A friend can give them a healing potion or help them up.'],
   'ohnmacht':['Dein Held ist ohnmächtig und wacht am nächsten Tisch wieder auf, im nächsten Kapitel.','Your hero is unconscious and wakes at the next table, in the next chapter.'],
   'tot':['Dieser Held ist gefallen und spielt nicht mehr. Wähle einen anderen Helden.','This hero has fallen and plays no more. Pick another hero.'],
@@ -355,7 +356,7 @@ function dmHeroes(D){const hs=D.helden;
   const list=hs.length?`<div class="dm-hcards">${hs.map((h,i)=>`<div class="dm-seat dm-hero dm-hcard"><div class="dm-hhead">${h.bild?`<span class="dm-av dm-avb" data-c="${i%5}"><img alt="" loading="lazy" src="/api/profile/dungeon/held/${esc(h.hid)}/bild?v=${h.stufe}"></span>`:`<span class="dm-av" data-c="${i%5}">${esc((h.name||'?').slice(0,1).toUpperCase())}</span>`}<div><b>${esc(h.name)}</b> <i>${esc(h.volk)} ${esc(h.klasse)}</i><small class="mut">${esc(t('Stufe','Level'))} ${h.stufe} · ${h.ep} EP${h.ep_tisch?' · +'+h.ep_tisch+' '+esc(t('EP noch am Tisch','EP still at the table')):''} · ${h.gold} ${esc(t('Gold','gold'))}</small>${dmZust(h)}</div></div>
     ${dmBar(h.leben,h.leben_max)}<small class="mut">${esc(t('Leben','Life'))} ${h.leben}/${h.leben_max}</small>
     <div class="dm-stats">${(h.werte||[]).map(x=>`<span title="${esc(x.name)}"><small>${esc(x.kurz)}</small><b>${x.wert}</b><i>${dmBo(x.mod)}</i></span>`).join('')}</div>
-    ${h.satz?`<small class="dm-isatz">„${esc(h.satz)}“</small>`:''}<div class="dm-hostb"><button type="button" class="b danger" data-dmdelhero="${esc(h.hid)}">${esc(t('Löschen','Delete'))}</button></div></div>`).join('')}</div>`
+    ${h.satz?`<small class="dm-isatz">„${esc(h.satz)}“</small>`:''}${dmHeroThings(h)}<div class="dm-hostb"><button type="button" class="b danger" data-dmdelhero="${esc(h.hid)}">${esc(t('Löschen','Delete'))}</button></div></div>`).join('')}</div>`
     :`<div class="ic-empty">${esc(t('Noch keine Helden. Ein Held entsteht mit deiner ersten Runde und behält Stufe, Werte und Beute.','No heroes yet. A hero comes with your first round and keeps level, values and loot.'))}</div>`;
   return `<h3 class="sec">${esc(t('Deine Helden','Your heroes'))} · ${hs.length}/${D.helden_max}</h3>${list}
     <div class="ic-danger"><div class="ic-mid"><b>${esc(t('Alle Spieldaten löschen','Delete all game data'))}</b><span>${esc(t('Deine Helden, Kampagnen, Runden und deine Plätze in fremden Runden.','Your heroes, campaigns, rounds and your seats in other rounds.'))}</span></div><button type="button" class="b danger" data-dmwipe="1">${esc(t('Löschen …','Delete …'))}</button></div>`}
@@ -514,9 +515,19 @@ const DMBT={t:null},DMBTABS=['aus','kann','tasche','werte'];
 function dmBTab(){if(DMBT.t===null){try{DMBT.t=localStorage.getItem('dm-bogen')||''}catch(e){DMBT.t=''}}return DMBTABS.includes(DMBT.t)?DMBT.t:'aus'}
 document.body.addEventListener('click',e=>{const b=e.target.closest('.dm [data-dmbt]');if(!b)return;DMBT.t=b.dataset.dmbt;try{localStorage.setItem('dm-bogen',DMBT.t)}catch(x){}
   if(!b.dataset.dmfen)(b.closest('#dgcard')?dgDraw():dmDraw())});
+// the hero's places for what it wears (SLOTS of dungeon.py), one list for the sheet and the heroes tab
+const dmSlots=()=>({kopf:t('Kopf','Head'),hals:t('Hals','Neck'),koerper:t('Körper','Body'),haupthand:t('Haupthand','Main hand'),nebenhand:t('Nebenhand','Off hand'),haende:t('Hände','Hands'),guertel:t('Gürtel','Belt'),fuesse:t('Füße','Feet'),ring1:t('Ring','Ring'),ring2:t('Ring','Ring')});
+// Dominik 2026-10-25 „unter dem Reiter Helden … was hat er für Gegenstände, Gold und so weiter“: what a kept hero wears
+// and carries, with where each thing was found, to look at between the rounds (changed only at the table)
+function dmHeroThings(h){const slot=dmSlots(),an=Object.entries(h.an||{}).filter(([,it])=>it),bag=h.tasche||[];
+  const n=an.length+bag.reduce((a,x)=>a+(x.n||1),0);
+  return `<details class="dm-hdet"><summary>🎒 ${esc(t('Ausrüstung und Tasche','Equipment and bag'))} · ${n} ${esc(n===1?t('Ding','thing'):t('Dinge','things'))} · ${h.gold} ${esc(t('Gold','gold'))}</summary>
+    ${an.length?`<div class="dm-n">${esc(t('Trägt','Wears'))}</div>${an.map(([k,it])=>`<small class="mut">${esc(slot[k]||k)}</small>${dmItem(it)}`).join('')}`:''}
+    <div class="dm-n">${esc(t('In der Tasche','In the bag'))} · ${bag.length}/${h.tasche_max||bag.length}</div>${bag.length?bag.map(x=>dmItem(x)).join(''):`<small class="mut">${esc(t('Leer.','Empty.'))}</small>`}
+    ${(h.kann&&h.kann.zauber||[]).length?`<div class="dm-n">${esc(t('Zauber','Spells'))}</div><small>${h.kann.zauber.map(z=>esc(z.name)).join(' · ')}</small>`:''}</details>`}
 function dmMe(v,mode){const h=v.ich;if(!h)return '';
   const open=v.status!=='ende',acts=it=>dmActs(v,it),tab=dmBTab(),kn=h.kann?h.kann.faehigkeiten.length+h.kann.zauber.length:0,offen=h.punkte||h.wahl.length;
-  const slot={kopf:t('Kopf','Head'),hals:t('Hals','Neck'),koerper:t('Körper','Body'),haupthand:t('Haupthand','Main hand'),nebenhand:t('Nebenhand','Off hand'),haende:t('Hände','Hands'),guertel:t('Gürtel','Belt'),fuesse:t('Füße','Feet'),ring1:t('Ring','Ring'),ring2:t('Ring','Ring')};
+  const slot=dmSlots();
   const zwei=h.an.haupthand&&h.an.haupthand.zweihand,kg=x=>String(x).replace('.',L==='en'?'.':',');
   const doll=['hals','kopf','ring1','haupthand','koerper','nebenhand','haende','guertel','ring2','fuesse'].map(k=>{const it=h.an[k];
     return `<div class="dm-pl${it?' voll '+(DMSEL[it.selten]||''):''}" data-dmslot="${k}"${it?` draggable="true" data-dmdrag="${esc(k)}" title="${esc([it.name,...it.zeilen].join(' · '))}"`:''}><small>${esc(slot[k])}</small>${it?`${dmDing(it)}<b>${esc(it.u?it.name.replace(/ \(.*\)$/,'')+' ?':it.name)}</b>${open?`<button type="button" class="ic-ib" data-dmhero="ablegen" data-platz="${k}" title="${esc(t('Ablegen','Unequip'))}" aria-label="${esc(t('Ablegen','Unequip')+': '+it.name)}">×</button>`:''}`:k==='nebenhand'&&zwei?`<i>${esc(t('beide Hände','both hands'))}</i>`:'<i>–</i>'}</div>`}).join('');
@@ -624,6 +635,7 @@ function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),tk=dmTal
     ${frei>0?`<button type="button" class="dm-zeile" data-dminvite="1"><span>＋ ${esc(t('Einladen','Invite'))}</span><small>${esc(frei===1?t('1 Platz frei','1 seat free'):t(frei+' Plätze frei',frei+' seats free'))} ›</small></button>`:''}
     <label class="dm-zeile"><span>📜 ${esc(t('Erzählweise','Way of telling'))}</span>${dmWeise('',v.erzaehlweise||'normal','data-dmweise="1"')}</label>
     ${v.regler?`<label class="dm-zeile" title="${esc(t('Nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer. Die Spieler sehen nur die Gefahr.','After every fight the Spark sets the next encounters at most a quarter easier or harder by fixed numbers. The players see only the danger.'))}"><span>🎚 ${esc(t('Spielleiter-Regler','Game master dial'))} <small>${esc(t('Gefahr','danger'))} ${v.regler.wert>0?'+':''}${v.regler.wert} %</small></span><span><input type="checkbox" data-dmregler="1"${v.regler.fest?' checked':''}> ${esc(t('festhalten','hold'))}</span></label>`:''}
+    ${v.mail_vorschau!=null?`<label class="dm-zeile" title="${esc(t('Gäste mit Gast-Konto bekommen „Du bist dran“ per Mail. Darin steht dann auch der letzte Satz des Erzählers, ohne Links, höchstens 160 Zeichen.','Guests with a guest account get "Your turn" by mail. It then also holds the narrator\'s last sentence, without links, at most 160 characters.'))}"><span>✉ ${esc(t('Letzter Satz in der Mail','Last sentence in the mail'))}</span><span><input type="checkbox" data-dmvorschau="1"${v.mail_vorschau?' checked':''}></span></label>`:''}
     ${erzw?`<details class="dm-zeile-d" data-dmauf="erz"${DMA.auf==='erz'?' open':''}><summary class="dm-zeile"><span>🎙 ${esc(t('Stimme des Erzählers','Narrator\'s voice'))}</span><small>${esc(erz?erz.name:'')} ›</small></summary>${erzw}</details>`:''}
     <details class="dm-mehr" data-dmauf="mehr"${DMA.auf==='mehr'||DM.kap||DM.ende?' open':''}><summary>⋯ ${esc(t('Mehr','More'))}</summary><div class="dm-hostb"><button type="button" class="b" data-dmkap="1">${esc(DM.kap?t('Kapitel wirklich beenden?','Really end the chapter?'):t('Kapitel beenden','End chapter'))}</button><button type="button" class="b danger" data-dmend="1">${esc(DM.ende?t('Wirklich beenden?','Really end?'):t('Runde beenden','End round'))}</button></div></details>${v.bilder_an&&v.bild_grund&&!v.bild_malt?`<small class="mut dm-bgrund">🖼 ${esc(v.bild_grund)}</small>`:''}${dmPlanHost(v)}${dmTruth(v)}${dmThings(v)}
     ${DM.made?`<div class="mitmade"><div class="jqr">${DM.made.qr||''}</div><div class="sp"><input readonly value="${esc(DM.made.link)}" aria-label="${esc(t('Der Link','The link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Wer ihn öffnet, sitzt auf diesem Platz: als Gast ohne Profil oder mit seinem Profil.','Shown only now. Whoever opens it takes this seat: as a guest without a profile or with their profile.'))}</small></div></div>`:''}`:'';
@@ -857,8 +869,8 @@ async function dmProbe(mode,h){const A=DMA[mode],voice=h.stimme||'',klang=h.klan
     if(!r.ok){dmSay(mode==='p'?DM:DG,t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'),1);return}
     if(r.headers.get('X-Stimme')==='fest')dmSay(mode==='p'?DM:DG,t('Stimmen aus Beschreibung laufen gerade nicht, die Probe kommt in der festen Stimme.','Voices from a description are not running right now, the sample uses the fixed voice.'));
     if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(e){}}
-document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmerz],#dmview [data-dmweise],#dmview [data-dmregler]');if(!s||!DM.rid)return;
-  const d=await dmSend(`/api/profile/dungeon/${DM.rid}/erzaehler`,s.dataset.dmregler?{regler_fest:s.checked}:s.dataset.dmweise?{weise:s.value}:{k:s.value},DM);if(d){DM.v=d;DM.at=Date.now();dmDraw()}});
+document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmerz],#dmview [data-dmweise],#dmview [data-dmregler],#dmview [data-dmvorschau]');if(!s||!DM.rid)return;
+  const d=await dmSend(`/api/profile/dungeon/${DM.rid}/erzaehler`,s.dataset.dmregler?{regler_fest:s.checked}:s.dataset.dmvorschau?{mail_vorschau:s.checked}:s.dataset.dmweise?{weise:s.value}:{k:s.value},DM);if(d){DM.v=d;DM.at=Date.now();dmDraw()}});
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmgive],#dgcard [data-dmgive]');if(!s||!s.value)return;
   const body={was:'schenken',i:s.dataset.dmgive,an:s.value};
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
@@ -873,8 +885,13 @@ const dgErr=e=>DMGRUND[e.message]?t(...DMGRUND[e.message]):e.status===404?t('Der
   :e.status===429?t('Zu viele Versuche. Bitte später noch einmal.','Too many attempts. Please try again later.')
   :e.status===400?t('Der Link passt nicht mehr: abgelaufen, zurückgenommen oder die Runde ist vorbei.','The link does not fit any more: expired, taken back or the round is over.')
   :t('Das hat nicht geklappt.','That did not work.');
-window.dmHash=()=>{const m=/^#spiel=([A-Za-z0-9_-]{32})$/.exec(location.hash);if(!m)return false;
+window.dmHash=()=>{const w=/^#weiter=([A-Za-z0-9_-]{43})$/.exec(location.hash);if(w){history.replaceState(null,'',location.pathname+location.search);dgWeiter(w[1]);return true}
+  const m=/^#spiel=([A-Za-z0-9_-]{32})$/.exec(location.hash);if(!m)return false;
   history.replaceState(null,'',location.pathname+location.search);DG.code=m[1];dgStart();return true};
+// „Weiterspielen“ of a guest's mail (#weiter=<once>): the panel gives this device a fresh key for its seat, the mail never holds one
+async function dgWeiter(tok){const box=dgBox();box.innerHTML=dgHead()+`<div class="mut">${esc(t('Öffne deinen Platz …','Opening your seat …'))}</div>`;
+  try{DG.code=(await dgPub('/api/dungeon/weiter',{t:tok})).code}catch(e){box.innerHTML=dgHead()+`<div class="err">${esc(e.status===400?t(...DMGRUND.weiter):dgErr(e))}</div>`;return}
+  dgStart()}
 function dgBox(){let m=$('dgmodal');if(!m){m=document.createElement('div');m.id='dgmodal';m.className='modal dgmodal';
   m.innerHTML='<div class="card modalcard dgcard" id="dgcard"></div>';document.body.appendChild(m)}m.style.display='grid';document.body.classList.add('dg-offen');document.body.classList.toggle('dg-gast',dgGast());return $('dgcard')}
 // a guest without a profile sees only the game (Dominik 2026-10-24 „das muss richtig abgesichert sein das man da nicht
@@ -1242,3 +1259,5 @@ async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(k==='gvor'?'vorschlag':'akt'),xjson('POST',body));DMP.busy=false;
   if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang})}else DMP.err=dmPlanErr(r,x);
   if(DMP.g&&$('dmadmcard'))dmRulesDraw(DMP.d,'')}
+// the pictures of a hero's things load once its list opens (dmHeroThings)
+document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.dm-hdet')&&e.target.open)dmDingFill(e.target,'p')},true);

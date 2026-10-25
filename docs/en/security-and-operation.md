@@ -90,6 +90,7 @@ Everything that reaches the panel from outside, and who may do what there. Every
 | `/live` | live monitor in the home network | off | home network only, kinds and numbers only |
 | Wyoming `:31003` | Home Assistant Assist | off | only the addresses on the allow list, only audio in, text out and back |
 | Phone SIP `:31060`, RTP `:31062-31069` | the own telephone system | off | only the PBX entered, numbers belong to profiles, a stranger's voice gets nothing personal |
+| Mail link "Play on" (`#weiter=…`, `/api/dungeon/weiter`) | a guest with a guest account from their "Your turn" mail | with "Guests with e-mail" | valid once and for 12 hours, only its hash lies on the Spark, never the seat key in the mail; gives only a fresh key for the own seat while it belongs to the account; rate limit "dungeonkonto", lock after failed tries, other sites refused |
 | Telegram | a profile's bot, the panel polls Telegram | off | no open port, only connected chats |
 
 ### Data on the disk and new ways to write

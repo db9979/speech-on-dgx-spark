@@ -90,6 +90,7 @@ Alles, was von außen ans Panel kommt, und wer dort was darf. Jeder Weg ist ab W
 | `/live` | Live-Monitor im Heimnetz | aus | nur Heimnetz, nur Arten und Zahlen |
 | Wyoming `:31003` | Home Assistant Assist | aus | nur die Adressen in der Erlaubt-Liste, nur Ton rein, Text raus und umgekehrt |
 | Telefon SIP `:31060`, RTP `:31062-31069` | die eigene Telefonanlage | aus | nur die eingetragene Anlage, Nummern sind Profilen zugeordnet, fremde Stimme bekommt nichts Persönliches |
+| Mail-Link „Weiterspielen“ (`#weiter=…`, `/api/dungeon/weiter`) | ein Gast mit Gast-Konto aus seiner Mail „Du bist dran“ | mit „Gäste mit E-Mail“ | gilt einmal und 12 Stunden, nur der Hash liegt auf dem Spark, nie der Platz-Schlüssel in der Mail; gibt nur einen frischen Schlüssel für den eigenen Platz, solange er zum Konto gehört; Lastgrenze „dungeonkonto“, Sperre nach Fehlversuchen, fremde Webseiten abgewiesen |
 | Telegram | Bot des Profils, das Panel fragt Telegram ab | aus | kein offener Port, nur verbundene Chats |
 
 ### Daten auf der Platte und neue Schreibwege
