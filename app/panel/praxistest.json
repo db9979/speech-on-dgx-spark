@@ -3348,6 +3348,13 @@
 "titel": "Wirtschaft Teil 1",
 "text": "A: Neuer Held: 25 Gold. B: Beim Händler kostet ein Heiltrank 12 Gold, eine Zauberrolle Grad 1 50 Gold. C: Regeln → Gegenstände → Vorpalschwert: „unverkäuflich“; Mithrilhemd: fester Preis statt „×Faktor“. D: Einen gefundenen Edelstein verkaufen: der Preis wächst mit der Stufe der Gruppe beim Fund. E: Ein legendäres Ding zeigt beim Händler keinen Verkaufen-Knopf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P503",
+"v": 1053,
+"titel": "Wirtschaft Teil 2",
+"text": "A: Ein Händler öffnet: das Fenster nennt Schmied, Alchemist oder Krämer, was er zum halben Wert nimmt, und seine Kasse. B: Beim Schmied ein Schwert verkaufen: halber Wert; einen Trank: ein Viertel. C: So lange verkaufen, bis die Kasse leer ist: der Knopf wird grau, er lehnt ab. D: Etwas bei ihm kaufen: die Kasse wächst. E: Regeln → Seltenheit: „ab Stufe 5“ bei legendär, keine Schwelle mehr.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

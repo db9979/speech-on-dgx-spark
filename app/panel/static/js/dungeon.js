@@ -145,6 +145,7 @@ const DMGRUND={
   'an':['Der andere Held kann das gerade nicht nehmen, seine Tasche ist voll oder zu schwer.','The other hero cannot take it right now, the bag is full or too heavy.'],
   'kaufen':['Dafür reicht dein Gold nicht, oder der Händler hat es nicht mehr.','You do not have enough gold, or the merchant no longer has it.'],
   'verkaufen':['Das kauft der Händler nicht.','The merchant does not buy that.'],
+  'kasse':['So viel Gold hat der Händler nicht mehr. Kauf erst etwas bei ihm oder komm am nächsten Ort wieder.','The merchant has no more gold for that. Buy something from them first or come back at the next place.'],
   'erkennen':['Das kann der Händler gerade nicht erkennen, oder dein Gold reicht nicht.','The merchant cannot identify this right now, or your gold is not enough.'],
   'haendler':['Gerade ist kein Händler da.','There is no merchant here right now.'],
   'kein trank':['Das ist kein Trank.','That is no potion.'],
@@ -1093,8 +1094,8 @@ function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
 function dmRSelLeg(K){return `<div class="dm-rsleg" aria-label="${esc(t('Seltenheit','Rarity'))}">${K.seltenheiten.map(s=>`<span class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i>${esc(s.name)}</span>`).join('')}<span class="dm-rsl"><i class="dm-rth dm-sx"></i>${esc(t('gewürfelt beim Fund','rolled when found'))}</span></div>`}
 function dmRSelLadder(K,x){if(!K.seltenheiten)return '';
   if(x.selten){const s=K.seltenheiten.find(z=>z.id===x.selten);return s?`<div class="fh dm-rsfest"><i class="dm-rth ${DMSEL[s.id]||''}"></i>${esc(x.preis==null?t(`Immer ${s.name}: +${s.bonus}, Preis ×${s.preis}`,`Always ${s.name}: +${s.bonus}, price ×${s.preis}`):x.preis?t(`Immer ${s.name}: +${s.bonus}, Preis ${x.preis} Gold`,`Always ${s.name}: +${s.bonus}, price ${x.preis} gold`):t(`Immer ${s.name}: +${s.bonus}, unverkäuflich`,`Always ${s.name}: +${s.bonus}, not for sale`))}</div>`:''}
-  return `<div class="dm-rsleiter"><div class="fh">${esc(t('Die Seltenheit wird beim Fund gewürfelt (W100 plus zweimal die Stufe) und gibt den Rahmen:','The rarity is rolled when it is found (d100 plus twice the level) and gives the frame:'))}</div>
-    ${K.seltenheiten.map(s=>`<div class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i><b>${esc(s.name)}</b><small>${esc(t(`ab ${s.ab||1} · +${s.bonus} · Preis ×${s.preis}${s.stufe>1?` · ab Stufe ${s.stufe}`:''}`,`from ${s.ab||1} · +${s.bonus} · price ×${s.preis}${s.stufe>1?` · from level ${s.stufe}`:''}`))}</small></div>`).join('')}</div>`}
+  return `<div class="dm-rsleiter"><div class="fh">${esc(t('Die Seltenheit wird beim Fund gewürfelt (W100 nach einer festen Tabelle je Stufe, Truhen und Bosse würfeln höher) und gibt den Rahmen:','The rarity is rolled when it is found (d100 by a fixed table per level, chests and bosses roll higher) and gives the frame:'))}</div>
+    ${K.seltenheiten.map(s=>`<div class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i><b>${esc(s.name)}</b><small>${esc(t(`+${s.bonus} · Preis ×${s.preis}${s.stufe>1?` · ab Stufe ${s.stufe}`:s.stufe?'':' · nie'}`,`+${s.bonus} · price ×${s.preis}${s.stufe>1?` · from level ${s.stufe}`:s.stufe?'':' · never'}`))}</small></div>`).join('')}</div>`}
 function dmRDet(teil){const K=DMR.k[teil],x=K.zeilen.find(z=>String(z.id)===DMR.sel),St=DMRSTAND();
   if(!x)return `<div class="ic-empty">${esc(t('Tippe links einen Eintrag an.','Tap an entry on the left.'))}</div>`;
   const e=K.eintraege[String(x.id)]||{},li=L==='en'?1:0,tx=v=>Array.isArray(v)?v[li]||v[0]:v||'';

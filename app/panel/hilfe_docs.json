@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wirtschaft Teil 2 (V01.1.053, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 3 und 5): Münzen: Ein Gegner gibt der Gruppe 5 bis 15 Gold mal Stufe (vorher 2 bis 10), Münzen werden so die Haupteinnahme. Händler mit Art: Jeder Händler ist Schmied (Waffen, Rüstung), Alchemist (Tränke, Zauber) oder Krämer (Schmuck, Werkzeug, Rollen, Schätze) (HAENDLER) und verkauft nur seine Art. Er zahlt für seine Art den halben Wert, für alles andere und für Unerkanntes ein Viertel (sell_price). Seine Kasse hat 50 Gold mal Stufe der Gruppe je Besuch (KASSE), was Helden bei ihm kaufen, füllt sie wieder; ist sie leer, lehnt er mit eigenem Satz ab. Das Händlerfenster nennt Art, was er zum halben Wert nimmt, und die Kasse. Fundtabelle: Die Seltenheit eines Funds kommt aus einer festen Tabelle je Stufe (fundtabelle in den Regeln, find_row, NIE = nie) statt aus Schwellen plus zweimal Stufe. Von einem Gegner wird keine Seltenheit von „selten“ bis „episch“ mit der Stufe seltener (vorher fiel „rar“ von 19 auf 12 Prozent, als „episch“ dazukam); Legendäres kommt ab Stufe 5 nur von Bossen, höchstens 10 von 100 (vorher 27), aus Truhen und Belohnungen nicht mehr. Unter Regeln steht "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "je Seltenheit, ab welcher Stufe sie vorkommt. Der Balance-Prüfstand rüstet seine Gruppen mit einer festen Annahme je Stufe aus (GEAR_SELTEN), damit eine neue Fundtabelle das Ziel nicht allein verschiebt. Selbsttests test_the_find_table_keeps_its_promises, test_a_merchant_of_a_kind_with_a_purse."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Wirtschaft Teil 1 (V01.1.052, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 1, 2 und 4): Eine Preisregel (dungeon.price): Grundpreis der Art (oder der eigene) mal Faktor der Seltenheit; ein Ding mit fester Seltenheit und eigenem Preis hat damit schon seinen Endpreis und wird nicht noch einmal multipliziert (vorher kostete das Vorpalschwert 125 000). Jeder Preis liegt im Band seiner Seltenheit (PREISBAND: gewöhnlich bis 50, selten bis 250, rar bis 1000, episch bis 4000); Legendäres hat keinen Preis und ist unverkäuflich. Was ohne feste Seltenheit mehr kostete (Plattenpanzer, Brustplatte, Drachenpanzer, Elfenbogen, Zweihänder und andere), kostet jetzt 50. Weil gute Rüstung damit früher erschwinglich ist, sind die Begegnungen „mittel“ auf Stufe 1 und 2 etwas größer (kampf.BUDGET 95 und 150); der Balance-Prüfstand hält weiter 70 bis 90 Prozent. Schätze nach Stufe: Ein Schatz hat statt eines Preises eine Klasse (klasse, SCHATZ: klein 10, mittel 25, groß 60 Gold) mal Stufe der Gruppe beim Fund (it[\"st\"]); große Schätze nur aus Truhen und von Bossen (SCHATZ_GROSS). Tränke und Rollen nach Stärke: Ein Heiltrank kostet 2 Gold je geheiltem Leben (HEIL_GOLD), "
 },
 {
@@ -18262,6 +18278,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: economy part 2 (V01.1.053, Dominik 2026-10-25 \"1-12\" on the review of the economy, points 3 and 5): Coins: a foe gives the group 5 to 15 gold times the level (before 2 to 10), so coins become the main income. Merchants with a kind: every merchant is a smith (weapons, armour), an alchemist (potions, spells) or a trader (jewellery, tools, scrolls, treasures) (HAENDLER) and sells only its kind. It pays half the worth for its kind, a quarter for anything else and for unknown things (sell_price). Its purse holds 50 gold times the group's level per visit (KASSE); what heroes buy from it fills it again; when it is empty it refuses with its own sentence. The merchant's window names its kind, what it takes for half the worth and the purse. Find table: the rarity of a find comes from a fixed table per level (fundtabelle in the rules, find_row, NIE = never) instead of thresholds plus twice the level. From a foe no rarity from \"uncommon\" to \"epic\" gets rarer with the level (before, \"rare\" fell from 19 to 12 per cent when \"epic\" came in); legendary things come from level 5 on only from bosses, at most 10 in 100 (before 27), no longer from chests and rewards. Under Rules each "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "rarity shows from which level it occurs. The balance bench equips its groups by a fixed assumption per level (GEAR_SELTEN), so a new find table does not move the aim by itself. Self-tests test_the_find_table_keeps_its_promises, test_a_merchant_of_a_kind_with_a_purse."
 },
 {
 "lang": "en",

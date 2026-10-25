@@ -47,7 +47,9 @@ RUNDEN = 30                    # turns of one fight at most
 NACHT = (2, 5)                 # the night window, local hours [from, to)
 TRANK = 3                      # a hero drinks its potion at a third of its life or less
 GEAR = ((1, 20), (3, 45), (6, 80), (9, 120))   # (from level, the dearest body armour a hero of it wears)
-FUND = 40, 6                   # the rarity of the gear: dungeon.rarity at the roll 40 + 6 × level
+# the rarity of the gear a group of a level typically wears (levels 1 to 10, beyond the last); a fixed assumption of
+# the bench, apart from the find table (dungeon.find_row), so a new table never moves the aim by itself
+GEAR_SELTEN = ("gewoehnlich", "gewoehnlich", "selten", "selten", "selten", "selten", "rar", "rar", "episch", "episch")
 KNOPF_S = 60                   # „Jetzt durchspielen“ at most once a minute
 clock = time.time              # the tests set it (no wall clock in a test)
 _lock = threading.Lock()
@@ -71,7 +73,7 @@ def party(r, n, stufe, rng):
     """n heroes of this level, the classes in turn, ready for a fight."""
     ks = [k["id"] for k in r["klassen"]]
     volk = r["voelker"][0]["id"]
-    selten = dungeon.rarity(r, stufe, min(99, FUND[0] + FUND[1] * stufe))[1]["id"]
+    selten = GEAR_SELTEN[min(len(GEAR_SELTEN), max(1, stufe)) - 1]
     out = []
     for i in range(n):
         k = ks[i % len(ks)]

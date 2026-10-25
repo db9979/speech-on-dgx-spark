@@ -226,8 +226,10 @@ def view(teil, lang="de", welt=""):
         out.update(weltfilter=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]],
                    arten={a: {"zeichen": kampf.ART_ZEICHEN.get(a, ""), "name": kampf.ART_NAME[a][li]} for a in kampf.SCHADEN_ARTEN})
     if teil == "gegenstaende":       # the ladder a rolled item climbs (dungeon.rarity: W100 + 2 × level)
-        out["seltenheiten"] = [{"id": s["id"], "name": _name(s, li), "ab": s["ab"], "bonus": s["bonus"],
-                                "stufe": s["stufe_min"], "preis": s["preis"]} for s in r["seltenheit"]]
+        ft = r["fundtabelle"]                        # the first level a rarity can be found at (Wirtschaft Punkt 5)
+        ab = [1] + [next((i + 1 for i, z in enumerate(ft) if z[k] < dungeon.NIE), 0) for k in range(len(r["seltenheit"]) - 1)]
+        out["seltenheiten"] = [{"id": s["id"], "name": _name(s, li), "bonus": s["bonus"], "stufe": a, "preis": s["preis"]}
+                               for s, a in zip(r["seltenheit"], ab)]
     return out
 
 

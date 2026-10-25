@@ -2132,12 +2132,12 @@ class Equipment(Base):
         self.assertIn(w["i"], [x["i"] for x in self.hero(self.host)["tasche"]])
         self.assertEqual(self.gheld({"was": "kaufen", "i": w["i"]}).status_code, 400)          # sold only once
         self.assertEqual(self.hero(self.gp)["gold"], 5000)
-        # selling: half its worth, the guest only from its own bag
+        # selling: half its worth to a merchant of its kind (else a quarter), the guest only from its own bag
         mine = self.give(self.rid, self.gp, "langschwert", "gewoehnlich")
         self.assertEqual(self.gheld({"was": "verkaufen", "i": w["i"]}).status_code, 400)
         it = next(x for x in self.hero(self.gp)["tasche"] if x["i"] == mine)
         self.assertEqual(self.gheld({"was": "verkaufen", "i": mine}).status_code, 200)
-        self.assertEqual(self.hero(self.gp)["gold"], 5000 + dungeon.price(self.r, it) // 2)
+        self.assertEqual(self.hero(self.gp)["gold"], 5000 + dungeon.sell_price(self.r, it, m))      # half for its kind, else a quarter
         self.assertIn(mine, [x["i"] for x in self.state(self.rid)["markt"]["ware"]])
         # Charisma: 5 % a point of its bonus, at most 20
         self.assertEqual(dungeon.rabatt(self.r, dict(h, werte=dict(h["werte"], charisma=14), an={}, segen=[], faehigkeiten=[])), 10)
@@ -5285,12 +5285,6 @@ class Fight(Turns):
             self.assertTrue(e.get("wirkung") in kampf.WIRKUNG or e["bonus"] > 0, e["id"])
         bad = dungeon.merge(dungeon._base_rules(), {"effekte": [{"id": "x", "satz": ["a", "b"], "wert": "staerke", "bonus": 0}]})
         self.assertTrue([e for e in dungeon.check_rules(bad) if "effekte" in e])
-        ids = [x["id"] for x in r["seltenheit"]]
-        for stufe in range(1, r["grenzen"]["stufe_max"] + 1):
-            n = {k: 0 for k in ids}
-            for w in range(1, 101):
-                n[dungeon.rarity(r, stufe, w + dungeon.FUND_STUFE * stufe)[1]["id"]] += 1
-            self.assertLessEqual(n[ids[-1]], n[ids[-2]], stufe)                   # legendary never more often than epic
         sword = next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c)
         self.assertNotIn("eff", dungeon.item(r, sword, "selten", random.Random(1)))
         for seed in range(20):
@@ -5350,8 +5344,8 @@ class Fight(Turns):
         dungeon.open_market(r, rd, rng=Top(2))
         self.assertNotIn(top, {x["s"] for x in rd["markt"]["ware"]})                  # never at a merchant
         n = len(leg.of_world(dungeon, r, rd["welt"]))
-        for i in range(n + 2):
-            dungeon.give_loot(r, rd, held, ("boss", "truhe", "belohnung")[i % 3], top_level, Top(i))
+        for i in range(n + 2):                                                        # a legend only from a boss (find table)
+            dungeon.give_loot(r, rd, held, "boss", top_level, Top(i))
         self.assertEqual(len(rd["legenden"]), n)
         self.assertEqual(len(set(rd["legenden"])), n)                                 # each once, then episch
         own = next(x for x in leg.of_world(dungeon, r, rd["welt"]) if x[2])
@@ -5460,6 +5454,66 @@ class Fight(Turns):
                     found.add((anlass, c["klasse"]))
         self.assertFalse({("gegner", "gross"), ("belohnung", "gross")} & found, found)
         self.assertTrue({("truhe", "gross"), ("boss", "gross")} & found, found)
+
+    def test_the_find_table_keeps_its_promises(self):
+        """Wirtschaft Punkt 5 (Dominik 2026-10-25 „1-12“): the rarity of a find by a fixed table per level. From a foe,
+        no rarity from „selten“ to „episch“ gets rarer as the level grows (so „rar“ never falls when „episch“ opens),
+        and no legend; a legend from a chest at most 3 and from a boss at most 10 in a hundred, never below its level."""
+        r = dungeon.rules()
+        ids = [x["id"] for x in r["seltenheit"]]
+        def share(stufe, anlass):
+            n = {k: 0 for k in ids}
+            for w in range(1, 101):
+                n[dungeon.rarity(r, stufe, w + r["anlass"][anlass])[1]["id"]] += 1
+            return n
+        before = None
+        for stufe in range(1, r["grenzen"]["stufe_max"] + 1):
+            n = share(stufe, "gegner")
+            self.assertEqual(n[ids[-1]], 0, stufe)
+            if before:
+                for k in ids[1:-1]:
+                    self.assertGreaterEqual(n[k], before[k], (stufe, k))
+            before = n
+            self.assertLessEqual(share(stufe, "truhe")[ids[-1]], 3, stufe)
+            self.assertLessEqual(share(stufe, "boss")[ids[-1]], 10, stufe)
+            self.assertLessEqual(share(stufe, "belohnung")[ids[-1]], 3, stufe)
+        self.assertEqual(share(1, "boss")[ids[-1]], 0)
+        bad = dungeon.merge(dungeon._base_rules(), {"fundtabelle": [[90, 50, 999, 999]]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "fundtabelle" in e])
+
+    def test_a_merchant_of_a_kind_with_a_purse(self):
+        """Wirtschaft Punkt 3 (Dominik 2026-10-25 „1-12“): a merchant has a kind and sells only its kind; it pays half
+        the worth for its own kind, a quarter for anything else, from a purse of 50 gold times the level that buying
+        fills; an empty purse refuses with its own sentence. A foe gives 5 to 15 gold times the level to the group."""
+        r = dungeon.rules()
+        self.assertEqual(r["gold"]["gegner"], [5, 15])
+        rd, _ = self.encounter()
+        rd.pop("kampf", None)
+        h = rd["plaetze"][self.host]["held"]
+        stufe = dungeon.group_level([p["held"] for _, p in dungeon.seated(rd)])
+        for seed in range(12):
+            dungeon.open_market(r, rd, rng=random.Random(seed))
+            m = rd["markt"]
+            self.assertIn(m["art"], dungeon.HAENDLER)
+            self.assertEqual(m["kasse"], dungeon.KASSE * stufe)
+            self.assertEqual(m["name"], dungeon.HAENDLER[m["art"]][0][0])
+            self.assertFalse([x["id"] for x in m["ware"] if dungeon._c(r, x)["art"] not in dungeon.HAENDLER[m["art"]][1]], seed)
+        rd["markt"] = dict(rd["markt"], art="schmied", kasse=1000)
+        sword = dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c), "selten")
+        potion = dungeon.item(r, "elixier", "selten")
+        m = rd["markt"]
+        self.assertEqual(dungeon.sell_price(r, sword, m), dungeon.price(r, sword) // 2)
+        self.assertEqual(dungeon.sell_price(r, potion, m), dungeon.price(r, potion) // 4)
+        h["tasche"] += [sword, potion]
+        gold = h["gold"]
+        dungeon.shop(r, rd, self.host, h, "verkaufen", {"i": sword["i"]}, sword)
+        self.assertEqual((h["gold"], m["kasse"]), (gold + dungeon.price(r, sword) // 2, 1000 - dungeon.price(r, sword) // 2))
+        m["kasse"] = 0
+        with self.assertRaises(ValueError) as e:
+            dungeon.shop(r, rd, self.host, h, "verkaufen", {"i": potion["i"]}, potion)
+        self.assertEqual(str(e.exception), "kasse")
+        v = dungeon.market_view(r, rd, h, "de")
+        self.assertEqual((v["art"], v["kasse"], v["kauft"]), ("Schmied", 0, ["Waffe", "Rüstung"]))
 
     def test_the_offer_fits_world_budget_and_turn(self):
         r = dungeon.rules()

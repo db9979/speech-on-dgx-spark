@@ -263,7 +263,7 @@ WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigke
        "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst")
 TASCHE = 12               # items in one bag
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
-FUND_STUFE = 2            # a find's d100 + this per level of the group (rarity)
+NIE = 999                 # a threshold of the find table no roll reaches (d100 + at most 50 for the occasion)
 LEGENDEN_MAX = 200        # legends a campaign remembers as found (dungeon_legenden)
 BONUS_MAX = 3             # a rarity's bonus at most (Gegenstands-Punkt 3: selten +1, rar +2, episch and legendär +3)
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
@@ -326,7 +326,12 @@ WARE = (6, 10)            # items a merchant offers
 WARE_MAX = 20             # with what the heroes sold to it
 RABATT = (5, 20)          # per point of the Charisma bonus, at most (percent)
 ERKENNEN = 5              # a merchant names an unknown item for a fifth of its price, at least this much gold
-HAENDLER = ("Fahrender Händler", "Travelling merchant")   # the merchant the host calls without one in the story
+# Wirtschaft Punkt 3 (Dominik 2026-10-25 „1-12“): a merchant has a kind; it sells and buys its own arts for half their
+# worth, anything else for a quarter, and pays from a purse of KASSE gold per level of the group, filled at every visit
+HAENDLER = {"schmied": (("Schmied", "Smith"), ("waffe", "ruestung")),
+            "alchemist": (("Alchemist", "Alchemist"), ("trank", "zauber")),
+            "kraemer": (("Krämer", "Trader"), ("schmuck", "werkzeug", "rolle", "schatz"))}
+KASSE = 50
 FOLGE_ARTEN = ("schaden", "heilung")
 FUNDE = ("gegner", "truhe", "belohnung", "boss")   # the occasions of a find (rules anlass, gold)
 ANLAESSE = ("truhe", "belohnung")   # the model's; „gegner“ and „boss“ the panel gives at a fight's end (dungeon_kampf)
@@ -630,9 +635,11 @@ def check_rules(r):
     need(sg is None or isinstance(sg, dict) and set(sg) == set(SG) and all(_int(sg[k], 1, 40) for k in SG)
          and [sg[k] for k in SG] == sorted(sg[k] for k in SG), f"sg: {', '.join(SG)} als aufsteigende Zahlen 1 bis 40")
     s = r.get("seltenheit") or []
-    need([x.get("ab") for x in s] == sorted(x.get("ab") for x in s if _int(x.get("ab"), 0, 100)) and s and s[0].get("ab") == 0,
-         "seltenheit: ab aufsteigend von 0 bis 100")
-    need(all(_int(x.get("bonus"), 0, BONUS_MAX) and _int(x.get("stufe_min"), 1, 20) for x in s), f"seltenheit: bonus 0 bis {BONUS_MAX}, stufe_min 1 bis 20")
+    need(len(s) >= 2 and all(_int(x.get("bonus"), 0, BONUS_MAX) for x in s), f"seltenheit: mindestens zwei, bonus 0 bis {BONUS_MAX}")
+    ft = r.get("fundtabelle")
+    need(isinstance(ft, list) and 1 <= len(ft) <= 20 and all(isinstance(z, list) and len(z) == len(s) - 1
+         and all(_int(w, 2, NIE) for w in z) and z == sorted(z) for z in ft),
+         f"fundtabelle: je Stufe {max(0, len(s) - 1)} aufsteigende Schwellen 2 bis {NIE} (ab selten; {NIE} = nie)")
     for x in r.get("toene") or []:
         need(_int(x.get("id"), 0, 21) and _pair(x.get("regel"), 200) and isinstance(x.get("woerter"), list)
              and all(isinstance(w, str) and 2 <= len(w) <= 30 for w in x["woerter"]), f"toene {x.get('id')}: regel und woerter")
@@ -1453,10 +1460,12 @@ def buy_price(r, h, it):
     return max(1, -(-price(r, it) * (100 - rabatt(r, h)) // 100)) * it.get("n", 1)
 
 
-def sell_price(r, it):
-    """Half its worth, a quarter while unknown, for every piece of a stack; 0 for a legend (not sold)."""
+def sell_price(r, it, m=None):
+    """What a merchant pays (Wirtschaft Punkt 3): half its worth for its own kind of things (HAENDLER), a quarter for
+    any other or while unknown, for every piece of a stack; 0 for a legend (not sold)."""
     p = price(r, it)
-    return max(1, p // (4 if it.get("u") else 2)) * it.get("n", 1) if p else 0
+    eigen = not m or _c(r, it)["art"] in HAENDLER.get(m.get("art"), ((), ()))[1]
+    return max(1, p // (2 if eigen and not it.get("u") else 4)) * it.get("n", 1) if p else 0
 
 
 def name_price(r, it):
@@ -1586,31 +1595,43 @@ def group_level(held):
     return max(1, round(sum(h["stufe"] for h in held) / max(1, len(held))))
 
 
+def find_row(r, stufe):
+    """The find table's row of a level (Wirtschaft Punkt 5): the d100 threshold of every rarity from „selten“ on,
+    NIE for one the level does not have yet; beyond the table its last row."""
+    ft = r["fundtabelle"]
+    return ft[min(len(ft), max(1, stufe)) - 1]
+
+
 def rarity(r, stufe, roll):
-    """(the rarities the level allows, the one this roll reaches). The rarest kind does not get the level's bonus of
-    the roll (2 a level, Gegenstands-Punkt 5): it stays rarer than the one before it at every level."""
-    stufen = [x for x in r["seltenheit"] if x["stufe_min"] <= stufe] or r["seltenheit"][:1]
-    top = r["seltenheit"][-1]["id"]
-    return stufen, [x for x in stufen if roll >= x["ab"] + (FUND_STUFE * stufe if x["id"] == top else 0)][-1]
+    """(the rarities the level allows, the one this roll reaches) by the find table (Wirtschaft Punkt 5, Dominik
+    2026-10-25 „1-12“): a fixed row per level, so „rar“ never gets rarer when „episch“ opens, and a legend comes
+    from a boss at most 10 and from a chest at most 3 in a hundred (test_the_find_table_keeps_its_promises)."""
+    row = [0] + find_row(r, stufe)
+    stufen = [x for x, ab in zip(r["seltenheit"], row) if ab < NIE]
+    return stufen, [x for x, ab in zip(r["seltenheit"], row) if ab < NIE and roll >= ab][-1]
 
 
 def open_market(r, rd, name="", satz="", rng=None):
-    """A merchant at this place: its goods drawn by the panel (rarity by d100 + level as for loot, never above what
-    the level allows), known to it, priced by the rules. The model only names it; it stays until the place changes."""
+    """A merchant at this place: its kind drawn (HAENDLER), its goods of that kind drawn by the panel (rarity by the
+    find table as for loot, never above what the level allows), known to it, priced by the rules, its purse KASSE
+    times the level. The model only names it; it stays until the place changes."""
     rng = rng or random
     li = 1 if rd["lang"] == "en" else 0
     stufe = group_level([p["held"] for _, p in seated(rd)])
+    art = rng.choice(sorted(HAENDLER))
+    arten = HAENDLER[art][1]
     ware = []
     for _ in range(rng.randint(*WARE)):
-        stufen, s = rarity(r, stufe, rng.randint(1, 100) + FUND_STUFE * stufe)
+        stufen, s = rarity(r, stufe, rng.randint(1, 100))
         s = stufen[-2] if s["id"] == r["seltenheit"][-1]["id"] else s      # a legend never at a merchant (legenden)
-        it = item(r, rng.choice([c for c in r["gegenstaende"] if in_world(c, rd.get("welt")) and reaches(r, c, s)]
+        it = item(r, rng.choice([c for c in r["gegenstaende"] if c["art"] in arten and in_world(c, rd.get("welt")) and reaches(r, c, s)]
+                                or [c for c in r["gegenstaende"] if c["art"] in arten and "seltenheit" not in c]
                                 or [c for c in r["gegenstaende"] if "seltenheit" not in c])["id"], s["id"], rng)
         it.pop("u", None)
         if _c(r, it)["art"] == "schatz":
             it["st"] = stufe
         ware.append(it)
-    rd["markt"] = {"name": name or HAENDLER[li], "satz": satz, "ware": ware}
+    rd["markt"] = {"name": name or HAENDLER[art][0][li], "satz": satz, "ware": ware, "art": art, "kasse": KASSE * stufe}
     _log(rd, "markt", name=rd["markt"]["name"], auf=True)
     _day.bump("maerkte")
     print(f"dungeon: markt | auf | {len(ware)} waren", flush=True)
@@ -1629,7 +1650,7 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd
     without a find (first seat on a tie); the item fits that hero's class. A legendary find is one of the world's
     legends (dungeon_legenden: boss, reward or chest, each once a campaign of the round rd), else episch."""
     rng = rng or random
-    roll = rng.randint(1, 100) + r["anlass"][anlass] + FUND_STUFE * gruppe_stufe
+    roll = rng.randint(1, 100) + r["anlass"][anlass]
     rec = max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
     h = held[rec]
     stufen, s = rarity(r, gruppe_stufe, roll)
@@ -4989,13 +5010,18 @@ def shop(r, rd, pid, h, was, b, it):
         preis = buy_price(r, h, w)
         m["ware"].remove(w)
         h["gold"] -= preis
+        m["kasse"] = m.get("kasse", 0) + preis
         bag_add(r, h, w)
         _day.bump("kaeufe")
     else:
-        if not it or not sell_price(r, it):
+        if not it or not sell_price(r, it, m):
             print("dungeon: handel | verkauf | abgelehnt", flush=True)
             raise ValueError("verkaufen")
-        preis = sell_price(r, it)
+        preis = sell_price(r, it, m)
+        if preis > m.get("kasse", 0):
+            print("dungeon: handel | verkauf | kasse leer", flush=True)
+            raise ValueError("kasse")
+        m["kasse"] -= preis
         h["tasche"].remove(it)
         h["gold"] = min(GOLD_MAX, h["gold"] + preis)
         if len(m["ware"]) < WARE_MAX:
@@ -5012,9 +5038,13 @@ def market_view(r, rd, h, lang):
     m = rd.get("markt")
     if not m:
         return None
-    return {"name": m["name"], "satz": m["satz"], "rabatt": rabatt(r, h) if h else 0,
+    from dungeon_regelseite import ART    # the arts' names, one source
+    li = 1 if lang == "en" else 0
+    k = HAENDLER.get(m.get("art"))
+    return {"name": m["name"], "satz": m["satz"], "rabatt": rabatt(r, h) if h else 0, "kasse": m.get("kasse", 0),
+            "art": k[0][li] if k else "", "kauft": [ART[a][li] for a in k[1]] if k else [],
             "ware": [dict(item_view(r, x, lang), preis=buy_price(r, h, x) if h else buy_price_full(r, x)) for x in m["ware"]],
-            "verkauf": {x["i"]: sell_price(r, x) for x in h["tasche"]} if h else {},
+            "verkauf": {x["i"]: sell_price(r, x, m) for x in h["tasche"]} if h else {},
             "erkennen": {x["i"]: name_price(r, x) for x in (h["tasche"] + worn(h) if h else []) if x.get("u")}}
 
 
