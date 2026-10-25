@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.087** KI-Dungeon-Master: wer nur fragt, würfelt nicht aufs Schleichen, die Erzählung erzählt die Frage, und nach unten bleibt nach unten
 - **V01.1.086** KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
 - **V01.1.085** KI-Dungeon-Master: Vorlesen nimmt das Geschlecht einer Stimme nur aus festen Merkmalen, „sagt er“ spricht nie mehr mit der Frauenstimme, auch nicht beim Weiterreden
 - **V01.1.084** KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.080** KI-Dungeon-Master: echte Würfel am Tisch (Zahl tippen oder sagen, nach 30 s würfelt der Spark, nie im Auto), Fanfare bei Ehrungen, Krit-Karte dreht sich um, Musik „Lagerfeuer“
 - **V01.1.079** KI-Dungeon-Master: Wappen für Gruppe und Fraktionen: das Panel zeichnet jedes Wappen selbst als geprüfte SVG aus Schild, Teilung, Tinkturen und 16 eigenen Zeichen, der Gastgeber wählt Farbe und Zeichen, jede Fraktion trägt ein eigenes
 - **V01.1.078** KI-Dungeon-Master: der Tisch am Handy mit Kopf in einer Zeile und „⋯“, einem Kampfkasten, dem Feld zum Handeln in jedem Teil, der Gruppe als Liste, schnellen Aktionen beim Helden und einer kurzen Hilfe; eine misslungene Untersuchung verrät nichts, Gehen braucht keine Probe, eine wiederholte Szene kürzt das Panel
-- **V01.1.077** KI-Dungeon-Master: die Karte zieht nur weiter, wenn eine Aktion gehen will (Fahne und Erzählung bleiben gleich); Ortsbilder prüfen nur die eigene Runde
 
 
 

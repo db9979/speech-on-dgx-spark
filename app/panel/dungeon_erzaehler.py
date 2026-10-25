@@ -71,7 +71,22 @@ ENTSCHEIDET = ("entscheidet", "beschließt", "greift", "zieht", "rennt", "läuft
 NEIN = HAELT + ("leer", "fehlt", "vergebens", "ins leere", "keine", "empty", "missing")
 KOERPER = {"haar": ("haar", "haare", "haaren", "hair"), "augen": ("augen", "auge", "eyes", "eye"), "bart": ("bart", "beard")}
 _TEIL = {w: k for k, ws in KOERPER.items() for w in ws}
-WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch")   # repair strikes these sentences
+# the action's intent (Dominik 2026-10-25 „ich frage nach dem keller - es geht nach oben!?“: „frage den Kellner, ob du in den
+# Keller gehen kannst“ became a sneaking check and a walk upstairs without a word to the waiter): an action that only
+# asks or talks (FRAGT, no word of dungeon.RISIKO) must be told with a question or an answer (ANTWORT, or a quote of at
+# least ZITAT_WOERTER words), and a way down (UNTEN) never turns up (OBEN), nor the other way round
+FRAGT = re.compile(r"(?i)\b(frag(e|en|t|st)?|bitte(n|t|st)?|sag(e|en|t|st)?|erzähl(e|en|t|st)?|rede(n|t)?|sprech(e|en)|sprich(st|t)?|"
+                   r"überred\w*|verhandl\w*|verhandel\w*|erkundig\w*|ask(s|ed)?|tell(s)?|talk(s|ed)?|speak(s)?|persuad\w*|enquir\w*|inquir\w*)\b")
+SICH = re.compile(r"(?i)\b(frag(e|t|st)\s+(mich|sich|dich)|wonder)")
+ANTWORT = ("fragt", "frage", "erkundigt", "bittet", "antwort", "erwider", "entgegn", "sagt", "meint", "murmelt", "brummt",
+           "nickt", "schüttelt", "zuckt mit", "flüstert", "knurrt", "lacht", "verneint", "bejaht", "asks", "answer", "repl",
+           "says", "said", "nods", "shakes", "shrugs", "whispers", "mutters", "grunts")
+ZITAT_WOERTER = 3
+UNTEN = ("keller", "nach unten", "hinunter", "hinab", "herunter", "runter", "abwärts", "untergeschoss", "cellar",
+         "basement", "downstairs", "down the stairs", "goes down", "go down", "beneath")
+OBEN = ("nach oben", "hinauf", "herauf", "oben angekommen", "treppe hoch", "empor", "aufwärts", "obergeschoss", "dachboden",
+        "upstairs", "up the stairs", "goes up", "go up", "attic", "upper floor")
+WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 # Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
 # id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
@@ -368,6 +383,14 @@ HINWEIS = {
               "Note: the character does not have or cannot do this: {namen}. Narrate that it does not work."),
     "aussehen": ("Hinweis: So sieht diese Person nicht aus, halte dich an ihre Karte: {namen}.",
                  "Note: this person does not look like that, keep to their card: {namen}."),
+    "richtung": ("Hinweis: Diese Figuren wollten in die andere Richtung, als du erzählst: {namen}. Erzähle den Weg so, wie "
+                 "die Aktion ihn nennt (nach unten bleibt nach unten, nach oben bleibt nach oben).",
+                 "Note: these characters wanted to go the other way than you tell: {namen}. Tell the way as the action names "
+                 "it (down stays down, up stays up)."),
+    "frage": ("Hinweis: Diese Figuren fragen oder reden in ihrer Aktion: {namen}. Erzähle zuerst die Frage und die Antwort "
+              "des Gefragten; tu nichts anderes an ihrer Stelle.",
+              "Note: these characters ask or talk in their action: {namen}. Tell the question and the answer of the one asked "
+              "first; do nothing else in their place."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -438,6 +461,7 @@ def repair(rd, story, fault, missing):
         bad = {"gold": lambda x: bool(GOLD.search(x)) and _hat(x, FINDET), "widerspruch": lambda x: bool(contradicts(rd, x)),
                "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
                "gefallen": lambda x: bool(fight_off(rd, x)),
+               "richtung": lambda x: bool(wrong_way(rd, x)),
                "karte": lambda x: any(re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", x.lower()) for n in missing)
                }.get(fault, lambda x: any(_name_in(n, x) and not _hat(x, NEIN) for n in missing))
         text = " ".join(x for x in _saetze(story["text"]) if not bad(x))
@@ -451,6 +475,8 @@ def repair(rd, story, fault, missing):
         return dict(story, npc=[n for n in story.get("npc") or [] if n.get("name") not in missing])
     elif fault == "namen":
         add = [("{n} wartet ab, was als Nächstes geschieht.", "{n} waits to see what happens next.")[li].format(n=n) for n in missing]
+    elif fault == "frage":
+        add = [("{n} stellt seine Frage und wartet auf die Antwort.", "{n} asks the question and waits for the answer.")[li].format(n=n) for n in missing]
     elif fault == "gegner":
         add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
             f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
@@ -562,6 +588,40 @@ def for_others(rd, text, ooc=()):
     return out[:3]
 
 
+def asks(action):
+    """An action that only asks or talks: a verb of FRAGT, not „frage mich“, no word of dungeon.RISIKO."""
+    import dungeon
+    low = str(action or "").lower()
+    return bool(FRAGT.search(low)) and not SICH.search(low) and not any(x in low for x in dungeon.RISIKO)
+
+
+def not_asked(rd, text):
+    """Heroes whose action only asks or talks (asks) and whose narration has no question or answer: no word of ANTWORT
+    and no quote of ZITAT_WOERTER words."""
+    import dungeon_vorlesen
+    low = str(text).lower()
+    if any(w in low for w in ANTWORT) or any(len(x[1].split()) >= ZITAT_WOERTER for x in dungeon_vorlesen.rede(text, []) if x[2]):
+        return []
+    return [rd["plaetze"][pid]["held"]["name"] for pid, a in (rd.get("offen") or {}).items()
+            if pid in rd.get("plaetze", {}) and rd["plaetze"][pid].get("held") and asks(a.get("text"))][:3]
+
+
+def _weg(x):
+    """The direction a text names: "unten", "oben", or "" for none or both."""
+    low = str(x or "").lower()
+    u, o = any(w in low for w in UNTEN), any(w in low for w in OBEN)
+    return "unten" if u and not o else "oben" if o and not u else ""
+
+
+def wrong_way(rd, text):
+    """Heroes whose action names a way down (UNTEN) and whose narration only goes up (OBEN), or the other way round."""
+    told = _weg(text)
+    if not told:
+        return []
+    return [rd["plaetze"][pid]["held"]["name"] for pid, a in (rd.get("offen") or {}).items()
+            if pid in rd.get("plaetze", {}) and rd["plaetze"][pid].get("held") and _weg(a.get("text")) not in ("", told)][:3]
+
+
 def told_unknown(rd, text):
     """What a seat's action named and its hero has not or cannot use (the panel's „nicht“: a power not known, a spell
     without a charge, a thing not carried) and the narration still tells used (Regel 2)."""
@@ -621,6 +681,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
         return "probe", done
     for why, found in (("fehlt", lambda: told_unknown(rd, text)), ("gefallen", lambda: fight_off(rd, text, hits)),
                        ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
+                       ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text)),
                        ("aussehen", lambda: looks_off(rd, text))):
         x = found()
         if x:

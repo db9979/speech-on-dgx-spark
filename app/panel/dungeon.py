@@ -409,7 +409,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -2955,12 +2955,14 @@ KANN_REGEL = {
           "work: tell that the character has not mastered it yet or has no power left for it."}
 AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko; "
-          "gehen, reisen oder zu einem Ort aufbrechen braucht keine). "
+          "gehen, reisen oder zu einem Ort aufbrechen braucht keine; wer nur fragt oder redet, braucht keine oder "
+          "höchstens Charisma, nie Schleichen oder Ablenken). "
           "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich); vorteil ist vorteil, wenn die "
           "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer. wofuer sagt in wenigen Wörtern aus Sicht "
           "der Spieler, wofür gewürfelt wird (etwa „Schattenwächter auf Schwächen untersuchen“).",
     "en": "Task: decide which actions need a check (at most one per character, only with real risk; "
-          "going, travelling or setting out for a place needs none). "
+          "going, travelling or setting out for a place needs none; whoever only asks or talks needs none or at most "
+          "Charisma, never sneaking or distracting). "
           "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
           "situation helps the character, nachteil when it hinders, else empty. wofuer says in a few words from the "
           "players' view what the roll is for (such as \"Search the shadow warden for weak spots\")."}
@@ -3201,8 +3203,11 @@ def _name_map(rd):
 # bewegen“ on Geschick): a check whose wofuer has a word of GEHEN and none of RISIKO is dropped; the map moves the group
 GEHEN = re.compile(r"(?i)\b(geh(e|en|t|st)?|lauf(e|en|t)?|läufs?t|reis(e|en|t)|beweg\w*|wander\w*|marschier\w*|"
                    r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?)\b")
-RISIKO = ("unbemerkt", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
+RISIKO = ("unbemerkt", "unauffällig", "ablenk", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
           "verfolg", "balancier", "sneak", "quiet", "unseen", "hidden", "climb", "jump", "swim", "flee", "past", "chase", "balanc")
+
+
+FRAGE_WERT = "charisma"     # the one value of a check for an action that only asks or talks (erz.asks)
 
 
 def just_going(wofuer):
@@ -3213,7 +3218,8 @@ def just_going(wofuer):
 
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped, none only for going somewhere (just_going). Returns (checks, dropped)."""
+    of the list, the difficulty clamped, none only for going somewhere (just_going), for an action that only asks or
+    talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
     werte = {w["id"] for w in r["werte"]}
     for p in (obj or {}).get("proben") or []:
@@ -3224,6 +3230,10 @@ def check_proben(r, rd, obj):
         if just_going(p.get("wofuer")):
             drop += 1
             print("dungeon: probe | verworfen | gehen", flush=True)
+            continue
+        if erz.asks((rd["offen"][pid] or {}).get("text")) and (p["wert"] != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
+            drop += 1                            # an action that only asks: Charisma or no check, never sneaking
+            print("dungeon: probe | verworfen | absicht", flush=True)
             continue
         seen.add(pid)
         out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
@@ -5455,7 +5465,7 @@ def for_live():
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg")},
-            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen"))}
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage"))}
 
 
 def own_count(uid):

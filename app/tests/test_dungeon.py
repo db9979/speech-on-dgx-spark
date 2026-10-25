@@ -5476,6 +5476,53 @@ class Fight(Turns):
             self.assertEqual(dungeon.erz.repair(rd, {"text": alt}, "wiederholung", []), {"text": alt})   # nothing new: kept
         self.assertIn("dungeon: nachbessern | bleibt | wiederholung", out.getvalue())
 
+    def test_a_question_stays_a_question_and_the_way_down_stays_down(self):
+        """Dominik 2026-10-25 „ich frage nach dem keller - es geht nach oben!?“: „frage den kellner ob du in den keller
+        gehen kannst“ got a Geschick check „Kellner ablenken und unauffällig zum Keller gehen“ and a narration where
+        Morpheus walks upstairs without a word to the waiter. An action that only asks keeps no check but Charisma and
+        none with sneaking; a narration turning down into up, or leaving out the question, is a fault with its rescue."""
+        E = dungeon.erz
+        tat = "frage den kellner ob du in den keller gehen kannst und dich dort umschauen."
+        self.assertTrue(E.asks(tat))
+        for other in ("Ich schleiche unbemerkt in den Keller.", "Ich frage mich, ob die Tür offen ist, und öffne sie.",
+                      "Ich klettere die Mauer hinauf.", "Ich greife den Kellner an."):
+            self.assertFalse(E.asks(other), other)
+        r = dungeon.rules()
+        rd = {"offen": {"p1": {"text": tat}}, "plaetze": {"p1": {"held": {"name": "Morpheus"}}}, "lang": "de",
+              "ton": r["toene"][-1]["id"], "welt": r["welten"][0]["id"]}
+        schleichen = {"wer": "Morpheus", "wert": "geschick", "schwer": 10, "wofuer": "Kellner ablenken und unauffällig zum Keller gehen"}
+        with mock.patch.object(dungeon, "_name_map", lambda rd: {"morpheus": "p1"}), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(dungeon.check_proben(r, rd, {"proben": [schleichen]}), ([], 1))
+            self.assertEqual(dungeon.check_proben(r, rd, {"proben": [dict(schleichen, wert="charisma")]}), ([], 1))   # charisma, but sneaking
+            got, drop = dungeon.check_proben(r, rd, {"proben": [{"wer": "Morpheus", "wert": "charisma", "schwer": 12, "wofuer": "Den Kellner überzeugen"}]})
+        self.assertEqual(([g["wert"] for g in got], drop), (["charisma"], 0))
+        self.assertEqual(out.getvalue().count("dungeon: probe | verworfen | absicht"), 2)
+        self.assertIn("wer nur fragt oder redet, braucht keine oder höchstens Charisma", dungeon.AUFGABE_PROBEN["de"])
+        story = ("Morpheus’ Blick ruht einen Moment länger auf dem Kellner, der seine mechanische Arbeit nicht unterbricht. Die Luft "
+                 "im Gastraum ist schwer, gesättigt von altem Hopfen. Mit der gewonnenen Ruhe schreitet Morpheus zur Treppe. Die Stufen "
+                 "aus dunklem Holz knarren unter seinem Gewicht. Oben angekommen, huscht er die wenigen Schritte zum Raum „oben rechts“. "
+                 "Die Tür steht leicht offen. Etwas stimmt hier nicht; die Leere hinter der Tür ist bedrohlicher als jeder Lärm.")
+        self.assertEqual(E.wrong_way(rd, story), ["Morpheus"])
+        self.assertEqual(E.not_asked(rd, story), ["Morpheus"])
+        gut = ("Morpheus fragt den Kellner nach dem Keller. Der Kellner wischt den Tresen und brummt: „Die Treppe hinter der Küche, "
+               "aber nehmt eine Lampe mit.“ Morpheus steigt die Stufen hinab in den kühlen Keller.")
+        self.assertEqual((E.wrong_way(rd, gut), E.not_asked(rd, gut)), ([], []))
+        rd_hoch = dict(rd, offen={"p1": {"text": "Ich steige die Treppe hinauf zum Dachboden."}})
+        self.assertEqual(E.wrong_way(rd_hoch, "Morpheus steigt hinab in den Keller."), ["Morpheus"])
+        self.assertEqual(E.wrong_way(rd_hoch, "Morpheus steigt die Treppe hinauf."), [])
+        full = dict(rd, log=[], zug=5)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(E.judge(dungeon, full, {"text": story}), ("richtung", ["Morpheus"]))
+            self.assertEqual(E.judge(dungeon, full, {"text": story.replace("Oben angekommen", "Dort angekommen")})[0], "frage")
+        self.assertIn("nach unten bleibt nach unten", E.HINWEIS["richtung"][0])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = E.repair(full, {"text": story}, "richtung", ["Morpheus"])
+            asked = E.repair(full, {"text": story}, "frage", ["Morpheus"])
+        self.assertNotIn("Oben angekommen", fixed["text"])
+        self.assertTrue(asked["text"].endswith("Morpheus stellt seine Frage und wartet auf die Antwort."))
+        self.assertEqual(out.getvalue().count("dungeon: nachbessern | fest"), 2)
+
     def test_more_fixed_rules_for_a_narration(self):
         """Dominik 2026-10-25 „1-3 und 1-7 umsetzten“: a fallen foe acting or a foe dying without a receipt (1), a thing
         the hero does not carry or a power it cannot use told as used (2), gold only told (3), a hero who did not act

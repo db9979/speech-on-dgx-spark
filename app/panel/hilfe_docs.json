@@ -5317,6 +5317,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: eine Frage bleibt eine Frage, nach unten bleibt nach unten (V01.1.087, Dominik 2026-10-25 „ich frage nach dem keller - es geht nach oben!?“): „frage den kellner ob du in den keller gehen kannst“ bekam eine Geschick-Probe „Kellner ablenken und unauffällig zum Keller gehen“, und die Erzählung schickte Morpheus die Treppe hinauf, ohne den Kellner zu fragen. Drei feste Regeln: Eine Aktion, die nur fragt oder redet (dungeon_erzaehler.asks: ein Wort von FRAGT, nicht „frage mich“, kein Wort von dungeon.RISIKO, das jetzt auch „unauffällig“ und „ablenk“ kennt), bekommt keine Probe oder höchstens eine auf FRAGE_WERT (Charisma), nie eine mit Schleichen oder Ablenken (check_proben, Zeile „dungeon: probe | verworfen | absicht“; auch die Aufgabe an das Modell sagt es). Nennt eine Aktion einen Weg nach unten (UNTEN: Keller, hinab, hinunter …) und die Erzählung nur einen nach oben (OBEN: hinauf, oben angekommen, Dachboden …), oder umgekehrt, ist das der Fehler „richtung“ (wrong_way); die Rettung streicht die Sätze mit der falschen Richtung. Erzählt die Erzählung zu einer solchen Frage weder Frage noch Antwort (kein Wort von ANTWORT, kein Zitat mit mindestens ZITAT_WOERTER (3) Wö"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rtern), ist das der Fehler „frage“ (not_asked); die Rettung hängt „… stellt seine Frage und wartet auf die Antwort.“ an. Beide mit festem Hinweis für den zweiten Versuch, Tageszähler regel_richtung, regel_frage in der Live-Zeile der nachgebesserten Erzählungen. Selbsttest test_a_question_stays_a_question_and_the_way_down_stays_down."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -19094,6 +19110,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: end or delete every round (V01.1.075, Dominik 2026-10-25 “runden sollen immer löschbar bzw. beendbar sein. mit nachfrage wirklich.”): In the list “Your rounds” every round has its buttons next to “Open”: the host can “End” a running round or “Delete” it at once, and “Delete” an ended one; a player hides an ended round. The first tap asks “Really end?”, “Really delete?” or “Really hide?”, only the second does it. “Delete” on a running round first ends it like every end (experience is paid, the heroes of profiles stay) and then deletes it with its sounds and pictures (DELETE /api/profile/dungeon/{rid}?loeschen=1, host only; a player gets 404). A player cannot end a running round of another host."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a question stays a question, down stays down (V01.1.087, Dominik 2026-10-25 \"ich frage nach dem keller - es geht nach oben!?\"): \"frage den kellner ob du in den keller gehen kannst\" got a Dexterity check \"Kellner ablenken und unauffällig zum Keller gehen\", and the narration sent Morpheus up the stairs without asking the waiter. Three fixed rules: an action that only asks or talks (dungeon_erzaehler.asks: a word of FRAGT, not \"frage mich\", no word of dungeon.RISIKO, which now also knows \"unauffällig\" and \"ablenk\") gets no check or at most one on FRAGE_WERT (Charisma), never one with sneaking or distracting (check_proben, line \"dungeon: probe | verworfen | absicht\"; the model's task says so too). When an action names a way down (UNTEN: cellar, hinab, hinunter …) and the narration only one up (OBEN: hinauf, oben angekommen, attic …), or the other way round, that is the fault \"richtung\" (wrong_way); the rescue strikes the sentences with the wrong direction. When the narration of such a question tells neither question nor answer (no word of ANTWORT, no quote of at least ZITAT_WOERTER (3) words), that is the fault \"frage\" (not_asked); the rescue adds \"… asks the questio"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "n and waits for the answer.\". Both with a fixed hint for the second try, day counters regel_richtung, regel_frage in the live line of narrations improved. Self-test test_a_question_stays_a_question_and_the_way_down_stays_down."
 },
 {
 "lang": "en",

@@ -1860,7 +1860,7 @@ def snapshot(view="admin", now=None):
                            if dgn.get("begegnungen") or dgn.get("kaempfe") else "")
                         + (f" · {dgn['dinge']} gemerkte Dinge" if dgn.get("dinge") else "")
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
-                        + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden oder Aussehen nachgebessert" if dgn.get("erz_regeln") else "")
+                        + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung oder Frage nachgebessert" if dgn.get("erz_regeln") else "")
                         + (f" · heute {dgn['ding_fehlt']} Aktionen mit Dingen, die der Held nicht dabeihat" if dgn.get("ding_fehlt") else "")
                         + (f" · heute {dgn['tageszeit_weg']} Sprünge der Tageszeit verworfen" if dgn.get("tageszeit_weg") else "")
                         + (f" · {dgn['gegner_mehrfach']} Gegner mit Mehrfachangriff stehen" if dgn.get("gegner_mehrfach") else "")
