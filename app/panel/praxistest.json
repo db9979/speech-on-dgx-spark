@@ -3250,6 +3250,13 @@
 "titel": "Gegenstände Teil 2",
 "text": "A: Ein Dietrich (gewöhnlich) zeigt „einfach: +1 bei Geschick-Proben“, ein rarer „meisterlich: +3“. B: Eine Probe mit dem Werkzeug: die Proben-Leiste zeigt genau +1, +2 oder +3 als Werkzeug-Teil. C: Beim Händler: ein Trank kostet weniger als eine Waffe derselben Seltenheit. D: Eine bessere Waffe in der Tasche: „▲ besser als deins“, eine schwächere „▼ schwächer als deins“. E: Ein Zweihänder beim Magier: „✗ nicht für deine Klasse“. F: Ein gewöhnlicher Ring hebt keinen Wert.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P489",
+"v": 1035,
+"titel": "Legendäre Einzelstücke",
+"text": "Auf Stufe 5 oder höher: A: Ein Boss oder eine Truhe bringt ab und zu einen legendären Fund, unerkannt. B: Erkennen lassen: eigener Name, eigener Satz, zwei Wirkungen und „✦ Einzelstück“. C: Beim Händler steht nie etwas Legendäres. D: Dasselbe Einzelstück kommt in der Kampagne nicht noch einmal, auch nicht im nächsten Kapitel. E: Zustand → Überblick nennt „legendäre Einzelstücke gefunden“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

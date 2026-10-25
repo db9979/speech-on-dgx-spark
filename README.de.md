@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.035** KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne
 - **V01.1.034** KI-Dungeon-Master: Gegenstände Teil 2, Werkzeuge einfach +1, gut +2 oder meisterlich +3, Tränke, Rollen, Zauber und Werkzeuge günstiger, gewöhnlicher Schmuck ist ein Schatz, ▲/▼ besser als deins und „nicht für deine Klasse“ in Tasche, beim Händler und am Boden
 - **V01.1.033** KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
 - **V01.1.032** KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.028** KI-Dungeon-Master: Spielleiter-Regler, nach jedem Kampf stellt der Spark die nächsten Begegnungen nach festen Zahlen um höchstens ein Viertel leichter oder schwerer, der Gastgeber sieht den Stand und kann ihn festhalten, am Kindertisch nur leichter
 - **V01.1.027** KI-Dungeon-Master: Balance-Prüfstand, der Spark spielt Kämpfe mit den echten Regeln allein durch und zeigt unter Regeln die Siege je Stufe und Gruppengröße; die Begegnungen sind darauf eingemessen, bei „mittel“ gewinnt eine Gruppe 70 bis 90 %, ein Held allein nicht mehr nur jeden zweiten Kampf
 - **V01.1.026** KI-Dungeon-Master: Kampf Teil 2, Waffen mit Eigenschaften (leicht, Finesse, Reichweite, Wurf, schwer, vielseitig), Schadensarten mit Schwäche, Resistenz und Immunität, Zustände durch Treffer mit Rettungswurf, echte Bosse mit zweiter Phase
-- **V01.1.025** KI-Dungeon-Master: SRD-Gegner mit Schadensart, Widerstand, Immunität, Schwäche und Boss, SRD-Waffen mit Schadensart und Eigenschaften (Kampf Teil 2, Daten)
 
 
 

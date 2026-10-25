@@ -114,6 +114,7 @@ import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
 import dungeon_mut as mut
 import dungeon_gold as gold
+import dungeon_legenden as legenden
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
@@ -247,6 +248,7 @@ WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigke
 TASCHE = 12               # items in one bag
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
 FUND_STUFE = 2            # a find's d100 + this per level of the group (rarity)
+LEGENDEN_MAX = 200        # legends a campaign remembers as found (dungeon_legenden)
 BONUS_MAX = 3             # a rarity's bonus at most (Gegenstands-Punkt 3: selten +1, rar +2, episch and legendär +3)
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
@@ -341,7 +343,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
-                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0)
+                  begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0)
 
 
 def _go(coro, name):
@@ -730,7 +732,7 @@ def own_name(r, it):
     (fund: a chest, a hiding place) and the thing keeps its catalog name. Also repairs finds from before (_read,
     fix_hero). Returns whether it changed."""
     e = it.get("eigen")
-    if not e or it.get("id") not in _by(r, "gegenstaende") or name_fits(r, it["id"], e):
+    if not e or it.get("leg") or it.get("id") not in _by(r, "gegenstaende") or name_fits(r, it["id"], e):
         return False
     it["fund"], it["eigen"] = e, ""
     return True
@@ -1143,19 +1145,25 @@ def fits(r, h, c):
     return "klassen" not in c or h["klasse"] in c["klassen"]
 
 
+def item_effects(r, it):
+    """The known effects of an item: one, two for a legendary piece (eff, eff2), none while unknown (only its base counts)."""
+    if not it or it.get("u"):
+        return []
+    eff = _by(r, "effekte")
+    return [eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff]
+
+
 def total(r, h, wert):
     """The bonus for a check on a value: the bonus of the hero's score (D&D), of the items worn for it, of effects,
     abilities and blessings."""
     v = mod(h["werte"].get(wert, 10))
-    eff, fa = _by(r, "effekte"), {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
+    fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
     for it in worn(h):
         if it.get("u"):
             continue                          # unknown: only its base counts
         if it.get("wert") == wert:
             v += it.get("bonus", 0)
-        e = eff.get(it.get("eff"))
-        if e and e["wert"] == wert:
-            v += e["bonus"]
+        v += sum(e["bonus"] for e in item_effects(r, it) if e["wert"] == wert)
     v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
     v += sum(x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert)
     v += 1 if (h.get("lehre") or {}).get("wert") == wert else 0     # a lesson in a settlement (dungeon_gold)
@@ -1284,12 +1292,11 @@ def strength(r, it):
     (+1 watchful), jewellery its bonus; an unknown piece only its base. None for anything not worn."""
     c = _c(r, it)
     b = 0 if it.get("u") else it.get("bonus", 0)
-    e = None if it.get("u") else _by(r, "effekte").get(it.get("eff"))
-    w = (e or {}).get("wirkung")
+    w = [e.get("wirkung") for e in item_effects(r, it)]
     if c["art"] == "waffe":
-        return (c["schaden"] + 1) / 2 + b + ((kampf.WIRKUNG_W + 1) / 2 if w == "schaden" else 0)
+        return (c["schaden"] + 1) / 2 + b + (kampf.WIRKUNG_W + 1) / 2 * w.count("schaden")
     if c["art"] == "ruestung":
-        return (c.get("schutz", 0) + b) * (2 if places(r, c)[0] == "koerper" else 1) + (1 if w == "wachsam" else 0)
+        return (c.get("schutz", 0) + b) * (2 if places(r, c)[0] == "koerper" else 1) + w.count("wachsam")
     if c["art"] == "schmuck":
         return b
     return None
@@ -1335,7 +1342,6 @@ def item_view(r, it, lang):
     li = 1 if lang == "en" else 0
     c, s = _by(r, "gegenstaende")[it["id"]], _by(r, "seltenheit").get(it["s"]) or r["seltenheit"][0]
     u = bool(it.get("u"))
-    e = None if u else _by(r, "effekte").get(it.get("eff"))
     w = _by(r, "werte")
     bonus = 0 if u else it.get("bonus", 0)
     zeilen = []
@@ -1357,13 +1363,12 @@ def item_view(r, it, lang):
         if c.get("segen"):
             sg = c["segen"]
             zeilen.append(("{} +{} für {} Züge" if not li else "{} +{} for {} turns").format(w[sg["wert"]]["name"][li], sg["bonus"], sg["zuege"]))
-    if e:
-        zeilen.append(e["satz"][li])
+    zeilen += [e["satz"][li] for e in item_effects(r, it)]
     if c.get("hilft"):
         zeilen.append(tool_line(r, c, li, it))
-    name = it.get("eigen") or c["name"][li]
+    name, satz = legenden.text(it, li) or (it.get("eigen") or c["name"][li], it.get("satz", ""))
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
-            "satz": "" if u else it.get("satz", ""), "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
+            "satz": "" if u else satz, "legende": bool(it.get("leg")) and not u, "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
             "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")),
             "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li],
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
@@ -1465,7 +1470,8 @@ def open_market(r, rd, name="", satz="", rng=None):
     stufe = group_level([p["held"] for _, p in seated(rd)])
     ware = []
     for _ in range(rng.randint(*WARE)):
-        s = rarity(r, stufe, rng.randint(1, 100) + FUND_STUFE * stufe)[1]
+        stufen, s = rarity(r, stufe, rng.randint(1, 100) + FUND_STUFE * stufe)
+        s = stufen[-2] if s["id"] == r["seltenheit"][-1]["id"] else s      # a legend never at a merchant (legenden)
         it = item(r, rng.choice([c for c in r["gegenstaende"] if in_world(c, rd.get("welt")) and reaches(r, c, s)]
                                 or [c for c in r["gegenstaende"] if "seltenheit" not in c])["id"], s["id"], rng)
         it.pop("u", None)
@@ -1483,10 +1489,11 @@ def close_market(rd):
         print("dungeon: markt | zu", flush=True)
 
 
-def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt=""):
+def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd=None):
     """(receiver index, item, gold each) of one find by the panel's rule: rarity by d100 + occasion + level, never
     above what the level allows, pity after pech_schutz finds without „selten“; the receiver is who went longest
-    without a find (first seat on a tie); the item fits that hero's class."""
+    without a find (first seat on a tie); the item fits that hero's class. A legendary find is one of the world's
+    legends (dungeon_legenden: boss, reward or chest, each once a campaign of the round rd), else episch."""
     rng = rng or random
     roll = rng.randint(1, 100) + r["anlass"][anlass] + FUND_STUFE * gruppe_stufe
     rec = max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
@@ -1494,10 +1501,14 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt=""):
     stufen, s = rarity(r, gruppe_stufe, roll)
     if h.get("ohne_selten", 0) + 1 >= r["pech_schutz"] and len(stufen) > 1 and stufen.index(s) == 0:
         s = stufen[1]
+    leg = None
+    if s["id"] == r["seltenheit"][-1]["id"]:
+        leg = legenden.pick(_me, r, rd, h, welt, rng) if anlass in legenden.ANLASS else None
+        s = s if leg else stufen[-2]
     here = [c for c in r["gegenstaende"] if in_world(c, welt) and reaches(r, c, s)] or \
         [c for c in r["gegenstaende"] if "seltenheit" not in c]
     pool = [c for c in here if fits(r, h, c)] or here
-    it = item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
+    it = legenden.make(_me, r, leg, rng) if leg else item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
     for i, x in enumerate(held):
         x["seit_fund"] = 0 if i == rec else x.get("seit_fund", 0) + 1
     h["ohne_selten"] = 0 if stufen.index(s) > 0 else h.get("ohne_selten", 0) + 1
@@ -1755,6 +1766,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
         if kampagne:
             rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
             rd.update(erz.carry(kampagne))
+            rd["legenden"] = [x for x in kampagne.get("legenden") or [] if isinstance(x, str)][:LEGENDEN_MAX]
             plan = kampagne.get("plan")
             if plan:
                 rd["akt"] = kampagne.get("akt", 0)
@@ -2060,6 +2072,7 @@ def end_chapter(owner, rid, now=None):
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
         c.update(erz.keep_chapter(rd))
         c["stimmen"] = stimmen.keep(rd)
+        c["legenden"] = list(rd.get("legenden") or [])
         kid = kid or "k" + os.urandom(4).hex()
         c["orte"] = dungeon_karte.names(rd)[-ORTE_KARTE:]
         cover(rid, rd, kid, c)
@@ -2175,7 +2188,7 @@ def next_chapter(owner, kid, b, lang, now=None):
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
                                "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte"),
                                "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "dinge": c.get("dinge"),
-                               "stimmen": c.get("stimmen")})
+                               "stimmen": c.get("stimmen"), "legenden": c.get("legenden")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -3187,7 +3200,11 @@ def consequences(r, rd, folgen, names):
 def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
     """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
     heavy (2a); the log and the journal say so."""
-    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""))
+    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd)
+    if it.get("leg"):
+        rd["legenden"] = (rd.get("legenden") or []) + [it["leg"]]      # once a campaign (end_chapter keeps the list)
+        _day.bump("legenden")
+        print("dungeon: legende | gefunden", flush=True)
     boden = not room(r, held[i], [it])
     if boden:
         rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
@@ -4803,7 +4820,7 @@ def for_live():
             "ohnmacht": t["ohnmacht"], "aufgestanden": t["aufgestanden"], "geholfen": t["geholfen"], "kraft_wirkt": t["kraft_wirkt"],
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
-            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"],
+            "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"],
             **dungeon_karte.for_live(rs)}
 
 

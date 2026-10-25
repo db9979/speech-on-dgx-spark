@@ -1,0 +1,1365 @@
+{
+ "zweck": "KI-Dungeon-Master: legendäre Einzelstücke je Welt (Gegenstands-Punkt 4 vom 2026-10-24): Grundgegenstand aus dem Katalog, eigener Name und Satz, zwei Wirkungen aus effekte; nur aus Boss, Belohnung oder Truhe, nie beim Händler, einmal je Kampagne.",
+ "legenden": [
+  {
+   "id": "morgenroete",
+   "welt": "fantasy",
+   "basis": "langschwert",
+   "name": [
+    "Morgenröte",
+    "Dawnbreaker"
+   ],
+   "satz": [
+    "Die Klinge, die den letzten Drachenkönig fällte.",
+    "The blade that felled the last dragon king."
+   ],
+   "effekte": [
+    "feuer",
+    "riese"
+   ]
+  },
+  {
+   "id": "frostzahn",
+   "welt": "fantasy",
+   "basis": "streitaxt",
+   "name": [
+    "Frostzahn",
+    "Frostfang"
+   ],
+   "satz": [
+    "Geschmiedet im Eis der Nordgipfel.",
+    "Forged in the ice of the northern peaks."
+   ],
+   "effekte": [
+    "frost",
+    "baer"
+   ]
+  },
+  {
+   "id": "sternensang",
+   "welt": "fantasy",
+   "basis": "langbogen",
+   "name": [
+    "Sternensang",
+    "Starsong"
+   ],
+   "satz": [
+    "Ihre Sehne summt wie ein fernes Lied.",
+    "Its string hums like a distant song."
+   ],
+   "effekte": [
+    "blitz",
+    "wind"
+   ]
+  },
+  {
+   "id": "lichtbringer",
+   "welt": "fantasy",
+   "basis": "sonnenhammer",
+   "name": [
+    "Lichtbringer",
+    "Lightbringer"
+   ],
+   "satz": [
+    "Ein Hammer, der nie ganz dunkel wird.",
+    "A hammer that never goes fully dark."
+   ],
+   "effekte": [
+    "heilig",
+    "eule"
+   ]
+  },
+  {
+   "id": "blutdorn",
+   "welt": "fantasy",
+   "basis": "krummdolch",
+   "name": [
+    "Blutdorn",
+    "Bloodthorn"
+   ],
+   "satz": [
+    "Er trinkt, was er schneidet.",
+    "It drinks what it cuts."
+   ],
+   "effekte": [
+    "vampir",
+    "wind"
+   ]
+  },
+  {
+   "id": "natterbiss",
+   "welt": "fantasy",
+   "basis": "giftdolch",
+   "name": [
+    "Natterbiss",
+    "Adder's Bite"
+   ],
+   "satz": [
+    "Aus dem Zahn einer Riesennatter.",
+    "From the fang of a giant adder."
+   ],
+   "effekte": [
+    "gift",
+    "glueck"
+   ]
+  },
+  {
+   "id": "weltenast",
+   "welt": "fantasy",
+   "basis": "runenstab",
+   "name": [
+    "Weltenast",
+    "Worldbranch"
+   ],
+   "satz": [
+    "Ein Zweig vom ersten Baum der Welt.",
+    "A branch of the world's first tree."
+   ],
+   "effekte": [
+    "heilig",
+    "zeit"
+   ]
+  },
+  {
+   "id": "donnerkeil",
+   "welt": "fantasy",
+   "basis": "kriegshammer",
+   "name": [
+    "Donnerkeil",
+    "Thunderbolt"
+   ],
+   "satz": [
+    "Jeder Schlag grollt wie ein Gewitter.",
+    "Every blow rumbles like a storm."
+   ],
+   "effekte": [
+    "blitz",
+    "riese"
+   ]
+  },
+  {
+   "id": "koenigsschild",
+   "welt": "fantasy",
+   "basis": "turmschild",
+   "name": [
+    "Schild der sieben Könige",
+    "Shield of the Seven Kings"
+   ],
+   "satz": [
+    "Sieben Wappen, keins je gebrochen.",
+    "Seven crests, none ever broken."
+   ],
+   "effekte": [
+    "wachsam",
+    "koenig"
+   ]
+  },
+  {
+   "id": "drachenschuppe",
+   "welt": "fantasy",
+   "basis": "drachenpanzer",
+   "name": [
+    "Schuppe des Alten",
+    "Scale of the Old One"
+   ],
+   "satz": [
+    "Aus der Haut eines tausendjährigen Drachen.",
+    "From the hide of a thousand-year dragon."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "elfenhauch",
+   "welt": "fantasy",
+   "basis": "elfenkette",
+   "name": [
+    "Elfenhauch",
+    "Elven Breath"
+   ],
+   "satz": [
+    "Leicht wie Morgennebel.",
+    "Light as morning mist."
+   ],
+   "effekte": [
+    "wachsam",
+    "wind"
+   ]
+  },
+  {
+   "id": "sternenmantel",
+   "welt": "fantasy",
+   "basis": "sternenrobe",
+   "name": [
+    "Mantel der Sternseherin",
+    "Mantle of the Star Seer"
+   ],
+   "satz": [
+    "Die Sterne darauf wandern mit der Nacht.",
+    "The stars on it move with the night."
+   ],
+   "effekte": [
+    "glueck",
+    "zeit"
+   ]
+  },
+  {
+   "id": "krone_ostens",
+   "welt": "fantasy",
+   "basis": "stirnreif",
+   "name": [
+    "Krone des Ostens",
+    "Crown of the East"
+   ],
+   "satz": [
+    "Wer sie trägt, dem folgen die Leute.",
+    "People follow whoever wears it."
+   ],
+   "effekte": [
+    "koenig",
+    "eule"
+   ]
+  },
+  {
+   "id": "ring_ewigkeit",
+   "welt": "fantasy",
+   "basis": "mondsteinring",
+   "name": [
+    "Ring der langen Nacht",
+    "Ring of the Long Night"
+   ],
+   "satz": [
+    "Ein Mondstein, der im Dunkeln wärmt.",
+    "A moonstone that warms in the dark."
+   ],
+   "effekte": [
+    "glueck",
+    "eule"
+   ]
+  },
+  {
+   "id": "guertel_titanen",
+   "welt": "fantasy",
+   "basis": "guertel",
+   "name": [
+    "Gürtel des Titanen",
+    "Belt of the Titan"
+   ],
+   "satz": [
+    "Eine Schnalle aus Riesenknochen.",
+    "A buckle of giant bone."
+   ],
+   "effekte": [
+    "riese",
+    "baer"
+   ]
+  },
+  {
+   "id": "schattensaum",
+   "welt": "fantasy",
+   "basis": "schattenmantel",
+   "name": [
+    "Schattensaum",
+    "Shadowhem"
+   ],
+   "satz": [
+    "Er verschluckt Fackellicht.",
+    "It swallows torchlight."
+   ],
+   "effekte": [
+    "wachsam",
+    "glueck"
+   ]
+  },
+  {
+   "id": "runenbrecher",
+   "welt": "fantasy",
+   "basis": "runenklinge",
+   "name": [
+    "Runenbrecher",
+    "Runebreaker"
+   ],
+   "satz": [
+    "Ihre Runen leuchten bei Zauberei.",
+    "Its runes glow near magic."
+   ],
+   "effekte": [
+    "blitz",
+    "zeit"
+   ]
+  },
+  {
+   "id": "waldhueter",
+   "welt": "fantasy",
+   "basis": "waldmantel",
+   "name": [
+    "Mantel des Waldhüters",
+    "Warden's Cloak"
+   ],
+   "satz": [
+    "Moos wächst an seinem Saum.",
+    "Moss grows on its hem."
+   ],
+   "effekte": [
+    "wachsam",
+    "eule"
+   ]
+  },
+  {
+   "id": "talisman_herz",
+   "welt": "fantasy",
+   "basis": "talisman",
+   "name": [
+    "Herz des Berges",
+    "Heart of the Mountain"
+   ],
+   "satz": [
+    "Ein Stein, der schlägt wie ein Herz.",
+    "A stone that beats like a heart."
+   ],
+   "effekte": [
+    "baer",
+    "glueck"
+   ]
+  },
+  {
+   "id": "pilgerlicht",
+   "welt": "fantasy",
+   "basis": "pilgerstab",
+   "name": [
+    "Stab der letzten Pilgerin",
+    "Staff of the Last Pilgrim"
+   ],
+   "satz": [
+    "Er wies ihr tausend Jahre den Weg.",
+    "It showed her the way for a thousand years."
+   ],
+   "effekte": [
+    "heilig",
+    "glueck"
+   ]
+  },
+  {
+   "id": "totenglocke",
+   "welt": "horror",
+   "basis": "morgenstern",
+   "name": [
+    "Totenglocke",
+    "Death Knell"
+   ],
+   "satz": [
+    "Jeder Schlag läutet für einen Toten.",
+    "Every blow tolls for the dead."
+   ],
+   "effekte": [
+    "heilig",
+    "riese"
+   ]
+  },
+  {
+   "id": "silbermond",
+   "welt": "horror",
+   "basis": "silberschwert",
+   "name": [
+    "Silbermond",
+    "Silver Moon"
+   ],
+   "satz": [
+    "Geweiht in einer Vollmondnacht.",
+    "Blessed on a night of full moon."
+   ],
+   "effekte": [
+    "heilig",
+    "glueck"
+   ]
+  },
+  {
+   "id": "witwenkuss",
+   "welt": "horror",
+   "basis": "silberdolch",
+   "name": [
+    "Kuss der Witwe",
+    "Widow's Kiss"
+   ],
+   "satz": [
+    "Er war ein Hochzeitsgeschenk.",
+    "It was a wedding gift."
+   ],
+   "effekte": [
+    "gift",
+    "wind"
+   ]
+  },
+  {
+   "id": "nachtpflock",
+   "welt": "horror",
+   "basis": "holzpflock",
+   "name": [
+    "Pflock der Nachtwache",
+    "Nightwatch Stake"
+   ],
+   "satz": [
+    "Aus dem Holz einer Kirchentür.",
+    "From the wood of a church door."
+   ],
+   "effekte": [
+    "heilig",
+    "baer"
+   ]
+  },
+  {
+   "id": "aderlass",
+   "welt": "horror",
+   "basis": "jagdmesser",
+   "name": [
+    "Aderlass",
+    "Bloodletter"
+   ],
+   "satz": [
+    "Es wird warm, wenn Blut fließt.",
+    "It grows warm when blood flows."
+   ],
+   "effekte": [
+    "vampir",
+    "glueck"
+   ]
+  },
+  {
+   "id": "schwarzfeuer",
+   "welt": "horror",
+   "basis": "armbrust",
+   "name": [
+    "Schwarzfeuer",
+    "Blackfire"
+   ],
+   "satz": [
+    "Ihre Bolzen brennen mit dunkler Flamme.",
+    "Its bolts burn with a dark flame."
+   ],
+   "effekte": [
+    "feuer",
+    "eule"
+   ]
+  },
+  {
+   "id": "sargdeckel",
+   "welt": "horror",
+   "basis": "turmschild",
+   "name": [
+    "Der Sargdeckel",
+    "The Coffin Lid"
+   ],
+   "satz": [
+    "Er hielt schon Schlimmeres zurück.",
+    "It has held back worse."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "pestmaske",
+   "welt": "horror",
+   "basis": "lederkappe",
+   "name": [
+    "Maske des Pestarztes",
+    "Plague Doctor's Mask"
+   ],
+   "satz": [
+    "Ihr Schnabel riecht nach Kräutern.",
+    "Its beak smells of herbs."
+   ],
+   "effekte": [
+    "wachsam",
+    "eule"
+   ]
+  },
+  {
+   "id": "leichentuch",
+   "welt": "horror",
+   "basis": "umhang",
+   "name": [
+    "Das Leichentuch",
+    "The Shroud"
+   ],
+   "satz": [
+    "Kalt, als wäre es nie getragen worden.",
+    "Cold, as if never worn."
+   ],
+   "effekte": [
+    "wachsam",
+    "glueck"
+   ]
+  },
+  {
+   "id": "jaegermantel",
+   "welt": "horror",
+   "basis": "kettenhemd",
+   "name": [
+    "Kettenhemd der Hexenjäger",
+    "Witch Hunter's Mail"
+   ],
+   "satz": [
+    "Jeder Ring trägt ein Gebet.",
+    "Every ring bears a prayer."
+   ],
+   "effekte": [
+    "wachsam",
+    "koenig"
+   ]
+  },
+  {
+   "id": "totenkopf",
+   "welt": "horror",
+   "basis": "totenkopfamulett",
+   "name": [
+    "Grinsendes Amulett",
+    "Grinning Amulet"
+   ],
+   "satz": [
+    "Sein Lächeln wird breiter, wenn Gefahr naht.",
+    "Its grin widens when danger nears."
+   ],
+   "effekte": [
+    "glueck",
+    "eule"
+   ]
+  },
+  {
+   "id": "rabenring",
+   "welt": "horror",
+   "basis": "siegelring",
+   "name": [
+    "Ring des Rabengrafen",
+    "Ring of the Raven Count"
+   ],
+   "satz": [
+    "Ein Rabe, der dich ansieht.",
+    "A raven that looks back at you."
+   ],
+   "effekte": [
+    "koenig",
+    "zeit"
+   ]
+  },
+  {
+   "id": "nebelklinge",
+   "welt": "horror",
+   "basis": "schattenklinge",
+   "name": [
+    "Nebelklinge",
+    "Mistblade"
+   ],
+   "satz": [
+    "Man sieht sie nur, wenn sie trifft.",
+    "You only see it when it strikes."
+   ],
+   "effekte": [
+    "frost",
+    "wind"
+   ]
+  },
+  {
+   "id": "irrlicht",
+   "welt": "horror",
+   "basis": "kristallstab",
+   "name": [
+    "Irrlicht",
+    "Will-o'-Wisp"
+   ],
+   "satz": [
+    "Ein Stab mit kaltem Licht.",
+    "A staff with cold light."
+   ],
+   "effekte": [
+    "blitz",
+    "zeit"
+   ]
+  },
+  {
+   "id": "beichtbuch",
+   "welt": "horror",
+   "basis": "grimoire",
+   "name": [
+    "Das Beichtbuch",
+    "The Book of Confessions"
+   ],
+   "satz": [
+    "Es kennt alle Sünden des Dorfes.",
+    "It knows every sin of the village."
+   ],
+   "effekte": [
+    "heilig",
+    "zeit"
+   ]
+  },
+  {
+   "id": "wolfsfell",
+   "welt": "horror",
+   "basis": "fellruestung",
+   "name": [
+    "Fell des Werwolfs",
+    "Werewolf Pelt"
+   ],
+   "satz": [
+    "Es sträubt sich bei Vollmond.",
+    "It bristles at full moon."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "eisenseele",
+   "welt": "horror",
+   "basis": "plattenpanzer",
+   "name": [
+    "Eiserne Seele",
+    "Iron Soul"
+   ],
+   "satz": [
+    "Ein Ritter, der nie starb, trug ihn.",
+    "A knight who never died wore it."
+   ],
+   "effekte": [
+    "wachsam",
+    "riese"
+   ]
+  },
+  {
+   "id": "kerzenring",
+   "welt": "horror",
+   "basis": "ring",
+   "name": [
+    "Ring der letzten Kerze",
+    "Ring of the Last Candle"
+   ],
+   "satz": [
+    "Er glimmt, solange du lebst.",
+    "It glows as long as you live."
+   ],
+   "effekte": [
+    "glueck",
+    "baer"
+   ]
+  },
+  {
+   "id": "schlafmohn",
+   "welt": "horror",
+   "basis": "halskette",
+   "name": [
+    "Kette aus Schlafmohn",
+    "Poppy Chain"
+   ],
+   "satz": [
+    "Wer sie trägt, fürchtet keine Träume.",
+    "Whoever wears it fears no dreams."
+   ],
+   "effekte": [
+    "eule",
+    "glueck"
+   ]
+  },
+  {
+   "id": "grabesruf",
+   "welt": "horror",
+   "basis": "zweihaender",
+   "name": [
+    "Grabesruf",
+    "Gravecall"
+   ],
+   "satz": [
+    "Die Toten kennen ihren Klang.",
+    "The dead know its sound."
+   ],
+   "effekte": [
+    "frost",
+    "riese"
+   ]
+  },
+  {
+   "id": "nova",
+   "welt": "scifi",
+   "basis": "lasergewehr",
+   "name": [
+    "Nova",
+    "Nova"
+   ],
+   "satz": [
+    "Prototyp der verlorenen Flotte.",
+    "A prototype of the lost fleet."
+   ],
+   "effekte": [
+    "feuer",
+    "wind"
+   ]
+  },
+  {
+   "id": "sonnenkern",
+   "welt": "scifi",
+   "basis": "plasmawerfer",
+   "name": [
+    "Sonnenkern",
+    "Sun Core"
+   ],
+   "satz": [
+    "Ein Stück Stern in einer Kammer.",
+    "A piece of a star in a chamber."
+   ],
+   "effekte": [
+    "feuer",
+    "riese"
+   ]
+  },
+  {
+   "id": "stillstand",
+   "welt": "scifi",
+   "basis": "betaeubungsstab",
+   "name": [
+    "Stillstand",
+    "Standstill"
+   ],
+   "satz": [
+    "Er friert alles, was er berührt.",
+    "It freezes whatever it touches."
+   ],
+   "effekte": [
+    "frost",
+    "eule"
+   ]
+  },
+  {
+   "id": "quantensplitter",
+   "welt": "scifi",
+   "basis": "vibroklinge",
+   "name": [
+    "Quantensplitter",
+    "Quantum Shard"
+   ],
+   "satz": [
+    "Sie schneidet in zwei Wirklichkeiten.",
+    "It cuts in two realities."
+   ],
+   "effekte": [
+    "blitz",
+    "glueck"
+   ]
+  },
+  {
+   "id": "leere",
+   "welt": "scifi",
+   "basis": "laserpistole",
+   "name": [
+    "Stimme der Leere",
+    "Voice of the Void"
+   ],
+   "satz": [
+    "Sie schießt ohne Klang.",
+    "It fires without a sound."
+   ],
+   "effekte": [
+    "frost",
+    "glueck"
+   ]
+  },
+  {
+   "id": "nanofresser",
+   "welt": "scifi",
+   "basis": "energiestab",
+   "name": [
+    "Nanofresser",
+    "Nanoeater"
+   ],
+   "satz": [
+    "Seine Schwärme nehmen, was sie berühren.",
+    "Its swarms take what they touch."
+   ],
+   "effekte": [
+    "vampir",
+    "zeit"
+   ]
+  },
+  {
+   "id": "kometenschweif",
+   "welt": "scifi",
+   "basis": "speer",
+   "name": [
+    "Kometenschweif",
+    "Comet Tail"
+   ],
+   "satz": [
+    "Ein Speer aus Asteroidenstahl.",
+    "A spear of asteroid steel."
+   ],
+   "effekte": [
+    "blitz",
+    "riese"
+   ]
+  },
+  {
+   "id": "giftstachel",
+   "welt": "scifi",
+   "basis": "giftdolch",
+   "name": [
+    "Xeno-Stachel",
+    "Xeno Sting"
+   ],
+   "satz": [
+    "Der Stachel einer fremden Königin.",
+    "The sting of an alien queen."
+   ],
+   "effekte": [
+    "gift",
+    "wind"
+   ]
+  },
+  {
+   "id": "bastion",
+   "welt": "scifi",
+   "basis": "energieschild",
+   "name": [
+    "Bastion",
+    "Bastion"
+   ],
+   "satz": [
+    "Er hielt eine ganze Station.",
+    "It held a whole station."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "phantomanzug",
+   "welt": "scifi",
+   "basis": "kampfanzug",
+   "name": [
+    "Phantomanzug",
+    "Phantom Suit"
+   ],
+   "satz": [
+    "Sensoren sehen ihn nicht.",
+    "Sensors do not see it."
+   ],
+   "effekte": [
+    "wachsam",
+    "wind"
+   ]
+  },
+  {
+   "id": "kommandohelm",
+   "welt": "scifi",
+   "basis": "raumhelm",
+   "name": [
+    "Helm des Admirals",
+    "Admiral's Helmet"
+   ],
+   "satz": [
+    "Sein Funk erreicht jede Flotte.",
+    "Its radio reaches every fleet."
+   ],
+   "effekte": [
+    "koenig",
+    "eule"
+   ]
+  },
+  {
+   "id": "schwerkraft",
+   "welt": "scifi",
+   "basis": "magnetstiefel",
+   "name": [
+    "Schwerkraftanker",
+    "Gravity Anchor"
+   ],
+   "satz": [
+    "Nichts bringt dich ins Wanken.",
+    "Nothing makes you stagger."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "orakel",
+   "welt": "scifi",
+   "basis": "neuralimplantat",
+   "name": [
+    "Orakel-Implantat",
+    "Oracle Implant"
+   ],
+   "satz": [
+    "Es rechnet schneller als du denkst.",
+    "It computes faster than you think."
+   ],
+   "effekte": [
+    "zeit",
+    "eule"
+   ]
+  },
+  {
+   "id": "reflexkern",
+   "welt": "scifi",
+   "basis": "reflexverstaerker",
+   "name": [
+    "Reflexkern",
+    "Reflex Core"
+   ],
+   "satz": [
+    "Die Welt wird langsam, du nicht.",
+    "The world slows, you do not."
+   ],
+   "effekte": [
+    "wind",
+    "glueck"
+   ]
+  },
+  {
+   "id": "sternenkarte",
+   "welt": "scifi",
+   "basis": "amulett",
+   "name": [
+    "Lebende Sternkarte",
+    "Living Star Map"
+   ],
+   "satz": [
+    "Sie zeigt Wege, die es nicht gibt.",
+    "It shows ways that do not exist."
+   ],
+   "effekte": [
+    "glueck",
+    "zeit"
+   ]
+  },
+  {
+   "id": "titanpanzer",
+   "welt": "scifi",
+   "basis": "halbplatte",
+   "name": [
+    "Titanpanzer",
+    "Titan Plate"
+   ],
+   "satz": [
+    "Aus der Hülle eines Schlachtschiffs.",
+    "From the hull of a battleship."
+   ],
+   "effekte": [
+    "wachsam",
+    "riese"
+   ]
+  },
+  {
+   "id": "ionenhandschuh",
+   "welt": "scifi",
+   "basis": "panzerhandschuhe",
+   "name": [
+    "Ionenfäuste",
+    "Ion Fists"
+   ],
+   "satz": [
+    "Sie knistern bei jedem Griff.",
+    "They crackle with every grip."
+   ],
+   "effekte": [
+    "wachsam",
+    "riese"
+   ]
+  },
+  {
+   "id": "diplomat",
+   "welt": "scifi",
+   "basis": "siegelring",
+   "name": [
+    "Siegel des Rates",
+    "Seal of the Council"
+   ],
+   "satz": [
+    "Jede Tür kennt dieses Siegel.",
+    "Every door knows this seal."
+   ],
+   "effekte": [
+    "koenig",
+    "glueck"
+   ]
+  },
+  {
+   "id": "singularitaet",
+   "welt": "scifi",
+   "basis": "kugel",
+   "name": [
+    "Singularität",
+    "Singularity"
+   ],
+   "satz": [
+    "Eine Kugel, die Licht verschluckt.",
+    "An orb that swallows light."
+   ],
+   "effekte": [
+    "blitz",
+    "zeit"
+   ]
+  },
+  {
+   "id": "letzter_funke",
+   "welt": "scifi",
+   "basis": "handarmbrust",
+   "name": [
+    "Letzter Funke",
+    "Last Spark"
+   ],
+   "satz": [
+    "Die letzte Waffe einer toten Welt.",
+    "The last weapon of a dead world."
+   ],
+   "effekte": [
+    "feuer",
+    "glueck"
+   ]
+  },
+  {
+   "id": "seeteufel",
+   "welt": "piraten",
+   "basis": "entermesser",
+   "name": [
+    "Seeteufel",
+    "Sea Devil"
+   ],
+   "satz": [
+    "Das Messer des gefürchtetsten Kapitäns.",
+    "The blade of the most feared captain."
+   ],
+   "effekte": [
+    "vampir",
+    "riese"
+   ]
+  },
+  {
+   "id": "sturmruf",
+   "welt": "piraten",
+   "basis": "muskete",
+   "name": [
+    "Sturmruf",
+    "Stormcall"
+   ],
+   "satz": [
+    "Ihr Schuss donnert wie ein Orkan.",
+    "Its shot thunders like a hurricane."
+   ],
+   "effekte": [
+    "blitz",
+    "eule"
+   ]
+  },
+  {
+   "id": "brandung",
+   "welt": "piraten",
+   "basis": "steinschlosspistole",
+   "name": [
+    "Brandung",
+    "Breaker"
+   ],
+   "satz": [
+    "Sie zündet auch im Regen.",
+    "It fires even in the rain."
+   ],
+   "effekte": [
+    "feuer",
+    "glueck"
+   ]
+  },
+  {
+   "id": "tiefenzahn",
+   "welt": "piraten",
+   "basis": "harpune",
+   "name": [
+    "Tiefenzahn",
+    "Deepfang"
+   ],
+   "satz": [
+    "Sie traf einst den großen Wal.",
+    "It once struck the great whale."
+   ],
+   "effekte": [
+    "frost",
+    "riese"
+   ]
+  },
+  {
+   "id": "kraken",
+   "welt": "piraten",
+   "basis": "enterbeil",
+   "name": [
+    "Krakenbeil",
+    "Kraken Axe"
+   ],
+   "satz": [
+    "Mit Tinte geschwärzt.",
+    "Blackened with ink."
+   ],
+   "effekte": [
+    "gift",
+    "baer"
+   ]
+  },
+  {
+   "id": "admiralsdegen",
+   "welt": "piraten",
+   "basis": "rapier",
+   "name": [
+    "Degen des Admirals",
+    "Admiral's Rapier"
+   ],
+   "satz": [
+    "Er beendete den Krieg der Inseln.",
+    "It ended the war of the isles."
+   ],
+   "effekte": [
+    "blitz",
+    "koenig"
+   ]
+  },
+  {
+   "id": "korallenstab",
+   "welt": "piraten",
+   "basis": "pilgerstab",
+   "name": [
+    "Korallenstab",
+    "Coral Staff"
+   ],
+   "satz": [
+    "Gewachsen am Grund der See.",
+    "Grown on the sea floor."
+   ],
+   "effekte": [
+    "heilig",
+    "eule"
+   ]
+  },
+  {
+   "id": "belegnagel_fluch",
+   "welt": "piraten",
+   "basis": "belegnagel",
+   "name": [
+    "Verfluchter Belegnagel",
+    "Cursed Belaying Pin"
+   ],
+   "satz": [
+    "Von einem Geisterschiff.",
+    "From a ghost ship."
+   ],
+   "effekte": [
+    "frost",
+    "glueck"
+   ]
+  },
+  {
+   "id": "kapitaensmantel_rot",
+   "welt": "piraten",
+   "basis": "kapitaensmantel",
+   "name": [
+    "Roter Mantel",
+    "The Red Coat"
+   ],
+   "satz": [
+    "Er hat nie einen Kampf verloren.",
+    "It never lost a fight."
+   ],
+   "effekte": [
+    "wachsam",
+    "koenig"
+   ]
+  },
+  {
+   "id": "dreispitz_wind",
+   "welt": "piraten",
+   "basis": "dreispitz",
+   "name": [
+    "Hut des Windkönigs",
+    "Hat of the Wind King"
+   ],
+   "satz": [
+    "Der Wind dreht, wenn du ihn ziehst.",
+    "The wind turns when you tip it."
+   ],
+   "effekte": [
+    "wind",
+    "koenig"
+   ]
+  },
+  {
+   "id": "seestiefel_tief",
+   "welt": "piraten",
+   "basis": "seestiefel",
+   "name": [
+    "Stiefel der Tiefe",
+    "Boots of the Deep"
+   ],
+   "satz": [
+    "Sie rutschen auf keinem Deck.",
+    "They slip on no deck."
+   ],
+   "effekte": [
+    "wachsam",
+    "wind"
+   ]
+  },
+  {
+   "id": "dublone",
+   "welt": "piraten",
+   "basis": "gluecksdublone",
+   "name": [
+    "Die erste Dublone",
+    "The First Doubloon"
+   ],
+   "satz": [
+    "Mit ihr begann jeder Schatz.",
+    "Every treasure began with it."
+   ],
+   "effekte": [
+    "glueck",
+    "koenig"
+   ]
+  },
+  {
+   "id": "sirenenkette",
+   "welt": "piraten",
+   "basis": "halskette",
+   "name": [
+    "Kette der Sirene",
+    "Siren's Necklace"
+   ],
+   "satz": [
+    "Sie singt leise bei Sturm.",
+    "It sings softly in storms."
+   ],
+   "effekte": [
+    "koenig",
+    "glueck"
+   ]
+  },
+  {
+   "id": "kompassring",
+   "welt": "piraten",
+   "basis": "ring",
+   "name": [
+    "Ring des Kompasses",
+    "Compass Ring"
+   ],
+   "satz": [
+    "Er zeigt immer zum Schatz.",
+    "It always points to the treasure."
+   ],
+   "effekte": [
+    "glueck",
+    "eule"
+   ]
+  },
+  {
+   "id": "haifischhaut",
+   "welt": "piraten",
+   "basis": "lederruestung",
+   "name": [
+    "Haifischhaut",
+    "Sharkskin"
+   ],
+   "satz": [
+    "Rau wie Sand, zäh wie Tauwerk.",
+    "Rough as sand, tough as rope."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "schiffbruch",
+   "welt": "piraten",
+   "basis": "schild",
+   "name": [
+    "Planke des Schiffbruchs",
+    "Shipwreck Plank"
+   ],
+   "satz": [
+    "Sie trug einen Kapitän drei Tage.",
+    "It carried a captain for three days."
+   ],
+   "effekte": [
+    "wachsam",
+    "baer"
+   ]
+  },
+  {
+   "id": "rumschuetze",
+   "welt": "piraten",
+   "basis": "kurzbogen",
+   "name": [
+    "Bogen des Rumschmugglers",
+    "Rum Runner's Bow"
+   ],
+   "satz": [
+    "Er traf auch betrunken.",
+    "It hit even when drunk."
+   ],
+   "effekte": [
+    "glueck",
+    "wind"
+   ]
+  },
+  {
+   "id": "leuchtfeuer",
+   "welt": "piraten",
+   "basis": "armbrust",
+   "name": [
+    "Leuchtfeuer",
+    "Beacon"
+   ],
+   "satz": [
+    "Ihre Bolzen brennen hell.",
+    "Its bolts burn bright."
+   ],
+   "effekte": [
+    "feuer",
+    "eule"
+   ]
+  },
+  {
+   "id": "perlenguertel",
+   "welt": "piraten",
+   "basis": "schaerpe",
+   "name": [
+    "Schärpe der Perlenkönigin",
+    "Pearl Queen's Sash"
+   ],
+   "satz": [
+    "Hundert Perlen, jede ein Wunsch.",
+    "A hundred pearls, each a wish."
+   ],
+   "effekte": [
+    "koenig",
+    "wind"
+   ]
+  },
+  {
+   "id": "sturmklinge",
+   "welt": "piraten",
+   "basis": "kurzschwert",
+   "name": [
+    "Sturmklinge",
+    "Stormblade"
+   ],
+   "satz": [
+    "Salz hat sie nie rosten lassen.",
+    "Salt never rusted it."
+   ],
+   "effekte": [
+    "blitz",
+    "glueck"
+   ]
+  }
+ ]
+}

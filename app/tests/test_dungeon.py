@@ -4905,6 +4905,62 @@ class Fight(Turns):
         h["an"]["kopf"] = dict(dungeon.item(r, armour, "gewoehnlich"), eff="wachsam")
         self.assertEqual(kampf.rk(dungeon, r, h), ac + dungeon._c(r, h["an"]["kopf"]).get("schutz", 0) + 1)
 
+    def test_legendary_pieces_once_a_campaign_never_at_a_merchant(self):
+        """Gegenstands-Punkt 4 of 2026-10-24 (Dominik „Ja, alles umsetzen“): 20 named legends per world with their own
+        name, sentence and two effects; a legendary find is one of them only from a boss, a reward or a chest, each once
+        a campaign, never at a merchant (there and with none free it is episch)."""
+        class Top(random.Random):
+            def randint(self, a, b):
+                return b
+        r = dungeon.rules()
+        leg = dungeon.legenden
+        top, epic = r["seltenheit"][-1]["id"], r["seltenheit"][-2]["id"]
+        self.assertEqual(leg.check(dungeon, r), [])
+        for w in [x["id"] for x in r["welten"]]:
+            self.assertGreaterEqual(len([x for x in leg.of_world(dungeon, r, w) if x[2]]), 20, w)
+        bad = dict(leg.load()[0], effekte=["feuer", "frost"])
+        self.assertIn("schaden", leg.problems(dungeon, r, bad))
+        self.assertIn("basis", leg.problems(dungeon, r, dict(bad, basis="heiltrank")))
+        rd, held = self.held()
+        top_level = r["grenzen"]["stufe_max"]
+        for _, p in dungeon.seated(rd):
+            p["held"]["stufe"] = top_level
+        it = dungeon.loot(r, held, "gegner", top_level, Top(1), welt=rd["welt"], rd=rd)[1]
+        self.assertEqual((it["s"], it.get("leg")), (epic, None))                      # a plain foe: no legend
+        dungeon.open_market(r, rd, rng=Top(2))
+        self.assertNotIn(top, {x["s"] for x in rd["markt"]["ware"]})                  # never at a merchant
+        n = len(leg.of_world(dungeon, r, rd["welt"]))
+        for i in range(n + 2):
+            dungeon.give_loot(r, rd, held, ("boss", "truhe", "belohnung")[i % 3], top_level, Top(i))
+        self.assertEqual(len(rd["legenden"]), n)
+        self.assertEqual(len(set(rd["legenden"])), n)                                 # each once, then episch
+        own = next(x for x in leg.of_world(dungeon, r, rd["welt"]) if x[2])
+        it = leg.make(dungeon, r, own, random.Random(1))
+        self.assertEqual((it["s"], it["u"], [it["eff"], it["eff2"]]), (top, True, own[2]["effekte"]))
+        self.assertFalse(dungeon.own_name(r, dict(it, eigen="Truhe")))
+        self.assertNotIn(own[2]["name"][0], dungeon.item_view(r, it, "de")["name"])    # unknown: only its base
+        it["u"] = False
+        v = dungeon.item_view(r, it, "en")
+        self.assertEqual((v["name"], v["satz"], v["legende"]), (own[2]["name"][1], own[2]["satz"][1], True))
+        h = held[0]
+        e2 = dungeon._by(r, "effekte")[it["eff2"]]
+        before = dungeon.total(r, h, e2["wert"])
+        h["an"][dungeon.places(r, dungeon._c(r, it))[0]] = it
+        self.assertGreaterEqual(dungeon.total(r, h, e2["wert"]), before + e2["bonus"])
+        self.assertEqual(len(dungeon.item_effects(r, it)), 2)
+
+    def test_found_legends_go_on_in_the_next_chapter(self):
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["legenden"] = [dungeon.legenden.load()[0]["id"]]
+            dungeon._write(d)
+        kid = self.c.post(f"/api/profile/dungeon/{self.rid}/kapitel", json={}).json()["kid"]
+        dungeon.ask_model = fake([{"bisher": "Arvid und Bela fanden im Gewölbe eine alte Klinge und zogen weiter."}])
+        asyncio.run(dungeon.summarize(self.uid, kid))
+        r = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.state(r.json()["rid"])["legenden"], [dungeon.legenden.load()[0]["id"]])
+
     def test_item_prices_jewellery_and_better_than_yours(self):
         """Gegenstands-Punkte 6, 8 and 10 of 2026-10-24: potions, scrolls, spells and tools by half the rarity's price
         factor; a common piece of jewellery is a treasure, a magic one raises a value by at least +1; the bag, the

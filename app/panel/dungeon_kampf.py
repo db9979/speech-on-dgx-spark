@@ -126,9 +126,8 @@ RAUB_W = 4                # „lebensraub“: the hero heals 1d4 on a hit
 
 def effects(dm, r, h, wirkung, it=None):
     """The known effects with this wirkung the hero wears (or of the one item it); an unknown item counts only by its base."""
-    eff = dm._by(r, "effekte")
     its = [it] if it else dm.worn(h)
-    return [eff[x["eff"]] for x in its if x and not x.get("u") and x.get("eff") in eff and eff[x["eff"]].get("wirkung") == wirkung]
+    return [e for x in its for e in dm.item_effects(r, x) if e.get("wirkung") == wirkung]
 
 
 def lucky(dm, r, h, w, rng):

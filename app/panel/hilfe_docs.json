@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: legendäre Einzelstücke (V01.1.035, Gegenstands-Punkt 4 vom 2026-10-24, Dominik „Ja, alles umsetzen“): Die mitgelieferte Datei app/panel/dungeon_legenden.json hält 20 benannte Einzelstücke je Welt (Fantasy, Horror, Sci-Fi, Piraten; die eigene Welt nimmt die aus Fantasy): ein tragbarer Grundgegenstand des Katalogs, ein eigener Name und Satz in beiden Sprachen und zwei Wirkungen aus der Liste der Wirkungen (höchstens eine mit Schaden, nur passende für die Art). Die Stücke des Katalogs mit fester Seltenheit „legendär“ (aus dem SRD, etwa das Vorpalschwert) zählen ebenfalls als Einzelstücke. Ein Fund, der legendär ausfällt, wird nach festen Regeln des Panels eines davon, nie nach dem Modell: nur von einem Boss, als Belohnung oder aus einer Truhe; ein Händler verkauft nie eines (dort höchstens episch); jedes nur einmal je Kampagne (die Runde merkt sich die gefundenen, ein neues Kapitel übernimmt die Liste, und keines kommt, das ein Held am Tisch schon trägt); zuerst eines für die Klasse des Empfängers; ist keines mehr frei, ist der Fund episch. Ein Einzelstück kommt unerkannt wie jeder legendäre Fund; erkannt zeigt es Name, Satz, beide Wirkungen und „✦ Einzelstück“, und"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " beide Wirkungen zählen bei Proben, Schaden, Rüstungsklasse und dem Vergleich ▲/▼. Ein Selbsttest prüft die Datei gegen die Regeln (dungeon_legenden.check). Zustand → Überblick nennt die Zahl der gefundenen Einzelstücke am Tag."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gegenstände Teil 2 (V01.1.034, Gegenstands-Punkte 6, 7, 8 und 10 vom 2026-10-24, Dominik „Ja, alles umsetzen“): Werkzeug-Güte: Ein Werkzeug hilft nach seiner Güte (WERKZEUG): gewöhnlich „einfach“ +1, selten „gut“ +2, ab rar „meisterlich“ +3; die Zeile des Werkzeugs nennt Güte und Bonus, der Wurf trägt werkzeug_plus und die Proben-Leiste zeigt genau diesen Teil (vorher fest +2). Preise je Art: Tränke, Rollen, Zauber und Werkzeuge (GUENSTIG) kosten die Hälfte des Seltenheitsfaktors, Waffen, Rüstung und Schmuck den vollen. Schmuck: Gewöhnlicher Schmuck ist ein Schatz ohne Wert; magischer Schmuck (ab selten) hebt immer einen Wert um mindestens +1. ▲/▼: In der Tasche, beim Händler und am Boden steht an jedem tragbaren Gegenstand „▲ besser als deins“, „▼ schwächer als deins“ oder „= wie deins“ gegen das, was der Held dort trägt (der schwächste seiner Plätze; Waffe: mittlerer Schaden und Bonus, Rüstung: Schutz, am Körper doppelt, und Bonus, Schmuck: Bonus, Wirkungen mitgerechnet, unerkannt nur der Grundwert), dazu „✗ nicht für deine Klasse“. Die Zahlen rechnet das Panel (dungeon.strength, compare, Ansicht vergleich)."
 },
 {
@@ -18086,6 +18102,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: legendary pieces (V01.1.035, item point 4 of 2026-10-24, Dominik \"Ja, alles umsetzen\"): The shipped file app/panel/dungeon_legenden.json holds 20 named pieces per world (fantasy, horror, sci-fi, pirates; the own world takes the fantasy ones): a wearable base item of the catalog, an own name and sentence in both languages and two effects from the list of effects (at most one with damage, only ones that fit the kind). The catalog's items of fixed rarity \"legendary\" (from the SRD, such as the Vorpal Sword) count as such pieces too. A find that comes out legendary becomes one of them by fixed rules of the panel, never by the model: only from a boss, as a reward or from a chest; a merchant never sells one (at most epic there); each only once a campaign (the round remembers the ones found, a new chapter takes over the list, and none comes that a hero at the table already carries); first one for the receiver's class; with none free the find is epic. A piece comes unknown like any legendary find; once known it shows name, sentence, both effects and \"✦ One of a kind\", and both effects count for checks, damage, armour class and the ▲/▼ comparison. A selftest checks the fil"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e against the rules (dungeon_legenden.check). Status → Live shows the number of pieces found that day."
 },
 {
 "lang": "en",
