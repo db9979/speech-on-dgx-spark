@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, musik,
-#                                  llm, llmtor, sehen, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug,
+#                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug,
 #                                  werkstatt or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
@@ -18,7 +18,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [helfer] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
@@ -214,12 +214,12 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel, werkstatt or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel, werkstatt or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -308,7 +308,7 @@ MESS_WUNSCH_UNIT=speech-spark-messen-wunsch   # Zustand → Modelle „Messen“
 MESS_PORT=31016
 UMZUG_UNIT=speech-spark-umzug
 WECHSEL_UNIT=speech-spark-wechsel   # stage E4: a fixed root unit; the panel and the command line leave a wish for it
-OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen)
+OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen speech-spark-helfer)
 mem_gib() { awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo; }
 
 # waits until the free memory stops growing (an engine that just stopped gives it back slowly), at most 3 minutes
@@ -465,6 +465,8 @@ cmd_messen_intern() {
     echo "modelle: sprachmodell aus (${#MESS_QWEN[@]} dienste), frei vorher $(mem_gib) GiB"
     systemctl stop "${MESS_QWEN[@]}" || true
   fi
+  # the models the LLM-Tor starts on demand give their memory back too; the next question starts them again
+  systemctl stop speech-spark-sehen.service speech-spark-helfer.service 2>/dev/null || true
   mem_settle
   # only now: the own language model's engine listens on the same port (31016) until it is stopped above; checked
   # before, every measurement next to the own model ended with "port belegt" (tars 2026-10-16)
@@ -754,7 +756,7 @@ cmd_modelle() {
         || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
       im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
       im_gang speech-spark-update && die "an update is running; measure afterwards"
-      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [eigen-…] [--yes]"
+      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [helfer] [eigen-…] [--yes]"
       echo "Messen: $ids"
       echo "Das lädt fehlende Modelle, stoppt das laufende Sprachmodell (eigenes oder qwen38) für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
@@ -794,7 +796,7 @@ cmd_modelle() {
     zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
     entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;
     wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_wunsch_intern ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [qwen36] [qwen36frei] [flash] [helfer] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
   esac
 }
 

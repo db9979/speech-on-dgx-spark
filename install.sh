@@ -523,7 +523,7 @@ ports=""
 [ "$TEILEN" = 1 ] && ports="$ports 31007"   # the Wärter (common.WAERTER_PORT); the door shares the services' ports
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
 [ "$WITH_MUSIK" = 1 ] && ports="$ports $(cfg_int .music.port 31004) $(cfg_int .music.engine_port 31014)"
-[ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017)"
+[ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017) $(cfg_int .llm.helfer_port 31018)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -1003,7 +1003,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen; do
+  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen helfer; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -1182,10 +1182,12 @@ engine_unit tts-engine main
 engine_unit tts-design design
 engine_unit asr-engine asr
 # the own language model and, on demand, the image understanding model (engine.sh reads the catalog, modelle.py);
-# speech-spark-sehen is never enabled: the LLM-Tor starts it for a picture question and stops it when idle
+# speech-spark-sehen is never enabled: the LLM-Tor starts it for a picture question and stops it when idle; the same
+# for speech-spark-helfer, the small helper model (a fixed-answer question or a short text asks for it)
 engine_unit llm llm
 engine_unit sehen sehen
-sed -i 's/^Restart=on-failure$/Restart=no/' /etc/systemd/system/speech-spark-sehen.service
+engine_unit helfer helfer
+sed -i 's/^Restart=on-failure$/Restart=no/' /etc/systemd/system/speech-spark-sehen.service /etc/systemd/system/speech-spark-helfer.service
 
 # The LLM-Tor (llm_tor.py) on llm.port: API key, field guard, System One, canary; the engines stay on 127.0.0.1.
 cat >/etc/systemd/system/speech-spark-llmtor.service <<EOF
@@ -1740,7 +1742,7 @@ if [ "$LLM_ON" = 1 ]; then
     || echo unbekannt)"
 else
   systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
-  systemctl stop speech-spark-sehen.service 2>/dev/null || true
+  systemctl stop speech-spark-sehen.service speech-spark-helfer.service 2>/dev/null || true
 fi
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then

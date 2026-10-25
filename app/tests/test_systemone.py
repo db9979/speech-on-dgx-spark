@@ -576,6 +576,56 @@ class Beschwerde(Base):
             again = chat("geht immer noch nicht, mach es nochmal")
             self.assertIn("reminder_set", offered(again))
 
+class Hilfsmodell(Base):
+    """The helper model (V01.1.051): asked first only with chat.helfer and the use's own switch; any failure asks
+    the language model with the same questions at once, and the panel's thresholds stay the same."""
+    CFG = {"llm_url": "http://127.0.0.1:1/v1"}
+
+    def test_off_by_default_only_the_language_model(self):
+        REPLY[0] = lambda b: answer(wichtig=0.9)
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(systemone.ask(self.CFG, "wichtig", "x", systemone.wichtig_question()))
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "wichtig", "x", systemone.wichtig_question()))
+            asyncio.run(systemone.ask(dict(self.CFG, helfer_mail=True), "wichtig", "x", systemone.wichtig_question()))
+        self.assertEqual([b["model"] for b in SEEN], [systemone.MODEL] * 3)
+
+    def test_helper_first_and_the_same_questions(self):
+        REPLY[0] = lambda b: answer(wichtig=0.9)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            a = systemone.ask_sync(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x", systemone.wichtig_question())
+        self.assertEqual([b["model"] for b in SEEN], [systemone.HELFER])
+        self.assertAlmostEqual(a["wichtig"]["yes"], 0.9)
+        self.assertIn("hilfsmodell", out.getvalue())
+        # a use whose switch is off still goes to the language model
+        SEEN.clear()
+        REPLY[0] = lambda b: answer(absicht={"wetter": 0.9, "unklar": 0.1})
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "weiche", "x",
+                                      systemone.route_question(["wetter"], {"wetter": "Wetter"})))
+        self.assertEqual([b["model"] for b in SEEN], [systemone.MODEL])
+
+    def test_loading_or_unsure_helper_falls_back_at_once(self):
+        def loading(b):
+            if b["model"] == systemone.HELFER:
+                return httpx.Response(503, json={"detail": "loading"})
+            return answer(wichtig=0.9)
+        REPLY[0] = loading
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            a = asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x",
+                                          systemone.wichtig_question()))
+        self.assertEqual([b["model"] for b in SEEN], [systemone.HELFER, systemone.MODEL])
+        self.assertEqual([b["questions"] for b in SEEN][0], SEEN[1]["questions"])
+        self.assertAlmostEqual(a["wichtig"]["yes"], 0.9)
+        self.assertIn("hilfsmodell nicht genutzt (ausgelastet), weiter mit dem sprachmodell", out.getvalue())
+        self.assertGreaterEqual(live.snapshot()["sys1"]["helfer_zurueck"], 1)
+        # both down: Unavailable as before, everything goes on without
+        REPLY[0] = lambda b: httpx.Response(503, json={"detail": "x"})
+        with self.assertRaises(systemone.Unavailable), contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x",
+                                      systemone.wichtig_question()))
+
 
 if __name__ == "__main__":
     unittest.main()

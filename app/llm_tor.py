@@ -17,6 +17,10 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
 - "sehen" as model name, or a picture in a message while the language model cannot see (Kolibri), goes to the image
   understanding engine (llm.sehen_modell on llm.sehen_port, no tools), a fixed rule (zum_sehen); it is started on
   demand through systemd (memory checked first) and stopped after llm.sehen_leerlauf_min minutes without a question;
+- "helfer" as model name (a chat or a System One question) goes to the small helper model (llm.helfer_modell on
+  llm.helfer_port, no tools, Dominik 2026-10-25): while it is not running it is started in the background and the
+  question gets 503 "loading" at once, so the panel asks the language model instead and never waits; it stops after
+  llm.helfer_leerlauf_min minutes without a question;
 - counts: requests, tokens read and written (numbers only, in memory, on /health for the panel).
 Journal lines start with "llmtor:" and hold only fixed words and numbers, never a prompt or an answer.
 """
@@ -38,13 +42,15 @@ from textnorm import defuse_marks
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory, inside,
                     load_config, outside_view, quiet_access_log, stage_of)
 
-UNIT_ENGINE, UNIT_SEHEN = "speech-spark-llm", "speech-spark-sehen"
+UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
 TOP_MAX = modelle.LOGPROBS_MAX  # top_logprobs the engine is started with (--max-logprobs)
 MAX_MESSAGES = 400
 MAX_TOOLS = 128
 MAX_STOP = 8
 KANARIE_S = 60                 # quiet seconds before the canary asks again
 SEHEN_START_S = 300            # the image engine has this long to load on demand
+HELFER_START_S = 600           # the helper engine's start in the background is given up after this long
+HELFER = "helfer"              # the model name that asks for the helper model
 # the request fields that pass; everything else (prompt_token_ids, input_ids, stop_token_ids, logit_bias, guided_*,
 # best_of …) is dropped before the engine sees it
 FELDER = ("messages", "stream", "stream_options", "max_tokens", "max_completion_tokens", "temperature", "top_p", "top_k",
@@ -78,6 +84,11 @@ def zum_sehen(body, m, c):
     if not c.get("sehen_modell") or not isinstance(body, dict):
         return False
     return body.get("model") == "sehen" or (not m["kann_sehen"] and hat_bild(body))
+
+
+def zum_helfer(body, c):
+    """The fixed rule for the helper model: only when the client names it and the configuration has one."""
+    return bool(c.get("helfer_modell")) and isinstance(body, dict) and body.get("model") == HELFER
 
 
 def entschaerft(msg):
@@ -202,9 +213,11 @@ app.add_middleware(BodyLimit, default=lambda: int(cfg().get("max_body_mb", 32)) 
 auth = [Depends(api_key_dependency())]
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
-stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0}
+stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0,
+         "helfer": 0, "helfer_laedt": 0}
 canary = {"status": "loading", "ms": None, "t": 0.0}
 sehen = {"used": 0.0, "lock": None}
+helfer = {"used": 0.0, "start": None}
 gate = None
 
 
@@ -325,6 +338,47 @@ async def _sehen_bereit(c):
         raise HTTPException(503, "loading")
 
 
+async def _helfer_start(m, port):
+    """The helper engine's start in the background: systemd, then its /health, at most HELFER_START_S."""
+    if _systemctl("start", UNIT_HELFER) != 0:
+        print("llmtor: helfer start fehler", flush=True)
+        return
+    print("llmtor: helfer start", flush=True)
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < HELFER_START_S:
+        await asyncio.sleep(3)
+        try:
+            if (await client.get(_url(port, "/health"), timeout=2)).status_code == 200:
+                print(f"llmtor: helfer bereit nach {int(time.monotonic() - t0)} s", flush=True)
+                helfer["used"] = time.monotonic()
+                return
+        except httpx.HTTPError:
+            pass
+    print("llmtor: helfer zeit abgelaufen", flush=True)
+
+
+async def _helfer_bereit(c):
+    """(entry, port) of the helper engine when it answers; else its start begins in the background (memory checked
+    first) and the question gets 503 at once: the panel then asks the language model, nobody waits for a start."""
+    m, port = modelle.rolle("helfer", {"llm": c})
+    try:
+        if (await client.get(_url(port, "/health"), timeout=2)).status_code == 200:
+            helfer["used"] = time.monotonic()
+            return m, port
+    except httpx.HTTPError:
+        pass
+    stats["helfer_laedt"] += 1
+    if helfer["start"] is None or helfer["start"].done():
+        try:
+            check_memory(m["need_gib"])
+        except MemoryError:
+            print("llmtor: helfer abgelehnt speicher", flush=True)
+            raise HTTPException(503, "memory")
+        helfer["start"] = asyncio.create_task(_helfer_start(m, port))
+    print("llmtor: helfer laedt, weiter mit dem sprachmodell", flush=True)
+    raise HTTPException(503, "loading")
+
+
 @app.post("/v1/chat/completions", dependencies=auth)
 async def chat(request: Request):
     try:
@@ -338,6 +392,10 @@ async def chat(request: Request):
             m, port = await _sehen_bereit(c)
             sehen["used"] = time.monotonic()
             stats["sehen"] += 1
+            served = m["id"]
+        elif zum_helfer(body, c):
+            m, port = await _helfer_bereit(c)
+            stats["helfer"] += 1
             served = m["id"]
         out = pruefe(body, m, served)
     except Abgelehnt as e:
@@ -361,6 +419,11 @@ async def systemone(request: Request):
         print("llmtor: systemone abgelehnt", flush=True)
         raise HTTPException(400, "questions")
     m, served, port = aktiv()
+    wer = HELFER if zum_helfer(body, cfg()) else "sprachmodell"
+    if wer == HELFER:
+        m, port = await _helfer_bereit(cfg())
+        served = m["id"]
+        stats["helfer"] += 1
     state = einordnung.clean_state(body.get("state"))
     fence = secrets.token_hex(8)
     answers, masses = {}, []
@@ -381,9 +444,9 @@ async def systemone(request: Request):
         masses.append(mass)
         answers[name] = antwort(q, probs)
     stats["systemone"] += 1
-    print(f"llmtor: systemone {len(questions)} fragen", flush=True)
+    print(f"llmtor: systemone {len(questions)} fragen {wer}", flush=True)
     return JSONResponse({"answers": answers}, headers={"x-systemone-label-mass": f"{min(masses):.4f}",
-                                                       "x-systemone-branches": str(len(questions))})
+                                                       "x-systemone-branches": str(len(questions)), "x-systemone-modell": wer})
 
 
 @app.get("/v1/models", dependencies=auth)
@@ -392,6 +455,8 @@ async def models():
     data = [{"id": served, "object": "model", "owned_by": "speech-spark"}]
     if cfg().get("sehen_modell"):
         data.append({"id": "sehen", "object": "model", "owned_by": "speech-spark"})
+    if cfg().get("helfer_modell"):
+        data.append({"id": HELFER, "object": "model", "owned_by": "speech-spark"})
     return {"object": "list", "data": data}
 
 
@@ -437,7 +502,8 @@ async def kanarie_loop():
 
 
 async def sehen_leerlauf_loop():
-    """Stops the image understanding engine after llm.sehen_leerlauf_min minutes without a question."""
+    """Stops the image understanding engine after llm.sehen_leerlauf_min minutes without a question, the helper model
+    after llm.helfer_leerlauf_min."""
     while True:
         await asyncio.sleep(30)
         idle = int(cfg().get("sehen_leerlauf_min", 10)) * 60
@@ -445,6 +511,11 @@ async def sehen_leerlauf_loop():
             sehen["used"] = 0.0
             rc = _systemctl("stop", UNIT_SEHEN)
             print("llmtor: sehen gestoppt leerlauf" if rc == 0 else "llmtor: sehen stop fehler", flush=True)
+        idle = int(cfg().get("helfer_leerlauf_min", 60)) * 60
+        if helfer["used"] and time.monotonic() - helfer["used"] > idle:
+            helfer["used"] = 0.0
+            rc = _systemctl("stop", UNIT_HELFER)
+            print("llmtor: helfer gestoppt leerlauf" if rc == 0 else "llmtor: helfer stop fehler", flush=True)
 
 
 @app.on_event("startup")

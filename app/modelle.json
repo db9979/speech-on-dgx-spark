@@ -269,6 +269,27 @@
       "hinweis": "Speicher aus dem Anteil der laufenden qwen38-Dienste"
     },
     {
+      "id": "qwen3-4b-instruct-2507-fp8",
+      "art": "helfer",
+      "name": {"de": "Qwen3 4B Instruct 2507 FP8 (Hilfsmodell)", "en": "Qwen3 4B Instruct 2507 FP8 (helper model)"},
+      "engine": "vllm",
+      "repo": "Qwen/Qwen3-4B-Instruct-2507-FP8",
+      "revision": "8591804019c8b22094c3b5b4454e0edc05dffc98",
+      "lizenz": "Apache-2.0",
+      "gewerblich": true,
+      "platte_gb": 5,
+      "need_gib": 13,
+      "gemessen": false,
+      "anteil": 0.1,
+      "kontext": 16384,
+      "kann_sehen": false,
+      "werkzeuge": false,
+      "vllm": {"max_seqs": 4},
+      "anfrage": {"top_k": 20},
+      "messen": "immer",
+      "betrieb": "bei_bedarf"
+    },
+    {
       "id": "qwen3-vl-8b-fp8",
       "art": "sehen",
       "name": {

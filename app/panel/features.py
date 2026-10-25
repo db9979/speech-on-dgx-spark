@@ -170,6 +170,15 @@ FEATURES = (
     F("einordnungcheck", "Antworten im Hintergrund prüfen", "Check answers in the background", "speed",
       ("systemone_check", "berater"), parent="einordnung", me="setbox", guide="einordnungcheck"),
     F("einordnungklage", "Beschwerde erkennen", "Recognize complaints", "speed", ("systemone_klage", "loop_stop"), parent="einordnung", me="setbox", guide="einordnungklage"),
+    # the small helper model on the model computer (systemone.HELFER_USES, Dominik 2026-10-25), the language model
+    # stands in whenever it is not ready
+    F("helfer", "Hilfsmodell", "Helper model", "speed", ("helfer",), guide="helfer"),
+    F("helferweiche", "Hilfsmodell für die Weiche", "Helper model for routing", "speed", ("helfer_weiche", "systemone"),
+      parent="helfer", guide="helferweiche"),
+    F("helferdungeon", "Hilfsmodell für den Dungeon-Master", "Helper model for the Dungeon Master", "speed",
+      ("helfer_dungeon", "systemone"), parent="helfer", guide="helferdungeon"),
+    F("helfermail", "Hilfsmodell für Mails", "Helper model for mail", "speed", ("helfer_mail", "systemone"), parent="helfer",
+      guide="helfermail"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
@@ -714,7 +723,8 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen"}
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen",
+              "helfer", "helferweiche", "helferdungeon", "helfermail"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.

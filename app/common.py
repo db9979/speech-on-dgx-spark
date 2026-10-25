@@ -643,7 +643,8 @@ def audio_rate_ok(data):
 SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design"})
-OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
+OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen",
+                 "helfer": "speech-spark-helfer"}
 # the optional services that load their engine only on demand (install.sh --bild, --musik), and the Werkstatt's order
 # unit (install.sh --werkstatt, only werkstatt.py's checked wish starts it): watched and shown on the model computer's
 # card (Monitoring, Steuerzentrale), never started or stopped by the panel's `einheit`

@@ -11,6 +11,7 @@ import json
 import math
 import os
 import unittest
+from unittest import mock
 from contextlib import redirect_stdout
 
 import httpx
@@ -214,6 +215,57 @@ class Dienst(Base):
         for _, body in self.engine.got:
             self.assertEqual((body["max_tokens"], body["top_logprobs"]), (1, modelle.LOGPROBS_MAX))
         self.assertEqual(self.app.post("/v1/systemone", headers=KEY, json={"state": "x", "questions": {}}).status_code, 400)
+
+    def helfer_an(self):
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["llm"].update(helfer_modell="qwen3-4b-instruct-2507-fp8", helfer_port=31018)
+        helpers.write_config(c)
+
+    def test_the_helper_model_answers_when_named_and_never_with_tools(self):
+        """Dominik 2026-10-25: the small helper model only when the panel names it; no tools, its own port."""
+        self.helfer_an()
+        r = self.app.post("/v1/chat/completions", headers=KEY, json={"model": "helfer", "messages": [
+            {"role": "user", "content": "Titel?"}], "tools": [{"type": "function", "function": {"name": "wetter"}}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        port, body = self.engine.got[-1]
+        self.assertEqual((port, body["model"]), (31018, "qwen3-4b-instruct-2507-fp8"))
+        self.assertNotIn("tools", body)
+        r = self.app.post("/v1/systemone", headers=KEY, json={"model": "helfer", "state": "x", "questions": {
+            "wichtig": {"type": "noul", "instructions": "Wichtig?"}}})
+        self.assertEqual((r.status_code, r.headers["x-systemone-modell"]), (200, "helfer"))
+        self.assertEqual(self.engine.got[-1][0], 31018)
+        r = self.app.post("/v1/systemone", headers=KEY, json={"state": "x", "questions": {
+            "wichtig": {"type": "noul", "instructions": "Wichtig?"}}})
+        self.assertEqual((r.headers["x-systemone-modell"], self.engine.got[-1][0]), ("sprachmodell", 31016))
+
+    def test_a_helper_that_is_not_running_starts_in_the_background_and_nobody_waits(self):
+        self.helfer_an()
+        engine = self.engine
+
+        def aus(request):
+            if request.url.port == 31018:
+                return httpx.Response(503, text="")
+            return engine(request)
+        llm_tor.client = httpx.AsyncClient(transport=httpx.MockTransport(aus))
+        started = []
+        out = io.StringIO()
+        with mock.patch.object(llm_tor, "_systemctl", side_effect=lambda *a: started.append(a) or 0), \
+                mock.patch.object(llm_tor, "check_memory"), mock.patch.object(llm_tor, "HELFER_START_S", 0), \
+                redirect_stdout(out):
+            llm_tor.helfer["start"] = None
+            r = self.app.post("/v1/systemone", headers=KEY, json={"model": "helfer", "state": "x", "questions": {
+                "wichtig": {"type": "noul", "instructions": "Wichtig?"}}})
+        self.assertEqual(r.status_code, 503)                 # the panel asks the language model instead
+        self.assertEqual(engine.got, [])
+        self.assertIn("llmtor: helfer laedt", out.getvalue())
+        self.assertTrue(all(line.startswith("llmtor: ") for line in out.getvalue().splitlines()))
+        # without a helper in the configuration "helfer" is only a name: the language model answers
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["llm"]["helfer_modell"] = ""
+        helpers.write_config(c)
+        self.assertFalse(llm_tor.zum_helfer({"model": "helfer"}, c["llm"]))
 
     def test_an_unknown_model_in_the_config_asks_no_engine(self):
         self.modell("gibt-es-nicht")

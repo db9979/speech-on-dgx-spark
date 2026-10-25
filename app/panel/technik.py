@@ -420,10 +420,10 @@ KNOTEN = {
                 "Anfrage-Verlauf, Live-Übersicht, Wächter, Sicherung. Nur feste Wörter und Zahlen.",
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
     "llm": (896, 344, "Sprachmodell", "Language model", ":31006 → :31016", "",
-            "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), eingeschaltet mit "
+            "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 und Hilfsmodell :31018 bei Bedarf), eingeschaltet mit "
             "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001). Ein Modell "
             "in Docker (Qwen3.8 Flash Next) läuft vorerst nur zum Messen: festes Image, ohne Netz, Socket über das Docker-Tor.",
-            "The own model (vLLM) behind the LLM-Tor (:31006 → :31016, image understanding :31017 on demand), switched on with "
+            "The own model (vLLM) behind the LLM-Tor (:31006 → :31016, image understanding :31017 and helper model :31018 on demand), switched on with "
             "speech-spark modelle llm uebernehmen; until then or after … zurueck Qwen3.8 from dgx-spark-qwen38 (:30001). A model in "
             "Docker (Qwen3.8 Flash Next) runs only to be measured for now: pinned image, no network, socket through the Docker-Tor.",
             ["llm_tor.py", "einordnung.py", "modelle.py", "dockertor.py"]),

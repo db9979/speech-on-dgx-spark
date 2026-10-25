@@ -1016,6 +1016,14 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Recognize complaints** (Features → Speed and accuracy → "Recognize complaints"; builds on "Classification with probabilities"; Me → Conversation): When somebody says "still does not work" or "it is still on" right after a deed, the panel recognizes it from a fixed word list, otherwise with the classification from 80 %.
 
+- **Helper model** (Features → Speed and accuracy → "Helper model"): A small, fast language model (Qwen3 4B) on the model computer takes simple work off the big language model: fixed questions with a fixed answer list (classification) for routing, the Dungeon Master and mail.
+
+- **Helper model for routing** (Features → Speed and accuracy → "Helper model for routing"; builds on "Helper model"): Questions no fixed rule of the switch recognizes are sorted into a tool group by the helper model first, also when measuring the threshold.
+
+- **Helper model for the Dungeon Master** (Features → Speed and accuracy → "Helper model for the Dungeon Master"; builds on "Helper model"): The dungeon judge (after every turn: must the narration be rewritten?) and the classification in the narrator test bench ask the helper model first.
+
+- **Helper model for mail** (Features → Speed and accuracy → "Helper model for mail"; builds on "Helper model"): Sorting mail when tidying the inbox and recognizing important mail ask the helper model first.
+
 ### My data
 
 - **Memory** (Features → My data → "Memory"; Me → Memory): The assistant remembers things about you, such as names, preferences or where something is, and uses them later.

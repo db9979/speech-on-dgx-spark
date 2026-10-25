@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.081** Hilfsmodell für einfache Einordnungen, Funktionen → Hilfsmodell
 - **V01.1.080** KI-Dungeon-Master: echte Würfel am Tisch (Zahl tippen oder sagen, nach 30 s würfelt der Spark, nie im Auto), Fanfare bei Ehrungen, Krit-Karte dreht sich um, Musik „Lagerfeuer“
 - **V01.1.079** KI-Dungeon-Master: Wappen für Gruppe und Fraktionen: das Panel zeichnet jedes Wappen selbst als geprüfte SVG aus Schild, Teilung, Tinkturen und 16 eigenen Zeichen, der Gastgeber wählt Farbe und Zeichen, jede Fraktion trägt ein eigenes
 - **V01.1.078** KI-Dungeon-Master: der Tisch am Handy mit Kopf in einer Zeile und „⋯“, einem Kampfkasten, dem Feld zum Handeln in jedem Teil, der Gruppe als Liste, schnellen Aktionen beim Helden und einer kurzen Hilfe; eine misslungene Untersuchung verrät nichts, Gehen braucht keine Probe, eine wiederholte Szene kürzt das Panel
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.074** KI-Dungeon-Master: Spielleiter-Pult als großes Fenster mit drei Spalten, die rechte Spalte zeigt nur noch Held, Jetzt weiter und Karte und lässt sich breiter ziehen
 - **V01.1.073** KI-Dungeon-Master: schneller auf dem Pi: eine Datei je Runde mit Zwischenspeicher, das Nachfragen bekommt „nichts neu“, solange sich nichts geändert hat, die Spiel-Skripte laden erst beim ersten Öffnen
 - **V01.1.072** KI-Dungeon-Master: die Tabellen unter Regeln zeigen jetzt alle Zeilen mit Nummer, Würfel und Welten, jede Tabelle hat in der Liste ein Zeichen
-- **V01.1.071** KI-Dungeon-Master: Fehler behoben: ein Angriff auf mehrere Gegner einer Art („die Ratten“) oder ein Angriff ohne genanntes Ziel würfelte nur eine Probe und machte keinen Schaden; jetzt trifft er den ersten, der noch steht, und Magie eines Zauberkundigen ohne eigenen Zauber ist ein Zaubertrick
 
 
 

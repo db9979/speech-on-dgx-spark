@@ -22,7 +22,7 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
-[--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh) · signatur llm|sehen
+[--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen|helfer · start-args llm|sehen|helfer (engine.sh) · signatur llm|sehen|helfer
 (install.sh) · docker-bild <id> · docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) ·
 fest <repo> · erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
 
@@ -31,8 +31,9 @@ An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container only w
 dockertor.py; switching to it is the next stage.
 
 Stage E2 starts the own language model: speech-spark-llm (engine.sh llm) and, on demand, speech-spark-sehen
-(engine.sh sehen) run `vllm serve` with start_args(): config llm.modell / llm.sehen_modell, a pinned commit only
-(the catalog's or the one `modelle messen` checked), on 127.0.0.1 behind the LLM-Tor (llm_tor.py, llm.port).
+(engine.sh sehen) and speech-spark-helfer (engine.sh helfer, the small helper model) run `vllm serve` with
+start_args(): config llm.modell / llm.sehen_modell / llm.helfer_modell, a pinned commit only (the catalog's or the
+one `modelle messen` checked), on 127.0.0.1 behind the LLM-Tor (llm_tor.py, llm.port).
 """
 import base64
 import hashlib
@@ -56,7 +57,7 @@ QWEN38_KEINE = ("qwen38-dashboard",)                     # qwen38 units that are
 ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
          "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
          "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
-         "klein": ("Kleine Modelle (CPU)", "Small models (CPU)")}
+         "klein": ("Kleine Modelle (CPU)", "Small models (CPU)"), "helfer": ("Hilfsmodell", "Helper model")}
 # vllm: an engine this installation starts itself (the strict rules below); the others are run as before by their
 # own services and are listed for the budget: extern (qwen38), the speech models, sd.cpp, acestep.cpp, ONNX on the CPU
 ENGINES = ("vllm", "extern", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
@@ -71,7 +72,10 @@ KV = ("fp8",)
 # speculative decoding with a helper model (vllm "entwurf"): the method and its fixed extra settings for vLLM
 ENTWURF = {"dspark": {"draft_sample_method": "probabilistic"}}
 LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--max-logprobs; System One in llm_tor.py)
-ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017)}   # config llm.*
+ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017),   # config llm.*
+          # the small helper model beside the language model (Dominik 2026-10-25 „1+2 und 3a b c d e“): fixed-answer
+          # questions (System One) and short texts, started on demand by the LLM-Tor, never with tools
+          "helfer": ("helfer_modell", "helfer_port", 31018)}
 ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
 # the only file kinds a model download takes: weights as safetensors, the rest is text; never *.bin/*.pt/*.pkl
 ERLAUBT = ("*.safetensors", "*.json", "*.txt", "*.jinja", "*.model", "*.tiktoken", "*.md", "LICENSE*")
@@ -181,7 +185,7 @@ def pruefe_eintrag(m):
 def _pruefe_vllm(m):
     """An engine started by this installation: only llm or sehen, a memory share within ANTEIL_MAX, only the known
     flags and request fields."""
-    if m["art"] not in ("llm", "sehen") or m.get("messen") not in MESSEN:
+    if m["art"] not in ROLLEN or m.get("messen") not in MESSEN:
         raise Fehler("art")
     a = m.get("anteil")
     if isinstance(a, bool) or not isinstance(a, (int, float)) or not 0.02 <= a <= ANTEIL_MAX:
@@ -196,6 +200,8 @@ def _pruefe_vllm(m):
         raise Fehler("schalter")
     if m["art"] == "sehen" and not m["kann_sehen"]:
         raise Fehler("sehen")
+    if m["art"] == "helfer" and (m["kann_sehen"] or m["werkzeuge"]):     # the helper only sorts and writes short texts
+        raise Fehler("helfer")
     v, q = m.get("vllm"), m.get("anfrage")
     if not isinstance(v, dict) or set(v) - set(VLLM_KEYS) or not isinstance(q, dict) or set(q) - set(ANFRAGE_KEYS):
         raise Fehler("felder")
@@ -340,6 +346,7 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
         add(m, m["anteil"] * total_gib + 1.5 if m and m["engine"] == "vllm" else None)
         if m and not m.get("kann_sehen"):
             add(kat.get(own.get("sehen_modell")), None, "bei_bedarf")
+        add(kat.get(own.get("helfer_modell")), None, "bei_bedarf")
     a = cfg.get("asr", {})
     if a.get("enabled"):
         if a.get("recognizer") == "parakeet":
@@ -428,7 +435,8 @@ def wahl_zeilen(art, kat=None):
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
     vl30, dspark (one entry each that is measured only on request), qwen36 (Qwen3.6 35B A3B NVFP4 with and without MTP),
-    qwen36frei (the same without refusals), flash (Qwen3.8 Flash Next in Docker); no word means llm and sehen."""
+    qwen36frei (the same without refusals), flash (Qwen3.8 Flash Next in Docker), helfer (the small helper model);
+    no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
@@ -439,7 +447,7 @@ def messliste(was, kat=None):
               "qwen36frei": ("qwen36-35b-a3b-frei-nvfp4", "qwen36-35b-a3b-frei-nvfp4-ohne-mtp"),
               "flash": ("qwen38-flash-next-fp4",)}     # Docker; share 0.65 never started (tars 2026-10-21)
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
-    if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
+    if any(w not in ("llm", "sehen", "helfer") and w not in wunsch for w in was):
         raise Fehler("was")
     ids = [i for x in was for i in wunsch.get(x, ())]
     return [i for i, m in kat.items() if m["engine"] == "vllm" and (i in ids or (m["art"] in was and m["messen"] == "immer"))]

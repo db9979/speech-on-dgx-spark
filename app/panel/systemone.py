@@ -26,6 +26,12 @@ Uses, each with its own admin switch below chat.systemone (all off) and the prof
              model's own view of each fixed scene, shown beside the fixed rules' points, never points itself
   messen     Funktionen → … → „Einordnung messen“: the Weiche's test sentences (intent_bench.BENCH) through the switch
              question, hit rate per threshold and a suggested threshold (chat.systemone_min), on a button only
+  richter    Dungeon-Richter (the Dungeon-Master's own switch): after a turn, whether the narration must be written anew
+
+Hilfsmodell (Dominik 2026-10-25 „1+2 und 3a b c d e“, chat.helfer, off): the small helper model on the model computer
+(llm.helfer_modell behind the LLM-Tor, model name "helfer") answers the uses in HELFER_USES first, each with its own
+switch; when it is still loading, busy, unsure or unreachable, the same question goes to the language model at once
+(„weiter mit dem Sprachmodell“). Same questions, same thresholds, the panel decides either way.
 
 Since qwen38 v1.15 its answer also carries x-systemone-label-mass (how much of the probability fell on any option
 at all) and x-systemone-branches (two per question when SYSTEMONE_PERMUTATIONS=2 asks every question in two option
@@ -52,7 +58,11 @@ MODEL = "jev-latest"
 MAX_BYTES = 64 * 1024         # of the answer
 USES = {"weiche": "Werkzeugwahl", "mail": "Postfach aufräumen", "wichtig": "Wichtige Mail",
         "qualitaet": "Qualitätstest", "test": "Prüfen", "messen": "Messen", "berater": "Einstellungs-Assistent",
-        "pruefen": "Antwort prüfen", "klage": "Beschwerde", "erzaehler": "Erzähler-Prüfstand"}
+        "pruefen": "Antwort prüfen", "klage": "Beschwerde", "erzaehler": "Erzähler-Prüfstand", "richter": "Dungeon-Richter"}
+HELFER = "helfer"             # the LLM-Tor's model name for the helper model
+# the uses the helper model may answer first, each behind its own switch chat.helfer_* (below chat.helfer)
+HELFER_USES = {"weiche": "helfer_weiche", "messen": "helfer_weiche", "erzaehler": "helfer_dungeon",
+               "richter": "helfer_dungeon", "mail": "helfer_mail", "wichtig": "helfer_mail"}
 # the panel's thresholds (Dominik 2026-10-10: "wie empfohlen")
 ROUTE_MIN = 0.80              # the switch narrows only from here (chat.systemone_min, after a measurement)
 ROUTE_STEPS = (0.6, 0.7, 0.8, 0.9)   # the thresholds an admin may choose for the switch
@@ -101,10 +111,15 @@ def noul(instructions):
     return {"type": "noul", "instructions": instructions}
 
 
-def body(state, questions):
+def body(state, questions, model=MODEL):
     """The request: the questions are the panel's own (checked here with einordnung's rules), the state is data."""
     check_questions(questions)
-    return {"model": MODEL, "state": clean_state(state), "questions": questions}
+    return {"model": model, "state": clean_state(state), "questions": questions}
+
+
+def helfer_fuer(ccfg, use):
+    """True when the helper model answers this use first: chat.helfer and the use's own switch (HELFER_USES)."""
+    return bool(ccfg.get("helfer")) and bool(ccfg.get(HELFER_USES.get(use, ""), False))
 
 
 def _p(v):
@@ -175,11 +190,13 @@ def _read(r):
         raise Unavailable("unlesbar")
 
 
-def _note(use, ok, ms, why=""):
+def _note(use, ok, ms, why="", wer=""):
     with _lock:
         if ok:
             _count.bump(use)
             _count.bump("ms", ms)
+            if wer == HELFER:
+                _count.bump("helfer")
         else:
             _count.bump({"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail"))
         _last[use] = (time.time(), ok, ms)
@@ -187,7 +204,8 @@ def _note(use, ok, ms, why=""):
         import verbrauch
         verbrauch.add("systemone", USES.get(use, use), amount=1, ms=ms)
     if not (ok and use == "messen"):   # a measurement says its sum once at the end (no flood of lines)
-        print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" if ok else f"nicht genutzt ({why}), weiter ohne"), flush=True)
+        print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" + (" hilfsmodell" if wer == HELFER else "") if ok
+                                                     else f"nicht genutzt ({why}), weiter ohne"), flush=True)
     if not ok:
         try:
             import live
@@ -209,6 +227,13 @@ def _prep(ccfg, use, state, questions):
     return url, body(state, questions)
 
 
+def _helfer_zurueck(use, why):
+    """The helper model gave no usable answer: counted and said, the language model is asked at once."""
+    with _lock:
+        _count.bump("helfer_zurueck")
+    print(f"systemone: {USES.get(use, use)} hilfsmodell nicht genutzt ({why}), weiter mit dem sprachmodell", flush=True)
+
+
 def _sure(r, questions, info):
     """The fixed rule on qwen38's own measure: a label mass under MIN_MASS is unsure (Unavailable)."""
     mass, orders = _meta(r, questions)
@@ -220,26 +245,33 @@ def _sure(r, questions, info):
         raise Unavailable("unsicher")
 
 
+def _wer(ccfg, use):
+    """The models to ask in order: the helper model first where its switch says so, then the language model."""
+    return (HELFER, MODEL) if helfer_fuer(ccfg, use) else (MODEL,)
+
+
 async def ask(ccfg, use, state, questions, timeout=4.0, info=None):
     """The parsed answers, or Unavailable. For the conversation itself: never waits for speech. `info` (a dict)
     gets the label mass and the option orders."""
     url, payload = _prep(ccfg, use, state, questions)
     t0 = time.monotonic()
-    try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=2), follow_redirects=False,
-                                     trust_env=False, transport=_transport) as c:
-            r = await c.post(url, json=payload, headers=_headers(ccfg))
-        out = parse(_read(r), questions)
-        _sure(r, questions, info)
-    except Unavailable as e:
-        _note(use, False, 0, e.why)
-        raise
-    except (httpx.HTTPError, OSError) as e:
-        why = "zu langsam" if isinstance(e, httpx.TimeoutException) else "nicht erreichbar"
-        _note(use, False, 0, why)
-        raise Unavailable(why)
-    _note(use, True, int((time.monotonic() - t0) * 1000))
-    return out
+    wer = _wer(ccfg, use)
+    for i, model in enumerate(wer):
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=2), follow_redirects=False,
+                                         trust_env=False, transport=_transport) as c:
+                r = await c.post(url, json=dict(payload, model=model), headers=_headers(ccfg))
+            out = parse(_read(r), questions)
+            _sure(r, questions, info)
+        except (Unavailable, httpx.HTTPError, OSError) as e:
+            why = e.why if isinstance(e, Unavailable) else "zu langsam" if isinstance(e, httpx.TimeoutException) else "nicht erreichbar"
+            if i + 1 < len(wer):
+                _helfer_zurueck(use, why)
+                continue
+            _note(use, False, 0, why)
+            raise Unavailable(why)
+        _note(use, True, int((time.monotonic() - t0) * 1000), wer=model)
+        return out
 
 
 def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
@@ -249,21 +281,23 @@ def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
         import vorrang
         vorrang.hold(job)
     t0 = time.monotonic()
-    try:
-        with httpx.Client(timeout=httpx.Timeout(timeout, connect=5), follow_redirects=False, trust_env=False,
-                          transport=_transport) as c:
-            r = c.post(url, json=payload, headers=_headers(ccfg))
-        out = parse(_read(r), questions)
-        _sure(r, questions, info)
-    except Unavailable as e:
-        _note(use, False, 0, e.why)
-        raise
-    except (httpx.HTTPError, OSError) as e:
-        why = "zu langsam" if isinstance(e, httpx.TimeoutException) else "nicht erreichbar"
-        _note(use, False, 0, why)
-        raise Unavailable(why)
-    _note(use, True, int((time.monotonic() - t0) * 1000))
-    return out
+    wer = _wer(ccfg, use)
+    for i, model in enumerate(wer):
+        try:
+            with httpx.Client(timeout=httpx.Timeout(timeout, connect=5), follow_redirects=False, trust_env=False,
+                              transport=_transport) as c:
+                r = c.post(url, json=dict(payload, model=model), headers=_headers(ccfg))
+            out = parse(_read(r), questions)
+            _sure(r, questions, info)
+        except (Unavailable, httpx.HTTPError, OSError) as e:
+            why = e.why if isinstance(e, Unavailable) else "zu langsam" if isinstance(e, httpx.TimeoutException) else "nicht erreichbar"
+            if i + 1 < len(wer):
+                _helfer_zurueck(use, why)
+                continue
+            _note(use, False, 0, why)
+            raise Unavailable(why)
+        _note(use, True, int((time.monotonic() - t0) * 1000), wer=model)
+        return out
 
 
 def for_live(now=None):
@@ -273,7 +307,8 @@ def for_live(now=None):
     uses = {k: c.get(k, 0) for k in USES if k not in ("test", "messen")}
     n = sum(uses.values())
     return {"n": n, "uses": uses, "busy": c.get("busy", 0), "fail": c.get("fail", 0), "unsure": c.get("unsure", 0),
-            "ms": round(c.get("ms", 0) / n) if n else 0, "orders": _orders[0]}
+            "ms": round(c.get("ms", 0) / n) if n else 0, "orders": _orders[0], "helfer": c.get("helfer", 0),
+            "helfer_zurueck": c.get("helfer_zurueck", 0)}
 
 
 # ---------------------------------------------------------------- the fixed questions of each use

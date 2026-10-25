@@ -3530,6 +3530,13 @@
 "titel": "Dungeon-Master: echte Würfel, Fanfare, Umdrehen, Lagerfeuer",
 "text": "A: Funktionen → KI-Dungeon-Master → Echte Würfel am Tisch an; in der Runde einen Platz auf eigene Würfel stellen (sobald der Haupt-Thread den Rundenschalter hat). B: Eine Probe auslösen: groß „Wirf W20 für … gegen …“, Zahlenfeld 1–20; Zahl antippen, Übernehmen; im Verlauf steht diese Zahl, der Beleg sagt „echt“. C: 🎤 und „siebzehn“ sagen: die 17 steht drin. D: Nichts tun: nach 30 s würfelt der Spark selbst. E: Mitspieler sehen „… würfelt am Tisch …“. F: Aus dem Auto (CarPlay) gespielt: keine Frage. G: Ehrungen des Abends: eine kurze Fanfare. H: Krit oder Patzer mit Tabelle: die Würfelkarte dreht sich um und zeigt den Eintrag. I: Rast: Musik „Lagerfeuer“, Feuer knistert.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P529",
+"v": 1081,
+"titel": "Hilfsmodell",
+"text": "A: Update (tars zuerst). B: Auf tars sudo speech-spark modelle messen helfer (lädt etwa 4,4 GB); auf der Modell-Seite steht beim Eintrag „Qwen3 4B Instruct 2507 FP8“ tok/s und Speicher. C: Funktionen → Hilfsmodell an und „Für die Weiche“ an. D: Eine Frage stellen, die keine Regel erkennt: die erste Antwort kommt sofort (das Hilfsmodell lädt noch, Zustand → Live zeigt „Hilfsmodell nicht bereit“), nach einigen Minuten zeigt Zustand → Live „vom Hilfsmodell“. E: Nach einer Stunde Ruhe ist speech-spark-helfer wieder aus (sudo speech-spark status).",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

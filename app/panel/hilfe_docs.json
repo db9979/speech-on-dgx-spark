@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, "
+"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl."
 },
 {
 "lang": "de",
@@ -1869,7 +1869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wen"
+"text": " In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: J"
 },
 {
 "lang": "de",
@@ -1877,7 +1877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
+"text": "eder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
 },
 {
 "lang": "de",
@@ -10035,6 +10035,38 @@
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell (Funktionen → Tempo und Genauigkeit → „Hilfsmodell“): Ein kleines, schnelles Sprachmodell (Qwen3 4B) auf dem Modell-Rechner nimmt dem großen Sprachmodell einfache Arbeit ab: feste Fragen mit fester Antwortliste (Einordnung) für die Weiche, den Dungeon-Master und Mails."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell für die Weiche (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für die Weiche“; baut auf „Hilfsmodell“): Fragen, die keine feste Regel der Weiche erkennt, ordnet erst das Hilfsmodell einer Werkzeuggruppe zu, auch beim Messen der Schwelle."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell für den Dungeon-Master (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für den Dungeon-Master“; baut auf „Hilfsmodell“): Der Dungeon-Richter (nach jedem Zug: muss die Erzählung neu geschrieben werden?) und die Einordnung im Erzähler-Prüfstand fragen erst das Hilfsmodell."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Hilfsmodell für Mails (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für Mails“; baut auf „Hilfsmodell“): Mails einordnen beim Postfach aufräumen und wichtige Mails erkennen fragt erst das Hilfsmodell."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gedächtnis (Funktionen → Meine Daten → „Gedächtnis“; Ich → Gedächtnis): Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen."
@@ -15653,7 +15685,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow"
+"text": "tes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what "
 },
 {
 "lang": "en",
@@ -15661,7 +15693,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become p"
+"text": "the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profi"
 },
 {
 "lang": "en",
@@ -15669,7 +15701,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "laceholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
+"text": "le (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -23526,6 +23558,38 @@
 "head": "Speed and accuracy",
 "title": "Speed and accuracy",
 "text": "- Recognize complaints (Features → Speed and accuracy → \"Recognize complaints\"; builds on \"Classification with probabilities\"; Me → Conversation): When somebody says \"still does not work\" or \"it is still on\" right after a deed, the panel recognizes it from a fixed word list, otherwise with the classification from 80 %."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model (Features → Speed and accuracy → \"Helper model\"): A small, fast language model (Qwen3 4B) on the model computer takes simple work off the big language model: fixed questions with a fixed answer list (classification) for routing, the Dungeon Master and mail."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model for routing (Features → Speed and accuracy → \"Helper model for routing\"; builds on \"Helper model\"): Questions no fixed rule of the switch recognizes are sorted into a tool group by the helper model first, also when measuring the threshold."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model for the Dungeon Master (Features → Speed and accuracy → \"Helper model for the Dungeon Master\"; builds on \"Helper model\"): The dungeon judge (after every turn: must the narration be rewritten?) and the classification in the narrator test bench ask the helper model first."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Helper model for mail (Features → Speed and accuracy → \"Helper model for mail\"; builds on \"Helper model\"): Sorting mail when tidying the inbox and recognizing important mail ask the helper model first."
 },
 {
 "lang": "en",

@@ -50,7 +50,7 @@ SCHRITT = {"asr": "asr", "weiche": "weiche", "llm": "llm", "tool": "tool", "tts"
 DIENST = {"ok": "g", "load": "y", "down": "r", "off": "d", "pause": "b"}
 STUFE = {"bad": "r", "warn": "y", "info": "m"}
 RECHNER = {"modell": "Modell-Rechner", "panel": "Panel-Rechner"}
-TEIL = {"asr": "Hören (ASR)", "tts": "Sprechen (TTS)", "llm": "Sprachmodell", "sehen": "Bildverständnis", "bild": "Bilder", "musik": "Musik", "werkstatt": "Werkstatt",
+TEIL = {"asr": "Hören (ASR)", "tts": "Sprechen (TTS)", "llm": "Sprachmodell", "sehen": "Bildverständnis", "helfer": "Hilfsmodell", "bild": "Bilder", "musik": "Musik", "werkstatt": "Werkstatt",
         "waerter": "Wärter", "turn": "TURN", "gehaeuse": "Gehäuse", "notasr": "Notbetrieb-ASR"}
 ZUSTAND = {"active": "läuft", "bereit": "bereit", "inactive": "aus", "activating": "startet", "deactivating": "stoppt", "failed": "Fehler"}
 

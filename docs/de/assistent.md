@@ -1016,6 +1016,14 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Beschwerde erkennen** (Funktionen → Tempo und Genauigkeit → „Beschwerde erkennen“; baut auf „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Sagt jemand gleich nach einer Handlung „geht immer noch nicht“ oder „ist noch an“, erkennt das Panel das an einer festen Wortliste, sonst mit der Einordnung ab 80 %.
 
+- **Hilfsmodell** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell“): Ein kleines, schnelles Sprachmodell (Qwen3 4B) auf dem Modell-Rechner nimmt dem großen Sprachmodell einfache Arbeit ab: feste Fragen mit fester Antwortliste (Einordnung) für die Weiche, den Dungeon-Master und Mails.
+
+- **Hilfsmodell für die Weiche** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für die Weiche“; baut auf „Hilfsmodell“): Fragen, die keine feste Regel der Weiche erkennt, ordnet erst das Hilfsmodell einer Werkzeuggruppe zu, auch beim Messen der Schwelle.
+
+- **Hilfsmodell für den Dungeon-Master** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für den Dungeon-Master“; baut auf „Hilfsmodell“): Der Dungeon-Richter (nach jedem Zug: muss die Erzählung neu geschrieben werden?) und die Einordnung im Erzähler-Prüfstand fragen erst das Hilfsmodell.
+
+- **Hilfsmodell für Mails** (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für Mails“; baut auf „Hilfsmodell“): Mails einordnen beim Postfach aufräumen und wichtige Mails erkennen fragt erst das Hilfsmodell.
+
 ### Meine Daten
 
 - **Gedächtnis** (Funktionen → Meine Daten → „Gedächtnis“; Ich → Gedächtnis): Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen.

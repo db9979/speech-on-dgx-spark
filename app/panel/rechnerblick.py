@@ -43,14 +43,14 @@ PLATTE_MIN_PCT = 10    # % free disk on either computer
 RAM_MIN_GIB = 0.5      # GiB available memory on the panel computer (the model computer has its own 8 GiB rule)
 DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 # the model computer's parts shown as chips (its status "einheiten"), the panel computer's own units
-MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "bild", "musik", "werkstatt")
+MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "helfer", "bild", "musik", "werkstatt")
 PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
                "schirm": "speech-spark-schirm"}
 # the parts that run only for a job and then stop again: the image understanding (the LLM-Tor starts it for a picture
 # question), one Werkstatt order, the case's setup (Einrichten/Entfernen; the case itself runs in the panel). Resting
 # („inactive“) is their normal state, so the chip says BEREIT instead of looking like an outage (Dominik 2026-10-21:
 # Gehäuse, Bildverständnis and Werkstatt stood grey under „7 von 9 laufen“); a Gehäuse with the switch off is not shown
-ABRUF = ("sehen", "werkstatt", "gehaeuse")
+ABRUF = ("sehen", "helfer", "werkstatt", "gehaeuse")    # the helper model too: the LLM-Tor starts it for a question
 BEREIT = "bereit"
 ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": (0, 65536), "ram_frei": (0, 65536),
           "ram_cache": (0, 65536), "ram_pct": (0, 100), "swap": (0, 65536), "platte_total": (0, 1e6),
@@ -68,7 +68,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
                 "tts-design": ("Stimmen gestalten", "Voice design"), "llm": ("Sprachmodell", "Language model"),
                 "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
-                "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
+                "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
                 "werkstatt": ("Werkstatt", "Werkstatt"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
                 "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
                 "gehaeuse": ("Gehäuse", "Case"), "schirm": ("Steuerzentrale", "Control centre"), "tlstor": ("TLS-Tor", "TLS gate"),
