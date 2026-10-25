@@ -1392,6 +1392,11 @@ def snapshot(view="admin", now=None):
         dgn["ding"] = dungeon_dingbild.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["ding"] = {"on": False}
+    try:   # Gesichter für NSCs (dungeon_gesicht.py): numbers on the game's line
+        import dungeon_gesicht
+        dgn["gesicht"] = dungeon_gesicht.for_live() if dgn.get("on") else {"on": False}
+    except Exception:
+        dgn["gesicht"] = {"on": False}
     try:   # the admin's rules tab (dungeon_regelseite.py): own entries, hidden ones, pictures to choose
         import dungeon_regelseite
         dgn["regeln"] = dungeon_regelseite.counts() if dgn.get("on") else {}
@@ -1863,6 +1868,9 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['orakel']} Mal das Orakel gefragt" if dgn.get("orakel") else "")
                         + (f" · {dgn['orakel_chaos']} Runden mit eigenem Chaosgrad" if dgn.get("orakel_chaos") else "")
                         + (f" · {dgn['nsc_karten']} Figuren mit Karte" if dgn.get("nsc_karten") else "")
+                        + (f" · Gesichter {dgn['gesicht']['da']}, heute {dgn['gesicht']['gemalt']} gemalt, {dgn['gesicht']['weg']} nicht, "
+                           f"{dgn['gesicht']['vorlagen']} Szenen mit Vorlage" + (f" · malt {dgn['gesicht']['malt']} Gesichter" if dgn['gesicht']['malt'] else "")
+                           if dgn.get("gesicht", {}).get("on") else "")
                         + (f" · {dgn['chronik_zeilen']} Zeilen Chronik" if dgn.get("chronik_zeilen") else "")
                         + (f" · heute {dgn.get('nsc_haltung', 0)} Haltungen und {dgn.get('nsc_kanten', 0)} Beziehungen geändert"
                            if dgn.get("nsc_haltung") or dgn.get("nsc_kanten") else "")

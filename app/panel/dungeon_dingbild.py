@@ -54,6 +54,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_gesicht
 import dungeon_karte
 import features
 import guard
@@ -150,7 +151,7 @@ SIEDLUNG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_sie
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
 NEU_S = 86400             # a candidate nobody kept or dropped goes with the sweep after a day
-NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
+NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}|nsc-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte), nsc-: a person's face (dungeon_gesicht)
 _lauf = {"task": None, "grund": "", "start": 0.0, "gemalt": 0, "stop": False}
 _funde = set()            # iids of finds being painted right now
 _files = {"m": None, "set": frozenset()}
@@ -686,8 +687,12 @@ async def paint_find(n, p):
 
 # ---------------------------------------------------------------- the minute loop (panel.py every_minute)
 async def due():
-    """Each minute: the finds, the night's run once a night, the sweep at most hourly."""
+    """Each minute: the people's faces (dungeon_gesicht: „Bilder malen“ without this switch), the finds, the night's
+    run once a night, the sweep at most hourly."""
     now = clock()
+    for rid, k, n, p in await asyncio.to_thread(dungeon_gesicht.queue):
+        spawn(dungeon_gesicht.paint(rid, k, n, p), name="dungeon-gesicht")
+    await asyncio.to_thread(dungeon_gesicht.sweep, now)
     if not on():
         return
     for n, p in await asyncio.to_thread(queue_finds):
@@ -786,7 +791,7 @@ def add(r, rd, out):
     out["buehne"] = {"ersatz": stage_pic(r, rd, have)}   # the stage's stand-in until the scene has its own picture
     if isinstance(out.get("siedlung"), dict):              # the settlement's head and service pictures, lines of life
         out["siedlung"] = settle_view(r, rd, out["siedlung"], have)
-    return out
+    return dungeon_gesicht.add(rd, out)                   # the faces of the people met (Tabletop-Punkt 15)
 
 
 # ---------------------------------------------------------------- „Nochmal malen“ (the admin's rules page)
@@ -921,6 +926,11 @@ def _png(name, klein=False):
     return dungeon.small_png(name) if klein else dungeon._png(name)
 
 
+def _may_see(name, uid=None, rid=None):
+    """A place's picture and a person's face only for a seat of their round; an item's for every seat."""
+    return dungeon_karte.may_see(name, uid=uid, rid=rid) and dungeon_gesicht.may_see(name, uid=uid, rid=rid)
+
+
 @router.get("/api/profile/dungeon/ding/{name}", dependencies=[Depends(assistant)])
 async def ding(name: str, request: Request, prof=Depends(own_profile), klein: int = 0):
     """A picture of an item, for a profile the game is released for; ?klein=1 the small copy."""
@@ -928,7 +938,7 @@ async def ding(name: str, request: Request, prof=Depends(own_profile), klein: in
     dungeon._need(uid)
     guard.limit(request, "dungeonding", uid)
     try:
-        if not await asyncio.to_thread(dungeon_karte.may_see, name, uid=uid):
+        if not await asyncio.to_thread(_may_see, name, uid=uid):
             raise LookupError("bild")
         return dungeon._png_out(await asyncio.to_thread(_png, name, bool(klein)))
     except LookupError as e:
@@ -941,7 +951,7 @@ async def gast_ding(request: Request):
     b, rid, _ = await dungeon._guest(request)
     guard.limit(request, "dungeonding")
     try:
-        if not await asyncio.to_thread(dungeon_karte.may_see, b.get("name"), rid=rid):
+        if not await asyncio.to_thread(_may_see, b.get("name"), rid=rid):
             raise LookupError("bild")
         return dungeon._png_out(await asyncio.to_thread(_png, b.get("name"), b.get("klein") is True))
     except LookupError as e:

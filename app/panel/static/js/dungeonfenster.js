@@ -28,14 +28,21 @@ function dmGrenzen(v){const g=v.grenzen,T=g.tisch,chips=l=>l.length?l.map(w=>`<s
 // heroes' reputation and the chronicle by chapter; the host also sees wish, secret and relations (nsc_geheim)
 function dmLeute(v){const N=v.nsc,G=v.nsc_geheim||{},chip=h=>`<span class="dm-haltung" data-h="${h[2]}">${esc(h[0])}: ${esc(h[1])}</span>`,
     zeile=(a,b)=>b?`<div class="dm-line"><span>${esc(a)}</span><span>${esc(b)}</span></div>`:'';
-  const leute=N.leute.length?N.leute.map(p=>{const g=G[p.name];return `<div class="dm-nsc"><b>${esc(p.name)}</b>${p.beruf?` <small class="mut">${esc(p.beruf)}</small>`:''}
+  const leute=N.leute.length?N.leute.map(p=>{const g=G[p.name],f=dmGesicht(v,p.name,1);return `<div class="dm-nsc${f?' mitbild':''}">${f}<div><b>${esc(p.name)}</b>${p.beruf?` <small class="mut">${esc(p.beruf)}</small>`:''}
     ${zeile(t('Aussehen','Looks'),p.aussehen)}${zeile(t('Art','Manner'),p.art)}<div>${p.haltung.length?p.haltung.map(chip).join(' '):`<small class="mut">${esc(t('kennt euch noch kaum','hardly knows you yet'))}</small>`}</div>
-    ${g?`<div class="dm-geheim"><small class="mut">🔒 ${esc(t('nur du als Gastgeber','only you as host'))}</small>${zeile(t('Wunsch','Wish'),g.wunsch)}${zeile(t('Geheimnis','Secret'),g.geheimnis)}${zeile(t('Beziehungen','Relations'),g.kanten.join(', '))}${zeile(t('Wesen','Traits'),(g.wesen||[]).join(', '))}${(g.ziele||[]).map(z=>`<div class="dm-line"><span>${esc(z[0])}</span><span>${esc(z[1])} <small class="dm-ziel" title="${z[2]}/${z[3]}">${'▰'.repeat(Math.min(z[2],z[3]))+'▱'.repeat(Math.max(0,z[3]-z[2]))}</small></span></div>`).join('')}</div>`:''}</div>`}).join('')
+    ${g?`<div class="dm-geheim"><small class="mut">🔒 ${esc(t('nur du als Gastgeber','only you as host'))}</small>${g.gesicht?`<div class="dm-hostb"><button type="button" class="b" data-dmgesicht="${esc(p.name)}"${g.gesicht==='malt'?' disabled':''}>${esc(g.gesicht==='malt'?t('⏳ Gesicht wird gemalt','⏳ Face on its way'):t('↻ Gesicht neu malen','↻ Paint the face again'))}</button></div>`:''}${zeile(t('Wunsch','Wish'),g.wunsch)}${zeile(t('Geheimnis','Secret'),g.geheimnis)}${zeile(t('Beziehungen','Relations'),g.kanten.join(', '))}${zeile(t('Wesen','Traits'),(g.wesen||[]).join(', '))}${(g.ziele||[]).map(z=>`<div class="dm-line"><span>${esc(z[0])}</span><span>${esc(z[1])} <small class="dm-ziel" title="${z[2]}/${z[3]}">${'▰'.repeat(Math.min(z[2],z[3]))+'▱'.repeat(Math.max(0,z[3]-z[2]))}</small></span></div>`).join('')}</div>`:''}</div></div>`}).join('')
     :`<p class="mut">${esc(t('Ihr habt noch niemanden getroffen.','You have not met anyone yet.'))}</p>`;
   const fern=Object.entries(G).filter(([,g])=>!g.gesehen).map(([n])=>n);
   const ruf=N.ruf.length?`<h5>${esc(t('Ruf','Reputation'))}</h5>`+N.ruf.map(([h,w])=>zeile(h,w)).join(''):'';
   let k=0;const chronik=N.chronik.length?N.chronik.map(c=>(c.k!==k?(k=c.k,`<h6>${esc(t('Kapitel ','Chapter '))}${c.k}</h6>`):'')+`<div class="dm-sys">📖 ${esc(c.t)}</div>`).join(''):`<p class="mut">${esc(t('Noch steht nichts in der Chronik.','Nothing in the chronicle yet.'))}</p>`;
   return `<h5>${esc(t('Leute','People'))}</h5>${leute}${fern.length?`<p class="mut">🔒 ${esc(t('Noch nicht getroffen: ','Not met yet: ')+fern.join(', '))}</p>`:''}${ruf}<h5>${esc(t('Chronik','Chronicle'))}</h5>${chronik}`}
+// Gleiches Gesicht für NSCs (Tabletop-Punkt 15): a person's portrait by name (nsc.leute[].bild, dungeon_gesicht), round in
+// „Leute und Chronik“ (big: the full copy; a tap makes it large) and small at its line in the feed; "" without one
+function dmGesicht(v,name,big){const n=String(name||'').toLowerCase(),p=((v.nsc||{}).leute||[]).find(x=>x.name.toLowerCase()===n);
+  return p&&p.bild?`<img class="dm-gesicht${big?' mittel':''}" alt="${esc(t('Gesicht von ','Face of ')+p.name)}" loading="lazy" decoding="async" data-dmdbild="${esc(p.bild)}"${big?'':' data-dmdk="1"'}>`:''}
+document.body.addEventListener('click',e=>{const im=e.target.closest('#dmview img.dm-gesicht.mittel,#dgcard img.dm-gesicht.mittel');if(im)im.classList.toggle('gross')});
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmgesicht]');if(!b||!DM.rid)return;b.disabled=true;
+  const d=await dmSend(`/api/profile/dungeon/${DM.rid}/gesicht`,{name:b.dataset.dmgesicht},DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()});
 // Fraktionen mit Uhren (Tabletop-Punkt 7): a clock per faction the table knows (a ring of fields); the host sees every
 // faction with what it wants and changes it here (data-dmfrak, dungeon_fraktionen.host checks it)
 function dmFrakRing(s,n,voll){const r=15,c=18,seg=[...Array(n)].map((_,i)=>{const a=i/n*2*Math.PI-Math.PI/2,b=(i+1)/n*2*Math.PI-Math.PI/2,

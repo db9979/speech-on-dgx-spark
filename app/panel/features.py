@@ -289,6 +289,10 @@ FEATURES = (
     # fixed rules, only the scene's people to the model; the chronicle and the heroes' reputation
     F("dungeonnsc", "NSC-Gedächtnis und Chronik", "NPC memory and chronicle", "data", ("dungeon_nsc",), parent="dungeon",
       me="dmbox", guide="dungeonnsc"),
+    # Gesichter für NSCs (dungeon_gesicht.py, Tabletop-Punkt 15): one portrait per person met, from fixed parts; later
+    # scene pictures take it as a reference picture
+    F("dungeongesicht", "Gesichter für NSCs", "Faces for NPCs", "data", ("dungeon_gesicht",), parent="dungeon",
+      me="dmbox", guide="dungeongesicht"),
     # Orakel (dungeon_orakel.py, Tabletop-Punkt 8): yes or no with a chaos grade and the catalog's tables for the host;
     # the panel rolls, the model only hears the answer as data
     F("dungeonorakel", "Orakel", "Oracle", "data", ("dungeon_orakel",), parent="dungeon", me="dmbox", guide="dungeonorakel"),

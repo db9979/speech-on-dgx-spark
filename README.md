@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.068** AI Dungeon Master: the same face for NPCs: every person met gets a fixed portrait from fixed parts, later scene pictures take it as a reference, the face in "People and chronicle" and at the person's line, the host paints it again
 - **V01.1.067** AI Dungeon Master: vaults left behind fill again after 6 steps, places a faction holds carry its banner on the map
 - **V01.1.066** AI Dungeon Master: adventure import: a written adventure (PDF, Word, Markdown) becomes a draft with acts, places and foe in the story planner; the panel checks it like a typed story
 - **V01.1.065** AI Dungeon Master: narrator bench: eight fixed scenes through the running language model with the table's rules, fixed rules give points, models side by side; the turn at the table uses the same steps
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.061** AI Dungeon Master: NPC goals: every person with six traits and goals for today, soon and their life; between turns the panel rolls the progress, a reached goal stands in the chronicle and goes as data into the next narration
 - **V01.1.060** AI Dungeon Master: NPC memory with cards from fixed tables, an attitude to each hero and relations, only the scene's people go to the model; chronicle and the heroes' reputation; NPC tables, name syllables and oracle in the catalog
 - **V01.1.059** AI Dungeon Master: the host's random rules, up to five per round with chance, trigger and effect; the panel rolls and applies them, the model only hears the hint as data
-- **V01.1.058** AI Dungeon Master: lines and veils per seat, anonymous for the whole table, and the X-card that tells the last scene again more calmly; fixed word lists of the panel, the model gets them only as data; a view filter with a leak self-test per secret; the scribe check notes by fixed limits what the narration changed
 
 
 

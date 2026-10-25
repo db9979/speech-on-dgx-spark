@@ -156,6 +156,7 @@ WITHOUT = {
     "dungeonfraktionen": "dungeon_fraktionen.py: kein Werkzeug, das Panel dreht die Uhren nach festen Regeln, das Modell meldet nur",
     "dungeonorakel": "dungeon_orakel.py: kein Werkzeug, der Gastgeber fragt, das Panel würfelt, das Modell hört nur die Antwort",
     "dungeonnsc": "dungeon_nsc.py: kein Werkzeug, das Panel würfelt die Karten und nimmt Änderungen nach festen Regeln an",
+    "dungeongesicht": "dungeon_gesicht.py: kein Werkzeug, das Panel malt die Porträts aus festen Teilen und wählt die Vorlagen",
     "dungeonheldenmut": "dungeon_mut.py: kein Werkzeug, Heldenmut zählt das Panel nach festen Regeln, nie das Modell",
     "dungeonregler": "dungeon_kampf.py: kein Werkzeug, der Regler stellt Begegnungen nach festen Zahlen um, nie das Modell",
     "dungeonimport": "dungeon_import.py: kein Werkzeug, der Admin gibt ein geschriebenes Abenteuer dem Geschichten-Planer, das Panel prüft den Entwurf",

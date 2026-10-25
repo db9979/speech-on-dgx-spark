@@ -3446,6 +3446,13 @@
 "titel": "Dungeon-Master: die Welt lebt weiter",
 "text": "A: Eine Runde mit Karte, ein Gewölbe betreten, einen Wächter besiegen, hinaus und mindestens 6 Orte weiterziehen. B: Zurück ins Gewölbe: am Tisch steht „Im Gewölbe … hat sich Neues eingenistet.“, der Wächterraum ist wieder unbekannt und hat neue Gegner. C: Rätsel und Quelle bleiben gelöst bzw. benutzt. D: Wird die Uhr einer Fraktion voll: auf der Karte ein dunkles Banner am besetzten Ort, unter „Von hier aus“ ein ⚑ am Weg. E: Dort ankommen: einmal „… ist von … besetzt.“, über der Karte „⚑ Besetzt von …“, die Erzählung kennt die Besatzer.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P517",
+"v": 1068,
+"titel": "Dungeon-Master: Gleiches Gesicht für NSCs",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Gesichter für NSCs an, Bilder malen an. A: Runde starten, bis die Erzählung eine Figur trifft und sie spricht; nach etwa einer Minute zeigt „👥 Leute und Chronik“ ihr rundes Gesicht, ein Tipp macht es groß. B: Neben der Sprechzeile der Figur im Verlauf steht das Gesicht klein. C: Das nächste Szenenbild mit dieser Figur zeigt dasselbe Gesicht. D: Als Gastgeber im Fenster „↻ Gesicht neu malen“: das alte Gesicht bleibt, bis das neue da ist. E: Ein Mitspieler sieht den Knopf nicht. F: Kapitel beenden und neues Kapitel beginnen: die Figur hat ihr Gesicht noch. G: Schalter aus: keine neuen Gesichter, Szenenbilder kommen ohne Vorlage.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

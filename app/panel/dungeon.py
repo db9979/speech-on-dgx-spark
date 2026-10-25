@@ -135,6 +135,7 @@ import dungeon_stimmen as stimmen
 import dungeon_vorlesen as vortrag
 import dungeon_gast as gastkonto
 import dungeon_auto as auto_car
+import dungeon_gesicht as gesicht
 import coadmin
 import features
 import guard
@@ -4415,7 +4416,9 @@ def queue_scene(r, d, rid, rd, text):
     rd.update(bild_zug=rd["zug"], bilder_n=rd.get("bilder_n", 0) + 1)
     _bild_take(d)
     _bilder_jobs[rid] = secrets.token_hex(6)
-    return bid, f"{style(r, rd)}, {text}, {BILD_ENDE}"
+    names, faces = gesicht.vorlagen(r, rd)        # the faces of the scene's people as reference pictures (Tabletop-Punkt 15)
+    gesicht.merke(rid, bid, names)
+    return bid, f"{style(r, rd)}, {text}{faces}, {BILD_ENDE}"
 
 
 def bild_file(name):
@@ -4449,10 +4452,10 @@ def _bild_drop(rid, keep=()):
             _bild_rm(f[:-4])
 
 
-async def _paint(jid, prompt, w, h):
+async def _paint(jid, prompt, w, h, refs=None):
     """One picture on the heavy jobs' one place (schwer.py, the voice first, Wartungspause „bild“), checked by the
-    picture service (bilder.paint: NSFW above its limit and a missing check give no picture). Returns the PNG or
-    raises ValueError(why)."""
+    picture service (bilder.paint: NSFW above its limit and a missing check give no picture); refs: reference pictures
+    (base64, a scene's faces of dungeon_gesicht). Returns the PNG or raises ValueError(why)."""
     import bilder
     import schwer
     import vorrang
@@ -4463,7 +4466,7 @@ async def _paint(jid, prompt, w, h):
         await vorrang.quiet("Bild malen")
         if wartung.paused("bild"):
             raise ValueError("wartung")
-        return await bilder.paint(prompt, w, h)
+        return await bilder.paint(prompt, w, h, refs)
     try:
         png, _ = await asyncio.wait_for(schwer.run("bild", jid, time.time(), once), bilder.JOB_SECONDS + schwer.WAIT_S)
     except asyncio.TimeoutError:
@@ -4482,7 +4485,7 @@ async def paint_scene(rid, bid, prompt):
     t0 = time.perf_counter()
     why = "ok"
     try:
-        png = await _paint(_bilder_jobs.get(rid) or secrets.token_hex(6), prompt, BILD_W, BILD_H)
+        png = await _paint(_bilder_jobs.get(rid) or secrets.token_hex(6), prompt, BILD_W, BILD_H, gesicht.refs(rid, bid))
 
         def keep():
             with _lock:
