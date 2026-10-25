@@ -75,7 +75,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/vorlesen    host: {an} read the narration aloud (narrator and NPC voice)
     POST   /api/profile/dungeon/{rid}/erzaehler   host: {k} the narrator's voice of the world's list, "" a new one (dungeon_stimmen.py)
     POST   /api/profile/dungeon/{rid}/dinge       host: {n, weg} or {n, name, merkmale}: a kept thing (dungeon_erzaehler.edit_thing)
-    GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, the last TON_ZUEGE turns)
+    GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, ?mp3=1 MP3, the last TON_ZUEGE turns)
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
     POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
@@ -93,6 +93,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
 import asyncio
 import base64
 import copy
+import gzip
 import hashlib
 import hmac
 import json
@@ -145,6 +146,10 @@ KLON_S = (3.0, 15.0)       # seconds a piece made with VoiceDesign needs to beco
 KAMPAGNEN = "dungeon-kampagnen.json"
 GESCHICHTEN = os.path.join(STATE, "dungeon-geschichten.json")
 BILD_DIR = os.path.join(STATE, "dungeon-bild")
+KLEIN_DIR = os.path.join(STATE, "dungeon-bild-klein")   # small copies of the pictures for lists (small_png)
+TON_MP3 = 48              # kbit/s of a piece's MP3 copy for the browser (mp3_of)
+GZ_AB = 4096              # bytes from which json_out gzips an answer
+KLEIN = 96                # pixels of a small copy at most (a 44 px picture on a sharp screen)
 
 RUNDEN_MAX = 3            # open rounds per host
 ALLE_MAX = 20             # open rounds on the Spark
@@ -3740,12 +3745,18 @@ async def speak_turn(rid, n, parts):
     """The turn n read aloud, once for every seat, in pieces (dungeon_vorlesen.py, Punkt 16 of 2026-10-24): each
     piece its own WAV STATE/dungeon-ton/<rid>-<n>-<k>.wav as soon as it is made, so the seats start after the first;
     one piece at a time on the Spark (the TTS slows down with many at once); every piece a second try, then the fixed
-    voice, else left out. Kept for the last TON_ZUEGE turns. Never raises; the clock goes on at the end."""
+    voice, else left out. Kept for the last TON_ZUEGE turns. Never raises; the clock goes on at the end.
+    The reading counts as speech for the panel (vorrang.mark, before the first piece, at each one and at the end):
+    the speech output may run on the model computer, whose own mark the panel does not see, and the scene picture,
+    the music and all other background work would otherwise run on its GPU at the same time and slow every
+    sentence (Dominik 2026-10-25 „erzähler macht nach jeden satz eine lange pause“)."""
     import begleiter
     import verbrauch
+    import vorrang
     import wartung
     t0 = time.perf_counter()
     why, k, fehl = "ok", 0, 0
+    vorrang.mark()                 # before anything waits: the picture spawned with it sees the reading
     _speaking.add(rid)
     try:
         if wartung.paused("tts"):
@@ -3756,7 +3767,9 @@ async def speak_turn(rid, n, parts):
         for voice, text, klang in pieces:
             t1 = time.perf_counter()
             async with _tts_lock():
+                vorrang.mark()
                 got = await _piece(text, voice, klang)
+            vorrang.mark()
             ms = round((time.perf_counter() - t1) * 1000)
             if not got:
                 fehl += 1
@@ -3769,11 +3782,16 @@ async def speak_turn(rid, n, parts):
             def keep(k=k, wav=wav):
                 os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
                 f = ton_file(rid, n, k)
-                with open(f + ".neu", "wb") as x:
-                    x.write(wav)
-                os.chmod(f + ".neu", 0o600)
-                os.replace(f + ".neu", f)
-            await asyncio.to_thread(keep)
+                mp3 = mp3_of(wav)
+                for path, data in ((f[:-4] + ".mp3", mp3), (f, wav)):     # the MP3 first: the seats ask once k counts it
+                    if data:
+                        with open(path + ".neu", "wb") as x:
+                            x.write(data)
+                        os.chmod(path + ".neu", 0o600)
+                        os.replace(path + ".neu", path)
+                return bool(mp3)
+            if not await asyncio.to_thread(keep):
+                print("dungeon: vorlesen | mp3 | fehler", flush=True)
             k += 1
             await asyncio.to_thread(_ton_set, rid, k=k)
             verbrauch.spoken("Dungeon-Master", wav=wav)
@@ -3787,6 +3805,7 @@ async def speak_turn(rid, n, parts):
         _day.bump("vorlesen_fehler")
     finally:
         _speaking.discard(rid)
+        vorrang.mark(end=True)
         try:
             await asyncio.to_thread(_ton_set, rid, fertig=True)
         except Exception:
@@ -3861,17 +3880,34 @@ def _tts_lock():
     return _tts[0]
 
 
-def ton_of(rid, pid, n, k=0):
-    """The WAV of piece k of turn n for a seat of the round, or LookupError."""
+def ton_of(rid, pid, n, k=0, mp3=False):
+    """(bytes, media type) of piece k of turn n for a seat of the round, or LookupError: with mp3 its MP3 copy when
+    there is one (the browser; the iPhone app takes the WAV), else the WAV."""
     rd = _round(_read(), rid)
     ok = lambda x: isinstance(x, int) and not isinstance(x, bool) and 0 <= x < 10000
     if pid not in rd["plaetze"] or not ok(n) or not ok(k) or n not in (rd.get("ton_n") or []):
         raise LookupError("ton")
+    f = ton_file(rid, n, k)
+    for path, media in ((f[:-4] + ".mp3", "audio/mpeg"),) * bool(mp3) + ((f, "audio/wav"),):
+        try:
+            with open(path, "rb") as x:
+                return x.read(), media
+        except FileNotFoundError:
+            pass
+    raise LookupError("ton")
+
+
+def mp3_of(wav):
+    """A WAV as MP3 (TON_MP3 kbit/s, mono) by ffmpeg, about a tenth of its size (Dominik 2026-10-25: over the proxy a
+    300 kB piece took as long to load as to play, a pause after every sentence); None when ffmpeg fails."""
+    import subprocess
     try:
-        with open(ton_file(rid, n, k), "rb") as f:
-            return f.read()
-    except FileNotFoundError:
-        raise LookupError("ton")
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-f", "wav", "-i", "pipe:0", "-ac", "1",
+                            "-c:a", "libmp3lame", "-b:a", f"{TON_MP3}k", "-f", "mp3", "pipe:1"],
+                           input=wav, capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return p.stdout if p.returncode == 0 and p.stdout else None
 
 
 async def ask_asr(wav, lang):
@@ -4032,10 +4068,11 @@ def _bild_save(name, png):
 
 
 def _bild_rm(name):
-    try:
-        os.remove(bild_file(name))
-    except FileNotFoundError:
-        pass
+    for f in (bild_file(name), os.path.join(KLEIN_DIR, name + ".png")):    # with its small copy
+        try:
+            os.remove(f)
+        except FileNotFoundError:
+            pass
 
 
 def _bild_drop(rid, keep=()):
@@ -4219,6 +4256,50 @@ def _png(name):
             return f.read()
     except FileNotFoundError:
         raise LookupError("bild")
+
+
+def bild_v(name):
+    """A picture's version for its address (?v=): its file time, 0 for none; a new picture gets a new one."""
+    try:
+        return int(os.path.getmtime(bild_file(name))) if name else 0
+    except OSError:
+        return 0
+
+
+def small_png(name):
+    """A picture KLEIN pixels at most, for a list (Dominik 2026-10-25: the rules page loaded 391 full pictures and held
+    up the whole panel): made once with Pillow, kept in KLEIN_DIR and made again when the picture is newer; the
+    full picture when Pillow fails."""
+    src = bild_file(name)
+    dst = os.path.join(KLEIN_DIR, name + ".png")
+    try:
+        m = os.path.getmtime(src)
+    except FileNotFoundError:
+        raise LookupError("bild")
+    try:
+        if os.path.getmtime(dst) >= m:
+            with open(dst, "rb") as f:
+                return f.read()
+    except OSError:
+        pass
+    try:
+        import io
+        from PIL import Image
+        with Image.open(src) as im:
+            im.thumbnail((KLEIN, KLEIN))
+            out = io.BytesIO()
+            im.save(out, "PNG", optimize=True)
+        png = out.getvalue()
+        os.makedirs(os.path.dirname(dst), mode=0o700, exist_ok=True)
+        with open(dst + ".neu", "wb") as f:
+            f.write(png)
+        os.chmod(dst + ".neu", 0o600)
+        os.replace(dst + ".neu", dst)
+        print("dungeon: bild | klein | neu", flush=True)
+        return png
+    except Exception:
+        print("dungeon: bild | klein | fehler", flush=True)
+        return _png(name)
 
 
 def cover(rid, rd, kid, c):
@@ -5517,16 +5598,26 @@ async def dinge(rid: str, request: Request, prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/dungeon/{rid}/ton/{n}/{k}", dependencies=[Depends(assistant)])
-async def ton(rid: str, n: int, k: int, request: Request, prof=Depends(own_profile)):
-    """Piece k of turn n read aloud (Punkt 16 of 2026-10-24), for a seat of the round."""
+async def ton(rid: str, n: int, k: int, request: Request, prof=Depends(own_profile), mp3: int = 0):
+    """Piece k of turn n read aloud (Punkt 16 of 2026-10-24), for a seat of the round; ?mp3=1 its MP3 copy."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeonton", uid)
     try:
-        wav = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n, k))
+        data, media = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n, k, bool(mp3)))
     except KNOWN as e:
         raise _http(e)
-    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+    return Response(data, media_type=media, headers={"Cache-Control": "no-store"})
+
+
+def json_out(request, obj):
+    """A big JSON answer, gzipped when the browser takes it and it is GZ_AB bytes or more (Dominik 2026-10-25: over
+    the proxy the catalog's 295 kB took 6 s). Only for answers with no secret and no words of other people in them
+    (BREACH): the admin's catalog and rules; never a round's view (invite links, the players' text)."""
+    body = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(body) < GZ_AB or request is None or "gzip" not in request.headers.get("accept-encoding", "").lower():
+        return Response(body, media_type="application/json", headers={"Vary": "Accept-Encoding"})
+    return Response(gzip.compress(body, 6), media_type="application/json", headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"})
 
 
 def _png_out(png):
@@ -5974,13 +6065,13 @@ async def gast_konto(request: Request):
 
 @router.post("/api/dungeon/ton")
 async def gast_ton(request: Request):
-    """{"code", "zug", "k"}: piece k of the turn read aloud as WAV, the same file for every seat."""
+    """{"code", "zug", "k", "mp3"}: piece k of the turn read aloud (WAV, or its MP3 copy), the same file for every seat."""
     b, rid, pid = await _guest(request)
     try:
-        wav = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"), b.get("k", 0))
+        data, media = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"), b.get("k", 0), b.get("mp3") is True)
     except KNOWN as e:
         raise _http(e)
-    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+    return Response(data, media_type=media, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/api/dungeon/bild")
@@ -6098,12 +6189,12 @@ def admin_show(request: Request = None):
     import dungeon_dingbild
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
-    return {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(),
+    return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
                                                "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX},
-            "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()}
+            "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()})
 
 
 @router.put("/api/admin/dungeon", dependencies=[Depends(auth)])

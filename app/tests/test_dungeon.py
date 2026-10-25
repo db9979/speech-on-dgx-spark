@@ -1180,7 +1180,7 @@ class Voice(Base):
             asyncio.run(dungeon.speak_turn(rid, n, parts))
         self.assertEqual(self.state(rid)["ton_n"], [2, 3, 4])
         self.assertEqual(self.state(rid)["lesung"], {"n": 4, "k": 2, "fertig": True, "fehler": 0})   # one piece each
-        self.assertEqual(sorted(os.listdir(dungeon.TON_DIR)), sorted(f"{rid}-{n}-{k}.wav" for n in (2, 3, 4) for k in (0, 1)))
+        self.assertEqual(sorted(os.listdir(dungeon.TON_DIR)), sorted(f"{rid}-{n}-{k}.{x}" for n in (2, 3, 4) for k in (0, 1) for x in ("wav", "mp3")))   # each also as MP3
         r = self.c.get(f"/api/profile/dungeon/{rid}/ton/4/1")
         self.assertEqual((r.status_code, r.content[:4]), (200, b"RIFF"))
         g = self.v.post("/api/dungeon/ton", json={"code": code, "zug": 4, "k": 1})
@@ -1520,6 +1520,96 @@ class ReadAloud(Base):
             d["runden"][rid].update(spricht=now - dungeon.vortrag.SPRICHT_MAX - 1, zug_t=now - 500)
             dungeon._write(d)
         self.assertLess(dungeon.turn_start(self.state(rid)), now)
+
+    def test_reading_aloud_counts_as_speech(self):
+        """Dominik 2026-10-25 „erzähler macht nach jeden satz eine lange pause“: the speech output on the model computer
+        marks speech there, not on the panel; the reading marks it itself, so pictures, music and other background
+        work wait (vorrang) instead of sharing the GPU with every sentence."""
+        import vorrang
+        p = mock.patch.object(vorrang, "GRACE", 20)          # the tests' helpers set it to 0 for everybody else
+        p.start()
+        self.addCleanup(p.stop)
+        self.addCleanup(self.unmark)
+        self.unmark()
+        v = self.new_round(vorlesen=True)
+        self.tts()
+        seen, old = [], dungeon.ask_tts
+
+        async def tts(text, voice, klang="", ref=None):
+            seen.append(vorrang.speaking())
+            return await old(text, voice, klang)
+        dungeon.ask_tts = tts
+        self.addCleanup(setattr, dungeon, "ask_tts", old)
+        asyncio.run(dungeon.speak_turn(v["rid"], 2, [("ryan", "Es ist still. Dann knarrt die Tür, und jemand tritt ein.", "")]))
+        self.assertTrue(seen and all(seen), seen)                                   # speech while every piece is made
+        self.assertTrue(vorrang.speaking())                                   # and the grace after it
+
+    def test_pieces_as_mp3_for_the_browser(self):
+        """Dominik 2026-10-25 (HAR: a 300 kB WAV piece loaded about as long as it played over the proxy): every piece is
+        kept as MP3 too, the browser asks for it (?mp3=1, a guest with "mp3": true), the iPhone app still gets the WAV."""
+        v = self.new_round(vorlesen=True)
+        rid = v["rid"]
+        old = dungeon.ask_tts
+
+        async def tts(text, voice, klang=""):
+            return (b"\0\4\0\374" * 6000)          # a short tone as 16-bit PCM
+        dungeon.ask_tts = tts
+        self.addCleanup(setattr, dungeon, "ask_tts", old)
+        asyncio.run(dungeon.speak_turn(rid, 2, [("ryan", "Es ist still.", "")]))
+        wav = self.c.get(f"/api/profile/dungeon/{rid}/ton/2/0")
+        mp3 = self.c.get(f"/api/profile/dungeon/{rid}/ton/2/0?mp3=1")
+        self.assertEqual((wav.status_code, wav.headers["content-type"]), (200, "audio/wav"))
+        self.assertEqual((mp3.status_code, mp3.headers["content-type"]), (200, "audio/mpeg"))
+        self.assertLess(len(mp3.content) * 4, len(wav.content))
+        code = self.invite(rid)
+        self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier"}})
+        g = self.v.post("/api/dungeon/ton", json={"code": code, "zug": 2, "k": 0, "mp3": True})
+        self.assertEqual((g.status_code, g.headers["content-type"]), (200, "audio/mpeg"))
+        self.assertIsNone(dungeon.mp3_of(b"kein wav"))
+
+    def test_big_admin_answers_gzipped_the_round_not(self):
+        """Dominik 2026-10-25 (HAR: 295 kB of catalog in 6 s): the admin's catalog and rules come gzipped; a round's
+        view never (invite links and the players' own words, BREACH)."""
+        v = self.new_round()
+        for url in ("/api/admin/dungeon/katalog/gegenstaende", "/api/admin/dungeon"):
+            r = ADMIN.get(url, headers={"Accept-Encoding": "gzip"})
+            self.assertEqual((r.status_code, r.headers.get("content-encoding")), (200, "gzip"), url)
+            self.assertTrue(r.json())
+        r = self.c.get(f"/api/profile/dungeon/{v['rid']}", headers={"Accept-Encoding": "gzip"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIsNone(r.headers.get("content-encoding"))
+        self.assertIsNone(ADMIN.get("/api/admin/dungeon", headers={"Accept-Encoding": "identity"}).headers.get("content-encoding"))
+
+    def unmark(self):
+        import vorrang
+        vorrang._local[0] = 0.0
+        if os.path.exists(vorrang.MARK):
+            os.utime(vorrang.MARK, (0, 0))
+
+    def test_small_pictures_for_the_list(self):
+        """Dominik 2026-10-25 (391 pictures of 80 kB held up the panel): the rules list asks for a small copy, made
+        once and kept until the picture changes, each address with the picture's own version so the browser keeps it."""
+        import io as _io
+        from PIL import Image
+        buf = _io.BytesIO()
+        Image.new("RGB", (512, 512), (120, 40, 40)).save(buf, "PNG")
+        name = "ding-" + "a" * 16
+        dungeon._bild_save(name, buf.getvalue())
+        r = ADMIN.get(f"/api/admin/dungeon/bild/{name}?klein=1")
+        self.assertEqual(r.status_code, 200)
+        with Image.open(_io.BytesIO(r.content)) as im:
+            self.assertLessEqual(max(im.size), dungeon.KLEIN)
+        small = os.path.join(dungeon.KLEIN_DIR, name + ".png")
+        self.assertTrue(os.path.exists(small))
+        self.assertEqual(ADMIN.get(f"/api/admin/dungeon/bild/{name}?klein=1").content, r.content)
+        import dungeon_dingbild
+        self.assertEqual(dungeon_dingbild._png(name, True), r.content)               # the bag and the seats: small too
+        self.assertEqual(len(ADMIN.get(f"/api/admin/dungeon/bild/{name}").content), len(buf.getvalue()))
+        self.assertGreater(dungeon.bild_v(name), 0)
+        self.assertEqual(dungeon.bild_v(""), 0)
+        dungeon._bild_rm(name)
+        self.assertFalse(os.path.exists(small))                               # the small copy goes with it
+        self.assertEqual(ADMIN.get(f"/api/admin/dungeon/bild/{name}?klein=1").status_code, 404)
 
 
 class Magic(Base):

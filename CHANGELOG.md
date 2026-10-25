@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.036** · 2026-10-25 · KI-Dungeon-Master schneller über den Proxy: Vorlesen als MP3 und das nächste Stück lädt schon, während Vorlesen warten Bilder und Musik, kleine Bilder in Listen, Bilder bleiben im Browser, Katalog und Regeln komprimiert
 - **V01.1.035** · 2026-10-25 · KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne
 - **V01.1.034** · 2026-10-25 · KI-Dungeon-Master: Gegenstände Teil 2, Werkzeuge einfach +1, gut +2 oder meisterlich +3, Tränke, Rollen, Zauber und Werkzeuge günstiger, gewöhnlicher Schmuck ist ein Schatz, ▲/▼ besser als deins und „nicht für deine Klasse“ in Tasche, beim Händler und am Boden
 - **V01.1.033** · 2026-10-25 · KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch

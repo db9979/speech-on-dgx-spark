@@ -3257,6 +3257,13 @@
 "titel": "Legendäre Einzelstücke",
 "text": "Auf Stufe 5 oder höher: A: Ein Boss oder eine Truhe bringt ab und zu einen legendären Fund, unerkannt. B: Erkennen lassen: eigener Name, eigener Satz, zwei Wirkungen und „✦ Einzelstück“. C: Beim Händler steht nie etwas Legendäres. D: Dasselbe Einzelstück kommt in der Kampagne nicht noch einmal, auch nicht im nächsten Kapitel. E: Zustand → Überblick nennt „legendäre Einzelstücke gefunden“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P490",
+"v": 1036,
+"titel": "Schneller über den Proxy",
+"text": "Über den Proxy (speech…i234.me): A: Eine Runde mit Vorlesen: zwischen den Sätzen keine lange Pause mehr. B: Während des Vorlesens startet kein Szenenbild und keine Musik (Zustand → Logs: vorrang wartet). C: Regeln → Gegenstände: die Liste ist sofort da, die kleinen Bilder kommen schnell; ein zweites Öffnen lädt die Bilder nicht neu. D: Tasche und Händler: kleine Bilder in der Tasche, groß beim Händler und im Detailfenster. E: In den Entwicklertools: Katalog mit content-encoding gzip, Vorlesen als audio/mpeg.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

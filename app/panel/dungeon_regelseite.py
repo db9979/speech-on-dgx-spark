@@ -12,7 +12,7 @@ admin keeps the new or the old one.
     GET  /api/admin/dungeon/katalog/{teil}         rows and entries of one part
     POST /api/admin/dungeon/katalog/{teil}         {"was": "setzen"|"aus"|"zurueck", "id", "eintrag"?}
     POST /api/admin/dungeon/katalog/{teil}/bild    {"id", "was": "malen"|"neu"|"alt"}
-    GET  /api/admin/dungeon/bild/{name}            a catalog picture or a candidate (admin only)
+    GET  /api/admin/dungeon/bild/{name}            a catalog picture or a candidate (admin only); ?klein=1 the small copy
 
 Journal lines „dungeon: regelseite | …“ with fixed words and numbers only.
 """
@@ -177,6 +177,7 @@ def view(teil, lang="de", welt=""):
             row["bild"] = n if n in have else ""
             cur = dingbild._current(r, x, teil, welt)[0]
             row["neu"] = "neu-" + cur[5:] if "neu-" + cur[5:] in neu else ""
+            row["bv"], row["nv"] = dungeon.bild_v(row["bild"]), dungeon.bild_v(row["neu"])   # the browser keeps it until it changes
         rows.append(row)
         entries[str(i)] = x
     out = {"teil": teil, "zeilen": rows, "eintraege": entries, "bilder_an": dingbild.on()}
@@ -233,7 +234,7 @@ async def katalog(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
     if teil not in TEILE:
         raise HTTPException(404, "teil")
-    return await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
+    return dungeon.json_out(request, await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40]))
 
 
 @router.post("/api/admin/dungeon/katalog/{teil}", dependencies=[Depends(auth)])
@@ -283,12 +284,13 @@ async def katalog_bild(teil: str, request: Request):
 
 
 @router.get("/api/admin/dungeon/bild/{name}", dependencies=[Depends(auth)])
-async def bild(name: str, request: Request):
+async def bild(name: str, request: Request, klein: int = 0):
+    """klein=1: the small copy for the list (dungeon.small_png; Dominik 2026-10-25: 391 full pictures held up the panel)."""
     guard.limit(request, "dungeonding", admin=True)
     if not (dingbild.NAME.fullmatch(name) or dingbild.NEU.fullmatch(name)):
         raise HTTPException(404, "bild")
     try:
-        return dungeon._png_out(await asyncio.to_thread(dungeon._png, name))
+        return dungeon._png_out(await asyncio.to_thread(dungeon.small_png if klein else dungeon._png, name))
     except LookupError as e:
         raise dungeon._http(e)
 

@@ -37,8 +37,8 @@ fund-<iid>.png next to the scene pictures. Seats see it through view() (add: "bi
 copy); a profile loads it by GET /api/profile/dungeon/ding/<name>, a guest's seat by POST /api/dungeon/ding with its
 code. Journal lines „dungeon: dingbild | …“, fixed words and numbers only; Live: dungeon's line, numbers only.
 
-    GET    /api/profile/dungeon/ding/{name}     a picture of an item (the game released for the profile)
-    POST   /api/dungeon/ding                    {code, name}: the same for a guest's seat
+    GET    /api/profile/dungeon/ding/{name}     a picture of an item (the game released for the profile); ?klein=1 small
+    POST   /api/dungeon/ding                    {code, name, klein}: the same for a guest's seat
     GET    /api/admin/dungeon/dingbilder        how far the pictures are (status)
     POST   /api/admin/dungeon/dingbilder        „Bilder jetzt erstellen“: the run starts now, not only at night
     DELETE /api/admin/dungeon/dingbilder        „Anhalten“: the run stops after the picture on its way
@@ -722,35 +722,37 @@ def for_live():
 
 
 # ---------------------------------------------------------------- endpoints
-def _png(name):
+def _png(name, klein=False):
+    """klein: the small copy for the bag, the seats and the map (dungeon.small_png; Dominik 2026-10-25: 23 pictures of
+    80 to 140 kB made the table slow over the proxy)."""
     if not NAME.fullmatch(str(name or "")):
         raise LookupError("bild")
-    return dungeon._png(name)
+    return dungeon.small_png(name) if klein else dungeon._png(name)
 
 
 @router.get("/api/profile/dungeon/ding/{name}", dependencies=[Depends(assistant)])
-async def ding(name: str, request: Request, prof=Depends(own_profile)):
-    """A picture of an item, for a profile the game is released for."""
+async def ding(name: str, request: Request, prof=Depends(own_profile), klein: int = 0):
+    """A picture of an item, for a profile the game is released for; ?klein=1 the small copy."""
     uid = prof["id"]
     dungeon._need(uid)
     guard.limit(request, "dungeonding", uid)
     try:
         if not await asyncio.to_thread(dungeon_karte.may_see, name, uid=uid):
             raise LookupError("bild")
-        return dungeon._png_out(await asyncio.to_thread(_png, name))
+        return dungeon._png_out(await asyncio.to_thread(_png, name, bool(klein)))
     except LookupError as e:
         raise dungeon._http(e)
 
 
 @router.post("/api/dungeon/ding")
 async def gast_ding(request: Request):
-    """{"code", "name"}: a picture of an item for a guest's seat."""
+    """{"code", "name", "klein"}: a picture of an item for a guest's seat (klein: the small copy)."""
     b, rid, _ = await dungeon._guest(request)
     guard.limit(request, "dungeonding")
     try:
         if not await asyncio.to_thread(dungeon_karte.may_see, b.get("name"), rid=rid):
             raise LookupError("bild")
-        return dungeon._png_out(await asyncio.to_thread(_png, b.get("name")))
+        return dungeon._png_out(await asyncio.to_thread(_png, b.get("name"), b.get("klein") is True))
     except LookupError as e:
         raise dungeon._http(e)
 

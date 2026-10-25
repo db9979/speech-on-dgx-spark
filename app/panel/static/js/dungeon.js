@@ -441,13 +441,14 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('[data
   catch(x){dmSay(g?DG:DM,t('Den Termin gibt es nicht mehr.','The date is gone.'),true)}});
 function dmBar(v,max,cls){const pc=Math.max(0,Math.min(100,Math.round(100*v/(max||1))));return `<i class="dm-bar ${cls||''}"><em style="width:${pc}%"></em></i>`}
 // pictures of items and spells (dungeon_dingbild.py, 5i): the picture in its rarity's frame, the kind's sign until it is painted
-function dmDing(it){return it.bild?`<span class="dm-ding"><img alt="" loading="lazy" data-dmdbild="${esc(it.bild)}"></span>`:it.zeichen?`<span class="dm-ding dm-dz" aria-hidden="true">${esc(it.zeichen)}</span>`:''}
-async function dmDingFill(w,mode){for(const im of w.querySelectorAll('img[data-dmdbild]:not([src])')){const n=im.dataset.dmdbild,key='d'+n;
-    if(mode==='p'){im.src='/api/profile/dungeon/ding/'+encodeURIComponent(n);continue}
+// big: the merchant's and the detail's large picture; everywhere else the small copy (Dominik 2026-10-25, slow over the proxy)
+function dmDing(it,big){return it.bild?`<span class="dm-ding"><img alt="" loading="lazy" decoding="async" data-dmdbild="${esc(it.bild)}"${big?'':' data-dmdk="1"'}></span>`:it.zeichen?`<span class="dm-ding dm-dz" aria-hidden="true">${esc(it.zeichen)}</span>`:''}
+async function dmDingFill(w,mode){for(const im of w.querySelectorAll('img[data-dmdbild]:not([src])')){const n=im.dataset.dmdbild,k=!!im.dataset.dmdk,key=(k?'k':'d')+n;
+    if(mode==='p'){im.src='/api/profile/dungeon/ding/'+encodeURIComponent(n)+(k?'?klein=1':'');continue}
     if(key in DMI){if(DMI[key])im.src=DMI[key];continue}DMI[key]='';
-    try{const r=await /*raw: a guest seat's picture as a blob, api() would open the login on a 401*/fetch('/api/dungeon/ding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,name:n})});
+    try{const r=await /*raw: a guest seat's picture as a blob, api() would open the login on a 401*/fetch('/api/dungeon/ding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,name:n,klein:k})});
       if(!r.ok){delete DMI[key];continue}DMI[key]=URL.createObjectURL(await r.blob())}catch(e){delete DMI[key];continue}
-    document.querySelectorAll(`#dgcard img[data-dmdbild="${n}"]`).forEach(x=>x.src=DMI[key])}}
+    document.querySelectorAll(`#dgcard img[data-dmdbild="${n}"]${k?'[data-dmdk]':':not([data-dmdk])'}`).forEach(x=>x.src=DMI[key])}}
 // ▲/▼ against what the hero wears and „passt“ for the class (Gegenstands-Punkt 10), from the panel's numbers of this view
 let DMCMP={};
 function dmCmp(it){const c=it&&DMCMP[it.i];if(!c)return '';
@@ -661,12 +662,21 @@ function dmLesung(mode,v){const A=DMLES[mode],T=v.lesung;if(!T)return;
 async function dmLesFrei(mode){const A=DMLES[mode];if(!A.el){A.el=new Audio();A.el.setAttribute('playsinline','')}A.el.src=dmStill();
   try{const AC=window.AudioContext||window.webkitAudioContext;if(AC){DMLES.ac=DMLES.ac||new AC();DMLES.ac.resume()}}catch(e){}
   try{await A.el.play();A.frei=true}catch(e){A.frei=!(e&&e.name==='NotAllowedError')}}
+// a piece as MP3, asked once; the next one loads while this one plays (Dominik 2026-10-25: over the proxy each piece
+// loaded only after the last one ended, a pause after every sentence)
+function dmLesHol(mode,n,k){const A=DMLES[mode],key=n+':'+k;A.pre=A.pre||{};
+  for(const x in A.pre)if(!x.startsWith(n+':'))delete A.pre[x];
+  if(!A.pre[key])A.pre[key]=(mode==='p'?api(`/api/profile/dungeon/${DM.rid}/ton/${n}/${k}?mp3=1`)
+    :/*raw: public route of a guest seat*/fetch('/api/dungeon/ton',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,zug:n,k,mp3:true})}))
+    .then(async r=>r.ok?URL.createObjectURL(await r.blob()):'').catch(()=>'');
+  return A.pre[key]}
 async function dmLesWeiter(mode){const A=DMLES[mode],S=mode==='p'?DM:DG,T=S.v&&S.v.lesung;
+  if(A.laeuft&&T&&T.n===A.n&&T.k>A.k+1)dmLesHol(mode,A.n,A.k+1);
   if(!T||A.laeuft||!A.frei||!dmLesHier()||!S.v.vorlesen||T.n!==A.n||A.k>=T.k)return;
   const n=A.n,k=A.k;A.laeuft=true;let gone=true;
-  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/ton/${n}/${k}`);
-    else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/ton',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,zug:n,k})});
-    if(r.ok){if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el.src=A.url;
+  try{const url=await dmLesHol(mode,n,k);delete A.pre[n+':'+k];
+    if(T.k>k+1)dmLesHol(mode,n,k+1);
+    if(url){if(A.url)URL.revokeObjectURL(A.url);A.url=url;A.el.src=url;
       await new Promise((ok,no)=>{A.el.onended=ok;A.el.onerror=ok;A.el.play().catch(no)})}}
   catch(e){if(e&&e.name==='NotAllowedError'){A.frei=false;gone=false}}      // the browser locked the sound again: a tap
   A.laeuft=false;if(gone&&A.n===n&&A.k===k)A.k=k+1;
@@ -956,7 +966,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 // Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „unübersichtlich“: the sections on the left,
 // the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
 // detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
-const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:Date.now(),welt:{}};
+const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{}};
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende'];
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),
@@ -1020,11 +1030,12 @@ function dmRPass(x){const f=DMR.f,q=DMR.q.trim().toLowerCase();
   if(f==='zauber')return ['zauber','rolle'].includes(x.art);if(f==='schatz')return ['schatz','schmuck'].includes(x.art);
   if(f[0]==='s'&&x.stufe!=null){const s=+x.stufe;return f==='s0'?s<5:f==='s5'?s>=5&&s<=10:s>10}
   return x.art===f}
-const dmRImg=n=>`<img alt="" loading="lazy" src="/api/admin/dungeon/bild/${encodeURIComponent(n)}?v=${DMR.v}">`;
+// v: the picture's own version (row bv/nv, its file time) so the browser keeps it; k: the small copy for the list
+const dmRImg=(n,v,k)=>`<img alt="" loading="lazy" decoding="async" src="/api/admin/dungeon/bild/${encodeURIComponent(n)}?v=${v||DMR.v}${k?'&klein=1':''}">`;
 // an item's picture in its rarity's frame, as in the bag (DMSEL; Dominik 2026-10-24 „farblich anders umrandet“)
 function dmRThumb(x,K){const s=x.selten?' '+(DMSEL[x.selten]||''):'selten' in x?' dm-sx':'';
   if(!K.bilder_an&&!x.bild||!('bild' in x))return `<span class="dm-rth dm-dz${s}" aria-hidden="true">${esc(x.zeichen||'·')}</span>`;
-  return x.bild?`<span class="dm-rth${s}">${dmRImg(x.bild)}</span>`:`<span class="dm-rth dm-rno${s}" aria-hidden="true">${esc(x.zeichen||'')}</span>`}
+  return x.bild?`<span class="dm-rth${s}">${dmRImg(x.bild,x.bv,1)}</span>`:`<span class="dm-rth dm-rno${s}" aria-hidden="true">${esc(x.zeichen||'')}</span>`}
 function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
   if(!K)return `<h3 class="sec">${esc(N[teil])}</h3><div class="mut">${esc(t('Lade …','Loading …'))}</div>`;
   if(K.fehler)return `<h3 class="sec">${esc(N[teil])}</h3><div class="err">${esc(K.fehler)}</div>`;
@@ -1055,9 +1066,9 @@ function dmRDet(teil){const K=DMR.k[teil],x=K.zeilen.find(z=>String(z.id)===DMR.
     <textarea class="mono dmr-txt" rows="16" data-fest spellcheck="false">${esc(JSON.stringify(DMR.edit.e,null,2))}</textarea>${DMR.err?`<div class="err dm-adm-err">${DMR.err}</div>`:''}
     <div class="row"><button type="button" class="b p" data-dmrdo="setzen">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmrdo="abbrechen">${esc(t('Abbrechen','Cancel'))}</button></div>`;
   const m=x.marke,neu=DMR.neu[String(x.id)]||x.neu,b='bild' in x;
-  const pic=b?`<div class="dm-rbild${x.selten?' '+(DMSEL[x.selten]||''):''}">${neu?`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(t('jetzt','now'))}</figcaption></figure><figure>${dmRImg(neu)}<figcaption>${esc(t('neu gemalt','painted again'))}</figcaption></figure></div>
+  const pic=b?`<div class="dm-rbild${x.selten?' '+(DMSEL[x.selten]||''):''}">${neu?`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild,x.bv):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(t('jetzt','now'))}</figcaption></figure><figure>${dmRImg(neu,DMR.neu[String(x.id)]?DMR.v:x.nv)}<figcaption>${esc(t('neu gemalt','painted again'))}</figcaption></figure></div>
       <div class="row"><button type="button" class="b p" data-dmrbild="neu" data-id="${esc(x.id)}">${esc(t('Neues behalten','Keep the new one'))}</button><button type="button" class="b" data-dmrbild="alt" data-id="${esc(x.id)}">${esc(t('Altes behalten','Keep the old one'))}</button></div>`
-      :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
+      :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild,x.bv):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
       <div class="row">${K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(DMR.busy===String(x.id)?t('Malt gerade …','Painting …'):x.bild?t('Nochmal malen','Paint again'):t('Malen','Paint'))}</button>`:`<small class="mut">${esc(t('Die Bilder sind aus; einschalten im Abschnitt „Bilder“.','Pictures are off; switch them on in the part "Pictures".'))}</small>`}</div></div>`:'';
   return `<div class="dm-rdkopf"><div><b class="dm-rname">${esc(x.zeichen||'')} ${esc(x.name)}</b> <span class="pill">${esc(St[x.stand])}</span>${m?` <span class="pill ${DMRMARKE[m.marke]}">${esc(m.name)}</span>`:''}</div></div>
     <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${(x.werte||[]).length?`<dl class="dm-rwerte">${x.werte.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:''}${dmRSelLadder(K,x)}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}
