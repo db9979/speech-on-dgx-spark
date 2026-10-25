@@ -5389,6 +5389,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Inhalte der D&D-Ideen 2, 4, 8, 9 und 12 (V01.1.090, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“): dungeon_srd.json trägt unter „ideen“ die festen Tabellen, die dungeon_ideen.check_rules prüft. Alles sind eigene Texte, denn die Vorlagen aus den Repos (darker-dungeons CC BY-NC-ND, VoloBot und rpg-card ohne Lizenz) gelten nur als Idee. Krit-Tabellen: je Schadensart 12 Zeilen für W12. Zeile 1 bis 4 sind nur Erzählung, die übrigen setzen einen vorhandenen Zustand für 1 bis 3 Züge, kampfunfähig, gelähmt, betäubt und bewusstlos immer nur für 1 Zug. Patzer: Nahkampf, Fernkampf und Zauber mit je 12 milden Zeilen; ein Zustand trifft nur den, der patzt, nie einen Freund. Landschaften: 13, darunter „weg“ als Rückfall und „huegel“ und „gras“ aus dem Gelände der Karte, je mit den Ortsarten, für die sie stehen, mit Nachtwachen auf W20 (ruhig, Geräusch, Besuch, Überfall) und 8 Reise-Ereignissen (ruhig, ausgeruht, hungrig, verirrt, überrascht). Lagerfeuer: 12 Fragen für alle Welten und je 12 für Fantasy, Horror, Sci-Fi und Piraten. Reise-Rollen: Kundschafter, Jäger, Wache und Pfadfinder mit Wert, Namen je Welt und Folge beim Misslingen. Narbe"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n: W20, Zeile 1 bis 4 mit −1 auf einen Wert bis zum Heiler, sonst nur eine Narbe; am Kindertisch nur Pflaster; dazu 8 Sätze aus der Taverne. Sage: jeder der 268 Gegner hat das Feld sage (je Sprache höchstens 200 Zeichen) für das Monster-Album. Selbsttests test_jeder_gegner_hat_eine_sage und test_ideen_tabellen_und_sagen (kein Satz trägt ein Wort des Kindertons)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: der Tisch am Handy (V01.1.078, Punkte 1 bis 6 der Tisch-Prüfung vom 2026-10-24, Dominik 2026-10-25 „alles 1-5 umsetzten“): Am Handy ist der Kopf des Tisches eine Zeile: Titel, Zug, 🔊 und „⋯“. Unter „⋯“ stehen „← Runden“, „So spielst du“, Hell oder Dunkel, „Vollbild“, Musik und Geräusche und beim Gastgeber das Spielleiter-Pult; die Reiter Runden, Helden und Regeln sind am Tisch ausgeblendet, der Tisch nutzt die ganze Breite. Der Kampf steht in einem Kasten mit einer Zeile je Gegner, der nicht mehr über der Erzählung klebt; die Begegnung in der Geschichte ist nur noch eine Zeile mit den Gegnern, ein Tipp öffnet ihr Fenster mit allen Werten (auch am Rechner). Das Feld zum Handeln steht in jedem Teil (Geschichte, Gruppe, Held, Karte) über der unteren Leiste, darüber „● Du bist dran“ und wie viele gehandelt haben; die Erzählung endet über dem Feld. Die Gruppe ist eine Liste mit Bild, Name, Lebensbalken und Stand, ein Tipp auf einen Helden zeigt seine Werte und Ausrüstung (auch am Rechner). Der Teil „Held“ zeigt die Rüstungsklasse, eine Reihe „Schnell“ (einen Heiltrank trinken, Fähigkeiten und Zauber mit Ladung, die Waffe in der Hand; Fähigkeit, Zauber und Waffe schrei"
 },
 {
@@ -19230,6 +19246,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "nds the same request as before, the panel checks it as before. With it the catalog checks the tables of the D&D ideas (Dominik 2026-10-25 “1-12 reihenfolge bestimmst du”) by fixed rules before a round sees them (dungeon_ideen.check_rules): under “ideen” in dungeon_srd.json critical hit tables per damage type and fumbles for melee, ranged and spells (d12, states only from the list, 1 to 3 turns), landscapes with night watches (d20 without gaps) and travel events, question cards, travel roles, scars (d20, at most −1 on one value) with plasters and sayings, and the saying on every foe (sage). They are played only in the next versions."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: content of the D&D ideas 2, 4, 8, 9 and 12 (V01.1.090, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.\"): dungeon_srd.json holds the fixed tables under \"ideen\", checked by dungeon_ideen.check_rules. All texts are our own, because the templates from the repos (darker-dungeons CC BY-NC-ND, VoloBot and rpg-card without a licence) count only as ideas. Critical tables: 12 rows per damage kind for a d12. Rows 1 to 4 are narration only, the others set an existing condition for 1 to 3 turns, incapacitated, paralysed, stunned and unconscious always for 1 turn only. Fumbles: melee, ranged and spell with 12 mild rows each; a condition only hits the one who fumbles, never a friend. Landscapes: 13, among them \"weg\" as the fallback and \"huegel\" and \"gras\" from the map's terrain, each with the kinds of places it stands for, with night watches on a d20 (quiet, noise, visitor, ambush) and 8 travel events (quiet, rested, hungry, lost, surprised). Campfire: 12 questions for all worlds and 12 each for fantasy, horror, sci-fi and pirates. Travel roles: scout, hunter, watch and pathfinder with a value, names per world and a consequence on failure. Scar"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "s: d20, rows 1 to 4 with −1 on a value until a healer, otherwise only a scar; at the children's table only plasters; plus 8 lines from the tavern. Legend: each of the 268 foes has the field sage (at most 200 characters per language) for the monster album. Self-tests test_jeder_gegner_hat_eine_sage and test_ideen_tabellen_und_sagen (no line carries a word of the children's tone)."
 },
 {
 "lang": "en",

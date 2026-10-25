@@ -188,6 +188,12 @@ class Srd(unittest.TestCase):
                           and w["id"] in (x.get("welten") or [w["id"]])]
                 self.assertTrue(waffen or a in oele, (w["id"], a))
 
+    def test_jeder_gegner_hat_eine_sage(self):
+        # D&D-Repo-Idee 12 (Monster-Album): every catalogue foe has its own legend line, both languages, at most 200 characters
+        for g in srd()["gegner"]:
+            self.assertEqual(len(g.get("sage") or []), 2, g["id"])
+            self.assertTrue(all(isinstance(x, str) and 0 < len(x) <= 200 for x in g["sage"]), g["id"])
+
     def test_angriffe_zwei_bis_fuenf(self):
         for g in dungeon._base_rules()["gegner"]:
             if "angriffe" in g:
@@ -270,7 +276,8 @@ class Srd(unittest.TestCase):
             self.assertEqual([x["id"] for x in s["gegner"] if "sage" not in x], [])
             woerter = next(t for t in r["toene"] if t["id"] == 8)["woerter"]
             texte = re.findall(r'"((?:[^"\\]|\\.)*)"', json.dumps([s["ideen"], [x.get("sage") for x in s["gegner"]]], ensure_ascii=False))
-            self.assertEqual([t for t in texte if any(w in " " + t.lower() + " " for w in woerter)], [])
+            ids = {z["id"] for z in r["zustaende"]}    # a state's id (blutend) is no spoken text, its name is checked above
+            self.assertEqual([t for t in texte if t not in ids and any(w in " " + t.lower() + " " for w in woerter)], [])
 
 
 if __name__ == "__main__":
