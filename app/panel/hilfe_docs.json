@@ -5189,6 +5189,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Öle im SRD-Katalog (V01.1.057, Dominik 2026-10-25 „1-12“, Punkt 9): Fünf Fläschchen mit oel in dungeon_srd.json: Donneröl (Donner), Blitzöl (Blitz), Feueröl (Feuer), Frostöl (Kälte) und Weihöl (strahlend), je 25 Gold, gewöhnlich und in jeder Welt. So hat ein Held in jeder Welt gegen eine Schwäche für Donner, Blitz, Feuer oder Kälte eine Waffe dieser Art oder ein Öl. Selbsttests test_schutz_nur_aus_der_liste (ein Öl ist ein Trank mit einer Art außer Hieb, Stich und Wucht) und test_jede_welt_trifft_donner_blitz_feuer_kaelte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Wirtschaft Teil 2 (V01.1.053, Dominik 2026-10-25 „1-12“ zur Prüfung der Wirtschaft, Punkte 3 und 5): Münzen: Ein Gegner gibt der Gruppe 5 bis 15 Gold mal Stufe (vorher 2 bis 10), Münzen werden so die Haupteinnahme. Händler mit Art: Jeder Händler ist Schmied (Waffen, Rüstung), Alchemist (Tränke, Zauber) oder Krämer (Schmuck, Werkzeug, Rollen, Schätze) (HAENDLER) und verkauft nur seine Art. Er zahlt für seine Art den halben Wert, für alles andere und für Unerkanntes ein Viertel (sell_price). Seine Kasse hat 50 Gold mal Stufe der Gruppe je Besuch (KASSE), was Helden bei ihm kaufen, füllt sie wieder; ist sie leer, lehnt er mit eigenem Satz ab. Das Händlerfenster nennt Art, was er zum halben Wert nimmt, und die Kasse. Fundtabelle: Die Seltenheit eines Funds kommt aus einer festen Tabelle je Stufe (fundtabelle in den Regeln, find_row, NIE = nie) statt aus Schwellen plus zweimal Stufe. Von einem Gegner wird keine Seltenheit von „selten“ bis „episch“ mit der Stufe seltener (vorher fiel „rar“ von 19 auf 12 Prozent, als „episch“ dazukam); Legendäres kommt ab Stufe 5 nur von Bossen, höchstens 10 von 100 (vorher 27), aus Truhen und Belohnungen nicht mehr. Unter Regeln steht "
 },
 {
@@ -18390,6 +18398,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "o the weapon in the main hand: the next 3 hits (OEL_TREFFER) do +1d6 of that kind, then the blade is clean again; without a weapon nothing is used up, an oil is never drunk. The item shows \"Oil: … N hits left\". New effects: thundering (thunder), corroding (acid) and withering (necrotic) burn like fire, each with its own kind. Self-tests test_the_economy_keeps_its_aim, test_gold_with_a_purpose_in_a_settlement, test_an_oil_on_the_weapon_for_three_hits, test_weapon_effects_for_thunder_acid_and_withering, test_every_common_kind_of_attack_has_its_protection (in every world each kind other than slashing, piercing and bludgeoning that at least five foes attack with has a protection thing there)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: oils in the SRD catalogue (V01.1.057, Dominik 2026-10-25 \"1-12\", point 9): five flasks with oel in dungeon_srd.json: thunder oil (thunder), lightning oil (lightning), fire oil (fire), frost oil (cold) and blessed oil (radiant), 25 gold each, common and in every world. So in every world a hero has a weapon of that kind or an oil against a weakness to thunder, lightning, fire or cold. Self-tests test_schutz_nur_aus_der_liste (an oil is a potion with a kind other than slashing, piercing and bludgeoning) and test_jede_welt_trifft_donner_blitz_feuer_kaelte."
 },
 {
 "lang": "en",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.057** · 2026-10-25 · KI-Dungeon-Master: fünf Öle im SRD-Katalog (Donner, Blitz, Feuer, Frost, Weihe) für 25 Gold, so trifft in jeder Welt jede Schwäche gegen Donner, Blitz, Feuer und Kälte
 - **V01.1.056** · 2026-10-25 · KI-Dungeon-Master am Tisch: Gegner mit mehreren Angriffen, Bosse mindestens zwei; Gegnerleben als Wort (angeschlagen, schwer verletzt, fast besiegt), Zustände mit „noch N Züge“; die Spracherkennung kennt die Namen der Runde; jeder Wurf mit Würfel-Beleg, die Erzählung nennt nur belegte Zahlen; beim Vorlesen wird der gesprochene Satz markiert
 - **V01.1.055** · 2026-10-25 · KI-Dungeon-Master: Siedlung mit Leben: Kopf mit Bild, Tageszeit und Gold, Karten mit Bild und Satz, Rechnung und Verb je Dienst, zu Teures grau mit „Es fehlen N Gold“, Lehrstunde als sechs Werte vorher → nachher
 - **V01.1.054** · 2026-10-25 · KI-Dungeon-Master: Wirtschaft Teil 3: der Prüfstand misst Einnahmen gegen Ausgaben je Stufe, Gasthaus 10 Gold mal Stufe je Held, der Schmied verbessert Waffen und Rüstung um eine Seltenheit, Öle auf der Waffe für 3 Treffer, Wirkungen donnernd, ätzend und welkend

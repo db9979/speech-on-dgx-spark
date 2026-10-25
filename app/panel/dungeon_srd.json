@@ -8765,6 +8765,81 @@
       "eigenschaften": [
         "leicht"
       ]
+    },
+    {
+      "id": "donneroel",
+      "art": "trank",
+      "name": [
+        "Donneröl",
+        "Thunder oil"
+      ],
+      "info": [
+        "Auf die Waffe gestrichen, dröhnen die nächsten drei Treffer.",
+        "Rubbed on a weapon, the next three hits boom."
+      ],
+      "kg": 0.3,
+      "oel": "donner",
+      "preis": 25
+    },
+    {
+      "id": "blitzoel",
+      "art": "trank",
+      "name": [
+        "Blitzöl",
+        "Lightning oil"
+      ],
+      "info": [
+        "Auf die Waffe gestrichen, knistern die nächsten drei Treffer.",
+        "Rubbed on a weapon, the next three hits crackle."
+      ],
+      "kg": 0.3,
+      "oel": "blitz",
+      "preis": 25
+    },
+    {
+      "id": "feueroel",
+      "art": "trank",
+      "name": [
+        "Feueröl",
+        "Fire oil"
+      ],
+      "info": [
+        "Auf die Waffe gestrichen, brennen die nächsten drei Treffer.",
+        "Rubbed on a weapon, the next three hits burn."
+      ],
+      "kg": 0.3,
+      "oel": "feuer",
+      "preis": 25
+    },
+    {
+      "id": "frostoel",
+      "art": "trank",
+      "name": [
+        "Frostöl",
+        "Frost oil"
+      ],
+      "info": [
+        "Auf die Waffe gestrichen, frieren die nächsten drei Treffer.",
+        "Rubbed on a weapon, the next three hits freeze."
+      ],
+      "kg": 0.3,
+      "oel": "kaelte",
+      "preis": 25
+    },
+    {
+      "id": "weihoel",
+      "art": "trank",
+      "name": [
+        "Weihöl",
+        "Blessed oil"
+      ],
+      "info": [
+        "Auf die Waffe gestrichen, leuchten die nächsten drei Treffer heilig.",
+        "Rubbed on a weapon, the next three hits shine with holy light."
+      ],
+      "kg": 0.3,
+      "oel": "strahlend",
+      "preis": 25
     }
   ],
   "gegner": [

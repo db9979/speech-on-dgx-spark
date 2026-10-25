@@ -162,10 +162,25 @@ class Srd(unittest.TestCase):
 
     def test_schutz_nur_aus_der_liste(self):
         for x in srd()["gegenstaende"]:
+            if "oel" in x:
+                self.assertEqual(x["art"], "trank", x["id"])
+                self.assertIn(x["oel"], ARTEN - set(kampf.KOERPER), x["id"])
             if "widerstand" in x:
                 self.assertIn(x["art"], dungeon.WIDERSTAND_ARTEN, x["id"])
                 self.assertTrue(x["widerstand"] and set(x["widerstand"]) <= ARTEN, x["id"])
                 self.assertNotIn("immun", x, x["id"])
+
+    def test_jede_welt_trifft_donner_blitz_feuer_kaelte(self):
+        # Wirtschaft Punkt 9: a foe weak to one of these kinds is never out of reach, by weapon or by an oil for every world
+        r = dungeon._base_rules()
+        oele = {x["oel"] for x in r["gegenstaende"] if "oel" in x and not x.get("welten")}
+        for w in r["welten"]:
+            if w["id"] == "eigene":
+                continue
+            for a in ("donner", "blitz", "feuer", "kaelte"):
+                waffen = [x for x in r["gegenstaende"] if x["art"] == "waffe" and x.get("schaden_art") == a
+                          and w["id"] in (x.get("welten") or [w["id"]])]
+                self.assertTrue(waffen or a in oele, (w["id"], a))
 
     def test_angriffe_zwei_bis_fuenf(self):
         for g in dungeon._base_rules()["gegner"]:
