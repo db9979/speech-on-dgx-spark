@@ -3488,6 +3488,13 @@
 "titel": "Dungeon-Master schneller auf dem Pi",
 "text": "A: Nach dem Update eine laufende Runde öffnen: sie ist noch da, mit Helden, Verlauf und Karte (die alte Datei wurde aufgeteilt). B: Im Browser die Entwicklerwerkzeuge, Reiter Netzwerk: vor dem ersten Öffnen des Dungeon-Masters lädt die Seite kein dungeon.js; beim Öffnen kommen dungeon.js und die vier anderen Spiel-Skripte. C: Am Tisch nichts tun: die Abfragen alle 3 Sekunden antworten kurz mit „neu: false“, die Uhr des Zuges läuft weiter. D: Auf dem Gast-Gerät eine Aktion schreiben: beim Gastgeber erscheint sie beim nächsten Nachfragen. E: Während der Spielleiter antwortet, bewegen sich die Würfel und Schritte wie bisher. F: Ein Platz-Link (#spiel=…) auf einem neuen Gerät öffnet den Platz wie bisher. G: Zustand → Überblick nennt, wie oft heute „nichts neu“ an den Tisch ging.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P523",
+"v": 1074,
+"titel": "Dungeon-Master: Spielleiter-Pult und breitere Spalte",
+"text": "A: Als Gastgeber eine Runde öffnen: rechts stehen Auftrag, Held, „▶ Jetzt weiter“ und „🎲 Spielleiter-Pult öffnen“, darunter Karte, Fäden, Termin; kein Reiter „Leiten“ mehr. B: „Spielleiter-Pult öffnen“: ein großes Fenster mit „Dieser Zug“, „Am Tisch“, „Erzähler“ nebeneinander, darunter Geschichte, Zufallsregeln, Orakel, Wahrheit. C: Im Pult Pause, Vorlesen, Erzählweise und Kampfstufe umstellen: es wirkt wie vorher. D: „Jetzt weiter“ im Pult: das Fenster schließt sich, die Erzählung kommt. E: Die Kante links der rechten Spalte mit der Maus ziehen: die Spalte wird breiter; Seite neu laden: die Breite bleibt; Doppelklick auf die Kante: zurück. F: Am Handy: das Pult steht untereinander, keine Kante.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

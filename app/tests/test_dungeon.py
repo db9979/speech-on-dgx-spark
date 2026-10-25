@@ -4301,9 +4301,9 @@ class Windows(unittest.TestCase):
                         self.assertTrue(await pg.evaluate(story), w)                                      # the story never a narrow strip
                         self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('fab')).display"), "none", w)   # no face at the table
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-group .dm-ichz').length"), 1, w)
-                        if await pg.evaluate("!!document.querySelector('#dmview [data-dmseite=host]')"):
+                        if await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=pult]')"):
                             await helpers.dm_pane(pg, "held")
-                            await pg.click("#dmview [data-dmseite=host]")
+                            await pg.click("#dmview [data-dmfen=pult]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-tiles .dm-tile')")
                         same = "(()=>{const a=getComputedStyle(document.querySelector('#dmview .dm-tile')).fontFamily,b=getComputedStyle(document.querySelector('#dmview .dm-tisch,#dmview.dm-tisch')).fontFamily;return a===b})()"
                         self.assertTrue(await pg.evaluate(same), w)
@@ -4349,12 +4349,14 @@ class Windows(unittest.TestCase):
             async with async_playwright() as pw:
                 br, pg, errors = await b.page(pw, 1280, 900)
                 try:
-                    await pg.evaluate("try{localStorage.setItem('dm-hilfe','1');localStorage.setItem('dm-seite','host')}catch(e){};goSec('dungeon')")
+                    await pg.evaluate("try{localStorage.setItem('dm-hilfe','1')}catch(e){};goSec('dungeon')")
                     await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
                     await pg.evaluate(f"DM.rid='{rid}';dmRound()")
-                    await b.until(pg, "!!document.querySelector('#dmview .dm-dinge')")
+                    await b.until(pg, "!!document.querySelector('#dmview [data-dmfen=pult]')")
                     if await pg.evaluate("!!document.querySelector('#dmview .dm-fen-hilfe')"):
                         await pg.keyboard.press("Escape")
+                    await pg.click("#dmview [data-dmfen=pult]")                                     # the things are in the console (2026-10-25)
+                    await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-dinge')")
                     await pg.click("#dmview .dm-dinge summary")
                     self.assertIn("nur du siehst das", await pg.inner_text("#dmview .dm-dinge summary"))
                     await pg.click("#dmview [data-dmding='0']")
@@ -4755,6 +4757,7 @@ class Windows(unittest.TestCase):
         b = Browser("run")
         b.port = self.port
         tabs = "[...document.querySelectorAll('#dmview .dm-seite [data-dmseite]')].map(x=>x.dataset.dmseite)"
+        fits = "(()=>{const x=document.querySelector('#dmview .dm-fen-box').getBoundingClientRect();return x.left>=0&&x.right<=innerWidth+0.5&&x.top>=0&&x.bottom<=innerHeight+0.5})()"
 
         async def go():
             async with async_playwright() as p:
@@ -4789,19 +4792,35 @@ class Windows(unittest.TestCase):
                             await pg.locator(".dm-vk[data-dmvkk=klasse]").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"klassen-{w}.png"))
                         await pg.evaluate(f"DM.rid='{rid}';dmRound()")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-seite')")
-                        self.assertEqual((await pg.evaluate(tabs))[:2], ["karte", "host"])
+                        self.assertEqual((await pg.evaluate(tabs))[:1], ["karte"])
+                        self.assertNotIn("host", await pg.evaluate(tabs))                                  # the host's controls are a window now
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-seitein').length"), 1)
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-seitein .dmk')"))   # the map first
-                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmweiter]')"))
                         await helpers.dm_pane(pg, "held")
-                        await pg.click("#dmview [data-dmseite=host]")
-                        await b.until(pg, "!!document.querySelector('#dmview .dm-seitein [data-dmweiter]')")
-                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk')"))
-                        self.assertEqual(await pg.evaluate("localStorage.getItem('dm-seite')"), "host")       # remembered
+                        # the column keeps „Jetzt weiter“ and opens the console (Dominik 2026-10-25, Vorschlag 2+3)
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-side .dm-pultz .dm-go[data-dmweiter]')"))
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-side [data-dmpause],#dmview .dm-side [data-dmweise]')"))
+                        if w == 1280:                                                                  # the edge: wider by the arrow keys, kept
+                            self.assertEqual(await pg.evaluate("Math.round(document.querySelector('#dmview .dm-side').getBoundingClientRect().width)"), 320)
+                            await pg.focus("#dmview .dm-ziehe")
+                            await pg.keyboard.press("ArrowLeft")
+                            self.assertEqual(await pg.evaluate("[localStorage.getItem('dm-breite'),Math.round(document.querySelector('#dmview .dm-side').getBoundingClientRect().width)]"), ["336", 336])
+                            await pg.evaluate("dmDraw()")
+                            self.assertEqual(await pg.evaluate("Math.round(document.querySelector('#dmview .dm-side').getBoundingClientRect().width)"), 336)
+                            await pg.dblclick("#dmview .dm-ziehe")
+                            self.assertEqual(await pg.evaluate("localStorage.getItem('dm-breite')"), "320")
+                        else:
+                            self.assertFalse(await pg.is_visible("#dmview .dm-ziehe"))                 # one column: no edge
+                        await pg.click("#dmview [data-dmfen=pult]")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-go[data-dmweiter]')")
+                        self.assertTrue(await pg.evaluate(fits), w)
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)"), ["zug", "tisch", "erz"])
+                        if w == 1280:                                                                  # three columns side by side
+                            self.assertEqual(await pg.evaluate("new Set([...document.querySelectorAll('#dmview .dm-pult-sp')].map(x=>Math.round(x.getBoundingClientRect().top))).size"), 1)
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-side .dm-mek')"))  # the own hero stays
-                        # „Leiten“ calm (Dominik 2026-10-24 „wirkt unruhig“): one main action, tiles alike, rare ones behind „⋯ Mehr“
-                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-seitein .dm-go[data-dmweiter]')"))
-                        self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-tiles .dm-tile').length"), 3)
+                        # the console calm (Dominik 2026-10-24 „wirkt unruhig“): one main action, tiles alike, rare ones behind „⋯ Mehr“
+                        self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult .dm-tiles .dm-tile').length"), 3)
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult [data-pult=erz] [data-dmweise]')"))
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=karte]')"))   # the map is a tab
                         self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-seite button')].filter(x=>x.scrollWidth>x.clientWidth+1).length"), 0, w)
                         self.assertFalse(await pg.evaluate("document.querySelector('#dmview .dm-mehr').open"))
@@ -4812,8 +4831,13 @@ class Windows(unittest.TestCase):
                         await pg.evaluate("DM.kap=false;DMA.auf='';dmDraw()")
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"pult-{w}.png"), full_page=True)
+                        await pg.click("#dmview .dm-fen-pult [data-dmfenzu]")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-fen-pult')")
+                        if os.environ.get("DMF_SHOT"):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"spalte-{w}.png"), full_page=True)
-                        await pg.click("#dmview [data-dmseite=termin]")
+                        if await pg.evaluate("!!document.querySelector('#dmview [data-dmseite=termin]')"):   # on the phone the date is the only tab left
+                            await pg.click("#dmview [data-dmseite=termin]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-seitein .dm-termin')")
                         self.assertEqual(errors, [])
                     finally:

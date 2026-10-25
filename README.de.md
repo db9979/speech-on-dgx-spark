@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.074** KI-Dungeon-Master: Spielleiter-Pult als großes Fenster mit drei Spalten, die rechte Spalte zeigt nur noch Held, Jetzt weiter und Karte und lässt sich breiter ziehen
 - **V01.1.073** KI-Dungeon-Master: schneller auf dem Pi: eine Datei je Runde mit Zwischenspeicher, das Nachfragen bekommt „nichts neu“, solange sich nichts geändert hat, die Spiel-Skripte laden erst beim ersten Öffnen
 - **V01.1.072** KI-Dungeon-Master: die Tabellen unter Regeln zeigen jetzt alle Zeilen mit Nummer, Würfel und Welten, jede Tabelle hat in der Liste ein Zeichen
 - **V01.1.071** KI-Dungeon-Master: Fehler behoben: ein Angriff auf mehrere Gegner einer Art („die Ratten“) oder ein Angriff ohne genanntes Ziel würfelte nur eine Probe und machte keinen Schaden; jetzt trifft er den ersten, der noch steht, und Magie eines Zauberkundigen ohne eigenen Zauber ist ein Zaubertrick
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.067** KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
 - **V01.1.066** KI-Dungeon-Master: Abenteuer-Import: ein geschriebenes Abenteuer (PDF, Word, Markdown) wird im Geschichten-Planer ein Entwurf mit Akten, Schauplätzen und Gegenspieler; das Panel prüft ihn wie eine getippte Geschichte
 - **V01.1.065** KI-Dungeon-Master: Erzähler-Prüfstand: acht feste Szenen durch das laufende Sprachmodell mit den Regeln des Tisches, feste Regeln geben Punkte, Modelle nebeneinander; der Zug am Tisch nutzt dieselben Schritte
-- **V01.1.064** KI-Dungeon-Master: Fraktionen mit Uhren: die Gruppen der Geschichte verfolgen ihr Ziel, das Panel dreht die Uhren, die Taten der Helden helfen oder stören, eine volle Uhr ändert die Welt; Fenster ⏳ Fraktionen
 
 
 

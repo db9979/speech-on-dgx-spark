@@ -2248,7 +2248,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm h5{margin:14px 0 6px;font-size:12px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .dm h6{margin:10px 0 4px;font-size:12px;font-weight:600}
 .dm-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}.dm-head h3{margin:0;font-size:17px}
-.dm-grid{display:grid;grid-template-columns:230px minmax(0,1fr) 290px;gap:14px;align-items:start}
+.dm-grid{display:grid;grid-template-columns:230px minmax(0,1fr) min(var(--dm-side,320px),45%);gap:14px;align-items:start}
 .dm-col{min-width:0}.dm-story{display:flex;flex-direction:column;gap:8px}
 .dm-feed{max-height:62vh;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px;overscroll-behavior:contain}
 .dm-dm{background:color-mix(in srgb,var(--acc) 8%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 22%,var(--line));border-radius:12px;padding:10px 12px}
@@ -2684,9 +2684,9 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 @media (max-width:980px){.dm.dm-tisch.dm-voll{overflow:auto;display:block}.dm-voll .dm-group,.dm-voll .dm-side{overflow:visible}.dm-voll .dm-feed{max-height:55vh}}
 /* the table by its own width, not the window's: next to the panel's menu a laptop leaves it ~700 px (Dominik 2026-10-24) */
 .dm-tisch{container:dmtisch/inline-size}
-@container dmtisch (max-width:1060px){.dm-grid{grid-template-columns:minmax(0,1fr) 270px}.dm-grid>.dm-group{grid-column:1/-1;order:-1;display:flex;flex-wrap:wrap;gap:8px}.dm-grid>.dm-group>h5{flex-basis:100%;margin:0}.dm-grid>.dm-group>.dm-seat{flex:1 1 220px;min-width:0}}
-@container dmtisch (max-width:720px){.dm-grid{grid-template-columns:minmax(0,1fr)}.dm-tisch .dm-side{border-left:0;padding-left:0}}
-@media (max-width:980px){.dm-grid{grid-template-columns:1fr}.dm-feed{max-height:55vh}.dm-group{order:2}.dm-story{order:1}.dm-side{order:3}.dm-tisch .dm-side{border-left:0;padding-left:0}.dm.dm-tisch{padding:10px;margin:0 -8px}.dm-tisch .dm-dm{padding:12px 14px;font-size:16px}}
+@container dmtisch (max-width:1060px){.dm-grid{grid-template-columns:minmax(0,1fr) min(var(--dm-side,320px),50%)}.dm-grid>.dm-group{grid-column:1/-1;order:-1;display:flex;flex-wrap:wrap;gap:8px}.dm-grid>.dm-group>h5{flex-basis:100%;margin:0}.dm-grid>.dm-group>.dm-seat{flex:1 1 220px;min-width:0}}
+@container dmtisch (max-width:720px){.dm-grid{grid-template-columns:minmax(0,1fr)}.dm-ziehe{display:none}.dm-tisch .dm-side{border-left:0;padding-left:0}}
+@media (max-width:980px){.dm-grid{grid-template-columns:1fr}.dm-ziehe{display:none}.dm-feed{max-height:55vh}.dm-group{order:2}.dm-story{order:1}.dm-side{order:3}.dm-tisch .dm-side{border-left:0;padding-left:0}.dm.dm-tisch{padding:10px;margin:0 -8px}.dm-tisch .dm-dm{padding:12px 14px;font-size:16px}}
 @media (max-width:520px){.dm-cards{grid-template-columns:1fr 1fr}.dm-cards.dm-gs{grid-template-columns:1fr}.dm-gidee{-webkit-line-clamp:2}.dm-vert{grid-template-columns:repeat(3,1fr)}.dm-two{grid-template-columns:1fr}}
 /* KI-Dungeon-Master: the admin's tab „Regeln“ (dungeon.js dmRulesDraw): sections left, the part right, list and detail */
 .dm-rcard{padding:4px 0}.dm-rhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-rhead h2{margin:0 0 8px}
@@ -2736,6 +2736,12 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-tisch:not(.dm-hell) .dm-bo.up{color:#7ee2a2;background:color-mix(in srgb,#5fd38d 16%,transparent)}.dm-tisch:not(.dm-hell) .dm-bo.dn{color:#ff9a8a;background:color-mix(in srgb,#ff7a66 16%,transparent)}
 /* the host's tab „Leiten“ (dungeon.js host): one main action, four tiles alike, quiet rows, „⋯ Mehr“ */
 .dm-go{display:flex;justify-content:center;align-items:baseline;gap:6px;width:100%;margin:4px 0 10px;padding:11px 12px;border:0;border-radius:12px;background:#2f6b45;color:#fff;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+/* the host's console as a window and the draggable edge of the right column (Dominik 2026-10-25, Vorschlag 2+3) */
+.dm-side{position:relative}.dm-ziehe{position:absolute;left:0;top:0;bottom:0;width:10px;cursor:col-resize;touch-action:none;z-index:2;border-radius:4px}.dm-ziehe::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:2px;border-radius:2px;background:transparent}.dm-ziehe:hover::after,.dm-ziehe:focus-visible::after,.dm-ziehe.on::after{background:var(--t-gold,var(--acc))}.dm-ziehe:focus-visible{outline:none}
+.dm-pultz{margin-top:10px}.dm-pultz .dm-go{margin:0 0 6px}.dm-pultz .dm-pultk{margin-top:0}
+.dm-pult{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.dm-pult-sp{min-width:0;border:1px solid var(--t-linie,var(--line));border-radius:12px;padding:10px 12px 12px}.dm-pult-sp>h5{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}.dm-pult-sp .dm-zeile:first-of-type{margin-top:0}.dm-pult-sp .dm-tiles+.dm-zeile{margin-top:8px}.dm-pult-sp .dm-mehr{margin-top:10px}
+.dm-pult-unten{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px;align-items:start}.dm-pult-unten>*{min-width:0;margin:0}
+@media (max-width:860px){.dm-pult{grid-template-columns:1fr}}
 .dm-go small{font-weight:400;font-size:12.5px;opacity:.9}.dm-go:disabled{background:color-mix(in srgb,var(--t-linie,var(--line)) 70%,transparent);color:var(--t-mut,var(--mut));cursor:default}
 .dm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dm-tiles>.dm-tile:last-child:nth-child(odd){grid-column:1/-1}   /* an odd last tile spans the row, no gap */
 .dm-tile{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 10px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer;min-width:0}

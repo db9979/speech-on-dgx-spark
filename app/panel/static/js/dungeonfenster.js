@@ -143,18 +143,21 @@ function dmDetail(v,f){const it=f.it,h=v.ich,open=v.status!=='ende',kg=it.kg?Str
     <div><b class="dm-detail-n">${esc(it.name)}</b>${dmCmp(it)}${it.n>1?` <span class="pill">×${it.n}</span>`:''}</div><small>${esc(it.selten_name||'')}${kg?' · '+kg:''}</small>
     ${it.fund?`<p class="dm-ifund">${esc(t('Gefunden in: ','Found in: ')+it.fund)}</p>`:''}${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${dmFx(z)}</li>`).join('')}</ul>`:''}
     ${it.u?`<small class="mut">${esc(t('Noch nicht erkannt: was es kann, zeigt sich erst, wenn es jemand erkennt.','Not yet identified: what it does shows only once someone identifies it.'))}</small>`:''}${acts}</div></div>`}
-const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',siedlung:'dm-fen dm-fen-haendler',grenzen:'dm-fen dm-fen-haendler',leute:'dm-fen dm-fen-haendler',fraktionen:'dm-fen dm-fen-haendler',ding:'dm-fen dm-fen-ding'};
+const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',siedlung:'dm-fen dm-fen-haendler',grenzen:'dm-fen dm-fen-haendler',leute:'dm-fen dm-fen-haendler',fraktionen:'dm-fen dm-fen-haendler',pult:'dm-fen dm-fen-pult',ding:'dm-fen dm-fen-ding'};
 function dmFenBox(kind,title,body,neu){return `<div class="${DMFENK[kind]}" data-dmfenbg="${kind==='ding'?'ding':'w'}"><div class="dm-fen-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">
   <div class="dm-fen-kopf"><h3>${esc(title)}</h3><button type="button" class="ic-ib" data-dmfenzu="${kind==='ding'?'ding':'w'}" title="${esc(t('Schließen','Close'))}" aria-label="${esc(t('Schließen','Close'))}">✕</button></div>${neu||''}<div class="dm-fen-body">${body}</div></div></div>`}
-function dmFenster(v,mode){DMCMP=v.vergleich||{};const W=DMW[mode],h=v.ich;if(!h){W.w=W.ding='';return ''}
+// the host's console (pult, built by dmTable): only while the host leads a running round
+function dmFenster(v,mode,pult){DMCMP=v.vergleich||{};const W=DMW[mode],h=v.ich;if(W.w==='pult'&&!pult)W.w='';if(!h&&W.w!=='pult'){W.w=W.ding='';return ''}
   if(W.w==='haendler'&&!(v.markt&&v.status!=='ende')||W.w==='siedlung'&&!v.siedlung||W.w==='grenzen'&&!v.grenzen||W.w==='leute'&&!v.nsc||W.w==='fraktionen'&&!v.fraktionen)W.w='';
   const f=dmFind(v,W.ding);if(!f)W.ding='';if(!W.w&&!W.ding)return '';
   const neu=W.zug&&v.zug>W.zug?`<div class="dm-fen-neu" role="status">${esc(t('Neuer Zug '+v.zug+': der Dungeon-Master hat weitererzählt.','New turn '+v.zug+': the Dungeon Master has told on.'))}<button type="button" class="b" data-dmfenzu="alle">${esc(t('Zum Tisch','To the table'))}</button></div>`:'';
   // the table's last message also in the window, so an answer (a refused portrait, a full bag) is never hidden behind it
   const S=mode==='g'?DG:DM,say=`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.msg||'')}</div>`;
-  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):W.w==='grenzen'?dmFenBox('grenzen','🛡 '+t('Grenzen und X-Karte','Lines and X-card'),say+dmGrenzen(v),neu):W.w==='leute'?dmFenBox('leute','👥 '+t('Leute und Chronik','People and chronicle'),dmLeute(v),neu):W.w==='fraktionen'?dmFenBox('fraktionen','⏳ '+t('Fraktionen','Factions'),say+dmFraktionen(v),neu):'';
+  const main=W.w==='bogen'?dmFenBox('bogen','📜 '+h.name,say+dmMe(v,mode),neu):W.w==='haendler'?dmFenBox('haendler','⚖ '+v.markt.name,say+dmShop(v),neu):W.w==='siedlung'?dmFenBox('siedlung','🏘 '+v.siedlung.name,dmSiedlung(v),neu):W.w==='grenzen'?dmFenBox('grenzen','🛡 '+t('Grenzen und X-Karte','Lines and X-card'),say+dmGrenzen(v),neu):W.w==='leute'?dmFenBox('leute','👥 '+t('Leute und Chronik','People and chronicle'),dmLeute(v),neu):W.w==='fraktionen'?dmFenBox('fraktionen','⏳ '+t('Fraktionen','Factions'),say+dmFraktionen(v),neu):W.w==='pult'?dmFenBox('pult','🎲 '+t('Spielleiter-Pult','Game master console'),say+pult,neu):'';
   const det=f&&(f.gegner?dmFoeDet(f):f.kann?dmKtDet(f.kann,v.status!=='ende'&&f.kann.rest!==0?dmKannSay(f.kann,f.zauber):''):dmDetail(v,f));
   return main+(f?dmFenBox('ding',f.it.name,det,main?'':neu):'')}
+// „Jetzt weiter“ in the console closes it: the host wants to see the story told on (the table's own handler sends it)
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview .dm-fen-pult [data-dmweiter]');if(b&&!b.disabled){DMW.p.w='';DMW.p.zug=0}},true);
 // the window's own scroll stays across the table's repaints
 function dmFenKeep(w){const s=[...w.querySelectorAll('.dm-fen-body')].map(x=>[x.closest('.dm-fen').className,x.scrollTop]);
   return ()=>s.forEach(([c,y])=>{const b=w.querySelector(`.dm-fen[class="${c}"] .dm-fen-body`);if(b)b.scrollTop=y})}

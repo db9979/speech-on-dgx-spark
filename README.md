@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.074** AI Dungeon Master: game master console as a big window with three columns, the right column shows only the hero, Go on now and the map and can be dragged wider
 - **V01.1.073** AI Dungeon Master: faster on the Pi: one file per round with a cache, the poll gets “nothing new” while nothing changed, the game scripts load on the first opening
 - **V01.1.072** AI Dungeon Master: the tables under Rules now show every row with its number, the die and the worlds, every table has a sign in the list
 - **V01.1.071** AI Dungeon Master: fixed: an attack on several foes of one kind (“the rats”) or an attack without a named target only rolled a check and dealt no damage; now it hits the first still standing, and a caster's magic without a spell of its own is a cantrip
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.067** AI Dungeon Master: vaults left behind fill again after 6 steps, places a faction holds carry its banner on the map
 - **V01.1.066** AI Dungeon Master: adventure import: a written adventure (PDF, Word, Markdown) becomes a draft with acts, places and foe in the story planner; the panel checks it like a typed story
 - **V01.1.065** AI Dungeon Master: narrator bench: eight fixed scenes through the running language model with the table's rules, fixed rules give points, models side by side; the turn at the table uses the same steps
-- **V01.1.064** AI Dungeon Master: factions with clocks: the story's groups pursue their goal, the panel turns the clocks, the heroes' deeds help or hinder, a full clock changes the world; window ⏳ Factions
 
 
 

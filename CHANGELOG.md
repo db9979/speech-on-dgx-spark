@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.074** · 2026-10-25 · KI-Dungeon-Master: Spielleiter-Pult als großes Fenster mit drei Spalten, die rechte Spalte zeigt nur noch Held, Jetzt weiter und Karte und lässt sich breiter ziehen
 - **V01.1.073** · 2026-10-25 · KI-Dungeon-Master: schneller auf dem Pi: eine Datei je Runde mit Zwischenspeicher, das Nachfragen bekommt „nichts neu“, solange sich nichts geändert hat, die Spiel-Skripte laden erst beim ersten Öffnen
 - **V01.1.072** · 2026-10-25 · KI-Dungeon-Master: die Tabellen unter Regeln zeigen jetzt alle Zeilen mit Nummer, Würfel und Welten, jede Tabelle hat in der Liste ein Zeichen
 - **V01.1.071** · 2026-10-25 · KI-Dungeon-Master: Fehler behoben: ein Angriff auf mehrere Gegner einer Art („die Ratten“) oder ein Angriff ohne genanntes Ziel würfelte nur eine Probe und machte keinen Schaden; jetzt trifft er den ersten, der noch steht, und Magie eines Zauberkundigen ohne eigenen Zauber ist ein Zaubertrick
