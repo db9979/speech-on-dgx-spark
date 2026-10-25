@@ -193,6 +193,7 @@ MODULE = {
     "dungeon_nsc": ("dienste", "Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf"),
     "dungeon_gesicht": ("dienste", "Dungeon-Master-Gesichter: ein festes Porträt je Figur, Vorlage für spätere Szenenbilder"),
     "dungeon_fraktionen": ("dienste", "Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln"),
+    "dungeon_quest": ("dienste", "Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund"),
     "dungeon_orakel": ("dienste", "Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt"),
     "dungeon_tabellen": ("dienste", "Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben"),
     "dungeon_sicht": ("dienste", "Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht"),

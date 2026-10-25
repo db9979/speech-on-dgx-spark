@@ -299,6 +299,8 @@ FEATURES = (
     # Fraktionen mit Uhren (dungeon_fraktionen.py, Tabletop-Punkt 7): the truth's groups with clocks the panel turns
     F("dungeonfraktionen", "Fraktionen mit Uhren", "Factions with clocks", "data", ("dungeon_fraktionen",), parent="dungeon", me="dmbox",
       guide="dungeonfraktionen"),
+    # Quest-Gegenstände (dungeon_quest.py, Punkt 15 of 2026-10-24): named things the story needs, the panel checks every find
+    F("dungeonquest", "Quest-Gegenstände", "Quest items", "data", ("dungeon_quest",), parent="dungeon", me="dmbox", guide="dungeonquest"),
     # Kampfstufen (dungeon_kampf.STUFEN, Tabletop-Punkt 13): the host chooses easy to deadly, the SRD 5.2.1 table sets the ratio
     F("dungeonstufen", "Kampfstufen", "Combat stages", "data", ("dungeon_stufen",), parent="dungeon", me="dmbox", guide="dungeonstufen"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's

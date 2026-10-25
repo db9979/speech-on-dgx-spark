@@ -3453,6 +3453,13 @@
 "titel": "Dungeon-Master: Gleiches Gesicht für NSCs",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Gesichter für NSCs an, Bilder malen an. A: Runde starten, bis die Erzählung eine Figur trifft und sie spricht; nach etwa einer Minute zeigt „👥 Leute und Chronik“ ihr rundes Gesicht, ein Tipp macht es groß. B: Neben der Sprechzeile der Figur im Verlauf steht das Gesicht klein. C: Das nächste Szenenbild mit dieser Figur zeigt dasselbe Gesicht. D: Als Gastgeber im Fenster „↻ Gesicht neu malen“: das alte Gesicht bleibt, bis das neue da ist. E: Ein Mitspieler sieht den Knopf nicht. F: Kapitel beenden und neues Kapitel beginnen: die Figur hat ihr Gesicht noch. G: Schalter aus: keine neuen Gesichter, Szenenbilder kommen ohne Vorlage.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P518",
+"v": 1069,
+"titel": "Quest-Gegenstände",
+"text": "A: Funktionen → KI-Dungeon-Master → Quest-Gegenstände an. Im Reiter „Regeln“ bei einer Geschichte im ersten Akt „Besonderes Ding“ auf „Messingschlüssel“ setzen, speichern und eine Runde damit beginnen. B: Als Gastgeber im Heldenbogen, Reiter „Tasche“, steht unter „✦ Besondere Dinge“ der Schlüssel mit „liegt in der Szene · noch nicht erzählt“; auf dem Gast-Gerät steht nichts davon. C: In der Aktion „Ich nehme den Messingschlüssel“ schreiben: nach dem Zug steht im Verlauf „✦ Arvid nimmt Messingschlüssel“, er steht im Heldenbogen ohne Gewicht und ohne Verkaufen. D: „Geben …“ an den Gast: beim Gast steht er unter „✦ Besondere Dinge“; dort „Hinlegen“: er liegt unter „Liegt hier“ und lässt sich aufheben. E: Ein paar Züge spielen, bis die Erzählung einen neuen Schlüssel oder eine Karte findet: der Fund steht mit ✦ beim Finder. F: Schalter aus: keine besonderen Dinge mehr zu sehen. G: Zustand → Überblick nennt Quest-Gegenstände und heute genommene.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

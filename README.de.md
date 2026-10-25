@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.069** KI-Dungeon-Master: Quest-Gegenstände: Schlüssel, Karten und Siegel der Geschichte ohne Gewicht, aus dem Geschichten-Planer, der Karte oder einem geprüften Fund; wer sie in der Aktion nennt, nimmt sie, Türen öffnen sich nur mit ihnen
 - **V01.1.068** KI-Dungeon-Master: Gleiches Gesicht für NSCs: jede getroffene Figur bekommt ein festes Porträt aus festen Teilen, spätere Szenenbilder nehmen es als Vorlage, Gesicht in „Leute und Chronik“ und an der Sprechzeile, Gastgeber malt neu
 - **V01.1.067** KI-Dungeon-Master: verlassene Gewölbe füllen sich nach 6 Schritten neu, Orte einer Fraktion tragen ihr Banner auf der Karte
 - **V01.1.066** KI-Dungeon-Master: Abenteuer-Import: ein geschriebenes Abenteuer (PDF, Word, Markdown) wird im Geschichten-Planer ein Entwurf mit Akten, Schauplätzen und Gegenspieler; das Panel prüft ihn wie eine getippte Geschichte
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.062** KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
 - **V01.1.061** KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
 - **V01.1.060** KI-Dungeon-Master: NSC-Gedächtnis mit Karten aus festen Tabellen, Haltung zu jedem Helden und Beziehungen, nur die Figuren der Szene gehen ans Modell; Chronik und Ruf der Helden; NSC-Tabellen, Namenssilben und Orakel im Katalog
-- **V01.1.059** KI-Dungeon-Master: Zufallsregeln des Gastgebers, bis zu fünf je Runde mit Chance, Auslöser und Wirkung; das Panel würfelt und wendet sie an, das Modell hört nur den Hinweis als Daten
 
 
 

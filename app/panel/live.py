@@ -1865,6 +1865,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['fraktionen']} Fraktionen, {dgn.get('fraktionen_voll', 0)} am Ziel" if dgn.get("fraktionen") else "")
                         + (f" · heute {dgn.get('fraktion_weiter', 0)} Felder gedreht, {dgn.get('fraktion_helden', 0)} durch die Helden, {dgn.get('fraktion_voll', 0)} Uhren voll"
                            if dgn.get("fraktion_weiter") or dgn.get("fraktion_helden") or dgn.get("fraktion_voll") else "")
+                        + (f" · {dgn['quest_dinge']} Quest-Gegenstände, {dgn.get('quest_getragen', 0)} getragen" if dgn.get("quest_dinge") else "")
+                        + (f" · heute {dgn.get('quest_genommen', 0)} genommen, {dgn.get('quest_gefunden', 0)} gefunden, {dgn.get('quest_gegeben', 0)} weitergegeben, {dgn.get('quest_verbraucht', 0)} verbraucht"
+                           if any(dgn.get(k) for k in ("quest_genommen", "quest_gefunden", "quest_gegeben", "quest_verbraucht")) else "")
                         + (f" · heute {dgn['orakel']} Mal das Orakel gefragt" if dgn.get("orakel") else "")
                         + (f" · {dgn['orakel_chaos']} Runden mit eigenem Chaosgrad" if dgn.get("orakel_chaos") else "")
                         + (f" · {dgn['nsc_karten']} Figuren mit Karte" if dgn.get("nsc_karten") else "")

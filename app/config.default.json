@@ -201,6 +201,7 @@
     "dungeon_gesicht": false,
     "dungeon_orakel": false,
     "dungeon_fraktionen": false,
+    "dungeon_quest": false,
     "dungeon_stufen": false,
     "remarkable": false,
     "remarkable_send": false,

@@ -290,6 +290,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_nsc.py` | KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf. |
 | `app/panel/dungeon_orakel.py` | KI-Dungeon-Master: Orakel. |
 | `app/panel/dungeon_pruefstand.py` | KI-Dungeon-Master: the balance bench „Balance-Prüfstand“: the panel plays thousands of fights alone, with the real rules and dice of dungeon_kampf (attacks, … |
+| `app/panel/dungeon_quest.py` | KI-Dungeon-Master: Quest-Gegenstände. |
 | `app/panel/dungeon_regelseite.py` | KI-Dungeon-Master: the admin's rules page as its own tab „Regeln“. |
 | `app/panel/dungeon_schreiber.py` | KI-Dungeon-Master: Schreiber-Abgleich. |
 | `app/panel/dungeon_sicht.py` | KI-Dungeon-Master: Sichtfilter. |

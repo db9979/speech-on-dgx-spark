@@ -5205,6 +5205,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Quest-Gegenstände (V01.1.069, Punkt 15 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“ und 12:33 „echte Quest-Gegenstände“, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Quest-Gegenstände* (chat.dungeon_quest, ab Werk aus; dungeon_quest.py). Ein Quest-Gegenstand ist ein benanntes Ding, das die Geschichte braucht (ein Schlüssel, eine Karte, ein Siegel): eigenes Zeichen ✦, kein Gewicht, nie zu verkaufen, von Held zu Held weiterzugeben. Er kommt auf drei Wegen, jeder nach festen Regeln: ein Akt des Geschichten-Planers nennt sein Ding (Feld „Besonderes Ding“, 2 bis 40 Zeichen, geprüft wie der Rest der Geschichte mit Ton, „nie“ und Tabus), es liegt in der Szene, solange der Akt läuft (q_akt1 …); die Karte legt eines an einen Ort oder in ein Gewölbe (dungeon.quest_legen(rd, ort_id, ding), dieselbe Kennung zweimal ändert nichts); oder die Erzählung meldet einen Fund (quest_fund, höchstens einer je Zug): das Panel nimmt ihn nur, wenn die Erzählung ihn beim Namen nennt, der Name 2 bis 40 Zeichen hat, durch die Wortlisten geht, die Runde ihn noch nicht hat und weniger als QUEST_MAX (12) Dinge zählt; er geht an den Finder, sonst liegt er hier"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Nennt die Aktion eines Helden ein Ding, das dort liegt, wo die Gruppe steht, nimmt er es (vor der Erzählung, das Modell hört es als quest_genommen); was die Gruppe trägt (quest_gruppe) und was hier liegt (quest_hier), hört das Modell nur als Daten. Im Heldenbogen, Reiter „Tasche“, stehen unter „✦ Besondere Dinge“ die eigenen Dinge mit „Geben …“ und „Hinlegen“, dazu was die anderen tragen; unter „Liegt hier“ lässt sich aufheben, was die Erzählung schon genannt hat (POST /api/profile/dungeon/{rid}/held mit questgeben, questablegen, questaufheben, für Gäste /api/dungeon/held). Türen und Wege der Karte öffnen sich nur, wenn eine Aktion das Ding nennt und die Gruppe es trägt (dungeon.quest_genannt, dungeon.quest_haben); ein verbrauchtes Ding verschwindet mit einer Zeile im Verlauf (dungeon.quest_verbrauchen) und wird nie wieder gelegt. Stirbt ein Träger oder verlässt er den Tisch, liegt das Ding dort, wo die Gruppe steht. Getragene Dinge gehen mit ihrem Helden ins nächste Kapitel; liegen gelassene bleiben zurück. Spieler sehen ein Ding erst, wenn die Erzählung es genannt hat oder es jemand trägt; der Gastgeber sieht alle mit ihrem Ort (quest_geheim, nur Gastgeber; im Sichtfilter quest"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "_versteckt und quest_anderswo). Logzeilen dungeon: quest | … nur mit festen Wörtern; die Live-Übersicht zählt Dinge, getragene und heute genommene, gefundene, weitergegebene und verbrauchte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
 },
 {
@@ -10270,6 +10294,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Fraktionen mit Uhren (Funktionen → Meine Daten → „Fraktionen mit Uhren“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Die Gruppen der Geschichte (Gilden, Banden, Orden …) verfolgen ihr Ziel, auch ohne die Helden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Quest-Gegenstände (Funktionen → Meine Daten → „Quest-Gegenstände“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Besondere Dinge der Geschichte (ein Schlüssel, eine Karte, ein Siegel) mit eigenem Zeichen ✦: sie wiegen nichts, sind nicht zu verkaufen und gehen von Held zu Held."
 },
 {
 "lang": "de",
@@ -18717,6 +18749,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: quest items (V01.1.069, point 15 of the review of 2026-10-24, Dominik \"alles umsetzten\" and 12:33 \"echte Quest-Gegenstände\", own code): Own admin switch *Features → AI Dungeon Master → Quest items* (chat.dungeon_quest, off from the start; dungeon_quest.py). A quest item is a named thing the story needs (a key, a map, a seal): its own sign ✦, no weight, never for sale, passed from hero to hero. It comes three ways, each by fixed rules: an act of the story planner names its thing (field \"Special thing\", 2 to 40 characters, checked like the rest of the story with tone, \"never\" and taboos) and it lies in the scene while the act runs (q_akt1 …); the map lays one at a place or in a vault (dungeon.quest_legen(rd, ort_id, ding), the same id twice changes nothing); or the narration reports a find (quest_fund, at most one a turn): the panel takes it only when the narration names it, the name has 2 to 40 characters, passes the word lists, the round does not have it yet and counts fewer than QUEST_MAX (12) things; it goes to the finder, else it lies here. When a hero's action names a thing lying where the group stands, the hero takes it (before the narration, the model hears"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " it as quest_genommen); what the group carries (quest_gruppe) and what lies here (quest_hier) the model hears only as data. In the hero sheet, tab \"Bag\", \"✦ Special things\" lists the own things with \"Give …\" and \"Put down\", and what the others carry; under \"Lying here\" one picks up what the narration has named (POST /api/profile/dungeon/{rid}/held with questgeben, questablegen, questaufheben, for guests /api/dungeon/held). Doors and ways of the map open only when an action names the thing and the group carries it (dungeon.quest_genannt, dungeon.quest_haben); a used thing vanishes with a line in the feed (dungeon.quest_verbrauchen) and is never laid again. When a carrier dies or leaves the table, the thing lies where the group stands. Carried things go into the next chapter with their hero; things left lying stay behind. Players see a thing only once the narration has named it or someone carries it; the host sees all with their place (quest_geheim, host only; in the view filter quest_versteckt and quest_anderswo). Journal lines dungeon: quest | … with fixed words only; the live overview counts things, carried ones and today's taken, found, passed on and used ones."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: factions with clocks (V01.1.064, tabletop point 7, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", clocks with fields as common in tabletop play, own code): Own admin switch *Features → AI Dungeon Master → Factions with clocks* (chat.dungeon_fraktionen, off from the start; dungeon_fraktionen.py). Every group of the chapter's fixed truth (wahrheit.gruppen, name and what it wants) becomes a faction with a clock of 4, 6 or 8 fields the panel rolls; at most FRAKTIONEN_MAX (6). After every told turn the panel rolls a d6 for each running clock, from UHR_WURF (5) it moves a field. The narration reports in fraktionen at most 2 groups whose goal an action of the heroes brings closer (hilft) or hinders (stoert); the panel then turns the clock a field, but only when the narration names the group (also without its article), and only once per group and turn. A full clock means: the group has got what it wanted. That stands in the feed (and in the chronicle while \"NPC memory and chronicle\" is on), the next narration gets it once as data (fraktion_voll) with the fixed rule to tell how the world changes, and the group holds the grou"
 },
 {
@@ -23598,6 +23646,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Factions with clocks (Features → My data → \"Factions with clocks\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The story's groups (guilds, gangs, orders …) pursue their goal, also without the heroes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Quest items (Features → My data → \"Quest items\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Special things of the story (a key, a map, a seal) with their own sign ✦: they weigh nothing, cannot be sold and pass from hero to hero."
 },
 {
 "lang": "en",

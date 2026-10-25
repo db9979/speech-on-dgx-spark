@@ -13,8 +13,8 @@ import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
-                 "fraktionen_geheim")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen")   # the admin switches of the secrets below: the self-test turns them on
+                 "fraktionen_geheim", "quest_geheim")
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -52,6 +52,11 @@ def _nsc(rd, karte, kanten, **more):
     rd["log"].append({"art": "dm", "text": "Oskar winkt der Gruppe zu.", "npc": [], "n": rd.get("zug", 0)})   # in the scene
 
 
+def _quest(rd, m, ort):
+    rd["quest"] = {"q_geheim": {"q": "q_geheim", "name": [m, m], "info": "", "wer": None, "hid": None, "ort": ort, "gesehen": False,
+                                "von": "karte", "zug": rd.get("zug", 0)}}
+
+
 # id: (what, who may see it, how the self-test plants a marker in a round)
 GEHEIM = {
     "wahrheit": (("Die verborgene Wahrheit der Runde", "The round's hidden truth"), {"gastgeber", "modell"},
@@ -81,6 +86,10 @@ GEHEIM = {
     "fraktion_ziel": (("Was eine Fraktion will", "What a faction wants"), {"gastgeber", "modell"},
                       lambda rd, m: rd.update(fraktionen={"gilde": {"name": "Gilde", "will": m, "felder": 6, "stand": 2, "bekannt": True,
                                                                      "voll": None, "ort": None, "eigen": True}})),
+    "quest_versteckt": (("Ein Quest-Gegenstand, der hier liegt und noch nicht erzählt ist", "A quest thing lying here, not told yet"),
+                        {"gastgeber", "modell"}, lambda rd, m: _quest(rd, m, "")),
+    "quest_anderswo": (("Ein Quest-Gegenstand an einem anderen Ort", "A quest thing at another place"), {"gastgeber"},
+                       lambda rd, m: _quest(rd, m, "o_weit")),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

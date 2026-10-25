@@ -154,6 +154,7 @@ WITHOUT = {
     "dungeonzufall": "dungeon_zufall.py: kein Werkzeug, der Gastgeber legt Regeln fest, das Panel würfelt, nie das Modell",
     "dungeonstufen": "dungeon_kampf.py: kein Werkzeug, der Gastgeber wählt die Stufe, das Panel rechnet das Budget",
     "dungeonfraktionen": "dungeon_fraktionen.py: kein Werkzeug, das Panel dreht die Uhren nach festen Regeln, das Modell meldet nur",
+    "dungeonquest": "dungeon_quest.py: kein Werkzeug, das Modell meldet einen Fund, das Panel prüft und verteilt nach festen Regeln",
     "dungeonorakel": "dungeon_orakel.py: kein Werkzeug, der Gastgeber fragt, das Panel würfelt, das Modell hört nur die Antwort",
     "dungeonnsc": "dungeon_nsc.py: kein Werkzeug, das Panel würfelt die Karten und nimmt Änderungen nach festen Regeln an",
     "dungeongesicht": "dungeon_gesicht.py: kein Werkzeug, das Panel malt die Porträts aus festen Teilen und wählt die Vorlagen",
