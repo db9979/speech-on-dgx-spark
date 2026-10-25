@@ -286,6 +286,9 @@ FEATURES = (
     # Orakel (dungeon_orakel.py, Tabletop-Punkt 8): yes or no with a chaos grade and the catalog's tables for the host;
     # the panel rolls, the model only hears the answer as data
     F("dungeonorakel", "Orakel", "Oracle", "data", ("dungeon_orakel",), parent="dungeon", me="dmbox", guide="dungeonorakel"),
+    # Fraktionen mit Uhren (dungeon_fraktionen.py, Tabletop-Punkt 7): the truth's groups with clocks the panel turns
+    F("dungeonfraktionen", "Fraktionen mit Uhren", "Factions with clocks", "data", ("dungeon_fraktionen",), parent="dungeon", me="dmbox",
+      guide="dungeonfraktionen"),
     # Kampfstufen (dungeon_kampf.STUFEN, Tabletop-Punkt 13): the host chooses easy to deadly, the SRD 5.2.1 table sets the ratio
     F("dungeonstufen", "Kampfstufen", "Combat stages", "data", ("dungeon_stufen",), parent="dungeon", me="dmbox", guide="dungeonstufen"),
     # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's

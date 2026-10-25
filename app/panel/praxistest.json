@@ -3418,6 +3418,13 @@
 "titel": "Kampfstufen und SRD 5.2.1",
 "text": "A: Funktionen → KI-Dungeon-Master → Kampfstufen an. Als Gastgeber im Reiter „Leiten“ bei „⚔ Kampfstufe“ „Leicht“ wählen: die nächste Begegnung hat weniger oder schwächere Gegner. B: „Tödlich“ wählen: deutlich mehr Gegner, die Gefahr auf der Karte zeigt meist „schwer“. C: Auf dem Gast-Gerät gibt es keine Auswahl. D: Neue Gegner aus dem SRD 5.2.1 tauchen auf (zum Beispiel Goblinkrieger, Pegasus, Riffhai) und Zauber wie Lenkender Blitz oder Eismesser stehen bei den Klassen. E: Am Kindertisch nennt der Erzähler den Trank „Drachenglut“ und den Zustand „verwundet“ ohne Abbruch. F: Zustand → Überblick zählt Runden mit eigener Kampfstufe.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P513",
+"v": 1064,
+"titel": "Fraktionen mit Uhren",
+"text": "A: Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren an. Eine neue Runde beginnen: nach dem Prolog zeigt „⏳ Fraktionen“ dem Gastgeber die Gruppen der Geschichte mit Ziel und Uhr. B: Ein paar Züge spielen: manche Uhren rücken zwischen den Zügen vor; die Spieler sehen eine Uhr erst, wenn die Erzählung die Gruppe nennt, nie ihr Ziel. C: Eine Gruppe in der Geschichte behindern (zum Beispiel ihre Schläger vertreiben): im Verlauf steht, dass ihre Uhr zurückfällt. D: Als Gastgeber eine eigene Gruppe anlegen, Ziel und Felder ändern, mit + bis voll drehen: im Verlauf steht, dass sie ihr Ziel erreicht hat, die nächste Erzählung zeigt die Folgen. E: Auf dem Gast-Gerät gibt es keine Ziele und keine Knöpfe. F: Zustand → Überblick zählt Fraktionen und volle Uhren.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

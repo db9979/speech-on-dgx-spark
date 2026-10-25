@@ -5173,6 +5173,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "on_voll) mit der festen Regel, die Veränderung der Welt zu erzählen, und die Gruppe hält den Ort der Gruppe auf der Karte (dungeon_fraktionen.occupied: der Haken für den Karten-Thread). Das Modell bekommt alle Fraktionen mit Ziel und Uhr nur als Daten. Sicht: Am Tisch öffnet „⏳ Fraktionen“ ein Fenster mit den Uhren der Gruppen, die die Erzählung schon genannt hat, nie mit ihrem Ziel; der Gastgeber sieht dort alle Gruppen mit Ziel (fraktionen_geheim, dungeon_sicht.NUR_GASTGEBER, im Selbsttest der Sichtfilter als Geheimnis „fraktion_ziel“), legt eigene an, ändert Ziel und Felder, dreht eine Uhr von Hand (−/+) oder entfernt eine Gruppe (POST /api/profile/dungeon/{rid}/fraktion mit name, will, felder, schritt oder weg, nur der Gastgeber, nur feste Werte). Die Fraktionen gehen ins nächste Kapitel mit. Live: Zustand → Überblick zählt Fraktionen, volle Uhren und am Tag gedrehte Felder. Selbsttest test_factions_with_clocks_turned_by_fixed_rules in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampfstufen leicht bis tödlich (V01.1.063, Tabletop-Punkt 13, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, eigener Code; die Tabelle aus dem SRD 5.2.1, CC-BY-4.0): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Kampfstufen* (chat.dungeon_stufen, ab Werk aus; dungeon_kampf.STUFEN). Der Gastgeber wählt im Reiter „Leiten“ bei „⚔ Kampfstufe“ Leicht, Mittel, Schwer oder Tödlich (POST /api/profile/dungeon/{rid}/erzaehler mit kampfstufe, nur der Gastgeber, nur ein Wert der Liste). Mittel bleibt das gemessene Budget (BUDGET, 70 bis 90 Siege in 100). Für Leicht und Schwer nimmt das Panel das Verhältnis der Budget-Tabelle des SRD 5.2.1 (budget im Katalog: leicht, mittel, schwer, EP je Held für Stufe 1 bis 10) zu Mittel, gemittelt über die Stufen der Helden; Tödlich ist Schwer mal TOEDLICH (1,5), denn die Tabelle kennt kein Tödlich. Ohne Tabelle gelten feste Verhältnisse (STUFE_OHNE: 0,67 und 1,4). Die Stufe wirkt ab der nächsten Begegnung zusammen mit Kindertisch und Spielleiter-Regler; die Gefahr, die die Spieler sehen, misst weiter gegen Mittel. dungeon_kampf.check_rules prüft die Tabelle (je 10 Zahlen, leicht <"
 },
 {
@@ -10166,6 +10182,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Orakel (Funktionen → Meine Daten → „Orakel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Gastgeber, auch allein am Tisch, fragst du das Orakel: eine Ja-oder-Nein-Frage mit „Sicher“ bis „Kaum“ oder bis zu 3 Tabellen wie Handlung und Thema, Ort, Wendung, Komplikation."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Fraktionen mit Uhren (Funktionen → Meine Daten → „Fraktionen mit Uhren“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Die Gruppen der Geschichte (Gilden, Banden, Orden …) verfolgen ihr Ziel, auch ohne die Helden."
 },
 {
 "lang": "de",
@@ -18581,6 +18605,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: factions with clocks (V01.1.064, tabletop point 7, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", clocks with fields as common in tabletop play, own code): Own admin switch *Features → AI Dungeon Master → Factions with clocks* (chat.dungeon_fraktionen, off from the start; dungeon_fraktionen.py). Every group of the chapter's fixed truth (wahrheit.gruppen, name and what it wants) becomes a faction with a clock of 4, 6 or 8 fields the panel rolls; at most FRAKTIONEN_MAX (6). After every told turn the panel rolls a d6 for each running clock, from UHR_WURF (5) it moves a field. The narration reports in fraktionen at most 2 groups whose goal an action of the heroes brings closer (hilft) or hinders (stoert); the panel then turns the clock a field, but only when the narration names the group (also without its article), and only once per group and turn. A full clock means: the group has got what it wanted. That stands in the feed (and in the chronicle while \"NPC memory and chronicle\" is on), the next narration gets it once as data (fraktion_voll) with the fixed rule to tell how the world changes, and the group holds the grou"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "p's place on the map (dungeon_fraktionen.occupied: the hook for the map thread). The model gets every faction with goal and clock only as data. Visibility: at the table \"⏳ Factions\" opens a window with the clocks of the groups the narration has named, never their goal; the host sees every group with its goal there (fraktionen_geheim, dungeon_sicht.NUR_GASTGEBER, in the visibility self-test as the secret \"fraktion_ziel\"), adds own ones, changes goal and fields, turns a clock by hand (−/+) or removes a group (POST /api/profile/dungeon/{rid}/fraktion with name, will, felder, schritt or weg, host only, fixed values only). The factions go on into the next chapter. Live: Status → Live counts factions, full clocks and fields turned per day. Self-test test_factions_with_clocks_turned_by_fixed_rules in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: combat stages easy to deadly (V01.1.063, tabletop point 13, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", own code; the table from the SRD 5.2.1, CC-BY-4.0): Own admin switch *Features → AI Dungeon Master → Combat stages* (chat.dungeon_stufen, off from the start; dungeon_kampf.STUFEN). The host chooses in the \"Host\" tab at \"⚔ Combat stage\" Easy, Medium, Hard or Deadly (POST /api/profile/dungeon/{rid}/erzaehler with kampfstufe, host only, only a value of the list). Medium stays the measured budget (BUDGET, 70 to 90 wins in 100). For Easy and Hard the panel takes the ratio of the SRD 5.2.1 budget table (budget in the catalog: low, moderate, high, XP per hero for levels 1 to 10) to Medium, averaged over the heroes' levels; Deadly is Hard times TOEDLICH (1.5), since the table has no deadly. Without the table fixed ratios hold (STUFE_OHNE: 0.67 and 1.4). The stage works from the next encounter on together with the children's table and the game master dial; the danger the players see still measures against Medium. dungeon_kampf.check_rules checks the table (10 numbers each, low < moderate < high). Live: Status → Live cou"
 },
 {
@@ -23390,6 +23430,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Oracle (Features → My data → \"Oracle\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As host, also alone at the table, you ask the oracle: a yes-or-no question from \"Certain\" to \"Hardly\" or up to 3 tables like action and theme, place, twist, complication."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Factions with clocks (Features → My data → \"Factions with clocks\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The story's groups (guilds, gangs, orders …) pursue their goal, also without the heroes."
 },
 {
 "lang": "en",

@@ -197,6 +197,7 @@
     "dungeon_zufall": false,
     "dungeon_nsc": false,
     "dungeon_orakel": false,
+    "dungeon_fraktionen": false,
     "dungeon_stufen": false,
     "remarkable": false,
     "remarkable_send": false,

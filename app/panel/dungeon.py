@@ -122,6 +122,7 @@ import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
 import dungeon_zufall as zufall
+import dungeon_fraktionen as fraktionen
 import dungeon_nsc as nsc
 import dungeon_orakel as orakel
 import dungeon_tabellen as tabellen
@@ -401,7 +402,8 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
                   oel=0, beleg_falsch=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
-                  nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0)
+                  nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
+                  fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0)
 
 
 def _go(coro, name):
@@ -1983,7 +1985,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
             h["stimme"] = voice_for(r, rd, h)
         if kampagne:
             rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
-            rd.update(erz.carry(kampagne), **nsc.carry(kampagne))
+            rd.update(erz.carry(kampagne), **nsc.carry(kampagne), **fraktionen.carry(kampagne))
             rd["legenden"] = [x for x in kampagne.get("legenden") or [] if isinstance(x, str)][:LEGENDEN_MAX]
             plan = kampagne.get("plan")
             if plan:
@@ -2317,7 +2319,7 @@ def end_chapter(owner, rid, now=None):
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
         if nsc.on(rd):
             nsc.note(rd, f"Kapitel {rd.get('kapitel', 1)} endet.", f"Chapter {rd.get('kapitel', 1)} ends.")
-        c.update(erz.keep_chapter(rd), **nsc.keep(rd))
+        c.update(erz.keep_chapter(rd), **nsc.keep(rd), **fraktionen.keep(rd))
         c["stimmen"] = stimmen.keep(rd)
         c["legenden"] = list(rd.get("legenden") or [])
         kid = kid or "k" + os.urandom(4).hex()
@@ -2435,7 +2437,7 @@ def next_chapter(owner, kid, b, lang, now=None):
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
                                "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte"),
                                "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "dinge": c.get("dinge"),
-                               "nsc": c.get("nsc"), "chronik": c.get("chronik"),
+                               "nsc": c.get("nsc"), "chronik": c.get("chronik"), "fraktionen": c.get("fraktionen"),
                                "stimmen": c.get("stimmen"), "legenden": c.get("legenden")})
     with _lock:
         ks, c = _campaign(owner, kid)
@@ -2977,7 +2979,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "wege": {"type": "array", "maxItems": WEGE[1], "items": {"type": "string", "maxLength": WEG_MAX + 40}},
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
-    "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA,
+    "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA, "fraktionen": fraktionen.SCHEMA,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -3043,6 +3045,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
     fakten.update(zufall.facts(rd.get("zufall_hinweise") or []))   # the hints of the host's random rules (Tabletop-Punkt 9)
     fakten.update(orakel.facts(rd, li))                  # this turn's oracle answers, only as data (Tabletop-Punkt 8)
+    fakten.update(fraktionen.facts(rd))                  # the factions and their clocks, only as data (Tabletop-Punkt 7)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3076,7 +3079,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3289,6 +3292,7 @@ def check_story(r, rd, obj):
     out["faeden"] = erz.check_threads(_me, r, rd, obj.get("faeden"))
     out["dinge"] = erz.check_things(_me, r, rd, obj.get("dinge"))
     out["nsc"] = nsc.check(_me, r, rd, obj.get("nsc"), text)      # NSC-Gedächtnis (Tabletop-Punkt 5): by fixed rules
+    out["fraktionen"] = fraktionen.check(rd, obj.get("fraktionen"), text)   # Fraktionen mit Uhren (Tabletop-Punkt 7)
     out["begegnung"] = kampf.check_encounter(_me, r, rd, _living(rd), obj.get("begegnung"))
     out["kampf_ende"] = obj.get("kampf_ende") if rd.get("kampf") and obj.get("kampf_ende") in kampf.ENDE else ""
     return out, drop
@@ -3601,6 +3605,7 @@ async def run_turn(rid, turn):
                 if story:
                     erz.learn_people(cur, story)
                     nsc.learn(_me, r, cur, story, turn)     # cards, attitudes, relations, the chronicle (Tabletop-Punkt 5)
+                    fraktionen.learn(_me, cur, story)       # the factions' clocks (Tabletop-Punkt 7)
                     erz.apply_threads(cur, story["faeden"])
                     erz.learn_things(cur, story["dinge"])
                     kurz.append(erz.wants_summary(cur))
@@ -3713,6 +3718,7 @@ async def run_prolog(rid):
                     stimmen.learn(cur, story["npc_stimme"])
                 told = prolog(r, cur, story)
                 nsc.learn(_me, r, cur, story, 1)       # the truth's people get their cards (Tabletop-Punkt 5)
+                fraktionen.learn(_me, cur, story)      # the truth's groups get their clocks (Tabletop-Punkt 7)
                 if told and cur.get("vorlesen"):
                     e = cur["log"][-1]
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], (), cur))
@@ -4864,6 +4870,7 @@ def view(rid, pid, now=None):
     out["zufall"] = zufall.view(rd, host, lang)
     out["orakel"] = orakel.view(rd, host, li)                   # the host's oracle (Tabletop-Punkt 8)
     out["nsc"], out["nsc_geheim"] = nsc.view(rd, host, li)      # the people met, chronicle, reputation (Tabletop-Punkt 5)
+    out["fraktionen"], out["fraktionen_geheim"] = fraktionen.view(rd, host)   # the factions' clocks (Tabletop-Punkt 7)
     out["siedlung"] = gold.view(_me, r, rd, pid)
     mine = me.get("held")                      # ▲/▼ and „passt“ for the bag, the merchant's goods and the ground (Gegenstands-Punkt 10)
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
@@ -5273,11 +5280,12 @@ def for_live():
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
             **dungeon_karte.for_live(rs),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
-            **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs),
+            **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
-                                 "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel")}}
+                                 "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
+                                 "fraktion_weiter", "fraktion_helden", "fraktion_voll")}}
 
 
 def own_count(uid):
@@ -5967,6 +5975,32 @@ async def orakel_fragen(rid: str, request: Request, prof=Depends(browser_profile
     try:
         return await asyncio.to_thread(go)
     except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/fraktion", dependencies=[Depends(assistant)])
+async def fraktion_setzen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {name, will?, felder?, schritt?, weg?} adds an own faction, changes one, turns its clock a field or takes
+    it away (Tabletop-Punkt 7, dungeon_fraktionen.host)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            was = fraktionen.host(_me, rules(), rd, b)
+            _write(d)
+        print(f"dungeon: fraktion | gastgeber | {was}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        print("dungeon: fraktion | abgelehnt", flush=True)
         raise _http(e)
 
 

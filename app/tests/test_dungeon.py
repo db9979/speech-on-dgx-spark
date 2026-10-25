@@ -3017,6 +3017,23 @@ class Refusals(Base):
         missing = sorted(w for w in words if dungeon._GRUND.fullmatch(w) and f"'{w}':[" not in table)
         self.assertEqual(missing, [])
 
+    def test_dungeon_scripts_name_each_function_once(self):
+        """V01.1.064 „dmUhr“ of the faction ring took the name of the turn clock and emptied it: no top-level function
+        of a dungeon*.js script may carry the name of a function in another script of the panel page."""
+        import glob
+        static = os.path.join(os.path.dirname(dungeon.__file__), "static")
+        with open(os.path.join(static, "index.html"), encoding="utf-8") as fh:
+            page = re.findall(r'src="/static/js/([\w.-]+\.js)', fh.read())
+        names = {}
+        for f in sorted(glob.glob(os.path.join(static, "js", "*.js"))):
+            b = os.path.basename(f)
+            if b in page or b.startswith("dungeon"):
+                with open(f, encoding="utf-8") as fh:
+                    for n in re.findall(r"^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(", fh.read(), re.M):
+                        names.setdefault(n, []).append(b)
+        twice = {n: fs for n, fs in names.items() if len(fs) > 1 and any(x.startswith("dungeon") for x in fs)}
+        self.assertEqual(twice, {})
+
     def test_a_hero_playing_elsewhere_says_so(self):
         v = self.new_round()
         hid = self.state(v["rid"])["plaetze"][v["pid"]]["held"]["hid"]
@@ -5656,6 +5673,92 @@ class Fight(Turns):
         self.assertNotIn("die Schenke retten", g)
         self.assertNotIn("eine Schuld begleichen", g)
         self.assertGreaterEqual(dungeon.for_live()["nsc_ziel_erreicht"], 1)
+
+    def test_factions_with_clocks_turned_by_fixed_rules(self):
+        """Tabletop-Punkt 7 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): every group of the truth
+        becomes a faction with a clock of 4, 6 or 8 fields; between told turns the panel rolls a d6 per running clock
+        (UHR_WURF or more: a field); the narration's „hilft“/„stoert“ turns a clock a field only for a faction named in
+        it, once each; a full clock is a line in the feed, the next narration hears it once as data and the faction
+        holds the group's place (the map's hook); the table sees a clock once the narration named the faction, never
+        what it wants; the host adds, changes, turns and removes; off nothing."""
+        import dungeon_fraktionen as fr
+        helpers.keep_chat(self, "dungeon_fraktionen")
+        url = f"/api/profile/dungeon/{self.rid}/fraktion"
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [{"name": "Die Rabengilde", "will": "den Hafen beherrschen"},
+                                                             {"name": "Der Mondorden", "will": "das alte Tor öffnen"}], "geheimnisse": []}
+            dungeon._write(d)
+        self.assertEqual(self.c.post(url, json={"name": "Die Rabengilde", "schritt": 1}).json()["detail"], "fraktionen aus")   # off
+        self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["fraktionen"])
+        self.assertEqual(fr.facts(self.state(self.rid)), {})
+        helpers.set_config(dungeon_fraktionen=True)
+        self.spawned.clear()
+        self.act_all("Wir gehen zum Hafen.")
+        text = "Arvid und Bela vertreiben am Hafen die Schläger der Rabengilde, die dort Schutzgeld eintreiben wollten."
+        with mock.patch.object(fr, "UHR_WURF", 7):                         # no roll of the panel moves a clock this turn
+            rd = self.play([{"proben": []}, {"erzaehlung": text, "frage_an": "", "fraktionen": [
+                {"name": "Die Rabengilde", "wirkung": "stoert"}, {"name": "Die Rabengilde", "wirkung": "hilft"}]}])   # once a turn
+        self.assertEqual(set(rd["fraktionen"]), {"die rabengilde", "der mondorden"})
+        rabe, mond = rd["fraktionen"]["die rabengilde"], rd["fraktionen"]["der mondorden"]
+        self.assertTrue(all(x["felder"] in fr.FELDER for x in (rabe, mond)))
+        self.assertEqual((rabe["stand"], rabe["bekannt"], mond["stand"], mond["bekannt"]), (0, True, 0, False))   # 0 stays 0
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            hier = dungeon.where(rd)["ort"]                                   # the group's place on the map
+            six, four = mock.Mock(randint=lambda a, b: 6), mock.Mock(randint=lambda a, b: 4)
+            self.assertEqual(fr.progress(dungeon, rd, four), (0, 0))
+            rd["fraktionen"]["der mondorden"].update(felder=4, stand=3)
+            self.assertEqual(fr.progress(dungeon, rd, six), (2, 1))
+            mond = rd["fraktionen"]["der mondorden"]
+            self.assertEqual((mond["stand"], mond["bekannt"], mond["ort"]), (4, True, hier))
+            self.assertEqual(fr.occupied(rd), {hier: "Der Mondorden"})   # the hook for the map
+            self.assertEqual(fr.progress(dungeon, rd, six), (1, 0))          # a full clock stands
+            self.assertEqual(fr.check(rd, [{"name": "Die Rabengilde", "wirkung": "hilft"}], "Niemand hier."), [])   # not named
+            self.assertEqual(fr.check(rd, [{"name": "Der Mondorden", "wirkung": "weg"}], "Der Mondorden"), [])
+            dungeon._write(d)
+        e = [x for x in rd["log"] if x["art"] == "fraktion"]
+        self.assertEqual([(x["name"], x["was"]) for x in e], [("Der Mondorden", "voll")])
+        self.assertNotIn("das alte Tor", json.dumps(e, ensure_ascii=False))
+        f = json.loads(dungeon.facts(r, rd).split("\n<<<", 1)[0])
+        self.assertEqual(f["fraktion_voll"], [{"name": "Der Mondorden", "will": "das alte Tor öffnen"}])   # only as data
+        self.assertIn({"name": "Die Rabengilde", "will": "den Hafen beherrschen", "uhr": f"2/{rabe['felder']}"}, f["fraktionen"])
+        self.assertIn("fraktion_voll", dungeon.system_text(r, rd, "erzaehlen"))
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual({x["name"] for x in v["fraktionen_geheim"]["alle"]}, {"Die Rabengilde", "Der Mondorden"})
+        g = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertIsNone(g["fraktionen_geheim"])
+        self.assertEqual({x["name"] for x in g["fraktionen"]["uhren"]}, {"Die Rabengilde", "Der Mondorden"})
+        self.assertNotIn("den Hafen beherrschen", json.dumps(g, ensure_ascii=False))
+        # the host: an own faction, its goal and fields, a clock by hand, away again; only the host, only fixed values
+        self.assertEqual(self.c.post(url, json={"name": "Die Händlergilde", "will": "Salz billig kaufen", "felder": 8}).status_code, 200)
+        self.assertEqual(self.c.post(url, json={"name": "Die Händlergilde", "felder": 5}).status_code, 400)
+        self.assertEqual(self.c.post(url, json={"name": "Die Händlergilde", "schritt": 2}).status_code, 400)
+        self.assertEqual(self.c.post(url, json={"name": "X"}).status_code, 400)
+        self.assertEqual(self.c.post(url, json={"name": "Fremde", "weg": True}).status_code, 400)
+        self.assertEqual(self.v.post(url, json={"name": "Die Händlergilde", "schritt": 1}).status_code // 100, 4)
+        v = self.c.post(url, json={"name": "Die Händlergilde", "schritt": 1}).json()
+        h = next(x for x in v["fraktionen_geheim"]["alle"] if x["name"] == "Die Händlergilde")
+        self.assertEqual((h["stand"], h["felder"], h["eigen"], h["bekannt"]), (1, 8, True, False))
+        v = self.c.post(url, json={"name": "Der Mondorden", "schritt": -1}).json()   # back from full: it runs again
+        self.assertEqual(fr.occupied(self.state(self.rid)), {})
+        self.assertEqual(self.c.post(url, json={"name": "Die Händlergilde", "weg": True}).status_code, 200)
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            for i in range(fr.FRAKTIONEN_MAX - len(rd["fraktionen"])):
+                fr.host(dungeon, r, rd, {"name": f"Gruppe {i}"})
+            self.assertRaises(OverflowError, fr.host, dungeon, r, rd, {"name": "Noch eine"})
+        self.assertEqual(fr.carry(fr.keep(rd)), {"fraktionen": rd["fraktionen"]})       # into the next chapter
+        live = dungeon.for_live()
+        self.assertGreaterEqual(live["fraktionen"], 2)
+        self.assertGreaterEqual(live["fraktion_voll"], 1)
+        helpers.set_config(dungeon_fraktionen=False)
+        self.assertEqual(fr.facts(rd), {})
+        self.assertEqual(fr.check(rd, [{"name": "Die Rabengilde", "wirkung": "hilft"}], "Die Rabengilde"), [])
 
     def test_the_oracle_answers_by_the_panels_dice(self):
         """Tabletop-Punkt 8 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): the host asks yes or no with

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.064** KI-Dungeon-Master: Fraktionen mit Uhren: die Gruppen der Geschichte verfolgen ihr Ziel, das Panel dreht die Uhren, die Taten der Helden helfen oder stören, eine volle Uhr ändert die Welt; Fenster ⏳ Fraktionen
 - **V01.1.063** KI-Dungeon-Master: Kampfstufen leicht bis tödlich für den Gastgeber nach der Budget-Tabelle des SRD 5.2.1; 44 Gegner und 30 Zauber aus dem SRD 5.2.1; Katalog ohne Wörter der Kinder-Wortliste
 - **V01.1.062** KI-Dungeon-Master: Orakel für Gastgeber und Solo: Ja oder Nein mit Wahrscheinlichkeit und Chaosgrad, Ereignisse bei Pasch, Würfe auf die Tabellen des Katalogs; eigene Tabellen im Reiter Regeln
 - **V01.1.061** KI-Dungeon-Master: NSC-Ziele: jede Figur mit sechs Wesenszügen und Zielen für heute, bald und ihr Leben; zwischen den Zügen würfelt das Panel den Fortschritt, ein erreichtes Ziel steht in der Chronik und geht als Daten in die nächste Erzählung
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.057** KI-Dungeon-Master: fünf Öle im SRD-Katalog (Donner, Blitz, Feuer, Frost, Weihe) für 25 Gold, so trifft in jeder Welt jede Schwäche gegen Donner, Blitz, Feuer und Kälte
 - **V01.1.056** KI-Dungeon-Master am Tisch: Gegner mit mehreren Angriffen, Bosse mindestens zwei; Gegnerleben als Wort (angeschlagen, schwer verletzt, fast besiegt), Zustände mit „noch N Züge“; die Spracherkennung kennt die Namen der Runde; jeder Wurf mit Würfel-Beleg, die Erzählung nennt nur belegte Zahlen; beim Vorlesen wird der gesprochene Satz markiert
 - **V01.1.055** KI-Dungeon-Master: Siedlung mit Leben: Kopf mit Bild, Tageszeit und Gold, Karten mit Bild und Satz, Rechnung und Verb je Dienst, zu Teures grau mit „Es fehlen N Gold“, Lehrstunde als sechs Werte vorher → nachher
-- **V01.1.054** KI-Dungeon-Master: Wirtschaft Teil 3: der Prüfstand misst Einnahmen gegen Ausgaben je Stufe, Gasthaus 10 Gold mal Stufe je Held, der Schmied verbessert Waffen und Rüstung um eine Seltenheit, Öle auf der Waffe für 3 Treffer, Wirkungen donnernd, ätzend und welkend
 
 
 

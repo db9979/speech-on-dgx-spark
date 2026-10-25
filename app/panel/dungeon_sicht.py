@@ -12,8 +12,9 @@ A new secret of the game comes into GEHEIM in the same commit as the secret itse
 import json
 
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
-NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc")   # the admin switches of the secrets below: the self-test turns them on
+NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
+                 "fraktionen_geheim")
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -77,6 +78,9 @@ GEHEIM = {
                    lambda rd, m: _nsc(rd, {}, [{"art": "weiss", "ziel": m}])),
     "nsc_ziele": (("Die Ziele einer Figur", "A person's goals"), {"gastgeber", "modell"},
                   lambda rd, m: _nsc(rd, {}, [], wesen={}, ziele=[{"ebene": "heute", "t": [m, m], "stand": 0, "voll": 2}])),
+    "fraktion_ziel": (("Was eine Fraktion will", "What a faction wants"), {"gastgeber", "modell"},
+                      lambda rd, m: rd.update(fraktionen={"gilde": {"name": "Gilde", "will": m, "felder": 6, "stand": 2, "bekannt": True,
+                                                                     "voll": None, "ort": None, "eigen": True}})),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),
