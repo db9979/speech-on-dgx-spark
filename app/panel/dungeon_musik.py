@@ -71,11 +71,12 @@ NAMEN = {"erkunden": ("Erkunden", "Exploring"), "taverne": ("Taverne", "Tavern")
          "gewoelbe": ("Gewölbe", "Vault")}
 ZIEL = 12                  # Dominik 1a: pieces per world and mood
 ZIEL_SPANNE = (4, 30)
-MB = 700                   # the store on the whole Spark (12 × 7 moods × 5 worlds of about 1.4 MB)
+MB = 2000                  # the store on the whole Spark (12 × 7 moods × 5 worlds of about 4.5 min at about 1 MB a minute)
+MB_JE_MINUTE = 1.0         # an MP3 of the music model (for the admin's hint how much the number needs)
 MB_SPANNE = (100, 5000)
-BEREIT = 4                 # pieces the moods of the current and the next act get first (2a)
+BEREIT = 2                 # pieces the moods of the current and the next act get first (2a; long pieces, two last a while)
 NEU_JE_AKT = 2             # new pieces every act asks for (2a: no two campaigns sound alike)
-LAENGE = (60, 75, 90, 105, 120)   # seconds of a piece (a seed picks one)
+LAENGE = (180, 240, 300, 360)     # seconds of a piece, a seed picks one (Dominik 2026-10-25 „mindestens verdreifachen“)
 SIEG_S = 30                # a victory is short and plays once
 NACHT = (1, 6)             # local hours the night fills the fields
 TAKT = 10                  # seconds between two looks at the queue
@@ -89,7 +90,7 @@ GRUENDE = ("memory", "belegt", "missing", "engine", "dienst", "zeit", "pause")  
 # Dominik 2026-10-24 "mehr mit den Themen zu tun ... auch gerne mit Trommeln und Bässen" (after 2026-10-23 "nichts
 # nervig und zu schnell"): every world and mood has its own scene and instruments, drums and bass with measure, steady
 # and never hectic (TEMPO at most 110 bpm, a fight included)
-STIL_V = 3                 # the style of the pieces: an older one plays until its field has new ones, then goes first
+STIL_V = 4                 # the style of the pieces: an older one plays until its field has new ones, then goes first
 STIL = {"fantasy": "medieval fantasy role-playing soundtrack", "horror": "dark gothic horror role-playing soundtrack",
         "scifi": "science fiction role-playing soundtrack", "piraten": "pirate adventure role-playing soundtrack"}
 EIGEN = "cinematic adventure role-playing soundtrack"
@@ -165,12 +166,17 @@ EIGEN_THEMA = {
     "sieg": ("victory", ("horns, strings, festive drums and bass",)),
     "gewoelbe": ("dark dungeon vault", ("low drums with echo, deep drones and bass",)),
 }
-TEMPO = {"erkunden": ("70 bpm", "75 bpm", "80 bpm"), "taverne": ("90 bpm", "96 bpm", "100 bpm"),
-         "spannung": ("65 bpm", "72 bpm", "80 bpm"), "kampf": ("95 bpm", "100 bpm", "110 bpm"),
-         "finale": ("85 bpm", "92 bpm", "100 bpm"), "sieg": ("90 bpm", "96 bpm"), "gewoelbe": ("60 bpm", "66 bpm", "72 bpm")}
-TONART = ("in D minor", "in A minor", "in E minor", "in C major", "in G major", "in F major", "in B flat major", "in C minor")
+# one tempo per mood and one key per world (minor, the tavern and the victory in its relative major): two pieces of a
+# field share key and tempo, so the crossfade between them is smooth (Dominik 2026-10-25 „smoother Übergang …
+# eventuell gleiche Chord-Progression“); tempo at most 110 bpm, a fight included
+TEMPO = {"erkunden": "75 bpm", "taverne": "96 bpm", "spannung": "72 bpm", "kampf": "100 bpm", "finale": "92 bpm",
+         "sieg": "96 bpm", "gewoelbe": "66 bpm"}
+TONART = {"fantasy": ("in D minor", "in F major"), "horror": ("in C minor", "in E flat major"),
+          "scifi": ("in A minor", "in C major"), "piraten": ("in E minor", "in G major")}
+TONART_EIGEN = ("in D minor", "in F major")
+DUR = ("taverne", "sieg")
 ENDE = ("instrumental background music for a tabletop role-playing game, steady groove, never hectic, "
-        "no sudden changes, no vocals, loops well")
+        "soft fade-in intro, long gentle fade-out ending, no sudden changes, no vocals, loops well")
 
 # the panel's word lists over the scene, the act and the place (the model's words are data: they only pick one of these)
 _W = lambda s: re.compile(r"(?i)\b(" + s + r")")   # noqa: E731 - a word at its start (German compounds end freely)
@@ -300,7 +306,8 @@ def prune(d, ziel, mb, keep=""):
 def caption(welt, st, rng):
     """The words for the music model: only fixed words of this module (never a text of the game)."""
     szene, wie = THEMA.get(welt, EIGEN_THEMA)[st]
-    return ", ".join((STIL.get(welt, EIGEN), szene, rng.choice(wie), rng.choice(TEMPO[st]), rng.choice(TONART), ENDE))
+    tonart = TONART.get(welt, TONART_EIGEN)[1 if st in DUR else 0]
+    return ", ".join((STIL.get(welt, EIGEN), szene, rng.choice(wie), TEMPO[st], tonart, ENDE))
 
 
 # ---------------------------------------------------------------- the mood (panel rules)
@@ -742,6 +749,7 @@ def admin_view(lang="de"):
             "markiert": [{"id": x["id"], "welt": next((w["name"][li] for w in r["welten"] if w["id"] == x["w"]), x["w"]),
                           "st": NAMEN.get(x["st"], ("", ""))[li], "nervt": x["nervt"], "s": x.get("s", 0)}
                          for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if not spielbar(x)],
+            "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGE) / len(LAENGE) / 60 * MB_JE_MINUTE),
             "live": for_live()}
 
 

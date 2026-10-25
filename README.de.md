@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.042** KI-Dungeon-Master: Musikstücke 3 bis 6 Minuten, feste Tonart und festes Tempo je Stimmung, leiser Anfang und langes Ende, 12 s Überblendung
 - **V01.1.041** Selbsttest Suche: wartet auf den Treffer statt fest 300 ms
 - **V01.1.040** Fehler im Log: Antwort brach mit „Rec.step() got multiple values for argument 'kind'“ ab, wenn Taten prüfen griff; Vermittler für Anrufe nimmt nur die öffentliche IPv4-Adresse, behält bei kurzem Ausfall die alte und loggt „relay refused“ nur einmal je Grund
 - **V01.1.039** KI-Dungeon-Master: Bestiarium mit 62 neuen Gegnern (jede Welt hat auf Stufe 1 bis 12 mindestens drei, die eigene Welt nimmt die aus Fantasy), Regeln zeigt Schadensart, Schwäche, Widerstand und Immunität als Symbole, Boss-Marke, EP je Held und „neu“, Filter nach Welt, Stufe, Bossen und neuen; eine misslungene Probe bleibt misslungen und die Erzählung nennt die Gegner der Karte
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.035** KI-Dungeon-Master: legendäre Einzelstücke, 20 je Welt mit eigenem Namen, Satz und zwei Wirkungen, nur aus Boss, Belohnung oder Truhe, nie beim Händler, jedes einmal je Kampagne
 - **V01.1.034** KI-Dungeon-Master: Gegenstände Teil 2, Werkzeuge einfach +1, gut +2 oder meisterlich +3, Tränke, Rollen, Zauber und Werkzeuge günstiger, gewöhnlicher Schmuck ist ein Schatz, ▲/▼ besser als deins und „nicht für deine Klasse“ in Tasche, beim Händler und am Boden
 - **V01.1.033** KI-Dungeon-Master: Gegenstände mit festen Wirkungen, ab „rar“ eine Wirkung des Panels (Feuer und andere +1W6, Lebensraub, Glück, Wachsam oder ein Wertbonus), Seltenheitsbonus höchstens +3, legendär auf jeder Stufe seltener als episch
-- **V01.1.032** KI-Dungeon-Master: Gold mit Zweck, in Siedlungen Gasthaus für die ganze Gruppe, Schmied für zerbrochene Werkzeuge, Lehrstunde +1 bis zum Ende der Runde und Gerüchte über den nächsten Ort, Preise nach der Stufe der Gruppe
 
 
 

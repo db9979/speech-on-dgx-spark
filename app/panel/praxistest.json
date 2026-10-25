@@ -3285,6 +3285,13 @@
 "titel": "Bestiarium mit neuen Gegnern",
 "text": "A: Reiter Regeln, Teil Gegner (Bestiarium): Filter Neu zeigt 62 Gegner mit „neu“, jede Zeile mit Symbol der Schadensart und ▲/▼/✕. B: Filter Welt Sci-Fi und Stufe 5-10: genug Gegner. C: Ein Boss (etwa Stationskern-KI) zeigt 👑 Boss und im Detail Phase 2 und zwei Angriffe, dazu EP je Held. D: Eine Runde in Sci-Fi auf Stufe 4 bis 6: eine Begegnung mit neuen Gegnern. E: Alle Bilder malen: die neuen Gegner bekommen Bilder. F: Eine Probe absichtlich verfehlen (etwa eine schwere Tür aufbrechen): die Erzählung sagt, dass es nicht gelingt. G: Kommt eine Begegnung, nennt die Erzählung die Gegner mit dem Namen der Karte. H: Als Gast im Heldenbogen „Porträt malen lassen“: es malt oder der Grund steht oben im Bogen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P494",
+"v": 1042,
+"titel": "Dungeon-Master: lange Musikstücke, weiche Übergänge",
+"text": "A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: Speicherplatz auf 2000 MB stellen (sonst steht dort ein Hinweis), „Musik jetzt vorbereiten“. B: Am Tisch dauert ein neues Stück 3 bis 6 Minuten. C: Der Wechsel zum nächsten Stück derselben Stimmung blendet über etwa 12 s, ohne harten Bruch, Tonart und Tempo passen. D: Nichts klingt hektisch.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

@@ -6,7 +6,7 @@
 // „👎 Nervt“ (Dominik 2026-10-24): any seat marks the piece playing, it is never played again, the night makes a new one.
 const DMT={ctx:null,out:null,amb:null,ambK:'',noise:null,el:[null,null],g:[null,null],cur:-1,id:'',st:'',last:[],urls:{},v:null,mode:'',
   seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
-const DMT_FADE=8,DMT_LAUT=20,DMT_URLS=4;
+const DMT_FADE=12,DMT_LAUT=20,DMT_URLS=4;
 function dmtPref(k,d){try{const x=localStorage.getItem('dm-'+k);return x===null?d:x}catch{return d}}
 function dmtSet(k,x){try{localStorage.setItem('dm-'+k,String(x))}catch{}}
 const dmtMusik=()=>dmtPref('musik','1')==='1',dmtFx=()=>dmtPref('fx','1')==='1',dmtLaut=()=>Math.max(0,Math.min(100,+dmtPref('laut',DMT_LAUT)||0));
@@ -119,6 +119,7 @@ function dmMusikDraw(d,err){const c=$('dmmusikadm');if(!c)return;const s=d.einst
     ${d.installiert?'':`<div class="ic-note"><div class="ic-mid"><b>${esc(t('Kein Musikmodell installiert.','No music model installed.'))}</b><span>${esc(t('Ohne Musikmodell gibt es am Tisch nur Geräusche und Würfel.','Without a music model the table has sounds and dice only.'))}</span></div></div>`}
     <div class="dm-two"><div><label for="dmmusikn">${esc(t('Stücke je Welt und Stimmung','Pieces per world and mood'))}</label><input id="dmmusikn" type="number" min="${d.spanne.stuecke[0]}" max="${d.spanne.stuecke[1]}" value="${s.stuecke}"></div>
       <div><label for="dmmusikmb">${esc(t('Speicherplatz (MB)','Storage (MB)'))}</label><input id="dmmusikmb" type="number" min="${d.spanne.mb[0]}" max="${d.spanne.mb[1]}" step="50" value="${s.mb}"></div></div>
+    ${s.mb<d.mb_noetig?`<small class="dm-wrest">${esc(t(`Für ${s.stuecke} Stücke je Feld braucht der Vorrat etwa ${d.mb_noetig} MB; mit ${s.mb} MB gehen die meistgespielten früher.`,`For ${s.stuecke} pieces per field the store needs about ${d.mb_noetig} MB; with ${s.mb} MB the most played go sooner.`))}</small>`:''}
     <label class="chk"><input type="checkbox" id="dmmusikan"${s.an?' checked':''}> ${esc(t('Musik vorbereiten','Prepare music'))}</label>
     <div class="dm-mfeld"><i></i>${d.stimmungen.map(m=>`<b title="${esc(m.name)}">${esc(m.name)}</b>`).join('')}${d.felder.map(f=>`<b>${esc((f.zeichen?f.zeichen+' ':'')+f.name)}</b>${d.stimmungen.map(m=>`<span class="${f.n[m.id]>=s.stuecke?'ok':'warn'}">${f.n[m.id]}${f.wartet.includes(m.id)?' ⏳':''}</span>`).join('')}`).join('')}</div>
     ${(d.markiert||[]).length?`<h4>${esc(t(`${d.markiert.length} markiert (👎 Nervt)`,`${d.markiert.length} marked (👎 annoying)`))}</h4><div class="pintro">${esc(t('Diese Stücke spielt kein Tisch mehr; nachts macht der Spark neue. Bis dahin lässt sich eine Markierung zurücknehmen.','No table plays these pieces any more; at night the Spark makes new ones. Until then a mark can be taken back.'))}</div>

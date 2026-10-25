@@ -113,8 +113,8 @@ class Words(MusicBase):
     def test_caption_only_fixed_words(self):
         import random
         themen = [t for w in list(dm.THEMA.values()) + [dm.EIGEN_THEMA] for sz, wie in w.values() for t in (sz, *wie)]
-        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.ENDE, *dm.STIL.values(), *themen, *dm.TONART,
-                                                     *[x for v in dm.TEMPO.values() for x in v]]).lower()))
+        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.ENDE, *dm.STIL.values(), *themen, *dm.TONART_EIGEN,
+                                                     *[x for v in dm.TONART.values() for x in v], *dm.TEMPO.values()]).lower()))
         for welt in list(dm.STIL) + ["eigene", EVIL]:
             for st in dm.STIMMUNGEN:
                 c = dm.caption(welt, st, random.Random(1))
@@ -140,6 +140,13 @@ class Words(MusicBase):
                     self.assertEqual(len(bpm), 1, c)
                     self.assertLessEqual(bpm[0], 110)
         self.assertIn("never hectic", dm.ENDE)
+        import random as rnd
+        for welt in list(dm.STIL) + ["eigene"]:                               # one key and tempo per field: smooth crossfades
+            for st in dm.STIMMUNGEN:
+                cs = {re.search(r"\d+ bpm, in [a-z ]+? (?:major|minor)", dm.caption(welt, st, rnd.Random(i)).lower()).group(0) for i in range(10)}
+                self.assertEqual(len(cs), 1, (welt, st, cs))
+        self.assertIn("fade-out ending", dm.ENDE)
+        self.assertGreaterEqual(min(dm.LAENGE), 180)                          # Dominik 2026-10-25: at least three times as long
         self.assertNotEqual(dm.caption("fantasy", "taverne", random.Random(1)), dm.caption("piraten", "taverne", random.Random(1)))
 
     def test_game_text_never_reaches_the_model(self):
