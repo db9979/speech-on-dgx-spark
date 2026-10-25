@@ -357,9 +357,11 @@ struct Mitteilung: Identifiable {
     let ref: String
     let code: String
     let weg: String
+    /// a Dungeon-Master round („Du bist dran“, mitteilungen.ziel): the table opens with a fresh code of the own seat
+    let rid: String
 
     static func gone(_ id: String) -> Mitteilung {
-        Mitteilung(id: id, title: "", body: "", at: nil, art: "text", vg: "", chat: "", ref: "", code: "", weg: "")
+        Mitteilung(id: id, title: "", body: "", at: nil, art: "text", vg: "", chat: "", ref: "", code: "", weg: "", rid: "")
     }
 }
 
@@ -377,7 +379,7 @@ extension SparkAPI {
                           at: (d["t"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) } ?? Date(),
                           art: pick("art", "^[a-z]{3,8}$"), vg: pick("vg", "^v[0-9a-f]{10}$"), chat: pick("chat", "^c[0-9a-f]{12}$"),
                           ref: pick("ref", "^m[0-9a-f]{8}:[0-9]{1,10}$"), code: pick("code", "^[A-Z0-9]{4,8}$"),
-                          weg: String((z["weg"] as? String ?? "").prefix(200)))
+                          weg: String((z["weg"] as? String ?? "").prefix(200)), rid: pick("rid", "^r[0-9a-f]{10}$"))
     }
 }
 
@@ -388,6 +390,7 @@ struct MitteilungKarte: View {
     @State private var chat: ChatStart?
     @State private var reading: MailItem?
     @State private var copied = false
+    @StateObject private var tisch = DungeonModel()
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -415,6 +418,9 @@ struct MitteilungKarte: View {
                         }
                         .buttonStyle(.borderedProminent)
                     }
+                    if x.art == "dungeon", !x.rid.isEmpty {
+                        Button("Zum Tisch") { Task { await tisch.spielen(x.rid) } }.buttonStyle(.borderedProminent)
+                    }
                     if x.art == "code" {
                         Button {
                             UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: x.code]],
@@ -434,6 +440,9 @@ struct MitteilungKarte: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
         .overlay(alignment: .leading) { Rectangle().fill(.tint).frame(width: 3).clipShape(Capsule()) }
         .onAppear { if x.art == "vorgang" { store.want(x.vg) } }
+        // a tap on „Du bist dran“ opens that table at once (Punkt 7 of the table review of 2026-10-24)
+        .task(id: x.id) { if x.art == "dungeon", !x.rid.isEmpty, x.at != nil { await tisch.spielen(x.rid) } }
+        .sheet(item: $tisch.play) { p in PanelPage(url: p.url).ignoresSafeArea() }
         .sheet(item: $chat) { c in ChatsView(start: c.id) }
         .sheet(item: $reading) { m in NavigationStack { MailView(item: m, box: "", folder: nil, post: PostModel()) } }
     }

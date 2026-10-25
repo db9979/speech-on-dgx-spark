@@ -1372,6 +1372,10 @@ class Voice(Base):
         self.addCleanup(dungeon_auto._im_auto.clear)
         self.assertIn("Arvid", dungeon_auto.words(self.uid, now=1000.0 + dungeon_auto.WORTE_S))
         self.assertEqual(dungeon_auto.words(self.uid, now=1001.0 + dungeon_auto.WORTE_S), [])
+        # the one mark „plays from the car“ (the real dice of dungeon_echt ask no seat there): same window, never a guest
+        self.assertTrue(dungeon_auto.im_auto(self.uid, now=1000.0 + dungeon_auto.WORTE_S))
+        self.assertFalse(dungeon_auto.im_auto(self.uid, now=1001.0 + dungeon_auto.WORTE_S))
+        self.assertFalse(dungeon_auto.im_auto("", now=1000.0))
 
     def test_hero_voices_speak_only_quotes(self):
         self.assertEqual(dungeon.says('Ich ziehe das Schwert. „Halt, wer da?“ Dann "Zurück!"'), "Halt, wer da? Zurück!")
@@ -2457,6 +2461,8 @@ class StayingWithIt(Base):
 
         async def send(uid, title, body, **k):
             self.sent.append((uid, body, k.get("tag")))
+            self.refs.append(k.get("ref"))
+        self.refs = []
         import push
         old = push.send
         push.send = send
@@ -2553,6 +2559,7 @@ class StayingWithIt(Base):
         asyncio.run(dungeon.due_once(now))
         self.assertEqual(sorted(u for u, _, _ in self.sent), sorted([self.uid, self.uid2]))
         self.assertTrue(all(tag == "dungeon" and "Die Glocke" in body for _, body, tag in self.sent))
+        self.assertEqual(self.refs, [self.rid, self.rid])          # the round's id only: a tap opens the table (Punkt 7), never a code
         self.assertEqual(self.spawned, [])                         # not due yet
         asyncio.run(dungeon.due_once(now + 121))
         self.assertEqual(self.spawned, ["dungeon"])                # the timer ran out: the turn closes without a visit
@@ -3934,6 +3941,9 @@ class Windows(unittest.TestCase):
                         # the own hero only once (Punkt 9): a short row in the group, the card in the side column
                         self.assertEqual(await pg.evaluate("[document.querySelectorAll('#dmview .dm-group .dm-ichz').length,document.querySelectorAll('#dmview .dm-group .me .dm-stats').length,document.querySelectorAll('#dmview .dm-side .dm-mek').length]"), [1, 0, 1])
                         await helpers.dm_pane(pg, "gruppe")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-group .dm-stats')"))   # the group a list (Punkt 5)
+                        await pg.click("#dmview .dm-group [data-dmgauf]:not([aria-expanded=true])")       # a tap on the hero shows the values
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-group .dm-stats')")
                         await pg.click("#dmview .dm-group .dm-stats .dm-erkb:nth-child(2)")             # a tap on a value explains it
                         await b.until(pg, "!!document.querySelector('#dmview .dm-group .dm-erk')")
                         self.assertIn("Geschick", await pg.evaluate("document.querySelector('#dmview .dm-group .dm-erk').textContent"))
@@ -4260,7 +4270,8 @@ class Windows(unittest.TestCase):
         asyncio.run(go())
 
     def test_table_calm_guide_pages_and_no_doubles(self):
-        """Punkt 9 of 2026-10-24: the guide is a window to page through; music and sounds sit in the head; turn, clock
+        """Punkt 9 of 2026-10-24: the guide is a window to page through, the first time only a short card with „Mehr“ and the
+        basics first (Punkt 6 of the table review); music and sounds sit in the head; turn, clock
         and „gehandelt“ stand once (not again in the side column); the own hero only in the side column; the
         assistant's face stays away at the table; „Leiten“ uses the table's font and an odd last tile fills its row."""
         from tests.test_ui_browser import Browser, async_playwright
@@ -4292,7 +4303,11 @@ class Windows(unittest.TestCase):
                         await pg.evaluate("try{localStorage.removeItem('dm-hilfe');localStorage.setItem('dm-seite','host')}catch(e){};goSec('dungeon')")
                         await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
                         await pg.evaluate(f"DM.rid='{rid}';dmRound()")
-                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-hilfe')")             # opens by itself once
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-hkurz')")                 # a short card opens by itself once
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-hilfe')"))   # never the whole window
+                        self.assertEqual(await pg.evaluate("DMHILFE[0][0]"), "Was du schreibst")                       # the basics first
+                        await pg.click("#dmview .dm-hkurz [data-dmhilfe='0']")                           # „Mehr“: the pages
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-fen-hilfe')&&!document.querySelector('#dmview .dm-hkurz')")
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-hpunkte button').length"), await pg.evaluate("DMHILFE.length"))
                         self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-hnav [data-dmhilfe=\"-1\"]').disabled"))
                         await pg.click("#dmview .dm-hnav .b.p")                                          # „Weiter“: page 2
@@ -4306,7 +4321,8 @@ class Windows(unittest.TestCase):
                             await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"hilfe-{w}.png"))
                         await pg.keyboard.press("Escape")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen-hilfe')")
-                        await pg.click("#dmview [data-dmhilfe='0']")                                     # the head's button opens it again
+                        await helpers.dm_kopf(pg)                                                       # on the phone under „⋯“
+                        await pg.click("#dmview .dm-head [data-dmhilfe='0']")                             # the head's button opens it again
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-hilfe')")
                         await pg.click("#dmview .dm-fen-hilfe [data-dmhilfe=zu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen-hilfe')")
@@ -4325,8 +4341,7 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('fab')).display"), "none", w)   # no face at the table
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-group .dm-ichz').length"), 1, w)
                         if await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=pult]')"):
-                            await helpers.dm_pane(pg, "held")
-                            await pg.click("#dmview [data-dmfen=pult]")
+                            await helpers.dm_pult(pg)
                         await b.until(pg, "!!document.querySelector('#dmview .dm-tiles .dm-tile')")
                         same = "(()=>{const a=getComputedStyle(document.querySelector('#dmview .dm-tile')).fontFamily,b=getComputedStyle(document.querySelector('#dmview .dm-tisch,#dmview.dm-tisch')).fontFamily;return a===b})()"
                         self.assertTrue(await pg.evaluate(same), w)
@@ -4378,7 +4393,7 @@ class Windows(unittest.TestCase):
                     await b.until(pg, "!!document.querySelector('#dmview [data-dmfen=pult]')")
                     if await pg.evaluate("!!document.querySelector('#dmview .dm-fen-hilfe')"):
                         await pg.keyboard.press("Escape")
-                    await pg.click("#dmview [data-dmfen=pult]")                                     # the things are in the console (2026-10-25)
+                    await helpers.dm_pult(pg)                                                      # the things are in the console (2026-10-25)
                     await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-dinge')")
                     await pg.click("#dmview .dm-dinge summary")
                     self.assertIn("nur du siehst das", await pg.inner_text("#dmview .dm-dinge summary"))
@@ -4443,7 +4458,7 @@ class Windows(unittest.TestCase):
                             self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-story'),{shown}('#dmview .dm-group'),{shown}('#dmview .dm-mek')]"), [True, False, False])
                             self.assertFalse(await pg.evaluate(f"{shown}('#aptabs')"))                    # the panel's bar stays away
                             await pg.click("#dmview [data-dmh=gruppe]")
-                            await b.until(pg, f"{shown}('#dmview .dm-group')&&!{shown}('#dmview .dm-story')")
+                            await b.until(pg, f"{shown}('#dmview .dm-group')&&!{shown}('#dmview .dm-feed')")
                             await pg.evaluate("DMA.hzug.p=DM.v.zug-1;dmDraw()")                          # a new turn meanwhile: the dot
                             self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview [data-dmh=geschichte] .dm-hneu')"))
                             await pg.click("#dmview [data-dmh=held]")
@@ -4459,6 +4474,120 @@ class Windows(unittest.TestCase):
                             if await pg.evaluate("document.body.classList.contains('appview')"):
                                 await pg.evaluate("goSec('mon')")                                         # away from the table the bar is back
                                 await b.until(pg, f"{shown}('#aptabs')")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
+    def test_the_phone_table_head_fight_field_group_and_hero(self):
+        """The table review of 2026-10-24, Punkte 1-6 (Dominik 2026-10-25 „alles 1-5 umsetzten“): on the phone the head is
+        one row (title, turn, „⋯“; back, guide, light or dark, full screen and the console under „⋯“), the panel's tabs stay
+        away; one fight box that never sticks over the story, the encounter a line of foes; the field with „Du bist dran“
+        above the bar in every pane and nothing of the story under it; the group a list, a tap shows the values; the hero
+        with quick actions and the bag. The app's seat (#spiel=…&app=1) has no full screen. On a wide
+        screen none of the phone's parts show."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        rid = dungeon.make_round(uid, {"titel": "Die Glocke von Hallstein", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        r = dungeon.rules()
+        code = "A" * 32
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["dm"] = ""
+            pid, s0 = next(iter(rd["plaetze"].items()))
+            s0["h"] = dungeon._hash(code)                                    # the app's code of the own seat (sitzcode)
+            h = s0["held"]
+            h["tasche"] = [dungeon.item(r, "heiltrank", "gewoehnlich")]
+            mate = copy.deepcopy(s0)
+            mate.update(uid="", h="")
+            mate["held"]["name"] = "Bela"
+            rd["plaetze"]["p_bela"] = mate
+            foes = [g for g in r["gegner"] if "fantasy" in g.get("welten", [])][:2]
+            kampf.start(dungeon, r, rd, [p["held"] for p in rd["plaetze"].values()], [(foes[0], 2), (foes[1], 1)], False)
+            dungeon._log(rd, "dm", text="Aus dem Glockenturm springen die Gegner. " * 30, npc=[], frage="")
+            dungeon._write(d)
+        weapon = (h.get("an") or {}).get("haupthand")
+        b = Browser("run")
+        b.port = self.port
+        shown = "(s=>{const e=document.querySelector(s);return !!e&&e.getClientRects().length>0})"
+
+        async def go():
+            async with async_playwright() as pw:
+                for w, ht in ((390, 844), (1280, 900)):
+                    br, pg, errors = await b.page(pw, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';DMA.handy='geschichte';dmRound()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-kampf')")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-beg .dm-begc[data-dmgeg]')"))   # the encounter a line
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-beg .dm-fwerte')"))
+                        self.assertTrue(await pg.evaluate(f"{shown}('#dmview .dm-dran')"))                 # „Du bist dran“
+                        if w > 760:
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-head [data-dmkopf]'),{shown}('#dmview .dm-mek-schnell'),{shown}('#dmview .dm-head [data-dmback]'),{shown}('#dungeon .ic-tabs')]"), [False, False, True, True])
+                            self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#dmview .dm-handeln')).position"), "static")
+                        else:
+                            # the head: one row with title, turn and „⋯“; the rest under „⋯“
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-head [data-dmkopf]'),{shown}('#dmview .dm-head [data-dmback]'),{shown}('#dmview .dm-head .dm-help'),{shown}('#dmview .dm-head [data-dmvoll]'),{shown}('#dungeon .ic-tabs')]"), [True, False, False, False, False])
+                            one = ("(()=>{const t=document.querySelector('#dmview .dm-htitle').getBoundingClientRect(),c=(t.top+t.bottom)/2;"
+                                   "return [...document.querySelectorAll('#dmview .dm-head>*')].filter(e=>e.getClientRects().length).every(e=>{const r=e.getBoundingClientRect();return r.top<=c&&r.bottom>=c})})()")
+                            self.assertTrue(await pg.evaluate(one))                                          # one row
+                            self.assertLess(await pg.evaluate("document.querySelector('#dmview .dm-head').getBoundingClientRect().height"), 90)
+                            await pg.click("#dmview [data-dmkopf]")
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-head [data-dmback]'),{shown}('#dmview .dm-head .dm-help'),{shown}('#dmview .dm-head [data-dmvoll]'),{shown}('#dmview .dm-head [data-dmfen=pult]')]"), [True, True, True, True])
+                            await pg.click("#dmview [data-dmkopf]")
+                            # one fight box, never over the story
+                            self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#dmview .dm-kampf')).position"), "static")
+                            await pg.click("#dmview .dm-beg .dm-begc")                                   # a foe of the line: its window
+                            await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding .dm-gdet')")
+                            await pg.keyboard.press("Escape")
+                            await b.until(pg, "!document.querySelector('#dmview .dm-fen-ding')")
+                            # the field above the bar in every pane, the story's end not under it
+                            above = ("(()=>{const f=document.querySelector('#dmview .dm-handeln'),u=document.querySelector('#dmview .dm-unten');"
+                                     "if(!f||!f.getClientRects().length)return false;const a=f.getBoundingClientRect(),c=u.getBoundingClientRect();return a.bottom<=c.top+1&&a.top>innerHeight/2})()")
+                            self.assertTrue(await pg.evaluate(above))
+                            await pg.evaluate("window.scrollTo(0,document.documentElement.scrollHeight)")
+                            await pg.wait_for_timeout(200)
+                            self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-feed').getBoundingClientRect().bottom<=document.querySelector('#dmview .dm-handeln').getBoundingClientRect().top+1"))
+                            await pg.evaluate("window.scrollTo(0,0)")
+                            await helpers.dm_pane(pg, "gruppe")
+                            self.assertTrue(await pg.evaluate(above))
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-group .dm-stats')"))   # the group a list
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-group [data-dmgauf] .dm-gmini .dm-bar')"))
+                            await pg.click("#dmview .dm-group [data-dmgauf]")
+                            await b.until(pg, f"{shown}('#dmview .dm-group .dm-stats')")
+                            await pg.click("#dmview .dm-group [data-dmgauf]")
+                            await b.until(pg, "!document.querySelector('#dmview .dm-group .dm-stats')")
+                            await helpers.dm_pane(pg, "held")
+                            self.assertTrue(await pg.evaluate(above))
+                            self.assertTrue(await pg.evaluate(f"{shown}('#dmview .dm-mek-schnell [data-dmhero=trinken]')"))   # quick: the potion
+                            self.assertTrue(await pg.evaluate(f"{shown}('#dmview .dm-mek-tasche [data-dmi]')"))                # and the bag
+                            self.assertFalse(await pg.evaluate(f"{shown}('#dmview .dm-side .dm-pultz')"))                     # the console under „⋯“
+                            if weapon:                                                                    # the weapon writes its attack into the field
+                                await pg.click("#dmview .dm-mek-schnell [data-dmkann]:last-child")
+                                self.assertIn(dungeon._read()["runden"][rid]["kampf"]["gegner"][0]["name"], await pg.evaluate("document.querySelector('#dmview .dm-in').value"))
+                            await pg.click("#dmview .dm-mek-tasche [data-dmi]")                          # a thing of the bag: its window
+                            await b.until(pg, "!!document.querySelector('#dmview .dm-fen-ding')")
+                            await pg.keyboard.press("Escape")
+                            if os.environ.get("DMF_SHOT"):
+                                await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], "handy-held.png"))
+                            # the app's own window: no full screen, no brand row
+                            await pg.evaluate(f"location.hash='#spiel={code}&app=1';dmHash()")
+                            await b.until(pg, "!!document.querySelector('#dgcard .dm-head')")
+                            self.assertEqual(await pg.evaluate("[!!document.querySelector('#dgcard [data-dmvoll]'),!!document.querySelector('#dgcard .joinbrand'),DMA.app]"), [False, True, True])
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         self.assertEqual(errors, [])
                     finally:
@@ -4834,7 +4963,7 @@ class Windows(unittest.TestCase):
                             self.assertEqual(await pg.evaluate("localStorage.getItem('dm-breite')"), "320")
                         else:
                             self.assertFalse(await pg.is_visible("#dmview .dm-ziehe"))                 # one column: no edge
-                        await pg.click("#dmview [data-dmfen=pult]")
+                        await helpers.dm_pult(pg)                                                      # on the phone under „⋯“
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-go[data-dmweiter]')")
                         self.assertTrue(await pg.evaluate(fits), w)
                         self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)"), ["zug", "tisch", "erz"])
@@ -5223,6 +5352,65 @@ class Fight(Turns):
         self.assertTrue(fixed["text"].endswith("Doch die Probe „Holztür aufbrechen“ ist misslungen: das gelingt in diesem Zug nicht."))
         self.assertLess(dungeon.erz.rank("probe"), dungeon.erz.rank("gegner"))
         self.assertLess(dungeon.erz.rank("gegner"), dungeon.erz.rank("wiederholung"))
+
+    def test_a_failed_search_finds_nothing(self):
+        """Dominik 2026-10-25 („ist das so in ordnung“): „Brief im Schlamm untersuchen“ 9 gegen 10 not passed, yet the
+        runes told the way north-east and the ooc line too. A failed check to find something out (erz.FORSCHEN) may not
+        hand over a finding (erz.ERFAEHRT without erz.HAELT in the clause), neither in the text nor in ooc; the repair
+        drops such sentences and ooc lines."""
+        rd = {"lang": "de"}
+        fail = [{"wofuer": "Brief im Schlamm untersuchen", "ok": False}]
+        text = ("Der Schlamm der Schattengasse verschluckt das Licht. Morpheus kniet nieder. Darauf keine Tinte, sondern "
+                "eingravierte Runen. Sie verraten keinen Text, sondern eine Richtung: Nordosten. Ein Geruch von Ozon liegt in der Luft.")
+        self.assertEqual(dungeon.erz.told_as_done(rd, text, fail), ["Brief im Schlamm untersuchen"])
+        calm = "Morpheus dreht den Brief im Schlamm, doch die Runen verraten ihm nichts. Ein Geruch von Ozon liegt in der Luft."
+        self.assertEqual(dungeon.erz.told_as_done(rd, calm, fail), [])
+        self.assertEqual(dungeon.erz.told_as_done(rd, calm, fail, ["Der Brief führt nach Nordosten (Wolfshafen). Was macht ihr?"]),
+                         ["Brief im Schlamm untersuchen"])
+        self.assertEqual(dungeon.erz.told_as_done(rd, text, [dict(fail[0], ok=True)]), [])
+        self.assertEqual(dungeon.erz.told_as_done(rd, text, [{"wofuer": "Tür aufzubrechen versuchen", "ok": False}]), [])   # no search
+        self.assertEqual(dungeon.erz.told_as_done({"lang": "en"}, "The tracks lead to the old mill.", [{"wofuer": "search for tracks", "ok": False}]),
+                         ["search for tracks"])
+        self.assertIn("nichts Neues", dungeon.erz.hint("probe", ["Brief im Schlamm untersuchen"], "de"))
+        self.assertIn("nichts Neues", dungeon.ERGEBNIS[False][0])
+        fixed = dungeon.erz.repair(rd, {"text": text, "ooc": [{"pid": "p1", "text": "Der Brief führt nach Nordosten (Wolfshafen)."}]},
+                                   "probe", ["Brief im Schlamm untersuchen"])
+        self.assertNotIn("Nordosten", fixed["text"])
+        self.assertEqual(fixed["ooc"], [])
+        self.assertIn("Morpheus kniet nieder.", fixed["text"])
+        self.assertTrue(fixed["text"].endswith("Doch die Probe „Brief im Schlamm untersuchen“ ist misslungen: das gelingt in diesem Zug nicht."))
+
+    def test_going_needs_no_check_and_a_repeated_scene_is_cut(self):
+        """Dominik 2026-10-25 („so ging es weiter“): „gehe nach wolfshafen“ got a Geschick check „Sich durch die Gassen
+        von Wolfshafen bewegen“, and turn 2 told turn 1 almost word for word. A check only for going (GEHEN without
+        RISIKO) is dropped with a line; a narration still repeating after the last try loses its told sentences."""
+        self.assertTrue(dungeon.just_going("Sich durch die Gassen von Wolfshafen bewegen"))
+        self.assertTrue(dungeon.just_going("Travel to the mill"))
+        for real in ("Holztür aufbrechen", "Unbemerkt an der Wache vorbei gehen", "Über die Schlucht klettern",
+                     "Geheimes Fach finden", "Den Läufer einholen", "Brief im Schlamm untersuchen"):
+            self.assertFalse(dungeon.just_going(real), real)
+        r = dungeon.rules()
+        rd = {"offen": {"p1": {"text": "gehe nach wolfshafen"}}, "plaetze": {"p1": {"held": {"name": "Morpheus"}}}, "lang": "de"}
+        with mock.patch.object(dungeon, "_name_map", lambda rd: {"morpheus": "p1"}), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            got, drop = dungeon.check_proben(r, rd, {"proben": [{"wer": "Morpheus", "wert": r["werte"][0]["id"], "schwer": 10,
+                                                                 "wofuer": "Sich durch die Gassen von Wolfshafen bewegen"}]})
+        self.assertEqual((got, drop), ([], 1))
+        self.assertIn("dungeon: probe | verworfen | gehen", out.getvalue())
+        self.assertIn("gehen, reisen oder zu einem Ort aufbrechen braucht keine", dungeon.AUFGABE_PROBEN["de"])
+        alt = ("Der Schlamm der Schattengasse verschluckt das Licht, kalt und zäh wie geronnenes Blut. Morpheus kniet "
+               "nieder, die Finger in die ölige Kruste tauchend. Der Brief ist kein gewöhnliches Pergament.")
+        rd = {"lang": "de", "log": [{"art": "dm", "text": alt}]}
+        neu = alt + (" Am Tor von Wolfshafen riecht es nach Teer und Salz, Möwen kreischen über den Masten, und eine "
+                     "Wächterin mit rostigem Helm hebt die Hand.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = dungeon.erz.repair(rd, {"text": neu}, "wiederholung", [])
+        self.assertNotIn("Schattengasse", fixed["text"])
+        self.assertTrue(fixed["text"].startswith("Am Tor von Wolfshafen"))
+        self.assertIn("dungeon: nachbessern | fest | wiederholung", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(dungeon.erz.repair(rd, {"text": alt}, "wiederholung", []), {"text": alt})   # nothing new: kept
+        self.assertIn("dungeon: nachbessern | bleibt | wiederholung", out.getvalue())
 
     def test_foes_not_named_three_times_the_panel_names_them(self):
         """The card and the text tell the same foes even when the model misses them on all three tries: the panel adds

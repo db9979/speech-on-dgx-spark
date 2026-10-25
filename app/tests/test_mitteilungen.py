@@ -63,12 +63,16 @@ class Rules(unittest.TestCase):
         self.assertEqual(self.z(tag="mailcode", body="AB12CD · Bank"), {"art": "code", "code": "AB12CD"})
         self.assertEqual(self.z(body="Dein Lied liegt unter Ich → Musik."), {"art": "weg", "weg": "Ich → Musik"})
         self.assertEqual(self.z(tag="briefing", body="3 Termine heute"), {"art": "text"})
+        # „Du bist dran“ of the Dungeon-Master opens that table (Punkt 7 of the table review of 2026-10-24)
+        self.assertEqual(self.z(tag="dungeon", ref="r0123456789"), {"art": "dungeon", "rid": "r0123456789"})
 
     def test_only_fixed_patterns_pass(self):
         self.assertEqual(self.z(vg="v0123<script>")["art"], "text")
         self.assertEqual(self.z(tag="chat-../etc")["art"], "text")
         self.assertEqual(self.z(tag="mail-new", ref="https://x.example/")["art"], "weg")   # only its fixed way
         self.assertEqual(self.z(tag="mailcode", body="hallo welt")["art"], "text")
+        self.assertEqual(self.z(tag="dungeon", ref="r0123/../x")["art"], "text")                 # only a round's id
+        self.assertEqual(self.z(tag="briefing", ref="r0123456789")["art"], "text")                 # only for the game's notes
 
     def test_kept_a_day_per_profile_and_at_most_max(self):
         mid = mitteilungen.keep("u_000000000001", "Titel", "Geheim", "rem-1", now=1000)

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.078** AI Dungeon Master: the table on the phone with a one-row head and “⋯”, one fight box, the field to act in every pane, the group as a list, quick actions for the hero and a short guide; a failed examination gives nothing away, going needs no check, the panel cuts a repeated scene
 - **V01.1.077** AI Dungeon Master: the map moves on only when an action wants to go (flag and narration stay the same); place pictures check only their own round
 - **V01.1.076** Test fix: the page test "delete and move mail" waits up to a minute under load for the rule hint and the mailbox instead of giving up after 10 or 20 seconds; it checks the same
 - **V01.1.075** AI Dungeon Master: every round can be ended or deleted in the list, asking “Really?” first
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.071** AI Dungeon Master: fixed: an attack on several foes of one kind (“the rats”) or an attack without a named target only rolled a check and dealt no damage; now it hits the first still standing, and a caster's magic without a spell of its own is a cantrip
 - **V01.1.070** AI Dungeon Master: key doors in vaults: the key lies in a reachable room, the door opens only for whoever carries and names it
 - **V01.1.069** AI Dungeon Master: quest items: the story's keys, maps and seals without weight, from the story planner, the map or a checked find; whoever names them in the action takes them, doors open only with them
-- **V01.1.068** AI Dungeon Master: the same face for NPCs: every person met gets a fixed portrait from fixed parts, later scene pictures take it as a reference, the face in "People and chronicle" and at the person's line, the host paints it again
 
 
 

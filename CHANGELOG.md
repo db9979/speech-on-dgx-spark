@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.078** · 2026-10-25 · KI-Dungeon-Master: der Tisch am Handy mit Kopf in einer Zeile und „⋯“, einem Kampfkasten, dem Feld zum Handeln in jedem Teil, der Gruppe als Liste, schnellen Aktionen beim Helden und einer kurzen Hilfe; eine misslungene Untersuchung verrät nichts, Gehen braucht keine Probe, eine wiederholte Szene kürzt das Panel
 - **V01.1.077** · 2026-10-25 · KI-Dungeon-Master: die Karte zieht nur weiter, wenn eine Aktion gehen will (Fahne und Erzählung bleiben gleich); Ortsbilder prüfen nur die eigene Runde
 - **V01.1.076** · 2026-10-25 · Test-Fix: der Seitentest „Mails löschen und verschieben“ wartet unter Last bis zu einer Minute auf den Regel-Hinweis und das Postfach, statt nach 10 oder 20 Sekunden aufzugeben; geprüft wird dasselbe
 - **V01.1.075** · 2026-10-25 · KI-Dungeon-Master: jede Runde lässt sich in der Liste beenden oder löschen, mit Nachfrage „Wirklich?“

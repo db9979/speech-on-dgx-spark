@@ -7,11 +7,24 @@ const DMW={p:{w:'',ding:'',zug:0},g:{w:'',ding:'',zug:0}};
 function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='ende',m=v.markt&&open,mir=(v.angebote||[]).filter(o=>o.mir).length,boden=open?(v.boden||[]).length+(v.boden_gold?1:0):0;
   return `<div class="dm-me dm-mek"><div class="dm-mek-k">${h.bild?`<span class="dm-mek-b">${dmImg(mode,v,'p',v.pid,h.stufe)}</span>`:''}<div><h4>${esc(h.name)}</h4><small class="mut">${esc(h.volk)} ${esc(h.klasse)} · ${esc(t('Stufe','Level'))} ${h.stufe}</small></div></div>
     <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></div>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}${dmZust(h)}${h.ep_tisch?`<small class="dm-eptisch">+${h.ep_tisch} ${esc(t('EP noch am Tisch','EP still at the table'))}</small>`:''}
-    <div class="dm-line"><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span><span>${esc(t('Tasche','Bag'))} ${h.tasche.length}/${h.tasche_max}</span></div>
+    <div class="dm-line"><span>${esc(t('RK','AC'))} <b>${h.rk}</b> · ${esc(t('Gold','Gold'))} <b>${h.gold}</b></span><span>${esc(t('Tasche','Bag'))} ${h.tasche.length}/${h.tasche_max}</span></div>
     ${h.punkte||h.wahl.length?`<button type="button" class="dm-hint dm-hintb" data-dmfen="bogen" data-dmbt="werte">${esc(t('Neue Stufe: im Heldenbogen verteilen.','New level: spend it in the hero sheet.'))}</button>`:''}
     ${mir?`<div class="dm-hint">${esc(mir===1?t('Ein Tauschangebot wartet.','A trade offer is waiting.'):t(mir+' Tauschangebote warten.',mir+' trade offers are waiting.'))}</div>`:''}
     ${boden?`<small class="mut">${esc(boden===1?t('Hier liegt 1 Ding.','1 thing lies here.'):t('Hier liegen '+boden+' Dinge.',boden+' things lie here.'))}</small>`:''}
-    <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}${v.nsc?`<button type="button" class="b" data-dmfen="leute">👥 ${esc(t('Leute und Chronik','People and chronicle'))}</button>`:''}${v.fraktionen&&(v.fraktionen.uhren.length||v.fraktionen_geheim)?`<button type="button" class="b" data-dmfen="fraktionen">⏳ ${esc(t('Fraktionen','Factions'))}</button>`:''}${v.grenzen?`<button type="button" class="b" data-dmfen="grenzen">🛡 ${esc(t('Grenzen','Lines'))}</button>${dmXKnopf(v)}`:''}</div></div>`}
+    ${open&&!h.zustand?dmSchnell(v,h):''}
+    <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.siedlung?`<button type="button" class="b" data-dmfen="siedlung">🏘 ${esc(t('Siedlung','Settlement'))}</button>`:''}${v.nsc?`<button type="button" class="b" data-dmfen="leute">👥 ${esc(t('Leute und Chronik','People and chronicle'))}</button>`:''}${v.fraktionen&&(v.fraktionen.uhren.length||v.fraktionen_geheim)?`<button type="button" class="b" data-dmfen="fraktionen">⏳ ${esc(t('Fraktionen','Factions'))}</button>`:''}${v.grenzen?`<button type="button" class="b" data-dmfen="grenzen">🛡 ${esc(t('Grenzen','Lines'))}</button>${dmXKnopf(v)}`:''}</div>${dmMekTasche(h)}</div>`}
+// the hero at a glance on the phone (Punkt 4 of the table review of 2026-10-24): quick actions and the bag under the card
+// (the wide table keeps them in the hero sheet). A potion is drunk at once; a power, a spell still charged and the weapon in
+// hand write their sentence into the own field, the panel checks it like typed text
+function dmSchnell(v,h){const k=h.kann||{faehigkeiten:[],zauber:[]},a=[];
+  const tr=(h.tasche||[]).find(x=>x.art==='trank'&&!x.oel);if(tr)a.push(`<button type="button" class="b" data-dmhero="trinken" data-i="${esc(tr.i)}">🧪 ${esc(tr.name)}</button>`);
+  [...(k.faehigkeiten||[]).filter(x=>!x.immer).map(x=>[x,false]),...(k.zauber||[]).map(x=>[x,true])].filter(([x])=>x.rest!==0).slice(0,3)
+    .forEach(([x,sp])=>a.push(`<button type="button" class="b" data-dmkann="${esc(dmKannSay(x,sp))}">${sp?'✨':'⚡'} ${esc(x.name)}</button>`));
+  const wf=h.an&&h.an.haupthand,g=v.kampf&&(v.kampf.gegner||[]).find(x=>!x.aus);
+  if(wf)a.push(`<button type="button" class="b" data-dmkann="${esc(g?t('Ich greife '+g.name+' mit meiner Waffe an.','I attack '+g.name+' with my weapon.'):t('Ich ziehe meine Waffe ('+wf.name+').','I draw my weapon ('+wf.name+').'))}">⚔ ${esc(wf.name)}</button>`);
+  return a.length?`<div class="dm-mek-schnell"><h5>${esc(t('Schnell','Quick'))}</h5><div class="dm-pills">${a.join('')}</div></div>`:''}
+// the bag as a list, a tap opens the thing's window with its buttons
+const dmMekTasche=h=>(h.tasche||[]).length?`<div class="dm-mek-tasche"><h5>${esc(t('Tasche','Bag'))} · ${h.tasche.length}/${h.tasche_max}</h5>${h.tasche.map(it=>`<div class="dm-mekt ${DMSEL[it.selten]||''}" data-dmi="${esc(it.i)}" role="button" tabindex="0">${dmDing(it)}<span>${esc(it.name)}${it.n>1?` <span class="pill">×${it.n}</span>`:''}</span></div>`).join('')}</div>`:'';
 // Grenzen, Schleier und X-Karte (Tabletop-Punkt 18): the seat's own two lists, the table's together without names, the
 // X-Karte one tap without a question (the panel checks everything by fixed word lists, dungeon_grenzen.py)
 const dmXKnopf=v=>{const x=v.grenzen&&v.grenzen.x,l=t('Die letzte Szene war zu viel: sie wird ruhiger neu erzählt. Niemand sieht, wer sie gelegt hat.','The last scene was too much: it is told again more calmly. Nobody sees who laid it.');
@@ -189,7 +202,7 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
 function dmBlatt(m,d){const W=DMW[m],v=dmFenV(m),f=v&&dmFind(v,W.ding);if(!f||!f.list||f.list.length<2)return;W.ding=f.list[(f.at+d+f.list.length)%f.list.length];dmFenDraw(m)}
 document.addEventListener('keydown',e=>{if(/^Arrow(Left|Right)$/.test(e.key)&&!e.target.closest('input,textarea,select')){for(const m of ['g','p']){const W=DMW[m];
     if(W.ding&&(W.ding.startsWith('g:')||W.ding.startsWith('kg:'))&&document.querySelector(m==='g'?'#dgcard .dm-fen-ding':'#dmview .dm-fen-ding')){dmBlatt(m,e.key==='ArrowRight'?1:-1);return}}}
-  if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('[data-dmgeg]')){e.preventDefault();e.target.click();return}});
+  if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('[data-dmgeg],.dm-mekt')){e.preventDefault();e.target.click();return}});
 document.addEventListener('keydown',e=>{const hf=document.querySelector('#dmview .dm-fen-hilfe,#dgcard .dm-fen-hilfe');
   if(hf&&/^Arrow(Left|Right)$/.test(e.key)){dmHilfeAuf(DMA.hilfe+(e.key==='ArrowRight'?1:-1));dmFenDraw(dmFenMode(hf));return}   // the guide pages with the arrow keys
   if(e.key!=='Escape')return;if(hf){dmFenZu(dmFenMode(hf),'hilfe');return}

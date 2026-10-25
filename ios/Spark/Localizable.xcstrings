@@ -17680,6 +17680,16 @@
           }
         }
       }
+    },
+    "Zum Tisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To the table"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

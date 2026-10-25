@@ -10,4 +10,6 @@ function dmLade(){return DML.p||(DML.p=DM_SKRIPTE.reduce((p,f)=>p.then(()=>new P
 window.dmStart=who=>{DML.who=who;const on=!!(who&&who.profile&&who.dungeon);document.querySelectorAll('nav button[data-s=dungeon]').forEach(b=>b.hidden=!on)};
 window.dmOpen=()=>{const root=$('dmroot');if(root&&!root.firstChild)root.innerHTML=`<div class="mut">${esc(t('Lädt …','Loading …'))}</div>`;
   dmLade().then(()=>window.dmOpen()).catch(()=>{if(root)root.innerHTML=`<div class="err">${esc(t('Das Spiel lädt gerade nicht. Seite neu laden.','The game does not load right now. Reload the page.'))}</div>`})};
-window.dmHash=()=>{if(!/^#(spiel=[A-Za-z0-9_-]{32}|weiter=[A-Za-z0-9_-]{43})$/.test(location.hash))return false;dmLade().then(()=>window.dmHash());return true};
+// „Zum Tisch“ on a tapped „Du bist dran“ (mitteilung.js, mitteilungen.ziel): that round's table
+window.dmZumTisch=rid=>{if(!/^r[0-9a-f]{10}$/.test(rid||''))return;dmLade().then(()=>{DM.rid=rid;DM.v=null;goSec('dungeon');dmRound()})};
+window.dmHash=()=>{if(!/^#(spiel=[A-Za-z0-9_-]{32}(&app=1)?|weiter=[A-Za-z0-9_-]{43})$/.test(location.hash))return false;dmLade().then(()=>window.dmHash());return true};

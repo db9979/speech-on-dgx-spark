@@ -79,6 +79,7 @@ FENSTER = {
     ".dm-fen-body": "Dungeon-Master hero sheet, merchant or item opened as a window over the table: its one bar while it is open",
     ".dm-rlist": "Dungeon-Master tab Regeln on a wide screen: the catalogue list beside its detail (like .ld-list); narrow screens show it in full",
     ".dm-rtafel": "Dungeon-Master tab Regeln: the rows of one table (up to 300) in the detail beside the list; the detail stays in view",
+    ".dm-tisch .dm-handeln": "Dungeon-Master table on a phone: the field to act stays above the bottom bar; only a long text in it scrolls (at most 45 % of the screen)",
 }
 CSS = ("app.css", "appview.css", "live.css", "technik.css", "weiche.css")
 

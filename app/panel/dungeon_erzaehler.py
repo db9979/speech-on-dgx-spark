@@ -35,6 +35,7 @@ STIL_MAX = 3               # style examples per world
 STIL_LEN = 400
 WIEDERHOLT = 0.35          # share of word triples already in the last narrations that counts as repeating
 WIEDER_ZURUECK = 3         # narrations a new one is compared with
+WIEDER_SATZ = 0.5          # a sentence with more of its word triples in them was told before (repair drops it)
 ZU_KURZ = 80               # a narration under this many characters is too short
 # a failed check told as done (Dominik 2026-10-25: „Holztür aufbrechen“ not passed, the door still burst open): a sentence
 # that names the check's thing and says it gave way, without a word that it held
@@ -43,6 +44,16 @@ GELINGT = ("gibt nach", "geben nach", "bricht auf", "aufgebrochen", "zerbricht",
            "schafft es", "gibt den weg frei", "gives way", "give way", "bursts open", "breaks open", "swings open",
            "springs open", "flies open", "off its hinges", "succeeds", "manages to", "shatters", "splinters")
 HAELT = ("nicht", "kein", "vergeblich", "hält stand", "widersteht", "umsonst", "not ", "n't", "in vain", "holds", "resists")
+# a failed check to find something out (Dominik 2026-10-25: „Brief im Schlamm untersuchen“ 9 gegen 10, yet the runes
+# told the way north-east): its check names a verb of FORSCHEN, and no clause of the narration or an ooc line may
+# hand over what it would have found (a word of ERFAEHRT without one of HAELT in the same clause); FORSCHEN are word
+# starts, so „versuchen“ is no „suchen“
+FORSCHEN = ("untersuch", "durchsuch", "absuch", "such", "lies", "lese", "entziffer", "erkenn", "erinner", "lausch", "spür",
+            "aufspür", "deut", "wissen", "studier", "prüf", "überprüf", "examin", "search", "investigat", "read", "deciph", "recall", "identif",
+            "track", "listen", "inspect", "study", "check")
+ERFAEHRT = ("verrät", "verraten", "enthüll", "entdeck", "erkennt", "erkennen", "findet", "erfährt", "erfahrt", "zeigt",
+            "weist", "deutet", "führt nach", "führt zu", "führen nach", "richtung", "spur", "offenbar", "verweist",
+            "reveal", "discover", "learns", "finds", "shows", "points", "leads to", "lead to", "direction", "trail", "recogni")
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 # Würfel-Beleg (Tabletop-Punkt 2, Dominik 2026-10-25 „alle punkte“, idea from portents): every roll of the panel gets an
 # id (W-17); a number the narration tells in a dice context (Wurf, Schaden, Lebenspunkte …) must be one of a receipt
@@ -305,9 +316,11 @@ HINWEIS = {
               "erleben: {namen}.",
               "Note: every character that acted must appear by name and meet a consequence of its action: {namen}."),
     "probe": ("Hinweis: Diese Probe ist misslungen: {namen}. Erzähle, dass es in diesem Zug nicht gelingt (es hält, "
-              "bleibt zu, rutscht ab); niemand und kein Zufall holt es nach.",
+              "bleibt zu, rutscht ab); niemand und kein Zufall holt es nach. Wer etwas untersucht, sucht oder wissen will, "
+              "erfährt nichts Neues: keine Richtung, keine Spur, kein Hinweis, auch nicht in ooc.",
               "Note: this check failed: {namen}. Narrate that it does not happen this turn (it holds, stays shut, "
-              "slips); nobody and no chance makes up for it."),
+              "slips); nobody and no chance makes up for it. Whoever examines, searches or wants to know something learns "
+              "nothing new: no direction, no trail, no hint, not in ooc either."),
     "gegner": ("Hinweis: Die Gegner der Begegnung müssen mit ihrem Namen aus angebot vorkommen: {namen}. Erfinde keine "
                "anderen Gegner.",
                "Note: the encounter's foes must appear by their name from angebot: {namen}. Invent no other foes."),
@@ -335,22 +348,40 @@ def _triples(text):
     return {tuple(w[i:i + 3]) for i in range(len(w) - 2)}
 
 
+def _alt(rd):
+    """The word triples of the last WIEDER_ZURUECK narrations."""
+    return set().union(*[_triples(x["text"]) for x in [e for e in rd["log"] if e["art"] == "dm"][-WIEDER_ZURUECK:]] or [set()])
+
+
 def _things(wofuer, en):
     """The words of a check that name its thing: the nouns in German, the longer words in English (stems)."""
     w = _WORT.findall(wofuer or "")
     return [x.lower()[:max(4, len(x) - 2)] for x in w if len(x) >= 4 and (en or x[:1].isupper())]
 
 
-def told_as_done(rd, text, wuerfe):
-    """The failed checks (their wofuer) the narration tells as done, by the fixed word lists GELINGT and HAELT."""
+def _forscht(w):
+    """A failed check to find something out (its wofuer names a verb of FORSCHEN)."""
+    return not w.get("ok") and any(x.startswith(FORSCHEN) for x in _WORT.findall((w.get("wofuer") or "").lower()))
+
+
+def _verraten(text):
+    """The clauses of a text that hand over a finding (a word of ERFAEHRT, none of HAELT)."""
+    return [x for x in re.split(r"[.!?…,;:–—()]+", text) if any(e in x.lower() for e in ERFAEHRT) and not any(h in x.lower() for h in HAELT)]
+
+
+def told_as_done(rd, text, wuerfe, ooc=()):
+    """The failed checks (their wofuer) the narration tells as done, by the fixed word lists GELINGT and HAELT; a failed
+    check to find something out also when a clause of the text or an ooc line hands over a finding (_verraten)."""
     en = rd.get("lang") == "en"
     saetze = [x.lower() for x in re.split(r"[.!?…]+", text)]
     out = []
     for w in wuerfe or ():
         stems = _things(w.get("wofuer"), en)
-        if w.get("ok") or not stems:
+        if w.get("ok"):
             continue
-        if any(any(st in x for st in stems) and any(g in x for g in GELINGT) and not any(h in x for h in HAELT) for x in saetze):
+        if stems and any(any(st in x for st in stems) and any(g in x for g in GELINGT) and not any(h in x for h in HAELT) for x in saetze):
+            out.append(w["wofuer"])
+        elif _forscht(w) and any(_verraten(t) for t in (text, *ooc)):
             out.append(w["wofuer"])
     return out
 
@@ -366,6 +397,9 @@ def repair(rd, story, fault, missing):
     if fault == "probe":
         add = [("Doch die Probe „{n}“ ist misslungen: das gelingt in diesem Zug nicht.",
                 "But the check \"{n}\" failed: it does not happen this turn.")[li].format(n=n) for n in missing]
+        if any(_forscht({"wofuer": n}) for n in missing):   # a finding the failed check did not earn leaves the text
+            story = dict(story, text=" ".join(x for x in re.split(r"(?<=[.!?…])\s+", story["text"]) if not _verraten(x)),
+                         ooc=[o for o in story.get("ooc") or [] if not _verraten(o.get("text", ""))])
     elif fault == "gegner":
         add = [("Vor euch: " if not li else "Before you: ") + ", ".join(
             f"{a} × {g['name'][li]}" if a > 1 else g["name"][li] for g, a in story.get("begegnung") or []) + "."]
@@ -373,6 +407,15 @@ def repair(rd, story, fault, missing):
         import dungeon_grenzen
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=dungeon_grenzen.cut(rd, story["text"]))
+    elif fault == "wiederholung":                # the sentences told before leave, when enough new ones stay
+        old = _alt(rd)
+        neu = [x for x in re.split(r"(?<=[.!?…])\s+", story["text"]) if not (t := _triples(x)) or len(t & old) / len(t) <= WIEDER_SATZ]
+        text = " ".join(neu).strip()
+        if len(text) < ZU_KURZ:
+            print("dungeon: nachbessern | bleibt | wiederholung", flush=True)
+            return story
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, text=text)
     elif fault == "beleg":                       # the receipts say the numbers, not the narration
         add = [("Es gelten die Würfel-Belege: " if not li else "The dice receipts count: ") + ", ".join(m for m in missing if m.startswith("W-")) + "."]
     else:
@@ -426,7 +469,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
                and rd["plaetze"][pid]["held"]["name"].lower() not in low]
     if missing:
         return "namen", missing
-    done = told_as_done(rd, text, wuerfe)
+    done = told_as_done(rd, text, wuerfe, [o.get("text", "") for o in story.get("ooc") or []])
     if done:
         return "probe", done
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
@@ -453,7 +496,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
         dm._day.bump("widerspruch")
         return "widerspruch", [f"{x['name']} ({x.get('merkmale', '')})" for x in rd.get("dinge") or [] if x["name"] in bad]
     t = _triples(text)
-    old = set().union(*[_triples(x["text"]) for x in [e for e in rd["log"] if e["art"] == "dm"][-WIEDER_ZURUECK:]] or [set()])
+    old = _alt(rd)
     if t and len(t & old) / len(t) > WIEDERHOLT:
         return "wiederholung", []
     return "", []

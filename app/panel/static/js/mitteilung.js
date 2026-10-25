@@ -25,6 +25,7 @@ function mtCard(x){const log=$('chatlog');if(!log)return;const old=$('mtcard');i
   if(z.art==='chat'&&typeof cxOpen==='function')go('Chat öffnen','Open chat',()=>{goSec('chats');cxOpen(z.chat)});
   if(z.art==='mail'&&typeof postRead==='function')go('Mail lesen','Read mail',()=>{icTabSet('post','show');goSec('post');postRead(z.ref)});
   if(z.art==='code'&&z.code)go('Code kopieren','Copy code',b=>copyString(z.code,b));
+  if(z.art==='dungeon'&&typeof dmZumTisch==='function')go('Zum Tisch','To the table',()=>dmZumTisch(z.rid));
   if(z.weg&&typeof wayGo==='function')go('Öffnen: '+z.weg,'Open: '+z.weg,()=>wayGo(z.weg));
   if(bar.childElementCount)c.appendChild(bar);
   if(z.vg&&typeof nahe!=='undefined')nahe.opened(z.vg);   // a note about a Vorgang counts as seen (zustellung.py)

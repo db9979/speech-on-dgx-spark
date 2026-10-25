@@ -3509,6 +3509,13 @@
 "titel": "Dungeon-Master: Nur wer gehen will, geht",
 "text": "A: Eine Runde mit Karte, die Aktion untersucht nur etwas am Ort (z. B. „Den Brief im Schlamm untersuchen“). B: Auch wenn die Erzählung von einem anderen Ort spricht, bleiben Fahne und „Ihr seid in …“ beim alten Ort. C: „Wir gehen nach …“ oder ein Weg unter „Von hier aus“: die Gruppe zieht weiter, Fahne und Erzählung zeigen den neuen Ort.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P526",
+"v": 1078,
+"titel": "Dungeon-Master: der Tisch am Handy",
+"text": "Am iPhone eine laufende Runde im Panel öffnen. A: Oben steht nur eine Zeile mit Titel, Zug und „⋯“; „⋯“ zeigt ← Runden, So spielst du, Dunkel, Vollbild, Geräusche und beim Gastgeber das Spielleiter-Pult. B: Im Kampf steht ein Kasten mit einer Zeile je Gegner, er klebt beim Scrollen nicht über der Erzählung; die Begegnung ist eine Zeile, ein Tipp auf einen Gegner öffnet sein Fenster. C: In Geschichte, Gruppe, Held und Karte steht das Feld „Was macht …?“ über der unteren Leiste, darüber „● Du bist dran“; das Ende der Erzählung ist lesbar. D: Gruppe: eine Zeile je Held mit Lebensbalken, ein Tipp zeigt die Werte. E: Held: RK, „Schnell“ mit Heiltrank und Waffe (die Waffe schreibt den Angriff ins Feld), darunter die Tasche. F: In einem neuen Browser öffnet sich beim ersten Mal nur die Karte „So geht's“ mit „Mehr“. G: Etwas untersuchen lassen, bis die Probe misslingt: die Erzählung und die graue Zeile verraten keine Richtung und keinen Fund. H: „Du bist dran“ auf dem iPhone antippen: der Tisch dieser Runde öffnet sich. I: „Ich gehe nach <Nachbarort>“ schreiben: keine Würfelprobe, und die nächste Erzählung wiederholt nicht die alte Szene.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

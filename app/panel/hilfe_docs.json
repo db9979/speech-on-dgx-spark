@@ -5293,6 +5293,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: der Tisch am Handy (V01.1.078, Punkte 1 bis 6 der Tisch-Prüfung vom 2026-10-24, Dominik 2026-10-25 „alles 1-5 umsetzten“): Am Handy ist der Kopf des Tisches eine Zeile: Titel, Zug, 🔊 und „⋯“. Unter „⋯“ stehen „← Runden“, „So spielst du“, Hell oder Dunkel, „Vollbild“, Musik und Geräusche und beim Gastgeber das Spielleiter-Pult; die Reiter Runden, Helden und Regeln sind am Tisch ausgeblendet, der Tisch nutzt die ganze Breite. Der Kampf steht in einem Kasten mit einer Zeile je Gegner, der nicht mehr über der Erzählung klebt; die Begegnung in der Geschichte ist nur noch eine Zeile mit den Gegnern, ein Tipp öffnet ihr Fenster mit allen Werten (auch am Rechner). Das Feld zum Handeln steht in jedem Teil (Geschichte, Gruppe, Held, Karte) über der unteren Leiste, darüber „● Du bist dran“ und wie viele gehandelt haben; die Erzählung endet über dem Feld. Die Gruppe ist eine Liste mit Bild, Name, Lebensbalken und Stand, ein Tipp auf einen Helden zeigt seine Werte und Ausrüstung (auch am Rechner). Der Teil „Held“ zeigt die Rüstungsklasse, eine Reihe „Schnell“ (einen Heiltrank trinken, Fähigkeiten und Zauber mit Ladung, die Waffe in der Hand; Fähigkeit, Zauber und Waffe schrei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ben ihren Satz ins Feld, das Panel prüft ihn wie getippt) und die Tasche, ein Tipp auf ein Ding öffnet sein Fenster. Die Hilfe öffnet sich beim ersten Mal nur als kleine Karte „So geht's“ mit drei Sätzen und „Mehr“; die Seiten beginnen mit „Was du schreibst“ und „Wann es weitergeht“, „Karte und Gewölbe“ kommt später. Öffnet die iPhone-App den Tisch, fehlt „Vollbild“, und ein Gast ohne Profil sieht am Tisch keine Spark-Zeile mehr. Eine misslungene Probe, mit der eine Figur etwas herausfinden will (untersuchen, suchen, lesen, erkennen …), verrät nichts mehr (Dominik 2026-10-25, der Brief in der Schattengasse): Nennt die Erzählung oder die graue Zeile trotzdem eine Richtung, eine Spur oder einen Fund, schreibt der Erzähler neu, und notfalls streicht das Panel diese Sätze. Fürs bloße Gehen oder Reisen gibt es keine Probe mehr: Das Panel verwirft eine Probe, deren Zweck nur ein Wort fürs Gehen nennt und keins für ein Risiko (leise, klettern, fliehen …). Wiederholt der Erzähler auch im letzten Versuch die letzte Szene, streicht das Panel die schon erzählten Sätze, solange genug Neues bleibt. Sicherheit: nur Darstellung, jede Aktion läuft wie bisher über die Prüfungen des Panels; „&app=1“"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " im Link ändert nur die Ansicht; die Prüfung der Erzählung folgt festen Wortlisten, nie dem Modell."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fraktionen mit Uhren (V01.1.064, Tabletop-Punkt 7, Dominik 2026-10-25 „ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.“, Uhren mit Feldern wie im Tischrollenspiel üblich, eigener Code): Eigener Admin-Schalter *Funktionen → KI-Dungeon-Master → Fraktionen mit Uhren* (chat.dungeon_fraktionen, ab Werk aus; dungeon_fraktionen.py). Jede Gruppe der festen Wahrheit des Kapitels (wahrheit.gruppen, Name und was sie will) wird eine Fraktion mit einer Uhr aus 4, 6 oder 8 Feldern, die das Panel auswürfelt; höchstens FRAKTIONEN_MAX (6). Nach jedem erzählten Zug würfelt das Panel für jede laufende Uhr einen W6, ab UHR_WURF (5) rückt sie ein Feld vor. Die Erzählung meldet in fraktionen höchstens 2 Gruppen, deren Ziel eine Handlung der Helden näher bringt (hilft) oder behindert (stoert); das Panel dreht die Uhr dann ein Feld, aber nur, wenn die Erzählung die Gruppe beim Namen nennt (auch ohne Artikel, „der Rabengilde“), und nur einmal je Gruppe und Zug. Eine volle Uhr heißt: die Gruppe hat erreicht, was sie wollte. Das steht im Verlauf (und in der Chronik, wenn „NSC-Gedächtnis und Chronik“ an ist), die nächste Erzählung bekommt es einmal als Daten (frakti"
 },
 {
@@ -6405,7 +6429,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: eigene Leiste am Handy (V01.1.006, Punkt 10 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Am Handy zeigt der Spieltisch immer nur einen Teil, unten wählt eine eigene Leiste ihn aus: 📖 Geschichte (Erzählung, Uhr und Feld), 👥 Gruppe (die Mitspieler), 📜 Held (der eigene Held mit Heldenbogen, dazu Leiten, Fäden und Termin) und 🗺 Karte (nur die Karte, sobald es eine gibt). Erzählt der Dungeon-Master weiter, während ein anderer Teil offen ist, bekommt „Geschichte“ einen roten Punkt. Die Leiste des Panels (Assistent, Heute, Dokumente, Ich, Verwalten) ist am Tisch ausgeblendet und kommt mit „← Runden“ zurück. Am breiten Bildschirm bleibt alles wie bisher in drei Spalten. Selbsttest Windows.test_phone_bar_one_pane_at_a_time."
+"text": "KI-Dungeon-Master: eigene Leiste am Handy (V01.1.006, Punkt 10 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Am Handy zeigt der Spieltisch immer nur einen Teil, unten wählt eine eigene Leiste ihn aus: 📖 Geschichte (Erzählung, Uhr und Feld), 👥 Gruppe (die Mitspieler), 📜 Held (der eigene Held mit Heldenbogen, Fäden und Termin; das Spielleiter-Pult seit V01.1.078 unter „⋯“ im Kopf, das Feld zum Handeln in jedem Teil) und 🗺 Karte (nur die Karte, sobald es eine gibt). Erzählt der Dungeon-Master weiter, während ein anderer Teil offen ist, bekommt „Geschichte“ einen roten Punkt. Die Leiste des Panels (Assistent, Heute, Dokumente, Ich, Verwalten) ist am Tisch ausgeblendet und kommt mit „← Runden“ zurück. Am breiten Bildschirm bleibt alles wie bisher in drei Spalten. Selbsttest Windows.test_phone_bar_one_pane_at_a_time."
 },
 {
 "lang": "de",
@@ -6413,7 +6437,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: ruhiger Tisch ohne Doppeltes (V01.1.004, Punkt 9 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Die Hilfe „So spielst du“ ist ein Fenster in der Art des Tisches mit einer Seite je Teil (Karte, Schreiben, Würfeln, Leben, Händler, Vorlesen und mehr). „‹ Zurück“, „Weiter ›“, die Punkte und am Rechner die Pfeiltasten blättern; Esc, ✕ oder ein Tipp daneben schließt. Sie öffnet sich wie bisher einmal von selbst auf jedem Gerät, danach über „❔ So spielst du“ im Kopf. Musik, Geräusche und die Lautstärke stehen jetzt im Kopf des Tisches statt in einer eigenen Zeile. Zug, Uhr und „haben gehandelt“ stehen nur noch einmal: der Zug im Kopf, Uhr und Stand über dem Feld; die rechte Spalte wiederholt sie nicht mehr. Wer gehandelt hat, sieht die Uhr in der eigenen Karte, eine eigene Extra-Minute dort als „+1 Minute für dich“. Der eigene Held steht in der Gruppe nur als kurze Zeile (Name, Leben, Stand), die große Karte mit Heldenbogen bleibt rechts. Am Spieltisch ist das schwebende Assistenten-Gesicht ausgeblendet, auf allen anderen Seiten ist es wieder da. Der Reiter „Leiten“ nutzt die Schrift des Tisches, eine ungerade letzte Kachel füllt ihre Zeile. Selbsttest Windows."
+"text": "KI-Dungeon-Master: ruhiger Tisch ohne Doppeltes (V01.1.004, Punkt 9 der Prüfung vom 2026-10-24, Dominik „alles umsetzten“): Die Hilfe „So spielst du“ ist ein Fenster in der Art des Tisches mit einer Seite je Teil (Karte, Schreiben, Würfeln, Leben, Händler, Vorlesen und mehr). „‹ Zurück“, „Weiter ›“, die Punkte und am Rechner die Pfeiltasten blättern; Esc, ✕ oder ein Tipp daneben schließt. Sie öffnet sich einmal von selbst auf jedem Gerät (seit V01.1.078 zuerst nur als kleine Karte „So geht's“ mit „Mehr“), danach über „❔ So spielst du“ im Kopf (am Handy unter „⋯“). Musik, Geräusche und die Lautstärke stehen jetzt im Kopf des Tisches statt in einer eigenen Zeile. Zug, Uhr und „haben gehandelt“ stehen nur noch einmal: der Zug im Kopf, Uhr und Stand über dem Feld; die rechte Spalte wiederholt sie nicht mehr. Wer gehandelt hat, sieht die Uhr in der eigenen Karte, eine eigene Extra-Minute dort als „+1 Minute für dich“. Der eigene Held steht in der Gruppe nur als kurze Zeile (Name, Leben, Stand), die große Karte mit Heldenbogen bleibt rechts. Am Spieltisch ist das schwebende Assistenten-Gesicht ausgeblendet, auf allen anderen Seiten ist es wieder da. Der Reiter „Leiten“ nutzt die Schrift "
 },
 {
 "lang": "de",
@@ -6421,7 +6445,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "test_table_calm_guide_pages_and_no_doubles."
+"text": "des Tisches, eine ungerade letzte Kachel füllt ihre Zeile. Selbsttest Windows.test_table_calm_guide_pages_and_no_doubles."
 },
 {
 "lang": "de",
@@ -18893,6 +18917,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: the table on the phone (V01.1.078, points 1 to 6 of the table review of 2026-10-24, Dominik 2026-10-25 “alles 1-5 umsetzten”): On the phone the table's head is one row: title, turn, 🔊 and “⋯”. Under “⋯” are “← Rounds”, “How to play”, light or dark, “Full screen”, music and sounds and, for the host, the game master console; the tabs Rounds, Heroes and Rules stay away at the table, which uses the whole width. The fight stands in one box with a row per foe that no longer sticks over the narration; the encounter in the story is just a line of foes, a tap opens their window with every value (on a computer too). The field to act stands above the bottom bar in every pane (Story, Group, Hero, Map), above it “● Your turn” and how many have acted; the narration ends above the field. The group is a list with picture, name, life bar and state, a tap on a hero shows its values and equipment (on a computer too). The “Hero” pane shows the armour class, a row “Quick” (drink a healing potion, abilities and spells with a charge, the weapon in hand; ability, spell and weapon write their sentence into the field, the panel checks it as if typed) and the bag, a tap on a thing opens it"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "s window. The first time the guide only opens as a small card “How it works” with three sentences and “More”; the pages start with “What you write” and “When it goes on”, “Map and vaults” comes later. When the iPhone app opens the table there is no “Full screen”, and a guest without a profile no longer sees a Spark row at the table. A failed check by which a character wants to find something out (examine, search, read, recognise …) no longer gives anything away (Dominik 2026-10-25, the letter in the Schattengasse): when the narration or the grey line still names a direction, a trail or a find, the narrator writes again, and if need be the panel strikes those sentences. Plain going or travelling no longer gets a check: the panel drops a check whose purpose names only a word for going and none for a risk (quietly, climb, flee …). When the narrator repeats the last scene even on the last try, the panel strikes the sentences told before, as long as enough new ones stay. Security: display only, every action goes through the panel's checks as before; “&app=1” in the link only changes the view; the narration check follows fixed word lists, never the model."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: factions with clocks (V01.1.064, tabletop point 7, Dominik 2026-10-25 \"ich hätte gerne alle punkte umgesetzt - bestimme selbst die reihenfolge.\", clocks with fields as common in tabletop play, own code): Own admin switch *Features → AI Dungeon Master → Factions with clocks* (chat.dungeon_fraktionen, off from the start; dungeon_fraktionen.py). Every group of the chapter's fixed truth (wahrheit.gruppen, name and what it wants) becomes a faction with a clock of 4, 6 or 8 fields the panel rolls; at most FRAKTIONEN_MAX (6). After every told turn the panel rolls a d6 for each running clock, from UHR_WURF (5) it moves a field. The narration reports in fraktionen at most 2 groups whose goal an action of the heroes brings closer (hilft) or hinders (stoert); the panel then turns the clock a field, but only when the narration names the group (also without its article), and only once per group and turn. A full clock means: the group has got what it wanted. That stands in the feed (and in the chronicle while \"NPC memory and chronicle\" is on), the next narration gets it once as data (fraktion_voll) with the fixed rule to tell how the world changes, and the group holds the grou"
 },
 {
@@ -19957,7 +19997,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: a bar of its own on the phone (V01.1.006, point 10 of the review of 2026-10-24, Dominik \"alles umsetzten\"): on the phone the game table shows one part at a time, a bar of its own at the bottom picks it: 📖 Story (narration, clock and field), 👥 Group (the other players), 📜 Hero (the own hero with the hero sheet, plus Host, Threads and Date) and 🗺 Map (only the map, once there is one). When the Dungeon Master tells on while another part is open, \"Story\" gets a red dot. The panel's own bar (Assistant, Today, Documents, Me, Manage) is hidden at the table and comes back with \"← Rounds\". On a wide screen everything stays in three columns as before. Self-test Windows.test_phone_bar_one_pane_at_a_time."
+"text": "AI Dungeon Master: a bar of its own on the phone (V01.1.006, point 10 of the review of 2026-10-24, Dominik \"alles umsetzten\"): on the phone the game table shows one part at a time, a bar of its own at the bottom picks it: 📖 Story (narration, clock and field), 👥 Group (the other players), 📜 Hero (the own hero with the hero sheet, Threads and Date; the game master console since V01.1.078 under “⋯” in the head, the field to act in every pane) and 🗺 Map (only the map, once there is one). When the Dungeon Master tells on while another part is open, \"Story\" gets a red dot. The panel's own bar (Assistant, Today, Documents, Me, Manage) is hidden at the table and comes back with \"← Rounds\". On a wide screen everything stays in three columns as before. Self-test Windows.test_phone_bar_one_pane_at_a_time."
 },
 {
 "lang": "en",
@@ -19965,7 +20005,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: a calm table without doubles (V01.1.004, point 9 of the review of 2026-10-24, Dominik \"alles umsetzten\"): the guide \"How to play\" is a window in the table's look with one page per part (map, writing, dice, life, merchants, reading aloud and more). \"‹ Back\", \"Next ›\", the dots and on a computer the arrow keys page through; Esc, ✕ or a tap beside it closes it. As before it opens by itself once on every device, then through \"❔ How to play\" in the head. Music, sounds and the volume now sit in the table's head instead of a row of their own. Turn, clock and \"have acted\" stand only once: the turn in the head, clock and state above the field; the right column no longer repeats them. Once you have acted the clock stands in your own card, your own extra minute there as \"+1 minute for you\". The own hero stands in the group only as a short row (name, life, state), the large card with the hero sheet stays on the right. At the table the floating assistant face is hidden, on every other page it is back. The tab \"Host\" uses the table's font, an odd last tile fills its row. Self-test Windows.test_table_calm_guide_pages_and_no_doubles."
+"text": "AI Dungeon Master: a calm table without doubles (V01.1.004, point 9 of the review of 2026-10-24, Dominik \"alles umsetzten\"): the guide \"How to play\" is a window in the table's look with one page per part (map, writing, dice, life, merchants, reading aloud and more). \"‹ Back\", \"Next ›\", the dots and on a computer the arrow keys page through; Esc, ✕ or a tap beside it closes it. It opens by itself once on every device (since V01.1.078 first only as a small card \"How it works\" with \"More\"), then through \"❔ How to play\" in the head (on the phone under \"⋯\"). Music, sounds and the volume now sit in the table's head instead of a row of their own. Turn, clock and \"have acted\" stand only once: the turn in the head, clock and state above the field; the right column no longer repeats them. Once you have acted the clock stands in your own card, your own extra minute there as \"+1 minute for you\". The own hero stands in the group only as a short row (name, life, state), the large card with the hero sheet stays on the right. At the table the floating assistant face is hidden, on every other page it is back. The tab \"Host\" uses the table's font, an odd last tile fills its row. Self-test Windows.te"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "st_table_calm_guide_pages_and_no_doubles."
 },
 {
 "lang": "en",

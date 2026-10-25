@@ -1055,3 +1055,18 @@ async def dm_pane(pg, name):
     geschichte, gruppe, held or karte; on a wide screen all stand and nothing is clicked."""
     if await pg.evaluate("(()=>{const e=document.querySelector('#dmview .dm-unten');return !!e&&e.getClientRects().length>0})()"):
         await pg.click(f"#dmview .dm-unten [data-dmh={name}]")
+
+
+async def dm_kopf(pg, box="#dmview"):
+    """On the phone the table's head is one row (V01.1.077): back, the guide, light or dark, full screen and the host's
+    console open under „⋯“; on a wide screen they stand in the head and nothing is clicked."""
+    if await pg.evaluate(f"(()=>{{const e=document.querySelector('{box} .dm-head [data-dmkopf]');return !!e&&e.getClientRects().length>0&&!e.closest('.dm-head').classList.contains('auf')}})()"):
+        await pg.click(f"{box} .dm-head [data-dmkopf]")
+
+
+async def dm_pult(pg):
+    """Opens the host's console: on the phone from „⋯“ in the head, on a wide screen from the side column."""
+    await dm_kopf(pg)
+    await pg.click("#dmview .dm-head [data-dmfen=pult]" if await pg.evaluate(
+        "(()=>{const e=document.querySelector('#dmview .dm-head [data-dmfen=pult]');return !!e&&e.getClientRects().length>0})()")
+        else "#dmview .dm-side [data-dmfen=pult]")

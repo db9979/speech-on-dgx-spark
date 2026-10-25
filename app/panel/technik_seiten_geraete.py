@@ -213,7 +213,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "53e86a993e",
+        "stand": "2435adadce",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],

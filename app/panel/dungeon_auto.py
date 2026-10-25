@@ -164,11 +164,17 @@ def _dm():
     return dungeon
 
 
+def im_auto(uid, now=None):
+    """Whether the profile plays from the car now: its last game request from there is at most WORTE_S old (a guest
+    without a profile never; the real dice of dungeon_echt never ask a seat in the car)."""
+    now = time.time() if now is None else now
+    return bool(uid) and now - _im_auto.get(uid, 0) <= WORTE_S
+
+
 def words(uid, now=None):
     """The names of the profile's round (dungeon.heard_words) for the car's recordings while it plays from the car,
     [] otherwise."""
-    now = time.time() if now is None else now
-    if not uid or now - _im_auto.get(uid, 0) > WORTE_S:
+    if not im_auto(uid, now):
         return []
     dm = _dm()
     rid, pid = _seat(dm, uid, "")

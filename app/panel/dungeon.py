@@ -2917,11 +2917,13 @@ KANN_REGEL = {
     "en": "A character only uses spells and powers from its list kann. Whatever stands under nicht_bekannt does not "
           "work: tell that the character has not mastered it yet or has no power left for it."}
 AUFGABE_PROBEN = {
-    "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko). "
+    "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko; "
+          "gehen, reisen oder zu einem Ort aufbrechen braucht keine). "
           "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich); vorteil ist vorteil, wenn die "
           "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer. wofuer sagt in wenigen Wörtern aus Sicht "
           "der Spieler, wofür gewürfelt wird (etwa „Schattenwächter auf Schwächen untersuchen“).",
-    "en": "Task: decide which actions need a check (at most one per character, only with real risk). "
+    "en": "Task: decide which actions need a check (at most one per character, only with real risk; "
+          "going, travelling or setting out for a place needs none). "
           "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
           "situation helps the character, nachteil when it hinders, else empty. wofuer says in a few words from the "
           "players' view what the roll is for (such as \"Search the shadow warden for weak spots\")."}
@@ -2959,7 +2961,8 @@ AUFGABE_MOMENT = {      # moment_of: the turn carries the mood, tell it fully
 }
 # a check's outcome in words for the narration (Dominik 2026-10-25: a failed „Holztür aufbrechen“ was told as done)
 ERGEBNIS = {True: ("gelungen", "passed"),
-            False: ("misslungen: das gelingt in diesem Zug nicht, niemand holt es nach", "failed: it does not happen this turn, nobody makes up for it")}
+            False: ("misslungen: das gelingt in diesem Zug nicht, niemand holt es nach; wer etwas untersucht oder wissen will, erfährt nichts Neues",
+                    "failed: it does not happen this turn, nobody makes up for it; whoever examines or wants to know something learns nothing new")}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen); eine "
           "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
@@ -3157,15 +3160,33 @@ def _name_map(rd):
     return {p["held"]["name"].lower(): pid for pid, p in seated(rd)}
 
 
+# going somewhere needs no check (Dominik 2026-10-25, „gehe nach wolfshafen“ got „Sich durch die Gassen von Wolfshafen
+# bewegen“ on Geschick): a check whose wofuer has a word of GEHEN and none of RISIKO is dropped; the map moves the group
+GEHEN = re.compile(r"(?i)\b(geh(e|en|t|st)?|lauf(e|en|t)?|läufs?t|reis(e|en|t)|beweg\w*|wander\w*|marschier\w*|"
+                   r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?)\b")
+RISIKO = ("unbemerkt", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
+          "verfolg", "balancier", "sneak", "quiet", "unseen", "hidden", "climb", "jump", "swim", "flee", "past", "chase", "balanc")
+
+
+def just_going(wofuer):
+    """A check only for going somewhere (GEHEN without RISIKO): no roll."""
+    low = (wofuer or "").lower()
+    return bool(GEHEN.search(low)) and not any(x in low for x in RISIKO)
+
+
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped. Returns (checks, dropped)."""
+    of the list, the difficulty clamped, none only for going somewhere (just_going). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
     werte = {w["id"] for w in r["werte"]}
     for p in (obj or {}).get("proben") or []:
         pid = names.get(str(p.get("wer", "")).strip().lower()) if isinstance(p, dict) else None
         if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not isinstance(p.get("schwer"), int):
             drop += 1
+            continue
+        if just_going(p.get("wofuer")):
+            drop += 1
+            print("dungeon: probe | verworfen | gehen", flush=True)
             continue
         seen.add(pid)
         out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
@@ -4791,7 +4812,9 @@ MELDEN = {"dran": ("Du bist dran in „{titel}“ (Zug {zug}).", "It is your tur
 
 
 async def send_notes(rd, notes):
-    """The notes as push notes of the profile (push.send, its own ways and quiet hours). Never raises."""
+    """The notes as push notes of the profile (push.send, its own ways and quiet hours). Never raises. The round's id goes
+    along as the note's ref: a tapped note opens that table (mitteilungen.ziel, Punkt 7 of the table review of 2026-10-24),
+    the seat's code never travels with it."""
     import push
     en = rd.get("lang") == "en"
     uhr = time.strftime("%H:%M", time.localtime(rd.get("termin") or 0))
@@ -4801,7 +4824,7 @@ async def send_notes(rd, notes):
             continue
         try:
             await push.send(uid, "Dungeon-Master", MELDEN[kind][1 if en else 0].format(titel=rd["titel"], zug=rd["zug"], uhr=uhr),
-                            tag="dungeon", why="Dungeon-Master")
+                            tag="dungeon", why="Dungeon-Master", ref=rd.get("rid") if _RID.fullmatch(str(rd.get("rid") or "")) else "")
             _day.bump("gemeldet")
             print(f"dungeon: melden | {kind}", flush=True)
         except Exception:   # noqa: BLE001 - a note that did not go out is no error of the game
@@ -4825,7 +4848,7 @@ async def due_once(now=None):
                 rd = d["runden"][rid]
                 notes = due_notes(rd, now)
                 if notes:
-                    todo.append((copy.deepcopy(rd), notes))
+                    todo.append((dict(copy.deepcopy(rd), rid=rid), notes))
                     changed = True
                 mails = gastkonto.due(rd, now, _seen)
                 if mails:

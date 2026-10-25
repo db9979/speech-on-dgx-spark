@@ -12,6 +12,8 @@ What the card offers is decided here with fixed rules from the kind of note (zie
     2. a message in a chat (tag chat-<cid>): open that chat
     3. a new mail with its reference: read that mail
     4. a Bestätigungscode (mailcode): copy the code, the note's first word
+    4a. „Du bist dran“ of the Dungeon-Master (tag dungeon) with its round's id: open that table (the app asks for the
+        seat's code only then, the note never carries it)
     5. a way in the text or a fixed way of the kind (begleiter.note_weg): open that place (Sprung-Link)
     6. else: title and text only
 
@@ -38,6 +40,7 @@ VG = re.compile(r"v[0-9a-f]{10}")
 CHAT = re.compile(r"chat-(c[0-9a-f]{12})")
 MAIL = re.compile(r"m[0-9a-f]{8}:\d{1,10}")
 CODE = re.compile(r"[A-Z0-9]{4,8}")
+RUNDE = re.compile(r"r[0-9a-f]{10}")          # a Dungeon-Master round (dungeon_ablage.RID)
 # what a card offers, fixed words; the Live line and the journal name only these
 ARTEN = {"vorgang": "Offen", "chat": "Chat", "mail": "Mail", "code": "Code", "weg": "Weg", "text": "Text"}
 _lock = threading.Lock()
@@ -66,7 +69,7 @@ def get(uid, mid, now=None):
 
 
 def ziel(x):
-    """What the card of a note offers (see the module's rules): {"art", and "vg" | "chat" | "ref" | "code"}, plus "weg"
+    """What the card of a note offers (see the module's rules): {"art", and "vg" | "chat" | "ref" | "code" | "rid"}, plus "weg"
     when the note names a place. Only fixed patterns pass, never a free text."""
     import begleiter
     tag, out = x.get("tag", ""), {}
@@ -81,6 +84,8 @@ def ziel(x):
         out = {"art": "mail", "ref": x["ref"]}
     elif tag == "mailcode" and CODE.fullmatch(code):
         out = {"art": "code", "code": code}
+    elif tag == "dungeon" and RUNDE.fullmatch(x.get("ref", "")):
+        out = {"art": "dungeon", "rid": x["ref"]}
     elif weg:
         out = {"art": "weg"}
     else:
