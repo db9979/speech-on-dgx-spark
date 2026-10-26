@@ -2659,6 +2659,9 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm.dm-voll:not(.dm-tisch){position:fixed;inset:0;z-index:200;margin:0;border-radius:0;overflow:auto;padding:16px max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 .dm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.dm-cards.dm-gs{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 .dm-cards.dm-klein{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+/* Eigene Geschichten (dungeon_geschichten): ⋯ beside a story card, ＋ Neue Geschichte first */
+.dm-gwrap{position:relative;display:grid}.dm-gwrap>.dm-gcard{padding-right:40px}.dm-gmehr{position:absolute;top:4px;right:4px}.dm-gmehr>.b{padding:2px 9px;min-height:0;line-height:1.3}
+.dm-gneu{border-style:dashed}.dm-gzeigen{grid-column:1/-1;justify-self:start}
 .dm-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));
   background:var(--t-karte,var(--card));color:var(--t-text,var(--fg));font:inherit;cursor:pointer;min-width:0}
 .dm-card b{font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct));font-size:15px;overflow-wrap:normal;hyphens:auto}

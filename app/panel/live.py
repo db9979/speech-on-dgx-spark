@@ -1478,6 +1478,11 @@ def snapshot(view="admin", now=None):
         dgn["haltung"] = dungeon_haltung.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["haltung"] = {}
+    try:   # Eigene Geschichten (dungeon_geschichten.py): numbers on the game's line
+        import dungeon_geschichten
+        dgn["geschichten"] = dungeon_geschichten.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["geschichten"] = {}
     try:   # Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): numbers on the game's line
         import dungeon_rueckfrage
         dgn["rueckfrage"] = dungeon_rueckfrage.for_live() if dgn.get("on") else {}
@@ -2064,6 +2069,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("umgebung") or {}).values()) else "")
                         + (f" · heute {dgn['haltung']['ansagen']} Gegner-Ansagen, {dgn['haltung']['abwehr']}-mal Abwehr, {dgn['haltung']['ausweichen']}-mal Ausweichen"
                            if any((dgn.get("haltung") or {}).values()) else "")
+                        + (f" · {dgn['geschichten']['eigene']} eigene Geschichten, heute {dgn['geschichten']['gespeichert']} gespeichert, {dgn['geschichten']['erstellt']} erstellt, {dgn['geschichten']['kopiert']} kopiert, {dgn['geschichten']['geloescht']} gelöscht, {dgn['geschichten']['ausgeblendet']} ausgeblendet"
+                           if any((dgn.get("geschichten") or {}).values()) else "")
                         + (f" · heute {dgn['rueckfrage']['gefragt']} Rückfragen, {dgn['rueckfrage']['genommen']} Vorschläge genommen, {dgn['rueckfrage']['so_lassen']}-mal so gelassen"
                            if any((dgn.get("rueckfrage") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"

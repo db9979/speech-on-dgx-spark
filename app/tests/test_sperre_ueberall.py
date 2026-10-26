@@ -298,7 +298,7 @@ ADMIN_ON_OK = {
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
     "dungeon.py:for_live": "Zustand → Live: Spark-wide flag beside numbers; each round asks features.allowed dungeon for its host",
-    "dungeon.py:admin_show": "the admin's story planner: the act field „Besonderes Ding“ only while the Spark-wide switch is on; a round asks features.allowed dungeonquest for its host",
+    "dungeon.py:_planner_limits": "the admin's story planner (uid None; a host's form asks features.allowed): the act field „Besonderes Ding“ only while the Spark-wide switch is on; a round asks features.allowed dungeonquest for its host",
     "dungeon_musik.py:on": "Spark-wide: one shared music store for every round (nothing personal); a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",
     "dungeon_dingbild.py:on": "the catalog's pictures are Spark-wide (one picture per entry and world, painted at night); a find asks dungeon.pictures_on (features.allowed bilder) for its host",
     "dungeon_dingbild.py:status": "the admin's page: Spark-wide switch and numbers",

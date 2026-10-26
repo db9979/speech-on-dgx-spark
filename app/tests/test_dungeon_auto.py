@@ -17,6 +17,7 @@ from unittest import mock
 
 from tests.test_dungeon import Base, dungeon   # noqa: F401  (one login per profile, the same fixtures as the table)
 import dungeon_auto as auto  # noqa: E402
+import dungeon_geschichten as geschichten  # noqa: E402
 
 
 class InTheCar(Base):
@@ -267,7 +268,7 @@ class InTheCar(Base):
         self.assertTrue(a["sagen"].startswith("Drei Geschichten: 1: "))
         gids = a["weiter"]["wahl"]
         self.assertEqual((len(gids), a["weiter"]["neu"]), (auto.WAHL, True))
-        titel = dungeon.story(dungeon.rules(), gids[1], "de")["titel"]
+        titel = geschichten.find(dungeon.rules(), self.uid, gids[1], "de")[0]["titel"]
         self.assertEqual(self.car(neu=True, wahl=gids, text="die vierte")["sagen"], "Welche Geschichte? Sag „die erste“, „die zweite“ oder „die dritte“.")
         b = self.car(neu=True, wahl=gids, text="die zweite")
         self.assertEqual((b["sagen"], b["frage"]), (f"{titel} mit Arvid. Passt das?", True))

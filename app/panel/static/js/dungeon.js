@@ -387,9 +387,14 @@ document.body.addEventListener('drop',e=>{const s=e.target.closest&&e.target.clo
   const a=e.dataTransfer.getData('text/plain');if(a)dmVertSwap(s.closest('.dm-vert'),a,s.dataset.w)});
 // a new round (Dominik 2026-10-23): world, story, tone, people and class as cards with pictures; the stories of the chosen
 // world are the admin's and the ten that come with the Spark, a story sets its tone
-function dmStories(w,welt){const ton=id=>w.toene.find(x=>x.id===id)||{};
-  return dmCard('data-dmgs=""',true,'✒',t('Frei erzählen','Tell freely'),t('Der Dungeon-Master erfindet die Geschichte aus dem Einstieg.','The Dungeon Master makes up the story from the opening.'))
-    +(w.geschichten||[]).filter(g=>g.welt===welt).map(g=>`<button type="button" class="dm-card dm-gcard" data-dmgs="${esc(g.gid)}"><b>${esc(g.titel)}</b><small class="dm-gidee">${esc(g.idee)}</small><small class="dm-gmeta">${esc((ton(g.ton).zeichen||'')+' '+(ton(g.ton).name||''))} · ${g.akte} ${esc(t('Akte','acts'))}${g.von==='admin'?' · '+esc(t('vom Admin','by the admin')):''}</small></button>`).join('')}
+function dmStories(w,welt){const ton=id=>w.toene.find(x=>x.id===id)||{},E=w.eigene,VON={eigen:t('deine','yours'),admin:t('vom Admin','by the admin')};
+  const card=g=>`<button type="button" class="dm-card dm-gcard" data-dmgs="${esc(g.gid)}"><b>${esc(g.titel)}</b><small class="dm-gidee">${esc(g.idee)}</small><small class="dm-gmeta">${esc((ton(g.ton).zeichen||'')+' '+(ton(g.ton).name||''))} · ${g.akte} ${esc(t('Akte','acts'))}${VON[g.von]?' · '+esc(VON[g.von]):''}</small></button>`;
+  // Eigene Geschichten (dungeon_geschichten): „⋯“ beside every card, Löschen of a story not the host's own only hides it
+  const mehr=g=>`<span class="ic-menu dm-gmehr"><button type="button" class="b" data-dmgmehr="1" aria-haspopup="true" aria-label="${esc(t('Mehr zu „'+g.titel+'“','More on “'+g.titel+'”'))}">⋯</button><div class="ic-pop" hidden>${[['bearbeiten',t('Bearbeiten','Edit')],['kopieren',t('Kopieren','Copy')],['loeschen',g.von==='eigen'?t('Löschen','Delete'):t('Ausblenden','Hide')]].map(([k,l])=>`<button type="button"${k==='loeschen'?' class="danger"':''} data-dmgwas="${k}" data-gid="${esc(g.gid)}">${esc(l)}</button>`).join('')}</div></span>`;
+  return (E?`<button type="button" class="dm-card dm-gcard dm-gneu" data-dmgneu="1"><b>＋ ${esc(t('Neue Geschichte','New story'))}</b><small class="dm-gidee">${esc(t('Ton wählen, Stichworte nach Wunsch: das Sprachmodell schreibt sie.','Pick a tone, keywords if you like: the language model writes it.'))}</small></button>`:'')
+    +dmCard('data-dmgs=""',true,'✒',t('Frei erzählen','Tell freely'),t('Der Dungeon-Master erfindet die Geschichte aus dem Einstieg.','The Dungeon Master makes up the story from the opening.'))
+    +(w.geschichten||[]).filter(g=>g.welt===welt).map(g=>E?`<div class="dm-gwrap">${card(g)}${mehr(g)}</div>`:card(g)).join('')
+    +(E&&E.aus?`<button type="button" class="b dm-gzeigen" data-dmgzeigen="1">${esc(t(`${E.aus} ausgeblendete wieder zeigen`,`Show ${E.aus} hidden again`))}</button>`:'')}
 function dmWorld(w,id){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D)return;DM.welt=id;DMBW.w=id;dmLook(w,dmWelt(D.wahl,id).farben);dmHBSwap(f);
   f.querySelector('.dmf-gesch').innerHTML=dmStories(D.wahl,id);dmStory(w,f.querySelector('.dmf-gesch [data-dmgs=""]'))}
 function dmStory(w,b){const f=w.querySelector('.dm-form'),D=DM.data;if(!f||!D||!b)return;
@@ -1620,12 +1625,16 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmdi
 // ---------------------------------------------------------------- the admin's stories (Geschichten-Planer)
 // a story: idea, goal, foe, places, taboos and 3 to 5 acts with a turning point; „Vorschlag erzeugen“ lets the model
 // write all of it from keywords, „↻“ one act again; the panel checks both like typed text before anything is kept
-const DMP={d:null,g:null,gid:'',err:'',stich:'',hint:'',busy:false};
-function dmPlans(d){const gs=d.geschichten||[],P=d.planer;
-  return `<h3 class="sec">${esc(t('Geschichten','Stories'))} · ${gs.length}/${P.max}</h3>
+const DMP={d:null,g:null,gid:'',err:'',stich:'',hint:'',busy:false,host:false};
+// the same form for a host's own story (Eigene Geschichten, dungeon_geschichten): DMP.host, its own sheet and endpoints
+const dmPBox=()=>$(DMP.host?'dmgscard':'dmadmcard');
+const dmPBase=()=>DMP.host?'/api/profile/dungeon/geschichten/':'/api/admin/dungeon/geschichte/';
+function dmPDraw(d){if(DMP.host)dmGSheet();else dmRulesDraw(d,'')}
+function dmPlans(d){const gs=d.geschichten||[],P=d.planer,own=gs.filter(g=>!g.von).length;   // a host's own (von) counts with the host
+  return `<h3 class="sec">${esc(t('Geschichten','Stories'))} · ${own}/${P.max}</h3>
     <div class="fh">${esc(t('Lege fest, wie eine Geschichte verläuft. Wer eine Runde anlegt, wählt sie aus; den Plan sehen nur du und der Gastgeber.','Set how a story runs. Whoever starts a round picks it; only you and the host see the plan.'))}</div>
-    ${gs.length?`<div class="ic-list">${gs.map(g=>`<div class="ic-row"><div class="ic-rmid"><span class="ic-t">${esc(g.titel)}</span><small class="ic-meta">${esc(g.welt_name)} · ${esc(g.ton_name)} · ${g.akte.length} ${esc(t('Akte','acts'))}</small></div><button type="button" class="b" data-dmadm="gedit" data-gid="${esc(g.gid)}">${esc(t('Bearbeiten','Edit'))}</button></div>`).join('')}</div>`:''}
-    <div class="row"><button type="button" class="b"${gs.length>=P.max?' disabled':''} data-dmadm="gneu">${esc(t('Neue Geschichte','New story'))}</button></div>`}
+    ${gs.length?`<div class="ic-list">${gs.map(g=>`<div class="ic-row"><div class="ic-rmid"><span class="ic-t">${esc(g.titel)}</span><small class="ic-meta">${esc(g.welt_name)} · ${esc(g.ton_name)} · ${g.akte.length} ${esc(t('Akte','acts'))}${g.von?' · '+esc(t('von '+g.von_name,'by '+g.von_name)):''}</small></div><button type="button" class="b" data-dmadm="gedit" data-gid="${esc(g.gid)}">${esc(t('Bearbeiten','Edit'))}</button></div>`).join('')}</div>`:''}
+    <div class="row"><button type="button" class="b"${own>=P.max?' disabled':''} data-dmadm="gneu">${esc(t('Neue Geschichte','New story'))}</button></div>`}
 function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
   const opt=(a,cur)=>a.map(x=>`<option value="${esc(x.id)}"${String(x.id)===String(cur)?' selected':''}>${esc(x.name)}</option>`).join('');
   const nums=[];for(let n=P.akte[0];n<=P.akte[1];n++)nums.push(n);
@@ -1640,10 +1649,10 @@ function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
     ${I.an?`<div class="dm-k"><div class="lbl">📄 ${esc(t('Abenteuer aus einer Datei','Adventure from a file'))}</div>
       <div class="row"><input type="file" class="dmp-datei" accept="${esc(I.typen.join(','))}" aria-label="${esc(t('Datei mit dem Abenteuer','File with the adventure'))}"><button type="button" class="b p" data-dmadm="gimp"${DMP.busy?' disabled':''}>${esc(DMP.busy?t('Das Modell liest …','The model is reading …'):t('Übernehmen','Import'))}</button></div>
       <small class="mut">${esc(t(`PDF, Word, OpenDocument, Markdown, Text oder HTML bis ${I.mb} MB. Welt, Ton, Tabus und die Zahl der Akte unten gelten; das Modell fasst die Kapitel zu Akten zusammen, das Panel prüft den Entwurf. Erst „Speichern“ behält ihn, die Datei behält der Spark nicht.`,`PDF, Word, OpenDocument, Markdown, text or HTML up to ${I.mb} MB. World, tone, taboos and the number of acts below count; the model joins the chapters into acts, the panel checks the draft. Only "Save" keeps it, the Spark does not keep the file.`))}</small></div>`:''}
-    <div class="dm-k"><div class="lbl">✨ ${esc(t('Vom Sprachmodell entwerfen lassen','Let the language model draft it'))}</div>
+    ${DMP.host?'':`<div class="dm-k"><div class="lbl">✨ ${esc(t('Vom Sprachmodell entwerfen lassen','Let the language model draft it'))}</div>
       <textarea class="dmp-stich" rows="2" maxlength="${P.stichworte}" placeholder="${esc(t('verfluchtes Bergdorf, ein Drache, der nur bewacht, eher düster','a cursed mountain village, a dragon that only guards, rather dark'))}">${esc(DMP.stich)}</textarea>
       <div class="row"><select class="dmp-n" aria-label="${esc(t('Akte','Acts'))}">${nums.map(n=>`<option value="${n}"${n===g.akte.length?' selected':''}>${n} ${esc(t('Akte','acts'))}</option>`).join('')}</select><button type="button" class="b p" data-dmadm="gvor"${DMP.busy?' disabled':''}>${esc(DMP.busy?t('Das Modell schreibt …','The model is writing …'):t('Vorschlag erzeugen','Create a proposal'))}</button></div>
-      <small class="mut">${esc(t('Das Modell füllt alle Felder; das Panel prüft Länge, Ton und Tabus. Erst „Speichern“ behält die Geschichte.','The model fills every field; the panel checks length, tone and taboos. Only "Save" keeps the story.'))}</small></div>
+      <small class="mut">${esc(t('Das Modell füllt alle Felder; das Panel prüft Länge, Ton und Tabus. Erst „Speichern“ behält die Geschichte.','The model fills every field; the panel checks length, tone and taboos. Only "Save" keeps the story.'))}</small></div>`}
     <label>${esc(t('Titel','Title'))}</label><input class="dmp-titel" maxlength="60" value="${esc(g.titel||'')}">
     <div class="dm-two"><div><label>${esc(t('Welt','World'))}</label><select class="dmp-welt">${opt(w.welten,g.welt)}</select></div><div><label>${esc(t('Ton','Tone'))}</label><select class="dmp-ton">${opt(w.toene,g.ton)}</select></div></div>
     <label>${esc(t('Grundidee','Idea'))}</label><textarea class="dmp-idee" rows="3" maxlength="${P.idee}">${esc(g.idee||'')}</textarea>
@@ -1654,8 +1663,8 @@ function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
     ${g.akte.length<P.akte[1]?`<div class="row"><button type="button" class="b" data-dmadm="gplus">${esc(t('Akt dazu','Add an act'))}</button></div>`:''}
     <label>${esc(t('Hinweis fürs Neuschreiben eines Akts (frei)','Hint for writing an act again (optional)'))}</label><input class="dmp-hint" maxlength="${P.stichworte}" value="${esc(DMP.hint)}" placeholder="${esc(t('mehr Rätsel, weniger Kampf','more riddles, less fighting'))}">
     ${DMP.err?`<div class="err dm-adm-err">${DMP.err}</div>`:''}
-    <div class="row"><button type="button" class="b p" data-dmadm="gsave"${DMP.busy?' disabled':''}>${esc(t('Prüfen und speichern','Check and save'))}</button>${DMP.gid?`<button type="button" class="b danger" data-dmadm="gdel">${esc(t('Löschen','Delete'))}</button>`:''}<button type="button" class="b" data-dmadm="gback">${esc(t('Zurück','Back'))}</button></div></div>`}
-function dmPlanRead(){const c=$('dmadmcard'),q=x=>(c.querySelector(x)||{}).value||'',list=x=>q(x).split(',').map(s=>s.trim()).filter(Boolean);
+    <div class="row"><button type="button" class="b p" data-dmadm="gsave"${DMP.busy?' disabled':''}>${esc(t('Prüfen und speichern','Check and save'))}</button>${DMP.gid?`<button type="button" class="b danger" data-dmadm="gdel">${esc(DMP.host&&DMP.von!=='eigen'?t('Ausblenden','Hide'):t('Löschen','Delete'))}</button>`:''}<button type="button" class="b" data-dmadm="gback">${esc(t('Zurück','Back'))}</button></div></div>`}
+function dmPlanRead(){const c=dmPBox(),q=x=>(c.querySelector(x)||{}).value||'',list=x=>q(x).split(',').map(s=>s.trim()).filter(Boolean);
   DMP.stich=q('.dmp-stich');DMP.hint=q('.dmp-hint');
   const ton=q('.dmp-ton');
   return {titel:q('.dmp-titel').trim(),welt:q('.dmp-welt'),ton:/^\d+$/.test(ton)?+ton:ton,lang:dmLang(),idee:q('.dmp-idee').trim(),ziel:q('.dmp-ziel').trim(),
@@ -1671,29 +1680,77 @@ const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br
   :d.detail==='dateiart'?esc(t('Diese Dateiart geht nicht: PDF, Word, OpenDocument, Markdown, Text oder HTML.','This file type does not work: PDF, Word, OpenDocument, Markdown, text or HTML.')):esc(dmErr(r.status,d.detail));
 async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   if(k==='gneu'){DMP.gid='';DMP.err='';DMP.stich='';DMP.hint='';DMP.g={titel:'',welt:w.welten[0].id,ton:(w.toene[1]||w.toene[0]).id,idee:'',ziel:'',gegner:'',orte:[],tabus:[],
-    akte:Array.from({length:d.planer.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))};dmRulesDraw(d,'');return}
-  if(k==='gedit'){const g=(d.geschichten||[]).find(x=>x.gid===b.dataset.gid);if(!g)return;DMP.gid=g.gid;DMP.err='';DMP.stich='';DMP.hint='';DMP.g=JSON.parse(JSON.stringify(g));dmRulesDraw(d,'');return}
-  if(k==='gback'){DMP.g=null;dmRulesDraw(d,'');return}
+    akte:Array.from({length:d.planer.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))};dmPDraw(d);return}
+  if(k==='gedit'){const g=(d.geschichten||[]).find(x=>x.gid===b.dataset.gid);if(!g)return;DMP.gid=g.gid;DMP.err='';DMP.stich='';DMP.hint='';DMP.g=JSON.parse(JSON.stringify(g));dmPDraw(d);return}
+  if(k==='gback'){DMP.g=null;dmPDraw(d);return}
   const g=dmPlanRead();DMP.g=g;
-  if(k==='gplus'){g.akte.push({titel:'',inhalt:'',wende:'',zuege:6});dmRulesDraw(d,'');return}
-  if(k==='gminus'){g.akte.splice(+b.dataset.n,1);dmRulesDraw(d,'');return}
+  if(k==='gplus'){g.akte.push({titel:'',inhalt:'',wende:'',zuege:6});dmPDraw(d);return}
+  if(k==='gminus'){g.akte.splice(+b.dataset.n,1);dmPDraw(d);return}
   if(k==='gdel'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich löschen?','Really delete?');return}
-    const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+DMP.gid+'?lang='+dmLang(),{method:'DELETE'});if(r.ok){DMP.g=null;dmRulesDraw(x,'')}return}
-  if(k==='gsave'){const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(DMP.gid||'neu')+'?lang='+dmLang(),xjson('PUT',g));
-    if(r.ok){DMP.g=null;dmRulesDraw(x,'');sayToast(t('Geschichte gespeichert','Story saved'));return}DMP.err=dmPlanErr(r,x);dmRulesDraw(d,'');return}
-  const n=Math.floor(+((($('dmadmcard').querySelector('.dmp-n'))||{}).value||g.akte.length));
-  if(k==='gimp'){const f=(($('dmadmcard').querySelector('.dmp-datei')||{}).files||[])[0];
-    if(!f){DMP.err=esc(t('Bitte zuerst eine Datei wählen.','Please pick a file first.'));dmRulesDraw(d,'');return}
+    if(DMP.host){await dmGWas('loeschen',DMP.gid);return}
+    const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+DMP.gid+'?lang='+dmLang(),{method:'DELETE'});if(r.ok){DMP.g=null;dmPDraw(x)}return}
+  if(k==='gsave'){const {r,d:x}=await apiTry(dmPBase()+(DMP.gid||'neu')+'?lang='+dmLang(),xjson('PUT',g));
+    if(r.ok){DMP.g=null;if(DMP.host)dmGDone(x);else dmPDraw(x);sayToast(t('Geschichte gespeichert','Story saved'));return}DMP.err=dmPlanErr(r,x);dmPDraw(d);return}
+  const n=Math.floor(+(((dmPBox().querySelector('.dmp-n'))||{}).value||g.akte.length));
+  if(k==='gimp'){const f=((dmPBox().querySelector('.dmp-datei')||{}).files||[])[0];
+    if(!f){DMP.err=esc(t('Bitte zuerst eine Datei wählen.','Please pick a file first.'));dmPDraw(d);return}
     const fd=new FormData();fd.append('file',f,f.name);fd.append('welt',g.welt);fd.append('ton',String(g.ton));fd.append('akte',String(n));fd.append('tabus',g.tabus.join(','));fd.append('lang',g.lang);
-    DMP.busy=true;DMP.err='';dmRulesDraw(d,'');
+    DMP.busy=true;DMP.err='';dmPDraw(d);
     const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/import',{method:'POST',body:fd});DMP.busy=false;
     if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang});sayToast(t(`Entwurf aus ${x.kapitel} Kapiteln, bitte prüfen und speichern`,`Draft from ${x.kapitel} chapters, please check and save`))}else DMP.err=dmPlanErr(r,x);
-    if(DMP.g&&$('dmadmcard'))dmRulesDraw(DMP.d,'');return}
+    if(DMP.g&&dmPBox())dmPDraw(DMP.d);return}
   const body=k==='gvor'?{welt:g.welt,ton:g.ton,akte:n,stichworte:DMP.stich,tabus:g.tabus,lang:g.lang}:{plan:g,n:+b.dataset.n,hinweis:DMP.hint};
-  if(k==='gvor'&&DMP.stich.trim().length<3){DMP.err=esc(t('Bitte ein paar Stichworte eingeben.','Please enter a few keywords.'));dmRulesDraw(d,'');return}
-  DMP.busy=true;DMP.err='';dmRulesDraw(d,'');
-  const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(k==='gvor'?'vorschlag':'akt'),xjson('POST',body));DMP.busy=false;
+  if(k==='gvor'&&DMP.stich.trim().length<3){DMP.err=esc(t('Bitte ein paar Stichworte eingeben.','Please enter a few keywords.'));dmPDraw(d);return}
+  DMP.busy=true;DMP.err='';dmPDraw(d);
+  const {r,d:x}=await apiTry(DMP.host?'/api/profile/dungeon/geschichten/akt':'/api/admin/dungeon/geschichte/'+(k==='gvor'?'vorschlag':'akt'),xjson('POST',body));DMP.busy=false;
   if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang})}else DMP.err=dmPlanErr(r,x);
-  if(DMP.g&&$('dmadmcard'))dmRulesDraw(DMP.d,'')}
+  if(DMP.g&&dmPBox())dmPDraw(DMP.d)}
+// ---------------------------------------------------------------- Eigene Geschichten (dungeon_geschichten): Bearbeiten in
+// the planner's form on its own sheet, Kopieren, Löschen / Ausblenden, „＋ Neue Geschichte“ (tone, keywords, „Erstellen“)
+const DMG={neu:null,busy:false,err:''};
+const dmGBase='/api/profile/dungeon/geschichten/';
+function dmGModal(){let m=$('dmgs');if(!m){m=document.createElement('div');m.id='dmgs';m.className='modal';
+  m.innerHTML='<div class="card modalcard dmadmcard" id="dmgscard"></div>';document.body.appendChild(m)}m.style.display='grid';return m}
+function dmGClose(){const m=$('dmgs');if(m)m.style.display='none';DMP.host=false;DMP.g=null;DMG.neu=null;DMG.busy=false}
+function dmGSheet(){const c=$('dmgscard');if(!c)return;if(DMG.neu)c.innerHTML=dmGNeu();else if(DMP.g)c.innerHTML=dmPlanForm(DMP.d)}
+function dmGNeu(){const w=DM.data.wahl,N=DMG.neu;
+  return `<h2>＋ ${esc(t('Neue Geschichte','New story'))}</h2><div class="dm-form">
+    <div class="lbl">${esc(t('Ton','Tone'))}</div><div class="dm-cards dm-klein">${w.toene.map(x=>`<button type="button" class="dm-card${String(x.id)===String(N.ton)?' on':''}" data-dmgton="${esc(String(x.id))}" aria-pressed="${String(x.id)===String(N.ton)}"><b>${esc((x.zeichen||'')+' '+x.name)}</b></button>`).join('')}</div>
+    <label>${esc(t('Stichworte (frei)','Keywords (optional)'))}</label><textarea class="dmg-stich" rows="2" maxlength="${w.eigene.planer.stichworte}" placeholder="${esc(t('verfluchtes Bergdorf, ein Drache, der nur bewacht','a cursed mountain village, a dragon that only guards'))}">${esc(N.stich||'')}</textarea>
+    <small class="mut">${esc(t('Das Sprachmodell schreibt Titel, Grundidee und Akte in der gewählten Welt, das Panel prüft den Entwurf mit festen Regeln. Danach kannst du sie über ⋯ bearbeiten.','The language model writes title, idea and acts in the chosen world, the panel checks the draft by fixed rules. Afterwards you can edit it with ⋯.'))}</small>
+    ${DMG.err?`<div class="err dm-adm-err">${DMG.err}</div>`:''}
+    <div class="row"><button type="button" class="b p" data-dmgnw="erstellen"${DMG.busy?' disabled':''}>${esc(DMG.busy?t('Das Modell schreibt …','The model is writing …'):t('Erstellen','Create'))}</button><button type="button" class="b" data-dmgnw="selbst"${DMG.busy?' disabled':''}>${esc(t('Selbst schreiben','Write it yourself'))}</button><button type="button" class="b" data-dmgnw="zu">${esc(t('Abbrechen','Cancel'))}</button></div></div>`}
+const dmGWelt=()=>{const w=$('dmview'),b=w&&w.querySelector('.dmf-welt .on');return b?b.dataset.dmseg:DM.welt};
+function dmGDone(x){const D=DM.data;D.wahl.geschichten=x.geschichten||D.wahl.geschichten;if(D.wahl.eigene)D.wahl.eigene.aus=x.aus||0;dmGClose();
+  const w=$('dmview'),f=w&&w.querySelector('.dm-form');if(!f||!f.querySelector('.dmf-gesch'))return;
+  f.querySelector('.dmf-gesch').innerHTML=dmStories(D.wahl,dmGWelt());
+  dmStory(w,(x.gid&&f.querySelector(`.dmf-gesch [data-dmgs="${x.gid}"]`))||f.querySelector('.dmf-gesch [data-dmgs=""]'))}
+function dmGForm(g,gid,von){const D=DM.data;DMP.host=true;DMG.neu=null;DMP.gid=gid;DMP.von=von;DMP.err='';DMP.stich='';DMP.hint='';
+  DMP.d={planer:D.wahl.eigene.planer,wahl:D.wahl};DMP.g=g;dmGModal();dmGSheet()}
+async function dmGWas(was,gid){const L='?lang='+dmLang();
+  if(was==='bearbeiten'){const {r,d}=await apiTry(dmGBase+gid+L);if(!r.ok){sayToast(dmErr(r.status,d.detail));return}dmGForm(d,gid,d.von);return}
+  const {r,d}=was==='kopieren'?await apiTry(dmGBase+gid+'/kopie',xjson('POST',{lang:dmLang()}))
+    :was==='zeigen'?await apiTry(dmGBase+'zeigen',xjson('POST',{lang:dmLang()})):await apiTry(dmGBase+gid+L,{method:'DELETE'});
+  if(!r.ok){sayToast(dmErr(r.status,d.detail));return}dmGDone(d);
+  sayToast(was==='kopieren'?t('Kopie angelegt','Copy made'):was==='zeigen'?t('Wieder da','Back again'):t('Erledigt','Done'))}
+document.body.addEventListener('click',async e=>{const m=e.target.closest('#dmview [data-dmgmehr]');
+  if(m){const p=m.parentNode.querySelector('.ic-pop'),open=!p.hidden;document.querySelectorAll('.ic-pop').forEach(x=>x.hidden=true);p.hidden=open;return}
+  const a=e.target.closest('#dmview [data-dmgwas]');
+  if(a){if(a.dataset.dmgwas==='loeschen'&&a.dataset.sure!=='1'){a.dataset.sure='1';a.textContent=t('Wirklich?','Really?');return}
+    a.closest('.ic-pop').hidden=true;await dmGWas(a.dataset.dmgwas,a.dataset.gid);return}
+  if(e.target.closest('#dmview [data-dmgzeigen]')){await dmGWas('zeigen','');return}
+  if(e.target.closest('#dmview [data-dmgneu]')){const w=$('dmview'),on=w&&w.querySelector('.dmf-ton .on');
+    DMG.neu={ton:on?on.dataset.dmseg:String((DM.data.wahl.toene[1]||DM.data.wahl.toene[0]).id),stich:''};DMG.err='';DMG.busy=false;DMP.host=true;dmGModal();dmGSheet();return}
+  const c=e.target.closest('#dmgscard [data-dmgton],#dmgscard [data-dmgnw],#dmgscard [data-dmadm]');if(!c)return;const N=DMG.neu,box=$('dmgscard');
+  if(N)N.stich=(box.querySelector('.dmg-stich')||{}).value||N.stich;
+  if(c.dataset.dmgton){N.ton=c.dataset.dmgton;dmGSheet();return}
+  const k=c.dataset.dmgnw;
+  if(k==='zu'||c.dataset.dmadm==='gback'){dmGClose();return}
+  if(c.dataset.dmadm){if(c.dataset.dmadm[0]==='g')await dmPlanClick(c,c.dataset.dmadm);return}
+  const ton=/^\d+$/.test(N.ton)?+N.ton:N.ton,P=DM.data.wahl.eigene.planer;
+  if(k==='selbst'){dmGForm({titel:'',welt:dmGWelt(),ton,idee:'',ziel:'',gegner:'',orte:[],tabus:[],akte:Array.from({length:P.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))},'','eigen');return}
+  if(k==='erstellen'){if(DMG.busy)return;DMG.busy=true;DMG.err='';dmGSheet();
+    const {r,d}=await apiTry(dmGBase+'erstellen',xjson('POST',{welt:dmGWelt(),ton,stichworte:N.stich,lang:dmLang()}));DMG.busy=false;
+    if(r.ok){dmGDone(d);sayToast(t('Geschichte erstellt','Story created'));return}DMG.err=dmPlanErr(r,d);dmGSheet()}});
 // the pictures of a hero's things load once its list opens (dmHeroThings)
 document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.dm-hdet')&&e.target.open)dmDingFill(e.target,'p')},true);

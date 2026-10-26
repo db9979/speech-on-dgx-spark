@@ -19,6 +19,8 @@ model's words are only the narration itself. The model decides nothing here.
 import re
 import time
 
+import dungeon_geschichten as geschichten
+
 KURZ = 60                  # characters: only a short sentence is a fixed question or command; a longer one is the action
 EREIGNIS_MAX = 8           # sentences of the summary after a narration
 DINGE_MAX = 8              # items named for the bag or the merchant
@@ -500,9 +502,10 @@ NEIN = {"tasche voll": "tasche_voll", "passt nicht": "passt_nicht", "platz falsc
 
 # ---------------------------------------------------------------- a new round in the car (Punkt 11)
 def offer(dm, r, uid, lang):
-    """WAHL stories to choose from: the admin's first, then the shipped ones, those the profile played lately last."""
+    """WAHL stories to choose from: the host's own first (Eigene Geschichten), then the admin's and the shipped ones, those
+    the profile played lately last."""
     played = {v.get("plan", {}).get("titel") for v in dm._read()["runden"].values() if v.get("owner") == uid and v.get("plan")}
-    pool = [(k, g) for k, g in sorted(dm.plans().items(), key=lambda x: x[1].get("titel", ""))] + list(dm.shipped(r, lang).items())
+    pool = [(k, g) for k, g, _ in geschichten.visible(r, uid, lang)]   # the own, the admin's, the Spark's (dungeon_geschichten)
     pool = [x for x in pool if x[1].get("titel") not in played] + [x for x in pool if x[1].get("titel") in played]
     return pool[:WAHL]
 
@@ -534,10 +537,10 @@ def new_round(dm, r, uid, text, lang, li, wahl, ok):
     m = FRAGEN[[k for k, _ in FRAGEN].index("faehigkeit")][1].search(text)
     i = _ZAHL.get((_what(m) if m else "").lower())
     if i is None:
-        i = next((j for j, g in enumerate(wahl) if find([{"name": dm.story(r, g, lang)["titel"]}], text)), None)
+        i = next((j for j, g in enumerate(wahl) if find([{"name": geschichten.find(r, uid, g, lang)[0]["titel"]}], text)), None)
     if i is None or i >= len(wahl):
         return dict(out("welche"), weiter={"neu": True, "wahl": wahl or gids})
-    g = dm.story(r, wahl[i], lang)
+    g = geschichten.find(r, uid, wahl[i], lang)[0]
     if not ok:
         return dict(out("passt", was=_say("neu", li, titel=g["titel"], held=h["name"])), frage=True, weiter={"neu": True, "wahl": wahl})
     try:

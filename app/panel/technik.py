@@ -188,6 +188,7 @@ MODULE = {
     "dungeon_umgebung": ("dienste", "Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung"),
     "dungeon_haltung": ("dienste", "Dungeon-Master: Gegner-Ansagen und Haltung, der nächste Hieb vorher, Abwehr und Ausweichen"),
     "dungeon_rueckfrage": ("dienste", "Dungeon-Master: Rückfrage bei unklaren Aktionen, feste Regeln und Vorschläge aus der Szene"),
+    "dungeon_geschichten": ("dienste", "Dungeon-Master: Eigene Geschichten der Gastgeber, bearbeiten, kopieren, ausblenden, neu"),
     "dungeon_chronik": ("dienste", "Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark"),
     "dungeon_kalender": ("dienste", "Dungeon-Master: Kalender der Welt, Monate, Monde und Feste, die Zeit läuft nur über Wege, Rasten und das Gasthaus"),
     "dungeon_sprachen": ("dienste", "Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann"),

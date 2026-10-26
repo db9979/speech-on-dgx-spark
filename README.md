@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.136** AI Dungeon Master: own stories (switch, off), every story card has ⋯ with Edit, Copy and Delete, "＋ New story" comes first (tone, keywords, the language model writes it, the panel checks it), every host has the own ones, the admin sees all
 - **V01.1.135** AI Dungeon Master: album page "People", with the people catalog the album also shows the people met, after 1, 2 and 4 meetings with face, looks, occupation, manner, traits and attitude towards the hero, never wish or secret
 - **V01.1.134** AI Dungeon Master: ask back on unclear actions (switch, off), when an action is too short, has no deed or its pronoun points at nothing, the table asks back by fixed rules with three suggestions from the scene and “Leave it”, never holds up the round, read aloud in the car and as buttons on CarPlay
 - **V01.1.133** AI Dungeon Master: combat word boundaries, attacking a Nachtmahr or a Sicherheitsdroide works again (self-test over every foe), more attack and non-attack phrases, a hero down rolls no check
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.129** AI Dungeon Master: the map at the table no longer blinks, it stays put on every refresh and the place pictures are there at once
 - **V01.1.128** AI Dungeon Master: people catalog, whoever the table met stays with card, traits, voice, face and attitude towards the heroes, other rounds of the world meet them again and they know the heroes, the admin keeps the people under Rules, whoever fights takes fixed values by its occupation and counts weighted in the balancing
 - **V01.1.127** AI Dungeon Master: combat audit, every attacking action becomes an attack of the panel, also without the model's check, damage spells always attack, when the target fell the attack takes the next foe, peace only through the panel's Charisma check, no healing by the model in a fight, no charge without an effect, the narration gives no hero a weapon it does not carry
-- **V01.1.126** AI Dungeon Master: alarm and torches in a vault, noise wakes first a patrol and then the master, torches burn for four rooms, checks in the dark at a disadvantage
 
 
 

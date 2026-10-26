@@ -156,6 +156,7 @@ import dungeon_vorlesen as vortrag
 import dungeon_gast as gastkonto
 import dungeon_auto as auto_car
 import dungeon_gesicht as gesicht
+import dungeon_geschichten as geschichten
 import dungeon_echt as echt
 import dungeon_ehre as ehre
 import dungeon_knapp as knapp
@@ -2100,8 +2101,8 @@ def make_round(owner, b, lang, now=None, kampagne=None):
     g = r["grenzen"]
     plan = None
     if b.get("geschichte") and not kampagne:
-        st = story(r, b["geschichte"], lang)
-        if not st or check_plan(r, st)[1]:
+        st = geschichten.find(r, owner, str(b["geschichte"]), lang)[0]   # only a story this host may play (Eigene Geschichten)
+        if check_plan(r, st)[1]:
             raise LookupError("geschichte")
         plan = {k: copy.deepcopy(st[k]) for k in ("titel", "ziel", "gegner", "orte", "tabus", "akte", "idee")}
         b = dict(b, welt=st["welt"], ton=st["ton"])        # the story's world and tone
@@ -2688,12 +2689,6 @@ def shipped(r, lang):
     return out
 
 
-def story(r, gid, lang):
-    """A story to play by its gid: the admin's own, else a shipped one."""
-    gid = str(gid or "")
-    return plans().get(gid) if _GID.fullmatch(gid) else shipped(r, lang).get(gid)
-
-
 def _words(x, n, most):
     """A list of short texts from a list or a comma list: plain, no doubles, at most most."""
     a = x if isinstance(x, list) else str(x or "").split(",")
@@ -2751,7 +2746,25 @@ def check_plan(r, b):
 def plan_view(r, gid, g):
     li = 1 if g.get("lang") == "en" else 0
     welt = _by(r, "welten").get(g.get("welt")) or r["welten"][0]
-    return dict(g, gid=gid, welt_name=welt["name"][li], ton_name=_ton(r, g)["name"][li])
+    von = {"von_name": (profiles.by_id(g["von"]) or {}).get("name") or "?"} if g.get("von") else {}   # a host's own (Eigene Geschichten)
+    return dict(g, gid=gid, welt_name=welt["name"][li], ton_name=_ton(r, g)["name"][li], **von)
+
+
+def _own_stories(uid):
+    """For the new round's form while „Eigene Geschichten“ is on: the limits of the planner's form and the hidden count."""
+    if not features.allowed(geschichten.KEY, uid):
+        return {}
+    return {"eigene": {"max": geschichten.EIGENE_MAX, "aus": len(geschichten.hidden(uid)), "planer": _planner_limits(uid)}}
+
+
+def _planner_limits(uid=None):
+    """The planner form's limits: the admin's (uid None) with the file import, a host's with its own limit; the act's
+    special thing while the quest things are on (Spark-wide for the admin, for the host by features.allowed)."""
+    import dungeon_import
+    on = features.admin_on("dungeonquest") if uid is None else features.allowed("dungeonquest", uid)
+    return {"max": GESCHICHTEN_MAX if uid is None else geschichten.EIGENE_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
+            "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX, "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX,
+            "tabus": TABUS_MAX, **({"import": dungeon_import.view()} if uid is None else {}), "quest": quest.NAME_LEN if on else 0}
 
 
 def save_plan(gid, b, now=None):
@@ -2762,12 +2775,14 @@ def save_plan(gid, b, now=None):
     with _lock:
         ps = plans()
         if gid == "neu":
-            if len(ps) >= GESCHICHTEN_MAX:
+            if sum(1 for x in ps.values() if not x.get("von")) >= GESCHICHTEN_MAX:   # a host's own stories count with the host
                 raise OverflowError("geschichten")
             gid = "g" + os.urandom(4).hex()
             g["made"] = int(time.time() if now is None else now)
         elif gid in ps:
             g["made"] = ps[gid].get("made", 0)
+            if ps[gid].get("von"):
+                g["von"] = ps[gid]["von"]      # the admin changes a host's story: it stays the host's
         else:
             raise LookupError("geschichte")
         g["t"] = int(time.time() if now is None else now)
@@ -5792,9 +5807,9 @@ def _lang(b):
     return "en" if b.get("lang") == "en" else "de"
 
 
-def _choices(lang, stories=True, welt=""):
-    """What a new round or hero is chosen from; stories (the admin's and the shipped ones, title and idea) only for a
-    host, not for a guest's seat form. The pictures of the hero form: a seat's form in its round's world (welt), the new
+def _choices(lang, stories=True, welt="", uid=None):
+    """What a new round or hero is chosen from; stories (the host's own, the admin's and the shipped ones, title and
+    idea; dungeon_geschichten.cards) only for a host, not for a guest's seat form. The pictures of the hero form: a seat's form in its round's world (welt), the new
     round's form each world's ("bilder", dungeon.js dmHB shows the world chosen; "bild" the first world's). A world's
     "bild" is its title picture (landscape, in its own style), shown on the new round's world card instead of the sign."""
     r = rules()
@@ -5815,10 +5830,7 @@ def _choices(lang, stories=True, welt=""):
             "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
             "spieler": r["grenzen"]["spieler"], "prompt": r["prompt"], "text_max": TEXT_MAX,
-            "geschichten": [{"gid": k, "titel": g["titel"], "welt": g["welt"], "ton": g["ton"], "akte": len(g["akte"]),
-                             "idee": g["idee"], "von": von}
-                            for von, ps in (("admin", sorted(plans().items(), key=lambda x: x[1].get("titel", ""))),
-                                            ("spark", shipped(r, lang).items())) if stories for k, g in ps]}
+            "geschichten": geschichten.cards(r, uid, lang) if stories else []}
 
 
 def _mine(uid, lang):
@@ -5834,7 +5846,7 @@ def _mine(uid, lang):
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
-            "wahl": dict(_choices(lang), bilder_an=pictures_on(uid)), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
+            "wahl": dict(_choices(lang, uid=uid), bilder_an=pictures_on(uid), **_own_stories(uid)), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
             "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX}
 
 
@@ -7243,16 +7255,11 @@ def _summary(r):
 def admin_show(request: Request = None):
     """The admin's own rules (as written), what is in force (counts), the stories with the limits of the planner and Live."""
     import dungeon_dingbild
-    import dungeon_import
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
     return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(), "personen_an": personen.admin_on(),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
-            "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
-                                               "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
-                                               "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX,
-                                               "import": dungeon_import.view(),
-                                               "quest": quest.NAME_LEN if features.admin_on("dungeonquest") else 0},
+            "wahl": _choices(lang), "planer": _planner_limits(),
             "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()})
 
 

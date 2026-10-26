@@ -2595,6 +2595,136 @@ class Stories(Base):
         self.assertEqual((v2["akt"], v2["akte"]), (2, 3))
 
 
+
+class OwnStories(Base):
+    """Eigene Geschichten (dungeon_geschichten, Dominik 2026-10-26 „nach empfehlung umsetzten“ + „und 2“ = 1, 2, 3b)."""
+    B = "/api/profile/dungeon/geschichten/"
+    save = Stories.save
+
+    def setUp(self):
+        super().setUp()
+        import dungeon_geschichten as gs
+        self.gs = gs
+        if os.path.exists(gs.AUS):
+            os.remove(gs.AUS)
+        self.addCleanup(lambda: os.path.exists(gs.AUS) and os.remove(gs.AUS))
+        helpers.keep_chat(self, "dungeon_geschichten")
+
+    def cards(self, c=None):
+        return {g["gid"]: g["von"] for g in (c or self.c).get("/api/profile/dungeon").json()["wahl"]["geschichten"]}
+
+    def test_off_by_default_nothing_own(self):
+        """Off by default: no ⋯ and no ＋ (no "eigene"), every endpoint refused, the admin's and the Spark's stories as before."""
+        import features
+        self.assertNotIn(self.gs.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_geschichten"], False)
+        self.save()
+        w = self.c.get("/api/profile/dungeon").json()["wahl"]
+        self.assertNotIn("eigene", w)
+        self.assertIn("admin", {g["von"] for g in w["geschichten"]})
+        self.assertIn("spark", {g["von"] for g in w["geschichten"]})
+        self.assertEqual(self.c.put(self.B + "neu", json=PLAN).status_code, 403)
+        self.assertEqual(self.c.post(self.B + "zeigen", json={}).status_code, 403)
+        self.assertEqual(self.c.post(self.B + "erstellen", json={"welt": "fantasy", "ton": 8}).status_code, 403)
+
+    def test_edit_copy_delete_hide_and_each_host_its_own(self):
+        """⋯ Bearbeiten: the own story changed, the admin's or the Spark's becomes an own copy and the original is hidden
+        for this host only; Kopieren an own copy „(Kopie)“; Löschen the own for good, another only hidden; „wieder
+        zeigen“ brings the hidden back; another host never sees or touches an own story; the admin sees all with the
+        host's name and its limit counts only its own; a round plays only a story the host may play."""
+        helpers.set_config(dungeon_geschichten=True)
+        adm = self.save().json()["geschichten"][0]["gid"]
+        w = self.c.get("/api/profile/dungeon").json()["wahl"]
+        self.assertEqual(w["eigene"]["aus"], 0)
+        self.assertIn("akte", w["eigene"]["planer"])
+        self.assertNotIn("import", w["eigene"]["planer"])                                # the file import stays the admin's
+        spark = next(k for k, v in self.cards().items() if v == "spark")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            r = self.c.put(self.B + "neu", json=dict(PLAN, titel="Meine Glocke"))
+        self.assertEqual(r.status_code, 200, r.text)
+        mine = r.json()["gid"]
+        self.assertIn("dungeon: geschichten | gespeichert | 3 akte", out.getvalue())
+        self.assertEqual(self.cards()[mine], "eigen")
+        self.assertEqual(list(self.cards())[0], mine)                                     # the own first
+        self.assertNotIn(mine, self.cards(self.c2))                                       # another host: never
+        self.assertEqual(self.c2.get(self.B + mine).status_code, 404)
+        self.assertEqual(self.c2.delete(self.B + mine).status_code, 404)
+        self.assertEqual(self.c2.put(self.B + mine, json=PLAN).status_code, 404)
+        self.assertEqual(self.c.put(self.B + mine, json=dict(PLAN, titel="Meine Glocke 2")).json()["gid"], mine)   # the own: changed
+        self.assertEqual(self.c.get(self.B + mine).json()["titel"], "Meine Glocke 2")
+        # Bearbeiten of the admin's story: an own copy, the original hidden for this host only
+        x = self.c.put(self.B + adm, json=dict(PLAN, titel="Glocke umgebaut")).json()
+        self.assertNotIn(adm, self.cards())
+        self.assertEqual(self.cards()[x["gid"]], "eigen")
+        self.assertEqual(x["aus"], 1)
+        self.assertIn(adm, self.cards(self.c2))
+        # Kopieren of a story of the Spark
+        k = self.c.post(self.B + spark + "/kopie", json={}).json()
+        self.assertTrue(dungeon.plans()[k["gid"]]["titel"].endswith(" (Kopie)"))
+        self.assertIn(spark, self.cards())                                                # a copy hides nothing
+        # Löschen: the Spark's hidden, the own gone for good
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            d = self.c.delete(self.B + spark).json()
+        self.assertNotIn(spark, {g["gid"] for g in d["geschichten"]})
+        self.assertIn("dungeon: geschichten | ausgeblendet", out.getvalue())
+        self.c.delete(self.B + mine)
+        self.assertNotIn(mine, dungeon.plans())
+        self.assertEqual(self.c.post(self.B + "zeigen", json={}).json()["aus"], 0)
+        self.assertTrue({adm, spark} <= set(self.cards()))
+        # a round: only a story the host may play
+        self.assertEqual(self.c2.post("/api/profile/dungeon/runde", json={"titel": "Fremd", "geschichte": x["gid"], "held": HERO}).status_code, 404)
+        r = self.c.post("/api/profile/dungeon/runde", json={"titel": "Eigen", "geschichte": x["gid"], "held": HERO})
+        self.assertEqual(r.status_code, 200, r.text)
+        # the admin: all of them, the host's with its name; its own limit counts only its own
+        a = ADMIN.get("/api/admin/dungeon").json()["geschichten"]
+        self.assertEqual({g["gid"]: g.get("von_name") for g in a if g.get("von")}, {x["gid"]: "Dungeon Dora", k["gid"]: "Dungeon Dora"})
+        self.assertEqual(self.save(dict(PLAN, titel="Admin ändert"), gid=x["gid"]).status_code, 200)
+        self.assertEqual(dungeon.plans()[x["gid"]]["von"], self.uid)                       # still the host's
+        with mock.patch.object(self.gs, "EIGENE_MAX", 2):
+            self.assertEqual(self.c.put(self.B + "neu", json=PLAN).status_code, 409)       # the host's limit
+        live = self.gs.for_live()
+        self.assertEqual(live["eigene"], 2)
+        self.assertGreaterEqual((live["gespeichert"], live["kopiert"], live["geloescht"], live["ausgeblendet"]), (3, 1, 1, 1))
+        helpers.set_config(dungeon_geschichten=False)                                     # off: own ones out, hidden back
+        self.assertEqual(set(self.cards().values()), {"admin", "spark"})
+
+    def test_new_story_written_by_the_planner_and_checked(self):
+        """＋ Neue Geschichte: tone and keywords, the planner writes it, the panel checks it like a typed one and keeps
+        it as the host's own; a draft the rules refuse twice is never kept; the planner's rate limit counts per host."""
+        helpers.set_config(dungeon_geschichten=True)
+        good = {k: PLAN[k] for k in ("titel", "idee", "ziel", "gegner")}
+        good.update(orte=["Dorfplatz", "Glockenturm"], akte=PLAN["akte"] + [dict(PLAN["akte"][0], titel="Das Ende")])
+        old = dungeon.ask_model
+        answers = []
+
+        async def ask(system, user, schema, name, tokens):
+            x = answers.pop(0)
+            return x if isinstance(x, str) else json.dumps(x)
+        dungeon.ask_model = ask
+        self.addCleanup(setattr, dungeon, "ask_model", old)
+        body = {"welt": "fantasy", "ton": 8, "stichworte": "eine Glocke", "lang": "de"}
+        word = dungeon.rules()["nie"][0]
+        answers[:] = [dict(good, idee=f"Eine Glocke und {word} im Dorf."), "kein json", "kein json"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.c.post(self.B + "erstellen", json=body).status_code, 422)   # refused by the rules: never kept
+        self.assertIn("dungeon: geschichten | abgelehnt | kein vorschlag", out.getvalue())
+        self.assertEqual([g for g in dungeon.plans().values() if g.get("von")], [])
+        n = 0
+        answers[:] = [good]
+        r = self.c.post(self.B + "erstellen", json=body)
+        self.assertEqual(r.status_code, 200, r.text)
+        g = dungeon.plans()[r.json()["gid"]]
+        self.assertEqual((g["von"], g["titel"], g["welt"], g["ton"], len(g["akte"])), (self.uid, PLAN["titel"], "fantasy", 8, 4))
+        self.assertEqual(len([g for g in dungeon.plans().values() if g.get("von")]), n + 1)
+        self.assertEqual(self.cards()[r.json()["gid"]], "eigen")
+
+    def test_the_page_has_the_menu_and_the_new_card(self):
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        for x in ("data-dmgneu", "data-dmgmehr", "data-dmgwas", "data-dmgzeigen", "/api/profile/dungeon/geschichten/"):
+            self.assertIn(x, js)
+
 class Equipment(Base):
     """Stufe 4 (Dominik 2026-10-23 1a-6a): nine places, weight and the carry limit, the merchant, unknown magic."""
     def setUp(self):
@@ -4765,6 +4895,58 @@ class Windows(unittest.TestCase):
                         fh.write(old)
             self.addCleanup(back)
 
+    def test_own_stories_menu_copy_and_new_story_sheet(self):
+        """Eigene Geschichten in the page: „＋ Neue Geschichte“ first, „⋯“ beside a story opens Bearbeiten, Kopieren and
+        Ausblenden; Kopieren puts the own copy among the cards; ＋ opens its sheet with the tones, „Selbst schreiben“ the
+        planner's form, „Zurück“ closes it; Bearbeiten opens the form with the story; no page wider than the screen."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon", "dungeon_geschichten")
+        helpers.set_config(dungeon=True, dungeon_geschichten=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+
+        def drop():
+            with dungeon._lock:
+                ps = dungeon.plans()
+                for k in [k for k, g in ps.items() if g.get("von") == uid]:
+                    ps.pop(k)
+                dungeon.write_json(dungeon.GESCHICHTEN, ps, 2, 0o600, False, 0o700)
+        self.addCleanup(drop)
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data&&!!document.querySelector('#dmview .dmf-gesch [data-dmgneu]')")
+                        self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dmf-gesch').firstElementChild.matches('[data-dmgneu]')"))
+                        n = await pg.evaluate("document.querySelectorAll('#dmview .dmf-gesch .dm-gwrap').length")
+                        self.assertGreater(n, 0)
+                        await pg.click("#dmview .dmf-gesch .dm-gwrap [data-dmgmehr]")
+                        self.assertEqual(await pg.evaluate("[...document.querySelector('#dmview .dmf-gesch .dm-gwrap .ic-pop:not([hidden])').querySelectorAll('[data-dmgwas]')].map(x=>x.dataset.dmgwas)"),
+                                         ["bearbeiten", "kopieren", "loeschen"])
+                        await pg.click("#dmview .dmf-gesch .dm-gwrap .ic-pop:not([hidden]) [data-dmgwas='kopieren']")
+                        await b.until(pg, f"document.querySelectorAll('#dmview .dmf-gesch .dm-gwrap').length>{n}")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        await pg.click("#dmview .dmf-gesch [data-dmgneu]")
+                        await b.until(pg, "getComputedStyle(document.querySelector('#dmgs')).display!=='none'&&!!document.querySelector('#dmgscard [data-dmgton]')")
+                        await pg.click("#dmgscard [data-dmgnw='selbst']")
+                        await b.until(pg, "!!document.querySelector('#dmgscard .dmp-titel')")
+                        await pg.click("#dmgscard [data-dmadm='gback']")
+                        await b.until(pg, "getComputedStyle(document.querySelector('#dmgs')).display==='none'")
+                        await pg.click("#dmview .dmf-gesch .dm-gwrap [data-dmgmehr]")
+                        await pg.click("#dmview .dmf-gesch .dm-gwrap .ic-pop:not([hidden]) [data-dmgwas='bearbeiten']")
+                        await b.until(pg, "!!document.querySelector('#dmgscard .dmp-titel')&&document.querySelector('#dmgscard .dmp-titel').value.length>1")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmgscard [data-dmadm=gvor]')"))   # the draft box stays the admin's
+                        await pg.click("#dmgscard [data-dmadm='gback']")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
     def test_hero_sheet_merchant_and_item_windows(self):
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
@@ -5960,6 +6142,11 @@ class Windows(unittest.TestCase):
                         await b.until(pg, "!!document.getElementById('dmadmtxt')")
                         await pg.click("#dmadmcard [data-dmrteil=geschichten]")
                         await b.until(pg, "!!document.querySelector('#dmadmcard [data-dmadm=gneu]')")
+                        # the admin's planner opens and closes in the rules card (one drawing path with the hosts' sheet)
+                        await pg.click("#dmadmcard [data-dmadm=gneu]")
+                        await b.until(pg, "!!document.querySelector('#dmadmcard .dmp-titel')")
+                        await pg.click("#dmadmcard [data-dmadm=gback]")
+                        await b.until(pg, "!!document.querySelector('#dmadmcard [data-dmadm=gneu]')&&!document.querySelector('#dmadmcard .dmp-titel')")
                         await pg.evaluate("goSec('feat')")
                         await pg.evaluate("dmRules()")
                         await b.until(pg, "!!document.querySelector('#dungeon.on .ic-tabs button[data-k=regeln].on')||!!document.querySelector('.ic-tabs button[data-k=regeln].on')")

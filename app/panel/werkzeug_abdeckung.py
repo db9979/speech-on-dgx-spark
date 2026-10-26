@@ -184,6 +184,7 @@ WITHOUT = {
     "dungeonumgebung": "dungeon_umgebung.py: kein Werkzeug, das Panel erkennt das Ding in der Aktion, würfelt die Probe und rechnet die feste Wirkung, das Modell erzählt nur",
     "dungeonhaltung": "dungeon_haltung.py: kein Werkzeug, das Panel würfelt die Ansagen und rechnet Abwehr und Ausweichen, das Modell erzählt nur",
     "dungeonrueckfrage": "dungeon_rueckfrage.py: kein Werkzeug, das Panel prüft die Aktion mit festen Regeln und baut die Vorschläge aus der Szene",
+    "dungeongeschichten": "dungeon_geschichten.py: kein Werkzeug, der Gastgeber bearbeitet seine Geschichten selbst, der Planer schreibt nur Daten, das Panel prüft sie mit festen Regeln",
     "dungeonchronik": "dungeon_chronik.py: kein Werkzeug, das Panel schreibt die Kapitelseite aus vorhandenen Daten, das Modell schreibt nichts dafür",
     "dungeonkalender": "dungeon_kalender.py: kein Werkzeug, das Panel zählt die Tage nach festen Regeln, das Modell bekommt das Datum nur als Daten",
     "dungeonsprachen": "dungeon_sprachen.py: kein Werkzeug, das Panel macht die fremden Laute und gibt die Bedeutung nur Plätzen, die die Sprache können",
