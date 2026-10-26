@@ -49,6 +49,7 @@ import re
 import dungeon_album as album
 import dungeon_ehre as ehre
 import dungeon_haltung as haltung
+import dungeon_umgebung as umgebung
 import dungeon_narben as narben
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
@@ -486,6 +487,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
         if "schwer" in eig and h["werte"].get("staerke", 10) < SCHWER_STAERKE:
             vt = "" if vt == "vorteil" else "nachteil"
         vt = _state_vt(r, h, vt, "angriff")
+        if umgebung.edge(rd):                    # a prop gave the group an opening this turn (round 2, idea 3)
+            vt = "" if vt == "nachteil" else "vorteil"
         if haltung.stance(rd, p["pid"]) == "abwehr":   # on guard: the own attack at a disadvantage (round 2, idea 2)
             vt = "" if vt == "vorteil" else "nachteil"
         if foe_has(r, rd, g, "vorteil_gegen"):   # a foe on the ground, blinded … by a critical hit (D&D idea 2)
@@ -677,18 +680,19 @@ def foes_turn(dm, r, rd, hits, rng=None):
         return []
     out = []
     zs = {z["id"]: z for z in r.get("zustaende") or []}
+    reach = [(pid, h) for pid, h in standing if not umgebung.away(rd, pid)]   # a way out of a prop (round 2, idea 3)
     for g in up(rd):
-        if g["k"] in down:
+        if g["k"] in down or not reach:
             continue
         if foe_has(r, rd, g, "kein_zug"):          # stunned, unconscious … by a critical hit: no blow (D&D idea 2)
             print("dungeon: kampf | gegner setzt aus", flush=True)
             continue
-        sagt = haltung.blow(rd, g, standing)      # the blow it announced last turn (round 2, idea 2)
+        sagt = haltung.blow(rd, g, reach)      # the blow it announced last turn (round 2, idea 2)
         for zug in range(blows(g)):
             by = [x["pid"] for x in hits if x["ziel"] == g["k"] and x["treffer"]]
             art = sagt[2] if sagt and not zug else ""
-            pid, h = (sagt[:2] if art else None) or (next(((q, hh) for q, hh in standing if by and q == by[-1]), None) if not zug else None) \
-                or standing[rng.randrange(len(standing))]
+            pid, h = (sagt[:2] if art else None) or (next(((q, hh) for q, hh in reach if by and q == by[-1]), None) if not zug else None) \
+                or reach[rng.randrange(len(reach))]
             vt = _state_vt(r, h, "", "gegen")
             if art == "lauert":
                 vt = "" if vt == "nachteil" else "vorteil"
@@ -699,7 +703,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
                 vt = "" if vt == "vorteil" else "nachteil"    # kept at a distance by a reach weapon
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
-            ac = rk(dm, r, h) + (haltung.ABWEHR if steht == "abwehr" else 0)
+            ac = rk(dm, r, h) + (haltung.ABWEHR if steht == "abwehr" else 0) + umgebung.cover(rd, pid)
             plus = (BOSS_PHASE if g.get("phase") == 2 else 0) + (haltung.ZIELT if art == "zielt" else -haltung.HOLT if art == "holt_aus" else 0)
             hit = w == 20 or (w != 1 and w + g["angriff"] + plus >= ac)
             n = max(1, _dice(rng, g["wuerfel"] * (2 if w == 20 else 1) * (2 if art == "holt_aus" else 1), g["schaden"]) + g["plus"]) if hit else 0

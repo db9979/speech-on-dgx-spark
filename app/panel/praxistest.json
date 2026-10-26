@@ -3761,6 +3761,13 @@
 "titel": "Dungeon-Master: Gegner-Ansagen und Haltung",
 "text": "Funktionen → KI-Dungeon-Master → Gegner-Ansagen und Haltung einschalten und in einer Runde einen Kampf beginnen. A: Nach dem ersten Kampfzug steht im Verlauf „⚠ … zielt auf …“ oder „holt weit aus“. B: Unter dem Eingabefeld stehen 🛡 Abwehr und 💨 Ausweichen; Abwehr setzt das Wort in die Aktion, der Beleg des Gegners zeigt eine um 2 höhere Rüstung. C: Der Erzähler kündigt an, was die Gegner als Nächstes vorhaben.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P562",
+"v": 1118,
+"titel": "Dungeon-Master: Umgebung nutzen",
+"text": "Funktionen → KI-Dungeon-Master → Umgebung nutzen einschalten und in einer Runde mit Karte einen Kampf beginnen. A: Unter dem Eingabefeld stehen zwei bis drei Dinge des Ortes, etwa „🕯 Kronleuchter“. B: Ein Klick setzt „Ich nutze Kronleuchter.“ in die Aktion; nach dem Zug zeigt der Verlauf die Probe und bei Erfolg die Treffer mit dem Kronleuchter, der Knopf ist danach weg. C: Misslingt die Probe, bleibt der Knopf; der Erzähler beschreibt die Dinge im Kampf.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -7932,6 +7932,89 @@ class Fight(Turns):
         self.assertIn("dmHaltung()", js)
         self.assertIn("e.art==='ansage'", js)
 
+    def test_props_of_the_fight_work_by_fixed_rules(self):
+        """D&D round 2, idea 3 (Umgebung nutzen, switch dungeonumgebung): off by default; on, a hero whose action names a
+        prop of the fight makes one check of the panel instead of its other checks (each prop once a turn); a success
+        works at once by the prop's kind: damage to every foe as hits, a foe on the ground, cover, advantage for the
+        group, out of the foes' reach; a used prop is gone, a failed one stays; the narrator gets the props as data."""
+        import features
+        import dungeon_umgebung as umg
+        self.assertNotIn(umg.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_umgebung"], False)
+        r = dungeon.rules()
+        self.fight()
+        rd = self.state(self.rid)
+        g = kampf.up(rd)[0]
+        g["leben"] = g["max"] = 100
+        rd["kampf"]["requisiten"] = ["kronleuchter", "saeule", "seil_abgrund", "fass_bier", "hochsitz"]
+        rd["offen"] = {self.host: {"text": "Ich schlage die Kette vom Kronleuchter.", "t": 0}, self.gp: {"text": "Ich springe hinter die dicke Säule.", "t": 0}}
+        probe = [{"pid": self.host, "wert": "staerke", "schwer": 10, "ziel": g["name"]}]
+        self.assertEqual((umg.here(r, rd), umg.checks(dungeon, r, rd, probe)), ([], probe))   # switch off
+        helpers.keep_chat(self, "dungeon_umgebung")
+        helpers.set_config(dungeon_umgebung=True)
+        self.assertEqual([x["id"] for x in umg.view(r, rd)], rd["kampf"]["requisiten"])
+        self.assertIn("Kronleuchter", json.dumps(dungeon.facts(r, rd), ensure_ascii=False))
+        self.assertIn("umgebung", dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertTrue(umg.named(umg._rows(r)["oelfass"], "I kick the oil barrel over"))
+        self.assertFalse(umg.named(umg._rows(r)["kronleuchter"], "Ich greife an."))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            proben = umg.checks(dungeon, r, rd, probe)
+        sg = umg.SCHWER_KINDER if dungeon.kids(r, rd) else umg.SCHWER
+        self.assertEqual(sorted((p["pid"], p["umgebung"], p["wert"], p["schwer"]) for p in proben),
+                         sorted([(self.host, "kronleuchter", "geschick", sg), (self.gp, "saeule", "geschick", sg)]))   # instead of the attack
+        self.assertIn("dungeon: umgebung | probe | 2", out.getvalue())
+
+        class Top:
+            def randint(self, a, b):
+                return b
+
+            def randrange(self, n):
+                return 0
+
+        x = copy.deepcopy(rd)
+        rest, wuerfe, hits = umg.roll(dungeon, r, x, proben + [{"pid": self.gp, "wert": "weisheit", "schwer": 10}], Top())
+        self.assertEqual(rest, [{"pid": self.gp, "wert": "weisheit", "schwer": 10}])
+        self.assertTrue(all(w["ok"] and w["w"] == 20 for w in wuerfe))
+        self.assertEqual({h["ziel"] for h in hits}, {gg["k"] for gg in kampf.up(rd)})           # every foe up
+        self.assertTrue(all(h["mit"] == "Kronleuchter" and h["treffer"] and h["pid"] == self.host for h in hits))
+        self.assertEqual(next(h for h in hits if h["ziel"] == g["k"])["schaden"], kampf.against(g, "wucht", umg.SCHADEN_W)[0])
+        self.assertEqual((umg.cover(x, self.gp), umg.cover(x, self.host)), (umg.DECKUNG, 0))
+        y = copy.deepcopy(rd)
+        y["kampf"]["_umgebung"] = {"fluchtweg": [self.host], "deckung": [self.gp]}
+        hg = rd["plaetze"][self.gp]["held"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            zuege = [z for z in kampf.foes_turn(dungeon, r, y, [], random.Random(3)) if "treffer" in z]
+        self.assertTrue(zuege)
+        self.assertTrue(all(z["pid"] == self.gp and z["rk"] == kampf.rk(dungeon, r, hg) + umg.DECKUNG for z in zuege))   # out of reach, cover
+        y["kampf"]["_umgebung"] = {"fluchtweg": [self.host, self.gp]}
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse([z for z in kampf.foes_turn(dungeon, r, y, [], random.Random(3)) if "treffer" in z])
+        y["kampf"]["_umgebung"] = {"vorteil": [self.gp]}
+        _, h2 = kampf.attacks(dungeon, r, y, [{"pid": self.host, "wert": "staerke", "schwer": 10, "ziel": g["name"]}], Top())
+        self.assertEqual(h2[0]["vt"], "vorteil")                                 # the group's opening
+        z = copy.deepcopy(rd)
+        z["offen"] = {self.host: {"text": f"Ich stoße das Fass Bier gegen {g['name']}.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()):
+            _, wz, hz = umg.roll(dungeon, r, z, umg.checks(dungeon, r, z, []), Top())
+        self.assertEqual((wz[0]["umgebung"], wz[0]["ziel"], hz), ("fass_bier", g["k"], []))
+        self.assertTrue(kampf.foe_has(r, z, kampf.up(z)[0], "nachteil_angriff"))   # on the ground this turn already
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            umg.used(dungeon, r, rd, wz[0])
+            umg.used(dungeon, r, rd, dict(wuerfe[1], ok=False))
+        self.assertNotIn("fass_bier", rd["kampf"]["requisiten"])
+        self.assertIn("saeule", rd["kampf"]["requisiten"])                      # a failed one stays
+        self.assertTrue(kampf.foe_has(r, rd, g, "vorteil_gegen"))
+        self.assertIn("dungeon: umgebung | umwerfen | ok", out.getvalue())
+        self.assertIn("dungeon: umgebung | deckung | daneben", out.getvalue())
+        k = copy.deepcopy(rd)
+        k.pop("karte", None)
+        umg.prepare(r, k)
+        self.assertEqual(k["kampf"]["requisiten"], [])                          # no map: no props
+        self.assertGreaterEqual(umg.for_live()["proben"], 2)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("dmUmgebung(v)", f.read())
+
     def test_rest_at_the_campfire_by_fixed_rules(self):
         """D&D idea 4 (Lagerfeuer und Rast, switch dungeonrast): off by default; on, the host calls a rest outside a fight:
         a short one heals a quarter (KURZ_MAX between long ones), a long one rolls WACHEN night watches of the landscape,

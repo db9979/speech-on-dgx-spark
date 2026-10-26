@@ -132,6 +132,7 @@ import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
+import dungeon_umgebung as umgebung
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3191,6 +3192,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
     fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
+    fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3229,7 +3231,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3545,6 +3547,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
+        if w.get("umgebung"):                    # a prop of the fight used (round 2, idea 3)
+            umgebung.used(_me, r, rd, w)
         if w.get("knapp"):                       # a near miss paid: its price by a fixed rule (dungeon_knapp)
             knapp.pay(_me, r, rd, (rd["plaetze"].get(w["pid"]) or {}).get("held"), w, rng)
         _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
@@ -3628,6 +3632,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             give_loot(r, rd, held, "boss" if rd["log"][-1].get("boss") else "gegner", stufe, rng)   # a boss: its own better find
         elif not war and story.get("begegnung") and held:
             kampf.start(_me, r, rd, held, story["begegnung"], li)
+        umgebung.prepare(r, rd, rng)              # the props where the fight goes on (round 2, idea 3)
         if story["beute"] and held:
             b = story["beute"]
             give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
@@ -3817,10 +3822,13 @@ async def run_turn(rid, turn):
             why = "pause"
         else:
             proben, drop = await ask_checks(r, rd)
+            proben = umgebung.checks(_me, r, rd, proben)       # a prop of the fight named: that hero's action (round 2, idea 3)
             hand = await echt.real_ask(_me, rid, turn, rd, proben)   # the seats with own dice at the real table (D&D idea 5)
+            proben, nutzt, wirft = umgebung.roll(_me, r, rd, proben, hand=hand)
             proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand)
+            hits = wirft + hits
             wuerfe = roll(r, rd, proben, hand=hand)
-            wuerfe = await knapp.ask(_me, rid, turn, r, rd, wuerfe)   # a near miss: give up or pay a price (D&D round 2, idea 1)
+            wuerfe = await knapp.ask(_me, rid, turn, r, rd, wuerfe) + nutzt   # a near miss: give up or pay a price (D&D round 2, idea 1)
             zuege = kampf.foes_turn(_me, r, rd, hits)
             erz.receipts(rd, wuerfe, hits, zuege)     # Würfel-Beleg: W-n on every roll (Tabletop-Punkt 2)
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
@@ -5176,6 +5184,7 @@ def view(rid, pid, now=None):
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
+    out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None

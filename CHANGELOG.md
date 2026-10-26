@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.118** · 2026-10-26 · KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung
 - **V01.1.117** · 2026-10-26 · KI-Dungeon-Master: Gegner-Ansagen und Haltung, jeder Gegner sagt seinen nächsten Hieb an, die Helden antworten mit Abwehr oder Ausweichen
 - **V01.1.116** · 2026-10-26 · KI-Dungeon-Master: Chronikbuch, am Ende jedes Kapitels eine Seite mit Titelbild, Bisher geschah, Helden, Ehrungen und Schriftstücken, zum Blättern und als PDF vom Spark
 - **V01.1.115** · 2026-10-26 · KI-Dungeon-Master: Kalender der Welt, Monate, Monde und Feste oben am Tisch, die Tage laufen nur über Wege, Rasten und das Gasthaus, an Festen kosten Dienste mehr

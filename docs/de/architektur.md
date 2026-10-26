@@ -313,6 +313,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_sprachen.py` | Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann |
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_tabellen.py` | Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben |
+| `app/panel/dungeon_umgebung.py` | Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
 | `app/panel/dungeon_wappen.py` | Dungeon-Master-Wappen: SVG für Gruppe und Fraktionen aus eigenen Teilen, geprüft, ohne Bildmodell |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |

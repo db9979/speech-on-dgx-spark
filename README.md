@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.118** AI Dungeon Master: use the surroundings, chandeliers, powder kegs, pillars and ropes in a fight, one check of the panel and a fixed effect
 - **V01.1.117** AI Dungeon Master: foe announcements and stance, every foe announces its next blow, the heroes answer with defend or dodge
 - **V01.1.116** AI Dungeon Master: chronicle book, at the end of every chapter a page with cover, the story so far, heroes, honours and writings, to turn and as a PDF from the Spark
 - **V01.1.115** AI Dungeon Master: calendar of the world, months, moons and festivals on top of the table, the days run only by ways, rests and the inn, on festivals services cost more
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.111** AI Dungeon Master: travel stages, a long way on the map becomes a journey, every hero takes a role and rolls, a consequence and an event of the landscape
 - **V01.1.110** AI Dungeon Master: heroes comment themselves, every hero who acted says a short checked line about its deed, as a speech bubble and in its voice
 - **V01.1.109** AI Dungeon Master: the way of telling rich really tells richly, with a minimum length, a fixed style sentence and a check by the panel
-- **V01.1.108** AI Dungeon Master: campfire and rest, the host calls a short or long rest, three night watches per landscape and a question at the fire for every seat
 
 
 
