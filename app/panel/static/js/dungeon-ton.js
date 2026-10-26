@@ -5,7 +5,7 @@
 // 0.8 s and always stops on the panel's number. Each device keeps its own choice (music, sounds, volume).
 // „👎 Nervt“ (Dominik 2026-10-24): any seat marks the piece playing, it is never played again, the night makes a new one.
 const DMT={ctx:null,out:null,amb:null,ambK:'',noise:null,el:[null,null],g:[null,null],cur:-1,id:'',st:'',last:[],urls:{},v:null,mode:'',
-  seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},alarm:{p:null,g:null},licht:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
+  seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},alarm:{p:null,g:null},licht:{p:null,g:null},lied:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
 const DMT_FADE=12,DMT_LAUT=20,DMT_URLS=4;
 function dmtPref(k,d){try{const x=localStorage.getItem('dm-'+k);return x===null?d:x}catch{return d}}
 function dmtSet(k,x){try{localStorage.setItem('dm-'+k,String(x))}catch{}}
@@ -84,7 +84,14 @@ function dmtBar(v){const m=v.musik||{},on=dmtMusik(),n=(m.stuecke||[]).length,i=
   const txt=m.an?(n?`♪ ${m.name}${on&&i>=0?' · '+t('Stück','piece')+' '+(i+1)+' '+t('von','of')+' '+n:''}`:`♪ ${m.name} · ${t('Musik wird vorbereitet …','music is being prepared …')}`):'';
   return `<div class="dm-ton">${txt?`<span class="dm-eq${on&&DMT.id?' on':''}" aria-hidden="true"><b></b><b></b><b></b><b></b></span><span class="dm-tontxt">${esc(txt)}</span>`:''}<span class="dm-tonsp"></span>
     ${m.an?`<button type="button" class="b${on?' p':''}" data-dmton="musik" aria-pressed="${on}">${esc(t('Musik','Music'))}</button>`:''}<button type="button" class="b${dmtFx()?' p':''}" data-dmton="fx" aria-pressed="${dmtFx()}">${esc(t('Geräusche','Sounds'))}</button>
-    <input type="range" class="dm-laut" min="0" max="100" step="5" value="${dmtLaut()}" aria-label="${esc(t('Lautstärke','Volume'))}">${m.an&&on&&n>1?`<button type="button" class="b" data-dmton="weiter" title="${esc(t('Nächstes Stück','Next piece'))}" aria-label="${esc(t('Nächstes Stück','Next piece'))}">⏭</button>`:''}${m.an&&on&&DMT.id?`<button type="button" class="b" data-dmton="nervt" title="${esc(t('Nervt: nie mehr spielen, nachts kommt ein neues','Annoying: never play it again, a new one comes at night'))}" aria-label="${esc(t('Stück nervt','Piece is annoying'))}">👎</button>`:''}</div>`}
+    <input type="range" class="dm-laut" min="0" max="100" step="5" value="${dmtLaut()}" aria-label="${esc(t('Lautstärke','Volume'))}">${m.an&&on&&n>1?`<button type="button" class="b" data-dmton="weiter" title="${esc(t('Nächstes Stück','Next piece'))}" aria-label="${esc(t('Nächstes Stück','Next piece'))}">⏭</button>`:''}${m.an&&on&&DMT.id?`<button type="button" class="b" data-dmton="nervt" title="${esc(t('Nervt: nie mehr spielen, nachts kommt ein neues','Annoying: never play it again, a new one comes at night'))}" aria-label="${esc(t('Stück nervt','Piece is annoying'))}">👎</button>`:''}${dmtLieder(v)}</div>`}
+// the bard's songs of the round (dungeon_lied.py, D&D round 2 idea 8): play one again, the host deletes one
+function dmtLieder(v){const xs=(v.musik||{}).lieder||[];if(!xs.length)return '';
+  return `<details class="dm-lieder"><summary class="b" title="${esc(t('Heldenlieder','Hero songs'))}">🎵 ${xs.length}</summary><div class="dm-liederlist">${xs.map(x=>`<div class="dm-liedrow"><button type="button" class="b" data-dmton="lied" data-id="${esc(x.id)}">▶ ${esc(t('Kapitel','Chapter'))} ${x.kapitel}</button>${v.gastgeber?`<button type="button" class="b danger" data-dmton="liedweg" data-id="${esc(x.id)}" aria-label="${esc(t('Lied löschen','Delete song'))}">🗑</button>`:''}</div>`).join('')}</div></details>`}
+async function dmtLiedWeg(b){const v=DMT.v;if(!v||DMT.mode!=='p')return;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich?','Really?');return}
+  const {r}=await apiTry(`/api/profile/dungeon/${v.rid}/lied/${encodeURIComponent(b.dataset.id)}/weg`,xjson('POST',{}));if(!r.ok)return;
+  const m=v.musik||{};m.lieder=(m.lieder||[]).filter(x=>x.id!==b.dataset.id);if(DMT.id===b.dataset.id)dmtStop();sayToast(t('Lied gelöscht','Song deleted'));
+  const w=b.closest('.dm');if(w){const old=w.querySelector('.dm-ton');if(old)old.remove();window.dmTon(w,v,DMT.mode)}}
 // „👎 Nervt“: the panel marks the piece for every table, here it leaves the list at once and the next one fades in
 async function dmtNervt(){const id=DMT.id,v=DMT.v;if(!id||!v)return;
   try{if(DMT.mode==='p'){const {r}=await apiTry(`/api/profile/dungeon/${v.rid}/musik/${id}/nervt`,xjson('POST',{}));if(!r.ok)return}
@@ -105,7 +112,7 @@ function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-re
   const dice=[...w.querySelectorAll('.dm-feed .dm-wurf .dm-d20')].slice(-news.length);
   dice.forEach(d=>{const real=d.textContent;if(reduce)return;d.classList.add('dm-rollt');let k=0;const iv=setInterval(()=>{d.textContent=String(1+Math.floor(Math.random()*20));if(++k>=12){clearInterval(iv);d.textContent=real;d.classList.remove('dm-rollt')}},66)})}
 window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
-  if(DMT.rid[mode]!==v.rid){DMT.rid[mode]=v.rid;DMT.seen[mode]=null;DMT.sieg[mode]=null;DMT.tuer[mode]=null;DMT.alarm[mode]=null;DMT.licht[mode]=null}
+  if(DMT.rid[mode]!==v.rid){DMT.rid[mode]=v.rid;DMT.seen[mode]=null;DMT.sieg[mode]=null;DMT.tuer[mode]=null;DMT.alarm[mode]=null;DMT.licht[mode]=null;DMT.lied[mode]=null}
   const head=w.querySelector('.dm-head .dm-htitle');if(head)head.insertAdjacentHTML('afterend',dmtBar(v));   // in the head, no own row (Punkt 9)
   // the log's new entries since the last drawing: the dice roll, the events sound (the first drawing only counts)
   const log=v.log||[],key=log.length?JSON.stringify(log[log.length-1]):'';
@@ -119,6 +126,8 @@ window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
   if(!m.an||!dmtMusik()||v.status!=='laeuft'){if(DMT.cur>=0)dmtStop();DMT.sieg[mode]=m.sieg_zug;return}
   if(DMT.sieg[mode]!==null&&m.sieg_zug>DMT.sieg[mode]&&(m.sieg||[]).length){DMT.sieg[mode]=m.sieg_zug;DMT.st=m.st;dmtStart(m.sieg,true);return}
   DMT.sieg[mode]=m.sieg_zug;
+  if(DMT.lied[mode]!==null&&m.lied&&m.lied!==DMT.lied[mode]){DMT.lied[mode]=m.lied;DMT.st=m.st;dmtStart([m.lied],true);return}   // a chapter's new song, once
+  DMT.lied[mode]=m.lied||'';
   if(m.st!==DMT.st||DMT.cur<0){if((m.stuecke||[]).length){DMT.st=m.st;dmtStart(m.stuecke)}}};
 // the bar's buttons and the volume, and a reading-aloud turn (dungeon.js DMA) makes the music quieter
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmton]');if(!b)return;const k=b.dataset.dmton,c=dmtCtx();if(c&&c.state==='suspended')c.resume();
@@ -126,6 +135,8 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmton
   else if(k==='fx'){dmtSet('fx',dmtFx()?'0':'1');if(!dmtFx())dmtAmb('')}
   else if(k==='weiter'){dmtNext();return}
   else if(k==='nervt'){dmtNervt();return}
+  else if(k==='lied'){if(DMT.v){DMT.st=(DMT.v.musik||{}).st;dmtStart([b.dataset.id],true)}return}
+  else if(k==='liedweg'){dmtLiedWeg(b);return}
   const w=b.closest('.dm');if(w&&DMT.v){const old=w.querySelector('.dm-ton');if(old)old.remove();window.dmTon(w,DMT.v,DMT.mode)}});
 document.body.addEventListener('input',e=>{const r=e.target.closest('.dm-laut');if(!r)return;dmtSet('laut',r.value);
   if(DMT.cur>=0&&DMT.g[DMT.cur])DMT.g[DMT.cur].gain.setTargetAtTime(dmtLevel(),dmtNow(),.1);if(DMT.amb)DMT.amb.g.gain.setTargetAtTime(DMT.amb.lvl*dmtLaut()/100,dmtNow(),.2)});

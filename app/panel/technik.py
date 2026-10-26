@@ -175,6 +175,7 @@ MODULE = {
     "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen"),
     "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort"),
     "dungeon_musik": ("dienste", "KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser"),
+    "dungeon_lied": ("dienste", "Dungeon-Master: Heldenlied des Barden, am Kapitelende feste Strophen mit Heldennamen, gesungen vom Musikmodell"),
     "dungeon_echt": ("dienste", "Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter"),
     "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_schrift": ("dienste", "Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht"),

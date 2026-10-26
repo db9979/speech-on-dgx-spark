@@ -214,6 +214,7 @@
     "dungeon_heldenmut": false,
     "dungeon_gold": false,
     "dungeon_echtwuerfel": false,
+    "dungeon_heldenlied": false,
     "dungeon_grenzen": true,
     "dungeon_schreiber": false,
     "dungeon_zufall": false,

@@ -1403,6 +1403,11 @@ def snapshot(view="admin", now=None):
         dgn["wappen"] = dungeon_wappen.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["wappen"] = {"on": False}
+    try:   # Heldenlied des Barden (dungeon_lied.py): numbers on the game's line
+        import dungeon_lied
+        dgn["lied"] = dungeon_lied.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["lied"] = {}
     try:   # Echte Würfel am Tisch (dungeon_echt.py): numbers on the game's line
         import dungeon_echt
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
@@ -1958,6 +1963,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("album") or {}).values()) else "")
                         + (f" · heute {dgn['narben']['narben']} Wunden, davon {dgn['narben']['folgen']} mit Folge und {dgn['narben']['pflaster']} Pflaster, {dgn['narben']['geheilt']}× beim Heiler"
                            if any((dgn.get("narben") or {}).values()) else "")
+                        + (f" · {dgn['lied']['lieder']} Heldenlieder, heute {dgn['lied']['gemacht']} gesungen, {dgn['lied']['weg']} nicht gekommen"
+                           + (" · singt gerade" if dgn['lied'].get("macht") else "") if (dgn.get("lied") or {}).get("lieder") or (dgn.get("lied") or {}).get("weg") or (dgn.get("lied") or {}).get("macht") else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

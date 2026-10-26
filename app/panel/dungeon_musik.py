@@ -55,6 +55,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 
+import dungeon_lied
 import features
 import guard
 from common import STATE, DayCounter, read_json, write_json
@@ -431,6 +432,7 @@ def for_view(rid, rd, lang="de"):
             xs = [x for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
             return [x["id"] for x in ([x for x in xs if neu(x)] or xs)][:LISTE]
         out.update(an=True, st=st, name=NAMEN[st][li], stuecke=pick(st), sieg=pick("sieg"), ziel=s["stuecke"])
+        out.update(dungeon_lied.ask_round(rid, rd))   # the bard's song of each chapter (lieder, lied: the newest)
     except Exception as e:   # noqa: BLE001 - the table never fails for its music
         print("dungeon: musik | ansicht fehler", type(e).__name__, flush=True)
     return out
@@ -467,13 +469,28 @@ def next_job(s):
     return None
 
 
-async def make(welt, st, rng=None):
-    """One piece of this field on the heavy jobs' place, the voice first; kept and the store pruned. Returns "ok" or
-    why not (GRUENDE). Never raises."""
+async def render(body, jid):
+    """One piece from the music model on the heavy jobs' place, the voice first (vorrang.quiet, wartung „musik“):
+    the MP3, or ValueError(why) / asyncio.TimeoutError. Also the bard's songs (dungeon_lied.py)."""
     import musik
     import schwer
     import vorrang
     import wartung
+    await vorrang.quiet("Musik machen")
+
+    async def once():
+        await vorrang.quiet("Musik machen")
+        if wartung.paused("musik"):
+            raise ValueError("pause")
+        return await musik.make(body)
+    mp3, _d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+    return mp3
+
+
+async def make(welt, st, rng=None):
+    """One piece of this field on the heavy jobs' place, the voice first; kept and the store pruned. Returns "ok" or
+    why not (GRUENDE). Never raises."""
+    import musik
     rng = rng or random.Random(secrets.randbits(32))
     secs = SIEG_S if st == "sieg" else rng.choice(LAENGE)
     body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
@@ -485,14 +502,7 @@ async def make(welt, st, rng=None):
     t0 = time.perf_counter()
     why = "ok"
     try:
-        await vorrang.quiet("Musik machen")
-
-        async def once():
-            await vorrang.quiet("Musik machen")
-            if wartung.paused("musik"):
-                raise ValueError("pause")
-            return await musik.make(body)
-        mp3, _d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+        mp3 = await render(body, jid)
         sid = "m" + secrets.token_hex(5)
 
         def keep():
@@ -549,15 +559,23 @@ async def step(now=None):
     if night(now) and _state["nacht"] != day and not notaus.blocks("auto"):
         _state["nacht"] = day
         await asyncio.to_thread(markierte_weg)
-        print(f"dungeon: musik | nacht | {fill_all(s)} felder", flush=True)
-    if _state["run"] or now < _state["ruhe"]:
+        print(f"dungeon: musik | nacht | {fill_all(s)} felder | {await asyncio.to_thread(_lieder_weg)} lieder weg", flush=True)
+    if _state["run"] or dungeon_lied._state["run"] or now < _state["ruhe"]:
         return "ruht"
+    if dungeon_lied.pending():   # a chapter's song goes before the store's pieces (dungeon_lied.py)
+        return "wartet" if schwer.offen() else await dungeon_lied.make_next()
     job = next_job(s)
     if not job:
         return "nichts"
     if schwer.offen():
         return "wartet"
     return await make(*job)
+
+
+def _lieder_weg():
+    """The night: the songs of rounds that are gone (dungeon_lied.tidy)."""
+    import dungeon
+    return dungeon_lied.tidy(set(dungeon._read()["runden"]))
 
 
 async def loop():
@@ -689,7 +707,7 @@ async def stueck(rid: str, sid: str, request: Request, prof=Depends(own_profile)
     try:
         def go():
             _seat_ok(rid, dungeon._seat_uid(rid, uid))
-            return piece(sid)
+            return dungeon_lied.piece(rid, sid) if dungeon_lied.ID.fullmatch(sid) else piece(sid)   # a song only of its round
         return _mp3(await asyncio.to_thread(go))
     except dungeon.KNOWN as e:
         raise dungeon._http(e)
@@ -704,7 +722,8 @@ async def gast_stueck(request: Request):
     try:
         def go():
             _seat_ok(rid, pid)
-            return piece(b.get("s"))
+            sid = b.get("s")
+            return dungeon_lied.piece(rid, sid) if isinstance(sid, str) and dungeon_lied.ID.fullmatch(sid) else piece(sid)
         return _mp3(await asyncio.to_thread(go))
     except dungeon.KNOWN as e:
         raise dungeon._http(e)

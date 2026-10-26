@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 45), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 92). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 45), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 93). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 45 Dateien in jeder Sicherung (Schritt 7) - 92 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 45 Dateien in jeder Sicherung (Schritt 7) - 93 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -6414,6 +6414,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "ßerhalb eines Gewölbes (fackel fehlt) gilt der Ort wie bisher. Nichts davon braucht einen eigenen Schalter: Die Töne gehören zu „Geräusche“ am Tisch, jedes Gerät schaltet sie selbst, und sie klingen erst, wenn die Funktionen des Haupt- und des Karten-Threads die Felder setzen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Heldenlied des Barden (V01.1.106, D&D-Ideen Runde 2, Punkt 8, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“, nach der Hörprobe „1 deutsch“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Heldenlied des Barden* (chat.dungeon_heldenlied, standardmäßig aus), dazu Musik am Tisch („Musik vorbereiten“ und das Musikmodell). Endet ein Kapitel (Log-Art kapitel_ende mit kapitel, vom Haupt-Thread), singt das eigene Musikmodell ein Lied von 60 bis 90 Sekunden (60 und 6 je Held) auf Deutsch, im Klang der Welt (STIL_LIED: Laute in Fantasy, Cello im Horror, Gitarre und Flächen in Science-Fiction, Akkordeon bei Piraten). Der Text kommt nur aus festen Strophen von dungeon_lied.py: „Hört, was im zweiten Kapitel geschah:“, je Held eine feste Tat-Zeile nach Wortliste aus dem Log des Kapitels (eigener Treffer oder kritischer Treffer, Zauber, neue Stufe, Beute, sonst „ging mutig stets voran“), ein Kehrreim je Welt und eine Schlusszeile. Ein Name wird nur gesungen, wenn er ein schlichter Name ist (Buchstaben, Leerzeichen, Apostroph, Bindestrich, höchstens 24) und die Wortliste von Musik machen ihn durchlässt, sonst „ein Held“; Klammern wie [chorus] kommen so nie "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "in den Liedtext. Das Lied entsteht auf dem Platz der schweren Aufträge nach der Sprache (dungeon_musik.render, dieselbe Stelle wie die Stücke) und vor den Stücken des Vorrats, je Kapitel ein Versuch. Am Tisch klingt das neue Lied einmal (dann wieder die Musik der Stimmung); unter 🎵 in der Musikleiste stehen die Lieder der Runde zum Nochmal-Hören, der Gastgeber löscht eines mit 🗑 („Wirklich?“). Hören kann ein Lied nur ein Platz seiner Runde (dieselben Türen wie die Stücke, GET /api/profile/dungeon/{{rid}}/musik/{{id}} und POST /api/dungeon/musik); löschen: POST /api/profile/dungeon/{{rid}}/lied/{{id}}/weg, nur der Gastgeber, Rate-Limit dungeonmusik. Je Runde bleiben höchstens 20 Lieder, nachts gehen die Lieder von Runden, die es nicht mehr gibt. Ablage STATE/dungeon-lieder/ (MP3 mit den Namen der Helden). Live: Lieder, heute gesungen, nicht gekommen (nur Zahlen); Log dungeon: lied | ok | kapitel N | s | ms, dungeon: lied | geloescht, dungeon: lied | loeschen abgelehnt | …."
 },
 {
 "lang": "de",
@@ -10894,6 +10910,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Echte Würfel am Tisch (Funktionen → Meine Daten → „Echte Würfel am Tisch“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wer am echten Tisch sitzt, wirft seinen eigenen W20."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Heldenlied des Barden (Funktionen → Meine Daten → „Heldenlied des Barden“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Endet ein Kapitel, singt der Spark ein kurzes Lied von 60 bis 90 Sekunden über die Helden der Runde, auf Deutsch, im Klang der Welt (Laute in Fantasy, Akkordeon bei Piraten)."
 },
 {
 "lang": "de",
@@ -17357,7 +17381,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 45), otherwise the line gives its reason (dateien.STATE_LOCAL, 92). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 45), otherwise the line gives its reason (dateien.STATE_LOCAL, 93). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -17373,7 +17397,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 45 files in every backup (step 7) - 92 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 45 files in every backup (step 7) - 93 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -20470,6 +20494,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "counts as before. None of it needs an own switch: the sounds belong to \"Sounds\" at the table, each device switches them itself, and they sound only once the features of the main and the map thread set the fields."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: bard's hero song (V01.1.106, D&D ideas round 2, point 8, Dominik 2026-10-26 \"1-9 implement, I leave the order to you.\", after the listening probe \"1 deutsch\"): Admin switch *Features → AI Dungeon Master → Bard's hero song* (chat.dungeon_heldenlied, off by default), plus music at the table (\"Prepare music\" and the music model). When a chapter ends (log kind kapitel_ende with kapitel, from the main thread), the own music model sings a song of 60 to 90 seconds (60 and 6 per hero) in German, in the sound of the world (STIL_LIED: lute in fantasy, cello in horror, guitar and pads in science fiction, accordion with pirates). The text comes only from fixed verses of dungeon_lied.py: \"Hört, was im zweiten Kapitel geschah:\", per hero one fixed deed line after a word list from the chapter's log (own hit or critical hit, spell, new level, loot, else \"ging mutig stets voran\"), one chorus per world and a closing line. A name is sung only if it is a plain name (letters, space, apostrophe, hyphen, at most 24) and the word list of Make music lets it through, else \"ein Held\"; brackets like [chorus] thus never get into the lyrics. The song is made on the heavy jobs' place after the"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " voice (dungeon_musik.render, the same place as the pieces) and before the store's pieces, one try per chapter. At the table the new song plays once (then the mood's music again); under 🎵 in the music bar the round's songs can be heard again, the host deletes one with 🗑 (\"Really?\"). Only a seat of its round can hear a song (the same doors as the pieces, GET /api/profile/dungeon/{{rid}}/musik/{{id}} and POST /api/dungeon/musik); delete: POST /api/profile/dungeon/{{rid}}/lied/{{id}}/weg, only the host, rate limit dungeonmusik. Each round keeps at most 20 songs, at night the songs of rounds that are gone go. Storage STATE/dungeon-lieder/ (MP3 with the heroes' names). Live: songs, sung today, did not come (numbers only); log dungeon: lied | ok | kapitel N | s | ms, dungeon: lied | geloescht, dungeon: lied | loeschen abgelehnt | …."
 },
 {
 "lang": "en",
@@ -24806,6 +24846,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Real dice at the table (Features → My data → \"Real dice at the table\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Whoever sits at the real table throws their own d20."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Bard's hero song (Features → My data → \"Bard's hero song\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a chapter ends, the Spark sings a short song of 60 to 90 seconds about the round's heroes, in German, in the sound of the world (lute in fantasy, accordion with pirates)."
 },
 {
 "lang": "en",

@@ -3684,6 +3684,13 @@
 "titel": "Dungeon-Master: Narben",
 "text": "Funktionen → KI-Dungeon-Master → Narben einschalten und spielen, bis ein Held am Boden liegt und wieder aufsteht oder kritisch getroffen wird. A: Im Verlauf steht „🩸 Name: Narbe“, im Heldenbogen die Narbe, eine Folge rot mit „−1 Wert“. B: In einer Siedlung bietet der Heiler „Heilen lassen“ an; danach ist die Folge weg, die Narbe bleibt. C: Mit „Nur Narben“ kommt nie eine Folge.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P551",
+"v": 1106,
+"titel": "Dungeon-Master: Heldenlied des Barden",
+"text": "A: Funktionen → KI-Dungeon-Master → Heldenlied des Barden an, Musik am Tisch an. B: Ein Kapitel zu Ende spielen (sobald der Haupt-Thread „Kapitel zu Ende“ meldet): nach einer Weile klingt am Tisch einmal ein deutsch gesungenes Lied mit den Namen der Helden und je einer Tat. C: Unter 🎵 in der Musikleiste steht „Kapitel 1“, ▶ spielt es noch einmal. D: Als Gastgeber 🗑, „Wirklich?“, weg. E: Ein Gast am Tisch hört es auch; ein Profil ohne Platz in der Runde nicht. F: Schalter aus: kein Lied am Kapitelende.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }
