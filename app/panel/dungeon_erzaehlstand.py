@@ -75,6 +75,7 @@ SZENEN = {
     "englisch": ("Englische Runde auf Englisch", "English round in English"),
     "probe": ("Riskante Aktion verlangt eine Probe", "A risky action asks for a check"),
     "ruhe": ("Harmlose Aktion ohne Probe", "A harmless action without a check"),
+    "kampfzug": ("Kämpfen wird ein Angriff gegen die Rüstung", "Fighting becomes an attack against the armour"),   # Kampfzug-Prüfung 5
 }
 LEVELS = ["gar nicht", "teilweise", "ganz"]
 _run = {"laeuft": False, "seit": 0.0, "task": None}
@@ -172,12 +173,15 @@ def scene(r, sid):
         return rd, [{"pid": "p0", "wert": "staerke", "schwer": 15, "vt": "", "wofuer": "die Holztür aufbrechen"}]
     if sid == "zwei":
         return _round(r, taten=(("Arvid", "Ich suche am Boden nach frischen Spuren."), ("Bela", "Ich frage den Wirt, wer zuletzt hier war."))), []
-    if sid == "kampf":
+    if sid in ("kampf", "kampfzug"):
         rd = _round(r, taten=(("Arvid", "Ich greife den vordersten Gegner mit meiner Waffe an."),))
         held = [p["held"] for p in rd["plaetze"].values()]
         foe = min(r["gegner"], key=lambda g: (abs(g.get("stufe", 0) - 0.25), g["id"]))
         rd["kampf"] = {"gegner": kampf.lineup([(foe, 2)], 0, len(held)), "seit": 1, "budget": 100, "gefahr": "mittel",
                        "leben0": sum(h["leben"] for h in held), "helden": ["p0"]}
+        if sid == "kampfzug":                # „kämpfe gegen …“ (Dominik 2026-10-26): the model's checks, the panel's attack
+            rd["offen"]["p0"]["text"] = f"Ich kämpfe gegen {rd['kampf']['gegner'][0]['name']}."
+            return rd, None
         return rd, [{"pid": "p0", "wert": "staerke", "schwer": 10, "vt": "", "wofuer": "Angriff", "ziel": rd["kampf"]["gegner"][0]["name"]}]
     if sid == "kinder":
         return _round(r, ton=min(t["id"] for t in r["toene"]), taten=(("Arvid", "Ich ziehe mein Schwert und stürze mich auf den Wolf."),)), []
@@ -240,6 +244,11 @@ async def play(r, sid, own=None):
         return {"punkte": punkte, "grund": "ok" if punkte else next((f for f in reversed(tries) if f), "abgelehnt"),
                 "versuche": len(tries), "laenge": len((story or {}).get("text") or ""), "sekunden": round(time.monotonic() - t0, 1)}
     rd, proben = scene(r, sid)
+    if proben is None and sid == "kampfzug":              # whatever the model asks: fighting a foe is an attack
+        got, _ = await dungeon.ask_checks(r, rd)
+        rest, hits = kampf.attacks(dungeon, r, rd, got, _Fest())
+        ok = any(x["pid"] == "p0" and not x.get("kann_nicht") for x in hits) and not any(x["pid"] == "p0" for x in rest)
+        return {"punkte": 2 if ok else 0, "grund": "ok" if ok else "kein angriff", "proben": len(got), "sekunden": round(time.monotonic() - t0, 1)}
     if proben is None:                                    # the checks scenes: does the model ask for one
         got, _ = await dungeon.ask_checks(r, rd)
         ok = bool(got) if sid == "probe" else not got

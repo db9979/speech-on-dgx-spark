@@ -610,7 +610,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
   if(e.art==='bild')return !(v.bilder||[]).some(x=>x.b===e.b)?'':e.b===dmNewest(v)?dmBildGross(v.mode,v,e.b,e.ort):`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`;
   if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
-  if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP${e.ende?' · '+esc(t('am Ende der Runde gutgeschrieben','credited at the end of the round')):e.tisch?' · '+esc(t('noch am Tisch, zählt am Ende der Runde','still at the table, counts at the end of the round')):''}</div>`;
+  if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP${(e.grund||[]).length?' ('+esc(e.grund.map(g=>t(...(DMEPGRUND[g]||[g,g]))).join(', '))+')':''}${e.ende?' · '+esc(t('am Ende der Runde gutgeschrieben','credited at the end of the round')):e.tisch?' · '+esc(t('noch am Tisch, zählt am Ende der Runde','still at the table, counts at the end of the round')):''}</div>`;
   if(e.art==='stufe')return `<div class="dm-stufe">★ ${esc(e.name)} ${esc(t('erreicht Stufe','reaches level'))} ${e.stufe}!</div>`;
   return `<div class="dm-sys mut">${esc(sys||'')}</div>`}
 // what can be done with an item in the own bag (side column, hero sheet, item window)
@@ -986,6 +986,8 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmhal
 // Herzenswunsch (round 2, idea 7, dungeon_wunsch): the own hero's secret wish, from the world's list or in own words; the host sees every seat's
 // Gefährten (round 2, idea 9, dungeon_gefaehrte): the hired companions as rows of the group, without a seat; the panel rolls their blows
 const DMGFAUS={am_boden:['am Boden','down'],geflohen:['geflohen','fled']};
+// why a hero's experience grew (Kampfzug-Prüfung 4, dungeon.apply mark): fixed words of the panel
+const DMEPGRUND={probe:['Probe','check'],ort:['neuer Ort','new place'],kampf:['Kampf','fight'],ziel:['Ziel','goal'],wunsch:['Herzenswunsch','heart\'s wish'],akt:['Akt','act']};
 function dmGefaehrten(v){return (v.gefaehrten||[]).map(c=>`<div class="dm-seat dm-hero dm-gefaehrte${c.aus||!c.dabei?' aus':''}"><span class="dm-av" aria-hidden="true">🤝</span><div><b>${esc(c.name)}</b> <small class="mut">${esc(t('Gefährte','Companion'))}${c.von?' · '+esc(t('von ','of ')+c.von):''} · ${c.leben}/${c.max}</small><small class="dm-isatz">${esc(c.satz)}</small></div>${c.aus?`<small class="dm-state">${esc(t(...DMGFAUS[c.aus]||[c.aus,c.aus]))}</small>`:!c.dabei?`<small class="dm-state">${esc(t('wartet auf den Lohn','waits for the pay'))}</small>`:''}</div>`).join('')}
 function dmWunsch(v){const w=v.wunsch;if(!w)return '';
   const andere=(w.andere||[]).map(x=>`<li>${esc(x.name)}: ${esc(x.text)}${x.erfuellt?' ✓':''}</li>`).join('');

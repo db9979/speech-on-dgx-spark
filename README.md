@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.122** AI Dungeon Master: fight turn check, fighting becomes an attack against the armour, the model never picks a spell, goal and act XP wait until the fight is over, every XP entry says what for
 - **V01.1.121** AI Dungeon Master: hire companions, in a settlement a companion of the world while fewer than four play, the panel rolls its blows, it counts as half a hero in the balance
 - **V01.1.120** AI Dungeon Master: heart's wish, every hero carries a secret wish, per act the narrator gets one in turn, when it comes true there is the experience of an act
 - **V01.1.119** AI Dungeon Master: whisper to a person, once a turn a word only for the own seat, the person answers, betrayal and gift the panel decides
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.115** AI Dungeon Master: calendar of the world, months, moons and festivals on top of the table, the days run only by ways, rests and the inn, on festivals services cost more
 - **V01.1.114** AI Dungeon Master: tongues of the peoples, a person briefly greets in its people's tongue, foreign sounds for everyone, the translation only for who knows the tongue
 - **V01.1.113** AI Dungeon Master: "Paint all pictures · N" counts only pictures a run will paint (fixed ones count as done); picture and lines for the settlement's healer
-- **V01.1.112** AI Dungeon Master: content of the D&D ideas round 2 in the SRD catalogue: 20 prices for "near miss", 58 props for every kind of place and room, heart's wishes per world, companions with values for levels 1 to 10 and animal friends at the children's table, torch and glow stick
 
 
 

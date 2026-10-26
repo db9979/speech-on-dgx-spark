@@ -3321,11 +3321,29 @@ def check_proben(r, rd, obj):
     return out, drop
 
 
+def spell_named(r, rd, pid, text):
+    """Whether a text names a spell the player did not choose in this action (Kampfzug-Prüfung 2, Dominik 2026-10-26:
+    „Wache mit Dornenranken treffen“ for „kämpfe gegen die wache“): only the player picks a spell, never the model."""
+    low = " " + str(text or "").lower() + " "
+    mine = str((rd["offen"].get(pid) or {}).get("kraft") or "")
+    for x in r.get("gegenstaende") or []:
+        if x.get("art") != "zauber" or x["id"] == mine:
+            continue
+        for n in x["name"]:
+            n = n.split(": ", 1)[-1].lower()
+            if len(n) >= 4 and re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", low):
+                return True
+    return False
+
+
 def wofuer(r, rd, pid, said):
     """What a check is for, as the table shows it above the roll (Dominik 2026-10-24 „für was die Würfelprobe gerade
     gemacht wird“): the model's few words, checked like its text, else the start of the player's own action, cut at a
-    word within WOFUER_MAX."""
+    word within WOFUER_MAX. The model's words never name a spell the player did not choose (spell_named)."""
     t = plain(said, WOFUER_MAX)
+    if t and spell_named(r, rd, pid, t):
+        print("dungeon: probe | zauber nicht gewaehlt", flush=True)
+        t = ""
     if t and not bad_words(r, rd, t):
         return t.rstrip(".")
     a = re.sub(r"\s+", " ", str((rd["offen"].get(pid) or {}).get("text", ""))).strip()
@@ -3552,6 +3570,14 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             if pid in rd["plaetze"] and rd["plaetze"][pid].get("held"):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, p in seated(rd) if not p["held"].get("tot")}
+    warum, stand = {}, dict(ep)
+
+    def mark(grund):
+        """Kampfzug-Prüfung 4: why a hero's experience grew, a fixed word per source for the „ep“ entry."""
+        for q, n in ep.items():
+            if n > stand.get(q, 0):
+                warum.setdefault(q, []).append(grund)
+        stand.update(ep)
     gefaehrte.pay(_me, r, rd, rng)              # a new chapter: the companions' pay from the hirer's gold (round 2, idea 9)
     for x in list(wuerfe) + list(kampfwuerfe[0]):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
@@ -3576,6 +3602,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             print("dungeon: werkzeug | kaputt", flush=True)
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
+    mark("probe")
     if story:
         orte = len(rd["karte"]["besucht"]) if rd.get("karte") else None
         von = rd["karte"]["hier"] if rd.get("karte") else None
@@ -3588,6 +3615,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             for pid in ep:
                 ep[pid] += r["ep"]["ort"] * neu
             print(f"dungeon: ep | ort | {neu}", flush=True)
+        mark("ort")
         if story.get("bild"):
             rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
@@ -3626,6 +3654,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                     c = _by(r, "gegner").get(g["id"]) or {}
                     kampf.learn(rd, g["id"], [a for x in ("resistenz", "immun", "schwaeche") for a in c.get(x) or []])
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
+            mark("kampf")
             haltung.count(rd, kampfwuerfe[1])
             haltung.announce(_me, r, rd, rng)    # the foes still up say their next blow (round 2, idea 2)
         folgen = story["folgen"]
@@ -3646,8 +3675,16 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if story["beute"] and held:
             b = story["beute"]
             give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
-        for e in story["erfolg"]:
+        # Kampfzug-Prüfung 3 (Dominik 2026-10-26, +110 EP mitten im Kampf): a goal or an act's end reported while a
+        # fight runs waits until it is over; the experience of the fight comes from its foes (kampf.end)
+        ziele = [e for e in story["erfolg"] if e["art"] == "ziel"] + ([{"art": "ziel"}] if not rd.get("kampf") and rd.pop("ziel_wartet", False) else [])
+        if rd.get("kampf") and ziele:
+            rd["ziel_wartet"] = True
+            ziele = []
+            print("dungeon: ep | ziel | wartet kampf", flush=True)
+        for e in ziele[:1]:
             if e["art"] == "ziel":
+                print("dungeon: ep | ziel", flush=True)
                 if rd.get("auftrag") and quest_may_end(rd) and not rd.get("auftrag_ok"):
                     rd["auftrag_ok"] = True       # the pinned quest shows as done
                     print("dungeon: auftrag | erfuellt", flush=True)
@@ -3655,12 +3692,21 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                     print("dungeon: auftrag | zu frueh", flush=True)
                 for pid in ep:
                     ep[pid] += r["ep"]["ziel"]
+        mark("ziel")
         if story.get("wunsch"):                   # a heart's wish come true (round 2, idea 7): the experience of an act
             wunsch.come_true(_me, r, rd, story["wunsch"], ep)
-        if step_act(rd, story.get("akt_fertig")):   # Idee 7: an act of the story done, fixed experience for every hero
+            mark("wunsch")
+        fertig = bool(story.get("akt_fertig")) or (not rd.get("kampf") and rd.pop("akt_wartet", False))
+        if rd.get("kampf") and rd.get("plan"):       # Kampfzug-Prüfung 3: no act ends while a fight runs
+            if fertig:
+                rd["akt_wartet"] = True
+                print("dungeon: akt | wartet kampf", flush=True)
+            fertig = None
+        if fertig is not None and step_act(rd, fertig):   # Idee 7: an act of the story done, fixed experience for every hero
             for pid in ep:
                 ep[pid] += r["ep"]["akt"]
             print("dungeon: ep | akt", flush=True)
+            mark("akt")
     else:
         _log(rd, "dm", text=r["ausfall"][li], npc=[], frage="")
     for pid, n in ep.items():
@@ -3668,7 +3714,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             continue
         h = rd["plaetze"][pid]["held"]
         h["ep_tisch"] = min(10 ** 7, h.get("ep_tisch", 0) + n)     # given at the end of the round (pay_ep)
-        _log(rd, "ep", pid=pid, name=h["name"], zahl=n, tisch=h["ep_tisch"])
+        _log(rd, "ep", pid=pid, name=h["name"], zahl=n, tisch=h["ep_tisch"], grund=warum.get(pid) or [])
     if rd.get("auftrag_ok") and not quest_may_end(rd):
         rd["auftrag_ok"] = False                 # a quest an older version closed too early is open again
     if story:

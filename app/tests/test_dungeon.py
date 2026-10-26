@@ -5976,6 +5976,62 @@ class Fight(Turns):
                                          "begegnung": [{"id": foe["id"], "anzahl": n}], "frage_an": ""}])
         return rd, foe
 
+    def test_a_fight_turn_keeps_to_the_panels_rules(self):
+        """Kampfzug-Prüfung (Dominik 2026-10-26 „1-5“, „kämpfe gegen die wache“ became „Wache mit Dornenranken treffen“,
+        a Geschick check against 10, no damage, no charge, +110 EP in the fight): 1 fighting a foe is an attack against
+        its armour, also when only the model's check names the foe to hit; 2 the check's words never name a spell the
+        player did not choose (a spell named by the player is chosen and costs its charge:
+        Powers.test_known_spell_uses_a_charge_when_told); 3 a goal or an act's end waits while a fight runs; 4 the
+        journal says when a foe is named and it stays a check, every „ep“ entry says why."""
+        r = dungeon.rules()
+        rd, _ = self.encounter(1)
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=2, immun=[], resistenz=[], schwaeche=[])
+        p = {"pid": self.host, "wert": "geschick", "schwer": 10, "vt": "", "wofuer": ""}
+
+        def hit(text, **kw):
+            rd["offen"][self.host] = {"text": text}
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                x = kampf.attacks(dungeon, r, rd, [dict(p, **kw)], Dice(10, 3))[1]
+            return (x[0]["ziel"], x[0]["rk"]) if x else out.getvalue()
+        for text in (f"kämpfe gegen die {g['name'].lower()}", f"Ich bekämpfe {g['name']}.", f"I fight the {g['name']}.",
+                     f"Ich haue {g['name']} eins drüber."):
+            self.assertEqual(hit(text), (g["k"], 2), text)                       # an attack against its armour
+        self.assertEqual(hit("Ich halte mich bereit.", wofuer=f"{g['name']} mit Dornenranken treffen"), (g["k"], 2))
+        rd["offen"][self.host] = {"text": f"kämpfe gegen {g['name']}"}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            x = kampf.attacks(dungeon, r, rd, [], Dice(10, 3))[1]
+        self.assertEqual([(y["pid"], y["ziel"]) for y in x], [(self.host, g["k"])])   # no check asked: the panel's attack
+        self.assertIn("dungeon: probe | kampf | angriff ergaenzt", out.getvalue())
+        self.assertIn("dungeon: probe | kampf | kein angriff", hit(f"Ich beobachte {g['name']}.", wofuer=f"{g['name']} beobachten"))
+        spell = next(x for x in r["gegenstaende"] if x.get("art") == "zauber" and len(x["name"][0].split(": ", 1)[-1]) >= 4)
+        name = spell["name"][0].split(": ", 1)[-1]
+        rd["offen"][self.host] = {"text": "kämpfe gegen die wache"}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(dungeon.wofuer(r, rd, self.host, f"Wache mit {name} treffen"), "kämpfe gegen die wache")
+        self.assertIn("dungeon: probe | zauber nicht gewaehlt", out.getvalue())
+        rd["offen"][self.host]["kraft"] = spell["id"]
+        self.assertEqual(dungeon.wofuer(r, rd, self.host, f"Wache mit {name} treffen"), f"Wache mit {name} treffen")   # chosen
+        # a goal and an act's end while the fight runs: they wait until it is over
+        self.act("Ich beobachte den Raum.")
+        z = self.state(self.rid)["zug"]
+        rd = self.play([{"proben": []}, {"erzaehlung": f"{g['name']} lauert im Schatten, die Gruppe hält den Atem an.",
+                                         "erfolg": [{"art": "ziel"}], "akt_fertig": True, "frage_an": ""}])
+        self.assertEqual(rd["zug"], z + 1)
+        self.assertTrue(rd.get("kampf") and rd.get("ziel_wartet"))
+        self.assertFalse([e for e in rd["log"] if e["art"] == "ep" and "ziel" in e.get("grund", [])])
+        with dungeon._lock:
+            d = dungeon._read()
+            kampf.end(dungeon, r, d["runden"][self.rid], {}, "flucht")
+            dungeon._write(d)
+        self.act("Ich atme durch.")
+        rd = self.play([{"proben": []}, {"erzaehlung": "Die Gruppe sammelt sich in der Stille nach dem Kampf.", "frage_an": ""}])
+        e = [e for e in rd["log"] if e["art"] == "ep"][-1]
+        self.assertIn("ziel", e["grund"])                                      # now the goal counts
+        self.assertNotIn("ziel_wartet", rd)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("DMEPGRUND", f.read())
+
     def test_an_attack_on_foes_of_one_kind_hits(self):
         """Dominik 2026-10-25 (a spell rolled „geschafft“ on two giant rats, both stayed at 7/7): a ziel naming several
         foes of one kind attacks the first still standing; a check without ziel whose action attacks and names a foe

@@ -83,7 +83,9 @@ ENDE = ("frieden", "flucht")       # the model may end a fight without a winner
 AUS = ("besiegt", "geflohen")
 ZIEL_MAX = 40
 HIEB_WORTE = re.compile(r"(?i)(?<!\w)(greif|angriff|angreif|attack|schlag|schläg|schlägt|stech|stich|stoß|stoss|schieß|schiess|schuss|"
-                        r"triff|treff|töte|erschlag|zerschmetter|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast)")   # an action that attacks
+                        r"triff|treff|töte|erschlag|zerschmetter|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|"
+                        # „kämpfe gegen die Wache“ (Dominik 2026-10-26, Kampfzug-Prüfung 1): fighting a foe is an attack
+                        r"kämpf|kaempf|bekämpf|bekaempf|fight|battle|hau(?:e|t|en)?(?!\w)|verprügel|prügel|verdresch|schlitz)")   # an action that attacks
 MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
 ZAUBERWERTE = ("intelligenz", "weisheit", "charisma")   # a cantrip's value: the better of these
 _FUELL = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "beide", "beiden", "alle", "allen",
@@ -452,11 +454,23 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
         return [{k: v for k, v in p.items() if k != "ziel"} for p in proben], []
     rest, out, life = [], [], {g["k"]: g["leben"] for g in up(rd)}
     li = 1 if rd["lang"] == "en" else 0
+    # Kampfzug-Prüfung 1 (Dominik 2026-10-26): a hero whose action fights a named foe attacks it even when the model
+    # asked no check for it
+    have = {p["pid"] for p in proben}
+    for pid, a in (rd.get("offen") or {}).items():
+        h = (rd["plaetze"].get(pid) or {}).get("held")
+        if pid not in have and h and not h.get("tot") and HIEB_WORTE.search(str(a.get("text", ""))) and _named(rd, a.get("text"), life, text=True):
+            proben = list(proben) + [{"pid": pid, "wert": "staerke", "schwer": 10, "vt": "", "wofuer": ""}]
+            print("dungeon: probe | kampf | angriff ergaenzt", flush=True)
     for p in proben:
         a = rd["offen"].get(p["pid"]) or {}
         g = _named(rd, p.get("ziel"), life) if p.get("ziel") else \
             _named(rd, a.get("text"), life, text=True) if HIEB_WORTE.search(str(a.get("text", ""))) else None
+        if not g and HIEB_WORTE.search(str(p.get("wofuer", ""))):   # the model's check names a foe to hit: an attack against
+            g = _named(rd, p.get("wofuer"), life, text=True)       # its armour, never a check against a difficulty (Kampfzug 1)
         if not g:
+            if any(_named(rd, x, life, text=True) for x in (a.get("text"), p.get("wofuer")) if x):
+                print("dungeon: probe | kampf | kein angriff", flush=True)   # a foe named, still a check: shows in the journal (4)
             rest.append({k: v for k, v in p.items() if k != "ziel"})
             continue
         h = rd["plaetze"][p["pid"]]["held"]

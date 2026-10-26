@@ -5661,6 +5661,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampfzug-Prüfung (V01.1.122, Dominik 2026-10-26 „1-5“, nach einem Zug, in dem „kämpfe gegen die wache“ zur Geschick-Probe „Wache mit Dornenranken treffen“ gegen 10 wurde, ohne Schaden, ohne Ladung und mit +110 EP mitten im Kampf): feste Regeln des Panels, kein Schalter. 1. Wer im Kampf einen Gegner bekämpft, greift ihn an: die Angriffswörter kennen auch „kämpfen“, „bekämpfen“, „hauen“, „prügeln“, „fight“ (dungeon_kampf.HIEB_WORTE); nennt die Probe des Modells einen Gegner zum Treffen, wird auch sie ein Angriff gegen die Rüstung mit Schadenswurf; verlangt das Modell gar keine Probe, ergänzt das Panel den Angriff (dungeon: probe | kampf | angriff ergaenzt). 2. Einen Zauber wählt nur der Spieler: nennt er ihn in seiner Aktion, gilt er als gewählt und kostet seine Ladung; nennt nur das Modell in der Beschriftung der Probe einen Zauber, steht dort die Aktion des Spielers (dungeon.spell_named, dungeon: probe | zauber nicht gewaehlt). 3. Meldet die Erzählung während eines laufenden Kampfs ein erreichtes Ziel oder das Ende eines Akts, wartet das Panel bis zum Ende des Kampfs (ziel_wartet, akt_wartet, dungeon: ep | ziel | wartet kampf, dungeon: akt | wartet kampf); die Er"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "fahrung des Kampfs kommt aus seinen Gegnern. 4. Jeder EP-Eintrag sagt in Klammern, wofür (Probe, neuer Ort, Kampf, Ziel, Herzenswunsch, Akt); nennt im Kampf eine Probe einen Gegner und bleibt doch eine Probe, steht dungeon: probe | kampf | kein angriff im Log. 5. Selbsttests Fight.test_a_fight_turn_keeps_to_the_panels_rules und Powers.test_known_spell_uses_a_charge_when_told, dazu die Szene „Kämpfen wird ein Angriff gegen die Rüstung“ im Erzähler-Prüfstand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -20070,6 +20086,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "gain (never lost for good). A new chapter without pay: a courage check, else it leaves. No loot, no experience. In the encounter budget every companion counts as half a hero (dungeon_kampf.budget), so the balance holds. The model gets the companions only as data and their blows as receipts, it never decides. A campaign keeps them. Live: hired, blows, down, fled, left, pay today. Log dungeon: gefaehrte | angeheuert, … | voll, … | unbekannt, … | sold | N gold, … | ohne sold | bleibt, … | gegangen, … | am boden, … | moral | geflohen|bleibt. Self-test Turns.test_companions_hired_fight_by_the_panels_dice."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: fight turn check (V01.1.122, Dominik 2026-10-26 \"1-5\", after a turn in which \"kämpfe gegen die wache\" became the Dexterity check \"Wache mit Dornenranken treffen\" against 10, without damage, without a charge and with +110 XP in the middle of the fight): fixed rules of the panel, no switch. 1. Whoever fights a foe in a fight attacks it: the attack words also know \"kämpfen\", \"bekämpfen\", \"hauen\", \"prügeln\", \"fight\" (dungeon_kampf.HIEB_WORTE); when the model's check names a foe to hit, it becomes an attack against the armour with a damage roll too; when the model asks no check at all, the panel adds the attack (dungeon: probe | kampf | angriff ergaenzt). 2. Only the player chooses a spell: naming it in the action chooses it and costs its charge; when only the model names a spell in the check's label, the player's action stands there (dungeon.spell_named, dungeon: probe | zauber nicht gewaehlt). 3. When the narration reports a goal reached or an act's end while a fight runs, the panel waits until the fight is over (ziel_wartet, akt_wartet, dungeon: ep | ziel | wartet kampf, dungeon: akt | wartet kampf); the fight's experience comes from its foes. 4. Every XP entry say"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "s in brackets what for (check, new place, fight, goal, heart's wish, act); when in a fight a check names a foe and still stays a check, the log shows dungeon: probe | kampf | kein angriff. 5. Self-tests Fight.test_a_fight_turn_keeps_to_the_panels_rules and Powers.test_known_spell_uses_a_charge_when_told, plus the scene \"Fighting becomes an attack against the armour\" in the narrator bench."
 },
 {
 "lang": "en",

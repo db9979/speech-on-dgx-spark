@@ -3789,6 +3789,13 @@
 "titel": "Dungeon-Master: Gefährten anheuern",
 "text": "Funktionen → KI-Dungeon-Master → Gold mit Zweck und Gefährten anheuern einschalten und eine Runde mit höchstens drei Helden beginnen. A: In einer Siedlung steht bei den Diensten „🤝 Gefährte anheuern“ mit Gefährten der Welt; einen wählen, „Anheuern“, der Lohn geht vom eigenen Gold ab. B: Der Gefährte steht mit 🤝 in der Gruppe. C: Im Kampf stehen seine Hiebe im Verlauf wie die der Helden; geht er zu Boden, steht er nach dem Kampf wieder auf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P566",
+"v": 1122,
+"titel": "Dungeon-Master: Kampfzug-Prüfung",
+"text": "Eine Runde mit Kampf spielen. A: „kämpfe gegen die Wache“ schreiben: es kommt ein Angriff gegen die Rüstung der Wache mit Treffer oder daneben und Schaden, keine Probe gegen eine Schwierigkeit. B: Die Beschriftung einer Probe nennt nie einen Zauber, den du nicht selbst genannt hast; nennst du einen, sinkt seine Ladung. C: Mitten im Kampf gibt es keine Ziel- oder Akt-EP; jeder EP-Eintrag sagt in Klammern, wofür.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

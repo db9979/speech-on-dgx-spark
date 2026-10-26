@@ -129,9 +129,10 @@ class Bench(Base):
         d = ADMIN.get(P).json()
         self.assertEqual(set(d["modelle"]), {"unbekannt", "qwen36frei"})
         m = d["modelle"]["qwen36frei"]
-        self.assertEqual((m["punkte"], m["max"], set(m["szenen"])), (16, 16, set(es.SZENEN)))
+        self.assertEqual((m["punkte"], m["max"], set(m["szenen"])), (2 * len(es.SZENEN), 2 * len(es.SZENEN), set(es.SZENEN)))
         self.assertNotIn("Holztür", json.dumps(d, ensure_ascii=False))    # points and reasons, never the narration
-        self.assertRegex(live._erzaehlstand(), r"^ · Erzähler-Prüfstand 2 Modelle, bestes 16 von 16 Punkten$")
+        n = 2 * len(es.SZENEN)
+        self.assertRegex(live._erzaehlstand(), rf"^ · Erzähler-Prüfstand 2 Modelle, bestes {n} von {n} Punkten$")
 
 
 if __name__ == "__main__":
