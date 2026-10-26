@@ -46,6 +46,7 @@ hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and c
 import random
 import re
 
+import dungeon_album as album
 import dungeon_ehre as ehre
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
@@ -781,6 +782,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
             dm._day.bump("besiegt")
+            album.win(dm, rd, g["id"])           # the Monster-Album (D&D idea 12): one more win for the fight's heroes
         elif was == "phase2":
             dm._log(rd, "gegner", gegner=g["name"], was="phase2")
             print("dungeon: kampf | boss | phase2", flush=True)
@@ -797,6 +799,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 if hurt(g, x["schaden"]) == "besiegt":
                     dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
                     dm._day.bump("besiegt")
+                    album.win(dm, rd, g["id"])
                 print("dungeon: kampf | gegner zustand", flush=True)
             continue
         g = by.get(x["k"])

@@ -1408,6 +1408,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Monster-Album (dungeon_album.py): numbers on the game's line
+        import dungeon_album
+        dgn["album"] = dungeon_album.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["album"] = {}
     try:   # Schriftstücke (dungeon_schrift.py): numbers on the game's line
         import dungeon_schrift
         dgn["schrift"] = dungeon_schrift.for_live() if dgn.get("on") else {}
@@ -1944,6 +1949,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("helfen") or {}).values()) else "")
                         + (f" · heute {dgn['schrift']['gefunden']} Schriftstücke gefunden, {dgn['schrift']['verworfen']} verworfen, {dgn['schrift']['geheim']} nur für einen Platz"
                            if any((dgn.get("schrift") or {}).values()) else "")
+                        + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht"
+                           if any((dgn.get("album") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

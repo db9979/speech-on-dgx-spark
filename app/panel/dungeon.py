@@ -118,6 +118,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import Response
 
 import dungeon_ablage as ablage
+import dungeon_album as album
 import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_ideen as ideen
@@ -1254,6 +1255,7 @@ def fix_hero(r, h):
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
     h["schutz"] = [x for x in h.get("schutz") or [] if isinstance(x, dict) and x.get("art") in kampf.SCHADEN_ARTEN
                    and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
+    album.fix(r, h)                       # the Monster-Album (D&D idea 12): only the catalog's foes
     return h
 
 
@@ -5114,6 +5116,7 @@ def view(rid, pid, now=None):
     out["echt_plaetze"] = echt.choice(rd) if host else None    # which seats throw their own d20 (dungeon_echt, D&D idea 5)
     out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
+    out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))

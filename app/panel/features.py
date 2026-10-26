@@ -299,6 +299,8 @@ FEATURES = (
       guide="dungeonhelfen"),
     # Schriftstücke (dungeon_schrift.py, D&D idea 3): a found writing as a parchment, the host chooses who sees it
     F("dungeonschrift", "Schriftstücke", "Writings", "data", ("dungeon_schrift",), parent="dungeon", me="dmbox", guide="dungeonschrift"),
+    # Monster-Album (dungeon_album.py, D&D idea 12): the foes the hero defeated, more known after 1, 3 and 5 wins
+    F("dungeonalbum", "Monster-Album", "Monster album", "data", ("dungeon_album",), parent="dungeon", me="dmbox", guide="dungeonalbum"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

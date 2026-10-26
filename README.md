@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.104** AI Dungeon Master: monster album, every hero collects the foes defeated and knows more about them after 1, 3 and 5 wins, up to their weaknesses
 - **V01.1.103** AI Dungeon Master: writings, letters, wanted posters and verses found appear as parchment at the table, the host shows them to all, one seat or nobody
 - **V01.1.102** AI Dungeon Master: helping and group checks, who helps a hero by name gives them advantage, in a group check half is enough
 - **V01.1.101** AI Dungeon Master: near miss, when a check misses by 1 or 2 the hero chooses to give up or to make it after all at a rolled price
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.097** AI Dungeon Master: the map fixes 2 to 3 props for the fight per room and place (use the surroundings); travel ways name their land from the landscape table
 - **V01.1.096** AI Dungeon Master: pause shown everywhere, in the round lists of web, app and CarPlay, as a bar at the table, as a note to the other players, in the car and in Live
 - **V01.1.095** Logs of model switch and image understanding visible again
-- **V01.1.094** AI Dungeon Master: the "Music at the table" table lines up again, the world first, one column per mood
 
 
 

@@ -3670,6 +3670,13 @@
 "titel": "Dungeon-Master: Schriftstücke",
 "text": "Funktionen → KI-Dungeon-Master → Schriftstücke einschalten und eine Runde mit zwei Plätzen spielen, bis die Helden einen Brief oder Steckbrief finden. A: Der Brief erscheint als Pergament im Verlauf und im Reiter „Schriftstücke“. B: Der Gastgeber tippt auf den Namen eines Platzes: nur dieser sieht ihn mit „nur für dich“, der andere Platz sieht ihn nicht mehr. C: „Niemand“ blendet ihn für alle Plätze aus.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P549",
+"v": 1104,
+"titel": "Dungeon-Master: Monster-Album",
+"text": "Funktionen → KI-Dungeon-Master → Monster-Album einschalten und eine Runde mit zwei Plätzen spielen, bis die Gruppe einen Gegner besiegt. A: Im Reiter „Album“ der rechten Spalte steht er mit einem Stern, Bild, Beschreibung und Spruch. B: Nach dem dritten Sieg über dieselbe Art zeigt er seine Werte, nach dem fünften seine Schwächen. C: In der nächsten Runde mit demselben Helden ist das Album noch da.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

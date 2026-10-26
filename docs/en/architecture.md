@@ -272,6 +272,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/beobachten.py` | Eigene Aufgaben, die beobachten: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt“, „Erinnere mich, wenn der Flug nach Rom unter 100 Eu … |
 | `app/panel/dungeon.py` | KI-Dungeon-Master: a round of a fantasy role-playing game for up to five players, the own language model narrates as Dungeon Master, the panel decides. |
 | `app/panel/dungeon_ablage.py` | KI-Dungeon-Master: Ablage der Runden. |
+| `app/panel/dungeon_album.py` | KI-Dungeon-Master: Monster-Album. |
 | `app/panel/dungeon_auto.py` | KI-Dungeon-Master im Auto. |
 | `app/panel/dungeon_balance.py` | Gleichgewicht of the Dungeon Master's catalog: fixed tables, never the model. |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber. |

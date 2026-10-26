@@ -178,6 +178,7 @@ MODULE = {
     "dungeon_echt": ("dienste", "Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter"),
     "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_schrift": ("dienste", "Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht"),
+    "dungeon_album": ("dienste", "Dungeon-Master: Monster-Album, je Held die besiegten Gegner, mehr Wissen nach 1, 3 und 5 Siegen"),
     "dungeon_helfen": ("dienste", "Dungeon-Master: Helfen und Gruppenprobe, feste Regeln auf den Würfen des Panels"),
     "dungeon_knapp": ("dienste", "Dungeon-Master: Knapp daneben, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an"),
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),

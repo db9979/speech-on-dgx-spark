@@ -7357,6 +7357,68 @@ class Fight(Turns):
         self.assertIn("if(e.art==='schrift')", js)
         self.assertIn("['schrift','✉'", js)
 
+    def test_the_monster_album_knows_more_after_each_stage(self):
+        """D&D idea 12 (Monster-Album, switch dungeonalbum): off by default, nothing counted; on, a foe the panel's own fight
+        defeats counts one win in the album of every hero of the fight; after 1 win name, picture, text and saying, after 3
+        the values, after 5 what hurts it more or less; a hero's file keeps only the catalog's foes."""
+        import features
+        import dungeon_album as album
+        self.assertNotIn(album.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_album"], False)
+        r = dungeon.rules()
+        rd, foe = self.encounter(2)
+        g1, g2 = rd["kampf"]["gegner"][:2]
+        for g in (g1, g2):
+            g.update(immun=[], resistenz=[], schwaeche=[], leben=1, max=1, rk=2)
+        hit = lambda g: kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}], Dice(20))[1][0]
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [hit(g1)], [], "", {})
+        self.assertEqual(g1["aus"], "besiegt")
+        self.assertNotIn("album", rd["plaetze"][self.host]["held"])               # switch off: nothing counted
+        helpers.keep_chat(self, "dungeon_album")
+        helpers.set_config(dungeon_album=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.apply(dungeon, r, rd, [hit(g2)], [], "", {})
+        self.assertIn("dungeon: album | stufe 1", out.getvalue())
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual(h["album"], {foe["id"]: 1})
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["album"], {foe["id"]: 1})   # every hero of the fight
+        e = album.view(dungeon, r, rd, h, "de")[0]
+        self.assertEqual((e["name"], e["stufe"], e["naechste"]), (foe["name"][0], 1, 3))
+        self.assertEqual(e["sage"], (foe.get("sage") or ["", ""])[0])
+        self.assertNotIn("werte", e)
+        rd["kampf"] = {"helden": [self.host]}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            album.win(dungeon, rd, foe["id"])
+            album.win(dungeon, rd, foe["id"])
+        self.assertEqual(out.getvalue().count("dungeon: album | stufe 2"), 1)
+        e = album.view(dungeon, r, rd, h, "en")[0]
+        self.assertEqual((e["name"], e["stufe"], e["werte"]["leben"]), (foe["name"][1], 2, foe["leben"]))
+        self.assertNotIn("resistenz", e)
+        with contextlib.redirect_stdout(io.StringIO()):
+            album.win(dungeon, rd, foe["id"])
+            album.win(dungeon, rd, foe["id"])
+        e = album.view(dungeon, r, rd, h, "de")[0]
+        self.assertEqual((e["stufe"], e["naechste"]), (3, 0))
+        self.assertTrue({"resistenz", "immun", "schwaeche", "zustaende"} <= set(e))
+        self.assertEqual(rd["plaetze"][self.gp]["held"]["album"], {foe["id"]: 1})   # only the fight's heroes
+        # the hero's file: only the catalog's foes and whole numbers
+        x = dict(copy.deepcopy(h), album={foe["id"]: 5, "kein_gegner": 3, "x": True})
+        self.assertEqual(dungeon.fix_hero(r, x)["album"], {foe["id"]: 5})
+        self.assertEqual(dungeon.fix_hero(r, dict(copy.deepcopy(h), album="viel"))["album"], {})
+        # through the view: the own hero's album only
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.host]["held"]["album"] = {foe["id"]: 3}
+            d["runden"][self.rid]["plaetze"][self.gp]["held"].pop("album", None)
+            dungeon._write(d)
+        self.assertEqual(dungeon.view(self.rid, self.host)["album"][0]["stufe"], 2)
+        self.assertEqual(dungeon.view(self.rid, self.gp)["album"], [])
+        self.assertGreaterEqual(album.for_live()["eintraege"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("['album','🐉'", f.read())
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""
