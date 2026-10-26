@@ -7008,6 +7008,113 @@ class Fight(Turns):
         kampf.end(dungeon, r, rd, ep)
         self.assertTrue(rd["log"][-1]["boss"])
 
+    def test_critical_and_fumble_tables(self):
+        """D&D idea 2 (Krit- und Patzer-Tabellen, switch dungeonkrit): off by default; on, a natural 20 rolls a d12 on
+        the table of its kind of damage and a natural 1 on the fumble table, the panel puts the line on the attack and the
+        state for its turns on the foe (no blow, disadvantage, bleeding, easier to hit) or on the hero; the states end
+        with their turns or with the fight; live counts both."""
+        import features
+        r = dungeon.rules()
+        self.assertNotIn(kampf.KRIT, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_krit"], False)
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g.update(immun=[], resistenz=[], schwaeche=[], leben=999, max=999)
+        h = rd["plaetze"][self.host]["held"]
+        h.pop("zust", None)
+        h["an"]["haupthand"] = dungeon.item(r, "langschwert")
+        p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]
+        self.assertTrue(x["krit"])
+        self.assertNotIn("krit_tabelle", x)                                       # switch off: no table
+        helpers.keep_chat(self, "dungeon_krit")
+        helpers.set_config(dungeon_krit=True)
+        n0 = dungeon._day.counts()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]               # then always the highest: 12 on the d12
+        row = next(y for y in r["ideen"]["krit"][x["art"] or "wucht"] if y["w"] == 12)
+        self.assertEqual((x["krit_tabelle"], x["tabelle_w"], x["krit_zustand"]), (row["t"][0], 12, {"id": row["zustand"], "zuege": row["zuege"]}))
+        self.assertIn("dungeon: kampf | krit tabelle | 12", out.getvalue())
+        self.assertEqual(dungeon._day.counts()["krit_gewuerfelt"], n0["krit_gewuerfelt"] + 1)
+        self.assertEqual(dungeon.roll_facts(r, rd, [], [dict(x, beleg="b1")], [])[0][0]["kritisch"], row["t"][0])   # the line as data for the narration
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertEqual(g["zust"], [{"id": row["zustand"], "bis": rd["zug"] + row["zuege"]}])
+        self.assertEqual(next(e for e in reversed(rd["log"]) if e["art"] == "angriff")["krit_tabelle"], row["t"][0])
+        self.assertIn(kampf._zname(r, rd, row["zustand"]), kampf.view(dungeon, r, rd, host=False)["gegner"][0]["zust"])
+        # the foe's states work by fixed rules
+        g["zust"] = [{"id": "betaeubt", "bis": rd["zug"] + 1}]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertFalse([y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(10)) if y.get("k") == g["k"]])   # no blow
+        self.assertIn("dungeon: kampf | gegner setzt aus", out.getvalue())
+        self.assertEqual(kampf.attacks(dungeon, r, rd, [p], Dice(10, 10))[1][0]["vt"], "vorteil")                 # easier to hit
+        g["zust"] = [{"id": "vergiftet", "bis": rd["zug"] + 1}]
+        self.assertEqual(next(y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(10, 10)) if y.get("k") == g["k"])["vt"], "nachteil")
+        g["zust"] = [{"id": "blutend", "bis": rd["zug"] + 1}]
+        z = [y for y in kampf.foes_turn(dungeon, r, rd, [], Dice(10, 10)) if y.get("gegner_schaden")]
+        self.assertEqual([y["gegner_schaden"] for y in z], ["blutend"])
+        self.assertTrue(1 <= z[0]["schaden"] <= kampf.BRENNT)
+        life = g["leben"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.apply(dungeon, r, rd, [], z, "", {})
+        self.assertEqual(g["leben"], life - z[0]["schaden"])
+        self.assertIn("dungeon: kampf | gegner zustand", out.getvalue())
+        self.assertEqual(kampf.zug_facts(r, rd, z[0])["schaden"], z[0]["schaden"])
+        rd["zug"] += 2                                                             # its turns are over: it goes
+        kampf.expire(dungeon, rd)
+        self.assertNotIn("zust", g)
+        # a fumble: a line of the melee table, its state on the hero
+        with contextlib.redirect_stdout(io.StringIO()):
+            x = kampf.attacks(dungeon, r, rd, [p], Dice(1, 9))[1][0]
+        row = next(y for y in r["ideen"]["patzer"]["nahkampf"] if y["w"] == x["tabelle_w"])
+        self.assertEqual((x["treffer"], x["patzer_tabelle"]), (False, row["t"][0]))
+        self.assertEqual(dungeon._day.counts()["patzer_gewuerfelt"], n0["patzer_gewuerfelt"] + 1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertEqual([y["id"] for y in h.get("zust") or []], [row["zustand"]] if row.get("zustand") else [])
+        g["zust"] = [{"id": "liegend", "bis": rd["zug"] + 3}]
+        kampf.end(dungeon, r, rd, {})
+        self.assertNotIn("zust", h)                                                # every state ends with the fight
+        self.assertIn("krit_gewuerfelt", dungeon.for_live())
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("e.krit_tabelle||e.patzer_tabelle", js)
+        self.assertIn("g.zust||[]", js)
+
+    def test_the_round_two_tables_by_fixed_rules(self):
+        """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
+        „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""
+        r = dungeon.rules()
+        self.assertEqual(next(x for x in r["gegenstaende"] if x["id"] == "fackel")["licht"], -1)
+        t = lambda s_: [s_, s_]
+        good = {"knapp": [{"id": "laerm_1", "von": 1, "bis": 10, "art": "laerm", "t": t("Laut."), "kinder": True},
+                          {"id": "gold_1", "von": 11, "bis": 20, "art": "gold", "t": t("Teuer.")}],
+                "requisiten": [{"id": "fass", "name": t("Fass"), "zeichen": "🛢", "arten": [r["ortsarten"][0]["id"]], "wirkung": "deckung"}],
+                "wuensche": {"alle": [{"id": "w1", "t": t("Heim.")}]},
+                "gefaehrte_werte": [{"stufe": s_, "leben": 9, "ruestung": 12, "angriff": 3, "schaden": 6, "schaden_plus": 1, "sold": 10} for s_ in range(1, 11)],
+                "gefaehrten": [{"id": "grete", "welt": "fantasy", "name": t("Grete"), "satz": t("Mit Speer."), "wert": "staerke"}],
+                "gefaehrten_kinder": [{"id": "pip", "name": t("Pip"), "satz": t("Ein Vogel.")}]}
+        ok = dict(r, ideen=dict(r.get("ideen") or {}, **good))
+        self.assertEqual(dungeon.check_rules(ok), [])
+        for teil, bad in (("knapp", [dict(good["knapp"][0], bis=9), good["knapp"][1]]),                        # a gap
+                          ("knapp", [dict(good["knapp"][0], kinder=False), good["knapp"][1]]),                  # no mild price
+                          ("knapp", [good["knapp"][0], dict(good["knapp"][1], kinder=True)]),                   # gold at a children's table
+                          ("requisiten", [dict(good["requisiten"][0], wirkung="explodiert")]),
+                          ("requisiten", [dict(good["requisiten"][0], arten=["mond"])]),
+                          ("wuensche", {"fantasy": good["wuensche"]["alle"]}),
+                          ("wuensche", {"alle": [{"id": "w1", "t": t("x" * 161)}]}),
+                          ("gefaehrte_werte", good["gefaehrte_werte"][:9]),
+                          ("gefaehrte_werte", [dict(x, sold=-1) for x in good["gefaehrte_werte"]]),
+                          ("gefaehrten", [dict(good["gefaehrten"][0], wert="glueck")]),
+                          ("gefaehrten_kinder", [{"id": "pip", "name": t("Pip")}])):
+            self.assertTrue([e for e in dungeon.check_rules(dict(ok, ideen=dict(ok["ideen"], **{teil: bad}))) if e.startswith("ideen." + teil)], (teil, bad))
+        cat = {x["id"]: x for x in r["gegenstaende"]}
+        for item, want in ((dict(cat["fackel"], licht=4), False), (dict(cat["fackel"], licht=0), True),
+                           (dict(cat["langschwert"], licht=4), True), (dict(cat["fackel"], licht=dungeon.LICHT_MAX + 1), True)):
+            bad = dungeon.merge(dungeon._base_rules(), {"gegenstaende": [item]})
+            self.assertIs(bool([e for e in dungeon.check_rules(bad) if "licht" in e]), want, item)
+
     def test_a_whole_fight_through_the_turns(self):
         r = dungeon.rules()
         rd, foe = self.encounter()

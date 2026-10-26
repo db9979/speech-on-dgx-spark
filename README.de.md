@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.099** KI-Dungeon-Master: Krit- und Patzer-Tabellen, eine 20 oder 1 im Kampf würfelt eine Zeile mit Folge für Gegner oder Held, dazu die Prüfregeln für die Inhalte der D&D-Ideen Runde 2
 - **V01.1.098** KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke und Fackel im Gewölbe
 - **V01.1.097** KI-Dungeon-Master: die Karte legt je Raum und Ort 2 bis 3 Requisiten für den Kampf fest (Umgebung nutzen); Reise-Wege nennen ihre Landschaft aus der Landschafts-Tabelle
 - **V01.1.096** KI-Dungeon-Master: Pause überall sichtbar, in den Rundenlisten von Web, App und CarPlay, als Leiste am Tisch, als Mitteilung an die Mitspieler, im Auto und in Live
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.092** KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
 - **V01.1.091** KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
 - **V01.1.090** KI-Dungeon-Master: Inhalte der D&D-Ideen im SRD-Katalog: Krit-Tabellen für 13 Schadensarten, milde Patzer, Nachtwachen und Reise-Ereignisse für 13 Landschaften, 60 Lagerfeuer-Fragen, Reise-Rollen, Narben mit Pflastern für den Kindertisch und eine Sage für jeden der 268 Gegner
-- **V01.1.089** Hilfsmodell erkennt Angriffe und schreibt kurze Texte
 
 
 

@@ -410,7 +410,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, richter_ok=0, richter_neu=0, richter_aus=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -442,6 +442,7 @@ def _base_rules(srd=True):
     return dict(r, **dungeon_karte.tables())
 
 
+LICHT_MAX = 20              # a light of the catalog burns at most this many rooms („licht“, the map thread counts them)
 _rules = {"key": None, "r": None}
 LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte") + dungeon_karte.LISTS + LEER_OK
 
@@ -594,6 +595,8 @@ def check_rules(r):
         need("kg" not in x or isinstance(x["kg"], (int, float)) and not isinstance(x["kg"], bool) and 0 <= x["kg"] <= 60,
              f"gegenstaende {x.get('id')}: kg 0 bis 60")
         need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
+        need("licht" not in x or x.get("art") == "werkzeug" and (_int(x["licht"], -1, -1) or _int(x["licht"], 1, LICHT_MAX)),   # rooms it burns, -1 never goes out
+             f"gegenstaende {x.get('id')}: licht nur bei werkzeug, -1 (brennt immer) oder 1 bis {LICHT_MAX} Räume")
         need(x.get("art") != "schatz" or x.get("klasse") in SCHATZ and "preis" not in x and "seltenheit" not in x,
              f"gegenstaende {x.get('id')}: schatz mit klasse ({', '.join(SCHATZ)}), ohne preis und seltenheit")
         need("klasse" not in x or x.get("art") == "schatz", f"gegenstaende {x.get('id')}: klasse nur bei schatz")
@@ -3659,7 +3662,8 @@ def roll_facts(r, rd, wuerfe, hits, zuege):
                for w in wuerfe]
     facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
                  "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
-                 **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {})}
+                 **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {}),
+                 **({"kritisch": x["krit_tabelle"]} if x.get("krit_tabelle") else {}), **({"patzer": x["patzer_tabelle"]} if x.get("patzer_tabelle") else {})}
                 for x in hits]
     facts_z = [dict(kampf.zug_facts(r, rd, x), **({"beleg": x["beleg"]} if x.get("beleg") else {})) for x in zuege]
     return facts_w, facts_z
@@ -5481,7 +5485,7 @@ def for_live():
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
-                                 "richter_ok", "richter_neu", "richter_aus")},
+                                 "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt")},
             "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage", "regel_neuer_ort")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 

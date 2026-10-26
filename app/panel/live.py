@@ -1863,6 +1863,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
                         + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung, Frage oder neuem Ort nachgebessert" if dgn.get("erz_regeln") else "")
                         + (f" · heute {dgn['neu_erzaehlt']} Szenen nach einer Fehler-Meldung neu erzählt" if dgn.get("neu_erzaehlt") else "")
+                        + (f" · heute {dgn.get('krit_gewuerfelt', 0)} Krit- und {dgn.get('patzer_gewuerfelt', 0)} Patzer-Tabellen gewürfelt"
+                           if dgn.get("krit_gewuerfelt") or dgn.get("patzer_gewuerfelt") else "")
                         + (f" · Richter heute {dgn.get('richter_ok', 0)} ok, {dgn.get('richter_neu', 0)} neu geschrieben, {dgn.get('richter_aus', 0)} ohne Antwort"
                            if dgn.get("richter_ok") or dgn.get("richter_neu") or dgn.get("richter_aus") else "")
                         + (f" · {dgn['neu_laeuft']} Szenen werden gerade neu erzählt" if dgn.get("neu_laeuft") else "")

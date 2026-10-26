@@ -283,6 +283,10 @@ FEATURES = (
     # probability of a contradiction, the panel writes anew from a fixed threshold; needs Einordnung mit Wahrscheinlichkeit
     F("dungeonrichter", "Dungeon-Richter", "Dungeon judge", "data", ("dungeon_richter",), parent="dungeon",
       me="dmbox", guide="dungeonrichter"),
+    # Krit- und Patzer-Tabellen (dungeon_kampf.KRIT, D&D idea 2): a critical hit or a natural 1 rolls a d12 on a fixed
+    # table (dungeon_srd.json „ideen“), its state for 1 to 3 turns; the model only tells the line
+    F("dungeonkrit", "Krit- und Patzer-Tabellen", "Critical and fumble tables", "data", ("dungeon_krit",), parent="dungeon",
+      me="dmbox", guide="dungeonkrit"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

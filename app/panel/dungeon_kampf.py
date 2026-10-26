@@ -105,6 +105,7 @@ WURF_WORTE = ("wirf", "werf", "wurf", "schleuder", "throw", "hurl", "toss")   # 
 RETTUNG = 10               # a state's save: this + a quarter of the foe's level
 GEIST = ("bezaubert", "veraengstigt")   # states of the mind: saved with Weisheit, the rest with Konstitution
 BRENNT = 4                 # schaden_pro_zug: 1W4 at each of the foes' turns
+KRIT = "dungeonkrit"       # the switch „Krit- und Patzer-Tabellen“ (D&D idea 2, features.py) for the round's host
 BOSS_LEBEN = 0.5           # a boss: its life times 1 + this per hero beyond the first
 BOSS_PHASE = 2             # a boss at half life: this much more to hit, once
 
@@ -480,6 +481,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
         if "schwer" in eig and h["werte"].get("staerke", 10) < SCHWER_STAERKE:
             vt = "" if vt == "vorteil" else "nachteil"
         vt = _state_vt(r, h, vt, "angriff")
+        if foe_has(r, rd, g, "vorteil_gegen"):   # a foe on the ground, blinded … by a critical hit (D&D idea 2)
+            vt = "" if vt == "nachteil" else "vorteil"
         if blocked(r, h):                     # a state that takes the turn (gelähmt, betäubt …): no attack
             out.append({"pid": p["pid"], "name": h["name"], "ziel": g["k"], "gegner": g["name"], "mit": mit, "wert": wert, "w": 0,
                         "ws": [], "vt": "", "bonus": 0, "gesamt": 0, "rk": g["rk"], "treffer": False, "krit": False, "schaden": 0,
@@ -522,8 +525,50 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
                     "schaden": n, "faellt": hit and life[g["k"]] <= 0, "art": art, "wirkt": wirkt,
                     "eig": [x for x in eig if x != "wurf" or wirft], **({"mut": True} if mut else {}),
                     **({"extra": extra} if extra else {}), **({"raub": raub} if raub else {}), **({"glueck": True} if gl else {}),
-                    **({"echt": True} if hand and hand.used(p["pid"]) else {})})
+                    **({"echt": True} if hand and hand.used(p["pid"]) else {}),
+                    **table(dm, r, rd, krit and hit, w == 1 and not krit, art, bool(spell), wirft or wert == "geschick" and "finesse" not in eig, rng)})
     return rest, out
+
+
+def tables_on(rd):
+    """The host's admin switch for the critical and fumble tables (D&D idea 2)."""
+    import features
+    return bool(rd.get("owner")) and features.allowed(KRIT, rd["owner"])
+
+
+def table(dm, r, rd, krit, patzer, art, spell, fern, rng):
+    """D&D idea 2: a critical hit rolls a d12 on the table of its kind of damage (krit), a natural 1 on the fumble table
+    of melee, ranged or spell (patzer, mild); the line as data for the narration, a state of the catalog for its turns:
+    on the foe (krit_zustand, apply) or on the hero (patzer_zustand). Nothing without the switch or a table."""
+    i = r.get("ideen") or {}
+    if not (krit or patzer) or not tables_on(rd):
+        return {}
+    rows = (i.get("krit") or {}).get(art or "wucht") if krit else (i.get("patzer") or {}).get("zauber" if spell else "fernkampf" if fern else "nahkampf")
+    if not rows:
+        return {}
+    import dungeon_ideen                 # the table's die (dungeon_ideen imports this module)
+    w = rng.randint(1, dungeon_ideen.KRIT_W)
+    e = next((x for x in rows if x["w"] == w), None)
+    if not e:
+        return {}
+    li = 1 if rd.get("lang") == "en" else 0
+    k = "krit" if krit else "patzer"
+    dm._day.bump(k + "_gewuerfelt")
+    print(f"dungeon: kampf | {k} tabelle | {w}", flush=True)
+    return {k + "_tabelle": e["t"][li], "tabelle_w": w, **({k + "_zustand": {"id": e["zustand"], "zuege": e["zuege"]}} if e.get("zustand") else {})}
+
+
+def st(rd, who, z):
+    """A state from the tables (D&D idea 2) on a foe or a hero for its turns; one of a kind at a time."""
+    if not who or not z or z["id"] in {x["id"] for x in who.get("zust") or []}:
+        return
+    who.setdefault("zust", []).append({"id": z["id"], "bis": rd.get("zug", 0) + z["zuege"]})
+
+
+def foe_has(r, rd, g, wirkung):
+    """Whether a foe has a state in force with this wirkung (from a critical hit, D&D idea 2)."""
+    zs = {z["id"]: z for z in r.get("zustaende") or []}
+    return any(wirkung in zs.get(x["id"], {}).get("wirkung", ()) for x in g.get("zust") or [] if x.get("bis", 0) >= rd.get("zug", 0))
 
 
 def oil(dm, r, rd, pid, h, c):
@@ -628,10 +673,15 @@ def foes_turn(dm, r, rd, hits, rng=None):
     for g in up(rd):
         if g["k"] in down:
             continue
+        if foe_has(r, rd, g, "kein_zug"):          # stunned, unconscious … by a critical hit: no blow (D&D idea 2)
+            print("dungeon: kampf | gegner setzt aus", flush=True)
+            continue
         for zug in range(blows(g)):
             by = [x["pid"] for x in hits if x["ziel"] == g["k"] and x["treffer"]]
             pid, h = (next(((q, hh) for q, hh in standing if by and q == by[-1]), None) if not zug else None) or standing[rng.randrange(len(standing))]
             vt = _state_vt(r, h, "", "gegen")
+            if foe_has(r, rd, g, "nachteil_angriff"):
+                vt = "" if vt == "vorteil" else "nachteil"
             if any(x["ziel"] == g["k"] and x["pid"] == pid and x["treffer"] and "reichweite" in x.get("eig", ()) for x in hits):
                 vt = "" if vt == "vorteil" else "nachteil"    # kept at a distance by a reach weapon
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
@@ -651,6 +701,10 @@ def foes_turn(dm, r, rd, hits, rng=None):
                 x["rettung"] = {"zustand": z, "wert": wert, "w": rw, "gesamt": rw + dm.total(r, h, wert), "gegen": dc,
                                 "ok": rw + dm.total(r, h, wert) >= dc}
             out.append(x)
+    for g in up(rd):                              # a foe bleeding or burning from a critical hit (D&D idea 2)
+        if g["k"] not in down and foe_has(r, rd, g, "schaden_pro_zug"):
+            zid = next(x["id"] for x in g["zust"] if "schaden_pro_zug" in zs.get(x["id"], {}).get("wirkung", ()))
+            out.append({"k": g["k"], "gegner_schaden": zid, "gegner": g["name"], "pid": "", "name": "", "schaden": rng.randint(1, BRENNT)})
     for pid, h in standing:                       # burning, bleeding: every turn of the foes
         for z in _states(r, h):
             if "schaden_pro_zug" in z["wirkung"]:
@@ -662,6 +716,8 @@ def zug_facts(r, rd, x):
     """One of the foes' turn for the model: an attack (with a state's save), or a state's damage."""
     if x.get("zustand_schaden"):
         return {"zustand": _zname(r, rd, x["zustand_schaden"]), "trifft": x["name"], "schaden": x["schaden"]}
+    if x.get("gegner_schaden"):
+        return {"zustand": _zname(r, rd, x["gegner_schaden"]), "trifft": x["gegner"], "schaden": x["schaden"]}
     rw = x.get("rettung")
     return {"gegner": x["gegner"], "greift_an": x["name"], "trifft": x["treffer"], "schaden": x["schaden"],
             **({"zustand": _zname(r, rd, rw["zustand"]), "gerettet": rw["ok"]} if rw else {})}
@@ -704,7 +760,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             continue
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
-                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []), **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "beleg") if x.get(k)})
+                sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []),
+                **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "krit_tabelle", "patzer_tabelle", "beleg") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
         if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
             learn(rd, g["id"], [x["art"]])
@@ -715,6 +772,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if any(e.get("oel") for e in x.get("extra") or ()) and held:
             used_oil(dm, r, rd, x["pid"], held)
         was = hurt(g, x["schaden"]) if x["treffer"] else ""
+        st(rd, g, x.get("krit_zustand") if x["treffer"] and not was == "besiegt" else None)   # D&D idea 2: the critical hit's state
+        st(rd, held, x.get("patzer_zustand") if held and not dm.zustand(held) else None)    # the fumble's, on the hero
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
             dm._day.bump("besiegt")
@@ -726,6 +785,15 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if x.get("zustand_schaden") and x["pid"] in seats and not dm.zustand(seats[x["pid"]]["held"]):
             dm._log(rd, "zustand", pid=x["pid"], name=x["name"], zustand=_zname(r, rd, x["zustand_schaden"]), schaden=x["schaden"])
             folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": _zname(r, rd, x["zustand_schaden"])})
+            continue
+        if x.get("gegner_schaden"):              # a foe bleeds or burns from a critical hit (D&D idea 2)
+            g = by.get(x["k"])
+            if g and not g["aus"]:
+                dm._log(rd, "zustand", name=g["name"], gegner=g["name"], zustand=_zname(r, rd, x["gegner_schaden"]), schaden=x["schaden"])
+                if hurt(g, x["schaden"]) == "besiegt":
+                    dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
+                    dm._day.bump("besiegt")
+                print("dungeon: kampf | gegner zustand", flush=True)
             continue
         g = by.get(x["k"])
         if not g or g["aus"] or x["pid"] not in seats or dm.zustand(seats[x["pid"]]["held"]):
@@ -787,7 +855,12 @@ def _zname(r, rd, zid):
 
 
 def expire(dm, rd, all_=False):
-    """The heroes' states whose turns are over go (all of them when the fight ends)."""
+    """The heroes' and the foes' states whose turns are over go (all of them when the fight ends)."""
+    for g in (rd.get("kampf") or {}).get("gegner") or []:
+        if g.get("zust"):
+            g["zust"] = [] if all_ else [x for x in g["zust"] if x.get("bis", 0) >= rd.get("zug", 0)]
+            if not g["zust"]:
+                g.pop("zust")
     for _, p in dm.seated(rd):
         h = p["held"]
         if h.get("zust"):
@@ -850,7 +923,8 @@ def view(dm, r, rd, host=True):
     lang, cat = "en" if rd.get("lang") == "en" else "de", dm._by(r, "gegner")
     out = [dict(card(dm, r, rd, g["id"], lang) if g["id"] in cat else {}, k=g["k"], id=g["id"], name=g["name"], zeichen=g["zeichen"],
                 leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], phase=g.get("phase", 1), bild=_picture(r, rd, g["id"], have),
-                lage=lage(g)[0], lage_name=lage(g)[1][1 if lang == "en" else 0]) for g in k["gegner"]]
+                lage=lage(g)[0], lage_name=lage(g)[1][1 if lang == "en" else 0],
+                **({"zust": [_zname(r, rd, x["id"]) for x in g["zust"] if x.get("bis", 0) >= rd.get("zug", 0)]} if g.get("zust") else {})) for g in k["gegner"]]
     if not host:
         out = [{k_: v for k_, v in x.items() if k_ not in ("leben", "max")} for x in out]
     return {"gegner": out, "gefahr": k["gefahr"], "stehen": len(up(rd))}

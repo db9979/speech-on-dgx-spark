@@ -2,6 +2,9 @@
 umsetzten kannst.“; the content comes from the thread „DnDAppFiles für den Dungeon-Master“, own texts, the sources were
 only ideas): critical hits and fumbles (idea 2), landscapes with night watches and question cards for a rest (4),
 travel roles and travel events (9), scars (8), and a saying on every foe (12, the field „sage“ of the catalog's foes).
+Round 2 (Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): the prices of a near miss (knapp, idea 1),
+the props of a room or place (requisiten, 3), heart's wishes (wuensche, 7) and companions (gefaehrte_werte, gefaehrten,
+gefaehrten_kinder, 9).
 
 All of it stands in dungeon_srd.json under „ideen“ (and „sage“ at the foes); this module checks it by fixed rules
 (check_rules, part of dungeon.check_rules, so a broken table never reaches a round). The panel rolls on these tables,
@@ -12,7 +15,8 @@ import re
 import dungeon_kampf as kampf
 
 TEILE = ("krit", "patzer", "landschaften", "nachtwachen", "fragekarten", "reise_rollen", "reise_ereignisse", "narben",
-         "narben_kinder", "narben_sprueche")
+         "narben_kinder", "narben_sprueche", "knapp", "requisiten", "wuensche", "gefaehrte_werte", "gefaehrten",
+         "gefaehrten_kinder")
 PATZER = ("nahkampf", "fernkampf", "zauber")
 KRIT_W = 12                 # a d12 for a critical hit or a fumble
 NARBEN_W = 20               # a d20 for a scar and a night watch
@@ -20,9 +24,17 @@ ZUEGE = (1, 3)              # a state from a critical hit lasts this many turns
 WACHE = ("ruhig", "geraeusch", "besuch", "ueberfall")
 REISE = ("ruhig", "ausgeruht", "hungrig", "verirrt", "ueberrascht")
 FOLGE_REISE = ("ueberrascht", "hungrig", "verirrt")
+KNAPP_W = 20                # a d20 for the price of a near miss
+KNAPP = ("laerm", "zeit", "nachteil", "schaden", "werkzeug", "gold", "nsc")
+KNAPP_KIND = ("laerm", "zeit")    # the mild prices, the only ones at a children's table
+WIRKUNGEN = ("schaden_gruppe", "umwerfen", "deckung", "vorteil", "fluchtweg")   # what a prop does, fixed rules
+WUNSCH_MAX = 160
+STUFEN = 10                 # a companion's values per level 1 to STUFEN
+GEF_WERTE = {"leben": (1, 200), "ruestung": (8, 25), "angriff": (0, 15), "schaden": (2, 12), "schaden_plus": (0, 10), "sold": (0, 10000)}
 TEXT_MAX = 200              # a line of a table, per language
 SAGE_MAX = 200
 _ID = re.compile(r"[a-z0-9_]{1,24}")
+NAME_MAX = 40
 
 
 def _pair(x, n=TEXT_MAX):
@@ -122,4 +134,39 @@ def check_rules(r):
     if "narben_sprueche" in i:
         need(isinstance(i["narben_sprueche"], list) and i["narben_sprueche"] and all(_pair(x) and ("{narbe}" in x[0]) == ("{narbe}" in x[1]) for x in i["narben_sprueche"]),
              "ideen.narben_sprueche: Liste von [deutsch, englisch], {narbe} in beiden Sprachen oder in keiner")
+    welten_alle = welten | {"alle"}
+    if "knapp" in i:
+        k = i["knapp"]
+        need(_cover(k, KNAPP_W) and _ids(k) and all(x.get("art") in KNAPP and _pair(x.get("t")) and ("kinder" not in x or x["kinder"] is True and x["art"] in KNAPP_KIND)
+                                                    for x in k) and any(x.get("kinder") for x in k),
+             f"ideen.knapp: W{KNAPP_W} lückenlos mit id, von, bis, art aus {', '.join(KNAPP)}, t und kinder: true nur bei {', '.join(KNAPP_KIND)} (mindestens einmal)")
+    if "requisiten" in i:
+        q = i["requisiten"]
+        karte = {x.get(f) for t_ in ("raeume", "ortsarten") for x in r.get(t_) or [] if isinstance(x, dict) for f in ("id", "art")} - {None}
+        need(_ids(q) and all(_pair(x.get("name"), NAME_MAX) and x.get("wirkung") in WIRKUNGEN and isinstance(x.get("arten"), list) and x["arten"]
+                             and (not karte or set(x["arten"]) <= karte) and ("zeichen" not in x or isinstance(x["zeichen"], str) and 0 < len(x["zeichen"]) <= 4) for x in q),
+             f"ideen.requisiten: id, name [deutsch, englisch], arten aus den Orten und Räumen der Karte, wirkung aus {', '.join(WIRKUNGEN)}, zeichen höchstens 4 Zeichen")
+    if "wuensche" in i:
+        w = i["wuensche"]
+        need(isinstance(w, dict) and "alle" in w and set(w) <= welten_alle and all(isinstance(v, list) and v and all(isinstance(x, dict) and _pair(x.get("t"), WUNSCH_MAX) for x in v) for v in w.values())
+             and _ids([x for v in w.values() for x in v]),
+             f"ideen.wuensche: alle und je Welt eine Liste von {{id, t}}, t je höchstens {WUNSCH_MAX} Zeichen, jede id einmal")
+    if "gefaehrte_werte" in i:
+        g = i["gefaehrte_werte"]
+        need(isinstance(g, list) and sorted(x.get("stufe") for x in g if isinstance(x, dict) and _int(x.get("stufe"), 1, STUFEN)) == list(range(1, STUFEN + 1))
+             and all(_int(x.get(k_), *lim) for x in g for k_, lim in GEF_WERTE.items()),
+             "ideen.gefaehrte_werte: Stufe 1 bis %d je einmal mit %s" % (STUFEN, ", ".join(f"{k_} {lo} bis {hi}" for k_, (lo, hi) in GEF_WERTE.items())))
+    if "gefaehrten" in i:
+        g = i["gefaehrten"]
+        need(_ids(g) and all(x.get("welt") in welten_alle and _pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) and x.get("wert") in werte for x in g),
+             "ideen.gefaehrten: id, welt aus den Welten, name, satz und wert aus den Werten")
+    if "gefaehrten_kinder" in i:
+        g = i["gefaehrten_kinder"]
+        need(_ids(g) and all(_pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) for x in g), "ideen.gefaehrten_kinder: id, name und satz")
     return err
+
+
+def _ids(rows):
+    """A non-empty list of entries, each with its own id."""
+    return (isinstance(rows, list) and bool(rows) and all(isinstance(x, dict) and isinstance(x.get("id"), str) and _ID.fullmatch(x["id"]) for x in rows)
+            and len({x["id"] for x in rows}) == len(rows))

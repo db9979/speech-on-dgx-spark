@@ -3635,6 +3635,13 @@
 "titel": "Dungeon-Master: Töne für knapp daneben, Ansage, Alarm, Fackel",
 "text": "Geräusche am Tisch an. A: Eine Probe um 1 oder 2 verfehlen (sobald der Haupt-Thread „knapp daneben“ hat): die Würfelkarte zeigt „Knapp daneben“ und wackelt kurz, zwei fallende Töne. B: Ein Gegner kündigt etwas an: tiefes Horn. C: Angriff mit Krit- oder Patzer-Tabelle: heller Lauf oder drei fallende Töne. D: Im Gewölbe (sobald der Karten-Thread Alarm und Fackel hat): Alarm auf 3 eine Glocke, auf 6 die Sturmglocke; mit Fackel leises Knistern, geht sie aus ein Puff, dann dunkles Rauschen mit Tropfen.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P544",
+"v": 1099,
+"titel": "Dungeon-Master: Krit- und Patzer-Tabellen",
+"text": "Funktionen → KI-Dungeon-Master → Krit- und Patzer-Tabellen einschalten und kämpfen, bis ein Held eine 20 oder eine 1 würfelt. A: Am Angriff im Verlauf steht eine Zeile mit 💥 (Krit) oder 🙃 (Patzer), und die Erzählung greift sie auf. B: Bringt die Zeile einen Zustand, steht er in der Kampfleiste beim Gegner (oder beim Helden) und endet nach seinen Zügen; ein betäubter Gegner greift nicht an.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
