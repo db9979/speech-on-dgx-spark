@@ -5629,6 +5629,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Herzenswunsch (V01.1.120, D&D-Ideen Runde 2, Idee 7, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Herzenswunsch* (chat.dungeon_wunsch, ab Werk aus; dungeon_wunsch.py, eigener Code, Wunschliste je Welt ideen.wuensche vom DnDAppFiles-Thread). Jeder Held kann einen Herzenswunsch tragen (held[\"wunsch\"]): einen aus der Liste seiner Welt oder eigene Worte mit höchstens 160 Zeichen. Neue Türen POST /api/profile/dungeon/{rid}/wunsch (Anmeldung, eigener Platz, CSRF, 1 KB, Rate-Limit dungeonwunsch) und POST /api/dungeon/wunsch (Platz-Link, gleiche Tür wie /api/dungeon/platz); beides leer nimmt den Wunsch weg. Den Wunsch sehen nur der eigene Platz, der Gastgeber als Spielleiter und das Modell (Sichtfilter herzenswunsch im Leck-Test). Je Akt der Geschichte (ohne Geschichte alle 8 Züge) gibt das Panel dem Erzähler höchstens einen Wunsch, die Helden mit offenem Wunsch reihum nach ihren Plätzen: in den Fakten nur der Name (herzenswunsch_von), der Wunsch selbst nur als Spieltext zwischen <<< und >>>. Meldet der Erzähler in wunsch_erfuellt den Helden, zählt das nur nach festen Regeln: der Held dieses Akts, er"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " hat in diesem Zug gehandelt, die Erzählung nennt ihn, der Wunsch ist noch offen. Dann gibt es die Erfahrung eines Akts (ep.akt), und am Tisch steht „💖 Der Herzenswunsch von … hat sich erfüllt.“, nie der Wunsch. Live: heute gesetzt, erfüllt, verworfene Meldungen, abgelehnt. Log dungeon: wunsch | gesetzt | liste|eigen, … | erfuellt, … | verworfen, … | weg, … | abgelehnt | ValueError. Selbsttest Turns.test_hearts_wish_secret_one_per_act_in_turn."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -10998,6 +11014,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Umgebung nutzen (Funktionen → Meine Daten → „Umgebung nutzen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wo gekämpft wird, liegen zwei bis drei Dinge im Raum oder am Ort, etwa ein Kronleuchter, ein Pulverfass, eine dicke Säule oder ein Seil über dem Abgrund."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Herzenswunsch (Funktionen → Meine Daten → „Herzenswunsch“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jeder Held kann einen Herzenswunsch tragen: einen aus der Liste seiner Welt oder in eigenen Worten, höchstens 160 Zeichen."
 },
 {
 "lang": "de",
@@ -19997,6 +20021,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: heart's wish (V01.1.120, D&D ideas round 2, idea 7, Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\"): Admin switch *Features → AI Dungeon Master → Heart's wish* (chat.dungeon_wunsch, off by default; dungeon_wunsch.py, own code, the list of wishes per world ideen.wuensche from the DnDAppFiles thread). Every hero may carry a heart's wish (held[\"wunsch\"]): one of its world's list or own words of at most 160 characters. New doors POST /api/profile/dungeon/{rid}/wunsch (login, own seat, CSRF, 1 KB, rate limit dungeonwunsch) and POST /api/dungeon/wunsch (seat link, same door as /api/dungeon/platz); both empty takes the wish away. Only the own seat, the host as game master and the model see the wish (view filter herzenswunsch in the leak test). Per act of the story (without a story every 8 turns) the panel gives the narrator at most one wish, the heroes with an open wish in turn by their seats: in the facts only the name (herzenswunsch_von), the wish itself only as game text between <<< and >>>. When the narrator reports the hero in wunsch_erfuellt, it counts only by fixed rules: this act's hero, it acted this turn, the narration names it, the wish sti"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ll open. Then there is the experience of an act (ep.akt), and the table shows \"💖 …'s heart's wish has come true.\", never the wish. Live: set, fulfilled, refused reports, refused today. Log dungeon: wunsch | gesetzt | liste|eigen, … | erfuellt, … | verworfen, … | weg, … | abgelehnt | ValueError. Self-test Turns.test_hearts_wish_secret_one_per_act_in_turn."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: telling richly (V01.1.109, Dominik 2026-10-26 \"ausführliche erzählweise ist immer noch kanpp\"): The round's way of telling only raised the upper limit so far. Now the narrator's task also names a minimum length (dungeon.WEISE_MIN: brief none, normal 500, rich 1000 characters, always 300 below the upper limit, erz_min) and a fixed style sentence (WEISE_STIL): for \"rich\" several paragraphs with senses, mood and a moment of its own for every hero who acted, for \"brief\" a few clear sentences. For \"rich\" the panel checks the minimum by a fixed rule (dungeon_erzaehler.judge, fault knapp): too short is told anew once with a fixed hint, then the try stays. Log dungeon: nachbessern | knapp, | bleibt | knapp; counted with the narrator rules. Self-test Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -25174,6 +25214,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Use the surroundings (Features → My data → \"Use the surroundings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Where a fight goes on, two to three things lie in the room or place, such as a chandelier, a powder keg, a thick pillar or a rope over the chasm."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Heart's wish (Features → My data → \"Heart's wish\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every hero may carry a heart's wish: one of its world's list or in own words, at most 160 characters."
 },
 {
 "lang": "en",

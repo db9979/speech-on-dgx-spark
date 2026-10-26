@@ -14,7 +14,7 @@ import json
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
                  "fraktionen_geheim", "quest_geheim", "echt_plaetze")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen", "dungeon_fluestern")   # the admin switches of the secrets below: the self-test turns them on
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen", "dungeon_fluestern", "dungeon_wunsch")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -62,6 +62,11 @@ def _fluester(rd, m):
     rd["fluester"] = {pid: [{"zug": rd.get("zug", 0) - 1, "an": "Bodo", "text": m, "antwort": m, "gold": 0, "verraten": False}]}
 
 
+def _wunsch(rd, m):
+    pid = next(k for k, p in rd["plaetze"].items() if p.get("uid") == rd["owner"])
+    rd["plaetze"][pid]["held"]["wunsch"] = {"t": m, "id": "", "erfuellt": 0}
+
+
 def _quest(rd, m, ort):
     rd["quest"] = {"q_geheim": {"q": "q_geheim", "name": [m, m], "info": "", "wer": None, "hid": None, "ort": ort, "gesehen": False,
                                 "von": "karte", "zug": rd.get("zug", 0)}}
@@ -106,6 +111,7 @@ GEHEIM = {
                         lambda rd, m: rd.update(fremd=[{"k": 1, "sagt": m, "wer": []}])),
     "gefluestert": (("Was ein Platz einer Figur zugeflüstert hat und ihre Antwort", "What a seat whispered to a person and its answer"),
                     {"gastgeber"}, _fluester),
+    "herzenswunsch": (("Der Herzenswunsch eines Helden", "A hero's heart's wish"), {"gastgeber", "modell"}, _wunsch),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

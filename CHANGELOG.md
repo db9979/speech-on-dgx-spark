@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.120** · 2026-10-26 · KI-Dungeon-Master: Herzenswunsch, jeder Held trägt einen geheimen Wunsch, je Akt bekommt der Erzähler einen reihum, wird er wahr, gibt es die Erfahrung eines Akts
 - **V01.1.119** · 2026-10-26 · KI-Dungeon-Master: Flüstern mit einer Figur, einmal je Zug ein Wort nur für den eigenen Platz, die Figur antwortet, Verrat und Geschenk entscheidet das Panel
 - **V01.1.118** · 2026-10-26 · KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung
 - **V01.1.117** · 2026-10-26 · KI-Dungeon-Master: Gegner-Ansagen und Haltung, jeder Gegner sagt seinen nächsten Hieb an, die Helden antworten mit Abwehr oder Ausweichen

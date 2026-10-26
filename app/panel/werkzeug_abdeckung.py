@@ -176,6 +176,7 @@ WITHOUT = {
     "dungeonhelfen": "dungeon_helfen.py: kein Werkzeug, feste Wörter in der Aktion und feste Regeln auf den Würfen des Panels",
     "dungeonnarbennur": "dungeon_narben.py: kein Werkzeug, eine feste Regel des Panels: Wunden ändern nie einen Wert",
     "dungeonkommentar": "dungeon_kommentar.py: kein Werkzeug, das Modell liefert die Zeilen als Daten, das Panel prüft sie mit festen Regeln und entscheidet nie für einen Spieler",
+    "dungeonwunsch": "dungeon_wunsch.py: kein Werkzeug, das Panel wählt den Wunsch des Akts reihum und prüft die Erfüllung mit festen Regeln, das Modell erzählt nur",
     "dungeonfluestern": "dungeon_fluestern.py: kein Werkzeug, das Modell antwortet als Figur nur mit Text, Haltung, Geschenk und Verrat entscheidet das Panel nach festen Regeln",
     "dungeonumgebung": "dungeon_umgebung.py: kein Werkzeug, das Panel erkennt das Ding in der Aktion, würfelt die Probe und rechnet die feste Wirkung, das Modell erzählt nur",
     "dungeonhaltung": "dungeon_haltung.py: kein Werkzeug, das Panel würfelt die Ansagen und rechnet Abwehr und Ausweichen, das Modell erzählt nur",

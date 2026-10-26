@@ -360,6 +360,69 @@ class Turns(Base):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(self.spawned, ["dungeon"])   # everyone acted: the turn closes by the fixed rule
 
+    def test_hearts_wish_secret_one_per_act_in_turn(self):
+        """D&D round 2, idea 7 (Herzenswunsch, switch dungeonwunsch): off by default; on, every hero may carry one secret
+        wish (the world's list or own words); only the own seat, the host and the model see it; per act one wish, the
+        heroes in turn, goes to the narrator only as game text; a fulfilment counts only for that hero, who acted and is
+        named, and gives the experience of an act; the table sees only that it came true."""
+        import features
+        import dungeon_wunsch as wunsch
+        self.assertNotIn(wunsch.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_wunsch"], False)
+        self.assertIn("wunsch_erfuellt", dungeon.SCHEMA_ERZAEHLEN["properties"])
+        url = f"/api/profile/dungeon/{self.rid}/wunsch"
+        x = self.c.post(url, json={"text": "Den Glockenturm erklimmen."})
+        self.assertEqual((x.status_code, x.json()["detail"]), (404, "wunsch aus"))
+        helpers.keep_chat(self, "dungeon_wunsch")
+        helpers.set_config(dungeon_wunsch=True)
+        r = dungeon.rules()
+        wahl = wunsch.choices(r, self.state(self.rid))
+        self.assertTrue(wahl)
+        self.assertEqual(self.c.post(url, json={"text": "x"}).json()["detail"], "wunsch")
+        x = self.c.post(url, json={"text": "Den Glockenturm erklimmen, ganz oben."})
+        self.assertEqual(x.status_code, 200, x.text)
+        self.assertEqual(x.json()["wunsch"]["text"], "Den Glockenturm erklimmen, ganz oben.")
+        g = self.v.post("/api/dungeon/wunsch", json={"code": self.code, "id": wahl[0]["id"]})
+        self.assertEqual(g.status_code, 200, g.text)
+        self.assertEqual(g.json()["wunsch"]["id"], wahl[0]["id"])
+        host = dungeon.view(self.rid, self.host)["wunsch"]
+        self.assertEqual([y["text"] for y in host["andere"]], [wahl[0]["t"][0]])   # the game master sees every wish
+        gast = dungeon.view(self.rid, self.gp)
+        self.assertNotIn("Glockenturm", json.dumps(gast, ensure_ascii=False))   # the others never
+        self.assertNotIn("andere", gast["wunsch"])
+        rd = self.state(self.rid)
+        a, b = rd["plaetze"][self.host]["held"]["name"], rd["plaetze"][self.gp]["held"]["name"]
+        self.assertEqual(wunsch.whose(dungeon, rd)[0], self.host)              # act 1: the first seat
+        self.assertEqual(wunsch.whose(dungeon, dict(rd, zug=1 + wunsch.ZUEGE))[0], self.gp)   # then in turn
+        head = dungeon.facts(r, rd).split("<<<")[0]
+        self.assertIn(f'"herzenswunsch_von": "{a}"', head)
+        self.assertNotIn("Glockenturm", head)                                  # the wish only as game text
+        self.assertIn(f"Herzenswunsch von {a}: Den Glockenturm erklimmen", dungeon.facts(r, rd))
+        self.assertIn("wunsch_erfuellt", dungeon.system_text(r, rd, "erzaehlen"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(wunsch.check(dungeon, rd, a, f"{a} lacht."), "")    # did not act this turn
+            acted = dict(rd, offen={self.host: {"text": "Ich klettere.", "t": 0}})
+            self.assertEqual(wunsch.check(dungeon, acted, b, f"{b} lacht."), "")   # not this act's wish
+            self.assertEqual(wunsch.check(dungeon, acted, a, "Jemand lacht."), "")   # not named
+            self.assertEqual(wunsch.check(dungeon, acted, a, f"{a} lacht."), self.host)
+        self.assertIn("dungeon: wunsch | verworfen", out.getvalue())
+        ep = {self.host: 0, self.gp: 0}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            wunsch.come_true(dungeon, r, rd, self.host, ep)
+            wunsch.come_true(dungeon, r, rd, self.host, ep)                    # once
+        self.assertEqual(ep, {self.host: r["ep"]["akt"], self.gp: 0})
+        self.assertEqual((rd["log"][-1]["art"], rd["log"][-1]["name"]), ("wunsch", a))
+        self.assertNotIn("Glockenturm", json.dumps(rd["log"][-1], ensure_ascii=False))
+        self.assertEqual(wunsch.whose(dungeon, rd)[0], self.gp)                # a fulfilled wish leaves the turn
+        x = self.c.post(url, json={"text": "", "id": ""})
+        self.assertEqual(x.json()["wunsch"]["text"], "")
+        self.assertGreaterEqual(wunsch.for_live()["gesetzt"], 2)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmWunsch(v)", js)
+        self.assertIn("e.art==='wunsch'", js)
+
     def test_whisper_to_a_person_only_for_the_own_seat(self):
         """D&D round 2, idea 5 (Flüstern mit einer Figur, switch dungeonfluestern): off by default; on, a seat whispers
         once a turn to a person of the scene; the model answers as that person, the panel checks it and keeps it only

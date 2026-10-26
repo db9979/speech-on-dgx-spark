@@ -318,6 +318,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
 | `app/panel/dungeon_wappen.py` | KI-Dungeon-Master: Wappen für Gruppe und Fraktionen (D&D-Idee 10 of 2026-10-25, Dominik „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“, plan … |
 | `app/panel/dungeon_warten.py` | KI-Dungeon-Master: the wait between turns made pleasant. |
+| `app/panel/dungeon_wunsch.py` | KI-Dungeon-Master: Herzenswunsch je Held. |
 | `app/panel/dungeon_zufall.py` | KI-Dungeon-Master: Zufallsregeln des Gastgebers. |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
 | `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |

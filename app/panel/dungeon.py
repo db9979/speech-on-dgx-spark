@@ -134,6 +134,7 @@ import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_umgebung as umgebung
 import dungeon_fluestern as fluestern
+import dungeon_wunsch as wunsch
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3119,7 +3120,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
     "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA, "fraktionen": fraktionen.SCHEMA,
-    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA, "helden_sagen": kommentar.SCHEMA, "fremd": sprachen.SCHEMA,
+    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA, "helden_sagen": kommentar.SCHEMA, "fremd": sprachen.SCHEMA, "wunsch_erfuellt": wunsch.SCHEMA,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -3194,6 +3195,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
+    fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3203,7 +3205,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
     if zuege:
         fakten["gegner_zuege"] = zuege
     spieltext = "\n".join([f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names]
-                          + fluestern.betrayed_lines(rd))      # a whisper a person told on (round 2, idea 5), only as game text
+                          + fluestern.betrayed_lines(rd)       # a whisper a person told on (round 2, idea 5), only as game text
+                          + wunsch.game_lines(_me, rd))        # the act's heart's wish (round 2, idea 7), only as game text
     head = json.dumps(fakten, ensure_ascii=False)
     einstieg = f"\n<<<\n{textnorm.defuse(rd['einstieg'])}\n>>>" if rd.get("einstieg") and not bisher else ""
     vorher = (f"\n{VORHER[1 if rd['lang'] == 'en' else 0]}\n<<<\n{textnorm.defuse(rd['vorher'])}\n>>>" if rd.get("vorher") else "")
@@ -3233,7 +3236,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3446,6 +3449,7 @@ def check_story(r, rd, obj):
         out["ooc"].append({"pid": pid, "text": t})
     out["helden"] = kommentar.check(_me, r, rd, obj.get("helden_sagen"), {x["pid"] for x in out["ooc"]})   # the heroes' own lines (2026-10-26)
     out["fremd"] = sprachen.check(_me, r, rd, obj.get("fremd"), out.get("text", ""))   # a greeting in a people's tongue (D&D idea 7)
+    out["wunsch"] = wunsch.check(_me, rd, obj.get("wunsch_erfuellt"), out.get("text", ""))   # a heart's wish come true (round 2, idea 7)
     for n in obj.get("npc") or []:
         name, sagt = plain(n.get("name") if isinstance(n, dict) else "", 40), plain(n.get("sagt") if isinstance(n, dict) else "", NPC_SAGT)
         if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
@@ -3647,6 +3651,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                     print("dungeon: auftrag | zu frueh", flush=True)
                 for pid in ep:
                     ep[pid] += r["ep"]["ziel"]
+        if story.get("wunsch"):                   # a heart's wish come true (round 2, idea 7): the experience of an act
+            wunsch.come_true(_me, r, rd, story["wunsch"], ep)
         if step_act(rd, story.get("akt_fertig")):   # Idee 7: an act of the story done, fixed experience for every hero
             for pid in ep:
                 ep[pid] += r["ep"]["akt"]
@@ -5187,6 +5193,7 @@ def view(rid, pid, now=None):
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
     out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
+    out["wunsch"] = wunsch.view(_me, r, rd, pid, host)          # the own heart's wish; the host every seat's (round 2, idea 7)
     out["fluestern"] = fluestern.view(rd, pid, host)            # the own whispers; the host only that and with whom (round 2, idea 5)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)

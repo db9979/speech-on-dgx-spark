@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["chronik"] = {}
+    try:   # Herzenswunsch (dungeon_wunsch.py): numbers on the game's line
+        import dungeon_wunsch
+        dgn["wunsch"] = dungeon_wunsch.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["wunsch"] = {}
     try:   # Flüstern mit einer Figur (dungeon_fluestern.py): numbers on the game's line
         import dungeon_fluestern
         dgn["fluestern"] = dungeon_fluestern.for_live() if dgn.get("on") else {}
@@ -2025,6 +2030,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("kalender") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
+                        + (f" · heute {dgn['wunsch']['gesetzt']} Herzenswünsche gesetzt, {dgn['wunsch']['erfuellt']} erfüllt, {dgn['wunsch']['verworfen']} Meldungen verworfen, {dgn['wunsch']['abgelehnt']} abgelehnt"
+                           if any((dgn.get("wunsch") or {}).values()) else "")
                         + (f" · heute {dgn['fluestern']['gefluestert']}-mal geflüstert, {dgn['fluestern']['verraten']} verraten, {dgn['fluestern']['geschenkt']} Geschenke, {dgn['fluestern']['stumm']} ohne Antwort, {dgn['fluestern']['abgelehnt']} abgelehnt"
                            if any((dgn.get("fluestern") or {}).values()) else "")
                         + (f" · heute {dgn['umgebung']['proben']}-mal Umgebung genutzt, {dgn['umgebung']['geschafft']} gelungen, {dgn['umgebung']['daneben']} daneben"

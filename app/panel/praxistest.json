@@ -3775,6 +3775,13 @@
 "titel": "Dungeon-Master: Flüstern mit einer Figur",
 "text": "Funktionen → KI-Dungeon-Master → Flüstern mit einer Figur einschalten und eine Runde mit einem Gast spielen, bis eine Figur spricht. A: Unter dem Eingabefeld steht „🤫 Flüstern“; Figur wählen, einen Satz schreiben, „Flüstern“: Die Antwort der Figur steht nur bei dir, 🔊 liest sie dein Gerät vor. B: Der Gast sieht nichts davon; beim Gastgeber steht nur „… flüstert mit …“. C: Ein zweites Flüstern im selben Zug wird abgelehnt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P564",
+"v": 1120,
+"titel": "Dungeon-Master: Herzenswunsch",
+"text": "Funktionen → KI-Dungeon-Master → Herzenswunsch einschalten und eine Runde mit einem Gast beginnen. A: Unter dem Eingabefeld steht „💖 Herzenswunsch“; einen aus der Liste wählen oder eigene Worte, „Speichern“. Der Gast sieht deinen Wunsch nicht, du als Gastgeber siehst seinen. B: Beim Helden, dessen Wunsch dran ist, steht „in diesem Akt“. C: Erfüllt er sich, steht im Verlauf „💖 Der Herzenswunsch von … hat sich erfüllt.“ und der Held bekommt Erfahrung.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
