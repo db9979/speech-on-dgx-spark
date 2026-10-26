@@ -101,13 +101,13 @@ async function dmtNervt(){const id=DMT.id,v=DMT.v;if(!id||!v)return;
   if((m.stuecke||[]).length)dmtStart(m.stuecke);else dmtStop()}
 const dmtTab=e=>e.krit_tabelle?'krit':e.patzer_tabelle?'patzer':'';   // a critical or fumble table's entry (D&D idea 2)
 const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe',ehrung:()=>'fanfare',   // ehrung: the evening's honours (D&D idea 1)
-  ansage:()=>'horn',angriff:dmtTab,wurf:e=>e.knapp&&!e.ok?'knapp':dmtTab(e)};   // D&D round 2: the foe's announcement (2), missed by 1 or 2 (1)
+  ansage:()=>'horn',angriff:dmtTab,wurf:e=>e.knapp?'knapp':dmtTab(e)};   // D&D round 2: the foe's announcement (2), passed at a price after missing by 1 or 2 (1)
 // the vault (D&D round 2 idea 6, dungeon_karte.py): the alarm's bell at 3 and the storm bell at 6, the torch's light
 // (rooms left; 0 dark, null outside a vault) as the background sound
-const dmtLicht=v=>{const f=(v.karte||{}).fackel;return typeof f==='number'?(f>0?'fackel':'dunkel'):''};
+const dmtLicht=v=>{const f=(v.karte||{}).fackel;return typeof f==='number'?(f!==0?'fackel':'dunkel'):''};   // -1 burns always, 0 dark
 function dmtVault(v,mode){const k=v.karte||{},al=typeof k.alarm==='number'?k.alarm:null,f=typeof k.fackel==='number'?k.fackel:null,o=DMT.alarm[mode],l=DMT.licht[mode];
   if(al!==null&&o!==null&&al>o){if(o<6&&al>=6)dmtPlay('sturmglocke');else if(o<3&&al>=3)dmtPlay('glocke')}
-  if(f===0&&l>0)dmtPlay('erlischt');DMT.alarm[mode]=al;DMT.licht[mode]=f}
+  if(f===0&&l!==null&&l!==0)dmtPlay('erlischt');DMT.alarm[mode]=al;DMT.licht[mode]=f}
 function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dice=[...w.querySelectorAll('.dm-feed .dm-wurf .dm-d20')].slice(-news.length);
   dice.forEach(d=>{const real=d.textContent;if(reduce)return;d.classList.add('dm-rollt');let k=0;const iv=setInterval(()=>{d.textContent=String(1+Math.floor(Math.random()*20));if(++k>=12){clearInterval(iv);d.textContent=real;d.classList.remove('dm-rollt')}},66)})}

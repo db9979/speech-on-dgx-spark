@@ -6621,7 +6621,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Alarm und Fackel (V01.1.098, D&D-Ideen Runde 2, Punkte 1, 2 und 6, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Alles klingt im Browser (dungeon-ton.js, WebAudio, keine Dateien) und folgt nur Feldern, die das Panel setzt; das Modell nennt keinen Ton. Knapp daneben: Trägt ein Wurf im Würfel-Beleg knapp (die Probe fehlte um 1 oder 2), übernimmt die Wartezeit knapp und die feste Preis-ID preis (dungeon_warten.step, für andere Plätze erst, wenn der Würfel offen ist); die Würfelkarte zeigt „Knapp daneben“ mit einem kurzen Wackeln (mit „Bewegung reduzieren“ ohne), dazu zwei leicht fallende Töne. Gegner-Ansage: Ein Log-Eintrag der Art ansage bläst ein tiefes Warnhorn. Krit und Patzer beim Angriff: Trägt ein Log-Eintrag angriff (oder wurf) krit_tabelle oder patzer_tabelle, klingt ein heller Lauf oder drei fallende Töne. Gewölbe: Steigt karte.alarm (0 bis 6, Karten-Thread) auf 3, schlägt einmal eine Glocke, auf 6 die Sturmglocke. Solange karte.fackel eine Zahl ist (Räume Licht übrig), knistert und flackert die Fackel leise im Hintergrund; bei 0 verlischt sie hörbar und es bleibt dunkles Rauschen mit Tropfen. Au"
+"text": "KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Alarm und Fackel (V01.1.098, D&D-Ideen Runde 2, Punkte 1, 2 und 6, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Alles klingt im Browser (dungeon-ton.js, WebAudio, keine Dateien) und folgt nur Feldern, die das Panel setzt; das Modell nennt keinen Ton. Knapp daneben: Trägt ein Wurf im Würfel-Beleg knapp (die Probe fehlte um 1 oder 2 und der Held hat den Preis gezahlt, dungeon_knapp setzt dann ok), übernimmt die Wartezeit knapp, die feste Preis-ID preis und den Text des Preises preis_t (dungeon_warten.step, für andere Plätze erst, wenn der Würfel offen ist); die Würfelkarte zeigt „Knapp geschafft, mit Preis: …“ mit einem kurzen Wackeln (mit „Bewegung reduzieren“ ohne), dazu zwei leicht fallende Töne statt des Tons für geschafft (seit V01.1.125). Gegner-Ansage: Ein Log-Eintrag der Art ansage bläst ein tiefes Warnhorn. Krit und Patzer beim Angriff: Trägt ein Log-Eintrag angriff (oder wurf) krit_tabelle oder patzer_tabelle, klingt ein heller Lauf oder drei fallende Töne. Gewölbe: Steigt karte.alarm (0 bis 6, Karten-Thread) auf 3, schlägt einmal eine Glocke, auf 6 die Sturmglocke. Solange karte.fackel eine Za"
 },
 {
 "lang": "de",
@@ -6629,7 +6629,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ßerhalb eines Gewölbes (fackel fehlt) gilt der Ort wie bisher. Nichts davon braucht einen eigenen Schalter: Die Töne gehören zu „Geräusche“ am Tisch, jedes Gerät schaltet sie selbst, und sie klingen erst, wenn die Funktionen des Haupt- und des Karten-Threads die Felder setzen."
+"text": "hl ist (Räume Licht übrig, −1 brennt immer), knistert und flackert die Fackel leise im Hintergrund; bei 0 verlischt sie hörbar und es bleibt dunkles Rauschen mit Tropfen. Außerhalb eines Gewölbes (fackel fehlt) gilt der Ort wie bisher. Nichts davon braucht einen eigenen Schalter: Die Töne gehören zu „Geräusche“ am Tisch, jedes Gerät schaltet sie selbst, und sie klingen erst, wenn die Funktionen des Haupt- und des Karten-Threads die Felder setzen."
 },
 {
 "lang": "de",
@@ -21029,7 +21029,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: sounds for just missed, the foe's announcement, alarm and torch (V01.1.098, D&D ideas round 2, points 1, 2 and 6, Dominik 2026-10-26 \"1-9 implement, I leave the order to you.\"): Everything sounds in the browser (dungeon-ton.js, WebAudio, no files) and follows only fields the panel sets; the model names no sound. Just missed: when a throw in the dice receipt carries knapp (the check missed by 1 or 2), the wait takes knapp and the fixed price id preis (dungeon_warten.step, for other seats only once the die is open); the die card shows \"Just missed\" with a short shake (without it with \"reduce motion\"), with two slightly falling tones. Foe's announcement: a log entry of kind ansage blows a deep warning horn. Critical and fumble on an attack: when a log entry angriff (or wurf) carries krit_tabelle or patzer_tabelle, a bright run or three falling tones sound. Vault: when karte.alarm (0 to 6, map thread) rises to 3, a bell strikes once, at 6 the storm bell. While karte.fackel is a number (rooms of light left), the torch crackles and flickers softly in the background; at 0 it goes out audibly and a dark hiss with drops remains. Outside a vault (fackel missing) the place "
+"text": "AI Dungeon Master: sounds for just missed, the foe's announcement, alarm and torch (V01.1.098, D&D ideas round 2, points 1, 2 and 6, Dominik 2026-10-26 \"1-9 implement, I leave the order to you.\"): Everything sounds in the browser (dungeon-ton.js, WebAudio, no files) and follows only fields the panel sets; the model names no sound. Just missed: when a throw in the dice receipt carries knapp (the check missed by 1 or 2 and the hero paid the price, dungeon_knapp then sets ok), the wait takes knapp, the fixed price id preis and the price's text preis_t (dungeon_warten.step, for other seats only once the die is open); the die card shows \"Just made it, at a price: …\" with a short shake (without it with \"reduce motion\"), with two slightly falling tones instead of the success tone (since V01.1.125). Foe's announcement: a log entry of kind ansage blows a deep warning horn. Critical and fumble on an attack: when a log entry angriff (or wurf) carries krit_tabelle or patzer_tabelle, a bright run or three falling tones sound. Vault: when karte.alarm (0 to 6, map thread) rises to 3, a bell strikes once, at 6 the storm bell. While karte.fackel is a number (rooms of light left, −1 burns always), t"
 },
 {
 "lang": "en",
@@ -21037,7 +21037,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "counts as before. None of it needs an own switch: the sounds belong to \"Sounds\" at the table, each device switches them itself, and they sound only once the features of the main and the map thread set the fields."
+"text": "he torch crackles and flickers softly in the background; at 0 it goes out audibly and a dark hiss with drops remains. Outside a vault (fackel missing) the place counts as before. None of it needs an own switch: the sounds belong to \"Sounds\" at the table, each device switches them itself, and they sound only once the features of the main and the map thread set the fields."
 },
 {
 "lang": "en",

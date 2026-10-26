@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.125** · 2026-10-26 · KI-Dungeon-Master: Würfelkarte zeigt „Knapp geschafft, mit Preis: …“ (preis_t aus dungeon_knapp, das ok setzt), zwei fallende Töne statt des Tons für geschafft
 - **V01.1.124** · 2026-10-26 · KI-Dungeon-Master: Requisiten im Szenenbild: im Kampf nimmt ein Szenenbild bis zu drei Requisiten, die noch da sind, mit ihrem Katalognamen mit ins Bild; Gesichter für Gefährten: ein angeheuerter Gefährte bekommt gleich sein Porträt aus seiner festen Beschreibung, die Gruppe zeigt es statt 🤝, Szenenbilder nehmen es als Vorlage
 - **V01.1.123** · 2026-10-26 · ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
 - **V01.1.122** · 2026-10-26 · KI-Dungeon-Master: Kampfzug-Prüfung, „kämpfen“ wird ein Angriff gegen die Rüstung, das Modell wählt nie einen Zauber, Ziel- und Akt-EP warten bis zum Ende des Kampfs, jeder EP-Eintrag sagt wofür

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.125** AI Dungeon Master: "Just made it, at a price" on the die card, with the price paid and its own sound
 - **V01.1.124** AI Dungeon Master: props in the scene picture: in a fight a scene picture takes up to three props still there into the picture by their catalog name; faces for companions: a hired companion gets its portrait at once from its fixed description, the group shows it instead of 🤝, scene pictures take it as a reference
 - **V01.1.123** RED FIX: the journey self-test takes a way that leads on instead of a dead end and back by chance
 - **V01.1.122** AI Dungeon Master: fight turn check, fighting becomes an attack against the armour, the model never picks a spell, goal and act XP wait until the fight is over, every XP entry says what for
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.118** AI Dungeon Master: use the surroundings, chandeliers, powder kegs, pillars and ropes in a fight, one check of the panel and a fixed effect
 - **V01.1.117** AI Dungeon Master: foe announcements and stance, every foe announces its next blow, the heroes answer with defend or dodge
 - **V01.1.116** AI Dungeon Master: chronicle book, at the end of every chapter a page with cover, the story so far, heroes, honours and writings, to turn and as a PDF from the Spark
-- **V01.1.115** AI Dungeon Master: calendar of the world, months, moons and festivals on top of the table, the days run only by ways, rests and the inn, on festivals services cost more
 
 
 

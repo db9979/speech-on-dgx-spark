@@ -151,7 +151,7 @@ def step(rd, s, wuerfe=None, rng=None):
                    "ok": bool(x["ok"]), "vt": x.get("vt", ""), "ws": list(x.get("ws") or [])[:2], "belastet": bool(x.get("belastet")),
                    "werkzeug": x.get("werkzeug", ""), "werkzeug_plus": x.get("werkzeug_plus", 0), "wofuer": x.get("wofuer", ""),
                    "krit_tabelle": x.get("krit_tabelle", ""), "patzer_tabelle": x.get("patzer_tabelle", ""),
-                   "knapp": bool(x.get("knapp")), "preis": x.get("preis", ""),   # D&D round 2 idea 1: missed by 1 or 2, the price's id
+                   "knapp": bool(x.get("knapp")), "preis": x.get("preis", ""), "preis_t": x.get("preis_t", ""),   # D&D round 2 idea 1: passed at a price (dungeon_knapp)
                    **({"geworfen": True} if x.get("echt") else {})} for x in wuerfe]   # a d20 thrown at the real table waits for no tap
 
 
@@ -191,7 +191,7 @@ def _die(x, pid, now, wt):
         out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]),
                    vt=x.get("vt", ""), ws=x.get("ws") or [], belastet=bool(x.get("belastet")),
                    krit_tabelle=x.get("krit_tabelle", ""), patzer_tabelle=x.get("patzer_tabelle", ""),   # D&D idea 2: the table's entry, the panel's
-                   knapp=bool(x.get("knapp")), preis=x.get("preis", ""))
+                   knapp=bool(x.get("knapp")), preis=x.get("preis", ""), preis_t=x.get("preis_t", ""))
     return out
 
 

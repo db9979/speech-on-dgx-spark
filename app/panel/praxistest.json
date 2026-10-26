@@ -3631,9 +3631,9 @@
 },
 {
 "id": "P543",
-"v": 1098,
+"v": 1125,
 "titel": "Dungeon-Master: Töne für knapp daneben, Ansage, Alarm, Fackel",
-"text": "Geräusche am Tisch an. A: Eine Probe um 1 oder 2 verfehlen (sobald der Haupt-Thread „knapp daneben“ hat): die Würfelkarte zeigt „Knapp daneben“ und wackelt kurz, zwei fallende Töne. B: Ein Gegner kündigt etwas an: tiefes Horn. C: Angriff mit Krit- oder Patzer-Tabelle: heller Lauf oder drei fallende Töne. D: Im Gewölbe (sobald der Karten-Thread Alarm und Fackel hat): Alarm auf 3 eine Glocke, auf 6 die Sturmglocke; mit Fackel leises Knistern, geht sie aus ein Puff, dann dunkles Rauschen mit Tropfen.",
+"text": "Geräusche am Tisch an. A: Mit „Knapp daneben“ an eine Probe um 1 oder 2 verfehlen und „Zahlen“ wählen: die Würfelkarte zeigt „Knapp geschafft, mit Preis: …“ und wackelt kurz, zwei fallende Töne. B: Ein Gegner kündigt etwas an: tiefes Horn. C: Angriff mit Krit- oder Patzer-Tabelle: heller Lauf oder drei fallende Töne. D: Im Gewölbe (sobald der Karten-Thread Alarm und Fackel hat): Alarm auf 3 eine Glocke, auf 6 die Sturmglocke; mit Fackel leises Knistern, geht sie aus ein Puff, dann dunkles Rauschen mit Tropfen.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 },
 {
