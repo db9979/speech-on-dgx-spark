@@ -5373,6 +5373,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Pause überall sichtbar (V01.1.096, Dominik 2026-10-26 „Wenn der Dungeon Master ein Spiel pausiert, dann sollte auch angezeigt werden, dass das Spiel sich gerade in Pause befindet“): Hält der Gastgeber eine Runde an (Spielleiter-Pult, Tafel „Zug“, „⏸ Pause“), steht das jetzt überall, wo die Runde zu sehen ist: in der Rundenliste im Browser und in der Android-App „⏸ Pause“ statt „läuft“, in der iPhone-App in der Zeile der Runde und in CarPlay hinter dem Zug. Am Tisch steht über der Erzählung für jeden Platz und jeden Gast eine Leiste „⏸ Pause“ (die Zeit steht, Aktionen können schon geschrieben werden); der Gastgeber hat dort gleich „▶ Weiter“. Die anderen Plätze mit Profil bekommen beim Anhalten und beim Weitermachen je eine Mitteilung („… ist pausiert“, „… geht weiter“) über ihre Wege (App, Begleiter, Uhr), nur wenn sich etwas ändert und nur wer am Tisch Mitteilungen nicht abgeschaltet hat. Im Auto sagt der Spark „Die Runde ist gerade pausiert“ statt „du bist dran“. Live zählt die pausierten Runden. Die Liste trägt dafür pause (GET /api/profile/dungeon), Log dungeon: pause | an oder | aus und dungeon: melden | pause oder | weiter."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -19262,6 +19270,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: Dungeon judge (V01.1.093, Tabletop point 2 with the helper model): Admin switch *Features → AI Dungeon Master → Dungeon judge* (chat.dungeon_richter, off by default, needs *Classification with probabilities*). When the first narration of a turn passes every fixed check, dungeon_erzaehler.richter asks one fixed yes/no question over systemone (use \"richter\", with *Helper model → For the Dungeon Master* the small model first): does the narration contradict the actions or the outcome of the dice? Actions, checks (only succeeded or failed) and narration go along as data. The model only gives the probability; from 90 % (RICHTER_MIN) the model writes once more, with a fixed hint. If the new version fails a fixed check, the first one stays (dungeon: richter | bleibt). If the judge does not answer within 8 seconds or is unsure, the turn goes on without it. Log dungeon: richter | ok | n %, | neu | n %, | ausfall | …; Live: judge today ok, written again, without answer (numbers only)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: pause shown everywhere (V01.1.096, Dominik 2026-10-26 \"Wenn der Dungeon Master ein Spiel pausiert, dann sollte auch angezeigt werden, dass das Spiel sich gerade in Pause befindet\"): When the host pauses a round (game master console, card \"Turn\", \"⏸ Pause\"), it now shows wherever the round is seen: in the round list in the browser and the Android app \"⏸ paused\" instead of \"running\", in the iPhone app in the round's row and in CarPlay after the turn. At the table a bar \"⏸ Paused\" stands above the narration for every seat and every guest (the clock stands still, actions can be written already); the host has \"▶ Go on\" right there. The other seats with a profile get one note each on pausing and on going on (\"… is paused\", \"… goes on\") over their ways (app, companion, watch), only when something changes and only who did not switch notes off at the table. In the car the Spark says \"The round is paused right now\" instead of \"your turn\". Live counts the paused rounds. The list carries pause for this (GET /api/profile/dungeon), log dungeon: pause | an or | aus and dungeon: melden | pause or | weiter."
 },
 {
 "lang": "en",

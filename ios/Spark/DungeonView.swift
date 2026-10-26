@@ -9,6 +9,7 @@ struct DMRunde: Identifiable {
     let id: String
     let titel: String
     let laeuft: Bool
+    let pause: Bool      // the host paused the round (dungeon.set_pause): „Pause“ on the row
     let zug: Int
     let kapitel: Int
     let spieler: Int
@@ -51,7 +52,7 @@ final class DungeonModel: ObservableObject {
         let n = { (x: Any?) in (x as? NSNumber)?.intValue ?? 0 }
         return (d["runden"] as? [[String: Any]] ?? []).prefix(40).map {
             DMRunde(id: $0["rid"] as? String ?? "", titel: $0["titel"] as? String ?? "", laeuft: $0["status"] as? String == "laeuft",
-                    zug: n($0["zug"]), kapitel: n($0["kapitel"]), spieler: n($0["spieler"]), held: $0["held"] as? String ?? "",
+                    pause: $0["pause"] as? Bool ?? false, zug: n($0["zug"]), kapitel: n($0["kapitel"]), spieler: n($0["spieler"]), held: $0["held"] as? String ?? "",
                     host: $0["gastgeber"] as? Bool ?? false)
         }
     }
@@ -204,7 +205,7 @@ struct DungeonView: View {
         a.append(String(localized: "Zug \(r.zug)"))
         a.append(String(localized: "\(r.spieler) Spieler"))
         if !r.held.isEmpty { a.append(r.held) }
-        if !r.laeuft { a.append(String(localized: "beendet")) }
+        if !r.laeuft { a.append(String(localized: "beendet")) } else if r.pause { a.append("⏸ " + String(localized: "Pause")) }
         return a.joined(separator: " · ")
     }
 }

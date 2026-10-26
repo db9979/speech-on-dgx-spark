@@ -262,7 +262,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func gameList(_ rounds: [DMRunde]) {
         guard let interface else { return }
         var rows: [CPListItem] = rounds.prefix(12).map { r -> CPListItem in
-            let row = CPListItem(text: r.titel, detailText: String(localized: "Zug \(r.zug) · \(r.held)"),
+            let row = CPListItem(text: r.titel, detailText: String(localized: "Zug \(r.zug) · \(r.held)") + (r.pause ? " · " + String(localized: "Pause") : ""),
                                  image: UIImage(systemName: "shield.lefthalf.filled"))
             row.handler = { [weak self] _, done in
                 done()

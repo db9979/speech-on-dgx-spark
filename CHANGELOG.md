@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.096** · 2026-10-25 · KI-Dungeon-Master: Pause überall sichtbar, in den Rundenlisten von Web, App und CarPlay, als Leiste am Tisch, als Mitteilung an die Mitspieler, im Auto und in Live
 - **V01.1.095** · 2026-10-26 · Logs → Dienste: Modellwechsel kommt vom Modell-Rechner, ein Dienst ohne Einträge zeigt „noch keine Einträge“ statt einer leeren Liste
 - **V01.1.094** · 2026-10-26 · KI-Dungeon-Master: Tabelle „Musik am Tisch“ ausgerichtet (Spaltenzahl aus den Stimmungen statt fest 7, seit „Lagerfeuer“ waren es 8), Browser-Test prüft Welt vorn und jede Zahl unter ihrer Stimmung
 - **V01.1.093** · 2026-10-25 · KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu

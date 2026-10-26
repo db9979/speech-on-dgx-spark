@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.096** KI-Dungeon-Master: Pause überall sichtbar, in den Rundenlisten von Web, App und CarPlay, als Leiste am Tisch, als Mitteilung an die Mitspieler, im Auto und in Live
 - **V01.1.095** Logs von Modellwechsel und Bildverständnis wieder sichtbar
 - **V01.1.094** KI-Dungeon-Master: Tabelle „Musik am Tisch“ wieder ausgerichtet, die Welt steht vorn, je Stimmung eine Spalte
 - **V01.1.093** KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.089** Hilfsmodell erkennt Angriffe und schreibt kurze Texte
 - **V01.1.088** KI-Dungeon-Master: Erzähler-Fehler beheben, ein 👎 mit Grund erzählt die letzte Szene neu, oft gemeldete Gründe werden feste Hinweise der Welt, der Prüfstand spielt die Fälle jede Nacht
 - **V01.1.087** KI-Dungeon-Master: wer nur fragt, würfelt nicht aufs Schleichen, die Erzählung erzählt die Frage, und nach unten bleibt nach unten
-- **V01.1.086** KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
 
 
 

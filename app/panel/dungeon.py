@@ -4874,7 +4874,10 @@ def due_notes(rd, now):
 
 MELDEN = {"dran": ("Du bist dran in „{titel}“ (Zug {zug}).", "It is your turn in \"{titel}\" (turn {zug})."),
           "erinnert": ("„{titel}“ wartet noch auf deinen Zug {zug}.", "\"{titel}\" is still waiting for your turn {zug}."),
-          "termin": ("„{titel}“ geht um {uhr} weiter.", "\"{titel}\" goes on at {uhr}.")}
+          "termin": ("„{titel}“ geht um {uhr} weiter.", "\"{titel}\" goes on at {uhr}."),
+          "pause": ("„{titel}“ ist pausiert. Es geht weiter, sobald der Spielleiter fortsetzt.",
+                    "\"{titel}\" is paused. It goes on as soon as the game master continues."),
+          "weiter": ("„{titel}“ geht weiter (Zug {zug}).", "\"{titel}\" goes on (turn {zug}).")}
 
 
 async def send_notes(rd, notes):
@@ -5460,6 +5463,7 @@ def for_live():
             "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"],
             "tisch": t["tisch"], "verborgen": t["verborgen"], "wortliste": t["wortliste"],
             "stumm": sum(1 for _, p in seats if p.get("stumm")), "warten": sum(1 for v in rs if v.get("dm")),
+            "pausiert": sum(1 for v in rs if v.get("pause")),
             "npc_stimmen": sum(len(v.get("npc_stimmen") or {}) for v in rs),
             "werkzeug": t["werkzeug"], "kaputt": t["kaputt"], "geworfen": t["geworfen"],
             "am_boden": sum(1 for _, p in seats if zustand(p["held"]) == "boden"), "zu_boden": t["zu_boden"], "gefallen": t["gefallen"],
@@ -5563,6 +5567,7 @@ def _mine(uid, lang):
         pid, p = seat_of(v, uid)
         if pid and uid not in (v.get("weg") or []) and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
             out.append({"rid": rid, "titel": v["titel"], "welt": v["welt"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
+                        "pause": v["status"] == "laeuft" and bool(v.get("pause")),     # „Pause“ wherever the round shows
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
@@ -5771,16 +5776,23 @@ async def weiter(rid: str, request: Request, prof=Depends(browser_profile)):
 
 
 def set_pause(rid, uid, an):
-    """The host pauses the round or goes on (the page's button, the car's „Runde pausieren“); the clock starts anew."""
+    """The host pauses the round or goes on (the page's button, the car's „Runde pausieren“); the clock starts anew.
+    The other seats that take notes get one („… ist pausiert“, „… geht weiter“) when the state changed (Dominik
+    2026-10-26 „da wo man es überall sieht, dass da ein Spiel läuft“)."""
     with _lock:
         d = _read()
         rd = _round(d, rid)
         if rd["owner"] != uid or rd["status"] == "ende":
             raise LookupError("gastgeber")
+        neu = bool(an) != bool(rd.get("pause"))
         rd["pause"] = bool(an)
         rd["zug_t"], rd["lesen"] = time.time(), 0
         _write(d)
+        notes = [(p["uid"], "pause" if an else "weiter") for p in rd["plaetze"].values() if _wants(p) and p["uid"] != uid] if neu else []
+        copy = dict(rd, rid=rid)
     print(f"dungeon: pause | {'an' if an else 'aus'}", flush=True)
+    if notes:
+        _go(send_notes(copy, notes), name="dungeon-melden")
 
 
 @router.post("/api/profile/dungeon/{rid}/pause", dependencies=[Depends(assistant)])

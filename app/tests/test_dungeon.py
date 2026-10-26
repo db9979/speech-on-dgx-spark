@@ -239,6 +239,58 @@ class OffAndDoors(Base):
         self.assertEqual(self.c.delete(f"/api/profile/dungeon/{v['rid']}").status_code, 200)
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": code, "text": "Ich laufe", "zug": 1}).status_code, 404)
 
+    def test_a_pause_shows_everywhere(self):
+        """Dominik 2026-10-26 „Wenn der Dungeon Master ein Spiel pausiert, dann sollte auch angezeigt werden, dass das
+        Spiel sich gerade in Pause befindet“: the round lists (web, iPhone, CarPlay) carry pause, the table a bar for
+        every seat, the car says it instead of „dran“, the other seats get one note when it changes, Live counts it."""
+        import dungeon_auto
+        v = self.new_round()
+        rid = v["rid"]
+        r = self.c.post(f"/api/profile/dungeon/{rid}/platz", json={"base": BASE})
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual(j.status_code, 200, j.text)
+        self.assertIs(self.c.get("/api/profile/dungeon").json()["runden"][0]["pause"], False)
+        sent, jobs = [], []
+
+        async def send(rd, notes):
+            sent.append((rd["rid"], notes))
+
+        def pause(c, an):
+            with mock.patch.object(dungeon, "_go", lambda coro, name: jobs.append((name, coro))), \
+                    mock.patch.object(dungeon, "send_notes", send), contextlib.redirect_stdout(io.StringIO()):
+                res = c.post(f"/api/profile/dungeon/{rid}/pause", json={"an": an})
+                for _, coro in jobs:
+                    asyncio.run(coro)
+                jobs.clear()
+            return res
+        self.assertEqual(pause(self.c2, True).status_code, 404)                       # only the host
+        self.assertIs(pause(self.c, True).json()["pause"], True)
+        self.assertEqual(sent, [(rid, [(self.uid2, "pause")])])                     # the other seat, not the host
+        pause(self.c, True)
+        self.assertEqual(len(sent), 1)                                              # no change, no second note
+        for c in (self.c, self.c2):
+            self.assertIs(c.get("/api/profile/dungeon").json()["runden"][0]["pause"], True)
+        self.assertIs(self.c2.get(f"/api/profile/dungeon/{rid}").json()["pause"], True)
+        self.assertEqual(dungeon.for_live()["pausiert"], 1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            car = dungeon_auto.car(self.uid2, nach=10 ** 6, rid=rid)
+        self.assertEqual(car["sagen"], dungeon_auto.SAGEN["pause"][0])
+        self.assertIn("Die Glocke", dungeon.MELDEN["pause"][0].format(titel="Die Glocke", zug=1))
+        pause(self.c, False)
+        self.assertEqual(sent[-1], (rid, [(self.uid2, "weiter")]))
+        self.assertIs(self.c.get("/api/profile/dungeon").json()["runden"][0]["pause"], False)
+        self.assertEqual(dungeon.for_live()["pausiert"], 0)
+        root = os.path.join(os.path.dirname(dungeon.__file__), "..", "..")
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("${dmPauseBar(v,leitet)}", js)
+        self.assertIn("x.pause?`<b class=\"dm-pausepill\">", js)
+        swift = os.path.join(root, "ios", "Spark")
+        if os.path.isdir(swift):                     # a copy with only app/ has no app sources
+            for f, s in (("DungeonView.swift", 'pause: $0["pause"] as? Bool'), ("CarPlayScene.swift", "r.pause ?")):
+                with open(os.path.join(swift, f), encoding="utf-8") as fh:
+                    self.assertIn(s, fh.read(), f)
+
     def test_an_ended_round_can_go(self):
         """Dominik 2026-10-23 „alte runden sollen gelöscht werden können“: the host deletes an ended round, a player
         takes it off the own list; a running round only ends."""
@@ -5039,6 +5091,13 @@ class Windows(unittest.TestCase):
                         # the console calm (Dominik 2026-10-24 „wirkt unruhig“): one main action, tiles alike, rare ones behind „⋯ Mehr“
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult .dm-tiles .dm-tile').length"), 2)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-fen-pult [data-pult=zug] .dm-schalt[role=switch]:is([data-dmpause],[data-dmmarkt])').length"), 2)
+                        # paused (Dominik 2026-10-26): a bar over the story, the host's „Weiter“ in it, nothing wider than the page
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-pausebar')"))
+                        await pg.evaluate("DM.v=Object.assign({},DM.v,{pause:true});dmDraw()")
+                        await b.until(pg, "!!document.querySelector('#dmview .dm-story .dm-pausebar[role=status] [data-dmpause=\"0\"]')")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        await pg.evaluate("DM.v=Object.assign({},DM.v,{pause:false});dmDraw()")
+                        await b.until(pg, "!document.querySelector('#dmview .dm-pausebar')")
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult [data-pult=erz] [data-dmweise]')"))
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview [data-dmfen=karte]')"))   # the map is a tab
                         self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-seite button')].filter(x=>x.scrollWidth>x.clientWidth+1).length"), 0, w)

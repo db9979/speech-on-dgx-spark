@@ -56,6 +56,8 @@ SAGEN = {
     "keine": ("Du sitzt gerade in keiner laufenden Runde. Sag „Neue Runde“ oder leg im Panel unter Dungeon-Master eine an.",
               "You are not in a running round. Say „new round“ or start one in the panel under Dungeon Master."),
     "dran": ("{name} ist dran. Was tust du?", "It is {name}'s turn. What do you do?"),
+    "pause": ("Die Runde ist gerade pausiert. Du kannst deine Aktion schon sagen, es geht weiter, sobald der Spielleiter fortsetzt.",
+              "The round is paused right now. You may say your action already, it goes on as soon as the game master continues."),
     "leben": ("{name} hat {leben} von {max} Leben.", "{name} has {leben} of {max} life."),
     "tasche": ("In der Tasche: {dinge}. Dazu {gold} Gold.", "In the bag: {dinge}. And {gold} gold."),
     "leer": ("Die Tasche ist leer. Du hast {gold} Gold.", "The bag is empty. You have {gold} gold."),
@@ -327,12 +329,12 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None)
                 return {"sagen": "", "n": nach, "warten": True, "aus": False, "rid": rid}
             after = summary(r, rd, pid, li, erz[-2] + 1 if len(erz) > 1 else 0)
             if not rd.get("dm") and pid not in rd["offen"] and not dm.zustand(h):
-                after.append(_say("dran", li, name=h["name"]))
+                after.append(_say("pause", li) if rd.get("pause") else _say("dran", li, name=h["name"]))
             return {"sagen": told(last, li), "danach": " ".join(after), "n": n, "warten": False, "aus": False, "rid": rid,
                     **({"ton": dict(tr, rid=rid)} if tr else {})}
         if rd.get("dm") or pid in rd["offen"]:
             return {"sagen": "", "n": n, "warten": True, "aus": False, "rid": rid}
-        return out("dran", name=h["name"])
+        return out("pause") if rd.get("pause") else out("dran", name=h["name"])   # paused by the host: said, not „dran“
     kind = next((k for k, rx in FRAGEN if rx.search(text)), "aktion") if len(text) <= KURZ else "aktion"
     dm._day.bump("auto")
     print(f"dungeon: auto | {kind}{' | ok' if ok and kind in TUN else ''}", flush=True)

@@ -3621,6 +3621,13 @@
 "titel": "Logs Modellwechsel und Bildverständnis",
 "text": "A: Update (tars zuerst). B: Zustand → Logs → Dienste, „Modellwechsel“ wählen: es stehen Zeilen des letzten Wechsels auf tars da oder „noch keine Einträge“. C: Dasselbe mit „Bildverständnis“; nach einer Frage mit Bild an das eigene Sprachmodell stehen dort Zeilen.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P542",
+"v": 1096,
+"titel": "Dungeon-Master: Pause überall",
+"text": "Eine Runde mit einem zweiten Profil öffnen, im Spielleiter-Pult bei Zug auf Pause tippen. A: Am Tisch steht über der Erzählung „⏸ Pause“, beim Gastgeber mit „▶ Weiter“. B: In der Rundenliste im Browser und in der iPhone-App steht „Pause“. C: Das zweite Profil bekommt die Mitteilung „… ist pausiert“, nach Weiter „… geht weiter“. D: In CarPlay steht in der Zeile der Runde „Pause“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

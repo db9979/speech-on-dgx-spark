@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.096** AI Dungeon Master: pause shown everywhere, in the round lists of web, app and CarPlay, as a bar at the table, as a note to the other players, in the car and in Live
 - **V01.1.095** Logs of model switch and image understanding visible again
 - **V01.1.094** AI Dungeon Master: the "Music at the table" table lines up again, the world first, one column per mood
 - **V01.1.093** AI Dungeon Master: Dungeon judge, after the fixed checks the model estimates a contradiction to actions or dice, from 90 % the Spark writes once more
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.089** Helper model spots attacks and writes short texts
 - **V01.1.088** AI Dungeon Master: fix narrator errors, a 👎 with a reason tells the last scene again, often reported reasons become a world's fixed hints, the bench plays the cases every night
 - **V01.1.087** AI Dungeon Master: whoever only asks rolls no sneaking check, the narration tells the question, and down stays down
-- **V01.1.086** AI Dungeon Master: a 👎 with a fixed reason becomes a narrator error without names, the admin takes it over as a scene of the narrator bench
 
 
 

@@ -1817,6 +1817,7 @@ def snapshot(view="admin", now=None):
                         + (" · arbeitet" if wbk.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
+                        + (f" · {dgn['pausiert']} pausiert" if dgn.get("pausiert") else "")
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
                         + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
