@@ -3831,6 +3831,13 @@
 "titel": "Dungeon-Master: Personen-Katalog",
 "text": "Admin: Funktionen → Meine Daten → „NSC-Gedächtnis und Chronik“ und „Personen-Katalog“ an. A: Eine Runde spielen, in der ihr eine Person trefft, dann beenden: unter Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“ steht sie mit Karte, Wesen und wen sie kennt. B: Dort „＋ Neue Person“ anlegen, ändern und wieder löschen; ein Name doppelt in derselben Welt wird abgelehnt. C: Eine neue Runde derselben Welt: trefft ihr die Person wieder, sieht sie aus wie vorher und erkennt eure Helden (Chronik). D: Legt euch mit einer Person der Szene an (etwa einer Wache): sie kämpft mit festen Werten, kommt nur einmal und steht danach als besiegt oder geflohen in der Chronik.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P572",
+"v": 1129,
+"titel": "Dungeon-Master: Karte blinkt nicht",
+"text": "A: Eine Runde mit Karte öffnen, rechts den Reiter Karte wählen. B: Eine Minute zusehen, während andere schreiben oder der Erzähler arbeitet: die Karte und ihre Ortsbilder bleiben ruhig stehen, nichts blinkt. C: Weitergehen: die Karte zeichnet den neuen Ort einmal, danach wieder ruhig.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

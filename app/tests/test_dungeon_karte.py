@@ -1005,6 +1005,12 @@ class Table(unittest.TestCase):
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dmk-wege [data-dmkid]').length"), 1)
                         if w == 1280:                    # the world (the wider run goes into a vault below)
                             self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dmk-banner title')"))
+                            # no blinking (Dominik 2026-10-26 „die karte blinkt immer wieder“): a refresh with the same
+                            # map keeps its node, the pictures are in the drawing at once
+                            await pg.wait_for_timeout(1700)
+                            await pg.evaluate("dmDraw()")
+                            self.assertTrue(await pg.evaluate("(()=>{const a=document.querySelector('#dmview .dmk');a.dataset.alt='1';dmDraw();const b=document.querySelector('#dmview .dmk');return a===b&&b.dataset.alt==='1'})()"))
+                            self.assertTrue(await pg.evaluate("(()=>{DMK.html='';dmDraw();const i=[...document.querySelectorAll('#dmview .dmk image[data-dmkb]')];return i.length>0&&i.every(x=>x.getAttribute('href'))})()"))
                             self.assertTrue(await pg.evaluate("(document.querySelector('#dmview .dmk-banner image.dmk-wappenbild')||{getAttribute:()=>''}).getAttribute('href').startsWith('data:image/svg+xml')"))
                             self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk-banner .dmk-wappen')"))
                             self.assertIn("⚑", await pg.evaluate(f"document.querySelector('#dmview .dmk-wege [data-dmkid=o{nb + 1}]').textContent"))

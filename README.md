@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.129** AI Dungeon Master: the map at the table no longer blinks, it stays put on every refresh and the place pictures are there at once
 - **V01.1.128** AI Dungeon Master: people catalog, whoever the table met stays with card, traits, voice, face and attitude towards the heroes, other rounds of the world meet them again and they know the heroes, the admin keeps the people under Rules, whoever fights takes fixed values by its occupation and counts weighted in the balancing
 - **V01.1.127** AI Dungeon Master: combat audit, every attacking action becomes an attack of the panel, also without the model's check, damage spells always attack, when the target fell the attack takes the next foe, peace only through the panel's Charisma check, no healing by the model in a fight, no charge without an effect, the narration gives no hero a weapon it does not carry
 - **V01.1.126** AI Dungeon Master: alarm and torches in a vault, noise wakes first a patrol and then the master, torches burn for four rooms, checks in the dark at a disadvantage
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.122** AI Dungeon Master: fight turn check, fighting becomes an attack against the armour, the model never picks a spell, goal and act XP wait until the fight is over, every XP entry says what for
 - **V01.1.121** AI Dungeon Master: hire companions, in a settlement a companion of the world while fewer than four play, the panel rolls its blows, it counts as half a hero in the balance
 - **V01.1.120** AI Dungeon Master: heart's wish, every hero carries a secret wish, per act the narrator gets one in turn, when it comes true there is the experience of an act
-- **V01.1.119** AI Dungeon Master: whisper to a person, once a turn a word only for the own seat, the person answers, betrayal and gift the panel decides
 
 
 

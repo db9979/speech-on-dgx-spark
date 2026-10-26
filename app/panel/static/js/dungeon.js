@@ -762,7 +762,7 @@ function dmGruppeZeile(v,mode,p,c){const k=mode+':'+p.pid,auf=!!DMA.gauf[k],low=
 document.body.addEventListener('click',e=>{const r=e.target.closest('.dm [data-dmgauf]');if(!r||e.target.closest('button,select,input,summary,details'))return;
   DMA.gauf[r.dataset.dmgauf]=!DMA.gauf[r.dataset.dmgauf];r.closest('#dgcard')?dgDraw():dmDraw()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.dm [data-dmgauf]')){e.preventDefault();e.target.click()}});
-function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),cols=dmColKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
+function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),mk=typeof dmkKeep==='function'?dmkKeep(w):null,cols=dmColKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
   const st=v.status==='ende'?t('beendet','ended'):v.dm?t('der Dungeon-Master erzählt …','the Dungeon Master is narrating …'):v.pause?t('Pause','paused'):'';
   const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const seats=v.plaetze.filter(p=>!p.frei),col=pid=>Math.max(0,seats.findIndex(p=>p.pid===pid))%5;
@@ -820,6 +820,7 @@ function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),cols=dmC
     ${v.ich?dmHilfe():''}<div class="dm-grid" data-dmpane="${DMA.handy}" style="--dm-side:${dmBreite()}px"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}${dmPauseBar(v,leitet)}${dmKalender(v)}${dmKnapp(v)}${dmRast(v)}${dmKampf(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input?`<div class="dm-handeln">${input}</div>`:''}${dmTalk(v,mode)}</div>
     <div class="dm-col dm-side">${dmZiehe()}${dmAuftrag(v)}${dmMeKurz(v,mode)}${host?`<div class="dm-pultz">${host}</div>`:''}${dmSeite(v,mode)}</div></div>${input?'':dmMsg(S)}${dmUnten(v,mode)}${dmFenster(v,mode,pult)}`;
+  if(mk)mk();                        // the map's node stays while its drawing is the same (dungeonkarte.js)
   fen();cols();tk();dmUntenPlatz(w);
   if(mode==='g')dmImgFill(w);
   dmDingFill(w,mode);

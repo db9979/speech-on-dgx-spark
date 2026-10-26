@@ -7149,6 +7149,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: die Karte blinkt nicht mehr (V01.1.129, Dominik 2026-10-26 „die karte blinkt immer wieder auf der rechten seite“): Der Tisch schreibt sich bei jeder Aktualisierung neu. Bisher zeichnete das auch die Karte neu, und die Bilder der Orte kamen erst einen Augenblick später dazu. Jetzt bleibt die Karte dasselbe Element, solange sich ihre Zeichnung nicht ändert (dmkKeep in dungeonkarte.js, aufgerufen von dmTable), und ein schon geladenes Ortsbild steht gleich in der Zeichnung. Neu gezeichnet wird nur, wenn sich wirklich etwas ändert, etwa ein Weg, ein neuer Ort oder die Breite."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Ohne Tageslimit auch ohne zweiten Schritt (V01.0.992, Dominik 2026-10-24 „admin hat noch tageslimits“): Die Regel aus V01.0.989 griff nur bei einer Admin-Rolle, die zählt, und die gibt es nur mit zweitem Anmeldeschritt. Ein Profil ohne zweiten Schritt behielt deshalb seine Tageslimits. Jetzt setzt der Admin unter Personen und Geräte beim Profil unter Rechte „Ohne Tageslimit“ den Haken „frei“, für jedes Profil und ohne zweiten Schritt (PUT /api/admin/profiles/{uid}/tageslimit mit {\"frei\": true}, nur Admin, kein Verwalter, Rate-Limit, CSRF). Ein Profil mit Admin-Rolle hat den Haken fest gesetzt. Gespeichert in state/ohne-tageslimit.json (in der Sicherung), Änderungen im Admin-Protokoll (profile_daily_limit) und im Log coadmin: tageslimit | frei|begrenzt|kein profil. Die Admin-Rechte selbst brauchen weiter den zweiten Schritt. Ich → Bilder und Ich → Musik zeigen „ohne Tageslimit“."
 },
 {
@@ -21630,6 +21638,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "tside) for the bell and the flicker, the model gets alarm and light only as data. Logs dungeon: alarm | <grund> | <stufe>, alarm | streife, alarm | herr bereit, alarm | licht | <rooms>, alarm | verworfen; the live overview counts noise, patrols, torches and darkness."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the map no longer blinks (V01.1.129, Dominik 2026-10-26 \"die karte blinkt immer wieder auf der rechten seite\"): The table writes itself anew on every refresh. Until now that drew the map again too, and the pictures of the places came a moment later. Now the map stays the same element while its drawing does not change (dmkKeep in dungeonkarte.js, called by dmTable), and a picture already loaded is in the drawing at once. It is drawn again only when something really changes, such as a way, a new place or the width."
 },
 {
 "lang": "en",
