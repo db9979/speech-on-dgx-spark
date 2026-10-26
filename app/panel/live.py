@@ -1413,6 +1413,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Lagerfeuer und Rast (dungeon_rast.py): numbers on the game's line
+        import dungeon_rast
+        dgn["rast"] = dungeon_rast.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["rast"] = {}
     try:   # Narben (dungeon_narben.py): numbers on the game's line
         import dungeon_narben
         dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
@@ -1970,6 +1975,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("narben") or {}).values()) else "")
                         + (f" · {dgn['lied']['lieder']} Heldenlieder, heute {dgn['lied']['gemacht']} gesungen, {dgn['lied']['weg']} nicht gekommen"
                            + (" · singt gerade" if dgn['lied'].get("macht") else "") if (dgn.get("lied") or {}).get("lieder") or (dgn.get("lied") or {}).get("weg") or (dgn.get("lied") or {}).get("macht") else "")
+                        + (f" · heute {dgn['rast']['kurz']} kurze und {dgn['rast']['lang']} lange Rasten, {dgn['rast']['gestoert']} Nächte gestört, {dgn['rast']['abgelehnt']} abgelehnt"
+                           if any((dgn.get("rast") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

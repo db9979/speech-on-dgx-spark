@@ -3698,6 +3698,13 @@
 "titel": "Wichtige Mail erst nach dem Einordnen",
 "text": "Pi auf V01.1.107, Von selbst melden mit „Mails“ und „Wichtige Mails erkennen“ an. A: Offene Karten „Wichtige Mail“ von Xcode Cloud, Apple, GitHub oder LinkedIn sind nach dem Update unter Erledigt (Nicht wichtig). B: Eine neue Mail von einem Menschen, die im Posteingang bleibt, kommt als Karte, wenn sie wichtig ist; ist „Mails aufräumen“ an, erst nach dessen nächstem Lauf. C: Eine neue Benachrichtigung (no-reply, GitHub, Newsletter) kommt nie als Karte. D: Auf einer Karte „Nicht wichtig“ tippen: unter E-Mail → Einstellungen steht der Absender im Feld „Nicht wichtig“, im iPhone unter Ich → Von selbst ebenso; von ihm kommt keine Karte mehr; aus dem Feld löschen geht. E: Zustand → Live, E-Mail: „Wichtige Mail: heute N gemeldet, M aussortiert“.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P553",
+"v": 1108,
+"titel": "Dungeon-Master: Lagerfeuer und Rast",
+"text": "Funktionen → KI-Dungeon-Master → Lagerfeuer und Rast einschalten, eine Runde mit zwei Plätzen spielen und außerhalb eines Kampfes das Spielleiter-Pult öffnen. A: „Kurze Rast“ gibt jedem stehenden Helden ein Viertel Leben, nach zwei kurzen ist die Kachel grau. B: „Lange Rast“ zeigt über der Geschichte drei Nachtwachen und jedem Platz eine eigene Frage am Lagerfeuer; der nächste Zug erzählt das Lager. C: Gleich danach ist „Lange Rast“ grau mit „in 8 Zügen“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

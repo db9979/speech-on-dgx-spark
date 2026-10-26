@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.108** KI-Dungeon-Master: Lagerfeuer und Rast, der Gastgeber ruft eine kurze oder lange Rast, drei Nachtwachen je Landschaft und eine Frage am Feuer für jeden Platz
 - **V01.1.107** · 2026-10-26 · Wichtige Mail erst nach dem Einordnen: Karten nur für Mails, die nach Mail-Regeln und „Mails aufräumen“ im Posteingang bleiben; automatische Absender, Listen, Newsletter, soziale Netzwerke, Rechnungen, Werbung und Anmeldecodes nie; Knopf „Nicht wichtig“ mit Absenderliste (Panel und iPhone)
 - **V01.1.106** KI-Dungeon-Master: Heldenlied des Barden, am Kapitelende ein deutsch gesungenes Lied mit den Namen und Taten der Helden
 - **V01.1.105** KI-Dungeon-Master: Narben und bleibende Wunden, wer wieder aufsteht oder kritisch getroffen wird, behält eine Narbe, selten mit −1 auf einen Wert, bis ein Heiler in der Siedlung sie nimmt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.101** KI-Dungeon-Master: Knapp daneben, fehlen einer Probe 1 oder 2, wählt der Held aufgeben oder es mit einem gewürfelten Preis doch zu schaffen
 - **V01.1.100** KI-Dungeon-Master: Ehrungen des Abends, am Ende der Runde feste Titel wie Klinge des Abends und je Held eine Urkunde mit den Zahlen aus den Würfeln des Spark
 - **V01.1.099** KI-Dungeon-Master: Krit- und Patzer-Tabellen, eine 20 oder 1 im Kampf würfelt eine Zeile mit Folge für Gegner oder Held, dazu die Prüfregeln für die Inhalte der D&D-Ideen Runde 2
-- **V01.1.098** KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke und Fackel im Gewölbe
 
 
 

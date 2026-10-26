@@ -125,6 +125,7 @@ import dungeon_ideen as ideen
 import dungeon_kampf as kampf
 import dungeon_mut as mut
 import dungeon_narben as narben
+import dungeon_rast as rast
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3162,6 +3163,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(quest.facts(_me, rd))                  # the quest things carried, lying here, taken now (Punkt 15)
     fakten.update(schrift.facts(rd))                     # the writings found last (D&D idea 3)
     fakten.update(narben.facts(rd, seated(rd)))          # the heroes' scars (D&D idea 8)
+    fakten.update(rast.facts(rd))                        # the camp of a rest (D&D idea 4)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3198,7 +3200,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3614,6 +3616,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             rd["still"][pid] = 0 if pid in rd["offen"] else rd["still"].get(pid, 0) + 1
         rd["offen"] = {}
         rd["zug"] += 1
+        rast.done(rd)                            # the camp is told: the rest ends (D&D idea 4)
         arrive(rd)                               # the fight is over: the ones at the edge come to the table
     _narrated(rd)
 
@@ -5123,6 +5126,7 @@ def view(rid, pid, now=None):
     out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
+    out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))

@@ -5485,6 +5485,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Lagerfeuer und Rast (V01.1.108, D&D-Idee 4, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Lagerfeuer und Rast* (chat.dungeon_rast, ab Werk aus; dungeon_rast.py, kurze und lange Rast nach SRD 5.1, CC BY 4.0, eigener Code; die Tabellen ideen.landschaften, nachtwachen und fragekarten stehen in dungeon_srd.json). Außerhalb eines Kampfes ruft der Gastgeber im Spielleiter-Pult „Kurze Rast“ oder „Lange Rast“ (POST /api/profile/dungeon/{rid}/rast {art}, nur der Gastgeber, Rate-Limit dungeon). Kurz: jeder stehende Held bekommt ein Viertel seines Lebens zurück (mindestens 1), höchstens zweimal zwischen zwei langen Rasten. Lang: das Panel würfelt drei Nachtwachen mit dem W20 auf der Tabelle der Landschaft (Ortsart der Karte, ein Gewölbe ist „Unter der Erde“, sonst „Unterwegs“): ruhig, Geräusch, Besuch oder Überfall. Ohne Überfall volles Leben und alle Zauber, mit Überfall nur das halbe Leben und keine Zauber; am Kindertisch ist ein Überfall nur ein Geräusch. Höchstens eine lange Rast in 8 Zügen. Jeder Platz bekommt eine Frage am Lagerfeuer. Solange die Rast auf ihre Erzählung wartet, steht rd[\"rast\"] (die Musik spielt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "„Lager“); der Erzähler bekommt Art, Landschaft, Nachtwachen und Fragen in seinen Fakten und erzählt nur, der nächste erzählte Zug beendet die Rast. Über der Geschichte steht ein Kasten mit den Nachtwachen und der eigenen Frage; die App zeigt ihn im Spieltisch. Live: heute kurze und lange Rasten, gestörte Nächte, abgelehnt. Log dungeon: rast | kurz, | lang | 3 wachen | ruhig|gestoert, | abgelehnt | Fehler. Selbsttest Fight.test_rest_at_the_campfire_by_fixed_rules."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10766,6 +10782,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Schriftstücke (Funktionen → Meine Daten → „Schriftstücke“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Finden die Helden in der Geschichte etwas Geschriebenes (einen Brief, einen Steckbrief, einen Vers, eine Tagebuchseite, eine Notiz, eine Inschrift), erscheint es am Tisch als Pergament mit Titel, Text (höchstens 600 Zeichen) und Absender …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Lagerfeuer und Rast (Funktionen → Meine Daten → „Lagerfeuer und Rast“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Außerhalb eines Kampfes ruft der Gastgeber im Spielleiter-Pult eine Rast."
 },
 {
 "lang": "de",
@@ -19605,6 +19629,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: campfire and rest (V01.1.108, D&D idea 4, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Campfire and rest* (chat.dungeon_rast, off by default; dungeon_rast.py, short and long rest after the SRD 5.1, CC BY 4.0, own code; the tables ideen.landschaften, nachtwachen and fragekarten stand in dungeon_srd.json). Outside a fight the host calls \"Short rest\" or \"Long rest\" in the game master console (POST /api/profile/dungeon/{rid}/rast {art}, only the host, rate limit dungeon). Short: every hero standing gets a quarter of its life back (at least 1), at most twice between two long rests. Long: the panel rolls three night watches with the d20 on the table of the landscape (the map place's kind, a vault is \"Underground\", else \"On the road\"): quiet, noise, visit or raid. Without a raid full life and every spell, with a raid only half the life and no spells; at the children's table a raid is only a noise. At most one long rest in 8 turns. Every seat gets a question at the campfire. While the rest waits for its narration rd[\"rast\"] stands (the music plays \"camp\"); the narrator gets kind, landscape, night watches and questions "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "in its facts and only tells, the next narrated turn ends the rest. Above the story a box shows the night watches and the own question; the app shows it at the game table. Live: short and long rests, disturbed nights, refused today. Log dungeon: rast | kurz, | lang | 3 wachen | ruhig|gestoert, | abgelehnt | Error. Self-test Fight.test_rest_at_the_campfire_by_fixed_rules."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24702,6 +24742,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Writings (Features → My data → \"Writings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When the heroes find something written in the story (a letter, a wanted poster, a verse, a diary page, a note, an inscription), it appears at the table as parchment with title, text (at most 600 characters) and sender and stays in the ta …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Campfire and rest (Features → My data → \"Campfire and rest\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Outside a fight the host calls a rest in the game master console."
 },
 {
 "lang": "en",

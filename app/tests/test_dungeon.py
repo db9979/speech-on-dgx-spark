@@ -7533,6 +7533,93 @@ class Fight(Turns):
         with open(os.path.join(root, "static", "js", "dungeonfenster.js"), encoding="utf-8") as f:
             self.assertIn("heiler:['Heilen lassen'", f.read())
 
+    def test_rest_at_the_campfire_by_fixed_rules(self):
+        """D&D idea 4 (Lagerfeuer und Rast, switch dungeonrast): off by default; on, the host calls a rest outside a fight:
+        a short one heals a quarter (KURZ_MAX between long ones), a long one rolls WACHEN night watches of the landscape,
+        a raid halves the healing and keeps the spell charges, else full; a question card per seat; one long rest in
+        LANG_ZUEGE turns; the children's table never has a raid; the narrated turn ends the rest."""
+        import features
+        import dungeon_rast as rast
+        self.assertNotIn(rast.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_rast"], False)
+        r = dungeon.rules()
+        u = f"/api/profile/dungeon/{self.rid}/rast"
+
+        def edit(fn):
+            with dungeon._lock:
+                d = dungeon._read()
+                fn(d["runden"][self.rid])
+                dungeon._write(d)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.post(u, json={"art": "kurz"}).status_code, 404)   # switch off
+        helpers.keep_chat(self, "dungeon_rast")
+        helpers.set_config(dungeon_rast=True)
+        edit(lambda rd: rd["plaetze"][self.host]["held"].update(leben=1))
+        h0 = self.state(self.rid)["plaetze"][self.host]["held"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.c.post(u, json={"art": "kurz"})
+        self.assertEqual(v.status_code, 200, v.text)
+        self.assertIn("dungeon: rast | kurz", out.getvalue())
+        self.assertEqual(v.json()["rast"]["jetzt"]["art"], "kurz")
+        self.assertEqual(self.state(self.rid)["plaetze"][self.host]["held"]["leben"], min(h0["leben_max"], 1 + max(1, h0["leben_max"] // rast.KURZ_TEIL)))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.post(u, json={"art": "kurz"}).json()["detail"], "rast schon")
+            self.assertEqual(self.c.post(u, json={"art": "nap"}).status_code, 400)
+
+        def next_turn(rd):
+            rd["zug"] += 1
+            rast.done(rd)
+        edit(next_turn)
+        self.assertNotIn("rast", self.state(self.rid))                             # the narrated turn ends it
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.post(u, json={"art": "kurz"}).status_code, 200)
+            edit(next_turn)
+            self.assertEqual(self.c.post(u, json={"art": "kurz"}).json()["detail"], "rast kurz")
+            edit(lambda rd: rd.update(kampf={"gegner": [], "helden": []}))
+            self.assertEqual(self.c.post(u, json={"art": "lang"}).json()["detail"], "rast kampf")
+        # a long rest with a raid in the night: half the life, no charges
+        weg = r["ideen"]["nachtwachen"]["weg"]
+        raid = next(x for x in weg if x["art"] == "ueberfall")
+
+        def low(rd):
+            rd.pop("kampf", None)
+            h = rd["plaetze"][self.host]["held"]
+            h["leben"] = 1
+            h["ladungen"] = [0] * len(h["ladungen"])
+        edit(low)
+        with mock.patch.object(rast.random, "randint", lambda a, b: raid["von"]), contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.c.post(u, json={"art": "lang"})
+        self.assertEqual(v.status_code, 200, v.text)
+        self.assertIn(f"dungeon: rast | lang | {rast.WACHEN} wachen | gestoert", out.getvalue())
+        j = v.json()["rast"]
+        self.assertTrue(j["jetzt"]["gestoert"])
+        self.assertEqual([x["art"] for x in j["jetzt"]["wachen"]], ["ueberfall"] * rast.WACHEN)
+        self.assertTrue(j["jetzt"]["frage"])
+        self.assertEqual((j["kurz_frei"], j["lang_in"]), (rast.KURZ_MAX, rast.LANG_ZUEGE))
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual(h["leben"], min(h["leben_max"], 1 + h["leben_max"] // 2))
+        self.assertEqual(set(h["ladungen"]), {0})
+        self.assertTrue(dungeon.view(self.rid, self.gp)["rast"]["jetzt"]["frage"])        # every seat its card
+        self.assertNotIn("kurz_frei", dungeon.view(self.rid, self.gp)["rast"])          # the tiles are the host's
+        self.assertIn(raid["t"][0], dungeon.facts(r, rd))
+        self.assertIn("rast", dungeon.system_text(r, rd, "erzaehlen"))
+        edit(next_turn)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.post(u, json={"art": "lang"}).json()["detail"], "rast lang")
+        # the children's table: a raid is only a noise; a vault is under the earth
+        rd["ton"] = min(x_["id"] for x_ in r["toene"])
+        with mock.patch.object(rast.random, "randint", lambda a, b: raid["von"]):
+            self.assertEqual({x["art"] for x in rast.watches(r, rd, rast.random, True)}, {"geraeusch"})
+        self.assertEqual(rast.land(r, {"karte": {"drin": 0}})["id"], "unterwelt")
+        self.assertEqual(rast.land(r, {})["id"], "weg")
+        self.assertGreaterEqual(rast.for_live()["lang"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("${dmRast(v)}", js)
+        self.assertIn("'rast lang':", js)
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""
