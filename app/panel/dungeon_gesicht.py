@@ -11,9 +11,15 @@ of these portraits as reference pictures (bilder.paint refs), chosen by fixed ru
 (speaking first, then named), then a hero who acted in that turn and has a portrait, each with a fixed phrase, so a face
 stays the same from picture to picture. The host may have a portrait painted again; the old one stays until the new
 one is there. Only while „Gesichter für NSCs“ (features "dungeongesicht", admin switch chat.dungeon_gesicht, off) is
-allowed for the host, together with „NSC-Gedächtnis und Chronik“ and „Bilder malen“. The field:
+allowed for the host, together with „NSC-Gedächtnis und Chronik“ and „Bilder malen“.
+A hired companion (dungeon_gefaehrte, D&D ideas round 2, idea 9, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse
+ich dir.“) gets its face the same way, at once on hiring, from its fixed line of the table in English (an animal friend at
+the children's table as it is), never with its name; only while „Gefährten anheuern“ is allowed for the host together
+with this switch and „Bilder malen“. The table shows it instead of 🤝 (gefaehrten[].bild), a scene picture takes it as a
+reference when the last narration names the companion. The field:
 
     rd["nsc"][name]["gesicht"]  {"n": "nsc-<16 hex>", "st": "malt" | "ok" | "weg" | "fehler" | "tag" | "neu", "day", "alt"?}
+    rd["gefaehrten"][i]["gesicht"]   the same for a companion (a campaign keeps it with the companion)
 
 The card goes into the next chapter with its portrait (dungeon_nsc.keep); a portrait no round or campaign names goes
 with the hourly sweep. Seats see the portrait's name in the people of the view (nsc.leute[].bild) and load it like an
@@ -32,6 +38,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_gefaehrte as gf
 import dungeon_nsc as nsc
 import dungeon_stimmen as stimmen
 import features
@@ -49,15 +56,40 @@ WARTE_ZUEGE = 2            # a person that has not spoken yet is painted this ma
 GESICHT_EN = "character portrait, head and shoulders, the face clearly visible"
 VORLAGE_EN = "{} from reference image {} with the same face"
 HELD_EN = "the hero"
+GEFAEHRTE_EN = "a companion of the heroes, "
+GEFAEHRTE_VORLAGE_EN = "the companion"
 _malt = set()              # portraits on their way (memory: a restart paints again the next day)
 _vorlagen = {}             # (rid, bid) -> portrait names of a scene picture on its way
 _sweep = [0.0]
 _day = DayCounter(gemalt=0, weg=0, vorlagen=0)
 
 
+def _basis(rd):
+    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and dungeon.pictures_on(rd["owner"])
+
+
 def on(rd):
     """The host may: this switch, „NSC-Gedächtnis und Chronik“ and „Bilder malen“."""
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd) and dungeon.pictures_on(rd["owner"])
+    return _basis(rd) and nsc.on(rd)
+
+
+def gf_on(rd):
+    """The companions' faces: this switch, „Gefährten anheuern“ and „Bilder malen“."""
+    return _basis(rd) and gf.on(rd)
+
+
+def people(rd):
+    """[(key, record)] of everyone who gets a portrait here: the cards (nsc) and the hired companions (key gf:…)."""
+    out = list((rd.get("nsc") or {}).items()) if on(rd) else []
+    if gf_on(rd):
+        out += [(c["k"], c) for c in gf.all_(rd) if isinstance(c, dict) and gf.is_one(c.get("k"))]
+    return out
+
+
+def _find(rd, key):
+    if gf.is_one(key):
+        return next((c for c in gf.all_(rd) if isinstance(c, dict) and c.get("k") == key), None)
+    return (rd.get("nsc") or {}).get(key)
 
 
 def who(rd, x):
@@ -70,7 +102,10 @@ def who(rd, x):
 
 
 def text(rd, x):
-    """The person's fixed description from its card (English column of the tables)."""
+    """The person's fixed description from its card (English column of the tables); a companion's from its fixed line."""
+    if gf.is_one(x.get("k")):
+        s = str((x.get("satz") or ["", ""])[-1]).strip().rstrip(".")
+        return GEFAEHRTE_EN + s[:1].lower() + s[1:]
     k = x.get("karte") or {}
     out = who(rd, x)
     if k.get("beruf"):
@@ -93,19 +128,20 @@ def prompt(r, rd, key, x):
 
 
 def _due(rd, key, x, today):
-    """Whether the person's portrait is to be painted now (not yet, or again on the host's wish)."""
+    """Whether the person's portrait is to be painted now (not yet, or again on the host's wish); a companion at once."""
     g = x.get("gesicht") or {}
-    if x.get("gesehen") is None or g.get("n") in _malt or g.get("st") in ("ok", "weg"):
+    comp = gf.is_one(key)
+    if (x.get("gesehen") is None and not comp) or g.get("n") in _malt or g.get("st") in ("ok", "weg"):
         return False
     if g.get("st") in ("tag", "fehler", "malt") and g.get("day") == today:
         return False
-    spoke = key in (rd.get("npc_stimmen") or {})
+    spoke = comp or key in (rd.get("npc_stimmen") or {})
     return g.get("st") == "neu" or spoke or rd.get("zug", 0) - x["gesehen"] >= WARTE_ZUEGE
 
 
 def queue():
-    """Inside dungeon._lock: every person met in a running round without its portrait, of a host who may, within the
-    game's day limit. Returns [(rid, key, name, prompt)] to paint (dungeon_dingbild.due)."""
+    """Inside dungeon._lock: every person met (and every companion hired) in a running round without its portrait, of a
+    host who may, within the game's day limit. Returns [(rid, key, name, prompt)] to paint (dungeon_dingbild.due)."""
     import dungeon_dingbild as db
     import schwer
     r = dungeon.rules()
@@ -114,9 +150,9 @@ def queue():
         d = dungeon._read()
         changed = False
         for rid, rd in d["runden"].items():
-            if rd.get("status") != "laeuft" or not on(rd):
+            if rd.get("status") != "laeuft":
                 continue
-            for key, x in (rd.get("nsc") or {}).items():
+            for key, x in people(rd):
                 if not _due(rd, key, x, today):
                     continue
                 g = x.get("gesicht") or {}
@@ -153,7 +189,7 @@ async def paint(rid, key, n, p):
     def note():
         with dungeon._lock:
             d = dungeon._read()
-            x = ((d["runden"].get(rid) or {}).get("nsc") or {}).get(key)
+            x = _find(d["runden"].get(rid) or {}, key)
             if not x or (x.get("gesicht") or {}).get("n") != n:
                 return
             alt, day = x["gesicht"].get("alt"), db._date()
@@ -185,22 +221,25 @@ def vorlagen(r, rd):
     people, speaking first, then named; then a hero who acted in that turn) and the fixed phrase for each. Returns
     ([names], text to add to the scene's prompt)."""
     import dungeon_dingbild as db
-    if not on(rd):
+    pp = dict(people(rd))
+    if not pp:
         return [], ""
     e = next((e for e in reversed(rd.get("log") or []) if e.get("art") == "dm"), None)
     if not e:
         return [], ""
     have = db.files()
-    ns = rd.get("nsc") or {}
     low = str(e.get("text", "")).lower()
     keys = [str(x.get("name", "")).lower() for x in e.get("npc") or []]
-    keys += sorted((k for k in ns if k in low), key=low.index)
+    keys += sorted((k for k in pp if not gf.is_one(k) and k in low), key=low.index)
+    seen = {k: min(low.index(w) for w in ws) for k, ws in
+            ((k, [str(w).lower() for w in pp[k].get("name") or [] if str(w).strip() and str(w).lower() in low]) for k in pp if gf.is_one(k)) if ws}
+    keys += sorted(seen, key=seen.get)                  # then the companions the narration names
     names, phrases = [], []
     for k in keys:
-        n = _ok(ns[k], have) if k in ns else ""
+        n = _ok(pp[k], have) if k in pp else ""
         if n and n not in names and len(names) < VORLAGEN:
             names.append(n)
-            phrases.append(VORLAGE_EN.format(f"the {who(rd, ns[k]).split(' ', 1)[1]}", len(names)))
+            phrases.append(VORLAGE_EN.format(GEFAEHRTE_VORLAGE_EN if gf.is_one(k) else f"the {who(rd, pp[k]).split(' ', 1)[1]}", len(names)))
     for a in rd.get("log") or []:
         if len(names) >= VORLAGEN:
             break
@@ -235,8 +274,14 @@ def refs(rid, bid):
 # ---------------------------------------------------------------- what a seat sees, what is kept
 def add(rd, out):
     """dungeon.view (through dungeon_dingbild.add): the portrait's name on every person met (nsc.leute[].bild), the
-    host's „Neu malen“ on its secret card (nsc_geheim[].gesicht: "ok" may be painted again, "malt" on its way)."""
+    host's „Neu malen“ on its secret card (nsc_geheim[].gesicht: "ok" may be painted again, "malt" on its way), the
+    companion's face on its row (gefaehrten[].bild)."""
     import dungeon_dingbild as db
+    if isinstance(out.get("gefaehrten"), list) and gf_on(rd):
+        have = db.files()
+        for c in out["gefaehrten"]:
+            x = _find(rd, str(c.get("k", "")))
+            c["bild"] = _ok(x, have) if x else ""
     if not isinstance(out.get("nsc"), dict) or not on(rd):
         return out
     have = db.files()
@@ -255,16 +300,13 @@ def keep(d):
     """The portraits a round or a campaign still names (the sweep keeps them)."""
     out = set()
 
-    def card(ns):
-        for x in (ns or {}).values():
+    def card(xs):
+        for x in xs:
             g = x.get("gesicht") if isinstance(x, dict) else None
             if isinstance(g, dict):
                 out.update(n for n in (g.get("n"), g.get("alt")) if n)
-    for v in d["runden"].values():
-        card(v.get("nsc"))
-    for uid in profiles.user_ids():
-        for c in dungeon.campaigns(uid).values():
-            card(c.get("nsc"))
+    for v in [*d["runden"].values(), *(c for uid in profiles.user_ids() for c in dungeon.campaigns(uid).values())]:
+        card(_alle(v))
     return out
 
 
@@ -285,6 +327,12 @@ def sweep(now):
     return len(gone)
 
 
+def _alle(v):
+    """Every card and companion of a round or a campaign (the records that may hold a portrait)."""
+    ns, gs = v.get("nsc"), v.get("gefaehrten")
+    return [*(ns.values() if isinstance(ns, dict) else ()), *(gs if isinstance(gs, list) else ())]
+
+
 def may_see(name, uid=None, rid=None):
     """An nsc- picture only for a seat of a round that names it (a guest's seat by rid, a profile that hosts or sits in
     it by uid). Any other name pattern is not this module's (True)."""
@@ -295,7 +343,7 @@ def may_see(name, uid=None, rid=None):
             continue
         if uid is not None and v.get("owner") != uid and not any(p.get("uid") == uid for p in v["plaetze"].values()):
             continue
-        if any(name in ((x.get("gesicht") or {}).get("n"), (x.get("gesicht") or {}).get("alt")) for x in (v.get("nsc") or {}).values()):
+        if any(isinstance(x, dict) and name in ((x.get("gesicht") or {}).get("n"), (x.get("gesicht") or {}).get("alt")) for x in _alle(v)):
             return True
     return False
 
@@ -305,7 +353,7 @@ def for_live():
     if not features.admin_on(KEY):
         return {"on": False}
     rs = [v for v in dungeon._read()["runden"].values() if v.get("status") == "laeuft"]
-    return {"on": True, "da": sum(1 for v in rs for x in (v.get("nsc") or {}).values() if (x.get("gesicht") or {}).get("st") == "ok"),
+    return {"on": True, "da": sum(1 for v in rs for x in _alle(v) if isinstance(x, dict) and (x.get("gesicht") or {}).get("st") == "ok"),
             "malt": len(_malt), **_day.counts()}
 
 

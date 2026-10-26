@@ -19,7 +19,10 @@
                      ["Ein Lehrling poliert, bis es glänzt.", "An apprentice polishes until it shines."]],
       "heiler": [["Über dem Tisch hängen Kräuterbündel zum Trocknen, es duftet nach Minze.", "Bundles of herbs hang drying over the table, it smells of mint."],
         ["Die Heilerin rollt saubere Verbände auf und lächelt ruhig.", "The healer rolls up clean bandages and smiles calmly."],
-        ["Auf dem Regal stehen kleine Fläschchen mit bunten Tropfen.", "Little bottles of coloured drops stand on the shelf."]]
+        ["Auf dem Regal stehen kleine Fläschchen mit bunten Tropfen.", "Little bottles of coloured drops stand on the shelf."]],
+      "gefaehrte": [["Am Brett neben der Tür hängen Zettel: Begleitung zu haben, gegen Lohn.", "On the board by the door hang notes: company to be had, for pay."],
+        ["Auf der Bank wartet jemand mit gepacktem Bündel und schaut euch an.", "Someone waits on the bench with a packed bundle and looks at you."],
+        ["Der Wirt nickt zur Ecke: Dort sitzen die, die mitkommen würden.", "The innkeeper nods towards the corner: there sit those who would come along."]]
     },
     "horror": {
       "gasthaus": [["Der Wirt zählt die Gäste zweimal und verriegelt die Tür.", "The innkeeper counts the guests twice and bolts the door."],

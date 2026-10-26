@@ -3796,6 +3796,20 @@
 "titel": "Dungeon-Master: Kampfzug-Prüfung",
 "text": "Eine Runde mit Kampf spielen. A: „kämpfe gegen die Wache“ schreiben: es kommt ein Angriff gegen die Rüstung der Wache mit Treffer oder daneben und Schaden, keine Probe gegen eine Schwierigkeit. B: Die Beschriftung einer Probe nennt nie einen Zauber, den du nicht selbst genannt hast; nennst du einen, sinkt seine Ladung. C: Mitten im Kampf gibt es keine Ziel- oder Akt-EP; jeder EP-Eintrag sagt in Klammern, wofür.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P567",
+"v": 1124,
+"titel": "Dungeon-Master: Requisiten im Szenenbild",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Umgebung nutzen an, Bilder malen und Szenenbilder an. A: In einer Runde einen Kampf beginnen; die Requisiten stehen als Chips am Tisch. B: Das nächste Szenenbild zeigt diese Dinge (etwa Kronleuchter oder Ölfässer). C: Eine Requisite benutzen: im folgenden Szenenbild fehlt sie. D: Umgebung nutzen aus: Szenenbilder wie bisher.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P568",
+"v": 1124,
+"titel": "Dungeon-Master: Gesichter für Gefährten",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Gesichter für NSCs, Gefährten anheuern und Bilder malen an. A: In einer Siedlung einen Gefährten anheuern; nach spätestens einer Minute steht in der Gruppe sein Gesicht statt 🤝. B: Das Gesicht passt zu seiner Beschreibung und trägt nie seinen Namen. C: Nennt der Spielleiter den Gefährten, zeigt das nächste Szenenbild dasselbe Gesicht. D: Gefährten anheuern aus: wieder 🤝 und kein neues Gesicht.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

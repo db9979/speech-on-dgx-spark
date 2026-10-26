@@ -4721,7 +4721,8 @@ def queue_scene(r, d, rid, rd, text):
     _bilder_jobs[rid] = secrets.token_hex(6)
     names, faces = gesicht.vorlagen(r, rd)        # the faces of the scene's people as reference pictures (Tabletop-Punkt 15)
     gesicht.merke(rid, bid, names)
-    return bid, f"{style(r, rd)}, {text}{faces}, {BILD_ENDE}"
+    import dungeon_dingbild                       # the fight's props in the picture (D&D-Idee 3 of round 2)
+    return bid, f"{style(r, rd)}, {text}{dungeon_dingbild.props(r, rd)}{faces}, {BILD_ENDE}"
 
 
 def bild_file(name):

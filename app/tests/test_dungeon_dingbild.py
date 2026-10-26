@@ -795,6 +795,42 @@ class Flair(Base):
                 self.assertNotIn("close-up", p)                               # a whole figure or head and shoulders
 
 
+class Props(Base):
+    """D&D-Idee 3 of round 2 (Umgebung nutzen, Dominik 2026-10-26 „1-9 umsetzten“): the props of a fight still there go
+    into the scene picture by their English catalog name (at most REQUISITEN_MAX), never the model's text; a used prop
+    and the switch off leave them out."""
+    def test_the_fights_props_are_in_the_scene_picture(self):
+        helpers.keep_chat(self, "dungeon_umgebung")
+        helpers.set_config(dungeon_umgebung=True)
+        r = dungeon.rules()
+        rid = self.new_round()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["kampf"] = {"gegner": [], "requisiten": ["kronleuchter", "oelfass", "pulverfass", "felsblock"]}
+            dungeon._write(d)
+        rd = dungeon._read()["runden"][rid]
+        rows = {x["id"]: x for x in r["ideen"]["requisiten"]}
+        t = db.props(r, rd)
+        for k in ("kronleuchter", "oelfass", "pulverfass"):
+            self.assertIn(rows[k]["name"][1].lower(), t)
+        self.assertNotIn(rows["felsblock"]["name"][1].lower(), t)          # at most REQUISITEN_MAX
+        with mock.patch("dungeon.may_paint", lambda *a: ""):
+            with dungeon._lock:
+                d = dungeon._read()
+                _, prompt = dungeon.queue_scene(r, d, rid, d["runden"][rid], "a hall with long shadows")
+            dungeon._bilder_jobs.pop(rid, None)
+        self.assertIn(t, prompt)
+        self.assertTrue(prompt.endswith(dungeon.BILD_ENDE))
+        rd["kampf"]["requisiten"] = ["oelfass"]                             # the others were used
+        self.assertNotIn(rows["kronleuchter"]["name"][1].lower(), db.props(r, rd))
+        helpers.set_config(dungeon_umgebung=False)
+        self.assertEqual(db.props(r, rd), "")
+        rd.pop("kampf")
+        helpers.set_config(dungeon_umgebung=True)
+        self.assertEqual(db.props(r, rd), "")
+
+
 class Settlement(Base):
     """Dominik 2026-10-25 „so umsetzten“ (Siedlung mit Leben 1a/2a/4a): the settlement's head is the place's stage
     picture, every service (dungeon_gold.DIENSTE and „verbessern“) has a picture per style (painted at night and with
@@ -803,7 +839,7 @@ class Settlement(Base):
     def test_every_service_painted_and_lined(self):
         import dungeon_gold
         r = dungeon.rules()
-        self.assertLessEqual(set(dungeon_gold.DIENSTE) | {dungeon_gold.HEILER}, set(db.DIENST_EN))   # the healer too (idea 8)
+        self.assertLessEqual(set(dungeon_gold.DIENSTE) | {dungeon_gold.HEILER, dungeon_gold.GEFAEHRTE}, set(db.DIENST_EN))   # the healer (idea 8), the companion (round 2, idea 9)
         self.assertIn("verbessern", db.DIENST_EN)
         want = dict(db.wanted(r))
         for st in db.styles(r) + [dungeon.BILD_KIND]:

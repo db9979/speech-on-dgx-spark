@@ -11,6 +11,8 @@ reference picture for later scene pictures.
 - The host may have a face painted again (nobody else); the old one stays until the new one is there and stays when
   the new one does not come.
 - Only a seat of a round that names a face loads it; the sweep removes the faces nobody names; Live only counts.
+- A hired companion (round 2, idea 9) gets its face at once, from its fixed English line, never with its name, only while
+  „Gefährten anheuern“ is allowed too; its row shows it, a scene that names it takes it as a reference, the sweep keeps it.
 
 No wall clock: the date comes from the picture module's clock, set by the tests.
 """
@@ -85,7 +87,7 @@ class Base(unittest.TestCase):
         cls.c, cls.uid = profile("Gesicht Greta")
 
     def setUp(self):
-        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_gesicht", "dungeon_bilder", "bilder")
+        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_gesicht", "dungeon_bilder", "bilder", "dungeon_gefaehrte")
         helpers.set_config(dungeon=True, dungeon_nsc=True, dungeon_gesicht=True, dungeon_bilder=False, bilder=True)
         self._image(True)
         self.addCleanup(self._image, False)
@@ -348,6 +350,53 @@ class Again(Base):
         live = gesicht.for_live()
         self.assertEqual((live["da"], live["gemalt"]), (1, 1))
         self.assertTrue(all(isinstance(v, (int, bool)) for v in live.values()))
+
+
+class Companions(Base):
+    SATZ = ["Söldnerin mit Speer, wortkarg und zuverlässig.", "A spear-carrying sellsword, curt and reliable."]
+
+    def hire(self, rid):
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid].setdefault("gefaehrten", []).append(
+                {"k": "gf:grete", "id": "grete", "name": ["Grete", "Grete"], "satz": list(self.SATZ), "hid": "", "stufe": 1, "leben": 8,
+                 "max": 8, "kapitel": d["runden"][rid].get("kapitel", 0), "aus": "", "moral": False})
+            dungeon._write(d)
+
+    def test_a_hired_companion_gets_its_face_at_once(self):
+        helpers.set_config(dungeon_gefaehrte=False)
+        rid = self.new_round()
+        self.hire(rid)
+        self.assertEqual(gesicht.queue(), [])                       # „Gefährten anheuern“ off: no face
+        helpers.set_config(dungeon_gefaehrte=True, dungeon_nsc=False)   # the cards' switch is not needed for it
+        jobs = self.paint_all()
+        self.assertEqual(len(jobs), 1)
+        _, key, n, p = jobs[0]
+        self.assertEqual(key, "gf:grete")
+        self.assertIn("a companion of the heroes, a spear-carrying sellsword, curt and reliable", p)
+        self.assertIn(gesicht.GESICHT_EN, p)
+        self.assertNotIn("Grete", p)                                # never the name
+        self.assertEqual(gesicht.queue(), [])                       # once
+        rd = dungeon._read()["runden"][rid]
+        self.assertEqual(rd["gefaehrten"][0]["gesicht"]["st"], "ok")
+        v = self.c.get(f"/api/profile/dungeon/{rid}").json()
+        self.assertEqual(v["gefaehrten"][0]["bild"], n)
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{n}").status_code, 200)
+        c2, _ = profile("Gesicht Gustav")                           # not at the table: nothing
+        self.assertEqual(c2.get(f"/api/profile/dungeon/ding/{n}").status_code, 404)
+        # a scene that names the companion takes its face
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            dungeon._log(rd, "dm", text="Grete hebt den Speer und lauscht.", npc=[])
+            names, extra = gesicht.vorlagen(dungeon.rules(), rd)
+        self.assertEqual(names, [n])
+        self.assertEqual(extra, ", the companion from reference image 1 with the same face")
+        self.assertIn(n, gesicht.keep(dungeon._read()))
+        self.assertEqual(gesicht.sweep(self.now[0]), 0)
+        self.assertTrue(os.path.exists(dungeon.bild_file(n)))
+        helpers.set_config(dungeon_gefaehrte=False)                 # off again: the row names no face
+        self.assertNotIn("bild", (self.c.get(f"/api/profile/dungeon/{rid}").json().get("gefaehrten") or [{}])[0])
 
 
 if __name__ == "__main__":

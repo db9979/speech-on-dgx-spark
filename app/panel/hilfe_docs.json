@@ -7173,6 +7173,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Requisiten im Szenenbild (V01.1.124, D&D-Ideen Runde 2, Idee 3 „Umgebung nutzen“, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“, Plan plaene/dungeon-dnd-ideen-2.md): Solange ein Kampf läuft und „Umgebung nutzen“ an ist, nimmt ein Szenenbild (dungeon.queue_scene) die Requisiten, die noch da sind (dungeon_umgebung.here, Zeilen aus ideen.requisiten), mit ins Bild: höchstens REQUISITEN_MAX (3), mit ihrem englischen Namen aus dem Katalog, nie mit Text des Modells (dungeon_dingbild.props). Ein Name, den die Bildregeln ablehnen, bleibt weg; eine benutzte Requisite fehlt im nächsten Bild. Kein eigener Schalter: es gilt der Schalter von „Umgebung nutzen“. Selbsttest test_the_fights_props_are_in_the_scene_picture."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gesichter für Gefährten (V01.1.124, D&D-Ideen Runde 2, Idee 9 „Gefährten anheuern“, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“, Plan plaene/dungeon-dnd-ideen-2.md): Ein angeheuerter Gefährte (rd[\"gefaehrten\"], Schlüssel gf:…) bekommt sein Porträt wie eine Figur mit Karte (dungeon_gesicht), aber gleich beim Anheuern statt nach dem ersten Wort: aus seiner festen englischen Zeile der Tabelle (GEFAEHRTE_EN + satz, am Kindertisch das Tierchen, wie es dasteht), nie mit seinem Namen, mit Weltstil, Licht und Stimmung aus den festen Listen, geprüft mit dungeon.picture_text, im Tageslimit der Bilder. Die Gruppe zeigt das Gesicht statt 🤝 (gefaehrten[].bild, dmGefaehrten); nennt die letzte Erzählung den Gefährten, nimmt ein Szenenbild das Gesicht als Vorlage („the companion from reference image N with the same face“). Es gilt nur, solange „Gesichter für NSCs“, „Gefährten anheuern“ und „Bilder malen“ für den Gastgeber an sind; „NSC-Gedächtnis und Chronik“ braucht es dafür nicht. Das Gesicht geht mit dem Gefährten ins nächste Kapitel (dungeon_gefaehrte.keep), der Aufräumer behält es, solange eine Runde oder Kampagne den Gefährten hat, laden darf es nur e"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "in Platz dieser Runde. Selbsttest test_a_hired_companion_gets_its_face_at_once. Der Siedlungsdienst „Gefährte anheuern“ bekommt sein eigenes Bild (DIENST_EN[\"gefaehrte\"], eine Anwerbe-Ecke an der Tür eines Gasthauses, ohne Person vorn) und drei Sätze Leben in dungeon_siedlung.json."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -21534,6 +21558,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ess (it must match the account): then it lies sealed like a password on the Spark, switching it off deletes it. The mail comes when a turn has been open 10 minutes, the guest has written nothing and is not at the table, once per turn, at most 3 a day. All mails are fixed texts of the panel, never model or player text; the emergency stop holds them. \"Delete guest account\" removes heroes, devices and address. Live counts guest accounts, turn mails, codes and mails; Logs only dungeon: gastmail | code gesendet, angemeldet, dran | gesendet and the like, never an address. API (guest): POST /api/dungeon/gast ({code, was: code|anmelden|konto|merken|zugmail|held_weg|loeschen, …}, rate limit dungeonkonto), joining with {code, konto, konto_held}; admin PUT /api/admin/dungeon/gastmail."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: props in the scene picture (V01.1.124, D&D ideas round 2, idea 3 \"use the surroundings\", Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\", plan plaene/dungeon-dnd-ideen-2.md): While a fight goes on and \"use the surroundings\" is on, a scene picture (dungeon.queue_scene) takes the props still there (dungeon_umgebung.here, rows of ideen.requisiten) into the picture: at most REQUISITEN_MAX (3), by their English name from the catalog, never with the model's text (dungeon_dingbild.props). A name the picture rules refuse is left out; a used prop is missing from the next picture. No switch of its own: the switch of \"use the surroundings\" counts. Self-test test_the_fights_props_are_in_the_scene_picture."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: faces for companions (V01.1.124, D&D ideas round 2, idea 9 \"hire companions\", Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\", plan plaene/dungeon-dnd-ideen-2.md): A hired companion (rd[\"gefaehrten\"], key gf:…) gets its portrait like a person with a card (dungeon_gesicht), but at once on hiring instead of after its first word: from its fixed English line of the table (GEFAEHRTE_EN + satz, at the children's table the little animal as it is), never with its name, with the world's style, light and mood from the fixed lists, checked by dungeon.picture_text, within the daily picture limit. The group shows the face instead of 🤝 (gefaehrten[].bild, dmGefaehrten); when the last narration names the companion, a scene picture takes the face as a reference (\"the companion from reference image N with the same face\"). It only holds while \"Faces for NPCs\", \"Hire companions\" and \"Paint pictures\" are on for the host; \"NPC memory and chronicle\" is not needed for it. The face goes on with the companion into the next chapter (dungeon_gefaehrte.keep), the sweep keeps it while a round or campaign has the companion, only a seat of that round may load it. Self-test te"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "st_a_hired_companion_gets_its_face_at_once. The settlement service \"hire a companion\" gets its own picture (DIENST_EN[\"gefaehrte\"], a hiring corner by an inn's door, no person in front) and three lines of life in dungeon_siedlung.json."
 },
 {
 "lang": "en",

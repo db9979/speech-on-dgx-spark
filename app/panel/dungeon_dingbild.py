@@ -148,7 +148,8 @@ DIENST_EN = {"gasthaus": "the common room of an inn of this world with a firepla
              "lehre": "a study room of this world with books, a lectern and a practice yard outside",
              "geruecht": "a busy corner of a tavern or market of this world where rumours are told",
              "verbessern": "a workbench of this world where gear is improved, fine tools and parts",
-             "heiler": "a calm healer's room of this world with drying herbs, clean bandages, a cot and small potion bottles"}
+             "heiler": "a calm healer's room of this world with drying herbs, clean bandages, a cot and small potion bottles",
+             "gefaehrte": "a hiring corner by the door of an inn of this world, a notice board with offers, a travelling pack and a shield against the wall"}
 SIEDLUNG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_siedlung.json")
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
@@ -384,6 +385,20 @@ def stage_pic(r, rd, have=None):
 def service_text(style, d):
     """The fixed prompt of a settlement's service (DIENST_EN) in a style, with light, angle and mood of the lists."""
     return f"{style}, scene art, {DIENST_EN[d]}, no people in the foreground, {flair(style, {'id': d}, 'dienst', True)}, {dungeon.BILD_ENDE}"
+
+
+REQUISITEN_MAX = 3         # props of a fight a scene picture names (dungeon_umgebung: 2 to 3 per place)
+
+
+def props(r, rd):
+    """D&D-Idee 3 of round 2 (Umgebung nutzen): the props of the fight still there (dungeon_umgebung.here, rows of
+    ideen.requisiten) in the scene picture, by their English catalog name, never the model's text; a name the picture
+    rules refuse is left out. "" without a fight, without props or while „Umgebung nutzen“ is off."""
+    import dungeon_umgebung
+    s = dungeon.style(r, rd)
+    names = [str(x["name"][1]).strip().lower() for x in dungeon_umgebung.here(r, rd)[:REQUISITEN_MAX]
+             if isinstance(x.get("name"), list) and len(x["name"]) == 2 and _ok_text(f"{s}, {x['name'][1]}", r)]
+    return f", {', '.join(names)} clearly visible in the scene" if names else ""
 
 
 def service_key(style, d):
