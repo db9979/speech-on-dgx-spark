@@ -3747,6 +3747,13 @@
 "titel": "Dungeon-Master: Kalender der Welt",
 "text": "Funktionen → KI-Dungeon-Master → Kalender der Welt einschalten und eine Runde mit Karte spielen. A: Oben am Tisch steht „📅 … Tag im …“ mit den Mondphasen. B: Nach einem Weg über zwei Etappen ist ein Tag vergangen, nach einer langen Rast noch einer. C: Steht ein Fest an, zeigt die Zeile „… in N Tagen“; am Fest kosten in einer Siedlung die Dienste 20 Prozent mehr.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P560",
+"v": 1116,
+"titel": "Dungeon-Master: Chronikbuch",
+"text": "Funktionen → KI-Dungeon-Master → Chronikbuch einschalten, eine Runde spielen und im Spielleiter-Pult „Kapitel beenden“. A: Bei der Kampagne steht „📖 Chronik · 1“; das Buch zeigt Titelbild, Helden, Ehrungen und Schriftstücke, Bisher geschah kommt dazu, sobald es geschrieben ist. B: „Als PDF“ lädt ein PDF mit derselben Seite. C: „Seite löschen“ nimmt die Seite heraus, die Kampagne bleibt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -275,6 +275,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_album.py` | Dungeon-Master: Monster-Album, je Held die besiegten Gegner, mehr Wissen nach 1, 3 und 5 Siegen |
 | `app/panel/dungeon_auto.py` | Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde |
 | `app/panel/dungeon_balance.py` | Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark |
+| `app/panel/dungeon_chronik.py` | Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke |
 | `app/panel/dungeon_echt.py` | Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter |
 | `app/panel/dungeon_ehre.py` | Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels |

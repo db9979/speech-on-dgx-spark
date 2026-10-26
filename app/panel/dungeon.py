@@ -130,6 +130,7 @@ import dungeon_rast as rast
 import dungeon_reise as reise
 import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
+import dungeon_chronik as chronikbuch
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -2443,6 +2444,8 @@ def end_chapter(owner, rid, now=None):
         kid = kid or "k" + os.urandom(4).hex()
         c["orte"] = dungeon_karte.names(rd)[-ORTE_KARTE:]
         cover(rid, rd, kid, c)
+        chronikbuch.page(_me, rules(), rd, c, now)   # the chapter's page of the book (D&D idea 11)
+        _log(rd, "kapitel_ende", kapitel=rd.get("kapitel", 1))   # the one place a chapter's end is told (dungeon_lied)
         c.update(kapitel=rd.get("kapitel", 1), vorher=c.get("bisher", ""), t=now, rid="", schreibt=True, entwurf=True,
                  quelle=[x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-QUELLE_MAX:],
                  helden=[{"uid": p["uid"], "hid": p["held"]["hid"], "name": p["held"]["name"]} for _, p in seated(rd) if p.get("uid")],
@@ -2508,6 +2511,7 @@ async def summarize(owner, kid):
                 ks = campaigns(owner)
                 if kid in ks:
                     ks[kid].update(bisher=text, schreibt=False, entwurf=why != "ok")
+                    chronikbuch.story(ks[kid], text)
                     _save_campaigns(owner, ks)
         await asyncio.to_thread(keep)
     finally:
@@ -2522,6 +2526,7 @@ def edit_summary(owner, kid, text):
         if not t or c.get("schreibt"):
             raise ValueError("bisher")
         c.update(bisher=t, entwurf=False)
+        chronikbuch.story(c, t)
         _save_campaigns(owner, ks)
     print("dungeon: bisher geaendert", flush=True)
 
@@ -2605,7 +2610,8 @@ def campaign_view(r, uid, lang):
                     "bisher": c.get("bisher", ""), "entwurf": bool(c.get("entwurf")), "schreibt": bool(c.get("schreibt")),
                     "rid": c.get("rid", ""), "t": c.get("t", 0), "helden": [x["name"] for x in c.get("helden") or []],
                     "gaeste": [h.get("name", "") for h in c.get("gaeste") or []],
-                    "titelbilder": list(c.get("titelbilder") or []), "orte": list(c.get("orte") or [])})
+                    "titelbilder": list(c.get("titelbilder") or []), "orte": list(c.get("orte") or []),
+                    "buch": len(c.get("buch") or []) if features.allowed(chronikbuch.KEY, uid) else None})
     return out
 
 

@@ -1385,6 +1385,67 @@ class Campaign(Base):
         live = dungeon.for_live()
         self.assertTrue(all(isinstance(x, (bool, int)) for x in live.values()))
 
+    def test_a_chronicle_page_for_every_chapter(self):
+        """D&D idea 11 (Chronikbuch, switch dungeonchronik): off by default, the log still says „kapitel_ende“ (the
+        bard's song waits for it); on, closing a chapter writes its page from the round's data (heroes with their scars,
+        the titles, only the writings for everyone, the places), „Bisher geschah“ comes onto it; only the campaign's
+        owner sees the book, turns it, gets the PDF and deletes a page."""
+        import features
+        import dungeon_chronik as chronik
+        self.assertNotIn(chronik.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_chronik"], False)
+        rid, kid = self.chapter()
+        self.assertEqual([e["kapitel"] for e in self.state(rid)["log"] if e["art"] == "kapitel_ende"], [1])
+        self.assertNotIn("buch", dungeon.campaigns(self.uid)[kid])
+        u = f"/api/profile/dungeon/kampagne/{kid}/chronik"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.get(u).status_code, 404)                    # switch off
+        helpers.keep_chat(self, "dungeon_chronik")
+        helpers.set_config(dungeon_chronik=True)
+        self.summarize(kid, {"bisher": "Arvid und Bela fanden unter der Glocke eine versiegelte Krypta."})
+        rid2 = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={}).json()["rid"]
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid2]
+            pid = next(iter(rd["plaetze"]))
+            rd["plaetze"][pid]["held"]["narben"] = [{"t": ["Narbe über dem Auge", "Scar over the eye"]}]
+            rd["schrift"] = [{"id": "s1", "zug": 1, "titel": "Steckbrief", "text": "Gesucht: der Glöckner.", "art": "steckbrief", "von": "", "sicht": "alle"},
+                             {"id": "s2", "zug": 1, "titel": "Geheim", "text": "GeheimerBriefQ7", "art": "brief", "von": "", "sicht": pid}]
+            rd["ehrung"] = [{"titel": "Klinge des Abends", "name": "Arvid"}]
+            dungeon._write(d)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid2}/kapitel", json={}).status_code, 200)
+        self.assertIn("dungeon: chronik | seite | 1 helden | 1 schriften", out.getvalue())
+        self.assertEqual([e["kapitel"] for e in self.state(rid2)["log"] if e["art"] == "kapitel_ende"], [2])
+        p = dungeon.campaigns(self.uid)[kid]["buch"][-1]
+        self.assertEqual((p["kapitel"], p["bisher"]), (2, ""))
+        self.assertEqual(p["helden"][0]["narben"], ["Narbe über dem Auge"])
+        self.assertEqual(p["ehrungen"], [{"titel": "Klinge des Abends", "name": "Arvid"}])
+        self.assertEqual([x["titel"] for x in p["schrift"]], ["Steckbrief"])           # a secret writing stays out
+        c = self.summarize(kid, {"bisher": "Die Krypta war leer, doch der Glöckner floh nach Norden."})
+        self.assertIn("Glöckner floh", c["buch"][-1]["bisher"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            j = self.c.get(u).json()
+            self.assertEqual([x["kapitel"] for x in j["seiten"]], [2])
+            self.assertNotIn("GeheimerBriefQ7", json.dumps(j))
+            self.assertEqual(self.c2.get(u).status_code, 404)                     # only the owner's book
+            self.assertEqual(next(k for k in self.c.get("/api/profile/dungeon").json()["kampagnen"] if k["kid"] == kid)["buch"], 1)
+            r = self.c.get(u + ".pdf")
+            try:
+                import fpdf  # noqa: F401
+                self.assertEqual((r.status_code, r.content[:4]), (200, b"%PDF"))
+            except ImportError:
+                self.assertEqual((r.status_code, r.json()["detail"]), (404, "pdf"))
+            self.assertEqual(self.c.post(u + "/loeschen", json={"kapitel": 99}).status_code, 404)
+            self.assertEqual(self.c2.post(u + "/loeschen", json={"kapitel": 2}).status_code, 404)
+            self.assertEqual(self.c.post(u + "/loeschen", json={"kapitel": 2}).json()["seiten"], [])
+        self.assertGreaterEqual(chronik.for_live()["seiten"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmBuch(DM.buch)", js)
+        self.assertIn("e.art==='kapitel_ende'", js)
+
 
 class Voice(Base):
     def setUp(self):

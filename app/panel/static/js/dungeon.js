@@ -94,6 +94,9 @@ const dmMsg=S=>`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.ms
 const dmHide=(v,art,n,pid)=>v.gastgeber?`<button type="button" class="ic-ib dm-hide" data-dmhide="${art}" data-n="${n}"${pid?` data-pid="${esc(pid)}"`:''} title="${esc(t('Für alle ausblenden','Hide for everyone'))}" aria-label="${esc(t('Für alle ausblenden','Hide for everyone'))}">⊘</button>`:'';
 const DMGRUND={
   'heiler':['Der Heiler findet keine Wunde mit einer Folge, die er nehmen könnte.','The healer finds no wound with a consequence to take.'],
+  'chronik aus':['Das Chronikbuch ist auf diesem Spark aus.','The chronicle is off on this Spark.'],
+  'seite':['Diese Seite der Chronik gibt es nicht mehr.','This page of the chronicle no longer exists.'],
+  'pdf':['Für das PDF fehlt auf diesem Spark die PDF-Bibliothek (fpdf2).','The PDF library (fpdf2) is missing on this Spark.'],
   'rast aus':['Die Rast ist auf diesem Spark aus.','Resting is off on this Spark.'],
   'rast kampf':['Mitten im Kampf rastet niemand.','Nobody rests in the middle of a fight.'],
   'rast schon':['Die Gruppe rastet schon; der nächste Zug erzählt das Lager.','The group is resting already; the next turn tells the camp.'],
@@ -235,7 +238,17 @@ function dmCampaigns(D){const ks=D.kampagnen||[];if(!ks.length)return '';
       :ed?`<textarea class="dm-kedit" rows="5" maxlength="${D.bisher_max}" aria-label="${esc(t('Bisher geschah','The story so far'))}">${esc(k.bisher)}</textarea>`
       :`<p class="dm-bisher">${esc(k.bisher)}</p>`}
     <div class="dm-hostb">${ed?`<button type="button" class="b p" data-dmksave="${esc(k.kid)}">${esc(t('Speichern','Save'))}</button><button type="button" class="b" data-dmkedit="">${esc(t('Abbrechen','Cancel'))}</button>`
-      :`<button type="button" class="b p" data-dmkweiter="${esc(k.kid)}"${k.schreibt?' disabled':''}>▶ ${esc(t('Kapitel '+(k.kapitel+1)+' beginnen','Start chapter '+(k.kapitel+1)))}</button><button type="button" class="b" data-dmkedit="${esc(k.kid)}"${k.schreibt?' disabled':''}>${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmkneu="${esc(k.kid)}"${k.schreibt?' disabled':''}>${esc(t('Neu schreiben lassen','Write it again'))}</button><button type="button" class="b danger" data-dmkdel="${esc(k.kid)}">${esc(t('Löschen','Delete'))}</button>`}</div></div>`}).join('')}</div>`}
+      :`<button type="button" class="b p" data-dmkweiter="${esc(k.kid)}"${k.schreibt?' disabled':''}>▶ ${esc(t('Kapitel '+(k.kapitel+1)+' beginnen','Start chapter '+(k.kapitel+1)))}</button><button type="button" class="b" data-dmkedit="${esc(k.kid)}"${k.schreibt?' disabled':''}>${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmkneu="${esc(k.kid)}"${k.schreibt?' disabled':''}>${esc(t('Neu schreiben lassen','Write it again'))}</button>${k.buch?`<button type="button" class="b" data-dmkbuch="${esc(k.kid)}">📖 ${esc(t('Chronik','Chronicle'))} · ${k.buch}</button>`:''}<button type="button" class="b danger" data-dmkdel="${esc(k.kid)}">${esc(t('Löschen','Delete'))}</button>`}</div>${DM.buch&&DM.buch.kid===k.kid?dmBuch(DM.buch):''}</div>`}).join('')}</div>`}
+// Chronikbuch (D&D idea 11, dungeon_chronik): one page per chapter to turn, the PDF made on the Spark, a page away
+function dmBuch(B){const s=B.d.seiten||[],i=Math.max(0,Math.min(B.i,s.length-1)),x=s[i];if(!x)return `<p class="mut">${esc(t('Die Chronik ist leer.','The chronicle is empty.'))}</p>`;
+  return `<div class="dm-buch"><div class="dm-buchkopf"><button type="button" class="b" data-dmkblatt="-1"${i?'':' disabled'} aria-label="${esc(t('Seite zurück','Page back'))}">‹</button><b>${esc(t('Kapitel','Chapter'))} ${x.kapitel} · ${esc(x.titel)}</b><small class="mut">${i+1}/${s.length}</small><button type="button" class="b" data-dmkblatt="1"${i<s.length-1?'':' disabled'} aria-label="${esc(t('Seite vor','Page forward'))}">›</button></div>
+  ${x.bild?`<img class="dm-kbild" alt="" loading="lazy" src="${esc(x.bild)}">`:''}<small class="mut">${x.zuege} ${esc(t('Züge','turns'))}</small>
+  ${x.bisher?`<div class="lbl">${esc(t('Bisher geschah','The story so far'))}</div><p>${esc(x.bisher)}</p>`:''}
+  <div class="lbl">${esc(t('Helden','Heroes'))}</div>${x.helden.map(h=>`<p>${esc(h.name)} · ${esc(h.volk)} ${esc(h.klasse)}, ${esc(t('Stufe','level'))} ${h.stufe}${h.narben.length?' · 🩸 '+esc(h.narben.join(', ')):''}</p>`).join('')}
+  ${x.ehrungen.length?`<div class="lbl">${esc(t('Ehrungen des Abends','Honours of the evening'))}</div>${x.ehrungen.map(e=>`<p>🏅 ${esc(e.titel)}: ${esc(e.name)}</p>`).join('')}`:''}
+  ${x.schrift.map(w=>`<div class="lbl">📜 ${esc(w.titel)}</div><p class="dm-buchschrift">${esc(w.text)}</p>`).join('')}
+  ${x.orte.length?`<small class="mut">${esc(t('Orte: ','Places: ')+x.orte.join(' → '))}</small>`:''}
+  <div class="dm-hostb"><a class="b" href="/api/profile/dungeon/kampagne/${esc(B.kid)}/chronik.pdf?lang=${dmLang()}" download>${esc(t('Als PDF','As PDF'))}</a><button type="button" class="b danger" data-dmkseite="${x.kapitel}">${esc(t('Seite löschen','Delete page'))}</button><button type="button" class="b" data-dmkbuch="">${esc(t('Schließen','Close'))}</button></div></div>`}
 // people and class of a new hero as cards (the hidden field keeps the choice), their values as chips that never break
 // (Dominik 2026-10-24 „die werte anzeige ist nicht cool gelöst“, „1“): the people's bonus; the class's best values,
 // life and what it can do from level 1
@@ -550,6 +563,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='begegnung')return dmBegegnung(e);
   if(e.art==='angriff')return dmAngriff(e,W);
   if(e.art==='ehrung')return dmEhrung(v,e);
+  if(e.art==='kapitel_ende')return `<div class="dm-sys">📖 ${esc(t('Kapitel '+e.kapitel+' ist zu Ende.','Chapter '+e.kapitel+' has ended.'))}</div>`;
   if(e.art==='rast')return `<div class="dm-narbez">${e.rast==='lang'?'🔥 '+esc(t('Lange Rast','Long rest')):'☕ '+esc(t('Kurze Rast','Short rest'))} · ${esc(e.landschaft||'')}${e.gestoert?' · '+esc(t('Nacht gestört','night disturbed')):''}</div>`;   // a rest (D&D idea 4)
   if(e.art==='reise'){const E={ruhig:t('ruhige Reise','a quiet journey'),ausgeruht:t('ausgeruht angekommen','arrived rested'),hungrig:t('hungrig angekommen','arrived hungry'),ueberrascht:t('überrascht','caught off guard'),verirrt:t('verirrt, ein Tag mehr','lost, a day more')};return `<div class="dm-narbez">🧭 ${esc(t('Reise','Journey'))} · ${esc(String(e.etappen||0))} ${esc(t('Etappen','stages'))} · ${esc(e.landschaft||e.land||'')} · ${esc(E[e.ergebnis]||'')}${(e.rollen||[]).map(x=>`<br>${x.ok?'✓':'✗'} ${esc(x.name||'')} (${esc(x.rolle||'')}): ${esc(String(x.w))}${x.bonus<0?'−':'+'}${esc(String(Math.abs(x.bonus||0)))} = ${esc(String(x.gesamt))} / ${esc(String(x.schwer))}`).join('')}${e.t?'<br>'+esc(e.t):''}</div>`;}   // a journey (D&D idea 9)
   if(e.art==='narbe')return `<div class="dm-narbez">${e.pflaster?'🩹':'🩸'} ${esc(t(`${e.name}: ${e.t[0]}`,`${e.name}: ${e.t[1]}`))}${e.folge?` <span class="pill warn">${esc(e.folge)}</span>`:''}</div>`;   // a wound (D&D idea 8)
@@ -1032,7 +1046,7 @@ async function dmSend(path,b,S,x){if(S.busy)return null;S.busy=true;
   const o=x?xjson(x.method,Object.assign({lang:dmLang()},x.body||{})):b===null?{method:'DELETE'}:xjson('POST',Object.assign({lang:dmLang()},b||{}));const {r,d}=await apiTry(path,o);S.busy=false;
   if(!r.ok){dmSay(S,dmErr(r.status,d.detail),true);return null}S.msg='';S.err=false;return d}
 // ---------------------------------------------------------------- clicks of the own page
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmsitz],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmerzprobe],#dmview [data-dmerzneu],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden],#dmview [data-dmmehr],#dmview [data-dmhide]');
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmsitz],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmerzprobe],#dmview [data-dmerzneu],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmkbuch],#dmview [data-dmkblatt],#dmview [data-dmkseite],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden],#dmview [data-dmmehr],#dmview [data-dmhide]');
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(b.closest('.dmf-welt'))dmWorld(w,B.dmseg);return}
   if(B.dmgs!==undefined){dmStory(w,b);return}
@@ -1055,6 +1069,10 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(B.dmerzprobe){const sel=document.querySelector('#dmview [data-dmerz]');dmProbe('p',{erzaehler:sel?sel.value:''});return}
   if(B.dmmic){dmMic('p');return}
   if(B.dmkedit!==undefined){DM.edit=B.dmkedit;dmDraw();return}
+  if(B.dmkbuch!==undefined){if(!B.dmkbuch){DM.buch=null;dmDraw();return}const {r,d}=await apiTry(`/api/profile/dungeon/kampagne/${B.dmkbuch}/chronik`);
+    if(!r.ok){dmSay(DM,dmErr(r.status,d.detail),true);dmDraw();return}DM.buch={kid:B.dmkbuch,d,i:Math.max(0,(d.seiten||[]).length-1)};dmDraw();return}
+  if(B.dmkblatt&&DM.buch){DM.buch.i+=Number(B.dmkblatt);dmDraw();return}
+  if(B.dmkseite&&DM.buch){const d=await dmSend(`/api/profile/dungeon/kampagne/${DM.buch.kid}/chronik/loeschen`,{kapitel:Number(B.dmkseite)},DM);if(d){DM.buch.d=d;DM.buch.i=Math.min(DM.buch.i,d.seiten.length-1);dmLoad()}dmDraw();return}
   if(B.dmksave||B.dmkneu||B.dmkdel){const kid=B.dmksave||B.dmkneu||B.dmkdel;
     const x=B.dmksave?await dmSend('/api/profile/dungeon/kampagne/'+kid,null,DM,{method:'PUT',body:{bisher:(w.querySelector('.dm-kedit')||{}).value||''}})
       :B.dmkneu?await dmSend(`/api/profile/dungeon/kampagne/${kid}/neu`,{},DM):await dmSend('/api/profile/dungeon/kampagne/'+kid,null,DM);

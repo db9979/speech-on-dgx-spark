@@ -275,6 +275,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_album.py` | KI-Dungeon-Master: Monster-Album. |
 | `app/panel/dungeon_auto.py` | KI-Dungeon-Master im Auto. |
 | `app/panel/dungeon_balance.py` | Gleichgewicht of the Dungeon Master's catalog: fixed tables, never the model. |
+| `app/panel/dungeon_chronik.py` | KI-Dungeon-Master: Chronikbuch zum Blättern. |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber. |
 | `app/panel/dungeon_echt.py` | KI-Dungeon-Master: echte Würfel am Tisch. |
 | `app/panel/dungeon_ehre.py` | KI-Dungeon-Master: Ehrungen des Abends. |
