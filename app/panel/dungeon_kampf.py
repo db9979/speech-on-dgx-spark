@@ -116,13 +116,18 @@ FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|aufgeben|gebt\s+auf|kapitulier|ver
 KONTROLLE = ("befehl", "farbspray", "furcht", "gegenzauber", "hypnosemuster", "person_beherrschen", "person_festhalten", "schlaf",
              "stinkwolke", "unheil", "verbannung", "verlangsamen", "verstricken", "verwandlung", "verwirrung")
 FRIEDEN_SG = (12, 10)      # the panel's peace check: Charisma against the higher of 12 and 10 + the strongest foe's level
+# Kampf-Audit M6: the group flees only when most heroes who can act say so, then by the panel's Geschick check
+FLUCHT_WORTE = re.compile(r"(?i)flieh|flücht|fluecht|(?<!ver)(?<!zu)flucht|(?:rückzug|rueckzug)|(?:renn|lauf|spring)\w*\s+(?:[\w'-]+\s+){0,5}(?:weg|davon|fort)(?!\w)|"
+                          r"hau\w*\s+ab(?!\w)|(?:zieh|ziehen)\w*\s+(?:uns|mich|euch)\s+zurück|(?<!\w)flee|run\s+away|retreat|fall\s+back|escape|get\s+away")
+FLUCHT_SG = (10, 8)        # the flight check: Geschick against the higher of 10 and 8 + the strongest foe's level
 
 
 def intent(text):
     """What an action does in a fight by the fixed word lists: "angriff" (attacks on its own), "bezug" (attacks a foe
-    it names), "frieden" (asks for peace) or ""."""
+    it names), "flucht" (runs away, Kampf-Audit M6), "frieden" (asks for peace) or ""."""
     t = NICHT_ANGRIFF.sub(" ", str(text or ""))
-    return "angriff" if ANGRIFF_WORTE.search(t) else "bezug" if BEZUG_WORTE.search(t) else "frieden" if FRIEDEN_WORTE.search(t) else ""
+    return ("angriff" if ANGRIFF_WORTE.search(t) else "bezug" if BEZUG_WORTE.search(t) else "flucht" if FLUCHT_WORTE.search(str(text or ""))
+            else "frieden" if FRIEDEN_WORTE.search(t) else "")
 
 
 MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
@@ -177,7 +182,7 @@ AUFGABE_KAMPF = {
           "Gegner ohne Wurf fallen. wirkt sagt, ob der Gegner den Schaden halbiert (resistenz), gar nicht nimmt (immun) "
           "oder doppelt (schwaeche); zustand mit gerettet false heißt, die Figur leidet jetzt daran (erzähle es), "
           "kann_nicht, dass sie wegen eines Zustands nicht angreifen konnte. Ein Gegner mit boss und phase 2 wird "
-          "jetzt gefährlicher. Flieht die Gruppe, setze kampf_ende flucht; Frieden gibt es nur, wenn die Probe „Frieden anbieten“ "
+          "jetzt gefährlicher. Ob die Gruppe entkommt, entscheidet das Panel (Probe „Fliehen“ in proben); Frieden gibt es nur, wenn die Probe „Frieden anbieten“ "
           "in proben geschafft ist. Melde im Kampf keine heilung in folgen: geheilt wird nur durch Zauber und Tränke des Panels.",
     "en": "There is a fight (facts kampf). The panel rolls every attack: when a character attacks a foe in its action, "
           "give it a check with ziel = the foe's name exactly as in kampf and the value it attacks with; schwer does "
@@ -185,7 +190,7 @@ AUFGABE_KAMPF = {
           "or flees. Report no damage of the fight in folgen and let no foe fall without a roll. wirkt says whether the "
           "foe halves the damage (resistenz), takes none (immun) or double (schwaeche); zustand with gerettet false means "
           "the character now suffers it (tell it), kann_nicht that a state kept it from attacking. A foe with boss "
-          "and phase 2 grows more dangerous now. When the group flees, set kampf_ende flucht; there is peace only when the check "
+          "and phase 2 grows more dangerous now. Whether the group gets away the panel decides (the check \"flee\" in proben); there is peace only when the check "
           "\"offer peace\" in proben is passed. Report no heilung in folgen during a fight: only the panel's spells and "
           "potions heal."}
 
@@ -227,10 +232,11 @@ def rk(dm, r, h):
             body = n
         else:
             rest += n
-    g = dm.mod(h["werte"].get("geschick", 10))
+    g = dm.body(r, h, "geschick") - dm.blessing(h, "geschick")   # Kampf-Audit M5: worn items count, a wound too
     base = dm._c(r, h["an"]["koerper"]).get("schutz", 0) if (h.get("an") or {}).get("koerper") else 0
     g = g if base < 2 else min(g, 2) if base < 3 else min(g, 0)
-    return 10 + 2 * body + rest + g + len(effects(dm, r, h, "wachsam"))
+    # a blessing on Geschick (Schild, Hast, a cat's potion) is magic: it counts past the armour's cap
+    return 10 + 2 * body + rest + g + dm.blessing(h, "geschick") + len(effects(dm, r, h, "wachsam"))
 
 
 def _mal(n):
@@ -588,7 +594,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                         "ws": [], "vt": "", "bonus": 0, "gesamt": 0, "rk": g["rk"], "treffer": False, "krit": False, "schaden": 0,
                         "faellt": False, "kann_nicht": blocked(r, h)})
             continue
-        bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (plus if spell else 0)
+        # Kampf-Audit M3: a spell's own bonus does not stack with the blessing already on the value (the higher counts)
+        bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (max(0, plus - dm.blessing(h, wert)) if spell else 0)
         mut = False
         gl = False
         for _ in range(2):
@@ -607,7 +614,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                 break
         n, wirkt, extra, raub = 0, "", [], 0
         if hit:
-            n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.mod(h["werte"].get(wert, 10)) + (0 if spell else plus))
+            n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.body(r, h, wert, dinge=False) + (0 if spell else plus))   # M5: with blessing
             n, wirkt = against(g, art, n, magisch=bool(spell) or bool(wp and not wp.get("u") and wp.get("bonus", 0) >= 1))
             for e in effects(dm, r, h, "schaden", wp) if wp and not spell else ():   # a burning blade: its own kind, its own resistances
                 m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))
@@ -936,12 +943,14 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             dm._log(rd, "gegner", gegner=g["name"], was="aufgegeben" if dm.kids(r, rd) else "geflohen")
             dm._day.bump("geflohen")
     # Kampf-Audit 3 (Dominik 2026-10-26): peace only after the panel's own peace check passed (peace), never because
-    # the model says so; then the fight ends in peace whatever the model wrote
+    # the model says so; then the fight ends in peace whatever the model wrote. M6: flight the same way (escape)
     if rd["kampf"].get("geschafft"):
         ende = "frieden"
-    elif ende == "frieden":
+    elif rd["kampf"].pop("entkommen", False):
+        ende = "flucht"
+    elif ende in ENDE:
+        print(f"dungeon: kampf | {ende} | ohne probe", flush=True)
         ende = ""
-        print("dungeon: kampf | frieden | ohne probe", flush=True)
     if not up(rd) or ende in ENDE:
         end(dm, r, rd, ep, ende)
     return folgen
@@ -972,6 +981,30 @@ def peace(dm, r, rd, proben, hits):
         return [p for p in proben if p["pid"] != pid] + [{"pid": pid, "wert": "charisma", "schwer": sg, "vt": "", "frieden": True,
                                                             "wofuer": ("Frieden anbieten", "offer peace")[li]}]
     return proben
+
+
+def escape(dm, r, rd, proben, hits):
+    """Kampf-Audit M6: when most heroes who can act flee (intent "flucht", no attack), each of them rolls the panel's
+    Geschick check against the higher of FLUCHT_SG[0] and FLUCHT_SG[1] + the strongest foe's level in place of the
+    model's checks for it; at least half passed (dungeon.apply), the fight ends in flight (apply). The check gives no
+    check's experience. Fewer: the words stay words and the fight goes on."""
+    if not rd.get("kampf") or not up(rd):
+        return proben
+    hit = {x["pid"] for x in hits}
+    offen = rd.get("offen") or {}
+    frei = [pid for pid, p in dm.seated(rd) if not dm.zustand(p["held"])]
+    weg = [pid for pid in frei if pid not in hit and intent((offen.get(pid) or {}).get("text")) == "flucht"]
+    if not weg:
+        return proben
+    if 2 * len(weg) <= len(frei):
+        print(f"dungeon: kampf | flucht | keine mehrheit | {len(weg)} von {len(frei)}", flush=True)
+        return proben
+    by = dm._by(r, "gegner")
+    sg = max(FLUCHT_SG[0], FLUCHT_SG[1] + max(math.ceil((by.get(g["id"]) or {}).get("stufe", 0)) for g in up(rd)))
+    li = 1 if rd.get("lang") == "en" else 0
+    print(f"dungeon: kampf | flucht | probe | {len(weg)} helden", flush=True)
+    return [p for p in proben if p["pid"] not in weg] + [{"pid": pid, "wert": "geschick", "schwer": sg, "vt": "", "flucht": True,
+                                                          "wofuer": ("Fliehen", "flee")[li]} for pid in weg]
 
 
 def hurt(g, n):

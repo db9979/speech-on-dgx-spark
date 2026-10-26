@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.138** KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 - **V01.1.137** KI-Dungeon-Master: Im Geschichten-Planer kreuzt du bis zu drei bekannte Personen aus dem Katalog an, eine Runde dieser Geschichte bringt sie mit ihrer festen Karte, Rolle und Haltung, das Sprachmodell darf sie im Entwurf nutzen
 - **V01.1.136** KI-Dungeon-Master: Eigene Geschichten (Schalter, aus), jede Geschichtenkarte hat ⋯ mit Bearbeiten, Kopieren und Löschen, „＋ Neue Geschichte“ steht vorn (Ton, Stichworte, das Sprachmodell schreibt sie, das Panel prüft sie), jeder Gastgeber hat seine eigenen, der Admin sieht alle
 - **V01.1.135** KI-Dungeon-Master: Album-Seite „Personen“, mit Personen-Katalog zeigt das Album auch die getroffenen Personen, nach 1, 2 und 4 Treffen mit Gesicht, Aussehen, Beruf, Art, Wesen und Haltung zum Helden, nie Wunsch oder Geheimnis
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.131** Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web
 - **V01.1.130** KI-Dungeon-Master: Kampf-Audit, Nachprüfung, Rückzug, zur Seite treten, Vorschläge, Blicke und Feuer geben sind kein Angriff mehr, das Ziel des Modells allein greift nie an, Frieden einmal je Kampf ohne Proben-EP, Kontrollzauber ohne Modell-Probe, ein Held am Boden greift nicht an, Balance neu eingemessen
 - **V01.1.129** KI-Dungeon-Master: die Karte am Tisch blinkt nicht mehr, sie bleibt bei jeder Aktualisierung stehen und die Ortsbilder sind sofort da
-- **V01.1.128** KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing
 
 
 

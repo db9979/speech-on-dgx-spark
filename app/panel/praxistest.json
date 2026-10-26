@@ -3894,6 +3894,13 @@
 "titel": "Dungeon-Master: Personen aus dem Katalog in Geschichten",
 "text": "A: Personen-Katalog an und eine Runde spielen, bis der Katalog eine Person der Welt Fantasy kennt. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Geschichten“ → „Neue Geschichte“: unter „Bekannte Personen aus dem Katalog“ steht die Person mit Beruf, nie mit Wunsch oder Geheimnis; die Welt wechseln zeigt deren Personen. C: Die Person ankreuzen, die Geschichte speichern und eine Runde mit ihr anlegen: die Person kommt mit ihrem Aussehen und erkennt eure Helden wieder. D: „Vorschlag erzeugen“: nennt der Entwurf die Person mit Namen, ist sie angekreuzt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P581",
+"v": 1138,
+"titel": "Dungeon-Master: Segen, Rüstung und Flucht",
+"text": "A: Im Kampf zweimal hintereinander Dornenranken wirken: in der Heldenkarte steht der Segen nur einmal, der Bonus zählt nicht doppelt. B: Als Heiler „Segnen“ auf die Gruppe wirken, im nächsten Zug einen anderen Segenszauber: der erste Segen ist bei allen weg. C: „Schild“ wirken: die Rüstungsklasse in der Heldenkarte steigt um 3, auch in schwerer Rüstung. D: Nur einer von zwei Helden schreibt „Ich renne weg“: der Kampf geht weiter. E: Beide schreiben „Wir fliehen“: jeder würfelt „Fliehen“ mit Geschick, schafft es mindestens die Hälfte, ist der Kampf vorbei, sonst geht er weiter.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

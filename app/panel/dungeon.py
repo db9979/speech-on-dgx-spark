@@ -1315,6 +1315,9 @@ def fix_hero(r, h):
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
+    for x in h["segen"]:
+        if not (isinstance(x.get("k"), str) and 0 < len(x["k"]) <= 40):
+            x.pop("k", None)              # the caster whose concentration holds it (Kampf-Audit M3)
     h["schutz"] = [x for x in h.get("schutz") or [] if isinstance(x, dict) and x.get("art") in kampf.SCHADEN_ARTEN
                    and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
     album.fix(r, h)                       # the Monster-Album (D&D idea 12): only the catalog's foes
@@ -1352,26 +1355,45 @@ def item_effects(r, it):
     return [eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff]
 
 
-def total(r, h, wert):
-    """The bonus for a check on a value: the bonus of the hero's score (D&D), of the items worn for it, of effects,
-    abilities and blessings."""
-    v = mod(h["werte"].get(wert, 10))
-    fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
+def blessing(h, wert):
+    """The blessing on a value: only the highest counts, blessings never stack (Kampf-Audit M3)."""
+    return max((x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert), default=0)
+
+
+def worn_bonus(r, h, wert, waffen=True):
+    """The items worn for a value and their effects (unknown ones: only their base counts); weapons only with waffen."""
+    v = 0
     for it in worn(h):
-        if it.get("u"):
-            continue                          # unknown: only its base counts
+        if it.get("u") or (not waffen and _c(r, it).get("art") == "waffe"):
+            continue
         if it.get("wert") == wert:
             v += it.get("bonus", 0)
         v += sum(e["bonus"] for e in item_effects(r, it) if e["wert"] == wert)
-    v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
-    v += sum(x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert)
-    v += 1 if (h.get("lehre") or {}).get("wert") == wert else 0     # a lesson in a settlement (dungeon_gold)
+    return v
+
+
+def body(r, h, wert, dinge=True):
+    """A value as the body has it, for the armour class and the damage too (Kampf-Audit M5): the score's bonus (D&D),
+    the blessing, less a wound's consequence; with dinge the items worn for it (never a weapon: its bonus is the
+    weapon's to hit and damage). No abilities, no lesson."""
+    v = mod(h["werte"].get(wert, 10)) + (worn_bonus(r, h, wert, waffen=False) if dinge else 0) + blessing(h, wert)
     return v - narben.minus(h, wert)                                  # a wound's consequence until a healer (D&D idea 8)
 
 
-def bless(h, sg, name):
-    """A blessing of a potion or spell: its bonus for the next turns (the newest SEGEN_MAX count)."""
-    h["segen"] = ((h.get("segen") or []) + [{"wert": sg["wert"], "bonus": sg["bonus"], "zuege": sg["zuege"], "von": name[:40]}])[-SEGEN_MAX:]
+def total(r, h, wert):
+    """The bonus for a check on a value: the body's value (body) with every item worn for it, the abilities and a lesson."""
+    fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
+    v = body(r, h, wert, dinge=False) + worn_bonus(r, h, wert)
+    v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
+    return v + (1 if (h.get("lehre") or {}).get("wert") == wert else 0)     # a lesson in a settlement (dungeon_gold)
+
+
+def bless(h, sg, name, k=None):
+    """A blessing of a potion or spell: its bonus for the next turns (the newest SEGEN_MAX count). The same blessing
+    again renews it; k: the hero whose spell it is (its concentration, _cast)."""
+    neu = {"wert": sg["wert"], "bonus": sg["bonus"], "zuege": sg["zuege"], "von": name[:40], **({"k": k} if k else {})}
+    alt = [x for x in h.get("segen") or [] if (x["wert"], x.get("von")) != (neu["wert"], neu["von"])]
+    h["segen"] = (alt + [neu])[-SEGEN_MAX:]
 
 
 def wear_off(rd):
@@ -3483,7 +3505,7 @@ def roll(r, rd, proben, rng=None, hand=None):
             extra["hilfe"] = von
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
                     "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra,
-                    **({"frieden": True} if p.get("frieden") else {})})
+                    **({"frieden": True} if p.get("frieden") else {}), **({"flucht": True} if p.get("flucht") else {})})
     return helfen.group(out) if helfen.on(rd) else out     # Gruppenprobe: half of the group passing is enough
 
 
@@ -3687,7 +3709,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             use_one(h, it)
             _day.bump("kaputt")
             print("dungeon: werkzeug | kaputt", flush=True)
-        if w["ok"] and not w.get("frieden"):      # the peace check pays with the fight's half experience, not as a check
+        if w["ok"] and not w.get("frieden") and not w.get("flucht"):   # peace and flight pay no check's experience
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     mark("probe")
     if story:
@@ -3739,6 +3761,10 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             if rd["kampf"]["geschafft"] or any(w.get("frieden") for w in wuerfe):
                 rd["kampf"]["frieden"] = True    # once a fight (kampf.peace)
                 print(f"dungeon: kampf | frieden | probe {'ok' if rd['kampf']['geschafft'] else 'nein'}", flush=True)
+            fl = [w for w in wuerfe if w.get("flucht")]      # Kampf-Audit M6: at least half of the fleeing passed
+            if fl:
+                rd["kampf"]["entkommen"] = 2 * sum(1 for w in fl if w["ok"]) >= len(fl)
+                print(f"dungeon: kampf | flucht | {'entkommen' if rd['kampf']['entkommen'] else 'gestellt'}", flush=True)
             if any(w["ok"] and w.get("wert") == KENNER for w in wuerfe):   # Punkt 6: a passed Intelligenz check knows the foes
                 for g in kampf.up(rd):
                     c = _by(r, "gegner").get(g["id"]) or {}
@@ -3975,6 +4001,7 @@ async def run_turn(rid, turn):
             proben, nutzt, wirft = umgebung.roll(_me, r, rd, proben, hand=hand)
             proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand, skip={x["pid"] for x in wirft + nutzt})
             proben = kampf.peace(_me, r, rd, proben, hits)    # a hero asking for peace: the panel's check (Kampf-Audit 3)
+            proben = kampf.escape(_me, r, rd, proben, hits)   # most of the group flees: the panel's check (Kampf-Audit M6)
             hits = wirft + hits
             hits += gefaehrte.attacks(_me, r, rd, hits)       # the companions strike by the panel's dice (round 2, idea 9)
             wuerfe = roll(r, rd, proben, hand=hand)
@@ -5391,6 +5418,14 @@ def start_powers(r, k, lang, welt=""):
 def _cast(r, rd, pid, h, c, bonus, name):
     """A spell's healing and blessing for the hero or the whole group, by the catalog; the model only hears that it was
     cast (facts) and narrates it."""
+    if c.get("segen"):                    # concentration (Kampf-Audit M3): a caster's new blessing ends the caster's last
+        n = 0
+        for _, p in seated(rd):
+            alt = p["held"].get("segen") or []
+            p["held"]["segen"] = [x for x in alt if x.get("k") != pid]
+            n += len(alt) - len(p["held"]["segen"])
+        if n:
+            print(f"dungeon: segen | konzentration | {n} beendet", flush=True)
     for xp, x in ([(q, p["held"]) for q, p in seated(rd)] if c["ziel"] == "gruppe" else [(pid, h)]):
         if x.get("tot") or x.get("ohnmacht"):
             continue
@@ -5399,7 +5434,7 @@ def _cast(r, rd, pid, h, c, bonus, name):
             heal(x, c["heilung"] + bonus)
             stood_up(rd, xp, x, was)
         if c.get("segen"):
-            bless(x, c["segen"], name)
+            bless(x, c["segen"], name, pid)
     _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe", satz=c["satz"][1 if rd["lang"] == "en" else 0])
 
 
