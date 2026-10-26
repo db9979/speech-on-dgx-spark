@@ -6,9 +6,19 @@ The more often, the more the album knows (STUFEN): after the first win name, pic
 the third its values (level, life, armour, attack, damage), after the fifth what hurts it more or less and the states its
 blows cause. Only the panel counts (win, at the panel's own „besiegt“); nothing comes from the model.
 
+Its page „Personen“ (NSC-Katalog, Dominik 2026-10-26 „auch in das begegnungs / monster album buch der spieler mit
+aufnehemen“): every person of the people catalog (dungeon_personen) the hero's table met counts one meeting per round
+(met, at the round's end when the catalog collects; h["personen"] = {catalog id: meetings}). The more often, the more the
+page knows (PERSONEN_STUFEN): after the first meeting name, face, looks and world, after the second occupation and manner,
+after the fourth the traits and how the person stands towards this hero. Never its wish, secret, role or goal (those
+stay with the admin and the host), never a person whose words do not fit the round's tone. Only while the people catalog
+is allowed for the host too.
+
 Off by default: the admin's switch dungeonalbum (features.py, chat.dungeon_album) for the round's host.
 Journal: fixed words and numbers („dungeon: album | …“), Live only counts.
 """
+import re
+
 import features
 from common import DayCounter
 
@@ -17,7 +27,11 @@ STUFEN = (1, 3, 5)         # wins for the album's three stages of knowing
 ALBUM_MAX = 400            # foes an album keeps (the catalog has about 270)
 SIEGE_MAX = 10 ** 6
 
-_day = DayCounter(eintraege=0, aufgestiegen=0)
+PERSONEN_STUFEN = (1, 2, 4)   # meetings for the people page's three stages
+PERSONEN_MAX = 300         # people an album keeps (the catalog keeps 300)
+_ID = re.compile(r"^[a-z0-9_]{1,40}$")
+
+_day = DayCounter(eintraege=0, aufgestiegen=0, personen=0)
 
 
 def on(rd):
@@ -74,15 +88,86 @@ def view(dm, r, rd, h, lang):
     return out
 
 
+def people_on(rd):
+    import dungeon_personen as personen
+    return on(rd) and personen.on(rd)
+
+
+def people_stage(n):
+    """The people page's stage for n meetings: 0 none, 1 to len(PERSONEN_STUFEN)."""
+    return sum(1 for s in PERSONEN_STUFEN if n >= s)
+
+
+def met(dm, rd, cid):
+    """From dungeon_personen.collect at the round's end: the catalog's person cid was met by this table, one more meeting
+    in the album of every living hero at the table."""
+    if not people_on(rd) or not _ID.match(str(cid or "")):
+        return
+    for _, p in dm.seated(rd):
+        h = p["held"]
+        if h.get("tot"):
+            continue
+        a = h.setdefault("personen", {})
+        if cid not in a and len(a) >= PERSONEN_MAX:
+            continue
+        n = min(SIEGE_MAX, a.get(cid, 0) + 1)
+        if people_stage(n) > people_stage(n - 1):
+            _day.bump("personen")
+            print(f"dungeon: album | person stufe {people_stage(n)}", flush=True)
+        a[cid] = n
+
+
+def people(dm, r, rd, h, lang):
+    """The own hero's page „Personen“, most met first: per stage only what the page knows; None while off."""
+    if not h or not people_on(rd):
+        return None
+    import dungeon_nsc as nsc
+    import dungeon_personen as personen
+    li = 1 if lang == "en" else 0
+    d = personen.load()
+    welten = {w["id"]: w["name"][li] for w in r.get("welten") or []}
+    out = []
+    for cid, n in sorted((h.get("personen") or {}).items(), key=lambda x: (-x[1], x[0])):
+        x = d.get(cid)
+        if not x or not people_stage(n) or dm.bad_words(r, rd, personen._text(r, x)):
+            continue
+        k = x.get("karte") or {}
+        feld = lambda f: (k.get(f) or ["", ""])[li]   # noqa: E731
+        e = {"id": cid, "name": x["name"], "treffen": n, "stufe": people_stage(n), "welt": welten.get(x.get("welt"), ""),
+             "aussehen": feld("aussehen"), "bild": (x.get("gesicht") or {}).get("n") or "", "zeichen": "👤",
+             "naechste": next((s for s in PERSONEN_STUFEN if s > n), 0)}
+        if people_stage(n) >= 2:
+            e.update(beruf=feld("beruf"), art=feld("art"))
+        if people_stage(n) >= 3:
+            e["wesen"] = nsc.trait_words(x, li)
+            v = (x.get("haltung") or {}).get(h.get("name", "").lower())
+            if isinstance(v, int) and not isinstance(v, bool):
+                e["haltung"] = nsc.word(v, li)
+        out.append(e)
+    return out
+
+
+def knows_face(name, heroes):
+    """dungeon_gesicht.may_see: a person's face for a seat whose round has a hero that met the person (the page shows it)."""
+    ids = {cid for h in heroes for cid in (h.get("personen") or {})}
+    if not ids:
+        return False
+    import dungeon_personen as personen
+    return any((x.get("gesicht") or {}).get("n") == name for cid, x in personen.load().items() if cid in ids)
+
+
 def fix(r, h):
-    """A hero read from a file: its album only with the catalog's foes and whole numbers of wins, at most ALBUM_MAX."""
+    """A hero read from a file: its album only with the catalog's foes and whole numbers of wins, at most ALBUM_MAX; its
+    people page only with ids of the catalog's form and whole numbers of meetings, at most PERSONEN_MAX."""
     ids = {g["id"] for g in r.get("gegner") or []}
+    ok = lambda n: isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= SIEGE_MAX   # noqa: E731
     a = h.get("album")
-    h["album"] = dict(list((k, n) for k, n in a.items() if k in ids and isinstance(n, int) and not isinstance(n, bool)
-                           and 1 <= n <= SIEGE_MAX)[:ALBUM_MAX]) if isinstance(a, dict) else {}
+    h["album"] = dict(list((k, n) for k, n in a.items() if k in ids and ok(n))[:ALBUM_MAX]) if isinstance(a, dict) else {}
+    p = h.get("personen")
+    h["personen"] = dict(list((k, n) for k, n in p.items() if _ID.match(str(k)) and ok(n))[:PERSONEN_MAX]) if isinstance(p, dict) else {}
 
 
 def for_live():
-    """Numbers only: new album entries and stages reached today."""
+    """Numbers only: new album entries and stages reached today, people stages reached today."""
     t = _day.counts()
-    return {k: t[k] for k in ("eintraege", "aufgestiegen")}
+    return {k: t[k] for k in ("eintraege", "aufgestiegen", "personen")}

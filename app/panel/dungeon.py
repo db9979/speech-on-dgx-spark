@@ -5309,6 +5309,7 @@ def view(rid, pid, now=None):
     out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
+    out["album_personen"] = album.people(_me, r, rd, mine, lang)   # its page „Personen“: the people the hero met
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
     out["rueckfrage"] = rueckfrage.view(rd, pid)               # the own unclear action: question and suggestions

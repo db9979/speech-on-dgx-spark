@@ -2034,7 +2034,7 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("helfen") or {}).values()) else "")
                         + (f" · heute {dgn['schrift']['gefunden']} Schriftstücke gefunden, {dgn['schrift']['verworfen']} verworfen, {dgn['schrift']['geheim']} nur für einen Platz"
                            if any((dgn.get("schrift") or {}).values()) else "")
-                        + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht"
+                        + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht, {dgn['album'].get('personen', 0)} Personen-Stufen"
                            if any((dgn.get("album") or {}).values()) else "")
                         + (f" · heute {dgn['narben']['narben']} Wunden, davon {dgn['narben']['folgen']} mit Folge und {dgn['narben']['pflaster']} Pflaster, {dgn['narben']['geheilt']}× beim Heiler"
                            if any((dgn.get("narben") or {}).values()) else "")

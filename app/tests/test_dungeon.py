@@ -7601,6 +7601,90 @@ class Fight(Turns):
         helpers.set_config(dungeon_personen=False)
         self.assertEqual((pers.offer(dungeon, r, nxt), pers.adopt(r, nxt, "Oskar")), ([], None))
 
+    def test_the_album_page_people_knows_more_after_each_meeting(self):
+        """NSC-Katalog, album page „Personen“ (Dominik 2026-10-26 „auch in das begegnungs / monster album buch der
+        spieler mit aufnehemen“): with the Monster-Album and the people catalog allowed, every person of the catalog the
+        table met counts one meeting per round in the album of every living hero; after 1 meeting name, face, looks and
+        world, after 2 occupation and manner, after 4 traits and the attitude towards this hero; never wish, secret, role
+        or goal; a word of the table's lists hides the person; the face only for a seat whose heroes met the person."""
+        import dungeon_album as album
+        import dungeon_gesicht as gesicht
+        import dungeon_nsc as nsc
+        import dungeon_personen as pers
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen", "dungeon_album")
+        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        r = dungeon.rules()
+        rd = copy.deepcopy(self.state(self.rid))
+        h, g = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
+        rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "heimlicher Verräter", "ziel": "die Krone stehlen", "sprache": ""}],
+                          "gruppen": [], "geheimnisse": []}
+        nsc.sync(r, rd, random.Random(3))
+        face = "nsc-" + "ab" * 8
+        rd["nsc"]["oskar"].update(gesehen=1, haltung={h["name"].lower(): 2}, gesicht={"n": face, "st": "ok"})
+        with contextlib.redirect_stdout(io.StringIO()):
+            pers.collect(dungeon, r, rd, 100)
+        self.assertNotIn("personen", h)                                                  # album off: nothing counted
+        self.assertIsNone(album.people(dungeon, r, rd, h, "de"))
+        os.remove(pers.FILE)
+        helpers.set_config(dungeon_album=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            pers.collect(dungeon, r, rd, 100)
+        self.assertIn("dungeon: album | person stufe 1", out.getvalue())
+        (cid, x), = pers.load().items()
+        self.assertEqual((h["personen"], g["personen"]), ({cid: 1}, {cid: 1}))        # every hero at the table
+        e, = album.people(dungeon, r, rd, h, "de")
+        k = rd["nsc"]["oskar"]["karte"]
+        self.assertEqual((e["name"], e["stufe"], e["treffen"], e["naechste"], e["aussehen"], e["bild"]),
+                         ("Oskar", 1, 1, 2, k["aussehen"][0], face))
+        self.assertNotIn("beruf", e)
+        hidden = [k["wunsch"][0], k["geheimnis"][0], "heimlicher Verräter", "die Krone stehlen"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            album.met(dungeon, rd, cid)                                                   # the next round
+        e, = album.people(dungeon, r, rd, h, "en")
+        self.assertEqual((e["stufe"], e["beruf"], e["art"], e["naechste"]), (2, k["beruf"][1], k["art"][1], 4))
+        self.assertNotIn("haltung", e)
+        with contextlib.redirect_stdout(io.StringIO()):
+            album.met(dungeon, rd, cid)
+            album.met(dungeon, rd, cid)
+        e, = album.people(dungeon, r, rd, h, "de")
+        self.assertEqual((e["stufe"], e["naechste"], e["haltung"], e["wesen"]), (3, 0, nsc.word(2, 0), nsc.trait_words(x, 0)))
+        self.assertNotIn("haltung", album.people(dungeon, r, rd, g, "de")[0])          # Oskar has no attitude to Bela
+        for t in hidden:
+            self.assertNotIn(t, json.dumps([album.people(dungeon, r, rd, h, li) for li in ("de", "en")], ensure_ascii=False), t)
+        with mock.patch.object(dungeon, "bad_words", lambda r, rd, t: "Oskar" in t):
+            self.assertEqual(album.people(dungeon, r, rd, h, "de"), [])                 # a word of the table's lists: hidden
+        # the hero's file: only ids of the catalog's form and whole numbers
+        y = dict(copy.deepcopy(h), personen={cid: 4, "Böse!": 2, "p1": True, "p2": 0})
+        self.assertEqual(dungeon.fix_hero(r, y)["personen"], {cid: 4})
+        self.assertEqual(dungeon.fix_hero(r, dict(copy.deepcopy(h), personen="viele"))["personen"], {})
+        # the face: only for a seat whose round has a hero that met the person; through the view the own hero's page
+        with dungeon._lock:
+            d = dungeon._read()
+            v = d["runden"][self.rid]
+            v["plaetze"][self.host]["held"]["personen"] = {cid: 2}
+            v["plaetze"][self.gp]["held"].pop("personen", None)
+            owner = v["owner"]
+            dungeon._write(d)
+        self.assertTrue(gesicht.may_see(face, uid=owner))
+        self.assertTrue(gesicht.may_see(face, rid=self.rid))
+        self.assertFalse(gesicht.may_see(face, uid="nobody"))
+        self.assertFalse(gesicht.may_see("nsc-" + "cd" * 8, uid=owner))
+        self.assertEqual([(p["name"], p["stufe"]) for p in dungeon.view(self.rid, self.host)["album_personen"]], [("Oskar", 2)])
+        self.assertEqual(dungeon.view(self.rid, self.gp)["album_personen"], [])
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.host]["held"].pop("personen", None)
+            dungeon._write(d)
+        self.assertFalse(gesicht.may_see(face, uid=owner))
+        self.assertGreaterEqual(album.for_live()["personen"], 3)
+        helpers.set_config(dungeon_personen=False)
+        self.assertIsNone(album.people(dungeon, r, rd, h, "de"))                        # the people catalog off: no page
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("data-dmalbseite", f.read())
+
     def test_a_person_who_fights_takes_a_fixed_template(self):
         """Personen-Katalog 4 with the balancing (Dominik 2026-10-26 „1-5“, „das ganze muss natürlich im balancing
         berücksichtigt werden“): a person of the scene comes into the foes' offer with the bestiary template of its

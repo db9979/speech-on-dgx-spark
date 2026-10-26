@@ -194,7 +194,7 @@ MODULE = {
     "dungeon_reise": ("dienste", "Dungeon-Master: Reise-Etappen, Rollen mit je einem Wurf und ein Ereignis der Landschaft auf langen Wegen"),
     "dungeon_rast": ("dienste", "Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten"),
     "dungeon_narben": ("dienste", "Dungeon-Master: Narben und bleibende Wunden nach fester W20-Tabelle, ein Heiler in der Siedlung nimmt die Folgen"),
-    "dungeon_album": ("dienste", "Dungeon-Master: Monster-Album, je Held die besiegten Gegner, mehr Wissen nach 1, 3 und 5 Siegen"),
+    "dungeon_album": ("dienste", "Dungeon-Master: Monster-Album, je Held die besiegten Gegner und die getroffenen Personen, mehr Wissen je Stufe"),
     "dungeon_helfen": ("dienste", "Dungeon-Master: Helfen und Gruppenprobe, feste Regeln auf den Würfen des Panels"),
     "dungeon_knapp": ("dienste", "Dungeon-Master: Knapp daneben, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an"),
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),

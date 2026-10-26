@@ -7,7 +7,7 @@
 const DM={on:false,data:null,rid:'',v:null,seq:0,busy:false,msg:'',err:false,made:null,at:0,ende:false,form:{},edit:'',kap:false};
 const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:'',konto:{tok:'',v:null,step:'',adr:'',msg:'',err:false,gebunden:false}};
 // read aloud (the last turn's WAV, the host's device plays it by itself) and the microphone of a seat
-const DMA={gtab:'',handy:'geschichte',hzug:{p:-1,g:-1},p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},rf:null,gesendet:0,mut:{p:0,g:0},kopf:false,app:false,gauf:{},ro:null};
+const DMA={gtab:'',handy:'geschichte',hzug:{p:-1,g:-1},p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},rf:null,albseite:'',gesendet:0,mut:{p:0,g:0},kopf:false,app:false,gauf:{},ro:null};
 // the short guide for players at the table, the basics first (Punkt 6 of the table review of 2026-10-24): a small card
 // opens by itself once on this device, the pages by its button
 const DMHILFE=[['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
@@ -456,7 +456,7 @@ const dmMalt=v=>v.bild_malt?`<div class="dm-malt" role="status">🖼 ${esc(v.bil
 // 2026-10-25)
 function dmSeite(v,mode){const hp=dmHandy()?DMA.handy:'';   // on the phone „Karte“ is its own pane, „Held“ shows the others
   const teile=[['karte','🗺',t('Karte','Map'),dmKarte(v,mode)],
-    ['faeden','📜',t('Fäden','Threads'),dmThreads(v)],['schrift','✉',t('Schriftstücke','Writings'),dmSchriften(v)],['album','🐉',t('Album','Album'),dmAlbum(v)],['termin','📅',t('Termin','Date'),dmDate(v,mode)]].filter(x=>x[3]&&(hp==='karte'?x[0]==='karte':hp!=='held'||x[0]!=='karte')).map(x=>[x[0],x[1]+'|'+x[2],x[3]]);if(!teile.length)return '';
+    ['faeden','📜',t('Fäden','Threads'),dmThreads(v)],['schrift','✉',t('Schriftstücke','Writings'),dmSchriften(v)],['album','🐉',t('Album','Album'),dmAlbumAlle(v)],['termin','📅',t('Termin','Date'),dmDate(v,mode)]].filter(x=>x[3]&&(hp==='karte'?x[0]==='karte':hp!=='held'||x[0]!=='karte')).map(x=>[x[0],x[1]+'|'+x[2],x[3]]);if(!teile.length)return '';
   if(!DMA.seite){try{DMA.seite=localStorage.getItem('dm-seite')||''}catch(e){}}
   const on=(teile.find(x=>x[0]===DMA.seite)||teile[0])[0];
   return `${teile.length>1?`<div class="lseg dm-seite" role="tablist">${teile.map(x=>`<button type="button" role="tab" aria-selected="${x[0]===on}" class="${x[0]===on?'on':''}" data-dmseite="${x[0]}"><span aria-hidden="true">${x[1].split('|')[0]}</span>${esc(x[1].split('|')[1])}</button>`).join('')}</div>`:''}
@@ -753,6 +753,14 @@ const dmAlbumW=e=>e.werte?`<div class="dm-albw">${[[t('Stufe','Level'),e.werte.s
 const dmAlbumK=e=>[['schwaeche',t('Schwach gegen','Weak to')],['resistenz',t('Hält aus','Resists')],['immun',t('Immun','Immune')],['zustaende',t('Bewirkt','Causes')]].filter(([k])=>(e[k]||[]).length).map(([k,l])=>`<div><small class="mut">${esc(l)}:</small> ${e[k].map(x=>`<span class="pill">${esc(x)}</span>`).join(' ')}</div>`).join('');
 const dmAlbum=v=>(v.album||[]).length?`<div class="dm-album">${v.album.map(e=>`<details class="dm-albe"><summary>${dmDing(e)}<b>${esc(e.name)}</b> <span class="dm-albs" aria-label="${esc(t(`Stufe ${e.stufe} von 3`,`stage ${e.stufe} of 3`))}">${'★'.repeat(e.stufe)}${'☆'.repeat(3-e.stufe)}</span><small class="mut">${esc(t(`${e.siege}× besiegt`,`defeated ${e.siege}×`))}</small></summary>
   <p>${esc(e.info)}</p>${e.sage?`<blockquote class="dm-albsage">${esc(e.sage)}</blockquote>`:''}${dmAlbumW(e)}${dmAlbumK(e)}${e.naechste?`<small class="mut">${esc(t(`Mehr weißt du nach ${e.naechste} Siegen.`,`You learn more after ${e.naechste} wins.`))}</small>`:''}</details>`).join('')}</div>`:'';
+// its page „Personen“ (people catalog): the people the hero's table met; the page knows more after 1, 2 and 4 meetings
+// (name, face, looks and world; occupation and manner; traits and how the person stands towards the hero)
+const dmAlbumP=v=>(v.album_personen||[]).length?`<div class="dm-album">${v.album_personen.map(e=>`<details class="dm-albe"><summary>${dmDing(e)}<b>${esc(e.name)}</b> <span class="dm-albs" aria-label="${esc(t(`Stufe ${e.stufe} von 3`,`stage ${e.stufe} of 3`))}">${'★'.repeat(e.stufe)}${'☆'.repeat(3-e.stufe)}</span><small class="mut">${esc(t(`${e.treffen}× getroffen`,`met ${e.treffen}×`))}</small></summary>
+  ${e.aussehen?`<p>${esc(e.aussehen)}</p>`:''}${[[t('Welt','World'),e.welt],[t('Beruf','Occupation'),e.beruf],[t('Art','Manner'),e.art],[t('Wesen','Traits'),(e.wesen||[]).join(', ')],[t('Zu dir','Towards you'),e.haltung]].filter(x=>x[1]).map(([k,x])=>`<div><small class="mut">${esc(k)}:</small> ${esc(x)}</div>`).join('')}${e.naechste?`<small class="mut">${esc(t(`Mehr weißt du nach ${e.naechste} Treffen.`,`You learn more after ${e.naechste} meetings.`))}</small>`:''}</details>`).join('')}</div>`:'';
+function dmAlbumAlle(v){const m=dmAlbum(v),p=dmAlbumP(v);if(!m||!p)return m||p;const on=DMA.albseite==='personen'?'personen':'monster';
+  return `<div class="lseg dm-albseite" role="tablist">${[['monster',t('Monster','Monsters')],['personen',t('Personen','People')]].map(([k,l])=>`<button type="button" role="tab" aria-selected="${k===on}" class="${k===on?'on':''}" data-dmalbseite="${k}">${esc(l)}</button>`).join('')}</div>${on==='personen'?p:m}`}
+document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmalbseite]');if(!b)return;DMA.albseite=b.dataset.dmalbseite;
+  if(b.closest('#dgcard'))dgDraw();else dmDraw()});
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmschrift]');if(!b||!DM.rid)return;
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/erzaehler`,{schrift:{id:b.dataset.dmschrift,sicht:b.dataset.sicht}},DM);if(d){DM.v=d;DM.at=Date.now();dmDraw()}});
 // Ehrungen des Abends (D&D idea 1, dungeon_ehre): the titles, then one certificate per hero with the panel's numbers

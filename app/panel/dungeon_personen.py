@@ -25,6 +25,7 @@ import re
 import threading
 import time
 
+import dungeon_album as album
 import dungeon_nsc as nsc
 import features
 from common import STATE, DayCounter, read_json, write_json
@@ -161,6 +162,7 @@ def collect(dm, r, rd, now=None):
             g = x.get("gesicht") if isinstance(x.get("gesicht"), dict) and (x.get("gesicht") or {}).get("st") == "ok" else None
             p = d.get(x.get("katalog") or "")
             if p and p.get("welt") == welt:
+                album.met(dm, rd, p["id"])      # the hero's album page „Personen“: one more meeting
                 p["haltung"] = dict(p.get("haltung") or {}, **{h: v for h, v in (x.get("haltung") or {}).items() if isinstance(v, int)})
                 p["treffen"] = p.get("treffen", 0) + 1
                 p["t"] = now
@@ -176,6 +178,7 @@ def collect(dm, r, rd, now=None):
                       "stimme": dict(stimmen.get(k[:40]) or {}), "haltung": {h: v for h, v in (x.get("haltung") or {}).items() if isinstance(v, int)},
                       "treffen": 1, "made": now, "t": now, "stand": "runde", **({"gesicht": {"n": g["n"]}} if g else {})}
             names.add((welt, k))
+            album.met(dm, rd, pid)
             n += 1
         while len(d) > MAX:                     # the oldest from a round go first, the admin's own stay
             old = min(d.values(), key=lambda v: (v.get("stand") == "eigen", v.get("t", 0)))

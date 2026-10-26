@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.135** KI-Dungeon-Master: Album-Seite „Personen“, mit Personen-Katalog zeigt das Album auch die getroffenen Personen, nach 1, 2 und 4 Treffen mit Gesicht, Aussehen, Beruf, Art, Wesen und Haltung zum Helden, nie Wunsch oder Geheimnis
 - **V01.1.134** KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (Schalter, aus), ist eine Ansage zu kurz, ohne Tun oder zeigt ihr Fürwort auf nichts, fragt der Tisch nach feste Regeln mit drei Vorschlägen aus der Szene und „So lassen“, hält die Runde nie auf, im Auto vorgelesen und auf CarPlay als Knöpfe
 - **V01.1.133** KI-Dungeon-Master: Kampf-Wortgrenzen, „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe (Selbsttest über jeden Gegner), „schlage dich nieder“ greift an, „Ich haue ab“ und „schlage Alarm“ nicht, wer am Boden liegt, würfelt keine Probe
 - **V01.1.132** KI-Dungeon-Master: Geschlecht des Helden, beim Anlegen und auf dem Heldenblatt männlich, weiblich oder divers, die Erzählung nennt den Helden mit dem richtigen Fürwort (bei divers nur beim Namen), die Stimme kommt aus den Stimmen des Geschlechts, das Porträt nennt es und darf nach einer Änderung neu gemalt werden
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.128** KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing
 - **V01.1.127** KI-Dungeon-Master: Kampf-Audit, jede angreifende Aktion wird ein Angriff des Panels, auch ohne Probe des Modells, Schadenszauber greifen immer an, fällt das Ziel, trifft der Angriff den nächsten Gegner, Frieden nur über eine Charisma-Probe des Panels, keine Heilung durch das Modell im Kampf, keine Ladung ohne Wirkung, die Erzählung gibt keinem Helden eine Waffe, die er nicht trägt
 - **V01.1.126** KI-Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt erst eine Streife und dann den Herrn, Fackeln brennen vier Räume lang, im Dunkeln Proben mit Nachteil
-- **V01.1.125** KI-Dungeon-Master: „Knapp geschafft, mit Preis“ an der Würfelkarte, mit dem gezahlten Preis und eigenem Ton
 
 
 

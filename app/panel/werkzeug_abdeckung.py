@@ -190,7 +190,7 @@ WITHOUT = {
     "dungeonreise": "dungeon_reise.py: kein Werkzeug, das Panel würfelt die Rollen der Reise und wendet die Folge an, das Modell erzählt nur die Reise",
     "dungeonrast": "dungeon_rast.py: kein Werkzeug, der Gastgeber ruft die Rast, das Panel heilt und würfelt die Nachtwachen, das Modell erzählt nur das Lager",
     "dungeonnarben": "dungeon_narben.py: kein Werkzeug, das Panel würfelt die Wunde auf seiner festen Tabelle, das Modell liest die Narben nur in den Fakten",
-    "dungeonalbum": "dungeon_album.py: kein Werkzeug, das Panel zählt die Siege seines eigenen Kampfes und zeigt je Stufe, was das Album weiß",
+    "dungeonalbum": "dungeon_album.py: kein Werkzeug, das Panel zählt die Siege seines eigenen Kampfes und zeigt je Stufe, was das Album weiß; die Seite „Personen“ zählt die Treffen mit Personen des Katalogs am Rundenende",
     "dungeonschrift": "dungeon_schrift.py: kein Werkzeug, das Modell meldet den Fundtext als Daten, das Panel prüft ihn und der Gastgeber bestimmt, wer ihn sieht",
     "dungeonrichter": "dungeon_erzaehler.py: kein Werkzeug, das Modell gibt nach den festen Prüfungen nur eine Wahrscheinlichkeit, das Panel entscheidet mit fester Schwelle",
     "dungeonerzfehler": "dungeon_erzaehlstand.py/dungeon_erzaehler.py: kein Werkzeug, ein 👎 mit festem Grund lässt das Panel die Szene einmal neu erzählen, feste Regeln prüfen",

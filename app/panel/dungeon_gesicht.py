@@ -38,6 +38,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_album as album
 import dungeon_gefaehrte as gf
 import dungeon_nsc as nsc
 import dungeon_stimmen as stimmen
@@ -335,8 +336,9 @@ def _alle(v):
 
 
 def may_see(name, uid=None, rid=None):
-    """An nsc- picture only for a seat of a round that names it (a guest's seat by rid, a profile that hosts or sits in
-    it by uid). Any other name pattern is not this module's (True)."""
+    """An nsc- picture only for a seat of a round that names it, or whose heroes met that person of the catalog (the
+    album's page „Personen“; a guest's seat by rid, a profile that hosts or sits in it by uid). Any other name pattern
+    is not this module's (True)."""
     if not str(name).startswith("nsc-"):
         return True
     for r_id, v in dungeon._read()["runden"].items():
@@ -346,6 +348,8 @@ def may_see(name, uid=None, rid=None):
             continue
         if any(isinstance(x, dict) and name in ((x.get("gesicht") or {}).get("n"), (x.get("gesicht") or {}).get("alt")) for x in _alle(v)):
             return True
+        if album.people_on(v) and album.knows_face(name, [p["held"] for p in v["plaetze"].values() if p.get("held")]):
+            return True                          # the album page „Personen“ of a hero at that table shows the face
     return False
 
 

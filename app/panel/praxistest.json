@@ -3873,6 +3873,13 @@
 "titel": "Dungeon-Master: Rückfrage bei unklaren Aktionen",
 "text": "A: Unter Funktionen → KI-Dungeon-Master „Rückfrage bei unklaren Aktionen“ einschalten und am Tisch nur „mach das“ schicken: der Tisch fragt nach und zeigt drei Vorschläge, die Runde wartet nicht auf dich. B: Einen Vorschlag tippen: er steht im Eingabefeld, nach dem Schicken zählt die Aktion. C: Wieder etwas Unklares schicken und „So lassen“ tippen: die Aktion zählt so, wie sie ist. D: Im Auto eine unklare Aktion sagen: die Rückfrage wird vorgelesen, auf CarPlay stehen die Vorschläge und „So lassen“ als Knöpfe.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P578",
+"v": 1135,
+"titel": "Dungeon-Master: Album-Seite Personen",
+"text": "A: Monster-Album und Personen-Katalog an, eine Runde mit einer Person spielen, die ihr trefft, und die Runde beenden: im Reiter „Album“ gibt es die Seite „Personen“ mit Name, Gesicht und Aussehen. B: Dieselbe Person in einer zweiten Runde der Welt treffen: die Seite kennt jetzt Beruf und Art. C: Prüfen, dass Wunsch und Geheimnis der Person nie auf der Seite stehen. D: Ein anderer Spieler, dessen Held die Person nie getroffen hat, sieht sie auf seiner Seite nicht.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
