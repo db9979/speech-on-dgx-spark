@@ -307,7 +307,8 @@ def keep(d):
                 out.update(n for n in (g.get("n"), g.get("alt")) if n)
     for v in [*d["runden"].values(), *(c for uid in profiles.user_ids() for c in dungeon.campaigns(uid).values())]:
         card(_alle(v))
-    return out
+    import dungeon_personen                      # the people of the catalog keep their faces (Personen-Katalog 1)
+    return out | dungeon_personen.portraits()
 
 
 def sweep(now):

@@ -7235,6 +7235,132 @@ class Fight(Turns):
         self.assertNotIn("eine Schuld begleichen", g)
         self.assertGreaterEqual(dungeon.for_live()["nsc_ziel_erreicht"], 1)
 
+    def test_people_catalog_keeps_the_people_met_and_brings_them_back(self):
+        """Personen-Katalog 1, 3 and 5 (Dominik 2026-10-26 „1-5“): off by default; on (with „NSC-Gedächtnis“), every
+        person the table met goes into the catalog at the round's end with its card, traits, role, voice and attitudes,
+        a name the world has already only once; another round of the world is offered up to ANGEBOT of them only as
+        data, and one the narration brings by its exact name comes with its stored card and knows the heroes again;
+        its entry follows the round; a person with a word of the table's lists is never offered; off nothing."""
+        import features
+        import dungeon_nsc as nsc
+        import dungeon_personen as pers
+        self.assertNotIn(pers.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_personen"], False)
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        helpers.set_config(dungeon_nsc=True)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "die Schenke retten", "sprache": ""},
+                                       {"name": "Mira", "rolle": "Diebin", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+        nsc.sync(r, rd, random.Random(3))
+        rd["nsc"]["oskar"].update(gesehen=1, haltung={"arvid": 2}, gesicht={"n": "oskar.webp", "st": "ok"})
+        rd["npc_stimmen"] = {"oskar": {"stimme": "tief"}}
+        self.assertEqual(pers.collect(dungeon, r, rd, 100), 0)                          # off: nothing kept
+        self.assertEqual(pers.facts(dungeon, r, rd, 0), {})
+        helpers.set_config(dungeon_personen=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(pers.collect(dungeon, r, rd, 100), 1)                      # Mira was never met
+            self.assertEqual(pers.collect(dungeon, r, rd, 101), 0)                      # the world has Oskar already
+        self.assertIn("dungeon: personen | gesammelt | 1 neu", out.getvalue())
+        (pid, x), = pers.load().items()
+        self.assertEqual((x["name"], x["welt"], x["rolle"], x["ziel"], x["stand"], x["treffen"]),
+                         ("Oskar", rd["welt"], "Wirt", "die Schenke retten", "runde", 1))
+        self.assertEqual((x["karte"], x["wesen"], x["haltung"], x["stimme"]),
+                         (rd["nsc"]["oskar"]["karte"], rd["nsc"]["oskar"]["wesen"], {"arvid": 2}, {"stimme": "tief"}))
+        self.assertEqual(pers.portraits(), {"oskar.webp"})                               # its face stays (dungeon_gesicht.keep)
+        # another round of the same world: Oskar on offer, only as data
+        nxt = dict(copy.deepcopy(rd), nsc={}, chronik=[], npc_stimmen={}, made=rd.get("made", 0) + 1,
+                   wahrheit={"personen": [], "gruppen": [], "geheimnisse": []})
+        self.assertEqual(pers.facts(dungeon, r, nxt, 0), {"bekannte_personen": [
+            {"name": "Oskar", "rolle": "Wirt", "aussehen": x["karte"]["aussehen"][0], "beruf": x["karte"]["beruf"][0]}]})
+        self.assertIn("bekannte_personen", dungeon.system_text(r, nxt, "erzaehlen"))
+        with mock.patch.object(dungeon, "bad_words", lambda r, rd, t: "Oskar" in t):
+            self.assertEqual(pers.offer(dungeon, r, nxt), [])                           # a word of the table's lists: never
+        nxt["wahrheit"]["personen"] = [{"name": "Oskar", "rolle": "", "ziel": "", "sprache": ""},
+                                       {"name": "Gundel", "rolle": "Köhlerin", "ziel": "", "sprache": ""}]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            nsc.sync(r, nxt, random.Random(4))
+        self.assertIn("dungeon: personen | wieder | 1 helden", out.getvalue())
+        o = nxt["nsc"]["oskar"]
+        self.assertEqual((o["karte"], o["wesen"], o["haltung"], o["katalog"], o["gesehen"]),
+                         (x["karte"], x["wesen"], {"arvid": 2}, pid, None))              # the same person, knows Arvid again
+        self.assertEqual(o["gesicht"], {"n": "oskar.webp", "st": "ok"})
+        self.assertEqual(nxt["npc_stimmen"]["oskar"], {"stimme": "tief"})
+        self.assertEqual(nxt["wahrheit"]["personen"][0]["rolle"], "Wirt")
+        self.assertEqual(nxt["chronik"][-1]["t"][0], "Oskar erkennt Arvid wieder.")
+        self.assertNotIn("katalog", nxt["nsc"]["gundel"])                                # any other name: a new person
+        self.assertEqual(pers.facts(dungeon, r, nxt, 0), {})                             # in the story now: not offered again
+        o.update(gesehen=3, haltung={"arvid": 3, "bela": -1})
+        nxt["nsc"]["gundel"]["gesehen"] = 2
+        self.assertEqual(pers.collect(dungeon, r, nxt, 200), 1)                          # Gundel new, Oskar's entry follows
+        x = pers.load()[pid]
+        self.assertEqual((x["treffen"], x["haltung"], x["t"]), (2, {"arvid": 3, "bela": -1}, 200))
+        live = pers.for_live()
+        self.assertEqual(live["personen"], 2)
+        self.assertGreaterEqual((live["neu"], live["wieder"], live["erkannt"]), (2, 1, 1))
+        helpers.set_config(dungeon_personen=False)
+        self.assertEqual((pers.offer(dungeon, r, nxt), pers.adopt(r, nxt, "Oskar")), ([], None))
+
+    def test_a_person_who_fights_takes_a_fixed_template(self):
+        """Personen-Katalog 4 with the balancing (Dominik 2026-10-26 „1-5“, „das ganze muss natürlich im balancing
+        berücksichtigt werden“): a person of the scene comes into the foes' offer with the bestiary template of its
+        occupation, the strongest of its row within the budget, and counts in it like any foe; one at a time, never a
+        friend of a hero here, never again after it was beaten; the model never gives it values; off nothing."""
+        import dungeon_nsc as nsc
+        import dungeon_personen as pers
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        helpers.set_config(dungeon_nsc=True)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        rd.pop("kampf", None)
+        rd.pop("raum_gegner", None)
+        rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Torwächter", "ziel": "", "sprache": ""},
+                                       {"name": "Ilse", "rolle": "Ritterin", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+        nsc.sync(r, rd, random.Random(3))
+        rd["nsc"]["oskar"]["karte"]["beruf"] = ["Wache", "guard"]
+        rd["nsc"]["ilse"]["karte"]["beruf"] = ["Ritterin", "knight"]
+        rd["log"].append({"art": "dm", "text": "Oskar und Ilse versperren das Tor.", "npc": [], "n": rd["zug"]})
+        held = dungeon._living(rd)
+        b = kampf.budget(dungeon, r, rd, held)
+        self.assertFalse(any(g.get("person") for g in kampf.offer(dungeon, r, rd, held)))   # off: no person as a foe
+        helpers.set_config(dungeon_personen=True)
+        by = {g["oid"]: g for g in kampf.offer(dungeon, r, rd, held) if g.get("person")}
+        self.assertEqual(set(by), {"p:oskar", "p:ilse"})
+        self.assertEqual((by["p:oskar"]["id"], by["p:oskar"]["name"]), ("wache", ["Oskar", "Oskar"]))
+        self.assertLessEqual(by["p:ilse"]["ep"], b * kampf.SCHWER)                         # a knight at level 1: not the knight's values
+        self.assertEqual(by["p:ilse"]["id"], pers.template(dungeon, r, rd, rd["nsc"]["ilse"], b)["id"])
+        self.assertEqual(pers.template(dungeon, r, rd, rd["nsc"]["ilse"], 10_000)["id"], "ritter")   # with the budget for it: the knight
+        f = {x["id"]: x for x in kampf.offer_facts(dungeon, r, rd, held, 0)}
+        self.assertEqual((f["p:oskar"]["name"], f["p:oskar"]["person"]), ("Oskar", True))
+        self.assertNotIn("ruestung", f["p:oskar"])                                           # values stay the panel's
+        self.assertIn("person", dungeon.system_text(r, rd, "erzaehlen"))
+        wahl = kampf.check_encounter(dungeon, r, rd, held, [{"id": "p:oskar", "anzahl": 4}])
+        self.assertEqual([(g["name"][0], n) for g, n in wahl], [("Oskar", 1)])             # a person comes once
+        k = kampf.start(dungeon, r, rd, held, wahl, 0)
+        (o,) = k["gegner"]
+        w = dungeon._by(r, "gegner")["wache"]
+        self.assertEqual((o["name"], o["person"], o["rk"], o["max"], o["ep"]), ("Oskar", "oskar", w["ruestung"], w["leben"], pers.weighted(w)["ep"]))
+        self.assertNotEqual(pers.weighted(w)["ep"], w["ep"])                                 # its weight counts (balancing)
+        self.assertEqual(rd["log"][-1]["gegner"][0]["name"], "Oskar")
+        self.assertEqual(kampf.offer(dungeon, r, rd, held), [])                              # in a fight: no offer
+        o["aus"] = "besiegt"
+        ep = {pid: 0 for pid, _ in dungeon.seated(rd)}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.end(dungeon, r, rd, ep)
+        self.assertIn("dungeon: personen | kampf | besiegt", out.getvalue())
+        self.assertGreaterEqual(sum(ep.values()), w["ep"] // len(ep))                        # its template's experience
+        self.assertEqual(rd["nsc"]["oskar"]["kampf"], "besiegt")
+        self.assertEqual(rd["chronik"][-1]["t"][0], "Oskar wurde im Kampf besiegt.")
+        left = {g["oid"] for g in kampf.offer(dungeon, r, rd, held) if g.get("person")}
+        self.assertEqual(left, {"p:ilse"})                                                    # beaten: never again this round
+        rd["nsc"]["ilse"]["haltung"] = {held[0]["name"].lower(): pers.FREUND}
+        self.assertFalse(any(g.get("person") for g in kampf.offer(dungeon, r, rd, held)))   # a friend of a hero: never
+        self.assertGreaterEqual(pers.for_live()["gekaempft"], 1)
+
     def test_factions_with_clocks_turned_by_fixed_rules(self):
         """Tabletop-Punkt 7 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“): every group of the truth
         becomes a faction with a clock of 4, 6 or 8 fields; between told turns the panel rolls a d6 per running clock

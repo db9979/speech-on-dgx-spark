@@ -57,6 +57,53 @@ class Page(Base):
         items, _ = self.rows("gegenstaende")
         self.assertTrue(all("marke" in x and "bild" in x for x in items.values()))
 
+    def test_the_people_of_the_catalog(self):
+        """Personen-Katalog 1 (Dominik 2026-10-26 „1-5“): „Personen (NSC)“ only for the admin and only while the switch
+        is on; the admin adds a person (new id), changes it and deletes it; a wrong field, a word of „nie“ or a name the
+        world has already is refused with its errors and nothing is written; wish and secret only here."""
+        import dungeon_personen as pers
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        self.assertIn(self.c.get(K + "personen").status_code, (401, 403))
+        x = ADMIN.get(K + "personen")
+        self.assertEqual((x.status_code, x.json()["detail"]), (404, "personen aus"))
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "setzen", "id": "oskar"}).json()["detail"], "personen aus")
+        self.assertFalse(ADMIN.get("/api/admin/dungeon").json()["personen_an"])
+        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        self.assertTrue(ADMIN.get("/api/admin/dungeon").json()["personen_an"])
+        self.assertIn(self.c.post(K + "personen", json={"was": "setzen", "id": "oskar"}).status_code, (401, 403))
+        d = ADMIN.get(K + "personen").json()
+        self.assertEqual((d["zeilen"], d["neu"]), ([], True))
+        e = {"id": "oskar", "name": "Oskar", "welt": "fantasy", "rolle": "Wirt", "wesen": {"mut": 2},
+             "karte": {"beruf": ["Wirt", "Innkeeper"], "geheimnis": ["Schuldet der Gilde Gold", "Owes the guild gold"]}}
+        x = ADMIN.post(K + "personen", json={"was": "setzen", "id": "oskar", "eintrag": e})
+        self.assertEqual(x.status_code, 200, x.text)
+        (row,) = x.json()["zeilen"]
+        self.assertEqual((row["name"], row["stand"], row["zeile"]), ("Oskar", "eigen", "Wirt · Fantasy · 0× getroffen"))
+        self.assertIn(["Geheimnis", "Schuldet der Gilde Gold"], row["werte"])            # the admin sees wish and secret
+        self.assertIn(["Wesen", "mutig"], row["werte"])
+        en = ADMIN.get(K + "personen?lang=en").json()["zeilen"][0]
+        self.assertEqual(en["zeile"], "Innkeeper · Fantasy · met 0×")
+        bad = [dict(e, id="oskar2"),                                                     # the world has Oskar
+               dict(e, id="o2", name="O"), dict(e, id="o3", welt="mond"), dict(e, id="o4", wesen={"mut": 9}),
+               dict(e, id="o5", karte={"farbe": ["rot", "red"]}), dict(e, id="o6", rolle="nackt am Tresen")]
+        for b in bad:
+            x = ADMIN.post(K + "personen", json={"was": "setzen", "id": b["id"], "eintrag": b})
+            self.assertEqual(x.status_code, 422, b)
+            self.assertTrue(x.json()["detail"], b)
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "setzen", "id": "Böse!", "eintrag": dict(e, id="Böse!")}).status_code, 422)
+        self.assertEqual(set(pers.load()), {"oskar"})                                     # nothing else written
+        x = ADMIN.post(K + "personen", json={"was": "setzen", "id": "oskar", "eintrag": dict(e, rolle="Alter Wirt")})
+        self.assertEqual(x.status_code, 200, x.text)                                     # its own name again is fine
+        self.assertEqual(pers.load()["oskar"]["rolle"], "Alter Wirt")
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "weg", "id": "oskar"}).status_code, 422)
+        x = ADMIN.post(K + "personen", json={"was": "zurueck", "id": "oskar"})
+        self.assertEqual((x.status_code, x.json()["zeilen"]), (200, []))
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "zurueck", "id": "oskar"}).status_code, 404)
+        self.assertGreaterEqual((pers.for_live()["geaendert"], pers.for_live()["geloescht"]), (2, 1))
+
     def test_a_table_shows_every_row_and_its_sign(self):
         """Dominik 2026-10-25 „ich sehe gar nicht die tabellen“: the detail holds every row with its number and the
         worlds of a row that counts only in some, the die is the number of rows, every table has a sign."""

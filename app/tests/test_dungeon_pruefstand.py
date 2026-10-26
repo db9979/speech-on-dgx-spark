@@ -63,6 +63,21 @@ class Bench(unittest.TestCase):
         self.assertEqual(off, {}, "Stufe/Gruppe außerhalb des Ziels")
 
 
+    def test_people_who_fight_keep_the_aim(self):
+        """Personen-Katalog, balancing (Dominik 2026-10-26 „das ganze muss natürlich im balancing berücksichtigt
+        werden“): encounters of people only, with their templates' weighted experience (dungeon_personen.GEWICHT), win
+        70 to 90 per cent on average at „mittel“, every cell within SPANNE; the weight counts in the budget and the reward."""
+        import dungeon_personen as P
+        r = dungeon.rules()
+        self.assertEqual(set(P.GEWICHT), set(P.templates()))
+        by = dungeon._by(r, "gegner")
+        self.assertEqual(P.weighted(by["schlaeger"])["ep"], round(by["schlaeger"]["ep"] * P.GEWICHT["schlaeger"]))
+        z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", pool=P.pool(r))
+        self.assertGreaterEqual(len(z), 40)
+        mean = sum(c["siege"] for c in z.values()) / len(z)
+        self.assertTrue(ps.AIM[0] <= mean <= ps.AIM[1], mean)
+        self.assertEqual({k: c["siege"] for k, c in z.items() if not P.SPANNE[0] <= c["siege"] <= P.SPANNE[1]}, {})
+
     def test_the_economy_keeps_its_aim(self):
         """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
         costs (median), and no find sells for more than ten times a level's income; the inn grows with the level."""

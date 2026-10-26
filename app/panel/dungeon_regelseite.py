@@ -25,12 +25,14 @@ import dungeon
 import dungeon_balance as balance
 import dungeon_dingbild as dingbild
 import dungeon_kampf as kampf
+import dungeon_personen as personen
 import guard
 from common import write_json
 from core import app_version, auth, json_body
 
 router = APIRouter()
 TEILE = ("gegenstaende", "gegner", "klassen", "voelker", "welten", "toene", "zustaende", "hintergruende", "tabellen")
+ALLE = TEILE + ("personen",)   # the people of the catalog (dungeon_personen, Personen-Katalog 1) beside the parts of the rules
 GRUPPE = {"nsc": ("Figuren", "People"), "orakel": ("Orakel", "Oracle"), "eigen": ("Eigene", "Own")}   # tables (dungeon_tabellen)
 TAB_ZEICHEN = {"nsc": "👤", "orakel": "🔮", "eigen": "✎",      # a table's sign in the list: its own, else its group's
                "nsc_aussehen": "👁️", "nsc_art": "🎭", "nsc_wunsch": "💭", "nsc_geheimnis": "🤫", "nsc_beruf": "🛠️",
@@ -210,7 +212,10 @@ def _welt_of(r, welt):
 
 
 def view(teil, lang="de", welt=""):
-    """{"teil", "zeilen": [...], "eintraege": {id: entry}}: the merged part with where each entry comes from."""
+    """{"teil", "zeilen": [...], "eintraege": {id: entry}}: the merged part with where each entry comes from; the people
+    of the catalog from dungeon_personen (Personen-Katalog 1)."""
+    if teil == "personen":
+        return personen.view(lang)
     li = 1 if lang == "en" else 0
     r = dungeon.rules()
     welt = _welt_of(r, welt)
@@ -262,7 +267,11 @@ def view(teil, lang="de", welt=""):
 
 def change(teil, was, i, eintrag=None):
     """One entry of the own rules set, hidden or taken back; refused (ValueError with the errors) unless the rules
-    still pass. Returns the hint of the balance for the entry (or None)."""
+    still pass. Returns the hint of the balance for the entry (or None). A person goes to dungeon_personen."""
+    if teil == "personen":
+        if not personen.admin_on():
+            raise LookupError("personen aus")
+        return personen.change(was, i, eintrag)
     own = dungeon.own_rules()
     own = own if isinstance(own, dict) else {}
     ids = {str(x["id"]): x["id"] for x in dungeon._base_rules().get(teil) or []}
@@ -303,16 +312,20 @@ def _entry(teil, i):
 @router.get("/api/admin/dungeon/katalog/{teil}", dependencies=[Depends(auth)])
 async def katalog(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
-    if teil not in TEILE:
+    if teil not in ALLE:
         raise HTTPException(404, "teil")
+    if teil == "personen" and not personen.admin_on():
+        raise HTTPException(404, "personen aus")
     return dungeon.json_out(request, await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40]))
 
 
 @router.post("/api/admin/dungeon/katalog/{teil}", dependencies=[Depends(auth)])
 async def katalog_change(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
-    if teil not in TEILE:
+    if teil not in ALLE:
         raise HTTPException(404, "teil")
+    if teil == "personen" and not personen.admin_on():
+        raise HTTPException(404, "personen aus")
     b = await json_body(request, BODY)
     i = str(b.get("id") or "")
     if not i or len(i) > 40:
@@ -321,6 +334,8 @@ async def katalog_change(teil: str, request: Request):
         hint = await asyncio.to_thread(change, teil, str(b.get("was") or ""), i, b.get("eintrag"))
     except ValueError as e:
         raise HTTPException(422, e.args[0] if e.args and isinstance(e.args[0], list) else ["eintrag"])
+    except LookupError as e:
+        raise dungeon._http(e)
     out = await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
     out["hinweis"] = hint
     return out

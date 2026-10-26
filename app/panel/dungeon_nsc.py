@@ -158,7 +158,8 @@ def sync(r, rd, rng=None):
     for p in w.get("personen") or []:
         k = p["name"].lower()
         if k not in ns:
-            ns[k] = {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
+            import dungeon_personen                # a known person of the catalog comes with its own card (Personen-Katalog 3)
+            ns[k] = dungeon_personen.adopt(r, rd, p["name"]) or {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
             n += 1
         if "wesen" not in ns[k]:                  # traits and goals (Tabletop-Punkt 6), also for cards made before
             ns[k].update(wesen=traits(rng), ziele=goals(r, rd, p.get("ziel") or "", rng))

@@ -351,12 +351,13 @@ def offer(dm, r, rd, held):
     fit = [g for g in _foes(dm, r, rd) if 0 < g["ep"] <= b * SCHWER]
     fit.sort(key=lambda g: (abs(g["ep"] - b / 3), g["id"]))
     top = fit[:12]
-    return sorted(_seed(rd, held).sample(top, min(ANGEBOT, len(top))), key=lambda g: g["ep"])
+    import dungeon_personen                      # people of the scene with a template by occupation (Personen-Katalog 4)
+    return sorted(_seed(rd, held).sample(top, min(ANGEBOT, len(top))), key=lambda g: g["ep"]) + dungeon_personen.fighters(dm, r, rd, held, b)
 
 
 def offer_facts(dm, r, rd, held, li):
-    return [{"id": g["id"], "name": g["name"][li], "stufe": g["stufe"], "groesse": g.get("groesse", "mittel")}
-            for g in offer(dm, r, rd, held)]
+    return [{"id": g.get("oid", g["id"]), "name": g["name"][li], "stufe": g["stufe"], "groesse": g.get("groesse", "mittel"),
+             **({"person": True} if g.get("person") else {})} for g in offer(dm, r, rd, held)]
 
 
 def adjusted(foes):
@@ -369,13 +370,13 @@ def check_encounter(dm, r, rd, held, obj):
     room of the map each of its foes once. Returns [(catalog entry, count)] or []."""
     if not isinstance(obj, list) or rd.get("kampf"):
         return []
-    have = {g["id"]: g for g in offer(dm, r, rd, held)}
+    have = {g.get("oid", g["id"]): g for g in offer(dm, r, rd, held)}
     out, seen = [], set()
     for x in obj[:3]:
         if not isinstance(x, dict) or x.get("id") not in have or x["id"] in seen:
             continue
         seen.add(x["id"])
-        n = x.get("anzahl") if isinstance(x.get("anzahl"), int) and not isinstance(x.get("anzahl"), bool) else 1
+        n = x.get("anzahl") if isinstance(x.get("anzahl"), int) and not isinstance(x.get("anzahl"), bool) and not have[x["id"]].get("person") else 1
         out.append([have[x["id"]], max(1, min(ANZAHL_MAX, n))])
     b = budget(dm, r, rd, held) * SCHWER
     if room(r, rd):                              # a room's guardian or boss comes once each, as the map wants it
@@ -402,7 +403,8 @@ def lineup(wahl, li, n_held):
                            "angriff": g["angriff"], "schaden": g["schaden"], "plus": g.get("schaden_plus", 0),
                            "wuerfel": g.get("anzahl_wuerfel", 1), "ep": g["ep"], "aus": "", "art": g.get("schaden_art", ""),
                            **{x: list(g.get(x) or []) for x in ("resistenz", "immun", "schwaeche", "zustaende")},
-                           "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1)})
+                           "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1),
+                           **({"person": g["person"]} if g.get("person") else {})})
             if g.get("boss"):
                 gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * (1 + BOSS_LEBEN * max(0, n_held - 1)))
     return gegner
@@ -424,7 +426,8 @@ def start(dm, r, rd, held, wahl, li):
                    "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")]}   # the group the fight was made for
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
         rd["kampf"]["raum"] = rd["raum_gegner"]["raum"]
-    dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n) for g, n in wahl],
+    dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n,
+                                          **({"name": g["name"][li], "person": True} if g.get("person") else {})) for g, n in wahl],
             gefahr=rd["kampf"]["gefahr"])
     dm._day.bump("begegnungen")
     print(f"dungeon: kampf | start | {len(gegner)} gegner | {rd['kampf']['gefahr']}", flush=True)
@@ -1013,6 +1016,8 @@ def end(dm, r, rd, ep, why=""):
         return
     expire(dm, rd, all_=True)
     gefaehrte.after_fight(rd)                    # the companions stand with the group again (round 2, idea 9)
+    import dungeon_personen
+    dungeon_personen.after_fight(dm, rd, k)      # a person beaten or fled into the chronicle (Personen-Katalog 4)
     besiegt = [g for g in k["gegner"] if g["aus"] == "besiegt"]
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7

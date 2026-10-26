@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["chronik"] = {}
+    try:   # Personen-Katalog (dungeon_personen.py): numbers on the game's line
+        import dungeon_personen
+        dgn["personen"] = dungeon_personen.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["personen"] = {}
     try:   # Gefährten anheuern (dungeon_gefaehrte.py): numbers on the game's line
         import dungeon_gefaehrte
         dgn["gefaehrte"] = dungeon_gefaehrte.for_live() if dgn.get("on") else {}
@@ -2040,6 +2045,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("kalender") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
+                        + (f" · Personen-Katalog {dgn['personen']['personen']}, heute {dgn['personen']['neu']} neu, {dgn['personen']['wieder']} wiedergetroffen, {dgn['personen']['erkannt']} erkannten Helden, {dgn['personen']['geaendert']} geändert, {dgn['personen']['geloescht']} gelöscht"
+                           if any((dgn.get("personen") or {}).values()) else "")
                         + (f" · heute {dgn['gefaehrte']['angeheuert']} Gefährten angeheuert, {dgn['gefaehrte']['hiebe']} Hiebe, {dgn['gefaehrte']['am_boden']} am Boden, {dgn['gefaehrte']['geflohen']} geflohen, {dgn['gefaehrte']['gegangen']} gegangen, {dgn['gefaehrte']['sold']}-mal Lohn"
                            if any((dgn.get("gefaehrte") or {}).values()) else "")
                         + (f" · heute {dgn['wunsch']['gesetzt']} Herzenswünsche gesetzt, {dgn['wunsch']['erfuellt']} erfüllt, {dgn['wunsch']['verworfen']} Meldungen verworfen, {dgn['wunsch']['abgelehnt']} abgelehnt"

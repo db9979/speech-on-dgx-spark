@@ -111,10 +111,11 @@ def _spell(r, h):
 
 
 # ---------------------------------------------------------------- an encounter
-def encounter(r, held, gefahr, rng, tries=200):
-    """[(catalog foe, count)] of the danger asked, one or two kinds, [] when none fits."""
+def encounter(r, held, gefahr, rng, tries=200, pool=None):
+    """[(catalog foe, count)] of the danger asked, one or two kinds, [] when none fits; pool: only these foes (the
+    templates people fight with, weighted: dungeon_personen.pool)."""
     b = kampf.budget(dungeon, r, {}, held)
-    fit = [g for g in r.get("gegner") or [] if 0 < g["ep"] <= b * kampf.SCHWER]
+    fit = [g for g in (r.get("gegner") or [] if pool is None else pool) if 0 < g["ep"] <= b * kampf.SCHWER]
     if not fit:
         return []
     for _ in range(tries):
@@ -174,14 +175,14 @@ def fight(r, held, wahl, rng):
     return {"sieg": sieg, "leben": 1 - sum(max(0, h["leben"]) for h in held) / max(1, voll), "runden": n}
 
 
-def cell(r, stufe, gruppe, gefahr, kaempfe, seed):
+def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None):
     """The bench for one level and group size: {"siege": per cent, "leben": per cent lost in the won fights,
     "runden": mean turns}; None when no encounter of the danger fits."""
     rng = random.Random(f"{seed}|{stufe}|{gruppe}|{gefahr}")
     won, lost, runden, n = 0, [], 0, 0
     for _ in range(kaempfe):
         held = party(r, gruppe, stufe, rng)
-        wahl = encounter(r, held, gefahr, rng)
+        wahl = encounter(r, held, gefahr, rng, pool=pool)
         if not wahl:
             continue
         x = fight(r, held, wahl, rng)
@@ -195,12 +196,12 @@ def cell(r, stufe, gruppe, gefahr, kaempfe, seed):
     return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
 
 
-def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None):
-    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out."""
+def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, pool=None):
+    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. pool: only these foes."""
     out = {}
     for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
         for g in gruppen or range(1, GRUPPE_MAX + 1):
-            c = cell(r, s, g, gefahr, kaempfe, seed)
+            c = cell(r, s, g, gefahr, kaempfe, seed, pool)
             if c:
                 out[f"{s}/{g}"] = c
     return out

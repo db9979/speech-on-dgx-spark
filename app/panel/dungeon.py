@@ -137,6 +137,7 @@ import dungeon_umgebung as umgebung
 import dungeon_fluestern as fluestern
 import dungeon_wunsch as wunsch
 import dungeon_gefaehrte as gefaehrte
+import dungeon_personen as personen
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -1922,6 +1923,7 @@ def _end(rd, now, why, rid):
     rd["ende_t"] = now
     pay_ep(rules(), rd, rid)
     honour(rd)
+    personen.collect(_me, rules(), rd, now)      # the people the table met into the catalog (Personen-Katalog 1)
     for p in rd["plaetze"].values():
         keep_seat(p)
     _log(rd, "system", text=["Die Runde ist zu Ende.", "The round has ended."])
@@ -3218,6 +3220,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
     fakten.update(gefaehrte.facts(rd, li))               # the companions with the group (round 2, idea 9)
+    fakten.update(personen.facts(_me, r, rd, li))        # known people of the world on offer (Personen-Katalog 3)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3258,7 +3261,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -7200,7 +7203,7 @@ def admin_show(request: Request = None):
     import dungeon_import
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
-    return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(),
+    return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(), "personen_an": personen.admin_on(),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,

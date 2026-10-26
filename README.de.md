@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.128** KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing
 - **V01.1.127** KI-Dungeon-Master: Kampf-Audit, jede angreifende Aktion wird ein Angriff des Panels, auch ohne Probe des Modells, Schadenszauber greifen immer an, fällt das Ziel, trifft der Angriff den nächsten Gegner, Frieden nur über eine Charisma-Probe des Panels, keine Heilung durch das Modell im Kampf, keine Ladung ohne Wirkung, die Erzählung gibt keinem Helden eine Waffe, die er nicht trägt
 - **V01.1.126** KI-Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt erst eine Streife und dann den Herrn, Fackeln brennen vier Räume lang, im Dunkeln Proben mit Nachteil
 - **V01.1.125** KI-Dungeon-Master: „Knapp geschafft, mit Preis“ an der Würfelkarte, mit dem gezahlten Preis und eigenem Ton
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.121** KI-Dungeon-Master: Gefährten anheuern, in der Siedlung ein Gefährte der Welt, solange weniger als vier spielen, das Panel würfelt seine Hiebe, er zählt als halber Held im Balancing
 - **V01.1.120** KI-Dungeon-Master: Herzenswunsch, jeder Held trägt einen geheimen Wunsch, je Akt bekommt der Erzähler einen reihum, wird er wahr, gibt es die Erfahrung eines Akts
 - **V01.1.119** KI-Dungeon-Master: Flüstern mit einer Figur, einmal je Zug ein Wort nur für den eigenen Platz, die Figur antwortet, Verrat und Geschenk entscheidet das Panel
-- **V01.1.118** KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung
 
 
 
