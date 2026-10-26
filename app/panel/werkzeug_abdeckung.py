@@ -171,6 +171,7 @@ WITHOUT = {
     "dungeonimport": "dungeon_import.py: kein Werkzeug, der Admin gibt ein geschriebenes Abenteuer dem Geschichten-Planer, das Panel prüft den Entwurf",
     "dungeonkrit": "dungeon_kampf.py: kein Werkzeug, das Panel würfelt auf festen Tabellen, das Modell erzählt nur die Zeile",
     "dungeonehrungen": "dungeon_ehre.py: kein Werkzeug, das Panel zählt seine eigenen Würfel-Belege und vergibt feste Titel",
+    "dungeonknapp": "dungeon_knapp.py: kein Werkzeug, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an",
     "dungeonrichter": "dungeon_erzaehler.py: kein Werkzeug, das Modell gibt nach den festen Prüfungen nur eine Wahrscheinlichkeit, das Panel entscheidet mit fester Schwelle",
     "dungeonerzfehler": "dungeon_erzaehlstand.py/dungeon_erzaehler.py: kein Werkzeug, ein 👎 mit festem Grund lässt das Panel die Szene einmal neu erzählen, feste Regeln prüfen",
     "dungeonerzaehlstand": "dungeon_erzaehlstand.py: kein Werkzeug, der Admin-Prüfstand spielt feste Szenen durch das laufende Modell, feste Regeln werten",

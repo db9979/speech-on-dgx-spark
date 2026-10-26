@@ -3649,6 +3649,13 @@
 "titel": "Dungeon-Master: Ehrungen des Abends",
 "text": "Funktionen → KI-Dungeon-Master → Ehrungen des Abends einschalten, eine Runde mit zwei Helden spielen, kämpfen und dann beenden. A: Im Verlauf steht „🏅 Ehrungen des Abends“ mit Titeln wie „Klinge des Abends“ und je Held eine Urkunde mit Treffern, Schaden und 20ern. B: In der Rundenliste und in der iPhone-App steht bei der beendeten Runde „🏅 Klinge des Abends: …“. C: Am Kindertisch gibt es keinen Pechvogel.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P546",
+"v": 1101,
+"titel": "Dungeon-Master: Knapp daneben",
+"text": "Funktionen → KI-Dungeon-Master → Knapp daneben einschalten (die Preis-Tabelle kommt mit dem Katalog) und spielen, bis eine Probe um 1 oder 2 fehlt. A: Am Tisch steht „Knapp daneben!“ mit „Aufgeben“ und „Zahlen“, die anderen sehen, wer überlegt. B: Nach „Zahlen“ ist die Probe geschafft, am Wurf steht „Knapp daneben, mit Preis: …“, und die Erzählung nennt den Preis. C: Ohne Antwort ist nach 20 Sekunden aufgegeben.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

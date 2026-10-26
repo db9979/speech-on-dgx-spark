@@ -142,6 +142,7 @@ import dungeon_auto as auto_car
 import dungeon_gesicht as gesicht
 import dungeon_echt as echt
 import dungeon_ehre as ehre
+import dungeon_knapp as knapp
 import coadmin
 import features
 import guard
@@ -3294,6 +3295,8 @@ def roll(r, rd, proben, rng=None, hand=None):
         if last:                                 # burdened: Geschick with disadvantage, advantage cancels it (2a)
             vt = "" if vt == "vorteil" else "nachteil"
         vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
+        if h.get("nachteil_zug") == rd["zug"]:    # the price „nachteil“ of a near miss last turn (dungeon_knapp.pay)
+            vt = "" if vt == "vorteil" else "nachteil"
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
         bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
         extra = {"belastet": True} if last else {}
@@ -3484,7 +3487,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "beleg") if k in w},
+        if w.get("knapp"):                       # a near miss paid: its price by a fixed rule (dungeon_knapp)
+            knapp.pay(_me, r, rd, (rd["plaetze"].get(w["pid"]) or {}).get("held"), w, rng)
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         ehre.count(rd, w["pid"], proben=int(bool(w["ok"])), schatten=int(bool(w["ok"]) and w["wert"] == "geschick"),
                    zwanzig=int(w["w"] == 20), eins=int(w["w"] == 1))
@@ -3679,7 +3684,8 @@ def roll_facts(r, rd, wuerfe, hits, zuege):
     """The turn's receipts for the model: the checks, the heroes' attacks and the foes' turn."""
     facts_w = [{"beleg": w["beleg"], "name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
                 "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
-                **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
+                **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {}),
+                **({"knapp_mit_preis": w["preis_t"]} if w.get("knapp") else {})}     # a near miss paid: the price as data (dungeon_knapp)
                for w in wuerfe]
     facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
                  "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
@@ -3745,6 +3751,7 @@ async def run_turn(rid, turn):
             hand = await echt.real_ask(_me, rid, turn, rd, proben)   # the seats with own dice at the real table (D&D idea 5)
             proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand)
             wuerfe = roll(r, rd, proben, hand=hand)
+            wuerfe = await knapp.ask(_me, rid, turn, r, rd, wuerfe)   # a near miss: give up or pay a price (D&D round 2, idea 1)
             zuege = kampf.foes_turn(_me, r, rd, hits)
             erz.receipts(rd, wuerfe, hits, zuege)     # Würfel-Beleg: W-n on every roll (Tabletop-Punkt 2)
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
@@ -5092,6 +5099,7 @@ def view(rid, pid, now=None):
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
     out["kampfstufe"] = {"wert": kampf.stage(rd), "wahl": [[k, v[li]] for k, v in kampf.STUFEN.items()]} if host and kampf.stages_on(rd) else None
     out["echt_plaetze"] = echt.choice(rd) if host else None    # which seats throw their own d20 (dungeon_echt, D&D idea 5)
+    out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))

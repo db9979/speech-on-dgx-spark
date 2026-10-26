@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.101** KI-Dungeon-Master: Knapp daneben, fehlen einer Probe 1 oder 2, wählt der Held aufgeben oder es mit einem gewürfelten Preis doch zu schaffen
 - **V01.1.100** KI-Dungeon-Master: Ehrungen des Abends, am Ende der Runde feste Titel wie Klinge des Abends und je Held eine Urkunde mit den Zahlen aus den Würfeln des Spark
 - **V01.1.099** KI-Dungeon-Master: Krit- und Patzer-Tabellen, eine 20 oder 1 im Kampf würfelt eine Zeile mit Folge für Gegner oder Held, dazu die Prüfregeln für die Inhalte der D&D-Ideen Runde 2
 - **V01.1.098** KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke und Fackel im Gewölbe
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.094** KI-Dungeon-Master: Tabelle „Musik am Tisch“ wieder ausgerichtet, die Welt steht vorn, je Stimmung eine Spalte
 - **V01.1.093** KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu
 - **V01.1.092** KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
-- **V01.1.091** KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
 
 
 

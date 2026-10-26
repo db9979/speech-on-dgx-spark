@@ -7152,6 +7152,109 @@ class Fight(Turns):
             with open(swift, encoding="utf-8") as f:
                 self.assertIn('$0["ehrungen"]', f.read())
 
+    def test_a_near_miss_gives_up_or_pays_a_price(self):
+        """D&D round 2 idea 1 (Knapp daneben, switch dungeonknapp): off by default; on, a check (never an attack, never a
+        natural 1) missing by 1 or 2 asks its seat; „zahlen“ passes it with a price of the d20 table (only the mild rows at
+        the children's table), „aufgeben“ or no answer leaves it failed; the price works by a fixed rule; the door takes
+        only the own seat's choice for the turn asked, once."""
+        import features
+        import dungeon_knapp as knapp
+        self.assertNotIn(knapp.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_knapp"], False)
+        t = lambda s_: [s_, s_ + " (en)"]
+        tab = [{"id": "laerm_1", "von": 1, "bis": 10, "art": "laerm", "t": t("Es scheppert."), "kinder": True},
+               {"id": "gold_1", "von": 11, "bis": 20, "art": "gold", "t": t("Es kostet.")}]
+        r = dungeon.rules()
+        r = dict(r, ideen=dict(r.get("ideen") or {}, knapp=tab))
+        rd = self.state(self.rid)
+        rd["ton"] = next(t_["id"] for t_ in r["toene"] if t_["id"] != min(x_["id"] for x_ in r["toene"]))
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["ton"] = rd["ton"]
+            dungeon._write(d)
+        turn = rd["zug"]
+        name = rd["plaetze"][self.host]["held"]["name"]
+        miss = {"pid": self.host, "name": name, "wert": "geschick", "w": 10, "bonus": 3, "gesamt": 13, "schwer": 14, "ok": False,
+                "vt": "", "ws": [10], "wofuer": "über den Graben"}
+        go = lambda ws, rng=None: asyncio.run(knapp.ask(dungeon, self.rid, turn, r, rd, ws, rng))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(go([miss]), [miss])                                   # switch off: no question
+        helpers.keep_chat(self, "dungeon_knapp")
+        helpers.set_config(dungeon_knapp=True)
+        self.assertEqual(knapp.near(rd, [dict(miss, gesamt=11), dict(miss, w=1, gesamt=4, ws=[1]), dict(miss, ok=True)]), {})   # 3 short, a 1, passed
+        self.assertEqual(knapp.near(rd, [miss, dict(miss, gesamt=12)]), {self.host: 0})   # once a turn per seat
+
+        def answer(wahl, after=0.3):
+            def put():
+                with dungeon._lock:
+                    d = dungeon._read()
+                    knapp.give(d["runden"][self.rid], self.host, turn, wahl)
+                    dungeon._write(d)
+            threading.Timer(after, put).start()
+        with mock.patch.object(knapp, "TAKT_S", 0.05), contextlib.redirect_stdout(io.StringIO()) as out:
+            answer("zahlen")
+            x = go([miss], random.Random(3))[0]
+        self.assertEqual((x["ok"], x["knapp"]), (True, True))
+        row = next(y for y in tab if y["id"] == x["preis"])
+        self.assertEqual((x["preis_art"], x["preis_t"]), (row["art"], row["t"][0]))
+        self.assertIn(f"dungeon: knapp | gezahlt | {row['art']}", out.getvalue())
+        self.assertNotIn("knapp_frage", self.state(self.rid))                      # the question goes with the turn
+        self.assertEqual(dungeon.roll_facts(r, rd, [dict(x, beleg="b1")], [], [])[0][0]["knapp_mit_preis"], row["t"][0])
+        with mock.patch.object(knapp, "TAKT_S", 0.05), contextlib.redirect_stdout(io.StringIO()) as out:
+            answer("aufgeben")
+            self.assertEqual(go([miss]), [miss])
+        self.assertIn("dungeon: knapp | aufgegeben", out.getvalue())
+        with mock.patch.object(knapp, "WARTE_S", 0.2), mock.patch.object(knapp, "TAKT_S", 0.05), contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(go([miss]), [miss])                                   # no answer: it stays failed
+        self.assertIn("dungeon: knapp | ohne antwort", out.getvalue())
+        rd["ton"] = min(x_["id"] for x_ in r["toene"])                             # the children's table: only the mild rows
+        self.assertEqual([y["id"] for y in knapp.table(r, rd, dungeon.kids(r, rd))], ["laerm_1"])
+        # the prices by fixed rules
+        h = copy.deepcopy(rd["plaetze"][self.host]["held"])
+        rd["zug"] = 5
+        for art, check in (("schaden", lambda: self.assertGreaterEqual(h["leben"], 1)), ("nachteil", lambda: self.assertEqual(h["nachteil_zug"], 6))):
+            h["leben"] = 2
+            with contextlib.redirect_stdout(io.StringIO()):
+                knapp.pay(dungeon, r, rd, h, dict(miss, preis_art=art), random.Random(1))
+            check()
+        h["gold"] = 4
+        with contextlib.redirect_stdout(io.StringIO()):
+            knapp.pay(dungeon, r, rd, h, dict(miss, preis_art="gold"), Dice(9))
+        self.assertEqual(h["gold"], 0)                                             # never more than the hero has
+        tool = next(c for c in r["gegenstaende"] if c["art"] == "werkzeug" and not (c.get("hilft") or {}).get("fest"))
+        h["tasche"] = [dungeon.item(r, tool["id"])]
+        w = dict(miss, preis_art="werkzeug")
+        with contextlib.redirect_stdout(io.StringIO()):
+            knapp.pay(dungeon, r, rd, h, w)
+        self.assertEqual(w["kaputt"], h["tasche"][0]["i"])                         # broken the way of a natural 1
+        heard = []
+        with mock.patch.object(dungeon_karte, "laerm", lambda rd_, n, grund: heard.append((n, grund)), create=True), contextlib.redirect_stdout(io.StringIO()):
+            knapp.pay(dungeon, r, rd, h, dict(miss, preis_art="laerm"))
+        self.assertEqual(heard, [(1, "preis")])
+        rd["plaetze"][self.host]["held"] = dict(h, nachteil_zug=rd["zug"])
+        self.assertEqual(dungeon.roll(r, rd, [{"pid": self.host, "wert": "weisheit", "schwer": 10}], Dice(10, 10))[0]["vt"], "nachteil")
+        # the doors: only the turn asked, only zahlen or aufgeben, once
+        with dungeon._lock:
+            d = dungeon._read()
+            z = d["runden"][self.rid]["zug"]
+            d["runden"][self.rid]["knapp_frage"] = {"zug": z, "t": time.time(), "plaetze": {self.host: {"frage": {"wert": "geschick", "schwer": 14, "gesamt": 13, "wofuer": ""}, "wahl": None}}}
+            dungeon._write(d)
+        u = f"/api/profile/dungeon/{self.rid}/knapp"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.c.post(u, json={"zug": z + 1, "wahl": "zahlen"}).status_code, 409)
+            self.assertEqual(self.c.post(u, json={"zug": z, "wahl": "alles"}).status_code, 400)
+            self.assertEqual(self.v.post("/api/dungeon/knapp", json={"code": self.code, "zug": z, "wahl": "zahlen"}).status_code, 404)   # not the guest's question
+            v = self.c.post(u, json={"zug": z, "wahl": "zahlen"})
+            self.assertEqual(v.status_code, 200, v.text)
+            self.assertTrue(v.json()["knapp"]["fertig"])
+            self.assertEqual(self.c.post(u, json={"zug": z, "wahl": "aufgeben"}).status_code, 409)
+        self.assertGreaterEqual(knapp.for_live()["gezahlt"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("${dmKnapp(v)}", js)
+        self.assertIn("e.knapp?", js)
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""

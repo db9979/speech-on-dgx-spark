@@ -1408,6 +1408,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Knapp daneben (dungeon_knapp.py): numbers on the game's line
+        import dungeon_knapp
+        dgn["knapp"] = dungeon_knapp.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["knapp"] = {}
     try:   # the admin's rules tab (dungeon_regelseite.py): own entries, hidden ones, pictures to choose
         import dungeon_regelseite
         dgn["regeln"] = dungeon_regelseite.counts() if dgn.get("on") else {}
@@ -1922,6 +1927,9 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['heldenmut']}× Heldenmut" if dgn.get("heldenmut") else "")
                         + (f" · heute {dgn['echt']['echt']} echte Würfe, {dgn['echt']['rueckfall']} nach 30 s vom Panel, {dgn['echt']['abgelehnt']} abgelehnt"
                            if (dgn.get("echt") or {}).get("gefragt") or (dgn.get("echt") or {}).get("abgelehnt") else "")
+                        + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
+                           f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"
+                           if (dgn.get("knapp") or {}).get("gefragt") or (dgn.get("knapp") or {}).get("abgelehnt") else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

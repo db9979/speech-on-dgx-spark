@@ -113,6 +113,7 @@ OPEN = {
     "/api/dungeon/tippt": "Dungeon-Master seat link: a keystroke of the seat, so the others see „X schreibt …“ for 6 seconds (memory only); same door as /api/dungeon/platz",
     "/api/dungeon/gast": "Dungeon-Master seat link: the guest account of the seat (code by mail, sign in, keep heroes, turn mail, delete); own switch dungeongast, rate limit dungeonkonto, same door as /api/dungeon/platz",
     "/api/dungeon/wurf": "Dungeon-Master seat link: the seat throws its own die, the others then see the number the panel rolled; same door as /api/dungeon/platz",
+    "/api/dungeon/knapp": "Dungeon-Master seat link: the seat's own choice on a near miss (zahlen or aufgeben) only for the turn its seat is asked, once, own switch dungeonknapp, rate limit dungeonknapp; same door as /api/dungeon/platz",
     "/api/dungeon/echt": "Dungeon-Master seat link: the seat's own d20 numbers (whole numbers 1 to 20) only for the turn its seat is asked, once, own switch dungeonechtwuerfel, rate limit dungeonecht; same door as /api/dungeon/platz",
     "/api/dungeon/termin": "Dungeon-Master seat link: the host's game date of this seat's own round as a calendar file (.ics), no other data; same door as /api/dungeon/platz",
     "/api/dungeon/musik": "Dungeon-Master seat link: one music piece (MP3) of the Spark's shared store, nothing personal, only for a seat of a running round, own rate limit dungeonmusik; same door as /api/dungeon/platz",

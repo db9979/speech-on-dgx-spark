@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.101** AI Dungeon Master: near miss, when a check misses by 1 or 2 the hero chooses to give up or to make it after all at a rolled price
 - **V01.1.100** AI Dungeon Master: honours of the evening, at the end of the round fixed titles like Blade of the evening and a certificate per hero with the numbers of the Spark's dice
 - **V01.1.099** AI Dungeon Master: critical and fumble tables, a 20 or 1 in a fight rolls a line with a consequence for the foe or the hero, plus the checks for the content of the D&D ideas round 2
 - **V01.1.098** AI Dungeon Master: sounds for just missed, the foe's announcement, critical/fumble on attacks, alarm bell and torch in the vault
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.094** AI Dungeon Master: the "Music at the table" table lines up again, the world first, one column per mood
 - **V01.1.093** AI Dungeon Master: Dungeon judge, after the fixed checks the model estimates a contradiction to actions or dice, from 90 % the Spark writes once more
 - **V01.1.092** AI Dungeon Master: when the group goes to a new place, the narration must name it, else the model writes again or the group stays
-- **V01.1.091** AI Dungeon Master: real dice now work, the host chooses in the game master console the seats with an own d20, the turn takes the number, the receipt says "real"
 
 
 

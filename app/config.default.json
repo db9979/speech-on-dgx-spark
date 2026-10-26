@@ -203,6 +203,7 @@
     "dungeon_richter": false,
     "dungeon_krit": false,
     "dungeon_ehrungen": false,
+    "dungeon_knapp": false,
     "dungeon_import": false,
     "dungeon_regler": false,
     "dungeon_heldenmut": false,
