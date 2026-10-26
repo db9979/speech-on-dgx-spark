@@ -5501,6 +5501,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Reise-Etappen (V01.1.111, D&D-Idee 9, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Reise-Etappen* (chat.dungeon_reise, ab Werk aus; dungeon_reise.py, eigener Code; die Tabellen ideen.reise_rollen und reise_ereignisse stehen in dungeon_srd.json, die Etappen eines Weges rechnet dungeon_karte.etappen). Führt die Karte die Gruppe über einen Weg von mindestens 2 Etappen (nicht in einem Gewölbe), würfelt das Panel eine Reise: jeder Platz mit einem stehenden Helden übernimmt eine Rolle (Kundschafter, Jäger, Wache, Pfadfinder; in der Science-Fiction-Welt eigene Namen), die Rollen wechseln mit dem Zug. Jede Rolle ist ein W20 auf ihren Wert gegen 10 plus die Etappen (die 20 gelingt, die 1 misslingt immer). Die erste misslungene Rolle bestimmt die Folge: überrascht (jeder Held würfelt im nächsten Zug mit Nachteil), hungrig (1 Leben weniger, nie unter 1) oder verirrt (ein Tag mehr unterwegs); gelingt alles, ist die Reise mit einer 20 „ausgeruht“ (2 Leben), sonst ruhig. Dazu kommt ein Ereignis der Tabelle der Landschaft mit diesem Ausgang. rd[\"reise_tage\"] zählt die Tage unterwegs (für den Kalender der Welt, D&D-Idee 6)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Der nächste Erzähler bekommt Etappen, Landschaft, Rollen mit Ausgang und Ereignis in seinen Fakten und erzählt nur; im Verlauf steht eine Karte „🧭 Reise“ mit jedem Wurf. Live: heute Reisen, Rollen gelungen und misslungen. Log dungeon: reise | 3 etappen | 1 von 2 | hungrig. Selbsttest Equipment.test_a_long_way_is_a_journey."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -10822,6 +10838,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Lagerfeuer und Rast (Funktionen → Meine Daten → „Lagerfeuer und Rast“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Außerhalb eines Kampfes ruft der Gastgeber im Spielleiter-Pult eine Rast."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Reise-Etappen (Funktionen → Meine Daten → „Reise-Etappen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Führt die Karte die Gruppe über einen Weg von zwei oder mehr Etappen (nicht in einem Gewölbe), wird daraus eine Reise."
 },
 {
 "lang": "de",
@@ -19677,6 +19701,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: travel stages (V01.1.111, D&D idea 9, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Travel stages* (chat.dungeon_reise, off by default; dungeon_reise.py, own code; the tables ideen.reise_rollen and reise_ereignisse stand in dungeon_srd.json, the stages of a way come from dungeon_karte.etappen). When the map leads the group along a way of at least 2 stages (not in a vault), the panel rolls a journey: every seat with a standing hero takes a role (scout, hunter, watch, pathfinder; own names in the science fiction world), the roles change with the turn. Every role is a d20 on its value against 10 plus the stages (a 20 always passes, a 1 always fails). The first failed role decides the consequence: caught off guard (every hero rolls at a disadvantage next turn), hungry (1 life less, never below 1) or lost (a day more on the road); if all pass, the journey is \"rested\" with a 20 (2 life), else quiet. An event of the landscape's table with this outcome comes with it. rd[\"reise_tage\"] counts the days on the road (for the world's calendar, D&D idea 6). The next narrator gets stages, landscape, roles with outcome and event"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " in its facts and only tells; the log shows a card \"🧭 Journey\" with every roll. Live: journeys, roles passed and failed today. Log dungeon: reise | 3 etappen | 1 von 2 | hungrig. Self-test Equipment.test_a_long_way_is_a_journey."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: telling richly (V01.1.109, Dominik 2026-10-26 \"ausführliche erzählweise ist immer noch kanpp\"): The round's way of telling only raised the upper limit so far. Now the narrator's task also names a minimum length (dungeon.WEISE_MIN: brief none, normal 500, rich 1000 characters, always 300 below the upper limit, erz_min) and a fixed style sentence (WEISE_STIL): for \"rich\" several paragraphs with senses, mood and a moment of its own for every hero who acted, for \"brief\" a few clear sentences. For \"rich\" the panel checks the minimum by a fixed rule (dungeon_erzaehler.judge, fault knapp): too short is told anew once with a fixed hint, then the try stays. Log dungeon: nachbessern | knapp, | bleibt | knapp; counted with the narrator rules. Self-test Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -24806,6 +24846,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Campfire and rest (Features → My data → \"Campfire and rest\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Outside a fight the host calls a rest in the game master console."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Travel stages (Features → My data → \"Travel stages\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When the map leads the group along a way of two or more stages (not in a vault), it becomes a journey."
 },
 {
 "lang": "en",

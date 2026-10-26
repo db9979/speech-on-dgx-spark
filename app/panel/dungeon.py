@@ -127,6 +127,7 @@ import dungeon_kampf as kampf
 import dungeon_mut as mut
 import dungeon_narben as narben
 import dungeon_rast as rast
+import dungeon_reise as reise
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3178,6 +3179,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(schrift.facts(rd))                     # the writings found last (D&D idea 3)
     fakten.update(narben.facts(rd, seated(rd)))          # the heroes' scars (D&D idea 8)
     fakten.update(rast.facts(rd))                        # the camp of a rest (D&D idea 4)
+    fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3216,7 +3218,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + kommentar.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3550,8 +3552,11 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
         orte = len(rd["karte"]["besucht"]) if rd.get("karte") else None
+        von = rd["karte"]["hier"] if rd.get("karte") else None
         if dungeon_karte.step(r, rd, story, ep, rng):   # the map moves the group (a new place: merchant and ground stay behind)
             rd.pop("boden_gold", None)
+        if rd.get("karte") and von != rd["karte"]["hier"]:
+            reise.journey(_me, r, rd, von, rng)  # a long way is a journey with roles and an event (D&D idea 9)
         neu = len(rd["karte"]["besucht"]) - orte if orte is not None and rd.get("karte") else 0
         if neu > 0:                              # Idee 7: a new place of the map found, fixed experience for every hero
             for pid in ep:

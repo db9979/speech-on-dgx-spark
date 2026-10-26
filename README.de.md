@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.111** KI-Dungeon-Master: Reise-Etappen, ein langer Weg auf der Karte wird eine Reise, jeder Held übernimmt eine Rolle und würfelt, eine Folge und ein Ereignis der Landschaft
 - **V01.1.110** KI-Dungeon-Master: Helden kommentieren selbst, jeder Held, der gehandelt hat, sagt eine kurze geprüfte Zeile zu seiner Tat, als Sprechblase und in seiner Stimme
 - **V01.1.109** KI-Dungeon-Master: die Erzählweise ausführlich erzählt wirklich ausführlich, mit Mindestlänge, festem Stil-Satz und einer Prüfung des Panels
 - **V01.1.108** KI-Dungeon-Master: Lagerfeuer und Rast, der Gastgeber ruft eine kurze oder lange Rast, drei Nachtwachen je Landschaft und eine Frage am Feuer für jeden Platz
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.104** KI-Dungeon-Master: Monster-Album, jeder Held sammelt die besiegten Gegner und weiß nach 1, 3 und 5 Siegen mehr über sie, bis zu ihren Schwächen
 - **V01.1.103** KI-Dungeon-Master: Schriftstücke, gefundene Briefe, Steckbriefe und Verse als Pergament am Tisch, der Gastgeber zeigt sie allen, einem Platz oder niemandem
 - **V01.1.102** KI-Dungeon-Master: Helfen und Gruppenprobe, wer einem Helden mit Namen hilft, gibt ihm Vorteil, bei einer Gruppenprobe reicht die Hälfte
-- **V01.1.101** KI-Dungeon-Master: Knapp daneben, fehlen einer Probe 1 oder 2, wählt der Held aufgeben oder es mit einem gewürfelten Preis doch zu schaffen
 
 
 

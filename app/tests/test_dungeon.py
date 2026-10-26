@@ -2400,6 +2400,94 @@ class Equipment(Base):
         self.assertEqual((h["an"]["haupthand"]["id"], h["an"]["koerper"]["id"], h["an"]["hals"]["id"]), ("schwert", "kettenhemd", "amulett"))
         self.assertFalse({"waffe", "ruestung", "schmuck"} & set(h))
 
+    def test_a_long_way_is_a_journey(self):
+        """D&D idea 9 (Reise-Etappen, switch dungeonreise): off by default; on, a way of REISE_MIN stages or more (never
+        in a vault) gives every standing hero a role of reise_rollen with one d20 check against SCHWER plus the stages;
+        the first failed role's consequence, else ausgeruht on a 20, else ruhig: hungrig costs HUNGER life (never below
+        1), ueberrascht a disadvantage next turn, verirrt a day more, ausgeruht RUHE life; the next narration gets it."""
+        import features
+        import dungeon_reise as reise
+        self.assertNotIn(reise.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_reise"], False)
+        r = self.r
+
+        def move(rd):
+            dungeon_karte.ensure(r, rd, random.Random(1))
+            wid = way(rd)
+            story, _ = dungeon.check_story(r, rd, {"erzaehlung": f"Ihr zieht weiter durch das nasse Moor bis nach {place(rd, wid)}.",
+                                                   "frage_an": "Arvid", "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": wid}})
+            dungeon.apply(r, rd, [], story, self.rid, random.Random(3))
+            return rd
+        with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: 3), contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.edit(move)
+        self.assertNotIn("dungeon: reise", out.getvalue())                       # switch off: a way stays a step
+        self.assertNotIn("reise", rd)
+        helpers.keep_chat(self, "dungeon_reise")
+        helpers.set_config(dungeon_reise=True)
+        with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: 3), contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.edit(move)
+        self.assertIn("dungeon: reise | 3 etappen | ", out.getvalue())
+        j = rd["reise"]
+        self.assertEqual((j["etappen"], len(j["rollen"])), (3, 2))
+        self.assertEqual({x["schwer"] for x in j["rollen"]}, {reise.SCHWER + 3})
+        self.assertEqual(len({x["rolle"][0] for x in j["rollen"]}), 2)              # two seats, two roles
+        self.assertGreaterEqual(rd["reise_tage"], 3)
+        self.assertEqual(next(e for e in reversed(rd["log"]) if e["art"] == "reise")["etappen"], 3)
+        self.assertEqual(reise.facts(rd)["reise"]["etappen"], 3)                 # the turn is over: the next narration tells it
+        self.assertEqual(reise.facts(dict(rd, zug=rd["zug"] + 1)), {})           # and only that one
+        self.assertIn(j["t"][0], dungeon.facts(r, rd))
+        self.assertIn("reise", dungeon.system_text(r, rd, "erzaehlen"))
+
+        class Fix:
+            def __init__(self, w):
+                self.w = w
+
+            def randint(self, a, b):
+                return self.w
+
+            def randrange(self, n):
+                return 0
+        rollen = r["ideen"]["reise_rollen"]
+
+        def go(w, zug, leben=5):
+            x = copy.deepcopy(rd)
+            x["zug"] = zug
+            x["reise_tage"] = 0
+            von = x["karte"]["hier"]
+            x["karte"]["hier"] = next(i for i in range(len(x["karte"]["orte"])) if i != von)
+            for _, p in dungeon.seated(x):
+                p["held"]["leben"] = leben
+            with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: 2), contextlib.redirect_stdout(io.StringIO()):
+                return x, reise.journey(dungeon, r, x, von, Fix(w))
+        folge = lambda zug: rollen[zug % len(rollen)]["folge_misslingt"]
+        for zug in range(len(rollen)):                                           # a natural 1: the first seat's role decides
+            x, e = go(1, zug)
+            self.assertEqual(e["ergebnis"], folge(zug))
+            hs = [p["held"] for _, p in dungeon.seated(x)]
+            if e["ergebnis"] == "hungrig":
+                self.assertEqual({h["leben"] for h in hs}, {5 - reise.HUNGER})
+                self.assertEqual({h["leben"] for h in [p["held"] for _, p in dungeon.seated(go(1, zug, 1)[0])]}, {1})
+            if e["ergebnis"] == "ueberrascht":
+                self.assertEqual({h["nachteil_zug"] for h in hs}, {zug + 1})
+            self.assertEqual(x["reise_tage"], 2 + (e["ergebnis"] == "verirrt"))
+        self.assertEqual({folge(z) for z in range(len(rollen))}, set(reise.FOLGEN))
+        x, e = go(20, 0, 1)
+        self.assertEqual(e["ergebnis"], "ausgeruht")
+        self.assertTrue(all(h["leben"] == min(h["leben_max"], 1 + reise.RUHE) for h in [p["held"] for _, p in dungeon.seated(x)]))
+        self.assertEqual(go(19, 0)[1]["ergebnis"], "ruhig")
+        # no journey: a short way, inside a vault
+        x = copy.deepcopy(rd)
+        von = x["karte"]["hier"]
+        x["karte"]["hier"] = next(i for i in range(len(x["karte"]["orte"])) if i != von)
+        with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: reise.REISE_MIN - 1):
+            self.assertIsNone(reise.journey(dungeon, r, x, von, Fix(1)))
+        with mock.patch.object(dungeon_karte, "vault", lambda rd: {"hier": 0}):
+            self.assertIsNone(reise.journey(dungeon, r, x, von, Fix(1)))
+        self.assertGreaterEqual(reise.for_live()["reisen"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("e.art==='reise'", f.read())
+
 
 class _Die:
     """A d20 that always shows the same number."""

@@ -3719,6 +3719,13 @@
 "titel": "Dungeon-Master: Helden kommentieren",
 "text": "Funktionen → KI-Dungeon-Master → Helden kommentieren einschalten und mit zwei Plätzen zwei Züge spielen. A: Unter der Erzählung steht für jeden Helden, der gehandelt hat, eine Sprechblase „💬 Name“ mit einer kurzen Zeile zu seiner Tat. B: Mit Vorlesen spricht die Stimme des Helden die Zeile nach der Erzählung. C: Keine Zeile entscheidet etwas Neues für einen Helden.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P556",
+"v": 1111,
+"titel": "Dungeon-Master: Reise-Etappen",
+"text": "Funktionen → KI-Dungeon-Master → Reise-Etappen einschalten, eine Runde mit Karte und zwei Plätzen spielen und zu einem fernen Ort der Karte aufbrechen. A: Im Verlauf steht eine Karte „🧭 Reise“ mit den Etappen, jeder Rolle, ihrem Wurf und dem Ereignis. B: Der nächste Zug erzählt die Reise mit Landschaft und Rollen, ohne Zahlen. C: Bei „hungrig“ hat jeder Held 1 Leben weniger, bei „überrascht“ würfelt im nächsten Zug jeder mit Nachteil.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

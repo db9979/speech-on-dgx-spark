@@ -1423,6 +1423,11 @@ def snapshot(view="admin", now=None):
         dgn["rast"] = dungeon_rast.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["rast"] = {}
+    try:   # Reise-Etappen (dungeon_reise.py): numbers on the game's line
+        import dungeon_reise
+        dgn["reise"] = dungeon_reise.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["reise"] = {}
     try:   # Narben (dungeon_narben.py): numbers on the game's line
         import dungeon_narben
         dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
@@ -1982,6 +1987,8 @@ def snapshot(view="admin", now=None):
                            + (" · singt gerade" if dgn['lied'].get("macht") else "") if (dgn.get("lied") or {}).get("lieder") or (dgn.get("lied") or {}).get("weg") or (dgn.get("lied") or {}).get("macht") else "")
                         + (f" · heute {dgn['rast']['kurz']} kurze und {dgn['rast']['lang']} lange Rasten, {dgn['rast']['gestoert']} Nächte gestört, {dgn['rast']['abgelehnt']} abgelehnt"
                            if any((dgn.get("rast") or {}).values()) else "")
+                        + (f" · heute {dgn['reise']['reisen']} Reisen, {dgn['reise']['gelungen']} Rollen gelungen, {dgn['reise']['misslungen']} misslungen"
+                           if any((dgn.get("reise") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
                            if any((dgn.get("kommentar") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")

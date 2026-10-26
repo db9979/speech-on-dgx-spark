@@ -303,6 +303,8 @@ FEATURES = (
     F("dungeonkommentar", "Helden kommentieren", "Heroes comment", "data", ("dungeon_kommentar",), parent="dungeon", me="dmbox", guide="dungeonkommentar"),
     # Lagerfeuer und Rast (dungeon_rast.py, D&D idea 4): short and long rests with night watches and question cards
     F("dungeonrast", "Lagerfeuer und Rast", "Campfire and rest", "data", ("dungeon_rast",), parent="dungeon", me="dmbox", guide="dungeonrast"),
+    # Reise-Etappen (dungeon_reise.py, D&D idea 9): a long way is a journey with roles, checks and an event
+    F("dungeonreise", "Reise-Etappen", "Travel stages", "data", ("dungeon_reise",), parent="dungeon", me="dmbox", guide="dungeonreise"),
     # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
     F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
     F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),
