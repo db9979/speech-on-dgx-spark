@@ -5445,6 +5445,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Schriftstücke (V01.1.103, D&D-Idee 3, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Schriftstücke* (chat.dungeon_schrift, ab Werk aus; dungeon_schrift.py; Handouts für alle, einige oder niemanden wie in NeonBrasil/DM-Dungeon-Music, BigJk/snd und Hinnful/Evermist, alle MIT, eigener Code). Finden die Helden etwas Geschriebenes, meldet die Erzählung es im Feld schriftstueck (höchstens eines je Zug): Titel, den Text, so wie er dasteht, die Art (Brief, Steckbrief, Vers, Tagebuch, Notiz, Inschrift) und den Absender. Das Panel prüft es nach festen Regeln (reiner Text, höchstens 600 Zeichen, mindestens 20, die Grenzen der Runde und die Liste „nie“) und legt es in der Runde ab (rd[\"schrift\"], höchstens 40). Am Tisch erscheint es an seinem Zug als Pergament mit Siegelzeichen, Handschrift-Schrift und Absender und bleibt im Reiter „Schriftstücke“ der rechten Spalte. Der Gastgeber sieht darunter „Alle · Niemand · Namen“ und bestimmt mit einem Tipp, wer es sieht (POST …/erzaehler {schrift: {id, sicht}}); ein geheimes Schriftstück trägt beim Empfänger „nur für dich“. Andere Plätze bekommen ein geheimes Schriftstück nie (de"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "r Sichtfilter, Geheimnis schrift_geheim, mit Leck-Test); der Erzähler kennt die letzten drei in seinen Fakten, damit die Geschichte dabei bleibt, entscheidet aber nie, wer sie sieht. Die App zeigt sie im Spieltisch. Live: heute gefunden, verworfen, nur für einen Platz. Log dungeon: schrift | gefunden | art, | verworfen, | sicht | alle|niemand|ein platz, | sicht | abgelehnt. Selbsttest Fight.test_writings_as_parchment_for_whom_the_host_chooses."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10702,6 +10718,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Helfen und Gruppenprobe (Funktionen → Meine Daten → „Helfen und Gruppenprobe“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Schreibt ein Spieler in seiner Aktion, dass er einem anderen Helden hilft, und nennt ihn beim Namen („Ich helfe Mara über die Mauer“), würfelt der Spark Maras erste Probe in diesem Zug mit Vorteil (zwei W20, der höhere zählt)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Schriftstücke (Funktionen → Meine Daten → „Schriftstücke“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Finden die Helden in der Geschichte etwas Geschriebenes (einen Brief, einen Steckbrief, einen Vers, eine Tagebuchseite, eine Notiz, eine Inschrift), erscheint es am Tisch als Pergament mit Titel, Text (höchstens 600 Zeichen) und Absender …"
 },
 {
 "lang": "de",
@@ -19469,6 +19493,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: writings (V01.1.103, D&D idea 3, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Writings* (chat.dungeon_schrift, off by default; dungeon_schrift.py; handouts for all, some or nobody as in NeonBrasil/DM-Dungeon-Music, BigJk/snd and Hinnful/Evermist, all MIT, own code). When the heroes find something written, the narration reports it in the field schriftstueck (at most one a turn): title, the text as it stands, the kind (letter, wanted poster, verse, diary, note, inscription) and the sender. The panel checks it by fixed rules (plain text, at most 600 characters, at least 20, the round's limits and the list \"never\") and keeps it in the round (rd[\"schrift\"], at most 40). At the table it appears at its turn as parchment with a seal sign, a handwriting font and the sender and stays in the tab \"Writings\" of the right column. The host sees \"All · Nobody · names\" below and decides with a tap who sees it (POST …/erzaehler {schrift: {id, sicht}}); a secret writing shows \"only for you\" at its receiver. Other seats never get a secret writing (the sight filter, secret schrift_geheim, with a leak test); the narrator knows the l"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ast three in its facts so the story keeps to them, but never decides who sees them. The app shows them at the game table. Live: found, dropped, for one seat only today. Log dungeon: schrift | gefunden | art, | verworfen, | sicht | alle|niemand|ein platz, | sicht | abgelehnt. Self-test Fight.test_writings_as_parchment_for_whom_the_host_chooses."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24542,6 +24582,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Helping and group checks (Features → My data → \"Helping and group checks\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a player writes in their action that they help another hero and names them (\"I help Mara over the wall\"), the Spark rolls Mara's first check of this turn with advantage (two d20, the higher counts)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Writings (Features → My data → \"Writings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When the heroes find something written in the story (a letter, a wanted poster, a verse, a diary page, a note, an inscription), it appears at the table as parchment with title, text (at most 600 characters) and sender and stays in the ta …"
 },
 {
 "lang": "en",

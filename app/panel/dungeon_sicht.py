@@ -14,7 +14,7 @@ import json
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
                  "fraktionen_geheim", "quest_geheim", "echt_plaetze")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest")   # the admin switches of the secrets below: the self-test turns them on
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -50,6 +50,11 @@ def _nsc(rd, karte, kanten, **more):
     rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "", "ziel": "", "sprache": ""}]}
     rd["nsc"] = {"oskar": {"name": "Oskar", "karte": karte, "kanten": kanten, "haltung": {}, "gesehen": rd.get("zug", 0), **more}}
     rd["log"].append({"art": "dm", "text": "Oskar winkt der Gruppe zu.", "npc": [], "n": rd.get("zug", 0)})   # in the scene
+
+
+def _schrift(rd, m):
+    pid = next(k for k, p in rd["plaetze"].items() if p.get("uid") == rd["owner"])
+    rd["schrift"] = [{"id": "s1", "zug": rd.get("zug", 0), "titel": "Brief", "text": m, "art": "brief", "von": "", "sicht": pid}]
 
 
 def _quest(rd, m, ort):
@@ -90,6 +95,7 @@ GEHEIM = {
                         {"gastgeber", "modell"}, lambda rd, m: _quest(rd, m, "")),
     "quest_anderswo": (("Ein Quest-Gegenstand an einem anderen Ort", "A quest thing at another place"), {"gastgeber"},
                        lambda rd, m: _quest(rd, m, "o_weit")),
+    "schrift_geheim": (("Ein Schriftstück nur für einen Platz", "A writing for one seat only"), {"gastgeber", "modell"}, _schrift),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

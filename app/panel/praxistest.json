@@ -3663,6 +3663,13 @@
 "titel": "Dungeon-Master: Helfen und Gruppenprobe",
 "text": "Funktionen → KI-Dungeon-Master → Helfen und Gruppenprobe einschalten und mit zwei Helden spielen. A: Schreibt einer „Ich helfe Mara über die Mauer“, steht an Maras Wurf „🤝 mit Hilfe von …“ und es sind zwei Würfel. B: Schleichen beide (gleicher Wert, gleiche Schwierigkeit) und einer schafft es, steht an beiden „👥 Gruppenprobe“ und beide haben es geschafft.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P548",
+"v": 1103,
+"titel": "Dungeon-Master: Schriftstücke",
+"text": "Funktionen → KI-Dungeon-Master → Schriftstücke einschalten und eine Runde mit zwei Plätzen spielen, bis die Helden einen Brief oder Steckbrief finden. A: Der Brief erscheint als Pergament im Verlauf und im Reiter „Schriftstücke“. B: Der Gastgeber tippt auf den Namen eines Platzes: nur dieser sieht ihn mit „nur für dich“, der andere Platz sieht ihn nicht mehr. C: „Niemand“ blendet ihn für alle Plätze aus.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

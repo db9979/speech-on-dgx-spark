@@ -297,6 +297,8 @@ FEATURES = (
     # Helfen und Gruppenprobe (dungeon_helfen.py, D&D round 2 idea 4): a named help gives advantage, half of a group passing is enough
     F("dungeonhelfen", "Helfen und Gruppenprobe", "Helping and group checks", "data", ("dungeon_helfen",), parent="dungeon", me="dmbox",
       guide="dungeonhelfen"),
+    # Schriftstücke (dungeon_schrift.py, D&D idea 3): a found writing as a parchment, the host chooses who sees it
+    F("dungeonschrift", "Schriftstücke", "Writings", "data", ("dungeon_schrift",), parent="dungeon", me="dmbox", guide="dungeonschrift"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

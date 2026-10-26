@@ -7300,6 +7300,63 @@ class Fight(Turns):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("e.hilfe||e.gruppe", f.read())
 
+    def test_writings_as_parchment_for_whom_the_host_chooses(self):
+        """D&D idea 3 (Schriftstücke, switch dungeonschrift): off by default; on, a writing the narration reports passes the
+        fixed rules (kind, lengths, the round's limits) and goes into the round for every seat; the host shows it to all,
+        one seat or nobody, and a seat never gets another's secret writing (GEHEIM["schrift_geheim"] in the leak test)."""
+        import features
+        import dungeon_schrift as schrift
+        import dungeon_sicht
+        self.assertNotIn(schrift.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_schrift"], False)
+        self.assertIn("schrift_geheim", dungeon_sicht.GEHEIM)
+        self.assertIn("schriftstueck", dungeon.SCHEMA_ERZAEHLEN["properties"])
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        brief = {"titel": "Ein Brief mit Siegel", "text": "Kommt nicht in den Keller. Der Wächter schläft nie. — E.", "art": "brief", "von": "Elsbeth"}
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertIsNone(schrift.check(dungeon, r, rd, brief))               # switch off
+        helpers.keep_chat(self, "dungeon_schrift")
+        helpers.set_config(dungeon_schrift=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(schrift.check(dungeon, r, rd, brief), brief)
+            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, text="Kurz.")))
+            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, art="buch")))
+            self.assertEqual(len(schrift.check(dungeon, r, rd, dict(brief, text="x " * 400))["text"]) <= schrift.TEXT_MAX, True)
+        self.assertIn("dungeon: schrift | verworfen", out.getvalue())
+        self.assertIn("schriftstueck", dungeon.system_text(r, rd, "erzaehlen"))
+        with dungeon._lock:
+            d = dungeon._read()
+            cur = d["runden"][self.rid]
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                schrift.learn(dungeon, cur, {"schrift": brief})
+            dungeon._write(d)
+        self.assertIn("dungeon: schrift | gefunden | brief", out.getvalue())
+        rd = self.state(self.rid)
+        sid = rd["schrift"][0]["id"]
+        self.assertEqual((rd["schrift"][0]["sicht"], rd["log"][-1]), ("alle", {"art": "schrift", "sid": sid, "n": rd["zug"]}))
+        self.assertEqual(dungeon.view(self.rid, self.gp)["schrift"][0]["text"], brief["text"])
+        self.assertIn(brief["text"], dungeon.facts(r, rd))
+        u = f"/api/profile/dungeon/{self.rid}/erzaehler"
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.c.post(u, json={"schrift": {"id": sid, "sicht": self.host}})
+        self.assertEqual(v.status_code, 200, v.text)
+        self.assertIn("dungeon: schrift | sicht | ein platz", out.getvalue())
+        self.assertEqual(v.json()["schrift"][0]["fuer"], rd["plaetze"][self.host]["held"]["name"])
+        self.assertNotIn(brief["text"], json.dumps(dungeon.view(self.rid, self.gp), ensure_ascii=False))   # not the guest's
+        with contextlib.redirect_stdout(io.StringIO()):
+            for bad in ({"id": sid, "sicht": "p_fremd"}, {"id": "s999", "sicht": "alle"}, "alle"):
+                self.assertEqual(self.c.post(u, json={"schrift": bad}).status_code, 400, bad)
+            self.c.post(u, json={"schrift": {"id": sid, "sicht": "niemand"}})
+        self.assertEqual(dungeon.view(self.rid, self.gp)["schrift"], [])
+        self.assertEqual(dungeon.view(self.rid, self.host)["schrift"][0]["sicht"], "niemand")
+        self.assertGreaterEqual(schrift.for_live()["gefunden"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("if(e.art==='schrift')", js)
+        self.assertIn("['schrift','✉'", js)
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""

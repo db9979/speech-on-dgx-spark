@@ -144,6 +144,7 @@ import dungeon_echt as echt
 import dungeon_ehre as ehre
 import dungeon_knapp as knapp
 import dungeon_helfen as helfen
+import dungeon_schrift as schrift
 import coadmin
 import features
 import guard
@@ -3084,7 +3085,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
     "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA, "fraktionen": fraktionen.SCHEMA,
-    "quest_fund": quest.SCHEMA,
+    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -3152,6 +3153,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(orakel.facts(rd, li))                  # this turn's oracle answers, only as data (Tabletop-Punkt 8)
     fakten.update(fraktionen.facts(rd))                  # the factions and their clocks, only as data (Tabletop-Punkt 7)
     fakten.update(quest.facts(_me, rd))                  # the quest things carried, lying here, taken now (Punkt 15)
+    fakten.update(schrift.facts(rd))                     # the writings found last (D&D idea 3)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3188,7 +3190,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3441,6 +3443,7 @@ def check_story(r, rd, obj):
     out["nsc"] = nsc.check(_me, r, rd, obj.get("nsc"), text)      # NSC-Gedächtnis (Tabletop-Punkt 5): by fixed rules
     out["fraktionen"] = fraktionen.check(rd, obj.get("fraktionen"), text)   # Fraktionen mit Uhren (Tabletop-Punkt 7)
     out["quest_fund"] = quest.check(_me, r, rd, obj.get("quest_fund"), text)   # a quest thing found (Punkt 15): fixed rules
+    out["schrift"] = schrift.check(_me, r, rd, obj.get("schriftstueck"))   # a writing found (D&D idea 3): fixed rules
     out["begegnung"] = kampf.check_encounter(_me, r, rd, _living(rd), obj.get("begegnung"))
     out["kampf_ende"] = obj.get("kampf_ende") if rd.get("kampf") and obj.get("kampf_ende") in kampf.ENDE else ""
     return out, drop
@@ -3795,6 +3798,7 @@ async def run_turn(rid, turn):
                     nsc.learn(_me, r, cur, story, turn)     # cards, attitudes, relations, the chronicle (Tabletop-Punkt 5)
                     fraktionen.learn(_me, cur, story)       # the factions' clocks (Tabletop-Punkt 7)
                     quest.learn(_me, r, cur, story, take)   # quest things taken, found, dropped, the act's thing (Punkt 15)
+                    schrift.learn(_me, cur, story)          # a writing found, as a parchment at the table (D&D idea 3)
                     erz.apply_threads(cur, story["faeden"])
                     erz.learn_things(cur, story["dinge"])
                     kurz.append(erz.wants_summary(cur))
@@ -5109,6 +5113,7 @@ def view(rid, pid, now=None):
     out["kampfstufe"] = {"wert": kampf.stage(rd), "wahl": [[k, v[li]] for k, v in kampf.STUFEN.items()]} if host and kampf.stages_on(rd) else None
     out["echt_plaetze"] = echt.choice(rd) if host else None    # which seats throw their own d20 (dungeon_echt, D&D idea 5)
     out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
+    out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))
@@ -6294,7 +6299,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
     or {kampfstufe} the stage of the next encounters (leicht, mittel, schwer, toedlich; Tabletop-Punkt 13);
     or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off);
-    or {echt: [pid, …]} the seats that throw their own d20 at the real table (dungeon_echt.choose, D&D idea 5)."""
+    or {echt: [pid, …]} the seats that throw their own d20 at the real table (dungeon_echt.choose, D&D idea 5);
+    or {schrift: {id, sicht}} who sees a writing: alle, niemand or one seat (dungeon_schrift.set_sight, D&D idea 3)."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -6320,6 +6326,10 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 rd["mail_vorschau"] = b["mail_vorschau"]
             elif "echt" in b:
                 echt.choose(rd, b["echt"])
+            elif "schrift" in b:
+                if not isinstance(b["schrift"], dict):
+                    raise ValueError()
+                schrift.set_sight(rd, b["schrift"].get("id"), b["schrift"].get("sicht"))
             elif "weise" in b:
                 if b["weise"] not in WEISEN:
                     raise ValueError()
@@ -6335,6 +6345,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             print(f"dungeon: gastmail | vorschau {'an' if b['mail_vorschau'] else 'aus'}", flush=True)
         elif "echt" in b:
             print(f"dungeon: echt | plaetze | {len(b['echt'])}", flush=True)
+        elif "schrift" in b:
+            pass                                 # set_sight wrote its line
         elif "weise" in b:
             print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
         else:

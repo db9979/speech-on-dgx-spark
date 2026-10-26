@@ -205,6 +205,7 @@
     "dungeon_ehrungen": false,
     "dungeon_knapp": false,
     "dungeon_helfen": false,
+    "dungeon_schrift": false,
     "dungeon_import": false,
     "dungeon_regler": false,
     "dungeon_heldenmut": false,

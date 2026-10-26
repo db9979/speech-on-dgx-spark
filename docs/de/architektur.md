@@ -299,6 +299,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_quest.py` | Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund |
 | `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen |
 | `app/panel/dungeon_schreiber.py` | Dungeon-Master-Schreiber: ein zweiter Modellaufruf schlägt Änderungen vor, das Panel nimmt sie nach festen Grenzen |
+| `app/panel/dungeon_schrift.py` | Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht |
 | `app/panel/dungeon_sicht.py` | Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht |
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_tabellen.py` | Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben |
