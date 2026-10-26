@@ -2727,7 +2727,7 @@ class Equipment(Base):
 
         def move(rd):
             dungeon_karte.ensure(r, rd, random.Random(1))
-            wid = way(rd)
+            wid = way(rd, weiter=True)       # on to a place with further new ways: the second move is no way back
             story, _ = dungeon.check_story(r, rd, {"erzaehlung": f"Ihr zieht weiter durch das nasse Moor bis nach {place(rd, wid)}.",
                                                    "frage_an": "Arvid", "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": wid}})
             dungeon.apply(r, rd, [], story, self.rid, random.Random(3))

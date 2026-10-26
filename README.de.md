@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.123** ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
 - **V01.1.122** KI-Dungeon-Master: Kampfzug-Prüfung, „kämpfen“ wird ein Angriff gegen die Rüstung, das Modell wählt nie einen Zauber, Ziel- und Akt-EP warten bis zum Ende des Kampfs, jeder EP-Eintrag sagt wofür
 - **V01.1.121** KI-Dungeon-Master: Gefährten anheuern, in der Siedlung ein Gefährte der Welt, solange weniger als vier spielen, das Panel würfelt seine Hiebe, er zählt als halber Held im Balancing
 - **V01.1.120** KI-Dungeon-Master: Herzenswunsch, jeder Held trägt einen geheimen Wunsch, je Akt bekommt der Erzähler einen reihum, wird er wahr, gibt es die Erfahrung eines Akts
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.116** KI-Dungeon-Master: Chronikbuch, am Ende jedes Kapitels eine Seite mit Titelbild, Bisher geschah, Helden, Ehrungen und Schriftstücken, zum Blättern und als PDF vom Spark
 - **V01.1.115** KI-Dungeon-Master: Kalender der Welt, Monate, Monde und Feste oben am Tisch, die Tage laufen nur über Wege, Rasten und das Gasthaus, an Festen kosten Dienste mehr
 - **V01.1.114** KI-Dungeon-Master: Sprachen der Völker, eine Person grüßt kurz in der Sprache ihres Volkes, fremde Laute für alle, die Übersetzung nur für wer die Sprache kann
-- **V01.1.113** KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur noch Bilder, die ein Lauf auch malt (fest gewählte gelten als fertig); Bild und Sätze für den Heiler der Siedlung
 
 
 

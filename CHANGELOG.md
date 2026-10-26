@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.123** · 2026-10-26 · ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
 - **V01.1.122** · 2026-10-26 · KI-Dungeon-Master: Kampfzug-Prüfung, „kämpfen“ wird ein Angriff gegen die Rüstung, das Modell wählt nie einen Zauber, Ziel- und Akt-EP warten bis zum Ende des Kampfs, jeder EP-Eintrag sagt wofür
 - **V01.1.121** · 2026-10-26 · KI-Dungeon-Master: Gefährten anheuern, in der Siedlung ein Gefährte der Welt, solange weniger als vier spielen, das Panel würfelt seine Hiebe, er zählt als halber Held im Balancing
 - **V01.1.120** · 2026-10-26 · KI-Dungeon-Master: Herzenswunsch, jeder Held trägt einen geheimen Wunsch, je Akt bekommt der Erzähler einen reihum, wird er wahr, gibt es die Erfahrung eines Akts

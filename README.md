@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.123** RED FIX: the journey self-test takes a way that leads on instead of a dead end and back by chance
 - **V01.1.122** AI Dungeon Master: fight turn check, fighting becomes an attack against the armour, the model never picks a spell, goal and act XP wait until the fight is over, every XP entry says what for
 - **V01.1.121** AI Dungeon Master: hire companions, in a settlement a companion of the world while fewer than four play, the panel rolls its blows, it counts as half a hero in the balance
 - **V01.1.120** AI Dungeon Master: heart's wish, every hero carries a secret wish, per act the narrator gets one in turn, when it comes true there is the experience of an act
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.116** AI Dungeon Master: chronicle book, at the end of every chapter a page with cover, the story so far, heroes, honours and writings, to turn and as a PDF from the Spark
 - **V01.1.115** AI Dungeon Master: calendar of the world, months, moons and festivals on top of the table, the days run only by ways, rests and the inn, on festivals services cost more
 - **V01.1.114** AI Dungeon Master: tongues of the peoples, a person briefly greets in its people's tongue, foreign sounds for everyone, the translation only for who knows the tongue
-- **V01.1.113** AI Dungeon Master: "Paint all pictures · N" counts only pictures a run will paint (fixed ones count as done); picture and lines for the settlement's healer
 
 
 
