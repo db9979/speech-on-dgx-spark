@@ -2596,6 +2596,56 @@ class Stories(Base):
 
 
 
+    def test_a_story_brings_people_of_the_catalog(self):
+        """Personen-Katalog 2 (Dominik 2026-10-26 „1-5“): with the people catalog on, the planner lists its people of
+        every world (name and occupation, never wish or secret); a story keeps only ids of its own world, each once, at
+        most PLAN_MAX; the model's draft gets them only as data and a person named exactly comes ticked; a round of the
+        story has them first in the chapter's truth with role and goal (never twice) and offers them first; off nothing."""
+        import dungeon_personen as pers
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        karte = {"beruf": ["Wirt", "Innkeeper"], "wunsch": ["Ruhe", "peace"], "geheimnis": ["schmuggelt Salz", "smuggles salt"]}
+        dungeon.write_json(pers.FILE, {
+            "oskar": {"id": "oskar", "name": "Oskar", "welt": "fantasy", "karte": karte, "rolle": "Wirt der Schenke", "ziel": "die Schenke retten"},
+            "mira": {"id": "mira", "name": "Mira", "welt": "anderswo", "karte": karte, "rolle": "Diebin", "ziel": ""}})
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        self.assertEqual(dungeon._planner_limits()["personen"], [])                  # off: nobody listed
+        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        P = dungeon._planner_limits()
+        self.assertEqual(P["personen_max"], pers.PLAN_MAX)
+        self.assertEqual(sorted(x["id"] for x in P["personen"]), ["mira", "oskar"])
+        self.assertEqual(P["personen"][1], {"id": "oskar", "name": "Oskar", "welt": "fantasy", "beruf": ["Wirt", "Innkeeper"]})
+        self.assertEqual(pers.plan_ids(["oskar", "oskar", "mira", "Böse Id", 7], "fantasy"), ["oskar"])
+        self.assertEqual(pers.plan_ids(["a", "b", "c", "d"], "fantasy"), [])          # not in the catalog
+        # the model's draft: the people only as data, a person named exactly comes ticked
+        good = {k: PLAN[k] for k in ("titel", "ziel", "gegner", "akte")}
+        good.update(orte=["Turm"], idee="Oskar, der Wirt, hört die Glocke als Erster.")
+        r, seen = self.ask("/api/admin/dungeon/geschichte/vorschlag", {"welt": "fantasy", "ton": 8, "akte": 3, "stichworte": "Glocke"}, [good])
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["plan"]["personen"], ["oskar"])
+        data = seen[0][seen[0].index("<<<"):]
+        self.assertIn("bekannte_personen", data)
+        self.assertIn("Wirt", data)
+        for w in ("Mira", "Salz", "Ruhe"):
+            self.assertNotIn(w, seen[0])                                             # another world, never wish or secret
+        # the story keeps the checked ids; a round of it has Oskar in the truth with his role and offers him first
+        gs = self.save(dict(PLAN, personen=["oskar", "mira", "oskar"])).json()["geschichten"]
+        self.assertEqual(gs[0]["personen"], ["oskar"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.new_round(geschichte=gs[0]["gid"], ton=8)
+        self.assertIn("dungeon: personen | geschichte | 1 in der wahrheit", out.getvalue())
+        rd = self.state(v["rid"])
+        self.assertEqual(rd["plan"]["personen"], ["oskar"])
+        self.assertEqual(rd["wahrheit"]["personen"][0], {"name": "Oskar", "rolle": "Wirt der Schenke", "ziel": "die Schenke retten", "sprache": ""})
+        self.assertEqual([x["id"] for x in pers.offer(dungeon, dungeon.rules(), rd)][:1], ["oskar"])
+        r0 = dungeon.rules()
+        w = {"personen": [{"name": "oskar", "rolle": "", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+        self.assertEqual(pers.into_truth(r0, dict(rd, wahrheit=None), copy.deepcopy(w))["personen"], w["personen"])   # never twice
+        self.assertIs(pers.into_truth(r0, rd, w), w)                                 # a truth already set stays
+        helpers.set_config(dungeon_personen=False)
+        self.assertEqual((pers.offer(dungeon, r0, rd), pers.into_truth(r0, dict(rd, wahrheit=None), None)), ([], None))
+
 class OwnStories(Base):
     """Eigene Geschichten (dungeon_geschichten, Dominik 2026-10-26 „nach empfehlung umsetzten“ + „und 2“ = 1, 2, 3b)."""
     B = "/api/profile/dungeon/geschichten/"
@@ -6087,8 +6137,13 @@ class Windows(unittest.TestCase):
         beside it; search and filters; Funktionen → KI-Dungeon-Master → Regeln anpassen opens the tab. No page wider
         than the screen at 1280, 390 and 320 px."""
         from tests.test_ui_browser import Browser, async_playwright
-        helpers.keep_chat(self, "dungeon")
-        helpers.set_config(dungeon=True)
+        import dungeon_personen as pers
+        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_personen")
+        helpers.set_config(dungeon=True, dungeon_nsc=True, dungeon_personen=True)
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        dungeon.write_json(pers.FILE, {"oskar": {"id": "oskar", "name": "Oskar", "welt": "fantasy", "karte": {"beruf": ["Wirt", "Innkeeper"]}}})
         b = Browser("run")
         b.port = self.port
         n = "document.querySelectorAll('#dmadmcard .dm-rrow').length"
@@ -6145,6 +6200,15 @@ class Windows(unittest.TestCase):
                         # the admin's planner opens and closes in the rules card (one drawing path with the hosts' sheet)
                         await pg.click("#dmadmcard [data-dmadm=gneu]")
                         await b.until(pg, "!!document.querySelector('#dmadmcard .dmp-titel')")
+                        # Personen-Katalog 2: the world's known people to tick; another world lists nobody
+                        await pg.check("#dmadmcard .dmp-p[value=oskar]")
+                        await pg.select_option("#dmadmcard .dmp-welt", "horror")
+                        await b.until(pg, "!document.querySelector('#dmadmcard .dmp-p')&&!!document.querySelector('#dmadmcard .dmp-leute small')")
+                        await pg.select_option("#dmadmcard .dmp-welt", "fantasy")
+                        await b.until(pg, "!!document.querySelector('#dmadmcard .dmp-p[value=oskar]')")
+                        self.assertEqual(await pg.evaluate("dmPlanRead().personen"), [])
+                        await pg.check("#dmadmcard .dmp-p[value=oskar]")
+                        self.assertEqual(await pg.evaluate("dmPlanRead().personen"), ["oskar"])
                         await pg.click("#dmadmcard [data-dmadm=gback]")
                         await b.until(pg, "!!document.querySelector('#dmadmcard [data-dmadm=gneu]')&&!document.querySelector('#dmadmcard .dmp-titel')")
                         await pg.evaluate("goSec('feat')")

@@ -11,6 +11,11 @@ The people the tables met become a stock the stories and the roads use again:
    of them by its exact name, the person comes with its stored card (adopt, from dungeon_nsc.sync): the same looks,
    traits, voice and face, and the attitudes it keeps towards the heroes at the table (it knows them again). Any other
    new name is a new person as before; a name the catalog already has in that world is never taken over twice.
+2. In the story planner (the admin's, a host's own stories): the form lists the catalog's people of the story's world
+   (name and occupation, never wish or secret) to tick, up to PLAN_MAX; the model's draft gets them only as data and a
+   person whose exact name the draft uses comes ticked (pick). A round with that story brings them into the chapter's
+   truth with their stored role and goal (into_truth) and always offers them first (offer), so the narration meets them
+   with their fixed card.
 5. Off by default: the admin's switch dungeonpersonen (features.py, chat.dungeon_personen), on top of „NSC-Gedächtnis
    und Chronik“, for the round's host.
 
@@ -34,12 +39,13 @@ KEY = "dungeonpersonen"
 FILE = os.path.join(STATE, "dungeon-personen.json")
 MAX = 300                  # people in the catalog (the oldest from a round go first)
 ANGEBOT = 3                # known people offered to the narrator per act
+PLAN_MAX = 3               # people of the catalog a story brings (Personen-Katalog 2)
 NAME_LEN = 40
 FELD_LEN = 120             # a card's field per language
 TEIL_LEN = 80              # role and goal
 _ID = re.compile(r"^[a-z0-9_]{1,40}$")
 _lock = threading.Lock()
-_day = DayCounter(neu=0, wieder=0, erkannt=0, gekaempft=0, geaendert=0, geloescht=0)
+_day = DayCounter(neu=0, wieder=0, erkannt=0, gekaempft=0, geaendert=0, geloescht=0, geschichte=0)
 FELD = {"aussehen": ("Aussehen", "Looks"), "art": ("Art", "Manner"), "beruf": ("Beruf", "Occupation"),
         "wunsch": ("Wunsch", "Wish"), "geheimnis": ("Geheimnis", "Secret")}
 
@@ -73,12 +79,58 @@ def _pool(dm, r, rd):
 
 
 def offer(dm, r, rd):
-    """Up to ANGEBOT people of the world for this act, by a die seeded with the round, its chapter and act."""
+    """The people the round's story brings (Personen-Katalog 2) first, then up to ANGEBOT people of the world for this
+    act, by a die seeded with the round, its chapter and act."""
     if not on(rd):
         return []
     xs = _pool(dm, r, rd)
+    mine = [x for i in (rd.get("plan") or {}).get("personen") or [] for x in xs if x["id"] == i]
+    rest = [x for x in xs if x not in mine]
     rng = random.Random(f"{rd.get('made', 0)}:{rd.get('kapitel', 0)}:{rd.get('akt', 0)}")
-    return rng.sample(xs, min(ANGEBOT, len(xs)))
+    return mine + rng.sample(rest, min(max(0, ANGEBOT - len(mine)), len(rest)))
+
+
+def for_plan(welt=None):
+    """The catalog's people for the planner's form: id, name, world, occupation [de, en]; never wish or secret."""
+    return [{"id": x["id"], "name": x["name"], "welt": x.get("welt"), "beruf": list((x.get("karte") or {}).get("beruf") or ["", ""])[:2]}
+            for _, x in sorted(load().items(), key=lambda kv: kv[1]["name"].lower()) if welt is None or x.get("welt") == welt]
+
+
+def plan_ids(ids, welt):
+    """A story's people by fixed rules: ids of the catalog in the story's world, each once, at most PLAN_MAX."""
+    if not isinstance(ids, list) or not ids:
+        return []
+    have = load()
+    ok = [i for i in dict.fromkeys(x for x in ids if isinstance(x, str) and _ID.match(x)) if (have.get(i) or {}).get("welt") == welt]
+    return ok[:PLAN_MAX]
+
+
+def pick(pool, g):
+    """The draft's people: those of the pool whose exact name the model's story uses (at most PLAN_MAX)."""
+    text = " ".join([g.get("titel", ""), g.get("idee", ""), g.get("ziel", ""), g.get("gegner", "")]
+                    + [" ".join((a["titel"], a["inhalt"], a["wende"])) for a in g.get("akte") or []])
+    return [p["id"] for p in pool if re.search(r"(?<!\w)" + re.escape(p["name"]) + r"(?!\w)", text)][:PLAN_MAX]
+
+
+def into_truth(r, rd, wahr):
+    """At a chapter's start: the people the round's story brings go into the truth with their stored role and goal
+    (first, never twice, at most the truth's limit); a truth the model did not make gets them alone."""
+    import dungeon_erzaehler as erz
+    ids = (rd.get("plan") or {}).get("personen") or []
+    if not ids or not on(rd) or rd.get("wahrheit"):
+        return wahr
+    d = load()
+    xs = [d[i] for i in ids if i in d and d[i].get("welt") == rd.get("welt")]
+    if not xs:
+        return wahr
+    w = wahr or {"personen": [], "gruppen": [], "geheimnisse": []}
+    have = {p["name"].lower() for p in w["personen"]}
+    neu = [{"name": x["name"][:erz.NAME_LEN], "rolle": x.get("rolle", "")[:erz.TEIL_LEN], "ziel": x.get("ziel", "")[:erz.TEIL_LEN], "sprache": ""}
+           for x in xs if x["name"][:erz.NAME_LEN].lower() not in have]
+    w["personen"] = (neu + w["personen"])[:erz.PERSONEN_MAX]
+    _day.bump("geschichte", len(neu))
+    print(f"dungeon: personen | geschichte | {len(neu)} in der wahrheit", flush=True)
+    return w
 
 
 def facts(dm, r, rd, li):
@@ -373,6 +425,6 @@ def view(lang="de"):
 
 
 def for_live():
-    """Numbers only: people in the catalog; new, met again, recognised, fought, changed, deleted today."""
+    """Numbers only: people in the catalog; new, met again, recognised, fought, changed, deleted, brought by a story today."""
     t = _day.counts()
-    return dict({k: t[k] for k in ("neu", "wieder", "erkannt", "gekaempft", "geaendert", "geloescht")}, personen=len(load()))
+    return dict({k: t[k] for k in ("neu", "wieder", "erkannt", "gekaempft", "geaendert", "geloescht", "geschichte")}, personen=len(load()))

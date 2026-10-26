@@ -3887,6 +3887,13 @@
 "titel": "Dungeon-Master: Eigene Geschichten",
 "text": "A: Unter Funktionen → Meine Daten „Eigene Geschichten“ einschalten und eine neue Runde anlegen: vorn steht „＋ Neue Geschichte“, jede Geschichte hat ⋯. B: ＋ tippen, einen Ton wählen, Stichworte eingeben und „Erstellen“: nach kurzer Zeit steht die neue Geschichte als „deine“ in der Auswahl. C: Bei einer Geschichte des Sparks ⋯ → Bearbeiten, den Titel ändern und speichern: deine Kopie steht da, das Original ist für dich ausgeblendet; „ausgeblendete wieder zeigen“ holt es zurück. D: ⋯ → Kopieren und ⋯ → Löschen ausprobieren. E: Mit einem zweiten Profil eine Runde anlegen: deine eigenen Geschichten sind dort nicht zu sehen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P580",
+"v": 1137,
+"titel": "Dungeon-Master: Personen aus dem Katalog in Geschichten",
+"text": "A: Personen-Katalog an und eine Runde spielen, bis der Katalog eine Person der Welt Fantasy kennt. B: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Geschichten“ → „Neue Geschichte“: unter „Bekannte Personen aus dem Katalog“ steht die Person mit Beruf, nie mit Wunsch oder Geheimnis; die Welt wechseln zeigt deren Personen. C: Die Person ankreuzen, die Geschichte speichern und eine Runde mit ihr anlegen: die Person kommt mit ihrem Aussehen und erkennt eure Helden wieder. D: „Vorschlag erzeugen“: nennt der Entwurf die Person mit Namen, ist sie angekreuzt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

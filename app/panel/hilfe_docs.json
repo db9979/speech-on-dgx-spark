@@ -5757,6 +5757,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Personen aus dem Katalog in Geschichten (V01.1.137, NSC-Katalog Punkt 2, Dominik 2026-10-26 „1-5“): Kein neuer Schalter: es gilt der Personen-Katalog (dungeonpersonen, mit „NSC-Gedächtnis und Chronik“). Im Geschichten-Planer (Funktionen → KI-Dungeon-Master → Regeln anpassen → „Geschichten“, beim Gastgeber im Fenster der eigenen Geschichte) steht unter den Tabus „Bekannte Personen aus dem Katalog“: die Personen der gewählten Welt mit Name und Beruf zum Ankreuzen, bis zu drei (dungeon_personen.PLAN_MAX); Wunsch und Geheimnis stehen dort nie. Wechselt die Welt, zeigt das Formular deren Personen. Das Panel behält nur IDs des Katalogs aus der Welt der Geschichte, jede einmal (dungeon_personen.plan_ids in dungeon.check_plan). „Vorschlag erzeugen“ und „＋ Neue Geschichte“ geben dem Sprachmodell bis zu 12 Personen der Welt nur als Daten mit (Name und Beruf, bekannte_personen); wen der Entwurf mit genau seinem Namen nennt, ist angekreuzt (dungeon_personen.pick). Eine Runde dieser Geschichte setzt die Personen mit ihrer Rolle und ihrem Ziel aus dem Katalog vorn in die Wahrheit des Kapitels, nie doppelt (dungeon_personen.into_truth), und bietet sie dem Erzähler je Akt zuerst"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " an; so kommen sie mit ihrer festen Karte, Stimme und Haltung. Katalog aus: keine Liste, nichts in der Wahrheit. Log dungeon: personen | geschichte | N in der wahrheit."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (V01.1.134, Plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 „wie empfehlung umsetzen“: Stufe 1 und 3, das Modell als Stufe 2 erst später): Admin-Schalter *Funktionen → KI-Dungeon-Master → Rückfrage bei unklaren Aktionen* (chat.dungeon_rueckfrage, ab Werk aus), freigegeben für jedes Profil; Gäste am Tisch bekommen sie genauso, es ist Teil des Spiels. Beim Absenden prüft das Panel die Aktion mit festen Regeln (dungeon_rueckfrage.unclear): zu kurz (weniger als 2 Wörter oder 8 Buchstaben, „ok“, „hm“), Buchstabensalat (ein Zeichen viermal, die Hälfte der Wörter ohne Vokal), nur ein Fürwort als letztes Ziel, wenn mehreres passt („Ich greife ihn an“ bei zwei Gegnern, „nimm es“), oder kein Tun (kein Wort aus TUN_WORTE und den Kampf-Wortlisten, kein Name der Szene, keine wörtliche Rede). Dann bleibt die Aktion wie geschrieben liegen, ist aber markiert: Unter der eigenen Aktion steht „❓ Was genau tut Morpheus?“ mit dem Grund, bis zu drei Vorschlägen und „So lassen“. Die Vorschläge baut das Panel aus festen Mustern und den Daten der Szene (stehende Gegner, Dinge im Kampf, der eigene Angriffszauber, Personen hier, Wege der Karte), nie au"
 },
 {
@@ -20422,6 +20438,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "n: up to 20 own stories per host (EIGENE_MAX), no other host sees, changes or plays them (404). The admin sees all of them under Features → AI Dungeon Master → Adjust rules → \"Stories\" with the host's name, changes them (they stay the host's) and counts only the own for the admin's limit. A round plays only a story the host may play (dungeon_geschichten.find), in the car the Spark offers the own ones first. The file dungeon-geschichten.json keeps the own ones with \"von\", dungeon-geschichten-aus.json the hidden ids per host. New endpoints under /api/profile/dungeon/geschichten/… (view, save, copy, delete, show, create, act) with login, profile binding, CSRF, size and rate limit (dungeongeschichte, the planner dungeonplan per host). Switch off: no ⋯ and no ＋, own stories are missing from the choice, hidden ones are back, nothing is deleted. Logs dungeon: geschichten | gespeichert / kopiert / geloescht / ausgeblendet / wieder gezeigt / erstellt / abgelehnt, Live \"N own stories, today …\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: people of the catalog in stories (V01.1.137, NPC catalog point 2, Dominik 2026-10-26 \"1-5\"): No new switch: the people catalog counts (dungeonpersonen, with \"NPC memory and chronicle\"). In the story planner (Features → AI Dungeon Master → Adjust rules → \"Stories\", for a host in the window of the own story) below the taboos there is \"Known people from the catalog\": the people of the chosen world with name and occupation to tick, up to three (dungeon_personen.PLAN_MAX); wish and secret never show there. When the world changes, the form shows its people. The panel keeps only ids of the catalog from the story's world, each once (dungeon_personen.plan_ids in dungeon.check_plan). \"Create a proposal\" and \"＋ New story\" give the language model up to 12 people of the world only as data (name and occupation, bekannte_personen); whoever the draft names with exactly their name comes ticked (dungeon_personen.pick). A round of that story puts the people with their role and goal from the catalog first into the chapter's truth, never twice (dungeon_personen.into_truth), and offers them to the narrator first in every act; so they come with their fixed card, voice and attitude. Cat"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "alog off: no list, nothing in the truth. Log dungeon: personen | geschichte | N in der wahrheit."
 },
 {
 "lang": "en",

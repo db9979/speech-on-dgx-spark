@@ -263,7 +263,8 @@ async def erstellen(request: Request, prof=Depends(browser_profile)):
     b = await json_body(request, dungeon.PLAN_BODY)
     lang = dungeon._lang(b)
     try:
-        g = await dungeon.propose_plan({k: b.get(k) for k in ("welt", "ton", "stichworte", "lang")})
+        leute = dungeon.personen.on({"owner": uid})
+        g = await dungeon.propose_plan({k: b.get(k) for k in ("welt", "ton", "stichworte", "lang")}, leute)
     except TimeoutError:
         print("dungeon: geschichten | abgelehnt | sprachmodell pausiert", flush=True)
         raise HTTPException(409, "sprachmodell pausiert")

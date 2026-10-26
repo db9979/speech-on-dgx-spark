@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.137** · 2026-10-26 · KI-Dungeon-Master: Im Geschichten-Planer kreuzt du bis zu drei bekannte Personen aus dem Katalog an, eine Runde dieser Geschichte bringt sie mit ihrer festen Karte, Rolle und Haltung, das Sprachmodell darf sie im Entwurf nutzen
 - **V01.1.136** · 2026-10-26 · KI-Dungeon-Master: Eigene Geschichten (Schalter, aus), jede Geschichtenkarte hat ⋯ mit Bearbeiten, Kopieren und Löschen, „＋ Neue Geschichte“ steht vorn (Ton, Stichworte, das Sprachmodell schreibt sie, das Panel prüft sie), jeder Gastgeber hat seine eigenen, der Admin sieht alle
 - **V01.1.135** · 2026-10-26 · KI-Dungeon-Master: Album-Seite „Personen“, mit Personen-Katalog zeigt das Album auch die getroffenen Personen, nach 1, 2 und 4 Treffen mit Gesicht, Aussehen, Beruf, Art, Wesen und Haltung zum Helden, nie Wunsch oder Geheimnis
 - **V01.1.134** · 2026-10-26 · KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (Schalter, aus), ist eine Ansage zu kurz, ohne Tun oder zeigt ihr Fürwort auf nichts, fragt der Tisch nach feste Regeln mit drei Vorschlägen aus der Szene und „So lassen“, hält die Runde nie auf, im Auto vorgelesen und auf CarPlay als Knöpfe

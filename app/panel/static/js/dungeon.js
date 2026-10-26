@@ -1659,16 +1659,23 @@ function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
     <div class="dm-two"><div><label>${esc(t('Ziel der Helden','The heroes\' goal'))}</label><input class="dmp-ziel" maxlength="${P.ziel}" value="${esc(g.ziel||'')}"></div><div><label>${esc(t('Gegenspieler','Foe'))}</label><input class="dmp-gegner" maxlength="${P.ziel}" value="${esc(g.gegner||'')}"></div></div>
     <label>${esc(t('Schauplätze (mit Komma, bis zu '+P.orte+')','Places (comma separated, up to '+P.orte+')'))}</label><input class="dmp-orte" value="${esc((g.orte||[]).join(', '))}">
     <label>${esc(t('Tabus: kommt nie vor (mit Komma, bis zu '+P.tabus+')','Taboos: never happens (comma separated, up to '+P.tabus+')'))}</label><input class="dmp-tabus" value="${esc((g.tabus||[]).join(', '))}" placeholder="${esc(t('Spinnen, Folter','spiders, torture'))}">
+    ${(P.personen||[]).length?dmPLeute(P,g):''}
     ${g.akte.map(akt).join('')}
     ${g.akte.length<P.akte[1]?`<div class="row"><button type="button" class="b" data-dmadm="gplus">${esc(t('Akt dazu','Add an act'))}</button></div>`:''}
     <label>${esc(t('Hinweis fürs Neuschreiben eines Akts (frei)','Hint for writing an act again (optional)'))}</label><input class="dmp-hint" maxlength="${P.stichworte}" value="${esc(DMP.hint)}" placeholder="${esc(t('mehr Rätsel, weniger Kampf','more riddles, less fighting'))}">
     ${DMP.err?`<div class="err dm-adm-err">${DMP.err}</div>`:''}
     <div class="row"><button type="button" class="b p" data-dmadm="gsave"${DMP.busy?' disabled':''}>${esc(t('Prüfen und speichern','Check and save'))}</button>${DMP.gid?`<button type="button" class="b danger" data-dmadm="gdel">${esc(DMP.host&&DMP.von!=='eigen'?t('Ausblenden','Hide'):t('Löschen','Delete'))}</button>`:''}<button type="button" class="b" data-dmadm="gback">${esc(t('Zurück','Back'))}</button></div></div>`}
+// Personen-Katalog 2: known people of the story's world to tick (name and occupation only), up to P.personen_max
+function dmPLeute(P,g){const xs=P.personen.filter(p=>p.welt===g.welt),on=g.personen||[],li=dmLang()==='en'?1:0;
+  return `<label>${esc(t('Bekannte Personen aus dem Katalog (bis zu '+P.personen_max+')','Known people from the catalog (up to '+P.personen_max+')'))}</label><div class="dmp-leute" data-max="${P.personen_max}">${xs.map(p=>`<label class="dm-check"><input type="checkbox" class="dmp-p" value="${esc(p.id)}"${on.includes(p.id)?' checked':''}> ${esc(p.name)}${p.beruf[li]?` <small class="mut">${esc(p.beruf[li])}</small>`:''}</label>`).join('')||`<small class="mut">${esc(t('In dieser Welt kennt der Katalog noch niemanden.','The catalog knows nobody in this world yet.'))}</small>`}</div>`}
+document.body.addEventListener('change',e=>{const x=e.target;if(!x.closest('#dmadmcard .dmp-form,#dmgscard .dmp-form'))return;
+  if(x.matches('.dmp-welt')){DMP.g=dmPlanRead();dmPDraw(DMP.d);return}
+  if(x.matches('.dmp-p')&&x.checked){const box=x.closest('.dmp-leute');if(box.querySelectorAll('.dmp-p:checked').length>+box.dataset.max)x.checked=false}});
 function dmPlanRead(){const c=dmPBox(),q=x=>(c.querySelector(x)||{}).value||'',list=x=>q(x).split(',').map(s=>s.trim()).filter(Boolean);
   DMP.stich=q('.dmp-stich');DMP.hint=q('.dmp-hint');
   const ton=q('.dmp-ton');
   return {titel:q('.dmp-titel').trim(),welt:q('.dmp-welt'),ton:/^\d+$/.test(ton)?+ton:ton,lang:dmLang(),idee:q('.dmp-idee').trim(),ziel:q('.dmp-ziel').trim(),
-    gegner:q('.dmp-gegner').trim(),orte:list('.dmp-orte'),tabus:list('.dmp-tabus'),
+    gegner:q('.dmp-gegner').trim(),orte:list('.dmp-orte'),tabus:list('.dmp-tabus'),personen:[...c.querySelectorAll('.dmp-p:checked')].map(x=>x.value),
     akte:[...c.querySelectorAll('.dmp-akt')].map(a=>({titel:a.querySelector('.dmp-at').value.trim(),inhalt:a.querySelector('.dmp-ai').value.trim(),
       wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0),...(a.querySelector('.dmp-ad')&&a.querySelector('.dmp-ad').value.trim()?{ding:a.querySelector('.dmp-ad').value.trim()}:{})}))}}
 const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>')

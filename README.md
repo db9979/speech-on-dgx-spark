@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.137** AI Dungeon Master: in the story planner you tick up to three known people from the catalog, a round of that story brings them with their fixed card, role and attitude, the language model may use them in the draft
 - **V01.1.136** AI Dungeon Master: own stories (switch, off), every story card has ⋯ with Edit, Copy and Delete, "＋ New story" comes first (tone, keywords, the language model writes it, the panel checks it), every host has the own ones, the admin sees all
 - **V01.1.135** AI Dungeon Master: album page "People", with the people catalog the album also shows the people met, after 1, 2 and 4 meetings with face, looks, occupation, manner, traits and attitude towards the hero, never wish or secret
 - **V01.1.134** AI Dungeon Master: ask back on unclear actions (switch, off), when an action is too short, has no deed or its pronoun points at nothing, the table asks back by fixed rules with three suggestions from the scene and “Leave it”, never holds up the round, read aloud in the car and as buttons on CarPlay
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.130** AI Dungeon Master: combat audit, follow-up check, retreating, stepping aside, proposals, glances and giving a light are no attack any more, the model's target alone never attacks, peace once a fight without check EP, control spells without a model check, a hero on the ground does not attack, balance measured anew
 - **V01.1.129** AI Dungeon Master: the map at the table no longer blinks, it stays put on every refresh and the place pictures are there at once
 - **V01.1.128** AI Dungeon Master: people catalog, whoever the table met stays with card, traits, voice, face and attitude towards the heroes, other rounds of the world meet them again and they know the heroes, the admin keeps the people under Rules, whoever fights takes fixed values by its occupation and counts weighted in the balancing
-- **V01.1.127** AI Dungeon Master: combat audit, every attacking action becomes an attack of the panel, also without the model's check, damage spells always attack, when the target fell the attack takes the next foe, peace only through the panel's Charisma check, no healing by the model in a fight, no charge without an effect, the narration gives no hero a weapon it does not carry
 
 
 
