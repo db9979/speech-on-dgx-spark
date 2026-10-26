@@ -403,6 +403,10 @@ HINWEIS = {
                 "Figuren tun wollten, und halte dich an den Ausgang jeder Probe.",
                 "Note: the check sees a contradiction to the actions or the dice. Tell exactly what the characters wanted "
                 "to do, and keep to the outcome of every check."),
+    "knapp": ("Hinweis: Am Tisch gilt die Erzählweise „ausführlich“, deine Erzählung ist zu kurz. Schreib mindestens {namen} "
+              "Zeichen in mehreren Absätzen: Sinne, Stimmung und für jeden Helden, der gehandelt hat, ein eigener Moment.",
+              "Note: the table's way of telling is \"rich\", your narration is too short. Write at least {namen} characters "
+              "in several paragraphs: senses, mood and for every hero who acted a moment of its own."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -482,6 +486,9 @@ def repair(rd, story, fault, missing):
             return story
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=text)
+    elif fault == "knapp":                       # too short for „ausführlich“ on every try: it stays as it is
+        print("dungeon: nachbessern | bleibt | knapp", flush=True)
+        return story
     elif fault == "richter":                     # only the model's opinion: the try passed every fixed check, it stays
         print("dungeon: richter | bleibt", flush=True)
         return story
@@ -773,6 +780,9 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     old = _alt(rd)
     if t and len(t & old) / len(t) > WIEDERHOLT:
         return "wiederholung", []
+    if rd.get("erzaehlweise") == "ausfuehrlich" and len(text) < dm.erz_min(rd):   # „ausführlich“ really rich (Dominik 2026-10-26)
+        dm._day.bump("regel_knapp")
+        return "knapp", [str(dm.erz_min(rd))]
     return "", []
 
 

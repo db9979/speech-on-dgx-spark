@@ -233,6 +233,19 @@ ERZ_LANG = 1500           # the narration that opens a round, a chapter or an ac
 # the round's way of telling (WEISEN, a factor on every limit)
 ERZ_MOMENT = 1600
 WEISEN = {"knapp": 0.7, "normal": 1.0, "ausfuehrlich": 1.6}
+# „ausführlich“ really rich (Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): a minimum per way of
+# telling in the task and a fixed style sentence; the panel checks the minimum of „ausfuehrlich“ (erz_min, the
+# fault „knapp“ in dungeon_erzaehler.judge, one rewrite, then the try stays)
+WEISE_MIN = {"knapp": 0, "normal": 500, "ausfuehrlich": 1000}
+WEISE_RAUM = 300          # the minimum leaves at least this much room below erz_max
+WEISE_STIL = {
+    "knapp": ("Erzähle knapp: wenige klare Sätze, nur das Nötige.", "Tell it briefly: a few clear sentences, only what is needed."),
+    "normal": ("", ""),
+    "ausfuehrlich": ("Erzähle ausführlich in mehreren Absätzen: was die Helden sehen, hören, riechen und spüren, die Stimmung "
+                     "des Ortes, und für jeden Helden, der gehandelt hat, einen eigenen Moment mit seiner Tat und ihrer Wirkung.",
+                     "Tell it richly in several paragraphs: what the heroes see, hear, smell and feel, the mood of the place, and "
+                     "for every hero who acted a moment of its own with its deed and its effect."),
+}
 # the prologue with a hold (Dominik 2026-10-24 „der prolog ist noch zu kurz die spieler haben keinerlei anhalts punkt
 # was zu tun ist“, „1-5“): a minimum length, a quest, 2 to 4 things to do as buttons, a hook per hero, a frame
 PROLOG_MIN = 700          # shorter goes back once (the second try counts as it is)
@@ -417,7 +430,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -3037,7 +3050,7 @@ ERGEBNIS = {True: ("gelungen", "passed"),
             False: ("misslungen: das gelingt in diesem Zug nicht, niemand holt es nach; wer etwas untersucht oder wissen will, erfährt nichts Neues",
                     "failed: it does not happen this turn, nobody makes up for it; whoever examines or wants to know something learns nothing new")}
 AUFGABE_ERZAEHLEN = {
-    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen); eine "
+    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht ({m}höchstens {n} Zeichen); eine "
           "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
           "Erzählung), gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
@@ -3047,7 +3060,7 @@ AUFGABE_ERZAEHLEN = {
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. Ändert sich die Tageszeit, "
           "melde sie in szene.tageszeit (morgen, tag, abend, nacht). {bild}",
-    "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters); a check holds "
+    "en": "Task: narrate what happens after the actions and the rolled checks ({m}at most {n} characters); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
@@ -3188,7 +3201,9 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+    if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
+        t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
         t += " " + AUFGABE_MOMENT[rd["_moment"]][1 if lang == "en" else 0]
     if task == "erzaehlen":                      # the world's often reported errors as fixed hints (Erzähler-Fehler beheben)
@@ -3365,6 +3380,12 @@ def erz_max(rd):
     telling (WEISEN)."""
     n = ERZ_LANG if rd["zug"] == 1 or rd.get("plan") and rd.get("akt_zug") == rd["zug"] else ERZ_MOMENT if rd.get("_moment") else ERZ_MAX
     return int(n * WEISEN.get(rd.get("erzaehlweise"), 1.0))
+
+
+def erz_min(rd):
+    """How long a narration should be at least for the round's way of telling (WEISE_MIN), always WEISE_RAUM below
+    erz_max."""
+    return max(0, min(WEISE_MIN.get(rd.get("erzaehlweise"), WEISE_MIN["normal"]), erz_max(rd) - WEISE_RAUM))
 
 
 def moment_of(rd, wuerfe, hits):
@@ -5545,7 +5566,7 @@ def for_live():
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
                                  "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt", "ehrungen")},
-            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage", "regel_neuer_ort")), "neu_erzaehlt": t["neu_erzaehlt"]}
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 
 def own_count(uid):

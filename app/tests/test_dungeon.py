@@ -7817,6 +7817,26 @@ class Fight(Turns):
         made = self.new_round(titel="Kurz", erzaehlweise="knapp")
         self.assertEqual(self.state(made["rid"])["erzaehlweise"], "knapp")
         self.assertEqual(self.state(self.new_round(titel="Fremd", erzaehlweise="roman")["rid"])["erzaehlweise"], "normal")
+        # „ausführlich“ really rich (Dominik 2026-10-26): a minimum and a style sentence in the task, the panel checks it
+        reich = dict(rd, erzaehlweise="ausfuehrlich")
+        self.assertEqual(dungeon.erz_min(reich), dungeon.WEISE_MIN["ausfuehrlich"])
+        for w in dungeon.WEISEN:
+            self.assertLessEqual(dungeon.erz_min(dict(reich, erzaehlweise=w)), dungeon.erz_max(dict(reich, erzaehlweise=w)) - dungeon.WEISE_RAUM)
+        s = dungeon.system_text(r, reich, "erzaehlen")
+        self.assertIn(f"mindestens {dungeon.WEISE_MIN['ausfuehrlich']}, höchstens", s)
+        self.assertIn(dungeon.WEISE_STIL["ausfuehrlich"][0], s)
+        self.assertNotIn("mindestens 0", dungeon.system_text(r, dict(rd, erzaehlweise="knapp"), "erzaehlen"))
+        name = rd["plaetze"][self.host]["held"]["name"]
+        kurz = {"text": f"{name} öffnet die Tür. Dahinter liegt ein stiller Gang aus altem Stein, kühl und dunkel.", "ooc": []}
+        voll = dict(kurz, text=kurz["text"] + " " + " ".join(f"Satz {i}: Fackellicht tanzt über nasse Wände, irgendwo tropft Wasser in eine Pfütze." for i in range(20)))
+        rd_off = dict(reich, offen={self.host: {"text": "Ich öffne die Tür."}})
+        self.assertEqual(dungeon.erz.judge(dungeon, rd_off, kurz), ("knapp", [str(dungeon.WEISE_MIN["ausfuehrlich"])]))
+        self.assertEqual(dungeon.erz.judge(dungeon, dict(rd_off, erzaehlweise="normal"), kurz)[0], "")   # normal: only the hint
+        self.assertEqual(dungeon.erz.judge(dungeon, rd_off, voll)[0], "")
+        self.assertIn("1000", dungeon.erz.hint("knapp", ["1000"], "de"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(dungeon.erz.repair(rd_off, kurz, "knapp", ["1000"]), kurz)   # too short on every try: it stays
+        self.assertIn("dungeon: nachbessern | bleibt | knapp", out.getvalue())
 
     def test_armour_class_and_the_experience_curve(self):
         r = dungeon.rules()

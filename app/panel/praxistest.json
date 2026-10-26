@@ -3705,6 +3705,13 @@
 "titel": "Dungeon-Master: Lagerfeuer und Rast",
 "text": "Funktionen → KI-Dungeon-Master → Lagerfeuer und Rast einschalten, eine Runde mit zwei Plätzen spielen und außerhalb eines Kampfes das Spielleiter-Pult öffnen. A: „Kurze Rast“ gibt jedem stehenden Helden ein Viertel Leben, nach zwei kurzen ist die Kachel grau. B: „Lange Rast“ zeigt über der Geschichte drei Nachtwachen und jedem Platz eine eigene Frage am Lagerfeuer; der nächste Zug erzählt das Lager. C: Gleich danach ist „Lange Rast“ grau mit „in 8 Zügen“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P554",
+"v": 1109,
+"titel": "Dungeon-Master: ausführlich erzählen",
+"text": "Im Spielleiter-Pult die Erzählweise „ausführlich“ wählen und zwei Züge spielen. A: Jede Erzählung hat mehrere Absätze mit Sinnen und Stimmung und für jeden Helden, der gehandelt hat, einen eigenen Moment. B: Unter Zustand → Logs steht bei einer zu kurzen Erzählung „dungeon: nachbessern | knapp“. C: Mit „knapp“ bleiben die Erzählungen kurz.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
