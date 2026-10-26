@@ -250,6 +250,32 @@ class Catalog(Base):
             self.assertEqual(ADMIN.post("/api/admin/dungeon/dingbilder", json={"alle": "ja"}).status_code, 200)
         self.assertEqual(started, ["alle", "knopf", "knopf"])
 
+    def test_the_count_names_only_what_a_run_paints(self):
+        """Dominik 2026-10-26: 3984/3990 and „Alle Bilder malen · 6“, but every run ended at once with 0 painted: an
+        entry whose own picture the admin kept by hand (fest) and an entry refused too often are not open."""
+        r = dungeon.rules()
+        few = db._want(r)[:5]
+        with mock.patch("dungeon_dingbild._want", lambda r: few):
+            self.run_now("alle")
+            self.assertEqual(len(self.calls), 5)
+            (n0, _, k0), (n1, _, _) = few[0], few[1]
+            d = db._state()
+            os.replace(dungeon.bild_file(n0), dungeon.bild_file("ding-" + "f" * 16))
+            d["fest"][k0] = "ding-" + "f" * 16                         # kept by hand, then the prompt changed
+            dungeon._bild_rm(n1)
+            d["fehl"][n1] = db.FEHL_MAX                                # refused too often
+            db._save(d)
+            db._files["m"] = None
+            s = db.status(r)
+            self.assertEqual((s["fertig"], s["von"], s["offen"], s["abgelehnt"]), (4, 5, 0, 1))
+            self.assertEqual(db.missing(r), [])
+            self.run_now("alle")
+            self.assertEqual(len(self.calls), 5)                       # nothing to paint, and the page says 0
+            dungeon._bild_rm(few[2][0])
+            db._files["m"] = None
+            self.assertEqual(db.status(r)["offen"], len(db.missing(r)))
+            self.assertEqual(db.status(r)["offen"], 1)
+
     def test_a_foe_is_painted_from_its_description_size_and_kind(self):
         """Dominik 2026-10-24 „2“: a Cultist came out as a horned demon from its name alone."""
         r = dungeon.rules()
@@ -777,7 +803,7 @@ class Settlement(Base):
     def test_every_service_painted_and_lined(self):
         import dungeon_gold
         r = dungeon.rules()
-        self.assertLessEqual(set(dungeon_gold.DIENSTE), set(db.DIENST_EN))
+        self.assertLessEqual(set(dungeon_gold.DIENSTE) | {dungeon_gold.HEILER}, set(db.DIENST_EN))   # the healer too (idea 8)
         self.assertIn("verbessern", db.DIENST_EN)
         want = dict(db.wanted(r))
         for st in db.styles(r) + [dungeon.BILD_KIND]:

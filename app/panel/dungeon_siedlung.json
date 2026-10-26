@@ -16,7 +16,10 @@
                    ["Eine Bettlerin weiß mehr, als sie zugibt.", "A beggar knows more than she lets on."]],
       "verbessern": [["Auf der Werkbank liegen Feilen, Nieten und feine Drähte.", "Files, rivets and fine wires lie on the workbench."],
                      ["Die Meisterin fährt mit dem Daumen über eine Schneide.", "The master runs her thumb along an edge."],
-                     ["Ein Lehrling poliert, bis es glänzt.", "An apprentice polishes until it shines."]]
+                     ["Ein Lehrling poliert, bis es glänzt.", "An apprentice polishes until it shines."]],
+      "heiler": [["Über dem Tisch hängen Kräuterbündel zum Trocknen, es duftet nach Minze.", "Bundles of herbs hang drying over the table, it smells of mint."],
+        ["Die Heilerin rollt saubere Verbände auf und lächelt ruhig.", "The healer rolls up clean bandages and smiles calmly."],
+        ["Auf dem Regal stehen kleine Fläschchen mit bunten Tropfen.", "Little bottles of coloured drops stand on the shelf."]]
     },
     "horror": {
       "gasthaus": [["Der Wirt zählt die Gäste zweimal und verriegelt die Tür.", "The innkeeper counts the guests twice and bolts the door."],

@@ -7029,6 +7029,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
 },
 {
@@ -21174,6 +21182,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ess (it must match the account): then it lies sealed like a password on the Spark, switching it off deletes it. The mail comes when a turn has been open 10 minutes, the guest has written nothing and is not at the table, once per turn, at most 3 a day. All mails are fixed texts of the panel, never model or player text; the emergency stop holds them. \"Delete guest account\" removes heroes, devices and address. Live counts guest accounts, turn mails, codes and mails; Logs only dungeon: gastmail | code gesendet, angemeldet, dran | gesendet and the like, never an address. API (guest): POST /api/dungeon/gast ({code, was: code|anmelden|konto|merken|zugmail|held_weg|loeschen, …}, rate limit dungeonkonto), joining with {code, konto, konto_held}; admin PUT /api/admin/dungeon/gastmail."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: \"Paint all pictures · N\" counts only what a run paints; a picture for the healer (V01.1.113, Dominik 2026-10-26: page 3984/3990 and \"Paint all pictures · 6\", every run ended at once with 0 painted): An entry for which the admin fixed a picture under \"Adjust rules\" with \"Keep new\" (fest) is never painted again by a run, even when its prompt changes later; but the page counted it as missing. Now one rule decides both (dungeon_dingbild._stand: there, fixed, refused, open): fixed counts as done, \"Paint all pictures · N\" and \"left N\" name only the open pictures (status()[\"offen\"], the same as missing()), refused ones stand beside as their own number as before; without open pictures both buttons are off. Also the settlement's new service \"healer\" (dungeon_gold.HEILER, scars idea 8) has its picture per style (DIENST_EN[\"heiler\"], a calm room with herbs, bandages and small bottles, no blood) and three lines of life in dungeon_siedlung.json; until the first run the window shows 🌿. Self-tests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
 "lang": "en",

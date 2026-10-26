@@ -147,7 +147,8 @@ DIENST_EN = {"gasthaus": "the common room of an inn of this world with a firepla
              "schmied": "a smithy of this world, a glowing forge, an anvil and hanging tools",
              "lehre": "a study room of this world with books, a lectern and a practice yard outside",
              "geruecht": "a busy corner of a tavern or market of this world where rumours are told",
-             "verbessern": "a workbench of this world where gear is improved, fine tools and parts"}
+             "verbessern": "a workbench of this world where gear is improved, fine tools and parts",
+             "heiler": "a calm healer's room of this world with drying herbs, clean bandages, a cot and small potion bottles"}
 SIEDLUNG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_siedlung.json")
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
@@ -498,13 +499,22 @@ def _ok_text(p, r=None):
     return not bilder.refuse_text("", p)
 
 
+def _stand(d, have, n, k):
+    """An entry's state, the one rule for missing and status: "da" (the current prompt's picture is there), "fest"
+    (a picture the admin kept by hand stands for it, a later prompt does not paint it over), "abgelehnt" (refused too
+    often) or "offen" (a run paints it)."""
+    if n in have:
+        return "da"
+    if k and d["fest"].get(k) in have:
+        return "fest"
+    return "abgelehnt" if d["fehl"].get(n, 0) >= FEHL_MAX else "offen"
+
+
 def missing(r, d=None):
-    """What a run still paints: the current prompt's picture is not there, nothing the admin painted by hand stands
-    for the entry (fest), and it was not refused too often."""
+    """What a run still paints (_stand "offen")."""
     d = _state() if d is None else d
     have = files()
-    return [(n, p) for n, p, k in _want(r) if n not in have and d["fehl"].get(n, 0) < FEHL_MAX
-            and not (k and d["fest"].get(k) in have)]
+    return [(n, p) for n, p, k in _want(r) if _stand(d, have, n, k) == "offen"]
 
 
 def _night(now):
@@ -898,10 +908,12 @@ def settle(r, c, keep_new, teil="", welt=""):
 def status(r=None):
     r = r or dungeon.rules()
     d = _state()
-    w = wanted(r)
     have = files()
-    return {"an": features.admin_on(KEY), "bilder": on(), "fertig": sum(1 for n, _ in w if n in have), "von": len(w),
-            "abgelehnt": sum(1 for n, _ in w if d["fehl"].get(n, 0) >= FEHL_MAX and n not in have),
+    st = [_stand(d, have, n, k) for n, _, k in _want(r)]
+    # an entry the admin kept by hand counts as done: „Alle Bilder malen · N“ names only what a run paints (Dominik
+    # 2026-10-26: 3984/3990 and „· 6“, but every run ended at once with 0 painted)
+    return {"an": features.admin_on(KEY), "bilder": on(), "fertig": sum(1 for x in st if x in ("da", "fest")), "von": len(st),
+            "offen": st.count("offen"), "abgelehnt": st.count("abgelehnt"),
             "funde": sum(1 for n in have if n.startswith("fund-")), "heute": _today(d), "tag_max": TAG_MAX,
             "nacht": [f"{NACHT[0]:02d}:00", f"{NACHT[1]:02d}:00"], "stile": len(styles(r)),
             "laeuft": bool(_lauf["task"] and not _lauf["task"].done()), "grund": _lauf["grund"], "gemalt": _lauf["gemalt"],

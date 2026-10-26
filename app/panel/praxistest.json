@@ -3726,6 +3726,13 @@
 "titel": "Dungeon-Master: Reise-Etappen",
 "text": "Funktionen → KI-Dungeon-Master → Reise-Etappen einschalten, eine Runde mit Karte und zwei Plätzen spielen und zu einem fernen Ort der Karte aufbrechen. A: Im Verlauf steht eine Karte „🧭 Reise“ mit den Etappen, jeder Rolle, ihrem Wurf und dem Ereignis. B: Der nächste Zug erzählt die Reise mit Landschaft und Rollen, ohne Zahlen. C: Bei „hungrig“ hat jeder Held 1 Leben weniger, bei „überrascht“ würfelt im nächsten Zug jeder mit Nachteil.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P557",
+"v": 1113,
+"titel": "Dungeon-Master: Bilderzähler und Heiler-Bild",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an, Bilder malen an. A: Unter Regeln anpassen → Bilder zeigt „Alle Bilder malen · N“ nur noch, was wirklich gemalt wird; bei 0 ist der Knopf aus. B: „Alle Bilder malen“ antippen: der Lauf malt genau N Bilder (Log „dingbild | lauf ende | fertig | N gemalt“). C: Mit Narben an: in der Siedlung zeigt der Heiler nach dem Lauf ein Bild statt 🌿 und einen Satz Leben.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
