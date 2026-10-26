@@ -48,6 +48,7 @@ import re
 
 import dungeon_album as album
 import dungeon_ehre as ehre
+import dungeon_haltung as haltung
 import dungeon_narben as narben
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
@@ -485,6 +486,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
         if "schwer" in eig and h["werte"].get("staerke", 10) < SCHWER_STAERKE:
             vt = "" if vt == "vorteil" else "nachteil"
         vt = _state_vt(r, h, vt, "angriff")
+        if haltung.stance(rd, p["pid"]) == "abwehr":   # on guard: the own attack at a disadvantage (round 2, idea 2)
+            vt = "" if vt == "vorteil" else "nachteil"
         if foe_has(r, rd, g, "vorteil_gegen"):   # a foe on the ground, blinded … by a critical hit (D&D idea 2)
             vt = "" if vt == "nachteil" else "vorteil"
         if blocked(r, h):                     # a state that takes the turn (gelähmt, betäubt …): no attack
@@ -680,28 +683,35 @@ def foes_turn(dm, r, rd, hits, rng=None):
         if foe_has(r, rd, g, "kein_zug"):          # stunned, unconscious … by a critical hit: no blow (D&D idea 2)
             print("dungeon: kampf | gegner setzt aus", flush=True)
             continue
+        sagt = haltung.blow(rd, g, standing)      # the blow it announced last turn (round 2, idea 2)
         for zug in range(blows(g)):
             by = [x["pid"] for x in hits if x["ziel"] == g["k"] and x["treffer"]]
-            pid, h = (next(((q, hh) for q, hh in standing if by and q == by[-1]), None) if not zug else None) or standing[rng.randrange(len(standing))]
+            art = sagt[2] if sagt and not zug else ""
+            pid, h = (sagt[:2] if art else None) or (next(((q, hh) for q, hh in standing if by and q == by[-1]), None) if not zug else None) \
+                or standing[rng.randrange(len(standing))]
             vt = _state_vt(r, h, "", "gegen")
+            if art == "lauert":
+                vt = "" if vt == "nachteil" else "vorteil"
+            steht = haltung.stance(rd, pid)
             if foe_has(r, rd, g, "nachteil_angriff"):
                 vt = "" if vt == "vorteil" else "nachteil"
             if any(x["ziel"] == g["k"] and x["pid"] == pid and x["treffer"] and "reichweite" in x.get("eig", ()) for x in hits):
                 vt = "" if vt == "vorteil" else "nachteil"    # kept at a distance by a reach weapon
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
-            ac = rk(dm, r, h)
-            plus = BOSS_PHASE if g.get("phase") == 2 else 0
+            ac = rk(dm, r, h) + (haltung.ABWEHR if steht == "abwehr" else 0)
+            plus = (BOSS_PHASE if g.get("phase") == 2 else 0) + (haltung.ZIELT if art == "zielt" else -haltung.HOLT if art == "holt_aus" else 0)
             hit = w == 20 or (w != 1 and w + g["angriff"] + plus >= ac)
-            n = max(1, _dice(rng, g["wuerfel"] * (2 if w == 20 else 1), g["schaden"]) + g["plus"]) if hit else 0
+            n = max(1, _dice(rng, g["wuerfel"] * (2 if w == 20 else 1) * (2 if art == "holt_aus" else 1), g["schaden"]) + g["plus"]) if hit else 0
             x = {"k": g["k"], "gegner": g["name"], "pid": pid, "name": h["name"], "w": w, "ws": ws, "vt": vt, "bonus": g["angriff"] + plus,
-                 "gesamt": w + g["angriff"] + plus, "rk": ac, "treffer": hit, "krit": w == 20, "schaden": n, "art": g.get("art", "")}
+                 "gesamt": w + g["angriff"] + plus, "rk": ac, "treffer": hit, "krit": w == 20, "schaden": n, "art": g.get("art", ""),
+                 **({"ansage": art} if art else {}), **({"haltung": steht} if steht else {})}
             frei = [z for z in g.get("zustaende") or [] if z in zs and z not in {y["id"] for y in h.get("zust") or []}]
             if hit and frei:                     # the hit may cause a state: the hero saves
                 z = frei[rng.randrange(len(frei))]
                 wert = "weisheit" if z in GEIST else "konstitution"
                 dc = RETTUNG + int(dm._by(r, "gegner").get(g["id"], {}).get("stufe", 0) // 4)
-                rw = rng.randint(1, 20)
+                rw = max(rng.randint(1, 20), rng.randint(1, 20)) if steht == "ausweichen" else rng.randint(1, 20)
                 x["rettung"] = {"zustand": z, "wert": wert, "w": rw, "gesamt": rw + dm.total(r, h, wert), "gegen": dc,
                                 "ok": rw + dm.total(r, h, wert) >= dc}
             out.append(x)
@@ -724,6 +734,7 @@ def zug_facts(r, rd, x):
         return {"zustand": _zname(r, rd, x["gegner_schaden"]), "trifft": x["gegner"], "schaden": x["schaden"]}
     rw = x.get("rettung")
     return {"gegner": x["gegner"], "greift_an": x["name"], "trifft": x["treffer"], "schaden": x["schaden"],
+            **({"wie_angesagt": x["ansage"]} if x.get("ansage") else {}), **({"haltung": x["haltung"]} if x.get("haltung") else {}),
             **({"zustand": _zname(r, rd, rw["zustand"]), "gerettet": rw["ok"]} if rw else {})}
 
 

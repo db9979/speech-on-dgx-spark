@@ -3754,6 +3754,13 @@
 "titel": "Dungeon-Master: Chronikbuch",
 "text": "Funktionen → KI-Dungeon-Master → Chronikbuch einschalten, eine Runde spielen und im Spielleiter-Pult „Kapitel beenden“. A: Bei der Kampagne steht „📖 Chronik · 1“; das Buch zeigt Titelbild, Helden, Ehrungen und Schriftstücke, Bisher geschah kommt dazu, sobald es geschrieben ist. B: „Als PDF“ lädt ein PDF mit derselben Seite. C: „Seite löschen“ nimmt die Seite heraus, die Kampagne bleibt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P561",
+"v": 1117,
+"titel": "Dungeon-Master: Gegner-Ansagen und Haltung",
+"text": "Funktionen → KI-Dungeon-Master → Gegner-Ansagen und Haltung einschalten und in einer Runde einen Kampf beginnen. A: Nach dem ersten Kampfzug steht im Verlauf „⚠ … zielt auf …“ oder „holt weit aus“. B: Unter dem Eingabefeld stehen 🛡 Abwehr und 💨 Ausweichen; Abwehr setzt das Wort in die Aktion, der Beleg des Gegners zeigt eine um 2 höhere Rüstung. C: Der Erzähler kündigt an, was die Gegner als Nächstes vorhaben.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

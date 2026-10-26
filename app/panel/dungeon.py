@@ -131,6 +131,7 @@ import dungeon_reise as reise
 import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
 import dungeon_chronik as chronikbuch
+import dungeon_haltung as haltung
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3189,6 +3190,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(rast.facts(rd))                        # the camp of a rest (D&D idea 4)
     fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
     fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
+    fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3227,7 +3229,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3610,6 +3612,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                     c = _by(r, "gegner").get(g["id"]) or {}
                     kampf.learn(rd, g["id"], [a for x in ("resistenz", "immun", "schwaeche") for a in c.get(x) or []])
             hiebe = kampf.apply(_me, r, rd, kampfwuerfe[0], kampfwuerfe[1], story.get("kampf_ende", ""), ep, rng)
+            haltung.count(rd, kampfwuerfe[1])
+            haltung.announce(_me, r, rd, rng)    # the foes still up say their next blow (round 2, idea 2)
         folgen = story["folgen"]
         helfer = [q for q in rd["offen"] if q in names]
         if helfer and all(fresh(rd, q) for q in helfer) and any(f["art"] == "heilung" and f["pid"] not in helfer for f in folgen):
@@ -5171,6 +5175,7 @@ def view(rid, pid, now=None):
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
+    out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None

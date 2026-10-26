@@ -7865,6 +7865,73 @@ class Fight(Turns):
         with open(os.path.join(root, "static", "js", "dungeonfenster.js"), encoding="utf-8") as f:
             self.assertIn("heiler:['Heilen lassen'", f.read())
 
+    def test_foes_announce_and_heroes_defend_or_dodge(self):
+        """D&D round 2, idea 2 (Gegner-Ansagen und Haltung, switch dungeonhaltung): off by default; on, every foe still
+        up announces its next blow at a standing hero (zielt +ZIELT, holt_aus −HOLT and twice the dice, lauert with
+        advantage), a fallen target frees it; „Abwehr“ in an action gives +ABWEHR armour and the own attack a
+        disadvantage, „Ausweichen“ the saves with advantage; the narrator gets the announcements as data."""
+        import features
+        import dungeon_haltung as haltung
+        self.assertNotIn(haltung.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_haltung"], False)
+        r = dungeon.rules()
+        self.fight()
+        rd = self.state(self.rid)
+        rd["offen"] = {self.host: {"text": "Abwehr, ich hebe den Schild.", "t": 0}, self.gp: {"text": "Ich weiche dem Hieb aus.", "t": 0}}
+        self.assertEqual(haltung.stance(rd, self.host), "")                    # switch off
+        helpers.keep_chat(self, "dungeon_haltung")
+        helpers.set_config(dungeon_haltung=True)
+        self.assertEqual((haltung.stance(rd, self.host), haltung.stance(rd, self.gp)), ("abwehr", "ausweichen"))
+        self.assertEqual(haltung.stance(dict(rd, offen={self.host: {"text": "Ich greife an."}}), self.host), "")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            haltung.announce(dungeon, r, rd, random.Random(1))
+        g = kampf.up(rd)[0]
+        a = rd["kampf"]["ansage"][str(g["k"])]
+        self.assertIn(a["art"], haltung.ARTEN)
+        self.assertIn(a["pid"], (self.host, self.gp))
+        self.assertIn(f"dungeon: ansage | {len(kampf.up(rd))} gegner", out.getvalue())
+        self.assertEqual(rd["log"][-1]["art"], "ansage")
+        self.assertIn(g["name"], rd["log"][-1]["ansagen"][0]["t"])
+        self.assertIn(g["name"], json.dumps(dungeon.facts(r, rd), ensure_ascii=False))
+        self.assertIn("ansagen", dungeon.system_text(r, rd, "erzaehlen"))
+
+        class Fix:
+            def randint(self, a, b):
+                return 10
+
+            def randrange(self, n):
+                return 0
+
+        def first(art, pid):
+            x = copy.deepcopy(rd)
+            for gg in kampf.up(x):
+                gg["angriffe"] = 1
+            x["kampf"]["ansage"] = {str(g["k"]): {"art": art, "pid": pid}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                return next(z for z in kampf.foes_turn(dungeon, r, x, [], Fix()) if z.get("k") == g["k"] and "treffer" in z)
+        hg = rd["plaetze"][self.host]["held"]
+        z = first("zielt", self.gp)
+        self.assertEqual((z["pid"], z["bonus"], z["ansage"]), (self.gp, g["angriff"] + haltung.ZIELT, "zielt"))
+        self.assertEqual(first("holt_aus", self.gp)["bonus"], g["angriff"] - haltung.HOLT)
+        self.assertEqual(first("lauert", self.gp)["vt"], "vorteil")
+        z = first("zielt", self.host)                                          # on guard: +2 armour
+        self.assertEqual((z["rk"], z["haltung"]), (kampf.rk(dungeon, r, hg) + haltung.ABWEHR, "abwehr"))
+        x = copy.deepcopy(rd)
+        x["kampf"]["ansage"] = {str(g["k"]): {"art": "zielt", "pid": self.gp}}
+        self.assertIsNone(haltung.blow(x, g, [(self.host, hg)]))               # the announced hero fell: free again
+        self.assertEqual(haltung.blow(x, g, [(self.gp, hg), (self.host, hg)])[2], "zielt")
+        _, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10, "ziel": g["name"]}], Fix())
+        self.assertEqual(hits[0]["vt"], "nachteil")                            # the own attack while on guard
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            haltung.count(rd, [{"haltung": "abwehr"}, {"haltung": "ausweichen"}, {}])
+        self.assertIn("dungeon: haltung | abwehr | 1", out.getvalue())
+        self.assertGreaterEqual(haltung.for_live()["ansagen"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmHaltung()", js)
+        self.assertIn("e.art==='ansage'", js)
+
     def test_rest_at_the_campfire_by_fixed_rules(self):
         """D&D idea 4 (Lagerfeuer und Rast, switch dungeonrast): off by default; on, the host calls a rest outside a fight:
         a short one heals a quarter (KURZ_MAX between long ones), a long one rolls WACHEN night watches of the landscape,

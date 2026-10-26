@@ -311,6 +311,8 @@ FEATURES = (
     F("dungeonkalender", "Kalender der Welt", "Calendar of the world", "data", ("dungeon_kalender",), parent="dungeon", me="dmbox", guide="dungeonkalender"),
     # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
     F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
+    # Gegner-Ansagen und Haltung (dungeon_haltung.py, D&D round 2, idea 2): foes announce their next blow, heroes defend or dodge
+    F("dungeonhaltung", "Gegner-Ansagen und Haltung", "Foe announcements and stance", "data", ("dungeon_haltung",), parent="dungeon", me="dmbox", guide="dungeonhaltung"),
     # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
     F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
     F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),

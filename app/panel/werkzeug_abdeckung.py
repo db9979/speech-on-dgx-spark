@@ -176,6 +176,7 @@ WITHOUT = {
     "dungeonhelfen": "dungeon_helfen.py: kein Werkzeug, feste Wörter in der Aktion und feste Regeln auf den Würfen des Panels",
     "dungeonnarbennur": "dungeon_narben.py: kein Werkzeug, eine feste Regel des Panels: Wunden ändern nie einen Wert",
     "dungeonkommentar": "dungeon_kommentar.py: kein Werkzeug, das Modell liefert die Zeilen als Daten, das Panel prüft sie mit festen Regeln und entscheidet nie für einen Spieler",
+    "dungeonhaltung": "dungeon_haltung.py: kein Werkzeug, das Panel würfelt die Ansagen und rechnet Abwehr und Ausweichen, das Modell erzählt nur",
     "dungeonchronik": "dungeon_chronik.py: kein Werkzeug, das Panel schreibt die Kapitelseite aus vorhandenen Daten, das Modell schreibt nichts dafür",
     "dungeonkalender": "dungeon_kalender.py: kein Werkzeug, das Panel zählt die Tage nach festen Regeln, das Modell bekommt das Datum nur als Daten",
     "dungeonsprachen": "dungeon_sprachen.py: kein Werkzeug, das Panel macht die fremden Laute und gibt die Bedeutung nur Plätzen, die die Sprache können",

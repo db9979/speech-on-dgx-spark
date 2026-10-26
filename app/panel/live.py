@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["chronik"] = {}
+    try:   # Gegner-Ansagen und Haltung (dungeon_haltung.py): numbers on the game's line
+        import dungeon_haltung
+        dgn["haltung"] = dungeon_haltung.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["haltung"] = {}
     try:   # Narben (dungeon_narben.py): numbers on the game's line
         import dungeon_narben
         dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
@@ -2010,6 +2015,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("kalender") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
+                        + (f" · heute {dgn['haltung']['ansagen']} Gegner-Ansagen, {dgn['haltung']['abwehr']}-mal Abwehr, {dgn['haltung']['ausweichen']}-mal Ausweichen"
+                           if any((dgn.get("haltung") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
                            if any((dgn.get("kommentar") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
