@@ -287,19 +287,19 @@ class Moves(unittest.TestCase):
         known; numbers only, the rolls are the main thread's."""
         k = self.k
         here, j = k["hier"], K._nb(k)[k["hier"]][0]
-        w = K.weg(self.rd, f"o{j + 1}")
+        w = K.weg(self.r, self.rd, f"o{j + 1}")
         self.assertEqual(w["etappen"], K.etappen(k, here, j))
         self.assertGreaterEqual(w["etappen"], 1)
-        self.assertIn(w["land"], set(K.LAND.values()) | {"gras"})
+        self.assertIn(w["land"], {x["id"] for x in self.r["ideen"]["landschaften"]})       # one source: the journey's lands
         far = next(i for i in range(len(k["orte"])) if i != here and i not in K._nb(k)[here])
         for bad in (f"o{far + 1}", "o99", "r1", "", None):
-            self.assertEqual(K.weg(self.rd, bad), {}, bad)
+            self.assertEqual(K.weg(self.r, self.rd, bad), {}, bad)
         o = k["orte"]
         o[j]["x"], o[j]["y"] = o[here]["x"] + 3 * K.ETAPPE, o[here]["y"]
         o[j]["art"] = "sumpf"
-        self.assertEqual(K.weg(self.rd, f"o{j + 1}"), {"etappen": 3, "land": "sumpf"})
+        self.assertEqual(K.weg(self.r, self.rd, f"o{j + 1}"), {"etappen": 3, "land": "sumpf"})
         o[j]["x"] = o[here]["x"] + 5
-        self.assertEqual(K.weg(self.rd, f"o{j + 1}")["etappen"], 1)          # at least one stage
+        self.assertEqual(K.weg(self.r, self.rd, f"o{j + 1}")["etappen"], 1)          # at least one stage
         from dungeon_gold import SIEDLUNG
         for i in range(len(o)):
             o[i]["art"] = "ruine"
@@ -317,6 +317,42 @@ class Moves(unittest.TestCase):
         self.assertEqual(next(p for p in K.view(self.r, self.rd)["orte"] if p["id"] == f"o{j + 1}")["l"], "")
         o[j]["art"] = "wald"
         self.assertEqual(next(p for p in K.view(self.r, self.rd)["orte"] if p["id"] == f"o{j + 1}")["l"], "wald")
+
+    def test_props_of_a_fight_by_the_kind_of_room_or_place(self):
+        """D&D-Idee 3 of round 2 (Dominik 2026-10-26 „1-9 umsetzten“): 2 to 3 props of ideen.requisiten for the fight
+        where the group stands, by the room's table id or kind or the place's kind, filled up with props for anywhere;
+        rolled once and kept there, a used one is gone. The effects are the main thread's."""
+        r = copy.deepcopy(self.r)
+        k = self.k
+        here = k["orte"][k["hier"]]["art"]
+        r.setdefault("ideen", {})["requisiten"] = [
+            {"id": "kronleuchter", "name": ["Kronleuchter", "Chandelier"], "arten": ["halle", "speisesaal"], "wirkung": "fallen"},
+            {"id": "fass", "name": ["Fass", "Barrel"], "arten": [here], "wirkung": "deckung"},
+            {"id": "karren", "name": ["Karren", "Cart"], "arten": [here], "wirkung": "deckung"},
+            {"id": "kerze", "name": ["Kerze", "Candle"], "arten": ["kammer"], "wirkung": "licht"},
+            {"id": "stein", "name": ["Lose Steine", "Loose stones"], "arten": [], "wirkung": "werfen"},
+            {"id": "seil", "name": ["Seil", "Rope"], "arten": [], "wirkung": "fesseln"}]
+        self.assertEqual(K.requisiten({"ideen": {}}, self.rd), [])                                # no table
+        for seed in range(12):
+            rd = copy.deepcopy(self.rd)
+            got = K.requisiten(r, rd, random.Random(seed))
+            self.assertIn(len(got), (2, 3))
+            self.assertTrue({"fass", "karren"} <= set(got), got)                               # the place's own first
+            self.assertFalse({"kronleuchter", "kerze"} & set(got))
+            self.assertEqual(K.requisiten(r, rd, random.Random(seed + 99)), got)                 # kept there
+        got = K.requisiten(r, self.rd, random.Random(1))
+        self.assertTrue(K.requisit_benutzt(self.rd, got[0]))
+        self.assertEqual(K.requisiten(r, self.rd, random.Random(2)), got[1:])                    # used: gone
+        self.assertFalse(K.requisit_benutzt(self.rd, got[0]))
+        self.assertFalse(K.requisit_benutzt(self.rd, "kronleuchter"))
+        v = K.enter_vault(self.r, self.rd, random.Random(3))                                      # in a vault: the room decides
+        rm = v["raeume"][v["hier"]]
+        rm["t"], rm["art"] = "speisesaal", "kammer"
+        got = K.requisiten(r, self.rd, random.Random(4))
+        self.assertTrue({"kronleuchter", "kerze"} <= set(got), got)
+        self.assertNotIn("fass", got)
+        self.assertIn(f"gw{self.k['drin']}-r{v['hier'] + 1}", self.k["req"])
+        self.assertEqual(K.requisiten(r, {}), [])
 
     def test_a_place_a_faction_holds(self):
         """Tabletop-Idee 7: a full clock (dungeon_fraktionen.occupied) puts the faction's banner on the place: in the

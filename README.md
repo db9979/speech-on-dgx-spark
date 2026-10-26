@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.097** AI Dungeon Master: the map fixes 2 to 3 props for the fight per room and place (use the surroundings); travel ways name their land from the landscape table
 - **V01.1.096** AI Dungeon Master: pause shown everywhere, in the round lists of web, app and CarPlay, as a bar at the table, as a note to the other players, in the car and in Live
 - **V01.1.095** Logs of model switch and image understanding visible again
 - **V01.1.094** AI Dungeon Master: the "Music at the table" table lines up again, the world first, one column per mood
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.090** AI Dungeon Master: content of the D&D ideas in the SRD catalogue: critical tables for 13 damage kinds, mild fumbles, night watches and travel events for 13 landscapes, 60 campfire questions, travel roles, scars with plasters for the children's table and a legend for each of the 268 foes
 - **V01.1.089** Helper model spots attacks and writes short texts
 - **V01.1.088** AI Dungeon Master: fix narrator errors, a 👎 with a reason tells the last scene again, often reported reasons become a world's fixed hints, the bench plays the cases every night
-- **V01.1.087** AI Dungeon Master: whoever only asks rolls no sneaking check, the narration tells the question, and down stays down
 
 
 

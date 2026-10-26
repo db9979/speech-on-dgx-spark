@@ -6709,7 +6709,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Wege in Etappen und der Weg zur nächsten Siedlung (V01.1.082, D&D-Ideen 9 und 4): Die Karte rechnet nur Zahlen, die Proben und Ereignisse würfelt das Panel an anderer Stelle. dungeon_karte.weg(rd, \"o3\") gibt für einen Weg von hier die Etappen nach seiner Länge auf der Karte (ETAPPE = 80 Einheiten, die Wege sind 1 bis 3 Etappen lang, mindestens eine) und die Landschaft, durch die er führt (LAND: Wald, Berg, Hügel, Sumpf, sonst Gras; dieselbe Tabelle zeichnet die Tuschezeichen um die Orte). dungeon_karte.zur_siedlung(rd) sucht über die Wege die nächste Siedlung (Dorf, Stadt, Taverne, Station, Basar, Hafen wie beim Handel) und gibt Etappen und Schritte, den Namen nur, wenn die Spieler den Ort schon kennen; steht die Gruppe in einer, sind es 0 Etappen."
+"text": "KI-Dungeon-Master: Wege in Etappen und der Weg zur nächsten Siedlung (V01.1.082, D&D-Ideen 9 und 4): Die Karte rechnet nur Zahlen, die Proben und Ereignisse würfelt das Panel an anderer Stelle. dungeon_karte.weg(r, rd, \"o3\") gibt für einen Weg von hier die Etappen nach seiner Länge auf der Karte (ETAPPE = 80 Einheiten, die Wege sind 1 bis 3 Etappen lang, mindestens eine) und die Landschaft, durch die er führt (die id aus ideen.landschaften, deren Ortsarten den Zielort enthalten, sonst den Startort, sonst „weg“; eine Quelle mit den Reise-Ereignissen). LAND zeichnet nur die Tuschezeichen um die Orte. dungeon_karte.zur_siedlung(rd) sucht über die Wege die nächste Siedlung (Dorf, Stadt, Taverne, Station, Basar, Hafen wie beim Handel) und gibt Etappen und Schritte, den Namen nur, wenn die Spieler den Ort schon kennen; steht die Gruppe in einer, sind es 0 Etappen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Requisiten je Raum und Ort (V01.1.097, D&D-Idee 3 der Runde 2 „Umgebung nutzen“): dungeon_karte.requisiten(r, rd, rng) legt für den Kampf, wo die Gruppe steht, 2 bis 3 Requisiten aus ideen.requisiten fest: zuerst die, deren arten die Raum-id (z. B. speisesaal) oder Raumart im Gewölbe bzw. die Ortsart draußen enthalten, aufgefüllt mit denen ohne arten (passen überall). Gewürfelt wird einmal je Raum oder Ort (karte.req), danach bleiben sie dort; requisit_benutzt(rd, id) nimmt ein benutztes weg (jedes nur einmal). Wirkung, Probe und Knöpfe legt der Kampf fest (Schalter dungeonumgebung). Logs dungeon: karte | requisiten | N, requisit | benutzt, requisit | fehlt."
 },
 {
 "lang": "de",
@@ -20557,7 +20565,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: ways in stages and the way to the nearest settlement (V01.1.082, D&D ideas 9 and 4): The map only counts; the checks and events are rolled by the panel elsewhere. dungeon_karte.weg(rd, \"o3\") gives for a way from here its stages by its length on the map (ETAPPE = 80 units, the ways are 1 to 3 stages long, at least one) and the land it leads through (LAND: forest, mountain, hills, swamp, else grass; the same table draws the ink signs around the places). dungeon_karte.zur_siedlung(rd) searches the ways for the nearest settlement (village, town, tavern, station, bazaar, harbour as for trading) and gives stages and steps, the name only when the players already know the place; where the group stands in one, it is 0 stages."
+"text": "AI Dungeon Master: ways in stages and the way to the nearest settlement (V01.1.082, D&D ideas 9 and 4): The map only counts; the checks and events are rolled by the panel elsewhere. dungeon_karte.weg(r, rd, \"o3\") gives for a way from here its stages by its length on the map (ETAPPE = 80 units, the ways are 1 to 3 stages long, at least one) and the land it leads through (the id of ideen.landschaften whose place kinds hold the target, else the start, else \"weg\"; one source with the travel events). LAND only draws the ink signs around the places. dungeon_karte.zur_siedlung(rd) searches the ways for the nearest settlement (village, town, tavern, station, bazaar, harbour as for trading) and gives stages and steps, the name only when the players already know the place; where the group stands in one, it is 0 stages."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: props by room and place (V01.1.097, D&D idea 3 of round 2 \"use the surroundings\"): dungeon_karte.requisiten(r, rd, rng) fixes 2 to 3 props of ideen.requisiten for the fight where the group stands: first those whose arten hold the room id (e.g. speisesaal) or room kind in a vault, or the place kind outside, filled up with those without arten (fit anywhere). They are rolled once per room or place (karte.req) and stay there; requisit_benutzt(rd, id) takes a used one away (each only once). Effect, check and buttons are the fight's (switch dungeonumgebung). Logs dungeon: karte | requisiten | N, requisit | benutzt, requisit | fehlt."
 },
 {
 "lang": "en",

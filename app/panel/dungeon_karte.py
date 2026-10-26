@@ -94,7 +94,7 @@ SATZ_MAX = 160
 FRAGE_MAX = 240
 STUB = 0.42               # how far a way into the unknown is drawn
 ETAPPE = 80               # map units a stage of travel covers (D&D-Idee 9: the ways of 110 to 250 are 1 to 3 stages)
-# the land around a kind of place: drawn as ink signs on the map, and the land a way leads through (D&D-Idee 9)
+# the land around a kind of place, drawn as ink signs on the map (the land of a journey is ideen.landschaften)
 LAND = {"wald": "wald", "lager": "wald", "dschungel": "wald", "muehle": "wald", "berg": "berg", "hoehle": "berg",
         "mine": "berg", "krater": "berg", "festung": "berg", "ruine": "huegel", "krypta": "huegel", "turm": "huegel",
         "gruft": "huegel", "friedhof": "huegel", "sumpf": "sumpf", "lagune": "sumpf"}
@@ -646,10 +646,10 @@ def etappen(k, a, b):
     return max(1, round(math.hypot(o[a]["x"] - o[b]["x"], o[a]["y"] - o[b]["y"]) / ETAPPE))
 
 
-def weg(rd, oid):
+def weg(r, rd, oid):
     """A way from where the group stands to the neighbouring place oid ("o3") as numbers for the travel stages
-    (D&D-Idee 9, the rolls are the main thread's): {"etappen", "land"}, the land the target's, else the start's, else
-    "gras"; {} for no such way or inside a vault (pure)."""
+    (D&D-Idee 9, the rolls are the main thread's): {"etappen", "land"}, land the id of ideen.landschaften holding the
+    target's kind, else the start's, else "weg"; {} for no such way or inside a vault (pure)."""
     k = rd.get("karte")
     oid = str(oid or "")
     if not k or not k.get("orte") or vault(rd) or oid[:1] != "o" or not oid[1:].isdigit():
@@ -657,8 +657,57 @@ def weg(rd, oid):
     j, here = int(oid[1:]) - 1, k["hier"]
     if j not in _nb(k)[here]:
         return {}
-    o = k["orte"]
-    return {"etappen": etappen(k, here, j), "land": LAND.get(o[j]["art"]) or LAND.get(o[here]["art"]) or "gras"}
+    o, land = k["orte"], (r.get("ideen") or {}).get("landschaften") or []
+    of = lambda art: next((x["id"] for x in land if art in (x.get("ortsarten") or [])), "")
+    return {"etappen": etappen(k, here, j), "land": of(o[j]["art"]) or of(o[here]["art"]) or "weg"}
+
+
+def _req_ort(rd):
+    """Where the props of a fight lie: the vault's room (its table id and kind) or the place of the map (its kind)."""
+    k, v = rd.get("karte") or {}, vault(rd)
+    if v:
+        rm = v["raeume"][v["hier"]]
+        return _room_id(rd, v["hier"]), [rm.get("t"), rm.get("art")]
+    if k.get("orte"):
+        return f"o{k['hier'] + 1}", [k["orte"][k["hier"]]["art"]]
+    return "", []
+
+
+def requisiten(r, rd, rng=None):
+    """The props of the fight where the group stands (D&D-Idee 3 „Umgebung nutzen“, Runde 2; the effects and chips are
+    the main thread's): 2 to 3 ids of ideen.requisiten whose arten hold the room's table id or kind, or the place's
+    kind, filled up with those for any place (arten empty). Rolled once and kept per room or place (k["req"]), a used
+    one is gone (requisit_benutzt); [] without a map or table."""
+    rng = rng or random
+    k = rd.get("karte")
+    rows = (r.get("ideen") or {}).get("requisiten") or []
+    wo, arten = _req_ort(rd)
+    if not k or not wo or not rows:
+        return []
+    ids = {x["id"] for x in rows}
+    keep = k.setdefault("req", {})
+    if wo not in keep:
+        hit = [x["id"] for x in rows if set(arten) & set(x.get("arten") or [])]
+        rest = [x["id"] for x in rows if not x.get("arten")]
+        n = rng.choice((2, 3))
+        pick = rng.sample(hit, min(n, len(hit)))
+        pick += rng.sample(rest, min(n - len(pick), len(rest)))
+        keep[wo] = pick
+        print(f"dungeon: karte | requisiten | {len(pick)}", flush=True)
+    return [x for x in keep[wo] if x in ids]
+
+
+def requisit_benutzt(rd, rid):
+    """A prop used in the fight is gone from where the group stands (once each); whether it was there."""
+    k = rd.get("karte") or {}
+    wo, _ = _req_ort(rd)
+    have = (k.get("req") or {}).get(wo) or []
+    if rid not in have:
+        print("dungeon: karte | requisit | fehlt", flush=True)
+        return False
+    have.remove(rid)
+    print("dungeon: karte | requisit | benutzt", flush=True)
+    return True
 
 
 def zur_siedlung(rd):
