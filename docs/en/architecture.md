@@ -288,6 +288,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_helfen.py` | KI-Dungeon-Master: Helfen und Gruppenprobe. |
 | `app/panel/dungeon_ideen.py` | KI-Dungeon-Master: the tables of the D&D ideas: critical hits and fumbles (idea 2), landscapes with night watches and question cards for a rest (4), travel r … |
 | `app/panel/dungeon_import.py` | KI-Dungeon-Master: „Abenteuer-Import“. |
+| `app/panel/dungeon_kalender.py` | KI-Dungeon-Master: Kalender der Welt. |
 | `app/panel/dungeon_kampf.py` | The fight of the KI-Dungeon-Master: the panel sets the encounter by a budget, rolls every attack and keeps the foes' life; the model only picks foes from the … |
 | `app/panel/dungeon_karte.py` | Die Karte des KI-Dungeon-Masters: a net of places per chapter and random vaults as a grid of rooms, rolled and kept by the panel, never by the model. |
 | `app/panel/dungeon_knapp.py` | KI-Dungeon-Master: Knapp daneben, Erfolg mit Preis. |

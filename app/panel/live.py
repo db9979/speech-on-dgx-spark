@@ -1433,6 +1433,11 @@ def snapshot(view="admin", now=None):
         dgn["sprachen"] = dungeon_sprachen.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["sprachen"] = {}
+    try:   # Kalender der Welt (dungeon_kalender.py): numbers on the game's line
+        import dungeon_kalender
+        dgn["kalender"] = dungeon_kalender.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["kalender"] = {}
     try:   # Narben (dungeon_narben.py): numbers on the game's line
         import dungeon_narben
         dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
@@ -1996,6 +2001,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("reise") or {}).values()) else "")
                         + (f" · heute {dgn['sprachen']['gesagt']} fremde Sätze, {dgn['sprachen']['verstanden']}-mal verstanden, {dgn['sprachen']['verworfen']} verworfen"
                            if any((dgn.get("sprachen") or {}).values()) else "")
+                        + (f" · heute {dgn['kalender']['halbe_tage']} halbe Tage der Welt vergangen, {dgn['kalender']['feste']} Feste"
+                           if any((dgn.get("kalender") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
                            if any((dgn.get("kommentar") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")

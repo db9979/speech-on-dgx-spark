@@ -5549,6 +5549,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kalender der Welt (V01.1.115, D&D-Idee 6, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Kalender der Welt* (chat.dungeon_kalender, ab Werk aus; dungeon_kalender.py, Idee von fantasycalendar/Fantasy-Calendar, ohne Lizenz, nur als Idee, eigener Code und eigene Listen). Jede Welt hat zwölf Monate zu 30 Tagen, einen oder zwei Monde und Feste (eigene Listen je Welt, der Kindertisch nimmt die allgemeinen). Der erste Tag einer Runde folgt fest aus ihrer Startzeit und ihrem Titel (rd[\"kalender\"] {start, halbe}). Die Zeit läuft nur nach festen Regeln: jede Etappe eines Weges auf der Karte ein halber Tag (dungeon_karte.etappen), eine Reise, die sich verirrt, ein Tag mehr, eine lange Rast oder eine Nacht im Gasthaus ein ganzer Tag, höchstens 20 Tage auf einmal, in einem Gewölbe nichts. Oben am Tisch stehen das Datum mit den Mondphasen, ein Fest heute oder in den nächsten 7 Tagen und in einer Siedlung jeden 7. Tag der Markttag; an einem Fest kosten die Dienste einer Siedlung 20 Prozent mehr (dungeon_gold.price). Der Erzähler bekommt Datum, Fest und Markttag nur als Daten und darf sie nicht ändern. Live: heute vergangene"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " halbe Tage der Welt und erreichte Feste. Log dungeon: kalender | 2 halbe tage | weg|reise|rast|gasthaus, mit | fest, wenn ein Fest erreicht ist. Selbsttest Equipment.test_the_worlds_calendar_runs_only_by_fixed_rules."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -10894,6 +10910,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Sprachen der Völker (Funktionen → Meine Daten → „Sprachen der Völker“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Grüßt oder ruft eine Person der Geschichte kurz in der Sprache ihres Volkes, macht der Spark daraus fremde Laute aus den Namenssilben dieses Volkes; derselbe Satz klingt immer gleich."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Kalender der Welt (Funktionen → Meine Daten → „Kalender der Welt“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jede Welt hat zwölf Monate zu 30 Tagen, einen oder zwei Monde und Feste."
 },
 {
 "lang": "de",
@@ -19797,6 +19821,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: calendar of the world (V01.1.115, D&D idea 6, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Calendar of the world* (chat.dungeon_kalender, off by default; dungeon_kalender.py, the idea of fantasycalendar/Fantasy-Calendar, no licence, only as an idea, own code and own lists). Every world has twelve months of 30 days, one or two moons and festivals (own lists per world, the children's table takes the general ones). A round's first day follows fixed from its start time and title (rd[\"kalender\"] {start, halbe}). Time runs only by fixed rules: every stage of a way on the map half a day (dungeon_karte.etappen), a journey that goes astray a day more, a long rest or a night at the inn a whole day, at most 20 days at once, nothing inside a vault. On top of the table stand the date with the moon phases, a festival today or within the next 7 days and, in a settlement, the market day every 7th day; on a festival a settlement's services cost 20 percent more (dungeon_gold.price). The narrator gets date, festival and market day only as data and may not change them. Live: half days of the world passed and festivals reached toda"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "y. Log dungeon: kalender | 2 halbe tage | weg|reise|rast|gasthaus, with | fest when a festival is reached. Self-test Equipment.test_the_worlds_calendar_runs_only_by_fixed_rules."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: telling richly (V01.1.109, Dominik 2026-10-26 \"ausführliche erzählweise ist immer noch kanpp\"): The round's way of telling only raised the upper limit so far. Now the narrator's task also names a minimum length (dungeon.WEISE_MIN: brief none, normal 500, rich 1000 characters, always 300 below the upper limit, erz_min) and a fixed style sentence (WEISE_STIL): for \"rich\" several paragraphs with senses, mood and a moment of its own for every hero who acted, for \"brief\" a few clear sentences. For \"rich\" the panel checks the minimum by a fixed rule (dungeon_erzaehler.judge, fault knapp): too short is told anew once with a fixed hint, then the try stays. Log dungeon: nachbessern | knapp, | bleibt | knapp; counted with the narrator rules. Self-test Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -24950,6 +24990,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Tongues of the peoples (Features → My data → \"Tongues of the peoples\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a person of the story briefly greets or cries out in the tongue of its people, the Spark turns it into foreign sounds from that people's name syllables; the same sentence always sounds the same."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Calendar of the world (Features → My data → \"Calendar of the world\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every world has twelve months of 30 days, one or two moons and festivals."
 },
 {
 "lang": "en",

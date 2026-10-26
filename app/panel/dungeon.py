@@ -129,6 +129,7 @@ import dungeon_narben as narben
 import dungeon_rast as rast
 import dungeon_reise as reise
 import dungeon_sprachen as sprachen
+import dungeon_kalender as kalender
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3181,6 +3182,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(narben.facts(rd, seated(rd)))          # the heroes' scars (D&D idea 8)
     fakten.update(rast.facts(rd))                        # the camp of a rest (D&D idea 4)
     fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
+    fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3219,7 +3221,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3558,7 +3560,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if dungeon_karte.step(r, rd, story, ep, rng):   # the map moves the group (a new place: merchant and ground stay behind)
             rd.pop("boden_gold", None)
         if rd.get("karte") and von != rd["karte"]["hier"]:
-            reise.journey(_me, r, rd, von, rng)  # a long way is a journey with roles and an event (D&D idea 9)
+            kalender.way(r, rd, von, reise.journey(_me, r, rd, von, rng))   # a long way is a journey (D&D idea 9), the days run (idea 6)
         neu = len(rd["karte"]["besucht"]) - orte if orte is not None and rd.get("karte") else 0
         if neu > 0:                              # Idee 7: a new place of the map found, fixed experience for every hero
             for pid in ep:
@@ -5163,6 +5165,7 @@ def view(rid, pid, now=None):
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
+    out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)

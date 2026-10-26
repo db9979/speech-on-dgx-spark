@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.115** KI-Dungeon-Master: Kalender der Welt, Monate, Monde und Feste oben am Tisch, die Tage laufen nur über Wege, Rasten und das Gasthaus, an Festen kosten Dienste mehr
 - **V01.1.114** KI-Dungeon-Master: Sprachen der Völker, eine Person grüßt kurz in der Sprache ihres Volkes, fremde Laute für alle, die Übersetzung nur für wer die Sprache kann
 - **V01.1.113** KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur noch Bilder, die ein Lauf auch malt (fest gewählte gelten als fertig); Bild und Sätze für den Heiler der Siedlung
 - **V01.1.112** KI-Dungeon-Master: Inhalte der D&D-Ideen Runde 2 im SRD-Katalog: 20 Preise für „Knapp daneben“, 58 Requisiten für jede Orts- und Raumart, Herzenswünsche je Welt, Gefährten mit Werten für Stufe 1 bis 10 und Tierfreunden am Kindertisch, Fackel und Leuchtstab
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.108** KI-Dungeon-Master: Lagerfeuer und Rast, der Gastgeber ruft eine kurze oder lange Rast, drei Nachtwachen je Landschaft und eine Frage am Feuer für jeden Platz
 - **V01.1.107** · 2026-10-26 · Wichtige Mail erst nach dem Einordnen: Karten nur für Mails, die nach Mail-Regeln und „Mails aufräumen“ im Posteingang bleiben; automatische Absender, Listen, Newsletter, soziale Netzwerke, Rechnungen, Werbung und Anmeldecodes nie; Knopf „Nicht wichtig“ mit Absenderliste (Panel und iPhone)
 - **V01.1.106** KI-Dungeon-Master: Heldenlied des Barden, am Kapitelende ein deutsch gesungenes Lied mit den Namen und Taten der Helden
-- **V01.1.105** KI-Dungeon-Master: Narben und bleibende Wunden, wer wieder aufsteht oder kritisch getroffen wird, behält eine Narbe, selten mit −1 auf einen Wert, bis ein Heiler in der Siedlung sie nimmt
 
 
 

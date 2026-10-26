@@ -2552,6 +2552,86 @@ class Equipment(Base):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("${e.fremd?dmFremd(v,e):''}", f.read())
 
+    def test_the_worlds_calendar_runs_only_by_fixed_rules(self):
+        """D&D idea 6 (Kalender der Welt, switch dungeonkalender): off by default; on, the round's first day is fixed,
+        time runs only by fixed rules (a stage half a day, lost a day more, a long rest or the inn a day, at most
+        HALB_MAX half days a step, nothing in a vault); a festival today or within BALD days shows, a settlement's
+        services cost FEST_AUFSCHLAG percent more on it; the children's table takes the lists of „alle“."""
+        import features
+        import dungeon_gold
+        import dungeon_kalender as kal
+        import dungeon_rast as rast
+        self.assertNotIn(kal.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_kalender"], False)
+        r = self.r
+        self.assertIsNone(dungeon.view(self.rid, self.host)["kalender"])
+        helpers.keep_chat(self, "dungeon_kalender", "dungeon_rast")
+        helpers.set_config(dungeon_kalender=True, dungeon_rast=True)
+        rd = self.state(self.rid)
+        self.assertEqual(kal.ensure(copy.deepcopy(rd)), kal.ensure(copy.deepcopy(rd)))   # the same round, the same first day
+        self.assertTrue(0 <= kal.ensure(rd)["start"] < kal.JAHR)
+        self.assertIn("Tag im", dungeon.view(self.rid, self.host)["kalender"]["text"])
+        d0 = kal.tag(rd)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kal.weiter(r, rd, 2, "rast")
+            kal.weiter(r, rd, 10 ** 6, "weg")
+            kal.weiter(r, rd, -3, "weg")
+        self.assertEqual(kal.tag(rd), d0 + 1 + kal.HALB_MAX // 2)
+        self.assertIn("dungeon: kalender | 2 halbe tage | rast", out.getvalue())
+        # a way: half a day a stage, lost a day more, nothing inside a vault
+        x = copy.deepcopy(rd)
+        dungeon_karte.ensure(r, x, random.Random(1))
+        von = x["karte"]["hier"]
+        x["karte"]["hier"] = next(i for i in range(len(x["karte"]["orte"])) if i != von)
+        h0 = kal.ensure(x)["halbe"]
+        with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: 3), contextlib.redirect_stdout(io.StringIO()):
+            kal.way(r, x, von, None)
+            self.assertEqual(kal.ensure(x)["halbe"], h0 + 3)
+            kal.way(r, x, von, {"etappen": 2, "ergebnis": "verirrt"})
+            self.assertEqual(kal.ensure(x)["halbe"], h0 + 3 + 4)
+            with mock.patch.object(dungeon_karte, "vault", lambda rd: {"hier": 0}):
+                kal.way(r, x, von, None)
+        self.assertEqual(kal.ensure(x)["halbe"], h0 + 7)
+        # a long rest is a night
+        x = copy.deepcopy(rd)
+        h0 = kal.ensure(x)["halbe"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            rast.rest(dungeon, r, x, "lang", random.Random(1))
+        self.assertEqual(kal.ensure(x)["halbe"], h0 + 2)
+        # a festival: today, soon, the surcharge only in a settlement
+        m, t_, name, _ = kal.FESTE["alle"][2]
+        fest = (m - 1) * kal.DAUER + t_ - 1
+        x = copy.deepcopy(rd)
+        x["welt"] = "fantasy"
+        x.pop("markt", None)                                                     # no merchant, no map: no settlement
+        x.pop("karte", None)
+        x["kalender"] = {"start": fest - 3, "halbe": 0}
+        self.assertEqual((kal.heute(r, x)["bald"]["name"], kal.heute(r, x)["bald"]["in"]), (list(name), 3))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kal.weiter(r, x, 6, "reise")
+        self.assertIn("| fest", out.getvalue())
+        self.assertEqual(kal.heute(r, x)["fest"]["name"], list(name))
+        self.assertEqual(kal.aufschlag(r, x), 0)                                   # not in a settlement
+        base = dungeon_gold.price(dungeon, x, "gasthaus")
+        with mock.patch.object(dungeon_gold, "here", lambda rd: "Kesselbruck"):
+            self.assertEqual(kal.aufschlag(r, x), kal.FEST_AUFSCHLAG)
+            self.assertEqual(dungeon_gold.price(dungeon, x, "gasthaus"), base * (100 + kal.FEST_AUFSCHLAG) // 100)
+        self.assertIn(name[0], dungeon.facts(r, x))
+        self.assertIn("kalender", dungeon.system_text(r, x, "erzaehlen"))
+        # the moons go round; the children's table never gets the horror months
+        x["kalender"] = {"start": 0, "halbe": 0}
+        self.assertEqual(kal.heute(r, x)["monde"][0]["phase"], ["Neumond", "new"])
+        x["kalender"]["halbe"] = 2 * 14
+        self.assertEqual(kal.heute(r, x)["monde"][0]["phase"], ["voll", "full"])
+        x["welt"] = "horror"
+        self.assertIn(tuple(kal.heute(r, x)["monat"]), kal.MONATE["horror"])
+        x["ton"] = min(y["id"] for y in r["toene"])
+        self.assertIn(tuple(kal.heute(r, x)["monat"]), kal.MONATE["alle"])
+        self.assertGreaterEqual(kal.for_live()["feste"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("${dmKalender(v)}", f.read())
+
 
 class _Die:
     """A d20 that always shows the same number."""

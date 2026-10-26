@@ -65,11 +65,14 @@ def per_level(was):
 
 
 def price(dm, rd, was):
-    """A service's price by the group's level (the inn per hero); „verbessern“ goes by the piece (better_price)."""
+    """A service's price by the group's level (the inn per hero), on a festival of the world's calendar more
+    (dungeon_kalender.aufschlag); „verbessern“ goes by the piece (better_price)."""
+    import dungeon_kalender
     if was == "verbessern":
         return 0
     level = dm.group_level(dm._living(rd))
-    return per_level(was) * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
+    n = per_level(was) * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
+    return n * (100 + dungeon_kalender.aufschlag(dm.rules(), rd)) // 100
 
 
 def better(dm, r, it):
@@ -129,6 +132,7 @@ def _direction(a, b):
 
 def serve(dm, r, rd, pid, h, b):
     """{id, i, wert}: one offer of the settlement for the hero by fixed rules; raises the game's refusals."""
+    import dungeon_kalender
     li = 1 if rd["lang"] == "en" else 0
     was = b.get("id")
     if not on(rd):
@@ -155,6 +159,7 @@ def serve(dm, r, rd, pid, h, b):
             print("dungeon: dienst | gasthaus | schon", flush=True)
             raise FileExistsError("gasthaus")
         rd["gasthaus"] = evening()
+        dungeon_kalender.weiter(r, rd, 2, "gasthaus")   # a night at the inn: a day of the world's calendar
         for p_id, p in dm.seated(rd):
             z = p["held"]
             if z.get("tot") or z.get("ohnmacht"):

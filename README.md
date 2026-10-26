@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.115** AI Dungeon Master: calendar of the world, months, moons and festivals on top of the table, the days run only by ways, rests and the inn, on festivals services cost more
 - **V01.1.114** AI Dungeon Master: tongues of the peoples, a person briefly greets in its people's tongue, foreign sounds for everyone, the translation only for who knows the tongue
 - **V01.1.113** AI Dungeon Master: "Paint all pictures · N" counts only pictures a run will paint (fixed ones count as done); picture and lines for the settlement's healer
 - **V01.1.112** AI Dungeon Master: content of the D&D ideas round 2 in the SRD catalogue: 20 prices for "near miss", 58 props for every kind of place and room, heart's wishes per world, companions with values for levels 1 to 10 and animal friends at the children's table, torch and glow stick
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.108** AI Dungeon Master: campfire and rest, the host calls a short or long rest, three night watches per landscape and a question at the fire for every seat
 - **V01.1.107** · 2026-10-26 · Important mail only after sorting: cards only for mail still in the inbox after the mail rules and "Tidy the inbox"; never automatic senders, lists, newsletters, social networks, bills, ads or login codes; "Not important" button with a sender list (panel and iPhone)
 - **V01.1.106** AI Dungeon Master: bard's hero song, at the end of a chapter a song sung in German with the heroes' names and deeds
-- **V01.1.105** AI Dungeon Master: scars and lasting wounds, who stands up again or takes a critical hit keeps a scar, rarely with −1 on a value until a healer in a settlement takes it
 
 
 

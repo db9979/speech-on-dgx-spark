@@ -288,6 +288,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_helfen.py` | Dungeon-Master: Helfen und Gruppenprobe, feste Regeln auf den Würfen des Panels |
 | `app/panel/dungeon_ideen.py` | Dungeon-Master-Ideen-Tabellen: Krit, Patzer, Landschaften, Reise, Narben, Sagen; feste Regeln prüfen |
 | `app/panel/dungeon_import.py` | Dungeon-Master-Abenteuer-Import: ein geschriebenes Abenteuer wird ein Entwurf im Geschichten-Planer, feste Regeln prüfen |
+| `app/panel/dungeon_kalender.py` | Dungeon-Master: Kalender der Welt, Monate, Monde und Feste, die Zeit läuft nur über Wege, Rasten und das Gasthaus |
 | `app/panel/dungeon_kampf.py` | Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse |
 | `app/panel/dungeon_karte.py` | Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort |
 | `app/panel/dungeon_knapp.py` | Dungeon-Master: Knapp daneben, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an |

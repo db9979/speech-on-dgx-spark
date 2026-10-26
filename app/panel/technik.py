@@ -180,6 +180,7 @@ MODULE = {
     "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_schrift": ("dienste", "Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht"),
     "dungeon_kommentar": ("dienste", "Dungeon-Master: Helden kommentieren selbst, je Held, der gehandelt hat, eine kurze geprüfte Zeile in seiner Stimme"),
+    "dungeon_kalender": ("dienste", "Dungeon-Master: Kalender der Welt, Monate, Monde und Feste, die Zeit läuft nur über Wege, Rasten und das Gasthaus"),
     "dungeon_sprachen": ("dienste", "Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann"),
     "dungeon_reise": ("dienste", "Dungeon-Master: Reise-Etappen, Rollen mit je einem Wurf und ein Ereignis der Landschaft auf langen Wegen"),
     "dungeon_rast": ("dienste", "Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten"),

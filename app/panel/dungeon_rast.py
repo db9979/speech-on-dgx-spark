@@ -81,6 +81,7 @@ def cards(dm, r, rd, rng):
 
 def rest(dm, r, rd, art, rng=None):
     """The host's rest by fixed rules; raises the game's refusals."""
+    import dungeon_kalender
     rng = rng or random
     if not on(rd):
         raise LookupError("rast aus")
@@ -109,6 +110,7 @@ def rest(dm, r, rd, art, rng=None):
             dm.heal(h, max(1, h["leben_max"] // KURZ_TEIL))
     else:
         rd["rast_kurz"], rd["rast_lang_zug"] = 0, zug
+        dungeon_kalender.weiter(r, rd, 2, "rast")   # the night: a day of the world's calendar (D&D idea 6)
         e["wachen"] = watches(r, rd, rng, dm.kids(r, rd))
         e["gestoert"] = any(x["art"] == "ueberfall" for x in e["wachen"])
         e["fragen"] = cards(dm, r, rd, rng)

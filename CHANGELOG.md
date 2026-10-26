@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.115** · 2026-10-26 · KI-Dungeon-Master: Kalender der Welt, Monate, Monde und Feste oben am Tisch, die Tage laufen nur über Wege, Rasten und das Gasthaus, an Festen kosten Dienste mehr
 - **V01.1.114** · 2026-10-26 · KI-Dungeon-Master: Sprachen der Völker, eine Person grüßt kurz in der Sprache ihres Volkes, fremde Laute für alle, die Übersetzung nur für wer die Sprache kann
 - **V01.1.113** · 2026-10-26 · KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur noch Bilder, die ein Lauf auch malt (fest gewählte gelten als fertig); Bild und Sätze für den Heiler der Siedlung
 - **V01.1.112** · 2026-10-26 · KI-Dungeon-Master: Inhalte der D&D-Ideen Runde 2 im SRD-Katalog: 20 Preise für „Knapp daneben“, 58 Requisiten für jede Orts- und Raumart, Herzenswünsche je Welt, Gefährten mit Werten für Stufe 1 bis 10 und Tierfreunden am Kindertisch, Fackel und Leuchtstab

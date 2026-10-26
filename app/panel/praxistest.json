@@ -3740,6 +3740,13 @@
 "titel": "Dungeon-Master: Sprachen der Völker",
 "text": "Funktionen → KI-Dungeon-Master → Sprachen der Völker einschalten, eine Runde mit einem Elfen und einem Zwerg spielen und eine Elfe der Geschichte ansprechen. A: Unter der Erzählung steht eine Sprechblase mit fremden Lauten. B: Am Platz des Elfen steht darunter „du verstehst: …“, am Platz des Zwergs „(unverständlich, Elfisch)“. C: Mit Vorlesen spricht die Stimme der Elfe die fremden Laute.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P559",
+"v": 1115,
+"titel": "Dungeon-Master: Kalender der Welt",
+"text": "Funktionen → KI-Dungeon-Master → Kalender der Welt einschalten und eine Runde mit Karte spielen. A: Oben am Tisch steht „📅 … Tag im …“ mit den Mondphasen. B: Nach einem Weg über zwei Etappen ist ein Tag vergangen, nach einer langen Rast noch einer. C: Steht ein Fest an, zeigt die Zeile „… in N Tagen“; am Fest kosten in einer Siedlung die Dienste 20 Prozent mehr.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
