@@ -3342,7 +3342,7 @@ def just_going(wofuer):
 
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped, none only for going somewhere (just_going), for an action that only asks or
+    of the list, the difficulty clamped, none only for going somewhere (just_going) or for a hero down (zustand), for an action that only asks or
     talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
     werte = {w["id"] for w in r["werte"]}
@@ -3354,6 +3354,10 @@ def check_proben(r, rd, obj):
         if just_going(p.get("wofuer")):
             drop += 1
             print("dungeon: probe | verworfen | gehen", flush=True)
+            continue
+        if zustand((rd["plaetze"].get(pid) or {}).get("held") or {}):
+            drop += 1                            # a hero down, unconscious or dead rolls nothing, so earns no check's experience
+            print("dungeon: probe | verworfen | zustand", flush=True)
             continue
         if erz.asks((rd["offen"][pid] or {}).get("text")) and (p["wert"] != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
             drop += 1                            # an action that only asks: Charisma or no check, never sneaking

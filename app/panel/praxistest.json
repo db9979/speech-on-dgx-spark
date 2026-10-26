@@ -3859,6 +3859,13 @@
 "titel": "Dungeon-Master: Geschlecht des Helden",
 "text": "A: Einen neuen Helden anlegen und unter dem Namen „weiblich“ wählen: die Erzählung nennt ihn „sie“, die vorgeschlagene Stimme ist eine Frauenstimme. B: Auf dem Heldenblatt unter „Werte verteilen“ auf „divers“ wechseln: die Erzählung nennt den Helden nur beim Namen, das Porträt lässt sich neu malen. C: Einen alten Helden öffnen: er steht ohne Angabe da, bis du eins wählst. D: Als Gast über den Platz-Link einen Helden mit Geschlecht anlegen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P576",
+"v": 1133,
+"titel": "Dungeon-Master: Kampf-Wortgrenzen",
+"text": "A: In einem Kampf gegen einen Gegner, dessen Name mit „Nach“, „Sich“ oder „Uns“ beginnt, ohne Artikel angreifen („Ich greife Nachtmahr an“): es ist ein Angriff mit Trefferwurf, keine Probe. B: „Ich haue ab“ oder „Ich schlage Alarm“ schicken: kein Angriff. C: Mit einem Helden am Boden etwas versuchen: es gibt keine Probe und keine Proben-EP.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

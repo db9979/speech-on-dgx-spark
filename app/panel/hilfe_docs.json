@@ -5765,6 +5765,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf-Wortgrenzen (V01.1.133, Nachprüfung dungeon-kampf-audit/nachpruefung-v130.md): Ohne neuen Schalter. 1. Wortgrenzen: Jedes Wort von NICHT_ANGRIFF endet an einer Wortgrenze. „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe auf genau diesen Gegner, vorher schluckte „greife nach“ bzw. „schlage sich“ den Anfang des Namens und machte daraus eine Modell-Probe mit Proben-EP mitten im Kampf. Ein Selbsttest greift jeden Gegner des Bestiariums ohne Artikel an (deutsch und englisch, acht bzw. fünf Verben) und verlangt einen Angriff mit dem ganzen Namen. 2. Wörtertabelle: Angriffe sind jetzt auch „schlage dich / euch nieder“, „trete ein paar Mal nach“ und „Gebt Feuer auf die Wache“ (mit genanntem Gegner). Kein Angriff sind „Ich haue ab“, „schlage Alarm“, „trete die Tür ein“, „werfe der Wache Gold zu“, „I hit the road“ und „I strike a deal“; „Ich trete ein“ bleibt kein Angriff. 3. Wer am Boden liegt, würfelt nicht: Eine Probe des Modells für einen Helden am Boden, ohnmächtig oder tot verwirft das Panel (dungeon: probe | verworfen | zustand), er bekommt dafür keine Proben-EP mehr."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit, Nachprüfung (V01.1.130, Nachprüfung dungeon-kampf-audit/nachpruefung-welle1.md): Drei Lücken der Welle 1 geschlossen, ohne neuen Schalter. 1. Keine Fehlalarme mehr: NICHT_ANGRIFF kennt jetzt auch „trete den Rückzug an“, „trete zur Seite / zurück / beiseite / ein / vor / näher“, „schlage vor“, „schlage mich in die Büsche“, „werfe der Wache einen Blick zu“, „gebe der Wache Feuer“, „step back“, „retreat“, „fall back“, „cast a glance“, „suggest“ und „propose“; diese Aktionen greifen nie an. „Ich trete die Wache“ und „Ich schlage auf den Ork ein“ bleiben Angriffe. 2. Das Ziel des Modells allein greift nie an: Ob eine Aktion angreift, entscheiden nur ihre Wörter (Angriffswort, Schadenszauber oder Bezugswort mit einem genannten Gegner). Das ziel aus der Probe des Modells wählt nur, welchen Gegner ein schon erkannter Angriff trifft. 3. Frieden einmal je Kampf, ohne Proben-EP: Die Charisma-Probe für Frieden gibt es einmal je Kampf (kampf.frieden); ein zweiter Versuch im selben Kampf würfelt nicht (dungeon: kampf | frieden | schon versucht). Die Probe selbst gibt keine Proben-EP, nur ein Erfolg die Hälfte der Kampf-EP. 4. Kontrollzauber ohne Modell-Probe: Wirk"
 },
 {
@@ -20366,6 +20374,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: combat word boundaries (V01.1.133, check dungeon-kampf-audit/nachpruefung-v130.md): No new switch. 1. Word boundaries: every word of NICHT_ANGRIFF ends at a word boundary. \"Ich greife Nachtmahr an\" and \"Ich schlage Sicherheitsdroide\" are attacks on exactly that foe again; before, \"greife nach\" or \"schlage sich\" swallowed the start of the name and turned it into a model check with check experience in the middle of a fight. A self-test attacks every foe of the bestiary without an article (German and English, eight and five verbs) and demands an attack with the whole name. 2. Word table: attacks now also include \"schlage dich / euch nieder\", \"trete ein paar Mal nach\" and \"Gebt Feuer auf die Wache\" (with a foe named). No attack: \"Ich haue ab\", \"schlage Alarm\", \"trete die Tür ein\", \"werfe der Wache Gold zu\", \"I hit the road\" and \"I strike a deal\"; \"Ich trete ein\" stays no attack. 3. A hero down rolls nothing: the panel drops a model check for a hero at 0 life, unconscious or dead (dungeon: probe | verworfen | zustand), so no more check experience for it."
 },
 {
 "lang": "en",

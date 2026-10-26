@@ -6073,21 +6073,62 @@ class Fight(Turns):
                    "Ich spieße ihn auf", "Ich schlitze ihn auf", "Ich greife an", "Angriff!", "Ich schlage zu", "Ich steche zu",
                    "Ich greife die Wache an", "Ich greife Meervolk-Späher 2 an", "Ich töte den Ork", "Ich trete die Wache",
                    "Ich trete zu", "Ich schlage die Wache", "Ich schlage auf den Ork ein", "Ich schieße einen Pfeil auf den Ork",
-                   "I fight", "I punch him", "I kick", "I swing at it", "I attack", "I stab the guard"]
+                   "I fight", "I punch him", "I kick", "I swing at it", "I attack", "I stab the guard",
+                   # Nachprüfung V01.1.130
+                   "Ich schlage dich nieder", "Ich schlage euch nieder, Banditen", "Ich trete ein paar Mal nach der Wache"]
         bezug = ["Ich ziele auf die Wache", "Ich werfe meinen Dolch auf die Wache", "boxe die Wache", "feuere auf die Wache",
                  "stürme auf die Wache los", "gehe auf die Wache los", "schneide der Wache die Kehle durch",
-                 "I charge the guard", "I throw my dagger at the guard", "I aim at the guard"]
+                 "I charge the guard", "I throw my dagger at the guard", "I aim at the guard", "Gebt Feuer auf die Wache",
+                 "Gebt Feuer!"]
         nichts = ["Ich greife nach dem Seil neben der Wache", "Ich stoße die Tür auf und rufe die Wache", "Ich treffe mich mit der Wache",
                   "Ich rede mit der Wache", "Ich betrete die Halle", "Ich mache ein Lagerfeuer", "Ich trinke einen Trank",
                   "Ich halte mich bereit", "Ich verstecke mich", "Ich helfe Bela auf", "Ich gehe zur Tür", "I reach for the rope",
                   # Nachprüfung Welle 1: stepping, proposing, fleeing, a look, a light
                   "Ich trete den Rückzug an", "Ich trete zur Seite, weg von der Wache", "Ich trete zurück und trinke einen Heiltrank",
                   "Ich schlage vor, wir reden", "Ich schlage mich in die Büsche", "Ich trete ein", "Ich werfe der Wache einen Blick zu",
-                  "Ich gebe der Wache Feuer für ihre Pfeife", "I step back", "I retreat", "I throw the guard a glance"]
+                  "Ich gebe der Wache Feuer für ihre Pfeife", "I step back", "I retreat", "I throw the guard a glance",
+                  # Nachprüfung V01.1.130
+                  "Ich haue ab", "Ich schlage Alarm", "Ich trete die Tür ein", "Ich werfe der Wache Gold zu",
+                  "Ich trete ein und schaue mich um", "I hit the road", "I strike a deal with the guard"]
         frieden = ["Ergebt euch!", "Ich verhandle mit den Orks", "Lasst uns reden", "Ich biete Frieden an", "We surrender", "I parley"]
         for want, texts in (("angriff", angriff), ("bezug", bezug), ("", nichts), ("frieden", frieden)):
             for t in texts:
                 self.assertEqual(kampf.intent(t), want, t)
+
+    def test_kampf_angriffswoerter_jeder_gegnername(self):
+        """Nachprüfung V01.1.130: the words that are no attack end at a word („greife nach“ never takes „Nachtmahr“,
+        „schlage sich“ never „Sicherheitsdroide“): every foe of the bestiary, attacked without an article, is an attack
+        and keeps its whole name for the target."""
+        de_t = ("Ich greife {} an.", "Ich schlage {}.", "Ich trete {}.", "Ich steche {} nieder.", "Ich attackiere {}.",
+                "Ich schieße auf {}.", "Ich treffe {}.", "Ich stoße {} um.")
+        en_t = ("I attack {}.", "I hit {}.", "I strike {}.", "I kick {}.", "I stab {}.")
+        names = set()
+        for g in dungeon.rules()["gegner"]:
+            nm = g["name"] if isinstance(g["name"], list) else [g["name"]]
+            names.update(((nm[0], de_t), (nm[-1], en_t)))
+        self.assertGreater(len(names), 500)
+        bad = []
+        for n, ts in sorted(names):
+            for t in ts:
+                s = t.format(n)
+                if kampf.intent(s) not in ("angriff", "bezug") or n not in kampf.NICHT_ANGRIFF.sub(" ", s):
+                    bad.append(s)
+        self.assertEqual(bad, [])
+
+    def test_kampf_wer_am_boden_liegt_wuerfelt_keine_probe(self):
+        """Nachprüfung V01.1.130 (niedrig): a hero at 0 life, unconscious or dead gets no check of the model, so no
+        check's experience; standing up again it may roll."""
+        r = dungeon.rules()
+        probe = {"wer": "Morpheus", "wert": r["werte"][0]["id"], "schwer": 12, "wofuer": "Die Kiste aufbrechen"}
+        for h, want in (({"name": "Morpheus", "leben": 0}, 0), ({"name": "Morpheus", "ohnmacht": True}, 0),
+                        ({"name": "Morpheus", "tot": True}, 0), ({"name": "Morpheus", "leben": 3}, 1)):
+            rd = {"offen": {"p1": {"text": "Ich breche die Kiste auf"}}, "plaetze": {"p1": {"held": h}}, "lang": "de",
+                  "ton": r["toene"][0]["id"]}
+            with mock.patch.object(dungeon, "_name_map", lambda rd: {"morpheus": "p1"}), \
+                    contextlib.redirect_stdout(io.StringIO()) as out:
+                got, drop = dungeon.check_proben(r, rd, {"proben": [dict(probe)]})
+            self.assertEqual((len(got), drop), (want, 1 - want), h)
+            self.assertEqual("dungeon: probe | verworfen | zustand" in out.getvalue(), not want, h)
 
     def test_kampf_angriff_aus_aktion(self):
         """Kampf-Audit 1: in a fight every action with an attack word, or a foe named with a word that needs one, is an

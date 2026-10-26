@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.133** KI-Dungeon-Master: Kampf-Wortgrenzen, „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe (Selbsttest über jeden Gegner), „schlage dich nieder“ greift an, „Ich haue ab“ und „schlage Alarm“ nicht, wer am Boden liegt, würfelt keine Probe
 - **V01.1.132** KI-Dungeon-Master: Geschlecht des Helden, beim Anlegen und auf dem Heldenblatt männlich, weiblich oder divers, die Erzählung nennt den Helden mit dem richtigen Fürwort (bei divers nur beim Namen), die Stimme kommt aus den Stimmen des Geschlechts, das Porträt nennt es und darf nach einer Änderung neu gemalt werden
 - **V01.1.131** Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web
 - **V01.1.130** KI-Dungeon-Master: Kampf-Audit, Nachprüfung, Rückzug, zur Seite treten, Vorschläge, Blicke und Feuer geben sind kein Angriff mehr, das Ziel des Modells allein greift nie an, Frieden einmal je Kampf ohne Proben-EP, Kontrollzauber ohne Modell-Probe, ein Held am Boden greift nicht an, Balance neu eingemessen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.126** KI-Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt erst eine Streife und dann den Herrn, Fackeln brennen vier Räume lang, im Dunkeln Proben mit Nachteil
 - **V01.1.125** KI-Dungeon-Master: „Knapp geschafft, mit Preis“ an der Würfelkarte, mit dem gezahlten Preis und eigenem Ton
 - **V01.1.124** KI-Dungeon-Master: Requisiten im Szenenbild: im Kampf nimmt ein Szenenbild bis zu drei Requisiten, die noch da sind, mit ihrem Katalognamen mit ins Bild; Gesichter für Gefährten: ein angeheuerter Gefährte bekommt gleich sein Porträt aus seiner festen Beschreibung, die Gruppe zeigt es statt 🤝, Szenenbilder nehmen es als Vorlage
-- **V01.1.123** ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
 
 
 
