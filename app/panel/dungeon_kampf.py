@@ -8,14 +8,14 @@ what the dice say.
                the same turn always offers the same (a seed of round, turn and group), so check and facts agree
     start      the model's begegnung [{id, anzahl}] from the offer only; the panel takes foes away until the adjusted
                experience (D&D multiplier by count) is at most SCHWER times the budget, GEGNER_MAX at most
-    attack     a check with ziel (a foe's name) is an attack: d20 + the value's bonus + proficiency against the foe's
-               armour class (ruestung); a hit costs the weapon's die + the value's bonus + its rarity (a spell cast
-               this turn: its die by grade); a natural 20 doubles the dice, a natural 1 misses. The ziel may name
-               several foes of one kind („Riesenratten“, „die Ratten“): the first of them still standing; a check in a
-               fight without ziel whose action attacks (HIEB_WORTE) and names a foe so is an attack on it too (Dominik
-               2026-10-25: a spell rolled „geschafft“ on two giant rats took no life). A hero whose class casts and
-               whose action is magic (MAGIE_WORTE) without a spell of its own attacks with a cantrip: ZAUBER_W[0] +
-               the better of the mind's values, kind energie
+    attack     the panel makes the attack from the action (Kampf-Audit 1, Dominik 2026-10-26): ANGRIFF_WORTE, a spell
+               with a damage kind, BEZUG_WORTE or magic with a foe named; d20 + the value's bonus + proficiency against
+               the foe's armour class (ruestung); a hit costs the weapon's die + the value's bonus + its rarity (a spell
+               cast this turn: its die by grade); a natural 20 doubles the dice, a natural 1 misses. The target is the
+               foe the action names („Riesenratten“, „die Ratten“: the first of them still standing), else the model's
+               ziel, else the first one standing; none standing, the attack lapses. A hero whose class casts and whose
+               action is magic (MAGIE_WORTE) without a spell of its own attacks with a cantrip: ZAUBER_W[0] + the better
+               of the mind's values, kind energie. Advantage only from fixed sources, never the model's
     foes       every foe still up attacks once: the hero who hit it this turn, else one of the standing heroes by the
                seed; d20 + angriff against the hero's armour class (rk), the bestiary's dice + schaden_plus; Eisenhaut
                and Schildwall work on it as on every hit (dungeon.consequences)
@@ -43,6 +43,7 @@ rd["kampf"] = {"gegner": [{k, id, name, zeichen, leben, max, rk, angriff, schade
                immun, schwaeche, zustaende, boss, phase, angriffe}], "seit": zug, "budget": n, "gefahr": "leicht"|"mittel"|"schwer"};
 hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and calls in.
 """
+import math
 import random
 import re
 
@@ -55,13 +56,14 @@ import dungeon_narben as narben
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
-# Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
-BUDGET = (95, 135, 291, 380, 410, 490, 780, 880, 520, 560, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with the Kampf-Audit (V01.1.127:
+# an attack whose foe fell this turn takes the next one, none is lost); beyond the heroes' top level the D&D table
+BUDGET = (125, 175, 291, 380, 490, 560, 780, 880, 625, 615, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
 REGLER_RUNTER = 15         # after a fight with a hero down, lost or fled from: this much easier
-GRUPPE = (0.8, 0.35)       # the budget times 0.8 for one hero and 0.35 more for each further one (more heroes hit more often)
+GRUPPE = (0.7, 0.4)        # the budget times 0.7 for one hero and 0.4 more for each further one (more heroes hit more often)
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
 ANZAHL_MAX = 4             # of one kind
@@ -82,10 +84,38 @@ ZAUBER_W = (6, 8, 8, 10, 10, 12)   # the die of an attack spell by its grade 0..
 ENDE = ("frieden", "flucht")       # the model may end a fight without a winner
 AUS = ("besiegt", "geflohen")
 ZIEL_MAX = 40
-HIEB_WORTE = re.compile(r"(?i)(?<!\w)(greif|angriff|angreif|attack|schlag|schläg|schlägt|stech|stich|stoß|stoss|schieß|schiess|schuss|"
-                        r"triff|treff|töte|erschlag|zerschmetter|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|"
-                        # „kämpfe gegen die Wache“ (Dominik 2026-10-26, Kampfzug-Prüfung 1): fighting a foe is an attack
-                        r"kämpf|kaempf|bekämpf|bekaempf|fight|battle|hau(?:e|t|en)?(?!\w)|verprügel|prügel|verdresch|schlitz)")   # an action that attacks
+# Kampf-Audit 1 (Dominik 2026-10-26 „Empfehlung umsetzen“): the panel makes the attack from the action, never from the
+# model's check. ANGRIFF_WORTE attack on their own (with no foe named: the first one standing), BEZUG_WORTE only with a
+# foe named in the action; a stem may carry a prefix (er-, be-, zu-, nieder-, ab-, ver-), NICHT_ANGRIFF is taken out
+# first („greife nach dem Seil“, „treffe mich mit“, „stoße die Tür auf“, „betrete“). New words only with
+# test_kampf_angriffswoerter_tabelle.
+_VOR = r"(?<!\w)(?:er|be|zu|nieder|ab|ver|drauf|los)?"
+ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
+                           r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|"
+                           r"zerschmetter|erdolch|kämpf|kaempf|hau(?:e|t|en)?(?!\w)|hieb|prügel|prügl|pruegel|pruegl|dresch|"
+                           r"schlitz|ramm|tret|tritt|spieß|spiess|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|fight|battle|"
+                           r"punch|kick|swing|bash|cleave)")
+BEZUG_WORTE = re.compile(r"(?i)" + _VOR + r"(?:triff|treff|traf|ziel|wirf|werf|wurf|schleuder|feuer|stürm|stuerm|schneid|box|"
+                         r"(?:gehe?|geht|renne?|rennt|springe?|springt)\s+(?:[\w'-]+\s+){0,4}los|aim|throw|hurl|toss|fire|charge|cut|shove)")
+NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach|treff\w*\s+(?:mich|uns|dich|euch|sich)|(?:stoß|stoss)\w*\s+(?:die|eine|das)\s+"
+                           r"(?:tür|tuer|tor|fenster|kiste|truhe)|betret|(?<!\w)(?:tür|tuer)\w*\s+auf|(?:greif|attack)\w*\s+(?:ab|aus)(?!\w)|"
+                           r"lagerfeuer|feuer\s+(?:machen|entzünd|an)|reach\s+for|meet\s+with")
+FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
+                           r"überred|ueberred|ruhig\s+bleiben|surrender|give\s+up|parley|negotiat|truce|peace|stand\s+down")
+# Kampf-Audit 5: spells that work on foes but have no damage kind; until the foes' saving throws are built they cost no
+# charge in a fight (dungeon.cast_powers) and say so to the seat
+KONTROLLE = ("befehl", "farbspray", "furcht", "gegenzauber", "hypnosemuster", "person_beherrschen", "person_festhalten", "schlaf",
+             "stinkwolke", "unheil", "verbannung", "verlangsamen", "verstricken", "verwandlung", "verwirrung")
+FRIEDEN_SG = (12, 10)      # the panel's peace check: Charisma against the higher of 12 and 10 + the strongest foe's level
+
+
+def intent(text):
+    """What an action does in a fight by the fixed word lists: "angriff" (attacks on its own), "bezug" (attacks a foe
+    it names), "frieden" (asks for peace) or ""."""
+    t = NICHT_ANGRIFF.sub(" ", str(text or ""))
+    return "angriff" if ANGRIFF_WORTE.search(t) else "bezug" if BEZUG_WORTE.search(t) else "frieden" if FRIEDEN_WORTE.search(t) else ""
+
+
 MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
 ZAUBERWERTE = ("intelligenz", "weisheit", "charisma")   # a cantrip's value: the better of these
 _FUELL = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "beide", "beiden", "alle", "allen",
@@ -138,14 +168,17 @@ AUFGABE_KAMPF = {
           "Gegner ohne Wurf fallen. wirkt sagt, ob der Gegner den Schaden halbiert (resistenz), gar nicht nimmt (immun) "
           "oder doppelt (schwaeche); zustand mit gerettet false heißt, die Figur leidet jetzt daran (erzähle es), "
           "kann_nicht, dass sie wegen eines Zustands nicht angreifen konnte. Ein Gegner mit boss und phase 2 wird "
-          "jetzt gefährlicher. Ergeben sich die Gegner oder flieht die Gruppe, setze kampf_ende.",
+          "jetzt gefährlicher. Flieht die Gruppe, setze kampf_ende flucht; Frieden gibt es nur, wenn die Probe „Frieden anbieten“ "
+          "in proben geschafft ist. Melde im Kampf keine heilung in folgen: geheilt wird nur durch Zauber und Tränke des Panels.",
     "en": "There is a fight (facts kampf). The panel rolls every attack: when a character attacks a foe in its action, "
           "give it a check with ziel = the foe's name exactly as in kampf and the value it attacks with; schwer does "
           "not count then. Tell exactly what the rolls in proben and gegner_zuege say: who hits, who misses, who falls "
           "or flees. Report no damage of the fight in folgen and let no foe fall without a roll. wirkt says whether the "
           "foe halves the damage (resistenz), takes none (immun) or double (schwaeche); zustand with gerettet false means "
           "the character now suffers it (tell it), kann_nicht that a state kept it from attacking. A foe with boss "
-          "and phase 2 grows more dangerous now. When the foes give up or the group flees, set kampf_ende."}
+          "and phase 2 grows more dangerous now. When the group flees, set kampf_ende flucht; there is peace only when the check "
+          "\"offer peace\" in proben is passed. Report no heilung in folgen during a fight: only the panel's spells and "
+          "potions heal."}
 
 
 def prof(stufe):
@@ -445,39 +478,65 @@ def _dice(rng, n, w):
     return sum(rng.randint(1, w) for _ in range(n))
 
 
-def attacks(dm, r, rd, proben, rng=None, hand=None):
-    """The checks with ziel in a fight become attacks (taken out of proben). Returns (the rest, the attack results);
-    every number from here: the foe's life is only changed in apply (hit). hand (dungeon_echt.Hand): the d20 a seat
-    threw at the real table come first, the attack says "echt"."""
+def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
+    """The attacks of a fight turn, made by the panel from the actions (Kampf-Audit 1, Dominik 2026-10-26): a hero whose
+    action attacks (intent), or who casts a spell with a damage kind (Kampf-Audit 2), attacks whether the model asked a
+    check for it or not; the model's checks for that hero are dropped. The target: the foe the action names, else the
+    one the model's ziel names, else the first still standing (a target fallen this turn: the next one); with none
+    standing the attack lapses, no check, no experience. A model's ziel naming a foe is an attack too, unless the action
+    asks for peace. skip: heroes a prop of the fight already took (dungeon_umgebung). Returns (the other checks, the attack
+    results); every number from here: the foe's life is only changed in apply (hit). hand (dungeon_echt.Hand): the
+    d20 a seat threw at the real table come first, the attack says "echt"."""
     rng = rng or random
     if not rd.get("kampf"):
         return [{k: v for k, v in p.items() if k != "ziel"} for p in proben], []
     rest, out, life = [], [], {g["k"]: g["leben"] for g in up(rd)}
     li = 1 if rd["lang"] == "en" else 0
-    # Kampfzug-Prüfung 1 (Dominik 2026-10-26): a hero whose action fights a named foe attacks it even when the model
-    # asked no check for it
-    have = {p["pid"] for p in proben}
-    for pid, a in (rd.get("offen") or {}).items():
-        h = (rd["plaetze"].get(pid) or {}).get("held")
-        if pid not in have and h and not h.get("tot") and HIEB_WORTE.search(str(a.get("text", ""))) and _named(rd, a.get("text"), life, text=True):
-            proben = list(proben) + [{"pid": pid, "wert": "staerke", "schwer": 10, "vt": "", "wofuer": ""}]
-            print("dungeon: probe | kampf | angriff ergaenzt", flush=True)
+    cat = dm._by(r, "gegenstaende")
+    model = {}
     for p in proben:
+        model.setdefault(p["pid"], p)
+    los = []                                     # (check, foe) in the order of the seats
+    offen = rd.get("offen") or {}
+    for pid in list(offen) + [q for q in model if q not in offen]:
+        a = offen.get(pid) or {}
+        h = (rd["plaetze"].get(pid) or {}).get("held")
+        if pid in skip or not h or h.get("tot") or (rd["plaetze"][pid].get("wartet")):
+            continue
+        spell = cat.get(a.get("kraft") or "")
+        was = intent(a.get("text"))
+        named = _named(rd, NICHT_ANGRIFF.sub(" ", str(a.get("text") or "")), life, text=True)
+        m = model.get(pid) or {}
+        by_model = _named(rd, m.get("ziel"), life) if m.get("ziel") else None
+        dmg = bool(spell and spell.get("art") == "zauber" and spell.get("schaden_art"))
+        magie = not spell and bool(MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
+        # the model's ziel names a foe too: an attack, never for an action asking for peace (Kampf-Audit 3) or casting a
+        # spell without damage (Schild, Segnen …)
+        if not (was == "angriff" or dmg or (was == "bezug" or magie) and named or by_model and was != "frieden" and not spell):
+            continue
+        los.append((dict(m or {"pid": pid, "wert": "staerke", "schwer": 10, "wofuer": ""}, pid=pid), named or by_model))
+        print(f"dungeon: kampf | angriff | {'aus aktion' if m else 'modell ohne probe'}", flush=True)
+    angreifer = {p["pid"] for p, _ in los}
+    for p in proben:
+        if p["pid"] in angreifer:
+            continue
         a = rd["offen"].get(p["pid"]) or {}
-        g = _named(rd, p.get("ziel"), life) if p.get("ziel") else \
-            _named(rd, a.get("text"), life, text=True) if HIEB_WORTE.search(str(a.get("text", ""))) else None
-        if not g and HIEB_WORTE.search(str(p.get("wofuer", ""))):   # the model's check names a foe to hit: an attack against
-            g = _named(rd, p.get("wofuer"), life, text=True)       # its armour, never a check against a difficulty (Kampfzug 1)
-        if not g:
-            if any(_named(rd, x, life, text=True) for x in (a.get("text"), p.get("wofuer")) if x):
-                print("dungeon: probe | kampf | kein angriff", flush=True)   # a foe named, still a check: shows in the journal (4)
-            rest.append({k: v for k, v in p.items() if k != "ziel"})
-            continue
+        if any(_named(rd, x, life, text=True) for x in (a.get("text"), p.get("wofuer")) if x):
+            print("dungeon: probe | kampf | kein angriff", flush=True)   # a foe named, still a check: shows in the journal
+        rest.append({k: v for k, v in p.items() if k != "ziel"})
+    for p, g in los:
+        a = rd["offen"].get(p["pid"]) or {}
+        if g and life.get(g["k"], 0) <= 0:
+            g = None
+        if not g:                                # none named, or it fell this turn: the next one standing
+            g = next((x for x in up(rd) if life.get(x["k"], 0) > 0), None)
+            print(f"dungeon: kampf | angriff | {'ziel neu' if g else 'verfaellt'}", flush=True)
+            if not g:
+                continue
         h = rd["plaetze"][p["pid"]]["held"]
-        spell = dm._by(r, "gegenstaende").get(a.get("kraft") or "")
+        spell = cat.get(a.get("kraft") or "")
         if spell and spell.get("art") == "zauber" and not spell.get("schaden_art"):
-            rest.append({k: v for k, v in p.items() if k != "ziel"})   # Schild, Segnen, Schlaf …: a spell without damage is no attack
-            continue
+            spell = None                          # Schild, Segnen, Schlaf … beside an attack: the attack is the weapon's
         wp = _weapon(dm, r, h)
         eig = ()
         geist = [x for x in ZAUBERWERTE if x in h["werte"]]
@@ -501,7 +560,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None):
             wert = max(("staerke", "geschick"), key=lambda x: (dm.total(r, h, x), x == wert))
         if "vielseitig" in eig and not (h.get("an") or {}).get("nebenhand"):
             wuerfel += 2                          # both hands on it
-        vt = p.get("vt") or ""
+        vt = ""                                   # Kampf-Audit: an attack's advantage only from the fixed sources below
         if "schwer" in eig and h["werte"].get("staerke", 10) < SCHWER_STAERKE:
             vt = "" if vt == "vorteil" else "nachteil"
         vt = _state_vt(r, h, vt, "angriff")
@@ -863,9 +922,37 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if flees(g, rng):
             dm._log(rd, "gegner", gegner=g["name"], was="aufgegeben" if dm.kids(r, rd) else "geflohen")
             dm._day.bump("geflohen")
+    # Kampf-Audit 3 (Dominik 2026-10-26): peace only after the panel's own peace check passed (peace), never because
+    # the model says so; then the fight ends in peace whatever the model wrote
+    if rd["kampf"].get("geschafft"):
+        ende = "frieden"
+    elif ende == "frieden":
+        ende = ""
+        print("dungeon: kampf | frieden | ohne probe", flush=True)
     if not up(rd) or ende in ENDE:
         end(dm, r, rd, ep, ende)
     return folgen
+
+
+def peace(dm, r, rd, proben, hits):
+    """Kampf-Audit 3: a hero whose action asks for peace (FRIEDEN_WORTE, intent) and who does not attack rolls the
+    panel's Charisma check against the higher of FRIEDEN_SG[0] and FRIEDEN_SG[1] + the strongest foe's level, in place
+    of the model's checks for it; one a turn. Passed (apply), the fight ends in peace with half the experience of the
+    foes still up (end)."""
+    if not rd.get("kampf") or not up(rd):
+        return proben
+    by = dm._by(r, "gegner")
+    hit = {x["pid"] for x in hits}
+    for pid, a in (rd.get("offen") or {}).items():
+        h = (rd["plaetze"].get(pid) or {}).get("held")
+        if pid in hit or not h or dm.zustand(h) or intent(a.get("text")) != "frieden":
+            continue
+        sg = max(FRIEDEN_SG[0], FRIEDEN_SG[1] + max(math.ceil((by.get(g["id"]) or {}).get("stufe", 0)) for g in up(rd)))
+        li = 1 if rd.get("lang") == "en" else 0
+        print("dungeon: kampf | frieden | probe", flush=True)
+        return [p for p in proben if p["pid"] != pid] + [{"pid": pid, "wert": "charisma", "schwer": sg, "vt": "", "frieden": True,
+                                                            "wofuer": ("Frieden anbieten", "offer peace")[li]}]
+    return proben
 
 
 def hurt(g, n):
@@ -929,7 +1016,7 @@ def end(dm, r, rd, ep, why=""):
     besiegt = [g for g in k["gegner"] if g["aus"] == "besiegt"]
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7
-    alle = sum(g["ep"] for g in besiegt + frieden) + sum(g["ep"] // 2 for g in flohen)
+    alle = sum(g["ep"] for g in besiegt) + sum(g["ep"] // 2 for g in flohen + frieden)   # Kampf-Audit 3: peace gives half
     # divided by the group the fight was made for (Dominik 2026-10-25, Punkt 3): a hero who left has fled and its share
     # stays out, one who arrived later (dungeon.arrive) gets none
     start = k.get("helden")

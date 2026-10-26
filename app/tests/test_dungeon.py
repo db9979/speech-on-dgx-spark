@@ -28,10 +28,12 @@ No wall clock in the checks: expiry and turns use a given now; dice use a seeded
 """
 import asyncio
 import base64
+import collections
 import contextlib
 import copy
 import io
 import json
+import math
 import os
 import random
 import re
@@ -2572,7 +2574,7 @@ class Equipment(Base):
         finally:
             dungeon.step_act = old
         foes = [{"k": "g1", "ep": 50, "aus": ""}, {"k": "g2", "ep": 25, "aus": "besiegt"}]
-        for geschafft, want in ((True, 38), (False, 13)):                                       # 75 or 25 by two heroes
+        for geschafft, want in ((True, 25), (False, 13)):            # 25 + half of 50 or 25 by two heroes (Kampf-Audit 3: peace gives half)
             rd = {"kampf": {"gegner": [dict(g) for g in foes], "geschafft": geschafft}, "log": [], "plaetze": {}, "zug": 1}
             ep = {"pa": 0, "pb": 0}
             kampf.end(dungeon, r, rd, ep, "frieden")
@@ -5976,6 +5978,296 @@ class Fight(Turns):
                                          "begegnung": [{"id": foe["id"], "anzahl": n}], "frage_an": ""}])
         return rd, foe
 
+    # ---------------------------------------------------------------- Kampf-Audit (Dominik 2026-10-26 „Empfehlung umsetzen“)
+    def test_kampf_angriffswoerter_tabelle(self):
+        """Kampf-Audit 1: the fixed word lists decide what an action does in a fight; new words only through this table."""
+        angriff = ["hau die Wache", "Ich haue der Wache eins über", "Ich kämpfe gegen die Wache", "Ich bekämpfe die Wache",
+                   "Ich ersteche ihn", "Ich erdolche ihn", "Ich ramme ihn", "Ich trete zu", "Ich prügle auf ihn ein", "Ich toete ihn",
+                   "Ich spieße ihn auf", "Ich schlitze ihn auf", "Ich greife an", "Angriff!", "Ich schlage zu", "Ich steche zu",
+                   "Ich greife die Wache an", "Ich greife Meervolk-Späher 2 an", "Ich töte den Ork", "Ich schieße einen Pfeil auf den Ork",
+                   "I fight", "I punch him", "I kick", "I swing at it", "I attack", "I stab the guard"]
+        bezug = ["Ich ziele auf die Wache", "Ich werfe meinen Dolch auf die Wache", "boxe die Wache", "feuere auf die Wache",
+                 "stürme auf die Wache los", "gehe auf die Wache los", "schneide der Wache die Kehle durch",
+                 "I charge the guard", "I throw my dagger at the guard", "I aim at the guard"]
+        nichts = ["Ich greife nach dem Seil neben der Wache", "Ich stoße die Tür auf und rufe die Wache", "Ich treffe mich mit der Wache",
+                  "Ich rede mit der Wache", "Ich betrete die Halle", "Ich mache ein Lagerfeuer", "Ich trinke einen Trank",
+                  "Ich halte mich bereit", "Ich verstecke mich", "Ich helfe Bela auf", "Ich gehe zur Tür", "I reach for the rope"]
+        frieden = ["Ergebt euch!", "Ich verhandle mit den Orks", "Lasst uns reden", "Ich biete Frieden an", "We surrender", "I parley"]
+        for want, texts in (("angriff", angriff), ("bezug", bezug), ("", nichts), ("frieden", frieden)):
+            for t in texts:
+                self.assertEqual(kampf.intent(t), want, t)
+
+    def test_kampf_angriff_aus_aktion(self):
+        """Kampf-Audit 1: in a fight every action with an attack word, or a foe named with a word that needs one, is an
+        attack against its armour: with the model's check without ziel, with no check at all, with no foe named (the
+        first standing); the model's check for that hero is dropped, so no check's experience for it."""
+        r = dungeon.rules()
+        rd, _ = self.encounter(2)
+        g1, g2 = rd["kampf"]["gegner"][:2]
+        for g in (g1, g2):
+            g.update(rk=2, immun=[], resistenz=[], schwaeche=[], leben=99, max=99)
+
+        def go(text, proben, pid=None):
+            pid = pid or self.host
+            rd["offen"] = {pid: {"text": text}}
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                rest, hits = kampf.attacks(dungeon, r, rd, proben, Dice(10, 3))
+            return rest, [(x["pid"], x["ziel"]) for x in hits], out.getvalue()
+        modell = {"pid": self.host, "wert": "geschick", "schwer": 10, "vt": "", "wofuer": "Wache treffen"}
+        rest, hits, log = go(f"Ich haue {g2['name']}.", [dict(modell)])
+        self.assertEqual((rest, hits), ([], [(self.host, "g2")]))                    # the model's check dropped
+        self.assertIn("dungeon: kampf | angriff | aus aktion", log)
+        rest, hits, log = go(f"Ich bekämpfe {g2['name']}.", [])
+        self.assertEqual(hits, [(self.host, "g2")])                                  # no check at all: still an attack
+        self.assertIn("dungeon: kampf | angriff | modell ohne probe", log)
+        rest, hits, log = go("Ich greife an.", [])
+        self.assertEqual(hits, [(self.host, "g1")])                                  # no foe named: the first one standing
+        self.assertIn("dungeon: kampf | angriff | ziel neu", log)
+        rest, hits, _ = go(f"Ich werfe meinen Dolch auf {g1['name']}.", [])
+        self.assertEqual(hits, [(self.host, "g1")])
+        rest, hits, log = go(f"Ich greife nach dem Seil neben {g1['name']}.", [dict(modell)])
+        self.assertEqual((len(rest), hits), (1, []))                                 # a check, no attack
+        self.assertIn("dungeon: probe | kampf | kein angriff", log)
+        rest, hits, _ = go(f"Ich rede mit {g1['name']}: ergebt euch!", [dict(modell, ziel=g1["name"])])
+        self.assertEqual(hits, [])                                                   # asking for peace: never an attack
+
+    def test_kampf_ziel_gefallen_neues_ziel(self):
+        """Kampf-Audit (M1): a target that fell this turn sends the next attack to the next foe still standing; with none
+        standing the attack lapses, no check and no experience."""
+        r = dungeon.rules()
+        rd, _ = self.encounter(2)
+        g1, g2 = rd["kampf"]["gegner"][:2]
+        for g in (g1, g2):
+            g.update(rk=2, immun=[], resistenz=[], schwaeche=[])
+        g1["leben"] = 1
+        rd["offen"] = {self.host: {"text": f"Ich greife {g1['name']} an."}, self.gp: {"text": f"Ich greife {g1['name']} an."}}
+        rest, hits = kampf.attacks(dungeon, r, rd, [], Dice(10, 3, 10, 3))
+        self.assertEqual([(x["pid"], x["ziel"]) for x in hits], [(self.host, "g1"), (self.gp, "g2")])
+        g2["leben"] = 1
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rest, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g1["name"]}],
+                                       Dice(10, 3, 10, 3, 10, 3))
+        self.assertEqual(([x["ziel"] for x in hits], rest), (["g1", "g2"], []))
+        rd["kampf"]["gegner"] = [g1]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rest, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10, "vt": ""}], Dice(10, 3, 10, 3))
+        self.assertEqual(([x["pid"] for x in hits], rest), ([self.host], []))       # the second lapses: no check either
+        self.assertIn("dungeon: kampf | angriff | verfaellt", out.getvalue())
+
+    def test_kampf_kein_vorteil_vom_modell(self):
+        """Kampf-Audit (M2): the model's vorteil or nachteil changes nothing on an attack: one d20 unless a fixed source."""
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        rd["offen"] = {self.host: {"text": f"Ich greife {g['name']} an."}}
+        for vt in ("vorteil", "nachteil"):
+            _, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": vt}], Dice(3, 18, 4))
+            self.assertEqual((hits[0]["ws"], hits[0]["vt"]), ([3], ""), vt)
+
+    def test_kampf_schadenszauber_immer_angriff_und_keine_ladung_ohne_wirkung(self):
+        """Kampf-Audit 2 and 5: a spell with a damage kind named in a fight is one attack of its kind and costs exactly one
+        charge; with no foe left standing it lapses and costs none; a spell on foes (kampf.KONTROLLE) costs none in a
+        fight until the foes' saving throws are built, and the seat hears why."""
+        r = dungeon.rules()
+        cat = dungeon._by(r, "gegenstaende")
+        self.assertEqual([z for z in kampf.KONTROLLE if z not in cat or cat[z].get("schaden_art")], [])
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=2, immun=[], resistenz=[], schwaeche=[], leben=99, max=99)
+        h = rd["plaetze"][self.host]["held"]
+        k = next(k for k in r["klassen"] if "schlaf" in (k.get("zauber") or {}).get("1", []))     # a class of its own spells
+        dmg = next(cat[z] for z in k["zauber"]["1"] if z in cat and cat[z].get("schaden_art"))
+        ctl = cat["schlaf"]
+        h.update(klasse=k["id"], stufe=max(1, h.get("stufe") or 1), ladungen=[5] * 5)
+        rd["offen"] = {self.host: {"text": f"Ich wirke {dmg['name'][0].split(': ', 1)[-1]} auf {g['name']}.", "kraft": dmg["id"]}}
+        _, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10, "vt": "", "wofuer": "x"}], Dice(10, 3))
+        self.assertEqual([(x["ziel"], x["art"]) for x in hits], [("g1", dmg["schaden_art"])])
+        vor = list(h["ladungen"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.cast_powers(r, rd, True, {self.host})
+        self.assertEqual(sum(vor) - sum(h["ladungen"]), 1)
+        vor = list(h["ladungen"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.cast_powers(r, rd, True, set())                  # its attack did not come: no charge
+        self.assertEqual(h["ladungen"], vor)
+        self.assertIn("dungeon: kraft | keine ladung | kein angriff", out.getvalue())
+        rd["offen"] = {self.host: {"text": f"Ich wirke Schlaf auf {g['name']}.", "kraft": ctl["id"]}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.cast_powers(r, rd, True, set())
+        self.assertEqual(h["ladungen"], vor)
+        self.assertIn("dungeon: kraft | keine ladung | kontrolle", out.getvalue())
+        self.assertTrue(any(e["art"] == "ooc" and e.get("pid") == self.host and "Ladung bleibt" in e["text"] for e in rd["log"]))
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.cast_powers(r, rd, False, set())                 # outside a fight the spell is cast as before
+        self.assertEqual(sum(vor) - sum(h["ladungen"]), 1)
+
+    def test_kampf_keine_modellheilung(self):
+        """Kampf-Audit 4: in a fight the model's heilung in folgen does nothing (a hero down stays down); outside it counts."""
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        h = rd["plaetze"][self.gp]["held"]
+        obj = {"erzaehlung": f"{h['name']} kommt wieder zu Kräften, die Wunden schließen sich wie von selbst im Kampf.", "frage_an": "",
+               "folgen": [{"wer": h["name"], "art": "heilung", "zahl": 6}] * 3}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            story, drop = dungeon.check_story(r, rd, obj)
+        self.assertEqual((story["folgen"], drop >= 3), ([], True))
+        self.assertIn("dungeon: folgen | heilung | kampf verworfen", out.getvalue())
+        rd.pop("kampf")
+        story, _ = dungeon.check_story(r, rd, obj)
+        self.assertEqual(len(story["folgen"]), 3)
+
+    def test_kampf_frieden_nur_mit_panelprobe(self):
+        """Kampf-Audit 3: kampf_ende frieden of the model alone ends nothing; a hero asking for peace rolls the panel's
+        Charisma check against the higher of 12 and 10 + the strongest foe's level; passed, the fight ends in peace with
+        half the experience of the foes still up, once."""
+        r = dungeon.rules()
+        rd, foe = self.encounter()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.apply(dungeon, r, rd, [], [], "frieden", {self.host: 0}, Dice(20))
+        self.assertIn("kampf", rd)                                                   # the model's word alone: the fight goes on
+        self.assertIn("dungeon: kampf | frieden | ohne probe", out.getvalue())
+        rd["offen"] = {self.host: {"text": "Ergebt euch, dann lassen wir euch ziehen!"}}
+        model = [{"pid": self.host, "wert": "charisma", "schwer": 5, "vt": "", "wofuer": "überreden"}]
+        with contextlib.redirect_stdout(io.StringIO()):
+            proben = kampf.peace(dungeon, r, rd, model, [])
+        sg = max(kampf.FRIEDEN_SG[0], kampf.FRIEDEN_SG[1] + math.ceil(foe["stufe"]))
+        self.assertEqual([(p["wert"], p["schwer"], p.get("frieden")) for p in proben], [("charisma", sg, True)])
+        self.assertEqual(kampf.peace(dungeon, r, rd, model, [{"pid": self.host}]), model)   # who attacks does not ask
+        w = dungeon.roll(r, rd, proben, Dice(20))
+        self.assertTrue(w[0]["ok"] and w[0]["frieden"])
+        rd["offen"] = {}
+        held = dict(dungeon.seated(rd))
+        ep = {pid: 0 for pid in held}
+        rd["kampf"]["geschafft"] = True
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [], [], "", ep, Dice(20))
+        self.assertNotIn("kampf", rd)
+        self.assertEqual(rd["log"][-1]["was"], "frieden")
+        self.assertEqual(sum(ep.values()), -(-(foe["ep"] // 2) // len(ep)) * len(ep))
+
+    def test_kampf_invarianten_simulation(self):
+        """Kampf-Audit (the audit's most important test): 300 fights with a fixed seed through the real steps of a turn
+        (act → check_proben → attacks → roll → foes_turn → apply), 1 to 5 heroes of every class, now and then the
+        children's table, an unreliable model (checks with and without ziel, none at all, vorteil, heilung, frieden).
+        Every turn: (a) a hit exactly on a critical or (w ≠ 1 and w + bonus ≥ armour); (b) a foe's life goes down by its
+        hits to 0 at most; (c) every life between 0 and its maximum; (d) foes down or fled do not attack, heroes down are
+        not attacked; (e) one end line per fight, the fight's experience only then; (f) a charge only when a spell of a
+        grade above 0 is cast; (g) dead only after the third failed save, never at the children's table; and every
+        attacking action of a standing hero gets its attack."""
+        r = dungeon.rules()
+        cat = dungeon._by(r, "gegenstaende")
+        foes = [g for g in r["gegner"] if "alle" in g["welten"] or "fantasy" in g["welten"]]
+        klassen = [k["id"] for k in r["klassen"]]
+        texte = ["Ich greife {z} an.", "Ich haue {z}.", "Ich bekämpfe {z}.", "Ich werfe meinen Speer auf {z}.", "Ich ersteche {z}.",
+                 "I attack {z}.", "Ich schlage zu!"]
+        bad = collections.Counter()
+        fights = 0
+        with contextlib.redirect_stdout(io.StringIO()), mock.patch.object(dungeon._day, "bump", lambda *a, **k: None):
+            for i in range(300):
+                rng = random.Random(f"kampf-audit|{i}")
+                kids = rng.random() < 0.2
+                stufe = rng.randint(1, 8)
+                heroes = []
+                for j in range(rng.randint(1, 5)):
+                    h = dungeon.new_hero(r, {"name": f"Held{j}", "volk": r["voelker"][0]["id"], "klasse": rng.choice(klassen)}, rng)
+                    h["stufe"] = stufe
+                    h["leben"] = h["leben_max"] = dungeon.life(r, h)
+                    h["ladungen"] = dungeon.full_charges(r, h)
+                    heroes.append(h)
+                rd = {"owner": "", "titel": "Sim", "welt": "fantasy", "ton": min(t["id"] for t in r["toene"]) if kids else 12,
+                      "zug_s": 120, "lang": "de", "einstieg": "", "prompt": "", "made": 0, "until": 10 ** 10, "status": "laeuft",
+                      "zug": 1, "zug_t": 0, "pause": False, "offen": {}, "still": {}, "szene": {"ort": "Hof", "stimmung": ""}, "log": [],
+                      "dm": "", "stunden": 6, "vorlesen": False, "erzaehlweise": "normal",
+                      "plaetze": {f"p{j}": {"h": "", "uid": "", "held": h, "made": j, "gast": False} for j, h in enumerate(heroes)}}
+                held = dungeon._living(rd)
+                b = kampf.budget(dungeon, r, rd, held)
+                fit = [g for g in foes if g["ep"] <= b * kampf.SCHWER] or [dungeon._by(r, "gegner")["wache"]]
+                kampf.start(dungeon, r, rd, held, [(rng.choice(fit), rng.randint(1, 3))], 0)
+                fights += 1
+                gegner, ends = rd["kampf"]["gegner"], 0
+                for _ in range(30):
+                    if not rd.get("kampf"):
+                        break
+                    seats = dict(dungeon.seated(rd))
+                    before = {pid: (p["held"]["leben"], dungeon.zustand(p["held"]), list(p["held"].get("ladungen") or [])) for pid, p in seats.items()}
+                    vor_g = {g["k"]: (g["leben"], g["aus"]) for g in gegner}
+                    proben_m, attackers = [], set()
+                    rd["offen"] = {}
+                    for pid, p in seats.items():
+                        h = p["held"]
+                        if dungeon.zustand(h):
+                            continue
+                        z = rng.choice(kampf.up(rd))["name"]
+                        sp = [x for x in dungeon.powers(r, h)["zauber"] if cat[x["id"]].get("schaden_art") and (x["rest"] is None or x["rest"] > 0)]
+                        t = f"Ich wirke {sp[0]['name']} auf {z}." if sp and rng.random() < 0.3 else rng.choice(texte).format(z=z)
+                        dungeon.act(rd, pid, t, rd["zug"], 0)
+                        dungeon.check_powers(r, rd, pid)
+                        attackers.add(pid)
+                        x = rng.random()
+                        if x < 0.4:
+                            proben_m.append({"wer": h["name"], "wert": "staerke", "schwer": rng.randint(5, 16), "ziel": z, "vorteil": "vorteil"})
+                        elif x < 0.8:
+                            proben_m.append({"wer": h["name"], "wert": "geschick", "schwer": rng.randint(5, 16), "wofuer": "Angriff"})
+                    kraft = {pid: rd["offen"][pid].get("kraft") for pid in rd["offen"]}
+                    proben, _ = dungeon.check_proben(r, rd, {"proben": proben_m})
+                    proben, hits = kampf.attacks(dungeon, r, rd, proben, rng)
+                    wuerfe = dungeon.roll(r, rd, proben, rng)
+                    zuege = kampf.foes_turn(dungeon, r, rd, hits, rng)
+                    dran = {x["pid"] for x in hits}
+                    alle_fielen = all(sum(x["schaden"] for x in hits if x["ziel"] == k and x["treffer"]) >= le
+                                      for k, (le, aus) in vor_g.items() if le > 0 and not aus)
+                    if not dran <= attackers or dran != attackers and not alle_fielen:   # the rest lapses: every foe fell
+                        bad["angriff_fehlt"] += 1
+                    if wuerfe:
+                        bad["probe_statt_angriff"] += 1
+                    zug0, rett0 = rd["zug"], {pid: list(p["held"].get("rettung") or []) for pid, p in seats.items()}
+                    story = {"text": "Es kracht.", "npc": [], "npc_stimme": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
+                             "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "", "begegnung": [], "fremd": [],
+                             "faeden": [], "dinge": [], "tageszeit": "", "folgen": [],
+                             "kampf_ende": "frieden" if rng.random() < 0.05 else ""}
+                    dungeon.apply(r, rd, wuerfe, story, "rsim", rng, kampfwuerfe=(hits, zuege))
+                    neu = [e for e in rd["log"] if e.get("n") == zug0]
+                    for x in hits:                                                       # (a)
+                        if not x.get("kann_nicht") and x["treffer"] != (x["krit"] or (x["w"] != 1 and x["gesamt"] >= x["rk"])) and not x.get("mut"):
+                            bad["treffer_regel"] += 1
+                    for g in gegner:                                                     # (b) (c)
+                        lost = vor_g[g["k"]][0] - g["leben"]
+                        if not vor_g[g["k"]][1] and lost > sum(x["schaden"] for x in hits if x["ziel"] == g["k"] and x["treffer"]) + 20:
+                            bad["gegner_leben"] += 1
+                        if not 0 <= g["leben"] <= g["max"]:
+                            bad["gegner_grenze"] += 1
+                    for pid, p in seats.items():
+                        if not 0 <= p["held"]["leben"] <= p["held"]["leben_max"]:
+                            bad["held_grenze"] += 1
+                    for x in zuege:                                                      # (d)
+                        if x.get("pid") in before and "treffer" in x and before[x["pid"]][1]:
+                            bad["liegender_angegriffen"] += 1
+                        if x.get("k") and "treffer" in x and vor_g.get(x["k"], (0, ""))[1]:
+                            bad["toter_gegner_handelt"] += 1
+                    ende = [e for e in neu if e["art"] == "kampf"]
+                    ends += len(ende)
+                    if rd.get("kampf") and any(e["art"] == "ep" for e in neu):           # (e)
+                        bad["ep_mitten_im_kampf"] += 1
+                    for pid, z in kraft.items():                                         # (f)
+                        vor, nach = before[pid][2], list(seats[pid]["held"].get("ladungen") or [])
+                        if not z and vor != nach:
+                            bad["ladung_ohne_zauber"] += 1
+                        if z and sum(vor) - sum(nach) > 1:
+                            bad["ladung_doppelt"] += 1
+                    for pid, p in seats.items():                                         # (g)
+                        h = p["held"]
+                        if h.get("tot") and before[pid][1] != "tot":
+                            if kids:
+                                bad["tot_am_kindertisch"] += 1
+                            if not rett0[pid] or rett0[pid][1] < 1:
+                                bad["tot_zu_frueh"] += 1
+                    if all(dungeon.zustand(p["held"]) for p in dict(dungeon.seated(rd)).values()):
+                        break
+                if ends > 1:
+                    bad["kampfende_doppelt"] += 1
+        self.assertEqual(fights, 300)
+        self.assertEqual(dict(bad), {})
+
     def test_a_fight_turn_keeps_to_the_panels_rules(self):
         """Kampfzug-Prüfung (Dominik 2026-10-26 „1-5“, „kämpfe gegen die wache“ became „Wache mit Dornenranken treffen“,
         a Geschick check against 10, no damage, no charge, +110 EP in the fight): 1 fighting a foe is an attack against
@@ -5997,12 +6289,13 @@ class Fight(Turns):
         for text in (f"kämpfe gegen die {g['name'].lower()}", f"Ich bekämpfe {g['name']}.", f"I fight the {g['name']}.",
                      f"Ich haue {g['name']} eins drüber."):
             self.assertEqual(hit(text), (g["k"], 2), text)                       # an attack against its armour
-        self.assertEqual(hit("Ich halte mich bereit.", wofuer=f"{g['name']} mit Dornenranken treffen"), (g["k"], 2))
+        # Kampf-Audit 1: the attack comes from the action; the model's words alone („… mit Dornenranken treffen“) make none
+        self.assertIn("dungeon: probe | kampf | kein angriff", hit("Ich halte mich bereit.", wofuer=f"{g['name']} mit Dornenranken treffen"))
         rd["offen"][self.host] = {"text": f"kämpfe gegen {g['name']}"}
         with contextlib.redirect_stdout(io.StringIO()) as out:
             x = kampf.attacks(dungeon, r, rd, [], Dice(10, 3))[1]
         self.assertEqual([(y["pid"], y["ziel"]) for y in x], [(self.host, g["k"])])   # no check asked: the panel's attack
-        self.assertIn("dungeon: probe | kampf | angriff ergaenzt", out.getvalue())
+        self.assertIn("dungeon: kampf | angriff | modell ohne probe", out.getvalue())
         self.assertIn("dungeon: probe | kampf | kein angriff", hit(f"Ich beobachte {g['name']}.", wofuer=f"{g['name']} beobachten"))
         spell = next(x for x in r["gegenstaende"] if x.get("art") == "zauber" and len(x["name"][0].split(": ", 1)[-1]) >= 4)
         name = spell["name"][0].split(": ", 1)[-1]
@@ -6057,7 +6350,7 @@ class Fight(Turns):
         rd["offen"][self.host]["text"] = f"Ich greife die {kind}n mit einem Zauberspruch an."
         self.assertEqual(hit(p), "g1")                                               # the action attacks and names them
         rd["offen"][self.host]["text"] = "Ich greife an."
-        self.assertIsNone(hit(p))                                                    # names no foe
+        self.assertEqual(hit(p), "g1")                                               # names no foe: the first standing (Kampf-Audit 1)
         g1["aus"] = True
         self.assertEqual(hit(dict(p, ziel=kind + "n")), "g2")                        # the first still standing
         g1["aus"] = False
@@ -6298,6 +6591,47 @@ class Fight(Turns):
             kept = E.repair(rd, {"text": first}, "richter", [])
         self.assertEqual(kept["text"], first)
         self.assertIn("dungeon: richter | bleibt", out.getvalue())
+
+    def test_narration_gives_no_weapon_the_hero_does_not_carry(self):
+        """Regel 6 (Dominik 2026-10-26 „die Hand am Griff seines Dolches … aber mein inventar sagt nichts vom dolch“): a
+        weapon the narration gives a hero by a possessive must be one it carries; the model sees each hero's waffen; a
+        fault of erz.judge with its hint, and the panel's rescue strikes the sentence."""
+        E = dungeon.erz
+        r = dungeon.rules()
+        cat = dungeon._by(r, "gegenstaende")
+        bogen = next(c for c in r["gegenstaende"] if c.get("art") == "waffe" and c["name"][0] == "Bogen")
+        kurz = next(c for c in r["gegenstaende"] if c.get("art") == "waffe" and c["name"][0] == "Kurzschwert")
+        h = {"name": "Morpheus", "tasche": [{"id": "heiltrank" if "heiltrank" in cat else bogen["id"], "i": 1}],
+             "an": {"haupthand": {"id": bogen["id"], "s": r["seltenheit"][0]["id"]}}}
+        rd = {"lang": "de", "plaetze": {"p1": {"held": h}, "p2": {"held": {"name": "Uma", "tasche": [], "an": {"haupthand": {"id": kurz["id"]}}}}},
+              "nsc": {"x": {"name": "Wirt"}}, "kampf": {"gegner": [{"name": "Wache 1", "leben": 5}]}}
+        dominik = "Morpheus bleibt stehen, die Hand am Griff seines Dolches, das Ohr gespannt auf das leise Summen der Gasse."
+        self.assertEqual(E.not_carried(rd, dominik, r), ["Morpheus: Dolch"])
+        self.assertEqual(E.not_carried(rd, "Morpheus spannt seinen Bogen und zielt.", r), [])
+        self.assertEqual(E.not_carried(rd, "Uma zieht ihr Schwert.", r), [])                 # a Kurzschwert is a Schwert
+        self.assertEqual(E.not_carried(rd, "Uma hebt ihre Klinge.", r), [])                  # any weapon
+        self.assertEqual(E.not_carried(rd, "Morpheus sieht, wie die Wache ihren Dolch zieht.", r), [])   # the foe's own
+        self.assertEqual(E.not_carried(rd, "Morpheus nickt dem Wirt zu, der seinen Dolch poliert.", r), [])
+        self.assertEqual(E.not_carried(rd, "Uma reicht Morpheus einen Dolch vom Tisch.", r), [])   # no possessive
+        self.assertEqual(E.not_carried(rd, "Uma packt ihren Speer fester.", r), ["Uma: Speer"])
+        self.assertIn("Hinweis", E.hint("dabei", ["Morpheus: Dolch"], "de"))
+        self.assertIn("Note", E.hint("dabei", ["Morpheus: Dolch"], "en"))
+        rd.update(offen={}, log=[], zug=1)
+        story = {"text": dominik + " Uma lauscht in die Dunkelheit hinein und hört in der Ferne Schritte auf nassem Pflaster, "
+                 "die langsam näher kommen und dann verstummen, als hätte jemand innegehalten.", "ooc": []}
+        with mock.patch.object(dungeon, "rules", lambda: r):
+            self.assertEqual(E.judge(dungeon, rd, story), ("dabei", ["Morpheus: Dolch"]))
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                fixed = E.repair(rd, story, "dabei", ["Morpheus: Dolch"])
+        self.assertNotIn("Dolch", fixed["text"])
+        self.assertIn("dungeon: nachbessern | fest | dabei", out.getvalue())
+        rd2, _ = self.encounter()                  # the model hears every hero's weapons
+        held = rd2["plaetze"][self.host]["held"]
+        want = [dungeon.item_view(r, it, "de")["name"] for it in [*dungeon.worn(held), *held["tasche"]] if cat[it["id"]]["art"] == "waffe"]
+        self.assertTrue(want)
+        self.assertIn('"waffen": ' + json.dumps(list(dict.fromkeys(want)), ensure_ascii=False), dungeon.facts(r, rd2).split("<<<")[0])
+        self.assertIn("waffen", dungeon.KANN_REGEL["de"])
+        self.assertIn("waffen", dungeon.KANN_REGEL["en"])
 
     def test_more_fixed_rules_for_a_narration(self):
         """Dominik 2026-10-25 „1-3 und 1-7 umsetzten“: a fallen foe acting or a foe dying without a receipt (1), a thing
@@ -7545,7 +7879,7 @@ class Fight(Turns):
         x = kampf.attacks(dungeon, r, rd, [dict(p, vt="")], Dice(1))[1][0]
         self.assertEqual((x["treffer"], x["schaden"]), (False, 0))                                     # a natural 1 always misses
         x = kampf.attacks(dungeon, r, rd, [dict(p, vt="vorteil")], Dice(1, 2))[1][0]
-        self.assertEqual((x["w"], x["ws"]), (2, [1, 2]))
+        self.assertEqual((x["w"], x["ws"]), (1, [1]))                    # the model's vorteil counts for nothing (Kampf-Audit M2)
         miss = g["rk"] - x["bonus"] - 1
         if 1 < miss < 20:
             x = kampf.attacks(dungeon, r, rd, [p], Dice(miss))[1][0]
@@ -8499,7 +8833,7 @@ class Fight(Turns):
         folgen = kampf.apply(dungeon, r, rd, [], z, "", {}, Dice(20))
         self.assertEqual(folgen, [{"pid": z[0]["pid"], "art": "schaden", "zahl": z[0]["schaden"], "gegner": g["name"],
                                    "sart": z[0].get("art", "")}])
-        self.assertTrue(rd["log"][-1]["von_gegner"])
+        self.assertTrue(next(e for e in reversed(rd["log"]) if e["art"] == "angriff")["von_gegner"])   # a saving throw may follow
         g["leben"] = max(1, g["max"] // kampf.FLUCHT)
         kampf.apply(dungeon, r, rd, [], [], "", {}, Dice(1))
         self.assertEqual(g["aus"], "geflohen")
@@ -8513,8 +8847,11 @@ class Fight(Turns):
         peace = copy.deepcopy(self.state(self.rid))
         ep = {self.host: 0}
         kampf.apply(dungeon, r, peace, [], [], "frieden", ep, Dice(20))
+        self.assertIn("kampf", peace)                     # the model's word alone ends nothing (Kampf-Audit 3)
+        peace["kampf"]["geschafft"] = True                # the panel's peace check passed
+        kampf.apply(dungeon, r, peace, [], [], "", ep, Dice(20))
         self.assertNotIn("kampf", peace)
-        self.assertEqual((peace["log"][-1]["was"], ep[self.host]), ("frieden", 0))
+        self.assertEqual(peace["log"][-1]["was"], "frieden")
 
     def test_a_room_of_the_map_brings_its_own_foes_and_says_when_it_is_won(self):
         r = dungeon.rules()

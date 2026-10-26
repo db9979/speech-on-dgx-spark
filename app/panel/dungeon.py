@@ -441,7 +441,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -1168,9 +1168,13 @@ def check_powers(r, rd, pid):
     print(f"dungeon: kann | {'nicht' if nicht else 'leer' if leer else 'szene' if szene else 'wirkt' if a.get('wirkt') else 'ok'} | {len(hits)} namen", flush=True)
 
 
-def cast_powers(r, rd):
+def cast_powers(r, rd, kampf_zug=False, angriffe=()):
     """The class spells named in the told turn's actions: a charge of its grade used (grade 0 none), its healing and
-    blessing by the catalog, as „Wirken“ from the bag does."""
+    blessing by the catalog, as „Wirken“ from the bag does. In a fight turn (kampf_zug) no charge without an effect
+    (Kampf-Audit 2 and 5, Dominik 2026-10-26): a spell with a damage kind only when its attack came (angriffe: the
+    heroes who attacked), a spell on foes (kampf.KONTROLLE: Schlaf, Person festhalten …) not at all until the foes'
+    saving throws are built; the seat hears why."""
+    li = 1 if rd["lang"] == "en" else 0
     for pid, a in rd["offen"].items():
         z, p = a.get("kraft"), rd["plaetze"].get(pid)
         if not z or not p or not p.get("held"):
@@ -1178,6 +1182,16 @@ def cast_powers(r, rd):
         h = p["held"]
         pw = {x["id"]: x for x in powers(r, h, rd["lang"])["zauber"]}
         if z not in pw or pw[z]["rest"] == 0:
+            continue
+        c = _by(r, "gegenstaende")[z]
+        warum = "kontrolle" if kampf_zug and z in kampf.KONTROLLE else "kein angriff" if kampf_zug and c.get("schaden_art") and pid not in angriffe else ""
+        if warum:
+            n = pw[z]["name"]
+            _log(rd, "ooc", pid=pid, panel=True, text=(
+                (f"{n} wirkt im Kampf noch nicht auf Gegner, die Ladung bleibt." if not li else f"{n} does not work on foes in a fight yet, the charge stays.")
+                if warum == "kontrolle" else
+                (f"{n} hatte kein Ziel mehr, die Ladung bleibt." if not li else f"{n} had no target left, the charge stays.")))
+            print(f"dungeon: kraft | keine ladung | {warum}", flush=True)
             continue
         if pw[z]["grad"]:
             h["ladungen"][pw[z]["grad"] - 1] -= 1
@@ -3014,9 +3028,11 @@ ZUSTAND_REGEL = {
           "confirms\" or the like: what the panel decides stands in its own lines."}
 KANN_REGEL = {
     "de": "Eine Figur wirkt nur Zauber und Kräfte aus ihrer Liste kann. Steht etwas unter nicht_bekannt, gelingt es "
-          "nicht: erzähle, dass die Figur es noch nicht beherrscht oder keine Kraft mehr dafür hat.",
+          "nicht: erzähle, dass die Figur es noch nicht beherrscht oder keine Kraft mehr dafür hat. Eine Figur trägt nur "
+          "die Waffen aus ihrer Liste waffen (leer: keine, sie kämpft mit den Fäusten).",
     "en": "A character only uses spells and powers from its list kann. Whatever stands under nicht_bekannt does not "
-          "work: tell that the character has not mastered it yet or has no power left for it."}
+          "work: tell that the character has not mastered it yet or has no power left for it. A character only carries "
+          "the weapons from its list waffen (empty: none, it fights with its fists)."}
 AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko; "
           "gehen, reisen oder zu einem Ort aufbrechen braucht keine; wer nur fragt oder redet, braucht keine oder "
@@ -3155,6 +3171,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
     gruppe = [{"name": p["held"]["name"], "volk": _by(r, "voelker")[p["held"]["volk"]]["name"][li],
                "klasse": _by(r, "klassen")[p["held"]["klasse"]]["name"][li], "stufe": p["held"]["stufe"],
                "leben": f"{p['held']['leben']}/{p['held']['leben_max']}", "kann": kann_facts(r, p["held"], rd["lang"]),
+               "waffen": list(dict.fromkeys(item_view(r, it, rd["lang"])["name"] for it in [*worn(p["held"]), *p["held"]["tasche"]]
+                                            if (_by(r, "gegenstaende").get(it.get("id")) or {}).get("art") == "waffe")),
                **({"zustand": ZUSTAND_WORT[zustand(p["held"])][li]} if zustand(p["held"]) else {}),
                **({"zustaende": [z["name"][li] for z in kampf._states(r, p["held"])]} if p["held"].get("zust") else {}),
                **({"neu": NEU_FAKT[li]} if p.get("neu_zug") == rd.get("zug") else {}),
@@ -3404,7 +3422,8 @@ def roll(r, rd, proben, rng=None, hand=None):
         if von:
             extra["hilfe"] = von
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
-                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra})
+                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra,
+                    **({"frieden": True} if p.get("frieden") else {})})
     return helfen.group(out) if helfen.on(rd) else out     # Gruppenprobe: half of the group passing is enough
 
 
@@ -3488,6 +3507,10 @@ def check_story(r, rd, obj):
         if not pid or f.get("art") not in FOLGE_ARTEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX \
                 or (f["art"] == "schaden" and rd.get("kampf")):      # in a fight only the panel's rolls hurt (dungeon_kampf)
             drop += 1
+            continue
+        if f["art"] == "heilung" and rd.get("kampf"):      # Kampf-Audit 4: in a fight only spells, potions and the catalog heal
+            drop += 1
+            print("dungeon: folgen | heilung | kampf verworfen", flush=True)
             continue
         out["folgen"].append({"pid": pid, "art": f["art"], "zahl": max(ZAHL[0], min(ZAHL[1], f["zahl"]))})
     b = (obj.get("beute") or [None])[0] if isinstance(obj.get("beute"), list) else None
@@ -3652,7 +3675,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                 _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
         hiebe, war = [], bool(rd.get("kampf"))
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
-            rd["kampf"]["geschafft"] = any(w["ok"] for w in wuerfe)   # a peace counts only with a check passed (Idee 7)
+            rd["kampf"]["geschafft"] = any(w["ok"] and w.get("frieden") for w in wuerfe)   # peace: only the panel's check (Kampf-Audit 3)
+            if rd["kampf"]["geschafft"] or any(w.get("frieden") for w in wuerfe):
+                print(f"dungeon: kampf | frieden | probe {'ok' if rd['kampf']['geschafft'] else 'nein'}", flush=True)
             if any(w["ok"] and w.get("wert") == KENNER for w in wuerfe):   # Punkt 6: a passed Intelligenz check knows the foes
                 for g in kampf.up(rd):
                     c = _by(r, "gegner").get(g["id"]) or {}
@@ -3722,7 +3747,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
     if rd.get("auftrag_ok") and not quest_may_end(rd):
         rd["auftrag_ok"] = False                 # a quest an older version closed too early is open again
     if story:
-        cast_powers(r, rd)
+        cast_powers(r, rd, war, {x["pid"] for x in kampfwuerfe[0]})
         down(r, rd, rng)
         wear_off(rd)
         for pid, _ in seated(rd):
@@ -3887,7 +3912,8 @@ async def run_turn(rid, turn):
             proben = umgebung.checks(_me, r, rd, proben)       # a prop of the fight named: that hero's action (round 2, idea 3)
             hand = await echt.real_ask(_me, rid, turn, rd, proben)   # the seats with own dice at the real table (D&D idea 5)
             proben, nutzt, wirft = umgebung.roll(_me, r, rd, proben, hand=hand)
-            proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand)
+            proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand, skip={x["pid"] for x in wirft + nutzt})
+            proben = kampf.peace(_me, r, rd, proben, hits)    # a hero asking for peace: the panel's check (Kampf-Audit 3)
             hits = wirft + hits
             hits += gefaehrte.attacks(_me, r, rd, hits)       # the companions strike by the panel's dice (round 2, idea 9)
             wuerfe = roll(r, rd, proben, hand=hand)
@@ -5673,7 +5699,7 @@ def for_live():
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
                                  "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt", "ehrungen")},
-            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_dabei", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 
 def own_count(uid):

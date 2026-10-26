@@ -87,7 +87,7 @@ UNTEN = ("keller", "nach unten", "hinunter", "hinab", "herunter", "runter", "abw
          "basement", "downstairs", "down the stairs", "goes down", "go down", "beneath")
 OBEN = ("nach oben", "hinauf", "herauf", "oben angekommen", "treppe hoch", "empor", "aufwärts", "obergeschoss", "dachboden",
         "upstairs", "up the stairs", "goes up", "go up", "attic", "upper floor")
-WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung")   # repair strikes these sentences
+WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung", "dabei")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 RICHTER = "dungeonrichter"   # the switch „Dungeon-Richter“ (features.py): the model's second opinion after the fixed checks
 RICHTER_MIN = 0.9            # the panel writes anew only from this probability of a contradiction (a fixed threshold)
@@ -391,6 +391,10 @@ HINWEIS = {
               "Note: the character does not have or cannot do this: {namen}. Narrate that it does not work."),
     "aussehen": ("Hinweis: So sieht diese Person nicht aus, halte dich an ihre Karte: {namen}.",
                  "Note: this person does not look like that, keep to their card: {namen}."),
+    "dabei": ("Hinweis: Diese Waffe trägt die Figur nicht bei sich: {namen}. Beschreibe nur, was auf ihrem Heldenblatt "
+              "steht (held: an und tasche).",
+              "Note: the character does not carry this weapon: {namen}. Describe only what is on its hero sheet (held: an "
+              "and tasche)."),
     "richtung": ("Hinweis: Diese Figuren wollten in die andere Richtung, als du erzählst: {namen}. Erzähle den Weg so, wie "
                  "die Aktion ihn nennt (nach unten bleibt nach unten, nach oben bleibt nach oben).",
                  "Note: these characters wanted to go the other way than you tell: {namen}. Tell the way as the action names "
@@ -476,6 +480,7 @@ def repair(rd, story, fault, missing):
     elif fault in WEG_SATZ:                      # the sentences with the fault leave, when enough new ones stay (Regeln 1-5)
         bad = {"gold": lambda x: bool(GOLD.search(x)) and _hat(x, FINDET), "widerspruch": lambda x: bool(contradicts(rd, x)),
                "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
+               "dabei": lambda x: bool(not_carried(rd, x)),
                "gefallen": lambda x: bool(fight_off(rd, x)),
                "richtung": lambda x: bool(wrong_way(rd, x)),
                "karte": lambda x: any(re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", x.lower()) for n in missing)
@@ -693,6 +698,62 @@ def told_unknown(rd, text):
     return list(dict.fromkeys(out))[:3]
 
 
+# Regel 6 (Dominik 2026-10-26 „die Hand am Griff seines Dolches … aber mein inventar sagt nichts vom dolch“): a weapon the
+# narration gives a hero by a possessive („seines Dolches“, „ihren Bogen“, „his sword“) must be one it carries
+BESITZ = re.compile(r"(?i)(?<!\w)(?:sein|seine|seinen|seinem|seiner|seines|ihr|ihre|ihren|ihrem|ihrer|ihres|his|her|their)"
+                    r"\s+(?:[\w-]+\s+)?([\w-]+)")
+DING_ALLGEMEIN = ("waffe", "waffen", "klinge", "weapon", "blade")   # words for any weapon: never a fault
+
+
+def _kopf(name):
+    """The head noun of a catalog name: the word before „der/des/von/of“, else the last word."""
+    ws = str(name).lower().split()
+    i = next((j for j, w in enumerate(ws) if j and w in ("der", "des", "von", "vom", "of")), len(ws))
+    return ws[i - 1] if i else ""
+
+
+def _dinge(r, items):
+    """The words of names (both languages, a hero's own name of it too) of items, for a carried weapon's match."""
+    cat = {c["id"]: c for c in r["gegenstaende"]}
+    out = set()
+    for it in items:
+        c = cat.get(it.get("id")) or {}
+        for n in list(c.get("name") or []) + [it.get("eigen") or ""]:
+            out |= set(re.findall(r"\w+", str(n).lower()))
+    return out
+
+
+def not_carried(rd, text, r=None):
+    """Heroes the narration gives a weapon they do not carry (Regel 6): in a sentence, a possessive whose nearest person
+    named before it is a seated hero, followed (one word between at most) by the head noun of a weapon of the catalog
+    (_kopf, a German ending allowed), when no word of the hero's bag and worn things ends with it (Kurzschwert counts
+    for „Schwert“). "Name: Ding" for each, three at most."""
+    import dungeon
+    import dungeon_kampf
+    r = r or dungeon.rules()
+    waffen = {_kopf(n) for c in r["gegenstaende"] if c.get("art") == "waffe" for n in c["name"]} - {""} - set(DING_ALLGEMEIN)
+    helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    andere = {re.sub(r"\s+\d+$", "", str(x.get("name", ""))).lower() for x in [*(rd.get("nsc") or {}).values(),
+              *((rd.get("kampf") or {}).get("gegner") or [])]} - {""}
+    out = []
+    for satz in _saetze(text):
+        low = satz.lower()
+        wer = sorted((m.start(), n) for n in set(helden) | andere for m in re.finditer(r"(?<!\w)" + re.escape(n) + r"(?!\w)", low))
+        for m in BESITZ.finditer(low):
+            vor = [n for pos, n in wer if pos < m.start()]
+            if not vor or vor[-1] not in helden:
+                continue
+            h = helden[vor[-1]]
+            words = m.group(0).split()[1:]
+            ding = next((k for w in words for k in waffen if k in set(dungeon_kampf._stems(w))), "")
+            if not ding:
+                continue
+            have = _dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])
+            if not any(w.endswith(ding) for w in have):
+                out.append(f"{h['name']}: {ding[:1].upper() + ding[1:]}")
+    return list(dict.fromkeys(out))[:3]
+
+
 def _koerper(text):
     """{part: colour} from „rote Haare“, „graues Haar“, „blue eyes“ (a colour word right before a part of KOERPER)."""
     ws = _WORT.findall(str(text).lower())
@@ -743,7 +804,7 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     for why, found in (("fehlt", lambda: told_unknown(rd, text)), ("gefallen", lambda: fight_off(rd, text, hits)),
                        ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
                        ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text)),
-                       ("aussehen", lambda: looks_off(rd, text))):
+                       ("aussehen", lambda: looks_off(rd, text)), ("dabei", lambda: not_carried(rd, text))):
         x = found()
         if x:
             dm._day.bump("regel_" + why)

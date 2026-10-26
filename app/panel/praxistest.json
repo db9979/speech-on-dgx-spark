@@ -3817,6 +3817,13 @@
 "titel": "Dungeon-Master: Alarm und Fackeln im Gewölbe",
 "text": "A: Funktionen → KI-Dungeon-Master → Alarm und Fackeln an. B: Beim Händler eine Fackel kaufen, dann ins Gewölbe gehen: über dem Plan steht „🔔 Alarm 0/6 · 🔥 Fackel: 4 Räume“, die Fackel ist aus der Tasche weg. C: Durch vier Räume gehen: die Zahl sinkt, danach „🌑 Dunkel“, ein Mensch würfelt Proben mit Nachteil, ein Zwerg nicht. D: Kämpfen, bis der Alarm 3 erreicht: eine Glocke, im nächsten Gang oder in der nächsten Kammer wartet eine Streife. E: Schalter aus: keine Anzeige, kein Nachteil im Dunkeln.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P570",
+"v": 1127,
+"titel": "Dungeon-Master: Kampf-Audit",
+"text": "Eine Runde mit Kampf spielen. A: „Ich greife an“ ohne Gegnernamen schreiben: es kommt ein Angriff auf den ersten Gegner, auch wenn das Modell keine Probe verlangt. B: Zwei Helden greifen denselben schwachen Gegner an: fällt er beim ersten, trifft der zweite den nächsten Gegner. C: „Ergebt euch!“ schreiben: es kommt eine Charisma-Probe des Panels, nur bei Erfolg endet der Kampf mit Frieden. D: Schlaf auf einen Gegner wirken: die Ladung bleibt, der Platz liest warum. E: In der Erzählung trägt dein Held nur Waffen, die auf seinem Heldenblatt stehen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
