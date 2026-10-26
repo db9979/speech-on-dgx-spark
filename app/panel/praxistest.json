@@ -3768,6 +3768,13 @@
 "titel": "Dungeon-Master: Umgebung nutzen",
 "text": "Funktionen → KI-Dungeon-Master → Umgebung nutzen einschalten und in einer Runde mit Karte einen Kampf beginnen. A: Unter dem Eingabefeld stehen zwei bis drei Dinge des Ortes, etwa „🕯 Kronleuchter“. B: Ein Klick setzt „Ich nutze Kronleuchter.“ in die Aktion; nach dem Zug zeigt der Verlauf die Probe und bei Erfolg die Treffer mit dem Kronleuchter, der Knopf ist danach weg. C: Misslingt die Probe, bleibt der Knopf; der Erzähler beschreibt die Dinge im Kampf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P563",
+"v": 1119,
+"titel": "Dungeon-Master: Flüstern mit einer Figur",
+"text": "Funktionen → KI-Dungeon-Master → Flüstern mit einer Figur einschalten und eine Runde mit einem Gast spielen, bis eine Figur spricht. A: Unter dem Eingabefeld steht „🤫 Flüstern“; Figur wählen, einen Satz schreiben, „Flüstern“: Die Antwort der Figur steht nur bei dir, 🔊 liest sie dein Gerät vor. B: Der Gast sieht nichts davon; beim Gastgeber steht nur „… flüstert mit …“. C: Ein zweites Flüstern im selben Zug wird abgelehnt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

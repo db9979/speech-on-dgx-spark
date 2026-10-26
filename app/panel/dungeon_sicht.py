@@ -14,7 +14,7 @@ import json
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
                  "fraktionen_geheim", "quest_geheim", "echt_plaetze")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen")   # the admin switches of the secrets below: the self-test turns them on
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen", "dungeon_fluestern")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -55,6 +55,11 @@ def _nsc(rd, karte, kanten, **more):
 def _schrift(rd, m):
     pid = next(k for k, p in rd["plaetze"].items() if p.get("uid") == rd["owner"])
     rd["schrift"] = [{"id": "s1", "zug": rd.get("zug", 0), "titel": "Brief", "text": m, "art": "brief", "von": "", "sicht": pid}]
+
+
+def _fluester(rd, m):
+    pid = next(k for k, p in rd["plaetze"].items() if p.get("uid") == rd["owner"])
+    rd["fluester"] = {pid: [{"zug": rd.get("zug", 0) - 1, "an": "Bodo", "text": m, "antwort": m, "gold": 0, "verraten": False}]}
 
 
 def _quest(rd, m, ort):
@@ -99,6 +104,8 @@ GEHEIM = {
     "fremd_bedeutung": (("Was ein Satz in der Sprache eines Volkes bedeutet, für einen Platz, der sie nicht kann",
                          "What a line in a people's tongue means, for a seat that does not know it"), {"gastgeber"},
                         lambda rd, m: rd.update(fremd=[{"k": 1, "sagt": m, "wer": []}])),
+    "gefluestert": (("Was ein Platz einer Figur zugeflüstert hat und ihre Antwort", "What a seat whispered to a person and its answer"),
+                    {"gastgeber"}, _fluester),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),

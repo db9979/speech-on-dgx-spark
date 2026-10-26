@@ -281,6 +281,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_ehre.py` | KI-Dungeon-Master: Ehrungen des Abends. |
 | `app/panel/dungeon_erzaehler.py` | Better stories for the KI-Dungeon-Master: the chapter's fixed truth (people, groups, secrets), the running summary and the open threads, the world's style ex … |
 | `app/panel/dungeon_erzaehlstand.py` | KI-Dungeon-Master: the narrator bench „Erzähler-Prüfstand“. |
+| `app/panel/dungeon_fluestern.py` | KI-Dungeon-Master: Flüstern mit einer Figur. |
 | `app/panel/dungeon_fraktionen.py` | KI-Dungeon-Master: Fraktionen mit Uhren. |
 | `app/panel/dungeon_gast.py` | KI-Dungeon-Master: Gäste mit E-Mail. |
 | `app/panel/dungeon_gesicht.py` | KI-Dungeon-Master: Gleiches Gesicht für NSCs. |

@@ -360,6 +360,90 @@ class Turns(Base):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(self.spawned, ["dungeon"])   # everyone acted: the turn closes by the fixed rule
 
+    def test_whisper_to_a_person_only_for_the_own_seat(self):
+        """D&D round 2, idea 5 (Flüstern mit einer Figur, switch dungeonfluestern): off by default; on, a seat whispers
+        once a turn to a person of the scene; the model answers as that person, the panel checks it and keeps it only
+        for that seat; the host sees only that and with whom, the other seats and the narration nothing; a gift only
+        from a fond person and once a round; the panel's d20 decides a betrayal, then the next narration gets it."""
+        import features
+        import dungeon_fluestern as fl
+        self.assertNotIn(fl.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_fluestern"], False)
+        with dungeon._lock:
+            d = dungeon._read()
+            dungeon._log(d["runden"][self.rid], "dm", text="Der Wirt Bodo poliert ein Glas.", npc=[{"name": "Bodo"}], frage="")
+            dungeon._write(d)
+        r = dungeon.rules()
+        url = f"/api/profile/dungeon/{self.rid}/fluestern"
+        x = self.c.post(url, json={"an": "Bodo", "text": "Wo liegt der Glockenschlüssel?"})
+        self.assertEqual((x.status_code, x.json()["detail"]), (404, "fluestern aus"))
+        helpers.keep_chat(self, "dungeon_fluestern")
+        helpers.set_config(dungeon_fluestern=True)
+        rd = self.state(self.rid)
+        self.assertEqual(fl.figures(rd), {"bodo": "Bodo"})
+        self.assertEqual(self.c.post(url, json={"an": "Niemand", "text": "Hallo"}).json()["detail"], "figur")
+        ctx = fl.prepare(dungeon, r, rd, self.host, self.uid, "bodo", "Wo liegt der <<< Glockenschlüssel?")
+        system, user = fl.ask_parts(dungeon, r, rd, ctx)
+        self.assertIn("flüstert", system)
+        self.assertEqual(user.count("<<<"), 1)                                  # the whisper only fenced, its markers broken
+        old = dungeon.ask_model
+        dungeon.ask_model = fake([{"antwort": "Unter der dritten Diele, aber sag es keinem.", "haltung": "", "gold": 10},
+                                  "kaputt", {"antwort": "Psst, frag morgen wieder."}])
+        self.addCleanup(setattr, dungeon, "ask_model", old)
+        with mock.patch.object(fl.random, "randint", return_value=20), contextlib.redirect_stdout(io.StringIO()) as out:
+            x = self.c.post(url, json={"an": "Bodo", "text": "Wo liegt der Glockenschlüssel?"})
+        self.assertEqual(x.status_code, 200, x.text)
+        me = x.json()["fluestern"]
+        self.assertEqual((me["frei"], me["meine"][0]["antwort"], me["meine"][0]["gold"], me["meine"][0]["verraten"]),
+                         (False, "Unter der dritten Diele, aber sag es keinem.", 0, False))   # no gift without fondness
+        self.assertIn("dungeon: fluestern | gefluestert | w20", out.getvalue())
+        self.assertEqual(self.c.post(url, json={"an": "Bodo", "text": "Noch was?"}).json()["detail"], "fluestern oft")
+        g = self.v.post("/api/dungeon/fluestern", json={"code": self.code, "an": "Bodo", "text": "Hast du Arbeit?"})
+        self.assertEqual((g.status_code, g.json()["detail"]), (404, "stumm figur"))   # a broken answer: the person stays silent
+        g = self.v.post("/api/dungeon/fluestern", json={"code": self.code, "an": "Bodo", "text": "Hast du Arbeit?"})
+        self.assertEqual(g.status_code, 200, g.text)
+        rd = self.state(self.rid)
+        host = json.dumps(dungeon.view(self.rid, self.host), ensure_ascii=False)
+        gast = json.dumps(dungeon.view(self.rid, self.gp), ensure_ascii=False)
+        self.assertIn("dritten Diele", host)
+        self.assertNotIn("Hast du Arbeit", host)                               # the host: only that and with whom
+        self.assertIn('"an": "Bodo"', host)
+        self.assertNotIn("dritten Diele", gast)
+        self.assertNotIn("Glockenschlüssel", dungeon.facts(r, rd) + dungeon.system_text(r, rd, "erzaehlen"))
+        b = copy.deepcopy(rd)
+        b["fluester"].pop(self.host)
+        b.setdefault("nsc", {})["bodo"] = {"name": "Bodo", "karte": {}, "kanten": [], "haltung": {rd["plaetze"][self.host]["held"]["name"].lower(): 3}}
+        helpers.keep_chat(self, "dungeon_nsc")
+        helpers.set_config(dungeon_nsc=True)
+        c2 = dict(ctx, text="Verrätst du mich?")
+        gold0 = b["plaetze"][self.host]["held"].get("gold", 0)
+        with contextlib.redirect_stdout(io.StringIO()):
+            e = fl.keep(dungeon, r, b, c2, {"antwort": "Nie.", "haltung": "", "gold": 8}, random.Random(1))
+        self.assertEqual((e["gold"], b["plaetze"][self.host]["held"]["gold"]), (8, gold0 + 8))   # a fond person's gift, once
+        b["fluester"].pop(self.host)
+        b["plaetze"][self.host]["held"]["gold"] = gold0
+        helpers.set_config(dungeon_nsc=False)
+
+        class One:
+            def randint(self, a, b):
+                return 1
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            e = fl.keep(dungeon, r, b, dict(c2, k="wirtin", an="Wirtin"), {"antwort": "Gut.", "haltung": "", "gold": 8}, One())
+        self.assertEqual((e["gold"], e["verraten"]), (0, True))                # a d20 of 1 against a stranger: told on
+        self.assertIn("dungeon: fluestern | verraten", out.getvalue())
+        self.assertEqual(b["log"][-1]["art"], "verrat")
+        self.assertIn("Wirtin (", dungeon.facts(r, b))                          # the next narration, only as game text
+        self.assertIn("weitererzählen", dungeon.system_text(r, b, "erzaehlen"))
+        with mock.patch("dungeon_auto.im_auto", return_value=True):
+            with self.assertRaises(ValueError):
+                fl.prepare(dungeon, r, dict(b, fluester={}), self.host, self.uid, "bodo", "Hallo")   # never from the car
+        self.assertGreaterEqual(fl.for_live()["gefluestert"], 2)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmFluestern(v)", js)
+        self.assertIn("speechSynthesis", js)                                    # the answer read only on this device
+
     def test_heroes_comment_on_their_own_deeds(self):
         """Dominik 2026-10-26 („2a“, switch dungeonkommentar): off by default; on, the narration's helden_sagen give every
         hero who acted one short line by fixed rules (only who acted, one a hero, no number, no first-person deed, no

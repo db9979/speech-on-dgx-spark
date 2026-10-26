@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.119** AI Dungeon Master: whisper to a person, once a turn a word only for the own seat, the person answers, betrayal and gift the panel decides
 - **V01.1.118** AI Dungeon Master: use the surroundings, chandeliers, powder kegs, pillars and ropes in a fight, one check of the panel and a fixed effect
 - **V01.1.117** AI Dungeon Master: foe announcements and stance, every foe announces its next blow, the heroes answer with defend or dodge
 - **V01.1.116** AI Dungeon Master: chronicle book, at the end of every chapter a page with cover, the story so far, heroes, honours and writings, to turn and as a PDF from the Spark
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.112** AI Dungeon Master: content of the D&D ideas round 2 in the SRD catalogue: 20 prices for "near miss", 58 props for every kind of place and room, heart's wishes per world, companions with values for levels 1 to 10 and animal friends at the children's table, torch and glow stick
 - **V01.1.111** AI Dungeon Master: travel stages, a long way on the map becomes a journey, every hero takes a role and rolls, a consequence and an event of the landscape
 - **V01.1.110** AI Dungeon Master: heroes comment themselves, every hero who acted says a short checked line about its deed, as a speech bubble and in its voice
-- **V01.1.109** AI Dungeon Master: the way of telling rich really tells richly, with a minimum length, a fixed style sentence and a check by the panel
 
 
 

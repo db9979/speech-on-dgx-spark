@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.119** KI-Dungeon-Master: Flüstern mit einer Figur, einmal je Zug ein Wort nur für den eigenen Platz, die Figur antwortet, Verrat und Geschenk entscheidet das Panel
 - **V01.1.118** KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung
 - **V01.1.117** KI-Dungeon-Master: Gegner-Ansagen und Haltung, jeder Gegner sagt seinen nächsten Hieb an, die Helden antworten mit Abwehr oder Ausweichen
 - **V01.1.116** KI-Dungeon-Master: Chronikbuch, am Ende jedes Kapitels eine Seite mit Titelbild, Bisher geschah, Helden, Ehrungen und Schriftstücken, zum Blättern und als PDF vom Spark
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.112** KI-Dungeon-Master: Inhalte der D&D-Ideen Runde 2 im SRD-Katalog: 20 Preise für „Knapp daneben“, 58 Requisiten für jede Orts- und Raumart, Herzenswünsche je Welt, Gefährten mit Werten für Stufe 1 bis 10 und Tierfreunden am Kindertisch, Fackel und Leuchtstab
 - **V01.1.111** KI-Dungeon-Master: Reise-Etappen, ein langer Weg auf der Karte wird eine Reise, jeder Held übernimmt eine Rolle und würfelt, eine Folge und ein Ereignis der Landschaft
 - **V01.1.110** KI-Dungeon-Master: Helden kommentieren selbst, jeder Held, der gehandelt hat, sagt eine kurze geprüfte Zeile zu seiner Tat, als Sprechblase und in seiner Stimme
-- **V01.1.109** KI-Dungeon-Master: die Erzählweise ausführlich erzählt wirklich ausführlich, mit Mindestlänge, festem Stil-Satz und einer Prüfung des Panels
 
 
 

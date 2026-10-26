@@ -281,6 +281,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_ehre.py` | Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels |
 | `app/panel/dungeon_erzaehler.py` | Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen |
 | `app/panel/dungeon_erzaehlstand.py` | Dungeon-Master-Erzähler-Prüfstand: feste Szenen durch das laufende Modell, feste Regeln geben Punkte |
+| `app/panel/dungeon_fluestern.py` | Dungeon-Master: Flüstern mit einer Figur, die Antwort nur für den eigenen Platz, Verrat würfelt das Panel |
 | `app/panel/dungeon_fraktionen.py` | Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln |
 | `app/panel/dungeon_gast.py` | Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse |
 | `app/panel/dungeon_gesicht.py` | Dungeon-Master-Gesichter: ein festes Porträt je Figur, Vorlage für spätere Szenenbilder |

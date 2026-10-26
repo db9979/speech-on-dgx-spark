@@ -133,6 +133,7 @@ import dungeon_kalender as kalender
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_umgebung as umgebung
+import dungeon_fluestern as fluestern
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3201,7 +3202,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
         fakten["proben"] = wuerfe
     if zuege:
         fakten["gegner_zuege"] = zuege
-    spieltext = "\n".join(f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names)
+    spieltext = "\n".join([f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names]
+                          + fluestern.betrayed_lines(rd))      # a whisper a person told on (round 2, idea 5), only as game text
     head = json.dumps(fakten, ensure_ascii=False)
     einstieg = f"\n<<<\n{textnorm.defuse(rd['einstieg'])}\n>>>" if rd.get("einstieg") and not bisher else ""
     vorher = (f"\n{VORHER[1 if rd['lang'] == 'en' else 0]}\n<<<\n{textnorm.defuse(rd['vorher'])}\n>>>" if rd.get("vorher") else "")
@@ -3231,7 +3233,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -5185,6 +5187,7 @@ def view(rid, pid, now=None):
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
     out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
+    out["fluestern"] = fluestern.view(rd, pid, host)            # the own whispers; the host only that and with whom (round 2, idea 5)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None

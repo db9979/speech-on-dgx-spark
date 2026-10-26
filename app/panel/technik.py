@@ -180,6 +180,7 @@ MODULE = {
     "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_schrift": ("dienste", "Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht"),
     "dungeon_kommentar": ("dienste", "Dungeon-Master: Helden kommentieren selbst, je Held, der gehandelt hat, eine kurze geprüfte Zeile in seiner Stimme"),
+    "dungeon_fluestern": ("dienste", "Dungeon-Master: Flüstern mit einer Figur, die Antwort nur für den eigenen Platz, Verrat würfelt das Panel"),
     "dungeon_umgebung": ("dienste", "Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung"),
     "dungeon_haltung": ("dienste", "Dungeon-Master: Gegner-Ansagen und Haltung, der nächste Hieb vorher, Abwehr und Ausweichen"),
     "dungeon_chronik": ("dienste", "Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark"),

@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["chronik"] = {}
+    try:   # Flüstern mit einer Figur (dungeon_fluestern.py): numbers on the game's line
+        import dungeon_fluestern
+        dgn["fluestern"] = dungeon_fluestern.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["fluestern"] = {}
     try:   # Umgebung nutzen (dungeon_umgebung.py): numbers on the game's line
         import dungeon_umgebung
         dgn["umgebung"] = dungeon_umgebung.for_live() if dgn.get("on") else {}
@@ -2020,6 +2025,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("kalender") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
+                        + (f" · heute {dgn['fluestern']['gefluestert']}-mal geflüstert, {dgn['fluestern']['verraten']} verraten, {dgn['fluestern']['geschenkt']} Geschenke, {dgn['fluestern']['stumm']} ohne Antwort, {dgn['fluestern']['abgelehnt']} abgelehnt"
+                           if any((dgn.get("fluestern") or {}).values()) else "")
                         + (f" · heute {dgn['umgebung']['proben']}-mal Umgebung genutzt, {dgn['umgebung']['geschafft']} gelungen, {dgn['umgebung']['daneben']} daneben"
                            if any((dgn.get("umgebung") or {}).values()) else "")
                         + (f" · heute {dgn['haltung']['ansagen']} Gegner-Ansagen, {dgn['haltung']['abwehr']}-mal Abwehr, {dgn['haltung']['ausweichen']}-mal Ausweichen"
