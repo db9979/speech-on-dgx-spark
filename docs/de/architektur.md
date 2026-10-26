@@ -284,6 +284,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_fluestern.py` | Dungeon-Master: Flüstern mit einer Figur, die Antwort nur für den eigenen Platz, Verrat würfelt das Panel |
 | `app/panel/dungeon_fraktionen.py` | Dungeon-Master-Fraktionen: Gruppen mit Uhren, das Panel dreht sie nach festen Regeln |
 | `app/panel/dungeon_gast.py` | Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse |
+| `app/panel/dungeon_gefaehrte.py` | Dungeon-Master: Gefährten anheuern in der Siedlung, Hiebe, Moral und Lohn nach festen Regeln des Panels |
 | `app/panel/dungeon_gesicht.py` | Dungeon-Master-Gesichter: ein festes Porträt je Figur, Vorlage für spätere Szenenbilder |
 | `app/panel/dungeon_gold.py` | Dungeon-Master-Gold mit Zweck: Gasthaus, Schmied, Lehrstunde und Gerücht in Siedlungen zu festen Preisen |
 | `app/panel/dungeon_grenzen.py` | Dungeon-Master-Grenzen: Grenzen und Schleier je Platz als Wortlisten, anonyme X-Karte erzählt die letzte Szene neu |

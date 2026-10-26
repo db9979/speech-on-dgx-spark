@@ -5645,6 +5645,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gefährten anheuern (V01.1.121, D&D-Ideen Runde 2, Idee 9, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Gefährten anheuern* (chat.dungeon_gefaehrte, ab Werk aus; dungeon_gefaehrte.py, eigener Code, die Gefährten je Welt, die Tierfreunde des Kindertischs und die Werte je Stufe ideen.gefaehrten, ideen.gefaehrten_kinder, ideen.gefaehrte_werte vom DnDAppFiles-Thread). In einer Siedlung ist „🤝 Gefährte anheuern“ ein weiterer Dienst von „Gold mit Zweck“ (dungeon_gold.serve, keine neue Tür, der Zug des Helden über /held mit {was: \"dienst\", id: \"gefaehrte\", i}): nur solange weniger als vier Helden spielen, so viele, bis die Gruppe vier zählt, höchstens zwei. Leben, Rüstung, Angriff, Schaden und Lohn kommen aus der festen Tabelle nach der Stufe der Gruppe; der Lohn ist je Kapitel aus dem Gold des Helden fällig, der erste beim Anheuern. Im Kampf würfelt das Panel für jeden Gefährten einen Hieb (W20 + Angriff gegen die Rüstung des Gegners mit dem wenigsten Leben), die Gegner können ihn treffen wie einen Helden (ohne Zustände). Bei halbem Leben einmal je Kampf eine Mutprobe (W20 ≥ 10, sonst flieht er aus "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "diesem Kampf), bei 0 geht er zu Boden; nach dem Kampf steht er wieder (nie für immer verloren). Ein neues Kapitel ohne Lohn: eine Mutprobe, sonst geht er. Keine Beute, keine Erfahrung. Im Begegnungsbudget zählt jeder Gefährte als halber Held (dungeon_kampf.budget), so bleibt das Balancing. Das Modell bekommt die Gefährten nur als Daten und ihre Hiebe als Belege, es entscheidet nie. Eine Kampagne behält sie. Live: heute angeheuert, Hiebe, am Boden, geflohen, gegangen, Lohn. Log dungeon: gefaehrte | angeheuert, … | voll, … | unbekannt, … | sold | N gold, … | ohne sold | bleibt, … | gegangen, … | am boden, … | moral | geflohen|bleibt. Selbsttest Turns.test_companions_hired_fight_by_the_panels_dice."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -11014,6 +11030,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Umgebung nutzen (Funktionen → Meine Daten → „Umgebung nutzen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wo gekämpft wird, liegen zwei bis drei Dinge im Raum oder am Ort, etwa ein Kronleuchter, ein Pulverfass, eine dicke Säule oder ein Seil über dem Abgrund."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Gefährten anheuern (Funktionen → Meine Daten → „Gefährten anheuern“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): In einer Siedlung heuert ein Held einen Gefährten seiner Welt an, am Kindertisch einen Tierfreund: nur solange weniger als vier Helden spielen, höchstens zwei, bis die Gruppe vier zählt."
 },
 {
 "lang": "de",
@@ -20037,6 +20061,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: hire companions (V01.1.121, D&D ideas round 2, idea 9, Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\"): Admin switch *Features → AI Dungeon Master → Hire companions* (chat.dungeon_gefaehrte, off by default; dungeon_gefaehrte.py, own code, the companions per world, the children's table's animal friends and the values per level ideen.gefaehrten, ideen.gefaehrten_kinder, ideen.gefaehrte_werte from the DnDAppFiles thread). In a settlement \"🤝 Hire a companion\" is one more service of \"Gold with a purpose\" (dungeon_gold.serve, no new door, the hero's move through /held with {was: \"dienst\", id: \"gefaehrte\", i}): only while fewer than four heroes play, as many as fill the group up to four, at most two. Life, armour, attack, damage and pay come from the fixed table by the group's level; the pay is due each chapter from the hero's gold, the first on hiring. In a fight the panel rolls a blow for every companion (d20 + attack against the armour of the foe with the least life), the foes can strike it like a hero (without states). At half its life a courage check once a fight (d20 ≥ 10, else it flees this fight), at 0 it goes down; after the fight it stands a"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "gain (never lost for good). A new chapter without pay: a courage check, else it leaves. No loot, no experience. In the encounter budget every companion counts as half a hero (dungeon_kampf.budget), so the balance holds. The model gets the companions only as data and their blows as receipts, it never decides. A campaign keeps them. Live: hired, blows, down, fled, left, pay today. Log dungeon: gefaehrte | angeheuert, … | voll, … | unbekannt, … | sold | N gold, … | ohne sold | bleibt, … | gegangen, … | am boden, … | moral | geflohen|bleibt. Self-test Turns.test_companions_hired_fight_by_the_panels_dice."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: telling richly (V01.1.109, Dominik 2026-10-26 \"ausführliche erzählweise ist immer noch kanpp\"): The round's way of telling only raised the upper limit so far. Now the narrator's task also names a minimum length (dungeon.WEISE_MIN: brief none, normal 500, rich 1000 characters, always 300 below the upper limit, erz_min) and a fixed style sentence (WEISE_STIL): for \"rich\" several paragraphs with senses, mood and a moment of its own for every hero who acted, for \"brief\" a few clear sentences. For \"rich\" the panel checks the minimum by a fixed rule (dungeon_erzaehler.judge, fault knapp): too short is told anew once with a fixed hint, then the try stays. Log dungeon: nachbessern | knapp, | bleibt | knapp; counted with the narrator rules. Self-test Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -25214,6 +25254,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Use the surroundings (Features → My data → \"Use the surroundings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Where a fight goes on, two to three things lie in the room or place, such as a chandelier, a powder keg, a thick pillar or a rope over the chasm."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Hire companions (Features → My data → \"Hire companions\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): In a settlement a hero hires a companion of its world, at the children's table an animal friend: only while fewer than four heroes play, at most two, until the group counts four."
 },
 {
 "lang": "en",

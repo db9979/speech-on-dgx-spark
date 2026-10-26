@@ -135,6 +135,7 @@ import dungeon_haltung as haltung
 import dungeon_umgebung as umgebung
 import dungeon_fluestern as fluestern
 import dungeon_wunsch as wunsch
+import dungeon_gefaehrte as gefaehrte
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -2106,7 +2107,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
             h["stimme"] = voice_for(r, rd, h)
         if kampagne:
             rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
-            rd.update(erz.carry(kampagne), **nsc.carry(kampagne), **fraktionen.carry(kampagne), **quest.carry(kampagne))
+            rd.update(erz.carry(kampagne), **nsc.carry(kampagne), **fraktionen.carry(kampagne), **quest.carry(kampagne), **gefaehrte.carry(kampagne))
             rd["legenden"] = [x for x in kampagne.get("legenden") or [] if isinstance(x, str)][:LEGENDEN_MAX]
             plan = kampagne.get("plan")
             if plan:
@@ -2442,7 +2443,8 @@ def end_chapter(owner, rid, now=None):
             nsc.note(rd, f"Kapitel {rd.get('kapitel', 1)} endet.", f"Chapter {rd.get('kapitel', 1)} ends.")
         c.pop("quest", None)
         c.pop("quest_weg", None)
-        c.update(erz.keep_chapter(rd), **nsc.keep(rd), **fraktionen.keep(rd), **quest.keep(rd))
+        c.pop("gefaehrten", None)
+        c.update(erz.keep_chapter(rd), **nsc.keep(rd), **fraktionen.keep(rd), **quest.keep(rd), **gefaehrte.keep(rd))
         c["stimmen"] = stimmen.keep(rd)
         c["legenden"] = list(rd.get("legenden") or [])
         kid = kid or "k" + os.urandom(4).hex()
@@ -2566,7 +2568,7 @@ def next_chapter(owner, kid, b, lang, now=None):
                                "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "dinge": c.get("dinge"),
                                "nsc": c.get("nsc"), "chronik": c.get("chronik"), "fraktionen": c.get("fraktionen"),
                                "quest": c.get("quest"), "quest_weg": c.get("quest_weg"),
-                               "stimmen": c.get("stimmen"), "legenden": c.get("legenden")})
+                               "stimmen": c.get("stimmen"), "legenden": c.get("legenden"), "gefaehrten": c.get("gefaehrten")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -3196,6 +3198,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
+    fakten.update(gefaehrte.facts(rd, li))               # the companions with the group (round 2, idea 9)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):
@@ -3236,7 +3239,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3549,6 +3552,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             if pid in rd["plaetze"] and rd["plaetze"][pid].get("held"):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, p in seated(rd) if not p["held"].get("tot")}
+    gefaehrte.pay(_me, r, rd, rng)              # a new chapter: the companions' pay from the hirer's gold (round 2, idea 9)
     for x in list(wuerfe) + list(kampfwuerfe[0]):
         if x.get("mut"):                        # Heldenmut (Idee 8): a roll used it, the charge of the evening is gone
             mut.use(rd, x["pid"])
@@ -3835,6 +3839,7 @@ async def run_turn(rid, turn):
             proben, nutzt, wirft = umgebung.roll(_me, r, rd, proben, hand=hand)
             proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand)
             hits = wirft + hits
+            hits += gefaehrte.attacks(_me, r, rd, hits)       # the companions strike by the panel's dice (round 2, idea 9)
             wuerfe = roll(r, rd, proben, hand=hand)
             wuerfe = await knapp.ask(_me, rid, turn, r, rd, wuerfe) + nutzt   # a near miss: give up or pay a price (D&D round 2, idea 1)
             zuege = kampf.foes_turn(_me, r, rd, hits)
@@ -3855,6 +3860,7 @@ async def run_turn(rid, turn):
                 if not cur or cur["zug"] != turn:
                     return
                 seats = {pid for pid, _ in seated(cur)}       # seats taken back meanwhile drop out
+                mit = seats | {c["k"] for c in gefaehrte.all_(cur)}   # the companions' blows and the foes' at them (round 2, idea 9)
                 if story:
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
@@ -3862,7 +3868,7 @@ async def run_turn(rid, turn):
                 cur["beleg_n"] = max(int(cur.get("beleg_n") or 0), int(rd.get("beleg_n") or 0))
                 take = quest.pickups(_me, cur) if story else []   # before apply clears the actions (Punkt 15)
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
-                      kampfwuerfe=([x for x in hits if x["pid"] in seats], [x for x in zuege if x["pid"] in seats]) if story else ([], []))
+                      kampfwuerfe=([x for x in hits if x["pid"] in mit], [x for x in zuege if x["pid"] in mit]) if story else ([], []))
                 if story:                         # the host's random rules (Tabletop-Punkt 9), their hints for the next narration
                     cur["zufall_hinweise"] = (zufall.roll(_me, r, cur, "zug") + (zufall.roll(_me, r, cur, "ort") if cur["szene"].get("ort") != ort0 else [])
                                               + (zufall.roll(_me, r, cur, "kampf") if cur.get("kampf") and not kampf0 else []))
@@ -5194,6 +5200,7 @@ def view(rid, pid, now=None):
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
     out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
     out["wunsch"] = wunsch.view(_me, r, rd, pid, host)          # the own heart's wish; the host every seat's (round 2, idea 7)
+    out["gefaehrten"] = gefaehrte.view(_me, rd)                  # the hired companions (round 2, idea 9)
     out["fluestern"] = fluestern.view(rd, pid, host)            # the own whispers; the host only that and with whom (round 2, idea 5)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)

@@ -218,6 +218,7 @@
     "dungeon_umgebung": false,
     "dungeon_fluestern": false,
     "dungeon_wunsch": false,
+    "dungeon_gefaehrte": false,
     "dungeon_kommentar": false,
     "dungeon_import": false,
     "dungeon_regler": false,

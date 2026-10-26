@@ -86,11 +86,11 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     body=k==='weg'?{name,weg:true}:k==='w'?{name,will:row.querySelector('[data-dmfrakw]').value.trim()}:{name,schritt:+k}}
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/fraktion`,body,DM);if(d){DM.v=d;DM.at=Date.now();if(k==='neu')DMA.frak=null}dmDraw()});
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
-const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿'};
+const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿',gefaehrte:'🤝'};
 // Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
 // purse; a card per service with its picture on top and a line of life; the price's calculation small above a verb
 // button; what the hero cannot pay is grey with how much is missing; the lesson as six values before → after
-const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed']};
+const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed'],gefaehrte:['Anheuern','Hire']};
 const DMZEIT={morgen:['🌅','Morgen','Morning'],tag:['☀️','Tag','Day'],abend:['🌇','Abend','Evening'],nacht:['🌙','Nacht','Night']};
 const dmPlus=n=>(n>=0?'+':'')+n;
 function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0,p-s.gold),
@@ -104,6 +104,7 @@ function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0
     d.id==='schmied'?(s.kaputt.length?rech(d)+s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
     :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{frei:true}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu,it.preis)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
     :d.id==='lehre'?lehre(d)
+    :d.id==='gefaehrte'?(s.gefaehrten&&s.gefaehrten.length?s.gefaehrten.map(g=>`<small class="dm-isatz"><b>${esc(g.name)}</b>: ${esc(g.satz)}</small>`+knopf(d,` data-i="${esc(g.id)}"`,t('Anheuern: ','Hire: ')+g.name)).join(''):`<small class="mut">${esc(t('Die Gruppe ist voll, kein Gefährte mehr frei.','The group is full, no companion free.'))}</small>`)
     :rech(d)+knopf(d)}</div>`,
     z=DMZEIT[s.tageszeit]||DMZEIT.tag;
   return `<div class="dm-sied-kopf${s.kopf?'':' leer'}">${s.kopf?dmDing({bild:s.kopf},1):''}<div class="dm-sied-titel"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span>💰 ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b> · ${esc(t('Gruppe','Group'))}: ${s.gold_gruppe}</span></div></div>

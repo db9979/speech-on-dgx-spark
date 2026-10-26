@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.121** · 2026-10-26 · KI-Dungeon-Master: Gefährten anheuern, in der Siedlung ein Gefährte der Welt, solange weniger als vier spielen, das Panel würfelt seine Hiebe, er zählt als halber Held im Balancing
 - **V01.1.120** · 2026-10-26 · KI-Dungeon-Master: Herzenswunsch, jeder Held trägt einen geheimen Wunsch, je Akt bekommt der Erzähler einen reihum, wird er wahr, gibt es die Erfahrung eines Akts
 - **V01.1.119** · 2026-10-26 · KI-Dungeon-Master: Flüstern mit einer Figur, einmal je Zug ein Wort nur für den eigenen Platz, die Figur antwortet, Verrat und Geschenk entscheidet das Panel
 - **V01.1.118** · 2026-10-26 · KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung

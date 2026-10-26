@@ -3782,6 +3782,13 @@
 "titel": "Dungeon-Master: Herzenswunsch",
 "text": "Funktionen → KI-Dungeon-Master → Herzenswunsch einschalten und eine Runde mit einem Gast beginnen. A: Unter dem Eingabefeld steht „💖 Herzenswunsch“; einen aus der Liste wählen oder eigene Worte, „Speichern“. Der Gast sieht deinen Wunsch nicht, du als Gastgeber siehst seinen. B: Beim Helden, dessen Wunsch dran ist, steht „in diesem Akt“. C: Erfüllt er sich, steht im Verlauf „💖 Der Herzenswunsch von … hat sich erfüllt.“ und der Held bekommt Erfahrung.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P565",
+"v": 1121,
+"titel": "Dungeon-Master: Gefährten anheuern",
+"text": "Funktionen → KI-Dungeon-Master → Gold mit Zweck und Gefährten anheuern einschalten und eine Runde mit höchstens drei Helden beginnen. A: In einer Siedlung steht bei den Diensten „🤝 Gefährte anheuern“ mit Gefährten der Welt; einen wählen, „Anheuern“, der Lohn geht vom eigenen Gold ab. B: Der Gefährte steht mit 🤝 in der Gruppe. C: Im Kampf stehen seine Hiebe im Verlauf wie die der Helden; geht er zu Boden, steht er nach dem Kampf wieder auf.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

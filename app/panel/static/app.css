@@ -2257,6 +2257,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-fremd .dm-fremdt{font-size:.85em;opacity:.8;font-style:italic;margin-top:2px}
 .dm-kalender{font-size:.9em;opacity:.85;margin:4px 0 8px}.dm-kalsatz{font-style:italic;margin-top:2px}
 .dm-buch{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}.dm-buchkopf{display:flex;align-items:center;gap:8px}.dm-buchkopf b{flex:1}.dm-buchschrift{white-space:pre-wrap;font-style:italic}
+.dm-gefaehrte.aus{opacity:.6}
 .dm-wunsch{margin-top:6px;font-size:.92em}.dm-wunsch select,.dm-wunsch textarea{width:100%;margin:4px 0}.dm-wunsch ul{margin:4px 0 0 18px;padding:0}
 .dm-fluestern{margin-top:6px;font-size:.92em}.dm-fluestern .dm-fl{margin-top:4px}.dm-flform select,.dm-flform textarea{width:100%;margin:4px 0}
 .dm-haltung{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.dm-ansage{color:var(--warn,#c80)}

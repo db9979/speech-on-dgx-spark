@@ -314,6 +314,8 @@ FEATURES = (
     # Gegner-Ansagen und Haltung (dungeon_haltung.py, D&D round 2, idea 2): foes announce their next blow, heroes defend or dodge
     # Umgebung nutzen (dungeon_umgebung.py, D&D round 2, idea 3): the props of a fight, one check of the panel, a fixed effect
     F("dungeonumgebung", "Umgebung nutzen", "Use the surroundings", "data", ("dungeon_umgebung",), parent="dungeon", me="dmbox", guide="dungeonumgebung"),
+    # Gefährten anheuern (dungeon_gefaehrte.py, D&D round 2, idea 9): a companion of the world in a settlement, the panel rolls its blows
+    F("dungeongefaehrte", "Gefährten anheuern", "Hire companions", "data", ("dungeon_gefaehrte",), parent="dungeon", me="dmbox", guide="dungeongefaehrte"),
     # Herzenswunsch (dungeon_wunsch.py, D&D round 2, idea 7): a secret wish per hero, one per act for the narrator
     F("dungeonwunsch", "Herzenswunsch", "Heart's wish", "data", ("dungeon_wunsch",), parent="dungeon", me="dmbox", guide="dungeonwunsch"),
     # Flüstern mit einer Figur (dungeon_fluestern.py, D&D round 2, idea 5): a word to a person only one seat hears

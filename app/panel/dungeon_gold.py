@@ -8,7 +8,9 @@ hero may pay for fixed offers of the panel, never of the model, priced by the gr
 - Gerücht: a hint at the next place of the map toward the goal, once per place;
 - Ausrüstung verbessern (Wirtschaft Punkt 7, Dominik 2026-10-25 „1-12“): a weapon or armour of the hero one rarity
   better, up to „episch“, for its full price at the new rarity; known from then on;
-- Heiler (Narben, D&D idea 8, only while dungeon_narben is on): takes every wound's consequence, the scars stay.
+- Heiler (Narben, D&D idea 8, only while dungeon_narben is on): takes every wound's consequence, the scars stay;
+- Gefährte anheuern (D&D round 2, idea 9, only while dungeon_gefaehrte is on): a companion goes with the group, its
+  pay for the first chapter now (dungeon_gefaehrte.hire, the price by the companions' table).
 The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
 (dungeon_pruefstand.economy) and its self-test keeps income to expenses between 1.2 and 2.
 Only while „Gold mit Zweck“ is allowed for the round's host (features "dungeongold"). The hero's move goes through the
@@ -16,11 +18,13 @@ seat's „held“ endpoint ({was: "dienst", id, i, wert}).
 """
 import time
 
+import dungeon_gefaehrte as gefaehrte
 import dungeon_narben as narben
 
 SIEDLUNG = ("dorf", "stadt", "taverne", "station", "basar", "hafen")
 DIENSTE = ("gasthaus", "schmied", "lehre", "geruecht", "verbessern")
 HEILER = "heiler"          # the healer of idea 8, only while the wounds are on (offers); its picture is the picture thread's
+GEFAEHRTE = "gefaehrte"    # D&D round 2, idea 9: a companion, only while dungeon_gefaehrte is on (offers)
 PREIS = {"gasthaus": 10, "schmied": 5, "lehre": 20, "geruecht": 3}   # gold per level of the group (the inn: per hero)
 VERBESSERN_ARTEN = ("waffe", "ruestung")
 VERBESSERN_BIS = "episch"   # the smith never makes a legend
@@ -30,7 +34,8 @@ NAMEN = {"gasthaus": (("Gasthaus", "Inn"), ("Eine Nacht für alle: volles Leben 
          "lehre": (("Lehrstunde", "Lesson"), ("+1 auf einen Wert bis zum Ende der Runde.", "+1 on one value until the round ends.")),
          "geruecht": (("Gerücht", "Rumour"), ("Ein Hinweis auf den nächsten Ort.", "A hint at the next place.")),
          "verbessern": (("Ausrüstung verbessern", "Improve gear"), ("Eine Waffe oder Rüstung wird eine Seltenheit besser, bis episch.", "A weapon or armour gets one rarity better, up to epic.")),
-         "heiler": (("Heiler", "Healer"), ("Nimmt die Folgen deiner Wunden; die Narben bleiben als Erinnerung.", "Takes your wounds' consequences; the scars stay as a memory."))}
+         "heiler": (("Heiler", "Healer"), ("Nimmt die Folgen deiner Wunden; die Narben bleiben als Erinnerung.", "Takes your wounds' consequences; the scars stay as a memory.")),
+         "gefaehrte": (("Gefährte anheuern", "Hire a companion"), ("Geht mit der Gruppe und kämpft mit; der Lohn ist je Kapitel fällig.", "Goes with the group and fights along; the pay is due each chapter."))}
 RICHTUNG = (("im Osten", "to the east"), ("im Südosten", "to the south-east"), ("im Süden", "to the south"), ("im Südwesten", "to the south-west"),
             ("im Westen", "to the west"), ("im Nordwesten", "to the north-west"), ("im Norden", "to the north"), ("im Nordosten", "to the north-east"))
 clock = time.time
@@ -55,8 +60,8 @@ def here(rd):
 
 def offers(rd, h):
     """The settlement's services for this hero: the healer while the host's wounds are on (dungeon_narben) or the hero
-    still has a consequence to heal (from a round with the switch on)."""
-    return DIENSTE + ((HEILER,) if narben.on(rd) or narben.to_heal(h) else ())
+    still has a consequence to heal (from a round with the switch on); the companions while the host's are on."""
+    return DIENSTE + ((HEILER,) if narben.on(rd) or narben.to_heal(h) else ()) + ((GEFAEHRTE,) if gefaehrte.on(rd) else ())
 
 
 def per_level(was):
@@ -70,6 +75,8 @@ def price(dm, rd, was):
     import dungeon_kalender
     if was == "verbessern":
         return 0
+    if was == GEFAEHRTE:
+        return gefaehrte.sold(dm, dm.rules(), rd)
     level = dm.group_level(dm._living(rd))
     n = per_level(was) * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
     return n * (100 + dungeon_kalender.aufschlag(dm.rules(), rd)) // 100
@@ -194,6 +201,8 @@ def serve(dm, r, rd, pid, h, b):
             raise ValueError("heiler")
         n = narben.heal(h)
         text = (f"Ein Heiler versorgt {h['name']}: {n} Wunden heilen aus, die Narben bleiben.", f"A healer tends to {h['name']}: {n} wounds heal, the scars stay.")
+    elif was == GEFAEHRTE:
+        text = gefaehrte.hire(dm, r, rd, pid, h, str(b.get("i") or "")[:40])
     elif was == "verbessern":
         alt = dm.item_view(r, teil, rd["lang"])["name"]
         teil["s"] = better(dm, r, teil)
@@ -232,7 +241,7 @@ def view(dm, r, rd, pid):
     besser = [x for x in dm.worn(h) + h["tasche"] if better(dm, r, x)]
     frei = {"gasthaus": rd.get("gasthaus") != evening(), "schmied": bool(h.get("kaputt")),
             "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser),
-            "heiler": bool(narben.to_heal(h))}
+            "heiler": bool(narben.to_heal(h)), "gefaehrte": bool(gefaehrte.candidates(dm, r, rd))}
     held = dm._living(rd)
     # Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 3a 5b): the time of day for the head, the group's gold only
     # shown, and per service the calculation of its price (gold per level, level, heroes for the inn)
@@ -242,6 +251,7 @@ def view(dm, r, rd, pid):
             "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x],
                          "je": per_level(x)} for x in offers(rd, h)],
             "spruch": narben.saying(r, rd, dm.seated(rd)),          # people ask about a scar (D&D idea 8)
+            "gefaehrten": gefaehrte.candidates(dm, r, rd),         # the companions to hire (D&D round 2, idea 9)
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
             "verbessern": [dict(dm.item_view(r, x, rd["lang"]), preis=better_price(dm, r, x),
                                 neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser]}

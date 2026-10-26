@@ -48,6 +48,7 @@ import re
 
 import dungeon_album as album
 import dungeon_ehre as ehre
+import dungeon_gefaehrte as gefaehrte
 import dungeon_haltung as haltung
 import dungeon_umgebung as umgebung
 import dungeon_narben as narben
@@ -194,8 +195,11 @@ def _mal(n):
 
 def budget(dm, r, rd, held, stufe=True):
     """The experience an encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size, half at
-    the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium)."""
-    b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (GRUPPE[0] + GRUPPE[1] * (len(held) - 1))
+    the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium). Every companion up
+    counts as gefaehrte.ANTEIL of a hero (round 2, idea 9)."""
+    mehr = gefaehrte.share(rd)
+    b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (1 + mehr / max(1, len(held))) \
+        * (GRUPPE[0] + GRUPPE[1] * (len(held) + mehr - 1))
     return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100) * (stage_factor(r, rd, held) if stufe else 1))
 
 
@@ -681,6 +685,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
     out = []
     zs = {z["id"]: z for z in r.get("zustaende") or []}
     reach = [(pid, h) for pid, h in standing if not umgebung.away(rd, pid)]   # a way out of a prop (round 2, idea 3)
+    reach += gefaehrte.targets(rd)                # the companions may be struck like a hero (round 2, idea 9)
     for g in up(rd):
         if g["k"] in down or not reach:
             continue
@@ -693,7 +698,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
             art = sagt[2] if sagt and not zug else ""
             pid, h = (sagt[:2] if art else None) or (next(((q, hh) for q, hh in reach if by and q == by[-1]), None) if not zug else None) \
                 or reach[rng.randrange(len(reach))]
-            vt = _state_vt(r, h, "", "gegen")
+            vt = "" if h.get("gefaehrte") else _state_vt(r, h, "", "gegen")
             if art == "lauert":
                 vt = "" if vt == "nachteil" else "vorteil"
             steht = haltung.stance(rd, pid)
@@ -703,7 +708,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
                 vt = "" if vt == "vorteil" else "nachteil"    # kept at a distance by a reach weapon
             ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
-            ac = rk(dm, r, h) + (haltung.ABWEHR if steht == "abwehr" else 0) + umgebung.cover(rd, pid)
+            ac = (h["ruestung"] if h.get("gefaehrte") else rk(dm, r, h)) + (haltung.ABWEHR if steht == "abwehr" else 0) + umgebung.cover(rd, pid)
             plus = (BOSS_PHASE if g.get("phase") == 2 else 0) + (haltung.ZIELT if art == "zielt" else -haltung.HOLT if art == "holt_aus" else 0)
             hit = w == 20 or (w != 1 and w + g["angriff"] + plus >= ac)
             n = max(1, _dice(rng, g["wuerfel"] * (2 if w == 20 else 1) * (2 if art == "holt_aus" else 1), g["schaden"]) + g["plus"]) if hit else 0
@@ -711,7 +716,7 @@ def foes_turn(dm, r, rd, hits, rng=None):
                  "gesamt": w + g["angriff"] + plus, "rk": ac, "treffer": hit, "krit": w == 20, "schaden": n, "art": g.get("art", ""),
                  **({"ansage": art} if art else {}), **({"haltung": steht} if steht else {})}
             frei = [z for z in g.get("zustaende") or [] if z in zs and z not in {y["id"] for y in h.get("zust") or []}]
-            if hit and frei:                     # the hit may cause a state: the hero saves
+            if hit and frei and not h.get("gefaehrte"):   # the hit may cause a state: the hero saves
                 z = frei[rng.randrange(len(frei))]
                 wert = "weisheit" if z in GEIST else "konstitution"
                 dc = RETTUNG + int(dm._by(r, "gegner").get(g["id"], {}).get("stufe", 0) // 4)
@@ -782,7 +787,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []),
                 **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "krit_tabelle", "patzer_tabelle", "beleg") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
-        ehre.count(rd, x["pid"], treffer=int(x["treffer"]), krit=int(x["treffer"] and x["krit"]), schaden=x["schaden"] if x["treffer"] else 0,
+        ehre.count(rd, "" if gefaehrte.is_one(x["pid"]) else x["pid"], treffer=int(x["treffer"]), krit=int(x["treffer"] and x["krit"]), schaden=x["schaden"] if x["treffer"] else 0,
                    zwanzig=int(x["w"] == 20), eins=int(x["w"] == 1))     # Ehrungen des Abends (D&D idea 1), the panel's own numbers
         if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
             learn(rd, g["id"], [x["art"]])
@@ -819,6 +824,9 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 print("dungeon: kampf | gegner zustand", flush=True)
             continue
         g = by.get(x["k"])
+        if g and not g["aus"] and gefaehrte.is_one(x["pid"]):   # a blow at a companion (round 2, idea 9)
+            gefaehrte.struck(dm, rd, x, rng)
+            continue
         if not g or g["aus"] or x["pid"] not in seats or dm.zustand(seats[x["pid"]]["held"]):
             continue
         dm._log(rd, "angriff", gegner=g["name"], pid=x["pid"], name=x["name"], w=x["w"], ws=x.get("ws", [x["w"]]), vt=x.get("vt", ""),
@@ -903,6 +911,7 @@ def end(dm, r, rd, ep, why=""):
     if not k:
         return
     expire(dm, rd, all_=True)
+    gefaehrte.after_fight(rd)                    # the companions stand with the group again (round 2, idea 9)
     besiegt = [g for g in k["gegner"] if g["aus"] == "besiegt"]
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7

@@ -423,6 +423,111 @@ class Turns(Base):
         self.assertIn("dmWunsch(v)", js)
         self.assertIn("e.art==='wunsch'", js)
 
+    def test_companions_hired_fight_by_the_panels_dice(self):
+        """D&D round 2, idea 9 (Gefährten anheuern, switch dungeongefaehrte): off by default; on, in a settlement a hero
+        hires a companion of the world as a service of „Gold mit Zweck“, only while fewer than four heroes play, at most
+        MAX; its values come from the fixed table by the group's level; in a fight the panel rolls its blows and the
+        foes may strike it; down at 0, it stands again after the fight; the encounter budget counts it as ANTEIL of a
+        hero; its pay is due each chapter from the hirer's gold, without it the panel's d20 decides; a campaign keeps it."""
+        import features
+        import dungeon_gefaehrte as gef
+        import dungeon_gold as gold
+        self.assertNotIn(gef.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_gefaehrte"], False)
+        helpers.keep_chat(self, "dungeon_gold")
+        helpers.keep_chat(self, "dungeon_gefaehrte")
+        helpers.set_config(dungeon_gold=True)
+        r = dungeon.rules()
+        url = f"/api/profile/dungeon/{self.rid}"
+        dienst = lambda **kw: self.c.post(url + "/held", json=dict(was="dienst", id="gefaehrte", **kw))
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            dungeon_karte.make(r, rd, random.Random(3))
+            rd["karte"]["orte"][rd["karte"]["hier"]]["art"] = "dorf"
+            for _, x in dungeon.seated(rd):
+                x["held"]["gold"] = 500
+            dungeon._write(d)
+        self.assertNotIn("gefaehrte", [x["id"] for x in self.c.get(url).json()["siedlung"]["dienste"]])   # off: no offer
+        self.assertEqual(dienst(i="grete").json()["detail"], "dienst")
+        helpers.set_config(dungeon_gefaehrte=True)
+        rd = self.state(self.rid)
+        v = self.c.get(url).json()["siedlung"]
+        w = gef.werte(r, dungeon.group_level(dungeon._living(rd)))
+        self.assertEqual(next(x["preis"] for x in v["dienste"] if x["id"] == "gefaehrte"), w["sold"])
+        welt = [x["id"] for x in r["ideen"]["gefaehrten"] if x["welt"] == rd["welt"]]
+        self.assertEqual([x["id"] for x in v["gefaehrten"]], welt)
+        self.assertGreaterEqual(len(welt), 2)
+        self.assertEqual(dienst(i="niemand").json()["detail"], "gefaehrte")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            x = dienst(i=welt[0])
+        self.assertEqual(x.status_code, 200, x.text)
+        self.assertIn("dungeon: gefaehrte | angeheuert", out.getvalue())
+        rd = self.state(self.rid)
+        c = rd["gefaehrten"][0]
+        self.assertEqual((c["k"], c["leben"], c["ruestung"], c["angriff"]), (gef.PREFIX + welt[0], w["leben"], w["ruestung"], w["angriff"]))
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], 500 - w["sold"])   # the first chapter's pay on hiring
+        self.assertEqual(rd["log"][-1]["art"], "dienst")
+        self.assertEqual(x.json()["gefaehrten"][0]["von"], rd["plaetze"][self.host]["held"]["name"])
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": self.code, "was": "dienst", "id": "gefaehrte", "i": welt[1]}).status_code, 200)
+        self.assertEqual(dienst(i=welt[-1]).status_code, 409)                  # two heroes: the group full at four
+        self.assertEqual(self.c.get(url).json()["siedlung"]["gefaehrten"], [])
+        rd = self.state(self.rid)
+        self.assertEqual(gef.share(rd), gef.ANTEIL * 2)
+        held = dungeon._living(rd)
+        self.assertGreater(kampf.budget(dungeon, r, rd, held), kampf.budget(dungeon, r, dict(rd, gefaehrten=[]), held))   # the balance holds
+        self.assertIn('"gefaehrten"', dungeon.facts(r, rd))
+        self.assertIn("Gefährten", dungeon.system_text(r, rd, "erzaehlen"))
+        # the fight: the companions' blows by the panel's dice, the foes may strike them
+        foe = kampf.offer(dungeon, r, rd, held)[0]
+        kampf.start(dungeon, r, rd, held, [(foe, 1)], 0)
+        hits = gef.attacks(dungeon, r, rd, [], random.Random(1))
+        self.assertEqual([h["pid"] for h in hits], [c["k"] for c in rd["gefaehrten"]])
+        self.assertTrue(all(h["gefaehrte"] and h["rk"] == rd["kampf"]["gegner"][0]["rk"] for h in hits))
+        at = next((z for s in range(60) for z in kampf.foes_turn(dungeon, r, rd, [], random.Random(s)) if gef.is_one(z["pid"])), None)
+        self.assertIsNotNone(at)
+        self.assertEqual(at["rk"], rd["gefaehrten"][0]["ruestung"])
+        self.assertNotIn("rettung", at)                                        # no states on a companion
+        x = dict(at, pid=rd["gefaehrten"][0]["k"], treffer=True, schaden=999)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.apply(dungeon, r, rd, [], [x], "", {})
+        self.assertEqual(rd["gefaehrten"][0]["aus"], "am_boden")
+        self.assertIn("dungeon: gefaehrte | am boden", out.getvalue())
+        self.assertEqual(rd["log"][-1]["was"], "am_boden")
+        self.assertEqual(len(gef.up(rd)), 1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.end(dungeon, r, rd, {}, "flucht")
+        self.assertEqual((rd["gefaehrten"][0]["aus"], rd["gefaehrten"][0]["leben"]), ("", 1))   # stands again after the fight
+        # a new chapter: the pay from the hirer's gold, without it the panel's d20
+        rd["kapitel"] = rd["gefaehrten"][0]["kapitel"] + 1
+        self.assertEqual(gef.up(rd), [])                                       # unpaid: not with the group
+        g0 = rd["plaetze"][self.host]["held"]["gold"]
+        rd["plaetze"][self.gp]["held"]["gold"] = 0
+
+        class One:
+            def randint(self, a, b):
+                return 1
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            gef.pay(dungeon, r, rd, One())
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], g0 - gef.sold(dungeon, r, rd))
+        self.assertEqual([c["id"] for c in rd["gefaehrten"]], [welt[0]])       # the guest's without pay went its way
+        self.assertIn("dungeon: gefaehrte | gegangen", out.getvalue())
+        self.assertEqual(len(gef.up(rd)), 1)
+        kept = gef.keep(rd)
+        self.assertEqual(gef.carry(kept)["gefaehrten"][0]["id"], welt[0])      # a campaign keeps it
+        self.assertEqual(gef.carry({"gefaehrten": [{"k": "boese"}]}), {"gefaehrten": []})
+        kids = dict(rd, ton=min(t["id"] for t in r["toene"]))
+        self.assertEqual([x["id"] for x in gef.rows(dungeon, r, kids)], [x["id"] for x in r["ideen"]["gefaehrten_kinder"]])   # animal friends
+        self.assertGreaterEqual(gef.for_live()["angeheuert"], 2)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmGefaehrten(v)", js)
+        self.assertIn("e.art==='gefaehrte'", js)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeonfenster.js"), encoding="utf-8") as f:
+            self.assertIn("gefaehrte:['Anheuern','Hire']", f.read())
+        self.assertIn(gold.GEFAEHRTE, gold.NAMEN)
+
     def test_whisper_to_a_person_only_for_the_own_seat(self):
         """D&D round 2, idea 5 (Flüstern mit einer Figur, switch dungeonfluestern): off by default; on, a seat whispers
         once a turn to a person of the scene; the model answers as that person, the panel checks it and keeps it only

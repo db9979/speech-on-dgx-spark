@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.121** AI Dungeon Master: hire companions, in a settlement a companion of the world while fewer than four play, the panel rolls its blows, it counts as half a hero in the balance
 - **V01.1.120** AI Dungeon Master: heart's wish, every hero carries a secret wish, per act the narrator gets one in turn, when it comes true there is the experience of an act
 - **V01.1.119** AI Dungeon Master: whisper to a person, once a turn a word only for the own seat, the person answers, betrayal and gift the panel decides
 - **V01.1.118** AI Dungeon Master: use the surroundings, chandeliers, powder kegs, pillars and ropes in a fight, one check of the panel and a fixed effect
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.114** AI Dungeon Master: tongues of the peoples, a person briefly greets in its people's tongue, foreign sounds for everyone, the translation only for who knows the tongue
 - **V01.1.113** AI Dungeon Master: "Paint all pictures · N" counts only pictures a run will paint (fixed ones count as done); picture and lines for the settlement's healer
 - **V01.1.112** AI Dungeon Master: content of the D&D ideas round 2 in the SRD catalogue: 20 prices for "near miss", 58 props for every kind of place and room, heart's wishes per world, companions with values for levels 1 to 10 and animal friends at the children's table, torch and glow stick
-- **V01.1.111** AI Dungeon Master: travel stages, a long way on the map becomes a journey, every hero takes a role and rolls, a consequence and an event of the landscape
 
 
 
