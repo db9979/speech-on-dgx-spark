@@ -294,6 +294,9 @@ FEATURES = (
     # Knapp daneben (dungeon_knapp.py, D&D round 2 idea 1): a check missing by 1 or 2 asks its seat, give up or pay a
     # price from a fixed table; the price works by a fixed rule
     F("dungeonknapp", "Knapp daneben", "Near miss", "data", ("dungeon_knapp",), parent="dungeon", me="dmbox", guide="dungeonknapp"),
+    # Helfen und Gruppenprobe (dungeon_helfen.py, D&D round 2 idea 4): a named help gives advantage, half of a group passing is enough
+    F("dungeonhelfen", "Helfen und Gruppenprobe", "Helping and group checks", "data", ("dungeon_helfen",), parent="dungeon", me="dmbox",
+      guide="dungeonhelfen"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

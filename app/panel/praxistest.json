@@ -3656,6 +3656,13 @@
 "titel": "Dungeon-Master: Knapp daneben",
 "text": "Funktionen → KI-Dungeon-Master → Knapp daneben einschalten (die Preis-Tabelle kommt mit dem Katalog) und spielen, bis eine Probe um 1 oder 2 fehlt. A: Am Tisch steht „Knapp daneben!“ mit „Aufgeben“ und „Zahlen“, die anderen sehen, wer überlegt. B: Nach „Zahlen“ ist die Probe geschafft, am Wurf steht „Knapp daneben, mit Preis: …“, und die Erzählung nennt den Preis. C: Ohne Antwort ist nach 20 Sekunden aufgegeben.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P547",
+"v": 1102,
+"titel": "Dungeon-Master: Helfen und Gruppenprobe",
+"text": "Funktionen → KI-Dungeon-Master → Helfen und Gruppenprobe einschalten und mit zwei Helden spielen. A: Schreibt einer „Ich helfe Mara über die Mauer“, steht an Maras Wurf „🤝 mit Hilfe von …“ und es sind zwei Würfel. B: Schleichen beide (gleicher Wert, gleiche Schwierigkeit) und einer schafft es, steht an beiden „👥 Gruppenprobe“ und beide haben es geschafft.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

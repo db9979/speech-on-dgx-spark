@@ -7255,6 +7255,51 @@ class Fight(Turns):
         self.assertIn("${dmKnapp(v)}", js)
         self.assertIn("e.knapp?", js)
 
+    def test_helping_and_group_checks(self):
+        """D&D round 2 idea 4 (Helfen und Gruppenprobe, switch dungeonhelfen): off by default; on, an action with a word of
+        help and another hero's name gives that hero's first check of the turn advantage (never oneself, never a hero
+        who cannot act); two or more seats on the same value and difficulty pass together when half of them pass."""
+        import features
+        import dungeon_helfen as helfen
+        self.assertNotIn(helfen.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_helfen"], False)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        for _, p_ in dungeon.seated(rd):
+            p_["held"].pop("zust", None)
+        bela = rd["plaetze"][self.gp]["held"]["name"]
+        rd["offen"] = {self.host: {"text": f"Ich helfe {bela.split()[0]} über die Mauer."}}
+        check = lambda pid, schwer=12: {"pid": pid, "wert": "staerke", "schwer": schwer}
+        self.assertEqual(dungeon.roll(r, rd, [check(self.gp)], Dice(5, 15))[0]["vt"], "")   # switch off: one die
+        helpers.keep_chat(self, "dungeon_helfen")
+        helpers.set_config(dungeon_helfen=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            x, y = dungeon.roll(r, rd, [check(self.gp), check(self.gp, 15)], Dice(5, 15, 5))
+        self.assertEqual((x["vt"], x["w"], x["hilfe"]), ("vorteil", 15, rd["plaetze"][self.host]["held"]["name"]))
+        self.assertNotIn("hilfe", y)                                              # only the first check of the turn
+        self.assertIn("dungeon: helfen | vorteil", out.getvalue())
+        self.assertEqual(dungeon.roll_facts(r, rd, [dict(x, beleg="b1")], [], [])[0][0]["geholfen_von"], x["hilfe"])
+        rd["offen"] = {self.host: {"text": "Ich helfe " + rd["plaetze"][self.host]["held"]["name"] + "."}}
+        self.assertEqual(helfen.helpers(dungeon, rd), {})                          # never oneself
+        rd["offen"] = {self.host: {"text": f"I help {bela}."}}
+        rd["plaetze"][self.host]["held"]["leben"] = 0
+        self.assertEqual(helfen.helpers(dungeon, rd), {})                          # a hero down helps nobody
+        rd["plaetze"][self.host]["held"]["leben"] = 5
+        rd["offen"] = {}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            a, b = dungeon.roll(r, rd, [check(self.host), check(self.gp)], Dice(15, 2))
+        self.assertEqual((a["ok"], b["ok"], a["gruppe"], b["gruppe"]), (True, True, True, True))   # half is enough
+        self.assertIn("dungeon: helfen | gruppe | 1 von 2 | geschafft", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()):
+            a, b = dungeon.roll(r, rd, [check(self.host), check(self.gp)], Dice(2, 2))
+        self.assertEqual((a["ok"], b["ok"], b["gruppe"]), (False, False, True))
+        a, b = dungeon.roll(r, rd, [check(self.host), check(self.gp, 15)], Dice(15, 2))
+        self.assertEqual((b["ok"], "gruppe" in b), (False, False))                 # another difficulty: no group
+        self.assertEqual(helfen.for_live()["gruppe_geschafft"] >= 1, True)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("e.hilfe||e.gruppe", f.read())
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""

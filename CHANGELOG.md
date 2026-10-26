@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.102** · 2026-10-26 · KI-Dungeon-Master: Helfen und Gruppenprobe, wer einem Helden mit Namen hilft, gibt ihm Vorteil, bei einer Gruppenprobe reicht die Hälfte
 - **V01.1.101** · 2026-10-26 · KI-Dungeon-Master: Knapp daneben, fehlen einer Probe 1 oder 2, wählt der Held aufgeben oder es mit einem gewürfelten Preis doch zu schaffen
 - **V01.1.100** · 2026-10-26 · KI-Dungeon-Master: Ehrungen des Abends, am Ende der Runde feste Titel wie Klinge des Abends und je Held eine Urkunde mit den Zahlen aus den Würfeln des Spark
 - **V01.1.099** · 2026-10-26 · KI-Dungeon-Master: Krit- und Patzer-Tabellen, eine 20 oder 1 im Kampf würfelt eine Zeile mit Folge für Gegner oder Held, dazu die Prüfregeln für die Inhalte der D&D-Ideen Runde 2

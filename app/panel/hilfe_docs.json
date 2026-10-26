@@ -5429,6 +5429,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Helfen und Gruppenprobe (V01.1.102, D&D-Ideen Runde 2, Idee 4, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Helfen und Gruppenprobe* (chat.dungeon_helfen, ab Werk aus; dungeon_helfen.py; nach „Working Together“ und „Group Checks“ der SRD 5.1, CC BY 4.0). Helfen: Steht in der Aktion eines Platzes ein Wort der Hilfe (WORTE: helfe, hilf, unterstütze, help, assist …) und der Name eines anderen Helden (ein Teil des Namens ab 3 Buchstaben als ganzes Wort), würfelt das Panel die erste Probe dieses Helden im Zug mit Vorteil; ein Nachteil hebt ihn auf. Nie für sich selbst, nie bei Angriffen, nur wer handeln kann, ein Helfer je Held. Am Wurf steht „🤝 mit Hilfe von …“, der Erzähler bekommt geholfen_von. Gruppenprobe: Würfeln zwei oder mehr Plätze im selben Zug denselben Wert gegen dieselbe Schwierigkeit, ist es eine Gruppenprobe: schafft es mindestens die Hälfte, gelten alle als geschafft (gruppe am Wurf, „👥 Gruppenprobe“, für den Erzähler gruppenprobe). Beides sind feste Regeln auf den Würfen des Panels (dungeon.roll), das Modell erzählt nur. Kein neuer Endpunkt. Live: heute geholfen, Gruppenproben ges"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "chafft und nicht. Log dungeon: helfen | vorteil und dungeon: helfen | gruppe | n von m | geschafft oder | nicht. Selbsttest Fight.test_helping_and_group_checks."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10678,6 +10694,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Knapp daneben (Funktionen → Meine Daten → „Knapp daneben“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Fehlen einer Probe nur 1 oder 2 (nie bei einer 1 und nie bei Angriffen), fragt der Spark den Helden: aufgeben oder es doch schaffen und einen Preis zahlen?"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Helfen und Gruppenprobe (Funktionen → Meine Daten → „Helfen und Gruppenprobe“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Schreibt ein Spieler in seiner Aktion, dass er einem anderen Helden hilft, und nennt ihn beim Namen („Ich helfe Mara über die Mauer“), würfelt der Spark Maras erste Probe in diesem Zug mit Vorteil (zwei W20, der höhere zählt)."
 },
 {
 "lang": "de",
@@ -19429,6 +19453,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: helping and group checks (V01.1.102, D&D ideas round 2, idea 4, Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\"): Admin switch *Features → AI Dungeon Master → Helping and group checks* (chat.dungeon_helfen, off by default; dungeon_helfen.py; after \"Working Together\" and \"Group Checks\" of the SRD 5.1, CC BY 4.0). Helping: When a seat's action has a word of help (WORTE: helfe, hilf, unterstütze, help, assist …) and another hero's name (a part of the name from 3 letters as a whole word), the panel rolls that hero's first check of the turn with advantage; a disadvantage cancels it. Never for oneself, never on attacks, only who can act, one helper per hero. The roll shows \"🤝 with help from …\", the narrator gets geholfen_von. Group check: When two or more seats roll the same value against the same difficulty in one turn, it is a group check: if at least half pass, all count as passed (gruppe on the roll, \"👥 group check\", for the narrator gruppenprobe). Both are fixed rules on the panel's rolls (dungeon.roll); the model only tells. No new endpoint. Live: helped today, group checks passed and not. Log dungeon: helfen | vorteil and dungeon: helfen | grup"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "pe | n von m | geschafft or | nicht. Self-test Fight.test_helping_and_group_checks."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24494,6 +24534,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Near miss (Features → My data → \"Near miss\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a check misses by only 1 or 2 (never on a 1 and never on attacks), the Spark asks the hero: give up, or make it after all and pay a price?"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Helping and group checks (Features → My data → \"Helping and group checks\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a player writes in their action that they help another hero and names them (\"I help Mara over the wall\"), the Spark rolls Mara's first check of this turn with advantage (two d20, the higher counts)."
 },
 {
 "lang": "en",

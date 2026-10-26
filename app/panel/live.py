@@ -1408,6 +1408,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Helfen und Gruppenprobe (dungeon_helfen.py): numbers on the game's line
+        import dungeon_helfen
+        dgn["helfen"] = dungeon_helfen.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["helfen"] = {}
     try:   # Knapp daneben (dungeon_knapp.py): numbers on the game's line
         import dungeon_knapp
         dgn["knapp"] = dungeon_knapp.for_live() if dgn.get("on") else {}
@@ -1930,6 +1935,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
                            f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"
                            if (dgn.get("knapp") or {}).get("gefragt") or (dgn.get("knapp") or {}).get("abgelehnt") else "")
+                        + (f" · heute {dgn['helfen']['hilfe']}× geholfen, Gruppenproben {dgn['helfen']['gruppe_geschafft']} geschafft, {dgn['helfen']['gruppe_nicht']} nicht"
+                           if any((dgn.get("helfen") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

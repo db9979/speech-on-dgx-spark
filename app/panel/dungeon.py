@@ -143,6 +143,7 @@ import dungeon_gesicht as gesicht
 import dungeon_echt as echt
 import dungeon_ehre as ehre
 import dungeon_knapp as knapp
+import dungeon_helfen as helfen
 import coadmin
 import features
 import guard
@@ -3288,9 +3289,14 @@ def roll(r, rd, proben, rng=None, hand=None):
     rng = rng or random
     out = []
     schrei = KRAFT["gruppe_probe"] if any("gruppe_probe" in (a.get("wirkt") or {}) for a in rd["offen"].values()) else 0
+    hilfe = helfen.helpers(_me, rd)              # Helfen (D&D round 2, idea 4): the helped hero's first check with advantage
     for p in proben:
         h = rd["plaetze"][p["pid"]]["held"]
         vt = p.get("vt") or ""
+        von = hilfe.pop(p["pid"], "")
+        if von:
+            vt = "" if vt == "nachteil" else "vorteil"
+            helfen.used()
         last = p["wert"] == "geschick" and burdened(r, h)
         if last:                                 # burdened: Geschick with disadvantage, advantage cancels it (2a)
             vt = "" if vt == "vorteil" else "nachteil"
@@ -3322,9 +3328,11 @@ def roll(r, rd, proben, rng=None, hand=None):
             extra["werkzeug_plus"] = tool_plus(r, tool)
             if w == 1 and not c["hilft"].get("fest"):   # a natural 1 breaks the tool (Dominik 2026-10-23 „1“), apply takes it
                 extra["kaputt"] = tool["i"]
+        if von:
+            extra["hilfe"] = von
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
                     "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra})
-    return out
+    return helfen.group(out) if helfen.on(rd) else out     # Gruppenprobe: half of the group passing is enough
 
 
 def used_tool(r, h, wert, text):
@@ -3489,7 +3497,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
     for w in wuerfe:
         if w.get("knapp"):                       # a near miss paid: its price by a fixed rule (dungeon_knapp)
             knapp.pay(_me, r, rd, (rd["plaetze"].get(w["pid"]) or {}).get("held"), w, rng)
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "beleg") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         ehre.count(rd, w["pid"], proben=int(bool(w["ok"])), schatten=int(bool(w["ok"]) and w["wert"] == "geschick"),
                    zwanzig=int(w["w"] == 20), eins=int(w["w"] == 1))
@@ -3685,7 +3693,8 @@ def roll_facts(r, rd, wuerfe, hits, zuege):
     facts_w = [{"beleg": w["beleg"], "name": w["name"], "wofuer": w["wofuer"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
                 "geschafft": w["ok"], "ergebnis": ERGEBNIS[w["ok"]][1 if rd["lang"] == "en" else 0], **({"vorteil": w["vt"]} if w.get("vt") else {}),
                 **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {}),
-                **({"knapp_mit_preis": w["preis_t"]} if w.get("knapp") else {})}     # a near miss paid: the price as data (dungeon_knapp)
+                **({"knapp_mit_preis": w["preis_t"]} if w.get("knapp") else {}),     # a near miss paid: the price as data (dungeon_knapp)
+                **({"geholfen_von": w["hilfe"]} if w.get("hilfe") else {}), **({"gruppenprobe": True} if w.get("gruppe") else {})}
                for w in wuerfe]
     facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
                  "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
