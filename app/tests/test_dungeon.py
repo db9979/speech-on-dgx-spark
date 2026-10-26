@@ -2945,7 +2945,7 @@ class Equipment(Base):
         finally:
             dungeon.step_act = old
         foes = [{"k": "g1", "ep": 50, "aus": ""}, {"k": "g2", "ep": 25, "aus": "besiegt"}]
-        for geschafft, want in ((True, 25), (False, 13)):            # 25 + half of 50 or 25 by two heroes (Kampf-Audit 3: peace gives half)
+        for geschafft, want in ((True, 25), (False, 12)):            # 25 + half of 50 or 25 by two heroes, rounded down (Kampf-Audit 3, N4)
             rd = {"kampf": {"gegner": [dict(g) for g in foes], "geschafft": geschafft}, "log": [], "plaetze": {}, "zug": 1}
             ep = {"pa": 0, "pb": 0}
             kampf.end(dungeon, r, rd, ep, "frieden")
@@ -6636,7 +6636,7 @@ class Fight(Turns):
             kampf.apply(dungeon, r, rd, [], [], "", ep, Dice(20))
         self.assertNotIn("kampf", rd)
         self.assertEqual(rd["log"][-1]["was"], "frieden")
-        self.assertEqual(sum(ep.values()), -(-(foe["ep"] // 2) // len(ep)) * len(ep))
+        self.assertEqual(sum(ep.values()), (foe["ep"] // 2) // len(ep) * len(ep))
 
     def test_kampf_flucht_nur_mit_mehrheit_und_panelprobe(self):
         """Kampf-Audit M6: kampf_ende flucht of the model alone ends nothing; only when most heroes who can act flee
@@ -6750,6 +6750,77 @@ class Fight(Turns):
         if wp and not wp.get("u"):                                                   # the weapon's bonus once, as before
             self.assertEqual(dungeon.body(r, h, wert, dinge=False), dungeon.mod(h["werte"][wert]) + 4 - dungeon.narben.minus(h, wert))
 
+    def test_kampf_angriffsrolle_macht_den_naechsten_angriff(self):
+        """Kampf-Audit M4: a scroll of an attack spell read from the bag (Feuerball) makes the hero's next attack that
+        spell (its damage kind), in this turn or the next, once; unused it lapses."""
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        i = self.give(self.rid, self.host, "feuerball")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            r2 = self.c.post(f"/api/profile/dungeon/{self.rid}/held", json={"was": "wirken", "i": i})
+        self.assertEqual(r2.status_code, 200, r2.text)
+        self.assertIn("dungeon: rolle | bereit", out.getvalue())
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        self.assertEqual(h["rolle"], {"id": "feuerball", "bis": rd["zug"] + 1})
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=1, leben=999, max=999, immun=[], resistenz=[], schwaeche=[])
+        rd["offen"] = {self.host: {"text": f"Ich greife {g['name']} an."}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            _, hits = kampf.attacks(dungeon, r, rd, [], Dice(10, 3))
+        self.assertEqual(hits[0]["art"], "feuer")
+        self.assertIn("dungeon: kampf | rolle | angriff", out.getvalue())
+        self.assertNotIn("rolle", h)
+        with contextlib.redirect_stdout(io.StringIO()):
+            _, hits = kampf.attacks(dungeon, r, rd, [], Dice(10, 3))
+        self.assertNotEqual(hits[0]["art"], "feuer")                                  # once
+        h["rolle"] = {"id": "feuerball", "bis": rd["zug"]}
+        dungeon.wear_off(rd)
+        self.assertNotIn("rolle", h)                                                  # not used in its turns: gone
+        h["rolle"] = {"id": "schwert", "bis": rd["zug"] + 1}
+        self.assertNotIn("rolle", dungeon.fix_hero(r, h))                             # no attack spell: dropped
+
+    def test_kampf_heilung_vor_den_treffern_des_zuges(self):
+        """Kampf-Audit M7: the heroes act before the foes, so a spell's healing and blessing (cast_powers) come before the
+        turn's hits (consequences)."""
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        seen = []
+        story = {"text": "Ihr kämpft.", "npc": [], "npc_stimme": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
+                 "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "", "begegnung": [], "fremd": [],
+                 "faeden": [], "dinge": [], "tageszeit": "", "folgen": [], "kampf_ende": ""}
+        with mock.patch.object(dungeon, "cast_powers", lambda *a, **k: seen.append("zauber")), \
+                mock.patch.object(dungeon, "consequences", lambda *a, **k: seen.append("treffer")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            dungeon.apply(r, rd, [], story, self.rid, random.Random(1), kampfwuerfe=([], []))
+        self.assertEqual(seen, ["zauber", "treffer"])
+
+    def test_kampf_ziel_genauester_treffer(self):
+        """Kampf-Audit N2: the most exact name wins: „Ratte“ is the Riesenratte (the end of its name), never the
+        Rattenschwarm (only its start); among several of the same kind the one with the least life left."""
+        mk = lambda k, n, leben: {"k": k, "name": n, "leben": leben, "max": 10, "aus": ""}
+        rd = {"kampf": {"gegner": [mk("g1", "Rattenschwarm 1", 9), mk("g2", "Riesenratte", 9)]}}
+        self.assertEqual(kampf._named(rd, "Ratte")["k"], "g2")
+        self.assertEqual(kampf._named(rd, "Rattensch")["k"], "g1")                   # the start still finds it
+        rd = {"kampf": {"gegner": [mk("g1", "Werratte", 9), mk("g2", "Riesenratte 1", 4), mk("g3", "Riesenratte 2", 9)]}}
+        self.assertEqual(kampf._named(rd, "Ratten")["k"], "g2")                      # same kind: the least life
+        self.assertEqual(kampf._named(rd, "Ratten", life={"g1": 2, "g2": 4, "g3": 9})["k"], "g1")
+        self.assertEqual(kampf._named(rd, "Riesenratte 2")["k"], "g3")              # the whole name first
+
+    def test_kampf_ep_abgerundet(self):
+        """Kampf-Audit N4: the fight's experience divided by the heroes is rounded down (25 for 2 heroes: 12 each)."""
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        held = dict(dungeon.seated(rd))
+        self.assertEqual(len(held), 2)
+        for g in rd["kampf"]["gegner"]:
+            g.update(aus="besiegt", ep=25)
+        rd["kampf"]["gegner"] = rd["kampf"]["gegner"][:1]
+        ep = {pid: 0 for pid in held}
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.end(dungeon, r, rd, ep)
+        self.assertEqual(ep, {pid: 12 for pid in held})
+
     def test_kampf_modellziel_allein_kein_angriff(self):
         """Nachprüfung Welle 1 (b): the model's ziel only picks the target, it never makes an action an attack; a hero
         casting a spell on foes (KONTROLLE) keeps no check of the model in a fight (no experience for nothing)."""
@@ -6804,7 +6875,7 @@ class Fight(Turns):
         self.assertNotIn("kampf", rd2)
         ep = [e for e in rd2["log"] if e["art"] == "ep"][n0:]
         self.assertEqual({tuple(e["grund"]) for e in ep}, {("kampf",)}, ep)           # only the fight's half, no check's experience
-        self.assertEqual(sum(e["zahl"] for e in ep), -(-(foe["ep"] // 2) // len(ep)) * len(ep))
+        self.assertEqual(sum(e["zahl"] for e in ep), (foe["ep"] // 2) // len(ep) * len(ep))
         self.assertEqual(rd2["log"][[e["art"] for e in rd2["log"]].index("kampf")]["was"], "frieden")
 
     def test_kampf_invarianten_simulation(self):

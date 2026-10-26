@@ -474,17 +474,21 @@ def _kind_of(g, text):
 
 
 def _named(rd, ziel, life=None, text=False):
-    """The foe a ziel (or with text=True an attacking action) names, the first still standing (life: the life left this
-    turn): its whole name, the start of it, then its kind."""
+    """The foe a ziel (or with text=True an attacking action) names, still standing (life: the life left this turn):
+    its whole name, then its kind (the end of its name: „Ratte“ is the Riesenratte, never the Rattenschwarm), then the
+    start of it (Kampf-Audit N2); among several of the same kind the one with the least life left, else the first."""
     z = str(ziel or "").strip().lower()
     z = z if text else z[:ZIEL_MAX]
     if not z:
         return None
     gs = [g for g in up(rd) if life is None or life.get(g["k"], 0) > 0]
     whole = (lambda n: re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", z)) if text else (lambda n: n == z)
-    return next((g for g in gs if whole(g["name"].lower())), None) or \
-        next((g for g in gs if not text and g["name"].lower().startswith(z)), None) or \
-        next((g for g in gs if _kind_of(g, z)), None)
+    left = (lambda g: life.get(g["k"], 0)) if life is not None else (lambda g: g.get("leben", 0))
+    for fits in (lambda g: whole(g["name"].lower()), lambda g: _kind_of(g, z), lambda g: not text and g["name"].lower().startswith(z)):
+        xs = [g for g in gs if fits(g)]
+        if xs:
+            return min(xs, key=left)
+    return None
 
 
 def _weapon(dm, r, h):
@@ -556,6 +560,12 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
         spell = cat.get(a.get("kraft") or "")
         if spell and spell.get("art") == "zauber" and not spell.get("schaden_art"):
             spell = None                          # Schild, Segnen, Schlaf … beside an attack: the attack is the weapon's
+        ro = h.get("rolle")
+        if not spell and ro and ro.get("bis", -1) >= rd.get("zug", 0) and (cat.get(ro.get("id")) or {}).get("art") == "zauber" \
+                and cat[ro["id"]].get("schaden_art"):
+            spell = cat[ro["id"]]                 # Kampf-Audit M4: the scroll read makes this attack its spell, once
+            h.pop("rolle")
+            print("dungeon: kampf | rolle | angriff", flush=True)
         wp = _weapon(dm, r, h)
         eig = ()
         geist = [x for x in ZAUBERWERTE if x in h["werte"]]
@@ -1072,11 +1082,12 @@ def end(dm, r, rd, ep, why=""):
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7
     alle = sum(g["ep"] for g in besiegt) + sum(g["ep"] // 2 for g in flohen + frieden)   # Kampf-Audit 3: peace gives half
     # divided by the group the fight was made for (Dominik 2026-10-25, Punkt 3): a hero who left has fled and its share
-    # stays out, one who arrived later (dungeon.arrive) gets none
+    # stays out, one who arrived later (dungeon.arrive) gets none; one who died in it is no longer in ep: its share goes
+    # to the living (Kampf-Audit N4)
     start = k.get("helden")
     teil = [pid for pid in ep if start is None or pid in start]
     zahl = len(teil) if start is None else len([pid for pid in start if pid in ep or pid not in rd["plaetze"]])   # the fallen out
-    each = -(-alle // max(1, zahl)) if teil else 0
+    each = alle // max(1, zahl) if teil else 0      # Kampf-Audit N4: rounded down (25 for 2 heroes: 12 each)
     for pid in teil:
         ep[pid] += each
     if k.get("raum") and not why:

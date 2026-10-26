@@ -3901,6 +3901,13 @@
 "titel": "Dungeon-Master: Segen, Rüstung und Flucht",
 "text": "A: Im Kampf zweimal hintereinander Dornenranken wirken: in der Heldenkarte steht der Segen nur einmal, der Bonus zählt nicht doppelt. B: Als Heiler „Segnen“ auf die Gruppe wirken, im nächsten Zug einen anderen Segenszauber: der erste Segen ist bei allen weg. C: „Schild“ wirken: die Rüstungsklasse in der Heldenkarte steigt um 3, auch in schwerer Rüstung. D: Nur einer von zwei Helden schreibt „Ich renne weg“: der Kampf geht weiter. E: Beide schreiben „Wir fliehen“: jeder würfelt „Fliehen“ mit Geschick, schafft es mindestens die Hälfte, ist der Kampf vorbei, sonst geht er weiter.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P582",
+"v": 1139,
+"titel": "Dungeon-Master: Schriftrollen, Reihenfolge und Ziele",
+"text": "A: Im Kampf eine Schriftrolle Feuerball aus der Tasche wirken und danach angreifen: der Angriff ist ein Feuerball mit Feuerschaden, der nächste wieder die Waffe. B: Ein Heiler mit wenig Leben heilt sich, während ihn ein Gegner trifft: erst kommt die Heilung, dann der Treffer. C: Gegen Riesenratte und Rattenschwarm „Ich greife die Ratte an“: getroffen wird die Riesenratte. D: Nach einem gewonnenen Kampf zu zweit: die Erfahrung ist gleich verteilt und abgerundet.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

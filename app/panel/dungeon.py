@@ -1318,6 +1318,10 @@ def fix_hero(r, h):
     for x in h["segen"]:
         if not (isinstance(x.get("k"), str) and 0 < len(x["k"]) <= 40):
             x.pop("k", None)              # the caster whose concentration holds it (Kampf-Audit M3)
+    ro = h.get("rolle")                   # a scroll's attack spell for the next attack (Kampf-Audit M4)
+    c = _by(r, "gegenstaende").get(ro.get("id")) if isinstance(ro, dict) else None
+    if not (c and c["art"] == "zauber" and c.get("schaden_art") and _int(ro.get("bis"), 0, 10 ** 6)):
+        h.pop("rolle", None)
     h["schutz"] = [x for x in h.get("schutz") or [] if isinstance(x, dict) and x.get("art") in kampf.SCHADEN_ARTEN
                    and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
     album.fix(r, h)                       # the Monster-Album (D&D idea 12): only the catalog's foes
@@ -1397,11 +1401,13 @@ def bless(h, sg, name, k=None):
 
 
 def wear_off(rd):
-    """After a narrated turn every blessing and a potion's protection has one turn less."""
+    """After a narrated turn every blessing and a potion's protection has one turn less; a scroll's attack (M4) lapses."""
     for _, p in seated(rd):
         h = p["held"]
         h["segen"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("segen") or [] if x["zuege"] > 1]
         h["schutz"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("schutz") or [] if x["zuege"] > 1]
+        if (h.get("rolle") or {}).get("bis", -1) <= rd.get("zug", 0):
+            h.pop("rolle", None)                  # a scroll's attack not used in its turn or the next lapses (Kampf-Audit M4)
 
 
 def resists(r, h):
@@ -3779,6 +3785,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             folgen = [f for f in folgen if not (f["art"] == "heilung" and f["pid"] not in helfer)]    # Punkt 2: no rescue on arrival
             _day.bump("neu_gesperrt")
             print("dungeon: folgen | heilung | neu", flush=True)
+        # Kampf-Audit M7: the heroes act before the foes, so a spell's healing and blessing come before the turn's hits
+        cast_powers(r, rd, war, {x["pid"] for x in kampfwuerfe[0]})
         consequences(r, rd, folgen + hiebe, names)
         if war:
             kampf.turn_dial(_me, r, rd)           # the game master's dial after the fight's end (Idee 6)
@@ -3834,7 +3842,6 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
     if rd.get("auftrag_ok") and not quest_may_end(rd):
         rd["auftrag_ok"] = False                 # a quest an older version closed too early is open again
     if story:
-        cast_powers(r, rd, war, {x["pid"] for x in kampfwuerfe[0]})
         down(r, rd, rng)
         wear_off(rd)
         for pid, _ in seated(rd):
@@ -5538,6 +5545,9 @@ def hero_act(rid, pid, b):
                 raise ValueError("kein zauber")
             use_one(h, it)
             _cast(r, rd, pid, h, c, it.get("bonus", 0), item_view(r, it, rd["lang"])["name"])
+            if c.get("schaden_art"):              # Kampf-Audit M4: a scroll of an attack spell makes the next attack it
+                h["rolle"] = {"id": it["id"], "bis": rd.get("zug", 0) + 1}
+                print("dungeon: rolle | bereit", flush=True)
         elif was == "schenken":
             an = rd["plaetze"].get(b.get("an"))
             if not it or not an or not an.get("held") or an["held"].get("tot") or b.get("an") == pid or not room(r, an["held"], [it]):

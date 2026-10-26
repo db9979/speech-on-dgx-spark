@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.139** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit Welle 2, eine gewirkte Angriffs-Schriftrolle macht den nächsten Angriff zu ihrem Zauber, Heilzauber wirken vor den Treffern des Zuges, „Ratte“ trifft die Riesenratte statt des Rattenschwarms, und die Kampf-Erfahrung wird abgerundet geteilt
 - **V01.1.138** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 - **V01.1.137** · 2026-10-26 · KI-Dungeon-Master: Im Geschichten-Planer kreuzt du bis zu drei bekannte Personen aus dem Katalog an, eine Runde dieser Geschichte bringt sie mit ihrer festen Karte, Rolle und Haltung, das Sprachmodell darf sie im Entwurf nutzen
 - **V01.1.136** · 2026-10-26 · KI-Dungeon-Master: Eigene Geschichten (Schalter, aus), jede Geschichtenkarte hat ⋯ mit Bearbeiten, Kopieren und Löschen, „＋ Neue Geschichte“ steht vorn (Ton, Stichworte, das Sprachmodell schreibt sie, das Panel prüft sie), jeder Gastgeber hat seine eigenen, der Admin sieht alle

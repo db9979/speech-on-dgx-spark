@@ -5837,6 +5837,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Schriftrollen, Reihenfolge und Ziele (V01.1.139, Bericht dungeon-kampf-audit/bericht.md Punkte M4, M7, N1, N2 und N4): Ohne neuen Schalter. 1. M4 Angriffs-Schriftrollen: Wer eine Rolle mit Schadenszauber aus der Tasche wirkt (Feuerball, Eislanze, Kettenblitz), dessen nächster Angriff in diesem oder dem nächsten Zug ist dieser Zauber, mit seiner Schadensart und seinem Würfel, einmal (h[\"rolle\"], Logs dungeon: rolle | bereit und dungeon: kampf | rolle | angriff); ungenutzt verfällt sie. 2. M7 Reihenfolge: Festgelegt ist: erst handeln alle Helden, dann alle Gegner. Darum wirken Heilung und Segen eines Zaubers (cast_powers) jetzt vor den Treffern des Zuges (consequences); eine Heilerin mit 1 Leben, die sich um 8 heilt und 9 Schaden nimmt, liegt danach am Boden. Eine Initiative gibt es nicht. 3. N2 Ziele: Nennt ein Ziel mehrere Gegner, gewinnt der ganze Name, dann die Art (das Ende des Namens: „Ratte“ ist die Riesenratte, nie der Rattenschwarm), dann der Anfang; unter mehreren derselben Art der mit dem wenigsten Leben. 4. N4 Erfahrung: Die Erfahrung eines Kampfes wird abgerundet geteilt (25 für 2 Helden: je 12). Der Anteil eines Helden, der im Kam"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "pf stirbt, geht an die Lebenden; wer den Tisch verlassen hat, dessen Anteil verfällt. 5. N1 bewusst milder als 5e: Es gibt keinen „massiven Schaden“ (sofort tot), und Schaden am Boden zählt nicht als Fehlschlag beim Rettungswurf; Gegner greifen Liegende ohnehin nicht an."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Segen, Rüstung und Flucht (V01.1.138, Bericht dungeon-kampf-audit/bericht.md Punkte M3, M5 und M6): Ohne neuen Schalter. 1. M3 Segen stapeln nicht: Auf einem Wert zählt nur der höchste Segen (dungeon.blessing), dreimal Dornenranken gibt +3 statt +9, derselbe Segen noch einmal erneuert nur seine Züge. Konzentration: Wirkt ein Held einen neuen Zauber mit Segen, endet sein voriger Segen bei allen Helden (dungeon._cast, Log dungeon: segen | konzentration | N beendet); Segen anderer Helden, von Tränken und Altären bleiben. Beim Zauberangriff zählt der Bonus des Zaubers nur, soweit er über dem Segen liegt, der schon auf dem Wert liegt. 2. M5 Rüstungsklasse und Schaden: Ein neuer Helfer dungeon.body gibt den Wert, wie ihn der Körper hat: Wertbonus und Segen, abzüglich einer Narbe, auf Wunsch mit den getragenen Gegenständen für den Wert und ihren Wirkungen (nie eine Waffe: ihr Bonus gehört zu Treffer und Schaden der Waffe, nie doppelt); ohne Fähigkeiten und Lehre (die zählen weiter nur bei Proben, dungeon.total). Die Rüstungsklasse nimmt Geschick mit den Gegenständen (mit der Grenze der Rüstung), ein Segen auf Geschick (Schild, Hast, Katzentrank) zäh"
 },
 {
@@ -7125,7 +7141,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "des Panels, seit V01.1.127 und V01.1.138), endet der Kampf. Die Erfahrung kommt aus dem Bestiarium (geflohene zur Hälfte), geteilt durch die lebenden Helden und aufgerundet; nur ein gewonnener Kampf bringt einen Fund. Das Modell meldet keinen besiegten Gegner und keine Beute „Gegner“ oder „Boss“ mehr, nur ein erreichtes Ziel (100 EP). Die Stufen folgen der D&D-Kurve (Stufe 5 ab 6.500 EP). Räume der Karte: Legt die Karte für einen Wächter- oder Boss-Raum raum_gegner (Kennung des Raums und ids des Bestiariums) in die Runde, bietet das Panel nur diese Gegner an, je einmal und ohne Budget; ist der Kampf gewonnen (kein Gegner steht mehr), steht sieg mit der Kennung des Raums in der Runde, und der Weg ist frei. Selbsttests Fight (sieben Fälle). Live-Übersicht: laufende Kämpfe, stehende Gegner, heute Begegnungen, Kämpfe, Treffer, daneben, besiegt, geflohen. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
+"text": "des Panels, seit V01.1.127 und V01.1.138), endet der Kampf. Die Erfahrung kommt aus dem Bestiarium (geflohene zur Hälfte), geteilt durch die lebenden Helden und abgerundet (seit V01.1.139); nur ein gewonnener Kampf bringt einen Fund. Das Modell meldet keinen besiegten Gegner und keine Beute „Gegner“ oder „Boss“ mehr, nur ein erreichtes Ziel (100 EP). Die Stufen folgen der D&D-Kurve (Stufe 5 ab 6.500 EP). Räume der Karte: Legt die Karte für einen Wächter- oder Boss-Raum raum_gegner (Kennung des Raums und ids des Bestiariums) in die Runde, bietet das Panel nur diese Gegner an, je einmal und ohne Budget; ist der Kampf gewonnen (kein Gegner steht mehr), steht sieg mit der Kennung des Raums in der Runde, und der Weg ist frei. Selbsttests Fight (sieben Fälle). Live-Übersicht: laufende Kämpfe, stehende Gegner, heute Begegnungen, Kämpfe, Treffer, daneben, besiegt, geflohen. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
 },
 {
 "lang": "de",
@@ -20541,6 +20557,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: combat audit wave 2, scrolls, order and targets (V01.1.139, report dungeon-kampf-audit/bericht.md points M4, M7, N1, N2 and N4): No new switch. 1. M4 attack scrolls: whoever casts a scroll with a damage spell from the bag (Fireball, Ice Lance, Chain Lightning) makes the next attack in this or the next turn that spell, with its damage kind and die, once (h[\"rolle\"], logs dungeon: rolle | bereit and dungeon: kampf | rolle | angriff); unused it lapses. 2. M7 order: it is fixed: first all heroes act, then all foes. So a spell's healing and blessing (cast_powers) now come before the turn's hits (consequences); a healer with 1 life who heals 8 and takes 9 damage is down afterwards. There is no initiative. 3. N2 targets: when a target names several foes, the whole name wins, then the kind (the end of the name: \"Ratte\" is the giant rat, never the rat swarm), then the start; among several of the same kind the one with the least life. 4. N4 experience: a fight's experience is divided rounded down (25 for 2 heroes: 12 each). The share of a hero who dies in the fight goes to the living; the share of one who left the table lapses. 5. N1 milder than 5e on purpose: there is no "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "\"massive damage\" (dead at once), and damage while down does not count as a failed death save; foes do not attack heroes on the ground anyway."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: combat audit wave 2, blessings, armour and flight (V01.1.138, report dungeon-kampf-audit/bericht.md points M3, M5 and M6): No new switch. 1. M3 blessings do not stack: on a value only the highest blessing counts (dungeon.blessing), three times Thorn Vines gives +3 instead of +9, the same blessing again only renews its turns. Concentration: when a hero casts a new spell with a blessing, the hero's last blessing ends on every hero (dungeon._cast, log dungeon: segen | konzentration | N beendet); blessings of other heroes, of potions and altars stay. In a spell attack the spell's bonus counts only as far as it is above the blessing already on the value. 2. M5 armour class and damage: a new helper dungeon.body gives the value as the body has it: the score's bonus and the blessing, less a wound, if asked with the items worn for the value and their effects (never a weapon: its bonus belongs to the weapon's hit and damage, never twice); without abilities and lessons (those still count only for checks, dungeon.total). The armour class takes Dexterity with the items (with the armour's cap), a blessing on Dexterity (Shield, Haste, cat's potion) counts as magic past that cap"
 },
 {
@@ -21765,7 +21797,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "f: +2, from level 5 +3 …) against the foe's armour class; a 20 always hits and rolls the damage twice, a 1 never hits. The damage is the weapon's die + the value's bonus + the rarity's bonus, with an attack spell its die by grade, without a weapon 1d2. Then every foe still standing attacks: the hero who last hit it, else a standing one; d20 + attack from the bestiary against the hero's armour class (10 + twice the body armour + helmet, shield, gloves, boots + Dexterity bonus, at most +2 in medium armour, none in heavy; shown on the hero sheet and the card instead of protection), damage by the bestiary's dice. Only the panel changes the foes' life; damage the model reports in a fight does not count. A foe at a quarter of its life or less flees on a d20 of 9 or less, at the children's table it \"gives up\". The bar \"⚔ Fight\" above the story shows every foe with its life, defeated or fled. End and experience: When no foe stands, the check \"offer peace\" or the group's flight succeeds (both only by the panel's check, since V01.1.127 and V01.1.138), the fight ends. The experience comes from the bestiary (fled ones half), divided among the living heroes and rounded up; only a won fight brin"
+"text": "f: +2, from level 5 +3 …) against the foe's armour class; a 20 always hits and rolls the damage twice, a 1 never hits. The damage is the weapon's die + the value's bonus + the rarity's bonus, with an attack spell its die by grade, without a weapon 1d2. Then every foe still standing attacks: the hero who last hit it, else a standing one; d20 + attack from the bestiary against the hero's armour class (10 + twice the body armour + helmet, shield, gloves, boots + Dexterity bonus, at most +2 in medium armour, none in heavy; shown on the hero sheet and the card instead of protection), damage by the bestiary's dice. Only the panel changes the foes' life; damage the model reports in a fight does not count. A foe at a quarter of its life or less flees on a d20 of 9 or less, at the children's table it \"gives up\". The bar \"⚔ Fight\" above the story shows every foe with its life, defeated or fled. End and experience: When no foe stands, the check \"offer peace\" or the group's flight succeeds (both only by the panel's check, since V01.1.127 and V01.1.138), the fight ends. The experience comes from the bestiary (fled ones half), divided among the living heroes and rounded down (since V01.1.139); o"
 },
 {
 "lang": "en",
@@ -21773,7 +21805,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "gs a find. The model no longer reports a defeated foe or loot \"foe\" or \"boss\", only a goal reached (100 XP). Levels follow the D&D curve (level 5 from 6,500 XP). Rooms of the map: When the map puts raum_gegner (the room's tag and bestiary ids) into the round for a guardian or boss room, the panel offers only these foes, once each and without the budget; when the fight is won (no foe stands), sieg with the room's tag is in the round and the way is free. Self-tests Fight (seven cases). Live overview: running fights, standing foes, today encounters, fights, hits, misses, defeated, fled. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
+"text": "nly a won fight brings a find. The model no longer reports a defeated foe or loot \"foe\" or \"boss\", only a goal reached (100 XP). Levels follow the D&D curve (level 5 from 6,500 XP). Rooms of the map: When the map puts raum_gegner (the room's tag and bestiary ids) into the round for a guardian or boss room, the panel offers only these foes, once each and without the budget; when the fight is won (no foe stands), sieg with the room's tag is in the round and the way is free. Self-tests Fight (seven cases). Live overview: running fights, standing foes, today encounters, fights, hits, misses, defeated, fled. Log: dungeon: kampf | start | 2 gegner | mittel, dungeon: kampf | ende | sieg | 2 besiegt | 0 geflohen."
 },
 {
 "lang": "en",
