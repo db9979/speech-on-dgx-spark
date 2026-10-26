@@ -234,6 +234,14 @@ async def run(t, name, args, st):
             tags, art = [], ""
         hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None, trace=getattr(t, "tr", None))
         win = getattr(t, "recent_ask", None)
+        gone = 0
+        if win is None:     # only passages that hold the words asked for (lokal.COVER, Dominik 2026-10-26: „Dresden“ in a
+            import lokal    # dealer list came back as news about the Frauenkirche)
+            words = lokal.terms(query)
+            kept = [h for h in hits if not words or lokal.cover(words, f"{h['name']} {h.get('head', '')} {h['text']}") >= lokal.COVER]
+            gone, hits = len(hits) - len(kept), kept
+            if gone:
+                print(f"wissen: dokumentsuche | {gone} stellen ohne die suchwörter weggelassen, {len(hits)} bleiben", flush=True)
         if win is not None:      # "Was habe ich zuletzt notiert?": the newest pages first, then what fits the words
             newest = await wissen.recent(t.who["id"], win[0], win[1])
             seen = {(h["id"], h["page"]) for h in newest}
@@ -255,7 +263,7 @@ async def run(t, name, args, st):
         dated = any(h.get("changed") for h in hits)
         return ((book + "\n\n" if book else "") + "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
                 + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"
-                   if dated and hits else "")) or "No matching passages in the documents. Say so; do not guess."
+                   if dated and hits else "")) or (NOTHING_FITS if gone else "No matching passages in the documents. Say so; do not guess.")
     if name == "document_list" and t.docs and t.who:
         import wissen
         tags = [str(x)[:40] for x in args.get("tags") or [] if isinstance(x, str)][:5] if isinstance(args.get("tags"), list) else []
@@ -364,6 +372,10 @@ def ha_log(name, e):
         print(f"homeassistant: tool {name} not reachable ({type(e).__name__})", flush=True)
 
 
+# document_search found passages, but none holds the words asked for (a fixed sentence, never the passages themselves)
+NOTHING_FITS = ("No passage in the documents is about this: the ones found do not contain what was asked. Say so in one "
+                "sentence and do not present other passages as an answer. If archive_search, wikipedia or web_search is "
+                "offered, look there.")
 REPEAT_SAYS = {"daily": "every day", "weekdays": "every weekday", "weekly": "every week", "monthly": "every month"}
 
 

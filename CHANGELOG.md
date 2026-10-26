@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.131** · 2026-10-26 · Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web
 - **V01.1.130** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit, Nachprüfung, Rückzug, zur Seite treten, Vorschläge, Blicke und Feuer geben sind kein Angriff mehr, das Ziel des Modells allein greift nie an, Frieden einmal je Kampf ohne Proben-EP, Kontrollzauber ohne Modell-Probe, ein Held am Boden greift nicht an, Balance neu eingemessen
 - **V01.1.129** · 2026-10-25 · KI-Dungeon-Master: die Karte am Tisch blinkt nicht mehr, sie bleibt bei jeder Aktualisierung stehen und die Ortsbilder sind sofort da
 - **V01.1.128** · 2026-10-26 · KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing

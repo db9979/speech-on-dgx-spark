@@ -359,7 +359,7 @@ def row(turn, calls, outside=False, now=None):
     route = getattr(turn, "route", None)
     kind, items = None, []
     import hilfe
-    if route is not None and route.names == ["spark"] and hilfe.CAN_ASK.search(ask_text):
+    if route is not None and route.names == ["spark"] and hilfe.can_ask(ask_text):
         kind, items = "kann", [x for a in kann(uid, c, org) for x in a["items"]][:12]
     if not items:
         hit = near(ask_text, called)

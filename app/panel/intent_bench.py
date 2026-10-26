@@ -169,6 +169,9 @@ BENCH = [
     ("Schreib in die Familiengruppe, dass ich später komme", "nachricht"),
     ("Räum mein Postfach auf", "mail"),
     ("Wann kommt meine Amazon-Bestellung?", "paket"),
+    # „Was kannst du mir zu X erzählen?“ is about X, never the Spark-Hilfe (Dominik 2026-10-26, Frauenkirche)
+    ("was kannst du mir zur frauenkirche in dresden alles mitteilen. schaue im archiv oder kiwix.", "archiv"),
+    ("was kannst du mir zur Frauen kirche in dresden erzählen?", ""),
     ("Schalte die Websuche ein", "spark"),
     ("Mach das Wetter aus", "spark"),
     ("Schalte die Funktion Pakete an", "spark"),

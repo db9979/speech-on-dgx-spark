@@ -373,10 +373,16 @@ SEITEN = {
               ("info", "ja", ("neueste Seiten zuerst", "newest pages first"))),
             S("s12", "frage", ("Keine Stelle gefunden?", "No passage found?"),
               ("mit Tags: wenigstens die Dokumente", "with tags: at least the documents"),
-              ("Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen "
-               "der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht.",
-               "If the search finds nothing but tags or a kind were given, the model gets the card lines of the "
-               "fitting documents. Otherwise: nothing found, say so, do not guess."),
+              ("Eine Stelle geht nur weiter, wenn sie mindestens {lokal.COVER} der Suchwörter enthält (Füllwörter wie "
+               "„Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur "
+               "Frauenkirche. Fällt so alles weg, sagt ein fester Satz: nichts Passendes, sag das und such im Archiv "
+               "oder im Web, wenn angeboten. Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das "
+               "Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht.",
+               "A passage only goes on when it holds at least {lokal.COVER} of the search words (filler words like "
+               "„information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about the "
+               "Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive "
+               "or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the "
+               "card lines of the fitting documents. Otherwise: nothing found, say so, do not guess."),
               ("stop", "ja", ("Nichts gefunden, nicht raten", "Nothing found, do not guess"))),
             S("s13", "ende", ("Stellen mit Herkunft ans Modell", "Passages with source to the model"),
               ("als Text von außen", "as outside text"),

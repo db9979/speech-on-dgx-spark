@@ -233,7 +233,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "500f0aa1cf",
+        "stand": "1783c1ba44",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -275,10 +275,13 @@ SEITEN = {
               ("vor allen anderen Gruppen", "before every other group"),
               ("„Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht "
                "nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie "
-               "dazu. Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel "
+               "dazu, ebenso wenig „Was kannst du mir über die Frauenkirche erzählen?“: Das fragt nach dem Ding, "
+               "außer es ist der Spark oder eine seiner Funktionen (hilfe.ABOUT). Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel "
                "über den Ort der Frage.",
                "„How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a "
-               "device or a search: group „spark“. A question about words or languages never counts. When „Ask "
+               "device or a search: group „spark“. A question about words or languages never counts, nor does „What "
+               "can you tell me about the Frauenkirche?“: it asks about the thing, unless that is the Spark or one of "
+               "its functions (hilfe.ABOUT). When „Ask "
                "Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was "
                "asked."),
               ("ok", "ja", "s9")),
@@ -790,7 +793,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b99ca422f1",
+        "stand": "c92b2f74b2",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -859,10 +862,13 @@ SEITEN = {
               ("Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen "
                "die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. "
                "document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist "
-               "fremder Text.",
+               "fremder Text. Eine Stelle ohne die gefragten Wörter fällt weg (lokal.cover); bleibt keine, kommt der feste "
+               "Satz chat_tools.NOTHING_FITS statt fremder Stellen.",
                "Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the "
                "mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the "
-               "knowledge book document_search brings the fitting page first, then the passages; both are outside text.")),
+               "knowledge book document_search brings the fitting page first, then the passages; both are outside text. "
+               "A passage without the words asked for drops out (lokal.cover); if none is left, the fixed sentence "
+               "chat_tools.NOTHING_FITS comes instead of unrelated passages.")),
             S("s7", "schritt", ("Werkzeug ausführen", "Run the tool"),
               ("Erweiterung oder eingebautes Werkzeug", "extension or built-in tool"),
               ("Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen "

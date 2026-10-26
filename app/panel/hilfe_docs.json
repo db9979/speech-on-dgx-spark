@@ -1845,7 +1845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Nur die eigene Nachricht: Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert hat. 2. Nur Plaudern?: Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein Werkzeug. 3. Frage zum Spark?: „Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie dazu. Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel über den Ort der Frage. 4. Wörter je Gruppe: Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen Wörter je Gruppe (höchstens 20, nur ganze Wörter) finden eine Gruppe zusätzlich, ersetzen aber nichts. 5. Vorrang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wen"
+"text": "1. Nur die eigene Nachricht: Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert hat. 2. Nur Plaudern?: Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein Werkzeug. 3. Frage zum Spark?: „Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie dazu, ebenso wenig „Was kannst du mir über die Frauenkirche erzählen?“: Das fragt nach dem Ding, außer es ist der Spark oder eine seiner Funktionen (hilfe.ABOUT). Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel über den Ort der Frage. 4. Wörter je Gruppe: Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen Wörter je Gruppe (höchstens 20, nur ganze Wörter) finden eine Gruppe zusätzlich, ersetzen aber nichts. 5. Vorr"
 },
 {
 "lang": "de",
@@ -1853,7 +1853,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eig"
+"text": "ang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchs"
 },
 {
 "lang": "de",
@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl."
+"text": "tens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt si"
 },
 {
 "lang": "de",
@@ -1869,7 +1869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: J"
+"text": "e erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wi"
 },
 {
 "lang": "de",
@@ -1877,7 +1877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "eder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
+"text": "rd mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
 },
 {
 "lang": "de",
@@ -1893,7 +1893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (170) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1909,7 +1909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 168 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 170 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2085,7 +2085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "chter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kur"
+"text": "chter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. Eine Stelle ohne die gefragten Wörter fällt weg (lokal.cover); bleibt keine, kommt der feste Satz chat_tools.NOTHING_FITS statt fremder Stellen. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Fr"
 },
 {
 "lang": "de",
@@ -2093,7 +2093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "zer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft (textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das M"
+"text": "age und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft (textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py"
 },
 {
 "lang": "de",
@@ -2101,7 +2101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "odell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
+"text": ". 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
 },
 {
 "lang": "de",
@@ -2189,7 +2189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "esitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, "
+"text": "esitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Eine Stelle geht nur weiter, wenn sie mindestens 0.6 der Suchwörter enthält (Füllwörter wie „Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur Frauenkirche. Fällt so alles weg, sagt ein fester Satz: nichts Passendes, sag das und such im Archiv oder im Web, wenn angeboten. Findet die Suche nichts, waren a"
 },
 {
 "lang": "de",
@@ -2197,7 +2197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
+"text": "ber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
 },
 {
 "lang": "de",
@@ -4678,6 +4678,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "; Ich → Dokumente zeigt, wie viele noch warten. Das Modell sieht den Abschnitt in der Quellenangabe („Vertrag.txt, Seite 2, Abschnitt § 4 Kaution“), gekürzt auf 60 Zeichen und ohne Klammern und Anführungszeichen, weil er Text von außen ist. Die Prüfbank stieg damit von 84 % auf 89 % unter den ersten 5; test_suchpruefung verlangt jetzt mindestens 85 %."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Wissensfrage statt Spark-Hilfe, nur passende Stellen (V01.1.131, Dominik 2026-10-26, Frauenkirche): „Was kannst du mir zur Frauenkirche in Dresden erzählen?“ ging wegen der Worte „was kannst du“ an die Spark-Hilfe; die Antwort kam aus dem Gedächtnis des Modells, mit der Liste der Beispielsätze darunter. Jetzt gilt „Was kannst du mir über/zu/zur/von X …“ (und „What can you tell me about X“) als Frage nach X (hilfe.ABOUT), außer X nennt den Spark, sein Panel oder eine seiner Funktionen; die Beispielliste kommt nur noch bei „Was kannst du (alles)?“ (hilfe.can_ask). Mit „schau im Archiv oder Kiwix“ geht die Frage an das eigene Archiv. document_search gibt nur noch Stellen weiter, die mindestens 60 % der Suchwörter enthalten (dieselbe Regel wie „Erst lokal suchen“, lokal.cover; Füllwörter wie „Informationen“, „schau“, „Archiv“, „Kiwix“ zählen nicht). Fällt so alles weg, bekommt das Modell einen festen Satz: nichts Passendes, sag das, stell keine anderen Stellen als Antwort hin und such im Archiv, in der Wikipedia oder im Web, wenn angeboten (chat_tools.NOTHING_FITS); Logzeile wissen: dokumentsuche | N stellen ohne die suchwörter weggelassen. Beide Sätze stehen in der Weiche-Prüfbank; Se"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "lbsttest test_wissensfrage."
 },
 {
 "lang": "de",
@@ -16525,7 +16541,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Only the own message: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Routing are added. 2. Only small talk?: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all. 3. Question about the Spark?: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts. When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked. 4. Words per group: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing. 5. Priority between groups: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new message"
+"text": "1. Only the own message: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Routing are added. 2. Only small talk?: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all. 3. Question about the Spark?: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts, nor does „What can you tell me about the Frauenkirche?“: it asks about the thing, unless that is the Spark or one of its functions (hilfe.ABOUT). When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked. 4. Words per group: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing. 5. Priority between groups: When several groups match, fixed rules tidy up: weather, li"
 },
 {
 "lang": "en",
@@ -16533,7 +16549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minu"
+"text": "st, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says "
 },
 {
 "lang": "en",
@@ -16541,7 +16557,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what "
+"text": "„weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, p"
 },
 {
 "lang": "en",
@@ -16549,7 +16565,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profi"
+"text": "lus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per d"
 },
 {
 "lang": "en",
@@ -16557,7 +16573,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "le (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
+"text": "ay and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -16573,7 +16589,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (170) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -16589,7 +16605,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 168 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 170 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -16765,7 +16781,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ith the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text get"
+"text": "ith the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. A passage without the words asked for drops out (lokal.cover); if none is left, the fixed sentence chat_tools.NOTHING_FITS comes instead of unrelated passages. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result"
 },
 {
 "lang": "en",
@@ -16773,7 +16789,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
+"text": " text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is ch"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ecked again by the answer (answer check, check deeds)."
 },
 {
 "lang": "en",
@@ -16861,7 +16885,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "oss-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
+"text": "oss-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: A passage only goes on when it holds at least 0.6 of the search words (filler words like „information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about the Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switch"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ing, saving to memory and reminders are locked in it. The device shows the sources."
 },
 {
 "lang": "en",
@@ -19270,6 +19302,14 @@
 "head": "Voice chat",
 "title": "Context in the sections (V01.0.519, plan *suche-schaerfen*, stage 2, no switch)",
 "text": " 2, Abschnitt § 4 Kaution\"), cut to 60 characters and without brackets and quotes, because it is outside text. The test bank rose from 84 % to 89 % among the first 5; test_suchpruefung now asks for at least 85 %."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Knowledge question instead of Spark help, only fitting passages (V01.1.131, Dominik 2026-10-26, Frauenkirche): \"Was kannst du mir zur Frauenkirche in Dresden erzählen?\" (what can you tell me about …) went to the Spark help because of the words \"was kannst du\"; the answer came from the model's memory, with the list of example sentences below. Now \"what can you tell me about/on X …\" counts as a question about X (hilfe.ABOUT), unless X names the Spark, its panel or one of its functions; the example list only comes with \"What can you do?\" (hilfe.can_ask). With \"look in the archive or Kiwix\" the question goes to the own archive. document_search only passes on passages holding at least 60 % of the search words (the same rule as \"Look locally first\", lokal.cover; filler words like \"information\", \"look\", \"archive\", \"Kiwix\" do not count). If all drop out so, the model gets a fixed sentence: nothing fitting, say so, do not present other passages as an answer and look in the archive, Wikipedia or the web if offered (chat_tools.NOTHING_FITS); log line wissen: dokumentsuche | N stellen ohne die suchwörter weggelassen. Both sentences are in the Weiche's test bench; self-test test_wissensfrage."
 },
 {
 "lang": "en",

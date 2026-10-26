@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.131** Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web
 - **V01.1.130** KI-Dungeon-Master: Kampf-Audit, Nachprüfung, Rückzug, zur Seite treten, Vorschläge, Blicke und Feuer geben sind kein Angriff mehr, das Ziel des Modells allein greift nie an, Frieden einmal je Kampf ohne Proben-EP, Kontrollzauber ohne Modell-Probe, ein Held am Boden greift nicht an, Balance neu eingemessen
 - **V01.1.129** KI-Dungeon-Master: die Karte am Tisch blinkt nicht mehr, sie bleibt bei jeder Aktualisierung stehen und die Ortsbilder sind sofort da
 - **V01.1.128** KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.124** KI-Dungeon-Master: Requisiten im Szenenbild: im Kampf nimmt ein Szenenbild bis zu drei Requisiten, die noch da sind, mit ihrem Katalognamen mit ins Bild; Gesichter für Gefährten: ein angeheuerter Gefährte bekommt gleich sein Porträt aus seiner festen Beschreibung, die Gruppe zeigt es statt 🤝, Szenenbilder nehmen es als Vorlage
 - **V01.1.123** ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
 - **V01.1.122** KI-Dungeon-Master: Kampfzug-Prüfung, „kämpfen“ wird ein Angriff gegen die Rüstung, das Modell wählt nie einen Zauber, Ziel- und Akt-EP warten bis zum Ende des Kampfs, jeder EP-Eintrag sagt wofür
-- **V01.1.121** KI-Dungeon-Master: Gefährten anheuern, in der Siedlung ein Gefährte der Welt, solange weniger als vier spielen, das Panel würfelt seine Hiebe, er zählt als halber Held im Balancing
 
 
 

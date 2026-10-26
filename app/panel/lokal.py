@@ -64,7 +64,9 @@ ist sind war waren bin bist hat haben hatte hatten gibt gab kann kannst können 
 eigentlich denn mal bitte doch genau ungefähr etwa erklär erkläre erklären erzähl erzähle erzählen sag sage sagen
 weißt weisst kennst über ueber mir mich uns dir dich hoch lang groß gross alt weit viel viele schwer tief breit
 schnell heißt heisst bedeutet bedeutung ich du mein meine meinen meinem meiner dein deine unser unsere man macht mache machen funktioniert funktionieren
-geht gehen gut beste besten richtig dauert einfach steht stehen stand the what who how where when why which does did tell me about explain"""
+geht gehen gut beste besten richtig dauert einfach steht stehen stand the what who how where when why which does did tell me about explain
+zur zum alles alle etwas mitteilen mitteile erzählst schau schaue nachschauen nachsehen such suche informationen info infos
+details archiv kiwix dokumenten unterlagen"""
 ASK_WORDS = set(documents._terms(_ASK)) | set(_ASK.split())
 # the person names an own source: then only there
 LOCAL = re.compile(r"(?i)\b(mein\w* (dokument\w*|unterlage\w*|datei\w*|pdfs?|papier\w*|vertr[aä]g\w*|rechnung\w*|"
