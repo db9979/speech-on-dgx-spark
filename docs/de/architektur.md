@@ -291,6 +291,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_kampf.py` | Dungeon-Master-Kampf: Begegnung nach Budget, Panel würfelt Angriffe gegen Rüstungsklasse |
 | `app/panel/dungeon_karte.py` | Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort |
 | `app/panel/dungeon_knapp.py` | Dungeon-Master: Knapp daneben, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an |
+| `app/panel/dungeon_kommentar.py` | Dungeon-Master: Helden kommentieren selbst, je Held, der gehandelt hat, eine kurze geprüfte Zeile in seiner Stimme |
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_lied.py` | Dungeon-Master: Heldenlied des Barden, am Kapitelende feste Strophen mit Heldennamen, gesungen vom Musikmodell |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |

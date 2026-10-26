@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.110** AI Dungeon Master: heroes comment themselves, every hero who acted says a short checked line about its deed, as a speech bubble and in its voice
 - **V01.1.109** AI Dungeon Master: the way of telling rich really tells richly, with a minimum length, a fixed style sentence and a check by the panel
 - **V01.1.108** AI Dungeon Master: campfire and rest, the host calls a short or long rest, three night watches per landscape and a question at the fire for every seat
 - **V01.1.107** · 2026-10-26 · Important mail only after sorting: cards only for mail still in the inbox after the mail rules and "Tidy the inbox"; never automatic senders, lists, newsletters, social networks, bills, ads or login codes; "Not important" button with a sender list (panel and iPhone)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.103** AI Dungeon Master: writings, letters, wanted posters and verses found appear as parchment at the table, the host shows them to all, one seat or nobody
 - **V01.1.102** AI Dungeon Master: helping and group checks, who helps a hero by name gives them advantage, in a group check half is enough
 - **V01.1.101** AI Dungeon Master: near miss, when a check misses by 1 or 2 the hero chooses to give up or to make it after all at a rolled price
-- **V01.1.100** AI Dungeon Master: honours of the evening, at the end of the round fixed titles like Blade of the evening and a certificate per hero with the numbers of the Spark's dice
 
 
 

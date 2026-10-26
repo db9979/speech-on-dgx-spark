@@ -3712,6 +3712,13 @@
 "titel": "Dungeon-Master: ausführlich erzählen",
 "text": "Im Spielleiter-Pult die Erzählweise „ausführlich“ wählen und zwei Züge spielen. A: Jede Erzählung hat mehrere Absätze mit Sinnen und Stimmung und für jeden Helden, der gehandelt hat, einen eigenen Moment. B: Unter Zustand → Logs steht bei einer zu kurzen Erzählung „dungeon: nachbessern | knapp“. C: Mit „knapp“ bleiben die Erzählungen kurz.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P555",
+"v": 1110,
+"titel": "Dungeon-Master: Helden kommentieren",
+"text": "Funktionen → KI-Dungeon-Master → Helden kommentieren einschalten und mit zwei Plätzen zwei Züge spielen. A: Unter der Erzählung steht für jeden Helden, der gehandelt hat, eine Sprechblase „💬 Name“ mit einer kurzen Zeile zu seiner Tat. B: Mit Vorlesen spricht die Stimme des Helden die Zeile nach der Erzählung. C: Keine Zeile entscheidet etwas Neues für einen Helden.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

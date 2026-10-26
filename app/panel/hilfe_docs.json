@@ -5509,6 +5509,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Helden kommentieren (V01.1.110, Dominik 2026-10-26 „ebenso fehlt ein bisschen das die helden mehr eigende komentare abgeben“, gewählt „2a“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Helden kommentieren* (chat.dungeon_kommentar, ab Werk aus; dungeon_kommentar.py). Der Erzähler gibt im Feld helden_sagen jedem Helden, der in diesem Zug gehandelt hat, eine kurze wörtliche Zeile zu seiner eigenen Tat oder ihrem Ausgang. Das Panel prüft jede Zeile nach festen Regeln: nur Helden, deren Platz gehandelt hat (nicht einer, der eine ooc-Zeile bekam, und nicht am Boden), eine Zeile je Held, reiner Text bis 120 Zeichen, keine Zahl, kein Wort der Wortliste, keine Tat in der ersten Person („ich gehe“, „wir nehmen“ …) und kein entscheidendes Wort. Die Zeilen stehen im Log-Eintrag der Erzählung (helden) und am Tisch als Sprechblase „💬 Name“ unter der Erzählung; beim Vorlesen spricht sie die Stimme des Helden nach der Erzählung, die eigenen Worte der Spieler in Anführungszeichen kommen weiter zuerst. Was ein Held tut, schreibt nur sein Spieler. Die App zeigt sie im Spieltisch. Live: heute gesagt, verworfen. Log dungeon: kommentar | N gesagt | M verworfen. Selbsttest Turns.t"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "est_heroes_comment_on_their_own_deeds."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10790,6 +10806,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Schriftstücke (Funktionen → Meine Daten → „Schriftstücke“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Finden die Helden in der Geschichte etwas Geschriebenes (einen Brief, einen Steckbrief, einen Vers, eine Tagebuchseite, eine Notiz, eine Inschrift), erscheint es am Tisch als Pergament mit Titel, Text (höchstens 600 Zeichen) und Absender …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Helden kommentieren (Funktionen → Meine Daten → „Helden kommentieren“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Erzähler gibt jedem Helden, der in diesem Zug gehandelt hat, eine kurze eigene Zeile: wie er seine Tat oder ihren Ausgang kommentiert, ein Gefühl, ein Spruch."
 },
 {
 "lang": "de",
@@ -19661,6 +19685,14 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: heroes comment (V01.1.110, Dominik 2026-10-26 \"ebenso fehlt ein bisschen das die helden mehr eigende komentare abgeben\", chosen \"2a\"): Admin switch *Features → AI Dungeon Master → Heroes comment* (chat.dungeon_kommentar, off by default; dungeon_kommentar.py). In the field helden_sagen the narrator gives every hero who acted this turn a short line in its own words about its own deed or the outcome. The panel checks every line by fixed rules: only heroes whose seat acted (not one that got an ooc line, not one lying down), one line per hero, plain text up to 120 characters, no number, no word of the word list, no first-person deed (\"ich gehe\", \"we take\" …) and no deciding word. The lines stand in the narration's log entry (helden) and at the table as a speech bubble \"💬 name\" under the narration; read aloud, the hero's voice speaks them after the narration, the players' own words in quotes still come first. What a hero does only its player writes. The app shows them at the game table. Live: said, dropped today. Log dungeon: kommentar | N gesagt | M verworfen. Self-test Turns.test_heroes_comment_on_their_own_deeds."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24758,6 +24790,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Writings (Features → My data → \"Writings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When the heroes find something written in the story (a letter, a wanted poster, a verse, a diary page, a note, an inscription), it appears at the table as parchment with title, text (at most 600 characters) and sender and stays in the ta …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Heroes comment (Features → My data → \"Heroes comment\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The narrator gives every hero who acted this turn a short line of its own: how it comments on its deed or the outcome, a feeling, a quip."
 },
 {
 "lang": "en",

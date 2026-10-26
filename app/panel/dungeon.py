@@ -120,6 +120,7 @@ from fastapi.responses import Response
 import dungeon_ablage as ablage
 import dungeon_album as album
 import dungeon_karte
+import dungeon_kommentar as kommentar
 import dungeon_erzaehler as erz
 import dungeon_ideen as ideen
 import dungeon_kampf as kampf
@@ -3106,7 +3107,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
     "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA, "fraktionen": fraktionen.SCHEMA,
-    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA,
+    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA, "helden_sagen": kommentar.SCHEMA,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -3215,7 +3216,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + kommentar.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3426,6 +3427,7 @@ def check_story(r, rd, obj):
             drop += 1
             continue
         out["ooc"].append({"pid": pid, "text": t})
+    out["helden"] = kommentar.check(_me, r, rd, obj.get("helden_sagen"), {x["pid"] for x in out["ooc"]})   # the heroes' own lines (2026-10-26)
     for n in obj.get("npc") or []:
         name, sagt = plain(n.get("name") if isinstance(n, dict) else "", 40), plain(n.get("sagt") if isinstance(n, dict) else "", NPC_SAGT)
         if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
@@ -3577,7 +3579,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             h = names[frage]["held"]
             k = _by(r, "klassen")[h["klasse"]]["name"][li]
             text += (f" {h['name']}, was macht dein {k} währenddessen?" if not li else f" {h['name']}, what does your {k} do meanwhile?")
-        _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "")
+        _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "",
+             **({"helden": story["helden"]} if story.get("helden") else {}))
         for o in story.get("ooc") or []:
             if o["pid"] in names:
                 _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
@@ -3839,6 +3842,7 @@ async def run_turn(rid, turn):
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn), cur))
+                    said.extend(kommentar.speak(_me, r, cur, e.get("helden")))   # the heroes' own comments last
                     cur["spricht"] = time.time()      # the clock waits for the reading (speak_turn ends it)
                 grund = auto_scene(cur, story, ort0, kampf0, akt0)
                 if grund:

@@ -2253,7 +2253,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-feed{max-height:62vh;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px;overscroll-behavior:contain}
 .dm-dm{background:color-mix(in srgb,var(--acc) 8%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 22%,var(--line));border-radius:12px;padding:10px 12px}
 .dm-dm p{margin:4px 0;white-space:pre-wrap}.dm-n{font-size:12px;font-weight:650;color:var(--acct)}
-.dm-npc{border-left:3px solid var(--acc2);padding-left:9px;margin-top:6px}.dm-npc p{margin:2px 0}
+.dm-npc{border-left:3px solid var(--acc2);padding-left:9px;margin-top:6px}.dm-npc p{margin:2px 0}.dm-heldsagt{border-left-color:var(--acc)}
 .dm-act{padding:4px 2px}.dm-sys{font-size:13px;padding:2px}.dm-sys.ok{color:var(--okt)}.dm-sys.bad{color:var(--badt)}
 .dm-wurf{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}.dm-wurf.ok b{color:var(--okt)}.dm-wurf.bad b{color:var(--badt)}
 .dm-d20{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;font-weight:700;background:var(--line);font-variant-numeric:tabular-nums}

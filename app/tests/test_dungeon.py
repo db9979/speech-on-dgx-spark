@@ -360,6 +360,45 @@ class Turns(Base):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(self.spawned, ["dungeon"])   # everyone acted: the turn closes by the fixed rule
 
+    def test_heroes_comment_on_their_own_deeds(self):
+        """Dominik 2026-10-26 („2a“, switch dungeonkommentar): off by default; on, the narration's helden_sagen give every
+        hero who acted one short line by fixed rules (only who acted, one a hero, no number, no first-person deed, no
+        deciding word), shown under the narration and read in the hero's voice."""
+        import features
+        import dungeon_kommentar as kommentar
+        self.assertNotIn(kommentar.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_kommentar"], False)
+        self.assertIn("helden_sagen", dungeon.SCHEMA_ERZAEHLEN["properties"])
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        a, b = rd["plaetze"][self.host]["held"]["name"], rd["plaetze"][self.gp]["held"]["name"]
+        gut = {"name": a, "sagt": "Hoffentlich ist hier niemand zu Hause."}
+        acted = dict(rd, offen={self.host: {"text": "Ich öffne die Tür."}, self.gp: {"text": "Ich schaue mich um."}})
+        self.assertEqual(kommentar.check(dungeon, r, acted, [gut]), [])            # switch off
+        self.assertNotIn("helden_sagen", dungeon.system_text(r, rd, "erzaehlen"))
+        helpers.keep_chat(self, "dungeon_kommentar")
+        helpers.set_config(dungeon_kommentar=True)
+        self.assertIn("helden_sagen", dungeon.system_text(r, rd, "erzaehlen"))
+        rows = [gut, {"name": a, "sagt": "Noch eine Zeile."}, {"name": b, "sagt": "Ich nehme die Fackel."}, {"name": b, "sagt": "Das kostet 5 Gold."},
+                {"name": b, "sagt": "Bela greift zum Schwert."}, {"name": "Niemand", "sagt": "Hallo zusammen."}, "kaputt"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(kommentar.check(dungeon, r, acted, rows), [{"pid": self.host, "name": a, "sagt": gut["sagt"]}])
+            self.assertEqual(kommentar.check(dungeon, r, dict(acted, offen={self.gp: {"text": "x"}}), [gut]), [])   # did not act
+            self.assertEqual(kommentar.check(dungeon, r, acted, [gut], {self.host}), [])                      # answered out of the game
+        self.assertIn("dungeon: kommentar | 1 gesagt | 6 verworfen", out.getvalue())
+        self.assertEqual(kommentar.speak(dungeon, r, rd, [{"pid": self.host, "sagt": "Ha!"}])[0][1], "Ha!")
+        # through a turn: the narration's log entry carries the lines
+        self.act_all()
+        story = {"erzaehlung": f"Die Tür knarrt auf, dahinter wartet ein Gang voller Staub und Echos. {a} und {b} treten vorsichtig ein.",
+                 "helden_sagen": [gut, {"name": b, "sagt": "Hier riecht es nach Ärger."}], "frage_an": ""}
+        rd = self.play([{"proben": []}, story, story, story])
+        e = next(x for x in reversed(rd["log"]) if x["art"] == "dm")
+        self.assertEqual([x["sagt"] for x in e["helden"]], [gut["sagt"], "Hier riecht es nach Ärger."])
+        self.assertGreaterEqual(kommentar.for_live()["gesagt"], 1)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("(e.helden||[]).map(", f.read())
+
     def test_checked_story_and_clamped_numbers(self):
         self.act_all()
         rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 99}, {"wer": "Niemand", "wert": "staerke", "schwer": 5}]},

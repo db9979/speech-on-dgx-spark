@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.110** · 2026-10-26 · KI-Dungeon-Master: Helden kommentieren selbst, jeder Held, der gehandelt hat, sagt eine kurze geprüfte Zeile zu seiner Tat, als Sprechblase und in seiner Stimme
 - **V01.1.109** · 2026-10-26 · KI-Dungeon-Master: die Erzählweise ausführlich erzählt wirklich ausführlich, mit Mindestlänge, festem Stil-Satz und einer Prüfung des Panels
 - **V01.1.108** · 2026-10-26 · KI-Dungeon-Master: Lagerfeuer und Rast, der Gastgeber ruft eine kurze oder lange Rast, drei Nachtwachen je Landschaft und eine Frage am Feuer für jeden Platz
 - **V01.1.107** · 2026-10-26 · Wichtige Mail erst nach dem Einordnen: Karten nur für Mails, die nach Mail-Regeln und „Mails aufräumen“ im Posteingang bleiben; automatische Absender, Listen, Newsletter, soziale Netzwerke, Rechnungen, Werbung und Anmeldecodes nie; Knopf „Nicht wichtig“ mit Absenderliste (Panel und iPhone)

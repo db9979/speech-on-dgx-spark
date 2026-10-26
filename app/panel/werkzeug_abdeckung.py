@@ -175,6 +175,7 @@ WITHOUT = {
     "dungeonknapp": "dungeon_knapp.py: kein Werkzeug, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an",
     "dungeonhelfen": "dungeon_helfen.py: kein Werkzeug, feste Wörter in der Aktion und feste Regeln auf den Würfen des Panels",
     "dungeonnarbennur": "dungeon_narben.py: kein Werkzeug, eine feste Regel des Panels: Wunden ändern nie einen Wert",
+    "dungeonkommentar": "dungeon_kommentar.py: kein Werkzeug, das Modell liefert die Zeilen als Daten, das Panel prüft sie mit festen Regeln und entscheidet nie für einen Spieler",
     "dungeonrast": "dungeon_rast.py: kein Werkzeug, der Gastgeber ruft die Rast, das Panel heilt und würfelt die Nachtwachen, das Modell erzählt nur das Lager",
     "dungeonnarben": "dungeon_narben.py: kein Werkzeug, das Panel würfelt die Wunde auf seiner festen Tabelle, das Modell liest die Narben nur in den Fakten",
     "dungeonalbum": "dungeon_album.py: kein Werkzeug, das Panel zählt die Siege seines eigenen Kampfes und zeigt je Stufe, was das Album weiß",

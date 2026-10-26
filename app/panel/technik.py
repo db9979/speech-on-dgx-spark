@@ -179,6 +179,7 @@ MODULE = {
     "dungeon_echt": ("dienste", "Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter"),
     "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_schrift": ("dienste", "Dungeon-Master: Schriftstücke als Pergament, der Gastgeber bestimmt, wer sie sieht"),
+    "dungeon_kommentar": ("dienste", "Dungeon-Master: Helden kommentieren selbst, je Held, der gehandelt hat, eine kurze geprüfte Zeile in seiner Stimme"),
     "dungeon_rast": ("dienste", "Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten"),
     "dungeon_narben": ("dienste", "Dungeon-Master: Narben und bleibende Wunden nach fester W20-Tabelle, ein Heiler in der Siedlung nimmt die Folgen"),
     "dungeon_album": ("dienste", "Dungeon-Master: Monster-Album, je Held die besiegten Gegner, mehr Wissen nach 1, 3 und 5 Siegen"),

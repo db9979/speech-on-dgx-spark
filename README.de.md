@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.110** KI-Dungeon-Master: Helden kommentieren selbst, jeder Held, der gehandelt hat, sagt eine kurze geprüfte Zeile zu seiner Tat, als Sprechblase und in seiner Stimme
 - **V01.1.109** KI-Dungeon-Master: die Erzählweise ausführlich erzählt wirklich ausführlich, mit Mindestlänge, festem Stil-Satz und einer Prüfung des Panels
 - **V01.1.108** KI-Dungeon-Master: Lagerfeuer und Rast, der Gastgeber ruft eine kurze oder lange Rast, drei Nachtwachen je Landschaft und eine Frage am Feuer für jeden Platz
 - **V01.1.107** · 2026-10-26 · Wichtige Mail erst nach dem Einordnen: Karten nur für Mails, die nach Mail-Regeln und „Mails aufräumen“ im Posteingang bleiben; automatische Absender, Listen, Newsletter, soziale Netzwerke, Rechnungen, Werbung und Anmeldecodes nie; Knopf „Nicht wichtig“ mit Absenderliste (Panel und iPhone)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.103** KI-Dungeon-Master: Schriftstücke, gefundene Briefe, Steckbriefe und Verse als Pergament am Tisch, der Gastgeber zeigt sie allen, einem Platz oder niemandem
 - **V01.1.102** KI-Dungeon-Master: Helfen und Gruppenprobe, wer einem Helden mit Namen hilft, gibt ihm Vorteil, bei einer Gruppenprobe reicht die Hälfte
 - **V01.1.101** KI-Dungeon-Master: Knapp daneben, fehlen einer Probe 1 oder 2, wählt der Held aufgeben oder es mit einem gewürfelten Preis doch zu schaffen
-- **V01.1.100** KI-Dungeon-Master: Ehrungen des Abends, am Ende der Runde feste Titel wie Klinge des Abends und je Held eine Urkunde mit den Zahlen aus den Würfeln des Spark
 
 
 
