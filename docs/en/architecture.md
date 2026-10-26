@@ -294,6 +294,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_legenden.py` | KI-Dungeon-Master: legendäre Einzelstücke je Welt. |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik, Geräusche, Würfel. |
 | `app/panel/dungeon_mut.py` | KI-Dungeon-Master: Heldenmut. |
+| `app/panel/dungeon_narben.py` | KI-Dungeon-Master: Narben und bleibende Wunden. |
 | `app/panel/dungeon_nsc.py` | KI-Dungeon-Master: NSC-Gedächtnis, Chronik und Ruf. |
 | `app/panel/dungeon_orakel.py` | KI-Dungeon-Master: Orakel. |
 | `app/panel/dungeon_pruefstand.py` | KI-Dungeon-Master: the balance bench „Balance-Prüfstand“: the panel plays thousands of fights alone, with the real rules and dice of dungeon_kampf (attacks, … |

@@ -124,6 +124,7 @@ import dungeon_erzaehler as erz
 import dungeon_ideen as ideen
 import dungeon_kampf as kampf
 import dungeon_mut as mut
+import dungeon_narben as narben
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -1256,6 +1257,7 @@ def fix_hero(r, h):
     h["schutz"] = [x for x in h.get("schutz") or [] if isinstance(x, dict) and x.get("art") in kampf.SCHADEN_ARTEN
                    and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
     album.fix(r, h)                       # the Monster-Album (D&D idea 12): only the catalog's foes
+    narben.fix(r, h)                      # the wounds (D&D idea 8) as the table writes them
     return h
 
 
@@ -1303,7 +1305,7 @@ def total(r, h, wert):
     v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
     v += sum(x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert)
     v += 1 if (h.get("lehre") or {}).get("wert") == wert else 0     # a lesson in a settlement (dungeon_gold)
-    return v
+    return v - narben.minus(h, wert)                                  # a wound's consequence until a healer (D&D idea 8)
 
 
 def bless(h, sg, name):
@@ -1364,6 +1366,7 @@ def stood_up(rd, pid, h, was):
         _log(rd, "zustand", pid=pid, name=h["name"], was="auf")
         _day.bump("aufgestanden")
         print("dungeon: zustand | auf", flush=True)
+        narben.wound(_me, rules(), rd, pid, h, "auf")          # up again, a scar stays (D&D idea 8)
 
 
 def save_roll(rng=None):
@@ -1428,6 +1431,7 @@ def spare(r, rd, pid, h, rng=None):
     _log(rd, "zustand", pid=pid, name=h["name"], was="gnade", gold=gold, ding=ding)
     _day.bump("gnade")
     print(f"dungeon: zustand | gnade | {gold} gold | {1 if ding else 0} ding", flush=True)
+    narben.wound(_me, r, rd, pid, h, "gnade")
 
 
 def fall(r, rd, pid, h):
@@ -1634,7 +1638,8 @@ def hero_view(r, h, lang, full=True, welt="", zug=None):
                segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
                       for x in h.get("segen") or []],
                widerstand=[kampf.ART_ZEICHEN[a] + " " + kampf.ART_NAME[a][li] for a in sorted(resists(r, h))],
-               wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa])
+               wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa],
+               narben=narben.view(r, h, lang))
     return out
 
 
@@ -3156,6 +3161,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(fraktionen.facts(rd))                  # the factions and their clocks, only as data (Tabletop-Punkt 7)
     fakten.update(quest.facts(_me, rd))                  # the quest things carried, lying here, taken now (Punkt 15)
     fakten.update(schrift.facts(rd))                     # the writings found last (D&D idea 3)
+    fakten.update(narben.facts(rd, seated(rd)))          # the heroes' scars (D&D idea 8)
     if nsc.on(rd):                                       # NSC-Gedächtnis (Tabletop-Punkt 5): only the scene's people with their cards
         fakten.update(nsc.facts(r, rd, li))
         if fakten.get("wahrheit"):

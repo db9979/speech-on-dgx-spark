@@ -299,6 +299,9 @@ FEATURES = (
       guide="dungeonhelfen"),
     # Schriftstücke (dungeon_schrift.py, D&D idea 3): a found writing as a parchment, the host chooses who sees it
     F("dungeonschrift", "Schriftstücke", "Writings", "data", ("dungeon_schrift",), parent="dungeon", me="dmbox", guide="dungeonschrift"),
+    # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
+    F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
+    F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),
     # Monster-Album (dungeon_album.py, D&D idea 12): the foes the hero defeated, more known after 1, 3 and 5 wins
     F("dungeonalbum", "Monster-Album", "Monster album", "data", ("dungeon_album",), parent="dungeon", me="dmbox", guide="dungeonalbum"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner

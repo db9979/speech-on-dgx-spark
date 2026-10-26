@@ -3677,6 +3677,13 @@
 "titel": "Dungeon-Master: Monster-Album",
 "text": "Funktionen → KI-Dungeon-Master → Monster-Album einschalten und eine Runde mit zwei Plätzen spielen, bis die Gruppe einen Gegner besiegt. A: Im Reiter „Album“ der rechten Spalte steht er mit einem Stern, Bild, Beschreibung und Spruch. B: Nach dem dritten Sieg über dieselbe Art zeigt er seine Werte, nach dem fünften seine Schwächen. C: In der nächsten Runde mit demselben Helden ist das Album noch da.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P550",
+"v": 1105,
+"titel": "Dungeon-Master: Narben",
+"text": "Funktionen → KI-Dungeon-Master → Narben einschalten und spielen, bis ein Held am Boden liegt und wieder aufsteht oder kritisch getroffen wird. A: Im Verlauf steht „🩸 Name: Narbe“, im Heldenbogen die Narbe, eine Folge rot mit „−1 Wert“. B: In einer Siedlung bietet der Heiler „Heilen lassen“ an; danach ist die Folge weg, die Narbe bleibt. C: Mit „Nur Narben“ kommt nie eine Folge.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

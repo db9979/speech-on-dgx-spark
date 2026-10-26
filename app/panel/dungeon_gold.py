@@ -7,7 +7,8 @@ hero may pay for fixed offers of the panel, never of the model, priced by the gr
 - Lehrstunde: +1 on one value until the round or chapter ends (one at a time);
 - Gerücht: a hint at the next place of the map toward the goal, once per place;
 - Ausrüstung verbessern (Wirtschaft Punkt 7, Dominik 2026-10-25 „1-12“): a weapon or armour of the hero one rarity
-  better, up to „episch“, for its full price at the new rarity; known from then on.
+  better, up to „episch“, for its full price at the new rarity; known from then on;
+- Heiler (Narben, D&D idea 8, only while dungeon_narben is on): takes every wound's consequence, the scars stay.
 The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
 (dungeon_pruefstand.economy) and its self-test keeps income to expenses between 1.2 and 2.
 Only while „Gold mit Zweck“ is allowed for the round's host (features "dungeongold"). The hero's move goes through the
@@ -15,8 +16,11 @@ seat's „held“ endpoint ({was: "dienst", id, i, wert}).
 """
 import time
 
+import dungeon_narben as narben
+
 SIEDLUNG = ("dorf", "stadt", "taverne", "station", "basar", "hafen")
 DIENSTE = ("gasthaus", "schmied", "lehre", "geruecht", "verbessern")
+HEILER = "heiler"          # the healer of idea 8, only while the wounds are on (offers); its picture is the picture thread's
 PREIS = {"gasthaus": 10, "schmied": 5, "lehre": 20, "geruecht": 3}   # gold per level of the group (the inn: per hero)
 VERBESSERN_ARTEN = ("waffe", "ruestung")
 VERBESSERN_BIS = "episch"   # the smith never makes a legend
@@ -25,7 +29,8 @@ NAMEN = {"gasthaus": (("Gasthaus", "Inn"), ("Eine Nacht für alle: volles Leben 
          "schmied": (("Schmied", "Smith"), ("Ein zerbrochenes Werkzeug wird wieder ganz.", "A broken tool is made whole again.")),
          "lehre": (("Lehrstunde", "Lesson"), ("+1 auf einen Wert bis zum Ende der Runde.", "+1 on one value until the round ends.")),
          "geruecht": (("Gerücht", "Rumour"), ("Ein Hinweis auf den nächsten Ort.", "A hint at the next place.")),
-         "verbessern": (("Ausrüstung verbessern", "Improve gear"), ("Eine Waffe oder Rüstung wird eine Seltenheit besser, bis episch.", "A weapon or armour gets one rarity better, up to epic."))}
+         "verbessern": (("Ausrüstung verbessern", "Improve gear"), ("Eine Waffe oder Rüstung wird eine Seltenheit besser, bis episch.", "A weapon or armour gets one rarity better, up to epic.")),
+         "heiler": (("Heiler", "Healer"), ("Nimmt die Folgen deiner Wunden; die Narben bleiben als Erinnerung.", "Takes your wounds' consequences; the scars stay as a memory."))}
 RICHTUNG = (("im Osten", "to the east"), ("im Südosten", "to the south-east"), ("im Süden", "to the south"), ("im Südwesten", "to the south-west"),
             ("im Westen", "to the west"), ("im Nordwesten", "to the north-west"), ("im Norden", "to the north"), ("im Nordosten", "to the north-east"))
 clock = time.time
@@ -48,12 +53,23 @@ def here(rd):
     return (rd.get("markt") or {}).get("name", "")
 
 
+def offers(rd, h):
+    """The settlement's services for this hero: the healer while the host's wounds are on (dungeon_narben) or the hero
+    still has a consequence to heal (from a round with the switch on)."""
+    return DIENSTE + ((HEILER,) if narben.on(rd) or narben.to_heal(h) else ())
+
+
+def per_level(was):
+    """A service's gold per level of the group: PREIS, the healer's from dungeon_narben, 0 for „verbessern“."""
+    return narben.HEILER if was == HEILER else PREIS.get(was, 0)
+
+
 def price(dm, rd, was):
     """A service's price by the group's level (the inn per hero); „verbessern“ goes by the piece (better_price)."""
     if was == "verbessern":
         return 0
     level = dm.group_level(dm._living(rd))
-    return PREIS[was] * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
+    return per_level(was) * level * (len(dm._living(rd)) if was == "gasthaus" else 1)
 
 
 def better(dm, r, it):
@@ -118,7 +134,7 @@ def serve(dm, r, rd, pid, h, b):
     if not on(rd):
         print("dungeon: dienst | aus", flush=True)
         raise PermissionError("gold")
-    if was not in DIENSTE:
+    if was not in offers(rd, h):
         print("dungeon: dienst | unbekannt", flush=True)
         raise ValueError("dienst")
     if not here(rd) or rd.get("kampf"):
@@ -167,6 +183,12 @@ def serve(dm, r, rd, pid, h, b):
         h["lehre"] = {"wert": b["wert"]}
         wn = dm._by(r, "werte")[b["wert"]]["name"][li]
         text = (f"{h['name']} nimmt eine Lehrstunde: {wn} +1 bis zum Ende der Runde.", f"{h['name']} takes a lesson: {wn} +1 until the round ends.")
+    elif was == "heiler":
+        if not narben.to_heal(h):
+            print("dungeon: dienst | heiler | nein", flush=True)
+            raise ValueError("heiler")
+        n = narben.heal(h)
+        text = (f"Ein Heiler versorgt {h['name']}: {n} Wunden heilen aus, die Narben bleiben.", f"A healer tends to {h['name']}: {n} wounds heal, the scars stay.")
     elif was == "verbessern":
         alt = dm.item_view(r, teil, rd["lang"])["name"]
         teil["s"] = better(dm, r, teil)
@@ -204,7 +226,8 @@ def view(dm, r, rd, pid):
     k = rd.get("karte") or {}
     besser = [x for x in dm.worn(h) + h["tasche"] if better(dm, r, x)]
     frei = {"gasthaus": rd.get("gasthaus") != evening(), "schmied": bool(h.get("kaputt")),
-            "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser)}
+            "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser),
+            "heiler": bool(narben.to_heal(h))}
     held = dm._living(rd)
     # Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 3a 5b): the time of day for the head, the group's gold only
     # shown, and per service the calculation of its price (gold per level, level, heroes for the inn)
@@ -212,7 +235,8 @@ def view(dm, r, rd, pid):
             "gold_gruppe": sum(p["held"]["gold"] for _, p in dm.seated(rd)), "tageszeit": rd.get("tageszeit") or "tag",
             "stufe": dm.group_level(held), "helden": len(held),
             "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x],
-                         "je": PREIS.get(x, 0)} for x in DIENSTE],
+                         "je": per_level(x)} for x in offers(rd, h)],
+            "spruch": narben.saying(r, rd, dm.seated(rd)),          # people ask about a scar (D&D idea 8)
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
             "verbessern": [dict(dm.item_view(r, x, rd["lang"]), preis=better_price(dm, r, x),
                                 neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser]}

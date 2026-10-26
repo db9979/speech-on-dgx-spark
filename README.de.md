@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.105** KI-Dungeon-Master: Narben und bleibende Wunden, wer wieder aufsteht oder kritisch getroffen wird, behält eine Narbe, selten mit −1 auf einen Wert, bis ein Heiler in der Siedlung sie nimmt
 - **V01.1.104** KI-Dungeon-Master: Monster-Album, jeder Held sammelt die besiegten Gegner und weiß nach 1, 3 und 5 Siegen mehr über sie, bis zu ihren Schwächen
 - **V01.1.103** KI-Dungeon-Master: Schriftstücke, gefundene Briefe, Steckbriefe und Verse als Pergament am Tisch, der Gastgeber zeigt sie allen, einem Platz oder niemandem
 - **V01.1.102** KI-Dungeon-Master: Helfen und Gruppenprobe, wer einem Helden mit Namen hilft, gibt ihm Vorteil, bei einer Gruppenprobe reicht die Hälfte
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.098** KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke und Fackel im Gewölbe
 - **V01.1.097** KI-Dungeon-Master: die Karte legt je Raum und Ort 2 bis 3 Requisiten für den Kampf fest (Umgebung nutzen); Reise-Wege nennen ihre Landschaft aus der Landschafts-Tabelle
 - **V01.1.096** KI-Dungeon-Master: Pause überall sichtbar, in den Rundenlisten von Web, App und CarPlay, als Leiste am Tisch, als Mitteilung an die Mitspieler, im Auto und in Live
-- **V01.1.095** Logs von Modellwechsel und Bildverständnis wieder sichtbar
 
 
 

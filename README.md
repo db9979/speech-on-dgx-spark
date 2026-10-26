@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.105** AI Dungeon Master: scars and lasting wounds, who stands up again or takes a critical hit keeps a scar, rarely with −1 on a value until a healer in a settlement takes it
 - **V01.1.104** AI Dungeon Master: monster album, every hero collects the foes defeated and knows more about them after 1, 3 and 5 wins, up to their weaknesses
 - **V01.1.103** AI Dungeon Master: writings, letters, wanted posters and verses found appear as parchment at the table, the host shows them to all, one seat or nobody
 - **V01.1.102** AI Dungeon Master: helping and group checks, who helps a hero by name gives them advantage, in a group check half is enough
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.098** AI Dungeon Master: sounds for just missed, the foe's announcement, critical/fumble on attacks, alarm bell and torch in the vault
 - **V01.1.097** AI Dungeon Master: the map fixes 2 to 3 props for the fight per room and place (use the surroundings); travel ways name their land from the landscape table
 - **V01.1.096** AI Dungeon Master: pause shown everywhere, in the round lists of web, app and CarPlay, as a bar at the table, as a note to the other players, in the car and in Live
-- **V01.1.095** Logs of model switch and image understanding visible again
 
 
 

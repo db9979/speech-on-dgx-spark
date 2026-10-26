@@ -7419,6 +7419,120 @@ class Fight(Turns):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("['album','🐉'", f.read())
 
+    def test_scars_and_lasting_wounds_with_a_healer(self):
+        """D&D idea 8 (Narben, switch dungeonnarben): off by default, no wound; on, standing up again, Gnade or a foe's
+        critical hit rolls the d20 wound table, at most one a hero and turn and NARBEN_MAX a hero; a consequence takes 1
+        from its value (dungeon.total) until the settlement's healer takes it for gold, the scar stays; „nur Narben“ never
+        gives a consequence, the children's table only plasters; a hero's file keeps only whole wounds."""
+        import features
+        import dungeon_gold as gold
+        import dungeon_narben as narben
+        self.assertNotIn(narben.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            c = json.load(f)["chat"]
+        self.assertIs(c["dungeon_narben"], False)
+        self.assertIs(c["dungeon_narben_nur"], False)
+        r = dungeon.rules()
+        rows = r["ideen"]["narben"]
+        mit = next(x for x in rows if x.get("folge"))
+        ohne = next(x for x in rows if not x.get("folge"))
+
+        class W:
+            def __init__(self, w):
+                self.w = w
+
+            def randint(self, a, b):
+                return self.w
+
+            def randrange(self, n):
+                return 0
+        rd, foe = self.encounter()
+        h = rd["plaetze"][self.host]["held"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertIsNone(narben.wound(dungeon, r, rd, self.host, h, "auf", W(mit["von"])))   # switch off
+        helpers.keep_chat(self, "dungeon_narben")
+        helpers.keep_chat(self, "dungeon_narben_nur")
+        helpers.set_config(dungeon_narben=True)
+        wert = mit["folge"]["wert"]
+        vorher = dungeon.total(r, h, wert)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            e = narben.wound(dungeon, r, rd, self.host, h, "auf", W(mit["von"]))
+            self.assertIsNone(narben.wound(dungeon, r, rd, self.host, h, "krit", W(ohne["von"])))   # one a turn
+        self.assertIn("dungeon: narbe | folge | auf", out.getvalue())
+        self.assertEqual(e["folge"], mit["folge"])
+        self.assertEqual(dungeon.total(r, h, wert), vorher - 1)
+        self.assertEqual((rd["log"][-1]["art"], rd["log"][-1]["t"]), ("narbe", mit["t"]))
+        self.assertTrue(dungeon.hero_view(r, h, "de")["narben"][0]["folge"].startswith("−1 "))
+        self.assertIn(mit["t"][0], json.dumps(dungeon.facts(r, rd), ensure_ascii=False))
+        # a foe's critical hit in the panel's fight
+        rd["zug"] += 1
+        g = rd["kampf"]["gegner"][0]
+        hit = {"k": g["k"], "pid": self.host, "name": h["name"], "w": 20, "bonus": 0, "gesamt": 30, "rk": 10, "treffer": True, "krit": True, "schaden": 1}
+        with mock.patch.object(narben.random, "randint", lambda a, b: ohne["von"]), contextlib.redirect_stdout(io.StringIO()) as out:
+            kampf.apply(dungeon, r, rd, [], [hit], "", {})
+        self.assertIn("dungeon: narbe | narbe | krit", out.getvalue())
+        self.assertEqual(h["narben"][-1], {"t": ohne["t"], "w": ohne["von"]})
+        # „nur Narben“: the look only
+        helpers.set_config(dungeon_narben=True, dungeon_narben_nur=True)
+        rd["zug"] += 1
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertNotIn("folge", narben.wound(dungeon, r, rd, self.host, h, "gnade", W(mit["von"])))
+        helpers.set_config(dungeon_narben=True, dungeon_narben_nur=False)
+        # the children's table: a plaster, never a consequence
+        kid = rd["plaetze"][self.gp]["held"]
+        ton = rd["ton"]
+        rd["ton"] = min(x_["id"] for x_ in r["toene"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            e = narben.wound(dungeon, r, rd, self.gp, kid, "auf", W(mit["von"]))
+        self.assertEqual(e, {"t": r["ideen"]["narben_kinder"][0], "pflaster": True})
+        self.assertIn("dungeon: narbe | pflaster | auf", out.getvalue())
+        rd["ton"] = ton
+        # NARBEN_MAX a hero
+        for i in range(narben.NARBEN_MAX):
+            rd["zug"] += 1
+            with contextlib.redirect_stdout(io.StringIO()):
+                narben.wound(dungeon, r, rd, self.host, h, "auf", W(ohne["von"]))
+        self.assertEqual(len(h["narben"]), narben.NARBEN_MAX)
+        # standing up again after lying down
+        rd["zug"] += 1
+        h["narben"] = h["narben"][:1]
+        h["leben"] = 1
+        with mock.patch.object(narben.random, "randint", lambda a, b: ohne["von"]), contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.stood_up(rd, self.host, h, 0)
+        self.assertIn("dungeon: narbe | narbe | auf", out.getvalue())
+        # the hero's file: only whole wounds
+        x = dict(copy.deepcopy(h), narben=[{"t": ["a", "b"], "folge": {"wert": wert, "minus": 3}}, {"t": "x"}, {"t": ["c", "d"], "pflaster": True, "folge": {"wert": wert, "minus": 1}}, 5])
+        self.assertEqual(dungeon.fix_hero(r, x)["narben"], [{"t": ["a", "b"]}, {"t": ["c", "d"], "pflaster": True}])
+        # the healer in a settlement takes the consequence for gold, the scar stays
+        helpers.keep_chat(self, "dungeon_gold")
+        helpers.set_config(dungeon_narben=True, dungeon_gold=True)
+        rd.pop("kampf", None)
+        rd["markt"] = {"name": "Marktplatz", "ware": []}
+        h["gold"] = 500
+        v = gold.view(dungeon, r, rd, self.host)
+        heiler = next(x_ for x_ in v["dienste"] if x_["id"] == gold.HEILER)
+        self.assertTrue(heiler["frei"])
+        self.assertEqual(heiler["preis"], narben.HEILER * dungeon.group_level(dungeon._living(rd)))
+        self.assertIsNotNone(v["spruch"])
+        self.assertEqual(v["spruch"]["name"], h["name"])
+        n = len(h["narben"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            gold.serve(dungeon, r, rd, self.host, h, {"id": "heiler"})
+        self.assertIn(f"dungeon: dienst | heiler | {heiler['preis']} gold", out.getvalue())
+        self.assertEqual((h["gold"], len(h["narben"]), narben.minus(h, wert)), (500 - heiler["preis"], n, 0))
+        with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(ValueError):
+            gold.serve(dungeon, r, rd, self.host, h, {"id": "heiler"})               # nothing left to heal
+        helpers.set_config(dungeon_narben=False, dungeon_gold=True)
+        self.assertNotIn(gold.HEILER, [x_["id"] for x_ in gold.view(dungeon, r, rd, self.host)["dienste"]])
+        self.assertGreaterEqual(narben.for_live()["narben"], 1)
+        root = os.path.dirname(dungeon.__file__)
+        with open(os.path.join(root, "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("if(e.art==='narbe')", js)
+        self.assertIn("${dmNarben(h)}", js)
+        with open(os.path.join(root, "static", "js", "dungeonfenster.js"), encoding="utf-8") as f:
+            self.assertIn("heiler:['Heilen lassen'", f.read())
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""

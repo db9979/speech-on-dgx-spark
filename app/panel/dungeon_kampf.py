@@ -48,6 +48,7 @@ import re
 
 import dungeon_album as album
 import dungeon_ehre as ehre
+import dungeon_narben as narben
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
@@ -810,6 +811,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 **({"beleg": x["beleg"]} if x.get("beleg") else {}))
         if x["treffer"]:
             folgen.append({"pid": x["pid"], "art": "schaden", "zahl": x["schaden"], "gegner": g["name"], "sart": x.get("art", "")})
+            if x["krit"]:
+                narben.wound(dm, r, rd, x["pid"], seats[x["pid"]]["held"], "krit")   # a foe's critical hit leaves a wound (D&D idea 8)
         rw = x.get("rettung")
         if rw:
             suffers(r, rd, seats[x["pid"]]["held"], rw)

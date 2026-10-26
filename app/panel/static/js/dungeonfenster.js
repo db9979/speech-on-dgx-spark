@@ -86,11 +86,11 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     body=k==='weg'?{name,weg:true}:k==='w'?{name,will:row.querySelector('[data-dmfrakw]').value.trim()}:{name,schritt:+k}}
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/fraktion`,body,DM);if(d){DM.v=d;DM.at=Date.now();if(k==='neu')DMA.frak=null}dmDraw()});
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
-const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒'};
+const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿'};
 // Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
 // purse; a card per service with its picture on top and a line of life; the price's calculation small above a verb
 // button; what the hero cannot pay is grey with how much is missing; the lesson as six values before → after
-const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve']};
+const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed']};
 const DMZEIT={morgen:['🌅','Morgen','Morning'],tag:['☀️','Tag','Day'],abend:['🌇','Abend','Evening'],nacht:['🌙','Nacht','Night']};
 const dmPlus=n=>(n>=0?'+':'')+n;
 function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0,p-s.gold),
@@ -107,7 +107,7 @@ function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0
     :rech(d)+knopf(d)}</div>`,
     z=DMZEIT[s.tageszeit]||DMZEIT.tag;
   return `<div class="dm-sied-kopf${s.kopf?'':' leer'}">${s.kopf?dmDing({bild:s.kopf},1):''}<div class="dm-sied-titel"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span>💰 ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b> · ${esc(t('Gruppe','Group'))}: ${s.gold_gruppe}</span></div></div>
-    <small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest. Jeder zahlt aus seinem eigenen Gold.','The panel sets the prices by the group\'s level. Everyone pays from their own gold.'))}</small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
+    ${s.spruch?`<p class="dm-isatz dm-narbsp">🩸 ${esc(s.spruch.text)} <small class="mut">· ${esc(s.spruch.name)}</small></p>`:''}<small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest. Jeder zahlt aus seinem eigenen Gold.','The panel sets the prices by the group\'s level. Everyone pays from their own gold.'))}</small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
 // the merchant as big cards: picture in the rarity's frame, lines, price; below what the own bag can sell or have named
 function dmShop(v){const h=v.ich,m=v.markt;
   const ware=m.ware.map(it=>`<div class="dm-ware ${DMSEL[it.selten]||''}" data-dmi="${esc(it.i)}"><span class="dm-ware-b">${dmDing(it,1)}</span><b>${esc(it.name)}</b>${dmCmp(it)}<small>${esc(it.selten_name)}${it.kg?' · '+String(it.kg).replace('.',L==='en'?'.':',')+' kg':''}</small>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>

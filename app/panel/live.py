@@ -1408,6 +1408,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Narben (dungeon_narben.py): numbers on the game's line
+        import dungeon_narben
+        dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["narben"] = {}
     try:   # Monster-Album (dungeon_album.py): numbers on the game's line
         import dungeon_album
         dgn["album"] = dungeon_album.for_live() if dgn.get("on") else {}
@@ -1951,6 +1956,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("schrift") or {}).values()) else "")
                         + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht"
                            if any((dgn.get("album") or {}).values()) else "")
+                        + (f" · heute {dgn['narben']['narben']} Wunden, davon {dgn['narben']['folgen']} mit Folge und {dgn['narben']['pflaster']} Pflaster, {dgn['narben']['geheilt']}× beim Heiler"
+                           if any((dgn.get("narben") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")
                         + (f" · heute {dgn['legenden']} legendäre Einzelstücke gefunden" if dgn.get("legenden") else "")
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()

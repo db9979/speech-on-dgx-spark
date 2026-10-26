@@ -5469,6 +5469,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Narben (V01.1.105, D&D-Idee 8, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Narben* (chat.dungeon_narben, ab Werk aus), darunter *Nur Narben* (chat.dungeon_narben_nur, ab Werk aus); dungeon_narben.py, Wunden wie in giffyglyph/darker-dungeons (CC BY-NC-ND, nur Idee), eigener Code; die Tabellen ideen.narben, narben_kinder und narben_sprueche stehen in dungeon_srd.json. Steht ein Held wieder auf, nachdem er am Boden lag (auch durch Gnade), oder trifft ihn ein Gegner kritisch, würfelt das Panel einen W20 auf der Wundtabelle: meist nur eine Narbe, auf wenigen Zeilen eine milde Folge, −1 auf einen Wert (in dungeon.total), bis ein Heiler in einer Siedlung sie nimmt. Höchstens eine Wunde je Held und Zug, höchstens 8 je Held (h[\"narben\"], beim Laden geprüft). *Nur Narben* gibt nie eine Folge, am Kindertisch gibt es nur Pflaster. Der Heiler steht im Fenster der Siedlung (dungeon_gold, 8 Gold je Stufe der Gruppe), solange der Schalter an ist oder der Held noch eine Folge hat; er nimmt alle Folgen, die Narben bleiben. In der Siedlung fragt eine feste Zeile aus narben_sprueche nach einer Narbe. Der Heldenbogen zeigt die"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Narben, eine Folge rot; der Verlauf eine Zeile je Wunde; der Erzähler liest die letzten drei je Held in seinen Fakten und würfelt nie selbst. Die App zeigt alles im Spieltisch. Live: heute Wunden, mit Folge, Pflaster, beim Heiler. Log dungeon: narbe | narbe|folge|pflaster | auf|gnade|krit, dungeon: dienst | heiler | N gold, | heiler | nein. Selbsttest Fight.test_scars_and_lasting_wounds_with_a_healer."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10734,6 +10750,22 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Schriftstücke (Funktionen → Meine Daten → „Schriftstücke“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Finden die Helden in der Geschichte etwas Geschriebenes (einen Brief, einen Steckbrief, einen Vers, eine Tagebuchseite, eine Notiz, eine Inschrift), erscheint es am Tisch als Pergament mit Titel, Text (höchstens 600 Zeichen) und Absender …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Narben (Funktionen → Meine Daten → „Narben“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Steht ein Held wieder auf, nachdem er am Boden lag, oder trifft ihn ein Gegner kritisch, würfelt der Spark auf einer festen W20-Wundtabelle: meist nur eine Narbe (das Aussehen), selten eine milde Folge, −1 auf einen Wert, bis ein Heiler …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Nur Narben (Funktionen → Meine Daten → „Nur Narben“; baut auf „Narben“; Dungeon-Master → Einstellungen): Zu „Narben“: Wunden ändern dann nur das Aussehen eines Helden, nie einen Wert."
 },
 {
 "lang": "de",
@@ -19533,6 +19565,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: scars (V01.1.105, D&D idea 8, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Scars* (chat.dungeon_narben, off by default), below it *Scars only* (chat.dungeon_narben_nur, off by default); dungeon_narben.py, wounds as in giffyglyph/darker-dungeons (CC BY-NC-ND, idea only), own code; the tables ideen.narben, narben_kinder and narben_sprueche stand in dungeon_srd.json. When a hero stands up again after lying down (Gnade too) or a foe hits it critically, the panel rolls a d20 on the wound table: mostly only a scar, on a few rows a mild consequence, −1 on a value (in dungeon.total), until a healer in a settlement takes it. At most one wound per hero and turn, at most 8 per hero (h[\"narben\"], checked when loaded). *Scars only* never gives a consequence, the children's table only plasters. The healer is in the settlement's window (dungeon_gold, 8 gold per level of the group) while the switch is on or the hero still has a consequence; it takes every consequence, the scars stay. In a settlement a fixed line of narben_sprueche asks about a scar. The hero sheet shows the scars, a consequence in red; the log one line per wou"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nd; the narrator reads the last three per hero in its facts and never rolls itself. The app shows it all at the game table. Live: wounds, with a consequence, plasters, at the healer today. Log dungeon: narbe | narbe|folge|pflaster | auf|gnade|krit, dungeon: dienst | heiler | N gold, | heiler | nein. Self-test Fight.test_scars_and_lasting_wounds_with_a_healer."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24614,6 +24662,22 @@
 "head": "My data",
 "title": "My data",
 "text": "- Writings (Features → My data → \"Writings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When the heroes find something written in the story (a letter, a wanted poster, a verse, a diary page, a note, an inscription), it appears at the table as parchment with title, text (at most 600 characters) and sender and stays in the ta …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Scars (Features → My data → \"Scars\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a hero stands up again after lying down or a foe hits it critically, the Spark rolls on a fixed d20 wound table: mostly only a scar (the look), rarely a mild consequence, −1 on a value, until a healer in a settlement takes it for gold."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Scars only (Features → My data → \"Scars only\"; builds on \"Scars\"; Dungeon Master → Settings): For \"Scars\": wounds then only change a hero's look, never a value."
 },
 {
 "lang": "en",

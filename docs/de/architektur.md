@@ -294,6 +294,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
+| `app/panel/dungeon_narben.py` | Dungeon-Master: Narben und bleibende Wunden nach fester W20-Tabelle, ein Heiler in der Siedlung nimmt die Folgen |
 | `app/panel/dungeon_nsc.py` | Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf |
 | `app/panel/dungeon_orakel.py` | Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt |
 | `app/panel/dungeon_pruefstand.py` | Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell |

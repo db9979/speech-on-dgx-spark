@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.105** · 2026-10-26 · KI-Dungeon-Master: Narben und bleibende Wunden, wer wieder aufsteht oder kritisch getroffen wird, behält eine Narbe, selten mit −1 auf einen Wert, bis ein Heiler in der Siedlung sie nimmt
 - **V01.1.104** · 2026-10-26 · KI-Dungeon-Master: Monster-Album, jeder Held sammelt die besiegten Gegner und weiß nach 1, 3 und 5 Siegen mehr über sie, bis zu ihren Schwächen
 - **V01.1.103** · 2026-10-26 · KI-Dungeon-Master: Schriftstücke, gefundene Briefe, Steckbriefe und Verse als Pergament am Tisch, der Gastgeber zeigt sie allen, einem Platz oder niemandem
 - **V01.1.102** · 2026-10-26 · KI-Dungeon-Master: Helfen und Gruppenprobe, wer einem Helden mit Namen hilft, gibt ihm Vorteil, bei einer Gruppenprobe reicht die Hälfte
