@@ -3630,7 +3630,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             use_one(h, it)
             _day.bump("kaputt")
             print("dungeon: werkzeug | kaputt", flush=True)
-        if w["ok"]:
+        if w["ok"] and not w.get("frieden"):      # the peace check pays with the fight's half experience, not as a check
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     mark("probe")
     if story:
@@ -3680,6 +3680,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if war:                                  # the fight by the panel's rolls (dungeon_kampf): hits, flight, the foes' attacks, the end
             rd["kampf"]["geschafft"] = any(w["ok"] and w.get("frieden") for w in wuerfe)   # peace: only the panel's check (Kampf-Audit 3)
             if rd["kampf"]["geschafft"] or any(w.get("frieden") for w in wuerfe):
+                rd["kampf"]["frieden"] = True    # once a fight (kampf.peace)
                 print(f"dungeon: kampf | frieden | probe {'ok' if rd['kampf']['geschafft'] else 'nein'}", flush=True)
             if any(w["ok"] and w.get("wert") == KENNER for w in wuerfe):   # Punkt 6: a passed Intelligenz check knows the foes
                 for g in kampf.up(rd):

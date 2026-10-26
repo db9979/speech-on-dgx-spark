@@ -207,8 +207,8 @@ SONST = ("wache",)         # any other occupation
 # a person counts in the fight's budget and gives experience by its template's experience times this weight, measured
 # with the balance bench (dungeon_pruefstand, people only): a group wins 70 to 90 per cent at „mittel“ on average, every
 # level and group size within SPANNE (few templates, so single cells swing more than with the whole bestiary)
-GEWICHT = {"adliger": 0.66, "akolyth": 0.55, "bandit": 1.43, "kultist": 0.88, "ritter": 1.21, "schlaeger": 1.65, "spaeher": 1.1,
-           "spion": 0.77, "veteran": 1.21, "wache": 1.54}
+GEWICHT = {"adliger": 0.66, "akolyth": 0.55, "bandit": 1.43, "kultist": 0.88, "ritter": 1.15, "schlaeger": 1.65, "spaeher": 1.1,
+           "spion": 0.77, "veteran": 1.15, "wache": 1.54}
 SPANNE = (50, 98)
 FREUND = 2                 # a person at least this friendly to a hero at the table never comes as a foe
 AUS = {"besiegt": ("{} wurde im Kampf besiegt.", "{} was beaten in the fight."), "geflohen": ("{} ist aus dem Kampf geflohen.", "{} fled the fight.")}

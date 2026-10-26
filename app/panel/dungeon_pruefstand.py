@@ -138,6 +138,7 @@ def fight(r, held, wahl, rng):
     n = 0
     for n in range(1, RUNDEN + 1):
         rd["zug"] = n
+        rd["offen"] = {}                         # a new turn: only this turn's actions, like the table
         kampf.expire(dungeon, rd)
         proben = []
         for pid, p in dungeon.seated(rd):
@@ -150,7 +151,7 @@ def fight(r, held, wahl, rng):
                 dungeon.heal(h, dungeon._c(r, trank)["heilung"] + trank.get("bonus", 0))
                 continue
             g = min(kampf.up(rd), key=lambda x: (x["leben"], x["k"]))
-            rd["offen"][pid] = {"kraft": spells[pid]} if spells[pid] else {}
+            rd["offen"][pid] = {"text": f"Ich greife {g['name']} an.", **({"kraft": spells[pid]} if spells[pid] else {})}
             proben.append({"pid": pid, "ziel": g["name"], "vt": ""})
         _, hits = kampf.attacks(dungeon, r, rd, proben, rng)
         by = {g["k"]: g for g in rd["kampf"]["gegner"]}

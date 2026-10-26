@@ -5733,6 +5733,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf-Audit, Nachprüfung (V01.1.130, Nachprüfung dungeon-kampf-audit/nachpruefung-welle1.md): Drei Lücken der Welle 1 geschlossen, ohne neuen Schalter. 1. Keine Fehlalarme mehr: NICHT_ANGRIFF kennt jetzt auch „trete den Rückzug an“, „trete zur Seite / zurück / beiseite / ein / vor / näher“, „schlage vor“, „schlage mich in die Büsche“, „werfe der Wache einen Blick zu“, „gebe der Wache Feuer“, „step back“, „retreat“, „fall back“, „cast a glance“, „suggest“ und „propose“; diese Aktionen greifen nie an. „Ich trete die Wache“ und „Ich schlage auf den Ork ein“ bleiben Angriffe. 2. Das Ziel des Modells allein greift nie an: Ob eine Aktion angreift, entscheiden nur ihre Wörter (Angriffswort, Schadenszauber oder Bezugswort mit einem genannten Gegner). Das ziel aus der Probe des Modells wählt nur, welchen Gegner ein schon erkannter Angriff trifft. 3. Frieden einmal je Kampf, ohne Proben-EP: Die Charisma-Probe für Frieden gibt es einmal je Kampf (kampf.frieden); ein zweiter Versuch im selben Kampf würfelt nicht (dungeon: kampf | frieden | schon versucht). Die Probe selbst gibt keine Proben-EP, nur ein Erfolg die Hälfte der Kampf-EP. 4. Kontrollzauber ohne Modell-Probe: Wirk"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "t ein Held im Kampf einen Zauber aus KONTROLLE, verwirft das Panel die Probe des Modells für ihn (dungeon: probe | kampf | kontrolle verworfen), bis die Rettungswürfe gebaut sind; vorher gab sie 13 EP. 5. Am Boden kein Angriff: Ein Held am Boden, ohnmächtig oder tot greift nie an, auch nicht mit einer Aktion von vorher (attacks prüft zustand). 6. Prüfstand neu eingemessen: Der Prüfstand greift jetzt mit einer Angriffs-Aktion an und beginnt jeden Zug ohne die Aktionen des Vorzugs; vorher griffen Zauberer auch im Zug ihres Heiltranks an, große Gruppen gewannen dadurch zu oft. GRUPPE ist jetzt 0,7 und je weiterem Helden 0,33, jedes Feld liegt bei 72 bis 88 %. Bei den Personen (dungeon_personen.GEWICHT) zählen Veteran und Ritter jetzt 1,15 statt 1,21, das Mittel liegt bei 75 %, jedes Feld bei 57 bis 96 %. Selbsttests Fight.test_kampf_angriffswoerter_tabelle (neue Zeilen), test_kampf_modellziel_allein_kein_angriff, test_kampf_frieden_einmal_je_kampf_ohne_proben_ep."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: ausführlich erzählen (V01.1.109, Dominik 2026-10-26 „ausführliche erzählweise ist immer noch kanpp“): Die Erzählweise der Runde hob bisher nur die Obergrenze an. Jetzt nennt die Aufgabe des Erzählers auch eine Mindestlänge (dungeon.WEISE_MIN: knapp keine, normal 500, ausführlich 1000 Zeichen, immer 300 unter der Obergrenze, erz_min) und einen festen Stil-Satz (WEISE_STIL): bei „ausführlich“ mehrere Absätze mit Sinnen, Stimmung und einem eigenen Moment für jeden Helden, der gehandelt hat, bei „knapp“ wenige klare Sätze. Bei „ausführlich“ prüft das Panel die Mindestlänge nach fester Regel (dungeon_erzaehler.judge, Fehler knapp): zu kurz wird einmal mit einem festen Hinweis neu erzählt, danach bleibt der Versuch. Log dungeon: nachbessern | knapp, | bleibt | knapp; gezählt unter den Erzähler-Regeln. Selbsttest Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -6317,7 +6333,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " Unter *Regeln anpassen* zeigt der Teil *Balance-Prüfstand* die Siege je Stufe als Balken mit dem Ziel 70 bis 90 % als grünem Band (rot außerhalb), dazu verlorenes Leben in gewonnenen Kämpfen und Runden, wählbar für 1 bis 5 Helden. Eingemessen: Der erste Lauf zeigte, dass eine Vierergruppe bei „mittel“ fast immer gewann, ein Held allein nur etwa jeden zweiten Kampf. Die Erfahrung einer mittleren Begegnung je Held und Stufe (dungeon_kampf.BUDGET, Stufe 1 bis 10) ist jetzt mit dem Prüfstand eingemessen, dazu wächst sie mit der Gruppe (GRUPPE: 0,7 für einen Helden, je weiterem 0,4 mehr; mit dem Kampf-Audit V01.1.127 neu eingemessen, weil kein Angriff mehr verloren geht, wenn sein Gegner im selben Zug schon fiel). Ein Selbsttest hält jedes Feld (Stufe und Gruppengröße) im Ziel; wer Gegner oder Waffen ändert, sieht es dort. Im echten Spiel helfen dazu Fähigkeiten und Heilzauber, die der Prüfstand nicht nutzt. Kein Kampf des Prüfstands zählt in die Tageszahlen, keine Runde wird berührt. Ergebnis in dungeon-pruefstand.json im Zustandsordner. Live: Felder, unter und über dem Ziel, ob er gerade spielt. Logs dungeon: pruefstand | start | nacht (oder knopf), fertig | N zellen | M unter dem zi"
+"text": " Unter *Regeln anpassen* zeigt der Teil *Balance-Prüfstand* die Siege je Stufe als Balken mit dem Ziel 70 bis 90 % als grünem Band (rot außerhalb), dazu verlorenes Leben in gewonnenen Kämpfen und Runden, wählbar für 1 bis 5 Helden. Eingemessen: Der erste Lauf zeigte, dass eine Vierergruppe bei „mittel“ fast immer gewann, ein Held allein nur etwa jeden zweiten Kampf. Die Erfahrung einer mittleren Begegnung je Held und Stufe (dungeon_kampf.BUDGET, Stufe 1 bis 10) ist jetzt mit dem Prüfstand eingemessen, dazu wächst sie mit der Gruppe (GRUPPE: 0,7 für einen Helden, je weiterem 0,33 mehr; mit dem Kampf-Audit V01.1.127 neu eingemessen, weil kein Angriff mehr verloren geht, wenn sein Gegner im selben Zug schon fiel, und mit der Nachprüfung V01.1.130, weil Helden, die einen Trank trinken oder am Boden liegen, nicht mehr mit der Aktion des Vorzugs angreifen). Ein Selbsttest hält jedes Feld (Stufe und Gruppengröße) im Ziel; wer Gegner oder Waffen ändert, sieht es dort. Im echten Spiel helfen dazu Fähigkeiten und Heilzauber, die der Prüfstand nicht nutzt. Kein Kampf des Prüfstands zählt in die Tageszahlen, keine Runde wird berührt. Ergebnis in dungeon-pruefstand.json im Zustandsordner. Live:"
 },
 {
 "lang": "de",
@@ -6325,7 +6341,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "el | S s, knopf | ok (oder aus, zu oft, laeuft). API (Admin): GET und POST /api/admin/dungeon/pruefstand (Anmeldung, CSRF, Größen- und Rate-Limit dungeonpruef). Selbsttests in app/tests/test_dungeon_pruefstand.py."
+"text": " Felder, unter und über dem Ziel, ob er gerade spielt. Logs dungeon: pruefstand | start | nacht (oder knopf), fertig | N zellen | M unter dem ziel | S s, knopf | ok (oder aus, zu oft, laeuft). API (Admin): GET und POST /api/admin/dungeon/pruefstand (Anmeldung, CSRF, Größen- und Rate-Limit dungeonpruef). Selbsttests in app/tests/test_dungeon_pruefstand.py."
 },
 {
 "lang": "de",
@@ -20285,6 +20301,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: combat audit, follow-up check (V01.1.130, check dungeon-kampf-audit/nachpruefung-welle1.md): Three gaps of wave 1 closed, no new switch. 1. No more false alarms: NICHT_ANGRIFF now also knows \"trete den Rückzug an\", \"trete zur Seite / zurück / beiseite / ein / vor / näher\", \"schlage vor\", \"schlage mich in die Büsche\", \"werfe der Wache einen Blick zu\", \"gebe der Wache Feuer\", \"step back\", \"retreat\", \"fall back\", \"cast a glance\", \"suggest\" and \"propose\"; these actions never attack. \"Ich trete die Wache\" and \"Ich schlage auf den Ork ein\" stay attacks. 2. The model's target alone never attacks: whether an action attacks is decided only by its words (an attack word, a damage spell, or a reference word with a named foe). The ziel from the model's check only picks which foe an attack already recognised hits. 3. Peace once a fight, no check EP: the Charisma check for peace happens once a fight (kampf.frieden); a second try in the same fight rolls nothing (dungeon: kampf | frieden | schon versucht). The check itself gives no check EP, only a success gives half the fight EP. 4. Control spells without a model check: when a hero casts a spell from KONTROLLE in a fight, the pa"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nel drops the model's check for that hero (dungeon: probe | kampf | kontrolle verworfen) until the saving throws are built; before, it gave 13 EP. 5. No attack when down: a hero on the ground, unconscious or dead never attacks, not even with an earlier action (attacks checks zustand). 6. Bench measured anew: the bench now attacks with an attack action and starts every turn without the actions of the turn before; before, casters also attacked in the turn of their healing potion, so large groups won too often. GRUPPE is now 0.7 and 0.33 for each further hero, every cell lies at 72 to 88 %. For the people (dungeon_personen.GEWICHT) veteran and knight now count 1.15 instead of 1.21, the mean lies at 75 %, every cell at 57 to 96 %. Self-tests Fight.test_kampf_angriffswoerter_tabelle (new rows), test_kampf_modellziel_allein_kein_angriff, test_kampf_frieden_einmal_je_kampf_ohne_proben_ep."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: telling richly (V01.1.109, Dominik 2026-10-26 \"ausführliche erzählweise ist immer noch kanpp\"): The round's way of telling only raised the upper limit so far. Now the narrator's task also names a minimum length (dungeon.WEISE_MIN: brief none, normal 500, rich 1000 characters, always 300 below the upper limit, erz_min) and a fixed style sentence (WEISE_STIL): for \"rich\" several paragraphs with senses, mood and a moment of its own for every hero who acted, for \"brief\" a few clear sentences. For \"rich\" the panel checks the minimum by a fixed rule (dungeon_erzaehler.judge, fault knapp): too short is told anew once with a fixed hint, then the try stays. Log dungeon: nachbessern | knapp, | bleibt | knapp; counted with the narrator rules. Self-test Fight.test_longer_at_the_moments_and_the_rounds_way_of_telling."
 },
 {
@@ -20853,7 +20885,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " with the aim of 70 to 90 % as a green band (red outside), plus life lost in won fights and turns, for 1 to 5 heroes. Measured in: the first run showed that a group of four almost always won at \"medium\", a lone hero only about every second fight. The experience of a medium encounter per hero and level (dungeon_kampf.BUDGET, levels 1 to 10) is now measured with the bench, and it grows with the group (GRUPPE: 0.7 for one hero, 0.4 more for each further one; measured anew with the combat audit V01.1.127, because no attack is lost any more when its foe already fell in the same turn). A self-test keeps every cell (level and group size) in the aim; whoever changes foes or weapons sees it there. In the real game abilities and healing spells help too, which the bench does not use. No fight of the bench counts into the day's numbers, no round is touched. The result is in dungeon-pruefstand.json in the state folder. Live: cells, below and above the aim, whether it is playing. Logs dungeon: pruefstand | start | nacht (or knopf), fertig | N zellen | M unter dem ziel | S s, knopf | ok (or aus, zu oft, laeuft). API (admin): GET and POST /api/admin/dungeon/pruefstand (sign-in, CSRF, size and rate"
+"text": " with the aim of 70 to 90 % as a green band (red outside), plus life lost in won fights and turns, for 1 to 5 heroes. Measured in: the first run showed that a group of four almost always won at \"medium\", a lone hero only about every second fight. The experience of a medium encounter per hero and level (dungeon_kampf.BUDGET, levels 1 to 10) is now measured with the bench, and it grows with the group (GRUPPE: 0.7 for one hero, 0.33 more for each further one; measured anew with the combat audit V01.1.127, because no attack is lost any more when its foe already fell in the same turn, and with the follow-up check V01.1.130, because heroes drinking a potion or lying on the ground no longer attack with the action of the turn before). A self-test keeps every cell (level and group size) in the aim; whoever changes foes or weapons sees it there. In the real game abilities and healing spells help too, which the bench does not use. No fight of the bench counts into the day's numbers, no round is touched. The result is in dungeon-pruefstand.json in the state folder. Live: cells, below and above the aim, whether it is playing. Logs dungeon: pruefstand | start | nacht (or knopf), fertig | N zelle"
 },
 {
 "lang": "en",
@@ -20861,7 +20893,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " limit dungeonpruef). Self-tests in app/tests/test_dungeon_pruefstand.py."
+"text": "n | M unter dem ziel | S s, knopf | ok (or aus, zu oft, laeuft). API (admin): GET and POST /api/admin/dungeon/pruefstand (sign-in, CSRF, size and rate limit dungeonpruef). Self-tests in app/tests/test_dungeon_pruefstand.py."
 },
 {
 "lang": "en",

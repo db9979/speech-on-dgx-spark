@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.130** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit, Nachprüfung, Rückzug, zur Seite treten, Vorschläge, Blicke und Feuer geben sind kein Angriff mehr, das Ziel des Modells allein greift nie an, Frieden einmal je Kampf ohne Proben-EP, Kontrollzauber ohne Modell-Probe, ein Held am Boden greift nicht an, Balance neu eingemessen
 - **V01.1.129** · 2026-10-25 · KI-Dungeon-Master: die Karte am Tisch blinkt nicht mehr, sie bleibt bei jeder Aktualisierung stehen und die Ortsbilder sind sofort da
 - **V01.1.128** · 2026-10-26 · KI-Dungeon-Master: Personen-Katalog, wer am Tisch getroffen wurde, bleibt mit Karte, Wesen, Stimme, Gesicht und Haltung zu den Helden, andere Runden der Welt treffen ihn wieder und er erkennt die Helden, der Admin pflegt die Personen unter Regeln, wer kämpft, nimmt feste Werte nach seinem Beruf und zählt gewichtet im Balancing
 - **V01.1.127** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit, jede angreifende Aktion wird ein Angriff des Panels, auch ohne Probe des Modells, Schadenszauber greifen immer an, fällt das Ziel, trifft der Angriff den nächsten Gegner, Frieden nur über eine Charisma-Probe des Panels, keine Heilung durch das Modell im Kampf, keine Ladung ohne Wirkung, die Erzählung gibt keinem Helden eine Waffe, die er nicht trägt

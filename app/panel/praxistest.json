@@ -3838,6 +3838,13 @@
 "titel": "Dungeon-Master: Karte blinkt nicht",
 "text": "A: Eine Runde mit Karte öffnen, rechts den Reiter Karte wählen. B: Eine Minute zusehen, während andere schreiben oder der Erzähler arbeitet: die Karte und ihre Ortsbilder bleiben ruhig stehen, nichts blinkt. C: Weitergehen: die Karte zeichnet den neuen Ort einmal, danach wieder ruhig.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P573",
+"v": 1130,
+"titel": "Dungeon-Master: Kampf-Audit Nachprüfung",
+"text": "Eine Runde mit Kampf spielen. A: „Ich trete den Rückzug an“, „Ich trete zur Seite“ und „Ich schlage vor, wir reden“ schreiben: kein Angriff. B: Eine Aktion ohne Angriffswort (z. B. „Ich sehe mich um“): auch wenn das Modell einen Gegner nennt, kommt kein Angriff. C: Zweimal im selben Kampf „Ergebt euch!“: nur beim ersten Mal eine Charisma-Probe, keine Proben-EP dafür. D: Schlaf auf einen Gegner wirken: keine Probe und keine EP dafür. E: Ein Held am Boden greift nicht an.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
