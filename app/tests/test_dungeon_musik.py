@@ -23,6 +23,7 @@ import unittest
 
 from tests import helpers
 from tests.test_dungeon import Base
+from tests.test_ui_browser import browser_ok
 
 import dungeon  # noqa: E402
 import dungeon_musik as dm  # noqa: E402
@@ -512,6 +513,52 @@ class Nervt(MusicBase):
         self.assertIn('data-dmton="nervt"', js)
         self.assertIn("/api/dungeon/musik/nervt", js)
         self.assertIn('data-dmmusik="zurueck"', js)
+
+
+# the fields' grid: one column for the world, then one per mood, read from the page itself (Dominik 2026-10-26
+# „tabelle verschoben“: the eighth mood „Lagerfeuer“ came with the CSS still counting seven, every row slid one over)
+GRID = """(()=>{const g=document.querySelector('#dmmusikadm .dm-mfeld'),c=[...g.children],n=+getComputedStyle(g).getPropertyValue('--n'),out=[];
+  const cols=getComputedStyle(g).gridTemplateColumns.split(' ').length;if(cols!==n+1)out.push('columns '+cols+' for '+n+' moods');
+  const L=e=>Math.round(e.getBoundingClientRect().left),T=e=>Math.round(e.getBoundingClientRect().top),head=c.slice(0,n+1);
+  for(let r=0;r*(n+1)<c.length;r++){const row=c.slice(r*(n+1),(r+1)*(n+1));
+    if(row.length!==n+1){out.push('row '+r+' has '+row.length);continue}
+    if(r&&(row[0].tagName!=='B'||row.slice(1).some(x=>x.tagName!=='SPAN')))out.push('row '+r+': world first, then numbers');
+    row.forEach((x,j)=>{if(Math.abs(L(x)-L(head[j]))>1)out.push('row '+r+' col '+j+' left');if(Math.abs(T(x)-T(row[0]))>1)out.push('row '+r+' col '+j+' top')})}
+  return out})()"""
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Grid(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import Browser
+        Browser.setUpClass.__func__(cls)
+
+    def test_each_mood_has_its_column_and_each_world_its_row(self):
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, h)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")                     # loads the game's scripts (dungeonlader.js)
+                        await b.until(pg, "typeof dmMusikAdm==='function'")
+                        # the card as under Funktionen → Dungeon-Master → Regeln anpassen, here on the page itself
+                        await pg.evaluate("(document.getElementById('dmmusikadm')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'dmmusikadm'})))"
+                                          ";document.body.appendChild(document.getElementById('dmmusikadm'));dmMusikAdm()")
+                        await b.until(pg, "!!document.querySelector('#dmmusikadm .dm-mfeld span')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmmusikadm .dm-mfeld > b').length"),
+                                         len(dm.STIMMUNGEN) + len(dm.admin_view()["felder"]))
+                        self.assertEqual(await pg.evaluate(GRID), [], w)
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        b.run_async(go())
+
 
 if __name__ == "__main__":
     unittest.main()

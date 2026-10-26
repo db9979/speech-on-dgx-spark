@@ -6285,7 +6285,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " Speicherplatz steht standardmäßig auf 2400 MB."
+"text": " Speicherplatz steht standardmäßig auf 2400 MB. Die Tabelle „Musik am Tisch“ im Admin-Fenster zählt ihre Spalten aus den Stimmungen: zuerst die Welt, dann je Stimmung eine Spalte (seit V01.1.094, Dominik 2026-10-26 „tabelle verschoben“; Browser-Test test_dungeon_musik.Grid prüft die Ausrichtung)."
 },
 {
 "lang": "de",
@@ -20133,7 +20133,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " the car right now (dungeon_auto.im_auto), its seat is not asked; a guest has no car. Doors: POST /api/profile/dungeon/{rid}/echt {zug, zahlen} and POST /api/dungeon/echt {code, zug, zahlen}. Live: asked, real throws, rolled by the panel after 30 s, refused (numbers only); log dungeon: echt | frage | n plaetze, dungeon: echt | alle da …, dungeon: echt | rueckfall …, dungeon: echt | eingetragen, dungeon: echt | abgelehnt | …. Fanfare: when the narrator reads the honours of the evening (log kind ehrung), a short, soft fanfare sounds once (WebAudio, no file). Turning over: when a natural 20 or 1 sets off an entry of the critical or fumble table (krit_tabelle, patzer_tabelle on the throw, a fixed name of the panel), the die card visibly turns over on landing and shows \"Critical: …\" or \"Fumble: …\"; with \"reduce motion\" without turning. Campfire: while the group rests (rd[\"rast\"]), an own music mood \"Campfire\" per world plays (calm, 70 beats per minute, in the world's major key, with guitar, flute, soft hand drum and warm bass), and the fire crackles in the background. Only a fight comes first. The store now has eight moods per world; the storage defaults to 2400 MB."
+"text": " the car right now (dungeon_auto.im_auto), its seat is not asked; a guest has no car. Doors: POST /api/profile/dungeon/{rid}/echt {zug, zahlen} and POST /api/dungeon/echt {code, zug, zahlen}. Live: asked, real throws, rolled by the panel after 30 s, refused (numbers only); log dungeon: echt | frage | n plaetze, dungeon: echt | alle da …, dungeon: echt | rueckfall …, dungeon: echt | eingetragen, dungeon: echt | abgelehnt | …. Fanfare: when the narrator reads the honours of the evening (log kind ehrung), a short, soft fanfare sounds once (WebAudio, no file). Turning over: when a natural 20 or 1 sets off an entry of the critical or fumble table (krit_tabelle, patzer_tabelle on the throw, a fixed name of the panel), the die card visibly turns over on landing and shows \"Critical: …\" or \"Fumble: …\"; with \"reduce motion\" without turning. Campfire: while the group rests (rd[\"rast\"]), an own music mood \"Campfire\" per world plays (calm, 70 beats per minute, in the world's major key, with guitar, flute, soft hand drum and warm bass), and the fire crackles in the background. Only a fight comes first. The store now has eight moods per world; the storage defaults to 2400 MB. The table \"Music at "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "the table\" in the admin window counts its columns from the moods: first the world, then one column per mood (since V01.1.094, Dominik 2026-10-26 \"table shifted\"; the browser test test_dungeon_musik.Grid checks the alignment)."
 },
 {
 "lang": "en",

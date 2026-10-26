@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.094** KI-Dungeon-Master: Tabelle „Musik am Tisch“ wieder ausgerichtet, die Welt steht vorn, je Stimmung eine Spalte
 - **V01.1.093** KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu
 - **V01.1.092** KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
 - **V01.1.091** KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.087** KI-Dungeon-Master: wer nur fragt, würfelt nicht aufs Schleichen, die Erzählung erzählt die Frage, und nach unten bleibt nach unten
 - **V01.1.086** KI-Dungeon-Master: ein 👎 mit festem Grund wird ein Erzähler-Fehler ohne Namen, der Admin übernimmt ihn als Szene des Erzähler-Prüfstands
 - **V01.1.085** KI-Dungeon-Master: Vorlesen nimmt das Geschlecht einer Stimme nur aus festen Merkmalen, „sagt er“ spricht nie mehr mit der Frauenstimme, auch nicht beim Weiterreden
-- **V01.1.084** KI-Dungeon-Master: mehr feste Prüfungen der Erzählung (gefallene Gegner, fehlende Dinge, nur erzähltes Gold, fremde Helden, Aussehen, Tageszeit), jede mit Rettung durch das Panel
 
 
 

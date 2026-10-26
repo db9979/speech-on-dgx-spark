@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.094** · 2026-10-26 · KI-Dungeon-Master: Tabelle „Musik am Tisch“ ausgerichtet (Spaltenzahl aus den Stimmungen statt fest 7, seit „Lagerfeuer“ waren es 8), Browser-Test prüft Welt vorn und jede Zahl unter ihrer Stimmung
 - **V01.1.093** · 2026-10-25 · KI-Dungeon-Master: Dungeon-Richter, nach den festen Prüfungen schätzt das Modell einen Widerspruch zu Aktionen oder Würfen, ab 90 % schreibt der Spark einmal neu
 - **V01.1.092** · 2026-10-25 · KI-Dungeon-Master: geht die Gruppe an einen neuen Ort, muss die Erzählung ihn nennen, sonst schreibt das Modell neu oder die Gruppe bleibt
 - **V01.1.091** · 2026-10-25 · KI-Dungeon-Master: echte Würfel wirken jetzt, der Gastgeber wählt im Spielleiter-Pult die Plätze mit eigenem W20, der Zug nimmt die Zahl, der Beleg sagt „echt“

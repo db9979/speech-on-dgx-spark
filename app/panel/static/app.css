@@ -2611,9 +2611,9 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 @keyframes dmeq{50%{height:14px}}
 .dm-d20.dm-rollt{animation:dmroll .8s cubic-bezier(.2,.7,.3,1)}@keyframes dmroll{0%{transform:rotate(0) scale(.7)}60%{transform:rotate(540deg) scale(1.15)}100%{transform:rotate(720deg) scale(1)}}
 @media (prefers-reduced-motion:reduce){.dm-eq.on b,.dm-d20.dm-rollt{animation:none}}
-.dm-mfeld{display:grid;grid-template-columns:minmax(90px,auto) repeat(7,1fr);gap:4px;font-size:12px;margin:8px 0;overflow-x:auto}
+.dm-mfeld{display:grid;grid-template-columns:minmax(90px,auto) repeat(var(--n,8),1fr);gap:4px;font-size:12px;margin:8px 0;overflow-x:auto}
 .dm-mfeld b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dm-mfeld span{text-align:center;border-radius:6px;padding:3px 4px;background:var(--line)}.dm-mfeld span.ok{color:var(--okt)}.dm-mfeld span.warn{color:var(--warnt)}
-@media (max-width:520px){.dm-laut{width:80px}.dm-mfeld{grid-template-columns:70px repeat(7,minmax(38px,1fr))}}
+@media (max-width:520px){.dm-laut{width:80px}.dm-mfeld{grid-template-columns:70px repeat(var(--n,8),minmax(38px,1fr))}}
 .dm-tisch .dm-akt{background:transparent;border:1px solid var(--t-gold);color:var(--t-gold);font-variant:small-caps;letter-spacing:.1em}
 .dm-tisch .dm-ooc{border-color:var(--t-linie)}
 .dm-tisch .dm-story .dm-inp{padding-top:10px;border-top:1px solid var(--t-linie)}
