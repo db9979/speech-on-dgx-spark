@@ -21,7 +21,8 @@ function dmWDie(v,x){const W=v.werte||{},k=dmWKey(v,x),wert=esc(W[x.wert]||x.wer
   if(land)setTimeout(()=>{if(Date.now()-DMWT.landT[k]>=1300)(v.mode==='g'?dgDraw:dmDraw)()},1350-el);
   const tab=x.krit_tabelle||x.patzer_tabelle;   // D&D idea 2: a table's entry turns the card over on landing
   return dmPK(v,x,`<span class="dm-d20">${x.w}${fun}</span>`,`${x.w===20?' dm-krit':''}${land?' dm-wland '+(typeof dmtErgebnis==='function'?dmtErgebnis(x):'')+(tab?' dm-wumdreh':''):''}`,` data-dmwkey="${esc(k)}"`)
-    +(tab?`<b class="dm-wtab${x.patzer_tabelle?' dm-wtabp':''}">${esc((x.krit_tabelle?t('Kritisch: ','Critical: '):t('Patzer: ','Fumble: '))+tab)}</b>`:'')+dmLeiste(x,el)}
+    +(tab?`<b class="dm-wtab${x.patzer_tabelle?' dm-wtabp':''}">${esc((x.krit_tabelle?t('Kritisch: ','Critical: '):t('Patzer: ','Fumble: '))+tab)}</b>`:'')
+    +(x.knapp&&!x.ok?`<b class="dm-wknapp${land?' dm-wland':''}">${esc(t('Knapp daneben','Just missed'))}</b>`:'')+dmLeiste(x,el)}   // D&D round 2 idea 1: missed by 1 or 2
 const DMD20=typeof DMT_D20==='string'?DMT_D20:'<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon class="dm-d20f" points="50,22 76,66 24,66"/></svg>';
 // the own die waiting for its tap: in the wait (rest -1) or in the feed after the narration came (1a, rest = seconds
 // left, a ring runs down and then it throws itself); never the number, only what is checked

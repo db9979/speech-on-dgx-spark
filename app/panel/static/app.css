@@ -2538,7 +2538,8 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 @keyframes dmechtzeit{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .dm-wumdreh{animation:dmumdreh .7s .55s both;transform-style:preserve-3d;backface-visibility:hidden}@keyframes dmumdreh{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
 .dm-wtab{display:block;margin:2px 0 4px;font-size:15px;color:var(--t-gold,var(--acct))}.dm-wtab.dm-wtabp{color:var(--t-rot,var(--bad,#b5463a))}
-@media (prefers-reduced-motion:reduce){.dm-wumdreh{animation:none}}
+.dm-wknapp{display:block;margin:2px 0 4px;font-size:14px;color:var(--t-gold,var(--warnt))}.dm-wknapp.dm-wland{animation:dmknapp .5s .5s both}@keyframes dmknapp{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.dm-wumdreh,.dm-wknapp.dm-wland{animation:none}}
 @media (prefers-reduced-motion:reduce){.dm-echtzeit{animation:none}}
 .dm-wkarten{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}.dm-wkarte{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--t-linie,var(--line));background:color-mix(in srgb,var(--t-karte,var(--card)) 80%,transparent);font-size:13px}.dm-wkarte small{color:var(--t-mut,var(--mut))}
 .dm-wtipp{color:var(--t-mut,var(--mut))}

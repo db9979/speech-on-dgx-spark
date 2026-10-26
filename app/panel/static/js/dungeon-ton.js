@@ -5,7 +5,7 @@
 // 0.8 s and always stops on the panel's number. Each device keeps its own choice (music, sounds, volume).
 // „👎 Nervt“ (Dominik 2026-10-24): any seat marks the piece playing, it is never played again, the night makes a new one.
 const DMT={ctx:null,out:null,amb:null,ambK:'',noise:null,el:[null,null],g:[null,null],cur:-1,id:'',st:'',last:[],urls:{},v:null,mode:'',
-  seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
+  seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},alarm:{p:null,g:null},licht:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
 const DMT_FADE=12,DMT_LAUT=20,DMT_URLS=4;
 function dmtPref(k,d){try{const x=localStorage.getItem('dm-'+k);return x===null?d:x}catch{return d}}
 function dmtSet(k,x){try{localStorage.setItem('dm-'+k,String(x))}catch{}}
@@ -37,15 +37,27 @@ const DMT_FX={
   stufe:v=>{const t=dmtNow();[392,494,587,784].forEach((f,i)=>dmtTone(f,t+i*.12,.02,i===3?.9:.25,v*.14,'triangle'))},
   // the honours of the evening (D&D idea 1): a short fanfare, two calls and a held chord, soft like the others
   fanfare:v=>{const t=dmtNow();[[392,0,.16],[392,.18,.1],[523,.3,.5]].forEach(([f,d,l])=>{dmtTone(f,t+d,.02,l,v*.13,'sawtooth');dmtTone(f*2,t+d,.02,l,v*.04,'triangle')});
-    [523,659,784].forEach(f=>dmtTone(f,t+.86,.06,1.3,v*.09,'triangle'))}};
+    [523,659,784].forEach(f=>dmtTone(f,t+.86,.06,1.3,v*.09,'triangle'))},
+  // D&D round 2: missed by 1 or 2 (idea 1), the foe's announcement (idea 2), the vault's alarm and torch (idea 6),
+  // a critical or fumble table on an attack (the log's „angriff“, round 1 idea 2)
+  knapp:v=>{const t=dmtNow();[[466,0],[440,.16]].forEach(([f,d])=>{const o=dmtTone(f,t+d,.01,.22,v*.12,'triangle');o.frequency.exponentialRampToValueAtTime(f*.94,t+d+.22)});dmtNoise(t+.38,.1,v*.25,'lowpass',400)},
+  horn:v=>{const t=dmtNow(),b=DMT.ctx.createBiquadFilter();b.type='lowpass';b.frequency.value=700;b.connect(DMT.out);
+    [[98,0,.55],[147,.62,1]].forEach(([f,d,l])=>{dmtTone(f,t+d,.12,l,v*.22,'sawtooth',b);dmtTone(f*2,t+d,.12,l,v*.05,'sawtooth',b)})},
+  glocke:v=>{const t=dmtNow();[1,2.76,5.4].forEach((p,i)=>dmtTone(392*p,t,.004,2.4-i*.6,v*(.16/(i+1))))},
+  sturmglocke:v=>{const t=dmtNow();for(let k=0;k<5;k++)[1,2.76,5.4].forEach((p,i)=>dmtTone(523*p,t+k*.32,.003,1.1-i*.3,v*(.15/(i+1))))},
+  erlischt:v=>{const t=dmtNow();dmtNoise(t,.35,v*.35,'lowpass',600);const o=dmtTone(220,t,.01,.4,v*.06);o.frequency.exponentialRampToValueAtTime(70,t+.4)},
+  krit:v=>{const t=dmtNow();[784,988,1319,1568].forEach((f,i)=>dmtTone(f,t+i*.05,.01,.5,v*.09))},
+  patzer:v=>{const t=dmtNow();[[311,0],[294,.22],[262,.44]].forEach(([f,d])=>dmtTone(f,t+d,.02,d>.4?.6:.18,v*.1,'triangle'))}};
 function dmtPlay(k,w){if(!dmtFx())return;const c=dmtCtx();if(!c||c.state!=='running')return;try{DMT_FX[k](dmtLaut()/100,w)}catch{}}
 // the place's sound in the background: a filtered noise loop (regen, wind, feuer, wasser), quiet under the music
 function dmtAmb(k){if(!dmtFx())k='';if(k===DMT.ambK)return;DMT.ambK=k;if(DMT.amb){const a=DMT.amb;a.g.gain.setTargetAtTime(0.0001,dmtNow(),.6);setTimeout(()=>{try{a.s.stop();clearInterval(a.tick)}catch{}},2500);DMT.amb=null}
   const c=dmtCtx();if(!k||!c)return;const s=c.createBufferSource();s.buffer=DMT.noise;s.loop=true;const f=c.createBiquadFilter(),g=c.createGain();
-  const set={regen:['highpass',900,.12],wind:['lowpass',420,.18],feuer:['lowpass',800,.09],wasser:['lowpass',360,.16]}[k]||['lowpass',500,.1];
+  const set={regen:['highpass',900,.12],wind:['lowpass',420,.18],feuer:['lowpass',800,.09],wasser:['lowpass',360,.16],fackel:['lowpass',650,.06],dunkel:['lowpass',140,.2]}[k]||['lowpass',500,.1];
   f.type=set[0];f.frequency.value=set[1];g.gain.value=0.0001;s.connect(f);f.connect(g);g.connect(DMT.out);s.start();
   g.gain.setTargetAtTime(set[2]*dmtLaut()/100,dmtNow(),1.2);const a={s,g,k,lvl:set[2],tick:0};
   if(k==='wind'){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=.12;lg.gain.value=220;l.connect(lg);lg.connect(f.frequency);l.start()}
+  if(k==='fackel')a.tick=setInterval(()=>{if(DMT.ctx.state!=='running')return;g.gain.setTargetAtTime(set[2]*dmtLaut()/100*(.6+Math.random()*.8),dmtNow(),.08);if(Math.random()<.35)dmtNoise(dmtNow(),.015,dmtLaut()/100*.15,'highpass',2800)},300);   // a torch flickers
+  if(k==='dunkel')a.tick=setInterval(()=>{if(DMT.ctx.state==='running'&&Math.random()<.2){const t=dmtNow(),o=dmtTone(900,t,.002,.2,dmtLaut()/100*.04);o.frequency.exponentialRampToValueAtTime(420,t+.2)}},1500);   // dark: low air, a drop now and then
   if(k==='feuer')a.tick=setInterval(()=>{if(DMT.ctx.state==='running'&&Math.random()<.5)dmtNoise(dmtNow(),.02,dmtLaut()/100*.25,'highpass',2500)},260);
   if(k==='wasser')a.tick=setInterval(()=>{if(DMT.ctx.state==='running'&&Math.random()<.3){const t=dmtNow(),o=dmtTone(1300,t,.002,.12,dmtLaut()/100*.06);o.frequency.exponentialRampToValueAtTime(600,t+.12)}},700);
   DMT.amb=a}
@@ -80,12 +92,20 @@ async function dmtNervt(){const id=DMT.id,v=DMT.v;if(!id||!v)return;
   const m=v.musik||{};['stuecke','sieg'].forEach(k=>{if(m[k])m[k]=m[k].filter(x=>x!==id)});
   if(DMT.urls[id]){URL.revokeObjectURL(DMT.urls[id]);delete DMT.urls[id]}sayToast(t('Kommt nicht wieder, nachts gibt es ein neues','Will not come again, a new one comes at night'));
   if((m.stuecke||[]).length)dmtStart(m.stuecke);else dmtStop()}
-const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe',ehrung:()=>'fanfare'};   // ehrung: the evening's honours (D&D idea 1)
+const dmtTab=e=>e.krit_tabelle?'krit':e.patzer_tabelle?'patzer':'';   // a critical or fumble table's entry (D&D idea 2)
+const DMT_EVENT={folge:e=>e.was==='heilung'?'heilung':'treffer',beute:()=>'muenzen',handel:()=>'muenzen',zauber:()=>'zauber',stufe:()=>'stufe',ehrung:()=>'fanfare',   // ehrung: the evening's honours (D&D idea 1)
+  ansage:()=>'horn',angriff:dmtTab,wurf:e=>e.knapp&&!e.ok?'knapp':dmtTab(e)};   // D&D round 2: the foe's announcement (2), missed by 1 or 2 (1)
+// the vault (D&D round 2 idea 6, dungeon_karte.py): the alarm's bell at 3 and the storm bell at 6, the torch's light
+// (rooms left; 0 dark, null outside a vault) as the background sound
+const dmtLicht=v=>{const f=(v.karte||{}).fackel;return typeof f==='number'?(f>0?'fackel':'dunkel'):''};
+function dmtVault(v,mode){const k=v.karte||{},al=typeof k.alarm==='number'?k.alarm:null,f=typeof k.fackel==='number'?k.fackel:null,o=DMT.alarm[mode],l=DMT.licht[mode];
+  if(al!==null&&o!==null&&al>o){if(o<6&&al>=6)dmtPlay('sturmglocke');else if(o<3&&al>=3)dmtPlay('glocke')}
+  if(f===0&&l>0)dmtPlay('erlischt');DMT.alarm[mode]=al;DMT.licht[mode]=f}
 function dmtRoll(w,news){const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dice=[...w.querySelectorAll('.dm-feed .dm-wurf .dm-d20')].slice(-news.length);
   dice.forEach(d=>{const real=d.textContent;if(reduce)return;d.classList.add('dm-rollt');let k=0;const iv=setInterval(()=>{d.textContent=String(1+Math.floor(Math.random()*20));if(++k>=12){clearInterval(iv);d.textContent=real;d.classList.remove('dm-rollt')}},66)})}
 window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
-  if(DMT.rid[mode]!==v.rid){DMT.rid[mode]=v.rid;DMT.seen[mode]=null;DMT.sieg[mode]=null;DMT.tuer[mode]=null}
+  if(DMT.rid[mode]!==v.rid){DMT.rid[mode]=v.rid;DMT.seen[mode]=null;DMT.sieg[mode]=null;DMT.tuer[mode]=null;DMT.alarm[mode]=null;DMT.licht[mode]=null}
   const head=w.querySelector('.dm-head .dm-htitle');if(head)head.insertAdjacentHTML('afterend',dmtBar(v));   // in the head, no own row (Punkt 9)
   // the log's new entries since the last drawing: the dice roll, the events sound (the first drawing only counts)
   const log=v.log||[],key=log.length?JSON.stringify(log[log.length-1]):'';
@@ -95,7 +115,7 @@ window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
     const ev=[...new Set(news.map(e=>DMT_EVENT[e.art]&&DMT_EVENT[e.art](e)).filter(Boolean))];ev.forEach((k,i)=>setTimeout(()=>dmtPlay(k),(wuerfe.length?900:0)+i*400))}
   DMT.seen[mode]=key;
   if(DMT.tuer[mode]!==null&&m.tuer_zug>DMT.tuer[mode])dmtPlay('tuer');DMT.tuer[mode]=m.tuer_zug;
-  dmtAmb(v.status==='laeuft'?m.klang||'':'');
+  dmtVault(v,mode);dmtAmb(v.status==='laeuft'?dmtLicht(v)||m.klang||'':'');
   if(!m.an||!dmtMusik()||v.status!=='laeuft'){if(DMT.cur>=0)dmtStop();DMT.sieg[mode]=m.sieg_zug;return}
   if(DMT.sieg[mode]!==null&&m.sieg_zug>DMT.sieg[mode]&&(m.sieg||[]).length){DMT.sieg[mode]=m.sieg_zug;DMT.st=m.st;dmtStart(m.sieg,true);return}
   DMT.sieg[mode]=m.sieg_zug;

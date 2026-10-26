@@ -559,6 +559,44 @@ class Grid(unittest.TestCase):
                         await br.close()
         b.run_async(go())
 
+    def test_the_sounds_of_round_two(self):
+        """D&D round 2 (Dominik 2026-10-26 „1-9 umsetzten“): missed by 1 or 2 (1), the foe's announcement (2), the
+        vault's alarm bells at 3 and 6 and its torch (6), a table's entry on an attack; every name has its sound."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1280, 900)
+                try:
+                    await pg.evaluate("goSec('dungeon')")
+                    await b.until(pg, "typeof dmtVault==='function'&&typeof dmWDie==='function'")
+                    got = await pg.evaluate("""(()=>{const E=DMT_EVENT,o={};
+                      o.ev=[E.ehrung({}),E.ansage({}),E.wurf({knapp:true,ok:false}),E.wurf({knapp:true,ok:true}),E.wurf({ok:true}),
+                            E.angriff({krit_tabelle:'Tiefer Schnitt'}),E.angriff({patzer_tabelle:'Ausgerutscht'}),E.angriff({})];
+                      o.fx=Object.keys(E).every(k=>[{},{knapp:true},{krit_tabelle:'x'},{patzer_tabelle:'x'},{was:'heilung'}].every(e=>!E[k](e)||typeof DMT_FX[E[k](e)]==='function'));
+                      o.fx2=['glocke','sturmglocke','erlischt'].every(k=>typeof DMT_FX[k]==='function');
+                      const rec=[],old=window.dmtPlay;window.dmtPlay=k=>rec.push(k);
+                      const v=(alarm,fackel)=>({karte:{alarm,fackel}});
+                      [[0,3],[2,3],[3,2],[5,1],[6,1],[6,0],[1,null]].forEach(([a,f])=>dmtVault(v(a,f),'p'));
+                      window.dmtPlay=old;o.rec=rec;
+                      o.licht=[dmtLicht(v(0,2)),dmtLicht(v(0,0)),dmtLicht(v(0,null)),dmtLicht({})];
+                      o.knapp=dmWDie({rid:'r',werte:{},mode:'p'},{name:'Mira',wert:'ges',schwer:14,w:12,bonus:1,gesamt:13,ok:false,knapp:true,ich:true,geworfen:true}).includes('Knapp daneben');
+                      o.gut=dmWDie({rid:'r',werte:{},mode:'p'},{name:'Mira',wert:'ges',schwer:14,w:15,bonus:1,gesamt:16,ok:true,knapp:true,ich:true,geworfen:true}).includes('Knapp daneben');
+                      return o})()""")
+                    self.assertEqual(got["ev"], ["fanfare", "horn", "knapp", "", "", "krit", "patzer", ""])
+                    self.assertTrue(got["fx"])
+                    self.assertTrue(got["fx2"])
+                    self.assertEqual(got["rec"], ["glocke", "sturmglocke", "erlischt"])   # 2→3 bell, 5→6 storm bell, the torch goes out
+                    self.assertEqual(got["licht"], ["fackel", "dunkel", "", ""])
+                    self.assertTrue(got["knapp"])
+                    self.assertFalse(got["gut"])
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        b.run_async(go())
+
 
 if __name__ == "__main__":
     unittest.main()

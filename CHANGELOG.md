@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.098** · 2026-10-26 · KI-Dungeon-Master: Töne der D&D-Ideen Runde 2 (knapp daneben mit Anzeige, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke bei 3 und 6, Fackel und Dunkel im Gewölbe), nur aus Feldern des Panels
 - **V01.1.097** · 2026-10-25 · KI-Dungeon-Master: die Karte legt je Raum und Ort 2 bis 3 Requisiten für den Kampf fest (Umgebung nutzen); Reise-Wege nennen ihre Landschaft aus der Landschafts-Tabelle
 - **V01.1.096** · 2026-10-25 · KI-Dungeon-Master: Pause überall sichtbar, in den Rundenlisten von Web, App und CarPlay, als Leiste am Tisch, als Mitteilung an die Mitspieler, im Auto und in Live
 - **V01.1.095** · 2026-10-26 · Logs → Dienste: Modellwechsel kommt vom Modell-Rechner, ein Dienst ohne Einträge zeigt „noch keine Einträge“ statt einer leeren Liste

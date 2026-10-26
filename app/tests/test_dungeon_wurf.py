@@ -75,6 +75,23 @@ class WaitsInTheFeed(unittest.TestCase):
         self.assertNotIn("wurf_offen", rd)
 
 
+class RoundTwo(unittest.TestCase):
+    """D&D round 2 idea 1 (Dominik 2026-10-26 „1-9 umsetzten“): a check missed by 1 or 2 carries "knapp" and the price's
+    id from the dice receipt into the wait; the others see it only once the die is open."""
+    def test_missed_by_a_little_goes_into_the_wait(self):
+        rd = {"dm": "denkt", "welt": "fantasy", "plaetze": {"p1": {}, "p2": {}}}
+        die = {"pid": "p1", "name": "Mira", "wert": "ges", "w": 12, "gesamt": 13, "schwer": 14, "ok": False, "knapp": True, "preis": "laerm"}
+        warten.step(rd, "wuerfeln", wuerfe=[die, dict(die, pid="p2", name="Bo", knapp=False, preis="")])
+        self.assertEqual([(x["knapp"], x["preis"]) for x in rd["warten"]["w"]], [(True, "laerm"), (False, "")])
+        wt = rd["warten"]["wt"]
+        own = warten._die(rd["warten"]["w"][0], "p1", wt, wt)
+        self.assertEqual((own["knapp"], own["preis"]), (True, "laerm"))
+        hidden = warten._die(rd["warten"]["w"][0], "p2", wt + 1, wt)        # another seat's die, not thrown yet
+        self.assertNotIn("knapp", hidden)
+        self.assertNotIn("w", hidden)
+        self.assertIn("Knapp daneben", js("dungeonwarten.js"))
+
+
 class Page(unittest.TestCase):
     def test_feed_keeps_the_die_and_veils_what_follows(self):
         w, d = js("dungeonwarten.js"), js("dungeon.js")
