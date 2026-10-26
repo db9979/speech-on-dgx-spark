@@ -3733,6 +3733,13 @@
 "titel": "Dungeon-Master: Bilderzähler und Heiler-Bild",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an, Bilder malen an. A: Unter Regeln anpassen → Bilder zeigt „Alle Bilder malen · N“ nur noch, was wirklich gemalt wird; bei 0 ist der Knopf aus. B: „Alle Bilder malen“ antippen: der Lauf malt genau N Bilder (Log „dingbild | lauf ende | fertig | N gemalt“). C: Mit Narben an: in der Siedlung zeigt der Heiler nach dem Lauf ein Bild statt 🌿 und einen Satz Leben.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P558",
+"v": 1114,
+"titel": "Dungeon-Master: Sprachen der Völker",
+"text": "Funktionen → KI-Dungeon-Master → Sprachen der Völker einschalten, eine Runde mit einem Elfen und einem Zwerg spielen und eine Elfe der Geschichte ansprechen. A: Unter der Erzählung steht eine Sprechblase mit fremden Lauten. B: Am Platz des Elfen steht darunter „du verstehst: …“, am Platz des Zwergs „(unverständlich, Elfisch)“. C: Mit Vorlesen spricht die Stimme der Elfe die fremden Laute.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

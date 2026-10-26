@@ -305,6 +305,8 @@ FEATURES = (
     F("dungeonrast", "Lagerfeuer und Rast", "Campfire and rest", "data", ("dungeon_rast",), parent="dungeon", me="dmbox", guide="dungeonrast"),
     # Reise-Etappen (dungeon_reise.py, D&D idea 9): a long way is a journey with roles, checks and an event
     F("dungeonreise", "Reise-Etappen", "Travel stages", "data", ("dungeon_reise",), parent="dungeon", me="dmbox", guide="dungeonreise"),
+    # Sprachen der Völker (dungeon_sprachen.py, D&D idea 7): a greeting in a people's tongue, the meaning only for who knows it
+    F("dungeonsprachen", "Sprachen der Völker", "Tongues of the peoples", "data", ("dungeon_sprachen",), parent="dungeon", me="dmbox", guide="dungeonsprachen"),
     # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
     F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
     F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),

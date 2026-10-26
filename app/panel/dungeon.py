@@ -128,6 +128,7 @@ import dungeon_mut as mut
 import dungeon_narben as narben
 import dungeon_rast as rast
 import dungeon_reise as reise
+import dungeon_sprachen as sprachen
 import dungeon_grenzen as grenzen
 import dungeon_sicht as sicht
 import dungeon_schreiber as schreiber
@@ -3108,7 +3109,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haken": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
               "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": HAKEN_MAX + 60}}}},
     "bild": {"type": "string", "maxLength": BILD_MAX + 100}, "faeden": erz.SCHEMA_FAEDEN, "dinge": erz.SCHEMA_DINGE, "nsc": nsc.SCHEMA, "fraktionen": fraktionen.SCHEMA,
-    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA, "helden_sagen": kommentar.SCHEMA,
+    "quest_fund": quest.SCHEMA, "schriftstueck": schrift.SCHEMA, "helden_sagen": kommentar.SCHEMA, "fremd": sprachen.SCHEMA,
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -3218,7 +3219,7 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     t += " " + KANN_REGEL[lang] + " " + ZUSTAND_REGEL[lang]
@@ -3430,6 +3431,7 @@ def check_story(r, rd, obj):
             continue
         out["ooc"].append({"pid": pid, "text": t})
     out["helden"] = kommentar.check(_me, r, rd, obj.get("helden_sagen"), {x["pid"] for x in out["ooc"]})   # the heroes' own lines (2026-10-26)
+    out["fremd"] = sprachen.check(_me, r, rd, obj.get("fremd"), out.get("text", ""))   # a greeting in a people's tongue (D&D idea 7)
     for n in obj.get("npc") or []:
         name, sagt = plain(n.get("name") if isinstance(n, dict) else "", 40), plain(n.get("sagt") if isinstance(n, dict) else "", NPC_SAGT)
         if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
@@ -3586,6 +3588,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             text += (f" {h['name']}, was macht dein {k} währenddessen?" if not li else f" {h['name']}, what does your {k} do meanwhile?")
         _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "",
              **({"helden": story["helden"]} if story.get("helden") else {}))
+        fremd = sprachen.keep(rd, story.get("fremd"))   # the sounds for everyone, the meaning only through the view
+        if fremd:
+            rd["log"][-1]["fremd"] = fremd
         for o in story.get("ooc") or []:
             if o["pid"] in names:
                 _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
@@ -3848,6 +3853,7 @@ async def run_turn(rid, turn):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn), cur))
                     said.extend(kommentar.speak(_me, r, cur, e.get("helden")))   # the heroes' own comments last
+                    said.extend(sprachen.speak(_me, r, cur, e))   # a people's tongue, only its sounds
                     cur["spricht"] = time.time()      # the clock waits for the reading (speak_turn ends it)
                 grund = auto_scene(cur, story, ort0, kampf0, akt0)
                 if grund:
@@ -5157,6 +5163,7 @@ def view(rid, pid, now=None):
     out["schrift"] = schrift.view(rd, pid, host)               # the writings found, only those this seat may see (D&D idea 3)
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
+    out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
     out.update(warten.view(rd, rid, pid, lang))

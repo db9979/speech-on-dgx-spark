@@ -211,6 +211,7 @@
     "dungeon_narben_nur": false,
     "dungeon_rast": false,
     "dungeon_reise": false,
+    "dungeon_sprachen": false,
     "dungeon_kommentar": false,
     "dungeon_import": false,
     "dungeon_regler": false,

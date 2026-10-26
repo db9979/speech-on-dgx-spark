@@ -307,6 +307,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_schreiber.py` | KI-Dungeon-Master: Schreiber-Abgleich. |
 | `app/panel/dungeon_schrift.py` | KI-Dungeon-Master: Schriftstücke zum Anfassen. |
 | `app/panel/dungeon_sicht.py` | KI-Dungeon-Master: Sichtfilter. |
+| `app/panel/dungeon_sprachen.py` | KI-Dungeon-Master: Sprachen der Völker. |
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
 | `app/panel/dungeon_tabellen.py` | KI-Dungeon-Master: the fixed tables of the catalog. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |

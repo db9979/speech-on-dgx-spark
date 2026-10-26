@@ -2488,6 +2488,70 @@ class Equipment(Base):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("e.art==='reise'", f.read())
 
+    def test_a_peoples_tongue_only_for_who_knows_it(self):
+        """D&D idea 7 (Sprachen der Völker, switch dungeonsprachen): off by default; on, the narration's short line in a
+        people's tongue gets fixed sounds from the people's name syllables (the same line, the same sounds); everyone
+        gets the sounds, the meaning only a seat whose hero knows the tongue (its people, a related one, a bard or a
+        wizard) and the host; too long, an unknown tongue or a line already in the narration's quotes is refused."""
+        import features
+        import dungeon_sprachen as sprachen
+        self.assertNotIn(sprachen.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_sprachen"], False)
+        r = self.r
+        self.assertIn("elf", sprachen.tongues(r))
+        a = sprachen.laut(r, "elf", "Sei gegrüßt, Wanderer!")
+        self.assertEqual(a, sprachen.laut(r, "elf", "Sei gegrüßt, Wanderer!"))
+        self.assertTrue(a.endswith("!") and a[:1].isupper() and len(a.split()) == 3)
+        self.assertNotEqual(a, sprachen.laut(r, "zwerg", "Sei gegrüßt, Wanderer!"))
+        self.assertNotIn("gegrüßt", a.lower())
+        line = {"name": "Laeria", "volk": "elf", "sagt": "Sei gegrüßt, Wanderer!"}
+
+        def tell(fremd, text="Die Elfe am Brunnen hebt die Hand und grüßt in ihrer eigenen Sprache."):
+            def go(rd):
+                story, _ = dungeon.check_story(r, rd, {"erzaehlung": text, "frage_an": "Arvid", "fremd": fremd})
+                dungeon.apply(r, rd, [], story, self.rid, random.Random(3))
+                return story
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                return self.edit(go), out.getvalue()
+        story, _ = tell(line)
+        self.assertIsNone(story["fremd"])                                        # switch off
+        helpers.keep_chat(self, "dungeon_sprachen")
+        helpers.set_config(dungeon_sprachen=True)
+
+        def heroes(rd):
+            rd["plaetze"][self.host]["held"].update(volk="elf")
+            rd["plaetze"][self.gp]["held"].update(volk="zwerg", klasse="krieger")
+        self.edit(heroes)
+        story, out = tell(line)
+        self.assertIn("dungeon: sprache | elf | 1 verstehen", out)
+        self.assertEqual(story["fremd"]["wer"], [self.host])
+        rd = self.state(self.rid)
+        e = next(x for x in reversed(rd["log"]) if x["art"] == "dm")
+        self.assertEqual(e["fremd"], {"name": "Laeria", "volk": "elf", "sprache": "Elfisch", "laut": a})   # never the meaning
+        self.assertEqual(rd["fremd"][-1], {"k": e["k"], "sagt": "Sei gegrüßt, Wanderer!", "wer": [self.host]})
+        self.assertEqual(dungeon.view(self.rid, self.host)["fremd"][str(e["k"])], "Sei gegrüßt, Wanderer!")
+        self.assertEqual(dungeon.view(self.rid, self.gp)["fremd"], {})          # the dwarf hears only sounds
+        self.assertNotIn("Wanderer", dungeon.facts(r, rd))
+        self.assertEqual([x[1] for x in sprachen.speak(dungeon, r, rd, e)], [a])
+        self.edit(lambda rd: rd["plaetze"][self.gp]["held"].update(klasse="barde"))
+        story, _ = tell(line)
+        self.assertEqual(set(story["fremd"]["wer"]), {self.host, self.gp})    # a bard knows every tongue
+        self.assertTrue(sprachen.versteht({"volk": "halbelf", "klasse": "krieger"}, "elf"))
+        self.assertFalse(sprachen.versteht({"volk": "mensch", "klasse": "krieger"}, "elf"))
+        for x, why in ((dict(line, volk="mensch"), "sprache"), (dict(line, name=""), "name"),
+                       (dict(line, sagt="Sei gegrüßt, Wanderer, du kommst von weit her und bist so müde."), "laenge")):
+            story, out = tell(x)
+            self.assertIsNone(story["fremd"])
+            self.assertIn(f"dungeon: sprache | verworfen | {why}", out)
+        story, out = tell(line, "Die Elfe hebt die Hand: „Sei gegrüßt, Wanderer!“ Dann lächelt sie.")
+        self.assertIsNone(story["fremd"])                                        # everyone has heard the meaning
+        self.assertIn("dungeon: sprache | verworfen | im text", out)
+        self.assertIn("fremd", dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertGreaterEqual(sprachen.for_live()["gesagt"], 2)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("${e.fremd?dmFremd(v,e):''}", f.read())
+
 
 class _Die:
     """A d20 that always shows the same number."""

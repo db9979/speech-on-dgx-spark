@@ -14,7 +14,7 @@ import json
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
                  "fraktionen_geheim", "quest_geheim", "echt_plaetze")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift")   # the admin switches of the secrets below: the self-test turns them on
+SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen")   # the admin switches of the secrets below: the self-test turns them on
 
 
 def _foe(rd, m):
@@ -96,6 +96,9 @@ GEHEIM = {
     "quest_anderswo": (("Ein Quest-Gegenstand an einem anderen Ort", "A quest thing at another place"), {"gastgeber"},
                        lambda rd, m: _quest(rd, m, "o_weit")),
     "schrift_geheim": (("Ein Schriftstück nur für einen Platz", "A writing for one seat only"), {"gastgeber", "modell"}, _schrift),
+    "fremd_bedeutung": (("Was ein Satz in der Sprache eines Volkes bedeutet, für einen Platz, der sie nicht kann",
+                         "What a line in a people's tongue means, for a seat that does not know it"), {"gastgeber"},
+                        lambda rd, m: rd.update(fremd=[{"k": 1, "sagt": m, "wer": []}])),
     "platz_schluessel": (("Der Schlüssel eines Platzes (nur als Hash)", "A seat's key (only as a hash)"), set(),
                          lambda rd, m: _seat(rd, "h", m)),
     "geraet": (("Das Gerät eines Platzes (nur als Hash)", "A seat's device (only as a hash)"), set(),
