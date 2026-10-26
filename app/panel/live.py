@@ -1507,6 +1507,8 @@ def snapshot(view="admin", now=None):
         post_view = mailansicht.counts()
         import fuerdich
         post_fd = fuerdich.for_live()
+        import proactive
+        post_imp = proactive.mail_today()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
         kal_serie = kal_undo = 0
@@ -1519,6 +1521,7 @@ def snapshot(view="admin", now=None):
         post_code = {}
         post_sort = {}
         post_fd = {}
+        post_imp = {"cards": 0, "out": 0}
     try:
         import vorwaermen
         warm = vorwaermen.for_live()
@@ -1714,6 +1717,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_threads} Unterhaltungen gezeigt"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
+        if x["id"] == "mail" and (post_imp["cards"] or post_imp["out"]):   # Wichtige Mail: cards, sorted out (numbers)
+            x["sub"] += f" · Wichtige Mail: heute {post_imp['cards']} gemeldet, {post_imp['out']} aussortiert"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "mail" and post_code.get("on"):   # Bestätigungscodes: notes today (a number, never a code)

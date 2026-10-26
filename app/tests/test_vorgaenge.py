@@ -386,9 +386,9 @@ class Stufe34(unittest.TestCase):
         acts = lambda: [k["k"] for k in vorgaenge.public(ub, m)["acts"]]  # noqa: E731
         real = vorgaenge.features.allowed
         with mock.patch.object(vorgaenge.features, "allowed", side_effect=lambda k, *a: k != "mailsend" and real(k, *a)):
-            self.assertEqual(acts(), ["ml_lesen", "erledigt", "spaeter"])
+            self.assertEqual(acts(), ["ml_lesen", "erledigt", "ausblenden", "spaeter"])
         with mock.patch.object(vorgaenge.features, "allowed", side_effect=lambda k, *a: True):
-            self.assertEqual(acts(), ["ml_lesen", "fd_reply", "erledigt", "spaeter"])
+            self.assertEqual(acts(), ["ml_lesen", "fd_reply", "erledigt", "ausblenden", "spaeter"])   # „Nicht wichtig“: test_wichtige_mail
 
     def test_stage_four_cards_close_at_their_source_and_never_confirm(self):
         import dienstwacht

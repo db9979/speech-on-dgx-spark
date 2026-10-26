@@ -277,6 +277,11 @@ class Postfach(Base):
             tidy.classify = old
 
 
+def KEEP(uid, items, now=None):
+    """proactive.sort for mailboxes without a server: every mail still in the inbox, none sorted out."""
+    return {f"{a}:{u}": "" for a, u, _ in items}
+
+
 class WichtigeMail(Base):
     def test_other_senders_only_when_sure_and_only_head(self):
         uid = profile("EinoEmil", pro_on=True, pro_mail=True, pro_mail_from="chef@firma.de", pro_mail_smart=True)
@@ -295,7 +300,8 @@ class WichtigeMail(Base):
         mail.get = lambda u: {"accounts": [{"id": "m1"}] if u == uid else []}
         mail.find = lambda u, q, days, unread, limit: (heads, [], False)
         try:
-            with mock.patch.object(proactive, "deliver", deliver), contextlib.redirect_stdout(io.StringIO()):
+            with mock.patch.object(proactive, "deliver", deliver), contextlib.redirect_stdout(io.StringIO()), \
+                    mock.patch.object(proactive, "sort", KEEP):   # the fixed rules before: test_wichtige_mail
                 asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))    # first look: remembers the time
                 proactive._mut(uid, lambda st: st.update(mail_checked=0, mail_since=t0.timestamp() - 60,
                                                           mail_smart_since=t0.timestamp() - 60))
@@ -329,7 +335,8 @@ class WichtigeMail(Base):
         mail.get = lambda u: {"accounts": [{"id": "m1"}] if u == uid else []}
         mail.find = lambda u, q, days, unread, limit: (heads, [], False)
         try:
-            with mock.patch.object(proactive, "deliver", deliver), contextlib.redirect_stdout(io.StringIO()):
+            with mock.patch.object(proactive, "deliver", deliver), contextlib.redirect_stdout(io.StringIO()), \
+                    mock.patch.object(proactive, "sort", KEEP):   # the fixed rules before: test_wichtige_mail
                 proactive._mut(uid, lambda st: st.update(mail_checked=0, mail_since=t0.timestamp() - 60,
                                                           mail_smart_since=t0.timestamp() - 60))
                 REPLY[0] = lambda b: httpx.Response(529)

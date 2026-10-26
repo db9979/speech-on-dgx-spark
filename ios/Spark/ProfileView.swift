@@ -192,6 +192,13 @@ struct ProfileView: View {
                 service("Bus und Bahn", "pro_transit", "transit_on")
                 Toggle("Begrüßung", isOn: m.bool("pro_greet"))
                 Toggle("Mails", isOn: m.bool("pro_mail"))
+                if m.s["pro_mail"] as? Bool != false {
+                    // „Nicht wichtig“ (proactive.pro_mail_not): senders never reported as an important mail; the card's
+                    // button adds one, here it is seen and removed (comma-separated, as on the panel page)
+                    TextField("Nicht wichtig", text: Binding(get: { m.text("pro_mail_not") }, set: { m.s["pro_mail_not"] = $0 }))
+                        .onSubmit { m.set("pro_mail_not", String(m.text("pro_mail_not").prefix(2000))) }
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                }
             }
             Toggle("Morgenrunde", isOn: Binding(get: { !m.text("briefing_at").isEmpty },
                                                  set: { m.set("briefing_at", $0 ? "07:00" : "") }))

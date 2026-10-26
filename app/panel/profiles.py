@@ -942,6 +942,8 @@ SETTINGS = {
     "pro_mail": (True, lambda v: isinstance(v, bool)),
     "pro_tidy": (True, lambda v: isinstance(v, bool)),
     "pro_mail_from": ("", lambda v: isinstance(v, str) and len(v) <= 300 and "\n" not in v),
+    # „Nicht wichtig“ on a card „Wichtige Mail“: senders never reported by the model (proactive.NOT_MAX characters)
+    "pro_mail_not": ("", lambda v: isinstance(v, str) and len(v) <= 2000 and "\n" not in v),
     "pro_weather": (True, lambda v: isinstance(v, bool)),
     "pro_place": ("", lambda v: isinstance(v, str) and len(v) <= 60 and re.fullmatch(r"[^<>\"\\\n]*", v)),
     "pro_weather_at": ("18:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),

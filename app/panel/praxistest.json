@@ -3691,6 +3691,13 @@
 "titel": "Dungeon-Master: Heldenlied des Barden",
 "text": "A: Funktionen → KI-Dungeon-Master → Heldenlied des Barden an, Musik am Tisch an. B: Ein Kapitel zu Ende spielen (sobald der Haupt-Thread „Kapitel zu Ende“ meldet): nach einer Weile klingt am Tisch einmal ein deutsch gesungenes Lied mit den Namen der Helden und je einer Tat. C: Unter 🎵 in der Musikleiste steht „Kapitel 1“, ▶ spielt es noch einmal. D: Als Gastgeber 🗑, „Wirklich?“, weg. E: Ein Gast am Tisch hört es auch; ein Profil ohne Platz in der Runde nicht. F: Schalter aus: kein Lied am Kapitelende.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P552",
+"v": 1107,
+"titel": "Wichtige Mail erst nach dem Einordnen",
+"text": "Pi auf V01.1.107, Von selbst melden mit „Mails“ und „Wichtige Mails erkennen“ an. A: Offene Karten „Wichtige Mail“ von Xcode Cloud, Apple, GitHub oder LinkedIn sind nach dem Update unter Erledigt (Nicht wichtig). B: Eine neue Mail von einem Menschen, die im Posteingang bleibt, kommt als Karte, wenn sie wichtig ist; ist „Mails aufräumen“ an, erst nach dessen nächstem Lauf. C: Eine neue Benachrichtigung (no-reply, GitHub, Newsletter) kommt nie als Karte. D: Auf einer Karte „Nicht wichtig“ tippen: unter E-Mail → Einstellungen steht der Absender im Feld „Nicht wichtig“, im iPhone unter Ich → Von selbst ebenso; von ihm kommt keine Karte mehr; aus dem Feld löschen geht. E: Zustand → Live, E-Mail: „Wichtige Mail: heute N gemeldet, M aussortiert“.",
+"thread": "Kalender und E-Mail in den Apps"
 }
 ]
 }

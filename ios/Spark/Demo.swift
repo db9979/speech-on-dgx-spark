@@ -101,7 +101,7 @@ enum Demo {
             "settings": ["voice": "Clara", "speed": 1.0, "length": "normal",
                          "pro_on": true, "pro_quiet": "22:00-07:00", "pro_max": 6, "pro_events": true, "pro_lead": 20,
                          "pro_weather": true, "pro_place": "Freiburg", "pro_weather_at": "18:00", "pro_parcel": true,
-                         "pro_bday": true, "pro_transit": false, "pro_greet": true, "pro_mail": false, "briefing_at": "07:00"] as [String: Any],
+                         "pro_bday": true, "pro_transit": false, "pro_greet": true, "pro_mail": false, "pro_mail_not": "", "briefing_at": "07:00"] as [String: Any],
             "style": t("Freundlich und eher kurz", "Friendly and rather brief"),
             "rights": ["app_ha": true, "app_car_ha": false, "app_act": true, "app_listen": true, "app_push": true],
             "services": ["wx_on": true, "par_on": true, "con_on": true, "transit_on": false],

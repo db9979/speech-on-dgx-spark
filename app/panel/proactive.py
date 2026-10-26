@@ -30,7 +30,7 @@ import llm
 import profiles
 import vorrang
 import features
-from common import load_config, no_think
+from common import DayCounter, load_config, no_think
 import core
 from core import assistant, browser_profile, own_profile
 
@@ -855,12 +855,101 @@ async def check_follow(uid, p, now):
 # ---------------------------------------------------------------- 6: mail from chosen senders
 # "Wichtige Mails erkennen" (pro_mail_smart, chat.systemone_mail): a mail from a sender not on the list counts
 # when qwen38's /v1/systemone says yes to WICHTIG with at least systemone.WICHTIG_MIN, judged from sender and
-# subject only (never the text); at most SMART_PER_CHECK such questions per check, only while nobody speaks
+# subject only (never the text); at most SMART_PER_CHECK such questions per check, only while nobody speaks.
+# Erst einordnen, dann melden (Dominik 2026-10-26 „1-4“): before any card the panel's fixed rules decide (sort()):
+# a mail no longer in the inbox (a rule or „Mails aufräumen“ moved it) never becomes one; while „Mails aufräumen“
+# has not looked at it yet, it waits (at most SORT_WAIT); one the profile's mail rules would move, an automatic
+# sender, a list, bulk mail, a social network, a bill, an ad or a login code is never „wichtig“ (tidy.decide, stages
+# 1 to 3), and neither is a sender on the profile's „Nicht wichtig“ list (pro_mail_not, the card's button). The model
+# only sees what is left; the senders on the profile's own list (pro_mail_from) always count, if still in the inbox.
 SMART_PER_CHECK = 5
+SORT_WAIT = 2 * 3600        # seconds a mail waits for „Mails aufräumen“ at most, then the fixed rules decide alone
+NOT_MAX = 2000              # characters of the „Nicht wichtig“ list (pro_mail_not)
+_mail_day = DayCounter(karte=0, aussortiert=0)    # Live: cards made today and mails the fixed rules kept from being one (numbers only)
+
+
+def mail_today():
+    """Zustand → Live, node E-Mail: important-mail cards today and mails the fixed rules sorted out (numbers)."""
+    c = _mail_day.counts()
+    return {"cards": c.get("karte", 0), "out": c.get("aussortiert", 0)}
 
 
 def mail_smart(uid, p):
     return p.get("pro_mail_smart") is True and features.allowed("mailwichtig", uid)
+
+
+def _list(text):
+    return [s.strip().lower() for s in str(text or "").split(",") if len(s.strip()) > 2]
+
+
+def not_important(uid):
+    """The senders the profile marked „Nicht wichtig“ (pro_mail_not): parts of an address, lower case."""
+    return _list(profiles.settings(uid).get("pro_mail_not", ""))
+
+
+def add_not_important(uid, addr):
+    """The card's „Nicht wichtig“: no card from this sender any more. False when the list is full or has it."""
+    a = re.sub(r"[\s,]+", "", str(addr or "")).lower()[:120]
+    have = not_important(uid)
+    if len(a) < 3 or a in have:
+        return False
+    text = ", ".join(have + [a])
+    if len(text) > NOT_MAX:
+        return False
+    profiles.save_settings(uid, {"pro_mail_not": text})
+    return True
+
+
+def _addr(frm):
+    import email.utils
+    return email.utils.parseaddr(str(frm or ""))[1].strip().lower()
+
+
+def sort(uid, items, now=None):
+    """Erst einordnen, dann melden: {ref: verdict} for [(aid, uid of the inbox, header)], by fixed rules only.
+    "" = may be asked about; "wait" = „Mails aufräumen“ has not looked at it yet; "gone" = no longer in the inbox;
+    "rule" = a mail rule of the profile moves it; "auto" = an automatic sender, list, bulk, social, bill, ad or
+    login code (tidy.decide stages 1 to 3); "never" = on the profile's „Nicht wichtig“ list. Reads headers only."""
+    import mail
+    import mailregeln
+    import tidy
+    now = time.time() if now is None else now
+    out = {}
+    d = tidy.state(uid)
+    rules = mailregeln.load(uid)["rules"] if features.allowed("mailmanage", uid) else []
+    never = not_important(uid)
+    tidy_on = tidy.admin_on() and features.allowed("tidy", uid)
+    by = {}
+    for aid, u, h in items:
+        by.setdefault(aid, []).append((u, h))
+    for acct in mail.get(uid)["accounts"]:
+        mine = by.get(acct["id"])
+        if not mine:
+            continue
+        a = tidy.acct_state(d, acct["id"])
+        todo = {x["uid"] for x in d["todo"] if x["aid"] == acct["id"]}
+        with tidy.Box(acct) as b:
+            b.select("INBOX")
+            heads = b.headers([u for u, _ in mine], tidy.HEAD_FIELDS + " TO CC CONTENT-TYPE")
+        for u, h in mine:
+            ref, msg = f"{acct['id']}:{u}", heads.get(u)
+            if msg is None:
+                out[ref] = "gone"
+                continue
+            young = now - h["date"].timestamp() < SORT_WAIT
+            if tidy_on and a["mode"] != "off" and young and (int(a.get("last_uid") or 0) < u or u in todo):
+                out[ref] = "wait"
+                continue
+            th = tidy.head(msg)
+            if any(s in th["sender"] for s in never):
+                out[ref] = "never"
+            elif mailregeln.first(rules, mailregeln.head(msg), acct["id"]):
+                out[ref] = "rule"
+            else:
+                cat, why, stage = tidy.decide(d, acct["id"], th, acct.get("user", ""))
+                login = stage == 1 and why == "Anmelde- oder Sicherheitsmail"
+                out[ref] = "auto" if login or cat not in (None, "keep") else ""
+    return out
 
 
 async def important(h):
@@ -878,10 +967,29 @@ async def important(h):
     return ans["wichtig"]["yes"]
 
 
+def _tidy_cards(uid):
+    """Once per profile (Dominik 2026-10-26 „1-4“, point 3): open „Wichtige Mail“ cards that the fixed rules of
+    sort() do not count as important any more go as „Nicht wichtig“. Returns how many."""
+    import vorgaenge
+    open_ = [x for x in vorgaenge._load(uid)["items"] if x["art"] == "mail" and x["zustand"] not in ("erledigt", "weg")]
+    items = []
+    for x in open_:
+        ref = str((x.get("daten") or {}).get("ref", ""))
+        aid, _, u = ref.partition(":")
+        if u.isdigit():
+            items.append((aid, int(u), {"date": datetime.datetime.fromtimestamp(0, datetime.timezone.utc)}))
+    verdict = sort(uid, items) if items else {}
+    n = 0
+    for x in open_:
+        if verdict.get(str((x.get("daten") or {}).get("ref", ""))) in ("gone", "rule", "auto", "never"):
+            n += bool(vorgaenge.done(uid, x["key"], "ausblenden"))
+    return n
+
+
 async def check_mail(uid, p):
     import mail
     import systemone
-    senders = [s.strip().lower() for s in str(p.get("pro_mail_from", "")).split(",") if len(s.strip()) > 2]
+    senders = _list(p.get("pro_mail_from", ""))
     smart = mail_smart(uid, p)
     st = state(uid)
     if not (senders or smart) or not features.allowed("mail", uid) or not mail.get(uid)["accounts"]:
@@ -893,18 +1001,41 @@ async def check_mail(uid, p):
     now = time.time()
     _mut(uid, lambda s: s.update(mail_checked=now, mail_since=s.get("mail_since") or now,
                                  mail_smart_since=(s.get("mail_smart_since") or now) if smart else 0))
+    name = profiles.log_name(profiles.by_id(uid))
+    if not st.get("mail_sorted_cards"):
+        try:
+            n = await asyncio.to_thread(_tidy_cards, uid)
+            _mut(uid, lambda s: s.update(mail_sorted_cards=int(now)))
+            print(f"proactive: mail cards tidied | {n} | {name}", flush=True)
+        except Exception as e:
+            print(f"proactive: mail cards not tidied ({type(e).__name__}) | {name}", flush=True)
     if first:
         return      # only mails that come after switching it on
     since = st["mail_since"]
     smart_since = now if first_smart else st.get("mail_smart_since") or now
     found, _, _ = await asyncio.to_thread(mail.find, uid, "", 2, True, 20)
     seen = set(st.get("mail_seen", []))
-    asked = 0
-    for aid, u, h in reversed(found):
+    todo = [(aid, u, h) for aid, u, h in reversed(found) if f"{aid}:{u}" not in seen and h["date"].timestamp() >= since]
+    if not todo:
+        return
+    try:
+        verdict = await asyncio.to_thread(sort, uid, todo, now)
+    except Exception as e:
+        print(f"proactive: mail not sorted ({type(e).__name__}) | {name}", flush=True)
+        return      # asked again at the next check
+    asked = out = 0
+    for aid, u, h in todo:
         key = f"{aid}:{u}"
-        if key in seen or h["date"].timestamp() < since:
+        v = verdict.get(key, "gone")
+        if v == "wait":
             continue
-        why = "Absender auf deiner Liste" if any(s in h["from"].lower() for s in senders) else ""
+        listed = any(s in h["from"].lower() for s in senders)
+        if v == "gone" or (v and not listed):
+            out += v != "gone"
+            seen.add(key)
+            _mut(uid, lambda s, key=key: s.update(mail_seen=(s.get("mail_seen", []) + [key])[-200:]))
+            continue
+        why = "Absender auf deiner Liste" if listed else ""
         if not why:
             if not smart or h["date"].timestamp() < smart_since or asked >= SMART_PER_CHECK:
                 continue
@@ -921,11 +1052,29 @@ async def check_mail(uid, p):
         _mut(uid, lambda s, key=key: s.update(mail_seen=(s.get("mail_seen", []) + [key])[-200:]))
         who = h["from"].split(" <")[0].strip() or h["from"]
         import vorgaenge     # its card with Lesen and Antwort (Alles Offene im Assistenten, stage 3); the note carries it
-        addr = h["from"].split("<")[-1].rstrip(">").strip() if "<" in h["from"] else h["from"]
+        addr = _addr(h["from"]) or h["from"]
         x, _ = vorgaenge.put(uid, "mail", f"mail:{key}", f"Wichtige Mail von {who}", h["subject"] or "ohne Betreff",
                              daten={"ref": key, "folder": "INBOX", "addr": addr, "subject": h["subject"] or ""})
+        _mail_day.bump("karte")
         await deliver(uid, "mail", f"Neue Mail von {who}: {(h['subject'] or 'ohne Betreff')[:120]}.",
                       why=why, data=f"{h['from']}: {h['subject']}"[:300], mail=True, vg=x["id"] if x else None)
+    if out:
+        _mail_day.bump("aussortiert", out)
+    print(f"proactive: mail sorted | {len(todo)} new, {out} not important, {asked} asked | {name}", flush=True)
+
+
+def _card_act(uid, x, name):
+    """The card's own button (vorgaenge.QUELLEN["mail"]): „Nicht wichtig“ puts its sender on the profile's list."""
+    if name == "ausblenden":
+        added = add_not_important(uid, (x.get("daten") or {}).get("addr", ""))
+        print(f"proactive: mail sender not important | {'added' if added else 'kept'} | "
+              f"{profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return None
+
+
+def _register():
+    import vorgaenge
+    vorgaenge.QUELLEN["mail"] = {"acts": lambda uid, x: set(), "run": _card_act}
 
 
 # ---------------------------------------------------------------- 8: weather for tomorrow
@@ -1312,3 +1461,5 @@ async def api_test(prof=Depends(own_profile)):
     """A sample note on the normal way (open page or push), outside every limit."""
     item = await deliver(prof["id"], "greet", "So melde ich mich, wenn etwas los ist.", why="Test", force=True)
     return {"item": item and {k: item[k] for k in ("id", "t", "kind", "text", "pushed") if k in item}}
+
+_register()

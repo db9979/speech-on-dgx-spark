@@ -69,9 +69,10 @@ ARTEN = {
     # something shared with this profile (geteilt.tell): one card per sharing profile and kind
     "geteilt": {"de": "Geteilt", "en": "Shared", "sym": "share", "mail": False, "dringend": False,
                 "acts": ("oeffnen", "erledigt")},
-    # an important new mail (proactive.check_mail, Von selbst „Wichtige Mail“): its card goes with the note
+    # an important new mail (proactive.check_mail, Von selbst „Wichtige Mail“): its card goes with the note;
+    # „Nicht wichtig“ also puts its sender on the profile's list (proactive._card_act, no card from it any more)
     "mail": {"de": "Wichtige Mail", "en": "Important mail", "sym": "mail", "mail": True, "dringend": False,
-             "acts": ("ml_lesen", "fd_reply", "erledigt")},
+             "acts": ("ml_lesen", "fd_reply", "erledigt", "ausblenden")},
     # stage 4: a watched service is down or warns (dienstwacht, admins only); it closes itself when the service is
     # fine again, „Ansehen“ opens Zustand → Überblick, nothing is restarted from a card
     "dienst": {"de": "Dienst", "en": "Service", "sym": "warn", "mail": False, "dringend": True,

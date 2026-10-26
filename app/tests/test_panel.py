@@ -1914,6 +1914,8 @@ class Proactive(unittest.TestCase):
                  ("m1", 2, {"from": "Werbung <shop@x.de>", "subject": "Rabatt", "date": t0, "unread": True})]
         mail.get = lambda u: {"accounts": [{"id": "m1"}] if u == uid else []}
         mail.find = lambda u, q, days, unread, limit: (heads, [], False)
+        old_sort = proactive.sort   # the fixed rules before (no mail server here): test_wichtige_mail
+        proactive.sort = lambda u, items, now=None: {f"{a}:{n}": "" for a, n, _ in items}
         try:
             asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))     # first look: only remembers the time
             proactive._mut(uid, lambda st: st.update(mail_checked=0, mail_since=time.time() - 60))
@@ -1921,7 +1923,7 @@ class Proactive(unittest.TestCase):
             proactive._mut(uid, lambda st: st.update(mail_checked=0))
             asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))     # the same mail once
         finally:
-            mail.get, mail.find = old_get, old_find
+            mail.get, mail.find, proactive.sort = old_get, old_find, old_sort
             helpers.set_config(mail=False)
         said = [x for x in a.get("/api/proactive").json()["items"] if x["kind"] == "mail"]
         self.assertEqual([x["text"] for x in said], ["Neue Mail von Chef: Termin morgen."])
