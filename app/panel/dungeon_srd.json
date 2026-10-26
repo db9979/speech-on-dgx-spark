@@ -9802,6 +9802,64 @@
         "zuege": 1
       },
       "schaden_art": "energie"
+    },
+    {
+      "id": "holzfackel",
+      "art": "werkzeug",
+      "name": [
+        "Fackel",
+        "Torch"
+      ],
+      "kg": 0.5,
+      "preis": 1,
+      "licht": 4,
+      "welten": [
+        "fantasy",
+        "horror",
+        "piraten",
+        "eigene"
+      ],
+      "hilft": {
+        "werte": [
+          "weisheit"
+        ],
+        "worte": [
+          "fackel",
+          "torch"
+        ]
+      },
+      "info": [
+        "Ein Holz mit Pech am Ende. Brennt etwa vier Räume lang.",
+        "A stick with pitch at one end. Burns for about four rooms."
+      ]
+    },
+    {
+      "id": "leuchtstab",
+      "art": "werkzeug",
+      "name": [
+        "Leuchtstab",
+        "Glow stick"
+      ],
+      "kg": 0.2,
+      "preis": 1,
+      "licht": 4,
+      "welten": [
+        "scifi"
+      ],
+      "hilft": {
+        "werte": [
+          "weisheit"
+        ],
+        "worte": [
+          "leuchtstab",
+          "knicklicht",
+          "glowstick"
+        ]
+      },
+      "info": [
+        "Einmal knicken, dann leuchtet er grün, etwa vier Räume lang.",
+        "Snap it once and it glows green for about four rooms."
+      ]
     }
   ],
   "gegner": [
@@ -31729,6 +31787,1831 @@
         "„Erzähl, war es ein Ungeheuer?“, ruft jemand vom Nachbartisch.",
         "\"Tell us, was it a monster?\" someone calls from the next table."
       ]
+    ],
+    "knapp": [
+      {
+        "id": "nsc_enttaeuscht",
+        "von": 1,
+        "bis": 1,
+        "art": "nsc",
+        "t": [
+          "Jemand, der euch vertraut hat, ist enttäuscht und hilft vorerst nicht mehr.",
+          "Someone who trusted you is let down and won't help for now."
+        ]
+      },
+      {
+        "id": "nsc_zeuge",
+        "von": 2,
+        "bis": 2,
+        "art": "nsc",
+        "t": [
+          "Ein Zeuge hat alles gesehen und erzählt es weiter.",
+          "A witness saw everything and spreads the word."
+        ]
+      },
+      {
+        "id": "gold_verloren",
+        "von": 3,
+        "bis": 3,
+        "art": "gold",
+        "t": [
+          "Ein Beutel reißt auf, ein paar Münzen rollen in eine Ritze.",
+          "A purse tears open, a few coins roll into a crack."
+        ]
+      },
+      {
+        "id": "gold_bestechung",
+        "von": 4,
+        "bis": 4,
+        "art": "gold",
+        "t": [
+          "Es klappt, aber nur mit einem Bestechungsgeld.",
+          "It works, but only with a bribe."
+        ]
+      },
+      {
+        "id": "werkzeug_bricht",
+        "von": 5,
+        "bis": 5,
+        "art": "werkzeug",
+        "t": [
+          "Ein Werkzeug bricht dabei entzwei.",
+          "A tool snaps in two."
+        ]
+      },
+      {
+        "id": "werkzeug_seil",
+        "von": 6,
+        "bis": 6,
+        "art": "werkzeug",
+        "t": [
+          "Das Seil franst aus und taugt nicht mehr.",
+          "The rope frays and is no longer any good."
+        ]
+      },
+      {
+        "id": "werkzeug_dietrich",
+        "von": 7,
+        "bis": 7,
+        "art": "werkzeug",
+        "t": [
+          "Der Dietrich verbiegt sich, er ist hin.",
+          "The lockpick bends and is ruined."
+        ]
+      },
+      {
+        "id": "schaden_kratzer",
+        "von": 8,
+        "bis": 8,
+        "art": "schaden",
+        "t": [
+          "Ein Splitter, ein Kratzer, eine Prellung: es tut weh.",
+          "A splinter, a scratch, a bruise: it hurts."
+        ]
+      },
+      {
+        "id": "schaden_sturz",
+        "von": 9,
+        "bis": 9,
+        "art": "schaden",
+        "t": [
+          "Ausgerutscht und hart aufgeschlagen.",
+          "Slipped and landed hard."
+        ]
+      },
+      {
+        "id": "schaden_zerrung",
+        "von": 10,
+        "bis": 10,
+        "art": "schaden",
+        "t": [
+          "Der Kraftakt zerrt an Muskeln und Sehnen.",
+          "The effort strains muscles and sinews."
+        ]
+      },
+      {
+        "id": "nachteil_kraft",
+        "von": 11,
+        "bis": 11,
+        "art": "nachteil",
+        "t": [
+          "Das hat viel Kraft gekostet, die nächste Probe fällt schwerer.",
+          "That took a lot of strength, the next check is harder."
+        ]
+      },
+      {
+        "id": "nachteil_zittern",
+        "von": 12,
+        "bis": 12,
+        "art": "nachteil",
+        "t": [
+          "Die Hände zittern noch, als es weitergeht.",
+          "The hands are still shaking as you go on."
+        ]
+      },
+      {
+        "id": "nachteil_zweifel",
+        "von": 13,
+        "bis": 13,
+        "art": "nachteil",
+        "t": [
+          "Der Kopf ist voller Zweifel.",
+          "The head is full of doubt."
+        ]
+      },
+      {
+        "id": "zeit_laenger",
+        "von": 14,
+        "bis": 14,
+        "art": "zeit",
+        "t": [
+          "Es dauert länger als gedacht.",
+          "It takes longer than expected."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "zeit_umweg",
+        "von": 15,
+        "bis": 15,
+        "art": "zeit",
+        "t": [
+          "Ein Umweg ist nötig.",
+          "A detour is needed."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "zeit_versuche",
+        "von": 16,
+        "bis": 16,
+        "art": "zeit",
+        "t": [
+          "Erst beim dritten Versuch klappt es, und die Zeit verrinnt.",
+          "Only the third try works, and time runs out."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "laerm_krach",
+        "von": 17,
+        "bis": 17,
+        "art": "laerm",
+        "t": [
+          "Es kracht laut, irgendwo horcht jemand auf.",
+          "It crashes loudly, somewhere someone listens up."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "laerm_scheppern",
+        "von": 18,
+        "bis": 18,
+        "art": "laerm",
+        "t": [
+          "Ein Scheppern hallt durch die Gänge.",
+          "A clatter echoes through the halls."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "laerm_tiere",
+        "von": 19,
+        "bis": 19,
+        "art": "laerm",
+        "t": [
+          "Ein Hund bellt, ein Vogel flattert auf.",
+          "A dog barks, a bird flaps away."
+        ],
+        "kinder": true
+      },
+      {
+        "id": "laerm_laut",
+        "von": 20,
+        "bis": 20,
+        "art": "laerm",
+        "t": [
+          "Geschafft, aber gar nicht leise.",
+          "Done, but not at all quietly."
+        ],
+        "kinder": true
+      }
+    ],
+    "requisiten": [
+      {
+        "id": "kronleuchter",
+        "name": [
+          "Kronleuchter",
+          "Chandelier"
+        ],
+        "zeichen": "🕯",
+        "arten": [
+          "halle",
+          "speisesaal",
+          "spiegelsaal",
+          "herrenhaus",
+          "boss",
+          "boss_h",
+          "festung"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "oelfass",
+        "name": [
+          "Ölfässer",
+          "Oil barrels"
+        ],
+        "zeichen": "🛢",
+        "arten": [
+          "kammer",
+          "lager",
+          "hafen",
+          "waffenkammer",
+          "kombuese",
+          "muehle",
+          "mine",
+          "hangar",
+          "pulver"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "pulverfass",
+        "name": [
+          "Pulverfass",
+          "Powder keg"
+        ],
+        "zeichen": "💥",
+        "arten": [
+          "pulver",
+          "schiffswrack",
+          "festung",
+          "hafen",
+          "boss_p"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "geroell",
+        "name": [
+          "Geröllhang",
+          "Scree slope"
+        ],
+        "zeichen": "🪨",
+        "arten": [
+          "berg",
+          "hoehle",
+          "mine",
+          "ruine",
+          "krater",
+          "treppe",
+          "schacht"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "morscher_balken",
+        "name": [
+          "Morscher Deckenbalken",
+          "Rotten ceiling beam"
+        ],
+        "zeichen": "🪵",
+        "arten": [
+          "ruine",
+          "muehle",
+          "herrenhaus",
+          "gang",
+          "kammer",
+          "turm",
+          "gruft"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "bienenstock",
+        "name": [
+          "Wildes Bienennest",
+          "Wild beehive"
+        ],
+        "zeichen": "🐝",
+        "arten": [
+          "wald",
+          "dschungel",
+          "muehle",
+          "dorf"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "dampfrohr",
+        "name": [
+          "Dampfrohr",
+          "Steam pipe"
+        ],
+        "zeichen": "♨",
+        "arten": [
+          "reaktor",
+          "station",
+          "labor",
+          "schacht",
+          "wrack",
+          "boss_s"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "energiezelle",
+        "name": [
+          "Wackelige Energiezelle",
+          "Unstable power cell"
+        ],
+        "zeichen": "🔋",
+        "arten": [
+          "reaktor",
+          "hangar",
+          "labor",
+          "waechter_s",
+          "schatz_s"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "seil_abgrund",
+        "name": [
+          "Seil über dem Abgrund",
+          "Rope over the chasm"
+        ],
+        "zeichen": "🪢",
+        "arten": [
+          "bruecke",
+          "berg",
+          "hoehle",
+          "schacht",
+          "treppe",
+          "turm"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "geheimtuer",
+        "name": [
+          "Lose Wandplatte",
+          "Loose wall panel"
+        ],
+        "zeichen": "🚪",
+        "arten": [
+          "gang",
+          "kammer",
+          "bibliothek",
+          "krypta",
+          "gruft",
+          "herrenhaus",
+          "gefaengnis"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "luftschacht",
+        "name": [
+          "Lüftungsschacht",
+          "Air vent"
+        ],
+        "zeichen": "🌀",
+        "arten": [
+          "station",
+          "labor",
+          "kryo",
+          "schleuse",
+          "eingang_s",
+          "wrack",
+          "kuppel"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "beiboot",
+        "name": [
+          "Beiboot",
+          "Rowing boat"
+        ],
+        "zeichen": "🛶",
+        "arten": [
+          "hafen",
+          "lagune",
+          "riff",
+          "insel",
+          "kapitaen",
+          "eingang_p",
+          "leuchtturm"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "kletterranken",
+        "name": [
+          "Dichte Ranken",
+          "Thick vines"
+        ],
+        "zeichen": "🌿",
+        "arten": [
+          "dschungel",
+          "wald",
+          "ruine",
+          "pilze",
+          "insel"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "schwingtau",
+        "name": [
+          "Schwingtau",
+          "Swinging rope"
+        ],
+        "zeichen": "🪝",
+        "arten": [
+          "schiffswrack",
+          "kapitaen",
+          "pulver",
+          "hafen",
+          "festung",
+          "boss_p",
+          "eingang_p"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "umgestuerzter_tisch",
+        "name": [
+          "Schwerer Tisch",
+          "Heavy table"
+        ],
+        "zeichen": "🪑",
+        "arten": [
+          "taverne",
+          "speisesaal",
+          "kombuese",
+          "bibliothek",
+          "kapitaen",
+          "stadt",
+          "dorf"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "steinsarg",
+        "name": [
+          "Steinsarg",
+          "Stone coffin"
+        ],
+        "zeichen": "⚰",
+        "arten": [
+          "krypta",
+          "gruft",
+          "gebeine",
+          "friedhof",
+          "kirche",
+          "boss_h"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "saeule",
+        "name": [
+          "Dicke Säule",
+          "Thick pillar"
+        ],
+        "zeichen": "🏛",
+        "arten": [
+          "halle",
+          "eingang",
+          "waechter",
+          "altar",
+          "ruine",
+          "kirche",
+          "turm",
+          "boss",
+          "waechter_h",
+          "waffenkammer"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "container",
+        "name": [
+          "Frachtcontainer",
+          "Cargo container"
+        ],
+        "zeichen": "📦",
+        "arten": [
+          "hangar",
+          "basar",
+          "station",
+          "schatz_s",
+          "eingang_s",
+          "mine",
+          "schleuse"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "buecherregal",
+        "name": [
+          "Hohes Bücherregal",
+          "Tall bookcase"
+        ],
+        "zeichen": "📚",
+        "arten": [
+          "bibliothek",
+          "herrenhaus",
+          "turm",
+          "labor"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "fass_bier",
+        "name": [
+          "Fass Bier",
+          "Barrel of ale"
+        ],
+        "zeichen": "🍺",
+        "arten": [
+          "taverne",
+          "kombuese",
+          "lager",
+          "stadt",
+          "dorf",
+          "speisesaal"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "glatter_boden",
+        "name": [
+          "Glitschiger Boden",
+          "Slick floor"
+        ],
+        "zeichen": "💧",
+        "arten": [
+          "brunnen",
+          "quelle",
+          "unterwasser",
+          "sumpf",
+          "lagune",
+          "hoehle",
+          "pilze",
+          "falle"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "kette_tor",
+        "name": [
+          "Fallgitter an einer Kette",
+          "Portcullis on a chain"
+        ],
+        "zeichen": "⛓",
+        "arten": [
+          "eingang",
+          "festung",
+          "waechter",
+          "gefaengnis",
+          "eingang_h"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "wagen",
+        "name": [
+          "Beladener Karren",
+          "Loaded cart"
+        ],
+        "zeichen": "🛒",
+        "arten": [
+          "dorf",
+          "stadt",
+          "lager",
+          "mine",
+          "bruecke",
+          "muehle"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "schwebeplattform",
+        "name": [
+          "Schwebende Plattform",
+          "Hover platform"
+        ],
+        "zeichen": "🛸",
+        "arten": [
+          "hangar",
+          "kuppel",
+          "bruecke_s",
+          "reaktor",
+          "krater"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "ladekran",
+        "name": [
+          "Ladekran",
+          "Loading crane"
+        ],
+        "zeichen": "🏗",
+        "arten": [
+          "hafen",
+          "hangar",
+          "basar",
+          "mine"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "altar_licht",
+        "name": [
+          "Heiliges Licht am Altar",
+          "Holy light at the altar"
+        ],
+        "zeichen": "✨",
+        "arten": [
+          "altar",
+          "kirche",
+          "krypta",
+          "quelle"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "hochsitz",
+        "name": [
+          "Erhöhter Platz",
+          "Raised spot"
+        ],
+        "zeichen": "🗼",
+        "arten": [
+          "turm",
+          "leuchtturm",
+          "berg",
+          "festung",
+          "bruecke",
+          "wald",
+          "krater"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "spiegel",
+        "name": [
+          "Großer Spiegel",
+          "Great mirror"
+        ],
+        "zeichen": "🪞",
+        "arten": [
+          "spiegelsaal",
+          "herrenhaus",
+          "kinderzimmer",
+          "schatz",
+          "raetsel"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "konsole",
+        "name": [
+          "Steuerkonsole",
+          "Control console"
+        ],
+        "zeichen": "🖥",
+        "arten": [
+          "bruecke_s",
+          "reaktor",
+          "labor",
+          "kryo",
+          "waechter_s",
+          "station",
+          "boss_s",
+          "altar_s",
+          "quelle_s"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "waffenstaender",
+        "name": [
+          "Waffenständer",
+          "Weapon rack"
+        ],
+        "zeichen": "🗡",
+        "arten": [
+          "waffenkammer",
+          "festung",
+          "kapitaen",
+          "waechter",
+          "gefaengnis"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "nebel",
+        "name": [
+          "Dichter Nebel",
+          "Thick fog"
+        ],
+        "zeichen": "🌫",
+        "arten": [
+          "sumpf",
+          "friedhof",
+          "lagune",
+          "leuchtturm",
+          "bruecke",
+          "eingang_h",
+          "waechter_h"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "dickicht",
+        "name": [
+          "Dornendickicht",
+          "Thorn thicket"
+        ],
+        "zeichen": "🌵",
+        "arten": [
+          "wald",
+          "dschungel",
+          "insel",
+          "sumpf"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "felsblock",
+        "name": [
+          "Großer Felsblock",
+          "Big boulder"
+        ],
+        "zeichen": "🪨",
+        "arten": [
+          "berg",
+          "krater",
+          "hoehle",
+          "insel",
+          "riff",
+          "lager"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "grabsteine",
+        "name": [
+          "Schiefe Grabsteine",
+          "Leaning gravestones"
+        ],
+        "zeichen": "🪦",
+        "arten": [
+          "friedhof",
+          "kirche",
+          "gebeine",
+          "eingang_h"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "korallen",
+        "name": [
+          "Scharfe Korallen",
+          "Sharp coral"
+        ],
+        "zeichen": "🪸",
+        "arten": [
+          "riff",
+          "unterwasser",
+          "lagune",
+          "schatz_p"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "feuerstelle",
+        "name": [
+          "Lagerfeuer",
+          "Campfire"
+        ],
+        "zeichen": "🔥",
+        "arten": [
+          "lager",
+          "insel",
+          "wald",
+          "dschungel",
+          "taverne"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "kessel",
+        "name": [
+          "Kochender Kessel",
+          "Boiling cauldron"
+        ],
+        "zeichen": "🍲",
+        "arten": [
+          "kombuese",
+          "speisesaal",
+          "taverne",
+          "labor"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "spielzeugkiste",
+        "name": [
+          "Alte Spielzeugkiste",
+          "Old toy chest"
+        ],
+        "zeichen": "🧸",
+        "arten": [
+          "kinderzimmer",
+          "herrenhaus"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "kryotank",
+        "name": [
+          "Kryotank",
+          "Cryo tank"
+        ],
+        "zeichen": "🧊",
+        "arten": [
+          "kryo",
+          "labor",
+          "schatz_s",
+          "waechter_s"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "schleusentor",
+        "name": [
+          "Schleusentor",
+          "Airlock door"
+        ],
+        "zeichen": "🚪",
+        "arten": [
+          "schleuse",
+          "eingang_s",
+          "bruecke_s",
+          "wrack"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "muehlrad",
+        "name": [
+          "Mühlrad",
+          "Mill wheel"
+        ],
+        "zeichen": "⚙",
+        "arten": [
+          "muehle",
+          "brunnen",
+          "dorf"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "glocke",
+        "name": [
+          "Schwere Glocke",
+          "Heavy bell"
+        ],
+        "zeichen": "🔔",
+        "arten": [
+          "kirche",
+          "turm",
+          "leuchtturm",
+          "festung"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "fallgrube",
+        "name": [
+          "Abgedeckte Grube",
+          "Covered pit"
+        ],
+        "zeichen": "🕳",
+        "arten": [
+          "falle",
+          "gang",
+          "eingang",
+          "waechter",
+          "raetsel",
+          "pilze"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "pfeilfalle",
+        "name": [
+          "Alte Pfeilfalle",
+          "Old arrow trap"
+        ],
+        "zeichen": "🏹",
+        "arten": [
+          "falle",
+          "gang",
+          "schatz",
+          "raetsel",
+          "gruft"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "pilzsporen",
+        "name": [
+          "Sporenpilz",
+          "Spore mushroom"
+        ],
+        "zeichen": "🍄",
+        "arten": [
+          "pilze",
+          "hoehle",
+          "sumpf",
+          "gebeine"
+        ],
+        "wirkung": "vorteil"
+      },
+      {
+        "id": "gitter",
+        "name": [
+          "Zellengitter",
+          "Cell bars"
+        ],
+        "zeichen": "🔒",
+        "arten": [
+          "gefaengnis",
+          "waechter",
+          "waechter_h",
+          "kryo"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "treibholz",
+        "name": [
+          "Treibholz",
+          "Driftwood"
+        ],
+        "zeichen": "🪵",
+        "arten": [
+          "insel",
+          "riff",
+          "lagune",
+          "hafen",
+          "schiffswrack",
+          "eingang_p"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "brunnenrand",
+        "name": [
+          "Brunnenrand",
+          "Well rim"
+        ],
+        "zeichen": "⛲",
+        "arten": [
+          "brunnen",
+          "quelle",
+          "quelle_s",
+          "dorf",
+          "stadt",
+          "altar_s"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "kuppelfenster",
+        "name": [
+          "Kuppelfenster",
+          "Dome window"
+        ],
+        "zeichen": "🪟",
+        "arten": [
+          "kuppel",
+          "station",
+          "quelle_s",
+          "altar_s",
+          "bruecke_s"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "hangbrett",
+        "name": [
+          "Hängende Planken",
+          "Hanging planks"
+        ],
+        "zeichen": "🪜",
+        "arten": [
+          "schiffswrack",
+          "treppe",
+          "unterwasser",
+          "schatz_p",
+          "boss_p"
+        ],
+        "wirkung": "fluchtweg"
+      },
+      {
+        "id": "statue",
+        "name": [
+          "Wackelige Statue",
+          "Wobbly statue"
+        ],
+        "zeichen": "🗿",
+        "arten": [
+          "halle",
+          "schatz",
+          "altar",
+          "raetsel",
+          "boss",
+          "ruine",
+          "spiegelsaal"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "stoffbahnen",
+        "name": [
+          "Lange Vorhänge",
+          "Long curtains"
+        ],
+        "zeichen": "🎭",
+        "arten": [
+          "herrenhaus",
+          "spiegelsaal",
+          "speisesaal",
+          "kinderzimmer",
+          "boss_h"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "marktstand",
+        "name": [
+          "Marktstand",
+          "Market stall"
+        ],
+        "zeichen": "🏪",
+        "arten": [
+          "basar",
+          "stadt",
+          "hafen",
+          "dorf"
+        ],
+        "wirkung": "deckung"
+      },
+      {
+        "id": "schleim",
+        "name": [
+          "Klebriger Schleim",
+          "Sticky slime"
+        ],
+        "zeichen": "🟢",
+        "arten": [
+          "hoehle",
+          "gang",
+          "wrack",
+          "schacht",
+          "mine",
+          "krater"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "energiezaun",
+        "name": [
+          "Flackernder Energiezaun",
+          "Flickering force fence"
+        ],
+        "zeichen": "⚡",
+        "arten": [
+          "waechter_s",
+          "eingang_s",
+          "kuppel",
+          "boss_s",
+          "basar"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "stalaktiten",
+        "name": [
+          "Lose Tropfsteine",
+          "Loose stalactites"
+        ],
+        "zeichen": "🧊",
+        "arten": [
+          "hoehle",
+          "unterwasser",
+          "quelle",
+          "brunnen",
+          "pilze"
+        ],
+        "wirkung": "schaden_gruppe"
+      },
+      {
+        "id": "schatzhaufen",
+        "name": [
+          "Münzberg",
+          "Pile of coins"
+        ],
+        "zeichen": "🪙",
+        "arten": [
+          "schatz",
+          "schatz_p",
+          "schatz_s",
+          "boss"
+        ],
+        "wirkung": "umwerfen"
+      },
+      {
+        "id": "wasserfall",
+        "name": [
+          "Wasserfall",
+          "Waterfall"
+        ],
+        "zeichen": "🌊",
+        "arten": [
+          "dschungel",
+          "quelle",
+          "berg",
+          "unterwasser"
+        ],
+        "wirkung": "deckung"
+      }
+    ],
+    "wuensche": {
+      "alle": [
+        {
+          "id": "alle_01",
+          "t": [
+            "Herausfinden, wer mich damals verraten hat.",
+            "Find out who betrayed me back then."
+          ]
+        },
+        {
+          "id": "alle_02",
+          "t": [
+            "Einen verlorenen Freund wiederfinden.",
+            "Find a lost friend again."
+          ]
+        },
+        {
+          "id": "alle_03",
+          "t": [
+            "Einmal etwas tun, über das man Lieder singt.",
+            "Once do something people sing songs about."
+          ]
+        },
+        {
+          "id": "alle_04",
+          "t": [
+            "Eine alte Schuld begleichen.",
+            "Settle an old debt."
+          ]
+        },
+        {
+          "id": "alle_05",
+          "t": [
+            "Meiner Familie beweisen, dass ich es wert bin.",
+            "Prove to my family that I am worthy."
+          ]
+        },
+        {
+          "id": "alle_06",
+          "t": [
+            "Ein Versprechen halten, das ich einem Sterbenden gab.",
+            "Keep a promise I made to someone on their last day."
+          ]
+        },
+        {
+          "id": "alle_07",
+          "t": [
+            "Ein Zuhause finden, in dem ich bleiben kann.",
+            "Find a home where I can stay."
+          ]
+        },
+        {
+          "id": "alle_08",
+          "t": [
+            "Den Menschen wiedersehen, den ich zurückgelassen habe.",
+            "See again the person I left behind."
+          ]
+        },
+        {
+          "id": "alle_09",
+          "t": [
+            "Lernen, wem ich wirklich vertrauen kann.",
+            "Learn whom I can truly trust."
+          ]
+        },
+        {
+          "id": "alle_10",
+          "t": [
+            "Mein altes Leben hinter mir lassen.",
+            "Leave my old life behind."
+          ]
+        },
+        {
+          "id": "alle_11",
+          "t": [
+            "Einen Rivalen ein für alle Mal übertrumpfen.",
+            "Outdo a rival once and for all."
+          ]
+        },
+        {
+          "id": "alle_12",
+          "t": [
+            "Das Geheimnis meiner Herkunft lüften.",
+            "Uncover the secret of where I come from."
+          ]
+        }
+      ],
+      "fantasy": [
+        {
+          "id": "fantasy_01",
+          "t": [
+            "Das Schwert meines Großvaters zurückholen.",
+            "Recover my grandfather's sword."
+          ]
+        },
+        {
+          "id": "fantasy_02",
+          "t": [
+            "Einen echten Drachen sehen, aus der Nähe.",
+            "See a real dragon, up close."
+          ]
+        },
+        {
+          "id": "fantasy_03",
+          "t": [
+            "Den Zauber lernen, den mein Meister mir verweigert hat.",
+            "Learn the spell my master refused me."
+          ]
+        },
+        {
+          "id": "fantasy_04",
+          "t": [
+            "Den Fluch über meinem Dorf brechen.",
+            "Break the curse over my village."
+          ]
+        },
+        {
+          "id": "fantasy_05",
+          "t": [
+            "Einen Platz am Hof des Königs bekommen.",
+            "Earn a place at the king's court."
+          ]
+        },
+        {
+          "id": "fantasy_06",
+          "t": [
+            "Die verlorene Elfenstadt finden.",
+            "Find the lost elven city."
+          ]
+        },
+        {
+          "id": "fantasy_07",
+          "t": [
+            "Das Wappen meines Hauses wieder in Ehren bringen.",
+            "Restore honour to the arms of my house."
+          ]
+        },
+        {
+          "id": "fantasy_08",
+          "t": [
+            "Meinen Namen in das Buch der Helden schreiben.",
+            "Write my name in the Book of Heroes."
+          ]
+        }
+      ],
+      "horror": [
+        {
+          "id": "horror_01",
+          "t": [
+            "Herausfinden, was in jener Nacht wirklich geschah.",
+            "Find out what really happened that night."
+          ]
+        },
+        {
+          "id": "horror_02",
+          "t": [
+            "Die Stimme zum Schweigen bringen, die mich nachts ruft.",
+            "Silence the voice that calls me at night."
+          ]
+        },
+        {
+          "id": "horror_03",
+          "t": [
+            "Meine Schwester aus dem Herrenhaus holen.",
+            "Bring my sister out of the manor."
+          ]
+        },
+        {
+          "id": "horror_04",
+          "t": [
+            "Beweisen, dass ich nicht verrückt bin.",
+            "Prove that I am not mad."
+          ]
+        },
+        {
+          "id": "horror_05",
+          "t": [
+            "Den Namen des Wesens erfahren, das mich verfolgt.",
+            "Learn the name of the thing that follows me."
+          ]
+        },
+        {
+          "id": "horror_06",
+          "t": [
+            "Ein Kreuz auf das Grab meines Vaters setzen, endlich.",
+            "Finally set a cross on my father's grave."
+          ]
+        },
+        {
+          "id": "horror_07",
+          "t": [
+            "Das Tagebuch des alten Pfarrers finden.",
+            "Find the old priest's diary."
+          ]
+        },
+        {
+          "id": "horror_08",
+          "t": [
+            "Einmal wieder ohne Angst schlafen.",
+            "Sleep without fear once more."
+          ]
+        }
+      ],
+      "scifi": [
+        {
+          "id": "scifi_01",
+          "t": [
+            "Das Signal finden, das meine Mutter vor Jahren empfing.",
+            "Find the signal my mother picked up years ago."
+          ]
+        },
+        {
+          "id": "scifi_02",
+          "t": [
+            "Ein eigenes Schiff besitzen.",
+            "Own a ship of my own."
+          ]
+        },
+        {
+          "id": "scifi_03",
+          "t": [
+            "Meine Erinnerungen zurückbekommen, die gelöscht wurden.",
+            "Get back the memories that were erased."
+          ]
+        },
+        {
+          "id": "scifi_04",
+          "t": [
+            "Die Heimatwelt sehen, die ich nur von Bildern kenne.",
+            "See the homeworld I only know from pictures."
+          ]
+        },
+        {
+          "id": "scifi_05",
+          "t": [
+            "Den Konzern bloßstellen, der meine Kolonie verriet.",
+            "Expose the corporation that betrayed my colony."
+          ]
+        },
+        {
+          "id": "scifi_06",
+          "t": [
+            "Herausfinden, ob die KI meines alten Schiffs noch lebt.",
+            "Find out whether my old ship's AI is still alive."
+          ]
+        },
+        {
+          "id": "scifi_07",
+          "t": [
+            "Den ersten Kontakt erleben, und ihn überleben.",
+            "Live through first contact, and survive it."
+          ]
+        },
+        {
+          "id": "scifi_08",
+          "t": [
+            "Meine Schulden bei der Gilde loswerden.",
+            "Get free of my debt to the guild."
+          ]
+        }
+      ],
+      "piraten": [
+        {
+          "id": "piraten_01",
+          "t": [
+            "Den Schatz meines Vaters finden.",
+            "Find my father's treasure."
+          ]
+        },
+        {
+          "id": "piraten_02",
+          "t": [
+            "Kapitän auf einem eigenen Schiff werden.",
+            "Become captain of my own ship."
+          ]
+        },
+        {
+          "id": "piraten_03",
+          "t": [
+            "Den Mann finden, der meine Mannschaft verkaufte.",
+            "Find the man who sold out my crew."
+          ]
+        },
+        {
+          "id": "piraten_04",
+          "t": [
+            "Einmal um die ganze Welt segeln.",
+            "Sail once around the whole world."
+          ]
+        },
+        {
+          "id": "piraten_05",
+          "t": [
+            "Die Insel finden, die auf keiner Karte steht.",
+            "Find the island that is on no map."
+          ]
+        },
+        {
+          "id": "piraten_06",
+          "t": [
+            "Mein Kopfgeld loswerden.",
+            "Get rid of the bounty on my head."
+          ]
+        },
+        {
+          "id": "piraten_07",
+          "t": [
+            "Die Seehexe nach meinem Schicksal fragen.",
+            "Ask the sea witch about my fate."
+          ]
+        },
+        {
+          "id": "piraten_08",
+          "t": [
+            "Meinem alten Kapitän die Treue beweisen.",
+            "Prove my loyalty to my old captain."
+          ]
+        }
+      ]
+    },
+    "gefaehrte_werte": [
+      {
+        "stufe": 1,
+        "leben": 9,
+        "ruestung": 12,
+        "angriff": 3,
+        "schaden": 6,
+        "schaden_plus": 1,
+        "sold": 10
+      },
+      {
+        "stufe": 2,
+        "leben": 12,
+        "ruestung": 12,
+        "angriff": 3,
+        "schaden": 6,
+        "schaden_plus": 1,
+        "sold": 15
+      },
+      {
+        "stufe": 3,
+        "leben": 16,
+        "ruestung": 13,
+        "angriff": 4,
+        "schaden": 8,
+        "schaden_plus": 1,
+        "sold": 20
+      },
+      {
+        "stufe": 4,
+        "leben": 19,
+        "ruestung": 13,
+        "angriff": 4,
+        "schaden": 8,
+        "schaden_plus": 2,
+        "sold": 30
+      },
+      {
+        "stufe": 5,
+        "leben": 22,
+        "ruestung": 14,
+        "angriff": 5,
+        "schaden": 8,
+        "schaden_plus": 2,
+        "sold": 40
+      },
+      {
+        "stufe": 6,
+        "leben": 25,
+        "ruestung": 14,
+        "angriff": 5,
+        "schaden": 10,
+        "schaden_plus": 2,
+        "sold": 55
+      },
+      {
+        "stufe": 7,
+        "leben": 28,
+        "ruestung": 15,
+        "angriff": 6,
+        "schaden": 10,
+        "schaden_plus": 3,
+        "sold": 70
+      },
+      {
+        "stufe": 8,
+        "leben": 32,
+        "ruestung": 15,
+        "angriff": 6,
+        "schaden": 10,
+        "schaden_plus": 3,
+        "sold": 90
+      },
+      {
+        "stufe": 9,
+        "leben": 35,
+        "ruestung": 16,
+        "angriff": 7,
+        "schaden": 12,
+        "schaden_plus": 3,
+        "sold": 110
+      },
+      {
+        "stufe": 10,
+        "leben": 38,
+        "ruestung": 16,
+        "angriff": 7,
+        "schaden": 12,
+        "schaden_plus": 4,
+        "sold": 130
+      }
+    ],
+    "gefaehrten": [
+      {
+        "id": "grete",
+        "welt": "fantasy",
+        "name": [
+          "Grete",
+          "Grete"
+        ],
+        "satz": [
+          "Söldnerin mit Speer, wortkarg und zuverlässig.",
+          "A spear-carrying sellsword, curt and reliable."
+        ],
+        "wert": "staerke"
+      },
+      {
+        "id": "ole",
+        "welt": "fantasy",
+        "name": [
+          "Ole der Fackelträger",
+          "Ole the Torchbearer"
+        ],
+        "satz": [
+          "Ein junger Bursche, der mehr Mut als Verstand hat.",
+          "A young lad with more courage than sense."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "brunhild",
+        "welt": "fantasy",
+        "name": [
+          "Brunhild",
+          "Brunhild"
+        ],
+        "satz": [
+          "Alte Bogenschützin, trifft eine Münze auf fünfzig Schritt.",
+          "An old archer who hits a coin at fifty paces."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "kasimir",
+        "welt": "fantasy",
+        "name": [
+          "Kasimir",
+          "Kasimir"
+        ],
+        "satz": [
+          "Ein Gnom mit Hammer und vielen Ratschlägen.",
+          "A gnome with a hammer and plenty of advice."
+        ],
+        "wert": "konstitution"
+      },
+      {
+        "id": "ansgar",
+        "welt": "horror",
+        "name": [
+          "Ansgar",
+          "Ansgar"
+        ],
+        "satz": [
+          "Ein Totengräber mit Schaufel und ruhigen Händen.",
+          "A gravedigger with a shovel and steady hands."
+        ],
+        "wert": "staerke"
+      },
+      {
+        "id": "marta",
+        "welt": "horror",
+        "name": [
+          "Schwester Marta",
+          "Sister Marta"
+        ],
+        "satz": [
+          "Eine Nonne mit Laterne, die keine Angst kennt.",
+          "A nun with a lantern who knows no fear."
+        ],
+        "wert": "weisheit"
+      },
+      {
+        "id": "viktor",
+        "welt": "horror",
+        "name": [
+          "Viktor",
+          "Viktor"
+        ],
+        "satz": [
+          "Ein Jäger mit Silberkugeln und einer alten Rechnung.",
+          "A hunter with silver bullets and an old score to settle."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "lene",
+        "welt": "horror",
+        "name": [
+          "Lene",
+          "Lene"
+        ],
+        "satz": [
+          "Ein Dienstmädchen, das jeden Gang im Herrenhaus kennt.",
+          "A maid who knows every corridor of the manor."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "k7",
+        "welt": "scifi",
+        "name": [
+          "K-7",
+          "K-7"
+        ],
+        "satz": [
+          "Ein ausgemusterter Wachroboter, der höflich bleibt.",
+          "A decommissioned guard robot that stays polite."
+        ],
+        "wert": "konstitution"
+      },
+      {
+        "id": "rax",
+        "welt": "scifi",
+        "name": [
+          "Rax",
+          "Rax"
+        ],
+        "satz": [
+          "Eine Söldnerin mit Lasergewehr und schlechten Witzen.",
+          "A mercenary with a laser rifle and bad jokes."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "doc_imani",
+        "welt": "scifi",
+        "name": [
+          "Doc Imani",
+          "Doc Imani"
+        ],
+        "satz": [
+          "Eine Sanitäterin, die nur ungern schießt.",
+          "A medic who only shoots reluctantly."
+        ],
+        "wert": "weisheit"
+      },
+      {
+        "id": "tobu",
+        "welt": "scifi",
+        "name": [
+          "Tobu",
+          "Tobu"
+        ],
+        "satz": [
+          "Ein Mechaniker, der mit allem einen Schraubenschlüssel wirft.",
+          "A mechanic who throws a wrench at anything."
+        ],
+        "wert": "staerke"
+      },
+      {
+        "id": "einaug",
+        "welt": "piraten",
+        "name": [
+          "Einaug-Jens",
+          "One-eyed Jens"
+        ],
+        "satz": [
+          "Ein alter Matrose mit Entermesser und Seemannsgarn.",
+          "An old sailor with a cutlass and tall tales."
+        ],
+        "wert": "staerke"
+      },
+      {
+        "id": "perle",
+        "welt": "piraten",
+        "name": [
+          "Perle",
+          "Pearl"
+        ],
+        "satz": [
+          "Eine Taucherin, die länger unter Wasser bleibt als jeder Fisch.",
+          "A diver who stays underwater longer than any fish."
+        ],
+        "wert": "geschick"
+      },
+      {
+        "id": "smutje_bo",
+        "welt": "piraten",
+        "name": [
+          "Smutje Bo",
+          "Cook Bo"
+        ],
+        "satz": [
+          "Ein Schiffskoch, der mit der Bratpfanne kämpft.",
+          "A ship's cook who fights with a frying pan."
+        ],
+        "wert": "konstitution"
+      },
+      {
+        "id": "kiki",
+        "welt": "piraten",
+        "name": [
+          "Kiki",
+          "Kiki"
+        ],
+        "satz": [
+          "Ein Schiffsjunge, der jeden Mast hinaufkommt.",
+          "A cabin boy who can climb any mast."
+        ],
+        "wert": "geschick"
+      }
+    ],
+    "gefaehrten_kinder": [
+      {
+        "id": "wuschel",
+        "name": [
+          "Wuschel",
+          "Fluffy"
+        ],
+        "satz": [
+          "Ein zotteliger Hund, der jeden Stock bringt und laut bellt.",
+          "A shaggy dog who fetches every stick and barks loudly."
+        ]
+      },
+      {
+        "id": "pip",
+        "name": [
+          "Pip",
+          "Pip"
+        ],
+        "satz": [
+          "Ein kleiner Drache, so groß wie eine Katze, der Funken niest.",
+          "A little dragon the size of a cat that sneezes sparks."
+        ]
+      },
+      {
+        "id": "bummel",
+        "name": [
+          "Bummel",
+          "Bumble"
+        ],
+        "satz": [
+          "Ein freundlicher Bär, der gern Honig teilt.",
+          "A friendly bear who likes to share honey."
+        ]
+      }
     ]
   }
 }

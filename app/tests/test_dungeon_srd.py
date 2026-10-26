@@ -194,6 +194,20 @@ class Srd(unittest.TestCase):
             self.assertEqual(len(g.get("sage") or []), 2, g["id"])
             self.assertTrue(all(isinstance(x, str) and 0 < len(x) <= 200 for x in g["sage"]), g["id"])
 
+    def test_runde2_fuer_jede_szene_und_welt(self):
+        # D&D-Ideen Runde 2: each kind of place and room of the map has at least 3 props (a fight scene draws 2 to 3), each
+        # world has wishes and companions, the children's table has mild prices and an animal friend
+        i = srd()["ideen"]
+        karte = json.load(open(os.path.join(os.path.dirname(dungeon.__file__), "dungeon_karte.json"), encoding="utf-8"))
+        welten = [w["id"] for w in dungeon._base_rules()["welten"] if w["id"] != "eigene"]
+        for a in [x["id"] for x in karte["ortsarten"] + karte["raeume"]]:
+            self.assertGreaterEqual(sum(a in x["arten"] for x in i["requisiten"]), 3, a)
+        for w in welten:
+            self.assertTrue(i["wuensche"].get(w), w)
+            self.assertGreaterEqual(sum(g["welt"] == w for g in i["gefaehrten"]), 4, w)
+        self.assertTrue([x for x in i["knapp"] if x.get("kinder")] and i["gefaehrten_kinder"])
+        self.assertEqual([x["stufe"] for x in i["gefaehrte_werte"]], list(range(1, 11)))
+
     def test_angriffe_zwei_bis_fuenf(self):
         for g in dungeon._base_rules()["gegner"]:
             if "angriffe" in g:

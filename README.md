@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.112** AI Dungeon Master: content of the D&D ideas round 2 in the SRD catalogue: 20 prices for "near miss", 58 props for every kind of place and room, heart's wishes per world, companions with values for levels 1 to 10 and animal friends at the children's table, torch and glow stick
 - **V01.1.111** AI Dungeon Master: travel stages, a long way on the map becomes a journey, every hero takes a role and rolls, a consequence and an event of the landscape
 - **V01.1.110** AI Dungeon Master: heroes comment themselves, every hero who acted says a short checked line about its deed, as a speech bubble and in its voice
 - **V01.1.109** AI Dungeon Master: the way of telling rich really tells richly, with a minimum length, a fixed style sentence and a check by the panel
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.105** AI Dungeon Master: scars and lasting wounds, who stands up again or takes a critical hit keeps a scar, rarely with −1 on a value until a healer in a settlement takes it
 - **V01.1.104** AI Dungeon Master: monster album, every hero collects the foes defeated and knows more about them after 1, 3 and 5 wins, up to their weaknesses
 - **V01.1.103** AI Dungeon Master: writings, letters, wanted posters and verses found appear as parchment at the table, the host shows them to all, one seat or nobody
-- **V01.1.102** AI Dungeon Master: helping and group checks, who helps a hero by name gives them advantage, in a group check half is enough
 
 
 

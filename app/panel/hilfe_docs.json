@@ -5485,6 +5485,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Inhalte der D&D-Ideen Runde 2 (V01.1.112, Ideen 1, 3, 6, 7 und 9, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): dungeon_srd.json trägt unter „ideen“ die festen Tabellen, die dungeon_ideen.check_rules prüft. Knapp daneben (knapp): 20 Preise auf W20, jeder mit fester id (sie geht als „preis“ in den Würfel-Beleg) und einer Wirkung aus Lärm, Zeit, Nachteil, Schaden, Werkzeug, Gold und NSC. Am Kindertisch gelten nur Lärm und Zeit (kinder). Die Zeilen folgen der Idee „Pay the Price“ aus Ironsworn und Starforged (Shawn Tomkin, über datasworn, CC BY 4.0, genannt in „lizenz“) und sind für die festen Wirkungen neu geschrieben. Requisiten (requisiten): 58 Stück mit Zeichen, Orts- und Raumarten und genau einer Wirkung (schaden_gruppe, umwerfen, deckung, vorteil, fluchtweg). Jede Ortsart und Raumart der Karte hat mindestens 3. Licht: die neuen Dinge Fackel (holzfackel, 1 Gold) und Leuchtstab (Sci-Fi), je mit licht 4 Räume. Herzenswünsche (wuensche): 12 für alle Welten und je 8 für Fantasy, Horror, Sci-Fi und Piraten, je höchstens 160 Zeichen. Gefährten: gefaehrte_werte für Stufe 1 bis 10 (Leben etwa 80 % eines Helden, Rüstung, Angriff, Schaden und Sold j"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e Kapitel), je Welt 4 Vorlagen in gefaehrten und 3 Tierfreunde für den Kindertisch in gefaehrten_kinder. Alle Texte sind eigene, die Quellen der Ideen gelten nur als Idee. Selbsttest test_runde2_fuer_jede_szene_und_welt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Lagerfeuer und Rast (V01.1.108, D&D-Idee 4, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Lagerfeuer und Rast* (chat.dungeon_rast, ab Werk aus; dungeon_rast.py, kurze und lange Rast nach SRD 5.1, CC BY 4.0, eigener Code; die Tabellen ideen.landschaften, nachtwachen und fragekarten stehen in dungeon_srd.json). Außerhalb eines Kampfes ruft der Gastgeber im Spielleiter-Pult „Kurze Rast“ oder „Lange Rast“ (POST /api/profile/dungeon/{rid}/rast {art}, nur der Gastgeber, Rate-Limit dungeon). Kurz: jeder stehende Held bekommt ein Viertel seines Lebens zurück (mindestens 1), höchstens zweimal zwischen zwei langen Rasten. Lang: das Panel würfelt drei Nachtwachen mit dem W20 auf der Tabelle der Landschaft (Ortsart der Karte, ein Gewölbe ist „Unter der Erde“, sonst „Unterwegs“): ruhig, Geräusch, Besuch oder Überfall. Ohne Überfall volles Leben und alle Zauber, mit Überfall nur das halbe Leben und keine Zauber; am Kindertisch ist ein Überfall nur ein Geräusch. Höchstens eine lange Rast in 8 Zügen. Jeder Platz bekommt eine Frage am Lagerfeuer. Solange die Rast auf ihre Erzählung wartet, steht rd[\"rast\"] (die Musik spielt "
 },
 {
@@ -19678,6 +19694,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "nd; the narrator reads the last three per hero in its facts and never rolls itself. The app shows it all at the game table. Live: wounds, with a consequence, plasters, at the healer today. Log dungeon: narbe | narbe|folge|pflaster | auf|gnade|krit, dungeon: dienst | heiler | N gold, | heiler | nein. Self-test Fight.test_scars_and_lasting_wounds_with_a_healer."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: content of the D&D ideas round 2 (V01.1.112, ideas 1, 3, 6, 7 and 9, Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\"): dungeon_srd.json holds the fixed tables under \"ideen\", checked by dungeon_ideen.check_rules. Near miss (knapp): 20 prices on a d20, each with a fixed id (it goes into the dice receipt as \"preis\") and an effect out of noise, time, disadvantage, damage, tool, gold and NPC. At the children's table only noise and time apply (kinder). The rows follow the idea of \"Pay the Price\" from Ironsworn and Starforged (Shawn Tomkin, via datasworn, CC BY 4.0, credited in \"lizenz\") and are rewritten for the fixed effects. Props (requisiten): 58 with a sign, kinds of places and rooms and exactly one effect (schaden_gruppe, umwerfen, deckung, vorteil, fluchtweg). Every kind of place and room of the map has at least 3. Light: the new things torch (holzfackel, 1 gold) and glow stick (sci-fi), each with licht 4 rooms. Heart's wishes (wuensche): 12 for all worlds and 8 each for fantasy, horror, sci-fi and pirates, at most 160 characters each. Companions: gefaehrte_werte for levels 1 to 10 (life about 80 % of a hero, armour, attack, damage and pay per c"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "hapter), 4 templates per world in gefaehrten and 3 animal friends for the children's table in gefaehrten_kinder. All texts are our own, the sources of the ideas count only as ideas. Self-test test_runde2_fuer_jede_szene_und_welt."
 },
 {
 "lang": "en",

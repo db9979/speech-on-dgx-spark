@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.112** · 2026-10-26 · KI-Dungeon-Master: Inhalte der D&D-Ideen Runde 2 im SRD-Katalog: 20 Preise für „Knapp daneben“, 58 Requisiten für jede Orts- und Raumart, Herzenswünsche je Welt, Gefährten mit Werten für Stufe 1 bis 10 und Tierfreunden am Kindertisch, Fackel und Leuchtstab
 - **V01.1.111** · 2026-10-26 · KI-Dungeon-Master: Reise-Etappen, ein langer Weg auf der Karte wird eine Reise, jeder Held übernimmt eine Rolle und würfelt, eine Folge und ein Ereignis der Landschaft
 - **V01.1.110** · 2026-10-26 · KI-Dungeon-Master: Helden kommentieren selbst, jeder Held, der gehandelt hat, sagt eine kurze geprüfte Zeile zu seiner Tat, als Sprechblase und in seiner Stimme
 - **V01.1.109** · 2026-10-26 · KI-Dungeon-Master: die Erzählweise ausführlich erzählt wirklich ausführlich, mit Mindestlänge, festem Stil-Satz und einer Prüfung des Panels
