@@ -118,6 +118,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import Response
 
 import dungeon_ablage as ablage
+import dungeon_alarm as alarm
 import dungeon_album as album
 import dungeon_karte
 import dungeon_kommentar as kommentar
@@ -3372,9 +3373,12 @@ def roll(r, rd, proben, rng=None, hand=None):
         vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
         if h.get("nachteil_zug") == rd["zug"]:    # the price „nachteil“ of a near miss last turn (dungeon_knapp.pay)
             vt = "" if vt == "vorteil" else "nachteil"
+        dark = alarm.dunkel(r, rd, h)
+        if dark:                                 # a dark vault without darkvision (dungeon_alarm, D&D round 2 idea 6)
+            vt = "" if vt == "vorteil" else "nachteil"
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
         bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
-        extra = {"belastet": True} if last else {}
+        extra = ({"belastet": True} if last else {}) | ({"dunkel": True} if dark else {})
         for _ in range(2):
             ws = [hand.d20(p["pid"], rng) if hand else rng.randint(1, 20) for _ in range(2 if vt else 1)]
             w = max(ws) if vt == "vorteil" else min(ws)
@@ -3587,7 +3591,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             umgebung.used(_me, r, rd, w)
         if w.get("knapp"):                       # a near miss paid: its price by a fixed rule (dungeon_knapp)
             knapp.pay(_me, r, rd, (rd["plaetze"].get(w["pid"]) or {}).get("held"), w, rng)
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "dunkel", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         ehre.count(rd, w["pid"], proben=int(bool(w["ok"])), schatten=int(bool(w["ok"]) and w["wert"] == "geschick"),
                    zwanzig=int(w["w"] == 20), eins=int(w["w"] == 1))

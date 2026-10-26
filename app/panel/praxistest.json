@@ -3810,6 +3810,13 @@
 "titel": "Dungeon-Master: Gesichter für Gefährten",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Gesichter für NSCs, Gefährten anheuern und Bilder malen an. A: In einer Siedlung einen Gefährten anheuern; nach spätestens einer Minute steht in der Gruppe sein Gesicht statt 🤝. B: Das Gesicht passt zu seiner Beschreibung und trägt nie seinen Namen. C: Nennt der Spielleiter den Gefährten, zeigt das nächste Szenenbild dasselbe Gesicht. D: Gefährten anheuern aus: wieder 🤝 und kein neues Gesicht.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P569",
+"v": 1126,
+"titel": "Dungeon-Master: Alarm und Fackeln im Gewölbe",
+"text": "A: Funktionen → KI-Dungeon-Master → Alarm und Fackeln an. B: Beim Händler eine Fackel kaufen, dann ins Gewölbe gehen: über dem Plan steht „🔔 Alarm 0/6 · 🔥 Fackel: 4 Räume“, die Fackel ist aus der Tasche weg. C: Durch vier Räume gehen: die Zahl sinkt, danach „🌑 Dunkel“, ein Mensch würfelt Proben mit Nachteil, ein Zwerg nicht. D: Kämpfen, bis der Alarm 3 erreicht: eine Glocke, im nächsten Gang oder in der nächsten Kammer wartet eine Streife. E: Schalter aus: keine Anzeige, kein Nachteil im Dunkeln.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.126** KI-Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt erst eine Streife und dann den Herrn, Fackeln brennen vier Räume lang, im Dunkeln Proben mit Nachteil
 - **V01.1.125** KI-Dungeon-Master: „Knapp geschafft, mit Preis“ an der Würfelkarte, mit dem gezahlten Preis und eigenem Ton
 - **V01.1.124** KI-Dungeon-Master: Requisiten im Szenenbild: im Kampf nimmt ein Szenenbild bis zu drei Requisiten, die noch da sind, mit ihrem Katalognamen mit ins Bild; Gesichter für Gefährten: ein angeheuerter Gefährte bekommt gleich sein Porträt aus seiner festen Beschreibung, die Gruppe zeigt es statt 🤝, Szenenbilder nehmen es als Vorlage
 - **V01.1.123** ROT-FIX: Selbsttest Reise-Etappen nimmt einen Weg, der weiterführt, statt zufällig in eine Sackgasse und zurück
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.119** KI-Dungeon-Master: Flüstern mit einer Figur, einmal je Zug ein Wort nur für den eigenen Platz, die Figur antwortet, Verrat und Geschenk entscheidet das Panel
 - **V01.1.118** KI-Dungeon-Master: Umgebung nutzen, Kronleuchter, Pulverfässer, Säulen und Seile im Kampf, eine Probe des Panels und eine feste Wirkung
 - **V01.1.117** KI-Dungeon-Master: Gegner-Ansagen und Haltung, jeder Gegner sagt seinen nächsten Hieb an, die Helden antworten mit Abwehr oder Ausweichen
-- **V01.1.116** KI-Dungeon-Master: Chronikbuch, am Ende jedes Kapitels eine Seite mit Titelbild, Bisher geschah, Helden, Ehrungen und Schriftstücken, zum Blättern und als PDF vom Spark
 
 
 

@@ -502,6 +502,79 @@ class Vaults(unittest.TestCase):
                 return rd, v, j
         self.fail("no vault with " + art)
 
+    def test_alarm_and_torches_in_a_vault(self):
+        """D&D-Idee 6 of round 2 (Dominik 2026-10-26 „1-9 umsetzten“, switch dungeonalarm, off by default): noise from
+        GRUENDE raises the vault's alarm to at most 6; at 3 a patrol stands in the next plain room, at 6 the master has
+        one more at his side; entering lights a torch of the bag (4 rooms, used up), a lasting light never burns down;
+        without light a hero without darkvision rolls at a disadvantage; new dwellers calm the vault."""
+        import dungeon_alarm as A
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_alarm"], False)
+        rd, v, j = self.vault_with("kammer")
+        self.assertIsNone(K.laerm(rd, 2, "kampf"))                                        # off: nothing counts
+        self.assertEqual({x: K.view(self.r, rd)[x] for x in ("alarm", "fackel")}, {"alarm": None, "fackel": None})
+        self.assertFalse(A.dunkel(self.r, rd, rd["plaetze"]["pa"]["held"]))
+        p_on = mock.patch.object(A, "on", lambda rd: True)
+        p_on.start()
+        self.addCleanup(p_on.stop)
+        r = self.r
+        k = rd["karte"]
+        torch = dungeon.item(r, "holzfackel")
+        rd["plaetze"]["pa"]["held"]["tasche"].append(torch)
+        k["drin"] = None
+        v = K.enter_vault(r, rd, random.Random(1))                                         # lit on entering, used up
+        self.assertEqual((v["licht"], K.view(r, rd)["fackel"], K.view(r, rd)["alarm"]), (4, 4, 0))
+        self.assertNotIn(torch, rd["plaetze"]["pa"]["held"]["tasche"])
+        self.assertEqual(K.facts(r, rd)["licht"], "hell")
+        for bad in ((1, "befehl"), (True, "kampf"), (0, "tuer"), ("2", "tuer")):
+            self.assertEqual(K.laerm(rd, *bad), 0, bad)
+        self.assertEqual(K.laerm(rd, 1, "kampf"), 1)
+        self.assertEqual(K.laerm(rd, 9, "schleichen_patzer"), 4)                            # one event at most LAERM_MAX
+        self.assertEqual(v["streife"], 1)
+        self.assertTrue(any("Streife" in str(e.get("text")) for e in rd["log"]))
+        self.assertEqual(K.facts(r, rd)["streife"], "unterwegs")
+        K._enter_room(r, rd, v, j, random.Random(2))                                       # the patrol in the plain room
+        room = v["raeume"][j]
+        self.assertTrue(room["streife"] and room["gegner"])
+        self.assertEqual(rd["raum_gegner"], {"raum": f"gw{k['drin']}-r{j + 1}", "ids": room["gegner"]})
+        self.assertEqual(v["streife"], 2)
+        rd["sieg"] = f"gw{k['drin']}-r{j + 1}"
+        K.won(rd)
+        self.assertTrue(room["fertig"])
+        self.assertEqual(v["licht"], 3)                                                    # one room burnt
+        boss = next(i for i, x in enumerate(v["raeume"]) if x["art"] == "boss")
+        calm = len(K._room_foes(r, rd, True, random.Random(5)))
+        self.assertEqual(K.laerm(rd, 3, "tuer"), 6)
+        K._enter_room(r, rd, v, boss, random.Random(5))
+        self.assertEqual(len(v["raeume"][boss]["gegner"]), min(5, calm + 1))                 # the master is ready
+        self.assertTrue(v["raeume"][boss]["bereit"])
+        self.assertEqual(K.facts(r, rd)["herr"], "bereit")
+        for _ in range(3):
+            A.schritt(r, rd)
+        self.assertEqual((v["licht"], K.view(r, rd)["fackel"]), (0, 0))                     # dark now
+        self.assertEqual(sum("Kein Licht" in str(e.get("text")) for e in rd["log"]), 1)
+        A.schritt(r, rd)
+        self.assertEqual(sum("Kein Licht" in str(e.get("text")) for e in rd["log"]), 1)       # told once
+        h = rd["plaetze"]["pa"]["held"]
+        self.assertEqual(h["volk"], "mensch")
+        self.assertTrue(A.dunkel(r, rd, h))
+        w = dungeon.roll(r, rd, [{"pid": "pa", "wert": "weisheit", "schwer": 10}], random.Random(2))[0]
+        self.assertEqual((w["vt"], w.get("dunkel")), ("nachteil", True))
+        self.assertFalse(A.dunkel(r, rd, dict(h, volk="zwerg")))                           # darkvision
+        h["tasche"].append(dungeon.item(r, "fackel"))                                       # the Ewige Fackel: lasting
+        A.schritt(r, rd)
+        self.assertEqual(v["licht"], -1)
+        for _ in range(5):
+            A.schritt(r, rd)
+        self.assertEqual((v["licht"], len([x for x in h["tasche"] if x["id"] == "fackel"])), (-1, 1))
+        self.assertFalse(A.dunkel(r, rd, h))
+        A.ruhe(v)
+        self.assertEqual((v["alarm"], v["streife"]), (0, 0))
+        k["drin"] = None
+        self.assertIsNone(K.laerm(rd, 1, "kampf"))                                          # outside a vault
+        self.assertEqual(K.view(r, rd)["alarm"], None)
+        self.assertEqual(set(A.for_live()), {"laerm", "streifen", "bereit", "fackeln", "dunkel"})
+
     def test_trap_is_rolled_by_the_panel(self):
         rd, v, j = self.vault_with("falle")
         f = K._table(self.r, "fallen", v["raeume"][j]["falle"])

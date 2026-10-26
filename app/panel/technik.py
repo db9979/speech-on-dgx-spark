@@ -183,6 +183,7 @@ MODULE = {
     "dungeon_gefaehrte": ("dienste", "Dungeon-Master: Gefährten anheuern in der Siedlung, Hiebe, Moral und Lohn nach festen Regeln des Panels"),
     "dungeon_wunsch": ("dienste", "Dungeon-Master: Herzenswunsch je Held, geheim, je Akt einer reihum für den Erzähler, Erfahrung nach fester Regel"),
     "dungeon_fluestern": ("dienste", "Dungeon-Master: Flüstern mit einer Figur, die Antwort nur für den eigenen Platz, Verrat würfelt das Panel"),
+    "dungeon_alarm": ("dienste", "Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt Streife und Herrn, Licht für 4 Räume"),
     "dungeon_umgebung": ("dienste", "Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung"),
     "dungeon_haltung": ("dienste", "Dungeon-Master: Gegner-Ansagen und Haltung, der nächste Hieb vorher, Abwehr und Ausweichen"),
     "dungeon_chronik": ("dienste", "Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark"),

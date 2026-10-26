@@ -216,6 +216,7 @@
     "dungeon_chronik": false,
     "dungeon_haltung": false,
     "dungeon_umgebung": false,
+    "dungeon_alarm": false,
     "dungeon_fluestern": false,
     "dungeon_wunsch": false,
     "dungeon_gefaehrte": false,

@@ -640,6 +640,13 @@ def _names(name, words):
     return bool(need) and all(any(x.startswith(w) for x in words) for w in need)
 
 
+def laerm(rd, n, grund):
+    """Noise in the vault (Alarm und Fackeln, D&D round 2 idea 6): the main thread's events (kampf, tuer, preis,
+    schleichen_patzer) raise the alarm; the rules are dungeon_alarm's. Returns the alarm or None."""
+    import dungeon_alarm
+    return dungeon_alarm.laerm(rd, n, grund)
+
+
 def etappen(k, a, b):
     """The stages of travel between the places a and b by their distance on the map, at least one (pure)."""
     o = k["orte"]
@@ -886,7 +893,10 @@ def facts(r, rd):
             out["truhe"] = "offen" if room["fertig"] else "zu"
         if room["art"] in ("quelle", "altar"):
             out[room["art"]] = ("vom Panel gewirkt", "worked by the panel")[li]
-        return dict(out, **_on_way(r, rd))
+        if room.get("streife") and not room["fertig"]:
+            out["gegner"] = ("eine Streife, ihre Gegner stehen im Angebot", "a patrol, its foes are in the offer")[li]
+        import dungeon_alarm
+        return dict(out, **dungeon_alarm.facts(rd), **_on_way(r, rd))
     here = k["hier"]
     p = (o[here]["x"], o[here]["y"])
     kd = _kind(r, o[here]["art"])
@@ -1013,12 +1023,21 @@ def _enter_room(r, rd, v, j, rng):
         v["gegangen"].append(e)
     rd.pop("raum_gegner", None)                  # the foes of the room left behind are no more on offer
     room = v["raeume"][j]
+    import dungeon_alarm as alarm
+    alarm.schritt(r, rd)                         # every room walked into burns the torch one room shorter
     if j not in v["besucht"]:
         v["besucht"].append(j)
         if room["art"] in ON_ENTER and not room["fertig"]:
             ON_ENTER[room["art"]](r, rd, room, rng)
-    if room["art"] in ("waechter", "boss") and not room["fertig"]:
+            if room["art"] == "falle" and room.get("getroffen"):
+                alarm.laerm(rd, 1, "falle")      # a trap sprung is heard
+    if alarm.streife(rd, room):                  # the alarm's patrol (Alarm und Fackeln): guardian foes in a plain room
+        room["streife"], room["gegner"], room["fertig"] = True, _room_foes(r, rd, False, rng), False
+        _say(rd, "Eine Streife stellt euch!", "A patrol confronts you!")
+    if (room["art"] in ("waechter", "boss") or room.get("streife")) and not room["fertig"]:
         room.setdefault("gegner", _room_foes(r, rd, room["art"] == "boss", rng))
+        if alarm.bereit(rd, room):               # the whole vault awake: one more at the master's side
+            room["gegner"] = (room["gegner"] + _room_foes(r, rd, False, rng)[:1])[:5]
         if room["gegner"]:
             rd["raum_gegner"] = {"raum": _room_id(rd, j), "ids": room["gegner"]}
 
@@ -1030,7 +1049,7 @@ def won(rd):
     if not sieg or not v:
         return
     room = v["raeume"][v["hier"]]
-    if room["art"] not in ("waechter", "boss") or room["fertig"] or sieg != _room_id(rd, v["hier"]):
+    if (room["art"] not in ("waechter", "boss") and not room.get("streife")) or room["fertig"] or sieg != _room_id(rd, v["hier"]):
         print("dungeon: gewoelbe | sieg verworfen", flush=True)
         return
     room["fertig"] = True
@@ -1139,6 +1158,8 @@ def enter_vault(r, rd, rng):
     v["hier"] = 0
     _say(rd, f"Ihr betretet das Gewölbe: {v['name']}.", f"You enter the vault: {v['name']}.")
     refill(rd, v)
+    import dungeon_alarm
+    dungeon_alarm.anzuenden(r, rd)               # a torch of the group, lit by the panel (Alarm und Fackeln)
     return v
 
 
@@ -1161,6 +1182,8 @@ def refill(rd, v):
             v["besucht"].remove(j)
     if neu:
         _say(rd, f"Im Gewölbe {v['name']} hat sich Neues eingenistet.", f"Something new has moved into the vault {v['name']}.")
+        import dungeon_alarm
+        dungeon_alarm.ruhe(v)                    # new dwellers: the alarm is calm again
     print(f"dungeon: gewoelbe | neu belebt | {len(neu)} raeume", flush=True)
     return len(neu)
 
@@ -1290,6 +1313,8 @@ def view(r, rd, host=False):
     ys = [o[i]["y"] for i in known] + [w[3] for w in wege]
     out = {"box": _box(xs, ys), "w": FLAECHE[0], "h": FLAECHE[1], "form": k.get("form", "verstreut"), "deko": k.get("deko") or {}, "orte": [place(i) for i in sorted(known)], "wege": wege, "hier": f"o{k['hier'] + 1}",
            "welt": rd.get("welt"), "gesehen": len(k["besucht"]), "bleibt": k.get("bleibt", ""), "neu": host and k["schritte"] == 0 and k.get("drin") is None and not k["gw"]}
+    import dungeon_alarm
+    out.update(dungeon_alarm.view(rd))           # alarm and fackel in a vault (Alarm und Fackeln), else None
     v = vault(rd)
     if v:
         vnb = _vnb(v)

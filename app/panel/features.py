@@ -318,6 +318,8 @@ FEATURES = (
     F("dungeongefaehrte", "Gefährten anheuern", "Hire companions", "data", ("dungeon_gefaehrte",), parent="dungeon", me="dmbox", guide="dungeongefaehrte"),
     # Herzenswunsch (dungeon_wunsch.py, D&D round 2, idea 7): a secret wish per hero, one per act for the narrator
     F("dungeonwunsch", "Herzenswunsch", "Heart's wish", "data", ("dungeon_wunsch",), parent="dungeon", me="dmbox", guide="dungeonwunsch"),
+    # Alarm und Fackeln (dungeon_alarm.py, D&D round 2, idea 6): noise wakes the vault, torches burn down, the dark hinders
+    F("dungeonalarm", "Alarm und Fackeln", "Alarm and torches", "data", ("dungeon_alarm",), parent="dungeon", me="dmbox", guide="dungeonalarm"),
     # Flüstern mit einer Figur (dungeon_fluestern.py, D&D round 2, idea 5): a word to a person only one seat hears
     F("dungeonfluestern", "Flüstern mit einer Figur", "Whisper to a person", "data", ("dungeon_fluestern",), parent="dungeon", me="dmbox", guide="dungeonfluestern"),
     F("dungeonhaltung", "Gegner-Ansagen und Haltung", "Foe announcements and stance", "data", ("dungeon_haltung",), parent="dungeon", me="dmbox", guide="dungeonhaltung"),

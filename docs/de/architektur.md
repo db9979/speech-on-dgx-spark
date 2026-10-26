@@ -272,6 +272,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
 | `app/panel/dungeon.py` | KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen |
 | `app/panel/dungeon_ablage.py` | Dungeon-Master-Ablage: eine Datei je Runde, Zwischenspeicher nach Änderungszeit |
+| `app/panel/dungeon_alarm.py` | Dungeon-Master: Alarm und Fackeln im Gewölbe, Lärm weckt Streife und Herrn, Licht für 4 Räume |
 | `app/panel/dungeon_album.py` | Dungeon-Master: Monster-Album, je Held die besiegten Gegner, mehr Wissen nach 1, 3 und 5 Siegen |
 | `app/panel/dungeon_auto.py` | Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde |
 | `app/panel/dungeon_balance.py` | Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark |
