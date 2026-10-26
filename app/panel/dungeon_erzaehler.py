@@ -391,6 +391,10 @@ HINWEIS = {
               "Note: the character does not have or cannot do this: {namen}. Narrate that it does not work."),
     "aussehen": ("Hinweis: So sieht diese Person nicht aus, halte dich an ihre Karte: {namen}.",
                  "Note: this person does not look like that, keep to their card: {namen}."),
+    "fuerwort": ("Hinweis: Diese Figuren haben ein festes geschlecht, nenne sie genau so: {namen}. Bei divers nur der Name, "
+                 "nie er oder sie, nie sein oder ihr.",
+                 "Note: these characters have a fixed geschlecht, refer to them exactly so: {namen}. For non-binary use "
+                 "they, their or the name."),
     "dabei": ("Hinweis: Diese Waffe trägt die Figur nicht bei sich: {namen}. Beschreibe nur, was auf ihrem Heldenblatt "
               "steht (held: an und tasche).",
               "Note: the character does not carry this weapon: {namen}. Describe only what is on its hero sheet (held: an "
@@ -491,6 +495,10 @@ def repair(rd, story, fault, missing):
             return story
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=text)
+    elif fault == "fuerwort":                    # the wrong possessive after a hero's name becomes the right one
+        text, n = fix_pronouns(rd, story["text"])
+        print(f"dungeon: nachbessern | {'fest' if n else 'bleibt'} | {fault}", flush=True)
+        return dict(story, text=text) if n else story
     elif fault == "knapp":                       # too short for „ausführlich“ on every try: it stays as it is
         print("dungeon: nachbessern | bleibt | knapp", flush=True)
         return story
@@ -754,6 +762,70 @@ def not_carried(rd, text, r=None):
     return list(dict.fromkeys(out))[:3]
 
 
+# a hero's gender (dungeon.GESCHLECHT, Dominik 2026-10-26): the possessive right after its name (at most three words
+# between, no comma, no article and no other person named between) before a thing of its own (EIGEN: a part of the
+# body or what it carries) is the hero's; „Lia hebt seine Klinge“ for a woman is wrong. Only the possessive, never er
+# or sie: those often mean somebody else or a group.
+BESITZ_M = ("sein", "seine", "seinen", "seinem", "seiner", "seines", "his")
+BESITZ_W = ("ihr", "ihre", "ihren", "ihrem", "ihrer", "ihres", "her")
+TAUSCH = dict(zip(BESITZ_M, BESITZ_W)) | dict(zip(BESITZ_W, BESITZ_M))
+DIVERS = {"seine": "die", "seinen": "den", "seinem": "dem", "seiner": "der", "seines": "des", "ihre": "die", "ihren": "den",
+          "ihrem": "dem", "ihrer": "der", "ihres": "des", "his": "their", "her": "their"}   # German sein/ihr alone: no sure article
+EIGEN = ("hand", "hände", "haende", "faust", "finger", "arm", "arme", "kopf", "augen", "blick", "stimme", "stirn", "haar",
+         "haare", "lippen", "schulter", "schultern", "atem", "herz", "rucksack", "umhang", "mantel", "klinge", "waffe",
+         "schild", "bogen", "stab", "schwert", "dolch", "axt", "hammer", "fackel", "hands", "fist", "fingers", "head",
+         "eyes", "gaze", "voice", "brow", "hair", "lips", "shoulder", "shoulders", "breath", "heart", "pack", "cloak",
+         "blade", "weapon", "shield", "bow", "staff", "sword", "dagger", "axe", "torch")
+
+
+FREMD_WORTE = ("der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "ihm", "ihn", "ihnen",
+               "the", "a", "an", "him", "them")   # someone else between: „Lia packt den Mann an seinem Arm“
+
+
+def _pronoun_spots(rd, text):
+    """[(start, end, hero name, right word)] of wrong possessives in text by the rule above; right "" when there is no
+    sure word (divers, German sein or ihr alone)."""
+    import dungeon
+    helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values()
+              if p.get("held") and dungeon.gender(p["held"].get("geschlecht"))}
+    if not helden:
+        return []
+    alle = {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")} | \
+        {re.sub(r"\s+\d+$", "", str(x.get("name", ""))).lower() for x in [*(rd.get("nsc") or {}).values(),
+         *((rd.get("kampf") or {}).get("gegner") or [])]} - {""}
+    out = []
+    low = str(text).lower()
+    for n, h in helden.items():
+        for m in re.finditer(r"(?<!\w)" + re.escape(n) + r"(?!\w)((?:\s+[^\s,;:.!?…„“\"]+){0,3}?)\s+(" +
+                             "|".join(BESITZ_M + BESITZ_W) + r")\s+([\w-]+)(?:\s+([\w-]+))?", low):
+            zwischen, wort = m.group(1), m.group(2)
+            if not {m.group(3), m.group(4)} & set(EIGEN) or set(zwischen.split()) & set(FREMD_WORTE) or any(re.search(r"(?<!\w)" + re.escape(x) + r"(?!\w)", zwischen) for x in alle - {n}):
+                continue
+            g = h["geschlecht"]
+            if g == "divers":
+                out.append((m.start(2), m.end(2), h["name"], DIVERS.get(wort, "")))
+            elif (wort in BESITZ_W) == (g == "maennlich"):
+                out.append((m.start(2), m.end(2), h["name"], TAUSCH[wort]))
+    return out
+
+
+def wrong_pronoun(rd, text):
+    """Heroes the narration gives the wrong possessive (_pronoun_spots), "Name: geschlecht", three at most."""
+    import dungeon
+    li = 1 if rd.get("lang") == "en" else 0
+    by = {str(p["held"]["name"]): p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    return list(dict.fromkeys(f"{n}: {dungeon.GESCHLECHT[by[n]['geschlecht']][0][li]}" for _, _, n, _ in _pronoun_spots(rd, text)))[:3]
+
+
+def fix_pronouns(rd, text):
+    """(text with every wrong possessive that has a sure right word replaced, how many), the first letter's case kept."""
+    spots = [x for x in _pronoun_spots(rd, text) if x[3]]
+    for a, b, _, w in sorted(spots, reverse=True):
+        old = text[a:b]
+        text = text[:a] + (w[:1].upper() + w[1:] if old[:1].isupper() else w) + text[b:]
+    return text, len(spots)
+
+
 def _koerper(text):
     """{part: colour} from „rote Haare“, „graues Haar“, „blue eyes“ (a colour word right before a part of KOERPER)."""
     ws = _WORT.findall(str(text).lower())
@@ -804,7 +876,8 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     for why, found in (("fehlt", lambda: told_unknown(rd, text)), ("gefallen", lambda: fight_off(rd, text, hits)),
                        ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
                        ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text)),
-                       ("aussehen", lambda: looks_off(rd, text)), ("dabei", lambda: not_carried(rd, text))):
+                       ("aussehen", lambda: looks_off(rd, text)), ("dabei", lambda: not_carried(rd, text)),
+                       ("fuerwort", lambda: wrong_pronoun(rd, text))):
         x = found()
         if x:
             dm._day.bump("regel_" + why)

@@ -3852,6 +3852,13 @@
 "titel": "Wissensfrage statt Spark-Hilfe",
 "text": "A: Im Chat fragen „Was kannst du mir zur Frauenkirche in Dresden erzählen?“: keine Spark-Hilfe und keine Liste „Das kannst du zum Beispiel sagen“; mit Kiwix steht der Artikel als Quelle darunter. B: „Was kannst du mir zur Frauenkirche in Dresden mitteilen, schau im Archiv oder Kiwix“: Antwort aus dem Archiv, keine Händlerliste oder andere Dokumente ohne Frauenkirche. C: „Was kannst du alles?“ zeigt weiter die Liste. D: Eine Frage nach etwas, das in keinem Dokument steht: die Antwort sagt, dass in den Unterlagen nichts Passendes ist.",
 "thread": "Dokumentsuche trifft falsche Stelle"
+},
+{
+"id": "P575",
+"v": 1132,
+"titel": "Dungeon-Master: Geschlecht des Helden",
+"text": "A: Einen neuen Helden anlegen und unter dem Namen „weiblich“ wählen: die Erzählung nennt ihn „sie“, die vorgeschlagene Stimme ist eine Frauenstimme. B: Auf dem Heldenblatt unter „Werte verteilen“ auf „divers“ wechseln: die Erzählung nennt den Helden nur beim Namen, das Porträt lässt sich neu malen. C: Einen alten Helden öffnen: er steht ohne Angabe da, bis du eins wählst. D: Als Gast über den Platz-Link einen Helden mit Geschlecht anlegen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

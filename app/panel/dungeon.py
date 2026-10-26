@@ -235,6 +235,21 @@ STIMMEN = ("erzaehler", "npc", "npc_w")   # the fixed voices: narrator, NPC (mal
 TEXT_MAX = 300            # one action
 NAME_MAX = 24
 SATZ_MAX = 120
+# a hero's gender (Dominik 2026-10-26 „männlich weiblich divers sollte auswählbar sein“): its name, what the model gets
+# (the pronoun; divers: the name, no er or sie) and the portrait's words; "" for a hero made before (unset)
+GESCHLECHT = {"maennlich": (("männlich", "male"), ("männlich, nenne ihn er", "male, call him he"), "a man"),
+              "weiblich": (("weiblich", "female"), ("weiblich, nenne sie sie", "female, call her she"), "a woman"),
+              "divers": (("divers", "non-binary"), ("divers, nenne nur den Namen, nie er oder sie", "non-binary, call them they or by the name"),
+                         "an androgynous person")}
+# the voices of the speech output's own speakers that sound female (Qwen3-TTS); every other one counts as male, divers takes all
+STIMMEN_W = ("serena", "vivian", "ono_anna", "sohee")
+
+
+def gender(x):
+    """A gender of GESCHLECHT as given, else "" (anything else, also a list or a number from a request)."""
+    return x if isinstance(x, str) and x in GESCHLECHT else ""
+
+
 TITEL_MAX = 60
 EINSTIEG_MAX = 400
 PROMPT_MAX = 4000
@@ -312,7 +327,7 @@ _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
 WAS = ("anlegen", "ablegen", "trinken", "auftragen", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
-       "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst", "questgeben", "questablegen", "questaufheben")
+       "geschlecht", "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst", "questgeben", "questablegen", "questaufheben")
 TASCHE = 12               # items in one bag
 ANGRIFFE_MAX = 5          # a foe's multiattack at most (Tabletop-Punkt 12, "angriffe" 2 to 5 in the bestiary)
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
@@ -442,7 +457,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -984,6 +999,7 @@ def new_hero(r, b, rng=None):
         raise ValueError("held")
     werte = {w: x + volk["werte"].get(w, 0) for w, x in spread(r, klasse, b.get("verteilung")).items()}
     h = {"hid": "h" + os.urandom(5).hex(), "name": name, "volk": volk["id"], "klasse": klasse["id"],
+         "geschlecht": gender(b.get("geschlecht")),
          "satz": _clean(b.get("satz"), SATZ_MAX), "stufe": 1, "ep": 0, "werte": werte, "leben": 0,
          "leben_max": 0, "gold": r["start"]["gold"], "an": dict({k: None for k in SLOTS}, haupthand=item(r, klasse["waffen"][0], rng=rng)),
          "tasche": [item(r, x, rng=rng) for x in r["start"]["tasche"]],
@@ -1276,6 +1292,9 @@ def fix_hero(r, h):
     six(r, h)
     h["stimme"] = h["stimme"] if isinstance(h.get("stimme"), str) and _VOICE.fullmatch(h["stimme"]) else ""
     h["klang"] = h["klang"] if isinstance(h.get("klang"), str) and KLANG.fullmatch(h["klang"]) else ""
+    h["geschlecht"] = gender(h.get("geschlecht"))
+    if h.get("bild_neu") is not True:
+        h.pop("bild_neu", None)               # the gender changed: the portrait may be painted anew at this level
     if not _int(h.get("bild"), 1, 20):
         h.pop("bild", None)                   # the level its portrait was painted at
     for z in ("tot", "ohnmacht"):
@@ -1652,8 +1671,9 @@ def tool_line(r, c, li, it):
 def hero_view(r, h, lang, full=True, welt="", zug=None):
     li = 1 if lang == "en" else 0
     k, v = _by(r, "klassen")[h["klasse"]], _by(r, "voelker")[h["volk"]]
+    g = gender(h.get("geschlecht"))
     out = {"hid": h["hid"], "name": h["name"], "volk": v["name"][li], "klasse": k["name"][li], "stufe": h["stufe"],
-           "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h),
+           "geschlecht": g, "geschlecht_name": GESCHLECHT[g][0][li] if g else "", "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None, "zustand": zustand(h),
            # from a foe's hit (Kampf Teil 2), with the turns left (Tabletop-Punkt 11) when the round's turn is known
            "zust": [dict(name=z["name"][li], info=z["info"][li], **({"noch": kampf.left(x, zug)} if zug is not None else {}))
                     for x, z in kampf.states_with(r, h)]}
@@ -1669,7 +1689,7 @@ def hero_view(r, h, lang, full=True, welt="", zug=None):
                werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]}
                       for w in r["werte"]],
-               wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"],
+               wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"] or bool(h.get("bild_neu")),
                rk=kampf.rk(_me, r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
@@ -3031,10 +3051,12 @@ ZUSTAND_REGEL = {
 KANN_REGEL = {
     "de": "Eine Figur wirkt nur Zauber und Kräfte aus ihrer Liste kann. Steht etwas unter nicht_bekannt, gelingt es "
           "nicht: erzähle, dass die Figur es noch nicht beherrscht oder keine Kraft mehr dafür hat. Eine Figur trägt nur "
-          "die Waffen aus ihrer Liste waffen (leer: keine, sie kämpft mit den Fäusten).",
+          "die Waffen aus ihrer Liste waffen (leer: keine, sie kämpft mit den Fäusten). Hat eine Figur ein geschlecht, nenne "
+          "sie genau so (er, sie, oder bei divers nur ihren Namen, nie er oder sie).",
     "en": "A character only uses spells and powers from its list kann. Whatever stands under nicht_bekannt does not "
           "work: tell that the character has not mastered it yet or has no power left for it. A character only carries "
-          "the weapons from its list waffen (empty: none, it fights with its fists)."}
+          "the weapons from its list waffen (empty: none, it fights with its fists). When a character has a geschlecht, "
+          "refer to it exactly so (he, she, or for non-binary they or its name)."}
 AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko; "
           "gehen, reisen oder zu einem Ort aufbrechen braucht keine; wer nur fragt oder redet, braucht keine oder "
@@ -3172,6 +3194,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     names = dict(seated(rd))
     gruppe = [{"name": p["held"]["name"], "volk": _by(r, "voelker")[p["held"]["volk"]]["name"][li],
                "klasse": _by(r, "klassen")[p["held"]["klasse"]]["name"][li], "stufe": p["held"]["stufe"],
+               **({"geschlecht": GESCHLECHT[gender(p["held"].get("geschlecht"))][1][li]} if gender(p["held"].get("geschlecht")) else {}),
                "leben": f"{p['held']['leben']}/{p['held']['leben_max']}", "kann": kann_facts(r, p["held"], rd["lang"]),
                "waffen": list(dict.fromkeys(item_view(r, it, rd["lang"])["name"] for it in [*worn(p["held"]), *p["held"]["tasche"]]
                                             if (_by(r, "gegenstaende").get(it.get("id")) or {}).get("art") == "waffe")),
@@ -4267,6 +4290,8 @@ def voice_for(r, rd, h):
     The player changes it in the hero sheet."""
     taken = {x.lower() for x in voices(r).values() if x} | {str(p["held"].get("stimme", "")).lower() for _, p in seated(rd)}
     pool = [x for x in _stimmen["v"] if x.lower() not in taken] or [x for x in _stimmen["v"] if x.lower() not in {v.lower() for v in voices(r).values() if v}]
+    g = h.get("geschlecht")                      # from the gender's voices (divers or unset: all), none left: any
+    pool = [x for x in pool if g not in ("weiblich", "maennlich") or (x.lower() in STIMMEN_W) == (g == "weiblich")] or pool
     return pool[int(hashlib.sha256(h["hid"].encode()).hexdigest(), 16) % len(pool)] if pool else ""
 
 
@@ -4874,7 +4899,8 @@ def paint_now(owner, rid):
 def portrait_text(r, h):
     """The fixed portrait from the hero's people, class and sentence (English names; the sentence checked)."""
     v, k = _by(r, "voelker")[h["volk"]], _by(r, "klassen")[h["klasse"]]
-    return f"{PORTRAET_STIL}, a {v['name'][1].lower()} {k['name'][1].lower()}" + (f", {h['satz']}" if h.get("satz") else "")
+    g = GESCHLECHT[gender(h.get("geschlecht"))][2] if gender(h.get("geschlecht")) else ""
+    return f"{PORTRAET_STIL}, a {v['name'][1].lower()} {k['name'][1].lower()}" + (f", {g}" if g else "") + (f", {h['satz']}" if h.get("satz") else "")
 
 
 def queue_portrait(rid, pid):
@@ -4890,7 +4916,7 @@ def queue_portrait(rid, pid):
             raise LookupError("held")
         key = "h:" + h["hid"]
         why = ("aus" if not pictures_on(rd["owner"]) else "malt" if key in _bilder_jobs else
-               "stufe" if h.get("bild") == h["stufe"] else
+               "stufe" if h.get("bild") == h["stufe"] and not h.get("bild_neu") else
                "tag" if _bild_tag_voll(r, d, rd) else "voll" if schwer.full() else "")
         text = ""
         if not why:
@@ -4922,6 +4948,7 @@ async def paint_portrait(rid, hid, prompt):
                     return False
                 _bild_save("held-" + hid, png)
                 p["held"]["bild"] = p["held"]["stufe"]
+                p["held"].pop("bild_neu", None)
                 _write(d)
                 keep_seat(p)
                 return True
@@ -5487,6 +5514,13 @@ def hero_act(rid, pid, b):
                     or klang and bad_words(r, rd, klang):
                 raise ValueError("stimme")
             h["stimme"], h["klang"] = b["stimme"], klang
+        elif was == "geschlecht":                 # the hero sheet: a new gender, the portrait may be painted anew
+            if not gender(b.get("geschlecht")):
+                raise ValueError("geschlecht")
+            if h.get("geschlecht") != b["geschlecht"]:
+                h["geschlecht"] = b["geschlecht"]
+                h["bild_neu"] = True              # the old portrait stays until the new one is painted
+                print("dungeon: held | geschlecht | geaendert", flush=True)
         elif was == "faehigkeit":
             if b.get("id") not in h["wahl"]:
                 raise ValueError("faehigkeit")
@@ -5703,7 +5737,7 @@ def for_live():
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
                                  "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt", "ehrungen")},
-            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_dabei", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_dabei", "regel_fuerwort", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 
 def own_count(uid):
@@ -6802,7 +6836,7 @@ async def kampagne_weg(kid: str, request: Request, prof=Depends(browser_profile)
 
 @router.post("/api/profile/dungeon/beitreten", dependencies=[Depends(assistant)])
 async def beitreten_profil(request: Request, response: Response, prof=Depends(browser_profile)):
-    """{"code", "held": hid | {name, volk, klasse, satz}}: a profile takes a seat link for its own login."""
+    """{"code", "held": hid | {name, volk, klasse, geschlecht, satz}}: a profile takes a seat link for its own login."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -6937,7 +6971,7 @@ def play_on(tok):
 
 @router.post("/api/dungeon/beitreten")
 async def gast_beitreten(request: Request, response: Response):
-    """{"code", "held": {name, volk, klasse, satz}} or {"code", "figur"}: a guest takes the seat (one seat per device)."""
+    """{"code", "held": {name, volk, klasse, geschlecht, satz}} or {"code", "figur"}: a guest takes the seat (one seat per device)."""
     b, rid, pid = await _guest(request)
     tok = _device_cookie(request, response)
     try:

@@ -1788,6 +1788,93 @@ class Voice(Base):
         self.assertFalse(dungeon_auto.im_auto(self.uid, now=1001.0 + dungeon_auto.WORTE_S))
         self.assertFalse(dungeon_auto.im_auto("", now=1000.0))
 
+    def test_a_hero_has_a_gender_for_words_voice_and_portrait(self):
+        """Dominik 2026-10-26 „männlich weiblich divers sollte auswählbar sein“: picked at creation (a seat link too),
+        changed on the hero sheet (fixed values only, the portrait may be painted anew), an older hero stays unset; the
+        model gets the pronoun, the hero's voice comes from the gender's voices, the portrait names it, and a wrong
+        possessive after the hero's name is a fault of erz.judge whose rescue sets the right one."""
+        E = dungeon.erz
+        r = dungeon.rules()
+        self.assertEqual(set(dungeon.GESCHLECHT), {"maennlich", "weiblich", "divers"})
+        for g in ("weiblich", "maennlich", "divers", "x", None):
+            h = dungeon.new_hero(r, dict(HERO, geschlecht=g), random.Random(1))
+            self.assertEqual(h["geschlecht"], g if g in dungeon.GESCHLECHT else "")
+        old = dungeon.new_hero(r, dict(HERO), random.Random(1))
+        old.pop("geschlecht")
+        self.assertEqual(dungeon.fix_hero(r, copy.deepcopy(old))["geschlecht"], "")           # made before: unset
+        self.assertNotIn("a man", dungeon.portrait_text(r, dungeon.fix_hero(r, copy.deepcopy(old))))
+        v = self.new_round(held=dict(HERO, geschlecht="weiblich"))
+        rid, host = v["rid"], v["pid"]
+        url = f"/api/profile/dungeon/{rid}"
+        self.assertEqual(self.c.get(url).json()["ich"]["geschlecht"], "weiblich")
+        code = self.invite(rid)
+        r2 = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {
+            "name": "Kim", "volk": "elf", "klasse": "magier", "geschlecht": "divers"}})
+        self.assertEqual(r2.status_code, 200, r2.text)
+        gp = r2.json()["pid"]
+        self.assertEqual(self.state(rid)["plaetze"][gp]["held"]["geschlecht"], "divers")
+        h = self.state(rid)["plaetze"][host]["held"]
+        self.assertIn("a woman", dungeon.portrait_text(r, h))
+        self.assertIn("an androgynous person", dungeon.portrait_text(r, self.state(rid)["plaetze"][gp]["held"]))
+        facts = dungeon.facts(r, self.state(rid)).split("<<<")[0]
+        self.assertIn('"geschlecht": "weiblich, nenne sie sie"', facts)
+        self.assertIn('"geschlecht": "divers, nenne nur den Namen, nie er oder sie"', facts)
+        self.assertIn("geschlecht", dungeon.KANN_REGEL["de"])
+        self.assertIn("geschlecht", dungeon.KANN_REGEL["en"])
+        dungeon._stimmen.update(t=__import__("time").time(), v=["Ryan", "Aiden", "Vivian", "Sohee"])
+        self.addCleanup(dungeon._stimmen.update, t=0.0, v=[])
+        for g, want in (("weiblich", {"Vivian", "Sohee"}), ("maennlich", {"Aiden"}), ("divers", {"Aiden", "Vivian", "Sohee"})):
+            for i in range(12):                  # Ryan is the narrator's fixed voice: never a hero's
+                x = dungeon.voice_for(r, {"plaetze": {}}, {"hid": f"h{i:010x}", "geschlecht": g})
+                self.assertIn(x, want, (g, x))
+        with dungeon._lock:                      # the sheet: a painted portrait at this level
+            d = dungeon._read()
+            d["runden"][rid]["plaetze"][host]["held"]["bild"] = 1
+            dungeon._write(d)
+        self.assertFalse(self.c.get(url).json()["ich"]["bild_neu"])
+        for bad in ("x", "", None, ["weiblich"]):
+            self.assertEqual(self.c.post(url + "/held", json={"was": "geschlecht", "geschlecht": bad}).status_code, 400, bad)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.c.post(url + "/held", json={"was": "geschlecht", "geschlecht": "maennlich"}).status_code, 200)
+        self.assertIn("dungeon: held | geschlecht | geaendert", out.getvalue())
+        held = self.c.get(url).json()["ich"]
+        self.assertEqual((held["geschlecht"], held["geschlecht_name"], held["bild"], held["bild_neu"]), ("maennlich", "männlich", True, True))
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": code, "was": "geschlecht", "geschlecht": "weiblich"}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/held", json={"code": code, "was": "geschlecht", "geschlecht": "frau"}).status_code, 400)
+        self.assertEqual(self.state(rid)["plaetze"][gp]["held"]["geschlecht"], "weiblich")              # a guest on its own sheet
+        with mock.patch.object(dungeon, "pictures_on", lambda owner: True), mock.patch.object(dungeon, "_bild_tag_voll", lambda *a: False), \
+                mock.patch.object(dungeon, "picture_text", lambda r_, rd_, t: (t, "")), contextlib.redirect_stdout(io.StringIO()):
+            hid, prompt = dungeon.queue_portrait(rid, host)            # the same level, painted anew after the change
+        dungeon._bilder_jobs.pop("h:" + hid, None)
+        self.assertIn("a man", prompt)
+        # the words of the narration
+        rd = {"lang": "de", "plaetze": {"a": {"held": {"name": "Lia", "geschlecht": "weiblich"}}, "b": {"held": {"name": "Morpheus", "geschlecht": "maennlich"}},
+                                        "c": {"held": {"name": "Kim", "geschlecht": "divers"}}, "d": {"held": {"name": "Uma"}}},
+              "nsc": {"x": {"name": "Wirt"}}, "kampf": {"gegner": [{"name": "Ork 1", "leben": 5}]}}
+        for text, want, fixed in (("Lia hebt seine Klinge und lacht.", ["Lia: weiblich"], "Lia hebt ihre Klinge und lacht."),
+                                  ("Morpheus legt ihre Hand auf den Tisch.", ["Morpheus: männlich"], "Morpheus legt seine Hand auf den Tisch."),
+                                  ("Kim zieht seinen Dolch.", ["Kim: divers"], "Kim zieht den Dolch."),
+                                  ("Kim hebt sein Schwert.", ["Kim: divers"], "Kim hebt sein Schwert."),   # no sure word: stays
+                                  ("Lia hebt ihre Klinge.", [], None), ("Morpheus nickt.", [], None),
+                                  ("Lia sieht den Wirt an, seine Hand zittert.", [], None),
+                                  ("Lia packt den Mann an seinem Arm.", [], None), ("Lia schlägt Ork seine Waffe weg.", [], None),
+                                  ("Uma hebt seine Klinge.", [], None)):                                 # unset: never a fault
+            self.assertEqual(E.wrong_pronoun(rd, text), want, text)
+            if fixed:
+                self.assertEqual(E.fix_pronouns(rd, text)[0], fixed)
+        en = dict(rd, lang="en")
+        self.assertEqual(E.fix_pronouns(en, "Lia raises his sword. Kim lifts her torch.")[0], "Lia raises her sword. Kim lifts their torch.")
+        self.assertIn("Hinweis", E.hint("fuerwort", ["Lia: weiblich"], "de"))
+        self.assertIn("Note", E.hint("fuerwort", ["Lia: female"], "en"))
+        rd.update(offen={}, log=[], zug=1)
+        story = {"text": "Lia hebt seine Klinge und lauscht in die Dunkelheit hinein, wo in der Ferne Schritte auf nassem Pflaster "
+                 "näher kommen und dann verstummen, als hätte jemand innegehalten.", "ooc": []}
+        with mock.patch.object(dungeon, "rules", lambda: r):
+            self.assertEqual(E.judge(dungeon, rd, story), ("fuerwort", ["Lia: weiblich"]))
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertTrue(E.repair(rd, story, "fuerwort", ["Lia: weiblich"])["text"].startswith("Lia hebt ihre Klinge"))
+        self.assertIn("dungeon: nachbessern | fest | fuerwort", out.getvalue())
+
     def test_hero_voices_speak_only_quotes(self):
         self.assertEqual(dungeon.says('Ich ziehe das Schwert. „Halt, wer da?“ Dann "Zurück!"'), "Halt, wer da? Zurück!")
         self.assertEqual(dungeon.says("Ich schleiche weiter."), "")
