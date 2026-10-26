@@ -1865,6 +1865,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['neu_erzaehlt']} Szenen nach einer Fehler-Meldung neu erzählt" if dgn.get("neu_erzaehlt") else "")
                         + (f" · heute {dgn.get('krit_gewuerfelt', 0)} Krit- und {dgn.get('patzer_gewuerfelt', 0)} Patzer-Tabellen gewürfelt"
                            if dgn.get("krit_gewuerfelt") or dgn.get("patzer_gewuerfelt") else "")
+                        + (f" · heute {dgn['ehrungen']} Ehrungen vergeben" if dgn.get("ehrungen") else "")
                         + (f" · Richter heute {dgn.get('richter_ok', 0)} ok, {dgn.get('richter_neu', 0)} neu geschrieben, {dgn.get('richter_aus', 0)} ohne Antwort"
                            if dgn.get("richter_ok") or dgn.get("richter_neu") or dgn.get("richter_aus") else "")
                         + (f" · {dgn['neu_laeuft']} Szenen werden gerade neu erzählt" if dgn.get("neu_laeuft") else "")

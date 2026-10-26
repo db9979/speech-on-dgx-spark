@@ -287,6 +287,10 @@ FEATURES = (
     # table (dungeon_srd.json „ideen“), its state for 1 to 3 turns; the model only tells the line
     F("dungeonkrit", "Krit- und Patzer-Tabellen", "Critical and fumble tables", "data", ("dungeon_krit",), parent="dungeon",
       me="dmbox", guide="dungeonkrit"),
+    # Ehrungen des Abends (dungeon_ehre.py, D&D idea 1): at a round's end titles and a certificate per hero from the
+    # panel's own dice receipts, never from the model
+    F("dungeonehrungen", "Ehrungen des Abends", "Honours of the evening", "data", ("dungeon_ehrungen",), parent="dungeon",
+      me="dmbox", guide="dungeonehrungen"),
     # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
     F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
       guide="dungeonimport"),

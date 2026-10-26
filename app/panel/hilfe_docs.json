@@ -5397,6 +5397,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Ehrungen des Abends (V01.1.100, D&D-Idee 1, Dominik 2026-10-25 „1-12 reihenfolge bestimmst du“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Ehrungen des Abends* (chat.dungeon_ehrungen, ab Werk aus; dungeon_ehre.py). Solange die Runde läuft, zählt das Panel je Platz aus seinen eigenen Würfeln mit: Treffer, kritische Treffer, Schaden, 20er und Einsen bei Angriffen und Proben, gelungene Proben, gelungene Geschick-Proben, Tränke für Freunde und das Leben, das sie geschenkt haben (rd[\"ehre\"], nie vom Modell). Endet die Runde (auch mit dem Ende eines Kapitels), vergibt es feste Titel an den Platz mit den meisten: Klinge des Abends (Schaden), Retter des Abends (Hilfe), Glückskind (20er), Stillster Schatten (ab 2 Geschick-Proben) und Pechvogel (ab 3 Einsen); bei Gleichstand der früher besetzte Platz. Am Kindertisch heißen sie Mutigstes Herz, Bester Freund, Glückskind und Leisester Fuchs, einen Pechvogel und Einsen gibt es dort nicht. Im Verlauf steht „🏅 Ehrungen des Abends“ mit den Titeln und je Held einer Urkunde mit seinen Zahlen (Log-Art ehrung, dazu spielt der Musik-Thread seine Fanfare); die Rundenliste im Browser und die iPhone-App zeigen die Titel bei der be"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "endeten Runde (ehrungen in GET /api/profile/dungeon). Danach zählt der nächste Abend neu. Live: heute vergebene Ehrungen. Log dungeon: ehrung | n titel | m urkunden oder | keine. Die Zeile einer Krit- oder Patzer-Tabelle am Angriff beginnt jetzt mit „Kritisch:“ oder „Patzer:“. Selbsttest Fight.test_honours_of_the_evening."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: mehr feste Prüfungen der Erzählung, jede mit Rettung (V01.1.084, Dominik 2026-10-25 „können wir diese fehler für die zukunf immer abfangen und verbessern?“, gewählt „1-3 und 1-7 umsetzten“): Nach jedem Zug prüft das Panel die Erzählung mit festen Wortlisten, nie mit dem Modell, zusätzlich zu Namen, Proben, Gegnern, Würfel-Belegen, Schleiern, Orten, Dingen und Wiederholung: ein gefallener Gegner handelt nicht mehr und ein stehender stirbt nicht ohne Treffer-Beleg (gefallen); was die Figur nicht hat oder nicht kann, gelingt nicht, auch ein Ding, das der Held nicht in der Tasche trägt (die Aktion bekommt die graue Zeile „… hat das nicht dabei“, fehlt); Gold und Beute nennt die Erzählung nicht als Menge, die legt das Panel fest (gold); ein Held, der in diesem Zug nicht gehandelt hat, entscheidet nichts (fremd); Haar-, Augen- und Bartfarbe einer Person folgen ihrer NSC-Karte (aussehen); die Tageszeit geht nur vorwärts, ein neuer Morgen erst nach der Nacht (sonst „tageszeit | verworfen“). Bei einem Fehler schreibt der Erzähler mit einem Hinweis neu; besteht auch der letzte Versuch nicht, rettet das Panel selbst: es streicht die Sätze mit dem Fehler, solange genug Erzäh"
 },
 {
@@ -10630,6 +10646,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Krit- und Patzer-Tabellen (Funktionen → Meine Daten → „Krit- und Patzer-Tabellen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Trifft ein Held kritisch, würfelt der Spark einen W12 auf der Tabelle der Schadensart (Hieb, Stich, Wucht, Feuer und die anderen): eine feste Zeile wie „Sehne getroffen: das Ziel humpelt“, manchmal mit einem Zustand für ein bis drei Züge …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Ehrungen des Abends (Funktionen → Meine Daten → „Ehrungen des Abends“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Endet eine Runde (auch mit einem Kapitel), vergibt der Spark feste Titel: Klinge des Abends (der meiste Schaden), Retter (die meiste Hilfe für Freunde), Glückskind (die meisten 20er), Stillster Schatten (die meisten gelungenen Geschick-P …"
 },
 {
 "lang": "de",
@@ -19349,6 +19373,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: honours of the evening (V01.1.100, D&D idea 1, Dominik 2026-10-25 \"1-12 reihenfolge bestimmst du\"): Admin switch *Features → AI Dungeon Master → Honours of the evening* (chat.dungeon_ehrungen, off by default; dungeon_ehre.py). While the round runs, the panel counts per seat from its own dice: hits, critical hits, damage, 20s and 1s on attacks and checks, checks passed, Dexterity checks passed, potions for friends and the life they gave (rd[\"ehre\"], never from the model). When the round ends (also with the end of a chapter), it gives fixed titles to the seat with the most: Blade of the evening (damage), Rescuer of the evening (help), Lucky one (20s), Quietest shadow (from 2 Dexterity checks) and Hard-luck hero (from 3 ones); on a tie the seat taken first. At the children's table they are Bravest heart, Best friend, Lucky one and Quietest fox; there is no hard-luck hero and no count of ones there. The log shows \"🏅 Honours of the evening\" with the titles and one certificate per hero with their numbers (log art ehrung, the music thread plays its fanfare with it); the round list in the browser and the iPhone app show the titles at the ended round (ehrungen in GET /api"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "/profile/dungeon). Then the next evening counts anew. Live: honours given today. Log dungeon: ehrung | n titel | m urkunden or | keine. The line of a critical or fumble table at the attack now starts with \"Critical:\" or \"Fumble:\". Self-test Fight.test_honours_of_the_evening."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: more fixed checks of the narration, each with a rescue (V01.1.084, Dominik 2026-10-25 “können wir diese fehler für die zukunf immer abfangen und verbessern?”, chosen “1-3 und 1-7 umsetzten”): After every turn the panel checks the narration with fixed word lists, never with the model, in addition to names, checks, foes, dice receipts, veils, places, things and repetition: a fallen foe acts no more and a standing one does not die without a hit receipt (gefallen); what the character does not have or cannot do does not work, a thing the hero does not carry too (the action gets the grey line “… does not carry that”, fehlt); the narration names no amount of gold or loot, the panel sets it (gold); a hero who did not act this turn decides nothing (fremd); a person's hair, eye and beard colour follow their NPC card (aussehen); the time of day only goes forward, a new morning only after the night (else “tageszeit | verworfen”). On a fault the narrator writes again with a hint; when the last try fails too, the panel rescues it itself: it strikes the sentences with the fault as long as enough narration stays, takes the speech from people at another place, or adds a fixed sen"
 },
 {
@@ -24398,6 +24438,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Critical and fumble tables (Features → My data → \"Critical and fumble tables\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a hero hits critically, the Spark rolls a d12 on the table of the kind of damage (slashing, piercing, bludgeoning, fire and the others): a fixed line such as \"Tendon struck: the target limps\", sometimes with a state for one to three …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Honours of the evening (Features → My data → \"Honours of the evening\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a round ends (also with a chapter), the Spark gives fixed titles: Blade of the evening (most damage), Rescuer (most help for friends), Lucky one (most 20s), Quietest shadow (most Dexterity checks passed) and Hard-luck hero (from thr …"
 },
 {
 "lang": "en",

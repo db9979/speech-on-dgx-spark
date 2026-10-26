@@ -176,6 +176,7 @@ MODULE = {
     "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz mit Nebel und Gewölbe (Fallen, Rätsel), Plan gezeichnet; Bilder je Ort"),
     "dungeon_musik": ("dienste", "KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser"),
     "dungeon_echt": ("dienste", "Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter"),
+    "dungeon_ehre": ("dienste", "Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels"),
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),
     "dungeon_regelseite": ("dienste", "Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen"),
     "dungeon_balance": ("dienste", "Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark"),

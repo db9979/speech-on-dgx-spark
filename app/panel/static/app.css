@@ -2838,3 +2838,6 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-quest b{color:var(--acc)}.dm-quest .dm-iacts{display:flex;gap:6px;align-items:center}.dm-qline b{color:var(--acc)}
 .dm-tab{font-style:italic;color:var(--mut)}.dm-tab[data-tab="krit"]{color:var(--ok,var(--acc))}
 .dm-gzust{display:inline-block;margin:2px 4px 0 0;padding:0 6px;border-radius:8px;background:var(--bg2,rgba(127,127,127,.15));font-size:12px}
+.dm-ehrung{margin:10px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--t-gold,var(--acc));background:var(--card,transparent)}.dm-ehrt{margin:2px 0}.dm-ehrt b{color:var(--t-gold,var(--acc))}
+.dm-urks{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:8px}.dm-urk{padding:8px 10px;border-radius:10px;border:1px dashed var(--line,rgba(127,127,127,.4))}.dm-urk>i{display:block;font-size:13px;color:var(--mut)}
+.dm-urkz{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:4px}.dm-urkz span{display:flex;flex-direction:column;line-height:1.1}.dm-urkz small{font-size:11px;color:var(--mut)}.dm-ehrz{display:block;margin-top:2px}

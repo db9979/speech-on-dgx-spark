@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.100** · 2026-10-26 · KI-Dungeon-Master: Ehrungen des Abends, am Ende der Runde feste Titel wie Klinge des Abends und je Held eine Urkunde mit den Zahlen aus den Würfeln des Spark
 - **V01.1.099** · 2026-10-26 · KI-Dungeon-Master: Krit- und Patzer-Tabellen, eine 20 oder 1 im Kampf würfelt eine Zeile mit Folge für Gegner oder Held, dazu die Prüfregeln für die Inhalte der D&D-Ideen Runde 2
 - **V01.1.098** · 2026-10-26 · KI-Dungeon-Master: Töne der D&D-Ideen Runde 2 (knapp daneben mit Anzeige, Gegner-Ansage, Krit/Patzer beim Angriff, Alarmglocke bei 3 und 6, Fackel und Dunkel im Gewölbe), nur aus Feldern des Panels
 - **V01.1.097** · 2026-10-25 · KI-Dungeon-Master: die Karte legt je Raum und Ort 2 bis 3 Requisiten für den Kampf fest (Umgebung nutzen); Reise-Wege nennen ihre Landschaft aus der Landschafts-Tabelle

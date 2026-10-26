@@ -15,6 +15,7 @@ struct DMRunde: Identifiable {
     let spieler: Int
     let held: String
     let host: Bool
+    let ehrungen: [String]   // the honours of an ended round (dungeon_ehre): „Klinge des Abends: Mara“
 }
 
 struct DMHeld: Identifiable {
@@ -53,7 +54,8 @@ final class DungeonModel: ObservableObject {
         return (d["runden"] as? [[String: Any]] ?? []).prefix(40).map {
             DMRunde(id: $0["rid"] as? String ?? "", titel: $0["titel"] as? String ?? "", laeuft: $0["status"] as? String == "laeuft",
                     pause: $0["pause"] as? Bool ?? false, zug: n($0["zug"]), kapitel: n($0["kapitel"]), spieler: n($0["spieler"]), held: $0["held"] as? String ?? "",
-                    host: $0["gastgeber"] as? Bool ?? false)
+                    host: $0["gastgeber"] as? Bool ?? false,
+                    ehrungen: ($0["ehrungen"] as? [[String: Any]] ?? []).prefix(5).map { "\($0["titel"] as? String ?? ""): \($0["name"] as? String ?? "")" })
         }
     }
 
@@ -206,6 +208,7 @@ struct DungeonView: View {
         a.append(String(localized: "\(r.spieler) Spieler"))
         if !r.held.isEmpty { a.append(r.held) }
         if !r.laeuft { a.append(String(localized: "beendet")) } else if r.pause { a.append("⏸ " + String(localized: "Pause")) }
+        if !r.laeuft && !r.ehrungen.isEmpty { a.append("🏅 " + r.ehrungen.joined(separator: ", ")) }
         return a.joined(separator: " · ")
     }
 }

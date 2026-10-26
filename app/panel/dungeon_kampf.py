@@ -46,6 +46,8 @@ hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and c
 import random
 import re
 
+import dungeon_ehre as ehre
+
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“; beyond the heroes' top level the D&D table
@@ -763,6 +765,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []),
                 **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "krit_tabelle", "patzer_tabelle", "beleg") if x.get(k)})
         dm._day.bump("treffer" if x["treffer"] else "daneben")
+        ehre.count(rd, x["pid"], treffer=int(x["treffer"]), krit=int(x["treffer"] and x["krit"]), schaden=x["schaden"] if x["treffer"] else 0,
+                   zwanzig=int(x["w"] == 20), eins=int(x["w"] == 1))     # Ehrungen des Abends (D&D idea 1), the panel's own numbers
         if x.get("wirkt") and x.get("art"):    # Punkt 6: a hit shows how the foe takes this kind
             learn(rd, g["id"], [x["art"]])
         held = (dict(dm.seated(rd)).get(x["pid"]) or {}).get("held")

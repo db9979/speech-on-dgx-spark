@@ -141,6 +141,7 @@ import dungeon_gast as gastkonto
 import dungeon_auto as auto_car
 import dungeon_gesicht as gesicht
 import dungeon_echt as echt
+import dungeon_ehre as ehre
 import coadmin
 import features
 import guard
@@ -410,7 +411,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -1871,10 +1872,28 @@ def _end(rd, now, why, rid):
     rd["status"] = "ende"
     rd["ende_t"] = now
     pay_ep(rules(), rd, rid)
+    honour(rd)
     for p in rd["plaetze"].values():
         keep_seat(p)
     _log(rd, "system", text=["Die Runde ist zu Ende.", "The round has ended."])
     print(f"dungeon: runde ende | {why}", flush=True)
+
+
+def honour(rd):
+    """Ehrungen des Abends (D&D idea 1, dungeon_ehre): at the round's end the titles and certificates from the panel's
+    counts as a log entry "ehrung" (the music thread's fanfare), kept for the round lists; the counts start anew."""
+    if not ehre.on(rd):
+        rd.pop("ehre", None)
+        return
+    e = ehre.award(rd, [(pid, p["held"]["name"]) for pid, p in seated(rd)], kids(rules(), rd))
+    rd.pop("ehre", None)
+    if not e:
+        print("dungeon: ehrung | keine", flush=True)
+        return
+    _log(rd, "ehrung", **e)
+    rd["ehrung"] = [{"titel": t["titel"], "name": t["name"]} for t in e["titel"]]
+    _day.bump("ehrungen")
+    print(f"dungeon: ehrung | {len(e['titel'])} titel | {len(e['urkunden'])} urkunden", flush=True)
 
 
 def _log(rd, art, **kw):
@@ -3467,6 +3486,8 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
     for w in wuerfe:
         _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
+        ehre.count(rd, w["pid"], proben=int(bool(w["ok"])), schatten=int(bool(w["ok"]) and w["wert"] == "geschick"),
+                   zwanzig=int(w["w"] == 20), eins=int(w["w"] == 1))
         h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
         if w.get("werkzeug"):
             _day.bump("werkzeug")
@@ -5196,9 +5217,12 @@ def hero_act(rid, pid, b):
             if zid != pid:
                 _log(rd, "system", text=[f"{h['name']} gibt {z['name']} einen Trank.", f"{h['name']} gives {z['name']} a potion."])
                 _day.bump("geholfen")
+                ehre.count(rd, pid, rettet=1)
             if c.get("heilung"):
                 was0 = z["leben"]
-                heal(z, c["heilung"] + it.get("bonus", 0))
+                n_ = heal(z, c["heilung"] + it.get("bonus", 0))
+                if zid != pid:
+                    ehre.count(rd, pid, heilung=n_)
                 _log(rd, "folge", pid=zid, name=z["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=z["leben"])
                 stood_up(rd, zid, z, was0)
             if c.get("segen"):
@@ -5485,7 +5509,7 @@ def for_live():
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
-                                 "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt")},
+                                 "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt", "ehrungen")},
             "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_richtung", "regel_frage", "regel_neuer_ort")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 
@@ -5572,6 +5596,7 @@ def _mine(uid, lang):
         if pid and uid not in (v.get("weg") or []) and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
             out.append({"rid": rid, "titel": v["titel"], "welt": v["welt"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
                         "pause": v["status"] == "laeuft" and bool(v.get("pause")),     # „Pause“ wherever the round shows
+                        **({"ehrungen": v["ehrung"]} if v["status"] == "ende" and v.get("ehrung") else {}),   # D&D idea 1
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],

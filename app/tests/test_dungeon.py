@@ -7082,6 +7082,76 @@ class Fight(Turns):
         self.assertIn("e.krit_tabelle||e.patzer_tabelle", js)
         self.assertIn("g.zust||[]", js)
 
+    def test_honours_of_the_evening(self):
+        """D&D idea 1 (Ehrungen des Abends, switch dungeonehrungen): off by default, nothing counted; on, the panel counts
+        hits, damage, 20s and 1s of its own rolls and the help for friends, and at the round's end gives each fixed title
+        to the seat with the most and every hero a certificate (log "ehrung", the round list, live); at the children's
+        table only the friendly titles and no hard-luck hero."""
+        import features
+        import dungeon_ehre as ehre
+        self.assertNotIn(ehre.EHRE, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_ehrungen"], False)
+        r = dungeon.rules()
+        rd, _ = self.encounter()
+        rd["ton"] = next(t_["id"] for t_ in r["toene"] if t_["id"] != min(x_["id"] for x_ in r["toene"]))
+        g = rd["kampf"]["gegner"][0]
+        g.update(immun=[], resistenz=[], schwaeche=[], leben=999, max=999)
+        p = {"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}
+        x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertNotIn("ehre", rd)                                               # switch off: nothing counted
+        helpers.keep_chat(self, "dungeon_ehrungen")
+        helpers.set_config(dungeon_ehrungen=True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, [x], [], "", {})
+        self.assertEqual(rd["ehre"][self.host], {"treffer": 1, "krit": 1, "schaden": x["schaden"], "zwanzig": 1})
+        ehre.count(rd, self.gp, eins=3, proben=2, schatten=2, rettet=1, heilung=5, unbekannt=9, treffer=-4)
+        self.assertEqual(rd["ehre"][self.gp], {"eins": 3, "proben": 2, "schatten": 2, "rettet": 1, "heilung": 5})
+        n0 = dungeon._day.counts()["ehrungen"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.honour(rd)
+        e = rd["log"][-1]
+        self.assertEqual(e["art"], "ehrung")
+        self.assertEqual({t_["id"]: t_["pid"] for t_ in e["titel"]},
+                         {"klinge": self.host, "glueck": self.host, "retter": self.gp, "schatten": self.gp, "pech": self.gp})
+        self.assertEqual(next(u for u in e["urkunden"] if u["pid"] == self.host)["zahlen"]["schaden"], x["schaden"])
+        self.assertIn({"titel": "Klinge des Abends", "name": rd["plaetze"][self.host]["held"]["name"]}, rd["ehrung"])
+        self.assertNotIn("ehre", rd)                                               # the next evening counts anew
+        self.assertEqual(dungeon._day.counts()["ehrungen"], n0 + 1)
+        self.assertIn("dungeon: ehrung | 5 titel | 2 urkunden", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.honour(rd)                                                     # nothing counted: no honours
+        self.assertIn("dungeon: ehrung | keine", out.getvalue())
+        rd["ton"] = min(x_["id"] for x_ in r["toene"])                             # the children's table
+        ehre.count(rd, self.gp, eins=5, schaden=3)
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.honour(rd)
+        e = rd["log"][-1]
+        self.assertEqual([(t_["id"], t_["titel"]) for t_ in e["titel"]], [("klinge", "Mutigstes Herz")])
+        self.assertNotIn("eins", e["urkunden"][0]["zahlen"])
+        # through the doors: the host ends the round, the list shows its titles
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["ehre"] = {self.host: {"schaden": 7}}
+            name = d["runden"][self.rid]["plaetze"][self.host]["held"]["name"]
+            dungeon._write(d)
+        with contextlib.redirect_stdout(io.StringIO()):
+            rows = self.c.delete(f"/api/profile/dungeon/{self.rid}").json()["runden"]
+        self.assertEqual(next(x_ for x_ in rows if x_["rid"] == self.rid)["ehrungen"], [{"titel": "Klinge des Abends", "name": name}])
+        self.assertEqual(self.state(self.rid)["log"][-2]["art"], "ehrung")        # before „Die Runde ist zu Ende.“
+        self.assertIn("ehrungen", dungeon.for_live())
+        root = os.path.join(os.path.dirname(dungeon.__file__))
+        with open(os.path.join(root, "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("if(e.art==='ehrung')return dmEhrung(v,e);", js)
+        self.assertIn("x.ehrungen", js)
+        swift = os.path.join(root, "..", "..", "ios", "Spark", "DungeonView.swift")
+        if os.path.exists(swift):                                                   # a copy with only app/ has no app sources
+            with open(swift, encoding="utf-8") as f:
+                self.assertIn('$0["ehrungen"]', f.read())
+
     def test_the_round_two_tables_by_fixed_rules(self):
         """D&D ideas round 2 (Dominik 2026-10-26): the prices of a near miss, the props, heart's wishes and companions in
         „ideen“ pass only whole; a light of the catalog only on a tool, -1 or 1 to LICHT_MAX rooms (the Ewige Fackel -1)."""
