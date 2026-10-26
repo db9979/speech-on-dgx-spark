@@ -215,6 +215,7 @@
     "dungeon_kalender": false,
     "dungeon_chronik": false,
     "dungeon_haltung": false,
+    "dungeon_rueckfrage": false,
     "dungeon_umgebung": false,
     "dungeon_alarm": false,
     "dungeon_fluestern": false,

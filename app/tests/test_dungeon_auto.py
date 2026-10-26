@@ -88,6 +88,48 @@ class InTheCar(Base):
         self.assertGreater(a["n"], n)
         self.assertGreaterEqual(dungeon.for_live()["auto"], 9)
 
+    def test_an_unclear_action_is_asked_back(self):
+        """Rückfrage bei unklaren Aktionen (dungeon_rueckfrage, Stufe 3): the question and its suggestions said, the
+        CarPlay buttons, „die erste“ or „so lassen“ answers; the action is in at once as said, so the turn never waits on
+        the car; only what the panel offered can be picked."""
+        import contextlib
+        import io
+        from tests import helpers
+        v = self.new_round(einstieg="Nebel liegt über Hallstein.")
+        rid, host = v["rid"], v["pid"]
+        code, gp = self.guest(rid)
+        n = self.car()["n"]
+        a = self.car(text="hm ja", nach=n)
+        self.assertTrue(a.get("frage"))                                   # off: said back as always
+        helpers.keep_chat(self, "dungeon_rueckfrage")
+        helpers.set_config(dungeon_rueckfrage=True)
+        a = self.car(text="hm ja", nach=n)
+        self.assertTrue(a["sagen"].startswith("Was genau tut Arvid?"), a["sagen"])
+        self.assertIn("Erstens:", a["sagen"])
+        self.assertTrue(1 <= len(a["vorschlaege"]) <= 3)
+        self.assertEqual(a["weiter"], {"rf": True})
+        self.assertEqual(self.state(rid)["offen"][host]["text"], "hm ja")   # in as said: the turn's time still counts
+        import dungeon_rueckfrage as rf
+        self.assertEqual(rf.answer(self.state(rid), host, "die vierte"), "")   # only what was offered
+        self.assertEqual(rf.answer(self.state(rid), host, "die erste"), a["vorschlaege"][0])
+        a = self.car(text="hm ja", nach=n)                                  # never twice for the same text
+        self.assertTrue(a["sagen"].startswith("Notiert."), a["sagen"])
+        a = self.car(text="ok ok", nach=n)
+        self.assertTrue(a["sagen"].startswith("Was genau tut Arvid?"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            a = self.car(text="die erste", nach=n, rf=True)
+        self.assertIn("dungeon: rueckfrage | vorschlag genommen", out.getvalue())
+        rd = self.state(rid)
+        self.assertEqual(rd["offen"][host]["text"], rd["rueckfrage"][host]["vorschlaege"][0])
+        self.assertTrue(a["warten"])
+        a = self.car(text="na gut", nach=n)
+        self.assertTrue(a["sagen"].startswith("Was genau tut Arvid?"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            a = self.car(text="so lassen", nach=n, rf=True)
+        self.assertIn("dungeon: rueckfrage | so lassen", out.getvalue())
+        self.assertEqual(self.state(rid)["offen"][host]["text"], "na gut")
+        self.assertNotIn("frage", self.state(rid)["offen"][host])
+
     def test_the_summary_after_a_narration(self):
         v = self.new_round(einstieg="Nebel.")
         rid, host = v["rid"], v["pid"]

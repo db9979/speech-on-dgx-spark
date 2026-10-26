@@ -3866,6 +3866,13 @@
 "titel": "Dungeon-Master: Kampf-Wortgrenzen",
 "text": "A: In einem Kampf gegen einen Gegner, dessen Name mit „Nach“, „Sich“ oder „Uns“ beginnt, ohne Artikel angreifen („Ich greife Nachtmahr an“): es ist ein Angriff mit Trefferwurf, keine Probe. B: „Ich haue ab“ oder „Ich schlage Alarm“ schicken: kein Angriff. C: Mit einem Helden am Boden etwas versuchen: es gibt keine Probe und keine Proben-EP.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P577",
+"v": 1134,
+"titel": "Dungeon-Master: Rückfrage bei unklaren Aktionen",
+"text": "A: Unter Funktionen → KI-Dungeon-Master „Rückfrage bei unklaren Aktionen“ einschalten und am Tisch nur „mach das“ schicken: der Tisch fragt nach und zeigt drei Vorschläge, die Runde wartet nicht auf dich. B: Einen Vorschlag tippen: er steht im Eingabefeld, nach dem Schicken zählt die Aktion. C: Wieder etwas Unklares schicken und „So lassen“ tippen: die Aktion zählt so, wie sie ist. D: Im Auto eine unklare Aktion sagen: die Rückfrage wird vorgelesen, auf CarPlay stehen die Vorschläge und „So lassen“ als Knöpfe.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

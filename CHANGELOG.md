@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.134** · 2026-10-26 · KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (Schalter, aus), ist eine Ansage zu kurz, ohne Tun oder zeigt ihr Fürwort auf nichts, fragt der Tisch nach feste Regeln mit drei Vorschlägen aus der Szene und „So lassen“, hält die Runde nie auf, im Auto vorgelesen und auf CarPlay als Knöpfe
 - **V01.1.133** · 2026-10-26 · KI-Dungeon-Master: Kampf-Wortgrenzen, „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe (Selbsttest über jeden Gegner), „schlage dich nieder“ greift an, „Ich haue ab“ und „schlage Alarm“ nicht, wer am Boden liegt, würfelt keine Probe
 - **V01.1.132** · 2026-10-26 · KI-Dungeon-Master: Geschlecht des Helden, beim Anlegen und auf dem Heldenblatt männlich, weiblich oder divers, die Erzählung nennt den Helden mit dem richtigen Fürwort (bei divers nur beim Namen), die Stimme kommt aus den Stimmen des Geschlechts, das Porträt nennt es und darf nach einer Änderung neu gemalt werden
 - **V01.1.131** · 2026-10-26 · Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web

@@ -325,6 +325,8 @@ FEATURES = (
     # Flüstern mit einer Figur (dungeon_fluestern.py, D&D round 2, idea 5): a word to a person only one seat hears
     F("dungeonfluestern", "Flüstern mit einer Figur", "Whisper to a person", "data", ("dungeon_fluestern",), parent="dungeon", me="dmbox", guide="dungeonfluestern"),
     F("dungeonhaltung", "Gegner-Ansagen und Haltung", "Foe announcements and stance", "data", ("dungeon_haltung",), parent="dungeon", me="dmbox", guide="dungeonhaltung"),
+    # Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py, Dominik 2026-10-26 „wie empfehlung umsetzen“): fixed rules, suggestions from the scene
+    F("dungeonrueckfrage", "Rückfrage bei unklaren Aktionen", "Ask back on unclear actions", "data", ("dungeon_rueckfrage",), parent="dungeon", me="dmbox", guide="dungeonrueckfrage"),
     # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
     F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
     F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),

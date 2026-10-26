@@ -1478,6 +1478,11 @@ def snapshot(view="admin", now=None):
         dgn["haltung"] = dungeon_haltung.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["haltung"] = {}
+    try:   # Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): numbers on the game's line
+        import dungeon_rueckfrage
+        dgn["rueckfrage"] = dungeon_rueckfrage.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["rueckfrage"] = {}
     try:   # Narben (dungeon_narben.py): numbers on the game's line
         import dungeon_narben
         dgn["narben"] = dungeon_narben.for_live() if dgn.get("on") else {}
@@ -2059,6 +2064,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("umgebung") or {}).values()) else "")
                         + (f" · heute {dgn['haltung']['ansagen']} Gegner-Ansagen, {dgn['haltung']['abwehr']}-mal Abwehr, {dgn['haltung']['ausweichen']}-mal Ausweichen"
                            if any((dgn.get("haltung") or {}).values()) else "")
+                        + (f" · heute {dgn['rueckfrage']['gefragt']} Rückfragen, {dgn['rueckfrage']['genommen']} Vorschläge genommen, {dgn['rueckfrage']['so_lassen']}-mal so gelassen"
+                           if any((dgn.get("rueckfrage") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
                            if any((dgn.get("kommentar") or {}).values()) else "")
                         + (f" · heute {dgn['dienste']} Angebote in Siedlungen bezahlt" if dgn.get("dienste") else "")

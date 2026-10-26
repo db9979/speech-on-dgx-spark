@@ -296,10 +296,11 @@ def _seat(dm, uid, rid):
     return (pick[0][1], pick[0][2]) if pick else (None, None)
 
 
-def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None):
+def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None, rf=False):
     """The game in the car. Returns {"sagen", "n", "warten", "aus", "rid"} and, when it fits, "danach" (the summary
     after the narration), "ton" (the round's pieces to play before danach), "frage" (said back, ok goes through),
-    "weiter" (fields for the next request), "prolog" (a new round whose opening the endpoint starts)."""
+    "weiter" (fields for the next request), "prolog" (a new round whose opening the endpoint starts), "vorschlaege"
+    (an unclear action's suggestions as CarPlay buttons, dungeon_rueckfrage; rf: the next text answers it)."""
     dm = _dm()
     r = dm.rules()
     li = 1 if lang == "en" else 0
@@ -335,7 +336,14 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None)
         if rd.get("dm") or pid in rd["offen"]:
             return {"sagen": "", "n": n, "warten": True, "aus": False, "rid": rid}
         return out("pause") if rd.get("pause") else out("dran", name=h["name"])   # paused by the host: said, not „dran“
+    import dungeon_rueckfrage
+    if rf and dungeon_rueckfrage.on(rd):         # the answer to the Rückfrage: a suggestion, „so lassen“, else a new action
+        pick = dungeon_rueckfrage.answer(rd, pid, text)
+        if pick:
+            return _act_car(dm, r, rid, pid, pick, li, n, True)
     kind = next((k for k, rx in FRAGEN if rx.search(text)), "aktion") if len(text) <= KURZ else "aktion"
+    if kind == "aktion" and not ok and dungeon_rueckfrage.on(rd) and dungeon_rueckfrage.unclear(dm, r, rd, pid, text):
+        return _act_car(dm, r, rid, pid, text, li, n, False)   # kept as written and asked: the turn never waits on the car
     dm._day.bump("auto")
     print(f"dungeon: auto | {kind}{' | ok' if ok and kind in TUN else ''}", flush=True)
     if kind == "nochmal":
@@ -459,6 +467,32 @@ def do(dm, r, rd, rid, pid, h, kind, text, ok, li, n, names, out, uid):
          "verkaufen": "verkauft", "punkt": "gesetzt", "faehigkeit": "gelernt"}[b["was"]]
     return out(k, name=h["name"], wer=z["name"], ding=ding, trank=ding, gold=h["gold"], leben=z["leben"], max=z["leben_max"],
                wert=ding, zahl=h["werte"].get(b.get("wert"), 0))
+
+
+def _act_car(dm, r, rid, pid, text, li, n, chosen):
+    """An action from the car with the Rückfrage (dungeon_rueckfrage): chosen (a suggestion or „so lassen“) goes in as
+    it is; else it goes in as written and the question with its suggestions is said, the CarPlay list shows them."""
+    import dungeon_rueckfrage
+    try:
+        with dm._lock:
+            d = dm._read()
+            cur = dm._round(d, rid)
+            dm.act(cur, pid, text, cur["zug"], time.time())
+            dungeon_rueckfrage.check(dm, r, cur, pid, chosen)
+            dm._write(d)
+    except dm.KNOWN as e:
+        why = e.args[0] if e.args and isinstance(e.args[0], str) else ""
+        print("dungeon: auto | aktion | abgelehnt", flush=True)
+        return {"sagen": _say(NEIN.get(why, "geht_nicht"), li), "n": n, "warten": False, "aus": False, "rid": rid}
+    dm.maybe_close(rid)
+    rd = dm._read()["runden"][rid]
+    f = dungeon_rueckfrage.view(rd, pid)
+    if f:
+        return {"sagen": dungeon_rueckfrage.car(rd, pid, li), "vorschlaege": f["vorschlaege"], "weiter": {"rf": True},
+                "n": n, "warten": False, "aus": False, "rid": rid}
+    names = [p["held"]["name"] for q, p in dm.seated(rd) if q not in rd["offen"]]
+    k = "notiert" if names and not rd.get("dm") else "notiert_alle"
+    return {"sagen": _say(k, li, namen=", ".join(names)), "n": n, "warten": True, "aus": False, "rid": rid}
 
 
 NEIN = {"tasche voll": "tasche_voll", "passt nicht": "passt_nicht", "platz falsch": "passt_nicht"}

@@ -5717,6 +5717,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (V01.1.134, Plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 „wie empfehlung umsetzen“: Stufe 1 und 3, das Modell als Stufe 2 erst später): Admin-Schalter *Funktionen → KI-Dungeon-Master → Rückfrage bei unklaren Aktionen* (chat.dungeon_rueckfrage, ab Werk aus), freigegeben für jedes Profil; Gäste am Tisch bekommen sie genauso, es ist Teil des Spiels. Beim Absenden prüft das Panel die Aktion mit festen Regeln (dungeon_rueckfrage.unclear): zu kurz (weniger als 2 Wörter oder 8 Buchstaben, „ok“, „hm“), Buchstabensalat (ein Zeichen viermal, die Hälfte der Wörter ohne Vokal), nur ein Fürwort als letztes Ziel, wenn mehreres passt („Ich greife ihn an“ bei zwei Gegnern, „nimm es“), oder kein Tun (kein Wort aus TUN_WORTE und den Kampf-Wortlisten, kein Name der Szene, keine wörtliche Rede). Dann bleibt die Aktion wie geschrieben liegen, ist aber markiert: Unter der eigenen Aktion steht „❓ Was genau tut Morpheus?“ mit dem Grund, bis zu drei Vorschlägen und „So lassen“. Die Vorschläge baut das Panel aus festen Mustern und den Daten der Szene (stehende Gegner, Dinge im Kampf, der eigene Angriffszauber, Personen hier, Wege der Karte), nie au"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "s Modelltext; jeder Vorschlag ist selbst klar. Antippen setzt ihn ins Eingabefeld, man kann ihn noch ändern. Solange die Frage offen ist, zählt der Platz nicht als „hat gehandelt“ (dungeon.due), der Zug schließt also nicht vorzeitig; läuft die Zugzeit ab, gilt die Aktion wie geschrieben. Für denselben Text fragt das Panel nur einmal je Zug, „So lassen“ (so_lassen) nimmt die Markierung weg. Im Auto (dungeon_auto) wird die Aktion sofort wie gesagt eingetragen und die Frage mit „Erstens …, zweitens …“ vorgelesen; die CarPlay-Liste „Was genau?“ zeigt die Vorschläge und „So lassen“ als Knöpfe, „die erste“ oder „so lassen“ antwortet per Sprache, nur Vorschläge des Panels zählen. Das Modell sieht die Frage nie. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live zählt Rückfragen, genommene Vorschläge und „so gelassen“. Selbsttests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_action_is_asked_back."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht des Helden (V01.1.132, Dominik 2026-10-26 „männlich weiblich divers sollte auswählbar sein“): Ohne neuen Schalter. Beim Anlegen eines Helden (Gastgeber, Platz-Link und Gast) wählt man unter dem Namen „männlich“, „weiblich“ oder „divers“; auf dem Heldenblatt (Reiter „Werte verteilen“) lässt es sich jederzeit ändern. Helden von vorher bleiben ohne Angabe, bis man eins wählt. Das Panel nimmt nur diese drei Werte (dungeon.GESCHLECHT, dungeon.gender), alles andere lehnt es ab (Fehler „geschlecht“). Das Modell bekommt je Held das Feld geschlecht mit dem Fürwort („weiblich, nenne sie sie“; bei divers „nur den Namen, nie er oder sie“) und die feste Regel in KANN_REGEL. Eine feste Prüfung des Erzählers (dungeon_erzaehler.wrong_pronoun, Fehler „fuerwort“, Tageszähler regel_fuerwort) findet ein falsches besitzanzeigendes Fürwort direkt hinter dem Namen eines Helden (höchstens drei Wörter dazwischen, kein Komma, kein Artikel, keine andere Person) vor einem eigenen Körperteil oder Ding („Lia hebt seine Klinge“): erst ein zweiter Versuch mit festem Hinweis, dann setzt das Panel das richtige Wort ein (sein ↔ ihr, bei divers der Artikel oder „their“; ohne sicheres Wor"
 },
 {
@@ -11254,6 +11270,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gegner-Ansagen und Haltung (Funktionen → Meine Daten → „Gegner-Ansagen und Haltung“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Nach jedem Kampfzug sagt jeder Gegner seinen nächsten Hieb an: er zielt auf einen Helden (+2 zum Treffen), holt weit aus (−2 zum Treffen, bei einem Treffer doppelte Schadenswürfel) oder lauert (mit Vorteil)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Rückfrage bei unklaren Aktionen (Funktionen → Meine Daten → „Rückfrage bei unklaren Aktionen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Schickt ein Spieler eine Aktion, die zu kurz ist („ok“), unleserlich („asdf“), nur ein Fürwort nennt, wenn mehreres passt („nimm es“), oder gar kein Tun und keinen Namen der Szene enthält, fragt das Spiel nach: „Was genau tut Morpheus?“ …"
 },
 {
 "lang": "de",
@@ -20333,6 +20357,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: ask back on unclear actions (V01.1.134, plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 \"wie empfehlung umsetzen\": stages 1 and 3, the model as stage 2 only later): Admin switch *Features → AI Dungeon Master → Ask back on unclear actions* (chat.dungeon_rueckfrage, off by default), released for every profile; guests at the table get it the same way, it is part of the game. When an action is sent the panel checks it by fixed rules (dungeon_rueckfrage.unclear): too short (fewer than 2 words or 8 letters, \"ok\", \"hm\"), gibberish (one character four times, half the words without a vowel), only a pronoun as the last target while several fit (\"I attack him\" with two foes, \"take it\"), or no doing (no word of TUN_WORTE and the fight's word lists, no name of the scene, no quoted speech). Then the action stays as written but marked: below the own action stands \"❓ What exactly does Morpheus do?\" with the reason, up to three suggestions and \"Keep it\". The panel builds the suggestions from fixed patterns and the scene's data (foes still up, things in a fight, the own attack spell, people here, ways of the map), never from the model's text; every suggestion is clear itself"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": ". Tapping one puts it into the input, where it can still be changed. While the question is open the seat does not count as \"has acted\" (dungeon.due), so the turn does not close early; when the turn's time runs out the action counts as written. The panel asks only once a turn for the same text, \"Keep it\" (so_lassen) takes the mark off. In the car (dungeon_auto) the action goes in at once as said and the question is read with \"First …, second …\"; the CarPlay list \"What exactly?\" shows the suggestions and \"Keep it\" as buttons, \"the first\" or \"keep it\" answers by voice, only the panel's suggestions count. The model never sees the question. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live counts questions, suggestions taken and \"kept\". Self-tests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_action_is_asked_back."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: the hero's gender (V01.1.132, Dominik 2026-10-26 \"männlich weiblich divers sollte auswählbar sein\"): No new switch. When making a hero (host, seat link and guest) one picks \"male\", \"female\" or \"non-binary\" below the name; on the hero sheet (tab \"Spend points\") it can be changed any time. Heroes made before stay unset until one is picked. The panel takes only these three values (dungeon.GESCHLECHT, dungeon.gender) and refuses anything else (fault \"geschlecht\"). The model gets each hero's field geschlecht with the pronoun (\"female, call her she\"; non-binary \"they or the name\") and the fixed rule in KANN_REGEL. A fixed check of the narrator (dungeon_erzaehler.wrong_pronoun, fault \"fuerwort\", day counter regel_fuerwort) finds a wrong possessive right after a hero's name (at most three words between, no comma, no article, no other person) before a part of the body or a thing of its own (\"Lia raises his blade\"): first a second try with a fixed hint, then the panel sets the right word (his ↔ her, sein ↔ ihr, for non-binary the article or \"their\"; without a sure word the sentence stays). Log dungeon: nachbessern | fest | fuerwort or | bleibt | fuerwort. The voice propose"
 },
 {
@@ -25686,6 +25726,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Foe announcements and stance (Features → My data → \"Foe announcements and stance\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): After every fought turn each foe announces its next blow: it takes aim at a hero (+2 to hit), winds up (−2 to hit, double damage dice on a hit) or waits for an opening (with advantage)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Ask back on unclear actions (Features → My data → \"Ask back on unclear actions\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a player sends an action that is too short (\"ok\"), unreadable (\"asdf\"), only names a pronoun while several things fit (\"take it\"), or holds no doing and no name of the scene, the game asks back: \"What exactly does Morpheus do?\" with …"
 },
 {
 "lang": "en",

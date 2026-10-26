@@ -766,6 +766,110 @@ class Turns(Base):
         self.assertLessEqual(best, r["pech_schutz"])
 
 
+class Rueckfrage(Turns):
+    """Rückfrage bei unklaren Aktionen (Dominik 2026-10-26 „wie empfehlung umsetzen“, plaene/dungeon-rueckfrage.md):
+    fixed rules at sending, suggestions only from the scene's data, never blocking, the guest too, off by default."""
+
+    def on(self):
+        helpers.keep_chat(self, "dungeon_rueckfrage")
+        helpers.set_config(dungeon_rueckfrage=True)
+
+    def test_the_table_of_clear_and_unclear_actions(self):
+        import dungeon_rueckfrage as rf
+        import features
+        self.assertNotIn(rf.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_rueckfrage"], False)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        for text, want in (("ok", "kurz"), ("ja", "kurz"), ("hm, naja", "kurz"), ("asdfgh qwrtz xcvbn", "salat"),
+                           ("aaaaaaah nein bitte", "salat"), ("Irgendwie so halt, weißt du", "kein_tun"),
+                           ("Ich bin müde und hungrig", "kein_tun"),
+                           ("Ich öffne die Tür.", ""), ("Ich frage den Wirt nach dem Turm.", ""), ("Ich greife an.", ""),
+                           ("„Wer da?“ rufe ich in die Nacht.", ""), ("„Halt, keinen Schritt weiter!“", ""),
+                           ("Ich schleiche zum Fenster.", ""), ("Arvid und Bela warten ab.", ""),
+                           ("I open the door carefully.", ""), ("Bela lacht leise vor sich hin", ""), ("Leise und irgendwie seltsam", "kein_tun")):
+            self.assertEqual(rf.unclear(dungeon, r, rd, self.host, text), want, text)
+        foe = self.fight_two()
+        rd = self.state(self.rid)
+        self.assertEqual(rf.unclear(dungeon, r, rd, self.host, "Ich greife ihn an."), "fuerwort")   # two foes up: whom?
+        self.assertEqual(rf.unclear(dungeon, r, rd, self.host, "Ich nehme es mit!"), "fuerwort")
+        self.assertEqual(rf.unclear(dungeon, r, rd, self.host, f"Ich greife {foe} an."), "")
+        self.assertEqual(rf.unclear(dungeon, r, rd, self.host, "Ich nehme das Seil vom Haken."), "")       # an article, no pronoun
+        tips = rf.suggestions(dungeon, r, rd, self.host)
+        self.assertTrue(1 <= len(tips) <= rf.VORSCHLAEGE)
+        names = {g["name"] for g in kampf.up(rd)}
+        self.assertTrue(any(n in tips[0] for n in names), tips)                                      # from the scene's data
+        self.assertEqual(rf.unclear(dungeon, r, rd, self.host, tips[0]), "")                         # every suggestion is clear
+
+    def fight_two(self):
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            foe = kampf.offer(dungeon, r, rd, dungeon._living(rd))[0]
+            kampf.start(dungeon, r, rd, dungeon._living(rd), [(foe, 2)], 0)
+            dungeon._write(d)
+        return foe["name"][0]
+
+    def test_asked_at_the_table_never_blocking(self):
+        url = f"/api/profile/dungeon/{self.rid}"
+        self.assertEqual(self.c.post(url + "/aktion", json={"text": "ok", "zug": 1}).status_code, 200)
+        self.assertIsNone(self.c.get(url).json()["rueckfrage"])                                     # switch off: nothing asked
+        self.on()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.c.post(url + "/aktion", json={"text": "mach was", "zug": 1}).json()
+        self.assertIn("dungeon: rueckfrage | regel | kurz", out.getvalue())
+        f = v["rueckfrage"]
+        self.assertEqual(f["frage"], "Was genau tut Arvid?")
+        self.assertTrue(1 <= len(f["vorschlaege"]) <= 3)
+        self.assertEqual(v["meine_aktion"], "mach was")                                           # kept as written
+        # the guest gets it the same way; a suggestion taken counts
+        g = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "ok", "zug": 1}).json()
+        self.assertEqual(g["rueckfrage"]["frage"], "Was genau tut Bela?")
+        tip = g["rueckfrage"]["vorschlaege"][0]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            g = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": tip, "zug": 1}).json()
+        self.assertIn("dungeon: rueckfrage | vorschlag genommen", out.getvalue())
+        self.assertIsNone(g["rueckfrage"])
+        rd = self.state(self.rid)
+        now = max(x["t"] for x in rd["offen"].values()) + dungeon.GNADE_S + 1
+        self.assertFalse(dungeon.due(rd, now))                                                    # the question waits for the seat
+        self.assertTrue(dungeon.due(rd, dungeon.turn_end(rd) + 1))                                # the turn's time: as written
+        self.assertNotIn('"frage"', dungeon.facts(dungeon.rules(), rd).split("<<<")[0])          # never to the model
+        import dungeon_rueckfrage as rf
+        self.assertGreaterEqual(rf.for_live()["gefragt"], 2)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            v = self.c.post(url + "/aktion", json={"text": "mach was", "zug": 1, "so_lassen": True}).json()
+        self.assertIn("dungeon: rueckfrage | so lassen", out.getvalue())
+        self.assertIsNone(v["rueckfrage"])
+        self.assertEqual(v["meine_aktion"], "mach was")
+        rd = self.state(self.rid)
+        self.assertTrue(dungeon.due(dict(rd, dm=""), max(x["t"] for x in rd["offen"].values()) + dungeon.GNADE_S + 1))
+
+    def test_asked_once_for_the_same_text(self):
+        self.on()
+        url = f"/api/profile/dungeon/{self.rid}"
+        self.assertIsNotNone(self.c.post(url + "/aktion", json={"text": "hm", "zug": 1}).json()["rueckfrage"])
+        self.assertIsNone(self.c.post(url + "/aktion", json={"text": "hm", "zug": 1}).json()["rueckfrage"])   # never twice
+        self.assertIsNotNone(self.c.post(url + "/aktion", json={"text": "naja", "zug": 1}).json()["rueckfrage"])
+        self.assertIsNone(self.c.post(url + "/aktion", json={"text": "Ich öffne die Tür.", "zug": 1}).json()["rueckfrage"])
+
+    def test_never_from_the_model_and_only_the_own_seat(self):
+        self.on()
+        url = f"/api/profile/dungeon/{self.rid}"
+        self.c.post(url + "/aktion", json={"text": "ok", "zug": 1})
+        g = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertIsNone(g["rueckfrage"])                                                         # another seat's question: not shown
+        with dungeon._lock:                                                                         # the model's words never become a tip
+            d = dungeon._read()
+            dungeon._log(d["runden"][self.rid], "dm", text="Nimm den goldenen Schlüssel und renne!", npc=[], frage="")
+            dungeon._write(d)
+        import dungeon_rueckfrage as rf
+        tips = rf.suggestions(dungeon, dungeon.rules(), self.state(self.rid), self.host)
+        self.assertFalse(any("Schlüssel" in x for x in tips), tips)
+
+
 class Permadeath(Turns):
     """Punkt 1 and 3 of 2026-10-24: life 0 means down, three told turns without healing and the hero is dead for good
     (at the children's table only unconscious); powers work by the panel; experience only at the end of a round."""

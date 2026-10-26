@@ -215,6 +215,9 @@ final class Conversation: ObservableObject {
     private(set) var gameRid = ""
     private var gameWait = false
     private var gameNext: [String: Any] = [:]
+    /// Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): the suggestions of the open question, CarPlay shows them as
+    /// buttons; empty when nothing is asked
+    @Published var gameChoices: [String] = []
     private var gameAsk: [String: Any]?
     private var gameWatch: Task<Void, Never>?
     static let gamePoll: TimeInterval = 4
@@ -1217,6 +1220,14 @@ final class Conversation: ObservableObject {
         gameAsk = nil
         gameNext = [:]
         gameRid = ""
+        gameChoices = []
+    }
+
+    /// A CarPlay button of the Rückfrage: the suggestion (or „so lassen“) goes back as if it was said.
+    func answerGame(_ text: String) {
+        guard game else { return }
+        gameChoices = []
+        playGame(text)
     }
 
     private func endWatch() {
@@ -1281,6 +1292,7 @@ final class Conversation: ObservableObject {
         gameWait = d["warten"] as? Bool ?? false
         gameAsk = d["frage"] as? Bool == true ? sent : nil
         gameNext = d["weiter"] as? [String: Any] ?? [:]
+        gameChoices = (d["vorschlaege"] as? [String] ?? []).prefix(3).map { String($0.prefix(80)) }
         if d["aus"] as? Bool == true { leaveGame() }
         let say = String((d["sagen"] as? String ?? "").prefix(6000))
         let after = String((d["danach"] as? String ?? "").prefix(2000))

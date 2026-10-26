@@ -17690,6 +17690,26 @@
           }
         }
       }
+    },
+    "Die Aktion gilt wie gesagt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The action counts as said"
+          }
+        }
+      }
+    },
+    "Was genau?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What exactly?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

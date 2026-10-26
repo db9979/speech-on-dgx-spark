@@ -29,6 +29,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var repeatRow: CPListItem?
     private var list: CPListTemplate?
     private var watchAreas: AnyCancellable?
+    private var watchChoices: AnyCancellable?
     /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
     private var face = ""
     private var faceLater = false
@@ -96,6 +97,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         }
         watchFace = talk.$allowed.map(\.face).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] f in self?.use(face: f) }
         watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
+        watchChoices = talk.$gameChoices.removeDuplicates().receive(on: RunLoop.main).sink { [weak self] c in self?.choices(c) }
         // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
         // without it the car would keep the defaults (robot face, no profile switches)
         Task { await talk.check() }
@@ -295,6 +297,33 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         AudioEngine.note(new ? "CarPlay: Knopf Neue Runde" : "CarPlay: Knopf Runde")
         interface?.popToRootTemplate(animated: true) { _, _ in }
         reachable { Conversation.shared.startGame(rid, new: new) }
+    }
+
+    /// Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): the Spark asked „Was genau tut …?“; its suggestions as
+    /// buttons and „So lassen“, each goes back as if it was said. The rows come only from the Spark's answer.
+    private func choices(_ c: [String]) {
+        guard let interface, !c.isEmpty else { return }
+        var rows: [CPListItem] = c.map { text -> CPListItem in
+            let row = CPListItem(text: text, detailText: nil, image: UIImage(systemName: "text.bubble"))
+            row.handler = { [weak self] _, done in
+                done()
+                AudioEngine.note("CarPlay: Knopf Rückfrage")
+                self?.interface?.popToRootTemplate(animated: true) { _, _ in }
+                Conversation.shared.answerGame(text)
+            }
+            return row
+        }
+        let keep = CPListItem(text: String(localized: "So lassen"), detailText: String(localized: "Die Aktion gilt wie gesagt"),
+                              image: UIImage(systemName: "checkmark"))
+        keep.handler = { [weak self] _, done in
+            done()
+            AudioEngine.note("CarPlay: Knopf So lassen")
+            self?.interface?.popToRootTemplate(animated: true) { _, _ in }
+            Conversation.shared.answerGame(Conversation.gameLang == "en" ? "keep it" : "so lassen")
+        }
+        rows.append(keep)
+        let sub = CPListTemplate(title: String(localized: "Was genau?"), sections: [CPListSection(items: rows)])
+        interface.pushTemplate(sub, animated: true) { _, _ in }
     }
 
     private func leaveGame() {

@@ -53,7 +53,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     GET    /api/profile/dungeon                   rules for a new round, own rounds, own heroes
     POST   /api/profile/dungeon/runde             {titel, welt, einstieg, ton, zug_s, stunden, prompt?, held, lang}
     GET    /api/profile/dungeon/{rid}             the round as the own seat sees it (the page polls)
-    POST   /api/profile/dungeon/{rid}/aktion      {text, zug}
+    POST   /api/profile/dungeon/{rid}/aktion      {text, zug, so_lassen?} (so_lassen: an unclear action stays as written, dungeon_rueckfrage)
     POST   /api/profile/dungeon/{rid}/mehrzeit    one more minute for this turn, once per seat (MEHR_S)
     POST   /api/profile/dungeon/{rid}/held        {was: anlegen|ablegen|trinken|wirken|schenken|punkt|faehigkeit|
                                                    tauschen|annehmen|ablehnen|stimme|kaufen|verkaufen|
@@ -61,7 +61,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/weiter      host: close the turn now (needs at least one action)
     POST   /api/profile/dungeon/{rid}/pause       host: {an: bool}
     POST   /api/profile/dungeon/{rid}/markt       host: {auf: bool} call a merchant here or send it away
-    POST   /api/profile/dungeon/auto              {text?, nach, lang}: the game in the car, spoken only (CarPlay)
+    POST   /api/profile/dungeon/auto              {text?, nach, lang, rf?}: the game in the car, spoken only (CarPlay); rf: the answer to a Rückfrage
     POST   /api/profile/dungeon/{rid}/platz       host: {base} a new seat link with its QR code, shown once
     DELETE /api/profile/dungeon/{rid}/platz/{pid} host: take a seat back
     PUT    /api/profile/dungeon/{rid}/platz/{pid} host: {was: link|ruhen|wecken|name|stumm|laut} a guest's new link, not waited for, again, a new name, no table talk, again
@@ -133,6 +133,7 @@ import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
+import dungeon_rueckfrage as rueckfrage
 import dungeon_umgebung as umgebung
 import dungeon_fluestern as fluestern
 import dungeon_wunsch as wunsch
@@ -2993,7 +2994,7 @@ def due(rd, now):
         # nobody up but someone down (Punkt 1 of 2026-10-24): the turn is told when the clock runs out, so the count goes on
         return not any(not zustand(p["held"]) for _, p in seated(rd)) and any(zustand(p["held"]) == "boden" for _, p in seated(rd)) \
             and now >= turn_end(rd)
-    if all(pid in rd["offen"] for pid in players):
+    if all(pid in rd["offen"] and not rueckfrage.waiting(rd, pid) for pid in players):   # a Rückfrage open: not yet
         return now - max(x.get("t", 0) for x in rd["offen"].values()) >= GNADE_S
     return now >= turn_end(rd)
 
@@ -5256,7 +5257,7 @@ def view(rid, pid, now=None):
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     runs = rd["offen"] and not rd.get("pause")
     left = max(0, int(turn_end(rd) - max(now, turn_start(rd)))) if runs else rd["zug_s"] + MEHR_S * len(rd.get("mehr") or {})
-    alle = bool(rd["offen"]) and all(x in rd["offen"] for x, p in seated(rd) if not p.get("ruht") and not zustand(p["held"]))
+    alle = bool(rd["offen"]) and all(x in rd["offen"] and not rueckfrage.waiting(rd, x) for x, p in seated(rd) if not p.get("ruht") and not zustand(p["held"]))
     gnade = max(0, int(GNADE_S - (now - max(x.get("t", 0) for x in rd["offen"].values())))) if alle and not rd.get("pause") else 0
     mehr = [rd["plaetze"][x]["held"]["name"] for x in (rd.get("mehr") or {}) if (rd["plaetze"].get(x) or {}).get("held")]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
@@ -5310,6 +5311,7 @@ def view(rid, pid, now=None):
     out["album"] = album.view(_me, r, rd, mine, lang)           # the own hero's Monster-Album (D&D idea 12)
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
+    out["rueckfrage"] = rueckfrage.view(rd, pid)               # the own unclear action: question and suggestions
     out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
     out["wunsch"] = wunsch.view(_me, r, rd, pid, host)          # the own heart's wish; the host every seat's (round 2, idea 7)
     out["gefaehrten"] = gefaehrte.view(_me, rd)                  # the hired companions (round 2, idea 9)
@@ -5899,7 +5901,7 @@ async def auto(request: Request, prof=Depends(browser_profile)):
     wahl = [g for g in b.get("wahl") or [] if isinstance(g, str)][:auto_car.WAHL] if isinstance(b.get("wahl"), list) else None
     try:
         out = await asyncio.to_thread(auto_car.car, uid, str(b.get("text") or ""), nach, _lang(b), rid, b.get("ok") is True,
-                                      b.get("neu") is True, wahl)
+                                      b.get("neu") is True, wahl, b.get("rf") is True)
     except KNOWN as e:
         raise _http(e)
     if out.pop("prolog", None):          # a new round chosen in the car opens like one made at the table
@@ -5979,6 +5981,7 @@ async def _act(rid, seat, b):
             if not rd["plaetze"][pid].get("held"):
                 raise LookupError("held")
             act(rd, pid, b.get("text"), b.get("zug"), time.time())
+            rueckfrage.check(_me, rules(), rd, pid, b.get("so_lassen") is True)   # an unclear action: asked, never blocked
             mut.ask(rd, pid, b.get("mut"))
             check_powers(rules(), rd, pid)
             check_items(rules(), rd, pid)

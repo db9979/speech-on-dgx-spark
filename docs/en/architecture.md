@@ -311,6 +311,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_rast.py` | KI-Dungeon-Master: Lagerfeuer und Rast. |
 | `app/panel/dungeon_regelseite.py` | KI-Dungeon-Master: the admin's rules page as its own tab „Regeln“. |
 | `app/panel/dungeon_reise.py` | KI-Dungeon-Master: Reise-Etappen. |
+| `app/panel/dungeon_rueckfrage.py` | KI-Dungeon-Master: Rückfrage bei unklaren Aktionen. |
 | `app/panel/dungeon_schreiber.py` | KI-Dungeon-Master: Schreiber-Abgleich. |
 | `app/panel/dungeon_schrift.py` | KI-Dungeon-Master: Schriftstücke zum Anfassen. |
 | `app/panel/dungeon_sicht.py` | KI-Dungeon-Master: Sichtfilter. |
