@@ -1143,7 +1143,11 @@ def service_action(name: str, action: str):
 def logs(name: str, lines: int = 200):
     if name not in LOG_UNITS:
         raise HTTPException(400, "bad service")
-    return Response(steuer.logs(name, LOG_UNITS[name], min(lines, 2000)), media_type="text/plain")
+    text = steuer.logs(name, LOG_UNITS[name], min(lines, 2000))
+    if not any(x.strip() and not x.startswith("-- ") for x in text.splitlines()):
+        # an on-demand unit that has not run yet (Bildverständnis, Modellwechsel): a fixed line instead of an empty page
+        text = f"{LOG_UNITS[name]}: noch keine Einträge (der Dienst lief noch nicht; Bildverständnis und Modellwechsel laufen nur bei Bedarf)\n"
+    return Response(text, media_type="text/plain")
 
 
 @router.get("/api/languages", dependencies=[Depends(auth)])

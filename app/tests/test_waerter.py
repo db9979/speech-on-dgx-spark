@@ -204,6 +204,24 @@ class Settings(Base):
             for args in (["panel", "5"], ["tts", "99999"], ["tts", "-1"], ["tts"]):
                 self.assertEqual(self.post(body("logs", args)).status_code, 400, args)
 
+    def test_logs_of_image_understanding_and_model_switch(self):
+        """Logs → Dienste „Bildverständnis“ and „Modellwechsel“ (Dominik 2026-10-26: both empty): both run on the model
+        computer, so the panel reads them through the Wärter, and an empty journal gives a fixed line."""
+        with mock.patch.object(tarswart, "journal", lambda unit, n, fmt: f"{unit} {n}\n"), \
+                redirect_stdout(io.StringIO()):
+            for teil, unit in (("sehen", "speech-spark-sehen"), ("wechsel", "speech-spark-wechsel")):
+                self.assertEqual(self.post(body("logs", [teil, "50"])).json()["text"], f"{unit} 50\n")
+        import core
+        for teil in ("sehen", "wechsel"):
+            self.assertIn(core.LOG_UNITS[teil], steuer.MODEL_UNITS, teil)     # read on the model computer
+        import admin
+        with mock.patch.object(steuer, "logs", lambda name, unit, n: "-- No entries --\n"):
+            text = admin.logs("wechsel", 50).body.decode()
+        self.assertIn("speech-spark-wechsel: noch keine Einträge", text)
+        with mock.patch.object(steuer, "logs", lambda name, unit, n: "2026-10-26T05:00:00+0100 tars x[1]: modelle: wechsel\n"):
+            self.assertNotIn("noch keine", admin.logs("sehen", 50).body.decode())
+
+
 
 class Modelle(Base):
     """B4c: Zustand → Modelle with the models on another computer: its numbers, its switch, its own models."""

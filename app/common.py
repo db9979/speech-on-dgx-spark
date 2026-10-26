@@ -645,6 +645,9 @@ UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine":
                           "tts-design": "speech-spark-tts-design"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen",
                  "helfer": "speech-spark-helfer"}
+# units that run only for a while on the model computer and are shown under Logs → Dienste: their lines live there,
+# so the panel reads them through the Wärter like the model units (Dominik 2026-10-26: „Modellwechsel“ was empty)
+MODEL_LOG_UNITS = {"wechsel": "speech-spark-wechsel"}
 # the optional services that load their engine only on demand (install.sh --bild, --musik), and the Werkstatt's order
 # unit (install.sh --werkstatt, only werkstatt.py's checked wish starts it): watched and shown on the model computer's
 # card (Monitoring, Steuerzentrale), never started or stopped by the panel's `einheit`

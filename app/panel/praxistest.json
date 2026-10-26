@@ -3614,6 +3614,13 @@
 "titel": "Dungeon-Master: Dungeon-Richter",
 "text": "Als Admin Funktionen → KI-Dungeon-Master → Dungeon-Richter an (Einordnung mit Wahrscheinlichkeit muss an sein). Ein paar Züge spielen. A: Unter Zustand → Logs steht nach jedem Zug „dungeon: richter | ok“ oder „| neu“ mit einer Prozentzahl. B: Bei „neu“ kommt die Erzählung etwas später, aber nur einmal. C: Unter Zustand → Überblick steht beim Dungeon-Master „Richter heute …“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P541",
+"v": 1095,
+"titel": "Logs Modellwechsel und Bildverständnis",
+"text": "A: Update (tars zuerst). B: Zustand → Logs → Dienste, „Modellwechsel“ wählen: es stehen Zeilen des letzten Wechsels auf tars da oder „noch keine Einträge“. C: Dasselbe mit „Bildverständnis“; nach einer Frage mit Bild an das eigene Sprachmodell stehen dort Zeilen.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

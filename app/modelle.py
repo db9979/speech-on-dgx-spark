@@ -48,7 +48,7 @@ import time
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import STATE, load_config, mem_available_gib, read_json, write_json  # noqa: E402
+from common import MODEL_LOG_UNITS, STATE, load_config, mem_available_gib, read_json, write_json  # noqa: E402
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
@@ -1435,7 +1435,7 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
 # ---------------------------------------------------------------- stage E4: switching models
 WECHSEL = os.path.join(STATE, "modelle-wechsel.json")   # per kind the model before the last switch, for 7 days
 WUNSCH = os.path.join(STATE, "modelle-wunsch.json")     # the panel's wish for the root unit speech-spark-wechsel
-WECHSEL_UNIT = "speech-spark-wechsel"
+WECHSEL_UNIT = MODEL_LOG_UNITS["wechsel"]
 # Zustand → Modelle „Messen“ (Dominik 2026-10-17): the panel's wish for the fixed root unit MESS_WUNSCH_UNIT, which
 # measures like `speech-spark modelle messen` does in its transient unit MESS_UNIT; one of the two at a time
 MESS_WUNSCH = os.path.join(STATE, "modelle-messen-wunsch.json")

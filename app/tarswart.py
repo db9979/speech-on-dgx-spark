@@ -48,7 +48,7 @@ import llmstart
 import modelle
 import rechner
 import werkstatt
-from common import (CONFIG_PATH, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
+from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     UPDATE_PROGRESS, run, shipped, uhr, update_anteil, waerter_key, waerter_sign, write_json)
 
@@ -184,10 +184,11 @@ def einstellen(daten):
 
 
 def logs(teil, n):
-    if teil not in WATCHED or not str(n).isdigit() or not 1 <= int(n) <= MAX_LINES:
+    units = dict(WATCHED, **MODEL_LOG_UNITS)
+    if teil not in units or not str(n).isdigit() or not 1 <= int(n) <= MAX_LINES:
         raise ValueError("befehl")
     print(f"waerter: logs {teil}", flush=True)
-    return {"text": journal(WATCHED[teil], int(n), "short-iso")[-400_000:]}
+    return {"text": journal(units[teil], int(n), "short-iso")[-400_000:]}
 
 
 def _wechsel_laeuft():

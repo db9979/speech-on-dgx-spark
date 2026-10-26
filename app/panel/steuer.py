@@ -39,14 +39,14 @@ import time
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
-from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
+from common import (CONFIG_PATH, MODEL_LOG_UNITS, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
                     model_local, model_settings, model_settings_hash, model_url, run, shipped, waerter_key, waerter_sign,
                     write_json)
 
 CACHE = 3              # seconds a status of the model computer is reused
 PUSH = 60              # seconds between two hand-overs of the speech settings when the hashes differ
 TIMEOUT = 5
-MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values())
+MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values()) | set(MODEL_LOG_UNITS.values())
 _status = {"t": 0.0, "d": None, "push": -PUSH, "wahl": None, "try": 0.0, "ok": 0.0, "weg": False}
 GONE = 30              # seconds without an answer of the model computer before the panel runs in Notbetrieb
 _lock = threading.Lock()
