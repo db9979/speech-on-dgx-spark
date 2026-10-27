@@ -96,13 +96,15 @@ def _find(rd, key):
 
 def who(rd, x):
     """Age and gender of the person by its fixed voice traits (the same the speech output uses), as English words; the
-    gender written on its card wins (stimmen._of), divers is an androgynous person (dungeon.GESCHLECHT)."""
+    gender and age written on its card win (stimmen._of, card field alter), divers is an androgynous person
+    (dungeon.GESCHLECHT)."""
     n = stimmen.data()["npc"]
     t = stimmen._of(rd, x["name"])
-    if t["alter"] == "kind":
+    a = x["alter"] if x.get("alter") in n["alter"] else t["alter"]
+    if a == "kind":
         return {"weiblich": "a girl", "maennlich": "a boy"}.get(t["geschlecht"], "a child")
     g = dungeon.GESCHLECHT["divers"][2].split(" ", 1)[1] if x.get("geschlecht") == "divers" else n["geschlecht"][t["geschlecht"]]
-    return f"{n['alter'][t['alter']]} {g}"
+    return f"{n['alter'][a]} {g}"
 
 
 def katalog_text(x):

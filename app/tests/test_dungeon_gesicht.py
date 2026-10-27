@@ -231,6 +231,10 @@ class Faces(Base):
         for g, w in (("maennlich", "an old man"), ("divers", "an old androgynous person")):   # the card's gender wins (review Z1/Z6)
             rd["nsc"]["mara"]["geschlecht"] = g
             self.assertTrue(gesicht.text(rd, rd["nsc"]["mara"]).startswith(w), g)
+        rd["nsc"]["mara"].update(geschlecht="weiblich", alter="kind")
+        self.assertTrue(gesicht.text(rd, rd["nsc"]["mara"]).startswith("a girl"))
+        rd["nsc"]["mara"]["alter"] = "jung"
+        self.assertTrue(gesicht.text(rd, rd["nsc"]["mara"]).startswith("a young woman"))
         kid = self.new_round(titel="Kinder", ton=min(t["id"] for t in dungeon.rules()["toene"]), held=dict(HERO, name="Ole"))
         self.meet(kid, "Mara")
         rk = dungeon._read()["runden"][kid]
