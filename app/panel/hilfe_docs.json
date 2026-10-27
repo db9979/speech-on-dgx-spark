@@ -5917,6 +5917,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Stimmen aus Beschreibung sichtbar (V01.1.172, Dominik 2026-10-27 „stimmprobe nahm bei jedem charakter das standard model“, „stimme klang bei alles gleich“): Ohne neuen Schalter. Eine eigene Stimme je Person (Alter, Geschlecht, Klang, Wesen, Tempo) braucht VoiceDesign auf dem Spark (Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“). Läuft es nicht, spricht jede Person in der festen Stimme der Regeln (Frauen in der weiblichen), die Probe auch. Das Panel fragte die Sprachausgabe bisher nur aus der Ansicht einer Runde und höchstens alle 10 Minuten; der Katalog der Personen und seine Probe nahmen so nach einem Neustart immer die feste Stimme. Jetzt fragen Katalog und Probe selbst nach, solange VoiceDesign als aus gilt, höchstens alle DESIGN_NEU_S (30) Sekunden (dungeon.design_up). Läuft es nicht, steht im Katalog bei der Stimme und im Spielleiter-Pult (bei Vorlesen an) der Satz „Stimmen aus Beschreibung laufen gerade nicht: jede Person spricht in der festen Stimme“ mit dem Sprung-Link zur Einstellung. Fällt VoiceDesign mitten im Spiel aus, steht der Grund im Log („dungeon: stimmen | voicedesign … | feste stimme“). Selbsttest in test_dungeon_regel"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "seite (Stimme einer Person)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Die Eingabe verstehen (V01.1.171, Review 27.10. Paket 6, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Fehlerbehebungen. Rückfrage: „Kein Tun“ fragt nur noch, wenn der Satz kein Verb hat: ein Subjekt (ich, wir, du, ihr, er, sie, der Name eines Helden am Tisch) mit einem Wort danach, das wie ein Verb endet (-e, -n, -t; englisch jedes Wort), gilt als Tun (dungeon_rueckfrage.subject_verb), nie ein Wort aus KEIN_VERB („Ich bin müde“, „Ich habe Hunger“). TUN_WORTE kennt dazu durchsuchen, verbinden, rasten, bestellen, befragen, verfolgen, plündern, entschärfen, steigen, zünden, ducken, bewachen und kaufen. Eine Rückfrage hält den Zug höchstens WARTE_S (30) Sekunden nach der Aktion auf, nie mehr die ganze Zugzeit. Vorher fragte das Spiel bei 32 von 45 klaren Sätzen nach („Ich durchsuche die Truhe“). Proben: Reine Bewegung (ein Wort zum Gehen, keins zum Schleichen oder Klettern, keins zum Suchen, Öffnen, Nehmen oder Angreifen), Kaufen, Verkaufen und Rasten nach den Worten des Spielers brauchen keine Probe, egal was das Modell schreibt (dungeon.typed; Log „dungeon: probe | verworfen | kauf“). Getippte Spielmechanik: Kaufen und Verkaufen gehen nur über „⚖ Händler“"
 },
 {
@@ -21150,6 +21166,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: voices from a description visible (V01.1.172, Dominik 2026-10-27 „stimmprobe nahm bei jedem charakter das standard model“, „stimme klang bei alles gleich“): No new switch. An own voice per person (age, gender, sound, manner, pace) needs VoiceDesign on the Spark (Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“). While it does not run, every person speaks in the rules' fixed voice (women in the female one), the sample too. Until now the panel asked the speech output only from a round's view and at most every 10 minutes, so after a restart the catalog of people and its sample always took the fixed voice. Now catalog and sample ask themselves while VoiceDesign counts as off, at most every DESIGN_NEU_S (30) seconds (dungeon.design_up). When it does not run, the catalog's voice and the game master console (with reading aloud on) show „Voices from a description are not running right now: every person speaks in the fixed voice“ with the jump link to the setting. When VoiceDesign fails in the middle of a game, the log names the reason („dungeon: stimmen | voicedesign … | feste stimme“). Self-test in test_dungeon_regelseite (a person's voice)."
 },
 {
 "lang": "en",

@@ -227,6 +227,7 @@ KLANG = re.compile(r"[A-Za-zÄÖÜäöüß0-9 ,.\-]{3,80}")   # a hero's voice d
 TTS_NICHT = re.compile(r"TTS engine (loading|stopped|error|blocked)|TTS (busy)")   # why the speech output said 503
 TTS_AUS = ("loading", "stopped", "error", "blocked")      # the VoiceDesign engine is not up: the fixed voice stands in
 STIMMEN_S = 600           # seconds the speech output's voice list is kept before it is asked again
+DESIGN_NEU_S = 30         # while VoiceDesign is not up: the catalog asks again after this many seconds (design_up)
 TON_BYTES = 32 * 1024 * 1024
 HOER_BYTES = 1024 * 1024  # one recording (16 kHz mono WAV: about 30 s)
 GESCHICHTEN_MAX = 30      # the admin's stories
@@ -4916,6 +4917,16 @@ async def hero_voices():
         pass
     finally:
         _stimmen.update(t=time.time(), laeuft=False)
+
+
+async def design_up():
+    """Whether voices from a description (VoiceDesign) run, for the catalog of people and its sample (Dominik
+    2026-10-27 „stimmprobe nahm bei jedem charakter das standard model“): while not, the speech output is asked again
+    after DESIGN_NEU_S, not only after STIMMEN_S and only from a round's view."""
+    if not _stimmen["design"] and time.time() - _stimmen["t"] >= DESIGN_NEU_S:
+        _stimmen["t"] = 0.0
+        await hero_voices()
+    return _stimmen["design"]
 
 
 PROBE = ("Ich bin bereit. Wohin führt uns der Weg?", "I am ready. Where does the road lead us?")

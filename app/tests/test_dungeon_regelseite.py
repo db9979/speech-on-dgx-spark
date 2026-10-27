@@ -15,6 +15,7 @@ No wall clock: the picture module's clock is set by the tests (test_dungeon_ding
 """
 import asyncio
 import os
+import time
 import unittest
 
 from tests.test_dungeon_dingbild import ADMIN, Base
@@ -176,6 +177,19 @@ class Page(Base):
             self.assertRegex(st.describe(dict(zip(st.MERKMALE, t))), dungeon.KLANG)
             self.assertLessEqual(len(st.describe(dict(zip(st.MERKMALE, t)))), 80)
         self.assertGreaterEqual(pers.for_live()["stimme"], 2)
+        # Dominik 2026-10-27 „stimmprobe nahm bei jedem charakter das standard model“: the catalog and its sample look at
+        # the speech output afresh while VoiceDesign counts as not running (never only after a round's view), and say so
+        import admin
+        for up in (False, True):
+            async def tts_voices():
+                return {"voices": ["Ryan"], "voicedesign": up}
+            dungeon._stimmen.update(design=False, t=time.time() - dungeon.DESIGN_NEU_S)
+            with mock.patch.object(admin, "tts_voices", tts_voices):
+                self.assertIs(ADMIN.get(K + "personen").json()["stimme_design"], up)
+            self.assertIs(dungeon._stimmen["design"], up)
+        dungeon._stimmen.update(design=False, t=time.time())                              # just asked: not again
+        with mock.patch.object(admin, "tts_voices", tts_voices):
+            self.assertIs(ADMIN.get(K + "personen").json()["stimme_design"], False)
 
     def test_a_table_shows_every_row_and_its_sign(self):
         """Dominik 2026-10-25 „ich sehe gar nicht die tabellen“: the detail holds every row with its number and the

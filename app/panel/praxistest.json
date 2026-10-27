@@ -4048,6 +4048,13 @@
 "titel": "Dungeon-Master: Die Eingabe verstehen",
 "text": "Rückfrage an: A: „Ich durchsuche die Truhe.“ fragt nicht nach. B: „mach was“ fragt nach, nach 30 Sekunden ohne Antwort geht der Zug weiter. C: „Ich kaufe einen Heiltrank.“ zeigt nur dir die Zeile mit „⚖ Händler ›“, Gold bleibt gleich, keine Probe. D: „Wir rasten.“ zeigt die Zeile zum Spielleiter-Pult. E: Mit einer Person der Szene „Ich gebe Grimma 10 Gold.“: 10 Gold weniger, Zeile „gibt Grimma“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P603",
+"v": 1172,
+"titel": "Dungeon-Master: Stimmen aus Beschreibung",
+"text": "Funktionen → KI-Dungeon-Master → Personen: eine Person öffnen, Stimme wählen, ▶ Probe. A: Mit VoiceDesign an klingt die Probe nach der Wahl (alt, rau …), zwei Personen klingen verschieden. B: Ist VoiceDesign aus, steht über der Wahl der Satz mit dem Link zu Einstellungen → Sprachausgabe; der Link öffnet die Einstellung. C: In einer Runde mit Vorlesen an zeigt das Spielleiter-Pult denselben Satz, solange VoiceDesign aus ist.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

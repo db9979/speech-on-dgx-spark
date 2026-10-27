@@ -326,7 +326,10 @@ async def katalog(teil: str, request: Request):
         raise HTTPException(404, "teil")
     if teil == "personen" and not personen.admin_on():
         raise HTTPException(404, "personen aus")
-    return dungeon.json_out(request, await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40]))
+    out = await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
+    if teil == "personen":                 # whether the voices from a description run (Dominik 2026-10-27 „stimme klang bei alles gleich“)
+        out["stimme_design"] = await dungeon.design_up()
+    return dungeon.json_out(request, out)
 
 
 @router.post("/api/admin/dungeon/katalog/{teil}", dependencies=[Depends(auth)])
@@ -365,6 +368,7 @@ async def personen_probe(request: Request):
             raise ValueError("stimme")
         r = await asyncio.to_thread(dungeon.rules)
         v = dungeon.voices(r)
+        await dungeon.design_up()          # a fresh look at the speech output, never a stale „not running“
         wav, ersatz = await dungeon.probe("", "en" if b.get("lang") == "en" else "de", stimmen.describe(t),
                                           v["npc_w"] if t["geschlecht"] == "weiblich" else v["npc"])
     except ValueError:
