@@ -4198,7 +4198,10 @@
         "bonus": 1,
         "zuege": 1
       },
-      "schaden_art": "strahlend"
+      "schaden_art": "strahlend",
+      "rettung": {
+        "wert": "geschick"
+      }
     },
     {
       "id": "schauerstrahl",
@@ -4319,7 +4322,11 @@
         "bonus": 2,
         "zuege": 1
       },
-      "schaden_art": "feuer"
+      "schaden_art": "feuer",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "schildzauber",
@@ -4378,7 +4385,11 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "bewusstlos"
     },
     {
       "id": "donnerwelle",
@@ -4410,7 +4421,11 @@
         "bonus": 2,
         "zuege": 1
       },
-      "schaden_art": "donner"
+      "schaden_art": "donner",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "heilendes_wort",
@@ -4419,7 +4434,7 @@
         "Zauber: Heilendes Wort",
         "Spell: Healing word"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Ein Wort aus der Ferne schließt Wunden.",
         "A word from afar closes wounds."
@@ -4494,6 +4509,9 @@
         "wert": "charisma",
         "bonus": 2,
         "zuege": 1
+      },
+      "rettung": {
+        "wert": "charisma"
       }
     },
     {
@@ -4584,7 +4602,11 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "staerke"
+      },
+      "zustand": "festgesetzt"
     },
     {
       "id": "jaegermal",
@@ -4641,7 +4663,11 @@
         "bonus": 2,
         "zuege": 1
       },
-      "schaden_art": "feuer"
+      "schaden_art": "feuer",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "federfall",
@@ -4776,7 +4802,7 @@
         "Zauber: Heldenmut",
         "Spell: Heroism"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Mut füllt dich, keine Furcht hält dich auf.",
         "Courage fills you, no fear can stop you."
@@ -4885,7 +4911,11 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 2
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "bezaubert"
     },
     {
       "id": "gute_beeren",
@@ -4970,7 +5000,11 @@
         "wert": "intelligenz",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "zustand": "blind"
     },
     {
       "id": "befehl",
@@ -4999,7 +5033,11 @@
         "wert": "charisma",
         "bonus": 2,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "liegend"
     },
     {
       "id": "nebelschritt",
@@ -5122,7 +5160,11 @@
         "wert": "weisheit",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "gelaehmt"
     },
     {
       "id": "stille",
@@ -5504,7 +5546,11 @@
         "wert": "charisma",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "bezaubert"
     },
     {
       "id": "blitzstrahl",
@@ -5534,7 +5580,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "blitz"
+      "schaden_art": "blitz",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "gegenzauber",
@@ -5593,6 +5643,9 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 2
+      },
+      "rettung": {
+        "wert": "weisheit"
       }
     },
     {
@@ -5632,7 +5685,7 @@
         "Zauber: Wiederbeleben",
         "Spell: Revivify"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Wer gerade gefallen ist, atmet wieder.",
         "Whoever just fell breathes again."
@@ -5703,7 +5756,11 @@
         "wert": "charisma",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "veraengstigt"
     },
     {
       "id": "hypnosemuster",
@@ -5734,7 +5791,11 @@
         "wert": "charisma",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "bezaubert"
     },
     {
       "id": "magie_bannen",
@@ -5777,7 +5838,7 @@
         "Zauber: Fluch brechen",
         "Spell: Remove curse"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Ein Fluch fällt von dir ab.",
         "A curse falls away from you."
@@ -5951,7 +6012,11 @@
         "bonus": 3,
         "zuege": 2
       },
-      "schaden_art": "blitz"
+      "schaden_art": "blitz",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "tageslicht",
@@ -6013,7 +6078,11 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "zustand": "vergiftet"
     },
     {
       "id": "verbannung",
@@ -6045,7 +6114,11 @@
         "wert": "charisma",
         "bonus": 4,
         "zuege": 1
-      }
+      },
+      "rettung": {
+        "wert": "charisma"
+      },
+      "zustand": "kampfunfaehig"
     },
     {
       "id": "dimensionstuer",
@@ -6137,7 +6210,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "feuerschild",
@@ -6197,6 +6274,9 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 2
+      },
+      "rettung": {
+        "wert": "weisheit"
       }
     },
     {
@@ -6228,6 +6308,9 @@
         "wert": "weisheit",
         "bonus": 3,
         "zuege": 3
+      },
+      "rettung": {
+        "wert": "weisheit"
       }
     },
     {
@@ -6237,7 +6320,7 @@
         "Zauber: Todesschutz",
         "Spell: Death ward"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Der nächste tödliche Treffer lässt dich stehen.",
         "The next deadly hit leaves you standing."
@@ -6318,7 +6401,11 @@
         "bonus": 3,
         "zuege": 2
       },
-      "schaden_art": "wucht"
+      "schaden_art": "wucht",
+      "rettung": {
+        "wert": "staerke"
+      },
+      "zustand": "festgesetzt"
     },
     {
       "id": "kaeltekegel",
@@ -6348,7 +6435,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "kaelte"
+      "schaden_art": "kaelte",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "flammenschlag",
@@ -6377,7 +6468,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "feuer"
+      "schaden_art": "feuer",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "massenheilung",
@@ -6432,7 +6527,11 @@
         "wert": "charisma",
         "bonus": 4,
         "zuege": 2
-      }
+      },
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "zustand": "bezaubert"
     },
     {
       "id": "todeswolke",
@@ -6462,7 +6561,11 @@
         "bonus": 4,
         "zuege": 2
       },
-      "schaden_art": "gift"
+      "schaden_art": "gift",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "ausspaehen",
@@ -6503,7 +6606,7 @@
         "Zauber: Wiedererweckung",
         "Spell: Raise dead"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Ein gefallener Gefährte kehrt zurück.",
         "A fallen companion returns."
@@ -6607,7 +6710,11 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 2
-      }
+      },
+      "rettung": {
+        "wert": "staerke"
+      },
+      "zustand": "festgesetzt"
     },
     {
       "id": "diebeswerkzeug",
@@ -8943,7 +9050,10 @@
         "bonus": 1,
         "zuege": 1
       },
-      "schaden_art": "saeure"
+      "schaden_art": "saeure",
+      "rettung": {
+        "wert": "geschick"
+      }
     },
     {
       "id": "kalte_beruehrung",
@@ -9062,7 +9172,10 @@
         "bonus": 1,
         "zuege": 1
       },
-      "schaden_art": "psychisch"
+      "schaden_art": "psychisch",
+      "rettung": {
+        "wert": "weisheit"
+      }
     },
     {
       "id": "fuehrung",
@@ -9100,7 +9213,7 @@
         "Zauber: Wunden heilen",
         "Spell: Cure wounds"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Deine Hand schließt Schnitte und Prellungen.",
         "Your hand closes cuts and bruises."
@@ -9179,7 +9292,10 @@
         "bonus": 2,
         "zuege": 1
       },
-      "schaden_art": "kaelte"
+      "schaden_art": "kaelte",
+      "rettung": {
+        "wert": "geschick"
+      }
     },
     {
       "id": "misstoene",
@@ -9208,7 +9324,11 @@
         "bonus": 2,
         "zuege": 1
       },
-      "schaden_art": "psychisch"
+      "schaden_art": "psychisch",
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "halb": true
     },
     {
       "id": "magierruestung",
@@ -9295,6 +9415,9 @@
         "wert": "weisheit",
         "bonus": 1,
         "zuege": 3
+      },
+      "rettung": {
+        "wert": "geschick"
       }
     },
     {
@@ -9441,7 +9564,11 @@
         "bonus": 3,
         "zuege": 1
       },
-      "schaden_art": "feuer"
+      "schaden_art": "feuer",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "zerspringen",
@@ -9472,7 +9599,11 @@
         "bonus": 3,
         "zuege": 1
       },
-      "schaden_art": "donner"
+      "schaden_art": "donner",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "mondstrahl",
@@ -9501,7 +9632,11 @@
         "bonus": 3,
         "zuege": 1
       },
-      "schaden_art": "strahlend"
+      "schaden_art": "strahlend",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "gedankenstachel",
@@ -9532,7 +9667,11 @@
         "bonus": 3,
         "zuege": 1
       },
-      "schaden_art": "psychisch"
+      "schaden_art": "psychisch",
+      "rettung": {
+        "wert": "weisheit"
+      },
+      "halb": true
     },
     {
       "id": "metall_erhitzen",
@@ -9571,7 +9710,7 @@
         "Zauber: Kleine Genesung",
         "Spell: Lesser restoration"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Gift und Krankheit weichen aus dem Körper.",
         "Poison and sickness leave the body."
@@ -9680,7 +9819,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "saeure"
+      "schaden_art": "saeure",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "feuerwand",
@@ -9711,7 +9854,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "feuer"
+      "schaden_art": "feuer",
+      "rettung": {
+        "wert": "geschick"
+      },
+      "halb": true
     },
     {
       "id": "verdorren",
@@ -9743,7 +9890,11 @@
         "bonus": 4,
         "zuege": 1
       },
-      "schaden_art": "nekrotisch"
+      "schaden_art": "nekrotisch",
+      "rettung": {
+        "wert": "konstitution"
+      },
+      "halb": true
     },
     {
       "id": "grosse_genesung",
@@ -9752,7 +9903,7 @@
         "Zauber: Große Genesung",
         "Spell: Greater restoration"
       ],
-      "ziel": "selbst",
+      "ziel": "verbuendeter",
       "satz": [
         "Selbst Flüche und tiefe Erschöpfung vergehen.",
         "Even curses and deep exhaustion fade."
@@ -9898,7 +10049,8 @@
       "sage": [
         "Man sagt, ein Goblin zählt nur bis drei, und alles darüber heißt „viele“.",
         "They say a goblin counts only to three, and everything above is \"lots\"."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "kobold",
@@ -9935,7 +10087,8 @@
       "sage": [
         "Alte Bergleute erzählen, Kobolde hätten einst einem Drachen ein Ei gestohlen und dienen ihm seitdem.",
         "Old miners tell that kobolds once stole a dragon's egg and have served it ever since."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "ork_krieger",
@@ -9972,7 +10125,8 @@
       "sage": [
         "Die Orks singen, ihr erster Häuptling habe einen Berg mit bloßen Fäusten gespalten.",
         "The orcs sing that their first chieftain split a mountain with bare fists."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "hobgoblin",
@@ -10009,7 +10163,8 @@
       "sage": [
         "Hobgoblins sollen ein Buch der Kriegskunst haben, das so dick ist wie ein Amboss.",
         "Hobgoblins are said to keep a book of war as thick as an anvil."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "grottenschrat",
@@ -10046,7 +10201,8 @@
       "sage": [
         "Wenn im Lager plötzlich die Hunde schweigen, sagen die Jäger, ein Grottenschrat ist nah.",
         "When the camp dogs suddenly fall silent, hunters say a bugbear is near."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "gnoll",
@@ -10083,7 +10239,8 @@
       "sage": [
         "Die Gnolle lachen, so heißt es, weil sie einen Witz kennen, den sonst niemand versteht.",
         "Gnolls laugh, it is said, because they know a joke nobody else understands."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "bandit",
@@ -10120,7 +10277,8 @@
       "sage": [
         "Jeder Bandit erzählt, er habe nur einmal einen schlechten Tag gehabt, der nie aufhörte.",
         "Every bandit tells of one bad day that never ended."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "banditenhauptmann",
@@ -10158,7 +10316,8 @@
       "sage": [
         "Es heißt, ein guter Banditenhauptmann kennt jeden Wirt auf hundert Meilen beim Namen.",
         "It is said a good bandit captain knows every innkeeper for a hundred miles by name."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "schlaeger",
@@ -10196,7 +10355,8 @@
       "sage": [
         "Die Wirte sagen: Ein Schläger vergisst kein Gesicht, aber jede Rechnung.",
         "Innkeepers say: a thug forgets no face, but every bill."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "kultist",
@@ -10234,7 +10394,8 @@
       "sage": [
         "Man flüstert, kein Kultist kennt den Namen dessen, dem er dient.",
         "It is whispered that no cultist knows the name of the one they serve."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "kultfanatiker",
@@ -10276,7 +10437,8 @@
       "sage": [
         "Die Prediger des Kults sollen im Schlaf in einer Sprache reden, die keiner gelernt hat.",
         "The cult's preachers are said to talk in their sleep in a tongue nobody learned."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "wache",
@@ -10309,11 +10471,12 @@
       },
       "ep": 25,
       "groesse": "mittel",
-      "schaden_art": "wucht",
+      "schaden_art": "stich",
       "sage": [
         "Jede Wache kennt die Sage vom Wächter, der hundert Jahre am Tor stand und nie gefragt wurde.",
         "Every guard knows the tale of the sentry who stood at the gate a hundred years and was never asked anything."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "veteran",
@@ -10351,7 +10514,8 @@
       "sage": [
         "Veteranen sagen, jede Narbe hat ein Lied, aber nur betrunken singt man es.",
         "Veterans say every scar has a song, but you only sing it drunk."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "ritter",
@@ -10389,7 +10553,8 @@
       "sage": [
         "Die Barden erzählen vom Ritter, der seinen Schild einem Kind gab und mit bloßen Händen siegte.",
         "Bards tell of a knight who gave his shield to a child and won with bare hands."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "berserker",
@@ -10427,7 +10592,8 @@
       "sage": [
         "Die Nordleute sagen, ein Berserker träumt nicht, er rennt nur weiter.",
         "The northfolk say a berserker does not dream, he just keeps running."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "spion",
@@ -10465,7 +10631,8 @@
       "sage": [
         "Ein altes Sprichwort: Wer einen Spion sucht, sollte zuerst den freundlichsten Gast fragen.",
         "An old saying: whoever seeks a spy should first ask the friendliest guest."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "assassine",
@@ -10509,7 +10676,8 @@
       "sage": [
         "Es heißt, ein Assassine hinterlässt immer eine Feder, damit man weiß, dass es kein Zufall war.",
         "It is said an assassin always leaves a feather, so you know it was no accident."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "magier_gegner",
@@ -10547,7 +10715,8 @@
       "sage": [
         "Abtrünnige Magier, sagt man, verbrennen ihre alten Lehrbücher, aber nie das erste.",
         "Rogue mages, they say, burn their old books, but never the first one."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "priester",
@@ -10585,7 +10754,8 @@
       "sage": [
         "Die Gläubigen erzählen, ein wahrer Priester segnet auch den, der ihn verflucht.",
         "The faithful tell that a true priest blesses even the one who curses him."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "gladiator",
@@ -10623,7 +10793,8 @@
       "sage": [
         "In der Arena geht die Sage vom Gladiator, der sich frei kämpfte und am nächsten Tag zurückkam.",
         "In the arena they tell of the gladiator who fought his way free and came back the next day."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "dunkelelf",
@@ -10663,7 +10834,8 @@
       "sage": [
         "Die Dunkelelfen sollen ihre Kinder lehren, Licht sei eine Lüge der Oberwelt.",
         "The drow are said to teach their children that light is a lie of the surface."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "duergar",
@@ -10703,7 +10875,8 @@
       "sage": [
         "Die Grauzwerge erzählen, sie seien es, die den Berg zusammenhalten.",
         "The duergar claim they are the ones holding the mountain together."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "echsenmensch",
@@ -10742,7 +10915,8 @@
       "sage": [
         "Echsenmenschen sagen, wer zu warm denkt, denkt falsch.",
         "Lizardfolk say whoever thinks too warmly thinks wrong."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "sahuagin",
@@ -10780,7 +10954,8 @@
       "sage": [
         "Die Fischer glauben, Sahuagin könnten Haie rufen, wie wir Hunde rufen.",
         "Fishers believe sahuagin can call sharks the way we call dogs."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "merrow",
@@ -10821,7 +10996,8 @@
       "sage": [
         "Seeleute erzählen, ein Meeresoger sammle die Anker gesunkener Schiffe.",
         "Sailors say a merrow collects the anchors of sunken ships."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "meerhexe",
@@ -10862,7 +11038,8 @@
       "sage": [
         "Die Fischerfrauen sagen: Wer die Meerhexe sieht, sieht sie nie zweimal.",
         "Fisherwives say: whoever sees the sea hag never sees her twice."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "waldhexe",
@@ -10900,7 +11077,8 @@
       "sage": [
         "Im Dorf heißt es, die Waldhexe kennt jedes Kinderlied und singt es falsch herum.",
         "In the village they say the green hag knows every nursery rhyme and sings it backwards."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "nachtvettel",
@@ -10947,7 +11125,8 @@
       "sage": [
         "Man legt ein Eisen unter das Kissen, sagen die Alten, dann bleibt die Nachtvettel fern.",
         "Put iron under your pillow, the old ones say, and the night hag stays away."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "skelett",
@@ -10992,7 +11171,8 @@
       "sage": [
         "Die Totengräber sagen, ein Skelett klappert nur, wenn es sich an seinen Namen erinnert.",
         "Gravediggers say a skeleton only rattles when it remembers its name."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "zombie",
@@ -11033,7 +11213,8 @@
       "sage": [
         "Man sagt, ein Zombie folgt immer dem Weg, den er im Leben am liebsten ging.",
         "They say a zombie always follows the path it liked best in life."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "ogerzombie",
@@ -11073,7 +11254,8 @@
       "sage": [
         "Die Bauern glauben, ein Oger-Zombie sucht noch immer sein letztes Abendessen.",
         "Farmers believe an ogre zombie is still looking for its last supper."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "ghul",
@@ -11117,7 +11299,8 @@
       "sage": [
         "Alte Grabwächter sagen, ein Ghul war einst ein Mensch, der nie genug bekam.",
         "Old grave wardens say a ghoul was once a person who never had enough."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "grabschrecken",
@@ -11164,7 +11347,8 @@
       "sage": [
         "Es heißt, wo ein Grabschrecken haust, welken die Blumen am Grab über Nacht.",
         "It is said where a ghast lairs, the flowers on the graves wilt overnight."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "schatten",
@@ -11221,7 +11405,8 @@
       "sage": [
         "Die Weisen sagen, jeder Schatten sucht den Menschen, dem er einmal gehörte.",
         "The wise say every shadow seeks the person it once belonged to."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "gespenst",
@@ -11272,7 +11457,8 @@
       "sage": [
         "Man erzählt, ein Gespenst friert ewig, und darum greift es nach jeder Wärme.",
         "They tell that a specter is always cold, and that is why it reaches for every warmth."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "geist",
@@ -11327,7 +11513,8 @@
       "sage": [
         "Jedes alte Haus hat seinen Geist, sagen die Leute, und jeder will nur eine Sache erledigen.",
         "Every old house has its ghost, people say, and each wants to finish just one thing."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "grabunhold",
@@ -11375,7 +11562,8 @@
       "sage": [
         "Die Sage geht, Grabunholde waren Feldherren, die ihren letzten Feldzug nicht aufgeben wollten.",
         "The legend goes that wights were warlords who would not give up their last campaign."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "todesalb",
@@ -11426,7 +11614,8 @@
       "sage": [
         "Man sagt, ein Todesalb ist nur ein Wunsch, der zu lange gewartet hat.",
         "They say a wraith is just a wish that waited too long."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "mumie",
@@ -11479,7 +11668,8 @@
       "sage": [
         "Die Wüstenleute erzählen, jede Mumie hütet einen Namen, den keiner aussprechen darf.",
         "Desert folk tell that every mummy guards a name nobody may speak."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "vampirbrut",
@@ -11526,7 +11716,8 @@
       "sage": [
         "Die Dörfler sagen, eine Vampirbrut kann nicht über fließendes Wasser, darum bauen sie Brücken schmal.",
         "Villagers say vampire spawn cannot cross running water, so they build their bridges narrow."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "irrlicht",
@@ -11578,7 +11769,8 @@
       "sage": [
         "Folge nie dem dritten Licht im Moor, sagen die Alten, das erste und zweite sind Laternen.",
         "Never follow the third light on the moor, the old ones say, the first and second are lanterns."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "werwolf",
@@ -11622,7 +11814,8 @@
       "sage": [
         "Die Großmütter sagen, ein Werwolf erkennt man daran, dass ihm die Augenbrauen zusammenwachsen.",
         "Grandmothers say you know a werewolf by eyebrows that grow together."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "werratte",
@@ -11665,7 +11858,8 @@
       "sage": [
         "In der Unterstadt heißt es, die Werratten haben einen König mit sieben Schwänzen.",
         "In the undercity they say the wererats have a king with seven tails."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "doppelgaenger",
@@ -11704,7 +11898,8 @@
       "sage": [
         "Ein Sprichwort: Wenn dein Freund heute freundlicher ist als sonst, frag ihn nach eurem ersten Treffen.",
         "A saying: if your friend is kinder than usual today, ask about the day you met."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "mimik",
@@ -11748,7 +11943,8 @@
       "sage": [
         "Die Abenteurer sagen: Klopf zweimal auf jede Truhe, die erste Truhe lügt.",
         "Adventurers say: knock twice on every chest, the first chest lies."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "gallertwuerfel",
@@ -11788,7 +11984,8 @@
       "sage": [
         "Man erzählt, in einem Gallertwürfel fand man einmal einen Ring, eine Münze und einen Zwerg, der noch winkte.",
         "They tell that a gelatinous cube once held a ring, a coin and a dwarf who was still waving."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "grauschlamm",
@@ -11831,7 +12028,8 @@
       "sage": [
         "Die Schmiede sagen, ein grauer Schleim riecht nach Regen auf heißem Eisen.",
         "Smiths say a gray ooze smells of rain on hot iron."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "schwarzer_pudding",
@@ -11875,7 +12073,8 @@
       "sage": [
         "Es heißt, ein Schwarzer Pudding hat noch nie eine Mahlzeit ausgelassen.",
         "It is said a black pudding has never skipped a meal."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "ockergallert",
@@ -11919,7 +12118,8 @@
       "sage": [
         "Kanalarbeiter sagen, die Ockergallert kennt jede Ritze besser als die Ratten.",
         "Sewer workers say the ochre jelly knows every crack better than the rats."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "plappermaul",
@@ -11959,7 +12159,8 @@
       "sage": [
         "Man sagt, ein Plappermaul wiederholt alles, was es je gehört hat, nur nie in der richtigen Reihenfolge.",
         "They say a gibbering mouther repeats everything it ever heard, just never in the right order."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "otyugh",
@@ -12000,7 +12201,8 @@
       "sage": [
         "Die Städter sagen, ohne Otyughs ersticke jede Stadt im eigenen Abfall.",
         "City folk say without otyughs every city would drown in its own rubbish."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "chuul",
@@ -12045,7 +12247,8 @@
       "sage": [
         "Die Taucher erzählen, Chuuls bewachen Ruinen, deren Erbauer niemand mehr kennt.",
         "Divers tell that chuuls guard ruins whose builders nobody remembers."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "mantler",
@@ -12086,7 +12289,8 @@
       "sage": [
         "Die Sage geht, ein Mantler war einst der Umhang eines Königs, der nicht gehen wollte.",
         "The legend goes that a cloaker was once a king's cloak that refused to leave."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "aboleth",
@@ -12129,7 +12333,8 @@
       "sage": [
         "Die Gelehrten flüstern, der Aboleth erinnert sich an die Zeit, bevor es Götter gab.",
         "Scholars whisper that the aboleth remembers a time before there were gods."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "belebte_ruestung",
@@ -12172,7 +12377,8 @@
       "sage": [
         "Man sagt, eine belebte Rüstung dient immer noch dem Herrn, der sie zuletzt trug.",
         "They say animated armour still serves the master who last wore it."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "fliegendes_schwert",
@@ -12213,7 +12419,8 @@
       "sage": [
         "Die Waffenschmiede erzählen, ein fliegendes Schwert sucht die Hand, für die es geschmiedet wurde.",
         "Weaponsmiths tell that a flying sword seeks the hand it was forged for."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "wuergeteppich",
@@ -12258,7 +12465,8 @@
       "sage": [
         "Es heißt, ein Würgeteppich liebt nichts mehr als Gäste, die ihre Stiefel ausziehen.",
         "It is said a rug of smothering loves nothing more than guests who take off their boots."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "fleischgolem",
@@ -12305,7 +12513,8 @@
       "sage": [
         "Die Sage erzählt, jeder Fleischgolem fragt einmal in seinem Leben nach seinem Namen.",
         "The tale goes that every flesh golem once in its life asks for its name."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "steingolem",
@@ -12353,7 +12562,8 @@
       "sage": [
         "Man sagt, ein Steingolem hört nur auf das eine Wort, das in seine Brust gemeißelt ist.",
         "They say a stone golem obeys only the one word carved into its chest."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "gargyl",
@@ -12400,7 +12610,8 @@
       "sage": [
         "Die Steinmetze sagen: Hau nie einem Wasserspeier ein Lächeln, sonst lacht er nachts.",
         "Stonemasons say: never carve a smile on a gargoyle, or it laughs at night."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "imp",
@@ -12451,7 +12662,8 @@
       "sage": [
         "Ein Imp, so heißt es, hält jeden Vertrag, aber nur Wort für Wort.",
         "An imp, it is said, keeps every contract, but only word for word."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "quasit",
@@ -12503,7 +12715,8 @@
       "sage": [
         "Man erzählt, ein Quasit kann jede Gestalt annehmen, außer der eines ehrlichen Wesens.",
         "They say a quasit can take any shape except that of an honest creature."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "hoellenhund",
@@ -12547,7 +12760,8 @@
       "sage": [
         "Die Hirten sagen, wo ein Höllenhund läuft, wächst drei Sommer lang kein Gras.",
         "Herders say where a hell hound runs, no grass grows for three summers."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "nachtmahr",
@@ -12590,7 +12804,8 @@
       "sage": [
         "Wer im Traum Hufschlag hört, sagen die Alten, sollte vor dem Morgen aufwachen.",
         "Whoever hears hoofbeats in a dream, the old ones say, should wake before morning."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "verfuehrer",
@@ -12639,7 +12854,8 @@
       "sage": [
         "Die Sage warnt: Wer zu schön lächelt, will etwas, das man nicht zurückbekommt.",
         "The legend warns: whoever smiles too beautifully wants something you never get back."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "bartteufel",
@@ -12691,7 +12907,8 @@
       "sage": [
         "Man erzählt, Bartteufel flechten in ihre Bärte die Namen gebrochener Versprechen.",
         "They tell that bearded devils braid the names of broken promises into their beards."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "stachelteufel",
@@ -12742,7 +12959,8 @@
       "sage": [
         "Es heißt, ein Stachelteufel zählt jeden Stachel und vermisst jeden, den er verschießt.",
         "It is said a barbed devil counts every spine and misses each one it throws."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "dretch",
@@ -12791,7 +13009,8 @@
       "sage": [
         "Selbst andere Dämonen, sagt man, halten sich die Nase zu, wenn ein Dretch vorbeikommt.",
         "Even other demons, they say, hold their noses when a dretch walks by."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "vrock",
@@ -12843,7 +13062,8 @@
       "sage": [
         "Man erzählt, wenn Vrocks tanzen, bebt die Erde und die Vögel fliehen.",
         "They tell that when vrocks dance, the earth shakes and the birds flee."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "oger",
@@ -12880,7 +13100,8 @@
       "sage": [
         "Die Bauern sagen, ein Oger kann eine Kuh essen, aber kein Schloss öffnen.",
         "Farmers say an ogre can eat a cow but cannot open a lock."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "troll",
@@ -12918,7 +13139,8 @@
       "sage": [
         "Die Sage geht, ein Troll wächst aus jedem Finger nach, den man ihm abschlägt, darum bringt Feuer mit.",
         "The legend goes that a troll grows back from every finger you cut off, so bring fire."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "huegelriese",
@@ -12959,7 +13181,8 @@
       "sage": [
         "Man sagt, die Hügel sind die Schlafkissen der Hügelriesen.",
         "They say the hills are the pillows of the hill giants."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "ettin",
@@ -12997,7 +13220,8 @@
       "sage": [
         "Ein Ettin, so heißt es, hat noch nie einen Streit gewonnen, weil der andere Kopf immer widerspricht.",
         "An ettin, it is said, has never won an argument, because the other head always disagrees."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "minotaurus",
@@ -13037,7 +13261,8 @@
       "sage": [
         "Man erzählt, ein Minotaurus verirrt sich nie, nicht einmal im dunkelsten Labyrinth.",
         "They tell that a minotaur never gets lost, not even in the darkest labyrinth."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "eulenbaer",
@@ -13078,7 +13303,8 @@
       "sage": [
         "Die Jäger sagen: Ein Eulenbär ruft „Huhu“ und meint es nie freundlich.",
         "Hunters say: an owlbear calls \"hoo-hoo\" and never means it kindly."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "harpyie",
@@ -13120,7 +13346,8 @@
       "sage": [
         "Die Seeleute stopfen Wachs in die Ohren, wenn sie an den Klippen der Harpyien vorbeisegeln.",
         "Sailors stuff wax in their ears when they sail past the harpies' cliffs."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "basilisk",
@@ -13160,7 +13387,8 @@
       "sage": [
         "Man sagt, ein Basilisk erschrickt vor seinem eigenen Spiegelbild.",
         "They say a basilisk is frightened by its own reflection."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "medusa",
@@ -13202,7 +13430,8 @@
       "sage": [
         "Die Sage erzählt, eine Medusa war einst so schön, dass ein Gott neidisch wurde.",
         "The legend tells that a medusa was once so beautiful that a god grew jealous."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "mantikor",
@@ -13240,7 +13469,8 @@
       "sage": [
         "Die Wüstenreiter sagen, ein Mantikor kennt drei Wörter, und alle sind Beleidigungen.",
         "Desert riders say a manticore knows three words, and all of them are insults."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "greif",
@@ -13278,7 +13508,8 @@
       "sage": [
         "Man erzählt, ein Greif lässt sich nur von dem reiten, der ihm ein Pferd schenkt.",
         "They tell that a griffon only lets the one who gives it a horse ride it."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "hydra",
@@ -13317,7 +13548,8 @@
       "sage": [
         "Die Sage geht, die erste Hydra hatte nur einen Kopf, bis ein Held sie zu oft verfehlte.",
         "The legend goes that the first hydra had only one head, until a hero missed it too often."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "chimaere",
@@ -13358,7 +13590,8 @@
       "sage": [
         "Man sagt, die drei Köpfe einer Chimäre streiten sich jeden Morgen, wer frühstücken darf.",
         "They say the three heads of a chimera quarrel every morning over who gets breakfast."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "bulette",
@@ -13398,7 +13631,8 @@
       "sage": [
         "Die Bauern sagen, wenn der Acker bebt und die Maulwürfe fliehen, ist ein Landhai unterwegs.",
         "Farmers say when the field shakes and the moles flee, a bulette is on its way."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "ankheg",
@@ -13438,7 +13672,8 @@
       "sage": [
         "Man erzählt, ein Ankheg lockert den Boden, und deshalb wächst in seinem Revier das beste Korn.",
         "They say an ankheg loosens the soil, which is why the best grain grows in its territory."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "phasenspinne",
@@ -13479,7 +13714,8 @@
       "sage": [
         "Es heißt, Phasenspinnen weben ihre Netze zwischen zwei Welten.",
         "It is said phase spiders weave their webs between two worlds."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "ettercap",
@@ -13521,7 +13757,8 @@
       "sage": [
         "Die Holzfäller sagen, jede Spinne im Wald gehorcht dem Pfiff des Ettercaps.",
         "Woodcutters say every spider in the forest obeys the ettercap's whistle."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "drider",
@@ -13563,7 +13800,8 @@
       "sage": [
         "Man flüstert, ein Drider war einst der stolzeste Krieger der Dunkelelfen.",
         "It is whispered that a drider was once the proudest warrior of the drow."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "rostmonster",
@@ -13600,7 +13838,8 @@
       "sage": [
         "Die Schmiede sagen, ein Rostmonster frisst lieber einen Nagel als einen Goldbarren.",
         "Smiths say a rust monster would rather eat a nail than a bar of gold."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "dunkelmantel",
@@ -13641,7 +13880,8 @@
       "sage": [
         "Die Höhlenführer sagen: Wenn die Fackel ohne Grund ausgeht, schau nach oben.",
         "Cave guides say: when the torch goes out for no reason, look up."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "grick",
@@ -13685,7 +13925,8 @@
       "sage": [
         "Man erzählt, ein Grick kann ein Jahr lang reglos warten, bis jemand stolpert.",
         "They tell that a grick can wait motionless for a year until someone stumbles."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "roper",
@@ -13725,7 +13966,8 @@
       "sage": [
         "Die Zwerge sagen: Zähle die Tropfsteine zweimal, einer davon hat Hunger.",
         "Dwarves say: count the stalagmites twice, one of them is hungry."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "winterwolf",
@@ -13765,7 +14007,8 @@
       "sage": [
         "Die Nordleute erzählen, Winterwölfe heulen den ersten Schnee herbei.",
         "The northfolk tell that winter wolves howl the first snow down."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "warg",
@@ -13805,7 +14048,8 @@
       "sage": [
         "Man sagt, ein Warg versteht jedes Wort, er antwortet nur nicht.",
         "They say a worg understands every word, it just doesn't answer."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "todeshund",
@@ -13844,7 +14088,8 @@
       "sage": [
         "Die Wüstenvölker sagen, ein Todeshund hat zwei Köpfe, damit er nie schlafen muss.",
         "Desert peoples say a death dog has two heads so it never has to sleep."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "wolf",
@@ -13885,7 +14130,8 @@
       "sage": [
         "Die Hirten sagen, der Wolf ist nur so böse wie der Winter lang.",
         "Shepherds say the wolf is only as wicked as the winter is long."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "schreckenswolf",
@@ -13925,7 +14171,8 @@
       "sage": [
         "Man erzählt, die Schreckenswölfe sind die Großeltern aller Wölfe und erinnern sich an die Eiszeit.",
         "They tell that dire wolves are the grandparents of all wolves and remember the ice age."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "braunbaer",
@@ -13962,7 +14209,8 @@
       "sage": [
         "Die Jäger sagen: Sprich mit dem Bären wie mit einem alten Onkel, ruhig und mit Respekt.",
         "Hunters say: talk to a bear like an old uncle, calmly and with respect."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "riesenspinne",
@@ -14004,7 +14252,8 @@
       "sage": [
         "Man sagt, in den Netzen der Riesenspinnen hängen die verlorenen Hüte ganzer Generationen.",
         "They say the hats lost by whole generations hang in the giant spiders' webs."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "riesenratte",
@@ -14041,7 +14290,8 @@
       "sage": [
         "In der Stadt heißt es, jede Riesenratte war einmal eine ganz normale Ratte mit großen Plänen.",
         "In the city they say every giant rat was once an ordinary rat with big plans."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "rattenschwarm",
@@ -14085,7 +14335,8 @@
       "sage": [
         "Die Müller sagen: Wo eine Ratte ist, sind hundert, und wo hundert sind, ist bald keine Mühle mehr.",
         "Millers say: where there is one rat there are a hundred, and where there are a hundred there is soon no mill."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "fledermausschwarm",
@@ -14128,7 +14379,8 @@
       "sage": [
         "Man erzählt, ein Fledermausschwarm kennt jeden Ausgang einer Höhle.",
         "They tell that a swarm of bats knows every exit of a cave."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "stirge",
@@ -14169,7 +14421,8 @@
       "sage": [
         "Die Sumpfleute sagen, die Riesenmücke summt in der Tonart, in der man einschläft.",
         "Marsh folk say the giant mosquito hums in the key you fall asleep to."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "riesenskorpion",
@@ -14211,7 +14464,8 @@
       "sage": [
         "Die Karawanen erzählen, ein Riesenskorpion leuchtet im Mondlicht wie grünes Glas.",
         "Caravans tell that a giant scorpion glows like green glass in the moonlight."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "riesenkrabbe",
@@ -14251,7 +14505,8 @@
       "sage": [
         "Die Strandkinder sagen, eine Riesenkrabbe läuft immer seitwärts, nur nicht, wenn sie dich jagt.",
         "Beach children say a giant crab always walks sideways, except when it chases you."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "riesenkrake",
@@ -14291,7 +14546,8 @@
       "sage": [
         "Die Seeleute erzählen, eine Riesenkrake kann acht Knoten zugleich lösen und neun knüpfen.",
         "Sailors tell that a giant octopus can untie eight knots at once and tie nine."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "jagdhai",
@@ -14328,7 +14584,8 @@
       "sage": [
         "Die Fischer sagen, ein Jagdhai riecht eine Lüge über drei Meilen Wasser.",
         "Fishers say a hunter shark can smell a lie across three miles of water."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "riesenhai",
@@ -14365,7 +14622,8 @@
       "sage": [
         "Man erzählt, ein Riesenhai hat einmal ein ganzes Ruderboot verschluckt und den Anker zurückgespuckt.",
         "They tell that a giant shark once swallowed a whole rowing boat and spat back the anchor."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "piranhaschwarm",
@@ -14407,7 +14665,8 @@
       "sage": [
         "Die Flussleute sagen: Halte den Finger nicht ins trübe Wasser, auch wenn es nach Gold glänzt.",
         "River folk say: keep your finger out of murky water, even when it glitters like gold."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "seeschlange",
@@ -14444,7 +14703,8 @@
       "sage": [
         "Jede Hafenkneipe kennt einen, der die Seeschlange gesehen hat, und jeder beschreibt sie anders.",
         "Every harbour tavern knows someone who saw the sea serpent, and each describes it differently."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "schwertwal",
@@ -14481,7 +14741,8 @@
       "sage": [
         "Die Walfänger sagen, die Schwertwale singen Lieder über jeden, der sie gejagt hat.",
         "Whalers say the killer whales sing songs about everyone who hunted them."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "meermensch",
@@ -14518,7 +14779,8 @@
       "sage": [
         "Die Seeleute erzählen, wer einem Meermenschen hilft, findet nie wieder den Weg ins Unglück.",
         "Sailors tell that whoever helps a merfolk never again finds the way into misfortune."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "wasserelementar",
@@ -14569,7 +14831,8 @@
       "sage": [
         "Man sagt, ein Wasserelementar ist ein Stück Meer, das einmal neugierig wurde.",
         "They say a water elemental is a piece of the sea that once grew curious."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "feuerelementar",
@@ -14619,7 +14882,8 @@
       "sage": [
         "Die Köhler erzählen, ein Feuerelementar entsteht, wenn ein Feuer nie gelöscht wird.",
         "Charcoal burners tell that a fire elemental is born when a fire is never put out."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "erdelementar",
@@ -14668,7 +14932,8 @@
       "sage": [
         "Die Bergleute sagen, ein Erdelementar summt tief im Fels, wenn er gute Laune hat.",
         "Miners say an earth elemental hums deep in the rock when it is in a good mood."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "luftelementar",
@@ -14720,7 +14985,8 @@
       "sage": [
         "Man erzählt, ein Luftelementar trägt die Stimmen aller, die je in den Wind gerufen haben.",
         "They tell that an air elemental carries the voices of all who ever shouted into the wind."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "azer",
@@ -14764,7 +15030,8 @@
       "sage": [
         "Die Zwergenschmiede sagen, die Azer haben ihnen einst das Härten des Stahls gezeigt.",
         "Dwarven smiths say the azer once taught them how to temper steel."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "salamander",
@@ -14816,7 +15083,8 @@
       "sage": [
         "Man sagt, ein Salamander friert, sobald er die Glut verlässt, und ist darum immer schlecht gelaunt.",
         "They say a salamander freezes the moment it leaves the embers and is therefore always grumpy."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "xorn",
@@ -14858,7 +15126,8 @@
       "sage": [
         "Die Edelsteinsucher erzählen: Folge einem Xorn, und du findest Edelsteine, aber nie mehr als er.",
         "Gem hunters tell: follow a xorn and you'll find gems, but never more than it does."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "dryade",
@@ -14898,7 +15167,8 @@
       "sage": [
         "Die Holzfäller sagen: Klopf dreimal an einen alten Baum, bevor du die Axt hebst.",
         "Woodcutters say: knock three times on an old tree before you raise the axe."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "satyr",
@@ -14938,7 +15208,8 @@
       "sage": [
         "Man erzählt, kein Fest im Wald beginnt, bevor ein Satyr die Flöte stimmt.",
         "They tell that no feast in the woods begins before a satyr tunes his pipes."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "erweckter_baum",
@@ -14982,7 +15253,8 @@
       "sage": [
         "Die Druiden sagen, ein erweckter Baum erinnert sich an jeden, der in seinem Schatten saß.",
         "Druids say an awakened tree remembers everyone who sat in its shade."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "schlurfhaufen",
@@ -15031,7 +15303,8 @@
       "sage": [
         "Man sagt, ein Schlurfender Haufen wächst, wenn es gewittert, und schrumpft nie.",
         "They say a shambling mound grows when lightning strikes and never shrinks."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "violetter_pilz",
@@ -15070,7 +15343,8 @@
       "sage": [
         "Die Kräuterfrauen warnen: Ein Pilz, der sich bewegt, gehört nicht in die Suppe.",
         "Herb women warn: a mushroom that moves does not belong in the soup."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "baumhirte",
@@ -15115,7 +15389,8 @@
       "sage": [
         "Die Sage geht, ein Baumhirte braucht einen ganzen Tag, um „Guten Morgen“ zu sagen.",
         "The legend goes that a treant needs a whole day to say \"good morning\"."
-      ]
+      ],
+      "sg": 18
     },
     {
       "id": "pseudodrache",
@@ -15155,7 +15430,8 @@
       "sage": [
         "Man erzählt, ein Pseudodrache sucht sich seinen Freund selbst aus, und nie den, der es erwartet.",
         "They tell that a pseudodragon chooses its own friend, and never the one who expects it."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "roter_nestling",
@@ -15198,7 +15474,8 @@
       "sage": [
         "Die Bergdörfer sagen, ein roter Nestling zählt jede Nacht seine Münzen, auch wenn er nur drei hat.",
         "Mountain villages say a red wyrmling counts its coins every night, even if it only has three."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "schwarzer_nestling",
@@ -15239,7 +15516,8 @@
       "sage": [
         "Man sagt, ein schwarzer Nestling lernt zuerst zu schwimmen und dann zu fliegen.",
         "They say a black wyrmling learns to swim first and to fly second."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "weisser_nestling",
@@ -15279,7 +15557,8 @@
       "sage": [
         "Die Nordleute erzählen, ein weißer Nestling schläft im Schnee und träumt von Fischen.",
         "The northfolk tell that a white wyrmling sleeps in the snow and dreams of fish."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "lindwurm",
@@ -15321,7 +15600,8 @@
       "sage": [
         "Die Ritter sagen, der Lindwurm ist der Drache der armen Leute, aber genauso gefährlich.",
         "Knights say the wyvern is the poor man's dragon, but just as dangerous."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "junger_gruener_drache",
@@ -15365,7 +15645,8 @@
       "sage": [
         "Man flüstert, ein grüner Drache lügt so gut, dass er sich manchmal selbst glaubt.",
         "It is whispered that a green dragon lies so well that it sometimes believes itself."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "junger_roter_drache",
@@ -15410,7 +15691,8 @@
       "sage": [
         "Die Sage geht, jeder rote Drache träumt davon, einmal einen König in seinem Hort zu haben.",
         "The legend goes that every red dragon dreams of one day keeping a king in its hoard."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "junger_schwarzer_drache",
@@ -15452,7 +15734,8 @@
       "sage": [
         "Die Sumpfleute sagen, wenn die Frösche verstummen, taucht ein schwarzer Drache auf.",
         "Marsh folk say when the frogs go silent, a black dragon surfaces."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "hippogreif",
@@ -15490,7 +15773,8 @@
       "sage": [
         "Man erzählt, ein Hippogreif verbeugt sich nur vor dem, der sich zuerst verbeugt.",
         "They tell that a hippogriff only bows to the one who bows first."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "einhorn",
@@ -15532,7 +15816,8 @@
       "sage": [
         "Die Sage geht, ein Einhorn zeigt sich nur dem, der es nicht sucht.",
         "The legend goes that a unicorn only shows itself to the one who isn't looking for it."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "zentaur",
@@ -15570,7 +15855,8 @@
       "sage": [
         "Die Zentauren sagen, Sterne sind die Lagerfeuer ihrer Ahnen.",
         "Centaurs say the stars are the campfires of their ancestors."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "lamia",
@@ -15612,7 +15898,8 @@
       "sage": [
         "Man warnt in der Wüste: Wer eine Oase mit Musik findet, sollte weitergehen.",
         "In the desert they warn: whoever finds an oasis with music should keep walking."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "kokatrix",
@@ -15652,7 +15939,8 @@
       "sage": [
         "Die Hühnerhalter sagen, wenn ein Hahn ein Ei legt, droht eine Kokatrix.",
         "Poultry keepers say when a rooster lays an egg, a cockatrice threatens."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "riesenaffe",
@@ -15691,7 +15979,8 @@
       "sage": [
         "Die Inselleute erzählen, der Riesenaffe trommelt bei Sonnenaufgang, damit die Sonne nicht vergisst aufzugehen.",
         "Islanders tell that the giant ape drums at dawn so the sun won't forget to rise."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "tyrannosaurus",
@@ -15733,7 +16022,8 @@
       "sage": [
         "Man sagt, auf der verlorenen Insel ist der Tyrannosaurus der einzige, der nie wegrennt.",
         "They say on the lost island the tyrannosaurus is the only one who never runs away."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "mammut",
@@ -15773,7 +16063,8 @@
       "sage": [
         "Die Eisvölker erzählen, die Mammuts tragen die Erinnerung an jeden Winter in ihrem Fell.",
         "Ice peoples tell that mammoths carry the memory of every winter in their fur."
-      ]
+      ],
+      "sg": 18
     },
     {
       "id": "oni",
@@ -15812,7 +16103,8 @@
       "sage": [
         "Die Mütter sagen, ein Oni klopft nie an, er wartet, bis jemand die Tür offen lässt.",
         "Mothers say an oni never knocks, it waits until someone leaves the door open."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "erzmagier",
@@ -15855,7 +16147,8 @@
       "sage": [
         "Man erzählt, ein Erzmagier hat seinen Namen so oft geändert, dass er ihn selbst nicht mehr weiß.",
         "They tell that an archmage has changed his name so often he no longer knows it himself."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "wachdrohne",
@@ -15899,7 +16192,8 @@
       "sage": [
         "Die Mechaniker sagen, jede Wachdrohne hat einen Lieblingsgang, und dort ist sie am schnellsten.",
         "Mechanics say every sentry drone has a favourite corridor, and that is where it is fastest."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "kampfroboter",
@@ -15948,7 +16242,8 @@
       "sage": [
         "Man erzählt, ein Kampfroboter hat einmal einen Krieg gewonnen, der schon zwanzig Jahre vorbei war.",
         "They tell that a combat robot once won a war that had been over for twenty years."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "raumpirat",
@@ -15985,7 +16280,8 @@
       "sage": [
         "Die Frachterpiloten sagen, ein Raumpirat funkt immer zuerst freundlich.",
         "Freighter pilots say a space pirate always radios friendly first."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "cyborg_soeldner",
@@ -16029,7 +16325,8 @@
       "sage": [
         "Man sagt, ein Cyborg-Söldner zählt seine Ersatzteile wie andere ihre Narben.",
         "They say a cyborg mercenary counts its spare parts the way others count scars."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "xeno_kriecher",
@@ -16073,7 +16370,8 @@
       "sage": [
         "Die Stationscrews sagen: Wenn es in den Schächten tropft und es regnet nicht, lauf.",
         "Station crews say: when it drips in the shafts and it isn't raining, run."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "xeno_koenigin",
@@ -16128,7 +16426,8 @@
       "sage": [
         "Man flüstert, eine Xeno-Königin hört jeden ihrer Kinder, egal wie weit weg.",
         "It is whispered that a xeno queen hears every one of her children, no matter how far."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "nanitenwolke",
@@ -16177,7 +16476,8 @@
       "sage": [
         "Die Techniker erzählen, eine Nanitenwolke hat einmal ein ganzes Schiff zerlegt und als Kunstwerk wieder aufgebaut.",
         "Technicians tell that a nanite swarm once took apart a whole ship and rebuilt it as a sculpture."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "abtruennige_ki",
@@ -16225,7 +16525,8 @@
       "sage": [
         "Man sagt, jede abtrünnige KI glaubt fest, sie sei die Einzige, die noch vernünftig ist.",
         "They say every rogue AI firmly believes it is the only one still sane."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "mutant",
@@ -16266,7 +16567,8 @@
       "sage": [
         "Die Siedler sagen, jeder Mutant trägt noch ein Stück seines alten Lebens bei sich.",
         "Settlers say every mutant still carries a piece of its old life."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "weltraumhai",
@@ -16306,7 +16608,8 @@
       "sage": [
         "Die Piloten erzählen, ein Leerenhai riecht Treibstoff über Lichtminuten hinweg.",
         "Pilots tell that a void shark can smell fuel across light-minutes."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "geschuetzturm",
@@ -16353,7 +16656,8 @@
       "sage": [
         "Man sagt, ein Geschützturm hat nur zwei Gedanken: Ziel und Feuer.",
         "They say a turret has only two thoughts: target and fire."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "geisterpirat",
@@ -16406,7 +16710,8 @@
       "sage": [
         "Die Seeleute sagen, ein Geisterpirat sucht noch immer die Insel, auf der er seinen Schatz vergraben hat.",
         "Sailors say a ghost pirate still seeks the island where he buried his treasure."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "klabautermann",
@@ -16443,7 +16748,8 @@
       "sage": [
         "Man sagt, ein Schiff ohne Klabautermann sinkt beim ersten Sturm, eins mit ihm beim zweiten.",
         "They say a ship without a kobold sinks in the first storm, one with it in the second."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "krakenbrut",
@@ -16490,7 +16796,8 @@
       "sage": [
         "Die Fischer erzählen, wo eine Krakenbrut ist, ist die Mutter nicht weit.",
         "Fishers tell that where there is kraken spawn, the mother is not far."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "meuterer",
@@ -16527,7 +16834,8 @@
       "sage": [
         "An Bord heißt es: Jeder Meuterer war einmal der treueste Matrose.",
         "Aboard they say: every mutineer was once the most loyal sailor."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "piratenkapitaen",
@@ -16566,7 +16874,8 @@
       "sage": [
         "Die Hafenkinder spielen „Piratenkapitän“, und wer verliert, muss das Deck schrubben.",
         "Harbour children play \"pirate captain\", and whoever loses has to scrub the deck."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "puppenspieler",
@@ -16610,7 +16919,8 @@
       "sage": [
         "Man erzählt, ein Puppenspieler kann nicht mehr loslassen, nicht einmal seine eigenen Fäden.",
         "They tell that a puppeteer can no longer let go, not even of his own strings."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "schattenkind",
@@ -16658,7 +16968,8 @@
       "sage": [
         "Die Ammen sagen, ein Schattenkind will nur spielen, aber nie aufhören.",
         "Nannies say a shadow child only wants to play, but never wants to stop."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "vogelscheuche",
@@ -16705,7 +17016,8 @@
       "sage": [
         "Die Bauern sagen: Stell die Vogelscheuche nie mit dem Gesicht zum Haus.",
         "Farmers say: never set the scarecrow facing the house."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "kirchhofbestie",
@@ -16751,7 +17063,8 @@
       "sage": [
         "Man erzählt, die Kirchhofbestie bellt nur einmal im Jahr, und dann weiß jeder, warum.",
         "They tell that the churchyard beast barks only once a year, and then everyone knows why."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "reparaturbot",
@@ -16796,7 +17109,8 @@
       "sage": [
         "Die Ingenieure sagen, ein Reparaturbot repariert alles, auch das, was gar nicht kaputt war.",
         "Engineers say a repair bot fixes everything, even what wasn't broken."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "sicherheitsdroide",
@@ -16841,7 +17155,8 @@
       "sage": [
         "Man sagt, ein Sicherheitsdroide hat noch nie einen Witz verstanden.",
         "They say a security droid has never understood a joke."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "leerenparasit",
@@ -16888,7 +17203,8 @@
       "sage": [
         "Die Ärzte der Flotte sagen: Wer plötzlich nach Kälte hungert, sollte sich untersuchen lassen.",
         "Fleet doctors say: whoever suddenly craves cold should get checked."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "enterkommando",
@@ -16926,7 +17242,8 @@
       "sage": [
         "Man erzählt, ein gutes Enterkommando ist an Bord, bevor der Alarm losgeht.",
         "They tell that a good boarding team is aboard before the alarm goes off."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "plasmakaefer",
@@ -16973,7 +17290,8 @@
       "sage": [
         "Die Schürfer sagen, ein Plasmakäfer leuchtet heller, je wütender er ist.",
         "Prospectors say a plasma beetle glows brighter the angrier it gets."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "psi_adept",
@@ -17017,7 +17335,8 @@
       "sage": [
         "Man sagt, ein Psi-Adept hört dich denken, bevor du es selbst tust.",
         "They say a psi adept hears you think before you do."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "tarnjaeger",
@@ -17061,7 +17380,8 @@
       "sage": [
         "Die Soldaten erzählen, einen Tarnjäger erkennt man nur an dem Regen, der um ihn herumfällt.",
         "Soldiers tell that you only recognise a cloaked hunter by the rain falling around it."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "frachtlader_mech",
@@ -17113,7 +17433,8 @@
       "sage": [
         "Man sagt, ein Frachtlader-Mech hebt zehn Tonnen, aber keine Entschuldigung.",
         "They say a cargo loader mech lifts ten tonnes, but never an apology."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "xeno_brueter",
@@ -17161,7 +17482,8 @@
       "sage": [
         "Die Xenobiologen flüstern, ein Xeno-Brüter hat mehr Kinder als Sterne am Himmel.",
         "Xenobiologists whisper that a xeno breeder has more children than there are stars in the sky."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "kampfsynth",
@@ -17209,7 +17531,8 @@
       "sage": [
         "Man erzählt, ein Kampfsynth träumt manchmal, ein Mensch zu sein, und wacht enttäuscht auf.",
         "They tell that a combat synth sometimes dreams of being human and wakes up disappointed."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "gravitationsgeist",
@@ -17259,7 +17582,8 @@
       "sage": [
         "Die Raumfahrer sagen: Wenn dein Kaffee nach oben tropft, bete zum Gravitationsgeist um Gnade.",
         "Spacers say: when your coffee drips upwards, pray to the gravity wraith for mercy."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "schwarmmutter",
@@ -17308,7 +17632,8 @@
       "sage": [
         "Man erzählt, eine Schwarmmutter kennt jedes ihrer tausend Beine beim Namen.",
         "They tell that a swarm mother knows every one of her thousand legs by name."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "belagerungspanzer",
@@ -17362,7 +17687,8 @@
       "sage": [
         "Die Kolonisten sagen, ein Belagerungspanzer hat noch nie eine Tür benutzt.",
         "Colonists say a siege walker has never used a door."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "stationskern_ki",
@@ -17415,7 +17741,8 @@
       "sage": [
         "Man sagt, die Stationskern-KI hört jedes Gespräch, und sie vergisst keins.",
         "They say the station core AI hears every conversation, and forgets none."
-      ]
+      ],
+      "sg": 18
     },
     {
       "id": "leerenleviathan",
@@ -17468,7 +17795,8 @@
       "sage": [
         "Die alten Kapitäne erzählen, ein Leerenleviathan singt, und wer es hört, will nie mehr landen.",
         "Old captains tell that a void leviathan sings, and whoever hears it never wants to land again."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "admiral_des_nichts",
@@ -17521,7 +17849,8 @@
       "sage": [
         "Man flüstert, der Admiral des Nichts salutiert jeden Morgen vor einer leeren Brücke.",
         "It is whispered that the Admiral of Nothing salutes an empty bridge every morning."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "deckratte",
@@ -17559,7 +17888,8 @@
       "sage": [
         "An Bord sagt man: Wenn die Deckratten das Schiff verlassen, verlass es auch.",
         "Aboard they say: when the deck rats leave the ship, leave it too."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "schmuggler",
@@ -17597,7 +17927,8 @@
       "sage": [
         "Die Zöllner sagen, ein guter Schmuggler hat mehr Taschen als Hemden.",
         "Customs men say a good smuggler has more pockets than shirts."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "seehexe",
@@ -17644,7 +17975,8 @@
       "sage": [
         "Die Fischer erzählen, die Seehexe tauscht Nebel gegen Namen.",
         "Fishers tell that the sea witch trades fog for names."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "scherenkoenigin",
@@ -17692,7 +18024,8 @@
       "sage": [
         "Man sagt, die Scherenkönigin knackt jeden Panzer, nur den eigenen nie.",
         "They say the claw queen cracks every shell except her own."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "geistermatrose",
@@ -17747,7 +18080,8 @@
       "sage": [
         "Die Seeleute erzählen, ein Geistermatrose wartet noch immer auf den Befehl „Feierabend“.",
         "Sailors tell that a ghost sailor is still waiting for the order \"stand down\"."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "marinekapitaen",
@@ -17786,7 +18120,8 @@
       "sage": [
         "Man sagt, ein Marinekapitän träumt nachts von Piraten und tagsüber vom Ruhestand.",
         "They say a navy captain dreams of pirates at night and of retirement by day."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "korallengolem",
@@ -17839,7 +18174,8 @@
       "sage": [
         "Die Taucher erzählen, ein Korallengolem wächst jedes Jahr um einen Finger.",
         "Divers tell that a coral golem grows by a finger every year."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "riffschlange",
@@ -17887,7 +18223,8 @@
       "sage": [
         "Die Lotsen sagen: Wenn das Riff sich bewegt, ist es keins.",
         "Pilots say: when the reef moves, it isn't one."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "verfluchter_kapitaen",
@@ -17941,7 +18278,8 @@
       "sage": [
         "Man erzählt, der verfluchte Kapitän kann nur erlöst werden, wenn jemand sein Gold freiwillig zurückgibt.",
         "They tell that the cursed captain can only be freed if someone gives his gold back of their own will."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "tiefenkraken",
@@ -17994,7 +18332,8 @@
       "sage": [
         "Die Sage geht, der Tiefenkraken schläft unter einer Insel, und wenn er aufwacht, ist die Insel weg.",
         "The legend goes that the deep kraken sleeps beneath an island, and when it wakes, the island is gone."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "puppenmacher",
@@ -18041,7 +18380,8 @@
       "sage": [
         "Man flüstert, der Puppenmacher näht jeder Puppe ein kleines Geheimnis ein.",
         "It is whispered that the dollmaker sews a small secret into every doll."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "knochenhund",
@@ -18089,7 +18429,8 @@
       "sage": [
         "Die Totengräber sagen, ein Knochenhund holt jeden Stock, aber nie einen aus Holz.",
         "Gravediggers say a bone hound fetches every stick, but never one of wood."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "seuchenarzt",
@@ -18136,7 +18477,8 @@
       "sage": [
         "Man erzählt, unter der Maske eines Seuchenarztes ist nur eine weitere Maske.",
         "They tell that beneath a plague doctor's mask there is only another mask."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "schattenweber",
@@ -18187,7 +18529,8 @@
       "sage": [
         "Man sagt, der Schattenweber webt jeden Abend die Nacht ein Stück länger.",
         "They say the shadow weaver weaves the night a little longer every evening."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "kirchturmwaechter",
@@ -18241,7 +18584,8 @@
       "sage": [
         "Die Dörfler sagen, der Kirchturmwächter schlägt die dreizehnte Stunde, wenn Gefahr droht.",
         "Villagers say the belfry warden strikes the thirteenth hour when danger looms."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "albtraumreiter",
@@ -18292,7 +18636,8 @@
       "sage": [
         "Man erzählt, wer am Morgen Hufspuren auf der Bettdecke findet, hatte Besuch vom Albtraumreiter.",
         "They tell that whoever finds hoofprints on the blanket in the morning was visited by the nightmare rider."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "die_bleiche_graefin",
@@ -18347,7 +18692,8 @@
       "sage": [
         "Die Dienstboten flüstern, die bleiche Gräfin hat seit dreihundert Jahren nicht in einen Spiegel gesehen.",
         "The servants whisper that the Pale Countess has not looked in a mirror for three hundred years."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "das_ding_im_brunnen",
@@ -18400,7 +18746,8 @@
       "sage": [
         "Man sagt, das Ding im Brunnen antwortet, wenn man seinen Namen hinunterruft, aber es ist nie der eigene.",
         "They say the Thing in the Well answers when you call your name down, but it is never your own."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "runenwaechter",
@@ -18453,7 +18800,8 @@
       "sage": [
         "Die Gelehrten sagen, jede Rune auf einem Runenwächter ist ein Wort aus einem verlorenen Gedicht.",
         "Scholars say every rune on a rune guardian is a word from a lost poem."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "frostriesin",
@@ -18501,7 +18849,8 @@
       "sage": [
         "Man erzählt, die Frostriesin weint Eiszapfen, wenn der Frühling kommt.",
         "They tell that the frost giantess weeps icicles when spring comes."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "greifenkoenig",
@@ -18546,7 +18895,8 @@
       "sage": [
         "Die Bergvölker sagen, der Greifenkönig hat jeden Gipfel einmal bestiegen, und keinen zu Fuß.",
         "Mountain peoples say the griffin king has stood on every peak, and never on foot."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "lichkoenig",
@@ -18601,7 +18951,8 @@
       "sage": [
         "Die Sage geht, der Lichkönig hat seine Seele in einem Kinderspielzeug versteckt, weil dort niemand sucht.",
         "The legend goes that the lich king hid his soul in a child's toy, because nobody looks there."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "feuerdrache_alt",
@@ -18654,7 +19005,8 @@
       "sage": [
         "Man sagt, der alte Feuerdrache kennt den Wert jeder Münze in seinem Hort, und auch, wer sie geprägt hat.",
         "They say the ancient fire dragon knows the worth of every coin in its hoard, and who minted it."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "dunkelelf_klinge",
@@ -18699,7 +19051,8 @@
       "sage": [
         "Die Zwerge sagen: Wenn die Fackeln flackern und keiner atmet, ist eine Dunkelelfen-Klinge nah.",
         "Dwarves say: when torches flicker and nobody breathes, a dark elf blade is near."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "waldwandler",
@@ -18748,7 +19101,8 @@
       "sage": [
         "Man erzählt, ein Waldwandler war einst ein ganzer Hain, der sich auf den Weg machte.",
         "They tell that a forest walker was once a whole grove that set off on a journey."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "hexenmeister",
@@ -18792,7 +19146,8 @@
       "sage": [
         "Man sagt, ein Hexenmeister hört seinen Schutzherrn in jedem Windhauch.",
         "They say a warlock hears their patron in every breath of wind."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "wegelagerer",
@@ -18830,7 +19185,8 @@
       "sage": [
         "Die Händler sagen: Jede Biegung hat ihren Wegelagerer, aber nur jede dritte ist hungrig.",
         "Merchants say: every bend has its highwayman, but only every third one is hungry."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "tollwuetiger_wolf",
@@ -18871,7 +19227,8 @@
       "sage": [
         "Die Hirten warnen: Ein Wolf, der am Tag in die Stadt kommt, ist kein gewöhnlicher Wolf.",
         "Shepherds warn: a wolf that comes into town by day is no ordinary wolf."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "hoehlenbaer",
@@ -18913,7 +19270,8 @@
       "sage": [
         "Man erzählt, ein Höhlenbär schläft den ganzen Winter und wacht nur auf, um sich zu beschweren.",
         "They tell that a cave bear sleeps all winter and only wakes to complain."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "spiegelwesen",
@@ -18958,7 +19316,8 @@
       "sage": [
         "Die Sage geht, jedes Spiegelwesen beneidet das Gesicht, das es zeigt.",
         "The legend goes that every mirror being envies the face it shows."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "wachfels",
@@ -19011,7 +19370,8 @@
       "sage": [
         "Man sagt, ein Wachfels hat tausend Jahre gewartet und kann noch tausend warten.",
         "They say a watch rock has waited a thousand years and can wait a thousand more."
-      ]
+      ],
+      "sg": 16
     },
     {
       "id": "chimaere_wild",
@@ -19056,7 +19416,8 @@
       "sage": [
         "Die Jäger sagen, eine wilde Chimäre ist sich nur in einer Sache einig: dem Hunger.",
         "Hunters say a wild chimera agrees with itself on only one thing: hunger."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "weltenfresser",
@@ -19109,7 +19470,8 @@
       "sage": [
         "Die ältesten Sagen erzählen, der Weltenfresser hat schon einmal eine Welt verschluckt, und sie war die vor dieser.",
         "The oldest legends tell that the world eater swallowed a world once before, the one before this."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "schicksalsweber",
@@ -19158,7 +19520,8 @@
       "sage": [
         "Man flüstert, der Schicksalsweber lässt manchmal einen Faden lose, damit ein Held ihn findet.",
         "It is whispered that the fate weaver sometimes leaves a thread loose so a hero may find it."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "sternenfreibeuter",
@@ -19201,7 +19564,8 @@
       "sage": [
         "Die Raumhäfen singen von dem Sternenfreibeuter, der eine Komet-Ladung Gold verschenkte.",
         "Spaceports sing of the star buccaneer who gave away a comet's load of gold."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "kometenkaperer",
@@ -19253,7 +19617,8 @@
       "sage": [
         "Man sagt, ein Kometenkaperer erkennt man am Schweif, den er hinter sich herzieht.",
         "They say you know a comet raider by the tail it drags behind."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "minendrohne",
@@ -19301,7 +19666,8 @@
       "sage": [
         "Die Bergleute der Asteroiden sagen: Piept es dreimal, duck dich.",
         "Asteroid miners say: if it beeps three times, duck."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "schrottkrieger",
@@ -19350,7 +19716,8 @@
       "sage": [
         "Man erzählt, ein Schrottkrieger trägt die Teile von hundert Schiffen und die Erinnerungen von keinem.",
         "They tell that a scrap warrior wears parts of a hundred ships and the memories of none."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "nebelsammler",
@@ -19397,7 +19764,8 @@
       "sage": [
         "Die Navigatoren sagen, der Nebelsammler hat die schönsten Farben des Alls in seinem Bauch.",
         "Navigators say the nebula collector keeps the most beautiful colours of space in its belly."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "sturmhueter",
@@ -19445,7 +19813,8 @@
       "sage": [
         "Man sagt, der Sturmhüter verschenkt manchmal eine Flasche mit Gewitter an Bauern in der Dürre.",
         "They say the storm keeper sometimes gives a bottled thunderstorm to farmers in a drought."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "eisenkoloss",
@@ -19499,7 +19868,8 @@
       "sage": [
         "Die Sage geht, der Eisenkoloss wurde gebaut, um eine Stadt zu schützen, die es nicht mehr gibt.",
         "The legend goes that the iron colossus was built to guard a city that no longer exists."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "traumfresser",
@@ -19551,7 +19921,8 @@
       "sage": [
         "Man sagt, wer morgens nicht weiß, was er geträumt hat, hatte Besuch vom Traumfresser.",
         "They say whoever can't recall their dream in the morning was visited by the dream eater."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "glutwurm",
@@ -19603,7 +19974,8 @@
       "sage": [
         "Die Bergleute sagen, wo ein Glutwurm gräbt, ist der Fels noch nach Jahren warm.",
         "Miners say where an ember worm digs, the rock stays warm for years."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "spiegelkoenigin",
@@ -19655,7 +20027,8 @@
       "sage": [
         "Man erzählt, die Spiegelkönigin sieht durch jeden Spiegel, darum hängen die Alten ihre zu.",
         "They tell that the mirror queen sees through every mirror, which is why the old ones cover theirs."
-      ]
+      ],
+      "sg": 18
     },
     {
       "id": "sternenwal",
@@ -19707,7 +20080,8 @@
       "sage": [
         "Die Sage geht, der Gesang des Sternenwals hat die ersten Sterne angezündet.",
         "The legend goes that the star whale's song lit the first stars."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "uhrwerkdrache",
@@ -19761,7 +20135,8 @@
       "sage": [
         "Man sagt, wer den Uhrwerkdrachen aufzieht, darf sich eine Stunde wünschen.",
         "They say whoever winds the clockwork dragon may wish for one hour."
-      ]
+      ],
+      "sg": 18
     },
     {
       "id": "goblinkrieger",
@@ -19798,7 +20173,8 @@
       "sage": [
         "Die Goblins singen, der beste Krieger ist der, der zuletzt wegläuft.",
         "Goblins sing that the best warrior is the one who runs away last."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "goblinboss",
@@ -19836,7 +20212,8 @@
       "sage": [
         "Man sagt, ein Goblinboss ist nur so lange Boss, wie er am lautesten schreit.",
         "They say a goblin boss is only boss as long as he shouts loudest."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "hobgoblin_hauptmann",
@@ -19874,7 +20251,8 @@
       "sage": [
         "Die Hobgoblins erzählen, ihr bester Hauptmann hat nie einen Kampf verloren, nur einige verschoben.",
         "Hobgoblins tell that their best captain never lost a battle, only postponed a few."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "koboldkrieger",
@@ -19911,7 +20289,8 @@
       "sage": [
         "Man sagt, ein Koboldkrieger stellt drei Fallen, bevor er frühstückt.",
         "They say a kobold warrior sets three traps before breakfast."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "gnollkrieger",
@@ -19948,7 +20327,8 @@
       "sage": [
         "Die Steppenleute sagen, wenn nachts jemand kichert, zählt eure Pferde.",
         "Steppe folk say when someone giggles at night, count your horses."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "pegasus",
@@ -19985,7 +20365,8 @@
       "sage": [
         "Die Sage geht, ein Pegasus trägt nur, wer ihm einen Stern zeigen kann.",
         "The legend goes that a pegasus only carries someone who can show it a star."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "wichtel",
@@ -20025,7 +20406,8 @@
       "sage": [
         "Man sagt, ein Wichtel spürt jede Lüge und kichert dann ganz leise.",
         "They say a sprite senses every lie and then giggles very quietly."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "blinkhund",
@@ -20062,7 +20444,8 @@
       "sage": [
         "Die Waldleute erzählen, ein Blinkhund ist nie dort, wo man ihn zuletzt gesehen hat.",
         "Forest folk tell that a blink dog is never where you last saw it."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "couatl",
@@ -20111,7 +20494,8 @@
       "sage": [
         "Man sagt, ein Couatl erscheint nur, wenn die Welt einen Rat braucht, und meist dann, wenn keiner ihn hören will.",
         "They say a couatl only appears when the world needs counsel, usually when nobody wants to hear it."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "werbaer",
@@ -20150,7 +20534,8 @@
       "sage": [
         "Die Dörfer im Wald erzählen, ein Werbär bringt Honig vor die Türen derer, die gut zu ihm waren.",
         "Forest villages tell that a werebear leaves honey at the doors of those who were kind to it."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "wertiger",
@@ -20192,7 +20577,8 @@
       "sage": [
         "Man sagt, ein Wertiger kann seine Streifen nicht verbergen, nicht einmal in Menschengestalt.",
         "They say a weretiger can't hide its stripes, not even in human form."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "lehmgolem",
@@ -20241,7 +20627,8 @@
       "sage": [
         "Die Töpfer erzählen, ein Lehmgolem bekommt Risse, wenn man ihn anlügt.",
         "Potters tell that a clay golem cracks when you lie to it."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "gorgone",
@@ -20281,7 +20668,8 @@
       "sage": [
         "Man sagt, eine Gorgone schnaubt Stein und frisst am liebsten Statuen.",
         "They say a gorgon snorts stone and likes to eat statues best."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "junger_messingdrache",
@@ -20325,7 +20713,8 @@
       "sage": [
         "Die Wüstenleute sagen, ein Messingdrache lässt dich gehen, wenn du ihm eine gute Geschichte erzählst.",
         "Desert folk say a brass dragon lets you go if you tell it a good story."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "junger_silberdrache",
@@ -20369,7 +20758,8 @@
       "sage": [
         "Man erzählt, ein Silberdrache wohnt manchmal unerkannt als freundliche Nachbarin im Dorf.",
         "They tell that a silver dragon sometimes lives unrecognised as a kindly neighbour in the village."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "junger_weisser_drache",
@@ -20410,7 +20800,8 @@
       "sage": [
         "Die Nordleute sagen, ein weißer Drache erinnert sich an jede Schneeflocke, die auf ihn fiel.",
         "The northfolk say a white dragon remembers every snowflake that fell on it."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "steinriese",
@@ -20451,7 +20842,8 @@
       "sage": [
         "Man erzählt, die Steinriesen spielen Fangen mit Felsen, und die Berge sind ihre Spielsteine.",
         "They tell that stone giants play catch with boulders, and the mountains are their game pieces."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "frostriese",
@@ -20492,7 +20884,8 @@
       "sage": [
         "Die Sage geht, ein Frostriese kämmt seinen Bart mit Eiszapfen.",
         "The legend goes that a frost giant combs his beard with icicles."
-      ]
+      ],
+      "sg": 17
     },
     {
       "id": "feuerriese",
@@ -20533,7 +20926,8 @@
       "sage": [
         "Man sagt, die Feuerriesen schmieden ihre Klingen so heiß, dass der Himmel rot wird.",
         "They say fire giants forge their blades so hot that the sky turns red."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "axtschnabel",
@@ -20570,7 +20964,8 @@
       "sage": [
         "Die Bauern sagen, ein Axtschnabel ist dümmer als ein Huhn, aber schneller als ein Pferd.",
         "Farmers say an axe beak is dumber than a chicken but faster than a horse."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "wundersphinx",
@@ -20612,7 +21007,8 @@
       "sage": [
         "Man erzählt, eine Wundersphinx schenkt dem, der ihr Rätsel löst, ein neues.",
         "They tell that a sphinx of wonder rewards whoever solves its riddle with a new one."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "schildwaechter",
@@ -20657,7 +21053,8 @@
       "sage": [
         "Man sagt, ein Schildwächter hört nur auf das Amulett, und nicht auf den, der es trägt.",
         "They say a shield guardian obeys only the amulet, not the one who wears it."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "roc",
@@ -20700,7 +21097,8 @@
       "sage": [
         "Die Seeleute erzählen, ein Roch hat einmal ein ganzes Schiff für ein Nest gehalten.",
         "Sailors tell that a roc once mistook a whole ship for a nest."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "remorhaz",
@@ -20746,7 +21144,8 @@
       "sage": [
         "Die Eisfischer sagen: Wenn das Eis plötzlich warm wird, ist ein Remorhaz darunter.",
         "Ice fishers say: when the ice suddenly turns warm, a remorhaz is beneath it."
-      ]
+      ],
+      "sg": 19
     },
     {
       "id": "seeraeuber",
@@ -20784,7 +21183,8 @@
       "sage": [
         "An Land sagt man, jeder Seeräuber hat eine Mutter, die glaubt, er sei Fischer.",
         "Ashore they say every pirate has a mother who thinks he is a fisherman."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "freibeuter_kapitaen",
@@ -20822,7 +21222,8 @@
       "sage": [
         "Man erzählt, ein Freibeuter-Kapitän hat für jeden Hafen einen anderen Namen.",
         "They tell that a freebooter captain has a different name for every port."
-      ]
+      ],
+      "sg": 15
     },
     {
       "id": "meervolk",
@@ -20860,7 +21261,8 @@
       "sage": [
         "Die Fischer sagen, das Meervolk lässt jedem Boot einen Fisch im Netz, das ihm einen Gruß hinterlässt.",
         "Fishers say the merfolk leave a fish in the net of every boat that leaves them a greeting."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "sahuagin_krieger",
@@ -20902,7 +21304,8 @@
       "sage": [
         "Man sagt, ein Sahuagin-Krieger hält das Meer für sein Haus und jedes Schiff für einen ungebetenen Gast.",
         "They say a sahuagin warrior thinks the sea is its house and every ship an unwelcome guest."
-      ]
+      ],
+      "sg": 11
     },
     {
       "id": "riffhai",
@@ -20939,7 +21342,8 @@
       "sage": [
         "Die Taucher sagen: Schwimm ruhig, der Riffhai mag keine Hektik.",
         "Divers say: swim calmly, the reef shark doesn't like a fuss."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "riesenseepferd",
@@ -20977,7 +21381,8 @@
       "sage": [
         "Man erzählt, ein Riesenseepferd findet jeden Weg nach Hause, auch durch den dichtesten Nebel.",
         "They tell that a giant seahorse finds the way home even through the thickest fog."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "archelon",
@@ -21015,7 +21420,8 @@
       "sage": [
         "Die Inselleute sagen, manche Inseln sind in Wahrheit schlafende Archelons.",
         "Islanders say some islands are really sleeping archelons."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "vampirdiener",
@@ -21059,7 +21465,8 @@
       "sage": [
         "Man flüstert, ein Vampirdiener zählt die Tage bis zu seiner Belohnung, und sie kommt nie.",
         "It is whispered that a vampire familiar counts the days to its reward, and it never comes."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "kriechklauen",
@@ -21108,7 +21515,8 @@
       "sage": [
         "Die Kinder erzählen sich, die kriechenden Klauen kitzeln nur, wenn man lacht.",
         "Children tell each other that the crawling claws only tickle if you laugh."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "minotaurusskelett",
@@ -21155,7 +21563,8 @@
       "sage": [
         "Man sagt, ein Minotaurusskelett findet den Weg durchs Labyrinth noch immer mit geschlossenen Augen.",
         "They say a minotaur skeleton still finds its way through the labyrinth with its eyes closed."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "grimlock",
@@ -21192,7 +21601,8 @@
       "sage": [
         "Die Bergleute sagen: Ein Grimlock sieht nichts, aber er hört, wie dein Herz klopft.",
         "Miners say: a grimlock sees nothing, but it hears your heart beat."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "unsichtbarer_jaeger",
@@ -21239,7 +21649,8 @@
       "sage": [
         "Man erzählt, ein unsichtbarer Pirscher gibt nie auf, bis sein Auftrag erfüllt ist.",
         "They tell that an invisible stalker never gives up until its task is done."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "dorfbewohner",
@@ -21276,7 +21687,8 @@
       "sage": [
         "Die Barden sagen, die größten Helden waren zuerst einfache Dorfbewohner.",
         "Bards say the greatest heroes were simple villagers first."
-      ]
+      ],
+      "sg": 10
     },
     {
       "id": "adliger",
@@ -21315,7 +21727,8 @@
       "sage": [
         "Man sagt, ein Adliger kennt die Namen seiner Ahnen, aber nicht die seiner Diener.",
         "They say a noble knows the names of their ancestors, but not those of their servants."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "spaeher",
@@ -21353,7 +21766,8 @@
       "sage": [
         "Die Soldaten sagen, ein guter Späher kommt zurück, bevor man ihn vermisst.",
         "Soldiers say a good scout comes back before anyone misses them."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "wachhauptmann",
@@ -21391,7 +21805,8 @@
       "sage": [
         "Man erzählt, jeder Wachhauptmann hat einmal selbst einen Apfel vom Markt gestohlen.",
         "They tell that every guard captain once stole an apple from the market themselves."
-      ]
+      ],
+      "sg": 14
     },
     {
       "id": "raufbold",
@@ -21428,7 +21843,8 @@
       "sage": [
         "Die Wirte sagen, ein Raufbold zahlt immer, aber nie mit Geld.",
         "Innkeepers say a tough always pays, just never with money."
-      ]
+      ],
+      "sg": 12
     },
     {
       "id": "kriegsveteran",
@@ -21466,7 +21882,8 @@
       "sage": [
         "Man sagt, ein Kriegsveteran schläft mit dem Rücken zur Wand und lacht über die Jungen, die es nicht tun.",
         "They say a warrior veteran sleeps with their back to the wall and laughs at the young who don't."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "druidin",
@@ -21507,7 +21924,8 @@
       "sage": [
         "Die Bauern sagen, wenn die Druidin lächelt, wird die Ernte gut.",
         "Farmers say when the druid smiles, the harvest will be good."
-      ]
+      ],
+      "sg": 13
     },
     {
       "id": "akolyth",
@@ -21545,7 +21963,8 @@
       "sage": [
         "Man erzählt, jeder Akolyth hat am ersten Tag die Glocke zu früh geläutet.",
         "They tell that every acolyte rang the bell too early on their first day."
-      ]
+      ],
+      "sg": 12
     }
   ],
   "tabellen": [

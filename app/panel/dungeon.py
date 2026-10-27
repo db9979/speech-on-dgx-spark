@@ -417,7 +417,7 @@ SG = ("sehr_leicht", "leicht", "mittel", "schwer", "sehr_schwer", "fast_unmoegli
 GRAD_MAX = 5              # spell grades 1..5 use charges, grade 0 (cantrips) any time
 LISTE_MAX = 500           # entries per list of the rules in force (shipped, SRD and the admin's)
 EIGENE_MAX = 200          # entries per list in the admin's own file
-ZIELE = ("selbst", "gruppe")   # whom a spell reaches
+ZIELE = ("selbst", "gruppe", "verbuendeter")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
 # Dominik 2026-10-25 „ja so umsetzten“ (Schadensarten Punkt 4): a worn thing or a potion with "widerstand" halves a
 # foe's hit of that kind, as a foe's resistance does; a potion's protection holds SCHUTZ_ZUEGE told turns

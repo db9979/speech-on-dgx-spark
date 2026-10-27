@@ -27,6 +27,9 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - SRD 5.2.1 (Tabletop-Punkt 13): die Tabelle „budget“ (leicht, mittel, schwer, je 10 Stufen, steigend) mit Namensnennung
   in der Datei und der Doku; kein Name und kein Text eines Gegners, Dings, Zustands, Volks, einer Klasse oder eines
   Hintergrunds trägt ein Wort aus der Wortliste des Kindertons (der Erzähler dürfte ihn am Kindertisch nie sagen).
+- Kampf-Audit Welle 2 (H4, N6, N7): ein Zauber mit Rettungswurf nennt genau einen der sechs Werte, ein Zustand nur aus
+  der Liste und nur mit Rettungswurf, „halb“ nur als true bei Schaden mit Rettungswurf; jeder Zauber ohne Schaden mit
+  Zustand hat einen Rettungswurf; „verbuendeter“ nur bei Heilung; jeder Gegner hat einen SG von 5 bis 30, die Wache sticht.
 """
 import json
 import os
@@ -292,6 +295,25 @@ class Srd(unittest.TestCase):
             texte = re.findall(r'"((?:[^"\\]|\\.)*)"', json.dumps([s["ideen"], [x.get("sage") for x in s["gegner"]]], ensure_ascii=False))
             ids = {z["id"] for z in r["zustaende"]}    # a state's id (blutend) is no spoken text, its name is checked above
             self.assertEqual([t for t in texte if t not in ids and any(w in " " + t.lower() + " " for w in woerter)], [])
+
+    def test_rettung_zustand_halb_und_sg(self):
+        s, r = srd(), dungeon._base_rules()
+        werte, zids = {w["id"] for w in r["werte"]}, {z["id"] for z in r["zustaende"]}
+        zauber = {x["id"]: x for x in s["gegenstaende"] if x.get("art") in ("zauber", "rolle")}
+        for x in zauber.values():
+            rw = x.get("rettung")
+            self.assertTrue(rw is None or isinstance(rw, dict) and set(rw) == {"wert"} and rw["wert"] in werte, x["id"])
+            self.assertTrue("zustand" not in x or rw and x["zustand"] in zids, x["id"])
+            self.assertTrue("halb" not in x or x["halb"] is True and rw and x.get("schaden_art"), x["id"])
+            self.assertTrue(x.get("ziel") != "verbuendeter" or x.get("heilung"), x["id"])
+        for k in ("brennende_haende", "donnerwelle", "blitzstrahl", "kaeltekegel", "flammenschlag", "todeswolke"):
+            self.assertTrue(zauber[k]["rettung"] and zauber[k]["halb"], k)    # half damage on a success, as in the SRD
+        self.assertEqual((zauber["schlaf"]["zustand"], zauber["person_festhalten"]["zustand"], zauber["verstricken"]["rettung"]["wert"]),
+                         ("bewusstlos", "gelaehmt", "staerke"))
+        self.assertEqual({zauber[k]["ziel"] for k in ("wiederbeleben", "tote_erwecken", "wunden_heilen", "heilendes_wort")}, {"verbuendeter"})
+        for g in s["gegner"]:
+            self.assertTrue(isinstance(g.get("sg"), int) and not isinstance(g["sg"], bool) and 5 <= g["sg"] <= 30, g["id"])
+        self.assertEqual(next(g for g in s["gegner"] if g["id"] == "wache")["schaden_art"], "stich")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.140** · 2026-10-26 · KI-Dungeon-Master: Rettungswürfe, Zustände und „halb“ an 40 Zaubern, Ziel „verbuendeter“ für 9 Heil- und Wiederbelebungszauber, SG für alle 268 Gegner nach dem SRD 5.2.1, die Wache sticht (Daten, Kampf-Audit H4, N6, N7)
 - **V01.1.139** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit Welle 2, eine gewirkte Angriffs-Schriftrolle macht den nächsten Angriff zu ihrem Zauber, Heilzauber wirken vor den Treffern des Zuges, „Ratte“ trifft die Riesenratte statt des Rattenschwarms, und die Kampf-Erfahrung wird abgerundet geteilt
 - **V01.1.138** · 2026-10-26 · KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 - **V01.1.137** · 2026-10-26 · KI-Dungeon-Master: Im Geschichten-Planer kreuzt du bis zu drei bekannte Personen aus dem Katalog an, eine Runde dieser Geschichte bringt sie mit ihrer festen Karte, Rolle und Haltung, das Sprachmodell darf sie im Entwurf nutzen

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.140** AI Dungeon Master: saving throws, conditions and DCs from the SRD in the catalog (combat audit H4, N6, N7)
 - **V01.1.139** AI Dungeon Master: combat audit wave 2, an attack scroll cast makes the next attack its spell, healing spells work before the turn's hits, "rat" hits the giant rat instead of the rat swarm, and the fight's experience is divided rounded down
 - **V01.1.138** AI Dungeon Master: combat audit wave 2, blessings no longer stack (the highest counts, a new spell ends the same hero's last blessing), Shield and Haste raise the armour class, Berserker Rage hits harder, and the group flees only by the panel's Dexterity check
 - **V01.1.137** AI Dungeon Master: in the story planner you tick up to three known people from the catalog, a round of that story brings them with their fixed card, role and attitude, the language model may use them in the draft
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.133** AI Dungeon Master: combat word boundaries, attacking a Nachtmahr or a Sicherheitsdroide works again (self-test over every foe), more attack and non-attack phrases, a hero down rolls no check
 - **V01.1.132** AI Dungeon Master: the hero's gender, male, female or non-binary at creation and on the hero sheet, the narration refers to the hero with the right pronoun (non-binary: they or the name), the voice comes from the gender's voices, the portrait names it and may be painted anew after a change
 - **V01.1.131** Knowledge question instead of Spark help: "What can you tell me about the Frauenkirche?" asks about the Frauenkirche, not the Spark (example list only for "What can you do?"); document search only passes on passages with the words asked for, else it says honestly "nothing fitting" and points to the archive or the web
-- **V01.1.130** AI Dungeon Master: combat audit, follow-up check, retreating, stepping aside, proposals, glances and giving a light are no attack any more, the model's target alone never attacks, peace once a fight without check EP, control spells without a model check, a hero on the ground does not attack, balance measured anew
 
 
 

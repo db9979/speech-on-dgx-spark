@@ -5853,6 +5853,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Rettungswürfe, Zustände und SG im SRD-Katalog (V01.1.140, Daten, Bericht dungeon-kampf-audit/bericht.md Punkte H4, N6 und N7, Thread „DnDAppFiles für den Dungeon-Master“): Nur Daten in app/panel/dungeon_srd.json, nach dem SRD 5.2.1 (CC-BY-4.0). 1. Rettungswurf und Zustand: 18 Zauber ohne Schaden, die auf Gegner wirken, tragen rettung: {\"wert\": …} (einer der sechs Werte), 13 davon dazu einen zustand aus der Liste (Schlaf bewusstlos, Person festhalten gelähmt, Verstricken und Telekinese festgesetzt, Furcht verängstigt, Befehl liegend, Farbspray blind, Stinkwolke vergiftet, Verbannung kampfunfähig, Tierfreundschaft, Einflüsterung, Hypnosemuster und Person beherrschen bezaubert); Unheil, Verlangsamen, Verwirrung, Verwandlung und Feenfeuer haben im SRD keinen Zustand und tragen nur den Rettungswurf. 2. Schaden mit Rettungswurf: 22 Schadenszauber tragen rettung, 17 davon \"halb\": true (gelungen = halber Schaden, etwa Brennende Hände, Donnerwelle, Blitzstrahl, Kältekegel, Todeswolke); ohne halb (Heilige Flamme, Säurespritzer, Bissiger Spott, Eismesser) heißt gelungen kein Schaden; Schwarze Tentakel: misslungen Schaden und festgesetzt, gelungen nichts. Zauber mit Angriffs"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "wurf (Feuerpfeil, Magisches Geschoss …) und Schläge (Sengender Schlag, Donnerschlag) bleiben ohne Rettungswurf. 3. Ziel „verbuendeter“: Wiederbeleben, Tote erwecken, Wunden heilen, Heilendes Wort, Kleine und Große Genesung, Todesschutz, Fluch brechen und Heldenmut wirken im SRD auf eine berührte oder gesehene Kreatur und tragen ziel: verbuendeter. 4. SG je Gegner: Jeder der 268 Gegner trägt sg, das SG seiner Zustände: bei 89 Gegnern aus dem Werteblock des SRD 5.2.1 (der Rettungswurf, der einen seiner Zustände auslöst, sonst sein höchstes SG), bei den übrigen 179 nach der SRD-Formel 8 + Übungsbonus der Stufe + bester Modifikator (geistige Zustände mit Intelligenz, Weisheit oder Charisma, die übrigen mit Stärke, Geschick oder Konstitution). 5. Wache: Speer, also schaden_art: stich. Selbsttest test_dungeon_srd (test_rettung_zustand_halb_und_sg). dungeon.ZIELE kennt „verbuendeter“; bis die Regeln dazu im Panel stehen (Hauptthread), wirkt es wie „selbst“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Segen, Rüstung und Flucht (V01.1.138, Bericht dungeon-kampf-audit/bericht.md Punkte M3, M5 und M6): Ohne neuen Schalter. 1. M3 Segen stapeln nicht: Auf einem Wert zählt nur der höchste Segen (dungeon.blessing), dreimal Dornenranken gibt +3 statt +9, derselbe Segen noch einmal erneuert nur seine Züge. Konzentration: Wirkt ein Held einen neuen Zauber mit Segen, endet sein voriger Segen bei allen Helden (dungeon._cast, Log dungeon: segen | konzentration | N beendet); Segen anderer Helden, von Tränken und Altären bleiben. Beim Zauberangriff zählt der Bonus des Zaubers nur, soweit er über dem Segen liegt, der schon auf dem Wert liegt. 2. M5 Rüstungsklasse und Schaden: Ein neuer Helfer dungeon.body gibt den Wert, wie ihn der Körper hat: Wertbonus und Segen, abzüglich einer Narbe, auf Wunsch mit den getragenen Gegenständen für den Wert und ihren Wirkungen (nie eine Waffe: ihr Bonus gehört zu Treffer und Schaden der Waffe, nie doppelt); ohne Fähigkeiten und Lehre (die zählen weiter nur bei Proben, dungeon.total). Die Rüstungsklasse nimmt Geschick mit den Gegenständen (mit der Grenze der Rüstung), ein Segen auf Geschick (Schild, Hast, Katzentrank) zäh"
 },
 {
@@ -20566,6 +20582,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "\"massive damage\" (dead at once), and damage while down does not count as a failed death save; foes do not attack heroes on the ground anyway."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: saving throws, conditions and DCs in the SRD catalog (V01.1.140, data, report dungeon-kampf-audit/bericht.md points H4, N6 and N7, thread \"DnDAppFiles für den Dungeon-Master\"): Data only in app/panel/dungeon_srd.json, following SRD 5.2.1 (CC-BY-4.0). 1. Saving throw and condition: 18 spells without damage that act on foes carry rettung: {\"wert\": …} (one of the six scores), 13 of them also a zustand from the list (Sleep unconscious, Hold person paralysed, Entangle and Telekinesis restrained, Fear frightened, Command prone, Colour spray blinded, Stinking cloud poisoned, Banishment incapacitated, Animal friendship, Suggestion, Hypnotic pattern and Dominate person charmed); Bane, Slow, Confusion, Polymorph and Faerie fire have no condition in the SRD and carry only the saving throw. 2. Damage with a saving throw: 22 damage spells carry rettung, 17 of them \"halb\": true (success = half damage, e.g. Burning hands, Thunderwave, Lightning bolt, Cone of cold, Cloudkill); without halb (Sacred flame, Acid splash, Vicious mockery, Ice knife) a success means no damage; Black tentacles: failure damage and restrained, success nothing. Spells with an attack roll (Fire bolt, Magic"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " missile …) and smites (Searing smite, Thunderous smite) keep no saving throw. 3. Target \"verbuendeter\": Revivify, Raise dead, Cure wounds, Healing word, Lesser and Greater restoration, Death ward, Remove curse and Heroism act on a creature touched or seen in the SRD and carry ziel: verbuendeter. 4. DC per foe: Each of the 268 foes carries sg, the DC of its conditions: for 89 foes from the SRD 5.2.1 stat block (the save that causes one of its conditions, else its highest DC), for the other 179 by the SRD formula 8 + proficiency bonus of its level + best modifier (states of the mind with Intelligence, Wisdom or Charisma, the rest with Strength, Dexterity or Constitution). 5. Guard: a spear, so schaden_art: stich. Self-test test_dungeon_srd (test_rettung_zustand_halb_und_sg). dungeon.ZIELE knows \"verbuendeter\"; until the rules for it are in the panel (main thread), it acts like \"selbst\"."
 },
 {
 "lang": "en",
