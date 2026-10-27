@@ -322,7 +322,8 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             Conversation.shared.answerGame(Conversation.gameLang == "en" ? "keep it" : "so lassen")
         }
         rows.append(keep)
-        let sub = CPListTemplate(title: String(localized: "Was genau?"), sections: [CPListSection(items: rows)])
+        let own = Conversation.shared.gameChoiceTitle
+        let sub = CPListTemplate(title: own.isEmpty ? String(localized: "Was genau?") : own, sections: [CPListSection(items: rows)])
         interface.pushTemplate(sub, animated: true) { _, _ in }
     }
 

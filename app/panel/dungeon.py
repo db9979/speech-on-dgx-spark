@@ -133,6 +133,7 @@ import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
 import dungeon_buch as heldenbuch
 import dungeon_tageszeit as tageszeit
+import dungeon_anleiten as anleiten
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_rueckfrage as rueckfrage
@@ -3085,8 +3086,10 @@ def act(rd, pid, text, turn, now):
         print("dungeon: aktion | wortliste", flush=True)
         _day.bump("wortliste")
         raise ValueError("wortliste")
+    offered = anleiten.buttons(_me, rules(), rd, pid)   # „Das kannst du hier“ as the seat saw it
     rd["offen"][pid] = {"text": t, "t": now}
     rd["plaetze"][pid].pop("ruht", None)          # back at the table: waited for again
+    anleiten.taken(_me, rules(), rd, pid, t, offered)
 
 
 PANEL_REGELN = {
@@ -3338,7 +3341,7 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang))).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang))).rstrip()
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
@@ -3645,6 +3648,7 @@ def check_story(r, rd, obj):
     out["fraktionen"] = fraktionen.check(rd, obj.get("fraktionen"), text)   # Fraktionen mit Uhren (Tabletop-Punkt 7)
     out["quest_fund"] = quest.check(_me, r, rd, obj.get("quest_fund"), text)   # a quest thing found (Punkt 15): fixed rules
     out["schrift"] = schrift.check(_me, r, rd, obj.get("schriftstueck"))   # a writing found (D&D idea 3): fixed rules
+    out["anleitwege"] = anleiten.check_ways(_me, r, rd, obj.get("wege"), text)   # Spieler anleiten: the narrator's ways
     out["begegnung"] = kampf.check_encounter(_me, r, rd, _living(rd), obj.get("begegnung"))
     out["kampf_ende"] = obj.get("kampf_ende") if rd.get("kampf") and obj.get("kampf_ende") in kampf.ENDE else ""
     return out, drop
@@ -3764,7 +3768,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             frage = still[0]
             h = names[frage]["held"]
             k = _by(r, "klassen")[h["klasse"]]["name"][li]
-            text += (f" {h['name']}, was macht dein {k} währenddessen?" if not li else f" {h['name']}, what does your {k} do meanwhile?")
+            text += " " + (anleiten.still_question(_me, r, rd, frage)    # Spieler anleiten: a choice of the scene's data
+                           or (f"{h['name']}, was macht dein {k} währenddessen?" if not li else f"{h['name']}, what does your {k} do meanwhile?"))
+        anleiten.keep_ways(rd, story.get("anleitwege"))   # „Das kannst du hier“ of the turn this narration opens
         _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "",
              **({"helden": story["helden"]} if story.get("helden") else {}))
         fremd = sprachen.keep(rd, story.get("fremd"))   # the sounds for everyone, the meaning only through the view
@@ -3862,6 +3868,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         rd["zug"] += 1
         rast.done(rd)                            # the camp is told: the rest ends (D&D idea 4)
         arrive(rd)                               # the fight is over: the ones at the edge come to the table
+        anleiten.told(_me, r, rd)                # „Das kannst du hier“: the seats that get buttons now
     _narrated(rd)
 
 
@@ -5391,6 +5398,7 @@ def view(rid, pid, now=None):
     out["album_personen"] = album.people(_me, r, rd, mine, lang)   # its page „Personen“: the people the hero met
     out["rast"] = rast.view(rd, pid, host)                      # the rest at the campfire (D&D idea 4)
     out["haltung"] = haltung.on(rd) and bool(rd.get("kampf"))   # the stance chips in a fight (round 2, idea 2)
+    out["anleiten"] = anleiten.view(_me, r, rd, pid, host)     # „Das kannst du hier“ and the host's level (Spieler anleiten)
     out["rueckfrage"] = rueckfrage.view(rd, pid)               # the own unclear action: question and suggestions
     out["umgebung"] = umgebung.view(r, rd)                      # the props of the fight as chips (round 2, idea 3)
     out["wunsch"] = wunsch.view(_me, r, rd, pid, host)          # the own heart's wish; the host every seat's (round 2, idea 7)
@@ -6614,7 +6622,8 @@ async def zufall_setzen(rid: str, request: Request, prof=Depends(browser_profile
 @router.post("/api/profile/dungeon/{rid}/erzaehler", dependencies=[Depends(assistant)])
 async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose); or {weise} the round's
-    way of telling (WEISEN) from the next turn on; or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
+    way of telling (WEISEN) from the next turn on; or {anleitung} the level of „Spieler anleiten“ (dungeon_anleiten.STUFEN);
+    or {regler_fest} holds the game master's dial (Idee 6) or lets it go;
     or {kampfstufe} the stage of the next encounters (leicht, mittel, schwer, toedlich; Tabletop-Punkt 13);
     or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off);
     or {echt: [pid, …]} the seats that throw their own d20 at the real table (dungeon_echt.choose, D&D idea 5);
@@ -6652,6 +6661,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 if b["weise"] not in WEISEN:
                     raise ValueError()
                 rd["erzaehlweise"] = b["weise"]
+            elif "anleitung" in b:
+                anleiten.choose(rd, b["anleitung"])     # Spieler anleiten: the round's level
             else:
                 stimmen.choose(rd, str(b.get("k") or ""))
             _write(d)
@@ -6667,6 +6678,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             pass                                 # set_sight wrote its line
         elif "weise" in b:
             print(f"dungeon: erzaehlweise | {b['weise']}", flush=True)
+        elif "anleitung" in b:
+            print(f"dungeon: anleitung | stufe | {b['anleitung']}", flush=True)
         else:
             print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)
         return view(rid, _seat_uid(rid, uid))

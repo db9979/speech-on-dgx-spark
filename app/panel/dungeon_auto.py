@@ -48,6 +48,8 @@ FRAGEN = (
     ("leben", re.compile(r"(?i)\b(wie ?viel\w*\b.*\bleben|lebenspunkte|wie geht es (mir|meinem helden)|how much (life|health)|hit points|my health)\b")),
     ("tasche", re.compile(r"(?i)\b(tasche|inventar|was trage ich|what do i carry|my bag|inventory)\b")),
     ("warten", re.compile(r"(?i)\b(auf wen warten|wer fehlt|who are we waiting for|who is missing)\b")),
+    ("kann", re.compile(r"(?i)\b(was (kann ich|können wir|koennen wir) (hier |jetzt )?(tun|machen)|"
+                        r"what can (i|we) do( here| now)?)\b")),
     ("wohin", re.compile(r"(?i)\b(wohin (können|koennen|kann) (wir|ich)( gehen)?|welche wege|wo geht es (hin|weiter)|"
                          r"where can (we|i) go|which ways)\b")))
 TUN = ("trank_an", "trinken", "anlegen", "wirken", "aufheben", "verkaufen", "kaufen", "punkt", "faehigkeit", "weiter", "aktion")
@@ -73,6 +75,8 @@ SAGEN = {
     "wege": ("Von hier aus: {wege}.", "From here: {wege}."),
     "weg": ("{richtung}: {ziel}", "{richtung}: {ziel}"),
     "keine_wege": ("Von hier aus kenne ich keinen Weg.", "I know no way from here."),
+    "kann_nichts": ("Gerade habe ich keinen Vorschlag. Sag einfach, was dein Held tut.",
+                    "I have no suggestion right now. Just say what your hero does."),
     "alle": ("Alle haben gehandelt, der Dungeon-Master erzählt gleich.", "Everyone has acted, the Dungeon Master tells it shortly."),
     "notiert": ("Notiert. Wir warten noch auf {namen}. Ich melde mich, wenn du dran bist.",
                 "Noted. We are still waiting for {namen}. I will speak up when it is your turn."),
@@ -117,10 +121,10 @@ SAGEN = {
     "tasche_voll": ("Die Tasche ist voll.", "The bag is full."),
     "gold": ("Dafür reicht das Gold nicht.", "There is not enough gold for that."),
     "am_boden": ("{name} liegt am Boden und kann das gerade nicht.", "{name} is down and cannot do that right now."),
-    "hilfe": ("Du kannst sagen: wie viel Leben habe ich, was ist in meiner Tasche, wie steht der Kampf, wohin können wir, was verkauft der Händler, "
+    "hilfe": ("Du kannst sagen: wie viel Leben habe ich, was ist in meiner Tasche, wie steht der Kampf, wohin können wir, was kann ich tun, was verkauft der Händler, "
               "trink einen Heiltrank, gib Bela einen Trank, leg den Dolch an, wirke Feuerpfeil, heb den Schlüssel auf, kauf, verkauf, "
               "Punkt auf Stärke, die erste, wer fehlt, nochmal, als Gastgeber jetzt weiter, und Stopp zum Aufhören. Alles andere ist deine Aktion.",
-              "You can say: how much life do I have, what is in my bag, how is the fight, where can we go, what does the merchant sell, drink a healing "
+              "You can say: how much life do I have, what is in my bag, how is the fight, where can we go, what can I do, what does the merchant sell, drink a healing "
               "potion, give Bela a potion, put on the dagger, cast fire bolt, pick up the key, buy, sell, point on strength, the first, "
               "who is missing, again, as host go on now, and stop to quit. Anything else is your action."),
     # a new round in the car (Punkt 11)
@@ -302,7 +306,8 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None,
     """The game in the car. Returns {"sagen", "n", "warten", "aus", "rid"} and, when it fits, "danach" (the summary
     after the narration), "ton" (the round's pieces to play before danach), "frage" (said back, ok goes through),
     "weiter" (fields for the next request), "prolog" (a new round whose opening the endpoint starts), "vorschlaege"
-    (an unclear action's suggestions as CarPlay buttons, dungeon_rueckfrage; rf: the next text answers it)."""
+    (an unclear action's suggestions as CarPlay buttons, dungeon_rueckfrage, or „Das kannst du hier“ of
+    dungeon_anleiten with "vorschlaege_titel"; rf: the next text answers it)."""
     dm = _dm()
     r = dm.rules()
     li = 1 if lang == "en" else 0
@@ -333,14 +338,26 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None,
             after = summary(r, rd, pid, li, erz[-2] + 1 if len(erz) > 1 else 0)
             if not rd.get("dm") and pid not in rd["offen"] and not dm.zustand(h):
                 after.append(_say("pause", li) if rd.get("pause") else _say("dran", li, name=h["name"]))
+            import dungeon_anleiten
+            k = dungeon_anleiten.car(dm, r, rd, pid, li) if dungeon_anleiten.stufe(rd) == "einsteiger" and not rd.get("pause") else None
+            if k:                                # Einsteiger: the buttons said after the narration, as the CarPlay list too
+                after.append(k["sagen"])
             return {"sagen": told(last, li), "danach": " ".join(after), "n": n, "warten": False, "aus": False, "rid": rid,
-                    **({"ton": dict(tr, rid=rid)} if tr else {})}
+                    **({"ton": dict(tr, rid=rid)} if tr else {}),
+                    **({"vorschlaege": k["vorschlaege"], "vorschlaege_titel": k["titel"], "weiter": {"rf": True}} if k else {})}
         if rd.get("dm") or pid in rd["offen"]:
             return {"sagen": "", "n": n, "warten": True, "aus": False, "rid": rid}
         return out("pause") if rd.get("pause") else out("dran", name=h["name"])   # paused by the host: said, not „dran“
+    import dungeon_anleiten
     import dungeon_rueckfrage
     if rf and dungeon_rueckfrage.on(rd):         # the answer to the Rückfrage: a suggestion, „so lassen“, else a new action
         pick = dungeon_rueckfrage.answer(rd, pid, text)
+        if pick:
+            return _act_car(dm, r, rid, pid, pick, li, n, True)
+    if rf and dungeon_anleiten.on(rd) and not dungeon_rueckfrage.waiting(rd, pid):   # a pick of „Das kannst du hier“
+        if dungeon_rueckfrage.SO_LASSEN.match(text):
+            return out("dran", name=h["name"])
+        pick = dungeon_anleiten.answer(dm, r, rd, pid, text)
         if pick:
             return _act_car(dm, r, rid, pid, pick, li, n, True)
     kind = next((k for k, rx in FRAGEN if rx.search(text)), "aktion") if len(text) <= KURZ else "aktion"
@@ -363,6 +380,12 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None,
         import dungeon_karte
         w = dungeon_karte.wege(rd, rd["lang"])[:DINGE_MAX]
         return out("wege", wege=", ".join(_say("weg", li, **x) for x in w)) if w else out("keine_wege")
+    if kind == "kann":   # Spieler anleiten: the seat's buttons, said and as the CarPlay list (dungeon_anleiten.car)
+        k = dungeon_anleiten.car(dm, r, rd, pid, li)
+        if not k:
+            return out("kann_nichts")
+        return {"sagen": k["sagen"], "vorschlaege": k["vorschlaege"], "vorschlaege_titel": k["titel"], "weiter": {"rf": True},
+                "n": n, "warten": False, "aus": False, "rid": rid}
     if kind == "kampf":
         s = stand(rd, li, rd.get("owner") == uid)
         return {"sagen": ". ".join(s) + "." if s else _say("kein_kampf", li), "n": n, "warten": False, "aus": False, "rid": rid}

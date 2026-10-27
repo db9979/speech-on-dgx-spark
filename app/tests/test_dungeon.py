@@ -3417,6 +3417,181 @@ class Equipment(Base):
         for f, x in (("dungeon.js", "${dmTageszeit(v)}"), ("dungeonfenster.js", "m.zu")):
             with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", f), encoding="utf-8") as fh:
                 self.assertIn(x, fh.read())
+    def test_the_narration_guides_the_players(self):
+        """Spieler anleiten step 1 (switch dungeonanleiten): off by default, the narrator's task and examples stay as
+        before and a quiet seat gets the old line; on, the task asks for the fixed form (deeds, the scene, two points to
+        take up, a concrete choice), the world's model narration joins the style examples, and a quiet seat gets a
+        choice the panel builds from the scene (people here, ways of the map, foes in a fight), never the model's words;
+        with fewer than two points the old line stays. The rules' examples are checked."""
+        import features
+        import dungeon_anleiten as an
+        import dungeon_erzaehler as erz
+        import dungeon_kampf
+        self.assertNotIn(an.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_anleiten"], False)
+        r = self.r
+        rd = self.state(self.rid)
+        rd.pop("karte", None)
+        self.assertNotIn(an.TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertEqual((an.example(r, rd, 0), an.still_question(dungeon, r, rd, self.host)), ([], None))
+        welt = next(w for w in r["welten"] if w["id"] == rd["welt"])
+        self.assertNotIn(welt["anleiten"][0], erz.style_text(dungeon, r, rd, "de"))
+        for w in r["welten"]:                                                    # every given world has one
+            if w["id"] != "eigene":
+                self.assertEqual(len(w["anleiten"]), 2)
+        bad = copy.deepcopy(r)
+        bad["welten"][0]["anleiten"] = ["zu kurz"]
+        self.assertTrue(any("anleiten" in p for p in dungeon.check_rules(bad)))
+        self.assertEqual(dungeon.check_rules(r), [])
+        helpers.keep_chat(self, "dungeon_anleiten")
+        helpers.set_config(dungeon_anleiten=True)
+        rd = self.state(self.rid)
+        rd.pop("karte", None)
+        self.assertIn(an.TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertIn(an.TASK["en"].strip(), dungeon.system_text(r, dict(rd, lang="en"), "erzaehlen"))
+        self.assertIn(welt["anleiten"][0], erz.style_text(dungeon, r, rd, "de"))
+        self.assertIn(welt["anleiten"][1], erz.style_text(dungeon, r, rd, "en"))
+        h = rd["plaetze"][self.host]["held"]
+        story = {"text": "Der Regen prasselt auf das Dach.", "npc": [], "npc_stimme": [], "beute": None, "erfolg": [], "szene": None,
+                 "frage": "", "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "", "begegnung": [], "fremd": [],
+                 "faeden": [], "dinge": [], "tageszeit": "", "folgen": [], "kampf_ende": ""}
+
+        def quiet(x):
+            x.update(offen={}, still={self.host: dungeon.STILL})
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                dungeon.apply(r, x, [], dict(story), self.rid, random.Random(1), kampfwuerfe=([], []))
+            return [e for e in x["log"] if e["art"] == "dm"][-1]["text"], out.getvalue()
+        # no people and no ways: fewer than two points, the old line stays
+        with mock.patch.object(dungeon_karte, "wege", lambda rd, lang="de": []):
+            text, out = quiet(copy.deepcopy(rd))
+        self.assertIn(f"{h['name']}, was macht dein", text)
+        self.assertIn("dungeon: anleitung | frage | zu wenig", out)
+        # people here and the ways of the map: the panel's choice
+        x = copy.deepcopy(rd)
+        dungeon_karte.ensure(r, x, random.Random(1))
+        x["karte"].setdefault("leute", {})["Grimma"] = {"ort": x["karte"]["hier"], "mit": False}
+        text, out = quiet(x)
+        self.assertIn(f"{h['name']}, sprichst du mit Grimma, oder ", text)
+        self.assertTrue(text.endswith("?"))
+        self.assertNotIn("was macht dein", text)
+        self.assertIn("dungeon: anleitung | frage | 2", out)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(an.still_question(dungeon, r, dict(x, lang="en"), self.host).startswith(f"{h['name']}, do you talk to Grimma, or "))
+        # only one point: a look round is the second
+        x["karte"]["leute"] = {}
+        with mock.patch.object(dungeon_karte, "wege", lambda rd, lang="de": [{"id": "w1", "richtung": "Norden", "ziel": "Mühle"}]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(an.still_question(dungeon, r, x, self.host),
+                             f"{h['name']}, gehst du nach Norden, oder siehst du dich hier genauer um?")
+        # in a fight: the foes standing, the weakest first
+        foes = [{"name": "Ork", "leben": 7, "k": 1}, {"name": "Goblin", "leben": 3, "k": 0}, {"name": "Wolf", "leben": 9, "k": 2}]
+        with mock.patch.object(dungeon_kampf, "up", lambda rd: foes), contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(an.still_question(dungeon, r, dict(x, kampf={"runde": 1}), self.host).startswith(
+                f"{h['name']}, greifst du Goblin an, oder "))
+        self.assertGreaterEqual(an.for_live()["frage"], 3)
+        self.assertGreaterEqual(an.for_live()["frage_alt"], 1)
+
+
+    def test_what_you_can_do_here(self):
+        """Spieler anleiten step 2: off no buttons; on, every seat that has not acted gets buttons only from the scene's
+        data (one source with the Rückfrage) and the narrator's ways that passed the fixed rules (a doing word, something
+        known, no refused word, nothing only a later act or a secret knows); the level per round sets how many (Einsteiger
+        with the value that likely counts, Erfahren none), only the host chooses it; a healing spell or potion comes
+        when someone is badly hurt; an action that is a button counts as taken; the car says them on „Was kann ich
+        tun?“ and takes a pick of the CarPlay list."""
+        import dungeon_anleiten as an
+        import dungeon_auto
+        import dungeon_rueckfrage as rf
+        r = self.r
+        rd = self.state(self.rid)
+        self.assertIsNone(dungeon.view(self.rid, self.host)["anleiten"])
+        self.assertEqual(an.buttons(dungeon, r, rd, self.host), [])
+        helpers.keep_chat(self, "dungeon_anleiten")
+        helpers.set_config(dungeon_anleiten=True)
+        rd = self.state(self.rid)
+        rd.update(offen={}, dm=False, status="laeuft")
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
+        b = an.buttons(dungeon, r, rd, self.host)
+        self.assertEqual(len(b), an.KNOEPFE["normal"])
+        self.assertEqual(b[0]["text"], "Ich spreche mit Grimma.")
+        self.assertTrue(all(x["wert"] == "" for x in b))                    # no value below Einsteiger
+        scene = {rf.say(p, 0) for p in rf.points(dungeon, r, rd, self.host, wege=2)}
+        self.assertTrue({x["text"] for x in b} <= scene)                    # only the scene's data
+        # the narrator's ways by fixed rules
+        rd["plan"] = {"akte": [{"titel": "Turm", "inhalt": "Glocke", "wende": "Der Küster ist der Verräter"},
+                               {"titel": "Gruft", "inhalt": "Unter der Kapelle wartet der Schattenfürst", "wende": "Kampf"}]}
+        rd["akt"] = 0
+        text = "Grimma zeigt auf die Gießerei am Fluss, wo der Lehrling verschwand."
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            w = an.check_ways(dungeon, r, rd, ["Dem Lehrling zur Gießerei folgen", "Den Verräter im Turm stellen",
+                                                "Schattenfürst suchen", "Abwarten.", "x" * 200, "Mit Grimma sprechen"], text)
+        self.assertEqual(w, ["Dem Lehrling zur Gießerei folgen", "Mit Grimma sprechen"])
+        self.assertIn("dungeon: anleitung | weg verworfen | geheim 2", out.getvalue())
+        self.assertIn("dungeon: anleitung | weg | 2", out.getvalue())
+        an.keep_ways(rd, w)
+        rd["zug"] += 1
+        b = an.buttons(dungeon, r, rd, self.host)
+        self.assertEqual([x["text"] for x in b[:2]], w)
+        rd["zug"] += 1
+        self.assertNotIn(w[0], [x["text"] for x in an.buttons(dungeon, r, rd, self.host)])   # only for the turn they came with
+        # the level: Einsteiger four with the value, Erfahren none and no ways asked, only the host chooses
+        an.keep_ways(rd, w)
+        rd["zug"] += 1
+        an.choose(rd, "einsteiger")
+        b = an.buttons(dungeon, r, rd, self.host)
+        self.assertEqual(len(b), 4)
+        self.assertEqual(next(x for x in b if x["text"] == w[1])["wert"], "Charisma")
+        self.assertEqual(next(x for x in b if x["text"] == "Ich spreche mit Grimma.")["wert"], "Charisma")
+        with self.assertRaises(ValueError):
+            an.choose(rd, "profi")
+        an.choose(rd, "erfahren")
+        self.assertEqual(an.buttons(dungeon, r, rd, self.host), [])
+        self.assertEqual(an.check_ways(dungeon, r, rd, ["Mit Grimma sprechen"], text), [])
+        self.assertNotIn(an.WEGE_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        an.choose(rd, "normal")
+        self.assertIn(an.WEGE_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.edit(lambda x: x.update(anleitstufe="normal"))
+        v = self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"anleitung": "einsteiger"})
+        self.assertEqual(v.status_code, 200)
+        self.assertEqual((v.json()["anleiten"]["stufe"], [k for k, _ in v.json()["anleiten"]["wahl"]]), ("einsteiger", list(an.STUFEN)))
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"anleitung": "profi"}).status_code, 400)
+        self.assertIsNone(dungeon.view(self.rid, self.gp)["anleiten"]["wahl"])          # a guest sees the buttons, not the choice
+        # someone badly hurt: a healing spell when the hero has one, else a potion of the own bag
+        h = rd["plaetze"][self.host]["held"]
+        h["leben"] = 1
+        with mock.patch.object(dungeon, "powers", lambda r, h, lang="de", **kw: {"zauber": [{"id": "heilende_haende", "name": "Heilende Hände", "rest": None}],
+                                                                                  "faehigkeiten": [], "dinge": []}):
+            self.assertIn(f"Ich wirke Heilende Hände auf {h['name']}.", [x["text"] for x in an.buttons(dungeon, r, rd, self.host)])
+        with mock.patch.object(dungeon, "powers", lambda r, h, lang="de", **kw: {"zauber": [], "faehigkeiten": [], "dinge": []}):
+            h["tasche"] = [{"i": "t1", "id": "heiltrank", "s": r["seltenheit"][0]["id"]}]
+            self.assertTrue(any(x["text"].startswith("Ich trinke ") and "Heiltrank" in x["text"] for x in an.buttons(dungeon, r, rd, self.host)))
+        h["leben"] = h["leben_max"]
+        # an action that is a button counts as taken; after acting no buttons
+        n0 = an.for_live()["genommen"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.act(rd, self.host, "Ich spreche mit Grimma.", rd["zug"], 1.0)
+        self.assertIn("dungeon: anleitung | knopf genommen", out.getvalue())
+        self.assertEqual(an.for_live()["genommen"], n0 + 1)
+        self.assertEqual(an.buttons(dungeon, r, rd, self.host), [])
+        # the car: „Was kann ich tun?“ says them, a pick of the list goes in as the action
+        rd["offen"] = {}
+        self.edit(lambda x: x.update({k: copy.deepcopy(rd[k]) for k in ("karte", "offen", "zug", "plaetze", "anleitstufe")}, dm=False, status="laeuft"))
+        uid = self.state(self.rid)["plaetze"][self.host]["uid"]
+        self.addCleanup(dungeon_auto._im_auto.pop, uid, None)               # the car's mark never reaches the next test
+        with contextlib.redirect_stdout(io.StringIO()):
+            o = dungeon_auto.car(uid, "Was kann ich tun?", rid=self.rid)
+        self.assertTrue(o["sagen"].startswith("Du kannst hier: Erstens: Ich spreche mit Grimma."))
+        self.assertEqual((o["vorschlaege_titel"], o["weiter"]), ("Das kannst du hier", {"rf": True}))
+        with contextlib.redirect_stdout(io.StringIO()):
+            o = dungeon_auto.car(uid, "die erste", rid=self.rid, rf=True)
+        self.assertEqual(self.state(self.rid)["offen"][self.host]["text"], "Ich spreche mit Grimma.")
+        self.assertGreaterEqual(an.for_live()["weg_verworfen"], 3)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as fh:
+            js = fh.read()
+        for x in ("dmKannst(v.anleiten.knoepfe)", "{anleitung:s.value}", "data-dmanleit"):
+            self.assertIn(x, js)
 
 
 class _Die:

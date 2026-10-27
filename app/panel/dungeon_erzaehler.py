@@ -320,6 +320,10 @@ def check_style(r, need):
             need(isinstance(s, list) and len(s) <= STIL_MAX and all(
                 isinstance(p, list) and len(p) == 2 and all(isinstance(t, str) and 20 <= len(t) <= STIL_LEN for t in p) for p in s),
                 f"{kind}[{x.get('id')}].stil: bis {STIL_MAX} Paare [Deutsch, Englisch] mit 20 bis {STIL_LEN} Zeichen")
+    for x in r.get("welten") or []:              # Spieler anleiten: one model narration with points to take up
+        a = x.get("anleiten") if isinstance(x, dict) else None
+        need(a is None or isinstance(a, list) and len(a) == 2 and all(isinstance(t, str) and 20 <= len(t) <= STIL_LEN for t in a),
+             f"welten[{x.get('id')}].anleiten: ein Paar [Deutsch, Englisch] mit 20 bis {STIL_LEN} Zeichen")
 
 
 STIL_LABEL = ("So klingt eine Erzählung hier (nur Beispiele für Ton, Rhythmus und Sinne; übernimm keinen Inhalt):",
@@ -329,7 +333,8 @@ STIL_LABEL = ("So klingt eine Erzählung hier (nur Beispiele für Ton, Rhythmus 
 def style_text(dm, r, rd, lang):
     li = 1 if lang == "en" else 0
     welt = dm._by(r, "welten").get(rd["welt"]) or {}
-    beispiele = [p[li] for p in (welt.get("stil") or []) + (dm._ton(r, rd).get("stil") or [])]
+    import dungeon_anleiten
+    beispiele = [p[li] for p in (welt.get("stil") or []) + (dm._ton(r, rd).get("stil") or [])] + dungeon_anleiten.example(r, rd, li)
     if not beispiele:
         return ""
     return "\n\n" + STIL_LABEL[li] + "\n" + "\n".join(f"- {t}" for t in beispiele)

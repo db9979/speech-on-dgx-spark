@@ -3929,6 +3929,13 @@
 "titel": "Dungeon-Master: Tageszeit vom Panel",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Tageszeit vom Panel an. A: Eine Runde spielen: oben am Tisch steht „🌅 Morgen · noch 6 Züge“, nach sechs Zügen wird es Tag, nach zwölf Abend; der Erzähler erzählt den Wechsel kurz. B: Nachts in einer Siedlung: Schmied und Lehrstunde zeigen „🌙 Nachts zu“, das Gasthaus geht; nach dem Gasthaus ist Morgen. C: Nachts draußen ohne Fackel mit einem Menschen würfeln: die Probe hat Nachteil, mit einer Fackel in der Tasche nicht. D: Schalter aus: der Erzähler meldet die Tageszeit wieder selbst.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P586",
+"v": 1148,
+"titel": "Dungeon-Master: Spieler anleiten",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Spieler anleiten an. A: Eine Runde spielen: jede Erzählung nennt mindestens zwei Dinge mit Namen, die man aufgreifen kann, und endet mit einer konkreten Wahl an eine Figur, nicht mit „Was tut ihr?“. B: Zu zweit spielen, einer schreibt zwei Züge nichts: der Erzähler fragt ihn mit Namen, etwa „Bela, sprichst du mit Grimma, oder gehst du nach Norden?“, im Kampf nach zwei Gegnern. C: Unter jeder Erzählung stehen drei Knöpfe „Das kannst du hier“; Antippen setzt den Text ins Feld. Gastgeber: im Spielleiter-Pult unter Erzähler Einsteiger wählen, dann vier Knöpfe mit „· Charisma“ und Co. D: Im Auto „Was kann ich tun?“ sagen: der Spark nennt die Knöpfe, CarPlay zeigt „Das kannst du hier“, „die erste“ schickt sie. E: Schalter aus: keine Knöpfe, die alte Zeile „was macht dein … währenddessen?“ kommt wieder.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

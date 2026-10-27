@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.148** KI-Dungeon-Master: Spieler anleiten (Schalter, aus), jede Erzählung nennt mindestens zwei greifbare Ansatzpunkte und endet mit einer konkreten Wahl, darunter „Das kannst du hier“ als Knöpfe nur aus der Szene und geprüften Wegen des Erzählers, Stufe Einsteiger, Normal oder Erfahren je Runde, im Auto „Was kann ich tun?“, und stille Spieler bekommen eine Frage aus der Szene
 - **V01.1.147** Tests ohne Zufall: Telefon-, Pebble- und Vorwärmen-Test prüfen nur Textfelder, nicht Zeitstempel, Zufalls-IDs oder verschlüsselte Werte, die eine Ziffernfolge zufällig enthalten können
 - **V01.1.146** KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium, nachts kommen Untote, Werwesen und Nachttiere (LlamaTale 1)
 - **V01.1.145** KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.141** Pebble-Test unabhängig von der Uhrzeit: „Mein Tag“ rechnet mit einem festen „jetzt“, kurz vor Mitternacht wird der Test nicht mehr rot
 - **V01.1.140** KI-Dungeon-Master: Rettungswürfe, Zustände und SG nach dem SRD im Katalog (Kampf-Audit H4, N6, N7)
 - **V01.1.139** KI-Dungeon-Master: Kampf-Audit Welle 2, eine gewirkte Angriffs-Schriftrolle macht den nächsten Angriff zu ihrem Zauber, Heilzauber wirken vor den Treffern des Zuges, „Ratte“ trifft die Riesenratte statt des Rattenschwarms, und die Kampf-Erfahrung wird abgerundet geteilt
-- **V01.1.138** KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 
 
 

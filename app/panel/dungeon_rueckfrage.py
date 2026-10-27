@@ -130,8 +130,11 @@ def _choices(r, rd):
     return len(dungeon_karte.leute(rd)["hier"]) + len(dungeon_karte.wege(rd, rd.get("lang", "de")))
 
 
-def suggestions(dm, r, rd, pid):
-    """Up to VORSCHLAEGE suggestions for the seat from fixed patterns and the scene's data, never the model's words."""
+def points(dm, r, rd, pid, wege=1):
+    """The scene's points for this seat from its data only, never the model's words (one source for the suggestions
+    here and dungeon_anleiten): [{art, x, z?}] with art a key of MUSTER; in a fight the foes still up (the weakest
+    first, the hero's own attack spell on the first), one prop of the fight and waiting, else people here, up to wege
+    ways of the map (only what a seat may see) and a look round."""
     import dungeon_karte
     import dungeon_kampf
     import dungeon_umgebung
@@ -140,21 +143,30 @@ def suggestions(dm, r, rd, pid):
     out = []
     if rd.get("kampf"):
         foes = sorted(dungeon_kampf.up(rd), key=lambda g: (g.get("leben", 0), g.get("k", 0)))
-        for g in foes[:2]:
-            out.append(MUSTER["angriff"][li].format(x=g["name"]))
+        out += [{"art": "angriff", "x": g["name"]} for g in foes[:2]]
         z = _attack_spell(dm, r, h, li) if h else ""
         if z and foes:
-            out.insert(1, MUSTER["zauber"][li].format(z=z, x=foes[0]["name"]))
-        for row in dungeon_umgebung.here(r, rd)[:1]:
-            out.append(MUSTER["requisit"][li].format(x=row["name"][li]))
-        out.append(MUSTER["abwarten"][li])
+            out.insert(1, {"art": "zauber", "x": foes[0]["name"], "z": z})
+        out += [{"art": "requisit", "x": row["name"][li]} for row in dungeon_umgebung.here(r, rd)[:1]]
+        out.append({"art": "abwarten", "x": ""})
     else:
-        for n in dungeon_karte.leute(rd)["hier"][:2]:
-            out.append(MUSTER["person"][li].format(x=n))
-        for w in dungeon_karte.wege(rd, rd.get("lang", "de"))[:1]:
-            out.append(MUSTER["weg"][li].format(x=(("nach " if not li else "") + w["richtung"]) if w["richtung"] else w["ziel"]))
-        out.append(MUSTER["umsehen"][li])
-    return list(dict.fromkeys(x[:VORSCHLAG_MAX] for x in out if x))[:VORSCHLAEGE]
+        out += [{"art": "person", "x": n} for n in dungeon_karte.leute(rd)["hier"][:2]]
+        for w in dungeon_karte.wege(rd, ("de", "en")[li])[:wege]:
+            d = w["richtung"]
+            out.append({"art": "weg", "x": (d if li or d in ("hinaus", "hinein") else "nach " + d) if d else w["ziel"]})
+        out.append({"art": "umsehen", "x": ""})
+    return out
+
+
+def say(p, li):
+    """A point as the seat's own action (MUSTER)."""
+    return MUSTER[p["art"]][li].format(x=p["x"], z=p.get("z", ""))[:VORSCHLAG_MAX]
+
+
+def suggestions(dm, r, rd, pid):
+    """Up to VORSCHLAEGE suggestions for the seat from fixed patterns and the scene's data, never the model's words."""
+    li = 1 if rd.get("lang") == "en" else 0
+    return list(dict.fromkeys(say(p, li) for p in points(dm, r, rd, pid)))[:VORSCHLAEGE]
 
 
 def _attack_spell(dm, r, h, li):
