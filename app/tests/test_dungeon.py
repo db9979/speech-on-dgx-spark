@@ -11049,6 +11049,84 @@ class Fight(Turns):
         self.assertNotIn("kampf", peace)
         self.assertEqual(peace["log"][-1]["was"], "frieden")
 
+    def test_review_attacks_are_recognised_and_healers_heal(self):
+        """Review 27.10. Paket 2 (E1, T4, T5): in a fight an action that names a foe standing is an attack unless it heals,
+        protects, talks, looks, hides, gives, waits, flees or asks for peace; „greife … an“ up to the sentence's end with
+        a foe named, „stürze mich auf“, „lasse … fliegen“, „gehe … los“, „verpasse … eins“; „Ork“ names the Ork-Krieger;
+        a model's check at a foe pays no check experience and the seat hears how to attack; „Ich heile Bela“ casts the
+        class's healing spell with a charge (the lowest grade first) and the spell's line says +N life."""
+        r = dungeon.rules()
+        by = dungeon._by(r, "gegner")
+        rd, held = self.held()
+        kampf.start(dungeon, r, rd, held, [(by["goblin"], 1), (by["ork_krieger"], 1)], 0)
+        gob, ork = [g["name"] for g in rd["kampf"]["gegner"]]
+        saetze = ["Ich greife {x} an.", "Ich greife {x} mit dem Schwert an.", "Ich greife mit meinem Schwert {x} an.",
+                  "Ich greife {x} mit meiner großen alten Axt an.", "Ich stürze mich auf {x}.", "Ich werfe mich auf {x}.",
+                  "Ich nehme {x} ins Visier und lasse einen Pfeil fliegen.", "Ich spanne den Bogen und ziele auf {x}.",
+                  "Ich gehe mit erhobenem Schwert auf {x} los.", "Ich packe {x} und werfe ihn zu Boden.", "Ich verpasse {x} eins.",
+                  "Ich wirke einen Zauber auf {x}."]
+        sanft = ["Ich rede mit {x}.", "Ich verstecke mich vor {x}.", "Wir fliehen vor {x}!", "Ich biete {x} Frieden an.",
+                 "Ich beobachte {x} genau.", "Ich schütze Bela vor {x}."]
+        probe = [{"pid": self.host, "wert": "staerke", "schwer": 12, "wofuer": "Angriff"}]
+        for wen, ziel in (("den Goblin", gob), ("dem Goblin", gob), ("den Ork", ork), ("dem Ork", ork)):
+            for t in saetze + sanft:
+                rd["offen"] = {self.host: {"text": t.format(x=wen), "t": 0}}
+                with contextlib.redirect_stdout(io.StringIO()):
+                    _, out = kampf.attacks(dungeon, r, rd, probe, Dice(15))
+                if t in saetze:
+                    self.assertEqual([x["gegner"] for x in out], [ziel], t.format(x=wen))
+                else:
+                    self.assertEqual(out, [], t.format(x=wen))
+        # a check at a foe, still no attack: no check experience, a line with the way
+        rd["offen"] = {self.host: {"text": "Ich rede mit dem Goblin.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()):
+            rest, out = kampf.attacks(dungeon, r, rd, [dict(probe[0], wofuer="den Goblin einschüchtern")], Dice(15))
+        self.assertEqual((out, rest[0]["kein_angriff"]), ([], gob))
+        w = dungeon.roll(r, rd, rest, Dice(20))
+        self.assertEqual((w[0]["kein_angriff"], w[0]["ok"]), (gob, True))
+        story = {"text": "Der Goblin knurrt.", "npc": [], "npc_stimme": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
+                 "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "", "begegnung": [], "fremd": [],
+                 "faeden": [], "dinge": [], "tageszeit": "", "folgen": [], "kampf_ende": ""}
+        n0 = len(rd["log"])
+        with contextlib.redirect_stdout(io.StringIO()) as log:
+            dungeon.apply(r, rd, w, story, self.rid, random.Random(1), kampfwuerfe=([], []))
+        self.assertIn("dungeon: probe | kampf | kein angriff | hinweis", log.getvalue())
+        neu = rd["log"][n0:]
+        self.assertIn(f"„Ich greife {gob} an.“", " ".join(e.get("text", "") for e in neu if e["art"] == "ooc" and e.get("pid") == self.host))
+        self.assertFalse([e for e in neu if e["art"] == "ep" and e.get("pid") == self.host])   # no check experience
+        # the healer
+        rd, held = self.held()
+        h = rd["plaetze"][self.host]["held"]
+        h.update(klasse="heiler")
+        h["ladungen"] = list(dungeon.full_charges(r, h))
+        bela = rd["plaetze"][self.gp]["held"]
+        rd["offen"] = {self.host: {"text": f"Ich heile {bela['name']}.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.check_powers(r, rd, self.host)
+        self.assertIn("dungeon: kann | heilen | zauber", out.getvalue())
+        z = rd["offen"][self.host]["kraft"]
+        c = dungeon._by(r, "gegenstaende")[z]
+        self.assertTrue(c["heilung"] and c["ziel"] in ("verbuendeter", "gruppe"))
+        bela["leben"] = 1
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.cast_powers(r, rd)
+        e = [e for e in rd["log"] if e["art"] == "zauber"][-1]
+        self.assertEqual(e["heilt"][0]["name"], bela["name"])
+        self.assertEqual(bela["leben"], 1 + e["heilt"][0]["zahl"])
+        self.assertGreater(e["heilt"][0]["zahl"], 0)
+        h["ladungen"] = [0] * len(h["ladungen"])
+        rd["offen"] = {self.host: {"text": f"Ich heile {bela['name']}.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.check_powers(r, rd, self.host)
+        self.assertNotIn("kraft", rd["offen"][self.host])
+        self.assertIn("dungeon: kann | heilen | leer", out.getvalue())
+        rd["offen"] = {self.host: {"text": "Ich heile die Wunden des Hauses.", "t": 0}}   # nobody named: nothing
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.check_powers(r, rd, self.host)
+        self.assertNotIn("heilen", out.getvalue())
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("(e.heilt||[]).map(", js)
+
     def test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life(self):
         """Review 27.10. Paket 3 and 4a: while a fight runs no merchant comes, the host cannot open the market, nobody buys
         or sells (a scroll still reads); a boss counts in the budget with its life factor (kampf.wert), at most one boss

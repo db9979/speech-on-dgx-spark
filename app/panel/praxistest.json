@@ -4034,6 +4034,13 @@
 "titel": "Dungeon-Master: Kämpfe halten fest und entschärft",
 "text": "A: Im Kampf den Markt öffnen oder etwas kaufen: der Hinweis „Erst der Kampf …“, nichts ändert sich. B: Mit zwei Helden kämpfen und beide auf 0 Leben bringen lassen: im Zug danach rettet ein Fremder beide, je 1 Leben, halbes Gold, ein Ding weniger. C: Einen Kampf gewinnen, ein Held ist angeschlagen: unter dem Kampfende steht „+N Leben · verschnauft nach dem Kampf“. D: Drei gelungene Rettungswürfe: „ist stabil, aber bewusstlos“, nach dem Kampf steht der Held mit 1 Leben wieder. E: Ein Boss gegen eine volle Gruppe kommt allein, nicht zu zweit.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P601",
+"v": 1170,
+"titel": "Dungeon-Master: Angriffe und Heilen erkennen",
+"text": "Im Kampf: A: „Ich greife den Goblin mit dem Schwert an.“ würfelt einen Angriff mit Schaden. B: „Ich stürze mich auf den Ork.“ greift den Ork-Krieger an. C: „Ich rede mit dem Goblin.“ greift nicht an. D: Mit einem Heiler „Ich heile Bela.“: ein Heilzauber wirkt, die Zeile zeigt „Bela +N Leben“, eine Ladung ist weg.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -1155,6 +1155,7 @@ def check_powers(r, rd, pid):
     verb = bool(_KANN_VERB.search(a["text"]))
     hits = _named(a["text"], list(ways)) if verb else []    # only with a word of using it („wirke“, „setze ein“, „cast“)
     if not hits:
+        heal_named(r, rd, pid, h, a)
         return
     pw = powers(r, h, rd["lang"])
     mine_s = {z["id"]: z for z in pw["zauber"]}
@@ -1199,6 +1200,39 @@ def check_powers(r, rd, pid):
             _log(rd, "ooc", pid=pid, text=t, panel=True)
             _day.bump("kann_nicht")
     print(f"dungeon: kann | {'nicht' if nicht else 'leer' if leer else 'szene' if szene else 'wirkt' if a.get('wirkt') else 'ok'} | {len(hits)} namen", flush=True)
+
+
+# Review 27.10. Paket 2 (T5): „Ich heile Tamas“ is a healing spell of the class with a charge left (heal_named)
+HEIL_VERB = re.compile(r"(?i)(?<!\w)(?:heil|versorg|verbind|kurier|flick\w*\s+(?:[\w'-]+\s+){0,3}zusammen|heal|cure|tend|patch\s+up)\w*")
+
+
+def heal_named(r, rd, pid, h, a):
+    """A healing word and a hero named (another at the table, or the healer's own name) without a spell named: the
+    class's healing spell with a charge left is cast on it (a["kraft"], cast_powers), by a fixed order: for a friend one
+    for a friend or the group, the lowest grade first, then the most life; with no charge left the seat gets a fixed
+    line. Never the model."""
+    t = a["text"]
+    if not HEIL_VERB.search(t) or kampf.intent(t) == "angriff":
+        return
+    ziel = friend(rd, pid, t) or (pid if re.search(r"(?<!\w)" + re.escape(h["name"].lower()) + r"(?!\w)", t.lower()) else None)
+    if not ziel:
+        return
+    cat = _by(r, "gegenstaende")
+    heil = [z for z in powers(r, h, rd["lang"])["zauber"] if (cat.get(z["id"]) or {}).get("heilung")
+            and (ziel == pid or cat[z["id"]].get("ziel") in ("verbuendeter", "gruppe"))]
+    voll = sorted((z for z in heil if z["rest"] != 0), key=lambda z: (z.get("grad", 0), -cat[z["id"]]["heilung"]))
+    if voll:
+        a["kraft"] = voll[0]["id"]
+        print("dungeon: kann | heilen | zauber", flush=True)
+        return
+    if not heil:
+        print("dungeon: kann | heilen | kein zauber", flush=True)
+        return
+    line = (f"{h['name']} hat für die Heilzauber in diesem Kapitel keine Ladung mehr." if rd["lang"] != "en" else
+            f"{h['name']} has no charge left for the healing spells in this chapter.")
+    if not any(e["art"] == "ooc" and e.get("pid") == pid and e.get("text") == line and e["n"] == rd["zug"] for e in rd["log"]):
+        _log(rd, "ooc", pid=pid, text=line, panel=True)
+    print("dungeon: kann | heilen | leer", flush=True)
 
 
 def cast_powers(r, rd, kampf_zug=False, angriffe=()):
@@ -3636,7 +3670,8 @@ def roll(r, rd, proben, rng=None, hand=None):
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
                     "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra,
                     **({"frieden": True} if p.get("frieden") else {}), **({"flucht": True} if p.get("flucht") else {}),
-                    **({"gedanken": p["gedanken"]} if p.get("gedanken") else {}), **({"mitkommen": p["mitkommen"]} if p.get("mitkommen") else {})})
+                    **({"gedanken": p["gedanken"]} if p.get("gedanken") else {}), **({"mitkommen": p["mitkommen"]} if p.get("mitkommen") else {}),
+                    **({"kein_angriff": p["kein_angriff"]} if p.get("kein_angriff") else {})})
     return helfen.group(out) if helfen.on(rd) else out     # Gruppenprobe: half of the group passing is enough
 
 
@@ -3841,7 +3876,12 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             use_one(h, it)
             _day.bump("kaputt")
             print("dungeon: werkzeug | kaputt", flush=True)
-        if w["ok"] and not w.get("frieden") and not w.get("flucht"):   # peace and flight pay no check's experience
+        if w.get("kein_angriff"):              # Review 27.10. Paket 2: a check at a foe pays nothing, the seat hears how to attack
+            _log(rd, "ooc", pid=w["pid"], panel=True, text=(
+                f"Kein Angriff erkannt. Schreib zum Beispiel: „Ich greife {w['kein_angriff']} an.“" if not li else
+                f"No attack recognised. Write for example: \"I attack {w['kein_angriff']}.\""))
+            print("dungeon: probe | kampf | kein angriff | hinweis", flush=True)
+        elif w["ok"] and not w.get("frieden") and not w.get("flucht"):   # peace and flight pay no check's experience
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     mark("probe")
     if story:
@@ -5615,16 +5655,18 @@ def _cast(r, rd, pid, h, c, bonus, name, an=None):
     sitz = dict(seated(rd))
     ziele = [(q, p["held"]) for q, p in sitz.items()] if c["ziel"] == "gruppe" else \
         [(an, sitz[an]["held"])] if c["ziel"] == "verbuendeter" and an in sitz else [(pid, h)]
+    plus = []
     for xp, x in ziele:
         if x.get("tot") or x.get("ohnmacht"):
             continue
         if c.get("heilung"):
             was = x["leben"]
-            heal(x, c["heilung"] + bonus)
+            plus.append({"name": x["name"], "zahl": heal(x, c["heilung"] + bonus)})   # Review 27.10. Paket 2: the line says +N
             stood_up(rd, xp, x, was)
         if c.get("segen"):
             bless(x, c["segen"], name, pid, c["id"])
-    _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe", satz=c["satz"][1 if rd["lang"] == "en" else 0])
+    _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe", satz=c["satz"][1 if rd["lang"] == "en" else 0],
+         **({"heilt": plus} if plus else {}))
 
 
 def hero_act(rid, pid, b):

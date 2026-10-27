@@ -94,13 +94,14 @@ ZIEL_MAX = 40
 # first („greife nach dem Seil“, „treffe mich mit“, „stoße die Tür auf“, „betrete“). New words only with
 # test_kampf_angriffswoerter_tabelle.
 _VOR = r"(?<!\w)(?:er|be|zu|nieder|ab|ver|drauf|los)?"
-ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
+ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|verpass\w*\s+(?:[\w'-]+\s+){0,4}eins(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
                            r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|besieg|"
                            r"zerschmetter|erdolch|kämpf|kaempf|hau(?:e|t|en)?(?!\w)|hieb|prügel|prügl|pruegel|pruegl|dresch|"
                            r"schlitz|ramm|tret|tritt|spieß|spiess|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|fight|battle|"
                            r"punch|kick|swing|bash|cleave)")
 BEZUG_WORTE = re.compile(r"(?i)" + _VOR + r"(?:triff|treff|traf|ziel|wirf|werf|wurf|schleuder|feuer|stürm|stuerm|schneid|box|"
-                         r"(?:gehe?|geht|renne?|rennt|springe?|springt)\s+(?:[\w'-]+\s+){0,4}los|aim|throw|hurl|toss|fire|charge|cut|shove)")
+                         r"(?:gehe?|geht|renne?|rennt|springe?|springt)\s+(?:[\w'-]+\s+){0,8}los|stürz\w*\s+(?:[\w'-]+\s+){0,8}auf(?!\w)|"
+                         r"stuerz\w*\s+(?:[\w'-]+\s+){0,8}auf(?!\w)|lass\w*\s+(?:[\w'-]+\s+){0,8}fliegen|pack|greif\w*\s+[^.!?;]*?(?<!\w)an(?!\w)|aim|throw|hurl|toss|fire|charge|cut|shove)")
 NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|dich|euch|sich)(?!\w)|(?:stoß|stoss)\w*\s+(?:die|eine|das)\s+"
                            r"(?:tür|tuer|tor|fenster|kiste|truhe)|betret|(?<!\w)(?:tür|tuer)\w*\s+auf|(?:greif|attack)\w*\s+(?:ab|aus)(?!\w)|"
                            r"lagerfeuer|feuer\s+(?:machen|entzünd|an)|reach\s+for|meet\s+with|"
@@ -110,7 +111,7 @@ NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|di
                            r"näher|naeher|(?:die|eine|das)\s+(?:tür|tuer|tor|fenster|kiste|truhe)\w*\s+ein(?!\w))|"
                            r"(?:schlag|schläg|schlug)\w*\s+(?:vor(?!\w)|(?:mich|uns|dich|euch|sich)(?!\w)(?!\s+nieder)|alarm)|hau\w*\s+ab(?!\w)|"
                            r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){0,4}blick|(?:gebe?|gib|reich)\w*\s+(?:[\w-]+\s+){0,4}feuer(?!\s*(?:auf|!|$))|"
-                           r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){1,5}zu(?!\w)(?!\s+(?:dem|der|den)(?!\w))|"
+                           r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){1,5}zu(?!\w)(?!\s+(?:dem|der|den|boden)(?!\w))|"
                            r"step\s+(?:back|aside|in|forward)|retreat|fall\s+back|(?:throw|cast)\w*\s+(?:[\w-]+\s+){0,3}(?:glance|look)|"
                            r"suggest|propose|hits?\s+the\s+road|strik\w*\s+(?:a\s+)?(?:deal|bargain|match|light)")
 FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
@@ -143,6 +144,12 @@ def intent(text):
             else "frieden" if FRIEDEN_WORTE.search(t) else "")
 
 
+# Review 27.10. Paket 2 (E1): an action that names a foe standing is an attack, unless it heals, protects, talks,
+# looks, hides, gives or waits (these words), flees or asks for peace
+SANFT_WORTE = re.compile(r"(?i)(?<!\w)(?:heil|versorg|verbind|schütz|schuetz|beschütz|beschuetz|deck|abschirm|rede|red|sprech|sprich|sag|"
+                         r"frag|ruf|antwort|überred|ueberred|droh|beobacht|schau|seh|sieh|beäug|lausch|versteck|duck|gib|geb|reich|zeig|"
+                         r"wart|bleib|halt\w*\s+(?:mich|uns)|heal|protect|guard|shield|cover|talk|speak|say|ask|call|threaten|watch|look|"
+                         r"observe|hide|give|hand|show|wait|stay)\w*")
 MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
 ZAUBERWERTE = ("intelligenz", "weisheit", "charisma")   # a cantrip's value: the better of these
 _FUELL = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "beide", "beiden", "alle", "allen",
@@ -500,11 +507,12 @@ def _kind_of(g, text):
     """The text names the foe's kind (its name without the number, as a plural or its last part): „Riesenratten“,
     „die Ratten“, „giant rats“."""
     last = re.sub(r"\s+\d+$", "", g["name"].lower()).split()[-1:] or [""]
+    teile = {x for x in re.split(r"[-\s]+", re.sub(r"\s+\d+$", "", g["name"].lower())) if len(x) >= 3}   # Review Paket 2: „Ork“ is the Ork-Krieger
     for w in re.findall(r"\w+", text):
         if w in _FUELL:
             continue
         for s in _stems(w):
-            if s == last[0] or len(s) >= 4 and last[0].endswith(s):
+            if s == last[0] or len(s) >= 4 and last[0].endswith(s) or s in teile:
                 return True
     return False
 
@@ -561,8 +569,9 @@ def attackers(dm, r, rd, proben, skip=()):
         by_model = _named(rd, m.get("ziel"), life) if m.get("ziel") else None
         dmg = bool(spell and spell.get("art") == "zauber" and spell.get("schaden_art")) or bann(spell)   # H4: a spell on a foe too
         magie = not spell and bool(MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
-        if not (was == "angriff" or dmg or (was == "bezug" or magie) and named):   # the model's ziel only picks the target
-            continue
+        sanft = was in ("flucht", "frieden") or bool(spell) or bool(SANFT_WORTE.search(str(a.get("text") or "")) or NICHT_ANGRIFF.search(str(a.get("text") or "")))
+        if not (was == "angriff" or dmg or (was == "bezug" or magie) and named or named and not sanft):   # the model's ziel only picks the target
+            continue                             # Review 27.10. Paket 2: a foe standing named and no gentle word is an attack
         out.append((dict(m or {"pid": pid, "wert": "staerke", "schwer": 10, "wofuer": ""}, pid=pid), named or by_model, bool(m)))
     return out
 
@@ -595,9 +604,10 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
             print("dungeon: probe | kampf | kontrolle verworfen", flush=True)
             continue
         a = rd["offen"].get(p["pid"]) or {}
-        if any(_named(rd, x, life, text=True) for x in (a.get("text"), p.get("wofuer")) if x):
+        g = next((g for g in (_named(rd, x, life, text=True) for x in (a.get("text"), p.get("wofuer")) if x) if g), None)
+        if g:
             print("dungeon: probe | kampf | kein angriff", flush=True)   # a foe named, still a check: shows in the journal
-        rest.append({k: v for k, v in p.items() if k != "ziel"})
+        rest.append(dict({k: v for k, v in p.items() if k != "ziel"}, **({"kein_angriff": g["name"]} if g else {})))
     for p, g in los:
         a = rd["offen"].get(p["pid"]) or {}
         if g and life.get(g["k"], 0) <= 0:

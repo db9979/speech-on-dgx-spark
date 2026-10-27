@@ -5909,6 +5909,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Angriffe und Heilen erkennen (V01.1.170, Review 27.10. Paket 2, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Angriff: Im Kampf ist eine Aktion ein Angriff, wenn sie einen stehenden Gegner nennt und kein Wort zum Heilen, Schützen, Reden, Schauen, Verstecken, Geben oder Warten trägt und weder flieht noch um Frieden bittet (dungeon_kampf.SANFT_WORTE). Dazu zählen neu „greife … an“ bis zum Satzende, wenn ein Gegner genannt ist, „stürze mich auf …“, „lasse … fliegen“, „gehe … los“ mit bis zu 8 Wörtern, „verpasse … eins“ und „packe …“. „Ork“ nennt den Ork-Krieger (Namen werden auch an Bindestrichen zerlegt, ein gleiches Wort ab 3 Buchstaben zählt). Vorher war „Ich greife den Goblin mit dem Schwert an“ kein Angriff: die Probe gelang, der Goblin verlor nichts. Bleibt eine Probe des Modells trotzdem eine Probe, obwohl sie einen Gegner nennt, gibt sie keine Proben-EP, und der Platz bekommt die Zeile „Kein Angriff erkannt. Schreib zum Beispiel: „Ich greife Goblin an.““. Heilen: „Ich heile Bela“ (heilen, versorgen, verbinden, kurieren) mit dem Namen eines Helden am Tisch oder dem eigenen wirkt einen Heilzauber der Klasse mit Ladung, nach fester Reihenfolge: für einen ander"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "en einer für Verbündete oder die Gruppe, der niedrigste Grad zuerst, dann der mit der meisten Heilung (dungeon.heal_named). Ohne Ladung kommt eine feste Zeile. Die Zauberzeile am Tisch nennt jetzt die Heilung („· Bela +7 Leben“). Log-Zeilen „dungeon: kann | heilen | zauber“, „| leer“, „| kein zauber“, „dungeon: probe | kampf | kein angriff | hinweis“. Selbsttest Fight.test_review_attacks_are_recognised_and_healers_heal mit allen Sätzen aus dem Bericht (E1, T4, T5)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kämpfe halten fest und entschärft (V01.1.169, Review 27.10. Pakete 3 und 4, Dominik 2026-10-27 „ok“ mit den Entscheidungen 1 und 2): Ohne neuen Schalter, es sind Kampfregeln. Der Kampf hält fest: Solange ein Kampf läuft, kommt kein Händler (open_market), der Gastgeber kann den Markt nicht öffnen und niemand kauft, verkauft oder lässt ein Ding benennen (Hinweis „Erst der Kampf …“, Grund markt kampf); eine Schriftrolle des Erkennens wirkt weiter. Die Flucht-Würfe zählen jetzt vor dem Schritt der Karte, eine gelungene Flucht kann also noch im selben Zug zum Nachbarort führen; den Ortswechsel im Kampf sperrt der Karten-Thread. Boss: Ein Boss zählt im Budget mit seinem Lebensfaktor (dungeon_kampf.wert, faktor, dieselbe Zahl wie sein Leben, auch für die Räume der Karte), je Begegnung höchstens ein Boss. Ein Raum der Karte bringt seine Gegner in der Zahl, die die Karte festlegt (raum_gegner.anzahl, höchstens ANZAHL_MAX, ohne das Feld 1). Liegen alle: Liegt im Kampf jeder Held am Tisch am Boden oder ohnmächtig und lag einer schon, endet der Kampf mit Gnade für alle: Jeder wacht mit 1 Leben auf, verliert halbes Gold und ein Ding, es gibt keine EP (dungeon.down, Log „dunge"
 },
 {
@@ -21102,6 +21118,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: recognising attacks and healing (V01.1.170, review 27.10. package 2, Dominik 2026-10-27 „ok“): No new switch. Attack: In a fight an action is an attack when it names a foe standing and carries no word of healing, protecting, talking, looking, hiding, giving or waiting and neither flees nor asks for peace (dungeon_kampf.SANFT_WORTE). New are „greife … an“ up to the sentence's end when a foe is named, „stürze mich auf …“, „lasse … fliegen“, „gehe … los“ with up to 8 words, „verpasse … eins“ and „packe …“. „Ork“ names the Ork-Krieger (names are also split at hyphens, an equal word from 3 letters counts). Before, „Ich greife den Goblin mit dem Schwert an“ was no attack: the check passed, the goblin lost nothing. When a model's check still stays a check although it names a foe, it pays no check experience and the seat gets the line „No attack recognised. Write for example: \"I attack Goblin.\"“. Healing: „Ich heile Bela“ (heal, tend, bandage, cure) with the name of a hero at the table or the own one casts a healing spell of the class with a charge, by a fixed order: for another one for allies or the group, the lowest grade first, then the one with the most healing (dung"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "eon.heal_named). Without a charge a fixed line comes. The spell's line at the table now names the healing („· Bela +7 life“). Log lines „dungeon: kann | heilen | zauber“, „| leer“, „| kein zauber“, „dungeon: probe | kampf | kein angriff | hinweis“. Self-test Fight.test_review_attacks_are_recognised_and_healers_heal with every sentence of the report (E1, T4, T5)."
 },
 {
 "lang": "en",

@@ -631,7 +631,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='quest'){const w={genommen:t('nimmt','takes'),gefunden:t('findet','finds'),gegeben:t('gibt','gives'),abgelegt:t('legt ab:','puts down:'),verbraucht:t('braucht auf:','uses up:')}[e.was]||e.was;
     return `<div class="dm-sys dm-qline">✦ ${e.wer?esc(e.wer)+' ':''}${esc(e.wer?w:t('Hier liegt','Lying here:'))} <b>${esc(e.name)}</b>${e.an?' '+esc(t('an','to'))+' '+esc(e.an):''}</div>`}
   if(e.art==='handel'){const w={kauf:t('kauft','buys'),verkauf:t('verkauft','sells'),erkannt:t('erkennt','identifies')}[e.was]||e.was;return `<div class="dm-sys mut">⚖ ${esc(e.name)} ${esc(w)} <b>${esc(e.ding)}</b>${e.gold?' · '+e.gold+' '+esc(t('Gold','gold')):''}</div>`}
-  if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
+  if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}${(e.heilt||[]).map(x=>' · '+esc(x.name)+' +'+(+x.zahl||0)+' '+esc(t('Leben','life'))).join('')}</div>`;
   if(e.art==='dienst')return `<div class="dm-sys ok dm-dienst">🏘 ${esc(sys)}</div>`;
   if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
   if(e.art==='bild')return !(v.bilder||[]).some(x=>x.b===e.b)?'':e.b===dmNewest(v)?dmBildGross(v.mode,v,e.b,e.ort):`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`;
