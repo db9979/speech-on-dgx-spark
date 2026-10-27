@@ -1,8 +1,12 @@
 """Pebble watch (pebblewatch.py, watch.py): pairing with a setup code, the key's narrow scope, the log line."""
 import asyncio
+import datetime
 import json
 import time
+import types
 import unittest
+import zoneinfo
+from unittest import mock
 
 from tests import helpers
 
@@ -252,13 +256,16 @@ class Pebble(unittest.TestCase):
         self.assertEqual(app.get("/api/watch/brief", params={"art": "tag"}, headers=h).status_code, 403)
         helpers.set_config(pebble_day=True)
         self.assertEqual(app.get("/api/watch/brief", params={"art": "jahr"}, headers=h).status_code, 400)
-        now = time.time()
+        berlin = zoneinfo.ZoneInfo("Europe/Berlin")
+        # a fixed "now" (10:00 in Berlin): shortly before midnight "now + 120 s" would already be tomorrow
+        now = datetime.datetime.combine(datetime.datetime.now(berlin).date(), datetime.time(10), berlin).timestamp()
         profiles.add_reminder(uid, "Müll raus", (now + 120) * 1000)
         profiles.remember(uid, "Das Auto steht auf Ebene 3", src="said")
         try:
-            day = app.get("/api/watch/brief", params={"art": "tag", "tz": "Europe/Berlin"}, headers=h).json()["lines"]
-            self.assertTrue(any("Müll raus" in x and x.startswith("⏰ ") for x in day), day)
-            week = app.get("/api/watch/brief", params={"art": "woche"}, headers=h).json()["lines"]
+            with mock.patch.object(pebblewatch, "time", types.SimpleNamespace(time=lambda: now)):
+                day = app.get("/api/watch/brief", params={"art": "tag", "tz": "Europe/Berlin"}, headers=h).json()["lines"]
+                week = app.get("/api/watch/brief", params={"art": "woche"}, headers=h).json()["lines"]
+            self.assertTrue(any("Müll raus" in x and x.startswith("⏰ 10:02 ") for x in day), day)
             self.assertTrue(week[0].startswith("Letzte 7 Tage: "), week)
             self.assertIn("1 neue Dinge gemerkt.", week)
             self.assertIn("1 Erinnerungen in den nächsten 7 Tagen.", week)

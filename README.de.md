@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.141** Pebble-Test unabhängig von der Uhrzeit: „Mein Tag“ rechnet mit einem festen „jetzt“, kurz vor Mitternacht wird der Test nicht mehr rot
 - **V01.1.140** KI-Dungeon-Master: Rettungswürfe, Zustände und SG nach dem SRD im Katalog (Kampf-Audit H4, N6, N7)
 - **V01.1.139** KI-Dungeon-Master: Kampf-Audit Welle 2, eine gewirkte Angriffs-Schriftrolle macht den nächsten Angriff zu ihrem Zauber, Heilzauber wirken vor den Treffern des Zuges, „Ratte“ trifft die Riesenratte statt des Rattenschwarms, und die Kampf-Erfahrung wird abgerundet geteilt
 - **V01.1.138** KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.134** KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (Schalter, aus), ist eine Ansage zu kurz, ohne Tun oder zeigt ihr Fürwort auf nichts, fragt der Tisch nach feste Regeln mit drei Vorschlägen aus der Szene und „So lassen“, hält die Runde nie auf, im Auto vorgelesen und auf CarPlay als Knöpfe
 - **V01.1.133** KI-Dungeon-Master: Kampf-Wortgrenzen, „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe (Selbsttest über jeden Gegner), „schlage dich nieder“ greift an, „Ich haue ab“ und „schlage Alarm“ nicht, wer am Boden liegt, würfelt keine Probe
 - **V01.1.132** KI-Dungeon-Master: Geschlecht des Helden, beim Anlegen und auf dem Heldenblatt männlich, weiblich oder divers, die Erzählung nennt den Helden mit dem richtigen Fürwort (bei divers nur beim Namen), die Stimme kommt aus den Stimmen des Geschlechts, das Porträt nennt es und darf nach einer Änderung neu gemalt werden
-- **V01.1.131** Wissensfrage statt Spark-Hilfe: „Was kannst du mir zur Frauenkirche erzählen?“ fragt nach der Frauenkirche, nicht nach dem Spark (Beispielliste nur bei „Was kannst du alles?“); die Dokumentsuche gibt nur Stellen mit den gefragten Wörtern weiter, sonst sagt sie ehrlich „nichts Passendes“ und verweist auf Archiv oder Web
 
 
 

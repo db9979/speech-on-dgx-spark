@@ -445,11 +445,12 @@ def _clock(ts, zone):
 
 async def _day_lines(uid, zone):
     import datetime
+    now = time.time()
+    end = datetime.datetime.fromtimestamp(now, zone).replace(hour=23, minute=59).timestamp()   # today, in the zone
     lines = []
     if features.allowed("calendar", uid):
         import today
         r = await today._events(uid, zone)
-        end = datetime.datetime.now(zone).replace(hour=23, minute=59).timestamp()
         evs = [x for x in r.get("next") or [] if x["start"] <= end]
         if r.get("error"):
             lines.append("Kalender gerade nicht erreicht.")
@@ -458,8 +459,7 @@ async def _day_lines(uid, zone):
         for x in evs:
             lines.append(("ganztägig" if x["allday"] else _clock(x["start"], zone)) + " " + _short(x["title"], 40))
     if features.allowed("reminders", uid):
-        end = datetime.datetime.now(zone).replace(hour=23, minute=59).timestamp() * 1000
-        rems = [x for x in profiles.reminders(uid) if time.time() * 1000 <= x.get("due", 0) <= end]
+        rems = [x for x in profiles.reminders(uid) if now * 1000 <= x.get("due", 0) <= end * 1000]
         for x in sorted(rems, key=lambda x: x["due"])[:4]:
             lines.append("⏰ " + _clock(x["due"] / 1000, zone) + " " + _short(x.get("text"), 40))
     w = await _weather(uid)
@@ -486,7 +486,7 @@ async def _week_lines(uid, zone):
         lines.append(f"{new} neue Dinge gemerkt.")
     if features.allowed("calendar", uid):
         import calendars
-        start = datetime.datetime.now(zone)
+        start = datetime.datetime.fromtimestamp(now, zone)
         try:
             r = await asyncio.wait_for(calendars.events(uid, start, start + datetime.timedelta(days=WEEK_DAYS), zone), 4)
         except (asyncio.TimeoutError, OSError, ValueError):
