@@ -5917,6 +5917,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Leben nur mit Grund (V01.1.175, Dominik 2026-10-27 „wiso verlor ich ein leben? erklärung“): Ohne neuen Schalter. Nach einer natürlichen 1 auf Charisma („Silas zur Kooperation überreden“) kostete ein Held 1 Leben, ohne dass die Erzählung es sagte: das Erzähl-Modell hatte die Folge „Schaden“ gesetzt, und außerhalb des Kampfs nahm das Panel sie bisher ohne Grund an. Jetzt prüft dungeon.grounded fest: Schaden außerhalb des Kampfs gilt nur für einen Helden, dessen Probe in diesem Zug auf einen Wert aus KOERPER_WERTE (Stärke, Geschick, Konstitution) misslang, etwa ein Sprung, ein Klettern, ein Schloss, das zuschnappt; die Zeile nennt dann „Probe „…“ misslungen“. Jeder andere Schaden fällt weg (Log dungeon: folgen | schaden | ohne grund, Tageszähler schaden_ohne_grund in der Live-Übersicht). Heilung und Treffer von Gegnern bleiben. Die Aufgabe des Erzählers sagt es auch: Schaden nur nach so einer Probe und mit dem Grund in der Erzählung. Selbsttest LifeLossReason in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Der Spieltisch bleibt ruhig (V01.1.174, Dominik 2026-10-27 „die seite im spiel läd zum teil immer neu, bilder flakern, texte formatieren sich um und springen“): Ohne neuen Schalter. Bringt eine Abfrage etwas Neues (wer gerade tippt, wer da ist, ein Satz wird vorgelesen …), baute der Tisch bisher sein ganzes HTML neu auf: jedes Bild wurde neu gesetzt und geladen, Texte brachen neu um, Spalten sprangen, und der Verlauf ging jedes Mal ans Ende. Jetzt setzt dmMorph (static/js/dungeon.js) das neue HTML in die vorhandenen Knoten ein: ein Knoten bleibt, wenn er dasselbe ist (gleicher Tag, gleiche id, gleicher Schlüssel oder gleicher Textanfang, bis DMMORPH_VOR (6) Plätze voraus gesucht), nur Geändertes wird gesetzt, ein Bild behält die Adresse, die es schon hat. Eingabefeld, Fokus, offene Bereiche und Scrollstand bleiben. Der Verlauf geht nur noch ans Ende, wenn man schon dort war oder ein neuer Eintrag kommt. Browser-Selbsttest Windows.test_the_table_stays_put_across_polls in test_dungeon: vier Abfragen mit Neuem, kein Knoten neu, nichts verschoben, der Scrollstand bleibt."
 },
 {
@@ -21190,6 +21198,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: life only with a reason (V01.1.175, Dominik 2026-10-27 „wiso verlor ich ein leben? erklärung“): No new switch. After a natural 1 on Charisma („Silas zur Kooperation überreden“) a hero lost 1 life without the narration saying so: the narrating model had set the consequence „damage“, and outside a fight the panel used to take it without a reason. Now dungeon.grounded checks by a fixed rule: damage outside a fight counts only for a hero whose check of this turn on a value of KOERPER_WERTE (strength, dexterity, constitution) failed, such as a jump, a climb, a lock that snaps; the line then names „check „…“ failed“. Any other damage is dropped (log dungeon: folgen | schaden | ohne grund, day counter schaden_ohne_grund in the live overview). Healing and hits by foes stay. The narrator's task says so too: damage only after such a check and with its reason in the narration. Self-test LifeLossReason in test_dungeon."
 },
 {
 "lang": "en",

@@ -4069,6 +4069,13 @@
 "titel": "Dungeon-Master: Der Spieltisch bleibt ruhig",
 "text": "Eine Runde mit Bildern im Verlauf offen lassen, ein zweiter Spieler tippt und schickt. A: Bilder flackern nicht, Texte springen nicht. B: Im Verlauf nach oben scrollen: der Verlauf bleibt dort, bis ein neuer Eintrag kommt. C: Beim Tippen im Feld bleibt der Text und der Cursor.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P606",
+"v": 1175,
+"titel": "Dungeon-Master: Leben nur mit Grund",
+"text": "Außerhalb eines Kampfs eine Überreden-Probe würfeln, bis sie misslingt. A: Kein Held verliert dafür Leben. B: Ein Sprung über eine Kluft misslingt (Geschick): verliert ein Held Leben, nennt die Zeile die Probe, und die Erzählung sagt, woher der Schaden kommt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

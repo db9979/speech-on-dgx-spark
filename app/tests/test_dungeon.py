@@ -663,9 +663,7 @@ class Turns(Base):
         self.assertEqual(rd["zug"], 2)
         wurf = [e for e in rd["log"] if e["art"] == "wurf"]
         self.assertEqual([(e["name"], e["schwer"]) for e in wurf], [("Arvid", dungeon.SCHWER[1])])
-        folgen = [e for e in rd["log"] if e["art"] == "folge"]
-        self.assertEqual(len(folgen), 1)
-        self.assertLessEqual(folgen[0]["zahl"], dungeon.ZAHL[1])
+        self.assertEqual([e for e in rd["log"] if e["art"] == "folge"], [])   # Bela made no check: no damage without a reason
         ep = {e["name"]: e["zahl"] for e in rd["log"] if e["art"] == "ep"}
         self.assertNotIn("Bela", ep)                    # a defeated foe counts only by the bestiary (dungeon_kampf), never by the model
 
@@ -4101,6 +4099,29 @@ class _Die:
 
     def randint(self, lo, hi):
         return self.n
+
+
+class LifeLossReason(unittest.TestCase):
+    def test_damage_outside_a_fight_needs_a_failed_check_of_the_body(self):
+        """Dominik 2026-10-27 „wiso verlor ich ein leben? erklärung“: a natural 1 on Charisma (persuading) cost a life
+        by the model's folgen alone. Damage outside a fight now needs a failed check of this turn on Stärke, Geschick or
+        Konstitution of that hero, and the line names it; healing and a foe's hit stay."""
+        wuerfe = [{"pid": "a", "wert": "charisma", "ok": False, "wofuer": "Silas überreden"},
+                  {"pid": "b", "wert": "geschick", "ok": False, "wofuer": "Über die Kluft springen"},
+                  {"pid": "c", "wert": "staerke", "ok": True, "wofuer": "Tor aufstemmen"}]
+        folgen = [{"pid": "a", "art": "schaden", "zahl": 1}, {"pid": "b", "art": "schaden", "zahl": 3},
+                  {"pid": "c", "art": "schaden", "zahl": 2}, {"pid": "d", "art": "schaden", "zahl": 2},
+                  {"pid": "a", "art": "heilung", "zahl": 2}, {"pid": "d", "art": "schaden", "zahl": 4, "gegner": "Ork"}]
+        n = dungeon._day.get("schaden_ohne_grund", 0)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            got = dungeon.grounded({}, folgen, wuerfe)
+        self.assertEqual(got, [dict(folgen[1], probe="Über die Kluft springen"), folgen[4], folgen[5]])
+        self.assertEqual(out.getvalue().count("dungeon: folgen | schaden | ohne grund"), 3)   # a social roll, a success, no check
+        self.assertEqual(dungeon._day.get("schaden_ohne_grund", 0), n + 3)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            self.assertIn("e.probe?' · '+esc(t('Probe „'+e.probe+'“ misslungen'", f.read())
+        with open(dungeon.__file__, encoding="utf-8") as f:
+            self.assertIn("Schaden nur nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution", f.read())   # the narrator's task
 
 
 class Explained(Equipment):

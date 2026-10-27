@@ -417,6 +417,7 @@ HAENDLER = {"schmied": (("Schmied", "Smith"), ("waffe", "ruestung")),
             "kraemer": (("Krämer", "Trader"), ("schmuck", "werkzeug", "rolle", "schatz"))}
 KASSE = 50
 FOLGE_ARTEN = ("schaden", "heilung")
+KOERPER_WERTE = ("staerke", "geschick", "konstitution")   # a failed check on these may hurt outside a fight (grounded)
 FUNDE = ("gegner", "truhe", "belohnung", "boss")   # the occasions of a find (rules anlass, gold)
 ANLAESSE = ("truhe", "belohnung")   # the model's; „gegner“ and „boss“ the panel gives at a fight's end (dungeon_kampf)
 ERFOLG_ARTEN = ("ziel",)   # a defeated foe counts by the bestiary (dungeon_kampf), never by the model
@@ -472,7 +473,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, ausfall_halt=0, verworf
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0, getippt=0, gegeben=0,
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0, getippt=0, gegeben=0, schaden_ohne_grund=0,
                   oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_gehen=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
@@ -3307,7 +3308,7 @@ AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht ({m}höchstens {n} Zeichen); eine "
           "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
-          "Erzählung), gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
+          "Erzählung), gib Heilung als folgen (zahl 1 bis 6), Schaden nur nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution und mit dem Grund in der Erzählung, melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, ein erreichtes Ziel als ziel in erfolg. Ende mit einer Frage an die Gruppe; "
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
@@ -3315,7 +3316,7 @@ AUFGABE_ERZAEHLEN = {
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.{zeit} {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks ({m}at most {n} characters); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
-          "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
+          "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give healing as folgen (zahl 1 to 6), damage only after a failed check on strength, dexterity or constitution and with its reason in the narration, report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
@@ -4058,7 +4059,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             mark("kampf")
             haltung.count(rd, kampfwuerfe[1])
             haltung.announce(_me, r, rd, rng)    # the foes still up say their next blow (round 2, idea 2)
-        folgen = story["folgen"]
+        folgen = grounded(rd, story["folgen"], wuerfe)    # damage only with a failed check of the body as its reason
         helfer = [q for q in rd["offen"] if q in names]
         if helfer and all(fresh(rd, q) for q in helfer) and any(f["art"] == "heilung" and f["pid"] not in helfer for f in folgen):
             folgen = [f for f in folgen if not (f["art"] == "heilung" and f["pid"] not in helfer)]    # Punkt 2: no rescue on arrival
@@ -4147,6 +4148,24 @@ def outage(r, rd, now=None):
     print(f"dungeon: ausfall | {'halt' if halt else 'neu'} | {n}", flush=True)
 
 
+def grounded(rd, folgen, wuerfe):
+    """The model's damage outside a fight only for a hero whose check of this turn on a value of KOERPER_WERTE failed (a
+    climb, a jump, a lock that snaps), that check as its reason at the line; any other is dropped (Dominik 2026-10-27
+    „wiso verlor ich ein leben?“: a natural 1 on Charisma, persuading, cost a life without a word in the narration)."""
+    out = []
+    for f in folgen:
+        if f["art"] != "schaden" or f.get("gegner"):
+            out.append(f)
+            continue
+        w = next((w for w in wuerfe or () if w.get("pid") == f["pid"] and not w.get("ok") and w.get("wert") in KOERPER_WERTE), None)
+        if w:
+            out.append(dict(f, probe=str(w.get("wofuer") or "")))
+            continue
+        _day.bump("schaden_ohne_grund")
+        print("dungeon: folgen | schaden | ohne grund", flush=True)
+    return out
+
+
 def consequences(r, rd, folgen, names):
     """Damage and healing of a told turn by the panel (Punkt 3 of 2026-10-24): a hit costs its number (armour works on
     the attack roll, dungeon_kampf.rk), less 1 for every ability „weniger_schaden“ (Eisenhaut, down to 0); a hero whose action
@@ -4183,7 +4202,8 @@ def consequences(r, rd, folgen, names):
             print("dungeon: schutz | halbiert", flush=True)
         h["leben"] = max(0, h["leben"] - n)
         _log(rd, "folge", pid=pid, name=h["name"], was="schaden", zahl=n, leben=h["leben"], **({"weniger": minus} if minus else {}),
-             **({"von": f["gegner"]} if f.get("gegner") else {}), **({"sart": f["sart"], "wirkt": "resistenz"} if halb else {}))
+             **({"von": f["gegner"]} if f.get("gegner") else {}), **({"sart": f["sart"], "wirkt": "resistenz"} if halb else {}),
+             **({"probe": f["probe"]} if f.get("probe") else {}))
         if minus:
             _day.bump("kraft_wirkt")
 
@@ -6168,7 +6188,7 @@ def for_live():
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "oel", "beleg_falsch", "hoer_namen",
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "schaden_ohne_grund", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",

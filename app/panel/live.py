@@ -1972,6 +1972,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
                         + (f" · {dgn['ausfall_halt']} wartet auf Jetzt weiter" if dgn.get("ausfall_halt") else "")
                         + (f" · {dgn.get('getippt', 0)} getippte Hinweise, {dgn.get('gegeben', 0)}-mal Gold gegeben" if dgn.get("getippt") or dgn.get("gegeben") else "")
+                        + (f" · {dgn['schaden_ohne_grund']}-mal Schaden ohne Grund verworfen" if dgn.get("schaden_ohne_grund") else "")
                         + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
                         + (f" · {dgn['abgelehnt']} abgelehnt" if dgn.get("abgelehnt") else "")
                         + (" · erzählt gerade" if dgn.get("denkt") else "")

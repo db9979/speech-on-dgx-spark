@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.175** AI Dungeon Master: outside a fight a roll costs life only after a failed check on strength, dexterity or constitution, the line names the check
 - **V01.1.174** AI Dungeon Master: the game table is never built anew, pictures do not flicker, texts do not jump, the feed stays where you read
 - **V01.1.173** AI Dungeon Master: foe pictures take what a foe is from the Bestiarium (humans look human), companion faces with fixed gender and age
 - **V01.1.172** AI Dungeon Master: the sample of a person's voice looks afresh whether voices from a description run, and catalog and game master console say so with a jump link when not
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.168** AI Dungeon Master: word lists no longer hit harmless words („knackt“), a model outage brakes and waits for "Go on now" after two tries, "kill" becomes "defeat" at the children's table, style examples stand at the end of the prompt (review 27.10., package 1)
 - **V01.1.167** AI Dungeon Master: every person has one fixed gender, portrait, voice, occupation word and pronouns follow it, a title like „Schattenwächter“ decides the occupation
 - **V01.1.166** AI Dungeon Master: persuade to come along (switch, off), whether an asked person comes along is decided by its attitude towards the hero and a Charisma check of the panel, the devoted come without a check (LlamaTale idea 4)
-- **V01.1.165** AI Dungeon Master: real dice for attacks in a fight too, only 10 s wait after two turns without a throw, difficulty as a word
 
 
 
