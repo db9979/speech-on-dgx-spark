@@ -22,6 +22,7 @@ helpers.start()
 import panel  # noqa: E402,F401
 import calendars  # noqa: E402
 import logfilter  # noqa: E402
+import profiles  # noqa: E402
 import vorrang  # noqa: E402
 import vorwaermen  # noqa: E402
 from tests.test_features import profile  # noqa: E402
@@ -107,9 +108,12 @@ class Warm(Base):
         self.assertEqual(done, ["ok", "ok"])
         self.assertEqual(self.quiet, ["Vorwärmen"] * 3)            # voice first, before every step
         line = out.getvalue().strip()
-        self.assertTrue(line.startswith("vorwaermen: done | 2 parts, 1 failed | "), line)
+        who = profiles.log_name(profiles.by_id(uid))
+        # the whole line is fixed words, counts and the profile tag ("Profil " and the end of a random id, which
+        # may hold "503" by chance), so nothing of the error text can be in it
+        self.assertEqual(line, "vorwaermen: done | 2 parts, 1 failed | " + who)
         self.assertNotIn("WarmWanda", line)                        # no name without its consent
-        self.assertNotIn("503", line)
+        self.assertNotIn("503", line[:-len(who)])
         self.assertEqual(next(k for k, rx in logfilter._AREAS if rx.search(line)), "vorrang")
 
     def test_only_what_the_profile_may_use(self):

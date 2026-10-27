@@ -26,6 +26,7 @@ import telefon  # noqa: E402
 import telefon_anruf  # noqa: E402
 import telefon_ich  # noqa: E402
 import telefon_ton  # noqa: E402
+import vault  # noqa: E402
 
 
 def tone(seconds, rate=16000, freq=440.0, level=9000):
@@ -421,7 +422,7 @@ class Calls(unittest.TestCase):
             out, blk = self.run_with_pbx(body)
         self.assertEqual((out, blk), (603, 403))
         self.assertIn("telefon: anruf extern abgelehnt", log.text)
-        self.assertNotIn("0170", log.text)          # an external number never in the log
+        self.assertNotIn("0170", _bare(log.text))          # an external number never in the log
 
     def test_a_call_greets_answers_and_hangs_up(self):
         self.say_next = ["Wie spät ist es?"]
@@ -771,8 +772,8 @@ class Calls(unittest.TestCase):
         self.assertEqual(telefon_ich.owner_of("01701234567"), self.uid)
         self.assertIn("telefon: bestaetigungscode falsch", log.text)
         self.assertIn("telefon: nummer bestaetigt fuer Profil ", log.text)
-        self.assertNotIn("0170", log.text)            # an external number never in the log
-        self.assertNotIn(code, log.text)
+        self.assertNotIn("0170", _bare(log.text))            # an external number never in the log
+        self.assertNotIn(code, _bare(log.text))
         self.assertEqual([c["art"] for c in telefon_ich.calls(self.uid)], ["bestaetigung"])
 
     def test_the_pin_stands_for_the_voice_and_locks_after_three_wrong(self):
@@ -814,7 +815,7 @@ class Calls(unittest.TestCase):
         self.assertIn("telefon: pin richtig fuer Profil ", log.text)
         self.assertIn("telefon: pin gesperrt", log.text)
         self.assertEqual(sent, [self.uid])
-        self.assertNotIn("2580", log.text)
+        self.assertNotIn("2580", _bare(log.text))
         self.assertTrue(telefon_ich.locked("**611"))
         self.assertEqual({c["art"] for c in telefon_ich.calls(self.uid)}, {"intern"})
 
@@ -872,7 +873,7 @@ class Calls(unittest.TestCase):
         self.assertIn("telefon: anruf extern unbekannt abgelehnt", log.text)
         self.assertIn("telefon: anruf extern unbekannt als gast", log.text)
         for nr in ("0170", "+49", "anonymous"):
-            self.assertNotIn(nr, log.text)                        # an external number never in the log
+            self.assertNotIn(nr, _bare(log.text))                        # an external number never in the log
         self.assertFalse(any("Tele Toni" in t for t in helpers.TTS_TEXT))   # a forged number learns no name
         self.assertIn("extern", {c["art"] for c in telefon_ich.calls(self.uid)})
 
@@ -1047,7 +1048,12 @@ class SparkCalls(unittest.TestCase):
         self.assertTrue(said.startswith("Planned"), said)
         rows = telefon_ich.planned(self.uid)
         self.assertEqual([(r["art"], r["text"]) for r in rows], [("erinnerung", "Zahnarzt")])
-        self.assertNotIn("0900", json.dumps(rows))
+        # the given number lands nowhere: only id, time, kind and text are kept; the random id (hex) and the
+        # timestamp may contain "0900" by chance, so the check covers every other field
+        self.assertEqual([sorted(r) for r in rows], [["art", "id", "t", "text"]])
+        self.assertIsInstance(rows[0]["t"], int)
+        self.assertRegex(rows[0]["id"], r"^[0-9a-f]{8}$")
+        self.assertNotIn("0900", json.dumps([{k: v for k, v in r.items() if k not in ("id", "t")} for r in rows]))
         # not yet due: nothing; due: the own handset, the text along
         with _quiet():
             asyncio.run(telefon_anruf.tick(now=rows[0]["t"] - 5))
@@ -1076,7 +1082,7 @@ class SparkCalls(unittest.TestCase):
             self.assertEqual(len(self.dialed), telefon_anruf.DAY_LIMIT + 2)
             self.assertEqual(self.notes[-1][2], "Müll")                 # … then the reminder as a note
         self.assertNotIn("Müll", log.text)
-        self.assertNotIn("611", log.text)
+        self.assertNotIn("611", _bare(log.text))
 
     def test_call_back_only_to_the_confirmed_number_that_called(self):
         self._confirmed(self.uid, "0170 5550001")
@@ -1090,7 +1096,7 @@ class SparkCalls(unittest.TestCase):
             self.assertEqual(telefon_anruf.call_back(self.uid, "+491705550001", now=5000), "ok")
             asyncio.run(telefon_anruf.tick(now=5000 + telefon_anruf.CALLBACK_WAIT))
         self.assertEqual(self.dialed, [("01705550001", self.uid, "rueckruf", "")])   # the stored number, not the shown one
-        self.assertNotIn("0170", log.text)
+        self.assertNotIn("0170", _bare(log.text))
 
     def _call(self, mode, text=""):
         c = telefon.Call(None, telefon.parse(invite(5060, "**611", 4000, "x1")), ("127.0.0.1", 5060), "**611", self.uid, False,
@@ -1213,7 +1219,11 @@ class OwnNumbersAndPin(unittest.TestCase):
         self.assertTrue(telefon_ich.set_pin(self.a, "2580"))
         telefon_ich.set_pin(self.b, "7391")
         with open(telefon_ich._file(self.a)) as f:
-            self.assertNotIn("2580", f.read())
+            d = json.load(f)
+        # sealed: the PIN only inside the sealed value (whose random base64 may hold "2580" by chance), nowhere else
+        self.assertTrue(d["pin"].startswith(vault.PREFIX), d)
+        self.assertNotEqual(vault.open_(d["pin"]), "2580")
+        self.assertNotIn("2580", json.dumps(dict(d, pin="")))
         both = [self.a, self.b]
         self.assertEqual(telefon_ich.pin_attempt("**612", both, "7391", now=10), ("ok", self.b))   # a shared phone
         self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "7391", now=10), ("wrong", ""))  # not this handset's
@@ -1238,6 +1248,22 @@ class OwnNumbersAndPin(unittest.TestCase):
         self.assertEqual(count(self.a), telefon_ich.KEEP_CALLS - 1)
         clear(self.a)
         self.assertEqual(count(self.a), 0)
+
+
+def _bare(text):
+    """A journal text without the profile tags: "Profil " and the end of a random id (hex) may hold any short
+    number by chance, so checks for a number that must never be logged look at everything else."""
+    return re.sub(r"\bProfil [0-9a-f]{4}\b", "Profil", text)
+
+
+def _texts(v, skip=("id", "code", "bis", "t")):
+    """An answer without its random fields (ids, the confirmation code) and timestamps, which may hold any
+    short number by chance; every other key and value stays."""
+    if isinstance(v, dict):
+        return {k: _texts(x, skip) for k, x in v.items() if k not in skip}
+    if isinstance(v, list):
+        return [_texts(x, skip) for x in v]
+    return v
 
 
 class _quiet:
@@ -1295,7 +1321,9 @@ class Endpoints(unittest.TestCase):
         r = c.put("/api/profile/telefon/pin", json={"pin": "8462"})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertTrue(r.json()["pin"])
-        self.assertNotIn("8462", r.text + c.get("/api/profile/telefon").text)    # never sent back
+        for v in (r.json(), c.get("/api/profile/telefon").json()):              # never sent back: only "pin": true
+            self.assertIs(v["pin"], True)
+            self.assertNotIn("8462", json.dumps(_texts(v)))
         self.assertFalse(c.delete("/api/profile/telefon/pin").json()["pin"])
         self.assertEqual(c.delete("/api/profile/telefon/nummern/" + row["id"]).json()["nummern"], [])
         self.assertEqual(c.delete("/api/profile/telefon/nummern/nope").status_code, 404)

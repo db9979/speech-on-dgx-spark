@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.147** Tests without chance: the phone, Pebble and warm-up tests check only text fields, not timestamps, random ids or sealed values that may hold a digit string by chance
 - **V01.1.146** AI Dungeon Master: 76 night foes in the bestiary, at night come undead, lycanthropes and night beasts (LlamaTale 1)
 - **V01.1.145** AI Dungeon Master: time of day by the panel, morning, day, evening and night by calendar and turns instead of the model, at night the shops are shut, without a light you roll outdoors in the dark at a disadvantage, and at night foes of the night come
 - **V01.1.144** AI Dungeon Master: the map remembers who asks a person to come along and lets people with a goal wander along the ways (the map's part of LlamaTale 4 and 6)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.140** AI Dungeon Master: saving throws, conditions and DCs from the SRD in the catalog (combat audit H4, N6, N7)
 - **V01.1.139** AI Dungeon Master: combat audit wave 2, an attack scroll cast makes the next attack its spell, healing spells work before the turn's hits, "rat" hits the giant rat instead of the rat swarm, and the fight's experience is divided rounded down
 - **V01.1.138** AI Dungeon Master: combat audit wave 2, blessings no longer stack (the highest counts, a new spell ends the same hero's last blessing), Shield and Haste raise the armour class, Berserker Rage hits harder, and the group flees only by the panel's Dexterity check
-- **V01.1.137** AI Dungeon Master: in the story planner you tick up to three known people from the catalog, a round of that story brings them with their fixed card, role and attitude, the language model may use them in the draft
 
 
 

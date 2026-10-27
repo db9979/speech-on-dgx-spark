@@ -15,6 +15,7 @@ import guard  # noqa: E402
 import panel  # noqa: E402
 import pebblewatch  # noqa: E402
 import profiles  # noqa: E402
+import vault  # noqa: E402
 import watch  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -389,8 +390,11 @@ class Pebble(unittest.TestCase):
         self.assertEqual(days, [{"day": "2026-03-05", "steps": 12, "bpm": None, "sleep": None},
                                 {"day": "2026-03-04", "steps": 9000, "bpm": 61, "sleep": 431}])   # one line per day
         with open(profiles._path(uid, pebblewatch.HEALTH_FILE)) as f:
-            stored = f.read()
-        self.assertNotIn("9000", stored)   # sealed at rest
+            stored = json.load(f)
+        # sealed at rest: the steps only inside the sealed value (whose random base64 may hold "9000" by chance)
+        self.assertEqual(set(stored), {"days"})
+        self.assertTrue(stored["days"].startswith(vault.PREFIX), stored)
+        self.assertIn("9000", vault.open_(stored["days"]))
         self.assertIn(app.get("/api/profile/pebble/gesundheit", headers=h).status_code, (401, 403))   # never with the watch key
         helpers.set_config(pebble_health=False)   # off: still seen and deleted
         self.assertEqual(len(a.get("/api/profile/pebble/gesundheit").json()["days"]), 2)

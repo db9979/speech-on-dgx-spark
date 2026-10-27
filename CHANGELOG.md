@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.147** · 2026-10-27 · Tests prüfen nur Textfelder statt Zeitstempel und Zufalls-IDs (Telefon, Pebble, Vorwärmen)
 - **V01.1.146** · 2026-10-27 · KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium (Untote, Werwesen, Nachttiere, Lauerer im Dunkeln), in jeder Welt mindestens 5 für Stufe 1 bis 3 (Daten, LlamaTale 1)
 - **V01.1.145** · 2026-10-27 · KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
 - **V01.1.144** · 2026-10-25 · KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
