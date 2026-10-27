@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.159** AI Dungeon Master: „go to the old library“ really leads there (no check, the narrator has to take the way, else the panel goes), „vague“ wants a point from the scene's data, no more „W-2“ on the dice card, the story fades out softly at the top
 - **V01.1.158** AI Dungeon Master: the map tells already before the narration whom an action asks to come along, so the panel can roll the Charisma check first (LlamaTale 4)
 - **V01.1.157** AI Dungeon Master: the hero book also arrives on a slow line (ReadTimeout when sending), pictures as JPEG and made only once per book (with 60 pictures below 2 MB instead of several MB), uploads to the reMarkable wait by file size with a second try, "Send now" works in the background with a status, the log names the step; book and notes lie in their own folder "Dungeon-Master"
 - **V01.1.156** AI Dungeon Master: wandering people and small gestures (two switches, off), during a long rest people of the map move on by fixed rules towards their goal or the place of their occupation and you hear it as a rumour, while waiting a person of the scene shows a fixed gesture by their nature (LlamaTale ideas 6 and 7)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.152** AI Dungeon Master: witness rule (switch, off), what a hero does in front of people of the scene changes their attitude by a fixed table, attack and theft target −2 and everyone present −1, gift and help target +1, a successful theft stays unseen, the narrator only shows the reaction (LlamaTale idea 3)
 - **V01.1.151** AI Dungeon Master: guide the players step 3, a narration with fewer than two points to take up or an empty question such as "What do you do?" is told again once, 👎 reason "Did not know what we could do" and bench scene "Sackgasse", plus a stall hint in three stages, another way after a failed search and step 5, two to three clues per act to the turning point in all 50 stories that the narrator shows one by one
 - **V01.1.150** AI Dungeon Master: choose a person's voice, under Rules → People (NPC) every person shows its voice, the admin picks age, gender, sound, manner and pace from fixed lists, hears a sample and saves, the round then speaks the person with that voice
-- **V01.1.149** AI Dungeon Master: portraits in the NPC catalog: every person shows its face in list and detail, whoever has none from a round gets a catalog picture from fixed parts (at night, with "Paint all pictures" or "Paint") and brings it into the next round
 
 
 

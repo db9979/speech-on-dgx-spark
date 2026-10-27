@@ -467,7 +467,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
                   rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
-                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
+                  oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_gehen=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
                   quest_genommen=0, quest_gefunden=0, quest_verbraucht=0, quest_gegeben=0, nichts_neu=0)
@@ -3128,6 +3128,12 @@ ORTE_REGEL = {"de": "Niemand ist an einem anderen Ort als in personen angegeben:
                     "spricht nicht, außer er steht unter mit. Die Einträge in bisher tragen ihren Ort in eckigen Klammern.",
               "en": "Nobody is at another place than personen says: whoever stands under anderswo is not here and does not "
                     "speak, unless listed under mit. The entries in bisher carry their place in square brackets."}
+WEG_REGEL = {"de": "karte.gewollt nennt Helden, die in ihrer Aktion zu einem Nachbarort gehen: erzähle den Weg und die "
+                   "Ankunft dort, nenne den Ort mit seinem Namen und setze szene.ort_id auf seine id; würfle dafür keine "
+                   "Probe und ersetze den Gang durch nichts anderes.",
+             "en": "karte.gewollt names heroes whose action goes to a neighbouring place: narrate the way and the arrival "
+                   "there, name the place by its name and set szene.ort_id to its id; roll no check for it and replace "
+                   "the walk by nothing else."}
 ZUSTAND_WORT = {"boden": ("am Boden", "down"), "ohnmacht": ("ohnmächtig", "unconscious"), "tot": ("gefallen", "fallen")}
 ZUSTAND_REGEL = {
     "de": "Eine Figur mit zustand handelt nicht. „am Boden“ liegt sie ohne Bewusstsein da; hilft ihr ein Freund auf oder "
@@ -3315,6 +3321,10 @@ def facts(r, rd, wuerfe=None, zuege=None):
         fakten["handel"] = handel
     if rd.get("karte"):
         fakten["karte"] = dungeon_karte.facts(r, rd)
+        walk = dungeon_karte.asked_ways(rd)          # where a hero's action goes: the narration must take that way
+        if walk:
+            fakten["karte"]["gewollt"] = [{"wer": rd["plaetze"][pid]["held"]["name"], "id": f"o{j + 1}", "name": rd["karte"]["orte"][j]["name"]}
+                                          for pid, j in walk.items() if (rd["plaetze"].get(pid) or {}).get("held")]
         fakten["personen"] = dungeon_karte.leute(rd)     # who is here, elsewhere (with the place) and travels along (Punkt 2)
     fakten.update(kampf.facts(_me, r, rd, _living(rd), li))
     fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
@@ -3375,6 +3385,8 @@ def system_text(r, rd, task):
         t += " " + AUFGABE_RAHMEN[lang].format(r=RAHMEN[rd["rahmen"]][1 if lang == "en" else 0])
     if task in ("prolog", "erzaehlen") and rd.get("karte"):
         t += " " + ORTE_REGEL[lang]
+    if task == "erzaehlen" and dungeon_karte.asked_ways(rd):
+        t += " " + WEG_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
         t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
@@ -3435,16 +3447,18 @@ def just_going(wofuer):
 
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped, none only for going somewhere (just_going) or for a hero down (zustand), for an action that only asks or
+    of the list, the difficulty clamped, none only for going somewhere (just_going, or the seat's action goes to a
+    neighbouring place without a word of RISIKO, dungeon_karte.asked_ways) or for a hero down (zustand), for an action that only asks or
     talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
     werte = {w["id"] for w in r["werte"]}
+    walk = dungeon_karte.asked_ways(rd)        # a plain way to a neighbouring place needs no check (no word of RISIKO)
     for p in (obj or {}).get("proben") or []:
         pid = names.get(str(p.get("wer", "")).strip().lower()) if isinstance(p, dict) else None
         if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not isinstance(p.get("schwer"), int):
             drop += 1
             continue
-        if just_going(p.get("wofuer")):
+        if just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
             drop += 1
             print("dungeon: probe | verworfen | gehen", flush=True)
             continue
@@ -5899,7 +5913,7 @@ def for_live():
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
                                  "quest_genommen", "quest_gefunden", "quest_verbraucht", "quest_gegeben", "nichts_neu", "ding_fehlt", "tageszeit_weg",
                                  "richter_ok", "richter_neu", "richter_aus", "krit_gewuerfelt", "patzer_gewuerfelt", "ehrungen")},
-            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_dabei", "regel_fuerwort", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
+            "erz_regeln": sum(t[k] for k in ("regel_fehlt", "regel_gefallen", "regel_gold", "regel_fremd", "regel_aussehen", "regel_dabei", "regel_fuerwort", "regel_richtung", "regel_frage", "regel_neuer_ort", "regel_gehen", "regel_knapp")), "neu_erzaehlt": t["neu_erzaehlt"]}
 
 
 def own_count(uid):

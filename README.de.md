@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.159** KI-Dungeon-Master: „gehe zur alten Bibliothek“ führt wirklich dorthin (keine Probe, der Erzähler muss den Weg nehmen, sonst geht das Panel), „vage“ verlangt einen Ansatzpunkt aus den Daten der Szene, kein „W-2“ mehr auf der Würfelkarte, die Geschichte blendet oben weich aus
 - **V01.1.158** KI-Dungeon-Master: die Karte sagt schon vor der Erzählung, wen eine Aktion zum Mitkommen fragt, damit das Panel die Charisma-Probe vorher würfeln kann (LlamaTale 4)
 - **V01.1.157** KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.156** KI-Dungeon-Master: Wandernde Personen und kleine Gesten (zwei Schalter, aus), bei langer Rast ziehen Personen der Karte nach festen Regeln zu ihrem Ziel oder dem Ort ihres Berufs weiter und man hört es als Gerücht, beim Warten zeigt eine Person der Szene eine feste Geste nach ihrem Wesen (LlamaTale-Ideen 6 und 7)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.152** KI-Dungeon-Master: Zeugen-Regel (Schalter, aus), was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach fester Tabelle, Angriff und Diebstahl Ziel −2 und alle Anwesenden −1, Geschenk und Hilfe Ziel +1, ein gelungener Diebstahl bleibt unbemerkt, der Erzähler zeigt nur die Reaktion (LlamaTale-Idee 3)
 - **V01.1.151** KI-Dungeon-Master: Spieler anleiten Schritt 3, eine Erzählung mit weniger als zwei Ansatzpunkten oder einer leeren Frage wie „Was tut ihr?“ wird einmal neu erzählt, 👎-Grund „Wusste nicht, was wir tun können“ und Prüfstand-Szene „Sackgasse“, dazu Stillstand-Wink in drei Stufen, ein anderer Weg nach einer misslungenen Untersuchung und Schritt 5, zwei bis drei Spuren je Akt zum Wendepunkt in allen 50 Geschichten, die der Erzähler nach und nach zeigt
 - **V01.1.150** KI-Dungeon-Master: Stimme einer Person wählen, unter Regeln → Personen (NSC) zeigt jede Person ihre Stimme, der Admin wählt Alter, Geschlecht, Klang, Wesen und Tempo aus festen Listen, hört eine Probe und speichert, die Runde spricht die Person dann mit dieser Stimme
-- **V01.1.149** KI-Dungeon-Master: Porträts im NSC-Katalog: jede Person zeigt ihr Gesicht in Liste und Detail, wer keins aus einer Runde hat, bekommt ein Katalogbild aus festen Teilen (nachts, mit „Alle Bilder malen“ oder „Malen“) und bringt es in die nächste Runde mit
 
 
 

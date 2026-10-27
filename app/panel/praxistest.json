@@ -3985,6 +3985,13 @@
 "titel": "Dungeon-Master: Wandernde Personen und kleine Gesten",
 "text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik, Lagerfeuer und Rast, Wandernde Personen und Kleine Gesten an. A: In einer Runde mit Karte, in der man Personen getroffen hat, als Gastgeber „🔥 Lange Rast“ wählen: steht im Verlauf „Am Lagerfeuer hört ihr: … ist von … nach … gezogen.“, ist die Person auf der Karte dort. B: Der nächste Zug: trifft die Gruppe die Person dort wieder, erzählt der Erzähler das Wiedersehen; sonst lässt er niemanden wandern. C: Eine Person, die mit der Gruppe reist, bleibt. D: Beim Warten auf Aktionen erscheint ab und zu „🤲 … nickt euch freundlich zu.“ oder eine andere Geste einer Person der Szene; im Auto nie. E: Schalter aus: niemand wandert, keine Gesten.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P594",
+"v": 1159,
+"titel": "Dungeon-Master: Gehen zu einem Nachbarort",
+"text": "A: In einer Runde mit Karte „gehe zur <Name eines Nachbarorts>“ schreiben (Name aus „Von hier aus“): keine Würfelprobe, die Erzählung führt dorthin, die Fahne steht auf dem Ort. B: „Ich gehe nach <Richtung>“ (Knopf unter „Das kannst du hier“): ebenso. C: „schleiche zur <Ort>“: eine Probe darf kommen. D: Würfelkarte: kein „W-…“ mehr neben dem Würfel. E: Lange Geschichte nach oben scrollen: die oberste Zeile blendet unter den Kopfzeilen weich aus. F: Mit Spieler anleiten: eine Erzählung ohne Person, Ding oder Weg der Szene wird neu erzählt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

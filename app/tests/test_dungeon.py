@@ -3517,7 +3517,7 @@ class Equipment(Base):
         self.assertEqual(len(b), an.KNOEPFE["normal"])
         self.assertEqual(b[0]["text"], "Ich spreche mit Grimma.")
         self.assertTrue(all(x["wert"] == "" for x in b))                    # no value below Einsteiger
-        scene = {rf.say(p, 0) for p in rf.points(dungeon, r, rd, self.host, wege=2)}
+        scene = {rf.say(p, 0) for p in rf.points(dungeon, r, rd, self.host, wege=an.WEGE)}
         self.assertTrue({x["text"] for x in b} <= scene)                    # only the scene's data
         # the narrator's ways by fixed rules
         rd["plan"] = {"akte": [{"titel": "Turm", "inhalt": "Glocke", "wende": "Der Küster ist der Verräter"},
@@ -3627,9 +3627,17 @@ class Equipment(Base):
             self.assertEqual(erz.judge(dungeon, rd, good), ("", []))
             self.assertEqual(erz.judge(dungeon, rd, dict(mood, text=mood["text"] + " Was macht ihr nun?"))[0], "vage")
             kept = erz.repair(rd, mood, "vage", names)                            # the second try stays as it is
+            # the narration's own things and speakers alone are no way on (Dominik 2026-10-27 „eine Präsenz“)
+            eigen = dict(mood, text=f"{h} spürt eine Präsenz, eine kalte Berührung an der Schulter, bevor die Schatten "
+                                    "hinter der Mauer sich auflösen. Die Fackel flackert.", dinge=[{"name": "Fackel"}, {"name": "Mauer"}])
+            self.assertEqual(erz.judge(dungeon, rd, eigen)[0], "vage")
+            self.assertIn("Grimma", an.vague(dungeon, rd, eigen))
+            weg = dungeon_karte.wege(rd)[0]
+            self.assertEqual(an.vague(dungeon, rd, dict(eigen, text=eigen["text"] + f" Die Spur führt nach {weg['richtung']}.")), [])
         self.assertEqual(kept, mood)
         self.assertIn("dungeon: anleitung | vage | zu wenig", out.getvalue())
         self.assertIn("dungeon: anleitung | vage | hohl", out.getvalue())
+        self.assertIn("dungeon: anleitung | vage | kein ansatz", out.getvalue())
         self.assertIn("dungeon: nachbessern | bleibt | vage", out.getvalue())
         self.assertIn("Grimma", erz.hint("vage", names, "de"))
         self.assertIn("concrete choice", erz.hint("vage", names, "en"))
@@ -4212,7 +4220,8 @@ class BetterStories(Base):
         self.assertEqual((fault, missing[0]), ("beleg", "19"))
         self.assertIn("W-4", " ".join(missing))
         fixed = erz.repair(rd, {"text": base + "Arvid würfelt eine 19."}, fault, missing)
-        self.assertIn("Es gelten die Würfel-Belege: W-4", fixed["text"])
+        self.assertIn("Es gelten die Würfe auf den Karten: Arvid: 15, Arvid: 14, Arvid: 22.", fixed["text"])
+        self.assertNotIn("W-4", fixed["text"])          # the bare receipt id never reaches the table (Dominik 2026-10-27)
         self.assertIn("beleg", erz.HART)
         self.assertIn("dmBeleg", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
 
@@ -7853,6 +7862,46 @@ class Fight(Turns):
             fixed = E.repair(full, story, "neuer_ort", [name])
         self.assertEqual((fixed["ort_id"], fixed["text"]), ("", text))
         self.assertIn("dungeon: nachbessern | fest | neuer_ort", out.getvalue())
+
+    def test_a_walk_to_a_named_place_is_taken(self):
+        """Dominik 2026-10-27 („gehe zur alten bibliothek“ got a Weisheit check for tracking, the group stayed): an
+        action with a word of going and exactly one neighbouring place by its name or direction is a walk
+        (dungeon_karte.asked_ways). The model's check for that seat goes (no word of RISIKO), the facts name the walk,
+        a narration whose ort_id leads elsewhere goes back as „gehen“, and failing again the panel takes the way."""
+        E = dungeon.erz
+        rd = self.state(self.rid)
+        k = rd["karte"]
+        o, here = k["orte"], k["hier"]
+        j = next(j for j in sorted(dungeon_karte._nb(k)[here]) if any(len(w) >= 4 for w in dungeon_karte._words(o[j]["name"])))
+        name = o[j]["name"]
+        pid, held = next((q, p["held"]) for q, p in rd["plaetze"].items() if p.get("held"))
+        full = dict(rd, offen={pid: {"text": f"gehe zur {name.lower()}", "t": 0}}, zug=5)
+        self.assertEqual(dungeon_karte.asked_ways(full), {pid: j})
+        self.assertEqual(dungeon_karte.asked_ways(dict(full, offen={pid: {"text": f"frage nach {name}"}})), {})   # no word of going
+        d = dungeon_karte._dir((o[here]["x"], o[here]["y"]), (o[j]["x"], o[j]["y"]), 0)
+        if sum(dungeon_karte._dir((o[here]["x"], o[here]["y"]), (o[i]["x"], o[i]["y"]), 0) == d for i in dungeon_karte._nb(k)[here]) == 1:
+            self.assertEqual(dungeon_karte.asked_ways(dict(full, offen={pid: {"text": f"Ich gehe nach {d}."}})), {pid: j})
+        r = dungeon.rules()
+        wert = r["werte"][0]["id"]
+        probe = {"wer": held["name"], "wert": wert, "schwer": 10, "wofuer": "Spuren in der Gasse verfolgen"}
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(dungeon.check_proben(r, full, {"proben": [probe]}), ([], 1))
+            sneak = dict(full, offen={pid: {"text": f"schleiche zur {name.lower()}"}})
+            self.assertEqual(len(dungeon.check_proben(r, sneak, {"proben": [probe]})[0]), 1)   # sneaking keeps its check
+        self.assertIn("gewollt", dungeon.system_text(r, full, "erzaehlen"))
+        text = f"{held['name']} folgt den Spuren durch den Nebel, die Gasse bleibt still, und die Mauern stehen grau und nass im Morgen."
+        story = {"text": text, "ort_id": ""}
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(E.judge(dungeon, full, story)[0:2], ("gehen", [name]))
+            self.assertNotEqual(E.judge(dungeon, full, dict(story, ort_id=f"o{j + 1}", text=text + f" Vor {held['name']} liegt {name}."))[0], "gehen")
+            self.assertNotEqual(E.judge(dungeon, dict(full, kampf={"x": 1}), story)[0], "gehen")       # a fight holds the group
+        self.assertIn(name, E.hint("gehen", [name], "de"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = E.repair(full, story, "gehen", [name])
+        self.assertEqual(fixed["ort_id"], f"o{j + 1}")
+        self.assertIn(name, fixed["text"])
+        self.assertEqual(dungeon_karte.ort_fehlt(full, fixed), "")              # the map takes it (step)
+        self.assertIn("dungeon: nachbessern | fest | gehen", out.getvalue())
 
     def test_the_judge_gives_a_number_the_panel_decides(self):
         """Dungeon-Richter (systemone use "richter"): off by default; on, the model only gives the probability of a
