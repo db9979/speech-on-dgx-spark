@@ -160,7 +160,8 @@ def points(dm, r, rd, pid, wege=1):
     """The scene's points for this seat from its data only, never the model's words (one source for the suggestions
     here and dungeon_anleiten): [{art, x, z?}] with art a key of MUSTER; in a fight the foes still up (the weakest
     first, the hero's own attack spell on the first), one prop of the fight and waiting, else people here, up to wege
-    ways of the map (only what a seat may see) and a look round."""
+    ways of the map (only what a seat may see) and a look round; when every other seat that acted this turn stays
+    (dungeon_karte.gruppe), the look round comes before the ways."""
     import dungeon_karte
     import dungeon_kampf
     import dungeon_umgebung
@@ -177,11 +178,14 @@ def points(dm, r, rd, pid, wege=1):
         out.append({"art": "abwarten", "x": ""})
     else:
         out += [{"art": "person", "x": n} for n in dungeon_karte.leute(rd)["hier"][:2]]
+        weg = []
         for w in dungeon_karte.wege(rd, ("de", "en")[li])[:wege]:
             d = w["richtung"]
-            out.append({"art": "weg", "x": (d if li or d in ("hinaus", "hinein") else "nach " + d) if d else w["ziel"]})
-        out.append({"art": "umsehen", "x": ""})
-    return out
+            weg.append({"art": "weg", "x": (d if li or d in ("hinaus", "hinein") else "nach " + d) if d else w["ziel"]})
+        andere = {q: a for q, a in (rd.get("offen") or {}).items() if q != pid and isinstance(a, dict)}
+        bleiben = bool(andere) and set(andere) <= set(dungeon_karte.gruppe(r, dict(rd, offen=andere))["bleiben"])
+        out += [{"art": "umsehen", "x": ""}] + weg if bleiben else weg + [{"art": "umsehen", "x": ""}]
+    return out                                   # Review 27.10. Paket 5 (G5): the others stay, going is not offered first
 
 
 def say(p, li):

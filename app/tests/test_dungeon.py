@@ -800,6 +800,26 @@ class Rueckfrage(Turns):
         self.assertTrue(any(n in tips[0] for n in names), tips)                                      # from the scene's data
         self.assertEqual(rf.unclear(dungeon, r, rd, self.host, tips[0]), "")                         # every suggestion is clear
 
+    def test_going_is_not_offered_first_when_the_others_stay(self):
+        """Review 27.10. Paket 5 (G5): when every other seat that acted this turn stays, the suggestions offer the look
+        round before a way of the map; when one goes, the way comes first as before."""
+        import dungeon_karte
+        import dungeon_rueckfrage as rf
+        r, rd = dungeon.rules(), self.state(self.rid)
+        old = dungeon_karte.wege, dungeon_karte.leute
+        dungeon_karte.wege = lambda rd, lang: [{"richtung": "Norden", "ziel": "Mühle"}]
+        dungeon_karte.leute = lambda rd: {"hier": [], "anderswo": [], "mit": []}
+        try:
+            arts = lambda: [p["art"] for p in rf.points(dungeon, r, rd, self.host)]
+            rd["offen"] = {}
+            self.assertEqual(arts(), ["weg", "umsehen"])
+            rd["offen"] = {self.gp: {"text": "Ich bleibe hier und trinke mein Bier."}}
+            self.assertEqual(arts(), ["umsehen", "weg"])
+            rd["offen"] = {self.gp: {"text": "Ich gehe nach Norden."}}
+            self.assertEqual(arts(), ["weg", "umsehen"])
+        finally:
+            dungeon_karte.wege, dungeon_karte.leute = old
+
     def fight_two(self):
         r = dungeon.rules()
         with dungeon._lock:

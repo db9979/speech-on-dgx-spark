@@ -5917,6 +5917,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gehen nicht zuerst (V01.1.179, Review 27.10. Paket 5, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Die Gruppe zieht nur mit Mehrheit und ohne „Ich bleibe“ (dungeon_karte.gruppe). Haben in diesem Zug schon andere gehandelt und bleiben sie alle, stellen die Vorschläge der Rückfrage und von *Spieler anleiten* (dungeon_rueckfrage.points) „Ich sehe mich genau um.“ vor den Weg der Karte, damit ein Knopf nicht die Gruppe wegführt. Geht einer, bleibt die alte Reihenfolge. Selbsttest Rueckfrage.test_going_is_not_offered_first_when_the_others_stay in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fürwort, Ort, Geheimnis, Spur, Aktion (V01.1.178, Review 27.10. Paket 7 Teil 3, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, weitere feste Prüfungen der Erzählung. 1. Fürwort („fuerwort“): Beginnt ein Satz mit „Er“, „He“ oder „She“ direkt nach einem Satz, der nur eine Person nennt, und ist das ein Held mit anderem Geschlecht (bei divers jedes Fürwort), ist das falsch (ER); die Reparatur setzt den Namen ein. „Sie“ wird nie gewertet (viele oder höflich). 2. Erfundener Ort („ort_erfunden“, place_untold): ein Wort aus ANKUNFT (erreicht, betretet …) mit einem Siedlungswort und Namen („die Burg Drachenfels“, ORTSWORT) oder einem Namen auf ORT_ENDE („Eichenburg“), den kein Ort der Karte und keine Person trägt, ohne ort_id und nicht im Gewölbe; der Satz wird gestrichen, die Gruppe bleibt, wo die Karte sie hat. 3. Geheimnis („geheim“, secret_told, Regel 7): ein Satz mit GEHEIM_ANTEIL (60 %) der längeren Wörter eines Geheimnisses der festen Wahrheit, ohne gelungene Probe in diesem Zug, wird gestrichen. 4. Spur nach misslungener Suche: Ein Satz mit dem Ding der Probe und einem Wort aus SPUR (führt, Richtung, Norden …) oder einem Ort der Karte zählt als „probe“. 5. Übergan"
 },
 {
@@ -21246,6 +21254,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: going not first (V01.1.179, review 27.10. package 5, Dominik 2026-10-27 „ok“): No new switch. The group moves only by majority and without „I stay“ (dungeon_karte.gruppe). When others have acted this turn already and all of them stay, the suggestions of the ask-back and of *guide the players* (dungeon_rueckfrage.points) put „I look around carefully.“ before the way of the map, so a button does not lead the group away. When one goes, the old order stays. Self-test Rueckfrage.test_going_is_not_offered_first_when_the_others_stay in test_dungeon."
 },
 {
 "lang": "en",

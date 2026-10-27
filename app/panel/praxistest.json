@@ -4097,6 +4097,13 @@
 "titel": "Dungeon-Master: Fürwort, Ort, Geheimnis",
 "text": "Mit einer Heldin spielen. A: Die Erzählung nennt sie nie „er“. B: Die Gruppe kommt nur an Orte, die auf der Karte stehen. C: Nach einer misslungenen Suche zeigt die Erzählung keine Spur, und eine längere Aktion wird erzählt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P610",
+"v": 1179,
+"titel": "Dungeon-Master: Gehen nicht zuerst",
+"text": "Zu zweit spielen, der erste Spieler schreibt „Ich bleibe hier“. A: Beim zweiten Spieler steht unter den Vorschlägen „Ich sehe mich genau um.“ vor dem Weg. B: Schreibt der erste „Ich gehe nach Norden“, steht der Weg vorn.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
