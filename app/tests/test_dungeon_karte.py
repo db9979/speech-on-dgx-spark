@@ -230,6 +230,51 @@ class Moves(unittest.TestCase):
         self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
         self.assertEqual(k["hier"], j)
 
+    def test_asked_along_and_people_on_the_move(self):
+        """LlamaTale ideas 4 and 6 (Dominik 2026-10-27 „1-7“): with the main thread's switch dungeonmitkommen a word of
+        MIT only asks (fragt = the seat), mitnehmen answers and clears it; without the switch (or before it exists)
+        MIT takes the person along as before. wandern moves a person with a goal (dungeon_nsc.ziel_ort) one way along
+        the map towards it, never one travelling along, never without a way."""
+        import dungeon_nsc
+        import features
+        k = self.k
+        start = k["hier"]
+        self.rd["offen"] = {"pa": {"text": "Ich grüße sie."}}
+        K.step(self.r, self.rd, self.story("", npc=[{"name": "Mara", "sagt": "Hallo"}, {"name": "Brom", "sagt": "Na"}]), {}, random.Random(1))
+        self.assertFalse(K._switch("gibtsnicht", self.rd))                                    # a missing switch is off
+        with mock.patch.object(K, "_switch", lambda key, rd: key == K.MITKOMMEN):
+            self.rd["offen"] = {"pb": {"text": "Mara, komm mit uns!"}}
+            K._people(self.rd, {})
+            self.assertEqual((k["leute"]["Mara"]["mit"], k["leute"]["Mara"]["fragt"]), (False, "pb"))   # only asked
+            self.assertTrue(K.mitnehmen(self.rd, "Mara", False))
+            self.assertNotIn("fragt", k["leute"]["Mara"])
+            self.assertFalse(k["leute"]["Mara"]["mit"])
+            self.assertFalse(K.mitnehmen(self.rd, "Mara", True))                                     # nothing open
+            K._people(self.rd, {})
+            self.assertTrue(K.mitnehmen(self.rd, "Mara", True))
+            self.assertEqual((k["leute"]["Mara"]["mit"], "fragt" in k["leute"]["Mara"]), (True, False))
+        self.rd["offen"] = {"pa": {"text": "Brom, kommt mit!"}}
+        K._people(self.rd, {})
+        self.assertTrue(k["leute"]["Brom"]["mit"])                                                   # switch off: as before
+        k["leute"]["Brom"]["mit"] = False
+        n = len(k["orte"])
+        far = max(range(n), key=lambda i: K._hops(n, k["wege"], start)[0].get(i, -1))
+        path = K._path(K._hops(n, k["wege"], start)[1], start, far)
+        with mock.patch.object(dungeon_nsc, "ziel_ort", lambda rd, name: far if name == "Brom" else None, create=True):
+            self.assertEqual(K.wandern(self.r, self.rd, random.Random(1), "befehl"), [])
+            moved = []
+            for seed in range(40):
+                moved += K.wandern(self.r, self.rd, random.Random(seed), "kapitel")
+                if k["leute"]["Brom"]["ort"] == far:
+                    break
+            self.assertEqual(k["leute"]["Brom"]["ort"], far)
+            self.assertEqual([m["nach"] for m in moved], [k["orte"][i]["name"] for i in path[1:]])   # way by way
+            self.assertTrue(all(m["name"] == "Brom" for m in moved))                                 # Mara travels along
+            self.assertEqual(K.wandern(self.r, self.rd, random.Random(1), "lange_rast"), [])         # arrived
+        with mock.patch.object(dungeon_nsc, "ziel_ort", lambda rd, name: True, create=True):
+            k["leute"]["Brom"]["ort"] = start
+            self.assertEqual(K.wandern(self.r, self.rd, random.Random(1), "kapitel"), [])           # no place index
+
     def test_people_stay_where_they_were_met(self):
         """leute: a new NPC is put where the group is; along only by an action with MIT, back with BLEIB."""
         k = self.k

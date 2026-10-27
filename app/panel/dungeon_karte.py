@@ -99,6 +99,9 @@ LAND = {"wald": "wald", "lager": "wald", "dschungel": "wald", "muehle": "wald", 
         "mine": "berg", "krater": "berg", "festung": "berg", "ruine": "huegel", "krypta": "huegel", "turm": "huegel",
         "gruft": "huegel", "friedhof": "huegel", "sumpf": "sumpf", "lagune": "sumpf"}
 LEUTE_MAX = 40            # people the map remembers by place (the oldest go first)
+MITKOMMEN = "dungeonmitkommen"   # the main thread's switch „Überreden zum Mitkommen“ (LlamaTale idea 4)
+WANDERN = 50              # percent a person with a goal goes one way on (LlamaTale idea 6 „Wandernde Personen“)
+WANDERN_ANLASS = ("kapitel", "lange_rast")
 # people stay where the group met them (Dominik 2026-10-24 „1-5 umsetzten“): one comes along only when an action of
 # the turn names them with one of these words, and stays behind with the others (fixed words, never the model)
 MIT = ("mit uns", "kommt mit", "komm mit", "mitkommen", "folgt uns", "folge uns", "folg uns", "begleit",
@@ -811,28 +814,86 @@ def _back_asked(rd):
     return any(_names(o[back]["name"], w.split()) or d in w or any(f" {z}" in w for z in ZURUECK) for w in _said(rd))
 
 
+def _switch(key, rd):
+    """A switch of the main thread that may not exist yet (then off)."""
+    import features
+    return key in features.BY_KEY and bool(rd.get("owner")) and features.allowed(key, rd["owner"])
+
+
 def _people(rd, story):
     """Who the group meets stays at that place (k["leute"]: name → place index, mit): a new name of the narration's
     npc is put where the group is; one comes along when an action names them with a word of MIT, and stays when an
-    action names them with BLEIB; those along move with the group."""
+    action names them with BLEIB; those along move with the group. With „Überreden zum Mitkommen“ (MITKOMMEN, the
+    main thread's switch, LlamaTale idea 4) a word of MIT only asks (p["fragt"] = the asking seat): the main thread's
+    check decides through mitnehmen."""
     k = rd["karte"]
     le = k.setdefault("leute", {})
     for n in story.get("npc") or []:
         name = str(n.get("name") or "").strip()[:NAME_MAX]
         if name and name not in le:
             le[name] = {"ort": k["hier"], "mit": False}
-    said = _said(rd)
+    asks = _switch(MITKOMMEN, rd)
+    said = [(pid, " " + " ".join(_words(a.get("text"))) + " ") for pid, a in (rd.get("offen") or {}).items() if isinstance(a, dict)]
     for name, p in le.items():
-        hits = [w for w in said if _names(name, w.split()) or set(_words(name)) & set(w.split())]
-        if any(f" {x}" in w for w in hits for x in BLEIB):
+        hits = [(pid, w) for pid, w in said if _names(name, w.split()) or set(_words(name)) & set(w.split())]
+        if any(f" {x}" in w for _, w in hits for x in BLEIB):
             p["mit"] = False
             p["ort"] = k["hier"]
-        elif any(f" {x}" in w for w in hits for x in MIT):
-            p["mit"] = True
+            p.pop("fragt", None)
+        else:
+            go = next((pid for pid, w in hits if any(f" {x}" in w for x in MIT)), None)
+            if go is not None and not p["mit"] and asks:
+                p["fragt"] = go
+                print("dungeon: karte | mitkommen | gefragt", flush=True)
+            elif go is not None:
+                p["mit"] = True
         if p["mit"]:
             p["ort"] = k["hier"]
     while len(le) > LEUTE_MAX:
         le.pop(next(iter(le)))
+
+
+def mitnehmen(rd, name, ja):
+    """The main thread's answer to a seat asking a person along (LlamaTale idea 4: attitude and a Charisma check of
+    the panel): yes, the person travels with the group; either way the question is gone. Whether one was open."""
+    p = ((rd.get("karte") or {}).get("leute") or {}).get(name)
+    if not p or "fragt" not in p:
+        print("dungeon: karte | mitkommen | ungefragt", flush=True)
+        return False
+    p.pop("fragt")
+    if ja:
+        p["mit"], p["ort"] = True, rd["karte"]["hier"]
+    print(f"dungeon: karte | mitkommen | {'ja' if ja else 'nein'}", flush=True)
+    return True
+
+
+def wandern(r, rd, rng=None, anlass=""):
+    """People on the move between chapters or over a long rest (LlamaTale idea 6, the main thread calls it behind its
+    switch dungeonwandern): each known person not travelling with the group whose goal place the main thread knows
+    (dungeon_nsc.ziel_ort, a place index or None) goes WANDERN percent one way along the map's ways towards it.
+    Returns [{name, von, nach}] (place names) for rumours; the model only tells the meeting again."""
+    rng = rng or random
+    k = rd.get("karte")
+    if anlass not in WANDERN_ANLASS or not k or not k.get("orte"):
+        print("dungeon: karte | wandern | verworfen", flush=True)
+        return []
+    import dungeon_nsc
+    ziel_ort = getattr(dungeon_nsc, "ziel_ort", None)
+    n, o, out = len(k["orte"]), k["orte"], []
+    for name, p in (k.get("leute") or {}).items():
+        z = ziel_ort(rd, name) if ziel_ort else None
+        if p.get("mit") or isinstance(z, bool) or not isinstance(z, int) or not 0 <= z < n or z == p["ort"]:
+            continue
+        if rng.randrange(100) >= WANDERN:
+            continue
+        _, back, _ = _hops(n, k["wege"], p["ort"])
+        if z not in back and z != p["ort"]:
+            continue                             # no way there
+        nxt = _path(back, p["ort"], z)[1]
+        out.append({"name": name, "von": o[p["ort"]]["name"], "nach": o[nxt]["name"]})
+        p["ort"] = nxt
+    print(f"dungeon: karte | wandern | {anlass} | {len(out)}", flush=True)
+    return out
 
 
 def leute(rd):
