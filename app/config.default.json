@@ -215,6 +215,7 @@
     "dungeon_kalender": false,
     "dungeon_tageszeit": false,
     "dungeon_anleiten": false,
+    "dungeon_fortschritt": true,
     "dungeon_zeugen": false,
     "dungeon_gedanken": false,
     "dungeon_mitkommen": false,

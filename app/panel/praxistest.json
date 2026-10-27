@@ -4132,6 +4132,13 @@
 "titel": "Dungeon-Master: Das Panel entscheidet",
 "text": "Eine Runde spielen. A: „Ich klettere die Mauer hinauf“ würfelt auf Geschick, die Probe zeigt eine Zahl 10, 13, 16 oder 19. B: „Ich durchsuche die Truhe“ mit gelungener Probe: der Fund steht schon in der Erzählung und liegt in der Tasche dessen, der gesucht hat; ein zweites Durchsuchen am selben Ort findet nichts mehr. C: „Wir rasten“ ohne Rast-Schalter heilt nichts.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P615",
+"v": 1185,
+"titel": "Dungeon-Master: Fortschritt der Geschichte",
+"text": "Funktionen → KI-Dungeon-Master: „Spieler anleiten“ aus, „Fortschritt der Geschichte“ an (ab Werk). Eine Runde spielen und drei Züge lang nur „Ich warte“ schicken: im dritten Zug zeigt die Erzählung etwas Greifbares, im vierten passiert etwas (ein Bote, ein Geräusch), im fünften steht „Tipp: Ihr könnt …“ am Ende. Zustand → Live zeigt „Fortschritt der Geschichte“ mit den Winken.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

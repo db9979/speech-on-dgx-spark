@@ -4340,10 +4340,11 @@ class Equipment(Base):
         dungeon_karte.ensure(r, rd, random.Random(1))
         rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
         rd.update(offen={}, dm=False, status="laeuft")
+        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
+        helpers.set_config(dungeon_fortschritt=False)
         self.assertEqual(an.progress(dungeon, r, rd, {}, [], random.Random(1)), "")     # off: nothing
         self.assertNotIn("stillstand", rd)
-        helpers.keep_chat(self, "dungeon_anleiten")
-        helpers.set_config(dungeon_anleiten=True)
+        helpers.set_config(dungeon_anleiten=True, dungeon_fortschritt=True)
         self.assertIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
 
         def turn(story=None, wuerfe=()):
@@ -4421,9 +4422,10 @@ class Equipment(Base):
                              ["akte"][0]["spuren"][0]), an.SPUR_LEN + 2)      # cut with „ …“
         rd = self.state(self.rid)
         rd.update(plan=g, akt=0, offen={}, dm=False, status="laeuft")
+        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
+        helpers.set_config(dungeon_fortschritt=False)
         self.assertEqual((an.clue_facts(rd), an.seen(rd, "Frisches Wachs klebt am Glockenseil.")), ({}, 0))   # off
-        helpers.keep_chat(self, "dungeon_anleiten")
-        helpers.set_config(dungeon_anleiten=True)
+        helpers.set_config(dungeon_anleiten=True, dungeon_fortschritt=True)
         self.assertIn(an.SPUR_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
         self.assertIn(an.SPUREN_PLAN[0], dungeon.AUFGABE_PLAN["de"] if isinstance(dungeon.AUFGABE_PLAN, dict) else dungeon.AUFGABE_PLAN)
         self.assertEqual(an.clue_facts(rd), {"spur": "Frisches Wachs klebt am Glockenseil."})
@@ -4452,6 +4454,50 @@ class Equipment(Base):
         rd["akt"] = 1                                                                     # a new act starts again
         self.assertEqual((an.shown(rd), an.clue_facts(rd)), ([], {}))
         self.assertGreaterEqual(an.for_live()["spur"], 2)
+
+    def test_story_progress_is_core_and_on_from_the_start(self):
+        """Review 27.10. E12 (Dominik „ok“, decision 4): the progress counter, the stall hint and the clues are the
+        story's core with their own switch dungeonfortschritt, on from the start (reason in features.DEFAULT_ON); they
+        count at the level normal while „Spieler anleiten“ is off, whose form, buttons and quiet-seat questions stay
+        off. Live shows the winks and clues on their own line."""
+        import dungeon_anleiten as an
+        import live
+        r = self.r
+        self.assertIn("chat.dungeon_fortschritt", dungeon.features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            c = json.load(f)["chat"]
+        self.assertEqual((c["dungeon_fortschritt"], c["dungeon_anleiten"]), (True, False))
+        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
+        helpers.set_config(dungeon_anleiten=False, dungeon_fortschritt=True)
+        rd = self.state(self.rid)
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
+        rd.update(offen={}, dm=False, status="laeuft", plan={"akte": [{"titel": "Turm", "spuren": ["Frisches Wachs klebt am Glockenseil."]}]}, akt=0)
+        self.assertTrue(an.kern(rd) and not an.on(rd))
+        sys_t = dungeon.system_text(r, rd, "erzaehlen")
+        self.assertIn(an.WINK_TASK["de"].strip(), sys_t)
+        self.assertIn(an.SPUR_TASK["de"].strip(), sys_t)
+        self.assertNotIn(an.TASK["de"].strip(), sys_t)                                    # the form stays with anleiten
+        self.assertEqual(an.clue_facts(rd), {"spur": "Frisches Wachs klebt am Glockenseil."})
+        self.assertEqual(an.buttons(dungeon, r, rd, self.host), [])                       # no buttons while anleiten is off
+        tips = []
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            for _ in range(5):
+                tips.append(an.progress(dungeon, r, rd, {}, [], random.Random(1)))
+                rd["zug"] += 1
+        self.assertIn("dungeon: anleitung | wink | 1", out.getvalue())
+        self.assertTrue(tips[-1].startswith(" Tipp: "), tips)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(an.seen(rd, "Am Glockenseil klebt frisches Wachs."), 1)
+        self.assertTrue(set(an.KERN_ZAEHLER) <= set(an.for_live()))
+        snap = json.dumps(live.snapshot(), ensure_ascii=False)
+        self.assertIn("Fortschritt der Geschichte: Stillstand-Winke", snap)
+        # the admin's switch off: nothing counts, no wink, no clue
+        helpers.set_config(dungeon_fortschritt=False)
+        rd.pop("anleitwink", None)
+        self.assertFalse(an.kern(rd))
+        self.assertEqual((an.clue_facts(rd), an.facts(rd), an.task(rd, "de")), ({}, {}, ""))
+        self.assertEqual(an.progress(dungeon, r, rd, {}, [], random.Random(1)), "")
 
 class _Die:
     """A d20 that always shows the same number."""

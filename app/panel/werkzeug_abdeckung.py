@@ -194,6 +194,7 @@ WITHOUT = {
     "dungeonmitkommen": "dungeon_mitkommen.py: kein Werkzeug, Haltung und eine Charisma-Probe des Panels entscheiden, das Modell schreibt nur die Antwort der Person",
     "dungeongedanken": "dungeon_gedanken.py: kein Werkzeug, das Panel würfelt die Probe und schreibt eine feste Zeile aus der Karte der Person, das Modell erzählt nur das Lauschen",
     "dungeonzeugen": "dungeon_zeugen.py: kein Werkzeug, feste Wortlisten und eine feste Tabelle ändern die Haltung der Zeugen, der Erzähler zeigt nur die Reaktion",
+    "dungeonfortschritt": "dungeon_anleiten.py: kein Werkzeug, Stillstand-Zähler, Wink und Spuren nach festen Regeln des Panels",
     "dungeonanleiten": "dungeon_anleiten.py: kein Werkzeug, feste Form für die Erzählung und Fragen an stille Spieler und Knöpfe „Das kannst du hier“ aus den Daten der Szene",
     "dungeontageszeit": "dungeon_tageszeit.py: kein Werkzeug, das Panel setzt die Tageszeit nach festen Regeln, das Modell bekommt sie nur als Daten",
     "dungeonsprachen": "dungeon_sprachen.py: kein Werkzeug, das Panel macht die fremden Laute und gibt die Bedeutung nur Plätzen, die die Sprache können",

@@ -1465,11 +1465,13 @@ def snapshot(view="admin", now=None):
         dgn["mitkommen"] = dungeon_mitkommen.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["mitkommen"] = {}
-    try:   # Spieler anleiten (dungeon_anleiten.py): numbers on the game's line
+    try:   # Spieler anleiten and Fortschritt der Geschichte (dungeon_anleiten.py): numbers on the game's line
         import dungeon_anleiten
-        dgn["anleiten"] = dungeon_anleiten.for_live() if dgn.get("on") else {}
+        c = dungeon_anleiten.for_live() if dgn.get("on") else {}
+        dgn["fortschritt"] = {k: c.pop(k, 0) for k in dungeon_anleiten.KERN_ZAEHLER}
+        dgn["anleiten"] = c
     except Exception:
-        dgn["anleiten"] = {}
+        dgn["anleiten"], dgn["fortschritt"] = {}, {}
     try:   # Tageszeit vom Panel (dungeon_tageszeit.py): numbers on the game's line
         import dungeon_tageszeit
         dgn["tageszeit"] = dungeon_tageszeit.for_live() if dgn.get("on") else {}
@@ -2124,8 +2126,11 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['anleiten']['frage']} Fragen an stille Spieler aus der Szene, {dgn['anleiten']['frage_alt']}-mal zu wenig Ansatzpunkte, "
                            f"{dgn['anleiten']['zeile']} Zeilen „Das kannst du hier“, {dgn['anleiten']['genommen']} Knöpfe genommen, "
                            f"{dgn['anleiten']['weg']} Wege des Erzählers übernommen, {dgn['anleiten']['weg_verworfen']} verworfen, {dgn['anleiten'].get('vage', 0)}-mal vage neu erzählt, "
-                           f"Stillstand-Winke {dgn['anleiten'].get('wink1', 0)}/{dgn['anleiten'].get('wink2', 0)}/{dgn['anleiten'].get('wink3', 0)}, {dgn['anleiten'].get('ausweg', 0)} Auswege, {dgn['anleiten'].get('spur', 0)} Spuren gezeigt"
+                           f"{dgn['anleiten'].get('ausweg', 0)} Auswege"
                            if any((dgn.get("anleiten") or {}).values()) else "")
+                        + (f" · heute Fortschritt der Geschichte: Stillstand-Winke {dgn['fortschritt']['wink1']}/{dgn['fortschritt']['wink2']}/{dgn['fortschritt']['wink3']}, "
+                           f"{dgn['fortschritt']['spur']} Spuren gezeigt"
+                           if any((dgn.get("fortschritt") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
                         + (f" · Personen-Katalog {dgn['personen']['personen']}, heute {dgn['personen']['neu']} neu, {dgn['personen']['wieder']} wiedergetroffen, {dgn['personen']['erkannt']} erkannten Helden, {dgn['personen']['geaendert']} geändert, {dgn['personen']['geloescht']} gelöscht, {dgn['personen'].get('geschichte', 0)} aus Geschichten, {dgn['personen'].get('stimme', 0)} Stimmen gesetzt"

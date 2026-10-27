@@ -5925,6 +5925,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Fortschritt der Geschichte (V01.1.185, Review 27.10. E12, Entscheidung 4, Dominik 2026-10-27 „ok“): Stillstand-Zähler, Wink in drei Stufen und Spuren zum Wendepunkt (Schritte 4 und 5 von „Spieler anleiten“) sind Kern der Geschichte und haben den eigenen Admin-Schalter *Funktionen → KI-Dungeon-Master → Fortschritt der Geschichte*, ab Werk an (features.DEFAULT_ON „chat.dungeon_fortschritt“, kein Modellaufruf mehr). dungeon_anleiten.kern gilt für progress, seen, clue_facts, facts und die Aufgaben WINK_TASK und SPUR_TASK; ist „Spieler anleiten“ aus, zählt die Stufe Normal (Wink nach zwei Zügen ohne Fortschritt). Form der Erzählung, Knöpfe „Das kannst du hier“, Fragen an stille Spieler, die Prüfung „vage“ und der Ausweg-Knopf bleiben unter „Spieler anleiten“ (ab Werk aus). Live: eigener Abschnitt „Fortschritt der Geschichte“ mit Stillstand-Winken je Stufe und gezeigten Spuren (KERN_ZAEHLER). Selbsttest test_story_progress_is_core_and_on_from_the_start in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Das Panel entscheidet (V01.1.184, Review 27.10. Paket 9, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Proben: Das Modell nennt nur eine Stufe (leicht, mittel, schwer, sehr_schwer), die Zahl setzt das Panel (PROBE_SG: 10, 13, 16, 19); eine alte Antwort mit Zahl bekommt die Stufe, in die sie fällt. Der Wert muss zur festen Tätigkeitstabelle der Spielereingabe passen (dungeon_anleiten.WURF_WORTE: klettern ist Geschick), sonst nimmt das Panel den Tabellenwert (fitting_value, Log dungeon: probe | wert | tabelle). Die Erfahrung einer gelungenen Probe hängt nicht mehr an der Stufe (PROBE_EP_SG). 2. Beute: Gelingt eine Probe, die sucht oder öffnet (FUND_TAT, nicht nach Fallen oder Spuren, FUND_NICHT), zieht das Panel den Fund schon vor der Erzählung (first_find) und gibt ihn dem Erzähler als Fakt fund (wer, was); er geht an den Finder. Ein Ort gibt nur einen Fund (fundorte), auch die Beute, die das Modell meldet (Log dungeon: beute | ort schon), und die geht an den Helden, der als einziger gehandelt hat. Ein eigener Name des Modells bleibt nicht, wenn er das Kopfwort eines anderen Dings nennt („Silberner Dolch“ für eine Fackel, name_fits); Eigennamen wie „Glockenbre"
 },
 {
@@ -11934,6 +11942,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Spieler anleiten (Funktionen → Meine Daten → „Spieler anleiten“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Erzähler bekommt eine feste Form: erst, was die Taten bewirken, dann, was jetzt zu sehen ist, und in jeder Erzählung mindestens zwei greifbare Ansatzpunkte mit Namen (eine Person, ein Ding, ein Weg)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Fortschritt der Geschichte (Funktionen → Meine Daten → „Fortschritt der Geschichte“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Spark zählt nach festen Regeln, ob die Geschichte vorankommt: ein neuer Ort, ein Faden auf- oder zugemacht, ein neues Ding, ein Akt geschafft, ein Kampf begonnen oder beendet, eine Spur gezeigt."
 },
 {
 "lang": "de",
@@ -21325,6 +21341,14 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: story progress (V01.1.185, review 27.10. E12, decision 4, Dominik 2026-10-27 „ok“): The stall counter, the wink in three stages and the clues to the turning point (steps 4 and 5 of \"Guide the players\") are the story's core and have their own admin switch *Features → AI Dungeon Master → Story progress*, on from the start (features.DEFAULT_ON \"chat.dungeon_fortschritt\", no extra model call). dungeon_anleiten.kern counts for progress, seen, clue_facts, facts and the tasks WINK_TASK and SPUR_TASK; while \"Guide the players\" is off the level Normal counts (wink after two turns without progress). The narration's form, the buttons \"What you can do here\", questions to quiet players, the check \"vage\" and the way-out button stay under \"Guide the players\" (off from the start). Live: its own part \"Fortschritt der Geschichte\" with stall winks per stage and clues shown (KERN_ZAEHLER). Self-test test_story_progress_is_core_and_on_from_the_start in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: the panel decides (V01.1.184, review 27.10. package 9, Dominik 2026-10-27 „ok“): No new switch. 1. Checks: the model names only a level (leicht, mittel, schwer, sehr_schwer), the panel sets the number (PROBE_SG: 10, 13, 16, 19); an old answer with a number gets the level it falls in. The value must fit the fixed table of activities of the player's words (dungeon_anleiten.WURF_WORTE: climbing is Dexterity), else the panel takes the table's (fitting_value, log dungeon: probe | wert | tabelle). The experience of a passed check no longer depends on the level (PROBE_EP_SG). 2. Loot: when a check that searches or opens passes (FUND_TAT, not for traps or tracks, FUND_NICHT), the panel draws the find before the narration (first_find) and gives it to the narrator as the fact fund (who, what); it goes to the finder. A place gives one find only (fundorte), also the loot the model reports (log dungeon: beute | ort schon), and that goes to the hero who alone acted. A name of the model does not stay when it names the head word of another thing („Silberner Dolch“ for a torch, name_fits); proper names like „Glockenbrecher“ stay. 3. Healing and damage: the panel always drops heal"
 },
 {
@@ -27126,6 +27150,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Guide the players (Features → My data → \"Guide the players\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The narrator gets a fixed form: first what the deeds cause, then what is to be seen now, and in every narration at least two things to take up, with names (a person, a thing, a way)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Story progress (Features → My data → \"Story progress\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The Spark counts by fixed rules whether the story moves on: a new place, a thread opened or closed, a new thing, an act done, a fight begun or ended, a clue shown."
 },
 {
 "lang": "en",

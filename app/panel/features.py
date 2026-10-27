@@ -313,6 +313,8 @@ FEATURES = (
     F("dungeontageszeit", "Tageszeit vom Panel", "Time of day by the panel", "data", ("dungeon_tageszeit",), parent="dungeon", me="dmbox", guide="dungeontageszeit"),
     # Spieler anleiten (dungeon_anleiten.py, plan dungeon-anleitung): narrations with points to take up, a concrete choice
     F("dungeonanleiten", "Spieler anleiten", "Guide the players", "data", ("dungeon_anleiten",), parent="dungeon", me="dmbox", guide="dungeonanleiten"),
+    # Fortschritt der Geschichte (dungeon_anleiten.kern, Review 27.10. E12): stall counter, wink and clues; on (DEFAULT_ON)
+    F("dungeonfortschritt", "Fortschritt der Geschichte", "Story progress", "data", ("dungeon_fortschritt",), parent="dungeon", me="dmbox", guide="dungeonfortschritt"),
     # Zeugen-Regel (dungeon_zeugen.py, LlamaTale idea 3): deeds in front of people change their attitude by a fixed table
     F("dungeonzeugen", "Zeugen-Regel", "Witness rule", "data", ("dungeon_zeugen",), parent="dungeon", me="dmbox", guide="dungeonzeugen"),
     # Gedanken lesen (dungeon_gedanken.py, LlamaTale idea 5): the panel's check, the thoughts only for the reading seat
@@ -830,6 +832,7 @@ DEFAULT_ON = {
     "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",
+    "chat.dungeon_fortschritt": "Dominik 2026-10-27 (Review E12, Entscheidung 4): eine Geschichte, die stehen bleibt, bekommt Wink, Ereignis und Tipp, ohne Modellaufruf mehr",
     "chat.dungeon_grenzen": "Schutz am Spieltisch (Tabletop-Punkt 18): Grenzen, Schleier und X-Karte gelten, bevor ein Modell erzählt",
     "chat.esp32_ota_http": "Dominik 2026-10-11: Lautsprecher-Updates über http bleiben erlaubt (sonst nur per USB)",
 }

@@ -197,7 +197,7 @@ MODULE = {
     "dungeon_auftraege": ("dienste", "Dungeon-Master: Aufträge von Personen, Art, Ziel, Lohn und Spuren vom Panel, erfüllt nur durch Belege"),
     "dungeon_mitkommen": ("dienste", "Dungeon-Master: Überreden zum Mitkommen, Haltung und Charisma-Probe des Panels, die Karte nimmt die Person mit"),
     "dungeon_gedanken": ("dienste", "Dungeon-Master: Gedanken lesen, Probe vom Panel, Wunsch und Geheimnis nur für den lesenden Platz"),
-    "dungeon_anleiten": ("dienste", "Dungeon-Master: Spieler anleiten, Erzählung mit Ansatzpunkten, Knöpfe „Das kannst du hier“, Fragen an stille Spieler"),
+    "dungeon_anleiten": ("dienste", "Dungeon-Master: Spieler anleiten (Ansatzpunkte, Knöpfe, stille Spieler), Fortschritt der Geschichte (Wink, Spuren)"),
     "dungeon_tageszeit": ("dienste", "Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht"),
     "dungeon_sprachen": ("dienste", "Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann"),
     "dungeon_reise": ("dienste", "Dungeon-Master: Reise-Etappen, Rollen mit je einem Wurf und ein Ereignis der Landschaft auf langen Wegen"),

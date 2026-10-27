@@ -51,7 +51,9 @@ counts it as shown (seen, and a clue shown is progress for the stall hint). A cl
 narrator's ways (check_ways). The host sees the clues with ✓ in „Nur für dich → Geschichte“.
 
 Off by default: the admin's switch dungeonanleiten (features.py, chat.dungeon_anleiten) for the round's host; a guest at
-the table gets it like everyone, it is part of the game and no tool.
+the table gets it like everyone, it is part of the game and no tool. Step 4's progress counter with the stall hint and
+step 5's clues are the core of the story (Review 27.10. E12, Dominik „ok“): their own switch dungeonfortschritt
+(chat.dungeon_fortschritt) is on from the start (features.DEFAULT_ON, kern), at the level normal while this is off.
 Journal: fixed words and numbers („dungeon: anleitung | …“), Live only counts.
 """
 import random
@@ -61,6 +63,7 @@ import features
 from common import DayCounter
 
 KEY = "dungeonanleiten"
+KERN = "dungeonfortschritt"   # progress counter, stall hint and clues (steps 4 and 5), on from the start
 WAHL = {                   # the second person's choices of the quiet seat's question
     "person": ("sprichst du mit {x}", "do you talk to {x}"),
     "weg": ("gehst du {x}", "do you go {x}"),
@@ -100,6 +103,7 @@ TIPP = {"person": ("mit {x} sprechen", "talk to {x}"), "weg": ("{x} gehen", "go 
         "angriff": ("{x} angreifen", "attack {x}"), "umsehen": ("euch hier genauer umsehen", "look around here more closely")}
 AUSWEG = {"person": ("Ich frage {x} danach.", "I ask {x} about it."), "weg": ("Ich suche {x} weiter.", "I search on {x}.")}
 
+KERN_ZAEHLER = ("wink1", "wink2", "wink3", "spur")   # the day's counts of kern (Live: Fortschritt der Geschichte)
 _day = DayCounter(frage=0, frage_alt=0, zeile=0, genommen=0, weg=0, weg_verworfen=0, vage=0, wink1=0, wink2=0, wink3=0, ausweg=0,
                   spur=0)
 
@@ -113,6 +117,11 @@ HOHL = re.compile(r"(?i)(?:^|\W)(?:und |also |nun |so )?(?:was (?:tut|macht|tust
 
 def on(rd):
     return bool(rd.get(PRUEFSTAND)) or bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+
+
+def kern(rd):
+    """Whether the story's progress counter, stall hint and clues count (steps 4 and 5, switch KERN)."""
+    return bool(rd.get(PRUEFSTAND)) or bool(rd.get("owner")) and features.allowed(KERN, rd["owner"])
 
 
 TASK = {
@@ -148,11 +157,10 @@ SPUR_TASK = {
 
 def task(rd, lang):
     """The narrator's form (step 1), the clues (step 5) and, unless the level is erfahren, the ways of the turn
-    (step 2) and the stall hint (step 4); "" while off."""
-    if not on(rd):
-        return ""
-    return (TASK[lang] + (SPUR_TASK[lang] if rd.get("plan") else "") + (WEGE_TASK[lang] if KNOEPFE[stufe(rd)] else "")
-            + (WINK_TASK[lang] if WINK[stufe(rd)] else ""))
+    (step 2) and the stall hint (step 4); the clues and the stall hint follow kern, the rest on, "" while both are off."""
+    k, o = kern(rd), on(rd)
+    return ((TASK[lang] if o else "") + (SPUR_TASK[lang] if k and rd.get("plan") else "")
+            + (WEGE_TASK[lang] if o and KNOEPFE[stufe(rd)] else "") + (WINK_TASK[lang] if k and WINK[stufe(rd)] else ""))
 
 
 def example(r, rd, li):
@@ -488,7 +496,7 @@ def shown(rd):
 
 def clue_facts(rd):
     """For the plan's facts: the next clue to show, „deutlich“ at the stall hint's stage 1; {} while off or none left."""
-    if not on(rd):
+    if not kern(rd):
         return {}
     sp, seen = _clues(rd)
     nxt = next((t for j, t in enumerate(sp) if j not in seen), None)
@@ -513,7 +521,7 @@ def named(text, of, need):
 def seen(rd, text):
     """After a narration: the clues it names (SPUR_TREFFER of their words, by stem) count as shown; returns how many
     are new."""
-    if not on(rd):
+    if not kern(rd):
         return 0
     sp, old = _clues(rd)
     low = str(text or "").lower()
@@ -553,9 +561,9 @@ def _tip(dm, r, rd):
 def progress(dm, r, rd, story, wuerfe, rng):
     """After a told turn (dungeon.apply, before the turn is counted on): the stall counter by fixed rules, the stage
     for the next narration (rd["anleitwink"]), the way out after a failed check (rd["anleitausweg"]); returns the
-    panel's tip line of stage 3, else "". Nothing while off or at the level erfahren."""
-    neu = seen(rd, story.get("text")) if on(rd) else 0   # a clue shown: progress
-    if not on(rd) or not WINK[stufe(rd)]:
+    panel's tip line of stage 3, else "". Nothing while kern is off or at the level erfahren."""
+    neu = seen(rd, story.get("text"))              # a clue shown: progress
+    if not kern(rd) or not WINK[stufe(rd)]:
         rd.pop("anleitwink", None)
         return ""
     import dungeon_erzaehler as erz
@@ -599,7 +607,7 @@ WINK_TASK = {
 def facts(rd):
     """The stall hint of this turn as data: {"wink": {stufe, ereignis?}}, {} without one."""
     w = rd.get("anleitwink") or {}
-    if not on(rd) or w.get("zug") != rd.get("zug"):
+    if not kern(rd) or w.get("zug") != rd.get("zug"):
         return {}
     return {"wink": {k: w[k] for k in ("stufe", "ereignis") if k in w}}
 

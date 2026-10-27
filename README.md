@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.185** AI Dungeon Master: story progress is core and on from the start: stall wink, event, tip and clues to the turning point also without "Guide the players", with its own admin switch (review 27.10. E12)
 - **V01.1.184** AI Dungeon Master: the panel decides, the model tells: checks only with a level and the table value, loot before the narration to the finder, healing only by rest, potion and spell, act end and goal only with their words (review 27.10. package 9)
 - **V01.1.183** AI Dungeon Master: small gestures show at the table, after 2 minutes of quiet, at most twice a turn, never in a fight or the car
 - **V01.1.182** AI Dungeon Master: a person's portrait follows the gender on its card, "divers" is painted androgynous
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.178** AI Dungeon Master: the check catches „he“ for a heroine, places the map does not have, secrets told, tracks after a failed search and actions passed over (review 27.10. package 7, part 3)
 - **V01.1.177** AI Dungeon Master: the check catches a weapon drawn without a possessive, a find without loot, gold in words, foes without an encounter and time jumps, gear never goes into the thing memory (review 27.10. package 7, part 2)
 - **V01.1.176** AI Dungeon Master: the narration check reports every fault, the repair strikes first and then checks names and place again, after a failed check the loot is lost (review 27.10. package 7, part 1)
-- **V01.1.175** AI Dungeon Master: outside a fight a roll costs life only after a failed check on strength, dexterity or constitution, the line names the check
 
 
 
