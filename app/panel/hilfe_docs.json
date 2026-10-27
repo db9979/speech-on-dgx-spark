@@ -5917,6 +5917,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Fürwort, Ort, Geheimnis, Spur, Aktion (V01.1.178, Review 27.10. Paket 7 Teil 3, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, weitere feste Prüfungen der Erzählung. 1. Fürwort („fuerwort“): Beginnt ein Satz mit „Er“, „He“ oder „She“ direkt nach einem Satz, der nur eine Person nennt, und ist das ein Held mit anderem Geschlecht (bei divers jedes Fürwort), ist das falsch (ER); die Reparatur setzt den Namen ein. „Sie“ wird nie gewertet (viele oder höflich). 2. Erfundener Ort („ort_erfunden“, place_untold): ein Wort aus ANKUNFT (erreicht, betretet …) mit einem Siedlungswort und Namen („die Burg Drachenfels“, ORTSWORT) oder einem Namen auf ORT_ENDE („Eichenburg“), den kein Ort der Karte und keine Person trägt, ohne ort_id und nicht im Gewölbe; der Satz wird gestrichen, die Gruppe bleibt, wo die Karte sie hat. 3. Geheimnis („geheim“, secret_told, Regel 7): ein Satz mit GEHEIM_ANTEIL (60 %) der längeren Wörter eines Geheimnisses der festen Wahrheit, ohne gelungene Probe in diesem Zug, wird gestrichen. 4. Spur nach misslungener Suche: Ein Satz mit dem Ding der Probe und einem Wort aus SPUR (führt, Richtung, Norden …) oder einem Ort der Karte zählt als „probe“. 5. Übergan"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "gene Aktion („ignoriert“, ignored): Nennt die Erzählung den Helden, aber keines von mindestens TAT_WORTE (2) Inhaltswörtern seiner Aktion, bekommt der nächste Versuch einen Hinweis, wenn ein anderer Fehler ohnehin eine Neufassung verlangt; allein lässt er einen Versuch nie scheitern (NUR_HINWEIS), das Panel hängt nichts an. Tageszähler regel_ort_erfunden, regel_geheim, regel_ignoriert. Noch offen aus dem Paket: der Zustand im Ding-Gedächtnis (offen/verschlossen …), weil ein Zustand sich durch eine Aktion ändern darf. Selbsttest ReviewPruefung.test_pronouns_places_secrets_tracks_and_ignored_actions in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Nichts Erfundenes (V01.1.177, Review 27.10. Paket 7 Teil 2, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, neue feste Prüfungen der Erzählung (dungeon_erzaehler), jede mit Hinweis für den nächsten Versuch und, scheitert er, mit gestrichenem Satz. 1. Waffe ohne Besitzwort („dabei“): Name des Helden, dann ein Wort aus ZIEHT (zieht, zückt, packt, trinkt …), dann das Kopfwort einer Katalogwaffe, einer Rüstung, eines Schilds oder Tranks (SCHUTZ_KOPF), die er nicht trägt, ohne andere Person dazwischen; nennt seine eigene Aktion das Ding, zählt es nicht. Ausrüstung kommt nie ins Ding-Gedächtnis (check_things). 2. Fund („fund“, found_untold): ein Satz mit dem Helden, einem Wort aus FINDET und dem Kopfwort eines Katalogdings (FUND_ARTEN), das weder Beute noch Quest-Fund noch in seiner Tasche ist. 3. Gold in Worten: „zwanzig Goldmünzen“, „eine Handvoll Münzen“ (GOLD_WORT) zählen wie Ziffern. 4. Gegner ohne Begegnung („gegner_neu“, foe_untold): ein Name des Bestiariums mit einem Wort aus ERSCHEINT (bricht durch, taucht auf, greift an …), den weder die Begegnung dieses Zugs noch der Kampf noch die Aktion eines Helden hat; friedliche Wesen, Menschen (wesen „mensch“), Personen"
 },
 {
@@ -21230,6 +21246,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: pronoun, place, secret, track, action (V01.1.178, review 27.10. package 7 part 3, Dominik 2026-10-27 „ok“): No new switch, more fixed checks of the narration. 1. Pronoun („fuerwort“): a sentence starting with „Er“, „He“ or „She“ right after a sentence naming one person only, a hero of another gender (any pronoun for divers), is wrong (ER); the repair puts the name in. German „Sie“ is never judged (many or polite). 2. Invented place („ort_erfunden“, place_untold): a word of ANKUNFT (reaches, enters …) with a settlement word and a name („die Burg Drachenfels“, ORTSWORT) or a name ending in ORT_ENDE („Eichenburg“) that no place of the map and no person has, with no ort_id and not in a vault; the sentence is struck, the group stays where the map has it. 3. Secret („geheim“, secret_told, rule 7): a sentence with GEHEIM_ANTEIL (60 %) of the longer words of a secret of the fixed truth, with no check of this turn succeeded, is struck. 4. Track after a failed search: a sentence with the check's thing and a word of SPUR (leads, towards, north …) or a place of the map counts as „probe“. 5. Action passed over („ignoriert“, ignored): when the narration names the hero but none"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " of at least TAT_WORTE (2) content words of the action, the next try gets a hint when another fault asks for a rewrite anyway; alone it never fails a try (NUR_HINWEIS), the panel adds nothing. Day counters regel_ort_erfunden, regel_geheim, regel_ignoriert. Still open from the package: the state in the thing memory (open/locked …), since an action may change a state. Self-test ReviewPruefung.test_pronouns_places_secrets_tracks_and_ignored_actions in test_dungeon."
 },
 {
 "lang": "en",

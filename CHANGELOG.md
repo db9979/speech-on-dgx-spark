@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.178** · 2026-10-27 · KI-Dungeon-Master: die Prüfung fängt „Er“ für eine Heldin, Orte, die es auf der Karte nicht gibt, verratene Geheimnisse, Spuren nach misslungener Suche und übergangene Aktionen (Review 27.10. Paket 7, Teil 3)
 - **V01.1.177** · 2026-10-27 · KI-Dungeon-Master: die Prüfung fängt eine gezogene Waffe ohne Besitzwort, einen Fund ohne Beute, Gold in Worten, Gegner ohne Begegnung und Zeitsprünge, Ausrüstung kommt nie ins Ding-Gedächtnis (Review 27.10. Paket 7, Teil 2)
 - **V01.1.176** · 2026-10-27 · KI-Dungeon-Master: die Prüfung der Erzählung meldet alle Fehler, die Reparatur streicht zuerst und prüft danach Namen und Ort erneut, nach misslungener Probe verfällt die Beute (Review 27.10. Paket 7, Teil 1)
 - **V01.1.175** · 2026-10-27 · KI-Dungeon-Master: außerhalb des Kampfs kostet ein Wurf nur Leben nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution, die Zeile nennt die Probe

@@ -1101,6 +1101,7 @@ class ReviewPruefung(Turns):
         troll = "Ein Troll bricht durch die Tür und brüllt."
         self.assertEqual(erz.foe_untold(rd, {"text": troll}), ["Troll"])
         self.assertEqual(erz.foe_untold(rd, {"text": troll, "begegnung": [(next(g for g in r["gegner"] if g["name"][0] == "Troll"), 1)]}), [])
+        self.assertEqual(erz.foe_untold(dict(rd, offen={self.host: {"text": "Ich stürze mich auf den Troll.", "t": 0}}), {"text": troll}), [])   # the action has it
         for t in ("In Wolfshafen springt ein Junge über den Zaun.", "Er roch den Rauch und springt auf.",
                   "Ein Dorfbewohner erscheint am Fenster.", "Eine Wache taucht auf."):
             self.assertEqual(erz.foe_untold(rd, {"text": t}), [], t)
@@ -1120,6 +1121,55 @@ class ReviewPruefung(Turns):
         self.assertIn("lauscht in die Nacht", fixed["text"])
         for k in ("fund", "gegner_neu", "zeitsprung"):
             self.assertIn(k, erz.WEG_SATZ)
+            self.assertEqual(len(erz.HINWEIS[k]), 2)
+
+    def test_pronouns_places_secrets_tracks_and_ignored_actions(self):
+        """G19/G20/G21: „Er“ after a woman, a place the map does not have, a secret told without a success, a failed
+        search that shows the way and an action not taken up are faults by fixed rules; the pronoun is fixed by the name."""
+        erz = dungeon.erz
+        rd, a, b = self.seats()
+        for pid, p in dungeon.seated(rd):
+            p["held"]["geschlecht"] = "weiblich" if pid == self.host else "divers"
+        text = f"{a} tritt an das Tor und lauscht. Er hört Schritte im Hof."
+        self.assertEqual(erz.wrong_pronoun(rd, text), [f"{a}: {dungeon.GESCHLECHT['weiblich'][0][0]}"])
+        self.assertEqual(erz.fix_pronouns(rd, text)[0], f"{a} tritt an das Tor und lauscht. {a} hört Schritte im Hof.")
+        self.assertEqual(erz.wrong_pronoun(rd, f"{a} spricht mit {b}. Er nickt."), [])                # two named: unsure
+        self.assertEqual(erz.wrong_pronoun(rd, f"{a} tritt an das Tor. Sie hört Schritte."), [])     # „Sie“ is never judged
+        self.assertTrue(erz.wrong_pronoun(rd, f"Draußen regnet es. {b} hebt den Kopf. Er lauscht."))  # divers: the name
+        rd["karte"] = {"orte": [{"name": "Wolfshafen", "x": 0, "y": 0}, {"name": "Alte Mühle", "x": 5, "y": 0}], "wege": [[0, 1]], "hier": 0}
+        burg = "Am Abend erreicht ihr die Burg Drachenfels hoch über dem Tal."
+        self.assertEqual(erz.place_untold(rd, {"text": burg}), ["Drachenfels"])
+        self.assertEqual(erz.place_untold(rd, {"text": "Ihr erreicht Eichenburg im Regen."}), ["Eichenburg"])
+        for t in ("Ihr erreicht den Hafen von Wolfshafen.", "Ihr betretet die Taverne am Markt.", "Die Burg Drachenfels ist weit."):
+            self.assertEqual(erz.place_untold(rd, {"text": t}), [], t)
+        self.assertEqual(erz.place_untold(rd, {"text": burg, "ort_id": "o2"}), [])
+        rd["wahrheit"] = {"personen": [], "gruppen": [], "geheimnisse": ["Der Bürgermeister schmuggelt Silber durch die Kanäle"]}
+        leck = "Ihr ahnt es: Der Bürgermeister schmuggelt das Silber heimlich durch die alten Kanäle."
+        self.assertEqual(erz.secret_told(rd, leck), ["Der Bürgermeister schmuggelt Silber"])
+        self.assertEqual(erz.secret_told(rd, leck, [{"ok": True}]), [])                             # a success may reveal it
+        self.assertEqual(erz.secret_told(rd, "Der Bürgermeister grüßt freundlich."), [])
+        w = [{"pid": self.host, "wofuer": "Abdrücke deuten", "ok": False}]
+        self.assertEqual(erz.told_as_done(rd, "Die Abdrücke im Schlamm führen zum alten Steg.", w), ["Abdrücke deuten"])
+        self.assertEqual(erz.told_as_done(rd, "Die Abdrücke im Schlamm verraten nicht, wohin sie führen.", w), [])
+        rd["offen"] = {self.host: {"text": "Ich klettere auf den Glockenturm und läute die Sturmglocke.", "t": 0}}
+        nichts = {"text": f"{a} blickt über den nassen Platz, der Regen rauscht.", "ooc": []}
+        self.assertEqual(erz.ignored(rd, nichts), [a])
+        self.assertEqual(erz.ignored(rd, {"text": f"{a} klettert den Glockenturm hinauf, Stufe um Stufe.", "ooc": []}), [])
+        with contextlib.redirect_stdout(io.StringIO()):
+            fs = erz.faults(dungeon, rd, {"text": f"{burg} {leck} {nichts['text']}", "ooc": [], "npc": []})
+            fixed = erz.repair_all(rd, {"text": f"{burg} {leck} {nichts['text']} Der Wind trägt den Geruch von Rauch und nassem Stein heran.",
+                                        "ooc": [], "npc": []}, fs)
+        self.assertTrue({"ort_erfunden", "geheim", "ignoriert"} <= {k for k, _ in fs}, fs)
+        with contextlib.redirect_stdout(io.StringIO()):
+            lang = dict(nichts, text=nichts["text"] + " Der Wind trägt den Geruch von Rauch und nassem Stein heran, irgendwo schlägt ein Fensterladen.")
+            self.assertEqual(erz.ignored(rd, lang), [a])
+            self.assertEqual(erz.judge(dungeon, rd, lang), ("", []))       # „ignoriert“ alone never fails a try, it is a hint only
+        self.assertEqual(erz.NUR_HINWEIS, ("ignoriert",))
+        self.assertNotIn("Drachenfels", fixed["text"])
+        self.assertNotIn("schmuggelt", fixed["text"])
+        for k in ("ort_erfunden", "geheim"):
+            self.assertIn(k, erz.WEG_SATZ)
+        for k in ("ort_erfunden", "geheim", "ignoriert"):
             self.assertEqual(len(erz.HINWEIS[k]), 2)
 
 
@@ -1252,11 +1302,23 @@ class Permadeath(Turns):
         self.assertEqual(r.status_code, 200, r.text)
         return self.play([{"proben": list(proben)}, {"erzaehlung": self.TEXTE[i], "folgen": list(folgen), "erfolg": list(erfolg), "frage_an": ""}])
 
+    def failing(self):
+        """The turn's d20 of every check is a 2: the check fails (damage outside a fight needs one, dungeon.grounded)."""
+        class Zwei:
+            def randint(self, a, b):
+                return 2 if (a, b) == (1, 20) else random.randint(a, b)
+        roll = dungeon.roll
+        return mock.patch.object(dungeon, "roll", lambda r, rd, proben, rng=None, hand=None: roll(r, rd, proben, Zwei(), hand))
+
+    def dodge(self, wer, wofuer="Dem Pfeil ausweichen"):
+        return {"proben": [{"wer": wer, "wert": "geschick", "schwer": 20, "wofuer": wofuer}]}
+
     def down_bela(self):
         self.set_hero(self.gp, leben=1)
         self.act_all()
-        return self.play([{"proben": []}, {"erzaehlung": "Ein Pfeil trifft Bela, Arvid und Bela stolpern in den Gang.",
-                                           "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        with self.failing():
+            return self.play([self.dodge("Bela"), {"erzaehlung": "Ein Pfeil trifft Bela, Arvid und Bela stolpern in den Gang.",
+                                                   "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
 
     def test_down_three_turns_then_dead_and_things_lie_here(self):
         rd = self.down_bela()
@@ -1328,7 +1390,8 @@ class Permadeath(Turns):
         z = self.state(self.rid)["zug"]
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich ducke mich.", "zug": z}).status_code, 200)
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich decke Bela.", "zug": z}).status_code, 200)
-        rd = self.play([{"proben": []}, {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        with self.failing():
+            rd = self.play([self.dodge("Bela"), {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [0, 0])
         # healing by the story gets it up too
         rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
@@ -1472,8 +1535,9 @@ class Permadeath(Turns):
         self.set_hero(self.host, leben=1, gold=40)
         z = self.state(self.rid)["zug"]
         self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich klettere.", "zug": z})
-        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid rutscht vom nassen Ast und landet weich im Moos.",
-                                         "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        with self.failing():
+            rd = self.play([self.dodge("Arvid", "Auf dem nassen Ast klettern"), {"erzaehlung": "Arvid rutscht vom nassen Ast und landet weich im Moos.",
+                                                                               "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(dungeon.zustand(rd["plaetze"][self.host]["held"]), "boden")
         self.guest(self.rid)                                 # not alone at the table: no Gnade (test_the_only_hero_is_spared)
         with dungeon._lock, mock.patch.object(dungeon, "save_roll", return_value=1):   # a 1 counts as two failures
@@ -1540,8 +1604,9 @@ class Permadeath(Turns):
         self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich zaubere.", "zug": z})
         self.assertEqual(self.state(self.rid)["offen"][self.host]["wirkt"], {"abfangen": "schildwall"})
         bela0 = self.state(self.rid)["plaetze"][self.gp]["held"]["leben"]
-        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid springt vor Bela, der Hieb kracht auf seinen Schild.",
-                                         "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
+        with self.failing():
+            rd = self.play([self.dodge("Bela", "Dem Hieb ausweichen"), {"erzaehlung": "Arvid springt vor Bela, der Hieb kracht auf seinen Schild.",
+                                                                        "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], bela0)                 # taken by Arvid
         self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 20 - (6 - 1))          # armour works on the attack roll (dungeon_kampf.rk), Eisenhaut takes 1
         self.assertEqual([e for e in rd["log"] if e["art"] == "kraft"][-1]["fuer"], "Bela")

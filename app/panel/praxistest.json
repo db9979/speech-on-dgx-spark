@@ -4090,6 +4090,13 @@
 "titel": "Dungeon-Master: Nichts Erfundenes",
 "text": "Eine Runde spielen und auf die Erzählung achten. A: Kein Held zieht eine Waffe, die er nicht trägt. B: Niemand findet Dinge oder Gold, die nicht als Beute kommen. C: Es tauchen keine Gegner ohne Begegnung auf, und ohne Rast oder Reise springt die Zeit nicht.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P609",
+"v": 1178,
+"titel": "Dungeon-Master: Fürwort, Ort, Geheimnis",
+"text": "Mit einer Heldin spielen. A: Die Erzählung nennt sie nie „er“. B: Die Gruppe kommt nur an Orte, die auf der Karte stehen. C: Nach einer misslungenen Suche zeigt die Erzählung keine Spur, und eine längere Aktion wird erzählt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

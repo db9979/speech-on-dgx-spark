@@ -93,8 +93,9 @@ UNTEN = ("keller", "nach unten", "hinunter", "hinab", "herunter", "runter", "abw
 OBEN = ("nach oben", "hinauf", "herauf", "oben angekommen", "treppe hoch", "empor", "aufwärts", "obergeschoss", "dachboden",
         "upstairs", "up the stairs", "goes up", "go up", "attic", "upper floor")
 WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung", "dabei", "fund", "gegner_neu",
-            "zeitsprung")   # repair strikes these sentences
+            "zeitsprung", "ort_erfunden", "geheim")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
+NUR_HINWEIS = ("ignoriert",)   # faults that never fail a try alone: their hint only rides along with a rewrite
 RICHTER = "dungeonrichter"   # the switch „Dungeon-Richter“ (features.py): the model's second opinion after the fixed checks
 RICHTER_MIN = 0.9            # the panel writes anew only from this probability of a contradiction (a fixed threshold)
 RICHTER_S = 8.0              # how long a turn waits for the judge, then it goes on as without
@@ -414,6 +415,18 @@ HINWEIS = {
                  "nie er oder sie, nie sein oder ihr.",
                  "Note: these characters have a fixed geschlecht, refer to them exactly so: {namen}. For non-binary use "
                  "they, their or the name."),
+    "geheim": ("Hinweis: Deine Erzählung verrät ein Geheimnis der festen Wahrheit ({namen} …), ohne dass eine Probe in diesem "
+               "Zug gelang. Deute höchstens an, verrate es nicht.",
+               "Note: your narration tells a secret of the fixed truth ({namen} …) although no check of this turn succeeded. "
+               "Hint at most, do not tell it."),
+    "ignoriert": ("Hinweis: Was diese Figuren tun wollten, kommt in deiner Erzählung nicht vor: {namen}. Erzähle ihre Aktion "
+                  "und was daraus wird.",
+                  "Note: what these characters wanted to do does not appear in your narration: {namen}. Tell their action "
+                  "and what comes of it."),
+    "ort_erfunden": ("Hinweis: Diese Orte gibt es auf der Karte nicht: {namen}. Die Gruppe kommt nur an Orte der Karte (in "
+                     "den Daten karte: ort und wege); erzähle den Ort, an dem sie ist, oder einen Nachbarort mit ort_id.",
+                     "Note: the map has no such places: {namen}. The group only comes to places of the map (karte: ort and "
+                     "wege in the data); tell the place it is at, or a neighbouring place with ort_id."),
     "fund": ("Hinweis: Diese Figuren finden in deiner Erzählung etwas, das das Panel nicht vergeben hat: {namen}. Beute "
              "vergibt nur das Panel (in den Daten beute oder quest_fund); erzähle keinen Fund außerhalb davon.",
              "Note: these characters find something in your narration the panel did not hand out: {namen}. Only the panel "
@@ -511,7 +524,22 @@ def told_as_done(rd, text, wuerfe, ooc=()):
             out.append(w["wofuer"])
         elif _forscht(w) and any(_verraten(t) for t in (text, *ooc)):
             out.append(w["wofuer"])
+        elif _forscht(w) and any(_spur(rd, w, x, en) for x in saetze):
+            out.append(w["wofuer"])
     return out
+
+
+# Review 27.10. Paket 7 (E10): a failed search that still shows the way („Abdrücke, die zum Hafen führen“): a sentence
+# with the check's thing and a word of SPUR or a place of the map, none of HAELT
+SPUR = ("führt", "führen", "fuehrt", "weist", "weisen", "richtung", "norden", "süden", "osten", "westen", "leads", "lead to",
+        "point", "north", "south", "east", "west", "towards")
+
+
+def _spur(rd, w, x, en):
+    import dungeon_karte
+    stems = _things(w.get("wofuer"), en)
+    orte = {n for o in ((rd.get("karte") or {}).get("orte") or []) for n in [str(o.get("name") or "").lower()] if len(n) >= 4}
+    return any(st in x for st in stems) and (any(z in x for z in SPUR) or any(o in x for o in orte)) and not any(h in x for h in HAELT)
 
 
 def rank(fault):
@@ -541,6 +569,8 @@ def repair(rd, story, fault, missing, wuerfe=()):
         bad = {"gold": lambda x: bool(gold_told(x)), "widerspruch": lambda x: bool(contradicts(rd, x)),
                "fund": lambda x: bool(found_untold(rd, dict(story, text=x))), "gegner_neu": lambda x: bool(foe_untold(rd, dict(story, text=x))),
                "zeitsprung": lambda x: bool(time_jump(rd, dict(story, text=x))),
+               "ort_erfunden": lambda x: bool(place_untold(rd, dict(story, text=x))),
+               "geheim": lambda x: bool(secret_told(rd, x, wuerfe)),
                "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
                "dabei": lambda x: bool(not_carried(rd, x)),
                "gefallen": lambda x: bool(fight_off(rd, x)),
@@ -815,8 +845,8 @@ def found_untold(rd, story, r=None):
 
 def foe_untold(rd, story, r=None):
     """Foes of the bestiary the narration lets come up or attack (a word of ERSCHEINT, none of NEIN) although neither
-    this turn's encounter nor the fight has them; peaceful ones, humans (wesen „mensch“), GEGNER_MEHRDEUTIG, people of
-    the round and heroes never count (the fault „gegner_neu“, its sentence is struck)."""
+    this turn's encounter nor the fight nor a hero's action has them; peaceful ones, humans (wesen „mensch“), GEGNER_MEHRDEUTIG,
+    people of the round and heroes never count (the fault „gegner_neu“, its sentence is struck)."""
     import dungeon
     import dungeon_bestiarium
     r = r or dungeon.rules()
@@ -824,6 +854,7 @@ def foe_untold(rd, story, r=None):
     da |= {str(n).lower() for g, _ in story.get("begegnung") or [] for n in g.get("name") or []}
     leute = {str(x.get("name", "")).lower() for x in (rd.get("nsc") or {}).values()} | \
             {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    taten = " ".join(str(a.get("text") or "") for a in (rd.get("offen") or {}).values()).lower()   # a foe the heroes go for is there
     out = []
     for satz in _saetze(story["text"]):
         low = satz.lower()
@@ -834,7 +865,8 @@ def foe_untold(rd, story, r=None):
                 continue                             # a human may be anybody of the scene
             for n in g.get("name") or []:
                 n = str(n).lower()
-                if len(n) >= 4 and n not in GEGNER_MEHRDEUTIG and n not in da and n not in leute and not any(n in d or d in n for d in da if d) and _wort_in(n, low):
+                if len(n) >= 4 and n not in GEGNER_MEHRDEUTIG and n not in da and n not in leute and not any(n in d or d in n for d in da if d) \
+                        and _wort_in(n, low) and not _wort_in(n, taten):
                     out.append(g["name"][1 if rd.get("lang") == "en" else 0])
     return list(dict.fromkeys(out))[:3]
 
@@ -1006,13 +1038,17 @@ EIGEN = ("hand", "hände", "haende", "faust", "finger", "arm", "arme", "kopf", "
          "blade", "weapon", "shield", "bow", "staff", "sword", "dagger", "axe", "torch")
 
 
+# Review 27.10. Paket 7 (G20, T10): a personal pronoun at a sentence's start right after a sentence that names one person
+# only, a hero: „Er“/„He“ for a woman or a divers hero, „She“ for a man or a divers one is wrong (German „Sie“ may be many
+# or the polite form: never); the fix puts the hero's name in its place
+ER = {"er": "maennlich", "he": "maennlich", "she": "weiblich"}
 FREMD_WORTE = ("der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "ihm", "ihn", "ihnen",
                "the", "a", "an", "him", "them")   # someone else between: „Lia packt den Mann an seinem Arm“
 
 
 def _pronoun_spots(rd, text):
-    """[(start, end, hero name, right word)] of wrong possessives in text by the rule above; right "" when there is no
-    sure word (divers, German sein or ihr alone)."""
+    """[(start, end, hero name, right word)] of wrong possessives and personal pronouns (ER) in text by the rules above;
+    right "" when there is no sure word (divers, German sein or ihr alone)."""
     import dungeon
     helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values()
               if p.get("held") and dungeon.gender(p["held"].get("geschlecht"))}
@@ -1034,6 +1070,13 @@ def _pronoun_spots(rd, text):
                 out.append((m.start(2), m.end(2), h["name"], DIVERS.get(wort, "")))
             elif (wort in BESITZ_W) == (g == "maennlich"):
                 out.append((m.start(2), m.end(2), h["name"], TAUSCH[wort]))
+    for m in re.finditer(r"(?:^|(?<=[.!?…]\s))(Er|He|She)(?!\w)", str(text)):
+        vor = _saetze(str(text)[:m.start()])
+        wer = {x for x in alle if vor and re.search(r"(?<!\w)" + re.escape(x) + r"(?!\w)", vor[-1].lower())}
+        if len(wer) == 1 and next(iter(wer)) in helden:
+            h = helden[next(iter(wer))]
+            if ER[m.group(1).lower()] != h["geschlecht"]:
+                out.append((m.start(1), m.end(1), h["name"], h["name"]))   # the name is always right
     return out
 
 
@@ -1090,12 +1133,11 @@ def _missing(rd, story):
 
 
 def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
-    """The first fault of faults, ("", []) when the narration passes."""
-    f = faults(dm, rd, story, wuerfe, hits, zuege)
-    return f[0] if f else ("", [])
+    """The first fault of faults that is not only a hint (NUR_HINWEIS), ("", []) when the narration passes."""
+    return next((f for f in faults(dm, rd, story, wuerfe, hits, zuege) if f[0] not in NUR_HINWEIS), ("", []))
 
 
-def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
+def faults(dm, rd, story, wuerfe=(), hits=(), zuege=(), count=True):
     """[] when the narration passes; else every fault (Review 27.10. Paket 7, never only the first) as (reason, the
     names missing) by fixed rules: too short (alone), a hero who acted
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
@@ -1106,6 +1148,7 @@ def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     a veil of the table more than once (dungeon_grenzen.veiled; the hint never repeats its words, they stay data),
     too much repeated from the last narrations, too few points to take up or a hollow question at the end
     (dungeon_anleiten.vague, while „Spieler anleiten“ is on)."""
+    bump = dm._day.bump if count else (lambda k: None)   # count=False: the Erzähler-Prüfstand, no day counters
     text = story["text"]
     if len(text) < ZU_KURZ:
         return [("kurz", [])]
@@ -1125,7 +1168,7 @@ def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
                        ("gegner_neu", lambda: foe_untold(rd, story)), ("zeitsprung", lambda: time_jump(rd, story))):
         x = found()
         if x:
-            dm._day.bump("regel_" + why)
+            bump("regel_" + why)
             out.append((why, x))
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
     gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
@@ -1133,38 +1176,50 @@ def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
         out.append(("gegner", gone))
     off = numbers_off(text, wuerfe, hits, zuege)
     if off:
-        dm._day.bump("beleg_falsch")
+        bump("beleg_falsch")
         out.append(("beleg", [str(n) for n in off] + [f"{x['beleg']} {x.get('name', '')}: {x.get('gesamt', '')}" for x in [*wuerfe, *hits, *zuege] if x.get("beleg")]))
     import dungeon_grenzen
     veil = dungeon_grenzen.veiled(rd, text)
     if veil:                                     # a veil of the table more than once (Tabletop-Punkt 18)
-        dm._day.bump("schleier")
+        bump("schleier")
         out.append(("schleier", veil))
     far = far_places(rd, story, low)
     if far:
         out.append(("karte", far))
+    geheim = secret_told(rd, text, wuerfe)
+    if geheim:                                   # a secret of the truth told without a success (Regel 7)
+        bump("regel_geheim")
+        out.append(("geheim", geheim))
+    tat = ignored(rd, story)
+    if tat:                                      # an action named but not taken up
+        bump("regel_ignoriert")
+        out.append(("ignoriert", tat))
+    erfunden = place_untold(rd, story)
+    if erfunden:                                 # a place the map does not have (Review 27.10. Paket 7, G19)
+        bump("regel_ort_erfunden")
+        out.append(("ort_erfunden", erfunden))
     import dungeon_karte
     neu = dungeon_karte.ort_fehlt(rd, story)
     if neu:                                      # ort_id leads to a place the narration does not name (Karten-Thread)
-        dm._day.bump("regel_neuer_ort")
+        bump("regel_neuer_ort")
         out.append(("neuer_ort", [neu]))
     weg = way_skipped(rd, story)
     if weg:                                      # a hero's action goes to a neighbouring place, the narration stays
-        dm._day.bump("regel_gehen")
+        bump("regel_gehen")
         out.append(("gehen", weg))
     away = elsewhere(rd, story)
     if away:
         out.append(("anderswo", away))
     bad = contradicts(rd, text)
     if bad:
-        dm._day.bump("widerspruch")
+        bump("widerspruch")
         out.append(("widerspruch", [f"{x['name']} ({x.get('merkmale', '')})" for x in rd.get("dinge") or [] if x["name"] in bad]))
     t = _triples(text)
     old = _alt(rd)
     if t and len(t & old) / len(t) > WIEDERHOLT:
         out.append(("wiederholung", []))
     if rd.get("erzaehlweise") == "ausfuehrlich" and len(text) < dm.erz_min(rd):   # „ausführlich“ really rich (Dominik 2026-10-26)
-        dm._day.bump("regel_knapp")
+        bump("regel_knapp")
         out.append(("knapp", [str(dm.erz_min(rd))]))
     import dungeon_anleiten
     offen = dungeon_anleiten.vague(dm, rd, story)
@@ -1221,6 +1276,80 @@ def far_places(rd, story, low):
         if i not in near and len(n) >= 4 and re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", low):
             out.append(n)
     return out[:3]
+
+
+# Review 27.10. Paket 7 (G19, T9): the narration lets the group arrive at a place with a name the map does not have
+# („Ihr erreicht die Burg Drachenfels“, the map stays): a word of ANKUNFT, then a settlement word with a name after it or
+# a name ending in one, the name in no place of the map and no person of the round, no ort_id, no vault
+ANKUNFT = ("erreicht", "erreichen", "erreichst", "kommt an", "kommen an", "kommt ihr an", "angekommen", "betritt", "betretet",
+           "betreten", "trefft ein", "trifft ein", "arrive", "arrives", "reach", "reaches", "enter", "enters")
+ORTSWORT = ("Burg", "Stadt", "Dorf", "Festung", "Feste", "Kloster", "Schloss", "Palast", "Ruine", "Siedlung", "Castle", "Town",
+            "Village", "Fortress", "Monastery", "Palace", "Ruins", "Settlement")
+ORT_ENDE = ("burg", "stadt", "dorf", "feste", "hafen", "heim", "furt", "hausen", "berg", "town", "ville", "ford", "port")
+
+
+GEHEIM_ANTEIL = 0.6        # this share of a secret's longer words in one sentence tells it (Regel 7)
+GEHEIM_WORT = 5            # the secret's words that count: this many letters at least
+
+
+def secret_told(rd, text, wuerfe=()):
+    """Secrets of the truth (rd["wahrheit"]["geheimnisse"]) a sentence tells while no check of this turn succeeded
+    (Regel 7, Review 27.10. Paket 7 G21): GEHEIM_ANTEIL of its words of GEHEIM_WORT letters in one sentence. The fault
+    „geheim“ strikes the sentence; the names are the secrets' first words only for the hint."""
+    if any(w.get("ok") for w in wuerfe or ()):
+        return []
+    out = []
+    for g in (rd.get("wahrheit") or {}).get("geheimnisse") or []:
+        ws = {w for w in _WORT.findall(str(g).lower()) if len(w) >= GEHEIM_WORT}
+        if len(ws) < 3:
+            continue
+        if any(sum(1 for w in ws if w[:max(GEHEIM_WORT, len(w) - 2)] in x.lower()) / len(ws) >= GEHEIM_ANTEIL for x in _saetze(text)):
+            out.append(" ".join(str(g).split()[:4]))
+    return out[:3]
+
+
+TAT_WORTE = 2              # an action with this many content words at least, none of them in the narration, is ignored
+
+
+def ignored(rd, story):
+    """Heroes whose action the narration names them in but does not take up (Review 27.10. Paket 7 G21): the action's
+    content words (German: capitalised words not first, English: words of 6 letters) are TAT_WORTE or more and no stem
+    of them stands in the text. The fault „ignoriert“ (NUR_HINWEIS) only sends a hint with a rewrite another fault asks
+    for, the panel adds nothing."""
+    low, ooc = story["text"].lower(), {x["pid"] for x in story.get("ooc") or []}
+    out = []
+    for pid, a in (rd.get("offen") or {}).items():
+        h = ((rd.get("plaetze") or {}).get(pid) or {}).get("held")
+        t = str(a.get("text") or "")
+        if not h or pid in ooc or not _name_in(h["name"], low) or not t:
+            continue
+        ws = re.findall(r"(?<=\s)[A-ZÄÖÜ][a-zäöüß]{3,}", t) if rd.get("lang") != "en" else re.findall(r"\b[a-z]{6,}\b", t.lower())
+        ws = {w.lower() for w in ws}
+        if len(ws) >= TAT_WORTE and not any(w[:max(4, len(w) - 2)] in low for w in ws):
+            out.append(h["name"])
+    return out[:3]
+
+
+def place_untold(rd, story):
+    """The names of places the narration lets the group arrive at that the map does not have (the fault „ort_erfunden“,
+    its sentence is struck; the group stays where the map has it)."""
+    import dungeon_karte
+    k = rd.get("karte")
+    if not k or not k.get("orte") or dungeon_karte.vault(rd) or story.get("ort_id"):
+        return []
+    bekannt = {w for o in k["orte"] for w in dungeon_karte._words(o.get("name"))} | \
+              {w for x in (rd.get("nsc") or {}).values() for w in dungeon_karte._words(x.get("name"))}
+    rx = re.compile(r"(?<!\w)(?:(?:" + "|".join(ORTSWORT) + r")\s+([A-ZÄÖÜ][\w-]{2,})|([A-ZÄÖÜ][\w-]*(?:" + "|".join(ORT_ENDE) + r")))(?!\w)")
+    out = []
+    for satz in _saetze(story["text"]):
+        if not _hat(satz, ANKUNFT) or _hat(satz, NEIN):
+            continue
+        for m in rx.finditer(satz):
+            n = m.group(1) or m.group(2)
+            ws = dungeon_karte._words(n)
+            if m.start() and ws and not set(ws) & bekannt and n.lower() not in ORT_ENDE:
+                out.append(n)
+    return list(dict.fromkeys(out))[:3]
 
 
 def hint(why, missing, lang):
@@ -1359,10 +1488,11 @@ async def retell_fixed(dm, rid, zug, grund):
             if text:
                 story = {"text": text, "ooc": []}
                 fs = faults(dm, alt, story, wuerfe)
-                if fs:
+                if any(w in HART for w, _ in fs):
+                    text = ""                    # a hard fault (a failed check told as done …): the old one stays
+                elif fs:
                     story = repair_all(alt, story, fs, wuerfe)
-                fault, _ = judge(dm, alt, story, wuerfe) if fs else ("", [])
-                text = "" if fault else story["text"]
+                    text = "" if judge(dm, alt, story, wuerfe)[0] else story["text"]
         if text:
             why = "ok"
             await asyncio.to_thread(dungeon_grenzen.replace, dm, rid, zug, text, {"neu": grund}, lambda cur: cur.pop("neu_laeuft", None))
