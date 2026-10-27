@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.155** AI Dungeon Master: errands from people (switch, off), whoever asks a person for work gets an errand from the panel (bring, talk, defeat) with reward, experience and two clues, done only by a handover, a talk or a victory, the narrator only tells the reason and the thanks (LlamaTale idea 2)
 - **V01.1.154** AI Dungeon Master: read thoughts (switch, off), with the spell or the potion the panel rolls an Intelligence check, only the reading player sees the person's wish, secret and attitude, the narrator only tells the listening (LlamaTale idea 5)
 - **V01.1.153** AI Dungeon Master: rune catalog with 13 runes and 7 runewords, checked by fixed rules (runes and sockets, data part)
 - **V01.1.152** AI Dungeon Master: witness rule (switch, off), what a hero does in front of people of the scene changes their attitude by a fixed table, attack and theft target −2 and everyone present −1, gift and help target +1, a successful theft stays unseen, the narrator only shows the reaction (LlamaTale idea 3)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.148** AI Dungeon Master: guide the players (switch, off), every narration names at least two things to take up and ends with a concrete choice, below it "What you can do here" as buttons only from the scene and checked ways of the narrator, level Beginner, Normal or Experienced per round, in the car "What can I do?", and quiet players get a question from the scene
 - **V01.1.147** Tests without chance: the phone, Pebble and warm-up tests check only text fields, not timestamps, random ids or sealed values that may hold a digit string by chance
 - **V01.1.146** AI Dungeon Master: 76 night foes in the bestiary, at night come undead, lycanthropes and night beasts (LlamaTale 1)
-- **V01.1.145** AI Dungeon Master: time of day by the panel, morning, day, evening and night by calendar and turns instead of the model, at night the shops are shut, without a light you roll outdoors in the dark at a disadvantage, and at night foes of the night come
 
 
 

@@ -5877,6 +5877,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Aufträge von Personen (V01.1.155, LlamaTale-Idee 2, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Aufträge von Personen* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung liest dungeon_auftraege.seen jede offene Aktion mit festen Wortlisten (ARBEIT, GEBEN, ZURUECK) und der Person der Szene, die sie nennt (dungeon_nsc.scene, dungeon_nsc.named). Ein neuer Auftrag (Person nicht feindselig, ohne offenen Auftrag, höchstens OFFEN_MAX = 3 offen) kommt aus roll: Art aus ARTEN (bringen ein Ding des Marktes, reden mit einer anderen Person, besiegen einen Gegner der Welt bis zur Stufe der Gruppe), Lohn LOHN mal Stufe der Gruppe, Erfahrung EP für alle am Tisch, zwei Spuren aus festen Daten (wo die Person laut Karte zuletzt war und ihr Beruf, dass Händler das Ding führen und sein Text, die Sage und der Text des Gegners), der Grund ist der Wunsch der Person von ihrer Karte. Erfüllt nur durch Belege: bringen, wenn die Aktion der Person das Ding gibt und der Held es trägt (das Ding geht weg); reden, wenn die andere Person in der Szene "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "in einer Aktion genannt ist; besiegen, wenn ein Treffer dieses Zuges so einen Gegner fällt. Zurückgeben macht die Person eine Stufe kühler. Die Erzählung bekommt die offenen Aufträge mit Spuren (auftraege) und die Entscheidungen des Zuges (auftrag_jetzt) als Daten und erzählt nur Grund und Dank; vergeben und schließen tut nur das Panel. Nach der Erzählung setzt auftraege.apply alles um: Gold an den Helden, Erfahrung an alle (ep_tisch, Grund „auftrag“), der Auftraggeber eine Stufe wärmer, Zeilen im Verlauf und in der Chronik. Jeder Platz sieht die Aufträge am Rand des Tisches mit Lohn und Spuren zum Aufklappen, auch in den Apps über die Tischansicht. Logs dungeon: auftraege | neu | bringen, | erfuellt | reden, | zurueck, | kein neuer. Live-Übersicht: vergeben, erfüllt, zurückgegeben."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gedanken lesen (V01.1.154, LlamaTale-Idee 5, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Gedanken lesen* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung prüft dungeon_gedanken.checks jede offene Aktion: wirkt sie in diesem Zug den Zauber gedanken_lesen (kraft aus check_powers) oder hat der Held noch den Segen des Zaubers oder des Tranks gedankentrank (Segen mit q aus QUELLEN, dungeon.bless merkt sich dafür die Katalog-Id) und ein Wort aus LESEN, und nennt sie eine Person der Szene (dungeon_nsc.scene, dungeon_nsc.named), würfelt das Panel eine Intelligenz-Probe statt der Proben des Modells für diesen Platz; die Schwierigkeit kommt aus der Haltung der Person zum Helden (SG: feindlich 15, neutral 13, zugeneigt 11). Die Erzählung bekommt die Probe als Beleg und nur in diesem Zug die Aufgabe, allein das Lauschen zu erzählen, nie den Inhalt: das Modell schreibt keine Zeile dafür, so kann das Geheimnis nicht über die Erzählung an den Tisch. Nach der Erzählung schreibt gedanken.apply eine feste Zeile aus der Karte der Perso"
 },
 {
@@ -11542,6 +11558,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Gedanken lesen (Funktionen → Meine Daten → „Gedanken lesen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wirkt ein Held den Zauber „Gedanken lesen“ oder hat er dessen Segen oder den des „Trank des Gedankenlesens“ und will in der Aktion die Gedanken einer Person der Szene hören, würfelt das Panel eine Intelligenz-Probe statt des Modells."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Aufträge von Personen (Funktionen → Meine Daten → „Aufträge von Personen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Fragt ein Held eine Person der Szene nach Arbeit, würfelt das Panel einen Auftrag aus festen Tabellen: etwas bringen (einen Trank oder ein Werkzeug vom Markt), mit einer anderen Person reden oder einen Gegner der Welt besiegen, dazu Lohn …"
 },
 {
 "lang": "de",
@@ -20853,6 +20877,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: errands from people (V01.1.155, LlamaTale idea 2, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\", idea only, own code): Admin switch *Features → AI Dungeon Master → Errands from people* (off; builds on \"NPC memory and chronicle\", applies to the round's host). Before the narration dungeon_auftraege.seen reads every open action with fixed word lists (ARBEIT, GEBEN, ZURUECK) and the person of the scene it names (dungeon_nsc.scene, dungeon_nsc.named). A new errand (person not hostile, without an open errand, at most OFFEN_MAX = 3 open) comes from roll: kind from ARTEN (bring a thing of the market, talk with another person, defeat a foe of the world up to the group's level), reward LOHN times the group's level, experience EP for everyone at the table, two clues from fixed data (where the person was last by the map and its occupation, that merchants sell the thing and its text, the foe's lore and text), the reason is the person's wish from its card. Done only by receipts: bring, when the action gives the person the thing and the hero carries it (the thing goes); talk, when the other person is in the scene and named in an action; defeat, when a hit of "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "this turn fells such a foe. Giving it back makes the person one step cooler. The narration gets the open errands with clues (auftraege) and the turn's decisions (auftrag_jetzt) as data and only tells the reason and the thanks; only the panel gives and closes. After the narration auftraege.apply carries it out: gold to the hero, experience to everyone (ep_tisch, reason \"auftrag\"), the giver one step warmer, lines in the log and the chronicle. Every seat sees the errands at the side of the table with reward and clues to open, in the apps too through the table view. Logs dungeon: auftraege | neu | bringen, | erfuellt | reden, | zurueck, | kein neuer. Live overview: given, done, given back."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: read thoughts (V01.1.154, LlamaTale idea 5, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\", idea only, own code): Admin switch *Features → AI Dungeon Master → Read thoughts* (off; builds on \"NPC memory and chronicle\", applies to the round's host). Before the narration dungeon_gedanken.checks looks at every open action: when it casts the spell gedanken_lesen this turn (kraft from check_powers) or the hero still has the blessing of the spell or of the potion gedankentrank (a blessing with q from QUELLEN, dungeon.bless keeps the catalog id for it) and a word of LESEN, and it names a person of the scene (dungeon_nsc.scene, dungeon_nsc.named), the panel rolls an Intelligence check in place of the model's checks for that seat; how hard comes from the person's attitude towards the hero (SG: hostile 15, neutral 13, fond 11). The narration gets the check as a receipt and, only in this turn, the task to tell only the listening, never the content: the model writes no line for it, so the secret cannot reach the table through the narration. After the narration gedanken.apply writes a fixed line from the person's card (wish, secret, attitude towards the hero)"
 },
 {
@@ -26334,6 +26374,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Read thoughts (Features → My data → \"Read thoughts\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a hero casts the spell \"Read thoughts\" or still has its blessing or that of the \"Potion of mind reading\" and the action wants to hear the thoughts of a person of the scene, the panel rolls an Intelligence check instead of the model."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Errands from people (Features → My data → \"Errands from people\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a hero asks a person of the scene for work, the panel rolls an errand from fixed tables: bring something (a potion or a tool of the market), talk with another person or defeat a foe of the world, plus a reward in gold (times the gro …"
 },
 {
 "lang": "en",

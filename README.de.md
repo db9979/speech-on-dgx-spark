@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.155** KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
 - **V01.1.154** KI-Dungeon-Master: Gedanken lesen (Schalter, aus), mit dem Zauber oder dem Trank würfelt das Panel eine Intelligenz-Probe, nur der lesende Spieler sieht Wunsch, Geheimnis und Haltung der Person, der Erzähler erzählt nur das Lauschen (LlamaTale-Idee 5)
 - **V01.1.153** KI-Dungeon-Master: Runen-Katalog mit 13 Runen und 7 Runenwörtern, geprüft nach festen Regeln (Runen und Sockel, Teil Daten)
 - **V01.1.152** KI-Dungeon-Master: Zeugen-Regel (Schalter, aus), was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach fester Tabelle, Angriff und Diebstahl Ziel −2 und alle Anwesenden −1, Geschenk und Hilfe Ziel +1, ein gelungener Diebstahl bleibt unbemerkt, der Erzähler zeigt nur die Reaktion (LlamaTale-Idee 3)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.148** KI-Dungeon-Master: Spieler anleiten (Schalter, aus), jede Erzählung nennt mindestens zwei greifbare Ansatzpunkte und endet mit einer konkreten Wahl, darunter „Das kannst du hier“ als Knöpfe nur aus der Szene und geprüften Wegen des Erzählers, Stufe Einsteiger, Normal oder Erfahren je Runde, im Auto „Was kann ich tun?“, und stille Spieler bekommen eine Frage aus der Szene
 - **V01.1.147** Tests ohne Zufall: Telefon-, Pebble- und Vorwärmen-Test prüfen nur Textfelder, nicht Zeitstempel, Zufalls-IDs oder verschlüsselte Werte, die eine Ziffernfolge zufällig enthalten können
 - **V01.1.146** KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium, nachts kommen Untote, Werwesen und Nachttiere (LlamaTale 1)
-- **V01.1.145** KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
 
 
 

@@ -2781,6 +2781,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-weg:hover{border-color:var(--t-gold,var(--acc))}
 .dm-auftrag{display:flex;flex-direction:column;gap:2px;margin:8px 0;padding:8px 10px;border-radius:10px;border:1px solid var(--t-gold,var(--acc));background:color-mix(in srgb,var(--t-gold,var(--acc)) 10%,transparent)}
 .dm-auftrag small{font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}.dm-auftrag b{font-weight:600;font-size:14px;overflow-wrap:anywhere}.dm-auftrag.ok{opacity:.7}.dm-auftrag.ok b{text-decoration:line-through}
+.dm-errand summary{display:flex;flex-direction:column;gap:2px;cursor:pointer;list-style:none}.dm-errand small.mut{text-transform:none;letter-spacing:0;font-size:12px;display:block;margin-top:4px}
 /* dice and bonuses stand out in every text of the game (dungeon.js dmFx, dmBo) */
 .dm-wf{display:inline-block;padding:0 6px;border-radius:6px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7a3dd6;background:color-mix(in srgb,#7a3dd6 13%,transparent);border:1px solid color-mix(in srgb,#7a3dd6 35%,transparent)}
 .dm-bo{display:inline-block;padding:0 5px;border-radius:6px;font-weight:700;font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}

@@ -8636,6 +8636,112 @@ class Fight(Turns):
         t = gd.for_live()
         self.assertTrue(t["versuche"] >= 1 and t["gelesen"] >= 1 and t["verschlossen"] >= 1, t)
 
+    def test_errands_from_people_done_only_by_receipts(self):
+        """LlamaTale idea 2 (Dominik 2026-10-27 „1-7“, switch dungeonauftraege): a hero asking a person of the scene for
+        work gets an errand the panel rolls (kind, target, reward times the group's level, experience, two clues from
+        fixed data, the reason from the person's wish); at most OFFEN_MAX open and one per person; done only by receipts
+        (the thing given while carried, the other person named in the scene, a hit that fells such a foe); given back
+        the person is a step cooler; the narration gets them as data; the reward, the experience, the feed and the
+        chronicle by the panel; off nothing."""
+        import dungeon_auftraege as au
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_auftraege")
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""},
+                                                              {"name": "Mira", "rolle": "Gast", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        helpers.set_config(dungeon_nsc=True)
+        self.spawned.clear()
+        self.act_all("Wir betreten die Schenke.")
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen, Mira sitzt am Fenster.",
+                                         "frage_an": "", "nsc": []}])
+        r = dungeon.rules()
+        rd["offen"] = {self.host: {"text": "Oskar, hast du Arbeit für mich?", "t": 0}}
+        self.assertEqual(au.seen(dungeon, r, rd), [])                                   # off
+        helpers.set_config(dungeon_auftraege=True)
+        ev = au.seen(dungeon, r, rd, rng=random.Random(1))
+        self.assertEqual([(e["was"], e["auftrag"]["geber"]) for e in ev], [("neu", "oskar")])
+        a = ev[0]["auftrag"]
+        self.assertIn(a["art"], au.ARTEN)
+        self.assertTrue(1 <= len(a["spuren"]) <= 2 and a["lohn"] >= au.LOHN[a["art"]][0], a)
+        for art in au.ARTEN:                         # every kind by the fixed tables, with a clue
+            with mock.patch("random.Random.choice", lambda self, xs, art=art: art if art in xs else xs[0]):
+                x = au.roll(dungeon, r, rd, "oskar", "arvid", random.Random(2))
+            self.assertEqual(x["art"], art)
+            self.assertTrue(x["spuren"] and all(len(s) == 2 and s[0] and s[1] for s in x["spuren"]), x)
+        rd["nsc"]["oskar"]["haltung"] = {"arvid": -1}                                       # hostile: no errand
+        self.assertEqual(au.seen(dungeon, r, rd), [])
+        rd["nsc"]["oskar"]["haltung"] = {}
+        # a bring errand and a talk errand, done only by receipts
+        h = rd["plaetze"][self.host]["held"]
+        bring = dict(au.roll(dungeon, r, rd, "oskar", "arvid", random.Random(1)), art="bringen", ziel="heiltrank", ziel_name=["Heiltrank", "Healing potion"])
+        talk = dict(au.roll(dungeon, r, rd, "mira", "arvid", random.Random(1)), art="reden", ziel="oskar", ziel_name=["Oskar", "Oskar"])
+        au.apply(dungeon, rd, [{"was": "neu", "pid": self.host, "auftrag": bring}, {"was": "neu", "pid": self.host, "auftrag": talk}])
+        self.assertEqual([(x["id"], x["status"]) for x in rd["auftraege"]], [("a1", "offen"), ("a2", "offen")])
+        self.assertTrue(any(e["art"] == "system" and str(e["text"][0]).startswith("Neuer Auftrag von Oskar") for e in rd["log"]))
+        rd["offen"] = {self.host: {"text": "Ich gebe Oskar den Heiltrank.", "t": 0}}
+        h["tasche"] = [x for x in h["tasche"] if x["id"] != "heiltrank"]
+        self.assertEqual([e for e in au.seen(dungeon, r, rd) if e["id"] == "a1"], [])     # not carried: not done
+        h["tasche"].append(dungeon.item(r, "heiltrank"))
+        ev = au.seen(dungeon, r, rd)
+        self.assertEqual([(e["was"], e["id"]) for e in ev], [("erfuellt", "a1"), ("erfuellt", "a2")])   # Oskar named for Mira's talk too
+        f = au.facts(rd, ev)
+        self.assertEqual(len(f["auftraege"]), 2)
+        self.assertEqual(f["auftrag_jetzt"][0]["auftrag"], "Bring Oskar Heiltrank.")
+        gold, n = h["gold"], sum(1 for x in h["tasche"] if x["id"] == "heiltrank")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            au.apply(dungeon, rd, ev[:1])
+        self.assertIn("dungeon: auftraege | erfuellt | bringen", out.getvalue())
+        self.assertEqual((h["gold"], sum(1 for x in h["tasche"] if x["id"] == "heiltrank")), (gold + bring["lohn"], n - 1))
+        self.assertEqual(rd["nsc"]["oskar"]["haltung"]["arvid"], 1)
+        self.assertTrue(all(p["held"].get("ep_tisch", 0) >= bring["ep"] for p in rd["plaetze"].values() if p.get("held")))
+        self.assertTrue(any(c["t"][0] == "Arvid erfüllt den Auftrag von Oskar." for c in rd["chronik"]))
+        au.apply(dungeon, rd, [{"was": "zurueck", "id": "a2", "pid": self.host}])          # given back: Mira cooler
+        self.assertEqual((rd["auftraege"][1]["status"], rd["nsc"]["mira"]["haltung"]["arvid"]), ("zurueck", -1))
+        rd["offen"] = {self.host: {"text": "Ich gebe Mira den Auftrag zurück.", "t": 0}}
+        self.assertEqual(au.seen(dungeon, r, rd), [])                                      # nothing open from Mira any more
+        # a defeat errand: a hit that fells such a foe
+        foe = au._foes(dungeon, r, rd, 1)[0]
+        au.apply(dungeon, rd, [{"was": "neu", "pid": self.host, "auftrag": dict(bring, status="offen", art="besiegen", ziel=foe["id"], ziel_name=list(foe["name"]), geber="mira", geber_name="Mira")}])
+        rd["nsc"]["mira"]["haltung"]["arvid"] = 0
+        rd["kampf"] = {"gegner": [{"id": foe["id"], "name": "Wolf 1"}]}
+        rd["offen"] = {}
+        self.assertEqual(au.seen(dungeon, r, rd, [{"pid": self.gp, "gegner": "Wolf 1", "faellt": False}]), [])
+        self.assertEqual([(e["was"], e["pid"]) for e in au.seen(dungeon, r, rd, [{"pid": self.gp, "gegner": "Wolf 1", "faellt": True}])],
+                         [("erfuellt", self.gp)])
+        rd.pop("kampf")
+        # at most OFFEN_MAX open
+        for k in ("p1", "p2", "p3"):
+            rd["nsc"][k] = {"name": k.upper() + "anna", "karte": {}, "kanten": [], "haltung": {}, "gesehen": rd["zug"]}
+        au.apply(dungeon, rd, [{"was": "neu", "pid": self.host, "auftrag": dict(bring, status="offen", geber=k, geber_name=k.upper() + "anna")} for k in ("p1", "p2", "p3")])
+        self.assertEqual(len(au.open_(rd)), au.OFFEN_MAX)
+        v = au.view(rd)
+        self.assertTrue(v and all({"text", "von", "lohn", "status", "spuren"} <= set(x) for x in v))
+        # the whole turn: the narration gets the open errands, the panel gives the new one
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["auftraege"] = []
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        self.spawned.clear()
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Oskar, hast du einen Auftrag für mich?", "zug": rd["zug"]}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich schaue mich um.", "zug": rd["zug"]}).status_code, 200)
+        seen = []
+        real = dungeon.facts
+
+        def facts(r, rd, *a, **k):
+            seen.append(real(r, rd, *a, **k))
+            return seen[-1]
+        with mock.patch("dungeon.facts", facts), contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, {"erzaehlung": "Oskar beugt sich vor und erzählt Arvid, was er braucht.", "frage_an": "", "nsc": []}])
+        self.assertIn('"auftrag_jetzt"', seen[-1])
+        self.assertIn("dungeon: auftraege | neu |", out.getvalue())
+        self.assertEqual([(x["geber"], x["status"]) for x in rd["auftraege"]], [("oskar", "offen")])
+        self.assertEqual(dungeon.view(self.rid, self.gp)["auftraege"][0]["von"], "Oskar")      # no secret: every seat sees it
+        t = au.for_live()
+        self.assertTrue(t["neu"] >= 1 and t["erfuellt"] >= 1 and t["zurueck"] >= 1, t)
+
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
         every person has six traits from −3 to +3 and a goal on three levels (today 2 steps, soon 4 from the truth's

@@ -217,6 +217,7 @@
     "dungeon_anleiten": false,
     "dungeon_zeugen": false,
     "dungeon_gedanken": false,
+    "dungeon_auftraege": false,
     "dungeon_chronik": false,
     "dungeon_buch": false,
     "dungeon_haltung": false,

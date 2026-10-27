@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.155** · 2026-10-27 · KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
 - **V01.1.154** · 2026-10-27 · KI-Dungeon-Master: Gedanken lesen (Schalter, aus), mit dem Zauber oder dem Trank würfelt das Panel eine Intelligenz-Probe, nur der lesende Spieler sieht Wunsch, Geheimnis und Haltung der Person, der Erzähler erzählt nur das Lauschen (LlamaTale-Idee 5)
 - **V01.1.153** · 2026-10-27 · KI-Dungeon-Master: Runen-Katalog, 13 Runen (Uruz bis Tiwaz, Wirkung je Waffe, Rüstung und Schild) und 7 Runenwörter (Glut bis Siegereid) mit festen Prüfregeln, noch ohne Wirkung im Spiel (Daten, Plan Runen und Sockel)
 - **V01.1.152** · 2026-10-27 · KI-Dungeon-Master: Zeugen-Regel (Schalter, aus), was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach fester Tabelle, Angriff und Diebstahl Ziel −2 und alle Anwesenden −1, Geschenk und Hilfe Ziel +1, ein gelungener Diebstahl bleibt unbemerkt, der Erzähler zeigt nur die Reaktion (LlamaTale-Idee 3)
