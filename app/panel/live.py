@@ -1413,6 +1413,11 @@ def snapshot(view="admin", now=None):
         dgn["echt"] = dungeon_echt.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["echt"] = {}
+    try:   # Runen und Sockel (dungeon_runen.py): numbers on the game's line
+        import dungeon_runen
+        dgn["runen"] = dungeon_runen.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["runen"] = {}
     try:   # Helden kommentieren selbst (dungeon_kommentar.py): numbers on the game's line
         import dungeon_kommentar
         dgn["kommentar"] = dungeon_kommentar.for_live() if dgn.get("on") else {}
@@ -2088,6 +2093,9 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['echt']['echt']} echte Würfe ({dgn['echt'].get('angriff', 0)} Angriffe gefragt), {dgn['echt']['rueckfall']} nach der Wartezeit vom Panel"
                            f" ({dgn['echt'].get('kurz', 0)} mit kurzer Wartezeit), {dgn['echt']['abgelehnt']} abgelehnt"
                            if (dgn.get("echt") or {}).get("gefragt") or (dgn.get("echt") or {}).get("abgelehnt") else "")
+                        + (f" · heute {dgn['runen']['gefunden']} Runen gefunden, {dgn['runen']['eingesetzt']} eingesetzt, {dgn['runen']['abgelehnt']} abgelehnt, "
+                           f"{dgn['runen']['gekauft']} gekauft, {dgn['runen']['verkauft']} verkauft, {dgn['runen']['sockel']} Funde mit Sockeln"
+                           if any((dgn.get("runen") or {}).values()) else "")
                         + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
                            f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"
                            if (dgn.get("knapp") or {}).get("gefragt") or (dgn.get("knapp") or {}).get("abgelehnt") else "")

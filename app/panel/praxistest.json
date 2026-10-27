@@ -4167,6 +4167,13 @@
 "titel": "Dungeon-Master: Merkmale der Karte im Porträt",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik sowie Gesichter für NSCs an. A: In einer neuen Runde eine Person treffen; ihre Karte unter Personen (NSC) nennt Haar, Augen und Statur. B: Das Porträt zeigt dieselben Merkmale (etwa graues Haar bei einer alten Person, Bart nur bei einem Mann).",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P620",
+"v": 1190,
+"titel": "Dungeon-Master: Runen und Sockel",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Runen und Sockel an. Ein paar Kämpfe spielen, bis eine Rune im Runenbeutel liegt (Heldenbogen → Tasche) und ein Fund mit Sockeln kommt (Zeile „Sockel“). Rune wählen, Ding wählen: die Vorschau nennt die Wirkung und die Stärke; „Einsetzen“ setzt sie fest. Im Kampf geht es nicht. Beim Krämer Runen kaufen und verkaufen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

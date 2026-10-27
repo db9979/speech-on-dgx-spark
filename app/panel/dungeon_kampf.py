@@ -260,7 +260,7 @@ def rk(dm, r, h):
     base = dm._c(r, h["an"]["koerper"]).get("schutz", 0) if (h.get("an") or {}).get("koerper") else 0
     g = g if base < 2 else min(g, 2) if base < 3 else min(g, 0)
     # a blessing on Geschick (Schild, Hast, a cat's potion) is magic: it counts past the armour's cap
-    return 10 + 2 * body + rest + g + dm.blessing(h, "geschick") + len(effects(dm, r, h, "wachsam"))
+    return 10 + 2 * body + rest + g + dm.blessing(h, "geschick") + len(effects(dm, r, h, "wachsam")) + dm.runen.armour(dm, r, h)
 
 
 def _mal(n):
@@ -687,7 +687,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
             out.append(spell_save(dm, r, rd, h, p["pid"], g, c, cw, wuerfel, art, c["name"][li].split(": ", 1)[-1] if gebannt else mit, life, rng))
             continue
         # Kampf-Audit M3: a spell's own bonus does not stack with the blessing already on the value (the higher counts)
-        bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (max(0, plus - dm.blessing(h, wert)) if spell else 0)
+        bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (max(0, plus - dm.blessing(h, wert)) if spell else 0) \
+            + (dm.runen.hit(dm, r, wp) if wp and not spell else 0)      # a weapon's runes only for its attack (dungeon_runen)
         mut = False
         gl = False
         for _ in range(2):
@@ -707,7 +708,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
         n, wirkt, extra, raub = 0, "", [], 0
         if hit:
             n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.body(r, h, wert, dinge=False) + (0 if spell else plus)   # M5: with blessing
-                    + (dm.KRAFT["schaden_plus"] * len(dm.kraft(r, h, "schaden_plus")) if wp and not spell else 0))   # Waffenmeister (B7)
+                    + (dm.KRAFT["schaden_plus"] * len(dm.kraft(r, h, "schaden_plus")) + dm.runen.damage(dm, r, wp) if wp and not spell else 0))   # Waffenmeister (B7), runes
             n, wirkt = against(g, art, n, magisch=bool(spell) or bool(wp and not wp.get("u") and wp.get("bonus", 0) >= 1))
             for e in effects(dm, r, h, "schaden", wp) if wp and not spell else ():   # a burning blade: its own kind, its own resistances
                 m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))

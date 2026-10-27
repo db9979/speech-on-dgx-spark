@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.190** AI Dungeon Master: runes and sockets, stage 1: finds bring sockets and runes, the trader sells the first four, set with a preview and never in a fight, the panel works out effect and cap (plan "runes and sockets")
 - **V01.1.189** AI Dungeon Master: portraits show hair, eyes, beard and build from the person's card
 - **V01.1.188** AI Dungeon Master: an ability counts only when it always works or is used, per value only the strongest bonus of jewel, gear and ability counts, the panel computes Weapon master, Tough, Laying on hands and Revive, „rare“ from level 3 and „epic“ from 5, the bench plays with heroes like at the table and all 12 classes, budget measured anew, peaceful creatures never as foes, three small night foes for science fiction (review 27.10. package 11)
 - **V01.1.187** AI Dungeon Master: a new hero needs its gender, the voice list is grouped by gender, a new gender takes a fitting voice, people get the same pronoun check as heroes (review 27.10. package 10)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.183** AI Dungeon Master: small gestures show at the table, after 2 minutes of quiet, at most twice a turn, never in a fight or the car
 - **V01.1.182** AI Dungeon Master: a person's portrait follows the gender on its card, "divers" is painted androgynous
 - **V01.1.181** AI Dungeon Master: guardian and master rooms of the vaults follow the fight's budget, the panel fills the number of foes by experience, a boss counts with its life factor
-- **V01.1.180** AI Dungeon Master: only people become people, never foes, heroes, companions, groups or role words, a merchant sells by its name and gets a card, a person in a fight shows its portrait (review 27.10. package 8)
 
 
 

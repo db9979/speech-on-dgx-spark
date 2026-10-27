@@ -353,7 +353,7 @@ _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
 WAS = ("anlegen", "ablegen", "trinken", "auftragen", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
-       "geschlecht", "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst", "questgeben", "questablegen", "questaufheben")
+       "geschlecht", "kaufen", "verkaufen", "erkennen", "aufheben", "fallen", "dienst", "questgeben", "questablegen", "questaufheben", "rune")
 TASCHE = 12               # items in one bag
 ANGRIFFE_MAX = 5          # a foe's multiattack at most (Tabletop-Punkt 12, "angriffe" 2 to 5 in the bestiary)
 EFFEKT_AB = 2             # the rank of the rarity („rar“) from which an item gets an effect
@@ -1046,7 +1046,7 @@ def life(r, h):
     Konstitution (at least 1 a level)."""
     k, m = _by(r, "klassen")[h["klasse"]], mod(h["werte"].get(KON, 10))
     plus = KRAFT["leben_je_stufe"] * len(kraft(r, h, "leben_je_stufe"))      # Zäh (Review 27.10. B7)
-    return max(1, k["leben"] + m) + (h["stufe"] - 1) * (max(1, k["leben_plus"] + m) + plus)
+    return max(1, k["leben"] + m) + (h["stufe"] - 1) * (max(1, k["leben_plus"] + m) + plus) + runen.life(_me, r, h)
 
 
 def relife(r, h):
@@ -1443,6 +1443,7 @@ def fix_hero(r, h):
         if it and not ok(it):
             h["an"][k] = None
     right_place(r, h)
+    runen.fix(_me, r, h)                  # the rune bag and the sockets as the rules allow (dungeon_runen)
     fa = {x["id"] for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
     h["faehigkeiten"] = [x for x in h.get("faehigkeiten") or [] if x in fa]
     h["faehigkeiten"] += [x for x in _by(r, "klassen")[h["klasse"]].get("start_faehigkeiten") or [] if x not in h["faehigkeiten"]]
@@ -1522,7 +1523,7 @@ def item_effects(r, it):
     if not it or it.get("u"):
         return []
     eff = _by(r, "effekte")
-    return [eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff]
+    return [eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff] + runen.effects(_me, r, it)   # runes (dungeon_runen)
 
 
 def blessing(h, wert):
@@ -1540,6 +1541,7 @@ def worn_bonuses(r, h, wert, waffen=True):
         if it.get("wert") == wert:
             out.append((it.get("bonus", 0), it))
         out += [(e["bonus"], it) for e in item_effects(r, it) if e["wert"] == wert]
+        out += [(b, it) for v, b in runen.value_bonuses(_me, r, h, it) if v == wert]   # Ehwaz, Ansuz (dungeon_runen)
     return out
 
 
@@ -1597,7 +1599,7 @@ def wear_off(rd):
 
 def resists(r, h):
     """The damage kinds a hero halves: what its worn things and its potions' protection give (Schadensarten Punkt 4)."""
-    out = {a for it in worn(h) for a in _c(r, it).get("widerstand") or []}
+    out = {a for it in worn(h) for a in _c(r, it).get("widerstand") or []} | runen.resists(_me, r, h)
     return out | {x["art"] for x in h.get("schutz") or []}
 
 
@@ -1810,7 +1812,7 @@ def price(r, it):
     if c.get("seltenheit") and "preis" in c:
         return c["preis"]
     f = s.get("preis", 1)
-    return max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f))
+    return max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f)) + runen.worth(r, it)
 
 
 def strength(r, it):
@@ -1821,9 +1823,9 @@ def strength(r, it):
     b = 0 if it.get("u") else it.get("bonus", 0)
     w = [e.get("wirkung") for e in item_effects(r, it)]
     if c["art"] == "waffe":
-        return (c["schaden"] + 1) / 2 + b + (kampf.WIRKUNG_W + 1) / 2 * w.count("schaden")
+        return (c["schaden"] + 1) / 2 + b + (kampf.WIRKUNG_W + 1) / 2 * w.count("schaden") + runen.extra(_me, r, it)
     if c["art"] == "ruestung":
-        return (c.get("schutz", 0) + b) * (2 if places(r, c)[0] == "koerper" else 1) + w.count("wachsam")
+        return (c.get("schutz", 0) + b) * (2 if places(r, c)[0] == "koerper" else 1) + w.count("wachsam") + runen.extra(_me, r, it)
     if c["art"] == "schmuck":
         return b
     return None
@@ -1847,8 +1849,8 @@ def tool_plus(r, it):
 
 
 def rabatt(r, h):
-    """The merchant's discount in percent: 5 per point of the Charisma bonus, at most 20 (4a)."""
-    return min(RABATT[1], RABATT[0] * max(0, total(r, h, "charisma")))
+    """The merchant's discount in percent: 5 per point of the Charisma bonus and Fehu's (dungeon_runen), at most 20 (4a)."""
+    return min(RABATT[1], RABATT[0] * max(0, total(r, h, "charisma")) + runen.discount(_me, r, h))
 
 
 def buy_price(r, h, it):
@@ -1904,7 +1906,7 @@ def item_view(r, it, lang):
         if c.get("segen"):
             sg = c["segen"]
             zeilen.append(("{} +{} für {} Züge" if not li else "{} +{} for {} turns").format(w[sg["wert"]]["name"][li], sg["bonus"], sg["zuege"]))
-    zeilen += [e["satz"][li] for e in item_effects(r, it)]
+    zeilen += [e["satz"][li] for e in item_effects(r, it)] + runen.item_lines(_me, r, it, li)
     if c.get("hilft"):
         zeilen.append(tool_line(r, c, li, it))
     name, satz = legenden.text(it, li) or (it.get("eigen") or c["name"][li], it.get("satz", ""))
@@ -1912,6 +1914,7 @@ def item_view(r, it, lang):
             "satz": "" if u else satz, "legende": bool(it.get("leg")) and not u, "fund": it.get("fund", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
             "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")), "oel": bool(c.get("oel")),
             "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li],
+            "so": it.get("so", 0), "ru": [runen.by(r)[x]["name"][li] for x in it.get("ru") or [] if x in runen.by(r)],
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
 
 
@@ -1955,6 +1958,7 @@ def hero_view(r, h, lang, full=True, welt="", zug=None):
                segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
                       for x in h.get("segen") or []],
                widerstand=[kampf.ART_ZEICHEN[a] + " " + kampf.ART_NAME[a][li] for a in sorted(resists(r, h))],
+               runen=runen.bag(_me, r, h, lang, welt) if h.get("runen") or any(x.get("so") for x in h["tasche"] + worn(h)) else None,
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa],
                narben=narben.view(r, h, lang))
     return out
@@ -2077,7 +2081,8 @@ def open_market(r, rd, name="", satz="", rng=None):
         nsc.merchant(r, rd, name, HAENDLER[art][0], rng)
     else:
         name = HAENDLER[art][0][li] if li or rng.random() < 0.5 else HAENDLER_IN[art]
-    rd["markt"] = {"name": name, "satz": satz, "ware": ware, "art": art, "kasse": KASSE * stufe}
+    rd["markt"] = {"name": name, "satz": satz, "ware": ware, "art": art, "kasse": KASSE * stufe,
+                   **({"runen": st} if (st := runen.stock(_me, r, rd, art, rng)) else {})}     # a trader's runes (dungeon_runen)
     _log(rd, "markt", name=rd["markt"]["name"], auf=True)
     _day.bump("maerkte")
     print(f"dungeon: markt | auf | {len(ware)} waren", flush=True)
@@ -4291,7 +4296,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             kampf.turn_dial(_me, r, rd)           # the game master's dial after the fight's end (Idee 6)
             dungeon_karte.won(rd)                # the fight won in a vault's room opens it in the same turn
         if war and not rd.get("kampf") and held and rd["log"][-1]["art"] == "kampf" and rd["log"][-1]["besiegt"]:
+            besiegt = rd["log"][-1]["besiegt"]
             give_loot(r, rd, held, "boss" if rd["log"][-1].get("boss") else "gegner", stufe, rng)   # a boss: its own better find
+            runen.fight_gold(_me, r, rd, held, besiegt)    # Fehu in a weapon (dungeon_runen)
         elif not war and story.get("begegnung") and held:
             kampf.start(_me, r, rd, held, story["begegnung"], li)
         umgebung.prepare(r, rd, rng)              # the props where the fight goes on (round 2, idea 3)
@@ -4444,7 +4451,7 @@ def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz="", wer=None)
     """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
     heavy (2a); the log and the journal say so."""
     i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd, wer)
-    put_find(r, rd, held, i, it, gold, anlass)
+    put_find(r, rd, held, i, it, gold, anlass, rng)
 
 
 def first_find(r, rd, wuerfe, rng=None):
@@ -4478,9 +4485,11 @@ def fund_ort(rd):
     return str(k.get("drin") or k.get("hier") or (rd.get("szene") or {}).get("ort") or "")
 
 
-def put_find(r, rd, held, i, it, gold, anlass):
+def put_find(r, rd, held, i, it, gold, anlass, rng=None):
     """A drawn find into the bag of held[i] or on the ground; a legend counted once a campaign; log, day count and
-    the place it was made at (rd["fundorte"], one find a place by the model or a passed search)."""
+    the place it was made at (rd["fundorte"], one find a place by the model or a passed search); sockets and a rune
+    by the rules of dungeon_runen (only while on)."""
+    runen.give_sockets(_me, r, rd, it, rng)
     rd["fundorte"] = [o for o in rd.get("fundorte") or [] if o != fund_ort(rd)][-FUNDORTE_MAX + 1:] + [fund_ort(rd)]
     if it.get("leg"):
         rd["legenden"] = (rd.get("legenden") or []) + [it["leg"]]      # once a campaign (end_chapter keeps the list)
@@ -4494,6 +4503,7 @@ def put_find(r, rd, held, i, it, gold, anlass):
     _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden)
     _day.bump("beute")
     print(f"dungeon: beute | {anlass} | {it['s']}", flush=True)
+    runen.find(_me, r, rd, held, anlass, rng)
 
 
 async def ask_model(system, user, schema, name, tokens):
@@ -6091,9 +6101,11 @@ def _cast(r, rd, pid, h, c, bonus, name, an=None):
 
 def hero_act(rid, pid, b):
     """A hero's own move outside the story: put an item on, drink a potion, give an item to another hero, spend a
-    value point, pick an offered ability. Fixed rules, never the model."""
+    value point, pick an offered ability, set a rune (dungeon_runen.act). Fixed rules, never the model. Returns what
+    the seat's view gets besides (a rune's preview) or None."""
     r = rules()
     was = b.get("was")
+    out = None
     if was not in WAS:
         raise ValueError("was")
     with _lock:
@@ -6141,12 +6153,16 @@ def hero_act(rid, pid, b):
                 bag_add(r, h, h["an"][x])
                 h["an"][x] = None
             h["an"][k] = it
+            if life(r, h) != h["leben_max"]:
+                relife(r, h)                      # a rune of life in what it wears (dungeon_runen) counts at once
         elif was == "ablegen":
             k = b.get("platz")
             if k not in SLOTS or not h["an"].get(k) or len(h["tasche"]) >= TASCHE:
                 raise ValueError("ablegen")
             bag_add(r, h, h["an"][k])
             h["an"][k] = None
+            if life(r, h) != h["leben_max"]:
+                relife(r, h)
         elif was == "trinken":
             c = _c(r, it) if it else None
             if not c or c["art"] != "trank" or c.get("oel"):
@@ -6163,10 +6179,11 @@ def hero_act(rid, pid, b):
                 ehre.count(rd, pid, rettet=1)
             if c.get("heilung"):
                 was0 = z["leben"]
-                n_ = heal(z, c["heilung"] + it.get("bonus", 0))
+                zahl = c["heilung"] + it.get("bonus", 0) + runen.potion(_me, r, z)    # Berkano in a shield (dungeon_runen)
+                n_ = heal(z, zahl)
                 if zid != pid:
                     ehre.count(rd, pid, heilung=n_)
-                _log(rd, "folge", pid=zid, name=z["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=z["leben"])
+                _log(rd, "folge", pid=zid, name=z["name"], was="heilung", zahl=zahl, leben=z["leben"])
                 stood_up(rd, zid, z, was0)
             if c.get("segen"):
                 bless(z, c["segen"], item_view(r, it, rd["lang"])["name"], q=c["id"])
@@ -6263,9 +6280,12 @@ def hero_act(rid, pid, b):
                 keep_seat(other)
         elif was in ("questgeben", "questablegen", "questaufheben"):   # quest things (Punkt 15): fixed rules
             quest.hero(_me, rd, pid, b, was)
+        elif was == "rune":                       # runes and sockets (dungeon_runen): preview, set, buy, sell
+            out = runen.act(_me, r, rd, pid, h, b)
         _write(d)
         keep_seat(p, h)
     print(f"dungeon: held | {was}", flush=True)
+    return out
 
 
 def shop(r, rd, pid, h, was, b, it):
@@ -6339,6 +6359,7 @@ def market_view(r, rd, h, lang):
             "ware": [dict(item_view(r, x, lang), preis=buy_price(r, h, x) if h else buy_price_full(r, x)) for x in m["ware"]],
             "verkauf": {x["i"]: sell_price(r, x, m) for x in h["tasche"]} if h else {},
             "erkennen": {x["i"]: name_price(r, x) for x in (h["tasche"] + worn(h) if h else []) if x.get("u")},
+            **({"runen": rv} if (rv := runen.market_view(_me, r, rd, h, lang)) and (rv["ware"] or rv["verkauf"]) else {}),
             **({"zu": True} if tageszeit.nachts(rd) else {})}   # shut at night (LlamaTale idea 1)
 
 
@@ -6735,8 +6756,8 @@ async def held(rid: str, request: Request, prof=Depends(browser_profile)):
 
     def go():
         pid = _seat_uid(rid, uid)
-        hero_act(rid, pid, b)
-        return view(rid, pid)
+        out = hero_act(rid, pid, b)
+        return dict(view(rid, pid), **(out or {}))
     try:
         return await asyncio.to_thread(go)
     except KNOWN as e:
@@ -7753,8 +7774,8 @@ async def gast_held(request: Request):
     b, rid, pid = await _guest(request)
 
     def go():
-        hero_act(rid, pid, b)
-        return view(rid, pid)
+        out = hero_act(rid, pid, b)
+        return dict(view(rid, pid), **(out or {}))
     try:
         return await asyncio.to_thread(go)
     except KNOWN as e:

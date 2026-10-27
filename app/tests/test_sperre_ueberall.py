@@ -299,6 +299,7 @@ ADMIN_ON_OK = {
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
     "dungeon_buch.py:due_once": "the background minute: Spark-wide early out while the switch is off; each profile then asks features.allowed (dungeon_buch.on)",
     "dungeon_buch.py:public": "the flag „admin“ only says whether the part shows at all; sending and the chronicle ask features.allowed (dungeon_buch.on)",
+    "dungeon_runen.py:wirkt": "Spark-wide: whether runes already in things do anything (13a, read in every check and fight without a round); finding, setting and buying ask features.allowed dungeonrunen for the host (dungeon_runen.on)",
     "dungeon.py:for_live": "Zustand → Live: Spark-wide flag beside numbers; each round asks features.allowed dungeon for its host",
     "dungeon.py:_planner_limits": "the admin's story planner (uid None; a host's form asks features.allowed): the act field „Besonderes Ding“ only while the Spark-wide switch is on; a round asks features.allowed dungeonquest for its host",
     "dungeon_musik.py:on": "Spark-wide: one shared music store for every round (nothing personal); a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",

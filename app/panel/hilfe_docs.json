@@ -5925,6 +5925,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Runen und Sockel, Stufe 1 (V01.1.190, Plan „Runen und Sockel“, Dominik 2026-10-27 „1a 2b 3a 4a 5a 6a 7a 8a 10a 11a“, Deckel 9a, Schalter 13a, Review 27.10. „Abstimmung mit den Runen“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Runen und Sockel* (chat.dungeon_runen, standardmäßig aus), gilt für jede Runde mit einem Profil als Gastgeber. 1. Sockel: Waffen und Rüstungen von gewöhnlich bis „rar“ kommen aus einem Fund zu 30 von 100 mit Sockeln (it[\"so\"]), die Zahl fest nach dem Grundteil: eine Waffe mit W8 oder mehr 3, sonst 2; Körper 3; Schild und Kopf 2; Hände und Füße 1 (dungeon_runen.sockel_max). 2. Runen (die 13 des Katalogs, Rang 1 bis 13): der Fund nach einem Kampf bringt zu 5, eine Truhe zu 15, eine Belohnung zu 20 von 100 eine Rune, ein Boss immer; nach 8 Kampffunden ohne Rune kommt die nächste sicher (PECH). Der höchste Rang ist die Gruppenstufe + 2, die niedrigen kommen öfter. Die Rune geht an den Helden mit den wenigsten Runen dieser Runde, in seinen Runenbeutel (h[\"runen\"], neben der Tasche, belegt keinen Platz, höchstens 40). Der Krämer verkauft die Ränge 1 bis 4 (je 1 bis 3), jeder Händler kauft Runen für den halben Preis. 3. Einsetzen: Im Helden"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "bogen unter *Tasche* wählt man im Runenbeutel bei einer Rune ein eigenes Ding mit freiem Sockel, an dem sie wirkt. Die Vorschau des Panels sagt, was sie dort tut und wie stark das Ding dann ist („Kenaz in Sockel 1 von Langschwert: Treffer brennen: +1W6 Feuerschaden. Stärke 0 → 3,5 (höchstens 6,5).“), oder warum nicht; erst *Einsetzen* setzt sie, danach sitzt sie fest (POST …/held mit {was: \"rune\", tun: \"pruefen\"|\"einsetzen\", rune, i}, dieselben Türen wie jeder Zug am Heldenbogen). Nie im Kampf. 4. Wirkung über die Regeln, die es gibt (item_effects, worn_bonuses, life, resists, rabatt, dungeon_kampf.rk und der Angriff): Elemente als Effekt der Waffe, ein Wert +1 wie Schmuck (je Wert zählt nur das Stärkste), Leben, Rüstungsklasse, Schutz (am Körper doppelt), Widerstand, Händlerrabatt, Heiltränke +2, Gold je besiegtem Gegner. Der Trefferbonus einer Waffenrune zählt nur bei ihren Angriffen, nie bei Proben. Die Zeile *Sockel 3: Kenaz (…) · frei · frei* steht an jedem Ding mit Sockeln. 5. Deckel (9a): ein Ding mit Runen ist höchstens so stark wie dasselbe Grundteil in „episch“ (Waffe 6,5, Körper 6, die übrigen 3; der eigene Effekt einer Waffe zählt wie +1W6, deshalb nimmt eine Waffe in „"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rar“ keine Element-Rune), Treffer aus Seltenheit und Runen höchstens +3, Rüstungsklasse aus Runen höchstens +2 je Ding und +3 je Held, Leben aus Runen höchstens +8 je Held, eine Widerstandsart je Ding, jedes Element nur einmal je Ding. 6. Welten (10a): dieselben Regeln, nur das Wort wechselt: Rune, in Science-Fiction Chip, bei Piraten Perle, im Horror Siegel. 7. Schalter aus (13a): Runen und Sockel bleiben bei den Helden, wirken aber nicht und fallen nicht mehr; wieder an, gilt alles wie vorher. Der Schmied verbessert kein Ding mit Runen. Runenwörter, Sockel bohren, Herauslösen, Verschmelzen und das Tauschen von Runen zwischen Helden kommen in Stufe 2 und 3. Live: Runen gefunden, eingesetzt, abgelehnt, gekauft, verkauft und Funde mit Sockeln heute (nur Zahlen). Log dungeon: rune | fund | rang N, dungeon: rune | pruefen | …, dungeon: rune | einsetzen | ok|deckel|voll|sockel|kampf|aus, dungeon: rune | kauf|verkauf | rang N, dungeon: rune | sockel | N, dungeon: rune | gold | N. Selbsttests test_dungeon_runen, darunter jede Kette von bis zu drei Runen auf jedem Grundteil und jeder Seltenheit mit Sockeln: unter jedem Deckel oder abgelehnt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fähigkeiten beim Einsetzen, nur der stärkste Bonus, Prüfstand wie am Tisch (V01.1.188, Review 27.10. Paket 11, Punkte B6, B7, B11 und B13, Dominik 2026-10-27 „ok“, zu B13 „je Wert nur das stärkste“): Ohne neuen Schalter. 1. Der Bonus einer Fähigkeit zählt nur, wenn sie immer wirkt (immer) oder in der Aktion dieses Zugs eingesetzt wird („Ich setze Rundumschlag ein“, Knopf *Einsetzen*; h[\"einsatz\"] aus check_powers, nach dem Zug wieder leer); die Kachel zeigt dazu „beim Einsetzen“. 2. Je Wert zählt nur der stärkste Bonus von Schmuck, getragener Ausrüstung und Fähigkeit, nie die Summe, wie beim Segen (dungeon.worn_bonus, ability_bonus, total); ein getragenes Stück, das deshalb nicht zählt, sagt im Heldenbogen „Zählt nicht auf Stärke: etwas anderes gibt dort mehr, nur das Stärkste zählt.“ (outdone, worn_view). 3. Neue feste Wirkungen (KRAFT): *Waffenmeister* +1 Schaden auf jeden Waffentreffer, *Zäh* +3 Leben je Stufe (sofort beim Wählen, relife), *Handauflegen* einmal je Szene 1W6+2 Leben für den genannten Freund oder sich selbst, *Zurückholen* einmal je Szene einen Freund am Boden mit 3 Leben zurück (use_abilities, nie auf Tote, ohne Ziel eine feste Zeile). 4. Die S"
 },
 {
@@ -12302,6 +12326,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Heldenlied des Barden (Funktionen → Meine Daten → „Heldenlied des Barden“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Endet ein Kapitel, singt der Spark ein kurzes Lied von 60 bis 90 Sekunden über die Helden der Runde, auf Deutsch, im Klang der Welt (Laute in Fantasy, Akkordeon bei Piraten)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Runen und Sockel (Funktionen → Meine Daten → „Runen und Sockel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wie in Diablo 2: Manche Waffen und Rüstungen bis „rar“ kommen aus einem Fund mit Sockeln (Waffe 2 oder 3, Körper 3, Schild und Kopf 2, Hände und Füße 1)."
 },
 {
 "lang": "de",
@@ -21405,6 +21437,30 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: runes and sockets, stage 1 (V01.1.190, plan \"runes and sockets\", Dominik 2026-10-27 \"1a 2b 3a 4a 5a 6a 7a 8a 10a 11a\", caps 9a, switch 13a, review 27.10. \"Abstimmung mit den Runen\"): Admin switch *Features → AI Dungeon Master → Runes and sockets* (chat.dungeon_runen, off by default), for every round with a profile as host. 1. Sockets: weapons and armour from common to \"rare\" come from a find with sockets 30 times in 100 (it[\"so\"]), their number fixed by the base: a weapon of d8 or more 3, else 2; body 3; shield and head 2; hands and feet 1 (dungeon_runen.sockel_max). 2. Runes (the catalog's 13, ranks 1 to 13): the find after a fight brings a rune 5 times in 100, a chest 15, a reward 20, a boss always; after 8 fight finds without a rune the next one comes surely (PECH). The highest rank is the group's level + 2, the low ones come more often. The rune goes to the hero with the fewest runes of this round, into its rune bag (h[\"runen\"], beside the bag, takes no place, at most 40). The trader sells ranks 1 to 4 (1 to 3 of each), every merchant buys runes for half their price. 3. Setting: in the hero sheet under *Bag* you pick, at a rune of the rune bag, an own thing w"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ith a free socket where it works. The panel's preview says what it does there and how strong the thing then is (\"Kenaz into socket 1 of Longsword: Hits burn: +1d6 fire damage. Strength 0 → 3.5 (at most 6.5).\"), or why not; only *Set* puts it in, then it stays for good (POST …/held with {was: \"rune\", tun: \"pruefen\"|\"einsetzen\", rune, i}, the same doors as every move of the hero sheet). Never in a fight. 4. Effect through the rules that are there (item_effects, worn_bonuses, life, resists, rabatt, dungeon_kampf.rk and the attack): elements as the weapon's effect, a value +1 like jewellery (per value only the strongest counts), life, armour class, protection (twice on the body), resistance, merchant discount, healing potions +2, gold per defeated foe. A weapon rune's to-hit counts only for its attacks, never for checks. The line *Sockets 3: Kenaz (…) · free · free* stands at every thing with sockets. 5. Caps (9a): a thing with runes is at most as strong as the same base in \"epic\" (weapon 6.5, body 6, the others 3; a weapon's own effect counts like +1d6, so a \"rare\" weapon takes no element rune), to hit from rarity and runes at most +3, armour class from runes at most +2 a thing and +3"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " a hero, life from runes at most +8 a hero, one kind of resistance a thing, each element once a thing. 6. Worlds (10a): the same rules, only the word changes: rune, in science fiction chip, with pirates pearl, in horror seal. 7. Switch off (13a): runes and sockets stay with the heroes but do nothing and fall no more; on again, everything counts as before. The smith never betters a thing with runes. Runewords, drilling sockets, removing, fusing and trading runes between heroes come in stages 2 and 3. Live: runes found, set, refused, bought, sold and finds with sockets today (numbers only). Log dungeon: rune | fund | rang N, dungeon: rune | pruefen | …, dungeon: rune | einsetzen | ok|deckel|voll|sockel|kampf|aus, dungeon: rune | kauf|verkauf | rang N, dungeon: rune | sockel | N, dungeon: rune | gold | N. Self-tests test_dungeon_runen, among them every chain of up to three runes on every base and every rarity with sockets: under every cap or refused."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: abilities when used, only the strongest bonus, bench like at the table (V01.1.188, review 27.10. package 11, points B6, B7, B11 and B13, Dominik 2026-10-27 „ok“, on B13 „je Wert nur das stärkste“): No new switch. 1. An ability's bonus counts only when it always works (immer) or is used in this turn's action (\"I use Sweeping blow\", the *Use* button; h[\"einsatz\"] from check_powers, empty again after the turn); its tile says \"when used\". 2. Per value only the strongest bonus of jewel, worn gear and ability counts, never the sum, like the blessing (dungeon.worn_bonus, ability_bonus, total); a worn piece that does not count for it says in the hero sheet \"Does not count for Strength: something else gives more there, only the strongest counts.\" (outdone, worn_view). 3. New fixed effects (KRAFT): *Weapon master* 1 more damage on every weapon hit, *Tough* 3 more life per level (at once when picked, relife), *Laying on hands* once a scene 1d6+2 life for the friend named or oneself, *Revive* once a scene a friend who is down back with 3 life (use_abilities, never on the dead, a fixed line without a target). 4. The sentences of the other abilities of the panel's own five cla"
 },
 {
@@ -27574,6 +27630,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Bard's hero song (Features → My data → \"Bard's hero song\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a chapter ends, the Spark sings a short song of 60 to 90 seconds about the round's heroes, in German, in the sound of the world (lute in fantasy, accordion with pirates)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Runes and sockets (Features → My data → \"Runes and sockets\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Like Diablo 2: some weapons and armour up to \"rare\" come from a find with sockets (weapon 2 or 3, body 3, shield and head 2, hands and feet 1)."
 },
 {
 "lang": "en",

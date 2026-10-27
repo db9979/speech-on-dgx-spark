@@ -167,6 +167,7 @@ WITHOUT = {
     "dungeonwappen": "dungeon_wappen.py: kein Werkzeug, das Panel zeichnet die Wappen aus festen Teilen, der Gastgeber wählt im Fenster",
     "dungeonechtwuerfel": "dungeon_echt.py: kein Werkzeug, ein Platz gibt die Zahl seines eigenen Würfels, das Panel prüft sie und würfelt weiter",
     "dungeonheldenlied": "dungeon_lied.py: kein Werkzeug, am Kapitelende singt das Musikmodell feste Strophen mit den Heldennamen",
+    "dungeonrunen": "dungeon_runen.py: kein Werkzeug, Sockel, Runen, Deckel und Preise nach festen Regeln des Panels, das Modell erzählt nur die feste Zeile",
     "dungeonheldenmut": "dungeon_mut.py: kein Werkzeug, Heldenmut zählt das Panel nach festen Regeln, nie das Modell",
     "dungeonregler": "dungeon_kampf.py: kein Werkzeug, der Regler stellt Begegnungen nach festen Zahlen um, nie das Modell",
     "dungeonimport": "dungeon_import.py: kein Werkzeug, der Admin gibt ein geschriebenes Abenteuer dem Geschichten-Planer, das Panel prüft den Entwurf",

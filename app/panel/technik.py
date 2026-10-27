@@ -229,7 +229,7 @@ MODULE = {
     "dungeon_ideen": ("dienste", "Dungeon-Master-Ideen-Tabellen: Krit, Patzer, Landschaften, Reise, Narben, Sagen; feste Regeln prüfen"),
     "dungeon_orakel": ("dienste", "Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt"),
     "dungeon_tabellen": ("dienste", "Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben"),
-    "dungeon_runen": ("dienste", "Dungeon-Master: Runen und Sockel, Katalog und Regeln"),
+    "dungeon_runen": ("dienste", "Dungeon-Master: Runen und Sockel, Katalog, Sockel, Runenbeutel, Deckel und Einsetzen mit Vorschau"),
     "dungeon_bestiarium": ("dienste", "Dungeon-Master: was ein Gegner ist (wesen) und wer keinen Streit will"),
     "dungeon_ablage": ("dienste", "Dungeon-Master-Ablage: eine Datei je Runde, Zwischenspeicher nach Änderungszeit"),
     "dungeon_sicht": ("dienste", "Dungeon-Master-Sichtfilter: jedes Geheimnis der Runde mit seinen Betrachtern, letzter Schritt jeder Ansicht"),

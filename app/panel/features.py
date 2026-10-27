@@ -408,6 +408,9 @@ FEATURES = (
     # Heldenlied des Barden (dungeon_lied.py, D&D round 2 idea 8): a sung song of each chapter, fixed verses + names
     F("dungeonheldenlied", "Heldenlied des Barden", "Bard's hero song", "data", ("dungeon_heldenlied",),
       parent="dungeon", me="dmbox", guide="dungeonheldenlied"),
+    # Runen und Sockel (dungeon_runen.py, plan dungeon-runen Stufe 1): sockets in finds, runes from finds and the trader,
+    # set with a preview; caps and effects by the panel's fixed rules, never the model
+    F("dungeonrunen", "Runen und Sockel", "Runes and sockets", "data", ("dungeon_runen",), parent="dungeon", me="dmbox", guide="dungeonrunen"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

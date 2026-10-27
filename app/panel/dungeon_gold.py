@@ -86,12 +86,12 @@ def price(dm, rd, was):
 
 
 def better(dm, r, it):
-    """The rarity one better for the smith, or None: only a weapon or armour without a fixed rarity, never a legend,
-    at most VERBESSERN_BIS."""
+    """The rarity one better for the smith, or None: only a weapon or armour without a fixed rarity, never a legend
+    nor a thing with runes, at most VERBESSERN_BIS."""
     c = dm._c(r, it)
     ids = [x["id"] for x in r["seltenheit"]]
-    if c["art"] not in VERBESSERN_ARTEN or c.get("seltenheit") or it.get("leg") or it["s"] not in ids:
-        return None
+    if c["art"] not in VERBESSERN_ARTEN or c.get("seltenheit") or it.get("leg") or it["s"] not in ids or it.get("ru"):
+        return None                               # a thing with runes keeps its rarity (the runes' cap, dungeon_runen)
     k = ids.index(it["s"]) + 1
     return ids[k] if k <= ids.index(VERBESSERN_BIS) else None
 
