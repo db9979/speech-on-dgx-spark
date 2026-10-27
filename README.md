@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.162** AI Dungeon Master: never innkeeper and landlady at once in one world, a scene picture knows names only as a whole word
 - **V01.1.161** AI Dungeon Master: occupations in male and female form, no ship AI as an occupation, looks only outward (NPC tables)
 - **V01.1.160** Settings: the text beside a field is never squeezed again, "Time server in the home network" under Operation stood word by word, now a field moves below the text when less than about 180 px would be left beside it, also at 820 px window width beside both menus (Speech output, Language model, Defaults, Voices), and no select sticks out of its box any more
 - **V01.1.159** AI Dungeon Master: „go to the old library“ really leads there (no check, the narrator has to take the way, else the panel goes), „vague“ wants a point from the scene's data, no more „W-2“ on the dice card, the story fades out softly at the top
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.155** AI Dungeon Master: errands from people (switch, off), whoever asks a person for work gets an errand from the panel (bring, talk, defeat) with reward, experience and two clues, done only by a handover, a talk or a victory, the narrator only tells the reason and the thanks (LlamaTale idea 2)
 - **V01.1.154** AI Dungeon Master: read thoughts (switch, off), with the spell or the potion the panel rolls an Intelligence check, only the reading player sees the person's wish, secret and attitude, the narrator only tells the listening (LlamaTale idea 5)
 - **V01.1.153** AI Dungeon Master: rune catalog with 13 runes and 7 runewords, checked by fixed rules (runes and sockets, data part)
-- **V01.1.152** AI Dungeon Master: witness rule (switch, off), what a hero does in front of people of the scene changes their attitude by a fixed table, attack and theft target −2 and everyone present −1, gift and help target +1, a successful theft stays unseen, the narrator only shows the reaction (LlamaTale idea 3)
 
 
 

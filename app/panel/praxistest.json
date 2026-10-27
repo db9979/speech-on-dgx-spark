@@ -3992,6 +3992,13 @@
 "titel": "Dungeon-Master: Gehen zu einem Nachbarort",
 "text": "A: In einer Runde mit Karte „gehe zur <Name eines Nachbarorts>“ schreiben (Name aus „Von hier aus“): keine Würfelprobe, die Erzählung führt dorthin, die Fahne steht auf dem Ort. B: „Ich gehe nach <Richtung>“ (Knopf unter „Das kannst du hier“): ebenso. C: „schleiche zur <Ort>“: eine Probe darf kommen. D: Würfelkarte: kein „W-…“ mehr neben dem Würfel. E: Lange Geschichte nach oben scrollen: die oberste Zeile blendet unter den Kopfzeilen weich aus. F: Mit Spieler anleiten: eine Erzählung ohne Person, Ding oder Weg der Szene wird neu erzählt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P595",
+"v": 1162,
+"titel": "Dungeon-Master: Wirt und Namen im Bild",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Gold mit Zweck, Gefährten anheuern und Bilder für Ausrüstung und Zauber an. A: In einer Siedlung die Dienste ansehen: nie steht dort zugleich „die Wirtin“ und „der Wirt“. B: Mit einem Gefährten „Perle“ (Piratenwelt) erzählt der Spielleiter von Perlen: das Szenenbild nimmt nicht ihr Gesicht. C: Nennt er „Perle“ selbst, nimmt es ihr Gesicht.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

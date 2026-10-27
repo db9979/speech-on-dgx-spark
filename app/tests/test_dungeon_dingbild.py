@@ -855,6 +855,17 @@ class Settlement(Base):
                 self.assertIn(d, db.DIENST_EN)
                 self.assertTrue(pool and all(len(x) == 2 and all(0 < len(t) <= 120 for t in x) for x in pool), (welt, d))
 
+    def test_one_innkeeper_per_world(self):
+        """Review 2026-10-27 Z13: the lines a world shows at once never name the innkeeper as „Wirt“ and „Wirtin“."""
+        import re
+        z = db.lines()
+        for welt in z:
+            seen = set()
+            for d in db.DIENST_EN:
+                for de, _ in z[welt].get(d) or z["alle"].get(d) or []:
+                    seen.update(re.findall(r"\b(Wirtin|Wirt)\b", de))
+            self.assertLessEqual(len(seen), 1, (welt, seen))
+
     def test_lines_by_fixed_rules(self):
         rd = {"welt": "piraten", "lang": "de", "zug": 4, "karte": {"hier": 2}}
         a = db.line(rd, "gasthaus")

@@ -387,6 +387,10 @@ class Companions(Base):
         self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{n}").status_code, 200)
         c2, _ = profile("Gesicht Gustav")                           # not at the table: nothing
         self.assertEqual(c2.get(f"/api/profile/dungeon/ding/{n}").status_code, 404)
+        with dungeon._lock:                                         # a part of a word is no name (review 2026-10-27 Z14)
+            d = dungeon._read()
+            dungeon._log(d["runden"][rid], "dm", text="Die Gretelsuppe dampft.", npc=[])
+            self.assertEqual(gesicht.vorlagen(dungeon.rules(), d["runden"][rid]), ([], ""))
         # a scene that names the companion takes its face
         with dungeon._lock:
             d = dungeon._read()

@@ -249,9 +249,10 @@ def vorlagen(r, rd):
     have = db.files()
     low = str(e.get("text", "")).lower()
     keys = [str(x.get("name", "")).lower() for x in e.get("npc") or []]
-    keys += sorted((k for k in pp if not gf.is_one(k) and k in low), key=low.index)
-    seen = {k: min(low.index(w) for w in ws) for k, ws in
-            ((k, [str(w).lower() for w in pp[k].get("name") or [] if str(w).strip() and str(w).lower() in low]) for k in pp if gf.is_one(k)) if ws}
+    # a name only as a whole word (nsc.named; review 2026-10-27 Z14: „Perle“ is not in „Perlen“)
+    keys += sorted((k for k in pp if not gf.is_one(k) and nsc.named(pp[k], low)), key=lambda k: low.find(k))
+    seen = {k: min(low.find(w) for w in ws) for k, ws in
+            ((k, [str(w).lower() for w in pp[k].get("name") or [] if str(w).strip() and nsc.named({"name": str(w)}, low)]) for k in pp if gf.is_one(k)) if ws}
     keys += sorted(seen, key=seen.get)                  # then the companions the narration names
     names, phrases = [], []
     for k in keys:

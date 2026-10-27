@@ -7725,6 +7725,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wirt oder Wirtin, Namen nur als ganzes Wort (V01.1.162, Dungeon-Review 2026-10-27 Paket 10, Z13 und Z14, Dominik „ok“): Die Sätze Leben der Siedlung (dungeon_siedlung.json) nennen in einer Welt den Wirt nie einmal als „Wirtin“ und einmal als „Wirt“; der Satz bei „Gefährte anheuern“ ist dafür neutral. Ein Szenenbild nimmt das Gesicht einer Person oder eines Gefährten nur, wenn die Erzählung den Namen als ganzes Wort nennt (dungeon_nsc.named in dungeon_gesicht.vorlagen): „Perle“ steckt nicht in „Perlen“. Selbsttests test_one_innkeeper_per_world und test_a_hired_companion_gets_its_face_at_once."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -22726,6 +22734,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "\" and \"People catalog\" are on. Self-test test_a_catalog_person_gets_its_face."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: innkeeper or landlady, names only as a whole word (V01.1.162, Dungeon review 2026-10-27 package 10, Z13 and Z14, Dominik \"ok\"): The settlement's lines of life (dungeon_siedlung.json) never name the innkeeper of one world once as \"Wirtin\" and once as \"Wirt\"; the line for \"hire a companion\" is neutral for that. A scene picture takes the face of a person or a companion only when the narration names it as a whole word (dungeon_nsc.named in dungeon_gesicht.vorlagen): \"Perle\" is not in \"Perlen\". Self-tests test_one_innkeeper_per_world and test_a_hired_companion_gets_its_face_at_once."
 },
 {
 "lang": "en",
