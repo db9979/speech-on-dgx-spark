@@ -468,17 +468,28 @@ def _verraten(text):
     return [x for x in re.split(r"[.!?…,;:–—()]+", text) if any(e in x.lower() for e in ERFAEHRT) and not any(h in x.lower() for h in HAELT)]
 
 
+def _who(rd, w):
+    """The name of the hero who rolled a check ("" for none)."""
+    return str((((rd.get("plaetze") or {}).get(w.get("pid")) or {}).get("held") or {}).get("name") or "")
+
+
+def _gelingt(rd, w, x, en):
+    """Whether a sentence (lower case) tells the failed check w as done: its thing (the stems of wofuer) or its hero's
+    name (Review 27.10. Paket 7, T13: also when wofuer says something else) with a word of GELINGT, none of HAELT."""
+    stems = _things(w.get("wofuer"), en)
+    return (any(st in x for st in stems) or _name_in(_who(rd, w), x)) and any(g in x for g in GELINGT) and not any(h in x for h in HAELT)
+
+
 def told_as_done(rd, text, wuerfe, ooc=()):
-    """The failed checks (their wofuer) the narration tells as done, by the fixed word lists GELINGT and HAELT; a failed
-    check to find something out also when a clause of the text or an ooc line hands over a finding (_verraten)."""
+    """The failed checks (their wofuer) the narration tells as done, by the fixed word lists GELINGT and HAELT (_gelingt);
+    a failed check to find something out also when a clause of the text or an ooc line hands over a finding (_verraten)."""
     en = rd.get("lang") == "en"
     saetze = [x.lower() for x in re.split(r"[.!?…]+", text)]
     out = []
     for w in wuerfe or ():
-        stems = _things(w.get("wofuer"), en)
         if w.get("ok"):
             continue
-        if stems and any(any(st in x for st in stems) and any(g in x for g in GELINGT) and not any(h in x for h in HAELT) for x in saetze):
+        if any(_gelingt(rd, w, x, en) for x in saetze):
             out.append(w["wofuer"])
         elif _forscht(w) and any(_verraten(t) for t in (text, *ooc)):
             out.append(w["wofuer"])
@@ -490,10 +501,11 @@ def rank(fault):
     return HART.index(fault) if fault in HART else len(HART)
 
 
-def repair(rd, story, fault, missing):
+def repair(rd, story, fault, missing, wuerfe=()):
     """A narration that failed a check on every try: the panel says the truth in a fixed sentence after it, or strikes
-    the sentences with the fault (WEG_SATZ, a repetition, a finding the failed check did not earn) when enough stays;
-    people at another place lose their lines. Every rescue writes a line „nachbessern | fest“ or „| bleibt“."""
+    the sentences with the fault (WEG_SATZ, a repetition, a finding the failed check did not earn, a failed check told
+    as done) when enough stays; people at another place lose their lines. Every rescue writes a line „nachbessern |
+    fest“ or „| bleibt“."""
     li = 1 if rd.get("lang") == "en" else 0
     if fault == "probe":
         add = [("Doch die Probe „{n}“ ist misslungen: das gelingt in diesem Zug nicht.",
@@ -501,6 +513,12 @@ def repair(rd, story, fault, missing):
         if any(_forscht({"wofuer": n}) for n in missing):   # a finding the failed check did not earn leaves the text
             story = dict(story, text=" ".join(x for x in re.split(r"(?<=[.!?…])\s+", story["text"]) if not _verraten(x)),
                          ooc=[o for o in story.get("ooc") or [] if not _verraten(o.get("text", ""))])
+        failed = [w for w in wuerfe or () if not w.get("ok") and w.get("wofuer") in missing]
+        keep = [x for x in _saetze(story["text"]) if not any(_gelingt(rd, w, x.lower(), li) for w in failed)]
+        if failed and len(" ".join(keep)) >= ZU_KURZ:   # the success told is struck first, then the fixed sentence (Paket 7, E11)
+            story = dict(story, text=" ".join(keep))
+        story = dict(story, beute=None)          # a turn repaired so loses its loot (Paket 7, T7)
+        print("dungeon: nachbessern | beute verfallen", flush=True)
     elif fault in WEG_SATZ:                      # the sentences with the fault leave, when enough new ones stay (Regeln 1-5)
         bad = {"gold": lambda x: bool(GOLD.search(x)) and _hat(x, FINDET), "widerspruch": lambda x: bool(contradicts(rd, x)),
                "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
@@ -562,9 +580,50 @@ def repair(rd, story, fault, missing):
         add = [("Es gelten die Würfe auf den Karten: " if not li else "The rolls on the cards count: ")    # never the bare id W-n
                + ", ".join(m.split(" ", 1)[-1] for m in missing if m.startswith("W-")) + "."]
     else:
+        print(f"dungeon: nachbessern | bleibt | {fault}", flush=True)
         return story
     print(f"dungeon: nachbessern | fest | {fault}", flush=True)
     return dict(story, text=(story["text"].rstrip() + " " + " ".join(add)).strip())
+
+
+# Review 27.10. Paket 7 (E9, T7, T8): every fault of the kept try is repaired, the strikes before the sentences added,
+# and the result is checked again for a hero missing and a new place untold
+ANHAENGEN = ("probe", "namen", "frage", "gegner", "beleg")
+BELEG_SATZ = ("{n} versucht es: {w}, {o}.", "{n} tries: {w}, {o}.")
+AUSGANG = (("gelungen", "misslungen"), ("it works", "it fails"))
+
+
+def repair_all(rd, story, faults, wuerfe=()):
+    """The kept try with all its faults (faults: [(reason, names)]) repaired one by one, the strikes first; then a hero
+    who acted and is missing gets a fixed sentence from his roll (or that he waits), and an ort_id the text does not
+    name is dropped (the group stays)."""
+    for why, missing in sorted(faults, key=lambda f: f[0] in ANHAENGEN):
+        story = repair(rd, story, why, missing, wuerfe)
+    li = 1 if rd.get("lang") == "en" else 0
+    add = []
+    for n in _missing(rd, story):
+        pid = next((p for p in rd["offen"] if _who(rd, {"pid": p}) == n), None)
+        w = next((w for w in wuerfe or () if w.get("pid") == pid and w.get("wofuer")), None)
+        add.append(BELEG_SATZ[li].format(n=n, w=w["wofuer"], o=AUSGANG[li][0 if w.get("ok") else 1]) if w else
+                   ("{n} wartet ab, was als Nächstes geschieht.", "{n} waits to see what happens next.")[li].format(n=n))
+    if add:
+        print("dungeon: nachbessern | nachgeprueft | namen", flush=True)
+        story = dict(story, text=(story["text"].rstrip() + " " + " ".join(add)).strip())
+    import dungeon_karte
+    if dungeon_karte.ort_fehlt(rd, story):
+        print("dungeon: nachbessern | nachgeprueft | neuer_ort", flush=True)
+        story = dict(story, ort_id="")
+    return story
+
+
+def milder(a, b):
+    """Whether the faults a of a try are milder than b: the worst one (rank) first, then fewer."""
+    return (min(rank(w) for w, _ in a), -len(a)) > (min(rank(w) for w, _ in b), -len(b))
+
+
+def hints(faults, lang):
+    """The hint for every fault of a try (Paket 7: the model hears all, never only the first)."""
+    return "".join(hint(w, m, lang) for w, m in faults)
 
 
 def richter_questions():
@@ -697,12 +756,13 @@ def asks(action):
     return bool(FRAGT.search(low)) and not SICH.search(low) and not any(x in low for x in dungeon.RISIKO)
 
 
-def not_asked(rd, text):
-    """Heroes whose action only asks or talks (asks) and whose narration has no question or answer: no word of ANTWORT
-    and no quote of ZITAT_WOERTER words."""
+def not_asked(rd, text, npc=()):
+    """Heroes whose action only asks or talks (asks) and whose narration has no question or answer: no word of ANTWORT,
+    no quote of ZITAT_WOERTER words and no line of a person (npc, Review 27.10. Paket 7, T12) that long."""
     import dungeon_vorlesen
     low = str(text).lower()
-    if any(w in low for w in ANTWORT) or any(len(x[1].split()) >= ZITAT_WOERTER for x in dungeon_vorlesen.rede(text, []) if x[2]):
+    if any(w in low for w in ANTWORT) or any(len(x[1].split()) >= ZITAT_WOERTER for x in dungeon_vorlesen.rede(text, []) if x[2]) \
+            or any(len(str(n.get("sagt") or "").split()) >= ZITAT_WOERTER for n in npc or ()):
         return []
     return [rd["plaetze"][pid]["held"]["name"] for pid, a in (rd.get("offen") or {}).items()
             if pid in rd.get("plaetze", {}) and rd["plaetze"][pid].get("held") and asks(a.get("text"))][:3]
@@ -882,8 +942,23 @@ def looks_off(rd, text):
     return out[:3]
 
 
+def _missing(rd, story):
+    """The heroes who acted and are not named (one the model answered out of the game, ooc, may be missing)."""
+    low, ooc = story["text"].lower(), {x["pid"] for x in story.get("ooc") or []}
+    return [rd["plaetze"][pid]["held"]["name"] for pid in rd["offen"]
+            if pid not in ooc and pid in rd["plaetze"] and rd["plaetze"][pid].get("held")
+            and rd["plaetze"][pid]["held"]["name"].lower() not in low]
+
+
 def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
-    """("", []) when the narration passes; else (reason, the names missing) by fixed rules: too short, a hero who acted
+    """The first fault of faults, ("", []) when the narration passes."""
+    f = faults(dm, rd, story, wuerfe, hits, zuege)
+    return f[0] if f else ("", [])
+
+
+def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
+    """[] when the narration passes; else every fault (Review 27.10. Paket 7, never only the first) as (reason, the
+    names missing) by fixed rules: too short (alone), a hero who acted
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
     (told_as_done, the check's wofuer), a foe of the encounter not named by
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
@@ -894,69 +969,68 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     (dungeon_anleiten.vague, while „Spieler anleiten“ is on)."""
     text = story["text"]
     if len(text) < ZU_KURZ:
-        return "kurz", []
+        return [("kurz", [])]
     low, ooc = text.lower(), {x["pid"] for x in story.get("ooc") or []}
-    missing = [rd["plaetze"][pid]["held"]["name"] for pid in rd["offen"]
-               if pid not in ooc and pid in rd["plaetze"] and rd["plaetze"][pid].get("held")
-               and rd["plaetze"][pid]["held"]["name"].lower() not in low]
+    out = []
+    missing = _missing(rd, story)
     if missing:
-        return "namen", missing
+        out.append(("namen", missing))
     done = told_as_done(rd, text, wuerfe, [o.get("text", "") for o in story.get("ooc") or []])
     if done:
-        return "probe", done
+        out.append(("probe", done))
     for why, found in (("fehlt", lambda: told_unknown(rd, text)), ("gefallen", lambda: fight_off(rd, text, hits)),
                        ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
-                       ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text)),
+                       ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text, story.get("npc"))),
                        ("aussehen", lambda: looks_off(rd, text)), ("dabei", lambda: not_carried(rd, text)),
                        ("fuerwort", lambda: wrong_pronoun(rd, text))):
         x = found()
         if x:
             dm._day.bump("regel_" + why)
-            return why, x
+            out.append((why, x))
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
     gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
     if gone:
-        return "gegner", gone
+        out.append(("gegner", gone))
     off = numbers_off(text, wuerfe, hits, zuege)
     if off:
         dm._day.bump("beleg_falsch")
-        return "beleg", [str(n) for n in off] + [f"{x['beleg']} {x.get('name', '')}: {x.get('gesamt', '')}" for x in [*wuerfe, *hits, *zuege] if x.get("beleg")]
+        out.append(("beleg", [str(n) for n in off] + [f"{x['beleg']} {x.get('name', '')}: {x.get('gesamt', '')}" for x in [*wuerfe, *hits, *zuege] if x.get("beleg")]))
     import dungeon_grenzen
     veil = dungeon_grenzen.veiled(rd, text)
     if veil:                                     # a veil of the table more than once (Tabletop-Punkt 18)
         dm._day.bump("schleier")
-        return "schleier", veil
+        out.append(("schleier", veil))
     far = far_places(rd, story, low)
     if far:
-        return "karte", far
+        out.append(("karte", far))
     import dungeon_karte
     neu = dungeon_karte.ort_fehlt(rd, story)
     if neu:                                      # ort_id leads to a place the narration does not name (Karten-Thread)
         dm._day.bump("regel_neuer_ort")
-        return "neuer_ort", [neu]
+        out.append(("neuer_ort", [neu]))
     weg = way_skipped(rd, story)
     if weg:                                      # a hero's action goes to a neighbouring place, the narration stays
         dm._day.bump("regel_gehen")
-        return "gehen", weg
+        out.append(("gehen", weg))
     away = elsewhere(rd, story)
     if away:
-        return "anderswo", away
+        out.append(("anderswo", away))
     bad = contradicts(rd, text)
     if bad:
         dm._day.bump("widerspruch")
-        return "widerspruch", [f"{x['name']} ({x.get('merkmale', '')})" for x in rd.get("dinge") or [] if x["name"] in bad]
+        out.append(("widerspruch", [f"{x['name']} ({x.get('merkmale', '')})" for x in rd.get("dinge") or [] if x["name"] in bad]))
     t = _triples(text)
     old = _alt(rd)
     if t and len(t & old) / len(t) > WIEDERHOLT:
-        return "wiederholung", []
+        out.append(("wiederholung", []))
     if rd.get("erzaehlweise") == "ausfuehrlich" and len(text) < dm.erz_min(rd):   # „ausführlich“ really rich (Dominik 2026-10-26)
         dm._day.bump("regel_knapp")
-        return "knapp", [str(dm.erz_min(rd))]
+        out.append(("knapp", [str(dm.erz_min(rd))]))
     import dungeon_anleiten
     offen = dungeon_anleiten.vague(dm, rd, story)
     if offen:                                    # Spieler anleiten: too few points to take up, or a hollow question
-        return "vage", offen
-    return "", []
+        out.append(("vage", offen))
+    return out
 
 
 def way_skipped(rd, story):
@@ -1144,10 +1218,10 @@ async def retell_fixed(dm, rid, zug, grund):
                 text = ""
             if text:
                 story = {"text": text, "ooc": []}
-                fault, missing = judge(dm, alt, story, wuerfe)
-                if fault:
-                    story = repair(alt, story, fault, missing)
-                    fault, _ = judge(dm, alt, story, wuerfe)
+                fs = faults(dm, alt, story, wuerfe)
+                if fs:
+                    story = repair_all(alt, story, fs, wuerfe)
+                fault, _ = judge(dm, alt, story, wuerfe) if fs else ("", [])
                 text = "" if fault else story["text"]
         if text:
             why = "ok"

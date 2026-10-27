@@ -5917,6 +5917,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Die Prüfung fängt alles (V01.1.176, Review 27.10. Paket 7 Teil 1, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Korrekturen der festen Prüfung. 1. Alle Fehler: dungeon_erzaehler.faults liefert jeden Fehler eines Versuchs, nicht nur den ersten (judge gibt weiter den ersten); der Hinweis für den nächsten Versuch nennt alle (hints), und behalten wird der mildeste Versuch (milder: der schwerste Fehler zuerst, dann weniger Fehler). 2. Reparatur nachgeprüft: Scheitern alle Versuche, arbeitet repair_all alle Fehler ab, erst das Streichen, dann die festen Sätze; danach prüft es erneut: fehlt ein Held, der gehandelt hat, kommt ein fester Satz aus seinem Würfelbeleg („Silas versucht es: Schloss öffnen, misslungen.“) oder „… wartet ab“; führt ort_id an einen Ort, den der Text nicht nennt, bleibt die Gruppe (Log dungeon: nachbessern | nachgeprueft | namen oder | neuer_ort). 3. Probe misslungen: Ein Satz, der die misslungene Probe als gelungen erzählt, wird jetzt erkannt, auch wenn er nur den Namen des Helden und ein Erfolgswort trägt, und gestrichen, statt einen Widerspruch anzuhängen; danach verfällt die Beute dieses Zugs (| beute verfallen). 4. Antwort im NSC-Feld"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ": Fragt ein Held, zählt auch eine Zeile einer Person in npc mit mindestens ZITAT_WOERTER Wörtern als Antwort. Kann eine Reparatur nichts tun, schreibt sie | bleibt | <Fehler>. 5. Neu erzählen nach 👎: Hat der neue Text einen schweren Fehler (HART, etwa eine misslungene Probe als gelungen), bleibt der alte; leichtere Fehler repariert repair_all. Der Erzähler-Prüfstand zählt keine Tageszähler der Regeln mehr mit (faults(…, count=False)). Selbsttests ReviewPruefung in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Leben nur mit Grund (V01.1.175, Dominik 2026-10-27 „wiso verlor ich ein leben? erklärung“): Ohne neuen Schalter. Nach einer natürlichen 1 auf Charisma („Silas zur Kooperation überreden“) kostete ein Held 1 Leben, ohne dass die Erzählung es sagte: das Erzähl-Modell hatte die Folge „Schaden“ gesetzt, und außerhalb des Kampfs nahm das Panel sie bisher ohne Grund an. Jetzt prüft dungeon.grounded fest: Schaden außerhalb des Kampfs gilt nur für einen Helden, dessen Probe in diesem Zug auf einen Wert aus KOERPER_WERTE (Stärke, Geschick, Konstitution) misslang, etwa ein Sprung, ein Klettern, ein Schloss, das zuschnappt; die Zeile nennt dann „Probe „…“ misslungen“. Jeder andere Schaden fällt weg (Log dungeon: folgen | schaden | ohne grund, Tageszähler schaden_ohne_grund in der Live-Übersicht). Heilung und Treffer von Gegnern bleiben. Die Aufgabe des Erzählers sagt es auch: Schaden nur nach so einer Probe und mit dem Grund in der Erzählung. Selbsttest LifeLossReason in test_dungeon."
 },
 {
@@ -21198,6 +21214,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the check catches everything (V01.1.176, review 27.10. package 7 part 1, Dominik 2026-10-27 „ok“): No new switch, these are corrections of the fixed check. 1. Every fault: dungeon_erzaehler.faults returns every fault of a try, not only the first (judge still gives the first); the hint for the next try names all of them (hints), and the mildest try is kept (milder: the worst fault first, then fewer faults). 2. Repair checked again: when every try fails, repair_all works through all faults, the strikes first, then the fixed sentences; then it checks again: a hero who acted and is missing gets a fixed sentence from their roll („Silas tries: open the lock, it fails.“) or „… waits“; an ort_id leading to a place the text does not name keeps the group where it is (log dungeon: nachbessern | nachgeprueft | namen or | neuer_ort). 3. Failed check: a sentence telling the failed check as done is now caught also when it only carries the hero's name and a word of success, and struck instead of adding a contradiction; then the turn's loot is lost (| beute verfallen). 4. Answer in the NPC field: when a hero asks, a line of a person in npc with at least ZITAT_WOERTER words counts"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " as an answer. A repair that can do nothing writes | bleibt | <fault>. 5. Retelling after 👎: when the new text has a hard fault (HART, such as a failed check told as done), the old one stays; lighter faults are repaired by repair_all. The narrator test bench no longer counts the rules' day counters (faults(…, count=False)). Self-tests ReviewPruefung in test_dungeon."
 },
 {
 "lang": "en",

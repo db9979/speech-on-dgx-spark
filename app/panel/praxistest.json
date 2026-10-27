@@ -4076,6 +4076,13 @@
 "titel": "Dungeon-Master: Leben nur mit Grund",
 "text": "Außerhalb eines Kampfs eine Überreden-Probe würfeln, bis sie misslingt. A: Kein Held verliert dafür Leben. B: Ein Sprung über eine Kluft misslingt (Geschick): verliert ein Held Leben, nennt die Zeile die Probe, und die Erzählung sagt, woher der Schaden kommt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P607",
+"v": 1176,
+"titel": "Dungeon-Master: Die Prüfung fängt alles",
+"text": "Eine Runde spielen, in der eine Probe misslingt. A: Die Erzählung sagt nicht, dass es doch gelang, und es gibt in diesem Zug keine Beute. B: Jeder Held, der gehandelt hat, kommt in der Erzählung vor. C: Eine Frage an eine Person bekommt eine Antwort.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

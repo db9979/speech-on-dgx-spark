@@ -4270,8 +4270,9 @@ def roll_facts(r, rd, wuerfe, hits, zuege):
 
 
 async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
-    """The narration of a closed turn: up to three tries against the fixed checks (check_story, erz.judge: a rewrite
-    with a hint, a third only for a hard fault, erz.HART), else the mildest try repaired (erz.repair). step(name) shows
+    """The narration of a closed turn: up to three tries against the fixed checks (check_story, erz.faults: a rewrite
+    with a hint for every fault, a third only for a hard fault, erz.HART), else the mildest try with all its faults
+    repaired and checked again (erz.repair_all, Review 27.10. Paket 7). step(name) shows
     the table the stage; count=False for the Erzähler-Prüfstand (no day counters). Returns (story or None, dropped,
     the faults of the tries: "" passed, None refused)."""
     facts_w, facts_z = roll_facts(r, rd, wuerfe, hits, zuege)
@@ -4283,8 +4284,8 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
     rd["_auftraege"] = auftraege.seen(_me, r, rd, hits)  # only on this copy: errands given, done, given back (LlamaTale idea 2)
     rd["_getippt"] = typed_seen(r, rd)                  # only on this copy: typed buying, resting, gold (Review 27.10. Paket 6)
     story, best, extra, drop, tries = None, None, "", 0, []
-    for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
-        if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
+    for n in range(3):                    # a second try when the first fails the checks (erz.faults: one rewrite),
+        if n == 2 and not (best and any(w in erz.HART for w, _ in best[1])):   # a third only for a hard one (erz.HART)
             break
         obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
         s, d2 = check_story(r, rd, obj)
@@ -4292,22 +4293,23 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
         if not s:
             tries.append(None)
             continue
-        fault, missing = erz.judge(_me, rd, s, wuerfe, hits, zuege)
-        if not fault and n == 0 and count and await erz.richter(_me, rd, s, wuerfe, hits):
-            fault, missing = "richter", []        # the Dungeon-Richter: one rewrite, else this try (it passed every fixed check)
+        fs = erz.faults(_me, rd, s, wuerfe, hits, zuege)
+        if not fs and n == 0 and count and await erz.richter(_me, rd, s, wuerfe, hits):
+            fs = [("richter", [])]                # the Dungeon-Richter: one rewrite, else this try (it passed every fixed check)
+        fault = fs[0][0] if fs else ""
         tries.append(fault)
         if not fault:
             story = s
             break
-        if not best or fault == "richter" or erz.rank(fault) > erz.rank(best[1]):     # keep the try with the mildest fault
-            best = (s, fault, missing)
-        extra = erz.hint(fault, missing, rd["lang"])
+        if not best or fault == "richter" or erz.milder(fs, best[1]):     # keep the try with the mildest faults
+            best = (s, fs)
+        extra = erz.hints(fs, rd["lang"])
         if step:
             await step("nachbessern")
         if count:
             _day.bump("nachgebessert")
         print(f"dungeon: nachbessern | {fault}", flush=True)
-    story = story or (erz.repair(rd, *best) if best else None)
+    story = story or (erz.repair_all(rd, *best, wuerfe) if best else None)
     if story and rd["_zeugen"]:
         story["zeugen"] = rd["_zeugen"]                  # the attitudes change in keep (zeugen.apply)
     if story and rd["_auftraege"]:

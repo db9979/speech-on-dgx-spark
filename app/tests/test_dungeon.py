@@ -1007,6 +1007,72 @@ class ReviewEingabe(Turns):
             self.assertIn("dungeon: ding | fehlt" if fehlt else "dungeon: ding | dabei", out.getvalue(), text)
 
 
+class ReviewPruefung(Turns):
+    """Review 27.10. Paket 7 (Dominik 2026-10-27 „ok“): the checks catch every fault, the repair is checked again."""
+
+    def seats(self):
+        rd = self.state(self.rid)
+        names = {pid: p["held"]["name"] for pid, p in dungeon.seated(rd)}
+        rd["offen"] = {self.host: {"text": "Ich untersuche die Spuren am Tor.", "t": 0}, self.gp: {"text": "Ich halte Wache.", "t": 0}}
+        return rd, names[self.host], names[self.gp]
+
+    def test_every_fault_is_found_hinted_and_repaired(self):
+        """E9/T8: faults gives every fault (judge the first), the hint names all; repair_all strikes first, then adds,
+        and a hero missing afterwards gets a fixed sentence from his roll."""
+        erz = dungeon.erz
+        rd, a, b = self.seats()
+        text = (f"Der Nebel hängt schwer über dem Hof und die Fackeln flackern im Wind. {a} kniet am Tor und findet 30 Goldmünzen. "
+                "Irgendwo bellt ein Hund, und die Nacht wird kälter. Die Mauern schweigen, das Tor knarrt leise im Wind.")
+        story = {"text": text, "ooc": [], "npc": []}
+        with contextlib.redirect_stdout(io.StringIO()):
+            fs = erz.faults(dungeon, rd, story)
+        self.assertEqual([w for w, _ in fs][:2], ["namen", "gold"])
+        self.assertEqual(erz.judge(dungeon, rd, story), fs[0])
+        h = erz.hints(fs, "de")
+        self.assertIn(erz.HINWEIS["namen"][0].split(":")[0], h)
+        self.assertIn(erz.HINWEIS["gold"][0].split(":")[0], h)
+        w = [{"pid": self.host, "wofuer": "Spuren am Tor untersuchen", "ok": True}]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = erz.repair_all(rd, story, fs, w)
+        self.assertNotIn("30 Goldmünzen", fixed["text"])                          # struck …
+        self.assertIn(f"{b} wartet ab", fixed["text"])                             # … then added
+        self.assertNotIn(a, fixed["text"].split("Irgendwo")[0])
+        self.assertIn(erz.BELEG_SATZ[0].format(n=a, w="Spuren am Tor untersuchen", o="gelungen"), fixed["text"])   # checked again
+        self.assertIn("dungeon: nachbessern | nachgeprueft | namen", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(erz.faults(dungeon, rd, fixed), [])
+        self.assertTrue(erz.milder([("namen", [a])], [("probe", ["x"])]))        # a hard fault is worse
+        self.assertTrue(erz.milder([("namen", [a])], [("namen", [a]), ("gold", ["30"])]))   # fewer is milder
+
+    def test_a_failed_check_told_as_done_is_struck_and_the_loot_lost(self):
+        """E11/T13: a sentence with the hero of a failed check and a word of GELINGT is a fault, also when wofuer says
+        something else; the repair strikes it before the fixed sentence, and the turn's loot is lost."""
+        erz = dungeon.erz
+        rd, a, b = self.seats()
+        text = (f"{a} beugt sich über die Spuren am Boden. {a} versucht es, und alles gelingt mühelos, die Tür springt auf. "
+                f"{b} hält Wache am Eingang und lauscht in die Nacht, doch nichts rührt sich im dunklen Hof.")
+        w = [{"pid": self.host, "wofuer": "Abdrücke am Ort deuten", "ok": False}]
+        story = {"text": text, "ooc": [], "npc": [], "beute": {"anlass": "truhe"}}
+        self.assertEqual(erz.told_as_done(rd, text, w), ["Abdrücke am Ort deuten"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fixed = erz.repair_all(rd, story, [("probe", ["Abdrücke am Ort deuten"])], w)
+        self.assertNotIn("gelingt mühelos", fixed["text"])
+        self.assertIn("ist misslungen", fixed["text"])
+        self.assertIsNone(fixed["beute"])
+        self.assertIn("dungeon: nachbessern | beute verfallen", out.getvalue())
+        self.assertEqual(erz.told_as_done(rd, f"{a} versucht es, doch es gelingt nicht.", w), [])   # it held
+
+    def test_an_answer_in_the_person_field_counts(self):
+        """T12: a line of a person with enough words answers the question."""
+        erz = dungeon.erz
+        rd, a, b = self.seats()
+        rd["offen"] = {self.host: {"text": "Ich frage den Wirt nach dem Turm.", "t": 0}}
+        text = "Der Wirt wischt über den Tresen und blickt zur Tür, draußen fällt der Regen in dichten Schnüren auf den Platz."
+        self.assertEqual(erz.not_asked(rd, text), [a])
+        self.assertEqual(erz.not_asked(rd, text, [{"name": "Odo", "sagt": "Der Turm steht im Norden am Fluss."}]), [])
+        self.assertEqual(erz.not_asked(rd, text, [{"name": "Odo", "sagt": "Hm."}]), [a])
+
+
 class ReviewSofort(Turns):
     """Review 27.10. Paket 1 (Dominik 2026-10-27 „ok“): nothing breaks any more."""
 

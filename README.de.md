@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.176** KI-Dungeon-Master: die Prüfung der Erzählung meldet alle Fehler, die Reparatur streicht zuerst und prüft danach Namen und Ort erneut, nach misslungener Probe verfällt die Beute (Review 27.10. Paket 7, Teil 1)
 - **V01.1.175** KI-Dungeon-Master: außerhalb des Kampfs kostet ein Wurf nur Leben nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution, die Zeile nennt die Probe
 - **V01.1.174** KI-Dungeon-Master: der Spieltisch wird nie mehr neu aufgebaut, Bilder flackern nicht, Texte springen nicht, der Verlauf bleibt, wo man liest
 - **V01.1.173** KI-Dungeon-Master: Gegnerbilder nehmen, was ein Gegner ist, aus dem Bestiarium (Menschen sehen wie Menschen aus), Gefährten-Gesichter mit festem Geschlecht und Alter
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.169** KI-Dungeon-Master: im Kampf kein Markt und kein Handel, Flucht gilt schon für den Weg, ein Boss zählt mit seinem Leben, liegen alle, rettet ein Fremder die ganze Gruppe, Verschnaufen nach einem Sieg, angeschlagene Gruppen bekommen kleinere Kämpfe (Review 27.10., Pakete 3 und 4)
 - **V01.1.168** KI-Dungeon-Master: Wortlisten treffen keine harmlosen Wörter mehr („knackt“), ein Ausfall des Modells bremst und wartet nach zwei Versuchen auf „Jetzt weiter“, „töten“ wird am Kindertisch zu „besiegen“, Stilbeispiele stehen am Ende des Prompts (Review 27.10., Paket 1)
 - **V01.1.167** KI-Dungeon-Master: jede Person hat ein festes Geschlecht, Porträt, Stimme, Beruf (Mystiker oder Mystikerin) und Pronomen folgen daraus, ein Titel wie „Schattenwächter“ bestimmt den Beruf
-- **V01.1.166** KI-Dungeon-Master: Überreden zum Mitkommen (Schalter, aus), ob eine gefragte Person mitkommt, entscheiden ihre Haltung zum Helden und eine Charisma-Probe des Panels, treu Ergebene kommen ohne Probe (LlamaTale-Idee 4)
 
 
 
