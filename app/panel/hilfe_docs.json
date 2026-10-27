@@ -5965,6 +5965,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Runen und Runenwörter im Katalog (V01.1.153, Daten und Prüfregeln, Plan dungeon-runen/plan.md, Dominik 2026-10-27 „1a 2b 3a 4a 5a 6a 7a 8a 10a 11a“, Thread „DnDAppFiles für den Dungeon-Master“): Noch ohne Schalter und ohne Wirkung im Spiel; den Kern mit dem Schalter „Runen und Sockel“ baut der Hauptthread. app/panel/dungeon_srd.json trägt 13 Runen (runen, Rang 1 bis 13, historische Runennamen, gemeinfrei: Uruz, Ehwaz, Ansuz, Fehu, Kenaz, Isa, Thurisaz, Nauthiz, Jera, Berkano, Sowilo, Algiz, Tiwaz) mit Sinn (Kraft, Gespann …), Preis (20 bis 1500 Gold) und Wirkung je Ort waffe, ruestung und schild (null = dort nicht möglich, etwa Algiz in der Waffe), dazu 7 Runenwörter (runenwoerter: Glut, Frostwacht, Sturmlied, Wanderglück, Wurzelkraft, Morgenröte, Siegereid) mit den Runen in fester Reihenfolge, Ort (waffe, koerper, nebenhand, kopf), Sockelzahl, Mindeststufe und Zusatzwirkung. Eine Wirkung nennt nur feste Schlüssel: treffer und schaden (1 bis 2, nur in der Waffe), effekt (eine id aus effekte, nur wo ihr „nur“ passt), werte mit bonus 1, leben, widerstand (eine Schadensart), rabatt, gold, heiltrank, rk und schutz. Das neue Modul app/panel/dungeon_runen.py prüft beid"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "es als Teil von dungeon.check_rules (eigene ids, Ränge ohne Lücke, Preise bis „episch“, nur diese Schlüssel, Runen eines Runenworts vorhanden und an seinem Ort möglich, Sockel = Zahl der Runen, keine Folge doppelt). Selbsttest test_dungeon_srd (test_runen_und_runenwoerter)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
 },
 {
@@ -20894,6 +20910,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: night foes in the SRD catalog (V01.1.146, data, LlamaTale 1 \"time of day from the panel\", thread \"DnDAppFiles für den Dungeon-Master\"): 76 foes in app/panel/dungeon_srd.json carry \"nacht\": true: creatures that per the SRD are mostly about at night (undead such as skeleton, zombie, ghoul, specter, shadow, wight, vampire spawn and wraith; wererat, werewolf, weretiger and werebear; wolf, worg, bats, rats, spiders and owlbear; peoples with sunlight sensitivity such as kobolds and drow; nightmare and night hag), plus bandits, highwaymen, thugs and spies lying in wait in the dark, and own night creatures of horror, sci-fi and pirates (living scarecrow, shadow child, ghost pirate, xeno crawler, sentry drone). There are some on every level from 0 to 15. In every world at least 5 night foes fit the budget of one hero of level 1 to 3; self-test test_dungeon_srd (test_nacht_gegner_je_welt_und_stufe)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: runes and runewords in the catalog (V01.1.153, data and check rules, plan dungeon-runen/plan.md, Dominik 2026-10-27 \"1a 2b 3a 4a 5a 6a 7a 8a 10a 11a\", thread \"DnDAppFiles für den Dungeon-Master\"): No switch and no effect in the game yet; the main thread builds the core with the switch \"Runes and sockets\". app/panel/dungeon_srd.json carries 13 runes (runen, rank 1 to 13, historical rune names, public domain: Uruz, Ehwaz, Ansuz, Fehu, Kenaz, Isa, Thurisaz, Nauthiz, Jera, Berkano, Sowilo, Algiz, Tiwaz) with meaning (strength, team …), price (20 to 1500 gold) and effect per place waffe, ruestung and schild (null = not possible there, e.g. Algiz in a weapon), plus 7 runewords (runenwoerter: Ember, Frostward, Stormsong, Wanderer's luck, Rootstrength, Daybreak, Victor's oath) with the runes in a fixed order, place (waffe, koerper, nebenhand, kopf), number of sockets, minimum level and extra effect. An effect names fixed keys only: treffer and schaden (1 to 2, weapon only), effekt (an id from effekte, only where its \"nur\" fits), werte with bonus 1, leben, widerstand (a damage type), rabatt, gold, heiltrank, rk and schutz. The new module app/panel/dungeon_runen.py checks "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "both as part of dungeon.check_rules (own ids, ranks without a gap, prices up to \"epic\", only these keys, a runeword's runes exist and are possible at its place, sockets = number of runes, no sequence twice). Self-test test_dungeon_srd (test_runen_und_runenwoerter)."
 },
 {
 "lang": "en",

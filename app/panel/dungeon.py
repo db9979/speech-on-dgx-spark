@@ -152,6 +152,7 @@ import dungeon_quest as quest
 import dungeon_nsc as nsc
 import dungeon_orakel as orakel
 import dungeon_tabellen as tabellen
+import dungeon_runen as runen
 import dungeon_gold as gold
 import dungeon_legenden as legenden
 import dungeon_warten as warten
@@ -762,7 +763,7 @@ def check_rules(r):
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
     anleiten.check_rules(r, need)                # the fixed stall events (Spieler anleiten, step 4)
-    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r) + ideen.check_rules(r)
+    return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r) + ideen.check_rules(r) + runen.check_rules(r)
 
 
 def own_rules():

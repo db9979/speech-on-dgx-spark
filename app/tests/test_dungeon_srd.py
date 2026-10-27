@@ -33,6 +33,9 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - Nacht-Gegner (LlamaTale 1 „Tageszeit vom Panel“): „nacht“ nur als true; in jeder Welt passen für einen Helden der
   Stufe 1, 2 und 3 mindestens 5 Nacht-Gegner ins Budget (sonst bietet das Panel nachts alle an), auf jeder Stufe des
   Bestiariums von 0 bis 5 gibt es welche.
+- Runen und Sockel (Plan dungeon-runen, Dominik 2026-10-27 „1a 2b 3a …“): 13 Runen mit den Rängen 1 bis 13 und den Preisen
+  der Plan-Tabelle, 7 Runenwörter aus vorhandenen Runen mit Sockelzahl = Zahl der Runen; dungeon_runen.check_rules
+  lehnt fremde Schlüssel, Treffer außerhalb der Waffe, Effekte am falschen Ort, Lücken im Rang und falsche Sockel ab.
 """
 import json
 import os
@@ -328,6 +331,31 @@ class Srd(unittest.TestCase):
                 n = [g["id"] for g in nacht if kampf.plays_in(r, g, w) and 0 < g["ep"] <= b]
                 self.assertGreaterEqual(len(n), 5, f"{w} Stufe {stufe}: {n}")
         self.assertLessEqual(set(range(6)), {int(g["stufe"]) for g in nacht})
+
+    def test_runen_und_runenwoerter(self):
+        import dungeon_runen as runen
+        s, r = srd(), dungeon._base_rules()
+        preise = {"uruz": 20, "ehwaz": 25, "ansuz": 30, "fehu": 50, "kenaz": 120, "isa": 150, "thurisaz": 150, "nauthiz": 180,
+                  "jera": 300, "berkano": 500, "sowilo": 500, "algiz": 900, "tiwaz": 1500}
+        self.assertEqual({x["id"]: x["preis"] for x in s["runen"]}, preise)
+        self.assertEqual(sorted(x["rang"] for x in s["runen"]), list(range(1, 14)))
+        self.assertEqual(len(s["runenwoerter"]), 7)
+        self.assertEqual(runen.check_rules(r), [])
+        sturm = next(x for x in r["runenwoerter"] if x["id"] == "sturmlied")
+        self.assertEqual((sturm["runen"], sturm["sockel"], sturm["ort"]), (["thurisaz", "ehwaz", "uruz"], 3, "waffe"))
+        uruz = next(x for x in r["runen"] if x["id"] == "uruz")
+        for bad in (dict(uruz, ruestung={"treffer": 1}), dict(uruz, ruestung={"effekt": "feuer"}), dict(uruz, waffe={"magie": 1}),
+                    dict(uruz, waffe={"werte": ["staerke"]}), dict(uruz, rang=14), {k: v for k, v in uruz.items() if k != "schild"}):
+            self.assertNotEqual(runen.check_rules(dict(r, runen=[bad] + [x for x in r["runen"] if x["id"] != "uruz"])), [], bad)
+        for bad in (dict(sturm, sockel=2), dict(sturm, runen=["thurisaz", "ehwaz", "gibtsnicht"]), dict(sturm, ort="haende"),
+                    dict(sturm, ort="nebenhand", zusatz={"schaden": 1})):
+            self.assertNotEqual(runen.check_rules(dict(r, runenwoerter=[bad])), [], bad)
+        algiz = dict(next(x for x in r["runenwoerter"] if x["id"] == "glut"), runen=["algiz", "uruz"])   # Algiz never in a weapon
+        self.assertNotEqual(runen.check_rules(dict(r, runenwoerter=[algiz])), [])
+        self.assertIn("runen", " ".join(dungeon.check_rules(dict(r, runen=[dict(uruz, rang=0)]))))   # part of the rules' check
+        woerter = next(t for t in r["toene"] if t["id"] == 8)["woerter"]
+        namen = [n for x in s["runen"] + s["runenwoerter"] for n in x["name"] + x.get("sinn", [])]
+        self.assertEqual([n for n in namen if any(w in " " + n.lower() + " " for w in woerter)], [])
 
 
 if __name__ == "__main__":

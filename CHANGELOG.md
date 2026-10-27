@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.153** · 2026-10-27 · KI-Dungeon-Master: Runen-Katalog, 13 Runen (Uruz bis Tiwaz, Wirkung je Waffe, Rüstung und Schild) und 7 Runenwörter (Glut bis Siegereid) mit festen Prüfregeln, noch ohne Wirkung im Spiel (Daten, Plan Runen und Sockel)
 - **V01.1.152** · 2026-10-27 · KI-Dungeon-Master: Zeugen-Regel (Schalter, aus), was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach fester Tabelle, Angriff und Diebstahl Ziel −2 und alle Anwesenden −1, Geschenk und Hilfe Ziel +1, ein gelungener Diebstahl bleibt unbemerkt, der Erzähler zeigt nur die Reaktion (LlamaTale-Idee 3)
 - **V01.1.151** · 2026-10-27 · KI-Dungeon-Master: Spieler anleiten Schritt 3, eine Erzählung mit weniger als zwei Ansatzpunkten oder einer leeren Frage wie „Was tut ihr?“ wird einmal neu erzählt, 👎-Grund „Wusste nicht, was wir tun können“ und Prüfstand-Szene „Sackgasse“, dazu Stillstand-Wink in drei Stufen, ein anderer Weg nach einer misslungenen Untersuchung und Schritt 5, zwei bis drei Spuren je Akt zum Wendepunkt in allen 50 Geschichten, die der Erzähler nach und nach zeigt
 - **V01.1.150** · 2026-10-27 · KI-Dungeon-Master: Stimme einer Person wählen, unter Regeln → Personen (NSC) zeigt jede Person ihre Stimme, der Admin wählt Alter, Geschlecht, Klang, Wesen und Tempo aus festen Listen, hört eine Probe und speichert, die Runde spricht die Person dann mit dieser Stimme

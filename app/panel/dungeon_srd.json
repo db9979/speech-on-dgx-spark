@@ -34108,5 +34108,445 @@
         ]
       }
     ]
-  }
+  },
+  "runen": [
+    {
+      "id": "uruz",
+      "rang": 1,
+      "name": [
+        "Uruz",
+        "Uruz"
+      ],
+      "sinn": [
+        "Kraft",
+        "Strength"
+      ],
+      "preis": 20,
+      "waffe": {
+        "schaden": 1
+      },
+      "ruestung": {
+        "leben": 2
+      },
+      "schild": {
+        "leben": 2
+      }
+    },
+    {
+      "id": "ehwaz",
+      "rang": 2,
+      "name": [
+        "Ehwaz",
+        "Ehwaz"
+      ],
+      "sinn": [
+        "Gespann",
+        "Team"
+      ],
+      "preis": 25,
+      "waffe": {
+        "treffer": 1
+      },
+      "ruestung": {
+        "werte": [
+          "geschick"
+        ],
+        "bonus": 1
+      },
+      "schild": {
+        "werte": [
+          "geschick"
+        ],
+        "bonus": 1
+      }
+    },
+    {
+      "id": "ansuz",
+      "rang": 3,
+      "name": [
+        "Ansuz",
+        "Ansuz"
+      ],
+      "sinn": [
+        "Wort",
+        "Word"
+      ],
+      "preis": 30,
+      "waffe": {
+        "werte": [
+          "intelligenz",
+          "weisheit"
+        ],
+        "bonus": 1
+      },
+      "ruestung": {
+        "werte": [
+          "intelligenz",
+          "weisheit"
+        ],
+        "bonus": 1
+      },
+      "schild": {
+        "werte": [
+          "intelligenz",
+          "weisheit"
+        ],
+        "bonus": 1
+      }
+    },
+    {
+      "id": "fehu",
+      "rang": 4,
+      "name": [
+        "Fehu",
+        "Fehu"
+      ],
+      "sinn": [
+        "Reichtum",
+        "Wealth"
+      ],
+      "preis": 50,
+      "waffe": {
+        "gold": 2
+      },
+      "ruestung": {
+        "rabatt": 5
+      },
+      "schild": {
+        "rabatt": 5
+      }
+    },
+    {
+      "id": "kenaz",
+      "rang": 5,
+      "name": [
+        "Kenaz",
+        "Kenaz"
+      ],
+      "sinn": [
+        "Fackel",
+        "Torch"
+      ],
+      "preis": 120,
+      "waffe": {
+        "effekt": "feuer"
+      },
+      "ruestung": {
+        "widerstand": "feuer"
+      },
+      "schild": {
+        "widerstand": "feuer"
+      }
+    },
+    {
+      "id": "isa",
+      "rang": 6,
+      "name": [
+        "Isa",
+        "Isa"
+      ],
+      "sinn": [
+        "Eis",
+        "Ice"
+      ],
+      "preis": 150,
+      "waffe": {
+        "effekt": "frost"
+      },
+      "ruestung": {
+        "widerstand": "kaelte"
+      },
+      "schild": {
+        "widerstand": "kaelte"
+      }
+    },
+    {
+      "id": "thurisaz",
+      "rang": 7,
+      "name": [
+        "Thurisaz",
+        "Thurisaz"
+      ],
+      "sinn": [
+        "Dorn",
+        "Thorn"
+      ],
+      "preis": 150,
+      "waffe": {
+        "effekt": "blitz"
+      },
+      "ruestung": {
+        "widerstand": "blitz"
+      },
+      "schild": {
+        "widerstand": "blitz"
+      }
+    },
+    {
+      "id": "nauthiz",
+      "rang": 8,
+      "name": [
+        "Nauthiz",
+        "Nauthiz"
+      ],
+      "sinn": [
+        "Not",
+        "Need"
+      ],
+      "preis": 180,
+      "waffe": {
+        "effekt": "gift"
+      },
+      "ruestung": {
+        "widerstand": "gift"
+      },
+      "schild": {
+        "widerstand": "gift"
+      }
+    },
+    {
+      "id": "jera",
+      "rang": 9,
+      "name": [
+        "Jera",
+        "Jera"
+      ],
+      "sinn": [
+        "Ernte",
+        "Harvest"
+      ],
+      "preis": 300,
+      "waffe": {
+        "effekt": "glueck"
+      },
+      "ruestung": {
+        "effekt": "glueck"
+      },
+      "schild": {
+        "effekt": "glueck"
+      }
+    },
+    {
+      "id": "berkano",
+      "rang": 10,
+      "name": [
+        "Berkano",
+        "Berkano"
+      ],
+      "sinn": [
+        "Birke",
+        "Birch"
+      ],
+      "preis": 500,
+      "waffe": {
+        "effekt": "vampir"
+      },
+      "ruestung": {
+        "leben": 4
+      },
+      "schild": {
+        "heiltrank": 2
+      }
+    },
+    {
+      "id": "sowilo",
+      "rang": 11,
+      "name": [
+        "Sowilo",
+        "Sowilo"
+      ],
+      "sinn": [
+        "Sonne",
+        "Sun"
+      ],
+      "preis": 500,
+      "waffe": {
+        "effekt": "heilig"
+      },
+      "ruestung": {
+        "widerstand": "nekrotisch"
+      },
+      "schild": {
+        "widerstand": "nekrotisch"
+      }
+    },
+    {
+      "id": "algiz",
+      "rang": 12,
+      "name": [
+        "Algiz",
+        "Algiz"
+      ],
+      "sinn": [
+        "Schutz",
+        "Protection"
+      ],
+      "preis": 900,
+      "waffe": null,
+      "ruestung": {
+        "rk": 1
+      },
+      "schild": {
+        "rk": 1
+      }
+    },
+    {
+      "id": "tiwaz",
+      "rang": 13,
+      "name": [
+        "Tiwaz",
+        "Tiwaz"
+      ],
+      "sinn": [
+        "Sieg",
+        "Victory"
+      ],
+      "preis": 1500,
+      "waffe": {
+        "treffer": 2,
+        "schaden": 2
+      },
+      "ruestung": {
+        "schutz": 1
+      },
+      "schild": {
+        "schutz": 1
+      }
+    }
+  ],
+  "runenwoerter": [
+    {
+      "id": "glut",
+      "name": [
+        "Glut",
+        "Ember"
+      ],
+      "runen": [
+        "kenaz",
+        "uruz"
+      ],
+      "ort": "waffe",
+      "sockel": 2,
+      "ab": 3,
+      "zusatz": {
+        "treffer": 1,
+        "schaden": 1
+      }
+    },
+    {
+      "id": "frostwacht",
+      "name": [
+        "Frostwacht",
+        "Frostward"
+      ],
+      "runen": [
+        "isa",
+        "uruz"
+      ],
+      "ort": "nebenhand",
+      "sockel": 2,
+      "ab": 4,
+      "zusatz": {
+        "rk": 1
+      }
+    },
+    {
+      "id": "sturmlied",
+      "name": [
+        "Sturmlied",
+        "Stormsong"
+      ],
+      "runen": [
+        "thurisaz",
+        "ehwaz",
+        "uruz"
+      ],
+      "ort": "waffe",
+      "sockel": 3,
+      "ab": 5,
+      "zusatz": {
+        "effekt": "donnernd"
+      }
+    },
+    {
+      "id": "wanderglueck",
+      "name": [
+        "Wanderglück",
+        "Wanderer's luck"
+      ],
+      "runen": [
+        "fehu",
+        "jera"
+      ],
+      "ort": "kopf",
+      "sockel": 2,
+      "ab": 7,
+      "zusatz": {
+        "werte": [
+          "charisma"
+        ],
+        "bonus": 1
+      }
+    },
+    {
+      "id": "wurzelkraft",
+      "name": [
+        "Wurzelkraft",
+        "Rootstrength"
+      ],
+      "runen": [
+        "nauthiz",
+        "berkano"
+      ],
+      "ort": "nebenhand",
+      "sockel": 2,
+      "ab": 8,
+      "zusatz": {
+        "werte": [
+          "konstitution"
+        ],
+        "bonus": 1
+      }
+    },
+    {
+      "id": "morgenroete",
+      "name": [
+        "Morgenröte",
+        "Daybreak"
+      ],
+      "runen": [
+        "sowilo",
+        "berkano",
+        "jera"
+      ],
+      "ort": "koerper",
+      "sockel": 3,
+      "ab": 9,
+      "zusatz": {
+        "werte": [
+          "weisheit"
+        ],
+        "bonus": 1,
+        "heiltrank": 2
+      }
+    },
+    {
+      "id": "siegereid",
+      "name": [
+        "Siegereid",
+        "Victor's oath"
+      ],
+      "runen": [
+        "tiwaz",
+        "uruz",
+        "ehwaz"
+      ],
+      "ort": "waffe",
+      "sockel": 3,
+      "ab": 11,
+      "zusatz": {
+        "effekt": "vampir"
+      }
+    }
+  ]
 }
