@@ -58,6 +58,8 @@ KINDS = {
     "eingang": (designed("Eingang"), "epub"),
     "web": (None, "epub"),                       # web pages stay EPUB (Dominik 3a)
     "archiv": (None, None),                      # only a folder: the documents of the other kinds go there
+    "dungeon": (None, None),                     # only a folder: the hero books and their notes have their own layout,
+                                                 # checked on every model in test_dungeon_buch (nothing outside the page)
     "anleitung": (designed("Anleitung"), "epub"),
     "kalibrierung": (lambda m: rmpapier.build_calibration(m)[0], None),
 }

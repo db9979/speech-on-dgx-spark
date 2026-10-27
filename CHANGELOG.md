@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.157** · 2026-10-27 · KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.156** · 2026-10-27 · KI-Dungeon-Master: Wandernde Personen und kleine Gesten (zwei Schalter, aus), bei langer Rast ziehen Personen der Karte nach festen Regeln zu ihrem Ziel oder dem Ort ihres Berufs weiter und man hört es als Gerücht, beim Warten zeigt eine Person der Szene eine feste Geste nach ihrem Wesen (LlamaTale-Ideen 6 und 7)
 - **V01.1.155** · 2026-10-27 · KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
 - **V01.1.154** · 2026-10-27 · KI-Dungeon-Master: Gedanken lesen (Schalter, aus), mit dem Zauber oder dem Trank würfelt das Panel eine Intelligenz-Probe, nur der lesende Spieler sieht Wunsch, Geheimnis und Haltung der Person, der Erzähler erzählt nur das Lauschen (LlamaTale-Idee 5)

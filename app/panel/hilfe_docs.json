@@ -5613,7 +5613,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " wird. Die Chronik des Helden (chronik, höchstens 300 Einträge) enthält nur feste Arten mit Katalog-IDs, ganzen Zahlen und den Namen, Völkern und Klassen der Mitspieler, nie Text des Modells; sie wird nur für Profile mit dem Schalter geschrieben und bei jedem Lesen geprüft. Gäste, Figur-Code und Gastkonten bekommen kein Buch; der Balance-Prüfstand schreibt nichts. Die Versände zählen in den Tageslimits des reMarkable. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (Rate-Limit dungeonpdf), POST …/buch/{hid}/senden. Zustand users/<id>/dungeon-buch.json. Live: heute geschickt, unverändert, nicht geschickt. Log dungeon: buch | gesendet | seiten 9 | bilder 7 | auto, | uebersprungen | unveraendert, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus. Selbsttests test_dungeon_buch."
+"text": " wird. Die Chronik des Helden (chronik, höchstens 300 Einträge) enthält nur feste Arten mit Katalog-IDs, ganzen Zahlen und den Namen, Völkern und Klassen der Mitspieler, nie Text des Modells; sie wird nur für Profile mit dem Schalter geschrieben und bei jedem Lesen geprüft. Gäste, Figur-Code und Gastkonten bekommen kein Buch; der Balance-Prüfstand schreibt nichts. Die Versände zählen in den Tageslimits des reMarkable. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (Rate-Limit dungeonpdf), POST …/buch/{hid}/senden. Zustand users/<id>/dungeon-buch.json. Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“ unter „Spark“ (bzw. dem gewählten Ablageordner), der bei Bedarf angelegt wird, auch ohne „Ordner nach Art“ (rmpapier.OWN_FOLDER, Dominik 2026-10-27); ein Buch, das noch lose in „Spark“ liegt, zieht mit der nächsten Ausgabe dorthin um (dasselbe Dokument, ohne Handschrift), ein selbst verschobenes bleibt, wo es ist, und schon geschickte Notizen bleiben liegen, weil sie Handschrift tragen können. „Jetzt schicken“ antwortet sofort und baut und schickt im Hintergrund (seit V01.1.157); die Seite zeigt je Held „wird gebaut und geschickt …“, dann „fertig“ oder „fehlgeschlagen“ mi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "t Schritt und Grund (Zeitüberschreitung, keine Verbindung, Cloud lehnt ab, zu groß, Tageslimit) und fragt nach, solange es läuft; ein zweiter Druck startet nichts Neues. Ein Buch bleibt klein: Bilder werden je Buch nur einmal gebaut, in Farbe als JPEG, in Graustufen als PNG mit 16 Stufen, Schriften nur als Teilmenge; mit 60 Bildern bleibt es unter 2 MB (vorher bis zu einige MB, die auf einer langsamen Leitung mit ReadTimeout endeten). Beim Hochladen wächst die Wartezeit mit der Dateigröße (remarkable.upload_timeout: Verbinden kurz, Lesen 60 s plus Zeit für eine langsame Leitung, höchstens 15 min), und eine Zeitüberschreitung wird einmal nach 5 s wiederholt; das gilt für alles, was der Spark aufs reMarkable legt. Live: heute geschickt, unverändert, nicht geschickt, gerade in Arbeit. Log dungeon: buch | gestartet | knopf, | gebaut | seiten 9 | bilder 7 | kb 610, | gesendet | seiten 9 | bilder 7 | auto, | fehler | hochladen | ReadTimeout (Schritt bauen, bild, liste, hochladen oder wurzel, dann der Grund in festen Wörtern), | uebersprungen | unveraendert, | uebersprungen | laeuft, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus; davor gegebenenfalls remarkable: "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "cloud ReadTimeout, trying once more. Selbsttests test_dungeon_buch."
 },
 {
 "lang": "de",
@@ -20661,7 +20677,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "og ids, whole numbers and the fellow heroes' names, peoples and classes, never a text of the model; it is written only for profiles with the switch and checked whenever it is read. Guests, figure codes and guest accounts get no book; the balance bench writes nothing. The sendings count in the reMarkable's daily limits. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (rate limit dungeonpdf), POST …/buch/{hid}/senden. State users/<id>/dungeon-buch.json. Live: sent today, unchanged, not sent. Log dungeon: buch | gesendet | seiten 9 | bilder 7 | auto, | uebersprungen | unveraendert, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus. Self-tests test_dungeon_buch."
+"text": "og ids, whole numbers and the fellow heroes' names, peoples and classes, never a text of the model; it is written only for profiles with the switch and checked whenever it is read. Guests, figure codes and guest accounts get no book; the balance bench writes nothing. The sendings count in the reMarkable's daily limits. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (rate limit dungeonpdf), POST …/buch/{hid}/senden. State users/<id>/dungeon-buch.json. Book and notes lie in their own folder \"Dungeon-Master\" (Dungeon Master) below \"Spark\" (or the chosen folder), made when needed, also without \"Folders by kind\" (rmpapier.OWN_FOLDER, Dominik 2026-10-27); a book still loose in \"Spark\" moves there with its next edition (the same document, without handwriting), one the person moved stays where it is, and notes already sent stay put because they may carry handwriting. \"Send now\" answers at once and makes and sends the book in the background (since V01.1.157); the page shows per hero \"being made and sent …\", then \"done\" or \"failed\" with step and reason (took too long, no connection, cloud refused, too large, daily limit) and asks again while it runs; a second press starts nothing new. A"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " book stays small: pictures are made only once per book, in colour as JPEG, in greyscale as PNG with 16 steps, fonts only as subsets; with 60 pictures it stays below 2 MB (before up to several MB, which ended in ReadTimeout on a slow line). When uploading, the wait grows with the file's size (remarkable.upload_timeout: connect briefly, read 60 s plus the time for a slow line, at most 15 min), and a timeout is tried once more after 5 s; this applies to everything the Spark puts on the reMarkable. Live: sent today, unchanged, not sent, in progress right now. Log dungeon: buch | gestartet | knopf, | gebaut | seiten 9 | bilder 7 | kb 610, | gesendet | seiten 9 | bilder 7 | auto, | fehler | hochladen | ReadTimeout (step bauen, bild, liste, hochladen or wurzel, then the reason in fixed words), | uebersprungen | unveraendert, | uebersprungen | laeuft, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus; before it possibly remarkable: cloud ReadTimeout, trying once more. Self-tests test_dungeon_buch."
 },
 {
 "lang": "en",

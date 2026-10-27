@@ -6,7 +6,8 @@ for every profile the admin did not block (chat.deny); "Selbst aufräumen" keeps
 
 rmordner    "Ordner nach Art": what the Spark puts on the reMarkable goes into one folder per kind below "Spark" (or
             the chosen folder): Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang,
-            Archiv. The guide lies on top as a favourite. The Spark keeps a folder's id, not its name, so renaming or
+            Archiv, and „Dungeon-Master“ (the hero books and their notes, dungeon_buch.py) which is used always,
+            even without this switch (OWN_FOLDER, Dominik 2026-10-27). The guide lies on top as a favourite. The Spark keeps a folder's id, not its name, so renaming or
             moving it is fine; a folder gone is made again. "Jetzt einsortieren" moves the Spark's own loose documents.
 rmaufraeumen "Selbst aufräumen": once a day Morgenblatt and Wochenrückblick without handwriting go to "Archiv" after
             ARCHIVE_DAYS, and from there into the reMarkable's trash (still restorable there) after TRASH_DAYS. A
@@ -56,7 +57,8 @@ MODELS = {
 }
 # folders below the base folder, one per kind (rmordner); "" = the base folder itself
 ARTEN = {"aufgaben": "Aufgaben", "morgen": "Morgenblatt", "woche": "Wochenrückblick", "besprechung": "Besprechungen", "antwort": "Antworten",
-         "web": "Web und Anhänge", "eingang": "Eingang", "archiv": "Archiv"}
+         "web": "Web und Anhänge", "eingang": "Eingang", "archiv": "Archiv", "dungeon": "Dungeon-Master"}
+OWN_FOLDER = ("dungeon",)   # kinds that always go into their folder, also without „Ordner nach Art“ (Dominik 2026-10-27)
 # the Spark's own loose documents from before the folders, by their title ("Jetzt einsortieren")
 OLD_NAMES = ((re.compile(r"^Morgenblatt\b"), "morgen"), (re.compile(r"^Wochenrückblick\b"), "woche"),
              (re.compile(r"^Zusammenfassung\b"), "besprechung"), (re.compile(r"^Antwort:"), "antwort"),

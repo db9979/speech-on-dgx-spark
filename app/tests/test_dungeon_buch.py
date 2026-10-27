@@ -10,8 +10,18 @@
   colour only on Paper Pro and Move and only while the profile keeps „Farbe“ (rm_color), never on the rm2.
 - The endpoints: login, own hero only, POST with a size bound, a GET changes nothing; the automatic book waits for
   the evening's end, goes once and skips an unchanged book.
+- „Jetzt schicken“ answers at once and works in the background; a second press while it runs starts nothing.
+- A timeout of the reMarkable cloud (Dominik's Pi 2026-10-27: „buch | fehler | ReadTimeout“) is asked once more; a
+  second one ends with a journal line that names the step (hochladen) in fixed words, a status for the page and no
+  change to the book's state. An upload's time grows by its size.
+- The book and its notes lie in the folder „Dungeon-Master“ below „Spark“, also without „Ordner nach Art“; a book still
+  loose in „Spark“ moves in with its next edition, notes sent before stay, a book the person put elsewhere stays there.
+- A book with BILDER_MAX photo-like pictures stays below BUCH_ZIEL on every model; each picture is made once per book.
 """
 import asyncio
+import contextlib
+import hashlib
+import io
 import json
 import os
 import random
@@ -33,6 +43,7 @@ import profiles  # noqa: E402
 import remarkable  # noqa: E402
 import rmpapier  # noqa: E402
 import rmplus  # noqa: E402
+import httpx  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -332,7 +343,7 @@ class Sending(Base):
         self.assertEqual(buch.due(uid, T + buch.BUENDEL_S), [h["hid"]])
         self.assertEqual(run(buch.due_once(idle=False, now=T + buch.BUENDEL_S, uids=[uid])), None)
         self.assertEqual(run(buch.due_once(now=T + buch.BUENDEL_S, uids=[uid])), "gesendet")
-        self.assertEqual([(s[1], s[2], s[3]) for s in self.sent], [(f"dungeonbuch:{h['hid']}", True, ""), ("", True, "")])
+        self.assertEqual([(s[1], s[2], s[3]) for s in self.sent], [(f"dungeonbuch:{h['hid']}", True, "dungeon"), ("", True, "dungeon")])
         self.assertEqual(buch.due(uid, T + buch.BUENDEL_S), [])
         buch.anstossen(uid, h["hid"], T + buch.BUENDEL_S)                  # once a day automatically
         self.assertEqual(buch.due(uid, T + 2 * buch.BUENDEL_S), [])
@@ -357,9 +368,22 @@ class Sending(Base):
         self.assertEqual(c2.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", json={}).status_code, 404)   # not its hero
         self.assertEqual(c.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", content=b"{" + b" " * 5000 + b"}",
                                 headers={"content-type": "application/json"}).status_code, 413)
-        r = c.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", json={})
-        self.assertEqual(r.status_code, 200, r.text)
+        later = []
+        with mock.patch.object(buch, "_hintergrund", later.append):
+            r = c.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", json={})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["helden"][0]["ausgabe"], 0)               # answered at once
+            self.assertEqual(r.json()["helden"][0]["status"]["s"], "laeuft")
+            self.assertEqual(buch.for_live()["laeuft"], 1)
+            r = c.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", json={})
+            self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(len(later), 1)                                      # a second press starts nothing
+        self.assertEqual(self.sent, [])
+        self.assertEqual(run(later[0]), "gesendet")
+        r = c.get("/api/profile/dungeon/buch")
         self.assertEqual(r.json()["helden"][0]["ausgabe"], 1)
+        self.assertEqual(r.json()["helden"][0]["status"]["s"], "gesendet")
+        self.assertEqual(buch.for_live()["laeuft"], 0)
         self.assertEqual(self.sent[0][1], f"dungeonbuch:{h['hid']}")
 
     def test_the_sentence_by_the_sheet_tool(self):
@@ -371,6 +395,216 @@ class Sending(Base):
         self.assertIn(h["name"], run(rmplus.sheet_now(uid, "heldenbuch")))
         helpers.set_config(dungeon_buch=False)
         self.assertNotIn("heldenbuch", rmplus.sheets_for(uid, "Schick mein Heldenbuch aufs reMarkable"))
+
+
+class Cloud(Base):
+    """The real remarkable.place against a small cloud in memory (only _request and the user token replaced)."""
+
+    def setUp(self):
+        super().setUp()
+        self.files = {}
+        self.timeouts = []      # (file name, read time) of every upload
+        self.fail = []          # which upload times out: a file ending, as often as listed
+        self.waits = []
+        empty = b"3\n"
+        self.root = hashlib.sha256(empty).hexdigest()
+        self.files[self.root] = empty
+        cloud = self
+
+        async def request(method, url, token="", most=remarkable.MAX_INDEX, headers=None, **kw):
+            if url == remarkable.ROOT_URL:
+                return httpx.Response(200, json={"hash": cloud.root, "generation": 1})
+            if url == remarkable.ROOT_PUT_URL:
+                cloud.root = kw["json"]["hash"]
+                return httpx.Response(200, json={})
+            h = url[len(remarkable.FILES_URL):]
+            if method == "GET":
+                return httpx.Response(200, content=cloud.files[h])
+            name = headers["rm-filename"]
+            cloud.timeouts.append((name, kw["timeout"].read, kw["timeout"].connect))
+            if any(name.endswith(x) for x in cloud.fail):
+                cloud.fail.remove(next(x for x in cloud.fail if name.endswith(x)))
+                raise httpx.ReadTimeout("cloud text with a secret")
+            cloud.files[h] = kw["content"]
+            return httpx.Response(200)
+
+        async def token(uid, fresh=False):
+            return "t" * 30
+
+        async def wait(s):
+            self.waits.append(s)
+        for p in (mock.patch.object(remarkable, "_request", request), mock.patch.object(remarkable, "user_token", token),
+                  mock.patch.object(remarkable, "_busy_wait", wait), mock.patch.object(buch, "connected", return_value=True)):
+            p.start()
+            self.addCleanup(p.stop)
+
+    def send(self, uid, hid):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            word = run(buch.senden(uid, hid, now=T))
+        return word, out.getvalue()
+
+    def tree(self):
+        """{name: (doc id, metadata)} of what the account's root holds now."""
+        out = {}
+        for e in remarkable.parse_index(self.files[self.root]):
+            for f in remarkable.parse_index(self.files[e["hash"]]):
+                if f["id"].endswith(".metadata"):
+                    meta = json.loads(self.files[f["hash"]])
+                    out[meta["visibleName"]] = (e["id"], meta)
+        return out
+
+    def test_book_and_notes_lie_in_dungeon_master(self):
+        _c, uid, h = self.mine("Buch Ordner")
+        self.assertFalse(features.allowed("rmordner", uid))                   # also without „Ordner nach Art“
+        self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")
+        t = self.tree()
+        spark, dm = t["Spark"], t["Dungeon-Master"]
+        self.assertEqual((spark[1]["type"], spark[1]["parent"]), ("CollectionType", ""))
+        self.assertEqual((dm[1]["type"], dm[1]["parent"]), ("CollectionType", spark[0]))
+        self.assertEqual(t["Heldenbuch – " + h["name"]][1]["parent"], dm[0])
+        self.assertEqual(t["Notizen – " + h["name"]][1]["parent"], dm[0])
+        self.assertEqual(rmpapier.ARTEN[buch.ORDNER], "Dungeon-Master")
+        self.assertIn(buch.ORDNER, rmpapier.OWN_FOLDER)
+
+    def test_a_loose_book_moves_in_and_the_notes_stay(self):
+        _c, uid, h = self.mine("Buch Umzug")
+        with mock.patch.object(rmpapier, "OWN_FOLDER", ()):                    # as sent before the folder existed
+            self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")
+        t = self.tree()
+        book = t["Heldenbuch – " + h["name"]]
+        self.assertEqual(book[1]["parent"], t["Spark"][0])
+        self.assertNotIn("Dungeon-Master", t)
+        self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")             # the next edition
+        t = self.tree()
+        self.assertEqual(t["Heldenbuch – " + h["name"]][0], book[0])          # the same document, moved
+        self.assertEqual(t["Heldenbuch – " + h["name"]][1]["parent"], t["Dungeon-Master"][0])
+        self.assertEqual(t["Notizen – " + h["name"]][1]["parent"], t["Spark"][0])   # notes may carry handwriting: stay
+        self.assertEqual(len([n for n in t if n.startswith("Heldenbuch")]), 1)
+
+    def test_a_book_put_elsewhere_stays_there(self):
+        _c, uid, h = self.mine("Buch Woanders")
+        self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")
+        t = self.tree()
+        bid = t["Heldenbuch – " + h["name"]][0]
+        items = run(remarkable.refresh_library(uid))
+        run(remarkable._add_to_root(uid, [], run(rmpapier.set_meta(uid, items, {bid: {"parent": ""}}))))   # the person moves it
+        self.assertEqual(self.tree()["Heldenbuch – " + h["name"]][1]["parent"], "")
+        self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")
+        self.assertEqual(self.tree()["Heldenbuch – " + h["name"]], (bid, mock.ANY))
+        self.assertEqual(self.tree()["Heldenbuch – " + h["name"]][1]["parent"], "")   # renewed where the person put it
+
+    def test_an_upload_gets_time_by_its_size(self):
+        small, big = remarkable.upload_timeout(1000), remarkable.upload_timeout(8 * 1024**2)
+        self.assertEqual(small.connect, remarkable.TIMEOUT.connect)
+        self.assertEqual(big.connect, remarkable.TIMEOUT.connect)            # connecting stays short
+        self.assertGreaterEqual(small.read, remarkable.TIMEOUT.read)
+        self.assertGreater(big.read, 4 * remarkable.TIMEOUT.read)
+        self.assertEqual(remarkable.upload_timeout(10 ** 12).read, remarkable.UPLOAD_READ_MAX)
+
+    def test_a_timeout_is_asked_once_more(self):
+        _c, uid, h = self.mine("Buch Wolke")
+        self.fail = [".pdf"]
+        word, log = self.send(uid, h["hid"])
+        self.assertEqual(word, "gesendet", log)
+        self.assertEqual(self.waits, [remarkable.TIMEOUT_WAIT])
+        self.assertIn("remarkable: cloud ReadTimeout, trying once more", log)
+        self.assertIn("dungeon: buch | gesendet |", log)
+        self.assertEqual(buch._state(uid)["buecher"][h["hid"]]["ausgabe"], 1)
+        self.assertEqual(buch.public(uid)["helden"][0]["status"]["s"], "gesendet")
+        pdf = [x for x in self.timeouts if x[0].endswith(".pdf")]
+        self.assertEqual(len(pdf), 3)                       # the book twice (one timeout), the notes once
+        self.assertTrue(all(x[1] >= remarkable.TIMEOUT.read and x[2] == remarkable.TIMEOUT.connect for x in self.timeouts))
+
+    def test_a_second_timeout_names_its_step_and_breaks_nothing(self):
+        _c, uid, h = self.mine("Buch Sturm")
+        st = buch._state(uid)
+        root = self.root
+        self.fail = [".pdf", ".pdf"]
+        word, log = self.send(uid, h["hid"])
+        self.assertEqual(word, "fehler")
+        self.assertIn("dungeon: buch | fehler | hochladen | ReadTimeout", log)
+        self.assertNotIn("secret", log)
+        lines = [x for x in log.splitlines() if x.startswith("dungeon:")]
+        self.assertTrue(lines)
+        for x in lines:
+            self.assertRegex(x, r"^dungeon: buch( \| [a-z_]+( [0-9]+)?)+( \| [A-Za-z]+)?$")
+        self.assertEqual(buch._state(uid), st)               # nothing noted as sent, nothing lost
+        self.assertEqual(self.root, root)                    # the account's root untouched
+        s = buch.public(uid)["helden"][0]["status"]
+        self.assertEqual((s["s"], s["schritt"], s["grund"]), ("fehler", "hochladen", "timeout"))
+        self.assertEqual(buch.for_live()["laeuft"], 0)
+        self.fail = []
+        self.assertEqual(self.send(uid, h["hid"])[0], "gesendet")             # the next press works
+
+    def test_the_root_step_is_named(self):
+        _c, uid, h = self.mine("Buch Wurzel")
+
+        async def boom(*a, **k):
+            raise httpx.ReadTimeout("x")
+        with mock.patch.object(remarkable, "_add_to_root", boom):
+            word, log = self.send(uid, h["hid"])
+        self.assertEqual(word, "fehler")
+        self.assertIn("dungeon: buch | fehler | wurzel | ReadTimeout", log)
+
+    def test_a_failing_build_is_named(self):
+        _c, uid, h = self.mine("Buch Bau")
+        with mock.patch.object(buch, "build", side_effect=RuntimeError("x")):
+            word, log = self.send(uid, h["hid"])
+        self.assertEqual(word, "fehler")
+        self.assertIn("dungeon: buch | fehler | bauen | RuntimeError", log)
+        self.assertEqual(buch.public(uid)["helden"][0]["status"]["schritt"], "bauen")
+        self.assertEqual(self.timeouts, [])
+
+
+class Size(Base):
+    def test_a_book_with_pictures_stays_small(self):
+        from PIL import Image, ImageDraw, ImageFilter
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        _c, uid, h = self.mine("Buch Bild")
+        r = dungeon.rules()
+        h["album"] = {g["id"]: 5 for g in r["gegner"][:buch.BILDER_MAX]}
+        data = buch.inhalt(dungeon, uid, h, "de")
+        names = []
+
+        def foto(seed):     # photo-like: a gradient, shapes, fine noise (a generated picture is no flat drawing)
+            rnd = random.Random(seed)
+            im = Image.linear_gradient("L").resize((512, 512)).convert("RGB")
+            im = Image.blend(im, Image.new("RGB", im.size, tuple(rnd.randrange(256) for _ in range(3))), 0.5)
+            d = ImageDraw.Draw(im)
+            for _ in range(30):
+                x, y = rnd.randrange(512), rnd.randrange(512)
+                d.ellipse((x, y, x + rnd.randrange(20, 160), y + rnd.randrange(20, 160)), fill=tuple(rnd.randrange(256) for _ in range(3)))
+            px = im.load()
+            for i in range(0, 512 * 512, 3):
+                x, y = i % 512, i // 512
+                v = rnd.randrange(-40, 40)
+                px[x, y] = tuple(max(0, min(255, c + v)) for c in px[x, y])
+            name = f"buchtest-gross-{seed}"
+            im.filter(ImageFilter.GaussianBlur(0.6)).save(dungeon.bild_file(name), "PNG")
+            self.addCleanup(os.remove, dungeon.bild_file(name))
+            names.append(name)
+            return name
+        things = data["an"] + data["tasche"] + data["bestien"]
+        for i, it in enumerate(things):
+            it["bild"] = foto(i)
+        data["portrait"] = foto(999)
+        self.assertGreaterEqual(len(names), buch.BILDER_MAX)
+        real, calls = buch._picture, []
+
+        def counted(*a):
+            calls.append(a[1:4])
+            return real(*a)
+        for key, farbe in (("pro", True), ("move", True), ("rm2", False)):
+            calls.clear()
+            m = rmpapier.model(key)
+            with mock.patch.object(buch, "_picture", counted):
+                pdf, b = buch.build(dungeon, data, m, farbe, 1, (), T)
+            self.assertEqual(b.bilder, buch.BILDER_MAX, key)
+            self.assertLess(len(pdf), buch.BUCH_ZIEL, key)
+            self.assertEqual(len(calls), len(set(calls)), key)                    # each picture made once per book
+        m = rmpapier.model("pro")
+        self.assertTrue(buch._picture(dungeon, names[0], 30, 30, m, False).startswith(b"\xff\xd8"))   # colour: JPEG
 
 
 if __name__ == "__main__":

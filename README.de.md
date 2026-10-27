@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.157** KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.156** KI-Dungeon-Master: Wandernde Personen und kleine Gesten (zwei Schalter, aus), bei langer Rast ziehen Personen der Karte nach festen Regeln zu ihrem Ziel oder dem Ort ihres Berufs weiter und man hört es als Gerücht, beim Warten zeigt eine Person der Szene eine feste Geste nach ihrem Wesen (LlamaTale-Ideen 6 und 7)
 - **V01.1.155** KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
 - **V01.1.154** KI-Dungeon-Master: Gedanken lesen (Schalter, aus), mit dem Zauber oder dem Trank würfelt das Panel eine Intelligenz-Probe, nur der lesende Spieler sieht Wunsch, Geheimnis und Haltung der Person, der Erzähler erzählt nur das Lauschen (LlamaTale-Idee 5)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.150** KI-Dungeon-Master: Stimme einer Person wählen, unter Regeln → Personen (NSC) zeigt jede Person ihre Stimme, der Admin wählt Alter, Geschlecht, Klang, Wesen und Tempo aus festen Listen, hört eine Probe und speichert, die Runde spricht die Person dann mit dieser Stimme
 - **V01.1.149** KI-Dungeon-Master: Porträts im NSC-Katalog: jede Person zeigt ihr Gesicht in Liste und Detail, wer keins aus einer Runde hat, bekommt ein Katalogbild aus festen Teilen (nachts, mit „Alle Bilder malen“ oder „Malen“) und bringt es in die nächste Runde mit
 - **V01.1.148** KI-Dungeon-Master: Spieler anleiten (Schalter, aus), jede Erzählung nennt mindestens zwei greifbare Ansatzpunkte und endet mit einer konkreten Wahl, darunter „Das kannst du hier“ als Knöpfe nur aus der Szene und geprüften Wegen des Erzählers, Stufe Einsteiger, Normal oder Erfahren je Runde, im Auto „Was kann ich tun?“, und stille Spieler bekommen eine Frage aus der Szene
-- **V01.1.147** Tests ohne Zufall: Telefon-, Pebble- und Vorwärmen-Test prüfen nur Textfelder, nicht Zeitstempel, Zufalls-IDs oder verschlüsselte Werte, die eine Ziffernfolge zufällig enthalten können
 
 
 

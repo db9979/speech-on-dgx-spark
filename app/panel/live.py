@@ -2075,6 +2075,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['schrift']['gefunden']} Schriftstücke gefunden, {dgn['schrift']['verworfen']} verworfen, {dgn['schrift']['geheim']} nur für einen Platz"
                            if any((dgn.get("schrift") or {}).values()) else "")
                         + (f" · heute {dgn['buch']['gesendet']} Heldenbücher aufs reMarkable, {dgn['buch']['unveraendert']} unverändert, {dgn['buch']['fehler'] + dgn['buch']['abgelehnt']} nicht geschickt"
+                           + (f", {dgn['buch']['laeuft']} gerade in Arbeit" if dgn['buch'].get('laeuft') else "")
                            if any((dgn.get("buch") or {}).values()) else "")
                         + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht, {dgn['album'].get('personen', 0)} Personen-Stufen"
                            if any((dgn.get("album") or {}).values()) else "")
