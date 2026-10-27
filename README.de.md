@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.148** KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.147** Tests ohne Zufall: Telefon-, Pebble- und Vorwärmen-Test prüfen nur Textfelder, nicht Zeitstempel, Zufalls-IDs oder verschlüsselte Werte, die eine Ziffernfolge zufällig enthalten können
 - **V01.1.146** KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium, nachts kommen Untote, Werwesen und Nachttiere (LlamaTale 1)
 - **V01.1.145** KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.141** Pebble-Test unabhängig von der Uhrzeit: „Mein Tag“ rechnet mit einem festen „jetzt“, kurz vor Mitternacht wird der Test nicht mehr rot
 - **V01.1.140** KI-Dungeon-Master: Rettungswürfe, Zustände und SG nach dem SRD im Katalog (Kampf-Audit H4, N6, N7)
 - **V01.1.139** KI-Dungeon-Master: Kampf-Audit Welle 2, eine gewirkte Angriffs-Schriftrolle macht den nächsten Angriff zu ihrem Zauber, Heilzauber wirken vor den Treffern des Zuges, „Ratte“ trifft die Riesenratte statt des Rattenschwarms, und die Kampf-Erfahrung wird abgerundet geteilt
-- **V01.1.138** KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 
 
 

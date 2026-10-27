@@ -22,7 +22,11 @@ model). reMarkable can change it; "Verbindung prüfen" then says so, uploading a
 
 Connections go through netguard (PUBLIC) to the fixed reMarkable hosts only (ALLOWED); redirects are
 followed by hand and only to these hosts; the login header only goes to the host it was made for.
-Answers have a byte cap, page files a size cap, parsing runs off the event loop.
+Answers have a byte cap, page files a size cap, parsing runs off the event loop. An upload gets time by its size
+(upload_timeout: a short connect, the read time grows with the file, because the body waits in the system's send
+buffer and the cloud answers only once it has it all; a slow line ended a 2 MB hero book with ReadTimeout, V01.1.148);
+a request that times out is asked once more after TIMEOUT_WAIT (uploads go by hash, the root by generation). place()
+marks an error with its step (step(e): liste, hochladen, wurzel) so the callers' journal says where it stopped.
 
     GET    /api/profile/remarkable          state, library with what is picked (own login)
     POST   /api/profile/remarkable/pair     {"code"}  connect (browser login, fresh code with MFA)
@@ -33,6 +37,7 @@ Answers have a byte cap, page files a size cap, parsing runs off the event loop.
 """
 import asyncio
 import base64
+import contextlib
 import hashlib
 import html
 import io
@@ -88,6 +93,9 @@ SYNC_EVERY = 1800
 SOON = 120                  # next comparison when one was cut short
 PEEK = 180                  # in between: one small look at the account's root every 3 minutes; changed -> compare now
 TIMEOUT = httpx.Timeout(60, connect=10)
+UPLOAD_RATE = 32 * 1024     # bytes per second a weak uplink still manages: an upload's read time grows by its size
+UPLOAD_READ_MAX = 900       # but never longer than this (s)
+TIMEOUT_WAIT = 5            # the pause before asking once more after a timeout
 CONCURRENT = 6
 SEND_DAY = 20               # uploads per profile and day
 MAX_SEND = 60_000           # characters of one upload
@@ -274,14 +282,35 @@ async def _busy_wait(seconds):
     await asyncio.sleep(seconds)
 
 
+def upload_timeout(n):
+    """The time for an upload of n bytes: connect briefly, then TIMEOUT's read time plus what a weak line needs for
+    the file (UPLOAD_RATE), at most UPLOAD_READ_MAX. httpx counts the upload's tail as read time: the body lies in the
+    system's send buffer while the answer is awaited, so a large file on a slow line ended in ReadTimeout."""
+    t = min(UPLOAD_READ_MAX, TIMEOUT.read + max(0, int(n)) / UPLOAD_RATE)
+    return httpx.Timeout(t, connect=TIMEOUT.connect)
+
+
 async def _authed(uid, method, url, most=MAX_INDEX, headers=None, **kw):
-    r = await _request(method, url, await user_token(uid), most, headers, **kw)
+    timed_out = []
+
+    async def ask(fresh=False):
+        tok = await user_token(uid, fresh=fresh)
+        try:
+            return await _request(method, url, tok, most, headers, **kw)
+        except httpx.TimeoutException as e:
+            if timed_out:           # once per request: a cloud that stays silent ends it
+                raise
+            timed_out.append(1)
+            print(f"remarkable: cloud {type(e).__name__}, trying once more", flush=True)
+            await _busy_wait(TIMEOUT_WAIT)
+            return await _request(method, url, tok, most, headers, **kw)
+    r = await ask()
     if r.status_code == 401:
-        r = await _request(method, url, await user_token(uid, fresh=True), most, headers, **kw)
+        r = await ask(fresh=True)
     if r.status_code in BUSY:
         print(f"remarkable: cloud answered HTTP {r.status_code}, trying once more", flush=True)
         await _busy_wait(_pause(r))
-        r = await _request(method, url, await user_token(uid), most, headers, **kw)
+        r = await ask()
     return r
 
 
@@ -870,7 +899,8 @@ async def _put(uid, data, name, ctype="application/octet-stream", h=None):
     h = h or hashlib.sha256(data).hexdigest()
     headers = {"rm-filename": name, "content-type": ctype,
                "x-goog-hash": "crc32c=" + base64.b64encode(struct.pack(">I", crc32c(data))).decode()}
-    r = await _authed(uid, "PUT", FILES_URL + h, most=64 * 1024, headers=headers, content=data)
+    r = await _authed(uid, "PUT", FILES_URL + h, most=64 * 1024, headers=headers, content=data,
+                      timeout=upload_timeout(len(data)))
     if not 200 <= r.status_code < 300:
         raise CloudError(f"upload of {name.rsplit('.', 1)[-1]} HTTP {r.status_code} {_said(r)}".strip())
     return {"hash": h, "id": name, "size": len(data)}
@@ -1010,6 +1040,27 @@ async def base_folder(uid, items, new):
 
 
 MAX_MADE = 400              # documents the Spark made, remembered for sorting and tidying up (rmpapier.py)
+STEPS = ("liste", "hochladen", "wurzel")   # place(): reading the account, uploading the files, the new root
+
+
+@contextlib.contextmanager
+def _step(name):
+    """Marks an error raised inside with the step of place() it came from (the first mark stays)."""
+    try:
+        yield
+    except Exception as e:
+        if not getattr(e, "rm_step", ""):
+            try:
+                e.rm_step = name
+            except Exception:
+                pass
+        raise
+
+
+def step(e):
+    """The step of place() an error came from, a fixed word of STEPS, or "" (before the cloud was asked)."""
+    s = getattr(e, "rm_step", "")
+    return s if s in STEPS else ""
 
 
 async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="", pinned=False):
@@ -1020,7 +1071,8 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="
     the old one goes to "Archiv" with "Ordner nach Art"). Nothing the person made is ever changed. auto: made by
     the Spark itself (rmplus.py), its own daily limit. src: "web" or "mail" when the title is outside text (a page's
     or an attachment's name; recent() then never repeats it). Every upload is noted (recent). art: a kind from
-    rmpapier.ARTEN, its folder below the base folder ("Ordner nach Art"; the caller passes it only when that is on).
+    rmpapier.ARTEN, its folder below the base folder (folder_by_kind: with "Ordner nach Art", always for
+    rmpapier.OWN_FOLDER, whose renewed document also moves there from the base folder).
     pinned: a favourite on the device.
     Returns {"title", "where", "lost", "id", "renewed"}."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
@@ -1028,44 +1080,27 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="
         raise ValueError("nothing to send")
     if len(data) > MAX_FILE:
         raise ValueError(f"zu groß (höchstens {MAX_FILE // 1024**2} MB)")
-    import rmpapier
     title = _clean(title, 80) or "Vom Spark"
     key = "auto" if auto else "sent"
     s = _count(load(uid), key, AUTO_DAY if auto else SEND_DAY)
-    try:
-        items = await refresh_library(uid)
-    except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
-        print("remarkable: listing before sending:", why_long(e), "- using the last listing", flush=True)
-        items = library(uid)
-    mine = (load(uid).get("own") or {}).get(own) if own else None
-    renew = mine if mine and ID.fullmatch(str(mine)) and mine in items and not items[mine].get("folder") else None
-    swap, new, lost, path, marked = {}, [], False, "", None
-    if renew:
-        old = parse_index(await blob(uid, items[renew]["h"], renew + ".docSchema"))
-        if kind == "pdf" and any(e["id"].endswith(".rm") for e in old):
-            marked, renew = renew, None     # handwriting on the sheet: never new text under it, a new version
-    if renew:
-        keep = [(e["id"], e) for e in old if not e["id"].endswith((".epub", ".pdf", ".content", ".metadata"))]
-        meta = _meta(title, items[renew].get("parent") or "", "DocumentType", pinned)
-        fresh = [await _put(uid, x, n) for n, x in ((renew + "." + kind, data), (renew + ".content", _content(kind, title)),
-                                                    (renew + ".metadata", meta))]
-        entries = sorted([e for _, e in keep] + fresh, key=lambda e: e["id"])
-        swap[renew] = await _index(uid, renew, entries)
-        did, path = renew, path_of(items, items[renew].get("parent")) if items[renew].get("parent") else ""
-    else:
-        folder, path, lost = await base_folder(uid, items, new)
-        if art in rmpapier.ARTEN and features.allowed("rmordner", uid):
-            folder = await rmpapier.art_folder(uid, items, folder, art, new)
-            path = (path or "Spark") + "/" + rmpapier.ARTEN[art]
-        if marked and features.allowed("rmordner", uid):
-            base, _, _ = await base_folder(uid, items, new)
-            swap.update(await rmpapier.set_meta(uid, items, {marked: {
-                "parent": await rmpapier.art_folder(uid, items, base, "archiv", new), "pinned": False}}))
-        did = str(uuid.uuid4())
-        new.append(await _new_doc(uid, did, [(did + ".content", _content(kind, title)),
-                                            (did + ".metadata", _meta(title, folder, "DocumentType", pinned)),
-                                            (did + ".pagedata", b"\n"), (did + "." + kind, data)]))
-    await _add_to_root(uid, [{k: v for k, v in e.items() if k not in ("spark_base", "folder_of")} for e in new], swap)
+    with _step("liste"):
+        try:
+            items = await refresh_library(uid)
+        except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
+            print("remarkable: listing before sending:", why_long(e), "- using the last listing", flush=True)
+            items = library(uid)
+        mine = (load(uid).get("own") or {}).get(own) if own else None
+        renew = mine if mine and ID.fullmatch(str(mine)) and mine in items and not items[mine].get("folder") else None
+        swap, new, marked = {}, [], None
+        if renew:
+            old = parse_index(await blob(uid, items[renew]["h"], renew + ".docSchema"))
+            if kind == "pdf" and any(e["id"].endswith(".rm") for e in old):
+                marked, renew = renew, None     # handwriting on the sheet: never new text under it, a new version
+    with _step("hochladen"):
+        did, path, lost = await _upload(uid, title, data, kind, items, renew, old if renew or marked else [], marked,
+                                        swap, new, art, pinned)
+    with _step("wurzel"):
+        await _add_to_root(uid, [{k: v for k, v in e.items() if k not in ("spark_base", "folder_of")} for e in new], swap)
     d = load(uid)
     s["n"] += 1
     d[key] = s
@@ -1084,6 +1119,51 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="
     import tagebuch
     tagebuch.note(uid, "remarkable", title, ref=did, src=src)
     return {"title": title, "where": path or "Spark", "lost": lost, "id": did, "renewed": bool(renew)}
+
+
+def folder_by_kind(uid, art):
+    """Whether a document of kind art goes into its kind's folder: with „Ordner nach Art“, or always for the kinds of
+    rmpapier.OWN_FOLDER (the hero books in „Dungeon-Master“)."""
+    import rmpapier
+    return art in rmpapier.ARTEN and (art in rmpapier.OWN_FOLDER or features.allowed("rmordner", uid))
+
+
+async def _upload(uid, title, data, kind, items, renew, old, marked, swap, new, art, pinned):
+    """place()'s uploads: the renewed document's files (swap) or a new document (new) in its folder.
+    Returns (document id, path, lost)."""
+    import rmpapier
+    lost, path = False, ""
+    if renew:
+        keep = [(e["id"], e) for e in old if not e["id"].endswith((".epub", ".pdf", ".content", ".metadata"))]
+        parent = items[renew].get("parent") or ""
+        if art in rmpapier.OWN_FOLDER and folder_by_kind(uid, art):
+            # still loose in the base folder (made before its folder existed): it moves in, its own files stay;
+            # one the person put somewhere else stays there
+            base, bpath, _ = await base_folder(uid, items, new)
+            if parent == base:
+                parent = await rmpapier.art_folder(uid, items, base, art, new)
+                path = (bpath or "Spark") + "/" + rmpapier.ARTEN[art]
+        meta = _meta(title, parent, "DocumentType", pinned)
+        fresh = [await _put(uid, x, n) for n, x in ((renew + "." + kind, data), (renew + ".content", _content(kind, title)),
+                                                    (renew + ".metadata", meta))]
+        entries = sorted([e for _, e in keep] + fresh, key=lambda e: e["id"])
+        swap[renew] = await _index(uid, renew, entries)
+        did = renew
+        path = path or (path_of(items, parent) if parent else "")
+    else:
+        folder, path, lost = await base_folder(uid, items, new)
+        if folder_by_kind(uid, art):
+            folder = await rmpapier.art_folder(uid, items, folder, art, new)
+            path = (path or "Spark") + "/" + rmpapier.ARTEN[art]
+        if marked and features.allowed("rmordner", uid):
+            base, _, _ = await base_folder(uid, items, new)
+            swap.update(await rmpapier.set_meta(uid, items, {marked: {
+                "parent": await rmpapier.art_folder(uid, items, base, "archiv", new), "pinned": False}}))
+        did = str(uuid.uuid4())
+        new.append(await _new_doc(uid, did, [(did + ".content", _content(kind, title)),
+                                            (did + ".metadata", _meta(title, folder, "DocumentType", pinned)),
+                                            (did + ".pagedata", b"\n"), (did + "." + kind, data)]))
+    return did, path, lost
 
 
 LOG_S = 7 * 86400       # what the Spark put on the reMarkable, kept this long (recent, document_status)

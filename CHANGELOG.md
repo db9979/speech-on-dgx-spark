@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.148** · 2026-10-27 · KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.147** · 2026-10-27 · Tests prüfen nur Textfelder statt Zeitstempel und Zufalls-IDs (Telefon, Pebble, Vorwärmen)
 - **V01.1.146** · 2026-10-27 · KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium (Untote, Werwesen, Nachttiere, Lauerer im Dunkeln), in jeder Welt mindestens 5 für Stufe 1 bis 3 (Daten, LlamaTale 1)
 - **V01.1.145** · 2026-10-27 · KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht

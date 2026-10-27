@@ -21,6 +21,8 @@ Three layouts (LAYOUT): rm2 and Paper Pro two columns where it fits, the Move on
 tables broken into lines, the hero's sheet over several pages; every text is measured and cut to its box, a box that
 does not fit goes to the next page (Buch.overflow records anything drawn outside the page's area, the self test
 checks it is empty for every model).
+The book and its notes go into the folder „Dungeon-Master“ below „Spark“ (rmpapier.OWN_FOLDER, made when missing; a book still loose in
+„Spark“ moves there with its next edition; notes sent before stay where they are, they may carry handwriting).
 A second document „Notizen – <Held>“ (lined pages with tabs) goes once and is never replaced: handwriting in the book
 stays in its old edition (remarkable.place makes a new one, the old goes to „Archiv“), notes belong there.
 
@@ -29,6 +31,12 @@ queued, BUENDEL_S later in a quiet minute, at most AUTO_TAG automatic books per 
 chapters gives one upload; unchanged since the last edition: nothing goes), and on „Jetzt schicken“ (Dungeon-Master →
 Helden) or „Schick mein Heldenbuch aufs reMarkable“ (rmplus.SHEETS „heldenbuch“). Uploads count in the reMarkable's
 daily limits (remarkable.AUTO_DAY, SEND_DAY); data leave the Spark only on the reMarkable's own way.
+„Jetzt schicken“ answers at once and makes and sends the book in the background (_hintergrund); the page asks again
+while a hero's status (public: laeuft, then gesendet or a word why not, with the step) says it is running. A failure
+names its step in the journal: bauen (making the PDF), bild (a picture), and from remarkable.place liste, hochladen,
+wurzel, then a fixed reason (V01.1.148: „buch | fehler | ReadTimeout“ on Dominik's Pi, a 2 MB book on a slow line).
+Pictures are made once per book (both runs share them) and go in small: colour as JPEG (BILD_JPEG), grey as 16 grey
+steps; fonts are embedded as subsets (fpdf2), so a book with BILDER_MAX pictures stays far below BUCH_ZIEL.
 
 The chronicle h["chronik"]: at most CHRONIK_MAX entries of fixed kinds (ARTEN) with catalog ids, whole numbers and the
 names of fellow heroes (NAME); never a text of the model. Written only while this function is allowed for the hero's
@@ -42,7 +50,8 @@ Journal: „dungeon: buch | …“ with fixed words and numbers; Live only count
 
     GET  /api/profile/dungeon/buch                 the profile's books: state per hero, model, colour
     GET  /api/profile/dungeon/buch/{hid}.pdf       the book as a PDF (preview, made on the Spark)
-    POST /api/profile/dungeon/buch/{hid}/senden    „Jetzt schicken“: the book (and the notes once) onto the reMarkable
+    POST /api/profile/dungeon/buch/{hid}/senden    „Jetzt schicken“: the book (and the notes once) onto the reMarkable,
+                                                   in the background (the answer: the state with status „laeuft“)
 """
 import asyncio
 import hashlib
@@ -84,8 +93,13 @@ GRUPPE_MAX = 14            # events shown per chapter of the chronicle (the rest
 LISTE_MAX = 120            # foes / people shown
 NEU_MAX = 6                # lines of „Neu seit der letzten Ausgabe“
 BODY = 256
+ORDNER = "dungeon"         # the book and its notes lie in the folder „Dungeon-Master“ (rmpapier.ARTEN, OWN_FOLDER)
+BILD_JPEG = 82             # JPEG quality of a colour picture (Paper Pro, Move); grey pictures stay PNG with 16 steps
+BUCH_ZIEL = 2 * 1024**2    # what a book with BILDER_MAX pictures stays below (self test)
+GRUENDE = ("timeout", "netz", "cloud", "gross", "limit", "intern")   # why a sending failed, for the page
 
 _day = DayCounter(gesendet=0, unveraendert=0, abgelehnt=0, fehler=0, vorschau=0, notizen=0)
+_status = {}               # uid -> {hid: {"s": laeuft or senden's word, "schritt", "grund", "t"}} (memory only)
 _last = {"s": 0.0}
 
 
@@ -233,6 +247,7 @@ def anstossen(uid, hid, now=None):
 
 
 def clear(uid):
+    _status.pop(uid, None)
     try:
         os.remove(_file(uid))
     except FileNotFoundError:
@@ -370,7 +385,7 @@ def _pictures(dm, r, welt, out):
             n = db.picture_of(r, c, welt)[0] if c else ""
             it["bild"] = n if n in have else ""
     except Exception as e:
-        print(f"dungeon: buch | fehler | bilder {type(e).__name__}", flush=True)
+        print(f"dungeon: buch | fehler | bild | {type(e).__name__}", flush=True)
 
 
 def fingerprint(data, m):
@@ -408,7 +423,8 @@ def neu(data, z):
 # ---------------------------------------------------------------- pictures
 def _picture(dm, name, wmm, hmm, m, grau):
     """A picture of the panel's own folder, opened again with Pillow, cut to the box's shape and scaled to the device's
-    pixels; 16 grey steps dithered (Floyd–Steinberg) for a grey book, else colour. PNG bytes or None."""
+    pixels; 16 grey steps dithered (Floyd–Steinberg) for a grey book as PNG, else colour as JPEG (BILD_JPEG: a photo
+    as PNG made the book several MB). Bytes or None."""
     if not name or not _BILD.fullmatch(name):
         return None
     try:
@@ -428,10 +444,13 @@ def _picture(dm, name, wmm, hmm, m, grau):
             pal.putpalette(sum(([v, v, v] for v in range(0, 256, 17)), []) + [0] * (3 * 240))
             im = im.convert("RGB").quantize(palette=pal, dither=Image.Dither.FLOYDSTEINBERG).convert("L")
         b = io.BytesIO()
-        im.save(b, "PNG", optimize=True)
+        if grau:
+            im.save(b, "PNG", optimize=True)
+        else:
+            im.save(b, "JPEG", quality=BILD_JPEG, optimize=True)
         return b.getvalue()
     except Exception as e:      # a broken or strange file: the drawn symbol instead
-        print(f"dungeon: buch | bild fehlt | {type(e).__name__}", flush=True)
+        print(f"dungeon: buch | bild | fehlt | {type(e).__name__}", flush=True)
         return None
 
 
@@ -456,7 +475,7 @@ class Buch:
     """One book in the page format of a model m (rmpapier.model) and colour or grey. Positions are mm from the top left;
     everything drawn goes through _box, which records what lies outside the page's area (overflow)."""
 
-    def __init__(self, dm, m, farbe, lang, titel, seiten=None):
+    def __init__(self, dm, m, farbe, lang, titel, seiten=None, cache=None):
         from fpdf import FPDF
         import docrender
         import rmpapier
@@ -474,6 +493,7 @@ class Buch:
         self.y1 = self.H - self.L["rand"] - (15.5 if self.L["reiter"] == "unten" else 9)
         self.seiten = seiten or {}
         self.overflow, self.bilder, self.teil = [], 0, ""
+        self.cache = {} if cache is None else cache    # (name, w, h, grey) -> picture bytes or None, for both runs
         doc = self.doc = FPDF(unit="mm", format=(self.W, self.H))
         doc.set_auto_page_break(False)
         doc.set_margins(self.x0, self.y0, self.W - self.x1)
@@ -877,7 +897,10 @@ class Buch:
         """A picture of the panel or the drawn symbol in a frame."""
         data = None
         if name and self.bilder < BILDER_MAX:
-            data = _picture(self.dm, name, w, h, self.m, not self.farbe)
+            key = (name, round(w, 2), round(h, 2), not self.farbe)
+            if key not in self.cache:
+                self.cache[key] = _picture(self.dm, name, w, h, self.m, not self.farbe)
+            data = self.cache[key]
         self.draw("tinte", 0.45)
         if data:
             self.doc.image(io.BytesIO(data), x=x, y=y, w=w, h=h)
@@ -1354,11 +1377,11 @@ def _dinge(b, data):
         b.y += b.write(b.x0, b.y, _t(b, "Die Tasche ist leer.", "The bag is empty."), b.x1 - b.x0, 9, color="mut")
 
 
-def render(dm, data, m, farbe, ausgabe=1, neue=(), stand="", seiten=None):
+def render(dm, data, m, farbe, ausgabe=1, neue=(), stand="", seiten=None, cache=None):
     """The book's PDF: (bytes, Buch). Pages of the parts are known only after a first run: the contents page takes
-    them from seiten (render twice)."""
+    them from seiten (render twice; cache: the pictures of the first run)."""
     titel = ("Heldenbuch – " if data["lang"] != "en" else "Hero book – ") + data["held"]["name"]
-    b = Buch(dm, m, farbe, data["lang"], titel, seiten)
+    b = Buch(dm, m, farbe, data["lang"], titel, seiten, cache)
     b.stand = stand
     _inhalt(b, data, ausgabe, list(neue))
     b.seiten = dict(b.seiten)
@@ -1372,8 +1395,9 @@ def build(dm, data, m, farbe, ausgabe=1, neue=(), now=None):
     now = time.time() if now is None else now
     en = data["lang"] == "en"
     stand = (f"Ausgabe {ausgabe} · " if not en else f"Edition {ausgabe} · ") + time.strftime("%d.%m.%Y", time.localtime(now))
-    _, first = render(dm, data, m, farbe, ausgabe, neue, stand)
-    return render(dm, data, m, farbe, ausgabe, neue, stand, seiten=first.seiten)
+    cache = {}
+    _, first = render(dm, data, m, farbe, ausgabe, neue, stand, cache=cache)
+    return render(dm, data, m, farbe, ausgabe, neue, stand, seiten=first.seiten, cache=cache)
 
 
 def notizen(dm, data, m, farbe):
@@ -1428,27 +1452,71 @@ def make(uid, hid, lang="de", now=None):
     return pdf, data, {"seiten": b.doc.page, "bilder": b.bilder, "fp": fp, "ausgabe": ausgabe, "m": m, "overflow": b.overflow}
 
 
+def _grund(e):
+    """Why a sending failed, a fixed word of GRUENDE."""
+    import httpx
+    import netguard
+    import remarkable
+    if isinstance(e, httpx.TimeoutException):
+        return "timeout"
+    if isinstance(e, (httpx.HTTPError, netguard.Blocked, OSError)):
+        return "netz"
+    if isinstance(e, (remarkable.CloudError, netguard.TooLarge)):
+        return "cloud"
+    return "intern"
+
+
+def _merke(uid, hid, s, schritt="", grund="", now=None):
+    """The hero's status for the page (memory only: after a restart the edition shows what went)."""
+    _status.setdefault(uid, {})[hid] = {"s": s, "schritt": schritt, "grund": grund,
+                                        "t": int(time.time() if now is None else now)}
+
+
+def laeuft(uid, hid):
+    return (_status.get(uid) or {}).get(hid, {}).get("s") == "laeuft"
+
+
 async def senden(uid, hid, auto=False, now=None):
     """The book onto the reMarkable (the same document while it has no handwriting, remarkable.place), the notes once.
-    Returns a fixed word: gesendet, unveraendert, aus, kein_geraet, limit, fehler."""
+    Returns a fixed word: gesendet, unveraendert, aus, kein_geraet, kein_held, limit, fehler; the hero's status
+    (_status) keeps the word with the step and the reason of a failure."""
+    _merke(uid, hid, "laeuft", now=now)
+    try:
+        word, schritt, grund = await _senden(uid, hid, auto, now)
+    except Exception as e:      # never a status that stays „läuft“
+        word, schritt, grund = "fehler", "intern", _grund(e)
+        _day.bump("fehler")
+        print(f"dungeon: buch | fehler | intern | {type(e).__name__}", flush=True)
+    _merke(uid, hid, word, schritt, grund, now)
+    return word
+
+
+async def _senden(uid, hid, auto, now):
     import remarkable
     now = time.time() if now is None else now
     if not on(uid):
         print("dungeon: buch | uebersprungen | aus", flush=True)
-        return "aus"
+        return "aus", "", ""
     if not connected(uid):
         print("dungeon: buch | uebersprungen | kein_geraet", flush=True)
-        return "kein_geraet"
+        return "kein_geraet", "", ""
     lang = "en" if profiles.settings(uid).get("lang") == "en" else "de"
+    t0 = time.time()
     try:
         pdf, data, info = await asyncio.to_thread(make, uid, hid, lang, now)
     except LookupError:
         print("dungeon: buch | uebersprungen | kein_held", flush=True)
-        return "kein_held"
+        return "kein_held", "", ""
     except ZuGross:
         _day.bump("abgelehnt")
         print("dungeon: buch | uebersprungen | gross", flush=True)
-        return "fehler"
+        return "fehler", "bauen", "gross"
+    except Exception as e:
+        _day.bump("fehler")
+        print(f"dungeon: buch | fehler | bauen | {type(e).__name__}", flush=True)
+        _live_job(uid, t0, False)
+        return "fehler", "bauen", "intern"
+    print(f"dungeon: buch | gebaut | seiten {info['seiten']} | bilder {info['bilder']} | kb {len(pdf) // 1024}", flush=True)
     st = _state(uid)
     alt = st["buecher"].get(hid) or {}
     if auto and alt.get("fp") == info["fp"]:
@@ -1456,21 +1524,21 @@ async def senden(uid, hid, auto=False, now=None):
         _save(uid, st)
         _day.bump("unveraendert")
         print("dungeon: buch | uebersprungen | unveraendert", flush=True)
-        return "unveraendert"
+        return "unveraendert", "", ""
     titel = ("Heldenbuch – " if lang != "en" else "Hero book – ") + data["held"]["name"]
-    t0 = time.time()
     try:
-        await remarkable.place(uid, titel, pdf, "pdf", own=f"dungeonbuch:{hid}", auto=auto)
+        await remarkable.place(uid, titel, pdf, "pdf", own=f"dungeonbuch:{hid}", auto=auto, art=ORDNER)
     except ValueError as e:
         why = "limit" if "heute" in str(e) else "gross" if "groß" in str(e) else "eingabe"
         _day.bump("abgelehnt")
         print(f"dungeon: buch | uebersprungen | {why}", flush=True)
-        return "limit" if why == "limit" else "fehler"
-    except Exception as e:
+        return ("limit", "", "limit") if why == "limit" else ("fehler", "hochladen", "gross" if why == "gross" else "intern")
+    except Exception as e:      # the step of remarkable.place and its reason in fixed words (remarkable.why)
+        schritt = remarkable.step(e) or "hochladen"
         _day.bump("fehler")
-        print(f"dungeon: buch | fehler | {type(e).__name__}", flush=True)
+        print(f"dungeon: buch | fehler | {schritt} | {remarkable.why(e)}", flush=True)
         _live_job(uid, t0, False)
-        return "fehler"
+        return "fehler", schritt, _grund(e)
     day = time.strftime("%Y-%m-%d", time.localtime(now))
     st = _state(uid)
     b = st["buecher"].get(hid) or {}
@@ -1488,15 +1556,17 @@ async def senden(uid, hid, auto=False, now=None):
             import dungeon as dm
             nb = await asyncio.to_thread(notizen, dm, data, m, True)
             await remarkable.place(uid, ("Notizen – " if lang != "en" else "Notes – ") + data["held"]["name"], nb, "pdf",
-                                   auto=auto)
+                                   auto=auto, art=ORDNER)
             st = _state(uid)
             st["notizen"][hid] = int(now)
             _save(uid, st)
             _day.bump("notizen")
             print("dungeon: buch | notizen | gesendet", flush=True)
+        except ValueError:
+            print("dungeon: buch | notizen | uebersprungen | limit", flush=True)
         except Exception as e:
-            print(f"dungeon: buch | notizen | fehler {type(e).__name__}", flush=True)
-    return "gesendet"
+            print(f"dungeon: buch | notizen | fehler | {remarkable.step(e) or 'bauen'} | {remarkable.why(e)}", flush=True)
+    return "gesendet", "", ""
 
 
 def _live_job(uid, t0, ok):
@@ -1563,15 +1633,16 @@ def public(uid):
     for h in dm.heroes(uid):
         b = st["buecher"].get(h["hid"]) or {}
         out.append({"hid": h["hid"], "name": h["name"], "ausgabe": b.get("ausgabe", 0), "t": b.get("t", 0),
-                    "seiten": b.get("seiten", 0), "wartet": st["warte"].get(h["hid"], 0), "notizen": h["hid"] in st["notizen"]})
+                    "seiten": b.get("seiten", 0), "wartet": st["warte"].get(h["hid"], 0), "notizen": h["hid"] in st["notizen"],
+                    "status": dict((_status.get(uid) or {}).get(h["hid"]) or {})})
     return {"on": on(uid), "admin": features.admin_on(KEY), "verbunden": connected(uid) if on(uid) else False,
             "fehlt": features.missing_text(KEY, uid) if not on(uid) else "", "modell": m["key"], "farbe": bool(m["color"]),
             "helden": out}
 
 
 def for_live():
-    """Numbers only: books sent, unchanged, refused, failed, previews and notes today, profiles waiting."""
-    return dict(_day.counts())
+    """Numbers only: books sent, unchanged, refused, failed, previews and notes today, books being made right now."""
+    return dict(_day.counts(), laeuft=sum(1 for d in list(_status.values()) for x in list(d.values()) if x.get("s") == "laeuft"))
 
 
 # ---------------------------------------------------------------- routes
@@ -1616,7 +1687,8 @@ async def buch_pdf(hid: str, request: Request, prof=Depends(own_profile)):
 
 @router.post("/api/profile/dungeon/buch/{hid}/senden", dependencies=[Depends(assistant)])
 async def buch_senden(hid: str, request: Request, prof=Depends(browser_profile)):
-    """„Jetzt schicken“: the book now (the reMarkable's daily limit for sending counts), the notes once."""
+    """„Jetzt schicken“: the book now (the reMarkable's daily limit for sending counts), the notes once; answers at once
+    and works in the background, the page follows the hero's status."""
     uid = prof["id"]
     guard.limit(request, "dungeon", uid)
     await json_body(request, BODY, lenient=True)
@@ -1631,10 +1703,20 @@ async def buch_senden(hid: str, request: Request, prof=Depends(browser_profile))
     if not connected(uid):
         print("dungeon: buch | abgelehnt | kein_geraet", flush=True)
         raise HTTPException(409, "kein_geraet")
-    word = await senden(uid, hid)
-    if word != "gesendet":
-        raise HTTPException(429 if word == "limit" else 502, word)
+    if laeuft(uid, hid):        # a second press while it runs: the running one goes on
+        print("dungeon: buch | uebersprungen | laeuft", flush=True)
+    else:
+        _merke(uid, hid, "laeuft")
+        print("dungeon: buch | gestartet | knopf", flush=True)
+        _hintergrund(senden(uid, hid))
     return await asyncio.to_thread(public, uid)
+
+
+def _hintergrund(coro):
+    """The button's work after the answer went out, on the panel's own loop (core.later); the result goes to the
+    journal and the hero's status."""
+    import core
+    core.later(coro, name="dungeonbuch")
 
 
 async def sheet(uid):
