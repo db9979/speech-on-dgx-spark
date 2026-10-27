@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.182** · 2026-10-27 · KI-Dungeon-Master: das Porträt einer Person folgt dem Geschlecht ihrer Karte, „divers“ wird androgyn gemalt
 - **V01.1.181** · 2026-10-27 · KI-Dungeon-Master: Wächter- und Herrenräume der Gewölbe richten sich nach dem Kampfbudget, die Anzahl der Gegner füllt das Panel nach Erfahrung auf, ein Boss zählt mit seinem Lebensfaktor
 - **V01.1.180** · 2026-10-27 · KI-Dungeon-Master: nur Personen werden Personen, Gegner, Helden, Gefährten, Gruppen und Rollenwörter nie, ein Händler verkauft nach seinem Namen und bekommt eine Karte, eine kämpfende Person zeigt ihr Porträt (Review 27.10. Paket 8)
 - **V01.1.179** · 2026-10-27 · KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)

@@ -8029,6 +8029,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Porträt nach dem Geschlecht der Karte (V01.1.182, Dungeon-Review 2026-10-27 Paket 10, Z1 und Z6, Dominik „ok“): Das Porträt einer Person nimmt das Geschlecht, das auf ihrer Karte festgeschrieben ist (rd[\"nsc\"][k][\"geschlecht\"], seit V01.1.167 einmal beim Anlegen gesetzt), über dieselbe Stelle wie die Stimme (dungeon_stimmen._of); ebenso das Alter, sobald die Karte ein Feld „alter“ hat, sonst wie bisher aus den festen Stimm-Merkmalen. Eine Person mit „divers“ wird als androgyne Person gemalt („an old androgynous person“, das Wort aus dungeon.GESCHLECHT), nicht mehr als „person“ ohne Angabe. Nichts davon rät das Modell; kein neuer Schalter, kein neuer Endpunkt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -23310,6 +23318,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: what a foe is, companions with gender and age in the picture (V01.1.173, Dungeon review 2026-10-27 package 10, Z7 and Z11, Dominik \"ok\"): A foe's picture takes what it is from its field \"wesen\" in the Bestiarium (dungeon_bestiarium.wesen), no longer from two lists by hand: humans, humanoids, giants, undead, constructs, fey, fiends, celestials and aberrations each have a fixed phrase (WESEN_EN), animals, dragons, elementals, plants, oozes and monsters already say it with their name. Ten humans the old list did not know (such as the sea robber and the villager) now look human; zombie, troll and dryad are no longer \"humanoid\". About 126 of the 268 foes get a new picture prompt by this: their old picture stays until the new one is painted (at night or with \"Paint all pictures\"). A companion's face puts gender and age from its data in front (\"a middle aged woman, a companion of the heroes, …\"), an animal or a machine gets \"an animal/a machine companion\"; nothing is guessed from the line. Self-tests test_a_foe_is_painted_from_its_description_size_and_kind and test_a_hired_companion_gets_its_face_at_once."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: portrait by the gender on the card (V01.1.182, Dungeon review 2026-10-27 package 10, Z1 and Z6, Dominik \"ok\"): A person's portrait takes the gender written on its card (rd[\"nsc\"][k][\"geschlecht\"], set once when the card is made since V01.1.167), through the same place as its voice (dungeon_stimmen._of); so does the age once the card has a field \"alter\", else from the fixed voice traits as before. A person with \"divers\" is painted as an androgynous person (\"an old androgynous person\", the word from dungeon.GESCHLECHT), no longer as a \"person\" without a word. None of it is guessed by the model; no new switch, no new endpoint."
 },
 {
 "lang": "en",

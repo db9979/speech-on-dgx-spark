@@ -4111,6 +4111,13 @@
 "titel": "Dungeon-Master: Personen sind Personen",
 "text": "NSC-Gedächtnis an, eine Runde spielen und den Händler einer Siedlung besuchen. A: Ein Gegner oder „Schattenwächter“ erscheint nie als Händler oder im Personen-Katalog. B: Heißt der Händler „Alchemistin …“, verkauft er Tränke und steht im Katalog mit Bild. C: Kein Händler bietet einen Schatz an.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P612",
+"v": 1182,
+"titel": "Dungeon-Master: Porträt nach Geschlecht der Karte",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik sowie Gesichter für NSCs an. A: In einer Runde eine Person treffen, ihre Karte unter Personen (NSC) zeigt ein Geschlecht; das Porträt passt dazu. B: Zeigt eine Karte das Geschlecht „divers“, zeigt ihr Porträt eine androgyne Person.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

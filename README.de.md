@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.182** KI-Dungeon-Master: das Porträt einer Person folgt dem Geschlecht ihrer Karte, „divers“ wird androgyn gemalt
 - **V01.1.181** KI-Dungeon-Master: Wächter- und Herrenräume der Gewölbe richten sich nach dem Kampfbudget, die Anzahl der Gegner füllt das Panel nach Erfahrung auf, ein Boss zählt mit seinem Lebensfaktor
 - **V01.1.180** KI-Dungeon-Master: nur Personen werden Personen, Gegner, Helden, Gefährten, Gruppen und Rollenwörter nie, ein Händler verkauft nach seinem Namen und bekommt eine Karte, eine kämpfende Person zeigt ihr Porträt (Review 27.10. Paket 8)
 - **V01.1.179** KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.175** KI-Dungeon-Master: außerhalb des Kampfs kostet ein Wurf nur Leben nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution, die Zeile nennt die Probe
 - **V01.1.174** KI-Dungeon-Master: der Spieltisch wird nie mehr neu aufgebaut, Bilder flackern nicht, Texte springen nicht, der Verlauf bleibt, wo man liest
 - **V01.1.173** KI-Dungeon-Master: Gegnerbilder nehmen, was ein Gegner ist, aus dem Bestiarium (Menschen sehen wie Menschen aus), Gefährten-Gesichter mit festem Geschlecht und Alter
-- **V01.1.172** KI-Dungeon-Master: die Probe einer Person-Stimme prüft frisch, ob Stimmen aus Beschreibung laufen, und Katalog und Spielleiter-Pult sagen mit Sprung-Link, wenn nicht
 
 
 
