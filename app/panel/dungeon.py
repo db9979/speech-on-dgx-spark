@@ -760,6 +760,7 @@ def check_rules(r):
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     erz.check_style(r, need)
+    anleiten.check_rules(r, need)                # the fixed stall events (Spieler anleiten, step 4)
     return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r) + ideen.check_rules(r)
 
 
@@ -2772,13 +2773,19 @@ def check_plan(r, b):
             err.append(f"Akt {i}: besonderes Ding 2 bis {quest.NAME_LEN} Zeichen")
         if ding:
             x["ding"] = ding
+        sp = a.get("spuren") if isinstance(a.get("spuren"), list) else []   # Spieler anleiten 5: clues to the turning point
+        sp = [plain(t, anleiten.SPUR_LEN) for t in sp[:anleiten.SPUREN_MAX] if isinstance(t, str) and t.strip()]
+        if any(len(t) < 5 for t in sp):
+            err.append(f"Akt {i}: Spuren 5 bis {anleiten.SPUR_LEN} Zeichen")
+        if sp:
+            x["spuren"] = sp
         g["akte"].append(x)
     pp = personen.plan_ids(b.get("personen"), welt)     # the catalog's people the story brings (Personen-Katalog 2)
     if pp:
         g["personen"] = pp
     if ton is not None:
         low = " ".join([g["titel"], g["idee"], g["ziel"], g["gegner"]] + g["orte"]
-                       + [" ".join((a["titel"], a["inhalt"], a["wende"], a.get("ding", ""))) for a in g["akte"]])
+                       + [" ".join((a["titel"], a["inhalt"], a["wende"], a.get("ding", ""), *a.get("spuren", []))) for a in g["akte"]])
         if bad_words(r, {"ton": ton, "plan": {"tabus": tabus}}, low):
             err.append("Ein Wort passt nicht zum Ton, steht in „nie“ oder in den Tabus")
     return (None, err) if err else (g, [])
@@ -2806,6 +2813,7 @@ def _planner_limits(uid=None):
     leute = personen.admin_on() if uid is None else personen.on({"owner": uid})
     return {"max": GESCHICHTEN_MAX if uid is None else geschichten.EIGENE_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
             "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX, "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX,
+            "spuren": [anleiten.SPUREN_MAX, anleiten.SPUR_LEN],
             "tabus": TABUS_MAX, **({"import": dungeon_import.view()} if uid is None else {}), "quest": quest.NAME_LEN if on else 0,
             "personen": personen.for_plan() if leute else [], "personen_max": personen.PLAN_MAX}
 
@@ -2857,22 +2865,23 @@ PLAN_LEUTE = 12            # the catalog's people of a world the planner's model
 AUFGABE_PLAN = {
     "de": "Aufgabe: Entwirf aus den Stichworten eine Geschichte mit genau {n} Akten in der Welt {welt}: Titel, Grundidee "
           "(höchstens {idee} Zeichen), Ziel der Helden, Gegenspieler, bis zu {orte} Schauplätze; jeder Akt mit Titel, "
-          "Inhalt (höchstens {inhalt} Zeichen), Wendepunkt am Ende und geplanten Zügen ({lo} bis {hi}). Der letzte "
+          "Inhalt (höchstens {inhalt} Zeichen), Wendepunkt am Ende, " + anleiten.SPUREN_PLAN[0] + "und geplanten Zügen ({lo} bis {hi}). Der letzte "
           "Wendepunkt ist das Finale. Meide die Tabus. Aus bekannte_personen darfst du Personen mit genau ihrem Namen "
           "einbauen.",
     "en": "Task: from the keywords design a story with exactly {n} acts in the world {welt}: title, idea (at most {idee} "
           "characters), the heroes' goal, the foe, up to {orte} places; every act with a title, content (at most "
-          "{inhalt} characters), a turning point at its end and planned turns ({lo} to {hi}). The last turning point is "
+          "{inhalt} characters), a turning point at its end, " + anleiten.SPUREN_PLAN[1] + "and planned turns ({lo} to {hi}). The last turning point is "
           "the finale. Avoid the taboos. You may use people of bekannte_personen with exactly their name."}
 AUFGABE_AKT = {
     "de": "Aufgabe: Schreibe Akt {n} der Geschichte neu, passend zu den anderen Akten (Titel, Inhalt höchstens {inhalt} "
-          "Zeichen, Wendepunkt, geplante Züge {lo} bis {hi}); der Hinweis des Admins steht mit im Datenblock.",
+          "Zeichen, Wendepunkt, " + anleiten.SPUREN_PLAN[0] + "geplante Züge {lo} bis {hi}); der Hinweis des Admins steht mit im Datenblock.",
     "en": "Task: write act {n} of the story again, fitting the other acts (title, content at most {inhalt} characters, "
-          "turning point, planned turns {lo} to {hi}); the admin's hint stands in the data block too."}
+          "turning point, " + anleiten.SPUREN_PLAN[1] + "planned turns {lo} to {hi}); the admin's hint stands in the data block too."}
 _AKT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["titel", "inhalt", "wende", "zuege"], "properties": {
     "titel": {"type": "string", "maxLength": TITEL_MAX}, "inhalt": {"type": "string", "maxLength": INHALT_MAX + 100},
     "wende": {"type": "string", "maxLength": WENDE_MAX + 100}, "zuege": {"type": "integer"},
-    "ding": {"type": "string", "maxLength": quest.NAME_LEN + 10}}}
+    "ding": {"type": "string", "maxLength": quest.NAME_LEN + 10},
+    "spuren": {"type": "array", "maxItems": anleiten.SPUREN_MAX, "items": {"type": "string", "maxLength": anleiten.SPUR_LEN + 20}}}}
 SCHEMA_PLAN = {"type": "object", "additionalProperties": False, "required": ["titel", "idee", "ziel", "gegner", "orte", "akte"], "properties": {
     "titel": {"type": "string", "maxLength": TITEL_MAX}, "idee": {"type": "string", "maxLength": IDEE_MAX + 100},
     "ziel": {"type": "string", "maxLength": ZIEL_MAX + 100}, "gegner": {"type": "string", "maxLength": ZIEL_MAX + 100},
@@ -3018,6 +3027,7 @@ def plan_facts(rd):
         a = p["akte"][i]
         head.update(akt=i + 1, titel=a["titel"], inhalt=a["inhalt"], wende=a["wende"], geplant=a["zuege"],
                     zuege_im_akt=rd["zug"] - rd.get("akt_zug", 1) + 1)
+        head.update(anleiten.clue_facts(rd))          # Spieler anleiten 5: the next clue to show (only while on)
     else:
         head["erzaehlt"] = True
     return f"\n{PLAN_LABEL[1 if rd['lang'] == 'en' else 0]}\n<<<\n{textnorm.defuse(json.dumps(head, ensure_ascii=False))}\n>>>"
@@ -3310,6 +3320,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
     fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
     fakten.update(tageszeit.facts(rd))                   # a change of the panel's time of day (LlamaTale idea 1)
+    fakten.update(anleiten.facts(rd))                    # the stall hint of Spieler anleiten (step 4)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
@@ -3771,6 +3782,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             text += " " + (anleiten.still_question(_me, r, rd, frage)    # Spieler anleiten: a choice of the scene's data
                            or (f"{h['name']}, was macht dein {k} währenddessen?" if not li else f"{h['name']}, what does your {k} do meanwhile?"))
         anleiten.keep_ways(rd, story.get("anleitwege"))   # „Das kannst du hier“ of the turn this narration opens
+        text += anleiten.progress(_me, r, rd, story, wuerfe, rng)   # the stall hint and the way out after a failed check
         _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "",
              **({"helden": story["helden"]} if story.get("helden") else {}))
         fremd = sprachen.keep(rd, story.get("fremd"))   # the sounds for everyone, the meaning only through the view
@@ -5369,7 +5381,7 @@ def view(rid, pid, now=None):
             "markt": market_view(r, rd, me.get("held"), lang), "boden": [item_view(r, x, lang) for x in rd.get("boden") or []], "boden_gold": rd.get("boden_gold", 0),
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
-            "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN,
+            "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN, "spuren_gezeigt": anleiten.shown(rd) if host else None,
             "bilder": [dict(x) for x in rd.get("bilder") or []][-BILDER_RUNDE:], "karte": dungeon_karte.view(r, rd, host),
             "bild_malt": rid in _bilder_jobs, "bild_hint": _hint(rid, lang), "bilder_an": pictures_on(rd["owner"]),
             "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",

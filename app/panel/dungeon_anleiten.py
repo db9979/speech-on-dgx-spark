@@ -25,10 +25,36 @@ Step 2 (ideas 1, 2, 8 and 9): „Das kannst du hier“ under every narration.
     narration; normal three buttons; erfahren none, only the form of step 1.
   - In the car „Was kann ich tun?“ says the buttons, the CarPlay list shows them (car, answer).
 
+Step 3 (ideas 4 and 12): measured and checked.
+  - The fixed check „vage“ (vague, in dungeon_erzaehler.judge): the narration names fewer than two of the scene's points
+    (people here, the targets of the ways, things, foes, props, the people it lets speak; as many as there are, when
+    the scene has fewer) or ends with a hollow question of HOHL („Was tut ihr?“). Then one rewrite with the hint and
+    up to three names to take up; the second try stays as it is (dungeon_erzaehler.repair).
+  - A 👎 may carry the reason „Wusste nicht, was wir tun können“ (dungeon_erzaehlstand.GRUENDE "vage", shown only
+    while this is on) and the bench has the scene „Sackgasse“ (a hall with a person, ways and a chest: the narration
+    must name two of them and end with a concrete choice; the bench's round turns the check on with PRUEFSTAND).
+
+Step 4 (ideas 6 and 11): the stall hint in three stages and a way out after a failed check.
+  - Progress by fixed rules (progress): a new place, a thread opened or closed, a new thing, an act done, a fight
+    begun or ended. Without it for WINK[stufe] told turns (Einsteiger 1, Normal 2, Erfahren never) the next narration
+    gets stage 1 in the facts (wink 1: let something tangible appear clearly that leads on), one turn later stage 2 (an
+    event of the rules' fixed table „stillstand“, at the children's table only mild ones, rolled by the panel), one
+    more and the panel adds a line „Tipp: …“ from the scene's data (tip); then it starts again.
+  - A failed check to find something out (dungeon_erzaehler._forscht) stays failed, but the seat's buttons of the next
+    turn start with another way to the same goal: ask a person here, else another way of the map (ausweg).
+
+Step 5 (idea 5, the three-clue rule): every act of a story may carry up to SPUREN_MAX clues (spuren) that lead to its
+turning point: the 50 stories of dungeon_geschichten.json, the planner's draft, the adventure import and the form
+(dungeon.check_plan). The panel keeps book of the clues shown (rd["spuren"] {akt, gezeigt}): the facts of the plan
+name the next one (clue_facts: spur, at the stall hint's stage 1 deutlich), a narration that names enough of its words
+counts it as shown (seen, and a clue shown is progress for the stall hint). A clue not yet shown is a secret for the
+narrator's ways (check_ways). The host sees the clues with ✓ in „Nur für dich → Geschichte“.
+
 Off by default: the admin's switch dungeonanleiten (features.py, chat.dungeon_anleiten) for the round's host; a guest at
 the table gets it like everyone, it is part of the game and no tool.
 Journal: fixed words and numbers („dungeon: anleitung | …“), Live only counts.
 """
+import random
 import re
 
 import features
@@ -60,12 +86,32 @@ WURF_WORTE = (("charisma", r"sprech|sprich|frag|überred|ueberred|bitt|verhandel
               ("weisheit", r"lausch|beobacht|späh|spaeh|spür|spuer|listen|watch|track|spot"),
               ("staerke", r"brech|heb|stemm|drück|drueck|zieh|break|lift|force|push|pull"))
 SO_LASSEN = ("so lassen", "keep it")
+SPUREN_MAX = 3            # clues of an act at most
+SPUR_LEN = 100             # characters of a clue
+SPUR_TREFFER = 0.5         # part of a clue's words a narration names for the clue to count as shown
+SPUREN_PLAN = ("zwei bis drei Spuren, die zum Wendepunkt führen (je ein greifbarer Hinweis wie Wachs am Turm oder ein "
+               f"redseliger Lehrling, höchstens {SPUR_LEN} Zeichen), ",
+               "two to three clues that lead to the turning point (each a tangible hint such as wax on the tower or a "
+               f"talkative apprentice, at most {SPUR_LEN} characters), ")
+WINK = {"einsteiger": 1, "normal": 2, "erfahren": 0}   # told turns without progress before the stall hint's stage 1
+EREIGNIS_MAX = 160
+TIPP = {"person": ("mit {x} sprechen", "talk to {x}"), "weg": ("{x} gehen", "go {x}"), "ding": ("{x} untersuchen", "examine {x}"),
+        "angriff": ("{x} angreifen", "attack {x}"), "umsehen": ("euch hier genauer umsehen", "look around here more closely")}
+AUSWEG = {"person": ("Ich frage {x} danach.", "I ask {x} about it."), "weg": ("Ich suche {x} weiter.", "I search on {x}.")}
 
-_day = DayCounter(frage=0, frage_alt=0, zeile=0, genommen=0, weg=0, weg_verworfen=0)
+_day = DayCounter(frage=0, frage_alt=0, zeile=0, genommen=0, weg=0, weg_verworfen=0, vage=0, wink1=0, wink2=0, wink3=0, ausweg=0,
+                  spur=0)
+
+
+PRUEFSTAND = "_anleiten"   # set only by the Erzähler-Prüfstand on its round in memory: the checks of this file count
+# hollow questions at the end of a narration (the fixed check „vage“), lower case, without the question mark
+HOHL = re.compile(r"(?i)(?:^|\W)(?:und |also |nun |so )?(?:was (?:tut|macht|tust|machst) (?:ihr|du)(?: nun| jetzt| als nächstes| als naechstes)?|"
+                  r"was nun|was jetzt|wie geht es weiter|was wollt ihr tun|was willst du tun|"
+                  r"what (?:do|will) you do(?: now| next)?|what now|what next|what is your next move|what's next)\W*$")
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return bool(rd.get(PRUEFSTAND)) or bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
 
 
 TASK = {
@@ -91,11 +137,21 @@ WEGE_TASK = {
 }
 
 
+SPUR_TASK = {
+    "de": (" Steht spur im Plan, lass diese Spur in dieser Erzählung in eigenen Worten sichtbar werden, bei deutlich "
+           "unübersehbar; verrate nichts darüber hinaus."),
+    "en": (" When the plan holds spur, let this clue become visible in this narration in your own words, with deutlich "
+           "impossible to miss; reveal nothing beyond it."),
+}
+
+
 def task(rd, lang):
-    """The narrator's form (step 1) and, unless the level is erfahren, the ways of the turn (step 2); "" while off."""
+    """The narrator's form (step 1), the clues (step 5) and, unless the level is erfahren, the ways of the turn
+    (step 2) and the stall hint (step 4); "" while off."""
     if not on(rd):
         return ""
-    return TASK[lang] + (WEGE_TASK[lang] if KNOEPFE[stufe(rd)] else "")
+    return (TASK[lang] + (SPUR_TASK[lang] if rd.get("plan") else "") + (WEGE_TASK[lang] if KNOEPFE[stufe(rd)] else "")
+            + (WINK_TASK[lang] if WINK[stufe(rd)] else ""))
 
 
 def example(r, rd, li):
@@ -162,6 +218,10 @@ def _secret(rd):
         out |= _words(" ".join(str(a.get(k, "")) for k in ("titel", "inhalt", "wende")))
     if i < len(akte):
         out |= _words(akte[i].get("wende", ""))
+        gezeigt = shown(rd)
+        for j, sp in enumerate(akte[i].get("spuren") or []):   # a clue not shown yet
+            if j not in gezeigt:
+                out |= _words(sp)
     for g in (rd.get("wahrheit") or {}).get("geheimnisse") or []:
         out |= _words(g)
     return out
@@ -252,6 +312,9 @@ def buttons(dm, r, rd, pid):
     li = _li(rd)
     w = rd.get("anleitwege") or {}
     pts = [{"art": "modell", "x": t} for t in (w.get("wege") or [] if w.get("zug") == rd.get("zug") else [])]
+    a = rd.get("anleitausweg") or {}
+    if a.get("zug") == rd.get("zug") and pid in (a.get("pids") or []):   # a failed check: another way to the same goal
+        pts = _way_out(dm, r, rd, pid) + pts
     care = _care(dm, r, rd, h, li)
     scene = rf.points(dm, r, rd, pid, wege=2)
     if rd.get("kampf"):
@@ -265,13 +328,27 @@ def buttons(dm, r, rd, pid):
     werte = {x["id"]: x["name"][li] for x in r["werte"]} if stufe(rd) == "einsteiger" else {}
     out, seen = [], set()
     for x in pts:
-        t = x["x"] if x["art"] == "modell" else (MUSTER[x["art"]][li] if x["art"] in MUSTER else rf.MUSTER[x["art"]][li]).format(x=x["x"], z=x.get("z", ""))
+        t = x["x"] if x["art"] in ("modell", "ausweg") else (MUSTER[x["art"]][li] if x["art"] in MUSTER else rf.MUSTER[x["art"]][li]).format(x=x["x"], z=x.get("z", ""))
         t = t[:WEG_MAX]
         if t.lower() in seen:
             continue
         seen.add(t.lower())
         out.append({"text": t, "wert": werte.get(_wurf(x["art"], t), "")})
     return out[:n]
+
+
+def _way_out(dm, r, rd, pid):
+    """After a failed check to find something out: ask a person here, else go on searching along another way."""
+    import dungeon_karte
+    li = _li(rd)
+    le = dungeon_karte.leute(rd)["hier"][:1]
+    if le:
+        return [{"art": "ausweg", "x": AUSWEG["person"][li].format(x=le[0])}]
+    w = [x for x in dungeon_karte.wege(rd, ("de", "en")[li]) if x["richtung"]][:1]
+    if w:
+        d = w[0]["richtung"]
+        return [{"art": "ausweg", "x": AUSWEG["weg"][li].format(x=d if li or d in ("hinaus", "hinein") else "nach " + d)}]
+    return []
 
 
 def told(dm, r, rd):
@@ -282,6 +359,11 @@ def told(dm, r, rd):
     if n:
         _day.bump("zeile")
         print(f"dungeon: anleitung | zeile | {n}", flush=True)
+    a = rd.get("anleitausweg") or {}
+    k = sum(1 for pid in a.get("pids") or [] if a.get("zug") == rd.get("zug") and _way_out(dm, r, rd, pid)) if WINK[stufe(rd)] else 0
+    if k:
+        _day.bump("ausweg", k)
+        print(f"dungeon: anleitung | ausweg | {k}", flush=True)
 
 
 def taken(dm, r, rd, pid, text, offered):
@@ -322,7 +404,188 @@ def answer(dm, r, rd, pid, text):
     return next((x for x in b if x.lower() == t.lower()), "")
 
 
+def scene_names(dm, rd, story=None):
+    """The names of the scene's points a narration may take up: people here, things near and of this narration, foes
+    still up, props of the fight, the people the narration lets speak, the targets of the ways (in this order)."""
+    import dungeon_erzaehler as erz
+    import dungeon_karte
+    import dungeon_kampf
+    import dungeon_umgebung
+    li = _li(rd)
+    out = list(dungeon_karte.leute(rd)["hier"]) + [x["name"] for x in erz._near(rd)] + [x["name"] for x in (story or {}).get("dinge") or []]
+    if rd.get("kampf"):
+        out += [re.sub(r"\s+\d+$", "", str(g.get("name", ""))) for g in dungeon_kampf.up(rd)]
+        out += [row["name"][li] for row in dungeon_umgebung.here(dm.rules(), rd)]
+    out += [str(n.get("name", "")) for n in (story or {}).get("npc") or []] + [w["ziel"] for w in dungeon_karte.wege(rd, ("de", "en")[li])]
+    heroes = {p["held"]["name"].lower() for _, p in dm.seated(rd)}
+    return [n for n in dict.fromkeys(x.strip() for x in out) if len(n) >= 3 and n.lower() not in heroes]
+
+
+def _named(n, low):
+    w = n.lower()
+    return bool(re.search(r"(?<!\w)" + re.escape(w) + r"(?!\w)", low)) or (len(w) >= 5 and " " in w and w.split()[-1] in low.split())
+
+
+def vague(dm, rd, story):
+    """The fixed check „vage“ (dungeon_erzaehler.judge): [] when the narration names enough of the scene's points
+    (two, or as many as the scene has) and ends without a hollow question; else up to three names to take up (or
+    ["…"] when the scene has none). Only while on."""
+    if not on(rd):
+        return []
+    text = str(story.get("text") or "")
+    low = text.lower()
+    names = scene_names(dm, rd, story)
+    found = [n for n in names if _named(n, low)]
+    last = [x for x in re.split(r"(?<=[.!?…])\s+", text.strip()) if x][-1:] or [""]
+    hohl = last[0].rstrip().endswith("?") and bool(HOHL.search(last[0].rstrip().rstrip("?!.… ")))
+    if len(found) >= min(2, len(names)) and not hohl:
+        return []
+    _day.bump("vage")
+    print(f"dungeon: anleitung | vage | {'hohl' if hohl else 'zu wenig'}", flush=True)
+    return [n for n in names if n not in found][:3] or found[:3] or ["…"]
+
+
+def check_rules(r, need):
+    """The fixed table of stall events (rules „stillstand“): ids once, a pair [German, English] of 20 to EREIGNIS_MAX
+    characters, mild a bool, at least three mild ones for the children's table."""
+    t = r.get("stillstand")
+    need(isinstance(t, list) and t, "stillstand: eine Liste fester Ereignisse")
+    ids = [x.get("id") for x in t or [] if isinstance(x, dict)]
+    need(len(ids) == len(t or []) and len(set(ids)) == len(ids) and all(isinstance(i, str) and i for i in ids), "stillstand: jede id einmal")
+    for x in t or []:
+        p = x.get("text") if isinstance(x, dict) else None
+        need(isinstance(p, list) and len(p) == 2 and all(isinstance(s, str) and 20 <= len(s) <= EREIGNIS_MAX for s in p),
+             f"stillstand[{x.get('id') if isinstance(x, dict) else ''}].text: ein Paar [Deutsch, Englisch] mit 20 bis {EREIGNIS_MAX} Zeichen")
+        need(isinstance(x, dict) and isinstance(x.get("mild"), bool), "stillstand: mild ist true oder false")
+    need(sum(1 for x in t or [] if isinstance(x, dict) and x.get("mild") is True) >= 3, "stillstand: mindestens drei milde Ereignisse")
+
+
+def _clues(rd):
+    """The current act's clues and the indices shown of it (a new act starts with none shown)."""
+    p = rd.get("plan") or {}
+    i = rd.get("akt", 0)
+    akte = p.get("akte") or []
+    sp = list(akte[i].get("spuren") or []) if i < len(akte) else []
+    b = rd.get("spuren") if isinstance(rd.get("spuren"), dict) else {}
+    return sp, (b.get("gezeigt") or []) if b.get("akt") == i else []
+
+
+def shown(rd):
+    """The indices of the current act's clues shown so far."""
+    return list(_clues(rd)[1])
+
+
+def clue_facts(rd):
+    """For the plan's facts: the next clue to show, „deutlich“ at the stall hint's stage 1; {} while off or none left."""
+    if not on(rd):
+        return {}
+    sp, seen = _clues(rd)
+    nxt = next((t for j, t in enumerate(sp) if j not in seen), None)
+    if not nxt:
+        return {}
+    w = rd.get("anleitwink") or {}
+    return {"spur": nxt, **({"deutlich": True} if w.get("zug") == rd.get("zug") and w.get("stufe") == 1 else {})}
+
+
+def _stem(w):
+    return w[:max(5, len(w) - 2)]
+
+
+def seen(rd, text):
+    """After a narration: the clues it names (SPUR_TREFFER of their words, by stem) count as shown; returns how many
+    are new."""
+    if not on(rd):
+        return 0
+    sp, old = _clues(rd)
+    low = str(text or "").lower()
+    stems = {_stem(w) for w in _words(low)}
+    new = []
+    for j, t in enumerate(sp):
+        ws = {_stem(w) for w in _words(t)}
+        if j not in old and ws and sum(1 for w in ws if w in stems) >= max(1, round(len(ws) * SPUR_TREFFER)):
+            new.append(j)
+    if new:
+        rd["spuren"] = {"akt": rd.get("akt", 0), "gezeigt": sorted(set(old) | set(new))}
+        _day.bump("spur", len(new))
+        print(f"dungeon: anleitung | spur | {len(rd['spuren']['gezeigt'])}/{len(sp)}", flush=True)
+    return len(new)
+
+
+def _stand(rd):
+    """What counts as progress, as one comparable value: the place, the threads, the things, the act, a fight."""
+    k = rd.get("karte") or {}
+    return [k.get("hier"), k.get("drin"), (rd.get("szene") or {}).get("ort", ""), list(rd.get("faeden") or []),
+            len(rd.get("dinge") or []), rd.get("akt", 0), bool(rd.get("kampf"))]
+
+
+def _tip(dm, r, rd):
+    """The panel's line „Tipp: …“ from the scene's data (the first seat's points), "" with fewer than one."""
+    import dungeon_erzaehler as erz
+    import dungeon_rueckfrage as rf
+    li = _li(rd)
+    seats = [pid for pid, _ in dm.seated(rd)]
+    pts = [p for p in (rf.points(dm, r, rd, seats[0], wege=1) if seats else []) if p["art"] in TIPP and p["art"] != "umsehen"]
+    dinge = [{"art": "ding", "x": x["name"]} for x in erz._near(rd)][-1:]
+    pts = (pts[:1] + dinge + pts[1:])[:2] or [{"art": "umsehen", "x": ""}]
+    t = (" oder ", " or ")[li].join(TIPP[p["art"]][li].format(x=p["x"]) for p in pts)
+    return (" Tipp: Ihr könnt {t}.", " Tip: You can {t}.")[li].format(t=t)
+
+
+def progress(dm, r, rd, story, wuerfe, rng):
+    """After a told turn (dungeon.apply, before the turn is counted on): the stall counter by fixed rules, the stage
+    for the next narration (rd["anleitwink"]), the way out after a failed check (rd["anleitausweg"]); returns the
+    panel's tip line of stage 3, else "". Nothing while off or at the level erfahren."""
+    neu = seen(rd, story.get("text")) if on(rd) else 0   # a clue shown: progress
+    if not on(rd) or not WINK[stufe(rd)]:
+        rd.pop("anleitwink", None)
+        return ""
+    import dungeon_erzaehler as erz
+    nxt = rd.get("zug", 0) + 1
+    out = [x["pid"] for x in wuerfe or () if erz._forscht(x) and x.get("pid")]
+    rd["anleitausweg"] = {"zug": nxt, "pids": out}
+    s = rd.setdefault("stillstand", {"zuege": 0})
+    now = _stand(rd)
+    moved = s.get("stand") is None or s.get("stand") != now or neu > 0 \
+        or bool(story.get("akt_fertig") or story.get("begegnung") or story.get("kampf_ende"))
+    s.update(stand=now, zuege=0 if moved else s.get("zuege", 0) + 1)
+    n = s["zuege"] - WINK[stufe(rd)] + 1           # the stage of the stall hint, 1 to 3
+    rd.pop("anleitwink", None)
+    if n < 1:
+        return ""
+    st = min(n, 3)
+    _day.bump(f"wink{st}")
+    print(f"dungeon: anleitung | wink | {st}", flush=True)
+    if st == 3:
+        s["zuege"] = 0                           # the tip is said: the stages start again
+        return _tip(dm, r, rd)
+    w = {"zug": nxt, "stufe": st}
+    if st == 2:
+        pool = [x for x in r.get("stillstand") or [] if x.get("mild") or not dm.kids(r, rd)]
+        if pool:
+            w["ereignis"] = (rng or random).choice(pool)["text"][_li(rd)]
+    rd["anleitwink"] = w
+    return ""
+
+
+WINK_TASK = {
+    "de": (" Steht wink in den Fakten, kommt die Geschichte nicht voran: bei stufe 1 lass in dieser Erzählung etwas "
+           "Greifbares deutlich auftauchen, das weiterführt (eine Spur, eine Person, ein Ausgang), ohne spätere Akte zu "
+           "verraten; steht ereignis darin, erzähle genau dieses Ereignis als Teil der Szene."),
+    "en": (" When the facts hold wink, the story does not move on: at stufe 1 let something tangible appear clearly in "
+           "this narration that leads on (a trace, a person, an exit), without revealing later acts; when it holds "
+           "ereignis, tell exactly this event as part of the scene."),
+}
+
+
+def facts(rd):
+    """The stall hint of this turn as data: {"wink": {stufe, ereignis?}}, {} without one."""
+    w = rd.get("anleitwink") or {}
+    if not on(rd) or w.get("zug") != rd.get("zug"):
+        return {}
+    return {"wink": {k: w[k] for k in ("stufe", "ereignis") if k in w}}
+
+
 def for_live():
     """Numbers only: questions to quiet seats built from the scene and those that kept the old line, lines of buttons
-    shown, buttons taken, the narrator's ways taken and refused."""
+    shown, buttons taken, the narrator's ways taken and refused, narrations sent back as vague."""
     return _day.counts()

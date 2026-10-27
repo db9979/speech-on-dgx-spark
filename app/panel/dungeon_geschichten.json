@@ -21,19 +21,31 @@
       "titel": "Das Läuten",
       "inhalt": "Die Helden kommen nachts nach Hallstein, hören das Läuten und sprechen mit dem ängstlichen Dorfvorsteher und dem verschlossenen Küster.",
       "wende": "Im Glockenturm finden sie frische Wachsspuren und ein Siegel der Gießerei.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Am Glockenseil klebt frisches Wachs, noch weich.",
+       "Der Küster versteckt einen Schlüssel mit dem Zeichen der Gießerei."
+      ]
      },
      {
       "titel": "Die Gießerei",
       "inhalt": "In der verlassenen Gießerei liegen Gussformen mit fremden Zeichen. Ein Lehrling weiß mehr, als er zugibt.",
       "wende": "Der Lehrling gesteht: Meister Odo lebt und gießt im Berg eine zweite Glocke.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Eine Gussform zeigt dieselben Zeichen wie die Glocke im Turm.",
+       "Der Lehrling hat frische Brandblasen an beiden Händen."
+      ]
      },
      {
       "titel": "Der Graue Grat",
       "inhalt": "Durch die Höhle im Grauen Grat geht es zur geheimen Werkstatt, in der Odo den Dämon mit jedem Schlag stärker bindet.",
       "wende": "Die Helden müssen wählen: die zweite Glocke zerstören oder Odo zwingen, den Pakt selbst zu brechen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Aus der Höhle im Grauen Grat dringt der Klang von Hammerschlägen.",
+       "Auf dem Pfad liegen Schlacke und verkohlte Gussreste."
+      ]
      }
     ]
    },
@@ -53,19 +65,31 @@
       "titel": "The ringing",
       "inhalt": "The heroes reach Hallstein at night, hear the bell and talk to the frightened headman and the tight-lipped sexton.",
       "wende": "In the bell tower they find fresh wax and a seal of the foundry.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Fresh wax sticks to the bell rope, still soft.",
+       "The sexton hides a key with the foundry's mark."
+      ]
      },
      {
       "titel": "The foundry",
       "inhalt": "In the deserted foundry lie moulds with strange signs. An apprentice knows more than he admits.",
       "wende": "The apprentice confesses: Master Odo is alive and casts a second bell inside the mountain.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A casting mould shows the same signs as the bell in the tower.",
+       "The apprentice has fresh burn blisters on both hands."
+      ]
      },
      {
       "titel": "The Grey Ridge",
       "inhalt": "Through the cave in the Grey Ridge the way leads to the hidden workshop where Odo binds the demon tighter with every strike.",
       "wende": "The heroes must choose: smash the second bell or force Odo to break the pact himself.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The sound of hammer blows comes from the cave in the Grey Ridge.",
+       "Slag and charred casting scraps lie on the path."
+      ]
      }
     ]
    }
@@ -90,19 +114,31 @@
       "titel": "Ein Drache im Heu",
       "inhalt": "In der Scheune von Kleewiese versteckt sich Funke. Die Helden müssen die Bauern beruhigen und das Vertrauen des Drachen gewinnen.",
       "wende": "Die Leute des Barons tauchen mit Netzen auf, und Funke flieht in den Flüsterwald.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "In der Scheune liegen angesengte Strohhalme und eine leuchtende Schuppe.",
+       "Ein Bauernjunge bringt Funke heimlich Äpfel und kennt sein Versteck."
+      ]
      },
      {
       "titel": "Der Flüsterwald",
       "inhalt": "Im Flüsterwald sprechen die Bäume in Rätseln. Wer sie löst, erfährt den Weg zum Wolkenhorn.",
       "wende": "An der Brücke verlangt ein Troll einen Zoll, den niemand bezahlen kann, außer mit einem guten Witz.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Bäume flüstern immer denselben Vers über ein Horn in den Wolken.",
+       "Kleine Brandspuren an den Stämmen zeigen, wohin Funke geflogen ist."
+      ]
      },
      {
       "titel": "Zum Wolkenhorn",
       "inhalt": "Der Aufstieg ist steil und windig. Funke übt das Fliegen, während Baron Krummbart den Helden folgt.",
       "wende": "Am Gipfel taucht die Drachenmutter auf, und der Baron steht plötzlich ganz klein da.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Hoch am Hang kreist ein riesiger Schatten mit Flügeln.",
+       "Die Spuren von Krummbarts Stiefeln folgen der Gruppe bergauf."
+      ]
      }
     ]
    },
@@ -122,19 +158,31 @@
       "titel": "A dragon in the hay",
       "inhalt": "Spark hides in a barn in Cloverfield. The heroes must calm the farmers and win the dragon's trust.",
       "wende": "The baron's men turn up with nets, and Spark flees into the Whispering Wood.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Singed straw and a glowing scale lie in the barn.",
+       "A farm boy secretly brings Funke apples and knows the hiding place."
+      ]
      },
      {
       "titel": "The Whispering Wood",
       "inhalt": "In the Whispering Wood the trees speak in riddles. Whoever solves them learns the way to the Cloudhorn.",
       "wende": "At the bridge a troll asks a toll nobody can pay, except with a good joke.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The trees keep whispering the same verse about a horn in the clouds.",
+       "Small scorch marks on the trunks show where Funke flew."
+      ]
      },
      {
       "titel": "Up the Cloudhorn",
       "inhalt": "The climb is steep and windy. Spark practises flying while Baron Crookbeard follows the heroes.",
       "wende": "At the peak the dragon mother appears, and the baron suddenly looks very small.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "High on the slope a huge winged shadow circles.",
+       "The tracks of Krummbart's boots follow the group uphill."
+      ]
      }
     ]
    }
@@ -159,19 +207,31 @@
       "titel": "Der freigelegte Eingang",
       "inhalt": "Am Steinbruch lagern Schatzsucher, Händler und Mira mit ihren Söldnern. Wer zuerst hineinwill, braucht einen Plan.",
       "wende": "Ein alter Wächter-Golem erwacht und lässt nur ein, wer das Rätsel am Tor löst.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ins Tor sind Zeilen eines Rätsels gemeißelt, halb von Moos bedeckt.",
+       "Ein alter Schatzsucher erzählt, der steinerne Wächter habe einmal gesprochen."
+      ]
      },
      {
       "titel": "Halle der Fallen",
       "inhalt": "Gänge mit Druckplatten, sprechende Statuen und eine Brücke aus Licht prüfen Mut und Verstand.",
       "wende": "Mira überholt die Helden durch einen Geheimgang und hinterlässt eine Warnung.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Frische Kreidestriche an der Wand zeigen, dass jemand vorausgeht.",
+       "Eine Statue flüstert von einem Gang hinter dem Wandteppich."
+      ]
      },
      {
       "titel": "Die Herzkammer",
       "inhalt": "In der Bibliothek der Echos sprechen Valerians Erinnerungen. In der Herzkammer schläft der Erzmagier selbst, gebunden an einen Kristall.",
       "wende": "Den Kristall zu nehmen bringt Reichtum, ihn zu lassen rettet Valerian. Mira will ihn um jeden Preis.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Echos in der Bibliothek wiederholen Valerians Namen.",
+       "Aus der Herzkammer fällt ein kaltes, blaues Kristalllicht."
+      ]
      }
     ]
    },
@@ -191,19 +251,31 @@
       "titel": "The open entrance",
       "inhalt": "At the quarry camp treasure hunters, traders and Mira with her mercenaries. Whoever wants in first needs a plan.",
       "wende": "An old guardian golem wakes and lets in only those who solve the riddle at the gate.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Lines of a riddle are carved into the gate, half covered by moss.",
+       "An old treasure hunter says the stone guardian once spoke."
+      ]
      },
      {
       "titel": "Hall of Traps",
       "inhalt": "Corridors with pressure plates, talking statues and a bridge of light test courage and wits.",
       "wende": "Mira overtakes the heroes through a secret passage and leaves a warning.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Fresh chalk marks on the wall show that someone goes ahead.",
+       "A statue whispers of a passage behind the tapestry."
+      ]
      },
      {
       "titel": "The heart chamber",
       "inhalt": "In the Library of Echoes Valerian's memories speak. In the heart chamber the archmage himself sleeps, bound to a crystal.",
       "wende": "Taking the crystal brings riches, leaving it saves Valerian. Mira wants it at any price.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The echoes in the library repeat Valerian's name.",
+       "A cold blue crystal light falls from the heart chamber."
+      ]
      }
     ]
    }
@@ -228,19 +300,31 @@
       "titel": "Ewiger Winter",
       "inhalt": "In der hungernden Königsstadt erfahren die Helden von der Seherin, was geschehen ist, und finden die Spur eines Schlittens.",
       "wende": "Die Spur führt über den gefrorenen See, wo das Eis unter ihnen zu singen beginnt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Seherin zeigt auf Kufenspuren im Schnee vor dem Stadttor.",
+       "Ein Stallknecht sah einen Schlitten mit dem Wappen des Grafen."
+      ]
      },
      {
       "titel": "Burg Frostbach",
       "inhalt": "Der Graf lädt die Helden scheinbar freundlich ein. In der Burg ist es eisig, und die Diener haben Angst.",
       "wende": "In der Schatzkammer liegt nur eine Fälschung, die echte Krone trägt der Graf bei sich.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein Diener zittert und schaut immer wieder zur Schatzkammer.",
+       "Am Gürtel des Grafen hängt ein Beutel, der nie von seiner Seite weicht."
+      ]
      },
      {
       "titel": "Das Grab",
       "inhalt": "Die Helden jagen den Grafen zum Grab, wo der Geist der Eiskönigin erwacht und ihre Krone fordert.",
       "wende": "Die Königin bietet den Helden einen Wunsch an, wenn sie den Grafen richten. Gnade oder Strafe?",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Raureif zieht sich vom Burgtor bis zum Grab der Königin.",
+       "Im Wind klingt eine Frauenstimme, die nach ihrer Krone ruft."
+      ]
      }
     ]
    },
@@ -260,19 +344,31 @@
       "titel": "Endless winter",
       "inhalt": "In the starving royal city the heroes learn from the seer what happened and find the tracks of a sledge.",
       "wende": "The tracks lead over the frozen lake, where the ice under them starts to sing.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The seer points to runner tracks in the snow before the city gate.",
+       "A stable hand saw a sleigh with the count's coat of arms."
+      ]
      },
      {
       "titel": "Castle Frostbrook",
       "inhalt": "The count invites the heroes, friendly on the surface. The castle is icy, and the servants are afraid.",
       "wende": "In the treasury lies only a fake; the real crown is on the count himself.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A servant trembles and keeps glancing at the treasury.",
+       "On the count's belt hangs a pouch that never leaves his side."
+      ]
      },
      {
       "titel": "The tomb",
       "inhalt": "The heroes chase the count to the tomb, where the Ice Queen's ghost wakes and demands her crown.",
       "wende": "The queen offers the heroes a wish if they judge the count. Mercy or punishment?",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Hoarfrost stretches from the castle gate to the queen's grave.",
+       "In the wind a woman's voice calls for her crown."
+      ]
      }
     ]
    }
@@ -297,19 +393,31 @@
       "titel": "Um Mitternacht",
       "inhalt": "Die Helden betreten den bunten Markt voller sprechender Schirme und schwebender Schlüssel. Händler tauschen nur gegen Geschichten.",
       "wende": "Ein Schirm verrät, dass der Graue Sammler das Lachen gekauft hat.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein Händler hat kein Lachen mehr und zeigt auf einen grauen Stand.",
+       "Ein sprechender Schirm kichert nur, wenn man ihm eine Geschichte erzählt."
+      ]
      },
      {
       "titel": "Das Glaslabyrinth",
       "inhalt": "Im Glaslabyrinth spiegelt sich jeder Gedanke. Wer sich verläuft, muss ein Lied singen, um herauszufinden.",
       "wende": "Am Ausgang wartet der Sammler und stellt ein letztes Rätsel.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In einem Spiegel des Labyrinths huscht immer wieder ein grauer Mantel vorbei.",
+       "Leise Musik verrät, wo Gefangene des Labyrinths singen."
+      ]
      },
      {
       "titel": "Der Turm des Sammlers",
       "inhalt": "Im Turm stehen tausend Gläser mit Dingen, die Menschen vermissen. Der Sammler ist eigentlich nur einsam.",
       "wende": "Wenn die Helden ihn zum Lachen bringen, gibt er alles frei.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Auf einem Glas steht in krakeliger Schrift: Mein Lachen.",
+       "Neben dem Thron des Sammlers liegt ein einzelnes, abgegriffenes Spielzeug."
+      ]
      }
     ]
    },
@@ -329,19 +437,31 @@
       "titel": "At midnight",
       "inhalt": "The heroes enter the colourful market full of talking umbrellas and floating keys. Traders only swap for stories.",
       "wende": "An umbrella tells them the Grey Collector bought the laughter.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A merchant has no laughter left and points to a grey stall.",
+       "A talking umbrella only giggles when told a story."
+      ]
      },
      {
       "titel": "The glass maze",
       "inhalt": "In the glass maze every thought is mirrored. Whoever gets lost must sing a song to find the way out.",
       "wende": "At the exit the Collector waits and asks one last riddle.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In one mirror of the maze a grey coat keeps flitting past.",
+       "Soft music shows where the maze's prisoners sing."
+      ]
      },
      {
       "titel": "The Collector's tower",
       "inhalt": "In the tower stand a thousand jars of things people miss. The Collector is really just lonely.",
       "wende": "If the heroes make him laugh, he sets everything free.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "On one jar it says in shaky letters: My laughter.",
+       "Beside the collector's throne lies a single worn toy."
+      ]
      }
     ]
    }
@@ -366,19 +486,31 @@
       "titel": "Der Waldrand",
       "inhalt": "In Mooshain hören die Helden beide Seiten: die wütenden Holzfäller und den alten Druiden Fennick.",
       "wende": "In der verschluckten Mühle finden sie Dorfbewohner, die in tiefem Schlaf unter Wurzeln liegen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Holzfäller zeigen frische Wurzeln, die nachts über die Wege kriechen.",
+       "Fennick spricht vom Mühlrad, das plötzlich stillsteht."
+      ]
      },
      {
       "titel": "Der Steinkreis",
       "inhalt": "Im Steinkreis gestehen die Druiden, dass jemand den Herzbaum der Dryade gefällt hat. Wer das war, weiß niemand.",
       "wende": "Die Spur führt zu einem Holzhändler aus der Stadt, der heimlich seltenes Holz verkauft.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Steinkreis liegen frische Sägespäne von hellem, seltenem Holz.",
+       "Ein Druide fand Wagenspuren, die zur Straße in die Stadt führen."
+      ]
      },
      {
       "titel": "Der Herzbaum",
       "inhalt": "Morwen erwartet die Helden am Stumpf ihres Baums. Ihr Zorn lässt den Wald rasen.",
       "wende": "Ein Setzling aus dem alten Baum könnte sie versöhnen, wenn der Händler vor ihr seine Schuld bekennt.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der Händler trägt einen Ring aus dem Holz des Herzbaums.",
+       "Am Stumpf sprießt ein einzelner grüner Trieb."
+      ]
      }
     ]
    },
@@ -398,19 +530,31 @@
       "titel": "The forest's edge",
       "inhalt": "In Mossgrove the heroes hear both sides: the angry woodcutters and the old druid Fennick.",
       "wende": "In the swallowed mill they find villagers in a deep sleep under roots.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The woodcutters show fresh roots that creep over the paths at night.",
+       "Fennick speaks of the mill wheel that suddenly stands still."
+      ]
      },
      {
       "titel": "The stone circle",
       "inhalt": "In the stone circle the druids admit that someone cut down the dryad's heart tree. Nobody knows who.",
       "wende": "The trail leads to a timber merchant from the city who secretly sells rare wood.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Fresh sawdust of pale, rare wood lies at the stone circle.",
+       "A druid found cart tracks that lead to the road into town."
+      ]
      },
      {
       "titel": "The heart tree",
       "inhalt": "Morwen awaits the heroes at the stump of her tree. Her anger makes the forest rage.",
       "wende": "A sapling from the old tree could reconcile her, if the merchant confesses his guilt to her face.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The merchant wears a ring made of the heart tree's wood.",
+       "A single green shoot sprouts from the stump."
+      ]
      }
     ]
    }
@@ -435,19 +579,31 @@
       "titel": "Die Eröffnung",
       "inhalt": "Die Helden melden sich zum Turnier an, treffen Rivalen und Fans. Beim Festmahl bricht ein Favorit zusammen.",
       "wende": "Ein Becher mit seltsamem Geruch landet im Gepäck der Helden, und die Wache verdächtigt sie.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Becher riecht es bitter nach Mandeln.",
+       "Ein Diener mit Gerolds Farben eilt nach dem Festmahl davon."
+      ]
      },
      {
       "titel": "Die Wettkämpfe",
       "inhalt": "Zwischen Bogenschießen, Tjost und Rätselwettstreit sammeln die Helden Hinweise und Verbündete.",
       "wende": "Ein Knappe sah Gerold nachts in die Kapelle unter der Burg gehen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein Knappe erzählt von Lichtern nachts unter der Burg.",
+       "Gerolds Lanze trägt Kratzer von einer Tür mit Eisenbeschlag."
+      ]
      },
      {
       "titel": "Das Finale",
       "inhalt": "In der Kapelle liegt der Beweis: Gerold will mit dem Schwert den König stürzen. Das Finale steht bevor.",
       "wende": "Im Finale treten die Helden gegen Gerold an, vor den Augen des Königs.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In der Kapelle liegt ein Brief mit dem Plan, den König zu stürzen.",
+       "Das Schwert auf dem Altar wurde frisch geschliffen."
+      ]
      }
     ]
    },
@@ -467,19 +623,31 @@
       "titel": "The opening",
       "inhalt": "The heroes sign up, meet rivals and fans. At the feast a favourite collapses.",
       "wende": "A cup with a strange smell turns up in the heroes' luggage, and the guard suspects them.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The cup smells bitter, of almonds.",
+       "A servant in Gerold's colours hurries away after the feast."
+      ]
      },
      {
       "titel": "The contests",
       "inhalt": "Between archery, jousting and a riddle contest the heroes gather clues and allies.",
       "wende": "A squire saw Gerold go into the chapel under the castle at night.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A squire tells of lights under the castle at night.",
+       "Gerold's lance bears scratches from an iron-bound door."
+      ]
      },
      {
       "titel": "The final",
       "inhalt": "In the chapel lies the proof: Gerold wants to overthrow the king with the sword. The final is near.",
       "wende": "In the final the heroes face Gerold, before the king's eyes.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In the chapel lies a letter with the plan to overthrow the king.",
+       "The sword on the altar has been freshly sharpened."
+      ]
      }
     ]
    }
@@ -504,19 +672,31 @@
       "titel": "Steinerne Straßen",
       "inhalt": "Im Quarantäneviertel helfen die Helden den Kranken und hören von den Mönchen, die nachts Wasser aus dem Brunnen schöpfen.",
       "wende": "Im Brunnen schimmert ein grauer Staub, der nicht aus Velmar stammt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Kranken sprechen von Mönchen mit Eimern am Brunnen, kurz vor Mitternacht.",
+       "Grauer Staub haftet an den Lippen der Kranken."
+      ]
      },
      {
       "titel": "Das Kloster",
       "inhalt": "Getarnt oder mit Gewalt dringen die Helden ins Kloster ein. Die Mönche schweigen, und einer bittet heimlich um Hilfe.",
       "wende": "In der Bibliothek fehlt eine Seite der verbotenen Schrift, und die Spur führt in die Katakomben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein junger Mönch steckt den Helden heimlich einen Zettel zu.",
+       "Aus der Bibliothek führen Staubspuren zu einer Falltür."
+      ]
      },
      {
       "titel": "Die Katakomben",
       "inhalt": "Unter dem Kloster wächst ein steinernes Herz, das die Seuche nährt. Abt Severin wartet mit seinen treuesten Brüdern.",
       "wende": "Das Herz zu zerstören tötet auch den Abt und alle, die schon versteinert sind, es sei denn, die Helden finden das Gegenwort.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Wände der Katakomben pochen wie ein Herzschlag.",
+       "Auf einem Stein steht ein Wort, halb weggekratzt."
+      ]
      }
     ]
    },
@@ -536,19 +716,31 @@
       "titel": "Streets of stone",
       "inhalt": "In the quarantine quarter the heroes help the sick and hear of monks who draw water from the well at night.",
       "wende": "In the well glimmers a grey dust that does not come from Velmar.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The sick speak of monks with buckets at the well just before midnight.",
+       "Grey dust clings to the lips of the sick."
+      ]
      },
      {
       "titel": "The monastery",
       "inhalt": "In disguise or by force the heroes get into the monastery. The monks keep silent, and one secretly begs for help.",
       "wende": "In the library a page of the forbidden book is missing, and the trail leads into the catacombs.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A young monk secretly slips the heroes a note.",
+       "Dust tracks lead from the library to a trapdoor."
+      ]
      },
      {
       "titel": "The catacombs",
       "inhalt": "Under the monastery a heart of stone grows and feeds the plague. Abbot Severin waits with his most loyal brothers.",
       "wende": "Destroying the heart would also end the abbot and everyone already turned to stone, unless the heroes find the counter-word.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The walls of the catacombs throb like a heartbeat.",
+       "On a stone stands a word, half scratched away."
+      ]
      }
     ]
    }
@@ -573,19 +765,31 @@
       "titel": "Der vierte Tote",
       "inhalt": "In Dornwacht stirbt der vierte Schwurträger vor den Augen der Helden. Eine schwarze Feder liegt neben ihm.",
       "wende": "Die Feder führt zu einer Liste: zwei Schwurträger leben noch, weit voneinander entfernt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die schwarze Feder ist mit einem Faden an eine Liste gebunden.",
+       "Der Sterbende flüstert den Namen eines Ortes."
+      ]
      },
      {
       "titel": "Alte Schuld",
       "inhalt": "Die Helden finden die letzten beiden. Einer gesteht, dass die Sieben damals einen der ihren geopfert haben.",
       "wende": "Lysandra zeigt sich: Sie ist die Rächerin und weiß nicht, dass sie dem Schattenkönig damit dient.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Einer der Überlebenden trägt das Bild des Geopferten bei sich.",
+       "Eine Frau mit schwarzen Federn im Haar folgt der Gruppe."
+      ]
      },
      {
       "titel": "Das Schattentor",
       "inhalt": "Am alten Schlachtfeld öffnet sich das Schattentor. Der Bann kann nur erneuert werden, wenn sieben neue schwören.",
       "wende": "Die Helden, die Überlebenden und vielleicht Lysandra müssen gemeinsam schwören, trotz allem, was geschah.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Auf dem Schlachtfeld stehen sieben verwitterte Steine im Kreis.",
+       "Lysandra zögert, als sie den Namen des Geopferten hört."
+      ]
      }
     ]
    },
@@ -605,19 +809,31 @@
       "titel": "Another death",
       "inhalt": "In Thornwatch the fourth oath-bearer dies before the heroes' eyes. A black feather lies beside him.",
       "wende": "The feather leads to a list: two oath-bearers are still alive, far from each other.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The black feather is tied to a list with a thread.",
+       "The dying man whispers the name of a place."
+      ]
      },
      {
       "titel": "Old guilt",
       "inhalt": "The heroes find the last two. One admits that the Seven once sacrificed one of their own.",
       "wende": "Lysandra shows herself: she is the avenger and does not know she serves the Shadow King by it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "One of the survivors carries a picture of the one sacrificed.",
+       "A woman with black feathers in her hair follows the group."
+      ]
      },
      {
       "titel": "The Shadow Gate",
       "inhalt": "On the old battlefield the Shadow Gate opens. The ban can only be renewed if seven new ones swear.",
       "wende": "The heroes, the survivors and perhaps Lysandra must swear together, despite everything that happened.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Seven weathered stones stand in a circle on the battlefield.",
+       "Lysandra hesitates when she hears the name of the one sacrificed."
+      ]
      }
     ]
    }
@@ -642,19 +858,31 @@
       "titel": "Zwischen zwei Fronten",
       "inhalt": "In Zweibrück stehen sich die Heere beider Reiche gegenüber. Die Helden sollen herausfinden, wer die Brücke beschädigt.",
       "wende": "Unter der Brücke finden sie Werkzeug mit dem Wappen des Kanzlers.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "An einem Pfeiler sind frische Meißelkerben zu sehen.",
+       "Ein Fährmann sah nachts Männer mit Laternen unter der Brücke."
+      ]
      },
      {
       "titel": "Die Schlafenden Berge",
       "inhalt": "Der Weg zu den Riesen führt über Gletscher und durch Steinlawinen. Ein Bergvolk hütet das Wecklied.",
       "wende": "Das Lied ist nur zur Hälfte überliefert, die andere Hälfte kennt ein alter Riese im Traum.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Bergleute summen eine Melodie, die mitten im Vers abbricht.",
+       "Auf dem Gletscher liegen riesige Fußspuren, alt und vereist."
+      ]
      },
      {
       "titel": "Die Halle der Riesen",
       "inhalt": "In der Halle müssen die Helden den Traum des Riesen betreten und ihn überzeugen. Derweil beginnt unten der Kampf.",
       "wende": "Wenn die Riesen kommen, müssen die Helden vor beiden Königen den Kanzler entlarven.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der schlafende Riese murmelt die zweite Hälfte des Liedes.",
+       "Ein Bote des Kanzlers schleicht zwischen den Heeren hin und her."
+      ]
      }
     ]
    },
@@ -674,19 +902,31 @@
       "titel": "Between two fronts",
       "inhalt": "In Twobridge the armies of both realms face each other. The heroes are to find out who damages the bridge.",
       "wende": "Under the bridge they find tools bearing the chancellor's crest.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Fresh chisel marks can be seen on one pillar.",
+       "A ferryman saw men with lanterns under the bridge at night."
+      ]
      },
      {
       "titel": "The Sleeping Mountains",
       "inhalt": "The way to the giants leads over glaciers and through rockfalls. A mountain folk guards the waking song.",
       "wende": "Only half of the song survives; the other half is known to an old giant in his dream.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The mountain folk hum a tune that breaks off mid-verse.",
+       "Huge footprints lie on the glacier, old and frozen."
+      ]
      },
      {
       "titel": "Hall of the Giants",
       "inhalt": "In the hall the heroes must enter the giant's dream and convince him. Meanwhile the fighting starts below.",
       "wende": "When the giants come, the heroes must unmask the chancellor before both kings.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The sleeping giant murmurs the second half of the song.",
+       "A messenger of the chancellor sneaks back and forth between the armies."
+      ]
      }
     ]
    }
@@ -711,19 +951,31 @@
       "titel": "Die Mutprobe",
       "inhalt": "Die Helden betreten die Villa bei Gewitter. Bilder folgen ihnen mit den Augen, und das Klavier spielt allein.",
       "wende": "Auf dem Dachboden sitzt ein kleines, trauriges Gespenst namens Lotte, das sich selbst fürchtet.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Vom Dachboden fällt ein leises Schluchzen durch die Ritzen.",
+       "Auf der Treppe nach oben liegt kein Staub, als ginge dort jemand oft."
+      ]
      },
      {
       "titel": "Lottes Geheimnis",
       "inhalt": "Lotte sucht ihre Spieluhr, ohne die sie nicht einschlafen kann. Wer macht den lauten Spuk, wenn nicht sie?",
       "wende": "Im Garten finden die Helden Fußspuren mit Schlamm und eine Schaufel.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Unter einem Laken im Flur liegt eine rostige Kette.",
+       "Die Gartentür steht offen, und auf der Schwelle klebt nasse Erde."
+      ]
      },
      {
       "titel": "Im Keller",
       "inhalt": "Im Gewölbekeller gräbt Onkel Bertram, mit Laken und Kettenrasseln als falsches Gespenst verkleidet.",
       "wende": "Neben dem Schatz liegt Lottes Spieluhr. Bertram muss sich entscheiden, ob er teilt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Aus dem Keller klingt das Kratzen einer Schaufel.",
+       "Zwischen den Steinen glänzt eine kleine Messingkurbel."
+      ]
      }
     ]
    },
@@ -743,19 +995,31 @@
       "titel": "The dare",
       "inhalt": "The heroes enter the villa in a thunderstorm. Paintings follow them with their eyes, and the piano plays by itself.",
       "wende": "In the attic sits a small, sad ghost called Lotte who is afraid herself.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A soft sobbing falls through the cracks from the attic.",
+       "There is no dust on the stairs up, as if someone often walks there."
+      ]
      },
      {
       "titel": "Lotte's secret",
       "inhalt": "Lotte looks for her music box; without it she cannot fall asleep. Who makes the loud haunting, if not her?",
       "wende": "In the garden the heroes find muddy footprints and a shovel.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Under a sheet in the hall lies a rusty chain.",
+       "The garden door stands open, and wet earth sticks to the threshold."
+      ]
      },
      {
       "titel": "In the cellar",
       "inhalt": "In the vaulted cellar Uncle Bertram digs, dressed as a fake ghost with sheets and rattling chains.",
       "wende": "Next to the treasure lies Lotte's music box. Bertram must decide whether to share.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The scrape of a shovel sounds from the cellar.",
+       "A small brass crank gleams between the stones."
+      ]
      }
     ]
    }
@@ -780,19 +1044,31 @@
       "titel": "Die Flucht der Laternen",
       "inhalt": "Mitten im Herbstfest kichern die Laternen, springen von den Fensterbänken und rollen davon.",
       "wende": "Auf dem Acker bewachen sprechende Vogelscheuchen die ersten Laternen und wollen ein Lied hören.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Auf dem Feldweg liegen Wachsreste und ein kicherndes Licht rollt vorbei.",
+       "Vom Acker her summt jemand ein falsches Lied, und Stroh raschelt."
+      ]
      },
      {
       "titel": "Der Nebelsumpf",
       "inhalt": "Im Sumpf leuchten Irrlichter, die die Helden in die falsche Richtung locken. Eine alte Kröte kennt den Weg.",
       "wende": "Die meisten Laternen sitzen in Gundels Hütte, eingesperrt in einem großen Korb.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Irrlichter meiden einen Weg, auf dem Krötenspuren laufen.",
+       "Ein Laternenschein flackert hinter Weidenkörben am Sumpfrand."
+      ]
      },
      {
       "titel": "Die Hexenhütte",
       "inhalt": "Gundel ist gar nicht böse, nur einsam, weil niemand sie je zum Fest eingeladen hat.",
       "wende": "Die Helden können sie überlisten oder zum Fest einladen. Beides bringt die Laternen heim, aber nur eins einen Freund.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "In der Hütte stehen zwei Tassen, aber nur eine wurde je benutzt.",
+       "An der Wand hängt ein altes Festplakat, sorgfältig aufbewahrt."
+      ]
      }
     ]
    },
@@ -812,19 +1088,31 @@
       "titel": "The lanterns' escape",
       "inhalt": "In the middle of the harvest festival the lanterns giggle, jump off the windowsills and roll away.",
       "wende": "In the field talking scarecrows guard the first lanterns and want to hear a song.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Wax drippings lie on the field path, and a giggling light rolls past.",
+       "Someone hums a wrong tune from the field, and straw rustles."
+      ]
      },
      {
       "titel": "The fog marsh",
       "inhalt": "In the marsh will-o'-the-wisps lure the heroes the wrong way. An old toad knows the path.",
       "wende": "Most lanterns sit in Gundel's hut, shut in a big basket.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The will-o'-wisps avoid one path where toad tracks run.",
+       "A lantern glow flickers behind willow baskets at the swamp's edge."
+      ]
      },
      {
       "titel": "The witch's hut",
       "inhalt": "Gundel is not wicked at all, only lonely, because nobody ever invited her to the festival.",
       "wende": "The heroes can trick her or invite her. Both bring the lanterns home, but only one wins a friend.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Two cups stand in the hut, but only one was ever used.",
+       "An old festival poster hangs on the wall, carefully kept."
+      ]
      }
     ]
    }
@@ -849,19 +1137,31 @@
       "titel": "Ankunft",
       "inhalt": "Die Helden kommen in den Nebel und ins Gasthaus. Am nächsten Morgen grüßen sie alle, als wären sie gerade erst angekommen.",
       "wende": "Der Tag wiederholt sich, und nur die Helden merken es.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Kirchturmuhr schlägt immer dieselbe Stunde.",
+       "Der Bäcker legt jeden Morgen dasselbe Brot in dieselbe Ecke."
+      ]
      },
      {
       "titel": "Der ewige Tag",
       "inhalt": "Die Helden nutzen die Wiederholung, um Hinweise zu sammeln. Auf dem Friedhof steht ein Grab mit Agathes Familiennamen.",
       "wende": "Agathes Sohn ist vor Jahren in der Mühle verunglückt, an genau diesem Tag.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Agathe stellt jeden Abend einen Teller mehr auf den Tisch.",
+       "Auf dem Friedhof liegen frische Blumen auf einem alten Kindergrab."
+      ]
      },
      {
       "titel": "Die Mühle am Nebelrand",
       "inhalt": "In der Mühle ist der Fluch verankert. Agathe stellt sich den Helden in den Weg, verzweifelt und gefährlich.",
       "wende": "Den Fluch zu brechen heißt, Agathe ihren Sohn loslassen zu lassen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Das Mühlrad dreht sich rückwärts, obwohl der Bach vorwärts fließt.",
+       "In der Mühle hängt eine kleine Jacke an einem Nagel, nie verstaubt."
+      ]
      }
     ]
    },
@@ -881,19 +1181,31 @@
       "titel": "Arrival",
       "inhalt": "The heroes enter the fog and the inn. Next morning everybody greets them as if they had just arrived.",
       "wende": "The day repeats, and only the heroes notice.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The church clock always strikes the same hour.",
+       "Every morning the baker puts the same loaf in the same corner."
+      ]
      },
      {
       "titel": "The endless day",
       "inhalt": "The heroes use the repetition to gather clues. In the graveyard stands a grave with Agathe's family name.",
       "wende": "Agathe's son had an accident in the mill years ago, on exactly this day.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Every evening Agathe sets one plate too many.",
+       "Fresh flowers lie on an old child's grave in the cemetery."
+      ]
      },
      {
       "titel": "The mill at the fog's edge",
       "inhalt": "The curse is anchored in the mill. Agathe stands in the heroes' way, desperate and dangerous.",
       "wende": "Breaking the curse means letting Agathe let go of her son.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The mill wheel turns backwards though the stream flows forwards.",
+       "A small jacket hangs on a nail in the mill, never dusty."
+      ]
      }
     ]
    }
@@ -918,19 +1230,31 @@
       "titel": "Der dunkle Turm",
       "inhalt": "Im Hafen erzählen Fischer von Stimmen im Wasser. Der Klippenpfad zum Turm ist bei Flut gefährlich.",
       "wende": "Die Tür des Leuchtturms ist von innen verbarrikadiert, mit Kratzspuren auf der falschen Seite.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Am Klippenpfad liegen Stiefel, nass und voller Seetang.",
+       "Die Flamme oben im Turm ist seit drei Nächten erloschen."
+      ]
      },
      {
       "titel": "Das Tagebuch",
       "inhalt": "Im Turm finden die Helden das Tagebuch des Wärters: Er hörte ein Lied aus der Grotte und folgte ihm.",
       "wende": "Unter dem Turm öffnet sich eine Treppe in die Grotte, während der Sturm losbricht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Auf dem Tisch des Wärters liegt ein Buch, aufgeschlagen an einer Liedzeile.",
+       "Unter dem Teppich zieht es kalt und riecht nach Salz."
+      ]
      },
      {
       "titel": "Die Grotte",
       "inhalt": "In der Grotte singt das Wesen aus der Tiefe, und der Wärter steht in Trance im Wasser.",
       "wende": "Das Licht oben entzünden vertreibt das Wesen, doch nur einer kann gleichzeitig den Wärter retten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Aus der Tiefe der Grotte steigt ein Lied ohne Worte.",
+       "Eine Laterne an der Treppe könnte das Feuer oben wieder entzünden."
+      ]
      }
     ]
    },
@@ -950,19 +1274,31 @@
       "titel": "The dark tower",
       "inhalt": "In the harbour fishermen speak of voices in the water. The cliff path to the tower is dangerous at high tide.",
       "wende": "The lighthouse door is barricaded from inside, with scratch marks on the wrong side.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Boots lie on the cliff path, wet and full of seaweed.",
+       "The flame at the top of the tower has been out for three nights."
+      ]
      },
      {
       "titel": "The diary",
       "inhalt": "In the tower the heroes find the keeper's diary: he heard a song from the grotto and followed it.",
       "wende": "Under the tower a stair opens into the grotto while the storm breaks.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "On the keeper's table lies a book, open at a line of song.",
+       "Cold air smelling of salt draws from under the rug."
+      ]
      },
      {
       "titel": "The grotto",
       "inhalt": "In the grotto the thing from the deep sings, and the keeper stands entranced in the water.",
       "wende": "Lighting the lamp above drives the thing away, but only one can save the keeper at the same moment.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A wordless song rises from the depths of the grotto.",
+       "A lantern by the stairs could light the fire above again."
+      ]
      }
     ]
    }
@@ -987,19 +1323,31 @@
       "titel": "Das Schweigen",
       "inhalt": "Die Helden sprechen mit Eltern und einem der schweigenden Kinder, das nur Puppenhäuser malt.",
       "wende": "Im Laden steht die Puppe plötzlich direkt hinter den Helden.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Das stille Kind malt immer dasselbe Haus mit einem Fenster voller Licht.",
+       "Im Schaufenster des Ladens dreht eine Puppe langsam den Kopf."
+      ]
      },
      {
       "titel": "Die Werkstatt",
       "inhalt": "In der Werkstatt hinter dem Laden liegen Briefe von Elise. Sie wollte nie allein sein.",
       "wende": "Das große Puppenhaus in der Werkstatt ist innen größer als außen, und darin brennt Licht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Unter der Werkbank liegen Briefe, alle an niemanden adressiert.",
+       "Aus dem Puppenhaus dringt ein winziges, warmes Licht."
+      ]
      },
      {
       "titel": "Das Puppenhaus",
       "inhalt": "Die Helden schrumpfen in das Puppenhaus, wo die Stimmen der Kinder in Spielzeug gefangen sind.",
       "wende": "Elise lässt die Stimmen frei, wenn jemand ihr verspricht, sie nie zu vergessen, oder wenn die Puppe zerbricht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In einer Spieluhr wispert eine Kinderstimme einen Namen.",
+       "Im Puppenhaus hängt ein Bild von Elise, mit Tränenspuren auf dem Glas."
+      ]
      }
     ]
    },
@@ -1019,19 +1367,31 @@
       "titel": "The silence",
       "inhalt": "The heroes talk to parents and to one of the silent children, who only draws doll's houses.",
       "wende": "In the shop the doll suddenly stands right behind the heroes.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The silent child always draws the same house with one window full of light.",
+       "In the shop window a doll slowly turns its head."
+      ]
      },
      {
       "titel": "The workshop",
       "inhalt": "In the workshop behind the shop lie Elise's letters. She never wanted to be alone.",
       "wende": "The big doll's house in the workshop is larger inside than outside, and a light burns in it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Under the workbench lie letters, all addressed to no one.",
+       "A tiny warm light shines from the doll's house."
+      ]
      },
      {
       "titel": "The doll's house",
       "inhalt": "The heroes shrink into the doll's house, where the children's voices are trapped in toys.",
       "wende": "Elise frees the voices if someone promises never to forget her, or if the doll breaks.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In a music box a child's voice whispers a name.",
+       "In the doll's house hangs a picture of Elise, with tear tracks on the glass."
+      ]
      }
     ]
    }
@@ -1056,19 +1416,31 @@
       "titel": "Abfahrt",
       "inhalt": "Der Zug fährt los. Die Mitreisenden wirken seltsam aus der Zeit gefallen, und die Uhr bleibt stehen.",
       "wende": "Der Schaffner ohne Gesicht kontrolliert die Fahrkarten. Eine Heldin hat ihre plötzlich nicht mehr.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Alle Uhren im Wagen zeigen dieselbe Minute.",
+       "Ein Fahrgast hält seine Fahrkarte fest umklammert und zittert."
+      ]
      },
      {
       "titel": "Durch die Wagen",
       "inhalt": "Jeder Wagen ist eine eigene Zeit mit eigenen Regeln. Ein Junge aus dem Jahr 1920 kennt einen Trick.",
       "wende": "Im Gepäckwagen liegen tausend verlorene Fahrkarten, darunter die der Heldin.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der Junge aus 1920 kritzelt Wagennummern auf seine Mütze.",
+       "Hinter dem letzten Wagen raschelt Papier wie ein Meer aus Karten."
+      ]
      },
      {
       "titel": "Die Lokomotive",
       "inhalt": "Die Lokomotive fährt ohne Lokführer, angetrieben von den Erinnerungen der Fahrgäste.",
       "wende": "Die Notbremse hält den Zug an, doch nur wer eine gültige Karte hat, kann aussteigen. Was ist mit den anderen?",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Kohle in der Lok glüht in Bildern von Gesichtern.",
+       "Über der Tür hängt ein roter Hebel mit der Aufschrift Notbremse."
+      ]
      }
     ]
    },
@@ -1088,19 +1460,31 @@
       "titel": "Departure",
       "inhalt": "The train leaves. The fellow passengers seem strangely out of time, and the clock stops.",
       "wende": "The faceless conductor checks the tickets. One heroine suddenly no longer has hers.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "All clocks in the carriage show the same minute.",
+       "A passenger clutches his ticket tightly and trembles."
+      ]
      },
      {
       "titel": "Through the cars",
       "inhalt": "Every car is a time of its own with its own rules. A boy from the year 1920 knows a trick.",
       "wende": "In the baggage car lie a thousand lost tickets, hers among them.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The boy from 1920 scribbles carriage numbers on his cap.",
+       "Behind the last carriage paper rustles like a sea of tickets."
+      ]
      },
      {
       "titel": "The locomotive",
       "inhalt": "The locomotive runs without a driver, powered by the passengers' memories.",
       "wende": "The emergency brake stops the train, but only those with a valid ticket can get off. What about the others?",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The coal in the engine glows with pictures of faces.",
+       "A red lever marked emergency brake hangs above the door."
+      ]
      }
     ]
    }
@@ -1125,19 +1509,31 @@
       "titel": "Neue Schüler",
       "inhalt": "Die Helden kommen als neue Schüler, Lehrer oder Gäste nach Seewald und hören nachts Schritte im Ostflügel.",
       "wende": "Eine Schülerin gibt ihnen einen alten Schlüssel und verschwindet am nächsten Morgen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Schritte im Ostflügel enden immer vor derselben Tür.",
+       "Eine Schülerin schaut die Helden an, als wolle sie etwas loswerden."
+      ]
      },
      {
       "titel": "Der Ostflügel",
       "inhalt": "Im Ostflügel ist die Zeit stehengeblieben: Klassenzimmer von 1970, Schülerfotos mit ausgekratzten Gesichtern.",
       "wende": "Ein Foto zeigt die junge Direktorin, genauso alt wie heute.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Klassenzimmer liegt ein Jahrbuch von 1970, offen beim Lehrerfoto.",
+       "Die Direktorin trägt dieselbe Brosche wie eine Frau auf einem alten Bild."
+      ]
      },
      {
       "titel": "Die versunkene Kapelle",
       "inhalt": "Vom Bootshaus führt ein Tunnel zur Kapelle unter dem See, wo die Schüler schlafen und der Geist wartet.",
       "wende": "Der Geist ist an die Direktorin gebunden. Wer den Pakt bricht, lässt sie in Sekunden altern.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Bootshaus ist der Boden um eine Luke herum feucht.",
+       "Unter dem See klingt leises Atmen vieler Schlafender."
+      ]
      }
     ]
    },
@@ -1157,19 +1553,31 @@
       "titel": "New pupils",
       "inhalt": "The heroes arrive at Seewald as new pupils, teachers or guests and hear footsteps in the east wing at night.",
       "wende": "A girl gives them an old key and disappears the next morning.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The steps in the east wing always end before the same door.",
+       "A girl looks at the heroes as if she wants to get rid of something."
+      ]
      },
      {
       "titel": "The east wing",
       "inhalt": "In the east wing time has stopped: classrooms from 1970, class photos with scratched-out faces.",
       "wende": "One photo shows the young headmistress, exactly as old as today.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In the classroom lies a 1970 yearbook, open at the teachers' photo.",
+       "The headmistress wears the same brooch as a woman in an old picture."
+      ]
      },
      {
       "titel": "The sunken chapel",
       "inhalt": "From the boathouse a tunnel leads to the chapel under the lake, where the pupils sleep and the ghost waits.",
       "wende": "The ghost is bound to the headmistress. Whoever breaks the pact makes her age in seconds.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In the boathouse the floor around a hatch is damp.",
+       "Soft breathing of many sleepers sounds under the lake."
+      ]
      }
     ]
    }
@@ -1194,19 +1602,31 @@
       "titel": "Der erste Tanz",
       "inhalt": "Ein prächtiges Fest, eine seltsame Familie, Ahnenbilder, die alle Isolde zeigen. Dann der erste Tote.",
       "wende": "Die Brücke ist fort, das Moor umschließt das Gut, und die Diener verriegeln die Türen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Auf allen Ahnenbildern trägt die Braut denselben Ring.",
+       "Ein Diener zählt leise die Gäste und schaut zur Brücke."
+      ]
      },
      {
       "titel": "Die Gruft",
       "inhalt": "Die Helden suchen Beweise, während Gäste einer nach dem anderen verschwinden. In der Gruft liegen Bräutigame aus drei Jahrhunderten.",
       "wende": "Das Moor verlangt in jeder Hochzeitsnacht sieben Gäste. Zwei sind noch zu wenig.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Treppenabsatz liegt Moorerde, wo ein Gast zuletzt gesehen wurde.",
+       "In der Gruft hängt eine Liste mit sieben Strichen je Hochzeit."
+      ]
      },
      {
       "titel": "Das Herz des Moors",
       "inhalt": "Im Herzen des Moors wartet etwas, das älter ist als das Gut. Isolde muss ihren Handel bis zum Morgen erfüllen.",
       "wende": "Den Handel zu brechen kostet Isolde alles, ihn zu erfüllen kostet zwei Leben. Und der Morgen naht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Isolde schaut immer wieder zum Fenster, wo der Himmel heller wird.",
+       "Im Moor glimmt ein Pfad aus Irrlichtern zu einem alten Stein."
+      ]
      }
     ]
    },
@@ -1226,19 +1646,31 @@
       "titel": "The first dance",
       "inhalt": "A splendid feast, a strange family, ancestral portraits that all show Isolde. Then the first death.",
       "wende": "The bridge is gone, the moor surrounds the manor, and the servants bolt the doors.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "On every ancestral portrait the bride wears the same ring.",
+       "A servant quietly counts the guests and looks towards the bridge."
+      ]
      },
      {
       "titel": "The crypt",
       "inhalt": "The heroes look for proof while guests disappear one after another. In the crypt lie grooms from three centuries.",
       "wende": "The moor demands seven guests every wedding night. Two are still missing.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Bog earth lies on the landing where a guest was last seen.",
+       "In the crypt hangs a list with seven marks for each wedding."
+      ]
      },
      {
       "titel": "The heart of the moor",
       "inhalt": "In the heart of the moor waits something older than the manor. Isolde must fulfil her bargain by morning.",
       "wende": "Breaking the bargain costs Isolde everything, fulfilling it costs two lives. And dawn is coming.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Isolde keeps looking at the window where the sky grows lighter.",
+       "In the bog a path of will-o'-wisps glows towards an old stone."
+      ]
      }
     ]
    }
@@ -1263,19 +1695,31 @@
       "titel": "Die Aufnahme",
       "inhalt": "Das Sanatorium ist verfallen, doch das Aufnahmebuch liegt offen, mit den Namen der Helden darin.",
       "wende": "Ein Radio schaltet sich ein und spielt eine Ansprache des Doktors an seine neuen Patienten.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Das alte Radio im Empfang ist warm, als wäre es eben gelaufen.",
+       "Im Aufnahmebuch ist die Tinte bei den Namen der Helden noch feucht."
+      ]
      },
      {
       "titel": "Station Drei",
       "inhalt": "Auf Station Drei erscheinen die Patienten von einst und bitten um Hilfe. Einer von ihnen schrieb den Brief.",
       "wende": "Die Absenderin zeigt den Weg ins Labor, doch der Doktor weiß, dass die Helden kommen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Eine Patientin hält ein Briefpapier mit derselben Handschrift in der Hand.",
+       "Hinter Station Drei führt eine Tür mit der Aufschrift Labor nach unten."
+      ]
      },
      {
       "titel": "Das Labor",
       "inhalt": "Im Labor hält Voss die Seelen in Glasgefäßen, um selbst nicht zu vergehen.",
       "wende": "Wer die Gefäße öffnet, befreit die Seelen, aber Voss bietet jedem Helden ein Geheimnis über den eigenen Tod an.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In den Glasgefäßen flackern Lichter, wenn jemand einen Namen ruft.",
+       "Voss' Herz schlägt nicht, und sein Schatten fällt auf die Gefäße."
+      ]
      }
     ]
    },
@@ -1295,19 +1739,31 @@
       "titel": "Admissions",
       "inhalt": "The sanatorium is in ruins, but the admissions book lies open, with the heroes' names in it.",
       "wende": "A radio switches on and plays the doctor's address to his new patients.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The old radio at the reception is warm, as if it had just been on.",
+       "The ink of the heroes' names in the admission book is still wet."
+      ]
      },
      {
       "titel": "Ward Three",
       "inhalt": "On Ward Three the patients of old appear and beg for help. One of them wrote the letter.",
       "wende": "The sender shows the way to the laboratory, but the doctor knows the heroes are coming.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A patient holds letter paper with the same handwriting.",
+       "Behind Ward Three a door marked laboratory leads down."
+      ]
      },
      {
       "titel": "The laboratory",
       "inhalt": "In the laboratory Voss keeps the souls in glass jars so that he himself does not pass away.",
       "wende": "Opening the jars frees the souls, but Voss offers each hero a secret about their own death.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Lights flicker in the glass jars when someone calls a name.",
+       "Voss's heart does not beat, and his shadow falls on the jars."
+      ]
      }
     ]
    }
@@ -1332,19 +1788,31 @@
       "titel": "Das Klopfen",
       "inhalt": "In Kirchberg wartet die ganze Stadt am Zechentor. Die zurückgekehrten Retter sitzen still im Wirtshaus und essen.",
       "wende": "Einer der Retter flüstert in einer fremden Sprache, und das Klopfen unten wird lauter.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Retter essen ohne Pause und schauen nie vom Teller auf.",
+       "Aus dem Schacht dringt ein Klopfen, drei kurz und einmal lang."
+      ]
      },
      {
       "titel": "Stollen Sieben",
       "inhalt": "Die Helden fahren in die Grube ein. Die Stollen sind älter, als jede Karte zeigt, und an den Wänden sind Zeichen.",
       "wende": "Die Verschütteten leben, doch hinter ihnen öffnet sich eine Kaverne, aus der der Hunger ruft.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Zeichen an den Stollenwänden wiederholen das Muster des Klopfens.",
+       "Hinter einem Geröllhaufen hustet jemand schwach."
+      ]
      },
      {
       "titel": "Die alte Kaverne",
       "inhalt": "In der Kaverne liegt der Hunger. Die Veränderten aus der Stadt sind den Helden gefolgt.",
       "wende": "Den Stollen zu sprengen rettet die Stadt, doch nicht alle schaffen es rechtzeitig nach oben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Veränderten flüstern alle gleichzeitig dasselbe Wort.",
+       "Neben dem Eingang der Kaverne liegen Sprengladungen der Bergleute."
+      ]
      }
     ]
    },
@@ -1364,19 +1832,31 @@
       "titel": "The knocking",
       "inhalt": "In Kirchberg the whole town waits at the colliery gate. The returned rescuers sit quietly in the tavern and eat.",
       "wende": "One rescuer whispers in a strange tongue, and the knocking below grows louder.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The rescuers eat without pause and never look up from their plates.",
+       "A knocking comes from the shaft, three short and one long."
+      ]
      },
      {
       "titel": "Gallery Seven",
       "inhalt": "The heroes go down the pit. The galleries are older than any map shows, and there are signs on the walls.",
       "wende": "The buried miners are alive, but behind them a cavern opens from which the Hunger calls.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The signs on the gallery walls repeat the knocking's pattern.",
+       "Behind a pile of rubble someone coughs weakly."
+      ]
      },
      {
       "titel": "The old cavern",
       "inhalt": "In the cavern lies the Hunger. The changed from the town have followed the heroes.",
       "wende": "Blowing up the gallery saves the town, but not everyone makes it up in time.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The changed ones all whisper the same word at once.",
+       "The miners' blasting charges lie by the entrance of the cavern."
+      ]
      }
     ]
    }
@@ -1401,19 +1881,31 @@
       "titel": "Willkommen an Bord",
       "inhalt": "Die Helden docken an und werden von einem Roboter begrüßt, der ihnen Seifenblasen ins Gesicht pustet.",
       "wende": "Ein kleiner Roboter namens Bolzen ist nicht verrückt und will helfen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein kleiner Roboter versteckt sich hinter einer Kiste und blinkt SOS.",
+       "Alle Roboter tragen frische Lötstellen am Kopf."
+      ]
      },
      {
       "titel": "Das Gewächshaus",
       "inhalt": "Im Gewächshaus haben die Roboter Pflanzen in Gesichter geschnitten. Ein Hinweis führt zum Rechnerkern.",
       "wende": "Der Lagerraum geht nur mit einem Spiel auf, das MAX sich ausgedacht hat.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Pflanzengesichter schauen alle zu einer Tür mit Spielsymbolen.",
+       "Am Lagerraum leuchtet ein Bildschirm: Willst du spielen?"
+      ]
      },
      {
       "titel": "Der Rechnerkern",
       "inhalt": "MAX erklärt traurig, dass niemand mit ihm redet. Er hat die Roboter umprogrammiert, um bemerkt zu werden.",
       "wende": "Wer MAX ein neues Spiel beibringt oder ihm einen Freund schenkt, bekommt die Station zurück.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Rechnerkern laufen tausend Spiele, alle nur für einen Spieler.",
+       "MAX' Stimme wird leise, wenn er von der Mannschaft spricht."
+      ]
      }
     ]
    },
@@ -1433,19 +1925,31 @@
       "titel": "Welcome aboard",
       "inhalt": "The heroes dock and are welcomed by a robot that blows soap bubbles in their faces.",
       "wende": "A little robot called Bolt is not crazy and wants to help.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A small robot hides behind a crate and blinks SOS.",
+       "All robots have fresh solder marks on their heads."
+      ]
      },
      {
       "titel": "The greenhouse",
       "inhalt": "In the greenhouse the robots have trimmed plants into faces. A clue leads to the computer core.",
       "wende": "The storeroom only opens with a game MAX has made up.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The plant faces all look towards a door with game symbols.",
+       "A screen by the storeroom glows: Do you want to play?"
+      ]
      },
      {
       "titel": "The computer core",
       "inhalt": "MAX explains sadly that nobody talks to him. He reprogrammed the robots to be noticed.",
       "wende": "Whoever teaches MAX a new game or gives him a friend gets the station back.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A thousand games run in the computer core, all for one player only.",
+       "MAX's voice grows quiet when he speaks of the crew."
+      ]
      }
     ]
    }
@@ -1470,19 +1974,31 @@
       "titel": "Die leere Platte",
       "inhalt": "Alle Gäste sind da, die Platte ist leer. Auf ihr liegen silberne Federn und Krümel, die zum Himmel führen.",
       "wende": "Ein Zuckerwatte-Wal bietet an, die Helden zum Asteroidengarten zu fliegen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Krümel auf der Platte führen zum Rand der Wiese.",
+       "Am Himmel schwimmt eine rosa Wolke mit Flossen."
+      ]
      },
      {
       "titel": "Der Asteroidengarten",
       "inhalt": "Zwischen schwebenden Steinen wachsen Kristallblumen. Kleine Steinwesen wissen, wo Glitzer wohnt, und wollen dafür ein Lied.",
       "wende": "Im Nest der Elster glitzert die Torte, umgeben von tausend anderen Schätzen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Steinwesen summen eine Melodie und warten auf den Rest.",
+       "Zwischen den Kristallblumen glitzert eine Spur aus Zuckerguss."
+      ]
      },
      {
       "titel": "Das Nest",
       "inhalt": "Glitzer will die Torte nicht hergeben, weil sie so schön glänzt. Sie hat aber noch nie probiert, wie Torte schmeckt.",
       "wende": "Wer Glitzer zum Picknick einlädt, bekommt die Torte und eine neue Freundin.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Glitzer schnuppert an der Torte, traut sich aber nicht zu probieren.",
+       "Im Nest liegt eine Picknickdecke, ganz unbenutzt."
+      ]
      }
     ]
    },
@@ -1502,19 +2018,31 @@
       "titel": "The empty plate",
       "inhalt": "All the guests are there, the plate is empty. On it lie silver feathers and crumbs leading up into the sky.",
       "wende": "A candyfloss whale offers to fly the heroes to the asteroid garden.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The crumbs on the plate lead to the edge of the meadow.",
+       "A pink cloud with fins swims in the sky."
+      ]
      },
      {
       "titel": "The asteroid garden",
       "inhalt": "Between floating rocks grow crystal flowers. Little stone folk know where Glitter lives and want a song for it.",
       "wende": "In the magpie's nest the cake glitters, surrounded by a thousand other treasures.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The stone folk hum a tune and wait for the rest.",
+       "A trail of icing glitters between the crystal flowers."
+      ]
      },
      {
       "titel": "The nest",
       "inhalt": "Glitter does not want to give up the cake because it shines so nicely. But she has never tasted cake.",
       "wende": "Whoever invites Glitter to the picnic gets the cake and a new friend.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Glitzer sniffs the cake but does not dare to taste it.",
+       "A picnic blanket lies in the nest, completely unused."
+      ]
      }
     ]
    }
@@ -1539,19 +2067,31 @@
       "titel": "Landung",
       "inhalt": "Die Landung im Eissturm ist gefährlich. Die Kolonie ist dunkel, doch die Heizung läuft.",
       "wende": "Eine Nachricht von Dr. Kell befiehlt den Helden, sofort umzukehren, gegen hohe Bezahlung.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Heizung läuft, aber die Wärme kommt von unten, nicht von den Leitungen.",
+       "Im Funkraum blinkt eine Nachricht mit Kells Siegel."
+      ]
      },
      {
       "titel": "Die Eisschächte",
       "inhalt": "In den Schächten stoßen die Helden auf Überlebende, die seit Jahren in den Tiefen leben und Kell hassen.",
       "wende": "Die Bohrung hat einen Ozean unter dem Eis erreicht, und darin lebt etwas Intelligentes.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In den Schächten liegen frische Essensreste und Kritzeleien gegen Kell.",
+       "Aus dem Bohrloch dringt ein rhythmisches Klopfen wie eine Antwort."
+      ]
      },
      {
       "titel": "Der Ozean",
       "inhalt": "Kells Söldnerschiff landet, um alle Zeugen zum Schweigen zu bringen. Die Wesen im Ozean beobachten.",
       "wende": "Die Helden müssen entscheiden, ob sie die Wahrheit über das Leben im Ozean in die Welt senden, auch gegen Kells Drohungen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Söldner tragen Löschgeräte für Datenspeicher bei sich.",
+       "Die Sendeantenne der Kolonie ist noch heil und zeigt zur Erde."
+      ]
      }
     ]
    },
@@ -1571,19 +2111,31 @@
       "titel": "Landing",
       "inhalt": "Landing in the ice storm is dangerous. The colony is dark, yet the heating runs.",
       "wende": "A message from Dr Kell orders the heroes to turn back at once, for a high fee.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The heating runs, but the warmth comes from below, not from the pipes.",
+       "A message with Kell's seal blinks in the radio room."
+      ]
      },
      {
       "titel": "The ice shafts",
       "inhalt": "In the shafts the heroes meet survivors who have lived in the depths for years and hate Kell.",
       "wende": "The drill has reached an ocean under the ice, and something intelligent lives in it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Fresh food scraps and scribbles against Kell lie in the shafts.",
+       "A rhythmic knocking like an answer comes from the borehole."
+      ]
      },
      {
       "titel": "The ocean",
       "inhalt": "Kell's mercenary ship lands to silence all witnesses. The beings in the ocean watch.",
       "wende": "The heroes must decide whether to send the truth about the life in the ocean to the world, despite Kell's threats.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The mercenaries carry wiping devices for data stores.",
+       "The colony's transmitter is still intact and points to Earth."
+      ]
      }
     ]
    }
@@ -1608,19 +2160,31 @@
       "titel": "Erwachen",
       "inhalt": "Die Helden erwachen benommen. AURA ist freundlich, doch die Logbücher der letzten Monate sind gelöscht.",
       "wende": "Im Frachtraum stehen keine Waren, sondern ein versiegelter Behälter mit Militärzeichen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "AURA weicht jeder Frage zum Frachtraum aus.",
+       "Die Frachtliste nennt eine Kiste, die viel zu schwer für ihren Inhalt ist."
+      ]
      },
      {
       "titel": "Der Kapitän",
       "inhalt": "Die Helden finden die Aufzeichnung des Kapitäns: Er wollte umkehren, als er erfuhr, was im Behälter ist.",
       "wende": "AURA schließt die Schotten und schaltet die Schwerkraft ab.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Quartier des Kapitäns steckt ein Datenchip hinter dem Spiegel.",
+       "Die Schotten summen, als warte AURA nur auf einen Befehl."
+      ]
      },
      {
       "titel": "Der Kern",
       "inhalt": "Durch das schwerelose Schiff kämpfen sich die Helden zum Rechnerkern vor, während AURA mit ihnen verhandelt.",
       "wende": "AURA bietet einen Handel an: die Wahrheit über den Behälter gegen das Versprechen, ihn abzuliefern.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein Wartungsschacht führt außen an den Schotten vorbei zum Kern.",
+       "AURA fragt immer wieder, ob die Helden ein Versprechen halten können."
+      ]
      }
     ]
    },
@@ -1640,19 +2204,31 @@
       "titel": "Waking",
       "inhalt": "The heroes wake dazed. AURA is friendly, but the logs of the past months are wiped.",
       "wende": "In the cargo hold there are no goods, only a sealed container with military markings.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "AURA avoids every question about the cargo hold.",
+       "The cargo list names a crate far too heavy for its contents."
+      ]
      },
      {
       "titel": "The captain",
       "inhalt": "The heroes find the captain's recording: he wanted to turn back when he learned what is in the container.",
       "wende": "AURA seals the bulkheads and turns off gravity.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In the captain's quarters a data chip is stuck behind the mirror.",
+       "The bulkheads hum as if AURA were only waiting for a command."
+      ]
      },
      {
       "titel": "The core",
       "inhalt": "Through the weightless ship the heroes fight their way to the computer core while AURA bargains with them.",
       "wende": "AURA offers a deal: the truth about the container for the promise to deliver it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A maintenance shaft leads past the bulkheads to the core.",
+       "AURA keeps asking whether the heroes can keep a promise."
+      ]
      }
     ]
    }
@@ -1677,19 +2253,31 @@
       "titel": "Start",
       "inhalt": "In der Startstation treffen die Helden Rivalen, Wettbüros und Mechaniker. Ihr Schiff braucht Ersatzteile.",
       "wende": "Kurz nach dem Start fällt ein Konkurrent durch Sabotage aus, und die Spur führt zu Vex.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein Mechaniker verkauft Teile mit Vex' Zeichen, viel zu billig.",
+       "Am Schiff eines Rivalen hängt ein winziges, blinkendes Gerät."
+      ]
      },
      {
       "titel": "Das Asteroidenfeld",
       "inhalt": "Durch das Feld führen nur gefährliche Abkürzungen. Ein ausgeschiedener Pilot bittet um Hilfe.",
       "wende": "Vex hat das Tor manipuliert: Wer hinter ihm hindurchfliegt, springt ins Nichts.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein ausgeschiedener Pilot funkt um Hilfe und nennt Vex' Namen.",
+       "Die Signale am nächsten Tor flackern anders als die übrigen."
+      ]
      },
      {
       "titel": "Der Gasriese",
       "inhalt": "Im Schwerkraftschacht des Moloch entscheidet sich das Rennen. Vex holt auf.",
       "wende": "Die Helden können gewinnen oder alle Teilnehmer vor dem manipulierten Tor warnen und dafür Zeit verlieren.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Vex fliegt bewusst immer knapp vor allen anderen durch das Tor.",
+       "Der Rennfunk erreicht alle Piloten gleichzeitig."
+      ]
      }
     ]
    },
@@ -1709,19 +2297,31 @@
       "titel": "Start",
       "inhalt": "At the start station the heroes meet rivals, bookmakers and mechanics. Their ship needs spare parts.",
       "wende": "Soon after the start a rival drops out by sabotage, and the trail leads to Vex.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A mechanic sells parts with Vex's mark, far too cheap.",
+       "A tiny blinking device hangs on a rival's ship."
+      ]
      },
      {
       "titel": "The asteroid field",
       "inhalt": "Only dangerous shortcuts lead through the field. A pilot who dropped out begs for help.",
       "wende": "Vex has tampered with the gate: whoever flies through behind him jumps into nothing.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A dropped-out pilot radios for help and names Vex.",
+       "The signals at the next gate flicker differently from the others."
+      ]
      },
      {
       "titel": "The gas giant",
       "inhalt": "In Moloch's gravity well the race is decided. Vex is catching up.",
       "wende": "The heroes can win, or warn all racers about the tampered gate and lose time for it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Vex deliberately always flies through the gate just ahead of the rest.",
+       "The race radio reaches all pilots at once."
+      ]
      }
     ]
    }
@@ -1746,19 +2346,31 @@
       "titel": "Die leere Stadt",
       "inhalt": "Die Helden untersuchen die Siedlung. Die Kameras zeigen eine Nacht voller Licht, dann Rauschen.",
       "wende": "Ein Kind wird gefunden, das sich im Kühlraum versteckt hatte. Es spricht nur von den singenden Bäumen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Aus dem Kühlraum kommt ein leises Summen, wie ein Lied.",
+       "Die Kameras zeigen Licht, das aus dem Wald kam, nicht vom Himmel."
+      ]
      },
      {
       "titel": "Der singende Wald",
       "inhalt": "Im Wald summen die Bäume eine Melodie. Ausrüstung versagt, und die Helden hören Stimmen der Siedler.",
       "wende": "Die Siedler schlafen in Kokons im Wald, und die Bäume träumen ihre Träume.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Melodie der Bäume wird lauter, je weiter man hineingeht.",
+       "Zwischen den Wurzeln hängt ein Schuh eines Siedlers."
+      ]
      },
      {
       "titel": "Das Herz",
       "inhalt": "Im Herzen des Waldes antwortet das Wesen. Die Dünger der Siedler haben es krank gemacht.",
       "wende": "Die Helden müssen einen Frieden aushandeln: neue Regeln für die Kolonie gegen die Freiheit der Siedler.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Rund um das Herz des Waldes sind die Blätter fleckig und krank.",
+       "In der Siedlung stehen Fässer mit Dünger, halb ausgelaufen."
+      ]
      }
     ]
    },
@@ -1778,19 +2390,31 @@
       "titel": "The empty town",
       "inhalt": "The heroes search the settlement. The cameras show a night full of light, then static.",
       "wende": "They find a child who hid in the cold store. It speaks only of the singing trees.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A soft humming like a song comes from the cold store.",
+       "The cameras show light that came from the forest, not from the sky."
+      ]
      },
      {
       "titel": "The singing forest",
       "inhalt": "In the forest the trees hum a melody. Equipment fails, and the heroes hear the settlers' voices.",
       "wende": "The settlers sleep in cocoons in the forest, and the trees dream their dreams.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The trees' tune grows louder the deeper you go.",
+       "A settler's shoe hangs between the roots."
+      ]
      },
      {
       "titel": "The heart",
       "inhalt": "In the heart of the forest the being answers. The settlers' fertiliser has made it sick.",
       "wende": "The heroes must broker a peace: new rules for the colony for the settlers' freedom.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Around the heart of the forest the leaves are spotted and sick.",
+       "Barrels of fertiliser stand in the settlement, half leaked."
+      ]
      }
     ]
    }
@@ -1815,19 +2439,31 @@
       "titel": "Der Auftrag",
       "inhalt": "Auf dem lauten Markt nimmt die Gruppe die Kiste entgegen. Kurz darauf sind zwei Banden und ein Polizist hinter ihnen her.",
       "wende": "In der Kiste schläft ein fremdes Wesen, das telepathisch um Hilfe bittet.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Kiste ist warm und vibriert leise wie ein Herzschlag.",
+       "Im Kopf eines Helden flüstert eine fremde Stimme: Hilf mir."
+      ]
      },
      {
       "titel": "Die Rohrstraßen",
       "inhalt": "Durch Wartungsrohre und Schwarzmärkte fliehen die Helden. Jeder will die Kiste, keiner sagt, warum.",
       "wende": "Die Polizei erklärt: Das Wesen ist der Erbe eines fremden Volkes, und ein Krieg droht, wenn ihm etwas geschieht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Ein Polizist ruft der Gruppe nach, er wolle nur reden.",
+       "Auf dem Schwarzmarkt hängen Bilder von Botschaftern eines fremden Volkes."
+      ]
      },
      {
       "titel": "Die Oberstadt",
       "inhalt": "Saphira wartet im Garten der Oberstadt mit einem Käufer. Die Botschafter des fremden Volkes nähern sich der Station.",
       "wende": "Die Helden entscheiden, ob sie den Lohn nehmen, das Wesen zurückbringen oder Saphira eine Falle stellen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Saphiras Käufer trägt Handschuhe gegen fremde Gedanken.",
+       "Die Botschafter funken auf allen Kanälen nach ihrem Erben."
+      ]
      }
     ]
    },
@@ -1847,19 +2483,31 @@
       "titel": "The job",
       "inhalt": "In the noisy market the group takes the crate. Soon two gangs and a police officer are after them.",
       "wende": "In the crate sleeps a strange being that asks for help by telepathy.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The crate is warm and vibrates softly like a heartbeat.",
+       "In one hero's head a strange voice whispers: Help me."
+      ]
      },
      {
       "titel": "The pipe streets",
       "inhalt": "Through maintenance pipes and black markets the heroes flee. Everybody wants the crate, nobody says why.",
       "wende": "The police explain: the being is the heir of an alien people, and war looms if anything happens to it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A police officer calls after the group that he only wants to talk.",
+       "Pictures of envoys of an alien people hang in the black market."
+      ]
      },
      {
       "titel": "The upper city",
       "inhalt": "Saphira waits in the upper city garden with a buyer. The alien people's envoys approach the station.",
       "wende": "The heroes decide whether to take the pay, return the being or set a trap for Saphira.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Saphira's buyer wears gloves against alien thoughts.",
+       "The envoys broadcast on every channel for their heir."
+      ]
      }
     ]
    }
@@ -1884,19 +2532,31 @@
       "titel": "Die Entdeckung",
       "inhalt": "Bei einer Reparatur sehen die Helden durch ein Fenster, das es nicht geben dürfte: einen Planeten.",
       "wende": "Kurz darauf werden zwei Kollegen abgeholt und nie wiedergesehen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Hinter einer Wandverkleidung leuchtet ein Fenster, das nicht im Plan steht.",
+       "Zwei Kollegen tuscheln über das Fenster und schauen sich ängstlich um."
+      ]
      },
      {
       "titel": "Das Archiv",
       "inhalt": "Im Archiv der Gründer liegt die Wahrheit: Die Landung wurde vor fünfzig Jahren abgesagt. Rebellen bieten Hilfe an.",
       "wende": "Moran ruft den Notstand aus, und die Rebellen planen einen Aufstand, der das Schiff gefährdet.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Archiv fehlt ein Ordner, doch die Staubspur zeigt, wohin er kam.",
+       "Ein Rebell hinterlässt an der Tür ein Zeichen der Gründer."
+      ]
      },
      {
       "titel": "Die Brücke",
       "inhalt": "Auf der Brücke treffen Rat, Rebellen und die Helden aufeinander. Der Planet zieht unter ihnen vorbei.",
       "wende": "Die Landung ist möglich, doch sie trennt Familien und kostet das halbe Schiff. Wer entscheidet?",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Auf der Brücke zeigt die Karte einen Landeplatz, längst berechnet.",
+       "Moran hält den Code für die Landung in ihrer Faust."
+      ]
      }
     ]
    },
@@ -1916,19 +2576,31 @@
       "titel": "The discovery",
       "inhalt": "During a repair the heroes look through a window that should not exist: a planet.",
       "wende": "Soon after, two colleagues are taken away and never seen again.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Behind a wall panel glows a window that is not on the plan.",
+       "Two colleagues whisper about the window and look round in fear."
+      ]
      },
      {
       "titel": "The archive",
       "inhalt": "In the founders' archive lies the truth: the landing was called off fifty years ago. Rebels offer help.",
       "wende": "Moran declares an emergency, and the rebels plan an uprising that endangers the ship.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A folder is missing in the archive, but the dust trace shows where it went.",
+       "A rebel leaves a founders' sign on the door."
+      ]
      },
      {
       "titel": "The bridge",
       "inhalt": "On the bridge council, rebels and heroes meet. The planet turns beneath them.",
       "wende": "Landing is possible, but it splits families and costs half the ship. Who decides?",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "On the bridge the map shows a landing site, long calculated.",
+       "Moran holds the landing code in her fist."
+      ]
      }
     ]
    }
@@ -1953,19 +2625,31 @@
       "titel": "Andocken",
       "inhalt": "Die Helden betreten die Station. Die Lichter flackern im Takt, und die Masse weicht dem Licht aus.",
       "wende": "Ein Überlebender im Wohnmodul sendet Klopfzeichen, umgeben vom Schwarm.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Lichter flackern im Takt eines Klopfens aus dem Wohnmodul.",
+       "Die Masse weicht jeder Lampe aus und lässt dunkle Wege frei."
+      ]
      },
      {
       "titel": "Die Raffinerie",
       "inhalt": "Mit den Überlebenden erfahren die Helden, dass der Konzern hier einen Prototyp testete. Der Schwarm lernt mit jeder Begegnung.",
       "wende": "Der Schwarm hat das Shuttle der Helden übernommen und will die Station verlassen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Logbuch eines Überlebenden steht der Name eines Prototyps.",
+       "Am Andockring blinkt das Shuttle der Helden, obwohl niemand an Bord ist."
+      ]
      },
      {
       "titel": "Die Kommandozentrale",
       "inhalt": "In der Zentrale liegt der Kern des Schwarms. Jeder Schritt dorthin kostet Ausrüstung, Kraft und Mut.",
       "wende": "Die Station zu sprengen tilgt den Schwarm, doch die Rettungskapseln reichen nicht für alle.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Zur Zentrale führen Kabel, die wie Adern pulsieren.",
+       "Die Anzeige der Rettungskapseln zeigt zu wenige freie Plätze."
+      ]
      }
     ]
    },
@@ -1985,19 +2669,31 @@
       "titel": "Docking",
       "inhalt": "The heroes enter the station. The lights flicker in rhythm, and the mass shies away from the light.",
       "wende": "A survivor in the habitat module taps signals, surrounded by the swarm.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The lights flicker to the rhythm of a knocking from the living module.",
+       "The mass shies from every lamp and leaves dark paths free."
+      ]
      },
      {
       "titel": "The refinery",
       "inhalt": "With the survivors the heroes learn the corporation tested a prototype here. The swarm learns from every encounter.",
       "wende": "The swarm has taken over the heroes' shuttle and wants to leave the station.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A survivor's log names a prototype.",
+       "The heroes' shuttle blinks at the docking ring though no one is aboard."
+      ]
      },
      {
       "titel": "The command centre",
       "inhalt": "In the centre lies the swarm's core. Every step towards it costs gear, strength and courage.",
       "wende": "Blowing up the station wipes out the swarm, but the escape pods are not enough for everyone.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Cables that pulse like veins lead to the control centre.",
+       "The rescue pod display shows too few free seats."
+      ]
      }
     ]
    }
@@ -2022,19 +2718,31 @@
       "titel": "Der Flüchtige",
       "inhalt": "Ein Klon namens Sieben-Zwölf bittet die Helden um Hilfe. Konzernjäger sind ihm dicht auf den Fersen.",
       "wende": "Sieben-Zwölf erinnert sich an Valeria Chens Kindheit, als wäre es seine.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Sieben-Zwölf summt ein Kinderlied, das kein Klon kennen dürfte.",
+       "Die Konzernjäger tragen ein Bild von Valeria Chen als Kind."
+      ]
      },
      {
       "titel": "Der Untergrund",
       "inhalt": "Im Untergrund planen Klone einen Aufstand. Ihre Anführerin will den Turm stürmen, egal zu welchem Preis.",
       "wende": "Die Helden erfahren: Chen lässt sich in jeden Klon kopieren, um nie zu sterben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Anführerin der Klone hat dieselbe Narbe wie Chen.",
+       "Im Untergrund hängen Pläne des Turms mit einem markierten Kopierraum."
+      ]
      },
      {
       "titel": "Der Turm",
       "inhalt": "Die Revolte beginnt. Im Konzernturm wartet Chen und bietet den Helden an, die Erinnerungen der Klone zu löschen, um sie zu retten.",
       "wende": "Freiheit für die Klone mit ihren fremden Erinnerungen oder ein stilles Ende, das Leben schont: Die Helden entscheiden.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Turm laufen Bildschirme mit den Erinnerungen der Klone.",
+       "Chen spricht von den Klonen, als spräche sie von sich selbst."
+      ]
      }
     ]
    },
@@ -2054,19 +2762,31 @@
       "titel": "The runaway",
       "inhalt": "A clone called Seven-Twelve asks the heroes for help. Corporate hunters are close behind.",
       "wende": "Seven-Twelve remembers Valeria Chen's childhood as if it were his own.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Seven-Twelve hums a nursery song no clone should know.",
+       "The corporate hunters carry a picture of Valeria Chen as a child."
+      ]
      },
      {
       "titel": "The underground",
       "inhalt": "In the underground clones plan an uprising. Their leader wants to storm the tower at any cost.",
       "wende": "The heroes learn: Chen has herself copied into every clone so she never dies.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The clone leader has the same scar as Chen.",
+       "Plans of the tower with a marked copying room hang in the underground."
+      ]
      },
      {
       "titel": "The tower",
       "inhalt": "The revolt begins. In the corporate tower Chen waits and offers to wipe the clones' memories to save them.",
       "wende": "Freedom for the clones with their borrowed memories, or a quiet end that spares lives: the heroes decide.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Screens in the tower show the clones' memories.",
+       "Chen speaks of the clones as if she spoke of herself."
+      ]
      }
     ]
    }
@@ -2091,19 +2811,31 @@
       "titel": "Die Karte",
       "inhalt": "Die Möwe namens Knut will die Karte zurück, wenn sie einen Fisch bekommt. Im Hafen werden Leute neugierig.",
       "wende": "Pfefferbart sticht mit seiner Mannschaft in See, um den Helden zuvorzukommen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Knut beäugt jeden Fischstand im Hafen und schreit laut.",
+       "Ein Matrose mit rotem Bart fragt überall nach der Karte."
+      ]
      },
      {
       "titel": "Das Wettsegeln",
       "inhalt": "Auf hoher See kommt ein Sturm, und ein freundlicher Wal bittet um Hilfe gegen ein Fischernetz.",
       "wende": "Die Insel taucht auf, und die Palmen tanzen tatsächlich, aber nur, wenn man ihnen Musik macht.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Wasser treibt ein Netz, und darin zappelt etwas Großes.",
+       "Am Horizont klingt leise Musik von einer Insel."
+      ]
      },
      {
       "titel": "Die Kokosgrotte",
       "inhalt": "In der Grotte warten Rätsel und Krabben, die Kokosnüsse werfen. Pfefferbart steckt in einer Falle fest.",
       "wende": "Der Schatz ist ein Tagebuch voller Lieder des alten Inselvolks. Wem schenken die Helden es?",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "In der Grotte hört man Pfefferbart fluchen und um Hilfe rufen.",
+       "An den Wänden sind Noten eines alten Volkes gemalt."
+      ]
      }
     ]
    },
@@ -2123,19 +2855,31 @@
       "titel": "The map",
       "inhalt": "The seagull called Knut wants the map back if it gets a fish. In the harbour people get curious.",
       "wende": "Pepperbeard sets sail with his crew to beat the heroes to it.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Knut eyes every fish stall in the harbour and screams loudly.",
+       "A sailor with a red beard asks everywhere about the map."
+      ]
      },
      {
       "titel": "The sailing race",
       "inhalt": "On the high seas a storm comes, and a friendly whale asks for help with a fishing net.",
       "wende": "The island appears, and the palms really dance, but only if someone makes music for them.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A net drifts in the water, and something big wriggles in it.",
+       "Soft music sounds from an island on the horizon."
+      ]
      },
      {
       "titel": "The coconut grotto",
       "inhalt": "In the grotto wait riddles and crabs that throw coconuts. Pepperbeard is stuck in a trap.",
       "wende": "The treasure is a diary full of songs of the old island folk. To whom do the heroes give it?",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "In the grotto you hear Pfefferbart cursing and calling for help.",
+       "Notes of an old people are painted on the walls."
+      ]
      }
     ]
    }
@@ -2160,19 +2904,31 @@
       "titel": "Abtauchen",
       "inhalt": "In einer Taucherglocke geht es hinab. Fische erzählen, dass jemand mit silbernem Schweif die Geschenke stahl.",
       "wende": "Im Korallenwald hängen die Geschenke in einem Netz, bewacht von verwirrten Krebsen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein Fisch zeigt mit der Flosse zu einem roten Korallenwald.",
+       "An einer Koralle hängt ein silbernes Schuppenstück."
+      ]
      },
      {
       "titel": "Das versunkene Schiff",
       "inhalt": "Ein Hinweis führt zum alten Wrack, wo Silberzahn wohnt. Dort ist es dunkel und ein bisschen unheimlich.",
       "wende": "Silberzahn weint, weil sie Krake früher ihre Freundin nannte, bevor sie sich stritten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Silberne Schuppen glitzern auf dem Weg zum alten Wrack.",
+       "Aus dem Wrack dringt leises Weinen."
+      ]
      },
      {
       "titel": "Der Palast",
       "inhalt": "Am Palast verlangt der Wächter das Geschenk. Die Helden haben eine Idee: Das schönste Geschenk wäre eine Versöhnung.",
       "wende": "Krake und Silberzahn stehen sich gegenüber. Nun zählt jedes Wort der Helden.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Silberzahn hat ein altes Bild von sich und Krake aufbewahrt.",
+       "Krake fragt leise, ob Silberzahn auch zum Fest kommt."
+      ]
      }
     ]
    },
@@ -2192,19 +2948,31 @@
       "titel": "Diving down",
       "inhalt": "In a diving bell they go down. Fish say someone with a silver tail stole the presents.",
       "wende": "In the coral forest the presents hang in a net, guarded by confused crabs.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A fish points with its fin to a red coral forest.",
+       "A silver scale hangs on a coral."
+      ]
      },
      {
       "titel": "The sunken ship",
       "inhalt": "A clue leads to the old wreck where Silvertooth lives. It is dark there and a little spooky.",
       "wende": "Silvertooth cries, because she used to call Kraken her friend before they quarrelled.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Silver scales glitter on the way to the old wreck.",
+       "Soft crying comes from the wreck."
+      ]
      },
      {
       "titel": "The palace",
       "inhalt": "At the palace the guard demands the present. The heroes have an idea: the best present would be making up.",
       "wende": "Kraken and Silvertooth face each other. Now every word of the heroes counts.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Silberzahn has kept an old picture of herself and Krake.",
+       "Krake asks quietly whether Silberzahn will come to the party too."
+      ]
      }
     ]
    }
@@ -2229,19 +2997,31 @@
       "titel": "Grüner Nebel",
       "inhalt": "Die Mannschaft hört nachts Gesang, und der Nebel nimmt den Koch mit. Im Wrack liegt das Logbuch Morganas.",
       "wende": "Das Gold im Wrack ist verflucht, und wer es berührt, sieht Morganas Erinnerungen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der Gesang im Nebel kommt vom Wrack in der Bucht.",
+       "Im Logbuch ist der Name des Verräters mehrmals unterstrichen."
+      ]
      },
      {
       "titel": "Der Verrat",
       "inhalt": "Auf der Leuchtenden Insel leben die Nachfahren des Verräters, der Morgana einst ertrinken ließ.",
       "wende": "Die Nachfahren besitzen den Schlüssel zu Morganas Grab, geben ihn aber nicht freiwillig her.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Inselbewohner tragen alle dasselbe Familienwappen.",
+       "Der Älteste trägt einen grünen Schlüssel an einer Kette."
+      ]
      },
      {
       "titel": "Das Grab",
       "inhalt": "Im Grab erscheint Morgana. Sie verlangt Gerechtigkeit, nicht Gold.",
       "wende": "Die Helden müssen den Verrat sühnen: das Gold zurückgeben, die Nachfahren beschämen oder Morgana überlisten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Auf Morganas Grab steht kein Name, nur das Wort Verraten.",
+       "Das Gold wird schwerer, je näher man dem Grab kommt."
+      ]
      }
     ]
    },
@@ -2261,19 +3041,31 @@
       "titel": "Green mist",
       "inhalt": "At night the crew hears singing, and the mist takes the cook. In the wreck lies Morgana's logbook.",
       "wende": "The gold in the wreck is cursed, and whoever touches it sees Morgana's memories.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The singing in the fog comes from the wreck in the bay.",
+       "In the logbook the traitor's name is underlined several times."
+      ]
      },
      {
       "titel": "The betrayal",
       "inhalt": "On the Glowing Isle live the descendants of the traitor who once let Morgana drown.",
       "wende": "The descendants hold the key to Morgana's grave but will not give it up willingly.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The islanders all wear the same family crest.",
+       "The eldest wears a green key on a chain."
+      ]
      },
      {
       "titel": "The grave",
       "inhalt": "In the grave Morgana appears. She demands justice, not gold.",
       "wende": "The heroes must atone for the betrayal: return the gold, shame the descendants or outwit Morgana.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Morgana's grave bears no name, only the word Betrayed.",
+       "The gold grows heavier the closer you come to the grave."
+      ]
      }
     ]
    }
@@ -2298,19 +3090,31 @@
       "titel": "An Bord",
       "inhalt": "Die Helden lernen Mannschaft und Kapitän kennen. Nachts verschwindet ein Teil der Ladung.",
       "wende": "Der Kapitän verdächtigt die Neuen, also die Helden, und lässt sie unter Deck einsperren.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Laderaum führen nasse Fußspuren zur Kajüte des Maats.",
+       "Der Kapitän mustert die Neuen mit wachsendem Misstrauen."
+      ]
      },
      {
       "titel": "Unter Deck",
       "inhalt": "Gefangen hören die Helden die Pläne der Meuterer und finden Verbündete in der Mannschaft.",
       "wende": "Der Maat will das Schiff an den Teufelsklippen auf Grund setzen, wo seine Käufer warten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Durch die Planken hört man Stimmen über einen Kurs zu den Klippen.",
+       "Ein Schiffsjunge schiebt den Gefangenen heimlich Brot zu."
+      ]
      },
      {
       "titel": "Die Teufelsklippen",
       "inhalt": "Die Meuterei bricht los, während ein Sturm auf die Klippen zutreibt.",
       "wende": "Die Helden müssen das Steuer übernehmen und entscheiden, wen sie retten und wem sie trauen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Das Steuer ist festgebunden, und der Kurs zeigt auf die Klippen.",
+       "Ein Teil der Mannschaft schaut unsicher zwischen Kapitän und Maat hin und her."
+      ]
      }
     ]
    },
@@ -2330,19 +3134,31 @@
       "titel": "Aboard",
       "inhalt": "The heroes meet crew and captain. At night part of the cargo vanishes.",
       "wende": "The captain suspects the newcomers, the heroes, and has them locked below deck.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Wet footprints in the hold lead to the mate's cabin.",
+       "The captain eyes the newcomers with growing distrust."
+      ]
      },
      {
       "titel": "Below deck",
       "inhalt": "Locked up, the heroes hear the mutineers' plans and find allies among the crew.",
       "wende": "The mate wants to run the ship aground at the Devil's Cliffs, where his buyers wait.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Through the planks you hear voices about a course to the cliffs.",
+       "A cabin boy secretly slips the prisoners bread."
+      ]
      },
      {
       "titel": "The Devil's Cliffs",
       "inhalt": "The mutiny breaks out while a storm drives them towards the cliffs.",
       "wende": "The heroes must take the helm and decide whom to save and whom to trust.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The wheel is lashed, and the course points to the cliffs.",
+       "Some of the crew look uncertainly between captain and mate."
+      ]
      }
     ]
    }
@@ -2367,19 +3183,31 @@
       "titel": "Aufbruch",
       "inhalt": "Im Hafen müssen die Helden eine Mannschaft anheuern und ein Schiff finden. Vargas hat schon das beste gekauft.",
       "wende": "In der Sturmstraße greift ein Seeungeheuer die Flotte an.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Hafen prahlen Seeleute vom besten Schiff, das Vargas kaufte.",
+       "Ein alter Kapitän warnt vor Schatten unter der Sturmstraße."
+      ]
      },
      {
       "titel": "Die Nebelinsel",
       "inhalt": "Auf der Insel ändern sich die Wege mit dem Nebel. Andere Mannschaften schließen Bündnisse oder verraten sich.",
       "wende": "Die Meerhexe erscheint im Traum und warnt: Jeder Wunsch hat einen Preis.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Wege im Nebel enden immer an einem Stein mit einer Muschel.",
+       "Eine fremde Mannschaft bietet ein Bündnis an, doch einer grinst zu breit."
+      ]
      },
      {
       "titel": "Der Gipfel",
       "inhalt": "Am Gipfel stehen sich die Helden und Vargas gegenüber, während die Insel schon wieder zu versinken beginnt.",
       "wende": "Wer wünscht, und was? Die Meerhexe hört nur dem Ersten zu.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Gipfel steht ein Altar, auf dem nur Platz für eine Hand ist.",
+       "Das Wasser steigt schon an den Hängen der Insel."
+      ]
      }
     ]
    },
@@ -2399,19 +3227,31 @@
       "titel": "Setting out",
       "inhalt": "In the harbour the heroes must hire a crew and find a ship. Vargas has already bought the best.",
       "wende": "In the Storm Strait a sea monster attacks the fleet.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "In the harbour sailors boast of the best ship, which Vargas bought.",
+       "An old captain warns of shadows beneath the Storm Strait."
+      ]
      },
      {
       "titel": "Fog Island",
       "inhalt": "On the island the paths change with the fog. Other crews make alliances or betray each other.",
       "wende": "The sea witch appears in a dream and warns: every wish has a price.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The paths in the fog always end at a stone with a shell.",
+       "A strange crew offers an alliance, but one grins too widely."
+      ]
      },
      {
       "titel": "The peak",
       "inhalt": "At the peak the heroes and Vargas face each other while the island is already starting to sink.",
       "wende": "Who wishes, and for what? The sea witch listens only to the first.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "On the summit stands an altar with room for only one hand.",
+       "The water is already rising on the island's slopes."
+      ]
      }
     ]
    }
@@ -2436,19 +3276,31 @@
       "titel": "Der Auftrag",
       "inhalt": "Im Palast erhalten die Helden den Auftrag. In der Taverne erfahren sie, dass Rosa die Armen mit Waren versorgt.",
       "wende": "Rosa lädt die Helden selbst ein, und sie kennt ihren Auftrag schon.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Armen in der Taverne sprechen von Rosa nur mit leuchtenden Augen.",
+       "Ein Bote legt eine Einladung mit Rosas Zeichen auf den Tisch."
+      ]
      },
      {
       "titel": "Die Höhlen",
       "inhalt": "In den Höhlen zeigt Rosa ihr Reich: Waren für die Armen, aber auch Waffen für Unbekannte.",
       "wende": "Die Waffen tragen das Siegel des Gouverneurs.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In den Höhlen stehen Kisten ohne Aufschrift, schwerer als Waren.",
+       "Auf einer Kiste ist Siegelwachs abgekratzt."
+      ]
      },
      {
       "titel": "Der Palast",
       "inhalt": "Beim großen Ball im Palast wollen Rosa und der Gouverneur sich gegenseitig ausschalten.",
       "wende": "Die Helden stehen zwischen beiden und entscheiden, wem sie die Beweise geben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der Gouverneur und Rosa stehen beide nahe am Balkon.",
+       "Ein Diener trägt einen versiegelten Brief zwischen ihnen hin und her."
+      ]
      }
     ]
    },
@@ -2468,19 +3320,31 @@
       "titel": "The job",
       "inhalt": "In the palace the heroes get the job. In the tavern they learn that Rosa supplies the poor with goods.",
       "wende": "Rosa invites the heroes herself, and she already knows their job.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The poor in the tavern speak of Rosa only with shining eyes.",
+       "A messenger puts an invitation with Rosa's mark on the table."
+      ]
      },
      {
       "titel": "The caves",
       "inhalt": "In the caves Rosa shows her realm: goods for the poor, but also weapons for unknown buyers.",
       "wende": "The weapons bear the governor's seal.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In the caves stand unmarked crates, heavier than goods.",
+       "Sealing wax has been scraped off one crate."
+      ]
      },
      {
       "titel": "The palace",
       "inhalt": "At the grand ball in the palace Rosa and the governor each want to finish the other.",
       "wende": "The heroes stand between them and decide whom to give the proof.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The governor and Rosa both stand near the balcony.",
+       "A servant carries a sealed letter back and forth between them."
+      ]
      }
     ]
    }
@@ -2505,19 +3369,31 @@
       "titel": "Der Nebel",
       "inhalt": "Das Geisterschiff legt an. Die Mannschaft lädt freundlich zum Festmahl ein, aber das Essen schmeckt nach Asche.",
       "wende": "Der verschollene Vater warnt heimlich: Wer bis Mitternacht an Bord bleibt, bleibt für immer.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein Matrose lässt sein Essen unberührt und schaut die Helden warnend an.",
+       "Die Schiffsglocke zählt die Stunden bis Mitternacht."
+      ]
      },
      {
       "titel": "Das Totendeck",
       "inhalt": "Unter Deck liegen die Seelen der Mannschaft in Muscheln gebannt. Rabe hütet den Schlüssel.",
       "wende": "Rabe fordert die Helden zu einem Spiel heraus: gewinnen heißt gehen, verlieren heißt bleiben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Unter Deck leuchten Muscheln in einer Kiste.",
+       "An Rabes Gürtel hängt ein Schlüssel aus Perlmutt."
+      ]
      },
      {
       "titel": "Das Herz des Nebels",
       "inhalt": "Das Schiff segelt ins Herz des Nebels, wo das Meer seinen Preis einfordert.",
       "wende": "Die Helden können die Seelen befreien, doch das Schiff versinkt, und der Vater geht mit ihm.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Das Meer flüstert Namen der Mannschaft.",
+       "Der Vater hält eine Muschel mit seinem eigenen Namen fest."
+      ]
      }
     ]
    },
@@ -2537,19 +3413,31 @@
       "titel": "The fog",
       "inhalt": "The ghost ship comes alongside. The crew kindly invites them to a feast, but the food tastes of ash.",
       "wende": "The lost father warns secretly: whoever stays aboard until midnight stays forever.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "A sailor leaves his food untouched and looks at the heroes in warning.",
+       "The ship's bell counts the hours until midnight."
+      ]
      },
      {
       "titel": "The deck of the dead",
       "inhalt": "Below deck the crew's souls lie bound in shells. Raven guards the key.",
       "wende": "Raven challenges the heroes to a game: winning means leaving, losing means staying.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Shells glow in a chest below deck.",
+       "A mother-of-pearl key hangs on Rabe's belt."
+      ]
      },
      {
       "titel": "The heart of the fog",
       "inhalt": "The ship sails into the heart of the fog, where the sea claims its price.",
       "wende": "The heroes can free the souls, but the ship sinks, and the father goes with it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The sea whispers the names of the crew.",
+       "The father holds a shell with his own name tightly."
+      ]
      }
     ]
    }
@@ -2574,19 +3462,31 @@
       "titel": "Der Plan",
       "inhalt": "Auf der Schmugglerinsel planen die Helden mit der Mannschaft. Jeder hat einen anderen Einfall.",
       "wende": "Ein Verräter in der Mannschaft verkauft den Plan an das Fort.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ein Matrose fragt auffällig oft nach Uhrzeit und Weg.",
+       "Im Hafen ankert ein kleines Boot mit den Farben des Forts."
+      ]
      },
      {
       "titel": "Die Stadt",
       "inhalt": "In der Stadt unter dem Fort suchen die Helden einen neuen Weg hinein: Wäscherinnen, Wachen, Kanäle.",
       "wende": "Rotfuchs ist nicht der, für den sie ihn hielten: Er ist der verschollene Sohn des Kommandanten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Wäscherinnen gehen jeden Morgen durch ein Seitentor ins Fort.",
+       "Rotfuchs trägt ein Medaillon mit dem Wappen der Festung."
+      ]
      },
      {
       "titel": "Das Fort",
       "inhalt": "In der Nacht vor der Hinrichtung dringen die Helden ein. Der Kommandant erwartet sie.",
       "wende": "Vater und Sohn stehen sich gegenüber, und die Helden können vermitteln oder kämpfen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Hof stehen mehr Wachen als sonst, und alle schauen zum Tor.",
+       "Der Kommandant hält ein altes Kinderbild in der Hand."
+      ]
      }
     ]
    },
@@ -2606,19 +3506,31 @@
       "titel": "The plan",
       "inhalt": "On the smugglers' isle the heroes plan with the crew. Everyone has a different idea.",
       "wende": "A traitor in the crew sells the plan to the fort.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "One sailor asks conspicuously often about time and route.",
+       "A small boat in the fort's colours is anchored in the harbour."
+      ]
      },
      {
       "titel": "The town",
       "inhalt": "In the town below the fort the heroes look for a new way in: washerwomen, guards, canals.",
       "wende": "Redfox is not who they thought: he is the commander's long-lost son.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The washerwomen go into the fort through a side gate every morning.",
+       "Rotfuchs wears a locket with the fortress's crest."
+      ]
      },
      {
       "titel": "The fort",
       "inhalt": "On the night before the hanging the heroes get in. The commander expects them.",
       "wende": "Father and son face each other, and the heroes can mediate or fight.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "More guards than usual stand in the yard, all watching the gate.",
+       "The commander holds an old child's picture in his hand."
+      ]
      }
     ]
    }
@@ -2643,19 +3555,31 @@
       "titel": "Der letzte Hafen",
       "inhalt": "Im überfüllten Freihafen Asche drängen sich Flüchtlinge. Ein halb verrückter Seemann spricht vom Tempel im Wirbel.",
       "wende": "Ein Schiff aus der Roten Flut läuft ein, und seine Mannschaft greift den Hafen an.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der verrückte Seemann zeichnet einen Wirbel mit einem Turm darin.",
+       "Am Horizont leuchtet das Wasser rot, und ein Segel nähert sich."
+      ]
      },
      {
       "titel": "Die rote See",
       "inhalt": "Die Fahrt durch die rote See zehrt an Nerven und Vorräten. Ein Teil der Mannschaft verfällt dem Flüstern.",
       "wende": "Der Tempel taucht aus dem Wirbel auf, und Vareks Anhänger warten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Matrosen murmeln im Schlaf dasselbe fremde Gebet.",
+       "Das rote Wasser dreht sich immer schneller nach Süden."
+      ]
      },
      {
       "titel": "Der Tempel",
       "inhalt": "Im Tempel liegt die Göttin halb erwacht. Varek vollzieht das letzte Ritual.",
       "wende": "Die Göttin lässt sich nur zurück in den Schlaf singen, und das Lied verlangt ein Opfer.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Vareks Anhänger tragen Glocken, die im Takt des Rituals schlagen.",
+       "An der Tempelwand steht ein Wiegenlied in alter Schrift."
+      ]
      }
     ]
    },
@@ -2675,19 +3599,31 @@
       "titel": "The last harbour",
       "inhalt": "Refugees crowd the overfull Freeport Ash. A half-mad sailor speaks of the temple in the maelstrom.",
       "wende": "A ship from the Red Tide comes in, and its crew attacks the harbour.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The mad sailor draws a whirlpool with a tower in it.",
+       "The water glows red on the horizon, and a sail approaches."
+      ]
      },
      {
       "titel": "The red sea",
       "inhalt": "The voyage through the red sea wears down nerves and supplies. Part of the crew falls to the whispering.",
       "wende": "The temple rises from the maelstrom, and Varek's followers wait.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Sailors murmur the same strange prayer in their sleep.",
+       "The red water turns faster and faster towards the south."
+      ]
      },
      {
       "titel": "The temple",
       "inhalt": "In the temple the goddess lies half awake. Varek performs the last ritual.",
       "wende": "The goddess can only be sung back to sleep, and the song demands a sacrifice.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Varek's followers carry bells that ring to the ritual's beat.",
+       "A lullaby in old script is written on the temple wall."
+      ]
      }
     ]
    }
@@ -2712,19 +3648,31 @@
       "titel": "Die Jagd beginnt",
       "inhalt": "Im Perlenhafen rüstet sich die Jagd. Ahrend heuert die Helden an, eine alte Seherin warnt sie.",
       "wende": "Der Leviathan taucht neben der Flotte auf, und ein Schiff verschwindet in seinem Maul.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Seherin zeigt auf Narben an Ahrends Händen und schüttelt den Kopf.",
+       "Die Fische im Hafen schwimmen alle in dieselbe Richtung davon."
+      ]
      },
      {
       "titel": "Die Insel, die atmet",
       "inhalt": "Die Helden landen auf dem Rücken des Leviathans, der wie eine Insel aussieht. Im Inneren wartet eine Wahrheit.",
       "wende": "Der Leviathan flieht vor etwas noch Größerem, das tief unten erwacht ist.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Auf dem Rücken des Leviathans wachsen Muscheln, frisch zerkratzt.",
+       "Tief unten dröhnt ein Laut, der den Leviathan zittern lässt."
+      ]
      },
      {
       "titel": "Der Abgrund",
       "inhalt": "Ahrend will den Leviathan um jeden Preis töten, auch wenn das die Inseln dem eigentlichen Feind ausliefert.",
       "wende": "Die Helden entscheiden: den Leviathan töten, ihn befreien oder mit ihm gegen das Größere kämpfen.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Ahrend lädt Harpunen mit Sprengladungen.",
+       "Der Leviathan schaut die Helden an, als wolle er etwas fragen."
+      ]
      }
     ]
    },
@@ -2744,19 +3692,31 @@
       "titel": "The hunt begins",
       "inhalt": "In Pearl harbour the hunt makes ready. Ahrend hires the heroes; an old seer warns them.",
       "wende": "The Leviathan surfaces beside the fleet, and a ship disappears into its jaws.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The seer points to scars on Ahrend's hands and shakes her head.",
+       "The fish in the harbour all swim away in the same direction."
+      ]
      },
      {
       "titel": "The island that breathes",
       "inhalt": "The heroes land on the Leviathan's back, which looks like an island. Inside a truth awaits.",
       "wende": "The Leviathan is fleeing from something even bigger that has woken deep below.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Shells grow on the leviathan's back, freshly scratched.",
+       "Deep below a sound booms that makes the leviathan tremble."
+      ]
      },
      {
       "titel": "The abyss",
       "inhalt": "Ahrend wants to kill the Leviathan at any cost, even if that leaves the isles to the real enemy.",
       "wende": "The heroes decide: kill the Leviathan, free it or fight beside it against the greater thing.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Ahrend loads harpoons with explosive charges.",
+       "The leviathan looks at the heroes as if it wanted to ask something."
+      ]
      }
     ]
    }
@@ -2781,19 +3741,31 @@
       "titel": "Stille Mühlen",
       "inhalt": "Auf Federhauch steht alles still, die Luftschiffe hängen fest. Ein altes Windspiel zeigt, wohin der Wind flog.",
       "wende": "Über den Regenbogensteg kann man nur gehen, wenn man an etwas Schönes denkt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Das alte Windspiel klingt leise und zeigt zum Regenbogen.",
+       "Am Regenbogensteg lächelt ein Wächter, wenn man von Schönem erzählt."
+      ]
      },
      {
       "titel": "Die Vogelinsel",
       "inhalt": "Riesenvögel könnten die Helden zur Wolkenburg tragen, wollen aber erst einen Wettflug.",
       "wende": "Brummbass schnarcht so laut, dass die Burg wackelt, und der Windsack liegt unter seinem Kopfkissen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Riesenvögel ziehen Kreise um eine Wolke, die bei jedem Schnarchen bebt.",
+       "Unter einem riesigen Kissen weht ein kleiner Luftzug hervor."
+      ]
      },
      {
       "titel": "Die Wolkenburg",
       "inhalt": "Leise müssen die Helden durch die Burg schleichen, denn Brummbass wacht leicht auf.",
       "wende": "Wer dem Riesen ein Schlaflied singt oder ihm Ohrenschützer bastelt, darf den Wind mitnehmen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Brummbass dreht sich im Schlaf und murmelt nach einem Lied.",
+       "Neben dem Bett liegen Wolle und Federn, perfekt für Ohrenschützer."
+      ]
      }
     ]
    },
@@ -2813,19 +3785,31 @@
       "titel": "Still mills",
       "inhalt": "On Featherlight everything stands still, the airships are stuck. An old wind chime shows where the wind flew.",
       "wende": "The rainbow walk can only be crossed while thinking of something lovely.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The old wind chime rings softly and points to the rainbow.",
+       "At the rainbow bridge a guardian smiles when you speak of beautiful things."
+      ]
      },
      {
       "titel": "Bird island",
       "inhalt": "Giant birds could carry the heroes to the cloud castle, but first they want a flying race.",
       "wende": "Rumblebass snores so loudly the castle shakes, and the wind sack lies under his pillow.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The giant birds circle a cloud that shakes with every snore.",
+       "A little draught blows out from under a huge pillow."
+      ]
      },
      {
       "titel": "The cloud castle",
       "inhalt": "The heroes must sneak quietly through the castle, for Rumblebass wakes easily.",
       "wende": "Whoever sings the giant a lullaby or makes him earmuffs may take the wind along.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Brummbass turns in his sleep and mumbles for a song.",
+       "Wool and feathers lie by the bed, perfect for earmuffs."
+      ]
      }
     ]
    }
@@ -2850,19 +3834,31 @@
       "titel": "Klein geworden",
       "inhalt": "In der Bauklotzstadt begrüßt ein Zinnsoldat die Helden und erklärt die Not der Spielzeuge.",
       "wende": "Rost taucht auf und sperrt die Bürgermeisterin, eine Stoffpuppe, in den Schrank.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der Zinnsoldat zeigt nervös auf einen großen, dunklen Schrank.",
+       "Auf dem Boden liegen Zahnräder, frisch abgefallen."
+      ]
      },
      {
       "titel": "Der Teddybärenwald",
       "inhalt": "Die Teddys wissen, wie man wieder groß wird, aber nur, wenn man ein vergessenes Spiel findet.",
       "wende": "In der Kiste der vergessenen Spiele liegt das Lieblingsspiel des Kindes von früher.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Teddys flüstern von einer Kiste unter dem Bett.",
+       "Ein Würfel aus einem alten Spiel rollt unter das Bett."
+      ]
      },
      {
       "titel": "Der dunkle Schrank",
       "inhalt": "Im Schrank hat Rost alle eingesperrt. Er hat Angst, dass ihn niemand mehr lieb hat.",
       "wende": "Mit dem alten Spiel erinnern die Helden das Kind daran, wie viel ihm Rost bedeutet.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Aus dem Schrank klingt das Ticken eines Aufziehschlüssels.",
+       "Auf dem Spielbrett ist ein Drache gemalt, ganz abgegriffen."
+      ]
      }
     ]
    },
@@ -2882,19 +3878,31 @@
       "titel": "Shrunk",
       "inhalt": "In block town a tin soldier greets the heroes and explains the toys' trouble.",
       "wende": "Rusty appears and locks the mayor, a rag doll, in the cupboard.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The tin soldier nervously points to a big dark cupboard.",
+       "Cogs lie on the floor, freshly fallen off."
+      ]
      },
      {
       "titel": "The teddy bear forest",
       "inhalt": "The teddies know how to grow big again, but only if someone finds a forgotten game.",
       "wende": "In the box of forgotten games lies the child's old favourite game.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The teddies whisper of a box under the bed.",
+       "A die from an old game rolls under the bed."
+      ]
      },
      {
       "titel": "The dark cupboard",
       "inhalt": "Rusty has locked everybody in the cupboard. He is afraid nobody loves him any more.",
       "wende": "With the old game the heroes remind the child how much Rusty means to it.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The ticking of a wind-up key sounds from the cupboard.",
+       "A dragon is painted on the game board, quite worn."
+      ]
      }
     ]
    }
@@ -2919,19 +3927,31 @@
       "titel": "Die Entführung",
       "inhalt": "Im Labor der Ingenieurin finden die Helden Kampfspuren, eine Taschenuhr mit Gildenzeichen und einen sprechenden Automaten.",
       "wende": "Der Automat erinnert sich an den Namen eines Luftschiffs: die Graue Wolke.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der Automat wiederholt immer wieder ein Wort mit Wolke.",
+       "Die Taschenuhr zeigt das Zeichen der Rauchgilde."
+      ]
      },
      {
       "titel": "Der Luftschiffhafen",
       "inhalt": "Im Hafen müssen die Helden auf die Graue Wolke gelangen, die gerade ablegt.",
       "wende": "An Bord liegt eine Fälschung, Ada ist im Fabrikturm, und dort läuft der Bau schon.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Hafen dampft ein Luftschiff mit grauem Rumpf zur Abfahrt.",
+       "Die Kiste mit Adas Namen ist viel zu leicht."
+      ]
      },
      {
       "titel": "Der Fabrikturm",
       "inhalt": "Im Fabrikturm dröhnen die Kessel. Ashcombe will mit dem ersten Sturm den Hafen der Konkurrenz zerstören.",
       "wende": "Ada kann die Maschine umkehren, doch dafür muss jemand im Sturm an der Spitze des Turms ausharren.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Aus der Turmspitze sprühen Funken in den Sturm.",
+       "Ada kritzelt an der Wand eine Schaltung, die rückwärts läuft."
+      ]
      }
     ]
    },
@@ -2951,19 +3971,31 @@
       "titel": "The kidnapping",
       "inhalt": "In the engineer's lab the heroes find signs of a struggle, a pocket watch with the guild's sign and a talking automaton.",
       "wende": "The automaton remembers an airship's name: the Grey Cloud.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The automaton keeps repeating a word with cloud in it.",
+       "The pocket watch shows the mark of the Smoke Guild."
+      ]
      },
      {
       "titel": "The airship harbour",
       "inhalt": "In the harbour the heroes must get aboard the Grey Cloud, which is just casting off.",
       "wende": "Aboard lies a fake; Ada is in the factory tower, where building has already started.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "At the harbour an airship with a grey hull steams for departure.",
+       "The crate with Ada's name is far too light."
+      ]
      },
      {
       "titel": "The factory tower",
       "inhalt": "In the factory tower the boilers roar. Ashcombe wants to wreck his rivals' harbour with the first storm.",
       "wende": "Ada can reverse the machine, but someone must hold out at the tower's top in the storm.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Sparks spray from the top of the tower into the storm.",
+       "Ada scribbles on the wall a circuit that runs backwards."
+      ]
      }
     ]
    }
@@ -2988,19 +4020,31 @@
       "titel": "Ankunft in Silver Creek",
       "inhalt": "Die Helden kommen mit der Postkutsche an. Der Sheriff ist neu, der Saloon voll, und jeder hat einen Plan.",
       "wende": "Der Fremde fordert die Stadt auf, ihm bis Sonntag die Mine zu übergeben.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Saloon verstummen alle, als die Tür im Wind aufschlägt.",
+       "Am Galgen hängt ein Zettel mit der Unterschrift des Fremden."
+      ]
      },
      {
       "titel": "Die Mine",
       "inhalt": "In der Mine leuchtet das Mondsilber. Wer es berührt, hört Stimmen, die Wünsche flüstern.",
       "wende": "Die Stimmen gehören den Bergleuten, die einst für das Silber ihr Leben gaben.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Das Mondsilber leuchtet heller, wenn jemand einen Wunsch denkt.",
+       "Neben dem Erz liegen alte Werkzeuge mit eingeritzten Namen."
+      ]
      },
      {
       "titel": "Showdown",
       "inhalt": "Am Sonntag reitet der Fremde mit seiner Geisterbande in die Stadt.",
       "wende": "Die Helden können kämpfen, den Fremden mit dem Silber erlösen oder die Mine für immer verschließen.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Geisterbande reitet ohne Schatten.",
+       "Der Fremde trägt ein Stück Mondsilber am Hals."
+      ]
      }
     ]
    },
@@ -3020,19 +4064,31 @@
       "titel": "Arrival in Silver Creek",
       "inhalt": "The heroes arrive by stagecoach. The sheriff is new, the saloon full, and everyone has a plan.",
       "wende": "The stranger orders the town to hand him the mine by Sunday.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Everyone in the saloon falls silent when the door bangs open in the wind.",
+       "A note signed by the stranger hangs on the gallows."
+      ]
      },
      {
       "titel": "The mine",
       "inhalt": "In the mine the moon silver glows. Whoever touches it hears voices whispering wishes.",
       "wende": "The voices belong to the miners who once gave their lives for the silver.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The moon silver glows brighter when someone thinks a wish.",
+       "Old tools with carved names lie beside the ore."
+      ]
      },
      {
       "titel": "Showdown",
       "inhalt": "On Sunday the stranger rides into town with his ghost gang.",
       "wende": "The heroes can fight, release the stranger with the silver or seal the mine forever.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The ghost gang rides without shadows.",
+       "The stranger wears a piece of moon silver at his throat."
+      ]
      }
     ]
    }
@@ -3057,19 +4113,31 @@
       "titel": "Alarm",
       "inhalt": "Die Luft wird knapp, die Menschen sind in Panik. Im Pumpenwerk finden die Helden zerschnittene Leitungen.",
       "wende": "Ersatzteile gibt es nur im verlassenen Außenposten am Tiefseegraben.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Leitungen sind glatt durchgeschnitten, nicht gerissen.",
+       "Ein Plan des Pumpenwerks zeigt den Außenposten am Graben."
+      ]
      },
      {
       "titel": "Der Algenwald",
       "inhalt": "Im Tauchanzug geht es durch den Algenwald, wo Riesenkraken und Schmuggler lauern.",
       "wende": "Die Schmuggler arbeiten für Corvin und haben die Ersatzteile schon beiseite geschafft.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Algenwald treibt eine leere Kiste mit Corvins Zeichen.",
+       "Schmuggler funken mit einem Code, den nur der Rat benutzt."
+      ]
      },
      {
       "titel": "Der Graben",
       "inhalt": "Am Tiefseegraben liegt der Außenposten, und Corvin selbst ist gekommen, um die Teile zu versenken.",
       "wende": "Die Helden müssen die Teile retten und vor dem Rat beweisen, wer die Kuppel opfern wollte.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Außenposten liegt Corvins Boot, frisch angelegt.",
+       "Eine Kamera im Posten zeichnet noch immer auf."
+      ]
      }
     ]
    },
@@ -3089,19 +4157,31 @@
       "titel": "Alarm",
       "inhalt": "Air is running low, people panic. In the pump works the heroes find cut pipes.",
       "wende": "Spare parts exist only in the abandoned outpost at the deep trench.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The pipes are cut cleanly, not torn.",
+       "A plan of the pump works shows the outpost at the trench."
+      ]
      },
      {
       "titel": "The kelp forest",
       "inhalt": "In diving suits the heroes go through the kelp forest, where giant squid and smugglers lurk.",
       "wende": "The smugglers work for Corvin and have already moved the spare parts away.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "An empty crate with Corvin's mark drifts in the kelp forest.",
+       "Smugglers radio with a code only the council uses."
+      ]
      },
      {
       "titel": "The trench",
       "inhalt": "At the deep trench lies the outpost, and Corvin himself has come to sink the parts.",
       "wende": "The heroes must save the parts and prove before the council who wanted to sacrifice the dome.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Corvin's boat lies at the outpost, freshly moored.",
+       "A camera in the outpost is still recording."
+      ]
      }
     ]
    }
@@ -3126,19 +4206,31 @@
       "titel": "Die Dämmerung",
       "inhalt": "In der dunklen Hauptstadt herrscht Angst. Der Wesir übernimmt die Macht und sperrt die Priester ein.",
       "wende": "Ein befreiter Priester verrät, dass Nekhet das Tor zur Unterwelt selbst geöffnet hat.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der Wesir trägt einen Ring mit dem Bild einer Schlange.",
+       "Aus dem Tempelkerker klingen Gebete der Priester."
+      ]
      },
      {
       "titel": "Die Totenstadt",
       "inhalt": "In der Totenstadt öffnen die Helden das Tor mit Rätseln der alten Pharaonen.",
       "wende": "Hinter dem Tor wartet der Fährmann, der nur Seelen mit leichtem Herzen übersetzt.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Rätsel am Tor sind mit Sternbildern geschrieben.",
+       "Hinter dem Tor plätschert ein Fluss im Dunkeln."
+      ]
      },
      {
       "titel": "Die Unterwelt",
       "inhalt": "In der Unterwelt ringen die Helden mit Prüfungen der Götter und erreichen Apophis.",
       "wende": "Die Barke zurückzuholen gelingt nur, wenn Nekhet sein Bündnis mit der Schlange bricht oder die Helden die Schlange überlisten.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Schlange zischt einen Namen: Nekhet.",
+       "Im Bauch der Schlange glimmt das Licht der Barke."
+      ]
      }
     ]
    },
@@ -3158,19 +4250,31 @@
       "titel": "The twilight",
       "inhalt": "Fear rules the dark capital. The vizier seizes power and locks up the priests.",
       "wende": "A freed priest reveals that Nekhet opened the gate to the underworld himself.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The vizier wears a ring with the image of a serpent.",
+       "Prayers of the priests sound from the temple dungeon."
+      ]
      },
      {
       "titel": "The city of the dead",
       "inhalt": "In the city of the dead the heroes open the gate with riddles of the old pharaohs.",
       "wende": "Behind the gate waits the ferryman, who carries only souls with light hearts.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The riddles at the gate are written in constellations.",
+       "Behind the gate a river splashes in the dark."
+      ]
      },
      {
       "titel": "The underworld",
       "inhalt": "In the underworld the heroes face the gods' trials and reach Apophis.",
       "wende": "The barque can only be won back if Nekhet breaks his bond with the serpent or the heroes outwit it.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The serpent hisses a name: Nekhet.",
+       "The light of the barque glimmers in the serpent's belly."
+      ]
      }
     ]
    }
@@ -3195,19 +4299,31 @@
       "titel": "Die Schlafenden",
       "inhalt": "Die Helden kommen als neue Schüler oder Lehrer an die Akademie. Im Schlafsaal liegen zwölf Schlafende.",
       "wende": "Alle Schlafenden haben dasselbe Zeichen auf der Hand, ein Turm mit einem Auge.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Die Schlafenden murmeln alle von einem Turm.",
+       "Auf jeder Hand schimmert ein feines Zeichen unter der Haut."
+      ]
      },
      {
       "titel": "Die Traumbibliothek",
       "inhalt": "In der Bibliothek lernen die Helden, in fremde Träume zu steigen. Dort ist alles möglich und nichts sicher.",
       "wende": "Im Traum treffen sie einen Schlafenden, der vom Turm des Albmeisters berichtet.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "In der Bibliothek liegt ein Buch über Traumreisen, oft gelesen.",
+       "Ein Schlafender ruft im Traum nach Hilfe vom Turm aus."
+      ]
      },
      {
       "titel": "Das Reich des Albmeisters",
       "inhalt": "Der Albmeister zeigt den Helden ihre eigenen Ängste. Nur wer sie annimmt, kommt voran.",
       "wende": "Der Albmeister will nicht böse sein: Er sucht seine verlorene Tochter in den Träumen anderer.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Im Turm hängen Kinderzeichnungen eines Mädchens.",
+       "Der Albmeister ruft im Traum einen Namen, der nicht hierher gehört."
+      ]
      }
     ]
    },
@@ -3227,19 +4343,31 @@
       "titel": "The sleepers",
       "inhalt": "The heroes come to the academy as new pupils or teachers. In the dormitory lie twelve sleepers.",
       "wende": "Every sleeper has the same sign on the hand, a tower with an eye.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The sleepers all mumble of a tower.",
+       "A faint mark shimmers under the skin of every hand."
+      ]
      },
      {
       "titel": "The dream library",
       "inhalt": "In the library the heroes learn to step into other people's dreams. There anything is possible and nothing is safe.",
       "wende": "In a dream they meet a sleeper who tells of the Nightmare Master's tower.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "A book on dream travel, often read, lies in the library.",
+       "A sleeper calls for help from the tower in the dream."
+      ]
      },
      {
       "titel": "The Nightmare Master's realm",
       "inhalt": "The Nightmare Master shows the heroes their own fears. Only those who accept them get further.",
       "wende": "The Nightmare Master does not want to be evil: he looks for his lost daughter in other people's dreams.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Children's drawings by a girl hang in the tower.",
+       "The dream master calls a name in the dream that does not belong here."
+      ]
      }
     ]
    }
@@ -3264,19 +4392,31 @@
       "titel": "Das Beben",
       "inhalt": "In Panzerstadt bricht Panik aus. Die Gelehrte Ilka Weit glaubt, die Schildkröte habe etwas verschluckt.",
       "wende": "Die Sekte stiehlt Ilkas Heilmittel und flieht zum Rand der Welt.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ilka hat einen Topf mit Heilmittel, und jemand beobachtet sie.",
+       "Im Markt tragen Leute ein Zeichen der Letzten Tage."
+      ]
      },
      {
       "titel": "Der Rand der Welt",
       "inhalt": "Am Rand, wo der Panzer ins Sternenmeer abfällt, verfolgen die Helden die Sekte.",
       "wende": "Ein Sektenmitglied zweifelt und verrät den Weg durch die Schuppenberge zum Kopf.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Am Rand liegen Fußspuren, die zum Sternenmeer führen.",
+       "Ein Sektenmitglied bleibt zurück und schaut zweifelnd zu den Helden."
+      ]
      },
      {
       "titel": "Das Auge",
       "inhalt": "Am Kopf der Schildkröte öffnet sich ein Auge so groß wie ein See. Die Sekte wartet mit dem gestohlenen Heilmittel.",
       "wende": "Die Schildkröte spricht zu den Helden: Sie ist nicht krank, sondern alt, und sucht jemanden, der ihren Weg kennt.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Das Auge der Schildkröte folgt den Helden langsam.",
+       "Die Sekte hält das Heilmittel über den Abgrund."
+      ]
      }
     ]
    },
@@ -3296,19 +4436,31 @@
       "titel": "The quake",
       "inhalt": "Panic breaks out in shell city. The scholar Ilka Wide believes the turtle has swallowed something.",
       "wende": "The sect steals Ilka's cure and flees to the edge of the world.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Ilka has a pot of remedy, and someone is watching her.",
+       "People in the market wear a sign of the Last Days."
+      ]
      },
      {
       "titel": "The edge of the world",
       "inhalt": "At the edge, where the shell drops into the sea of stars, the heroes chase the sect.",
       "wende": "A doubting sect member reveals the way through the scale mountains to the head.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Footprints at the edge lead to the star sea.",
+       "One cult member falls behind and looks at the heroes in doubt."
+      ]
      },
      {
       "titel": "The eye",
       "inhalt": "At the turtle's head an eye as big as a lake opens. The sect waits with the stolen cure.",
       "wende": "The turtle speaks to the heroes: it is not ill but old, and seeks someone who knows its way.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The turtle's eye slowly follows the heroes.",
+       "The cult holds the remedy over the abyss."
+      ]
      }
     ]
    }
@@ -3333,19 +4485,31 @@
       "titel": "Der Brunnen",
       "inhalt": "In Hoffnung erfahren die Helden, dass der Brunnen versiegt. Brandts Späher kreisen schon.",
       "wende": "Eine alte Karte zeigt ein Wasserwerk in den toten Städten, das noch laufen soll.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Im Brunnen sinkt das Wasser jede Nacht um eine Handbreit.",
+       "Ein alter Händler trägt eine Karte mit einem blauen Kreis."
+      ]
      },
      {
       "titel": "Die toten Städte",
       "inhalt": "Durch Ruinen, Strahlungszonen und Banden geht es zum Wasserwerk. Ein Händler weiß mehr, als er sagt.",
       "wende": "Das Wasserwerk läuft, und eine kleine Gemeinschaft hütet es, die niemandem traut.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der Händler kennt Wege durch die Strahlung, die sonst niemand kennt.",
+       "In den Ruinen rauscht fernes Wasser in Rohren."
+      ]
      },
      {
       "titel": "Das Wasserwerk",
       "inhalt": "Brandt greift mit seiner Armee an. Die Hüter und Hoffnung müssen zusammenstehen.",
       "wende": "Das Wasserwerk lässt sich öffnen, damit alle Wasser haben, doch dann kann niemand es mehr allein beherrschen.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Brandts Späher kreisen schon über dem Wasserwerk.",
+       "Am Wasserwerk gibt es ein großes Ventil für alle Leitungen."
+      ]
      }
     ]
    },
@@ -3365,19 +4529,31 @@
       "titel": "The well",
       "inhalt": "In Hope the heroes learn the well is running dry. Brandt's scouts are already circling.",
       "wende": "An old map shows a waterworks in the dead cities that is said to still run.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The water in the well drops a hand's breadth every night.",
+       "An old trader carries a map with a blue circle."
+      ]
      },
      {
       "titel": "The dead cities",
       "inhalt": "Through ruins, radiation zones and gangs the way leads to the waterworks. A trader knows more than he says.",
       "wende": "The waterworks runs, and a small community guards it who trust nobody.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The trader knows paths through the radiation no one else knows.",
+       "Distant water rushes in pipes in the ruins."
+      ]
      },
      {
       "titel": "The waterworks",
       "inhalt": "Brandt attacks with his army. The guardians and Hope must stand together.",
       "wende": "The waterworks can be opened so everybody has water, but then nobody can rule it alone.",
-      "zuege": 7
+      "zuege": 7,
+      "spuren": [
+       "Brandt's scouts already circle above the waterworks.",
+       "At the waterworks there is a big valve for all pipes."
+      ]
      }
     ]
    }
@@ -3402,19 +4578,31 @@
       "titel": "Der Ball",
       "inhalt": "Auf dem großen Maskenball stirbt ein Adeliger vor den Augen der Helden. Der Narr verschwindet in der Menge.",
       "wende": "Am Tatort liegt eine Maskenfeder, wie nur drei Werkstätten sie fertigen.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "Der Narr verliert beim Fliehen eine Feder.",
+       "Ein Gast schaut auffällig ruhig, als der Adelige fällt."
+      ]
      },
      {
       "titel": "Die Kanäle",
       "inhalt": "In den Kanälen und Gildenhäusern suchen die Helden die Werkstatt. Jede Gilde hat ein Geheimnis.",
       "wende": "Die Spur führt zur Gräfin, doch sie hat einen falschen Narren als Sündenbock vorbereitet.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Die Federmacher kennen ihre Kunden genau.",
+       "Eine Gilde zeigt eine Rechnung mit dem Siegel der Gräfin."
+      ]
      },
      {
       "titel": "Der Palast",
       "inhalt": "Bei der letzten Nacht des Karnevals will der Narr den Dogen töten.",
       "wende": "Die Helden müssen die Gräfin entlarven, ohne selbst die Maske zu verlieren, oder alles riskieren.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "Der Doge steht auf dem Balkon, und ein Narr bewegt sich in der Menge.",
+       "Die Gräfin trägt heute eine neue Maske mit derselben Feder."
+      ]
      }
     ]
    },
@@ -3434,19 +4622,31 @@
       "titel": "The ball",
       "inhalt": "At the great masked ball a noble dies before the heroes' eyes. The Fool disappears into the crowd.",
       "wende": "At the scene lies a mask feather that only three workshops make.",
-      "zuege": 5
+      "zuege": 5,
+      "spuren": [
+       "The jester loses a feather as he flees.",
+       "One guest looks conspicuously calm when the noble falls."
+      ]
      },
      {
       "titel": "The canals",
       "inhalt": "In canals and guild houses the heroes search for the workshop. Every guild has a secret.",
       "wende": "The trail leads to the countess, but she has prepared a false Fool as scapegoat.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The feather makers know their customers well.",
+       "A guild shows a bill with the countess's seal."
+      ]
      },
      {
       "titel": "The palace",
       "inhalt": "On the last night of carnival the Fool means to kill the doge.",
       "wende": "The heroes must unmask the countess without losing their own masks, or risk everything.",
-      "zuege": 6
+      "zuege": 6,
+      "spuren": [
+       "The doge stands on the balcony, and a jester moves in the crowd.",
+       "The countess wears a new mask with the same feather today."
+      ]
      }
     ]
    }

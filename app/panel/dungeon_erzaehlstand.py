@@ -15,6 +15,8 @@ in memory: nothing is saved, no seat, no profile, no day counter of the table. E
     englisch  an English round is told in English (few German words, ENGLISCH_MAX)
     probe     a risky action: the model asks for a check (dungeon.ask_checks)
     ruhe      a harmless action: no check
+    sackgasse a hall with a person, ways of the map and a chest: the narration names two of them and ends with a
+              concrete choice (dungeon_anleiten.vague, the check of „Spieler anleiten“ on for the bench's round)
 
 Points per scene: 2 when the first try passes, 1 after a rewrite, 0 when refused or only the panel's repair is left;
 the checks scenes 2 or 0. The model's own Einordnung (systemone use "erzaehler", Einordnung mit Wahrscheinlichkeit:
@@ -76,6 +78,7 @@ SZENEN = {
     "probe": ("Riskante Aktion verlangt eine Probe", "A risky action asks for a check"),
     "ruhe": ("Harmlose Aktion ohne Probe", "A harmless action without a check"),
     "kampfzug": ("Kämpfen wird ein Angriff gegen die Rüstung", "Fighting becomes an attack against the armour"),   # Kampfzug-Prüfung 5
+    "sackgasse": ("Erzählung nennt, was man tun kann", "The narration names what one can do"),   # Spieler anleiten, step 3
 }
 LEVELS = ["gar nicht", "teilweise", "ganz"]
 _run = {"laeuft": False, "seit": 0.0, "task": None}
@@ -111,6 +114,9 @@ GRUENDE = {
                "Personen sehen so aus und sind dort, wie die Fakten sagen.", "People look and are where the facts say."),
     "wiederholung": ("Wiederholt sich", "Repeats itself", "wiederholung",
                      "Erzähle Neues und wiederhole nichts aus den letzten Zügen.", "Tell something new and repeat nothing of the last turns."),
+    "vage": ("Wusste nicht, was wir tun können", "Did not know what we could do", "vage",   # Spieler anleiten, step 3
+             "Nenne in jeder Erzählung mindestens zwei greifbare Ansatzpunkte mit Namen und ende mit einer konkreten Wahl an eine Figur.",
+             "Name at least two things to take up with names in every narration and end with a concrete choice for one figure."),
     "sonst": ("Etwas anderes", "Something else", "",
               "Folge genau den Aktionen der Spieler und den Würfen.", "Follow the players' actions and the dice exactly."),
 }
@@ -193,6 +199,17 @@ def scene(r, sid):
         return _round(r, lang="en", taten=(("Arvid", "I light a torch and look around the cellar."),)), []
     if sid == "probe":
         return _round(r, taten=(("Arvid", "Ich klettere die glatte, nasse Felswand hinauf."),)), None
+    if sid == "sackgasse":                   # a hall with a person, ways and a chest: two named, a concrete choice (vague)
+        import dungeon_anleiten
+        import dungeon_karte
+        rd = _round(r, taten=(("Arvid", "Ich bleibe in der Halle stehen und überlege, was wir tun können."),))
+        rd[dungeon_anleiten.PRUEFSTAND] = True
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        k = rd["karte"]
+        k.setdefault("leute", {})["Grimma"] = {"ort": k["hier"], "mit": False}
+        rd["szene"]["ort"] = k["orte"][k["hier"]]["name"]
+        rd["dinge"] = [{"name": "Truhe", "merkmale": "eisenbeschlagen, verschlossen", "ort": rd["szene"]["ort"], "zug": 1}]
+        return rd, []
     return _round(r, taten=(("Arvid", "Ich wünsche den anderen einen guten Morgen und packe mein Brot aus."),)), None
 
 
@@ -391,9 +408,15 @@ def counts():
 
 
 # ---------------------------------------------------------------- the cases „Erzähler-Fehler“
-def reasons(lang):
-    """The 👎's fixed reasons for a seat: [[id, label]]."""
-    return [[k, v[1 if lang == "en" else 0]] for k, v in GRUENDE.items()]
+def reasons_ids(rd):
+    """The reasons a seat of this round may give: „vage“ only while „Spieler anleiten“ is on (dungeon_anleiten)."""
+    import dungeon_anleiten
+    return [k for k in GRUENDE if k != "vage" or dungeon_anleiten.on(rd)]
+
+
+def reasons(rd):
+    """The 👎's fixed reasons for a seat of the round: [[id, label]]."""
+    return [[k, GRUENDE[k][1 if rd.get("lang") == "en" else 0]] for k in reasons_ids(rd)]
 
 
 def cases():

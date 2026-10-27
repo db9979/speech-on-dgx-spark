@@ -420,6 +420,10 @@ HINWEIS = {
               "Zeichen in mehreren Absätzen: Sinne, Stimmung und für jeden Helden, der gehandelt hat, ein eigener Moment.",
               "Note: the table's way of telling is \"rich\", your narration is too short. Write at least {namen} characters "
               "in several paragraphs: senses, mood and for every hero who acted a moment of its own."),
+    "vage": ("Hinweis: Deine Erzählung lässt offen, was die Gruppe tun kann. Nenne mindestens zwei greifbare Ansatzpunkte "
+             "mit Namen aus den Fakten, etwa {namen}, und ende mit einer konkreten Wahl an eine Figur statt mit einer leeren Frage.",
+             "Note: your narration leaves open what the group can do. Name at least two things to take up with names from the "
+             "facts, such as {namen}, and end with a concrete choice for one figure instead of an empty question."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -504,8 +508,8 @@ def repair(rd, story, fault, missing):
         text, n = fix_pronouns(rd, story["text"])
         print(f"dungeon: nachbessern | {'fest' if n else 'bleibt'} | {fault}", flush=True)
         return dict(story, text=text) if n else story
-    elif fault == "knapp":                       # too short for „ausführlich“ on every try: it stays as it is
-        print("dungeon: nachbessern | bleibt | knapp", flush=True)
+    elif fault in ("knapp", "vage"):             # too short for „ausführlich“ or vague on every try: it stays as it is
+        print(f"dungeon: nachbessern | bleibt | {fault}", flush=True)
         return story
     elif fault == "richter":                     # only the model's opinion: the try passed every fixed check, it stays
         print("dungeon: richter | bleibt", flush=True)
@@ -866,7 +870,8 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
     a new place of ort_id the narration does not name (dungeon_karte.ort_fehlt),
     a veil of the table more than once (dungeon_grenzen.veiled; the hint never repeats its words, they stay data),
-    too much repeated from the last narrations."""
+    too much repeated from the last narrations, too few points to take up or a hollow question at the end
+    (dungeon_anleiten.vague, while „Spieler anleiten“ is on)."""
     text = story["text"]
     if len(text) < ZU_KURZ:
         return "kurz", []
@@ -923,6 +928,10 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     if rd.get("erzaehlweise") == "ausfuehrlich" and len(text) < dm.erz_min(rd):   # „ausführlich“ really rich (Dominik 2026-10-26)
         dm._day.bump("regel_knapp")
         return "knapp", [str(dm.erz_min(rd))]
+    import dungeon_anleiten
+    offen = dungeon_anleiten.vague(dm, rd, story)
+    if offen:                                    # Spieler anleiten: too few points to take up, or a hollow question
+        return "vage", offen
     return "", []
 
 
@@ -984,6 +993,8 @@ def thumb(dm, rid, pid, zug, gut, grund=None):
         rd = dm._round(d, rid)
         if not any(e["art"] == "dm" and e["n"] == zug for e in rd["log"]):
             raise LookupError("erzaehlung")
+        if grund not in es.reasons_ids(rd) and grund is not None:   # „vage“ only while „Spieler anleiten“ is on
+            raise ValueError("daumen")
         votes = rd.setdefault("daumen", {}).setdefault(str(zug), {})
         old, new = votes.get(pid), 1 if gut else -1
         votes[pid] = new
@@ -1306,7 +1317,7 @@ def view(rd, pid, host):
     import dungeon_erzaehlstand as es
     out = {"faeden": list(rd.get("faeden") or []), "daumen": mine(rd, pid), "fall": mine_cases(rd, pid)}
     if es.cases_on(rd.get("owner")):
-        out["gruende"] = es.reasons(rd.get("lang"))
+        out["gruende"] = es.reasons(rd)
     if running(rd):
         out["neu_laeuft"] = running(rd)
     if host:

@@ -272,5 +272,17 @@
     {"id": "erkennungsrolle", "art": "rolle", "name": ["Schriftrolle des Erkennens", "Scroll of identify"], "erkennt": true, "kg": 0.1, "preis": 30, "info": ["Einmal lesen: zeigt, was ein unerkannter magischer Gegenstand kann.", "Read once: shows what an unknown magic item can do."]}
   ],
   "start": {"gold": 25, "tasche": ["heiltrank"]},
-  "ausfall": ["Der Dungeon-Master blättert in seinen Notizen und schaut euch erwartungsvoll an. Was tut ihr?", "The Dungeon Master leafs through the notes and looks at you expectantly. What do you do?"]
+  "ausfall": ["Der Dungeon-Master blättert in seinen Notizen und schaut euch erwartungsvoll an. Was tut ihr?", "The Dungeon Master leafs through the notes and looks at you expectantly. What do you do?"],
+  "stillstand": [
+    {"id": "bote", "text": ["Ein Bote stürzt herein, außer Atem, mit einer Nachricht für die Gruppe, die keinen Aufschub duldet.", "A messenger rushes in, out of breath, with a message for the group that brooks no delay."], "mild": true},
+    {"id": "glocke", "text": ["Irgendwo in der Nähe schlägt eine Glocke dreimal, als riefe sie jemanden zu sich.", "Somewhere nearby a bell strikes three times, as if calling someone to it."], "mild": true},
+    {"id": "bitte", "text": ["Jemand tritt zur Gruppe, sieht sich unsicher um und bittet leise um Hilfe.", "Someone steps up to the group, looks around uneasily and quietly asks for help."], "mild": true},
+    {"id": "geraeusch", "text": ["Aus der Nähe kommt ein Poltern, dann Schritte, die sich rasch entfernen.", "A clatter comes from nearby, then footsteps that quickly move away."], "mild": true},
+    {"id": "tier", "text": ["Ein kleines Tier taucht auf, sieht die Helden an und läuft los, als sollten sie ihm folgen.", "A small animal appears, looks at the heroes and runs off as if they should follow it."], "mild": true},
+    {"id": "fremder", "text": ["Ein Fremder beobachtet die Gruppe aus dem Schatten und geht davon, sobald man ihn bemerkt.", "A stranger watches the group from the shadows and walks away as soon as he is noticed."], "mild": true},
+    {"id": "regen", "text": ["Plötzlich setzt heftiger Regen ein und treibt alle unter das nächste Dach, wo schon jemand wartet.", "Suddenly heavy rain sets in and drives everyone under the nearest roof, where someone is already waiting."], "mild": true},
+    {"id": "zeichen", "text": ["Etwas fällt zu Boden und rollt vor die Füße der Helden: ein kleines Ding mit einem eingeritzten Zeichen.", "Something falls to the ground and rolls to the heroes' feet: a small thing with a carved sign."], "mild": true},
+    {"id": "schrei", "text": ["Ein Schrei hallt durch die Gegend, dann ist es auf einmal unheimlich still.", "A scream echoes through the area, then all at once it is eerily quiet."], "mild": false},
+    {"id": "rauch", "text": ["In der Ferne steigt dunkler Rauch auf, als brenne dort etwas, das nicht brennen sollte.", "In the distance dark smoke rises, as if something burns there that should not."], "mild": false}
+  ]
 }

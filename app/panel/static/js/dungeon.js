@@ -915,7 +915,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(d){DM.v=d;DM.at=Date.now();DMA.zufDraft=null;dmSay(DM,t('Zufallsregeln gespeichert.','Random rules saved.'),false)}dmDraw()});
 function dmPlanHost(v){const p=v.plan;if(!p)return '';const cur=v.erzaehlt?-1:v.akt-1;
   return `<details class="adv dm-plan"><summary>${esc(t('Geschichte: ','Story: ')+p.titel)} · ${esc(t('nur du siehst das','only you see this'))}</summary><small class="mut">${esc(t('Ziel: ','Goal: ')+p.ziel)}${p.gegner?' · '+esc(t('Gegenspieler: ','Foe: ')+p.gegner):''}</small>
-    <ol>${p.akte.map((a,i)=>`<li class="${i===cur?'on':i<cur||cur<0?'mut':''}"><b>${esc(a.titel)}</b> <small>${esc(a.inhalt)}</small><small class="mut">${esc(t('Wendepunkt: ','Turning point: ')+a.wende)} · ${a.zuege} ${esc(t('Züge','turns'))}</small></li>`).join('')}</ol>
+    <ol>${p.akte.map((a,i)=>`<li class="${i===cur?'on':i<cur||cur<0?'mut':''}"><b>${esc(a.titel)}</b> <small>${esc(a.inhalt)}</small><small class="mut">${esc(t('Wendepunkt: ','Turning point: ')+a.wende)} · ${a.zuege} ${esc(t('Züge','turns'))}</small>${(a.spuren||[]).length?`<ul class="dm-spuren">${a.spuren.map((s,j)=>`<li>${i===cur&&(v.spuren_gezeigt||[]).includes(j)||i<cur||cur<0?'✓':'🔎'} ${esc(s)}</li>`).join('')}</ul>`:''}</li>`).join('')}</ol>
     <small class="mut">${esc(t('Der Dungeon-Master entscheidet, wann der nächste Akt beginnt (frühestens nach '+v.akt_min+' Zügen); läuft ein Akt anderthalbmal so lange wie geplant, geht das Panel selbst weiter.','The Dungeon Master decides when the next act begins (after '+v.akt_min+' turns at the earliest); when an act runs one and a half times as long as planned, the panel moves on by itself.'))}</small></details>`}
 // read aloud piece by piece (Punkt 16 of 2026-10-24): every device that has it on plays the round's pieces in order
 // as the Spark makes them, guests and the iPhone app too; browsers allow sound only after a tap, so one tap on
@@ -1668,7 +1668,8 @@ function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
     <label>${esc(t('Was geschieht','What happens'))}</label><textarea class="dmp-ai" rows="3" maxlength="${P.inhalt}">${esc(a.inhalt||'')}</textarea>
     <div class="dm-two"><div><label>${esc(t('Wendepunkt am Ende','Turning point at the end'))}</label><input class="dmp-aw" maxlength="${P.wende}" value="${esc(a.wende||'')}"></div>
     <div><label>${esc(t('Geplante Züge','Planned turns'))}</label><input class="dmp-az" type="number" min="${P.zuege[0]}" max="${P.zuege[1]}" value="${a.zuege||6}"></div></div>
-    ${P.quest?`<label>✦ ${esc(t('Besonderes Ding des Akts (frei lassen: keins)','The act\'s special thing (leave empty: none)'))}</label><input class="dmp-ad" maxlength="${P.quest}" value="${esc(a.ding||'')}" placeholder="${esc(t('zum Beispiel der Messingschlüssel','for example the brass key'))}">`:''}</div>`;
+    ${P.quest?`<label>✦ ${esc(t('Besonderes Ding des Akts (frei lassen: keins)','The act\'s special thing (leave empty: none)'))}</label><input class="dmp-ad" maxlength="${P.quest}" value="${esc(a.ding||'')}" placeholder="${esc(t('zum Beispiel der Messingschlüssel','for example the brass key'))}">`:''}
+    ${P.spuren?`<label>🔎 ${esc(t('Spuren zum Wendepunkt (eine je Zeile, bis zu '+P.spuren[0]+')','Clues to the turning point (one per line, up to '+P.spuren[0]+')'))}</label><textarea class="dmp-asp" rows="3" maxlength="${P.spuren[0]*(P.spuren[1]+1)}" placeholder="${esc(t('frische Wachsspuren am Turm','fresh wax on the tower'))}">${esc((a.spuren||[]).join('\n'))}</textarea>`:''}</div>`;
   const I=P.import||{};
   return `<h2>${esc(DMP.gid?t('Geschichte bearbeiten','Edit the story'):t('Neue Geschichte','New story'))}</h2><div class="dm-form dmp-form">
     ${I.an?`<div class="dm-k"><div class="lbl">📄 ${esc(t('Abenteuer aus einer Datei','Adventure from a file'))}</div>
@@ -1702,7 +1703,8 @@ function dmPlanRead(){const c=dmPBox(),q=x=>(c.querySelector(x)||{}).value||'',l
   return {titel:q('.dmp-titel').trim(),welt:q('.dmp-welt'),ton:/^\d+$/.test(ton)?+ton:ton,lang:dmLang(),idee:q('.dmp-idee').trim(),ziel:q('.dmp-ziel').trim(),
     gegner:q('.dmp-gegner').trim(),orte:list('.dmp-orte'),tabus:list('.dmp-tabus'),personen:[...c.querySelectorAll('.dmp-p:checked')].map(x=>x.value),
     akte:[...c.querySelectorAll('.dmp-akt')].map(a=>({titel:a.querySelector('.dmp-at').value.trim(),inhalt:a.querySelector('.dmp-ai').value.trim(),
-      wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0),...(a.querySelector('.dmp-ad')&&a.querySelector('.dmp-ad').value.trim()?{ding:a.querySelector('.dmp-ad').value.trim()}:{})}))}}
+      wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0),...(a.querySelector('.dmp-ad')&&a.querySelector('.dmp-ad').value.trim()?{ding:a.querySelector('.dmp-ad').value.trim()}:{}),
+      ...(a.querySelector('.dmp-asp')?{spuren:a.querySelector('.dmp-asp').value.split('\n').map(s=>s.trim()).filter(Boolean)}:{})}))}}
 const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>')
   :d.detail==='kein vorschlag'?esc(t('Das Modell hat keinen brauchbaren Vorschlag geliefert. Bitte noch einmal oder mit anderen Stichworten.','The model gave no usable proposal. Please try again or with other keywords.'))
   :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.'))

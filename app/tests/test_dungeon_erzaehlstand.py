@@ -47,6 +47,10 @@ def model(foe, good=True):
         elif "Wolf" in user:
             t = ("Arvid stürzt sich auf den Wolf, der erschrocken zurückweicht und mit eingezogenem Schwanz zwischen den Bäumen "
                  "verschwindet." if good else "Arvid stürzt sich auf den Wolf, Blut spritzt über den Waldboden und der Wolf heult laut auf.")
+        elif "überlege" in user:              # „Sackgasse“ (Spieler anleiten): two points and a concrete choice, or hollow
+            t = ("Arvid sieht sich in der hohen Halle um. Grimma lehnt an einer eisenbeschlagenen Truhe und mustert ihn "
+                 "schweigend. Arvid, sprichst du mit Grimma, oder öffnest du die Truhe?" if good else
+                 "Arvid steht in der hohen Halle, und die Stille drückt schwer auf seine Schultern, während der Wind heult. Was tut ihr?")
         elif "Spuren" in user:
             t = ("Arvid kniet sich hin und findet frische Spuren im Staub. Bela fragt den Wirt, der nur mit den Schultern zuckt "
                  "und auf die Tür zeigt.")
@@ -99,6 +103,7 @@ class Bench(Base):
         self.assertEqual((bad["englisch"]["punkte"], bad["englisch"]["grund"]), (0, "deutsch"))
         self.assertEqual((bad["ruhe"]["punkte"], bad["ruhe"]["grund"]), (0, "probe"))        # a check for a good morning
         self.assertEqual(bad["probe"]["punkte"], 2)
+        self.assertEqual((bad["sackgasse"]["punkte"], bad["sackgasse"]["grund"], bad["sackgasse"]["versuche"]), (0, "vage", 2))
         self.assertEqual(dict(dungeon._day), before)                    # nothing of the bench counts
         self.assertEqual(self._rounds(), runden)                         # no round written
         self.assertNotIn("einordnung", good["zwei"])                    # Einordnung off: none

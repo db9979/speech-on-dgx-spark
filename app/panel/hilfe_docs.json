@@ -5877,6 +5877,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spieler anleiten, Schritt 3 bis 5 (V01.1.151, Plan dungeon-anleitung/plan.md Ideen 4, 12, 6 und 11): Unter demselben Schalter *Funktionen → KI-Dungeon-Master → Spieler anleiten*. Neue feste Prüfung „vage“ in erz.judge (dungeon_anleiten.vague): Nennt die Erzählung weniger als zwei Ansatzpunkte der Szene (Personen hier, Dinge in der Nähe und der Erzählung, Gegner und Requisiten im Kampf, sprechende Personen, Ziele der Wege; so viele, wie die Szene hat, wenn es weniger sind) oder endet sie mit einer leeren Frage aus HOHL („Was tut ihr?“, „Was macht ihr nun?“, „What do you do?“), schreibt der Erzähler sie einmal neu, mit einem Hinweis, der bis zu drei Namen zum Aufgreifen nennt; der zweite Versuch bleibt, wie er ist (erz.repair, „nachbessern | bleibt | vage“). Ein 👎 kann den festen Grund „Wusste nicht, was wir tun können“ tragen (dungeon_erzaehlstand.GRUENDE „vage“, nur solange der Schalter an ist). Der Erzähler-Prüfstand hat die Szene „Sackgasse“ (eine Halle mit Grimma, Wegen der Karte und einer Truhe; die Erzählung muss zwei davon nennen und mit einer konkreten Wahl enden; die Prüfung gilt dort immer). Logs dungeon: anleitung | vage | zu wenig, dungeon: anleitung |"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " vage | hohl. Live-Übersicht: vage neu erzählt. Schritt 4, Stillstand-Wink (anleiten.progress): Fortschritt nach festen Regeln ist ein neuer Ort, ein neuer oder erledigter Faden, ein neues Ding, ein beendeter Akt, ein Kampf, der beginnt oder endet. Ohne Fortschritt nach WINK erzählten Zügen (Einsteiger 1, Normal 2, Erfahren nie) bekommt die nächste Erzählung Stufe 1 als Daten (wink 1: etwas Greifbares deutlich zeigen, das weiterführt), einen Zug später Stufe 2 (ein Ereignis aus der festen Tabelle stillstand der Regeln, geprüft in check_rules, am Kindertisch nur milde, gewürfelt vom Panel), noch einen Zug später hängt das Panel eine Zeile „Tipp: Ihr könnt mit Grimma sprechen oder nach Norden gehen.“ aus den Daten der Szene an; danach beginnen die Stufen neu. Ausweg nach misslungener Probe: eine misslungene Probe, etwas herauszufinden, bleibt misslungen, aber die Knöpfe des Platzes beginnen im nächsten Zug mit einem anderen Weg zum selben Ziel („Ich frage Grimma danach.“, sonst ein Weg der Karte). Logs dungeon: anleitung | wink | 2, dungeon: anleitung | ausweg | 1. Live-Übersicht: Winke je Stufe, Auswege. Schritt 5, Spuren (Drei-Hinweise-Regel): Jeder Akt einer Geschichte trägt bis z"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "u drei Spuren zum Wendepunkt (spuren, je 5 bis 100 Zeichen, geprüft in check_plan samt Wörtern des Tons); der Planer und der Import fragen danach, jede der 50 mitgelieferten Geschichten hat zwei je Akt auf Deutsch und Englisch, im Planer-Formular ein Feld „Spuren zum Wendepunkt“. In den Daten des Plans steht die nächste noch nicht gezeigte Spur (anleiten.clue_facts, bei Stillstand-Stufe 1 mit „deutlich“). Nennt eine Erzählung die meisten Wörter einer Spur, gilt sie als gezeigt (anleiten.seen, rd[\"spuren\"]) und zählt als Fortschritt; ein neuer Akt beginnt neu. Eine noch nicht gezeigte Spur gehört zum Geheimen: ein Weg des Erzählers, der sie nennt, wird verworfen. Der Gastgeber sieht im Plan je Spur ✓ (gezeigt) oder 🔎. Log dungeon: anleitung | spur | 1/2. Live-Übersicht: Spuren gezeigt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spieler anleiten, Schritt 1 und 2 (V01.1.148, Plan dungeon-anleitung/plan.md, Dominik 2026-10-27 „1-5“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Spieler anleiten* (chat.dungeon_anleiten, aus). Schritt 1 (Ideen 3, 7 und 10): Die Erzählung bekommt eine feste Form (dungeon_anleiten.py): erst, was die Taten bewirken, dann, was jetzt zu sehen ist, und in jeder Erzählung mindestens zwei greifbare Ansatzpunkte mit Namen (eine Person, ein Ding, ein Weg), nur aus den Fakten oder der eigenen Erzählung; am Ende eine konkrete Wahl an eine Figur, nie ein leeres „Was tut ihr?“. Jede Welt hat dazu eine Muster-Erzählung, die so endet (welten[].anleiten in den Regeln, ein Paar Deutsch und Englisch, geprüft wie die Stil-Beispiele). Wer STILL Züge nichts geschrieben hat, bekommt eine Frage, die das Panel aus den Daten der Szene baut, nie aus Worten des Modells: im Kampf die stehenden Gegner (der schwächste zuerst), sonst Personen hier und Wege der Karte, etwa „Bela, sprichst du mit Grimma, oder gehst du nach Norden?“; bei nur einem Ansatzpunkt ist „siehst du dich hier genauer um“ der zweite, bei keinem bleibt die alte Zeile. Logs dungeon: anleitung | frage | 2, dungeon: an"
 },
 {
@@ -20758,6 +20782,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: guide the players, steps 3 to 5 (V01.1.151, plan dungeon-anleitung/plan.md ideas 4, 12, 6 and 11): Under the same switch *Features → AI Dungeon Master → Guide the players*. New fixed check \"vage\" in erz.judge (dungeon_anleiten.vague): if the narration names fewer than two points of the scene (people here, things nearby and of the narration, foes and props in a fight, speaking people, targets of the ways; as many as the scene has when there are fewer) or ends with an empty question of HOHL (\"Was tut ihr?\", \"Was macht ihr nun?\", \"What do you do?\"), the narrator writes it once again with a hint naming up to three names to take up; the second try stays as it is (erz.repair, \"nachbessern | bleibt | vage\"). A 👎 can carry the fixed reason \"Did not know what we could do\" (dungeon_erzaehlstand.GRUENDE \"vage\", only while the switch is on). The narrator bench has the scene \"Sackgasse\" (a hall with Grimma, ways of the map and a chest; the narration must name two of them and end with a concrete choice; the check always counts there). Logs dungeon: anleitung | vage | zu wenig, dungeon: anleitung | vage | hohl. Live overview: told again as vague. Step 4, stall hint (anleiten.pr"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ogress): progress by fixed rules is a new place, a new or closed thread, a new thing, an act done, a fight that begins or ends. Without progress after WINK told turns (Beginner 1, Normal 2, Experienced never) the next narration gets stage 1 as data (wink 1: show something tangible clearly that leads on), one turn later stage 2 (an event of the fixed table stillstand of the rules, checked in check_rules, at the children's table only mild ones, rolled by the panel), one more turn later the panel adds a line \"Tipp: Ihr könnt mit Grimma sprechen oder nach Norden gehen.\" from the scene's data; then the stages start again. Way out after a failed check: a failed check to find something out stays failed, but the seat's buttons of the next turn start with another way to the same goal (\"I ask Grimma about it.\", else a way of the map). Logs dungeon: anleitung | wink | 2, dungeon: anleitung | ausweg | 1. Live overview: hints per stage, ways out. Step 5, clues (the three-clue rule): every act of a story carries up to three clues to the turning point (spuren, 5 to 100 characters each, checked in check_plan with the words of the tone); the planner and the import ask for them, each of the 50 shipp"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ed stories has two per act in German and English, the planner form has a field \"Clues to the turning point\". The plan's facts name the next clue not shown yet (anleiten.clue_facts, with \"deutlich\" at stall stage 1). When a narration names most words of a clue, it counts as shown (anleiten.seen, rd[\"spuren\"]) and as progress; a new act starts again. A clue not shown yet is secret: a narrator's way that names it is dropped. The host sees ✓ (shown) or 🔎 per clue in the plan. Log dungeon: anleitung | spur | 1/2. Live overview: clues shown."
 },
 {
 "lang": "en",

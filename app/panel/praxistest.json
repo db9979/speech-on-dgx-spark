@@ -3950,6 +3950,13 @@
 "titel": "Dungeon-Master: Stimme einer Person",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“, eine Person antippen. A: Im Detail steht „Stimme“, bei einer Person ohne eigene mit „(nach dem Namen)“. B: Unter „Stimme, wenn die Person spricht“ Alter, Geschlecht, Klang, Wesen und Tempo wählen, „▶ Probe“: der Spark spricht den Probesatz in dieser Stimme (ohne VoiceDesign in der festen NSC-Stimme mit Hinweis). C: „Stimme speichern“: die Zeile „Stimme“ zeigt die Wahl, der Hinweis „aus einer Runde“ bleibt. D: Eine Runde in der Welt spielen, in der die Person wieder auftaucht: sie spricht mit der gewählten Stimme. E: „Nach dem Namen“: die eigene Stimme ist weg, wieder „(nach dem Namen)“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P589",
+"v": 1151,
+"titel": "Dungeon-Master: Spieler anleiten, vage Erzählung, Stillstand und Spuren",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Spieler anleiten an. A: Eine Runde spielen: kommt eine Erzählung ohne greifbare Ansatzpunkte oder mit „Was tut ihr?“ am Ende, steht unter Zustand → Logs „dungeon: anleitung | vage“ und die Erzählung kommt neu. B: 👎 an einer Erzählung: der Grund „Wusste nicht, was wir tun können“ steht zur Wahl, mit Schalter aus nicht. C: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an, dort „Jetzt prüfen“: die Szene „Sackgasse“ ist dabei. D: Zwei Züge nur reden, ohne weiterzugehen: erst zeigt der Erzähler etwas Greifbares, dann passiert etwas, dann steht „Tipp: Ihr könnt …“ unter der Erzählung. F: Eine mitgelieferte Geschichte spielen: im Plan des Gastgebers stehen je Akt Spuren mit 🔎; taucht eine in der Erzählung auf, wird sie ✓ und im Log steht „dungeon: anleitung | spur | 1/2“. E: Eine Untersuchung misslingt: der erste Knopf im nächsten Zug ist etwa „Ich frage Grimma danach.“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

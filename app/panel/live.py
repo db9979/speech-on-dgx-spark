@@ -2074,7 +2074,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("tageszeit") or {}).values()) else "")
                         + (f" · heute {dgn['anleiten']['frage']} Fragen an stille Spieler aus der Szene, {dgn['anleiten']['frage_alt']}-mal zu wenig Ansatzpunkte, "
                            f"{dgn['anleiten']['zeile']} Zeilen „Das kannst du hier“, {dgn['anleiten']['genommen']} Knöpfe genommen, "
-                           f"{dgn['anleiten']['weg']} Wege des Erzählers übernommen, {dgn['anleiten']['weg_verworfen']} verworfen"
+                           f"{dgn['anleiten']['weg']} Wege des Erzählers übernommen, {dgn['anleiten']['weg_verworfen']} verworfen, {dgn['anleiten'].get('vage', 0)}-mal vage neu erzählt, "
+                           f"Stillstand-Winke {dgn['anleiten'].get('wink1', 0)}/{dgn['anleiten'].get('wink2', 0)}/{dgn['anleiten'].get('wink3', 0)}, {dgn['anleiten'].get('ausweg', 0)} Auswege, {dgn['anleiten'].get('spur', 0)} Spuren gezeigt"
                            if any((dgn.get("anleiten") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")

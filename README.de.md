@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.151** KI-Dungeon-Master: Spieler anleiten Schritt 3, eine Erzählung mit weniger als zwei Ansatzpunkten oder einer leeren Frage wie „Was tut ihr?“ wird einmal neu erzählt, 👎-Grund „Wusste nicht, was wir tun können“ und Prüfstand-Szene „Sackgasse“, dazu Stillstand-Wink in drei Stufen, ein anderer Weg nach einer misslungenen Untersuchung und Schritt 5, zwei bis drei Spuren je Akt zum Wendepunkt in allen 50 Geschichten, die der Erzähler nach und nach zeigt
 - **V01.1.150** KI-Dungeon-Master: Stimme einer Person wählen, unter Regeln → Personen (NSC) zeigt jede Person ihre Stimme, der Admin wählt Alter, Geschlecht, Klang, Wesen und Tempo aus festen Listen, hört eine Probe und speichert, die Runde spricht die Person dann mit dieser Stimme
 - **V01.1.149** KI-Dungeon-Master: Porträts im NSC-Katalog: jede Person zeigt ihr Gesicht in Liste und Detail, wer keins aus einer Runde hat, bekommt ein Katalogbild aus festen Teilen (nachts, mit „Alle Bilder malen“ oder „Malen“) und bringt es in die nächste Runde mit
 - **V01.1.148** KI-Dungeon-Master: Spieler anleiten (Schalter, aus), jede Erzählung nennt mindestens zwei greifbare Ansatzpunkte und endet mit einer konkreten Wahl, darunter „Das kannst du hier“ als Knöpfe nur aus der Szene und geprüften Wegen des Erzählers, Stufe Einsteiger, Normal oder Erfahren je Runde, im Auto „Was kann ich tun?“, und stille Spieler bekommen eine Frage aus der Szene
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.144** KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
 - **V01.1.143** KI-Dungeon-Master: Heldenbuch aufs reMarkable (Schalter, aus), je Held ein Buch im Format des eigenen Geräts mit Heldenbogen, Chronik, Personen, Bestiarium und Gegenständen, auf Paper Pro und Move in Farbe, rm2 in Graustufen, von selbst nach dem Abend und auf „Jetzt schicken“, Farbe oder Graustufen unter Ich → reMarkable
 - **V01.1.142** KI-Dungeon-Master: Kampf-Audit Welle 2, Zauber mit Rettungswurf würfelt jetzt der Gegner (halber Schaden, Zustände wie liegend oder bewusstlos), Schlaf und Person festhalten wirken im Kampf, Heilende Hände heilt einen Freund mit Namen, und Zustände der Gegner nehmen den SG des Bestiariums
-- **V01.1.141** Pebble-Test unabhängig von der Uhrzeit: „Mein Tag“ rechnet mit einem festen „jetzt“, kurz vor Mitternacht wird der Test nicht mehr rot
 
 
 

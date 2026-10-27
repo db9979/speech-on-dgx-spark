@@ -3593,6 +3593,196 @@ class Equipment(Base):
         for x in ("dmKannst(v.anleiten.knoepfe)", "{anleitung:s.value}", "data-dmanleit"):
             self.assertIn(x, js)
 
+    def test_a_vague_narration_is_told_again(self):
+        """Spieler anleiten step 3: off no check; on, a narration that names fewer than two of the scene's points (as
+        many as there are, when fewer) or ends with a hollow question is told again once with a hint naming points to
+        take up (the fixed check „vage“ of erz.judge), the second try stays; a 👎 may carry „Wusste nicht, was wir tun
+        können“ only while on."""
+        import dungeon_anleiten as an
+        import dungeon_erzaehler as erz
+        import dungeon_erzaehlstand as es
+        r = self.r
+        rd = self.state(self.rid)
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
+        rd["szene"] = dict(rd.get("szene") or {}, ort=rd["karte"]["orte"][rd["karte"]["hier"]]["name"])
+        rd["dinge"] = [{"name": "Truhe", "merkmale": "eisenbeschlagen", "ort": rd["szene"]["ort"], "zug": rd["zug"]}]
+        rd["offen"] = {}
+        h = rd["plaetze"][self.host]["held"]["name"]
+        mood = {"text": f"{h} steht in der hohen Halle, und die Stille drückt schwer auf die Schultern, während draußen der Wind heult und klagt.",
+                "npc": [], "ooc": []}
+        hollow = dict(mood, text=f"{h} sieht Grimma an der Truhe lehnen, die Halle ist kalt und still, nur der Wind heult draußen ums Haus. Was tut ihr?")
+        good = dict(mood, text=f"{h} sieht Grimma an der eisenbeschlagenen Truhe lehnen, die Halle ist kalt und still. {h}, sprichst du mit Grimma, oder öffnest du die Truhe?")
+        self.assertEqual(an.vague(dungeon, rd, mood), [])                          # off: no check
+        self.assertEqual(erz.judge(dungeon, rd, mood), ("", []))
+        self.assertNotIn("vage", [g for g, _ in es.reasons(rd)])
+        helpers.keep_chat(self, "dungeon_anleiten")
+        helpers.set_config(dungeon_anleiten=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            fault, names = erz.judge(dungeon, rd, mood)
+            self.assertEqual(fault, "vage")
+            self.assertIn("Grimma", names)
+            self.assertIn("Truhe", names)
+            self.assertEqual(erz.judge(dungeon, rd, hollow)[0], "vage")            # two names, but a hollow question
+            self.assertEqual(erz.judge(dungeon, rd, good), ("", []))
+            self.assertEqual(erz.judge(dungeon, rd, dict(mood, text=mood["text"] + " Was macht ihr nun?"))[0], "vage")
+            kept = erz.repair(rd, mood, "vage", names)                            # the second try stays as it is
+        self.assertEqual(kept, mood)
+        self.assertIn("dungeon: anleitung | vage | zu wenig", out.getvalue())
+        self.assertIn("dungeon: anleitung | vage | hohl", out.getvalue())
+        self.assertIn("dungeon: nachbessern | bleibt | vage", out.getvalue())
+        self.assertIn("Grimma", erz.hint("vage", names, "de"))
+        self.assertIn("concrete choice", erz.hint("vage", names, "en"))
+        # a scene without points: only the hollow question counts
+        bare = copy.deepcopy(rd)
+        bare.pop("karte")
+        bare["dinge"] = []
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(an.vague(dungeon, bare, mood), [])
+            self.assertEqual(an.vague(dungeon, bare, dict(mood, text=mood["text"] + " What do you do?")), ["…"])
+        self.assertGreaterEqual(an.for_live()["vage"], 3)
+        # the 👎's reason „vage“ only while on
+        self.assertIn("vage", [g for g, _ in es.reasons(rd)])
+        self.assertEqual(es.GRUENDE["vage"][2], "vage")
+        with dungeon._lock:
+            d = dungeon._read()
+            dungeon._log(d["runden"][self.rid], "dm", text="Die Halle schweigt.", npc=[], frage="")
+            n = d["runden"][self.rid]["log"][-1]["n"]
+            dungeon._write(d)
+        erz.thumb(dungeon, self.rid, self.host, n, False, "vage")
+        helpers.set_config(dungeon_anleiten=False)
+        with self.assertRaises(ValueError):
+            erz.thumb(dungeon, self.rid, self.host, n, False, "vage")
+
+    def test_a_stall_gets_a_hint_in_three_stages(self):
+        """Spieler anleiten step 4: without progress (place, threads, things, act, fight) for two told turns (one for
+        Einsteiger, never for Erfahren) the next narration gets stage 1 as data, then an event of the fixed table (only
+        mild ones at the children's table), then the panel's tip line from the scene, and the stages start again;
+        progress resets them. After a failed check to find something out the seat's buttons start with another way."""
+        import dungeon_anleiten as an
+        r = self.r
+        self.assertEqual(dungeon.check_rules(r), [])
+        bad = copy.deepcopy(r)
+        bad["stillstand"] = [dict(x, mild=False) for x in r["stillstand"]]
+        self.assertTrue(any("mild" in p for p in dungeon.check_rules(bad)))
+        bad["stillstand"] = [dict(r["stillstand"][0], text=["kurz", "short"])] + r["stillstand"][1:]
+        self.assertTrue(any("stillstand" in p for p in dungeon.check_rules(bad)))
+        rd = self.state(self.rid)
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
+        rd.update(offen={}, dm=False, status="laeuft")
+        self.assertEqual(an.progress(dungeon, r, rd, {}, [], random.Random(1)), "")     # off: nothing
+        self.assertNotIn("stillstand", rd)
+        helpers.keep_chat(self, "dungeon_anleiten")
+        helpers.set_config(dungeon_anleiten=True)
+        self.assertIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+
+        def turn(story=None, wuerfe=()):
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                tip = an.progress(dungeon, r, rd, story or {}, list(wuerfe), random.Random(1))
+            rd["zug"] += 1
+            return tip, an.facts(rd), out.getvalue()
+        self.assertEqual(turn()[:2], ("", {}))                                          # the first turn only marks the state
+        self.assertEqual(turn()[:2], ("", {}))
+        tip, f, out = turn()
+        self.assertEqual((tip, f), ("", {"wink": {"stufe": 1}}))
+        self.assertIn("dungeon: anleitung | wink | 1", out)
+        tip, f, _ = turn()
+        self.assertEqual(f["wink"]["stufe"], 2)
+        self.assertIn(f["wink"]["ereignis"], [x["text"][0] for x in r["stillstand"]])
+        tip, f, out = turn()
+        self.assertTrue(tip.startswith(" Tipp: Ihr könnt mit Grimma sprechen oder "), tip)
+        self.assertEqual(f, {})
+        self.assertIn("dungeon: anleitung | wink | 3", out)
+        self.assertEqual([turn()[1] for _ in range(2)], [{}, {"wink": {"stufe": 1}}])    # the stages start again
+        rd["karte"]["hier"] = next(i for i in range(len(rd["karte"]["orte"])) if i != rd["karte"]["hier"])
+        self.assertEqual([turn()[1] for _ in range(2)], [{}, {}])                         # a new place: progress
+        self.assertEqual(turn({"akt_fertig": True})[1], {})                              # an act done: progress
+        # the children's table: only mild events
+        rd["ton"] = min(t["id"] for t in r["toene"])
+        for _ in range(3):
+            f = turn()[1]
+        self.assertIn(f["wink"]["ereignis"], [x["text"][0] for x in r["stillstand"] if x["mild"]])
+        # Einsteiger after one turn, Erfahren never
+        rd["stillstand"] = {"zuege": 0}
+        an.choose(rd, "einsteiger")
+        turn()
+        self.assertEqual(turn()[1], {"wink": {"stufe": 1}})
+        an.choose(rd, "erfahren")
+        self.assertEqual([turn()[:2] for _ in range(4)], [("", {})] * 4)
+        self.assertNotIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        # a failed check to find something out: the next buttons start with another way to it
+        an.choose(rd, "normal")
+        rd["karte"]["leute"]["Grimma"]["ort"] = rd["karte"]["hier"]
+        miss = {"pid": self.host, "ok": False, "wofuer": "die Spuren untersuchen", "wert": "intelligenz"}
+        turn(wuerfe=[miss])
+        self.assertEqual(an.buttons(dungeon, r, rd, self.host)[0]["text"], "Ich frage Grimma danach.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            an.told(dungeon, r, rd)
+        self.assertIn("dungeon: anleitung | ausweg | 1", out.getvalue())
+        turn()
+        self.assertNotEqual(an.buttons(dungeon, r, rd, self.host)[0]["text"], "Ich frage Grimma danach.")
+        t = an.for_live()
+        self.assertTrue(t["wink1"] >= 3 and t["wink2"] >= 1 and t["wink3"] >= 1 and t["ausweg"] >= 1, t)
+
+
+    def test_clues_lead_to_the_turning_point(self):
+        """Spieler anleiten step 5 (the three-clue rule): an act carries up to SPUREN_MAX clues (5 to SPUR_LEN
+        characters, checked by check_plan and the words of the tone); every shipped story has two per act in both
+        languages. While on the plan's facts name the next clue not shown yet („deutlich“ at the stall hint's stage 1),
+        a narration that names most of its words shows it (progress for the stall counter), a new act starts again, and
+        a narrator's way may not name a clue before it is shown; off: nothing."""
+        import dungeon_anleiten as an
+        r = self.r
+        raw = dungeon.read_json(dungeon.VORLAGEN, {})["geschichten"]
+        for lang in ("de", "en"):
+            ok = dungeon.shipped(r, lang)
+            for x in raw:
+                self.assertEqual([a["spuren"] for a in ok["v-" + x["id"]]["akte"]], [a["spuren"] for a in x[lang]["akte"]], x["id"])
+                self.assertTrue(all(2 <= len(a["spuren"]) <= an.SPUREN_MAX for a in x[lang]["akte"]), x["id"])
+        base = copy.deepcopy(dict(raw[0]["de"], welt=raw[0]["welt"], ton=raw[0]["ton"], lang="de"))
+        base["akte"][0]["spuren"] = ["Frisches Wachs klebt am Glockenseil.", "Der Küster versteckt einen Schlüssel.", "Ein Hund bellt laut.", "Vier"]
+        base["akte"][1].pop("spuren")
+        g, err = dungeon.check_plan(r, base)
+        self.assertEqual(err, [])
+        self.assertEqual(g["akte"][0]["spuren"], base["akte"][0]["spuren"][:3])   # at most SPUREN_MAX
+        self.assertNotIn("spuren", g["akte"][1])
+        self.assertTrue(dungeon.check_plan(r, dict(base, akte=[dict(base["akte"][0], spuren=["Wachs", "kurz"])] + base["akte"][1:]))[1])
+        self.assertEqual(len(dungeon.check_plan(r, dict(base, akte=[dict(base["akte"][0], spuren=["W" * 300])] + base["akte"][1:]))[0]
+                             ["akte"][0]["spuren"][0]), an.SPUR_LEN + 2)      # cut with „ …“
+        rd = self.state(self.rid)
+        rd.update(plan=g, akt=0, offen={}, dm=False, status="laeuft")
+        self.assertEqual((an.clue_facts(rd), an.seen(rd, "Frisches Wachs klebt am Glockenseil.")), ({}, 0))   # off
+        helpers.keep_chat(self, "dungeon_anleiten")
+        helpers.set_config(dungeon_anleiten=True)
+        self.assertIn(an.SPUR_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertIn(an.SPUREN_PLAN[0], dungeon.AUFGABE_PLAN["de"] if isinstance(dungeon.AUFGABE_PLAN, dict) else dungeon.AUFGABE_PLAN)
+        self.assertEqual(an.clue_facts(rd), {"spur": "Frisches Wachs klebt am Glockenseil."})
+        # a way that names a clue not shown yet is dropped
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(an.check_ways(dungeon, r, rd, ["Den Schlüssel beim Küster suchen"], "Die Helden stehen im Turm."), [])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(an.seen(rd, "Am Glockenseil klebt frisches Wachs."), 1)      # its words, in any order
+            self.assertEqual(an.seen(rd, "Am Glockenseil klebt frisches Wachs."), 0)      # once
+        self.assertIn("dungeon: anleitung | spur | 1/3", out.getvalue())
+        self.assertEqual((an.shown(rd), an.clue_facts(rd)), ([0], {"spur": "Der Küster versteckt einen Schlüssel."}))
+        self.assertEqual(dungeon.view(self.rid, self.host)["spuren_gezeigt"], [])          # the stored round: none yet
+        # the stall hint's stage 1 makes it „deutlich“
+        rd["anleitwink"] = {"zug": rd["zug"], "stufe": 1}
+        self.assertEqual(an.clue_facts(rd), {"spur": "Der Küster versteckt einen Schlüssel.", "deutlich": True})
+        rd.pop("anleitwink")
+        # a clue shown counts as progress for the stall counter
+        dungeon_karte.ensure(r, rd, random.Random(1))
+        with contextlib.redirect_stdout(io.StringIO()):
+            for _ in range(3):
+                an.progress(dungeon, r, rd, {}, [], random.Random(1))
+                rd["zug"] += 1
+            self.assertGreater(rd["stillstand"]["zuege"], 0)
+            an.progress(dungeon, r, rd, {"text": "Der Küster versteckt hastig einen Schlüssel."}, [], random.Random(1))
+        self.assertEqual((rd["stillstand"]["zuege"], an.shown(rd)), (0, [0, 1]))
+        rd["akt"] = 1                                                                     # a new act starts again
+        self.assertEqual((an.shown(rd), an.clue_facts(rd)), ([], {}))
+        self.assertGreaterEqual(an.for_live()["spur"], 2)
 
 class _Die:
     """A d20 that always shows the same number."""
@@ -10476,7 +10666,8 @@ class NarratorCases(Base):
         self.assertFalse(os.path.exists(es.FALL_FILE))
         self.assertNotIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())
         helpers.set_config(dungeon_erzaehlstand=True)
-        self.assertEqual([g[0] for g in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["gruende"]], list(es.GRUENDE))
+        self.assertEqual([g[0] for g in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["gruende"]],
+                         [g for g in es.GRUENDE if g != "vage"])      # „vage“ only with „Spieler anleiten“ (test_a_vague_narration_is_told_again)
         for bad in (dict(down, grund="quatsch"), dict(down, gut=True), dict(down, grund=["probe"])):
             self.assertEqual(self.c.post(self.u, json=bad).status_code, 400, bad)
         d = self.c.post(self.u, json=down).json()
