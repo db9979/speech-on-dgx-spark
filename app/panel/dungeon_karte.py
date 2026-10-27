@@ -1269,9 +1269,10 @@ def _room_foes(r, rd, boss, rng):
     HERR times dungeon_kampf.budget, at most two kinds, ANZAHL_MAX of a kind and GEGNER_MAX in all: the first of the
     NAH nearest kinds that fits, else the one nearest the band. Returns (ids, {id: count})."""
     import dungeon
+    import dungeon_bestiarium as best
     import dungeon_kampf as kampf
     held = [p["held"] for _, p in dungeon.seated(rd)]
-    tab = [x for x in r.get("gegner") or [] if kampf.plays_in(r, x, rd.get("welt", "")) and x.get("ep", 0) > 0]
+    tab = [x for x in r.get("gegner") or [] if kampf.plays_in(r, x, rd.get("welt", "")) and x.get("ep", 0) > 0 and not best.friedlich(x)]
     if not tab or not held:
         return [], {}
     n, lv = len(held), dungeon.group_level(held)

@@ -1412,7 +1412,7 @@ class Permadeath(Turns):
             rd = self.play([self.dodge("Bela"), {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [0, 0])
         # the story's word heals nothing (Review 27.10. Paket 9, G25): only rest, potion and spell
-        with contextlib.redirect_stdout(io.StringIO()) as out:
+        with contextlib.redirect_stdout(io.StringIO()) as out, self.failing():   # no 20 on the rescue roll gets Bela up
             rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
         self.assertEqual(dungeon.zustand(rd["plaetze"][self.gp]["held"]), "boden")
         self.assertIn("dungeon: folgen | heilung | verworfen", out.getvalue())
@@ -1644,6 +1644,105 @@ class Permadeath(Turns):
         rd["offen"].pop(self.host)
         ohne = dungeon.roll(r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10}], random.Random(4))[0]
         self.assertEqual((mit["bonus"] - ohne["bonus"], mit.get("schrei")), (1, True))
+
+    def test_an_ability_counts_when_used_and_only_the_strongest(self):
+        """Review 27.10. B7 and B13 (Dominik 2026-10-27 „ok“, B13 „je Wert nur das stärkste“): an ability's bonus counts
+        only when it always works or is used in this turn's action; per value only the strongest bonus of items and
+        abilities counts, never the sum; the hero sheet says which worn item does not count and why."""
+        r = dungeon.rules()
+        self.set_hero(self.host, faehigkeiten=["eisenhaut", "rundumschlag", "standhaft"], an=dict({k: None for k in dungeon.SLOTS}))
+        h = self.state(self.rid)["plaetze"][self.host]["held"]
+        base = dungeon.body(r, h, "staerke", dinge=False)
+        self.assertEqual(dungeon.total(r, h, "staerke"), base)                      # Rundumschlag not used
+        self.assertEqual(dungeon.total(r, h, "weisheit"), dungeon.body(r, h, "weisheit", dinge=False) + 2)   # Standhaft always
+        z = self.state(self.rid)["zug"]
+        self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich setze Rundumschlag ein.", "zug": z})
+        h = self.state(self.rid)["plaetze"][self.host]["held"]
+        self.assertEqual((h["einsatz"], dungeon.total(r, h, "staerke")), (["rundumschlag"], base + 1))
+        rd = self.state(self.rid)
+        dungeon.wear_off(rd)
+        self.assertNotIn("einsatz", rd["plaetze"][self.host]["held"])
+        # two rings on Stärke (+2, +3) and the ability: only the +3 counts; the +2 ring says so
+        ring = next(c for c in r["gegenstaende"] if "ring1" in (c.get("platz") or []) or c.get("art") == "schmuck")
+        a = dict(dungeon.item(r, ring["id"], "rar", random.Random(1)), wert="staerke", bonus=2)
+        b = dict(dungeon.item(r, ring["id"], "episch", random.Random(2)), wert="staerke", bonus=3)
+        a.pop("eff", None), b.pop("eff", None), a.pop("u", None), b.pop("u", None)
+        h["an"]["ring1"], h["an"]["ring2"] = a, b
+        h["einsatz"] = ["rundumschlag"]
+        self.assertEqual(dungeon.total(r, h, "staerke"), base + 3)
+        self.assertEqual((dungeon.outdone(r, h, a), dungeon.outdone(r, h, b)), (["staerke"], []))
+        v = dungeon.worn_view(r, h, a, "de")
+        self.assertIn("Zählt nicht auf Stärke: etwas anderes gibt dort mehr, nur das Stärkste zählt.", v["zeilen"])
+        self.assertEqual(dungeon.worn_view(r, h, b, "en").get("zaehlt_nicht"), None)
+        b["bonus"] = 2                                                              # a tie: the first one counts
+        self.assertEqual((dungeon.outdone(r, h, a), dungeon.outdone(r, h, b), dungeon.total(r, h, "staerke")), ([], ["staerke"], base + 2))
+        self.assertEqual(dungeon.worn_bonus(r, h, "geschick"), 0)
+
+    def test_abilities_the_panel_computes(self):
+        """Review 27.10. B7: Waffenmeister +1 damage on every weapon hit, Zäh +3 life on every level, Handauflegen once a
+        scene heals a friend or the hero by 1d6+2, Zurückholen once a scene gets a friend down up with 3 life; nobody to
+        raise gives a fixed line, never the model."""
+        r = dungeon.rules()
+        fa = {x["id"]: x for k in r["klassen"] for x in k["faehigkeiten"]}
+        self.assertEqual({x: fa[x].get("wirkung") for x in ("waffenmeister", "zaeh", "handauflegen", "wiederbeleben")},
+                         {"waffenmeister": "schaden_plus", "zaeh": "leben_je_stufe", "handauflegen": "heilen", "wiederbeleben": "wiederbeleben"})
+        h = dungeon.new_hero(r, dict(HERO, klasse="waldlaeufer"))
+        h["stufe"] = 4
+        ohne = dungeon.life(r, h)
+        h["faehigkeiten"].append("zaeh")
+        self.assertEqual(dungeon.life(r, h), ohne + 3 * 3)
+        h["leben"], h["leben_max"] = 10, ohne
+        dungeon.relife(r, h)
+        self.assertEqual((h["leben_max"], h["leben"]), (ohne + 9, 19))
+        # Waffenmeister: the same roll, one more damage
+        k = dungeon.new_hero(r, dict(HERO, klasse="krieger"))
+        g = {"k": "g1", "id": "wolf", "name": "Wolf", "leben": 99, "leben_max": 99, "rk": 1, "aus": False}
+        def hit(held):
+            rd = {"lang": "de", "zug": 1, "offen": {"p0": {"text": "Ich greife den Wolf an."}}, "log": [], "plaetze": {"p0": {"held": held, "made": 0}},
+                  "kampf": {"gegner": [dict(g)]}}
+            return [x for x in kampf.attacks(dungeon, r, rd, [{"pid": "p0", "ziel": "Wolf", "vt": ""}], random.Random(3))[1] if x["treffer"]][0]["schaden"]
+        mit = dict(k, faehigkeiten=k["faehigkeiten"] + ["waffenmeister"])
+        self.assertEqual(hit(mit) - hit(k), 1)
+        # Handauflegen on a friend, then once a scene; Wiederbeleben on a friend down
+        self.set_hero(self.host, klasse="heiler", faehigkeiten=["handauflegen", "wiederbeleben"], leben=20, leben_max=20)
+        self.set_hero(self.gp, leben=3)
+        z = self.state(self.rid)["zug"]
+        self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich setze Handauflegen bei Bela ein.", "zug": z})
+        a = self.state(self.rid)["offen"][self.host]
+        self.assertEqual((a["wirkt"], a["kraft_ziel"]), ({"heilen": "handauflegen"}, self.gp))
+        rd = self.state(self.rid)
+        dungeon.use_abilities(r, rd, random.Random(5))
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertTrue(3 + 3 <= bela["leben"] <= 3 + 8, bela["leben"])
+        self.assertEqual([e for e in rd["log"] if e["art"] == "kraft"][-1]["wie"], "heilen")
+        self.assertEqual(rd["plaetze"][self.host]["held"]["szene_kraft"]["handauflegen"], rd["szene"].get("ort", ""))
+        bela["leben"] = 0
+        rd["offen"][self.host] = {"text": "Ich setze Zurückholen bei Bela ein."}
+        dungeon.check_powers(r, rd, self.host)
+        dungeon.use_abilities(r, rd, random.Random(5))
+        self.assertEqual((bela["leben"], dungeon.zustand(bela)), (3, ""))
+        rd["offen"][self.host] = {"text": "Ich setze Zurückholen bei Bela ein."}
+        dungeon.check_powers(r, rd, self.host)
+        self.assertIn("Zurückholen", rd["offen"][self.host]["nicht"])            # once a scene
+        rd["plaetze"][self.host]["held"]["szene_kraft"] = {}
+        rd["offen"][self.host] = {"text": "Ich setze Zurückholen bei Bela ein."}
+        dungeon.check_powers(r, rd, self.host)
+        dungeon.use_abilities(r, rd, random.Random(5))                              # Bela stands: nobody to raise
+        self.assertEqual(rd["log"][-1]["text"], "Zurückholen: niemand hier braucht das gerade.")
+        self.assertNotIn("wiederbeleben", rd["plaetze"][self.host]["held"]["szene_kraft"])
+
+    def test_an_ability_promises_only_what_the_panel_computes(self):
+        """Review 27.10. B7: the sentence of an ability of the panel's own classes that the panel computes nothing more
+        for than its bonus promises nothing of the fight, of life or of a check's number (dungeon.VERSPRECHEN); every
+        effect is one of KRAFT; the tile says „beim Einsetzen“ for one to use."""
+        own = json.load(open(os.path.join(os.path.dirname(dungeon.__file__), "dungeon_regeln.json"), encoding="utf-8"))
+        bad = [(x["id"], t) for k in own["klassen"] for x in k["faehigkeiten"] if not x.get("wirkung") for t in x["satz"]
+               if dungeon.VERSPRECHEN.search(t)]
+        self.assertEqual(bad, [])
+        self.assertTrue(all(x.get("wirkung", "") in ("",) + tuple(dungeon.KRAFT) for k in own["klassen"] for x in k["faehigkeiten"]))
+        self.assertTrue(dungeon.VERSPRECHEN.search("Trifft alle Gegner direkt neben dir.") and dungeon.VERSPRECHEN.search("Schlösser und Fallen: Probe +3."))
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("t('beim Einsetzen','when used')", js)
 
     def test_experience_only_at_the_end_and_gone_when_leaving_early(self):
         r = dungeon.rules()
@@ -4551,6 +4650,24 @@ class _Die:
 
     def randint(self, lo, hi):
         return self.n
+
+
+class PeacefulFoes(unittest.TestCase):
+    def test_peaceful_foes_are_never_offered(self):
+        """Review 27.10. Paket 11 (Dominik „ok“): a foe of the bestiary marked „friedlich“ (dungeon_bestiarium) is never
+        in the foes' offer of a world at any level, nor the foe of an errand."""
+        import dungeon_auftraege as au
+        import dungeon_bestiarium as best
+        r = dungeon.rules()
+        peace = {g["id"] for g in r["gegner"] if best.friedlich(g)}
+        self.assertTrue(peace)
+        for w in r["welten"]:
+            for lv in (1, 3, 6, 10, 15, 20):
+                h = dict(dungeon.new_hero(r, dict(HERO), random.Random(lv)), stufe=lv)
+                rd = {"welt": w["id"], "zug": lv, "lang": "de", "plaetze": {"p1": {"held": h}}}
+                self.assertFalse(peace & {g["id"] for g in dungeon.kampf._foes(dungeon, r, rd)}, (w["id"], lv))
+                self.assertFalse(peace & {g["id"] for g in dungeon.kampf.offer(dungeon, r, rd, [h])}, (w["id"], lv))
+                self.assertFalse(peace & {g["id"] for g in au._foes(dungeon, r, rd, lv)}, (w["id"], lv))
 
 
 class LifeLossReason(unittest.TestCase):
@@ -10676,7 +10793,8 @@ class Fight(Turns):
         self.assertTrue({("truhe", "gross"), ("boss", "gross")} & found, found)
 
     def test_the_find_table_keeps_its_promises(self):
-        """Wirtschaft Punkt 5 (Dominik 2026-10-25 „1-12“): the rarity of a find by a fixed table per level. From a foe,
+        """Wirtschaft Punkt 5 (Dominik 2026-10-25 „1-12“): the rarity of a find by a fixed table per level, „rar“ from level
+        3 and „episch“ from level 5 (Review 27.10. B11). From a foe,
         no rarity from „selten“ to „episch“ gets rarer as the level grows (so „rar“ never falls when „episch“ opens),
         and no legend; a legend from a chest at most 3 and from a boss at most 10 in a hundred, never below its level."""
         r = dungeon.rules()
@@ -10698,6 +10816,13 @@ class Fight(Turns):
             self.assertLessEqual(share(stufe, "boss")[ids[-1]], 10, stufe)
             self.assertLessEqual(share(stufe, "belohnung")[ids[-1]], 3, stufe)
         self.assertEqual(share(1, "boss")[ids[-1]], 0)
+        # Review 27.10. B11 (Dominik 2026-10-27 „ok“): „rar“ not before level 3, „episch“ not before level 5, from anything
+        for stufe in range(1, 5):
+            for anlass in r["anlass"]:
+                n = share(stufe, anlass)
+                self.assertEqual((n["rar"] if stufe < 3 else 0, n["episch"]), (0, 0), (stufe, anlass))
+        self.assertGreater(share(3, "gegner")["rar"], 0)
+        self.assertGreater(share(5, "gegner")["episch"], 0)
         bad = dungeon.merge(dungeon._base_rules(), {"fundtabelle": [[90, 50, 999, 999]]})
         self.assertTrue([e for e in dungeon.check_rules(bad) if "fundtabelle" in e])
 
@@ -10740,7 +10865,9 @@ class Fight(Turns):
         r = dungeon.rules()
         rd, held = self.held()
         b = kampf.budget(dungeon, r, rd, held)
-        self.assertEqual(b, int(sum(kampf.BUDGET[h["stufe"] - 1] for h in held) * (kampf.GRUPPE[0] + kampf.GRUPPE[1] * (len(held) - 1))))
+        self.assertEqual(b, int(sum(kampf.BUDGET[h["stufe"] - 1] for h in held) * kampf.group_factor(len(held))))
+        self.assertEqual([round(kampf.group_factor(n), 6) for n in (1, 2, 1.5, 7)],
+                         [round(x, 6) for x in (kampf.GRUPPE[0], kampf.GRUPPE[1], (kampf.GRUPPE[0] + kampf.GRUPPE[1]) / 2, kampf.GRUPPE[-1] + 2 * kampf.GRUPPE_PLUS)])
         o = kampf.offer(dungeon, r, rd, held)
         self.assertTrue(0 < len(o) <= kampf.ANGEBOT)
         for g in o:

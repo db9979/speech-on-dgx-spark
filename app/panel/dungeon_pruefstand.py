@@ -4,10 +4,11 @@ flees, expire) and the merged catalog, for every level and group size, without t
 admin sees under Regeln how often the group wins and how much life it loses; a self-test keeps the aim (AIM, 70 to 90
 per cent wins at „mittel“).
 
-- A group: GRUPPE_MAX heroes at most, the classes in turn (krieger, magier, dieb, heiler, waldlaeufer), the first
-  people, built like a player's hero (dungeon.new_hero) and raised to the level; gear by fixed numbers (GEAR): the
-  first weapon of its class and the best body armour it may wear up to the level's price, both of the rarity a mean
-  find of that level has.
+- A group: GRUPPE_MAX heroes at most, every class of the world in turn from a start the seed draws, the first people,
+  built like a player's hero (dungeon.new_hero) and raised like at the table (Review 27.10. B6, raise_to): level by
+  level, the first of the two abilities offered, every point on the class's order; gear: the first weapon of its class
+  and the best body armour it may wear up to the level's price (GEAR), both of the rarity of the median find from foes
+  up to the level by the find table (B11, gear_rarity).
 - An encounter of the danger asked: one or two kinds of the whole bestiary, counted until the adjusted experience
   against the budget gives that danger (dungeon_kampf.danger), drawn by the seed.
 - A fight: each turn every standing hero drinks its healing potion below a third of its life, else attacks the foe
@@ -41,6 +42,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_bestiarium
 import dungeon_gold as gold
 import dungeon_kampf as kampf
 import features
@@ -59,7 +61,6 @@ TRANK = 3                      # a hero drinks its potion at a third of its life
 GEAR = ((1, 20), (3, 45), (6, 80), (9, 120))   # (from level, the dearest body armour a hero of it wears)
 # the rarity of the gear a group of a level typically wears (levels 1 to 10, beyond the last); a fixed assumption of
 # the bench, apart from the find table (dungeon.find_row), so a new table never moves the aim by itself
-GEAR_SELTEN = ("gewoehnlich", "gewoehnlich", "selten", "selten", "selten", "selten", "rar", "rar", "episch", "episch")
 WIRTSCHAFT = (1.2, 2.0)        # income ÷ expenses of a hero per level (median) the self-test keeps (Wirtschaft Punkt 6)
 JACKPOT = 10                   # no single find sells for more than this many times a level's income
 LAEUFE = 200                   # runs per level of the economy
@@ -84,17 +85,45 @@ def _armour(r, klasse, stufe):
     return max(fit, key=lambda x: (x.get("schutz", 0), -x.get("preis", 0), x["id"]), default=None)
 
 
+def gear_rarity(r, stufe):
+    """The rarity of a hero's gear at this level (Review 27.10. B11): the median of the finds from foes up to this level
+    by the find table (dungeon.rarity), so the bench moves with the table and makes no assumption of its own."""
+    order = [x["id"] for x in r["seltenheit"]]
+    fund = sorted((dungeon.rarity(r, s, w + r["anlass"]["gegner"])[1]["id"] for s in range(1, stufe + 1) for w in range(1, 101)),
+                  key=order.index)
+    return fund[len(fund) // 2]
+
+
+def raise_to(r, h, stufe, rng):
+    """A hero raised to the level as a player does it (Review 27.10. B6): level by level by dungeon.gain, the first of
+    the two abilities offered taken, every level's point on the first value of the class's order below WERT_MAX."""
+    reihe = dungeon._by(r, "klassen")[h["klasse"]]["reihe"]
+    while h["stufe"] < stufe:
+        if not dungeon.gain(r, h, r["stufen_ep"][h["stufe"]] - h["ep"], f"pruefstand|{h['stufe']}", rng):
+            break
+        if h["wahl"]:
+            h["faehigkeiten"].append(h["wahl"][0])
+            h["wahl"] = []
+        w = next((w for w in reihe if h["werte"][w] < dungeon.WERT_MAX), None)
+        if w and h["punkte"]:
+            h["punkte"] -= 1
+            h["werte"][w] += 1
+        dungeon.relife(r, h)
+    h["leben"] = h["leben_max"] = dungeon.life(r, h)
+    return h
+
+
 def party(r, n, stufe, rng):
-    """n heroes of this level, the classes in turn, ready for a fight."""
+    """n heroes of this level built like at the table (Review 27.10. B6): every class of the world in turn from a start
+    the seed draws, raised level by level (raise_to), gear of the find table's rarity (gear_rarity)."""
     ks = [k["id"] for k in r["klassen"]]
     volk = r["voelker"][0]["id"]
-    selten = GEAR_SELTEN[min(len(GEAR_SELTEN), max(1, stufe)) - 1]
+    selten = gear_rarity(r, stufe)
+    start = rng.randrange(len(ks))
     out = []
     for i in range(n):
-        k = ks[i % len(ks)]
-        h = dungeon.new_hero(r, {"name": f"Held {i + 1}", "volk": volk, "klasse": k}, rng)
-        h["stufe"] = stufe
-        h["leben"] = h["leben_max"] = dungeon.life(r, h)
+        k = ks[(start + i) % len(ks)]
+        h = raise_to(r, dungeon.new_hero(r, {"name": f"Held {i + 1}", "volk": volk, "klasse": k}, rng), stufe, rng)
         h["an"]["haupthand"] = dungeon.item(r, dungeon._by(r, "klassen")[k]["waffen"][0], selten, rng)
         a = _armour(r, k, stufe)
         if a:
@@ -113,9 +142,10 @@ def _spell(r, h):
 # ---------------------------------------------------------------- an encounter
 def encounter(r, held, gefahr, rng, tries=200, pool=None):
     """[(catalog foe, count)] of the danger asked, one or two kinds, [] when none fits; pool: only these foes (the
-    templates people fight with, weighted: dungeon_personen.pool)."""
+    templates people fight with, weighted: dungeon_personen.pool); never a peaceful foe, as at the table."""
     b = kampf.budget(dungeon, r, {}, held)
-    fit = [g for g in (r.get("gegner") or [] if pool is None else pool) if 0 < g["ep"] <= b * kampf.SCHWER]
+    fit = [g for g in (r.get("gegner") or [] if pool is None else pool) if 0 < g["ep"] <= b * kampf.SCHWER
+           and not dungeon_bestiarium.friedlich(g)]          # like the table (dungeon_kampf._foes): never a peaceful one
     if not fit:
         return []
     for _ in range(tries):

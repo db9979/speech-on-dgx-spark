@@ -5925,6 +5925,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Fähigkeiten beim Einsetzen, nur der stärkste Bonus, Prüfstand wie am Tisch (V01.1.188, Review 27.10. Paket 11, Punkte B6, B7, B11 und B13, Dominik 2026-10-27 „ok“, zu B13 „je Wert nur das stärkste“): Ohne neuen Schalter. 1. Der Bonus einer Fähigkeit zählt nur, wenn sie immer wirkt (immer) oder in der Aktion dieses Zugs eingesetzt wird („Ich setze Rundumschlag ein“, Knopf *Einsetzen*; h[\"einsatz\"] aus check_powers, nach dem Zug wieder leer); die Kachel zeigt dazu „beim Einsetzen“. 2. Je Wert zählt nur der stärkste Bonus von Schmuck, getragener Ausrüstung und Fähigkeit, nie die Summe, wie beim Segen (dungeon.worn_bonus, ability_bonus, total); ein getragenes Stück, das deshalb nicht zählt, sagt im Heldenbogen „Zählt nicht auf Stärke: etwas anderes gibt dort mehr, nur das Stärkste zählt.“ (outdone, worn_view). 3. Neue feste Wirkungen (KRAFT): *Waffenmeister* +1 Schaden auf jeden Waffentreffer, *Zäh* +3 Leben je Stufe (sofort beim Wählen, relife), *Handauflegen* einmal je Szene 1W6+2 Leben für den genannten Freund oder sich selbst, *Zurückholen* einmal je Szene einen Freund am Boden mit 3 Leben zurück (use_abilities, nie auf Tote, ohne Ziel eine feste Zeile). 4. Die S"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ätze der übrigen Fähigkeiten der eigenen fünf Klassen versprechen nichts, was das Panel nicht rechnet (dungeon.VERSPRECHEN), etwa „Ein weiter Hieb, der Raum schafft.“ statt „Trifft alle Gegner direkt neben dir.“. 5. Friedliche Wesen des Bestiariums (dungeon_bestiarium.friedlich: Dorfbewohner, Einhorn …) bietet das Panel nie als Gegner an, weder im Kampf noch in Aufträgen. 6. Fundtabelle (B11): „rar“ gibt es erst ab Stufe 3, „episch“ ab Stufe 5 (Zeilen 1 bis 4 neu, ab Stufe 5 wie bisher; je Anlass, auch beim Händler). 7. Prüfstand wie am Tisch (B6): Der Balance-Prüfstand nimmt alle Klassen der Welt reihum ab einem gezogenen Start (auch allein), hebt jeden Helden Stufe für Stufe wie ein Spieler (dungeon_pruefstand.raise_to: die erste der zwei angebotenen Fähigkeiten, jeder Stufenpunkt auf den ersten Wert der Klassenreihe) und gibt ihm Ausrüstung der Seltenheit des mittleren Funds von Gegnern bis zu seiner Stufe (gear_rarity, keine eigene Annahme mehr); wie am Tisch zieht er nie einen friedlichen Gegner (encounter). Damit neu gemessen: dungeon_kampf.BUDGET Stufe 1 bis 10 = 99, 145, 242, 314, 440, 547, 635, 1003, 1138, 1350 (steigt jetzt mit der Stufe) und der Gruppenfaktor GRUPPE je G"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "röße 1 bis 5 = 0,42, 0,92, 1,36, 1,69, 2,02 (group_factor, darüber +0,33 je Held): ein Held allein bekommt deutlich leichtere Kämpfe. Jede Zelle des Prüfstands liegt bei 74 bis 86 % Siegen. Selbsttests test_an_ability_counts_when_used_and_only_the_strongest, test_abilities_the_panel_computes, test_an_ability_promises_only_what_the_panel_computes, test_peaceful_foes_are_never_offered und test_the_find_table_keeps_its_promises in test_dungeon, test_heroes_like_at_the_table in test_dungeon_pruefstand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -8078,6 +8102,14 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "face_at_once."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: drei kleine Nachtgegner für Science-Fiction (V01.1.188, Daten, Dungeon-Prüfbericht 27.10. Paket 11, Wunsch des Hauptthreads, Thread „DnDAppFiles für den Dungeon-Master“): Mit dem neu gemessenen Budget (ein Held allein hat auf Stufe 1 nur noch rund 60 EP) fand Science-Fiction auf Stufe 1 und 2 nur drei Nachtgegner. Neu im Bestiarium (app/panel/dungeon_srd.json, je mit \"nacht\": true, „neu“-Marke und Sage): die Glimmmotte (10 EP, ein Tier, das am Licht der Lampen knabbert), der Kabelkriecher (25 EP, ein Wartungsroboter aus den Kabelschächten, Konstrukt, immun gegen Gift und Psychisches, empfindlich gegen Blitz) und der Nachtschwirrer (50 EP, ein Tier, das im Dunkeln durch die Frachträume schwirrt). Jede Welt hat damit für einen Helden auf Stufe 1 bis 3 mindestens fünf Nachtgegner. Die Bilder malt der Bilder-Thread."
 },
 {
 "lang": "de",
@@ -21365,6 +21397,30 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: abilities when used, only the strongest bonus, bench like at the table (V01.1.188, review 27.10. package 11, points B6, B7, B11 and B13, Dominik 2026-10-27 „ok“, on B13 „je Wert nur das stärkste“): No new switch. 1. An ability's bonus counts only when it always works (immer) or is used in this turn's action (\"I use Sweeping blow\", the *Use* button; h[\"einsatz\"] from check_powers, empty again after the turn); its tile says \"when used\". 2. Per value only the strongest bonus of jewel, worn gear and ability counts, never the sum, like the blessing (dungeon.worn_bonus, ability_bonus, total); a worn piece that does not count for it says in the hero sheet \"Does not count for Strength: something else gives more there, only the strongest counts.\" (outdone, worn_view). 3. New fixed effects (KRAFT): *Weapon master* 1 more damage on every weapon hit, *Tough* 3 more life per level (at once when picked, relife), *Laying on hands* once a scene 1d6+2 life for the friend named or oneself, *Revive* once a scene a friend who is down back with 3 life (use_abilities, never on the dead, a fixed line without a target). 4. The sentences of the other abilities of the panel's own five cla"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "sses promise nothing the panel does not compute (dungeon.VERSPRECHEN), e.g. \"A wide blow that makes room.\" instead of \"Hits every foe right next to you.\". 5. Peaceful creatures of the bestiary (dungeon_bestiarium.friedlich: villager, unicorn …) are never offered as foes, neither in a fight nor in quests. 6. Find table (B11): \"rare\" only from level 3, \"epic\" from level 5 (rows 1 to 4 new, from level 5 as before; for every occasion, the merchant too). 7. Bench like at the table (B6): the balance bench takes every class of the world in turn from a drawn start (alone too), raises every hero level by level like a player (dungeon_pruefstand.raise_to: the first of the two abilities offered, every level's point on the first value of the class's order) and gives it gear of the rarity of the median find from foes up to its level (gear_rarity, no assumption of its own); as at the table it never draws a peaceful foe (encounter). Measured anew with it: dungeon_kampf.BUDGET levels 1 to 10 = 99, 145, 242, 314, 440, 547, 635, 1003, 1138, 1350 (now growing with the level) and the group factor GRUPPE per size 1 to 5 = 0.42, 0.92, 1.36, 1.69, 2.02 (group_factor, beyond +0.33 per hero): a hero alone g"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ets clearly easier fights. Every cell of the bench lies at 74 to 86 % wins. Self-tests test_an_ability_counts_when_used_and_only_the_strongest, test_abilities_the_panel_computes, test_an_ability_promises_only_what_the_panel_computes, test_peaceful_foes_are_never_offered and test_the_find_table_keeps_its_promises in test_dungeon, test_heroes_like_at_the_table in test_dungeon_pruefstand."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: choose the gender, voice and pronoun follow (V01.1.187, review 27.10. package 10, point Z12, Dominik 2026-10-27 „ok“): No new switch. 1. Whoever makes a hero (a new round, a seat link) must pick male, female or non-binary (dungeon.made_hero, else the error \"Please pick male, female or non-binary.\"); the panel's heroes (bench, test table) need none, old heroes stay unset. 2. In the hero sheet the voice list has two groups, \"Female voices\" and \"Male voices\", the hero's own first (stimmen_w, dmVoiceGroups). 3. When the gender changes and the voice belongs to the other (dungeon.voice_fits) and was not described by the player, the hero takes a fitting new one (voice_for, log dungeon: held | stimme | nach geschlecht). 4. People with a card (dungeon_nsc) get the same pronoun check as heroes (dungeon_erzaehler._figures): \"Grimma hebt seine Hand\" becomes \"ihre\", \"Er\" after a sentence only about Grimma becomes her name. Self-test test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -23438,6 +23494,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: what a foe is, companions with gender and age in the picture (V01.1.173, Dungeon review 2026-10-27 package 10, Z7 and Z11, Dominik \"ok\"): A foe's picture takes what it is from its field \"wesen\" in the Bestiarium (dungeon_bestiarium.wesen), no longer from two lists by hand: humans, humanoids, giants, undead, constructs, fey, fiends, celestials and aberrations each have a fixed phrase (WESEN_EN), animals, dragons, elementals, plants, oozes and monsters already say it with their name. Ten humans the old list did not know (such as the sea robber and the villager) now look human; zombie, troll and dryad are no longer \"humanoid\". About 126 of the 268 foes get a new picture prompt by this: their old picture stays until the new one is painted (at night or with \"Paint all pictures\"). A companion's face puts gender and age from its data in front (\"a middle aged woman, a companion of the heroes, …\"), an animal or a machine gets \"an animal/a machine companion\"; nothing is guessed from the line. Self-tests test_a_foe_is_painted_from_its_description_size_and_kind and test_a_hired_companion_gets_its_face_at_once."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: three small night foes for science fiction (V01.1.188, data, Dungeon review 27.10. Paket 11, asked by the main thread, thread \"DnDAppFiles für den Dungeon-Master\"): With the newly measured budget (one hero alone has only about 60 XP on level 1) science fiction had only three night foes on levels 1 and 2. New in the bestiary (app/panel/dungeon_srd.json, each with \"nacht\": true, the \"new\" mark and a saying): the glow moth (10 XP, an animal that nibbles at the light of lamps), the cable crawler (25 XP, a maintenance robot from the cable ducts, construct, immune to poison and psychic, weak to lightning) and the night flitter (50 XP, an animal that flits through the cargo holds in the dark). Every world now has at least five night foes for one hero on levels 1 to 3. The picture thread paints the pictures."
 },
 {
 "lang": "en",

@@ -4153,6 +4153,13 @@
 "titel": "Dungeon-Master: Geschlecht wählen",
 "text": "Einen neuen Helden ohne Geschlecht anlegen: der Spark bittet um männlich, weiblich oder divers. Im Heldenbogen eine weibliche Stimme wählen und dann „männlich“: die Stimme wechselt zu einer männlichen, die Liste zeigt die männlichen zuerst.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P618",
+"v": 1188,
+"titel": "Dungeon-Master: Fähigkeiten einsetzen",
+"text": "Als Heiler „Ich setze Handauflegen bei <Freund> ein“ schreiben: der Freund bekommt 4 bis 8 Leben, ein zweites Mal in derselben Szene sagt der Spark „schon eingesetzt“. Zwei Ringe auf denselben Wert anlegen: im Heldenbogen sagt der schwächere „Zählt nicht“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

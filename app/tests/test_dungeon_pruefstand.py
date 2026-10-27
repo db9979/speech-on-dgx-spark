@@ -34,7 +34,9 @@ class Bench(unittest.TestCase):
         r = dungeon.rules()
         rng = random.Random(1)
         held = ps.party(r, 5, 4, rng)
-        self.assertEqual([h["klasse"] for h in held], [k["id"] for k in r["klassen"]][:5])
+        ks = [k["id"] for k in r["klassen"]]
+        i = ks.index(held[0]["klasse"])
+        self.assertEqual([h["klasse"] for h in held], [ks[(i + j) % len(ks)] for j in range(5)])     # in turn from a drawn start
         for h in held:
             self.assertEqual((h["stufe"], h["leben"]), (4, dungeon.life(r, h)))
             self.assertEqual(dungeon._c(r, h["an"]["haupthand"])["art"], "waffe")
@@ -54,6 +56,32 @@ class Bench(unittest.TestCase):
         self.assertEqual(a, ps.bench(r, kaempfe=10, stufen=[2], gruppen=[3]))       # the same seed, the same table
         self.assertEqual(set(a["2/3"]), {"siege", "leben", "runden"})
         self.assertEqual(dict(dungeon._day), before)                               # no fight of the bench counts
+
+    def test_heroes_like_at_the_table(self):
+        """Review 27.10. B6 and B11 (Dominik 2026-10-27 „ok“): the bench's heroes are raised like a player's, level by
+        level with the first of the two abilities offered and every point on the class's order; every class of the world
+        comes; the gear has the rarity of the median find from foes up to the level (never an assumption of its own); the
+        budget grows with the level."""
+        import random
+        r = dungeon.rules()
+        h = ps.raise_to(r, dungeon.new_hero(r, {"name": "Held 1", "volk": r["voelker"][0]["id"], "klasse": "heiler"}), 6, random.Random(2))
+        k = dungeon._by(r, "klassen")["heiler"]
+        self.assertEqual((h["stufe"], h["punkte"], h["wahl"]), (6, 0, []))
+        self.assertEqual(len(h["faehigkeiten"]), len(k.get("start_faehigkeiten") or []) + sum(1 for x in r["faehigkeit_auf"] if x <= 6))
+        fresh = dungeon.new_hero(r, {"name": "Held 1", "volk": r["voelker"][0]["id"], "klasse": "heiler"})
+        self.assertEqual(sum(h["werte"].values()) - sum(fresh["werte"].values()), 5)
+        self.assertEqual(h["werte"][k["reihe"][0]], min(dungeon.WERT_MAX, fresh["werte"][k["reihe"][0]] + 5))
+        self.assertEqual(h["leben"], dungeon.life(r, h))
+        seen = {x["klasse"] for i in range(40) for x in ps.party(r, 1, 1, random.Random(i))}
+        self.assertEqual(seen, {k["id"] for k in r["klassen"]})
+        order = [x["id"] for x in r["seltenheit"]]
+        for stufe in range(1, 11):
+            fund = sorted((dungeon.rarity(r, s, w)[1]["id"] for s in range(1, stufe + 1) for w in range(1, 101)), key=order.index)
+            self.assertEqual(ps.gear_rarity(r, stufe), fund[len(fund) // 2])
+        self.assertEqual(ps.gear_rarity(r, 1), "gewoehnlich")
+        b = kampf.BUDGET[:r["grenzen"]["stufe_max"]]
+        self.assertEqual(list(b), sorted(b))
+        self.assertEqual(list(kampf.GRUPPE), sorted(kampf.GRUPPE))
 
     def test_the_aim_at_medium_for_every_level_and_group(self):
         """The self-test of the balance (Dominik 2026-10-24, Idee 5 „Ein Selbsttest hält das Ziel“)."""

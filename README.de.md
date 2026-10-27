@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.188** KI-Dungeon-Master: eine Fähigkeit zählt nur, wenn sie immer wirkt oder eingesetzt wird, je Wert zählt nur der stärkste Bonus von Schmuck, Ausrüstung und Fähigkeit, Waffenmeister, Zäh, Handauflegen und Zurückholen rechnet das Panel, „rar“ ab Stufe 3 und „episch“ ab 5, der Prüfstand spielt mit Helden wie am Tisch und alle 12 Klassen, Budget neu gemessen, friedliche Wesen nie als Gegner, drei kleine Nachtgegner für Science-Fiction (Review 27.10. Paket 11)
 - **V01.1.187** KI-Dungeon-Master: ein neuer Held braucht sein Geschlecht, die Stimmenliste ist nach Geschlecht geordnet, ein neues Geschlecht nimmt eine passende Stimme, Personen bekommen dieselbe Fürwort-Prüfung wie Helden (Review 27.10. Paket 10)
 - **V01.1.186** KI-Dungeon-Master: jede Person hat ein festes Alter und feste Haare, Augen, Bart und Statur vom Panel, Alter und Geschlecht nie vom Modell, kein Kind mit Erwachsenenberuf und nie als Gegner, die Rolle setzt den Beruf (Review 27.10. Paket 10)
 - **V01.1.185** KI-Dungeon-Master: der Fortschritt der Geschichte ist Kern und ab Werk an: Stillstand-Wink, Ereignis, Tipp und Spuren zum Wendepunkt auch ohne „Spieler anleiten“, mit eigenem Admin-Schalter (Review 27.10. E12)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.181** KI-Dungeon-Master: Wächter- und Herrenräume der Gewölbe richten sich nach dem Kampfbudget, die Anzahl der Gegner füllt das Panel nach Erfahrung auf, ein Boss zählt mit seinem Lebensfaktor
 - **V01.1.180** KI-Dungeon-Master: nur Personen werden Personen, Gegner, Helden, Gefährten, Gruppen und Rollenwörter nie, ein Händler verkauft nach seinem Namen und bekommt eine Karte, eine kämpfende Person zeigt ihr Porträt (Review 27.10. Paket 8)
 - **V01.1.179** KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)
-- **V01.1.178** KI-Dungeon-Master: die Prüfung fängt „Er“ für eine Heldin, Orte, die es auf der Karte nicht gibt, verratene Geheimnisse, Spuren nach misslungener Suche und übergangene Aktionen (Review 27.10. Paket 7, Teil 3)
 
 
 

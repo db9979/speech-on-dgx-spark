@@ -335,7 +335,7 @@ class Srd(unittest.TestCase):
         nacht = [g for g in s["gegner"] if g.get("nacht")]
         for w in [x["id"] for x in r["welten"]]:
             for stufe in (1, 2, 3):
-                b = kampf.BUDGET[stufe - 1] * kampf.GRUPPE[0] * kampf.SCHWER    # one hero, the smallest budget at the table
+                b = kampf.BUDGET[stufe - 1] * kampf.group_factor(1) * kampf.SCHWER    # one hero, the smallest budget at the table
                 n = [g["id"] for g in nacht if kampf.plays_in(r, g, w) and 0 < g["ep"] <= b]
                 self.assertGreaterEqual(len(n), 5, f"{w} Stufe {stufe}: {n}")
         self.assertLessEqual(set(range(6)), {int(g["stufe"]) for g in nacht})

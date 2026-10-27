@@ -79,7 +79,9 @@ def _items(dm, r, rd):
 
 
 def _foes(dm, r, rd, lvl):
-    return [g for g in r["gegner"] if dm.in_world(g, rd.get("welt")) and g.get("stufe", 0) <= lvl and not g.get("boss")]
+    import dungeon_bestiarium                    # a peaceful one is never an errand's foe (Review 27.10. Paket 11)
+    return [g for g in r["gegner"] if dm.in_world(g, rd.get("welt")) and g.get("stufe", 0) <= lvl and not g.get("boss")
+            and not dungeon_bestiarium.friedlich(g)]
 
 
 def _level(dm, rd):

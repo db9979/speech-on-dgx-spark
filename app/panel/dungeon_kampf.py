@@ -59,15 +59,18 @@ import dungeon_narben as narben
 
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
-# Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with the Kampf-Audit (V01.1.127:
-# an attack whose foe fell this turn takes the next one, none is lost), level 7 anew with the boss's life factor in the
-# budget (Review 27.10. Paket 4a); beyond the heroes' top level the D&D table
-BUDGET = (125, 175, 291, 380, 490, 560, 860, 880, 625, 615, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with heroes raised like at the
+# table, every class, gear of the find table (Review 27.10. B6, B11) and abilities only when used, only the strongest
+# bonus (B7, B13); beyond the heroes' top level the D&D table
+BUDGET = (99, 145, 242, 314, 440, 547, 635, 1003, 1138, 1350, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
 REGLER_RUNTER = 15         # after a fight with a hero down, lost or fled from: this much easier
-GRUPPE = (0.7, 0.33)       # the budget times 0.7 for one hero and 0.33 more for each further one (more heroes hit more often)
+# the budget times this for 1 to 5 heroes (more heroes hit more often), 0.33 more for each further one; measured with
+# the balance bench (Review 27.10. B6: every class, alone too, heroes raised like at the table)
+GRUPPE = (0.42, 0.92, 1.36, 1.69, 2.02)
+GRUPPE_PLUS = 0.33
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
 ANZAHL_MAX = 4             # of one kind
@@ -264,6 +267,16 @@ def _mal(n):
     return next(m for k, m in MAL if n >= k)
 
 
+def group_factor(n):
+    """GRUPPE for n heroes (companions as their share): between two sizes on the line, beyond the table GRUPPE_PLUS more
+    for each further hero."""
+    n = max(1.0, n)
+    if n >= len(GRUPPE):
+        return GRUPPE[-1] + GRUPPE_PLUS * (n - len(GRUPPE))
+    k = int(n)
+    return GRUPPE[k - 1] + (GRUPPE[k] - GRUPPE[k - 1]) * (n - k)
+
+
 def budget(dm, r, rd, held, stufe=True):
     """The experience an encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size, half at
     the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium), times the group's
@@ -272,7 +285,7 @@ def budget(dm, r, rd, held, stufe=True):
     voll = sum(max(1, h.get("leben_max") or 1) for h in held)    # Review 27.10. B5: a battered group gets less, at least ANTEIL_MIN
     anteil = max(ANTEIL_MIN, min(1, sum(max(0, h.get("leben", h.get("leben_max") or 1)) for h in held) / voll)) if held else 1
     b = anteil * sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (1 + mehr / max(1, len(held))) \
-        * (GRUPPE[0] + GRUPPE[1] * (len(held) + mehr - 1))
+        * group_factor(len(held) + mehr)
     return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100) * (stage_factor(r, rd, held) if stufe else 1))
 
 
@@ -361,8 +374,10 @@ def plays_in(r, g, welt):
 
 
 def _foes(dm, r, rd):
+    """The foes of the round's world; a peaceful one (dungeon_bestiarium.friedlich, Review 27.10. Paket 11) never."""
+    import dungeon_bestiarium
     welt = rd.get("welt", "")
-    return [g for g in r.get("gegner") or [] if plays_in(r, g, welt)]
+    return [g for g in r.get("gegner") or [] if plays_in(r, g, welt) and not dungeon_bestiarium.friedlich(g)]
 
 
 def _seed(rd, held, *more):
@@ -691,7 +706,8 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                 break
         n, wirkt, extra, raub = 0, "", [], 0
         if hit:
-            n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.body(r, h, wert, dinge=False) + (0 if spell else plus))   # M5: with blessing
+            n = max(1, _dice(rng, 2 if krit else 1, wuerfel) + dm.body(r, h, wert, dinge=False) + (0 if spell else plus)   # M5: with blessing
+                    + (dm.KRAFT["schaden_plus"] * len(dm.kraft(r, h, "schaden_plus")) if wp and not spell else 0))   # Waffenmeister (B7)
             n, wirkt = against(g, art, n, magisch=bool(spell) or bool(wp and not wp.get("u") and wp.get("bonus", 0) >= 1))
             for e in effects(dm, r, h, "schaden", wp) if wp and not spell else ():   # a burning blade: its own kind, its own resistances
                 m, _ = against(g, e["art"], _dice(rng, 2 if krit else 1, WIRKUNG_W))

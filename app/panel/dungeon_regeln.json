@@ -35,48 +35,48 @@
   "klassen": [
     {"id": "krieger", "zeichen": "🛡️", "name": ["Krieger", "Warrior"], "satz": ["Kämpft vorn, hält viel aus und schützt die Freunde.", "Fights up front, takes a lot and shields friends."], "reihe": ["staerke", "konstitution", "geschick", "weisheit", "charisma", "intelligenz"], "leben": 14, "leben_plus": 5, "waffen": ["schwert", "axt", "hammer", "speer", "langschwert", "zweihaender", "streitaxt", "morgenstern", "hellebarde", "flegel", "runenklinge"], "start_faehigkeiten": ["eisenhaut"],
      "faehigkeiten": [
-       {"id": "rundumschlag", "name": ["Rundumschlag", "Sweeping blow"], "satz": ["Trifft alle Gegner direkt neben dir.", "Hits every foe right next to you."], "wert": "staerke", "bonus": 1},
+       {"id": "rundumschlag", "name": ["Rundumschlag", "Sweeping blow"], "satz": ["Ein weiter Hieb, der Raum schafft.", "A wide blow that makes room."], "wert": "staerke", "bonus": 1},
        {"id": "schildwall", "name": ["Schildwall", "Shield wall"], "satz": ["1× je Szene Schaden eines Treffers für einen Freund abfangen.", "Once per scene take a hit's damage for a friend."], "wert": "staerke", "bonus": 1, "wirkung": "abfangen"},
        {"id": "kampfschrei", "name": ["Kampfschrei", "Battle cry"], "satz": ["Die ganze Gruppe bekommt bei der nächsten Probe +1.", "The whole group gets +1 on the next check."], "wert": "charisma", "bonus": 1, "wirkung": "gruppe_probe"},
        {"id": "eisenhaut", "name": ["Eisenhaut", "Iron skin"], "satz": ["Jeder Treffer gegen dich macht 1 Schaden weniger.", "Every hit against you does 1 less damage."], "wert": "konstitution", "bonus": 1, "wirkung": "weniger_schaden", "immer": true},
-       {"id": "standhaft", "name": ["Standhaft", "Steadfast"], "satz": ["Proben gegen Angst und Zauber +2.", "Checks against fear and spells +2."], "wert": "weisheit", "bonus": 2, "immer": true},
-       {"id": "waffenmeister", "name": ["Waffenmeister", "Weapon master"], "satz": ["Waffen machen +1 Schaden.", "Weapons do +1 damage."], "wert": "staerke", "bonus": 2, "immer": true}
+       {"id": "standhaft", "name": ["Standhaft", "Steadfast"], "satz": ["Ein fester Wille, den so leicht nichts bricht.", "A firm will that little can break."], "wert": "weisheit", "bonus": 2, "immer": true},
+       {"id": "waffenmeister", "name": ["Waffenmeister", "Weapon master"], "satz": ["Waffen machen +1 Schaden.", "Weapons deal 1 more damage."], "wert": "staerke", "bonus": 1, "immer": true, "wirkung": "schaden_plus"}
      ]},
     {"id": "magier", "zeichen": "🔮", "name": ["Magier", "Mage"], "satz": ["Gelehrt in arkaner Kunst: wenig Leben, viele Zauber.", "Learned in the arcane: little life, many spells."], "reihe": ["intelligenz", "konstitution", "geschick", "weisheit", "charisma", "staerke"], "leben": 9, "leben_plus": 3, "waffen": ["stab", "dolch", "zauberbuch", "kugel", "runenstab", "zauberstab", "kristallstab", "grimoire", "sternenszepter", "schattenfolio"], "start_faehigkeiten": ["frostnova"], "zauber": {"0": ["lichtzauber"], "1": ["blick_voraus", "nebelschleier"], "2": ["eislanze", "unsichtbarkeit", "gedanken_lesen"], "3": ["feuerball", "hast", "zeitlupe", "lebensraub"], "4": ["steinhaut"], "5": ["kettenblitz"]},
      "faehigkeiten": [
-       {"id": "feuerball", "name": ["Feuerball", "Fireball"], "satz": ["1× je Szene eine Gruppe Gegner in Flammen setzen.", "Once per scene set a group of foes on fire."], "wert": "intelligenz", "bonus": 2},
-       {"id": "unsichtbar", "name": ["Unsichtbarkeit", "Invisibility"], "satz": ["1× je Szene bis zur nächsten Aktion unsichtbar.", "Once per scene invisible until your next action."], "wert": "geschick", "bonus": 1},
-       {"id": "lichtzauber", "name": ["Licht", "Light"], "satz": ["Erhellt jeden Raum, Untote scheuen das Licht.", "Lights any room, the undead shun the light."], "wert": "intelligenz", "bonus": 1},
-       {"id": "gedankenlesen", "name": ["Gedanken lesen", "Read minds"], "satz": ["Erkennt, ob ein NPC lügt.", "Tells whether an NPC lies."], "wert": "intelligenz", "bonus": 2},
-       {"id": "frostnova", "name": ["Frostnova", "Frost nova"], "satz": ["Friert Gegner in der Nähe für eine Runde ein.", "Freezes nearby foes for one round."], "wert": "intelligenz", "bonus": 1},
-       {"id": "teleport", "name": ["Blinzeln", "Blink"], "satz": ["Springt einige Schritte weit durch den Raum.", "Jumps a few steps through space."], "wert": "geschick", "bonus": 1}
+       {"id": "feuerball", "name": ["Feuerball", "Fireball"], "satz": ["Ein Funke Feuer in jeder Formel.", "A spark of fire in every formula."], "wert": "intelligenz", "bonus": 2},
+       {"id": "unsichtbar", "name": ["Unsichtbarkeit", "Invisibility"], "satz": ["Für einen Atemzug kaum zu sehen.", "Hard to see for a breath."], "wert": "geschick", "bonus": 1},
+       {"id": "lichtzauber", "name": ["Licht", "Light"], "satz": ["Ein Licht in der Hand, das Untote scheuen.", "A light in the hand the undead shy from."], "wert": "intelligenz", "bonus": 1},
+       {"id": "gedankenlesen", "name": ["Gedanken lesen", "Read minds"], "satz": ["Ein feines Gespür für Lügen.", "A keen feel for lies."], "wert": "intelligenz", "bonus": 2},
+       {"id": "frostnova", "name": ["Frostnova", "Frost nova"], "satz": ["Kälte sammelt sich um die Hände.", "Cold gathers around the hands."], "wert": "intelligenz", "bonus": 1},
+       {"id": "teleport", "name": ["Blinzeln", "Blink"], "satz": ["Ein kurzer Sprung durch die Luft.", "A short leap through the air."], "wert": "geschick", "bonus": 1}
      ]},
     {"id": "dieb", "zeichen": "🗡️", "name": ["Dieb", "Rogue"], "satz": ["Leise, geschickt und listig, öffnet jedes Schloss.", "Quiet, deft and cunning, opens any lock."], "reihe": ["geschick", "intelligenz", "charisma", "konstitution", "weisheit", "staerke"], "leben": 11, "leben_plus": 4, "waffen": ["dolch", "bogen", "kurzschwert", "armbrust", "wurfmesser", "rapier", "giftdolch", "kurzbogen", "handarmbrust", "krummdolch", "schattenklinge", "krummsaebel"], "start_faehigkeiten": ["hinterhalt", "schloesser"],
      "faehigkeiten": [
-       {"id": "schattenschritt", "name": ["Schattenschritt", "Shadow step"], "satz": ["1× je Szene unbemerkt bewegen, Schleich-Probe automatisch geschafft.", "Once per scene move unseen, a sneak check passes by itself."], "wert": "geschick", "bonus": 2},
-       {"id": "hinterhalt", "name": ["Hinterhältiger Stich", "Sneak attack"], "satz": ["+1W6 Schaden, wenn ein Verbündeter danebensteht.", "+1d6 damage when an ally stands next to the foe."], "wert": "geschick", "bonus": 1, "immer": true},
-       {"id": "schloesser", "name": ["Meisterdieb", "Master thief"], "satz": ["Schlösser und Fallen: Probe +3.", "Locks and traps: check +3."], "wert": "geschick", "bonus": 2, "immer": true},
-       {"id": "flinkezunge", "name": ["Flinke Zunge", "Silver tongue"], "satz": ["Lügen und Handeln: Probe +2.", "Lying and haggling: check +2."], "wert": "charisma", "bonus": 2, "immer": true},
-       {"id": "ausweichen", "name": ["Ausweichen", "Evasion"], "satz": ["1× je Szene einem Treffer ganz ausweichen.", "Once per scene dodge a hit completely."], "wert": "geschick", "bonus": 1},
-       {"id": "gift", "name": ["Giftklinge", "Poisoned blade"], "satz": ["Der nächste Treffer macht +2 Schaden.", "The next hit does +2 damage."], "wert": "geschick", "bonus": 1}
+       {"id": "schattenschritt", "name": ["Schattenschritt", "Shadow step"], "satz": ["Bewegt sich lautlos wie ein Schatten.", "Moves silently like a shadow."], "wert": "geschick", "bonus": 2},
+       {"id": "hinterhalt", "name": ["Hinterhältiger Stich", "Sneak attack"], "satz": ["Schlägt zu, wo der Feind nicht hinsieht.", "Strikes where the foe does not look."], "wert": "geschick", "bonus": 1, "immer": true},
+       {"id": "schloesser", "name": ["Meisterdieb", "Master thief"], "satz": ["Kennt Schlösser und Fallen.", "Knows locks and traps."], "wert": "geschick", "bonus": 2, "immer": true},
+       {"id": "flinkezunge", "name": ["Flinke Zunge", "Silver tongue"], "satz": ["Lügt und handelt mit flinker Zunge.", "Lies and haggles with a quick tongue."], "wert": "charisma", "bonus": 2, "immer": true},
+       {"id": "ausweichen", "name": ["Ausweichen", "Evasion"], "satz": ["Flink und schwer zu fassen.", "Quick and hard to catch."], "wert": "geschick", "bonus": 1},
+       {"id": "gift", "name": ["Giftklinge", "Poisoned blade"], "satz": ["Ein Tropfen Gift auf der Klinge.", "A drop of poison on the blade."], "wert": "geschick", "bonus": 1}
      ]},
     {"id": "heiler", "zeichen": "🌿", "name": ["Heiler", "Healer"], "satz": ["Heilt Wunden, segnet die Gruppe und vertreibt Untote.", "Heals wounds, blesses the group and drives off the undead."], "reihe": ["weisheit", "konstitution", "staerke", "charisma", "intelligenz", "geschick"], "leben": 11, "leben_plus": 4, "waffen": ["stab", "streitkolben", "kugel", "heiligenkolben", "segensstab", "lichtszepter", "pilgerstab", "sonnenhammer"], "start_faehigkeiten": ["handauflegen"], "zauber": {"0": ["lichtzauber"], "1": ["heilende_haende", "segen_des_lichts"], "3": ["kreis_der_heilung", "schutzgeister"], "4": ["hauch_des_lebens"], "5": ["erdbeben"]},
      "faehigkeiten": [
-       {"id": "handauflegen", "name": ["Handauflegen", "Laying on hands"], "satz": ["1× je Szene einen Freund um 1W6+2 heilen.", "Once per scene heal a friend by 1d6+2."], "wert": "weisheit", "bonus": 1},
-       {"id": "segen", "name": ["Segen", "Blessing"], "satz": ["Ein Freund bekommt bei seiner nächsten Probe +2.", "A friend gets +2 on the next check."], "wert": "weisheit", "bonus": 1},
-       {"id": "untote", "name": ["Untote bannen", "Turn undead"], "satz": ["Untote weichen zurück: Probe +3.", "The undead back away: check +3."], "wert": "weisheit", "bonus": 2, "immer": true},
-       {"id": "reinigen", "name": ["Reinigen", "Cleanse"], "satz": ["Hebt Gift und Fluch auf.", "Lifts poison and curses."], "wert": "weisheit", "bonus": 1},
-       {"id": "schutzkreis", "name": ["Schutzkreis", "Circle of protection"], "satz": ["Die Gruppe nimmt eine Runde lang 1 Schaden weniger.", "The group takes 1 less damage for a round."], "wert": "weisheit", "bonus": 1},
-       {"id": "wiederbeleben", "name": ["Zurückholen", "Revive"], "satz": ["Holt einen bewusstlosen Freund mit 3 Leben zurück.", "Brings an unconscious friend back with 3 life."], "wert": "weisheit", "bonus": 2}
+       {"id": "handauflegen", "name": ["Handauflegen", "Laying on hands"], "satz": ["1× je Szene einen Freund oder dich selbst um 1W6+2 heilen.", "Once a scene heal a friend or yourself by 1d6+2."], "wert": "weisheit", "bonus": 1, "wirkung": "heilen"},
+       {"id": "segen", "name": ["Segen", "Blessing"], "satz": ["Ein Gebet für einen Freund.", "A prayer for a friend."], "wert": "weisheit", "bonus": 1},
+       {"id": "untote", "name": ["Untote bannen", "Turn undead"], "satz": ["Untote scheuen deinen Glauben.", "The undead shy from your faith."], "wert": "weisheit", "bonus": 2, "immer": true},
+       {"id": "reinigen", "name": ["Reinigen", "Cleanse"], "satz": ["Ein reinigendes Gebet gegen Gift und Fluch.", "A cleansing prayer against poison and curse."], "wert": "weisheit", "bonus": 1},
+       {"id": "schutzkreis", "name": ["Schutzkreis", "Circle of protection"], "satz": ["Ein Kreis aus Licht um die Gruppe.", "A circle of light around the group."], "wert": "weisheit", "bonus": 1},
+       {"id": "wiederbeleben", "name": ["Zurückholen", "Revive"], "satz": ["1× je Szene einen Freund am Boden mit 3 Leben zurückholen.", "Once a scene bring a friend who is down back with 3 life."], "wert": "weisheit", "bonus": 2, "wirkung": "wiederbeleben"}
      ]},
     {"id": "waldlaeufer", "zeichen": "🏹", "name": ["Waldläufer", "Ranger"], "satz": ["Fährtenleser und Schütze, zu Hause in der Wildnis.", "Tracker and archer, at home in the wild."], "reihe": ["geschick", "weisheit", "konstitution", "staerke", "intelligenz", "charisma"], "leben": 12, "leben_plus": 4, "waffen": ["bogen", "speer", "kurzschwert", "armbrust", "langbogen", "kompositbogen", "jagdspeer", "jagdmesser", "wurfaxt", "elfenbogen"], "start_faehigkeiten": ["faehrte"], "zauber": {"1": ["tiersprache", "dornenranken"], "4": ["steinhaut"]},
      "faehigkeiten": [
-       {"id": "faehrte", "name": ["Fährtenleser", "Tracker"], "satz": ["Spuren lesen und Wege finden: Probe +3.", "Reading tracks and finding paths: check +3."], "wert": "weisheit", "bonus": 2, "immer": true},
-       {"id": "doppelschuss", "name": ["Doppelschuss", "Double shot"], "satz": ["Zwei Pfeile auf einmal, zwei Ziele.", "Two arrows at once, two targets."], "wert": "geschick", "bonus": 1},
-       {"id": "tierfreund", "name": ["Tierfreund", "Friend of beasts"], "satz": ["Tiere greifen dich nicht von selbst an.", "Animals do not attack you by themselves."], "wert": "weisheit", "bonus": 1, "immer": true},
-       {"id": "adlerauge", "name": ["Adlerauge", "Eagle eye"], "satz": ["Sieht Fallen und Hinterhalte früher.", "Spots traps and ambushes earlier."], "wert": "weisheit", "bonus": 2, "immer": true},
+       {"id": "faehrte", "name": ["Fährtenleser", "Tracker"], "satz": ["Liest Spuren und findet Wege.", "Reads tracks and finds ways."], "wert": "weisheit", "bonus": 2, "immer": true},
+       {"id": "doppelschuss", "name": ["Doppelschuss", "Double shot"], "satz": ["Zwei Pfeile auf der Sehne.", "Two arrows on the string."], "wert": "geschick", "bonus": 1},
+       {"id": "tierfreund", "name": ["Tierfreund", "Friend of beasts"], "satz": ["Tiere spüren in dir einen Freund.", "Animals sense a friend in you."], "wert": "weisheit", "bonus": 1, "immer": true},
+       {"id": "adlerauge", "name": ["Adlerauge", "Eagle eye"], "satz": ["Ein scharfes Auge für Fallen und Hinterhalte.", "A sharp eye for traps and ambushes."], "wert": "weisheit", "bonus": 2, "immer": true},
        {"id": "tarnung", "name": ["Tarnung", "Camouflage"], "satz": ["In der Natur kaum zu sehen.", "Hard to see in the wild."], "wert": "geschick", "bonus": 1, "immer": true},
-       {"id": "zaeh", "name": ["Zäh", "Tough"], "satz": ["+3 Leben auf jeder neuen Stufe.", "+3 life on every new level."], "wert": "konstitution", "bonus": 1, "immer": true}
+       {"id": "zaeh", "name": ["Zäh", "Tough"], "satz": ["+3 Leben auf jeder Stufe.", "3 more life on every level."], "wert": "konstitution", "bonus": 1, "immer": true, "wirkung": "leben_je_stufe"}
      ]}
   ],
   "stufen_ep": [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000],
@@ -91,10 +91,10 @@
     {"id": "legendaer", "name": ["legendär", "legendary"], "bonus": 3, "preis": 50}
   ],
   "fundtabelle": [
-    [56, 86, 999, 999],
-    [53, 84, 99, 999],
-    [50, 82, 97, 999],
-    [47, 79, 95, 999],
+    [71, 999, 999, 999],
+    [70, 999, 999, 999],
+    [55, 87, 999, 999],
+    [53, 85, 999, 999],
     [44, 77, 93, 116],
     [41, 75, 91, 116],
     [38, 73, 89, 116],

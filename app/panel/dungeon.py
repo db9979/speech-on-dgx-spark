@@ -414,8 +414,18 @@ BODEN_ZUEGE = 3
 RETTUNG = 10
 ZUSTAENDE = ("boden", "ohnmacht", "tot")
 # Punkt 3: what an ability does by the panel (faehigkeiten[].wirkung, fixed words): every hit 1 less, a friend's hit
-# taken once a scene, +1 on the group's checks of that turn; "immer": true marks one that always works (no „Einsetzen“)
-KRAFT = {"weniger_schaden": 1, "abfangen": 1, "gruppe_probe": 1}
+# taken once a scene, +1 on the group's checks of that turn; Review 27.10. B7 (Dominik 2026-10-27 „ok“): +1 damage on
+# every weapon hit, +3 life on every level, once a scene a friend healed by 1d6+2, once a scene a friend down back with
+# 3 life; "immer": true marks one that always works (no „Einsetzen“)
+KRAFT = {"weniger_schaden": 1, "abfangen": 1, "gruppe_probe": 1, "schaden_plus": 1, "leben_je_stufe": 3, "heilen": (6, 2),
+         "wiederbeleben": 3}
+KRAFT_SZENE = ("abfangen", "heilen", "wiederbeleben")    # once a scene (szene_kraft)
+EINSATZ_MAX = 4                                          # abilities one action uses at most
+KRAFT_ZUG = KRAFT_SZENE + ("gruppe_probe",)               # works in the turn it is used (a["wirkt"])
+# Review 27.10. B7: the sentence of an ability the panel computes nothing more for than its bonus promises nothing of the
+# fight, of life or of a check's number (test_an_ability_promises_only_what_the_panel_computes)
+VERSPRECHEN = re.compile(r"(?i)\d|\b[wd]\d|schaden|damage|leben\b|life|heil|heal|ziel|target|treffer|trifft|\bhits?\b|automati|ausweich|"
+                         r"dodge|friert|freez|unsichtbar|invisib|probe|check|greif\w* \w+ nicht|attack|hebt .* auf|lifts?\b|cures?\b")
 WARE = (6, 10)            # items a merchant offers
 WARE_MAX = 20             # with what the heroes sold to it
 RABATT = (5, 20)          # per point of the Charisma bonus, at most (percent)
@@ -1035,7 +1045,14 @@ def life(r, h):
     """Life at the hero's level: the class's start, then leben_plus per level, each with the bonus of
     Konstitution (at least 1 a level)."""
     k, m = _by(r, "klassen")[h["klasse"]], mod(h["werte"].get(KON, 10))
-    return max(1, k["leben"] + m) + (h["stufe"] - 1) * max(1, k["leben_plus"] + m)
+    plus = KRAFT["leben_je_stufe"] * len(kraft(r, h, "leben_je_stufe"))      # Zäh (Review 27.10. B7)
+    return max(1, k["leben"] + m) + (h["stufe"] - 1) * (max(1, k["leben_plus"] + m) + plus)
+
+
+def relife(r, h):
+    """Life at the level anew after a better Konstitution or an ability of life (Zäh): the difference counts at once."""
+    was_max, h["leben_max"] = h["leben_max"], life(r, h)
+    h["leben"] = max(1, min(h["leben_max"], h["leben"] + h["leben_max"] - was_max))
 
 
 def new_hero(r, b, rng=None):
@@ -1189,6 +1206,8 @@ def check_powers(r, rd, pid):
     a.pop("kraft", None)
     a.pop("nicht", None)
     a.pop("wirkt", None)
+    a.pop("kraft_ziel", None)
+    h.pop("einsatz", None)                      # an ability's bonus counts only in the turn it is used (Review 27.10. B7)
     ways = {}                                   # a name as typed (without „Schriftrolle: “) → [("z"|"f", id)]
     for c in r["gegenstaende"]:
         if c["art"] == "zauber":
@@ -1214,13 +1233,19 @@ def check_powers(r, rd, pid):
     for n in hits:
         ws = ways[n]
         if any(w == "f" and x in own_a or w == "z" and x in bag for w, x in ws):
-            # an own ability or a spell in the bag (cast with „Wirken“); an ability the panel carries out (KRAFT) works
-            # this turn, „abfangen“ once a scene (Punkt 3 of 2026-10-24)
-            for x in [x for w, x in ws if w == "f" and x in own_a and fa.get(x, {}).get("wirkung") in ("abfangen", "gruppe_probe")]:
-                if fa[x]["wirkung"] == "abfangen" and (h.get("szene_kraft") or {}).get(x) == rd["szene"].get("ort", ""):
+            # an own ability or a spell in the bag (cast with „Wirken“); an own ability's bonus counts this turn
+            # (einsatz), an ability the panel carries out (KRAFT_ZUG) works this turn, KRAFT_SZENE once a scene (Punkt 3
+            # of 2026-10-24, Review 27.10. B7)
+            for x in [x for w, x in ws if w == "f" and x in own_a]:
+                wk = fa.get(x, {}).get("wirkung", "")
+                if wk in KRAFT_SZENE and (h.get("szene_kraft") or {}).get(x) == rd["szene"].get("ort", ""):
                     szene.append(fa[x]["name"][li])
-                else:
-                    a.setdefault("wirkt", {})[fa[x]["wirkung"]] = x
+                    continue
+                h["einsatz"] = list(dict.fromkeys((h.get("einsatz") or []) + [x]))[-EINSATZ_MAX:]
+                if wk in KRAFT_ZUG:
+                    a.setdefault("wirkt", {})[wk] = x
+                if wk in ("heilen", "wiederbeleben"):
+                    a["kraft_ziel"] = friend(rd, pid, a["text"]) or (pid if wk == "heilen" else "")
             continue
         z = next((mine_s[x] for w, x in ws if w == "z" and x in mine_s), None)
         if z and z["rest"] == 0:
@@ -1320,6 +1345,41 @@ def cast_powers(r, rd, kampf_zug=False, angriffe=()):
         print(f"dungeon: kraft | grad {pw[z]['grad']}", flush=True)
 
 
+def use_abilities(r, rd, rng=None):
+    """The told turn's abilities that heal (Review 27.10. B7, KRAFT, once a scene): „heilen“ (Handauflegen) gives the
+    friend named, else the hero, 1d6+2 life, „wiederbeleben“ gets the friend named up from the ground or out of a faint
+    with 3 life; never on the dead, never by the model. The seat hears a fixed line when there is nobody to raise."""
+    rng = rng or random
+    li = 1 if rd["lang"] == "en" else 0
+    for pid, a in list(rd["offen"].items()):
+        p = rd["plaetze"].get(pid) or {}
+        h, wk = p.get("held"), a.get("wirkt") or {}
+        for w in ("heilen", "wiederbeleben"):
+            if not h or w not in wk or zustand(h):
+                continue
+            fid = wk[w]
+            fa = next((x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"] if x["id"] == fid), None)
+            q = (rd["plaetze"].get(a.get("kraft_ziel") or "") or {}).get("held")
+            if not fa or not q or q.get("tot") or (w == "wiederbeleben" and zustand(q) not in ("boden", "ohnmacht")):
+                _log(rd, "ooc", pid=pid, panel=True, text=(f"{fa['name'][0] if fa else fid}: niemand hier braucht das gerade." if not li else
+                                                         f"{fa['name'][1] if fa else fid}: nobody here needs that right now."))
+                print(f"dungeon: kraft | {w} | kein ziel", flush=True)
+                continue
+            was = q["leben"]
+            if w == "heilen":
+                n = heal(q, rng.randint(1, KRAFT["heilen"][0]) + KRAFT["heilen"][1])
+            else:
+                q.pop("ohnmacht", None)
+                q["leben"] = min(q["leben_max"], KRAFT["wiederbeleben"])
+                n = q["leben"] - max(0, was)
+            h.setdefault("szene_kraft", {})[fid] = rd["szene"].get("ort", "")
+            _log(rd, "kraft", pid=pid, name=h["name"], fuer=q["name"], kraft=fa["name"][li], wie=w)
+            _log(rd, "folge", pid=a["kraft_ziel"], name=q["name"], was="heilung", zahl=n, leben=q["leben"])
+            stood_up(rd, a["kraft_ziel"], q, was)
+            _day.bump("kraft_wirkt")
+            print(f"dungeon: kraft | {w}", flush=True)
+
+
 def six(r, h):
     """A hero from before the six values (V01.0.958): the scores laid out anew by the class's order plus the
     people's bonus, every point already spent comes back to spend again, life at its level; items and blessings
@@ -1413,6 +1473,8 @@ def fix_hero(r, h):
         h.pop("ep_tisch", None)
     sk = h.get("szene_kraft")
     h["szene_kraft"] = {k: v[:60] for k, v in sk.items() if k in fa and isinstance(v, str)} if isinstance(sk, dict) else {}
+    ez = h.get("einsatz")
+    h["einsatz"] = [x for x in ez if x in fa][-EINSATZ_MAX:] if isinstance(ez, list) else []
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
@@ -1468,31 +1530,47 @@ def blessing(h, wert):
     return max((x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert), default=0)
 
 
-def worn_bonus(r, h, wert, waffen=True):
-    """The items worn for a value and their effects (unknown ones: only their base counts); weapons only with waffen."""
-    v = 0
+def worn_bonuses(r, h, wert, waffen=True):
+    """[(bonus, item)] of the items worn for a value and their effects (unknown ones: only their base counts); weapons
+    only with waffen."""
+    out = []
     for it in worn(h):
         if it.get("u") or (not waffen and _c(r, it).get("art") == "waffe"):
             continue
         if it.get("wert") == wert:
-            v += it.get("bonus", 0)
-        v += sum(e["bonus"] for e in item_effects(r, it) if e["wert"] == wert)
-    return v
+            out.append((it.get("bonus", 0), it))
+        out += [(e["bonus"], it) for e in item_effects(r, it) if e["wert"] == wert]
+    return out
+
+
+def worn_bonus(r, h, wert, waffen=True):
+    """The strongest bonus of the items worn for a value (Review 27.10. B13, Dominik 2026-10-27: per value only the
+    strongest of jewel, item and ability counts, never the sum, like the blessing)."""
+    return max((b for b, _ in worn_bonuses(r, h, wert, waffen)), default=0)
+
+
+def ability_bonus(r, h, wert):
+    """The strongest bonus of the hero's abilities for a value (Review 27.10. B7): one that always works („immer“) or
+    one used in this turn's action (h["einsatz"], check_powers), never the sum."""
+    fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
+    jetzt = set(h.get("einsatz") or ())
+    return max((fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert
+                and (fa[x].get("immer") or x in jetzt)), default=0)
 
 
 def body(r, h, wert, dinge=True):
     """A value as the body has it, for the armour class and the damage too (Kampf-Audit M5): the score's bonus (D&D),
-    the blessing, less a wound's consequence; with dinge the items worn for it (never a weapon: its bonus is the
-    weapon's to hit and damage). No abilities, no lesson."""
+    the blessing, less a wound's consequence; with dinge the strongest item worn for it (never a weapon: its bonus is
+    the weapon's to hit and damage). No abilities, no lesson."""
     v = mod(h["werte"].get(wert, 10)) + (worn_bonus(r, h, wert, waffen=False) if dinge else 0) + blessing(h, wert)
     return v - narben.minus(h, wert)                                  # a wound's consequence until a healer (D&D idea 8)
 
 
 def total(r, h, wert):
-    """The bonus for a check on a value: the body's value (body) with every item worn for it, the abilities and a lesson."""
-    fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
-    v = body(r, h, wert, dinge=False) + worn_bonus(r, h, wert)
-    v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
+    """The bonus for a check on a value: the body's value (body), the strongest bonus of the items worn for it and the
+    abilities (Review 27.10. B7 and B13: only one counts, an ability only when it always works or is used now) and a
+    lesson."""
+    v = body(r, h, wert, dinge=False) + max(worn_bonus(r, h, wert), ability_bonus(r, h, wert))
     return v + (1 if (h.get("lehre") or {}).get("wert") == wert else 0)     # a lesson in a settlement (dungeon_gold)
 
 
@@ -1506,9 +1584,11 @@ def bless(h, sg, name, k=None, q=None):
 
 
 def wear_off(rd):
-    """After a narrated turn every blessing and a potion's protection has one turn less; a scroll's attack (M4) lapses."""
+    """After a narrated turn every blessing and a potion's protection has one turn less; a scroll's attack (M4) lapses;
+    an ability used counts no more (Review 27.10. B7)."""
     for _, p in seated(rd):
         h = p["held"]
+        h.pop("einsatz", None)
         h["segen"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("segen") or [] if x["zuege"] > 1]
         h["schutz"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("schutz") or [] if x["zuege"] > 1]
         if (h.get("rolle") or {}).get("bis", -1) <= rd.get("zug", 0):
@@ -1540,7 +1620,7 @@ def kids(r, rd):
 def kraft(r, h, wirkung):
     """The hero's abilities that do this by the panel (faehigkeiten[].wirkung, KRAFT)."""
     fa = {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
-    return [fa[x] for x in h["faehigkeiten"] if x in fa and fa[x].get("wirkung") == wirkung]
+    return [fa[x] for x in h.get("faehigkeiten") or [] if x in fa and fa[x].get("wirkung") == wirkung]
 
 
 def heal(h, n):
@@ -1867,7 +1947,7 @@ def hero_view(r, h, lang, full=True, welt="", zug=None):
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]}
                       for w in r["werte"]],
                wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"] or bool(h.get("bild_neu")),
-               rk=kampf.rk(_me, r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
+               rk=kampf.rk(_me, r, h), an={k: worn_view(r, h, it, lang) if it else None for k, it in h["an"].items()},
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
@@ -1878,6 +1958,34 @@ def hero_view(r, h, lang, full=True, welt="", zug=None):
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa],
                narben=narben.view(r, h, lang))
     return out
+
+
+def outdone(r, h, it):
+    """The values a worn item's bonus does not count for (Review 27.10. B13): another item worn or an ability gives more,
+    or as much and comes first; only the strongest counts."""
+    ids = {w["id"] for w in r["werte"]}
+    out = []
+    for w in dict.fromkeys([it.get("wert")] + [e.get("wert") for e in item_effects(r, it)]):
+        if w not in ids:
+            continue
+        alle = worn_bonuses(r, h, w)
+        mine = max((b for b, x in alle if x is it), default=0)
+        first = next((x for b, x in alle if b == mine), None)
+        if mine > 0 and (mine < max([b for b, x in alle if x is not it] + [ability_bonus(r, h, w)]) or first is not it):
+            out.append(w)
+    return out
+
+
+def worn_view(r, h, it, lang):
+    """A worn item for the hero sheet: item_view and a line for every value its bonus does not count for (B13)."""
+    v = item_view(r, it, lang)
+    li = 1 if lang == "en" else 0
+    for w in outdone(r, h, it):
+        n = _by(r, "werte")[w]["name"][li]
+        v["zeilen"] = v["zeilen"] + [f"Zählt nicht auf {n}: etwas anderes gibt dort mehr, nur das Stärkste zählt." if not li else
+                                     f"Does not count for {n}: something else gives more there, only the strongest counts."]
+        v["zaehlt_nicht"] = v.get("zaehlt_nicht", []) + [n]
+    return v
 
 
 def hero_card(r, h, lang):
@@ -2497,7 +2605,7 @@ def sit_down(r, h):
     wach = bool(h.pop("ohnmacht", None))
     if wach:
         h["gold"] = 0
-    for k in ("rettung", "ep_tisch", "szene_kraft"):
+    for k in ("rettung", "ep_tisch", "szene_kraft", "einsatz"):
         h.pop(k, None)
     h["leben"] = h["leben_max"]
     h["ladungen"] = full_charges(r, h)
@@ -4177,6 +4285,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         folgen = grounded(rd, story["folgen"], wuerfe, rng)    # damage only with a failed check of the body as its reason
         # Kampf-Audit M7: the heroes act before the foes, so a spell's healing and blessing come before the turn's hits
         cast_powers(r, rd, war, {x["pid"] for x in kampfwuerfe[0]})
+        use_abilities(r, rd, rng)
         consequences(r, rd, folgen + hiebe, names)
         if war:
             kampf.turn_dial(_me, r, rd)           # the game master's dial after the fight's end (Idee 6)
@@ -6124,8 +6233,7 @@ def hero_act(rid, pid, b):
             h["punkte"] -= 1
             h["werte"][b["wert"]] += 1
             if b["wert"] == KON:                       # a better bonus counts for every level, as in D&D
-                was_max, h["leben_max"] = h["leben_max"], life(r, h)
-                h["leben"] = max(1, min(h["leben_max"], h["leben"] + h["leben_max"] - was_max))
+                relife(r, h)
         elif was == "stimme":
             klang = re.sub(r"\s+", " ", str(b.get("klang") or "")).strip()
             if b.get("stimme") not in [""] + _stimmen["v"] or klang and not (_stimmen["design"] and KLANG.fullmatch(klang)) \
@@ -6148,6 +6256,7 @@ def hero_act(rid, pid, b):
                 raise ValueError("faehigkeit")
             h["faehigkeiten"].append(b["id"])
             h["wahl"] = []
+            relife(r, h)                              # Zäh counts for every level at once
         elif was in ("tauschen", "annehmen", "ablehnen"):
             other = trade(r, rd, pid, was, b)
             if other:

@@ -731,12 +731,28 @@ class Vaults(unittest.TestCase):
     def test_vault_rooms_within_the_budget(self):
         """Dungeon-Review 2026-10-27 Paket 4 (B1, Dominik „ok“): in every world, level 1 to 10 and 1 to 5 heroes the
         guardian's room lies within WAECHTER, the master's within HERR times the fight's budget (the count filled by
-        experience, a boss with its life factor), never more than 0.05 off where the Bestiarium has no fitting
-        numbers; at most two kinds, ANZAHL_MAX of a kind, GEGNER_MAX in all, a master alone never above HERR_MAX."""
+        experience, a boss with its life factor), never more than 0.05 off unless no room of the world gets there
+        (Review 27.10. B6, a hero alone at a small budget: for a guardian no room of one or two kinds, for a master none
+        of at least half its challenge alone or with one helper kind), never a peaceful foe;
+        at most two kinds, ANZAHL_MAX
+        of a kind, GEGNER_MAX in all, a master alone never above HERR_MAX."""
+        import dungeon_bestiarium as best
         import dungeon_kampf as kampf
         by = {x["id"]: x for x in self.r["gegner"]}
         welten = sorted({w for x in self.r["gegner"] for w in x.get("welten") or []}) + ["eigene"]
         cells = inside = 0
+
+        def fits(welt, lv, nh, b, boss, band):    # some room of the world could land within 0.05 of the band
+            tab = [g for g in self.r["gegner"] if g.get("ep", 0) > 0 and kampf.plays_in(self.r, g, welt) and not best.friedlich(g)]
+            near = lambda foes: band[0] - 0.05 <= kampf.adjusted(foes, nh) / b <= band[1] + 0.05
+            if not boss:                          # a guardian: any room of one kind or two (V01.1.188: a 10 EP foe made
+                return any(near([g] * m + [h] * k)  # „two of the weakest still fit“ true where no room fits)
+                           for g in tab for m in range(1, kampf.ANZAHL_MAX + 1)
+                           for h in [g] + [x for x in tab if x is not g]
+                           for k in range(0 if h is g else 1, (1 if h is g else min(kampf.ANZAHL_MAX, kampf.GEGNER_MAX - m) + 1)))
+            leads = [g for g in tab if kampf.wert(g, nh) <= K.HERR_MAX * b and g["stufe"] >= (lv + 1) / 2]
+            return any(near([g]) or any(near([g] + [h] * k) for h in tab if h is not g for k in range(1, min(kampf.ANZAHL_MAX, kampf.GEGNER_MAX - 1) + 1))
+                       for g in leads)                  # a master of at least half its challenge, alone or with one helper kind
         for welt in welten:
             for lv in range(1, 11):
                 for nh in range(1, 6):
@@ -749,9 +765,10 @@ class Vaults(unittest.TestCase):
                         cell = (welt, lv, nh, boss, anz)
                         self.assertTrue(1 <= len(ids) <= 2 and set(ids) == set(anz), cell)
                         self.assertTrue(all(1 <= m <= kampf.ANZAHL_MAX for m in anz.values()) and sum(anz.values()) <= kampf.GEGNER_MAX, cell)
-                        self.assertTrue(all(kampf.plays_in(self.r, by[i], welt) for i in ids), cell)
+                        self.assertTrue(all(kampf.plays_in(self.r, by[i], welt) and not best.friedlich(by[i]) for i in ids), cell)
                         e = kampf.adjusted([by[i] for i in ids for _ in range(anz[i])], nh) / b
-                        self.assertTrue(band[0] - 0.05 <= e <= band[1] + 0.05, (cell, round(e, 2)))
+                        if not band[0] - 0.05 <= e <= band[1] + 0.05:    # Review 27.10. B6: a hero alone has a small budget
+                            self.assertFalse(fits(welt, lv, nh, b, boss, band), (cell, round(e, 2)))
                         if boss:
                             self.assertEqual(anz[ids[0]], 1)
                             self.assertLessEqual(kampf.wert(by[ids[0]], nh), K.HERR_MAX * b, cell)

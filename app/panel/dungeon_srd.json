@@ -22314,6 +22314,136 @@
         "They tell that every acolyte rang the bell too early on their first day."
       ],
       "sg": 12
+    },
+    {
+      "id": "glimmmotte",
+      "zeichen": "🦋",
+      "name": [
+        "Glimmmotte",
+        "Glow moth"
+      ],
+      "info": [
+        "Flattert um jede Lampe und knabbert am Licht, bis es flackert.",
+        "Flutters around every lamp and nibbles at the light until it flickers."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 0,
+      "leben": 3,
+      "ruestung": 12,
+      "angriff": 3,
+      "schaden": 4,
+      "schaden_plus": 0,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 3,
+        "geschick": 15,
+        "konstitution": 10,
+        "intelligenz": 2,
+        "weisheit": 10,
+        "charisma": 3
+      },
+      "ep": 10,
+      "groesse": "winzig",
+      "wesen": "tier",
+      "schaden_art": "stich",
+      "seit": "V01.1.188",
+      "sage": [
+        "Die Techniker sagen: Flackert die Lampe ohne Grund, sitzt eine Glimmmotte darin.",
+        "Technicians say: if a lamp flickers for no reason, a glow moth sits inside."
+      ],
+      "sg": 12,
+      "nacht": true
+    },
+    {
+      "id": "kabelkriecher",
+      "zeichen": "🤖",
+      "name": [
+        "Kabelkriecher",
+        "Cable crawler"
+      ],
+      "info": [
+        "Ein kleiner Wartungsroboter, der nachts aus den Kabelschächten kommt und alles festschraubt, was sich bewegt.",
+        "A small maintenance robot that comes out of the cable ducts at night and bolts down anything that moves."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 0.125,
+      "leben": 7,
+      "ruestung": 13,
+      "angriff": 3,
+      "schaden": 4,
+      "schaden_plus": 1,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 8,
+        "geschick": 14,
+        "konstitution": 10,
+        "intelligenz": 3,
+        "weisheit": 10,
+        "charisma": 1
+      },
+      "ep": 25,
+      "groesse": "klein",
+      "wesen": "konstrukt",
+      "schaden_art": "wucht",
+      "immun": [
+        "gift",
+        "psychisch"
+      ],
+      "schwaeche": [
+        "blitz"
+      ],
+      "seit": "V01.1.188",
+      "sage": [
+        "Die Mechaniker sagen, ein Kabelkriecher hat noch nie eine Schraube verloren, nur manchmal den Überblick.",
+        "Mechanics say a cable crawler has never lost a screw, only sometimes track of things."
+      ],
+      "sg": 12,
+      "nacht": true
+    },
+    {
+      "id": "nachtschwirrer",
+      "zeichen": "🦇",
+      "name": [
+        "Nachtschwirrer",
+        "Night flitter"
+      ],
+      "info": [
+        "Schwirrt im Dunkeln durch die Frachträume und schnappt zu, sobald das Licht ausgeht.",
+        "Flits through the cargo holds in the dark and snaps as soon as the lights go out."
+      ],
+      "welten": [
+        "scifi"
+      ],
+      "stufe": 0.25,
+      "leben": 10,
+      "ruestung": 13,
+      "angriff": 4,
+      "schaden": 6,
+      "schaden_plus": 2,
+      "anzahl_wuerfel": 1,
+      "werte": {
+        "staerke": 8,
+        "geschick": 16,
+        "konstitution": 12,
+        "intelligenz": 2,
+        "weisheit": 12,
+        "charisma": 4
+      },
+      "ep": 50,
+      "groesse": "klein",
+      "wesen": "tier",
+      "schaden_art": "stich",
+      "seit": "V01.1.188",
+      "sage": [
+        "Die Frachtpiloten sagen: Lass im Frachtraum ein Licht brennen, dann schläft der Nachtschwirrer.",
+        "Cargo pilots say: leave a light on in the hold and the night flitter sleeps."
+      ],
+      "sg": 13,
+      "nacht": true
     }
   ],
   "tabellen": [
