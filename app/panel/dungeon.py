@@ -235,6 +235,7 @@ AKTE = (3, 5)             # acts of a story
 AKT_ZUEGE = (2, 30)       # planned turns of an act
 AKT_MIN = 3               # turns an act lasts at least before the model may close it
 AKT_UEBER = 1.5           # after this many times the planned turns the panel moves on by itself
+WENDE_WORTE = 2           # content words of the turning point (or the goal) a narration names for the model's word to count (Paket 9)
 AUFTRAG_ZUEGE = 8         # without a story plan the pinned quest can be done after this many turns at the earliest
 STICHWORTE_MAX = 300
 IDEE_MAX = 400
@@ -314,6 +315,10 @@ LOG_ZEIGEN = 60           # log entries a seat sees
 BISHER = 4                # earlier narrations the model gets
 STILL = 2                 # turns without an action before the player is asked by name
 SCHWER = (5, 20)          # difficulty of a check
+# Review 27.10. Paket 9 (G23, Dominik 2026-10-27 „ok“): the model names only a level, the panel sets the number; a
+# check's experience never depends on that level
+PROBE_SG = {"leicht": 10, "mittel": 13, "schwer": 16, "sehr_schwer": 19}
+PROBE_EP_SG = PROBE_SG["mittel"]
 ZAHL = (1, 6)             # damage or healing of one consequence
 FOLGEN_MAX = 6
 ERFOLG_MAX = 2
@@ -423,10 +428,20 @@ HAENDLER_WORT = {"schmied": ("schmied", "smith", "waffen", "rüstung", "armour",
                  "kraemer": ("krämer", "kraemer", "trödler", "troedler", "hausierer", "pedlar", "peddler", "trinket")}
 NIE_ANGEBOT = ("schatz",)
 KASSE = 50
-FOLGE_ARTEN = ("schaden", "heilung")
+FOLGE_ARTEN = ("schaden", "heilung")   # what a consequence does (consequences: the model's damage, the host's random rules)
+MODELL_FOLGEN = ("schaden",)   # Review 27.10. Paket 9 (G25): only rest, potion and spell heal, never the model's word
+SCHADEN_W = {"": 4, "schwer": 6, "sehr_schwer": 6}   # the die of damage outside a fight by the failed check's level (grounded)
 KOERPER_WERTE = ("staerke", "geschick", "konstitution")   # a failed check on these may hurt outside a fight (grounded)
 FUNDE = ("gegner", "truhe", "belohnung", "boss")   # the occasions of a find (rules anlass, gold)
 ANLAESSE = ("truhe", "belohnung")   # the model's; „gegner“ and „boss“ the panel gives at a fight's end (dungeon_kampf)
+# Review 27.10. Paket 9 (E5, G24): a passed check that searches or opens finds, by the panel, before the narration
+FUND_TAT = re.compile(r"(?<!\w)(?:durchsuch|such|öffn|oeffn|plünder|pluender|search|open|loot|rummag)")
+FUND_NICHT = re.compile(r"(?<!\w)(?:falle|fallen|spur|spuren|weg|ausgang|hinweis|trap|traps|track|tracks|trail|path|exit|clue)(?!\w)")
+FUNDORTE_MAX = 40           # places a round remembers a find at
+FUND_AUFGABE = {"de": " Steht fund in den Fakten, hat das Panel diesen Fund schon gezogen: erzähle genau dieses Ding bei dieser Figur "
+                      "und melde keine beute.",
+                "en": " When the facts hold fund, the panel has drawn this find already: tell exactly this thing with this "
+                      "character and report no beute."}
 ERFOLG_ARTEN = ("ziel",)   # a defeated foe counts by the bestiary (dungeon_kampf), never by the model
 ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "werkzeug", "schatz")   # schatz: gems and art, only to sell;
 # werkzeug: a tool (hilft) of its own kind, so it gets its own picture (Dominik 2026-10-24 „alles umsetzten“, Punkt 4)
@@ -480,7 +495,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, ausfall_halt=0, verworf
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0, getippt=0, gegeben=0, schaden_ohne_grund=0,
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0, getippt=0, gegeben=0, schaden_ohne_grund=0, probe_wert_fest=0, akt_ohne_wende=0, ziel_zu_frueh=0, beute_vorab=0, beute_ort=0,
                   oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_gehen=0, regel_knapp=0, regel_fund=0, regel_gegner_neu=0, regel_zeitsprung=0, regel_ort_erfunden=0, regel_geheim=0, regel_ignoriert=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
@@ -885,11 +900,16 @@ def name_fits(r, cid, eigen):
     """Whether the model's own name for a find fits it (Dominik 2026-10-24: a belt came as „Versiegelte Truhe“, a
     short sword as „Verlassenes Versteck“): no word of a chest or hiding place (_FUNDORT) in it, or else a word of it
     (4 letters or more) in a word of the catalog name in either language, or the other way round („Truhenbrecher-Dolch“
-    for Dolch). A proper name like „Glockenbrecher“ for a sword fits."""
+    for Dolch). A proper name like „Glockenbrecher“ for a sword fits; a name with the head word of another thing of the
+    catalog never does (Review 27.10. Paket 9, E5: „Silberner Dolch“ was a torch)."""
     own = _NAMWORT.findall(str(eigen or "").lower())
+    cat = [w for n in _by(r, "gegenstaende")[cid]["name"] for w in _NAMWORT.findall(n.lower())]
+    andere = {erz._kopf(n) for c in r["gegenstaende"] if c["id"] != cid for n in c.get("name") or []} \
+        - set(cat) - {""} - set(erz.MEHRDEUTIG) - set(erz.DING_ALLGEMEIN)
+    if any(w in andere for w in own):
+        return False
     if not any(_FUNDORT.search(w) for w in own):
         return True
-    cat = [w for n in _by(r, "gegenstaende")[cid]["name"] for w in _NAMWORT.findall(n.lower())]
     return any(a in b or b in a for a in own for b in cat)
 
 
@@ -1949,14 +1969,15 @@ def close_market(rd):
         print("dungeon: markt | zu", flush=True)
 
 
-def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd=None):
+def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd=None, wer=None):
     """(receiver index, item, gold each) of one find by the panel's rule: rarity by d100 + occasion + level, never
-    above what the level allows, pity after pech_schutz finds without „selten“; the receiver is who went longest
-    without a find (first seat on a tie); the item fits that hero's class. A legendary find is one of the world's
-    legends (dungeon_legenden: boss, reward or chest, each once a campaign of the round rd), else episch."""
+    above what the level allows, pity after pech_schutz finds without „selten“; the receiver is the finder (wer, an
+    index of held, Review 27.10. Paket 9), else who went longest without a find (first seat on a tie); the item fits
+    that hero's class. A legendary find is one of the world's legends (dungeon_legenden: boss, reward or chest, each
+    once a campaign of the round rd), else episch."""
     rng = rng or random
     roll = rng.randint(1, 100) + r["anlass"][anlass]
-    rec = max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
+    rec = wer if wer is not None and 0 <= wer < len(held) else max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
     h = held[rec]
     stufen, s = rarity(r, gruppe_stufe, roll)
     if h.get("ohne_selten", 0) + 1 >= r["pech_schutz"] and len(stufen) > 1 and stufen.index(s) == 0:
@@ -1972,15 +1993,20 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd
     it = legenden.make(_me, r, leg, rng) if leg else item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
     if _c(r, it)["art"] == "schatz":
         it["st"] = max(1, gruppe_stufe)          # Punkt 2: its worth by the level it was found at
+    lo, hi = r["gold"][anlass]
+    each = rng.randint(lo, hi) * max(1, gruppe_stufe) // len(held)
+    found(held, rec, stufen.index(s) > 0, each)
+    return rec, it, each
+
+
+def found(held, rec, selten, each):
+    """What a find changes besides the thing (loot, and keep for a find drawn before the narration): who went how long
+    without one, the pity count for „selten“, every hero's share of the gold."""
     for i, x in enumerate(held):
         x["seit_fund"] = 0 if i == rec else x.get("seit_fund", 0) + 1
-    h["ohne_selten"] = 0 if stufen.index(s) > 0 else h.get("ohne_selten", 0) + 1
-    lo, hi = r["gold"][anlass]
-    gold = rng.randint(lo, hi) * max(1, gruppe_stufe)
-    each = gold // len(held)
+    held[rec]["ohne_selten"] = 0 if selten else held[rec].get("ohne_selten", 0) + 1
     for x in held:
         x["gold"] += each
-    return rec, it, each
 
 
 # ---------------------------------------------------------------- the profile's heroes
@@ -3104,17 +3130,39 @@ def quest_may_end(rd):
     return rd.get("akt", 0) >= len(p["akte"]) - 1 if p and p.get("akte") else rd.get("zug", 0) >= AUFTRAG_ZUEGE
 
 
-def step_act(rd, fertig):
-    """After a narrated turn: the next act when the model says the turning point is told and the act ran AKT_MIN
-    turns, or by the panel after AKT_UEBER times its planned turns; always one act on, never back. Returns why."""
+def goal_told(rd, text):
+    """Whether a goal the model reports counts (Review 27.10. Paket 9, G27): with a story plan only in its last act or
+    after it and with WENDE_WORTE words of the plan's goal in the narration; without a plan as before (quest_may_end
+    decides about the pinned quest)."""
+    p = rd.get("plan")
+    if not p or not p.get("akte"):
+        return True
+    if quest_may_end(rd) and anleiten.named(text, p.get("ziel", ""), WENDE_WORTE):
+        return True
+    _day.bump("ziel_zu_frueh")
+    print("dungeon: ep | ziel | ohne grund", flush=True)
+    return False
+
+
+def step_act(rd, fertig, text=""):
+    """After a narrated turn: the next act when the model says the turning point is told, the narration text names
+    WENDE_WORTE of its words (Review 27.10. Paket 9, G26: „Akt 2 beginnt“ after a beer) and the act ran AKT_MIN turns,
+    or by the panel after AKT_UEBER times its planned turns, then the next narration first tells the turning point as a
+    bridge (rd["bruecke"], plan_facts); always one act on, never back. Returns why."""
     p = rd.get("plan")
     if not p or rd.get("akt", 0) >= len(p["akte"]):
         return ""
     a = p["akte"][rd["akt"]]
     k = rd["zug"] - rd.get("akt_zug", 1) + 1
+    if fertig and not anleiten.named(text, a["wende"], WENDE_WORTE):
+        fertig = False
+        _day.bump("akt_ohne_wende")
+        print("dungeon: akt | modell | ohne wende", flush=True)
     why = "modell" if fertig and k >= AKT_MIN else "panel" if k >= math.ceil(a["zuege"] * AKT_UEBER) else ""
     if not why:
         return ""
+    if why == "panel":
+        rd["bruecke"] = {"zug": rd["zug"] + 1, "wende": a["wende"]}
     rd["akt"] += 1
     rd["akt_zug"] = rd["zug"] + 1
     n = rd["akt"] + 1
@@ -3128,9 +3176,11 @@ def step_act(rd, fertig):
 PLAN_LABEL = ("Plan der Geschichte (nur Spieldaten, verrate keine späteren Akte):", "Plan of the story (game data only, reveal no later acts):")
 AUFGABE_FOLGE = {
     "de": "Folge dem aktuellen Akt des Plans und führe die Gruppe zu seinem Wendepunkt, ohne spätere Akte zu verraten. "
-          "Setze akt_fertig auf true, sobald du den Wendepunkt erzählt hast.",
+          "Setze akt_fertig auf true, sobald du den Wendepunkt erzählt hast. Steht bruecke im Plan, erzähle zuerst kurz, "
+          "wie dieser Wendepunkt geschehen ist.",
     "en": "Follow the plan's current act and lead the group to its turning point without revealing later acts. Set "
-          "akt_fertig to true once you have told the turning point."}
+          "akt_fertig to true once you have told the turning point. When the plan holds bruecke, first tell briefly how that "
+          "turning point came about."}
 
 
 def plan_facts(rd):
@@ -3145,7 +3195,10 @@ def plan_facts(rd):
         head.update(akt=i + 1, titel=a["titel"], inhalt=a["inhalt"], wende=a["wende"], geplant=a["zuege"],
                     zuege_im_akt=rd["zug"] - rd.get("akt_zug", 1) + 1)
         head.update(anleiten.clue_facts(rd))          # Spieler anleiten 5: the next clue to show (only while on)
-    else:
+    b = rd.get("bruecke") or {}
+    if b.get("zug") == rd["zug"]:
+        head["bruecke"] = b["wende"]                  # the panel moved on: tell the old act's turning point first (Paket 9)
+    if i >= len(p["akte"]):
         head["erzaehlt"] = True
     return f"\n{PLAN_LABEL[1 if rd['lang'] == 'en' else 0]}\n<<<\n{textnorm.defuse(json.dumps(head, ensure_ascii=False))}\n>>>"
 
@@ -3275,13 +3328,15 @@ AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko; "
           "gehen, reisen oder zu einem Ort aufbrechen braucht keine; wer nur fragt oder redet, braucht keine oder "
           "höchstens Charisma, nie Schleichen oder Ablenken). "
-          "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich); vorteil ist vorteil, wenn die "
+          "wert ist einer von {werte}, stufe ist leicht, mittel, schwer oder sehr_schwer (die Zahl setzt das Panel); "
+          "vorteil ist vorteil, wenn die "
           "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer. wofuer sagt in wenigen Wörtern aus Sicht "
           "der Spieler, wofür gewürfelt wird (etwa „Schattenwächter auf Schwächen untersuchen“).",
     "en": "Task: decide which actions need a check (at most one per character, only with real risk; "
           "going, travelling or setting out for a place needs none; whoever only asks or talks needs none or at most "
           "Charisma, never sneaking or distracting). "
-          "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
+          "wert is one of {werte}, stufe is leicht, mittel, schwer or sehr_schwer (easy to very hard, the panel sets the "
+          "number); vorteil is vorteil when the "
           "situation helps the character, nachteil when it hinders, else empty. wofuer says in a few words from the "
           "players' view what the roll is for (such as \"Search the shadow warden for weak spots\")."}
 AUFGABE_PROLOG = {
@@ -3324,7 +3379,7 @@ AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht ({m}höchstens {n} Zeichen); eine "
           "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
-          "Erzählung), gib Heilung als folgen (zahl 1 bis 6), Schaden nur nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution und mit dem Grund in der Erzählung, melde Beute nur als Anlass ({anlaesse}) "
+          "Erzählung), heilen tun nur Rast, Trank und Zauber (keine Heilung in folgen), Schaden nur nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution und mit dem Grund in der Erzählung, melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, ein erreichtes Ziel als ziel in erfolg. Ende mit einer Frage an die Gruppe; "
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
@@ -3332,7 +3387,7 @@ AUFGABE_ERZAEHLEN = {
           "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.{zeit} {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks ({m}at most {n} characters); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
-          "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give healing as folgen (zahl 1 to 6), damage only after a failed check on strength, dexterity or constitution and with its reason in the narration, report loot only as an occasion ({anlaesse}) with a "
+          "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), only rest, potions and spells heal (no healing in folgen), damage only after a failed check on strength, dexterity or constitution and with its reason in the narration, report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
@@ -3343,9 +3398,9 @@ AUFGABE_ERZAEHLEN = {
 def schema_proben(r):
     return {"type": "object", "additionalProperties": False, "required": ["proben"], "properties": {
         "proben": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False,
-                   "required": ["wer", "wert", "schwer"], "properties": {
+                   "required": ["wer", "wert", "stufe"], "properties": {
                        "wer": {"type": "string", "maxLength": NAME_MAX}, "wert": {"type": "string", "enum": [w["id"] for w in r["werte"]]},
-                       "schwer": {"type": "integer"}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]},
+                       "stufe": {"type": "string", "enum": list(PROBE_SG)}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]},
                        "ziel": {"type": "string", "maxLength": kampf.ZIEL_MAX}, "wofuer": {"type": "string", "maxLength": WOFUER_MAX}}}}}}
 
 
@@ -3355,7 +3410,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
             "properties": {"name": {"type": "string", "maxLength": 40}, "sagt": {"type": "string", "maxLength": NPC_SAGT},
                            "stimme": stimmen.schema()}}},
     "folgen": {"type": "array", "maxItems": FOLGEN_MAX, "items": {"type": "object", "additionalProperties": False,
-               "required": ["wer", "art", "zahl"], "properties": {"wer": {"type": "string"}, "art": {"type": "string", "enum": list(FOLGE_ARTEN)},
+               "required": ["wer", "art", "zahl"], "properties": {"wer": {"type": "string"}, "art": {"type": "string", "enum": list(MODELL_FOLGEN)},
                                                                    "zahl": {"type": "integer"}}}},
     "beute": {"type": "array", "maxItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["anlass"],
               "properties": {"anlass": {"type": "string", "enum": list(ANLAESSE)}, "name": {"type": "string", "maxLength": 40},
@@ -3436,6 +3491,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
         fakten["auftrag"] = rd["auftrag"]
     if rd.get("markt"):
         fakten["haendler"] = rd["markt"]["name"]
+    if rd.get("_fund"):
+        fakten["fund"] = {k: rd["_fund"][k] for k in ("wer", "was")}   # the panel's find of this turn (Paket 9, E5)
     handel = [{"wer": x["name"], "was": x["was"], "ding": x["ding"]} for x in rd["log"] if x["art"] == "handel" and x["n"] == rd["zug"]]
     if handel:
         fakten["handel"] = handel
@@ -3509,6 +3566,8 @@ def system_text(r, rd, task):
         t += " " + ORTE_REGEL[lang]
     if task == "erzaehlen" and dungeon_karte.asked_ways(rd):
         t += " " + WEG_REGEL[lang]
+    if task == "erzaehlen" and rd.get("_fund"):
+        t += FUND_AUFGABE[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + stimmen.AUFGABE[lang]
         t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
@@ -3688,7 +3747,8 @@ def check_proben(r, rd, obj):
     walk = dungeon_karte.asked_ways(rd)        # a plain way to a neighbouring place needs no check (no word of RISIKO)
     for p in (obj or {}).get("proben") or []:
         pid = names.get(str(p.get("wer", "")).strip().lower()) if isinstance(p, dict) else None
-        if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not isinstance(p.get("schwer"), int):
+        stufe = probe_stufe(p) if isinstance(p, dict) else ""
+        if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not stufe:
             drop += 1
             continue
         kind = typed(rd["offen"][pid].get("text"))
@@ -3700,15 +3760,40 @@ def check_proben(r, rd, obj):
             drop += 1                            # a hero down, unconscious or dead rolls nothing, so earns no check's experience
             print("dungeon: probe | verworfen | zustand", flush=True)
             continue
-        if erz.asks((rd["offen"][pid] or {}).get("text")) and (p["wert"] != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
+        wert = fitting_value(rd, pid, p["wert"])
+        if erz.asks((rd["offen"][pid] or {}).get("text")) and (wert != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
             drop += 1                            # an action that only asks: Charisma or no check, never sneaking
             print("dungeon: probe | verworfen | absicht", flush=True)
             continue
         seen.add(pid)
-        out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
+        out.append({"pid": pid, "wert": wert, "schwer": PROBE_SG[stufe], "sg": stufe,
                     "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else "", "ziel": plain(p.get("ziel"), kampf.ZIEL_MAX),
                     "wofuer": wofuer(r, rd, pid, p.get("wofuer"))})
     return out, drop
+
+
+def probe_stufe(p):
+    """The level of a check the model asked for (PROBE_SG); an old answer with a number gets the level it falls in
+    (Review 27.10. Paket 9: the number is always the panel's), "" for anything else."""
+    if p.get("stufe") in PROBE_SG:
+        return p["stufe"]
+    n = p.get("schwer")
+    if isinstance(n, int) and not isinstance(n, bool):
+        return next((k for k, v in PROBE_SG.items() if n <= v), "sehr_schwer")
+    return ""
+
+
+def fitting_value(rd, pid, wert):
+    """The value of a check by the fixed table of activities (dungeon_anleiten.WURF_WORTE) for the player's own words:
+    the model's when it is one the action names or the action names none, else the table's first (Review 27.10.
+    Paket 9, G23: „ich klettere“ is never a check on Charisma)."""
+    low = str((rd["offen"].get(pid) or {}).get("text") or "").lower()
+    fits = [w for w, rx in anleiten.WURF_WORTE if re.search(r"(?<!\w)(?:" + rx + r")", low)]
+    if not fits or wert in fits:
+        return wert
+    _day.bump("probe_wert_fest")
+    print("dungeon: probe | wert | tabelle", flush=True)
+    return fits[0]
 
 
 def spell_named(r, rd, pid, text):
@@ -3794,6 +3879,7 @@ def roll(r, rd, proben, rng=None, hand=None):
             extra["hilfe"] = von
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
                     "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra,
+                    **({"sg": p["sg"]} if p.get("sg") else {}),
                     **({"frieden": True} if p.get("frieden") else {}), **({"flucht": True} if p.get("flucht") else {}),
                     **({"gedanken": p["gedanken"]} if p.get("gedanken") else {}), **({"mitkommen": p["mitkommen"]} if p.get("mitkommen") else {}),
                     **({"kein_angriff": p["kein_angriff"]} if p.get("kein_angriff") else {})})
@@ -3877,13 +3963,13 @@ def check_story(r, rd, obj):
             out["npc_stimme"].append({"name": name, "stimme": n["stimme"]})   # only the fixed lists count (stimmen.learn)
     for f in obj.get("folgen") or []:
         pid = names.get(str(f.get("wer", "")).strip().lower()) if isinstance(f, dict) else None
-        if not pid or f.get("art") not in FOLGE_ARTEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX \
+        if isinstance(f, dict) and f.get("art") == "heilung":   # Kampf-Audit 4, Paket 9: only spells, potions and rest heal
+            drop += 1
+            print("dungeon: folgen | heilung | " + ("kampf verworfen" if rd.get("kampf") else "verworfen"), flush=True)
+            continue
+        if not pid or f.get("art") not in MODELL_FOLGEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX \
                 or (f["art"] == "schaden" and rd.get("kampf")):      # in a fight only the panel's rolls hurt (dungeon_kampf)
             drop += 1
-            continue
-        if f["art"] == "heilung" and rd.get("kampf"):      # Kampf-Audit 4: in a fight only spells, potions and the catalog heal
-            drop += 1
-            print("dungeon: folgen | heilung | kampf verworfen", flush=True)
             continue
         out["folgen"].append({"pid": pid, "art": f["art"], "zahl": max(ZAHL[0], min(ZAHL[1], f["zahl"]))})
     b = (obj.get("beute") or [None])[0] if isinstance(obj.get("beute"), list) else None
@@ -3988,7 +4074,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             umgebung.used(_me, r, rd, w)
         if w.get("knapp"):                       # a near miss paid: its price by a fixed rule (dungeon_knapp)
             knapp.pay(_me, r, rd, (rd["plaetze"].get(w["pid"]) or {}).get("held"), w, rng)
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "dunkel", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "sg", "ok", "vt", "ws", "belastet", "dunkel", "werkzeug", "werkzeug_plus", "schrei", "wofuer", "mut", "glueck", "echt", "knapp", "preis", "preis_t", "hilfe", "gruppe", "beleg") if k in w},
              **({"kaputt": True} if w.get("kaputt") else {}))
         ehre.count(rd, w["pid"], proben=int(bool(w["ok"])), schatten=int(bool(w["ok"]) and w["wert"] == "geschick"),
                    zwanzig=int(w["w"] == 20), eins=int(w["w"] == 1))
@@ -4007,7 +4093,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                 f"No attack recognised. Write for example: \"I attack {w['kein_angriff']}.\""))
             print("dungeon: probe | kampf | kein angriff | hinweis", flush=True)
         elif w["ok"] and not w.get("frieden") and not w.get("flucht"):   # peace and flight pay no check's experience
-            ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
+            ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * PROBE_EP_SG // 10   # never by the model's level (Paket 9)
     mark("probe")
     if story:
         fl = [w for w in wuerfe if w.get("flucht")] if rd.get("kampf") else []   # Kampf-Audit M6: at least half of the fleeing passed
@@ -4075,12 +4161,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             mark("kampf")
             haltung.count(rd, kampfwuerfe[1])
             haltung.announce(_me, r, rd, rng)    # the foes still up say their next blow (round 2, idea 2)
-        folgen = grounded(rd, story["folgen"], wuerfe)    # damage only with a failed check of the body as its reason
-        helfer = [q for q in rd["offen"] if q in names]
-        if helfer and all(fresh(rd, q) for q in helfer) and any(f["art"] == "heilung" and f["pid"] not in helfer for f in folgen):
-            folgen = [f for f in folgen if not (f["art"] == "heilung" and f["pid"] not in helfer)]    # Punkt 2: no rescue on arrival
-            _day.bump("neu_gesperrt")
-            print("dungeon: folgen | heilung | neu", flush=True)
+        folgen = grounded(rd, story["folgen"], wuerfe, rng)    # damage only with a failed check of the body as its reason
         # Kampf-Audit M7: the heroes act before the foes, so a spell's healing and blessing come before the turn's hits
         cast_powers(r, rd, war, {x["pid"] for x in kampfwuerfe[0]})
         consequences(r, rd, folgen + hiebe, names)
@@ -4092,12 +4173,23 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         elif not war and story.get("begegnung") and held:
             kampf.start(_me, r, rd, held, story["begegnung"], li)
         umgebung.prepare(r, rd, rng)              # the props where the fight goes on (round 2, idea 3)
-        if story["beute"] and held:
+        f = story.get("fund")
+        hf = (rd["plaetze"].get(f["pid"]) or {}).get("held") if f else None
+        if f and hf in held:                      # the find drawn before the narration (Paket 9, E5)
+            i = held.index(hf)
+            found(held, i, f["selten"], f["gold"])
+            put_find(r, rd, held, i, f["it"], f["gold"], "truhe")
+        if story["beute"] and held and fund_ort(rd) not in (rd.get("fundorte") or []):
             b = story["beute"]
-            give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
+            tat = [held.index(h) for pid in rd["offen"] for h in [(rd["plaetze"].get(pid) or {}).get("held")] if h in held]
+            give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"], tat[0] if len(tat) == 1 else None)
+        elif story["beute"]:
+            _day.bump("beute_ort")
+            print("dungeon: beute | ort schon", flush=True)
         # Kampfzug-Prüfung 3 (Dominik 2026-10-26, +110 EP mitten im Kampf): a goal or an act's end reported while a
         # fight runs waits until it is over; the experience of the fight comes from its foes (kampf.end)
-        ziele = [e for e in story["erfolg"] if e["art"] == "ziel"] + ([{"art": "ziel"}] if not rd.get("kampf") and rd.pop("ziel_wartet", False) else [])
+        ziele = [e for e in story["erfolg"] if e["art"] == "ziel" and goal_told(rd, story.get("text", ""))] \
+            + ([{"art": "ziel"}] if not rd.get("kampf") and rd.pop("ziel_wartet", False) else [])
         if rd.get("kampf") and ziele:
             rd["ziel_wartet"] = True
             ziele = []
@@ -4122,7 +4214,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
                 rd["akt_wartet"] = True
                 print("dungeon: akt | wartet kampf", flush=True)
             fertig = None
-        if fertig is not None and step_act(rd, fertig):   # Idee 7: an act of the story done, fixed experience for every hero
+        if fertig is not None and step_act(rd, fertig, story.get("text", "")):   # Idee 7: an act of the story done, fixed experience for every hero
             for pid in ep:
                 ep[pid] += r["ep"]["akt"]
             print("dungeon: ep | akt", flush=True)
@@ -4164,10 +4256,12 @@ def outage(r, rd, now=None):
     print(f"dungeon: ausfall | {'halt' if halt else 'neu'} | {n}", flush=True)
 
 
-def grounded(rd, folgen, wuerfe):
+def grounded(rd, folgen, wuerfe, rng=None):
     """The model's damage outside a fight only for a hero whose check of this turn on a value of KOERPER_WERTE failed (a
     climb, a jump, a lock that snaps), that check as its reason at the line; any other is dropped (Dominik 2026-10-27
-    „wiso verlor ich ein leben?“: a natural 1 on Charisma, persuading, cost a life without a word in the narration)."""
+    „wiso verlor ich ein leben?“: a natural 1 on Charisma, persuading, cost a life without a word in the narration).
+    How much the panel rolls (Review 27.10. Paket 9, G25): 1W4, 1W6 after a hard check (SCHADEN_W), never the model's number."""
+    rng = rng or random
     out = []
     for f in folgen:
         if f["art"] != "schaden" or f.get("gegner"):
@@ -4175,7 +4269,7 @@ def grounded(rd, folgen, wuerfe):
             continue
         w = next((w for w in wuerfe or () if w.get("pid") == f["pid"] and not w.get("ok") and w.get("wert") in KOERPER_WERTE), None)
         if w:
-            out.append(dict(f, probe=str(w.get("wofuer") or "")))
+            out.append(dict(f, zahl=rng.randint(1, SCHADEN_W.get(w.get("sg", ""), SCHADEN_W[""])), probe=str(w.get("wofuer") or "")))
             continue
         _day.bump("schaden_ohne_grund")
         print("dungeon: folgen | schaden | ohne grund", flush=True)
@@ -4224,10 +4318,48 @@ def consequences(r, rd, folgen, names):
             _day.bump("kraft_wirkt")
 
 
-def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
+def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz="", wer=None):
     """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
     heavy (2a); the log and the journal say so."""
-    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd)
+    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd, wer)
+    put_find(r, rd, held, i, it, gold, anlass)
+
+
+def first_find(r, rd, wuerfe, rng=None):
+    """Review 27.10. Paket 9 (E5, G24): the panel's find before the narration, for the first hero whose passed check
+    of this turn searches or opens (FUND_TAT in its words or the action, none of FUND_NICHT), once a place
+    (rd["fundorte"]) and never in a fight. Drawn on copies (loot), keep puts it in (put_find); the narrator gets it as
+    the fact fund. None without one."""
+    if rd.get("kampf"):
+        return None
+    held = _living(rd)
+    ort = fund_ort(rd)
+    if not held or ort in (rd.get("fundorte") or []):
+        return None
+    for w in wuerfe or ():
+        h = (rd["plaetze"].get(w.get("pid")) or {}).get("held")
+        low = f"{w.get('wofuer', '')} {(rd['offen'].get(w.get('pid')) or {}).get('text', '')}".lower()
+        if not w.get("ok") or h not in held or not FUND_TAT.search(low) or FUND_NICHT.search(low):
+            continue
+        kopie = copy.deepcopy(held)
+        i, it, gold = loot(r, kopie, "truhe", group_level(held), rng, welt=rd.get("welt", ""), rd=copy.deepcopy(rd), wer=held.index(h))
+        _day.bump("beute_vorab")
+        print("dungeon: beute | vorab", flush=True)
+        return {"pid": w["pid"], "it": it, "gold": gold, "ort": ort, "selten": kopie[i].get("ohne_selten", 1) == 0,
+                "wer": h["name"], "was": item_view(r, it, rd["lang"])["name"]}
+    return None
+
+
+def fund_ort(rd):
+    """Where a find counts as made: the map's place, else the scene's place."""
+    k = rd.get("karte") or {}
+    return str(k.get("drin") or k.get("hier") or (rd.get("szene") or {}).get("ort") or "")
+
+
+def put_find(r, rd, held, i, it, gold, anlass):
+    """A drawn find into the bag of held[i] or on the ground; a legend counted once a campaign; log, day count and
+    the place it was made at (rd["fundorte"], one find a place by the model or a passed search)."""
+    rd["fundorte"] = [o for o in rd.get("fundorte") or [] if o != fund_ort(rd)][-FUNDORTE_MAX + 1:] + [fund_ort(rd)]
     if it.get("leg"):
         rd["legenden"] = (rd.get("legenden") or []) + [it["leg"]]      # once a campaign (end_chapter keeps the list)
         _day.bump("legenden")
@@ -4370,7 +4502,11 @@ async def run_turn(rid, turn):
             if wuerfe:                            # the dice show at the table before the narration comes (5j)
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
+            fund = first_find(r, rd, wuerfe)          # the panel's find before the narration (Review 27.10. Paket 9)
+            rd["_fund"] = fund                        # only on this copy: the fact and the check of the narration
             story, d2, _ = await tell(r, rd, wuerfe, hits, zuege, lambda s: asyncio.to_thread(wait_step, rid, turn, s))
+            if story and fund:
+                story.update(fund=fund, beute=None)   # the model's loot waits: the turn has the panel's
             drop += d2
             if drop:
                 _day.bump("verworfen", drop)
@@ -6208,7 +6344,7 @@ def for_live():
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "schaden_ohne_grund", "oel", "beleg_falsch", "hoer_namen",
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "schaden_ohne_grund", "probe_wert_fest", "akt_ohne_wende", "ziel_zu_frueh", "beute_vorab", "beute_ort", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",

@@ -502,6 +502,14 @@ def _stem(w):
     return w[:max(5, len(w) - 2)]
 
 
+def named(text, of, need):
+    """Whether text names need stems of the content words of of (all of them when it has fewer); False when of has
+    none (dungeon.step_act: the turning point, dungeon.goal_told: the goal)."""
+    stems = {_stem(w) for w in _words(text)}
+    ws = {_stem(w) for w in _words(of)}
+    return bool(ws) and sum(1 for w in ws if w in stems) >= min(need, len(ws))
+
+
 def seen(rd, text):
     """After a narration: the clues it names (SPUR_TREFFER of their words, by stem) count as shown; returns how many
     are new."""

@@ -662,7 +662,7 @@ class Turns(Base):
                          "erfolg": [{"art": "gegner", "rang": 99}], "frage_an": "Bela"}])
         self.assertEqual(rd["zug"], 2)
         wurf = [e for e in rd["log"] if e["art"] == "wurf"]
-        self.assertEqual([(e["name"], e["schwer"]) for e in wurf], [("Arvid", dungeon.SCHWER[1])])
+        self.assertEqual([(e["name"], e["schwer"], e["sg"]) for e in wurf], [("Arvid", dungeon.PROBE_SG["sehr_schwer"], "sehr_schwer")])   # an old number: its level
         self.assertEqual([e for e in rd["log"] if e["art"] == "folge"], [])   # Bela made no check: no damage without a reason
         ep = {e["name"]: e["zahl"] for e in rd["log"] if e["art"] == "ep"}
         self.assertNotIn("Bela", ep)                    # a defeated foe counts only by the bestiary (dungeon_kampf), never by the model
@@ -1323,12 +1323,10 @@ class Permadeath(Turns):
         return self.play([{"proben": list(proben)}, {"erzaehlung": self.TEXTE[i], "folgen": list(folgen), "erfolg": list(erfolg), "frage_an": ""}])
 
     def failing(self):
-        """The turn's d20 of every check is a 2: the check fails (damage outside a fight needs one, dungeon.grounded)."""
-        class Zwei:
-            def randint(self, a, b):
-                return 2 if (a, b) == (1, 20) else random.randint(a, b)
-        roll = dungeon.roll
-        return mock.patch.object(dungeon, "roll", lambda r, rd, proben, rng=None, hand=None: roll(r, rd, proben, Zwei(), hand))
+        """The turn's d20 of every check is a 2: the check fails (damage outside a fight needs one, dungeon.grounded), and
+        the panel's die of that damage shows its highest."""
+        orig = random.randint
+        return mock.patch("random.randint", side_effect=lambda a, b: 2 if (a, b) == (1, 20) else b if (a, b) in ((1, 4), (1, 6)) else orig(a, b))
 
     def dodge(self, wer, wofuer="Dem Pfeil ausweichen"):
         return {"proben": [{"wer": wer, "wert": "geschick", "schwer": 20, "wofuer": wofuer}]}
@@ -1413,9 +1411,11 @@ class Permadeath(Turns):
         with self.failing():
             rd = self.play([self.dodge("Bela"), {"erzaehlung": self.TEXTE[4] + " Bela wird getroffen.", "folgen": [{"wer": "Bela", "art": "schaden", "zahl": 6}], "frage_an": ""}])
         self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [0, 0])
-        # healing by the story gets it up too
-        rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
-        self.assertEqual(dungeon.zustand(rd["plaetze"][self.gp]["held"]), "")
+        # the story's word heals nothing (Review 27.10. Paket 9, G25): only rest, potion and spell
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.host_turn(0, folgen=[{"wer": "Bela", "art": "heilung", "zahl": 3}])
+        self.assertEqual(dungeon.zustand(rd["plaetze"][self.gp]["held"]), "boden")
+        self.assertIn("dungeon: folgen | heilung | verworfen", out.getvalue())
 
     def test_rescue_rolls_get_a_hero_up(self):
         """Dominik 2026-10-25 „1 und 2“, Punkt 1: rescue rolls by the panel as in D&D, from the second told turn down. RETTUNG
@@ -1904,6 +1904,74 @@ class Zugzeit(Base):
         rd["log"].append({"art": "dm", "text": "Weiter."})
         dungeon._narrated(rd)
         self.assertEqual(rd["mehr"], {})                                     # a new turn: asked again
+
+
+class ReviewPanel(Turns):
+    """Review 27.10. Paket 9 (Dominik 2026-10-27 „ok“): the panel decides, the model tells."""
+
+    def test_the_model_names_a_level_the_panel_the_number_and_the_value(self):
+        """G23: the model names only leicht … sehr_schwer, the number is the panel's (PROBE_SG); the value fits the fixed
+        table of activities for the player's words (dungeon_anleiten.WURF_WORTE), else the table's; the experience of a
+        check never depends on the level."""
+        r, rd = dungeon.rules(), self.state(self.rid)
+        name = rd["plaetze"][self.host]["held"]["name"]
+        sch = dungeon.schema_proben(r)["properties"]["proben"]["items"]
+        self.assertEqual((sch["properties"]["stufe"]["enum"], "schwer" in sch["properties"]), (list(dungeon.PROBE_SG), False))
+        self.assertIn("stufe", sch["required"])
+
+        def check(text, wert, **kw):
+            rd["offen"] = {self.host: {"text": text, "t": 0}}
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                got, drop = dungeon.check_proben(r, rd, {"proben": [dict({"wer": name, "wert": wert, "wofuer": "x"}, **kw)]})
+            return got, drop, out.getvalue()
+        got, drop, out = check("Ich klettere die Mauer hinauf.", "charisma", stufe="schwer")
+        self.assertEqual([(x["wert"], x["schwer"], x["sg"]) for x in got], [("geschick", 16, "schwer")])
+        self.assertIn("dungeon: probe | wert | tabelle", out)
+        got, _, out = check("Ich klettere und springe über die Kluft.", "geschick", stufe="leicht")
+        self.assertEqual([(x["wert"], x["schwer"]) for x in got], [("geschick", dungeon.PROBE_SG["leicht"])])
+        self.assertNotIn("| tabelle", out)
+        got, _, _ = check("Ich halte die Stellung am Tor.", "weisheit", stufe="sehr_schwer")   # no activity of the table: the model's
+        self.assertEqual([(x["wert"], x["schwer"]) for x in got], [("weisheit", 19)])
+        self.assertEqual(check("Ich halte die Stellung.", "weisheit", stufe="extrem")[:2], ([], 1))
+        self.assertEqual(check("Ich halte die Stellung.", "weisheit", schwer=3)[0][0]["sg"], "leicht")   # an old number: its level
+        with open(dungeon.__file__, encoding="utf-8") as f:
+            self.assertIn('r["ep"]["probe"] * PROBE_EP_SG // 10', f.read())
+
+    def test_loot_before_the_narration_to_the_finder_once_a_place(self):
+        """E5/G24: a passed check that searches or opens finds before the narration, for that hero, once a place; not
+        after a failed one, not for traps, not in a fight; the model's loot at a place with a find is refused."""
+        r, rd = dungeon.rules(), self.state(self.rid)
+        gp = self.gp
+        name = rd["plaetze"][gp]["held"]["name"]
+        rd["offen"] = {gp: {"text": "Ich durchsuche die alte Truhe.", "t": 0}, self.host: {"text": "Ich halte Wache.", "t": 0}}
+        w = [{"pid": gp, "ok": True, "wofuer": "Die Truhe durchsuchen", "wert": "intelligenz"}]
+        with contextlib.redirect_stdout(io.StringIO()):
+            f = dungeon.first_find(r, rd, w, random.Random(4))
+            self.assertIsNone(dungeon.first_find(r, rd, [dict(w[0], ok=False)], random.Random(4)))
+            self.assertIsNone(dungeon.first_find(r, rd, [dict(w[0], wofuer="Nach Fallen suchen")], random.Random(4)))
+            self.assertIsNone(dungeon.first_find(r, dict(rd, kampf={"gegner": []}), w, random.Random(4)))
+        self.assertEqual((f["pid"], f["wer"], f["ort"]), (gp, name, dungeon.fund_ort(rd)))
+        self.assertEqual(rd["plaetze"][gp]["held"].get("seit_fund", 0), self.state(self.rid)["plaetze"][gp]["held"].get("seit_fund", 0))   # drawn on copies
+        self.assertIn('"fund": {"wer": "' + name, dungeon.facts(r, dict(rd, _fund=f)))
+        self.assertIn(dungeon.FUND_AUFGABE["de"], dungeon.system_text(r, dict(rd, _fund=f), "erzaehlen"))
+        story, _ = dungeon.check_story(r, rd, {"erzaehlung": f"{name} öffnet die Truhe und findet {f['was']}.", "frage_an": "",
+                                                "beute": [{"anlass": "truhe", "name": "", "satz": ""}]})
+        story.update(fund=f, beute=None)
+        gold = [p["held"]["gold"] for _, p in dungeon.seated(rd)]
+        dungeon.apply(r, rd, [], story, self.rid, random.Random(5))
+        held = rd["plaetze"][gp]["held"]
+        self.assertIn(f["it"]["i"], [x["i"] for x in held["tasche"]] + [x["i"] for x in rd.get("boden") or []])
+        self.assertEqual([p["held"]["gold"] for _, p in dungeon.seated(rd)], [g + f["gold"] for g in gold])
+        self.assertEqual((held["seit_fund"], rd["fundorte"]), (0, [f["ort"]]))
+        n = len([e for e in rd["log"] if e["art"] == "beute"])
+        rd["offen"] = {gp: {"text": "Ich durchsuche die Truhe noch einmal.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertIsNone(dungeon.first_find(r, rd, w, random.Random(4)))          # once a place
+            story, _ = dungeon.check_story(r, rd, {"erzaehlung": f"{name} wühlt in der leeren Truhe herum.", "frage_an": "",
+                                                    "beute": [{"anlass": "truhe", "name": "", "satz": ""}]})
+            dungeon.apply(r, rd, [], story, self.rid, random.Random(5))
+        self.assertEqual(len([e for e in rd["log"] if e["art"] == "beute"]), n)
+        self.assertIn("dungeon: beute | ort schon", out.getvalue())
 
 
 class ReviewPersonen(Base):
@@ -3129,21 +3197,37 @@ class Stories(Base):
         self.assertIn("akt_fertig", dungeon.system_text(r, rd, "erzaehlen"))
         self.assertTrue(dungeon.bad_words(r, rd, "Viele Spinnen im Turm"))       # the taboos hold in the narration
         # the model decides, the panel holds the limits
-        x = {"plan": {"akte": [{"zuege": 2}, {"zuege": 10}, {"zuege": 4}]}, "akt": 0, "akt_zug": 1, "zug": 1, "lang": "de", "log": []}
-        self.assertEqual(dungeon.step_act(x, True), "")                         # not before AKT_MIN turns
+        wachs, krypta, morwen = "Wachsspuren am Siegel des Glockenturms", "Die Krypta unter der Kapelle öffnet sich", "Morwen stürzt"
+        akt = {"titel": "", "inhalt": ""}
+        x = {"plan": {"ziel": "Morwen aufhalten", "gegner": "Morwen", "orte": [], "akte": [dict(akt, zuege=z, wende=w) for z, w in ((4, wachs), (10, krypta), (4, morwen))]},
+             "akt": 0, "akt_zug": 1, "zug": 1, "lang": "de", "log": []}
+        told = "Am Glockenturm entdeckt ihr frische Wachsspuren und ein gebrochenes Siegel."
+        self.assertEqual(dungeon.step_act(x, True, told), "")                   # not before AKT_MIN turns
         x["zug"] = dungeon.AKT_MIN
-        self.assertEqual(dungeon.step_act(x, True), "modell")
+        with contextlib.redirect_stdout(io.StringIO()) as out:                  # Review 27.10. Paket 9 (G26): a beer is no turning point
+            self.assertEqual(dungeon.step_act(x, True, "Ihr trinkt ein Bier in der Schenke."), "")
+        self.assertIn("dungeon: akt | modell | ohne wende", out.getvalue())
+        self.assertEqual(dungeon.step_act(x, True, told), "modell")
         self.assertEqual((x["akt"], x["akt_zug"]), (1, dungeon.AKT_MIN + 1))
         x["zug"] = x["akt_zug"] + 13
         self.assertEqual(dungeon.step_act(x, False), "")
         x["zug"] += 1                                                            # 15 turns = 1.5 times the planned 10
         self.assertEqual(dungeon.step_act(x, False), "panel")
         self.assertEqual(x["akt"], 2)                                            # one act on, never a jump
+        self.assertEqual(x["bruecke"], {"zug": x["zug"] + 1, "wende": krypta})   # the next narration tells it first
+        x["zug"] += 1
+        self.assertIn('"bruecke": "Die Krypta', dungeon.plan_facts(x))
+        x["zug"] += 1
+        self.assertNotIn("bruecke", dungeon.plan_facts(x))
+        self.assertIn("bruecke", dungeon.AUFGABE_FOLGE["de"])
         x["zug"] = x["akt_zug"] + dungeon.AKT_MIN - 1
-        self.assertEqual(dungeon.step_act(x, True), "modell")
+        self.assertFalse(dungeon.goal_told(x, "Morwen wird aufgehalten."))      # the goal only in the last act (G27)
+        self.assertEqual(dungeon.step_act(x, True, "Morwen stürzt in die Tiefe."), "modell")
         self.assertEqual((x["akt"], x["log"][-1]["text"][0]), (3, "Die Geschichte ist erzählt."))
+        self.assertTrue(dungeon.goal_told(x, "Ihr konntet Morwen aufhalten, der Turm schweigt."))
+        self.assertFalse(dungeon.goal_told(x, "Ihr trinkt auf den Sieg."))       # and with its words
         x["zug"] += 50
-        self.assertEqual(dungeon.step_act(x, True), "")
+        self.assertEqual(dungeon.step_act(x, True, told), "")
         # a played turn: akt_fertig too early changes nothing
         for c, body in ((self.c, f"/api/profile/dungeon/{rid}/aktion"), (self.v, "/api/dungeon/aktion")):
             self.assertEqual(c.post(body, json=dict({"text": "Wir lauschen.", "zug": 1}, **({"code": code} if c is self.v else {}))).status_code, 200)
@@ -3513,7 +3597,7 @@ class Equipment(Base):
         self.assertEqual(self.edit(lambda rd: go(rd, way(rd))), [r["ep"]["ort"]] * 2)            # a new place
         self.assertEqual(self.edit(lambda rd: back(rd, start)), [0, 0])   # known
         old = dungeon.step_act
-        dungeon.step_act = lambda rd, fertig: "modell"
+        dungeon.step_act = lambda rd, fertig, text="": "modell"
         try:
             self.assertEqual(self.edit(lambda rd: go(rd, "", "Der Küster schweigt, die Glocke ist still, der Akt ist vorbei.")),
                              [r["ep"]["akt"]] * 2)
@@ -3537,6 +3621,8 @@ class Equipment(Base):
         self.assertFalse(dungeon.name_fits(r, "kurzschwert", "Verlassenes Versteck"))
         self.assertTrue(dungeon.name_fits(r, "schwert", "Glockenbrecher"))           # a proper name stays
         self.assertTrue(dungeon.name_fits(r, "dolch", "Truhenbrecher-Dolch"))
+        self.assertFalse(dungeon.name_fits(r, "fackel", "Silberner Dolch"))           # another thing's word (Review 27.10. Paket 9, E5)
+        self.assertTrue(dungeon.name_fits(r, "fackel", "Silberne Fackel"))
         it = dungeon.item(r, "guertel", "selten", random.Random(1), "Versiegelte Truhe", "Eine Truhe mit silbernen Zierleisten.")
         self.assertEqual((it["eigen"], it["fund"]), ("", "Versiegelte Truhe"))
         v = dungeon.item_view(r, it, "de")
@@ -4382,15 +4468,18 @@ class LifeLossReason(unittest.TestCase):
         by the model's folgen alone. Damage outside a fight now needs a failed check of this turn on Stärke, Geschick or
         Konstitution of that hero, and the line names it; healing and a foe's hit stay."""
         wuerfe = [{"pid": "a", "wert": "charisma", "ok": False, "wofuer": "Silas überreden"},
-                  {"pid": "b", "wert": "geschick", "ok": False, "wofuer": "Über die Kluft springen"},
+                  {"pid": "b", "wert": "geschick", "ok": False, "wofuer": "Über die Kluft springen", "sg": "sehr_schwer"},
                   {"pid": "c", "wert": "staerke", "ok": True, "wofuer": "Tor aufstemmen"}]
         folgen = [{"pid": "a", "art": "schaden", "zahl": 1}, {"pid": "b", "art": "schaden", "zahl": 3},
                   {"pid": "c", "art": "schaden", "zahl": 2}, {"pid": "d", "art": "schaden", "zahl": 2},
                   {"pid": "a", "art": "heilung", "zahl": 2}, {"pid": "d", "art": "schaden", "zahl": 4, "gegner": "Ork"}]
         n = dungeon._day.get("schaden_ohne_grund", 0)
         with contextlib.redirect_stdout(io.StringIO()) as out:
-            got = dungeon.grounded({}, folgen, wuerfe)
-        self.assertEqual(got, [dict(folgen[1], probe="Über die Kluft springen"), folgen[4], folgen[5]])
+            got = dungeon.grounded({}, folgen, wuerfe, random.Random(1))
+        n6 = random.Random(1).randint(1, dungeon.SCHADEN_W["sehr_schwer"])      # the panel's die, never the model's 3 (Paket 9, G25)
+        self.assertEqual(got, [dict(folgen[1], zahl=n6, probe="Über die Kluft springen"), folgen[4], folgen[5]])
+        self.assertEqual(dungeon.grounded({}, folgen[1:2], [dict(wuerfe[1], sg="leicht")], random.Random(1))[0]["zahl"],
+                         random.Random(1).randint(1, dungeon.SCHADEN_W[""]))
         self.assertEqual(out.getvalue().count("dungeon: folgen | schaden | ohne grund"), 3)   # a social roll, a success, no check
         self.assertEqual(dungeon._day.get("schaden_ohne_grund", 0), n + 3)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
@@ -7500,9 +7589,9 @@ class Fight(Turns):
             rd = d["runden"][self.rid]
             rd["plaetze"][self.host]["held"]["leben"] = 1
             rd["offen"] = {pid: {"text": "Ich heile Arvid.", "t": 0}}
-            dungeon.apply(dungeon.rules(), rd, [], {"text": "Cora legt die Hände auf Arvid.", "folgen": [{"pid": self.host, "art": "heilung", "zahl": 5}],
-                                                     "frage": "", "npc": [], "ooc": [], "szene": None, "beute": None, "erfolg": [],
-                                                     "begegnung": [], "kampf_ende": "", "bild": ""}, self.rid)
+            story, _ = dungeon.check_story(dungeon.rules(), rd, {"erzaehlung": "Cora legt die Hände auf Arvid, ein warmes Licht.", "frage_an": "",
+                                                                 "folgen": [{"wer": rd["plaetze"][self.host]["held"]["name"], "art": "heilung", "zahl": 5}]})
+            dungeon.apply(dungeon.rules(), rd, [], story, self.rid)   # the model's word heals nobody (Paket 9, G25)
             self.assertEqual(rd["plaetze"][self.host]["held"]["leben"], 1)
             self.assertFalse(dungeon.fresh(rd, pid))          # the next turn it may help
         facts = dungeon.facts(dungeon.rules(), dict(rd, zug=rd["plaetze"][pid]["neu_zug"]))
@@ -7738,7 +7827,8 @@ class Fight(Turns):
         self.assertEqual(sum(vor) - sum(h["ladungen"]), 1)
 
     def test_kampf_keine_modellheilung(self):
-        """Kampf-Audit 4: in a fight the model's heilung in folgen does nothing (a hero down stays down); outside it counts."""
+        """Kampf-Audit 4: in a fight the model's heilung in folgen does nothing (a hero down stays down); since Review 27.10.
+        Paket 9 (G25) outside it neither: only rest, potion and spell heal."""
         r = dungeon.rules()
         rd, _ = self.encounter()
         h = rd["plaetze"][self.gp]["held"]
@@ -7749,8 +7839,10 @@ class Fight(Turns):
         self.assertEqual((story["folgen"], drop >= 3), ([], True))
         self.assertIn("dungeon: folgen | heilung | kampf verworfen", out.getvalue())
         rd.pop("kampf")
-        story, _ = dungeon.check_story(r, rd, obj)
-        self.assertEqual(len(story["folgen"]), 3)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            story, _ = dungeon.check_story(r, rd, obj)
+        self.assertEqual(story["folgen"], [])
+        self.assertIn("dungeon: folgen | heilung | verworfen", out.getvalue())
 
     def test_kampf_frieden_nur_mit_panelprobe(self):
         """Kampf-Audit 3: kampf_ende frieden of the model alone ends nothing; a hero asking for peace rolls the panel's

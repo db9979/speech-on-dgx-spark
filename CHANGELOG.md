@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.184** · 2026-10-27 · KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
 - **V01.1.183** · 2026-10-27 · KI-Dungeon-Master: Auslöser der kleinen Gesten (dungeon_warten.geste_faellig/geste aus maybe_close): 2 Minuten Stille, höchstens 2 je Zug, nie im Kampf, in der Pause oder im Auto (LlamaTale 7)
 - **V01.1.182** · 2026-10-27 · KI-Dungeon-Master: das Porträt einer Person folgt dem Geschlecht ihrer Karte, „divers“ wird androgyn gemalt
 - **V01.1.181** · 2026-10-27 · KI-Dungeon-Master: Wächter- und Herrenräume der Gewölbe richten sich nach dem Kampfbudget, die Anzahl der Gegner füllt das Panel nach Erfahrung auf, ein Boss zählt mit seinem Lebensfaktor

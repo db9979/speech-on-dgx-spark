@@ -829,7 +829,7 @@ def found_untold(rd, story, r=None):
     the hero's bag. "Name: Ding" for each, three at most (the fault „fund“, its sentence is struck)."""
     import dungeon
     r = r or dungeon.rules()
-    erlaubt = " ".join(str(x) for x in [((story.get("beute") or {}).get("name")), *[(q or {}).get("name") for q in
+    erlaubt = " ".join(str(x) for x in [((story.get("beute") or {}).get("name")), (rd.get("_fund") or {}).get("was"), *[(q or {}).get("name") for q in
                                         (story.get("quest_fund") or [] if isinstance(story.get("quest_fund"), list) else [story.get("quest_fund")])]]
                        if x).lower()
     koepfe = {k for k in _heads(r, FUND_ARTEN, 1 if rd.get("lang") == "en" else 0) if len(k) >= 4}

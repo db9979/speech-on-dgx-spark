@@ -4125,6 +4125,13 @@
 "titel": "Dungeon-Master: kleine Gesten bei Stille",
 "text": "Funktionen → Meine Daten → Kleine Gesten an (dazu NSC-Gedächtnis und Chronik). A: In einer Runde mit einer Person in der Szene, die einen starken Wesenszug hat, 2 Minuten nichts tun: im Verlauf steht „🤲 … nickt euch freundlich zu.“ oder eine andere feste Geste. B: Nach weiteren 2 Minuten höchstens eine zweite, dann keine mehr in diesem Zug. C: Im Kampf oder in der Pause: keine. D: Mit CarPlay im Spiel: keine.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P614",
+"v": 1184,
+"titel": "Dungeon-Master: Das Panel entscheidet",
+"text": "Eine Runde spielen. A: „Ich klettere die Mauer hinauf“ würfelt auf Geschick, die Probe zeigt eine Zahl 10, 13, 16 oder 19. B: „Ich durchsuche die Truhe“ mit gelungener Probe: der Fund steht schon in der Erzählung und liegt in der Tasche dessen, der gesucht hat; ein zweites Durchsuchen am selben Ort findet nichts mehr. C: „Wir rasten“ ohne Rast-Schalter heilt nichts.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -1975,6 +1975,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['ausfall_halt']} wartet auf Jetzt weiter" if dgn.get("ausfall_halt") else "")
                         + (f" · {dgn.get('getippt', 0)} getippte Hinweise, {dgn.get('gegeben', 0)}-mal Gold gegeben" if dgn.get("getippt") or dgn.get("gegeben") else "")
                         + (f" · {dgn['schaden_ohne_grund']}-mal Schaden ohne Grund verworfen" if dgn.get("schaden_ohne_grund") else "")
+                        + (f" · {dgn['probe_wert_fest']}-mal Probenwert nach Tabelle, {dgn.get('akt_ohne_wende', 0)}-mal Akt-Ende ohne Wendepunkt, "
+                           f"{dgn.get('ziel_zu_frueh', 0)}-mal Ziel ohne Grund" if dgn.get("probe_wert_fest") or dgn.get("akt_ohne_wende") or dgn.get("ziel_zu_frueh") else "")
+                        + (f" · {dgn.get('beute_vorab', 0)} Funde vor der Erzählung, {dgn.get('beute_ort', 0)}-mal Beute am selben Ort abgelehnt"
+                           if dgn.get("beute_vorab") or dgn.get("beute_ort") else "")
                         + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
                         + (f" · {dgn['abgelehnt']} abgelehnt" if dgn.get("abgelehnt") else "")
                         + (" · erzählt gerade" if dgn.get("denkt") else "")

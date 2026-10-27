@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Das Panel entscheidet (V01.1.184, Review 27.10. Paket 9, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Proben: Das Modell nennt nur eine Stufe (leicht, mittel, schwer, sehr_schwer), die Zahl setzt das Panel (PROBE_SG: 10, 13, 16, 19); eine alte Antwort mit Zahl bekommt die Stufe, in die sie fällt. Der Wert muss zur festen Tätigkeitstabelle der Spielereingabe passen (dungeon_anleiten.WURF_WORTE: klettern ist Geschick), sonst nimmt das Panel den Tabellenwert (fitting_value, Log dungeon: probe | wert | tabelle). Die Erfahrung einer gelungenen Probe hängt nicht mehr an der Stufe (PROBE_EP_SG). 2. Beute: Gelingt eine Probe, die sucht oder öffnet (FUND_TAT, nicht nach Fallen oder Spuren, FUND_NICHT), zieht das Panel den Fund schon vor der Erzählung (first_find) und gibt ihn dem Erzähler als Fakt fund (wer, was); er geht an den Finder. Ein Ort gibt nur einen Fund (fundorte), auch die Beute, die das Modell meldet (Log dungeon: beute | ort schon), und die geht an den Helden, der als einziger gehandelt hat. Ein eigener Name des Modells bleibt nicht, wenn er das Kopfwort eines anderen Dings nennt („Silberner Dolch“ für eine Fackel, name_fits); Eigennamen wie „Glockenbre"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "cher“ bleiben. 3. Heilung und Schaden: Heilung in folgen verwirft das Panel immer (Log dungeon: folgen | heilung | verworfen), es heilen Rast, Trank und Zauber. Schaden außerhalb des Kampfs würfelt das Panel (1W4, nach schwerer Probe 1W6, SCHADEN_W), nie die Zahl des Modells. 4. Akt-Ende und Ziel: akt_fertig zählt nur, wenn die Erzählung WENDE_WORTE (2) Inhaltswörter des Wendepunkts nennt (dungeon_anleiten.named, Log dungeon: akt | modell | ohne wende); springt das Panel nach der Zeit selbst weiter, erzählt der nächste Zug zuerst den Wendepunkt als bruecke. Ein Ziel gibt Erfahrung nur im letzten Akt und mit Wörtern des Ziels im Text (goal_told). Live: Probenwert nach Tabelle, Akt-Ende ohne Wendepunkt, Ziel ohne Grund, Funde vor der Erzählung, Beute am selben Ort abgelehnt. Selbsttests ReviewPanel und Stories.test_round_follows_the_act_model_decides_panel_limits in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Personen sind Personen (V01.1.180, Review 27.10. Paket 8, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, unter *NSC-Gedächtnis und Chronik*. 1. Eine feste Prüfung dungeon_nsc.ist_person sagt, ob ein Name eine Person sein darf, und sonst warum nicht: ein Held, ein Gefährte, ein Gegner des laufenden Kampfs, ein Name des Bestiariums (auch mit Ziffer oder in der Mehrzahl, „Goblins“), eine Gruppe der Wahrheit oder ein reines Rollenwort (ROLLENWORTE, „der Fremde“, „Bord-KI“, oder ein Wort auf ROLLEN_ENDE, „Schattenwächter“). Sie gilt bei der Wahrheit des Kapitels, beim Lernen aus der Erzählung, beim Händler und im Personen-Katalog; die Logzeile dungeon: wahrheit | person | abgelehnt | <Grund> | <wo> nennt nie den Namen. 2. Händler: Die Art kommt aus festen Wörtern des Namens oder Satzes (HAENDLER_WORT: „Alchemistin Mira“ verkauft Tränke), sonst gewürfelt; ein Name, der keine Person ist, gibt den Standardnamen, auf Deutsch in beiden Formen (HAENDLER_IN). Ein Händler mit eigenem Namen bekommt eine Karte mit der Händlerart als Beruf (dungeon_nsc.merchant, Log dungeon: markt | person | neu), damit Porträt, Stimme und Katalog greifen. Ein Schatz wird angekauft, nie angebote"
 },
 {
@@ -21302,6 +21318,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the panel decides (V01.1.184, review 27.10. package 9, Dominik 2026-10-27 „ok“): No new switch. 1. Checks: the model names only a level (leicht, mittel, schwer, sehr_schwer), the panel sets the number (PROBE_SG: 10, 13, 16, 19); an old answer with a number gets the level it falls in. The value must fit the fixed table of activities of the player's words (dungeon_anleiten.WURF_WORTE: climbing is Dexterity), else the panel takes the table's (fitting_value, log dungeon: probe | wert | tabelle). The experience of a passed check no longer depends on the level (PROBE_EP_SG). 2. Loot: when a check that searches or opens passes (FUND_TAT, not for traps or tracks, FUND_NICHT), the panel draws the find before the narration (first_find) and gives it to the narrator as the fact fund (who, what); it goes to the finder. A place gives one find only (fundorte), also the loot the model reports (log dungeon: beute | ort schon), and that goes to the hero who alone acted. A name of the model does not stay when it names the head word of another thing („Silberner Dolch“ for a torch, name_fits); proper names like „Glockenbrecher“ stay. 3. Healing and damage: the panel always drops heal"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ing in folgen (log dungeon: folgen | heilung | verworfen); rest, potions and spells heal. Damage outside a fight is rolled by the panel (1d4, after a hard check 1d6, SCHADEN_W), never the model's number. 4. Act end and goal: akt_fertig counts only when the narration names WENDE_WORTE (2) content words of the turning point (dungeon_anleiten.named, log dungeon: akt | modell | ohne wende); when the panel moves on by itself after the time, the next turn first tells the turning point as bruecke. A goal gives experience only in the last act and with words of the goal in the text (goal_told). Live: check value by the table, act end without a turning point, goal without a reason, finds before the narration, loot refused at the same place. Self-tests ReviewPanel and Stories.test_round_follows_the_act_model_decides_panel_limits in test_dungeon."
 },
 {
 "lang": "en",

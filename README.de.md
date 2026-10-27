@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.184** KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
 - **V01.1.183** KI-Dungeon-Master: kleine Gesten erscheinen am Tisch, nach 2 Minuten Stille, höchstens zweimal je Zug, nie im Kampf oder im Auto
 - **V01.1.182** KI-Dungeon-Master: das Porträt einer Person folgt dem Geschlecht ihrer Karte, „divers“ wird androgyn gemalt
 - **V01.1.181** KI-Dungeon-Master: Wächter- und Herrenräume der Gewölbe richten sich nach dem Kampfbudget, die Anzahl der Gegner füllt das Panel nach Erfahrung auf, ein Boss zählt mit seinem Lebensfaktor
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.177** KI-Dungeon-Master: die Prüfung fängt eine gezogene Waffe ohne Besitzwort, einen Fund ohne Beute, Gold in Worten, Gegner ohne Begegnung und Zeitsprünge, Ausrüstung kommt nie ins Ding-Gedächtnis (Review 27.10. Paket 7, Teil 2)
 - **V01.1.176** KI-Dungeon-Master: die Prüfung der Erzählung meldet alle Fehler, die Reparatur streicht zuerst und prüft danach Namen und Ort erneut, nach misslungener Probe verfällt die Beute (Review 27.10. Paket 7, Teil 1)
 - **V01.1.175** KI-Dungeon-Master: außerhalb des Kampfs kostet ein Wurf nur Leben nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution, die Zeile nennt die Probe
-- **V01.1.174** KI-Dungeon-Master: der Spieltisch wird nie mehr neu aufgebaut, Bilder flackern nicht, Texte springen nicht, der Verlauf bleibt, wo man liest
 
 
 
