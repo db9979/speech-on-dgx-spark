@@ -10650,8 +10650,9 @@ class Fight(Turns):
                 "requisiten": [{"id": "fass", "name": t("Fass"), "zeichen": "🛢", "arten": [r["ortsarten"][0]["id"]], "wirkung": "deckung"}],
                 "wuensche": {"alle": [{"id": "w1", "t": t("Heim.")}]},
                 "gefaehrte_werte": [{"stufe": s_, "leben": 9, "ruestung": 12, "angriff": 3, "schaden": 6, "schaden_plus": 1, "sold": 10} for s_ in range(1, 11)],
-                "gefaehrten": [{"id": "grete", "welt": "fantasy", "name": t("Grete"), "satz": t("Mit Speer."), "wert": "staerke"}],
-                "gefaehrten_kinder": [{"id": "pip", "name": t("Pip"), "satz": t("Ein Vogel.")}]}
+                "gefaehrten": [{"id": "grete", "welt": "fantasy", "name": t("Grete"), "satz": t("Mit Speer."), "wert": "staerke",
+                                "geschlecht": "weiblich", "alter": "mittel", "art": "mensch"}],
+                "gefaehrten_kinder": [{"id": "pip", "name": t("Pip"), "satz": t("Ein Vogel."), "geschlecht": "maennlich", "alter": "jung", "art": "tier"}]}
         ok = dict(r, ideen=dict(r.get("ideen") or {}, **good))
         self.assertEqual(dungeon.check_rules(ok), [])
         for teil, bad in (("knapp", [dict(good["knapp"][0], bis=9), good["knapp"][1]]),                        # a gap

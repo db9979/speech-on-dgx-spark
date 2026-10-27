@@ -40,6 +40,10 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   Spalte ist eine davon; „Aussehen“ beschreibt nur Äußeres, Art und Verhalten stehen unter „Art“ (feste Wortliste
   dungeon_tabellen.AUSSEHEN_NICHT), keine Zeile steht in beiden Tabellen; kein Beruf ist eine Maschine („Bord-KI“,
   Prüfbericht 2026-10-27 Z2/Z8).
+- Was ein Gegner ist (Prüfbericht 2026-10-27 Z7, Z9, Z11, T24a): jeder Gegner trägt „wesen“ aus
+  dungeon_bestiarium.WESEN (auch die Lücken der alten Handlisten: Seeräuber, Dorfbewohner, Goblinkrieger, Werbär),
+  „friedlich“ nur true; jeder Gefährte trägt geschlecht, alter (nie Kind) und art; die Aussehen-Tabellen Haar, Augen,
+  Bart und Statur nennen ihre Farbe als festes Wort, und der Text der Zeile zeigt dieselbe Farbe (dungeon_erzaehler).
 """
 import json
 import os
@@ -379,6 +383,49 @@ class Srd(unittest.TestCase):
         self.assertIn("\"m\" und \"w\"", " ".join(tabellen.check_rules(tab("nsc_beruf", [{"t": ["Wirt", "innkeeper"]}] + beruf))))
         self.assertNotEqual(tabellen.check_rules(tab("nsc_art", [{"t": ["still", "quiet"], "m": "x", "w": "y"}] * 6)), [])
         self.assertIn("nsc_art", " ".join(tabellen.check_rules(tab("nsc_aussehen", [{"t": ["wirkt zerstreut", "seems distracted"]}] * 6))))
+
+    def test_wesen_und_gefaehrten(self):
+        import dungeon_bestiarium as best
+        import dungeon_erzaehler as erz
+        import dungeon_ideen as ideen
+        import dungeon_tabellen as tabellen
+        s, r = srd(), dungeon._base_rules()
+        self.assertEqual([g["id"] for g in s["gegner"] if g.get("wesen") not in best.WESEN], [])
+        by = {g["id"]: best.wesen(g) for g in s["gegner"]}
+        self.assertEqual({by[i] for i in ("seeraeuber", "dorfbewohner", "spaeher", "akolyth", "bandit")}, {"mensch"})
+        self.assertEqual({by[i] for i in ("goblinkrieger", "werbaer", "meervolk", "grimlock", "dunkelelf")}, {"humanoid"})
+        self.assertEqual((by["zombie"], by["troll"], by["kampfsynth"], by["wolf"], by["dryade"]), ("untot", "riese", "konstrukt", "tier", "fee"))
+        self.assertTrue(all(g.get("friedlich", True) is True for g in s["gegner"] if "friedlich" in g))
+        self.assertTrue(best.friedlich(next(g for g in s["gegner"] if g["id"] == "dorfbewohner")))
+        self.assertEqual(best.check_rules(r), [])
+        g0 = r["gegner"][0]
+        self.assertTrue(best.check_rules(dict(r, gegner=[dict(g0, wesen="gott")])))
+        self.assertTrue(best.check_rules(dict(r, gegner=[dict(g0, friedlich="ja")])))
+        self.assertIn("wesen", " ".join(dungeon.check_rules(dict(r, gegner=[dict(g0, wesen="gott")] + r["gegner"][1:]))))
+        eigen = {k: v for k, v in g0.items() if k != "wesen"}      # an admin's own foe may leave it out
+        self.assertEqual((best.check_rules(dict(r, gegner=[eigen])), best.wesen(eigen)), ([], ""))
+        gef = s["ideen"]["gefaehrten"] + s["ideen"]["gefaehrten_kinder"]
+        self.assertEqual([x["id"] for x in gef if x.get("geschlecht") not in dungeon.GESCHLECHT or x.get("alter") not in ideen.ALTER
+                          or x.get("art") not in ideen.GEF_ART], [])
+        by = {x["id"]: (x["geschlecht"], x["alter"], x["art"]) for x in gef}
+        self.assertEqual((by["grete"], by["brunhild"], by["k7"][2], by["wuschel"][2]), (("weiblich", "mittel", "mensch"), ("weiblich", "alt", "mensch"), "maschine", "tier"))
+        self.assertNotIn("kind", ideen.ALTER)
+        i = dict(r["ideen"], gefaehrten=[dict(r["ideen"]["gefaehrten"][0], alter="kind")] + r["ideen"]["gefaehrten"][1:])
+        self.assertIn("ideen.gefaehrten:", " ".join(ideen.check_rules(dict(r, ideen=i))))
+        teil = {"nsc_haar": "haar", "nsc_augen": "augen", "nsc_bart": "bart"}
+        t = {x["id"]: x for x in s["tabellen"]}
+        self.assertEqual(set(teil), set(tabellen.FARBE))
+        self.assertIn("kein Bart", [z["t"][0] for z in t["nsc_bart"]["zeilen"]])
+        self.assertGreaterEqual(len(t["nsc_statur"]["zeilen"]), 8)
+        for tid, k in teil.items():
+            for z in t[tid]["zeilen"]:
+                want = {k: z["farbe"]} if "farbe" in z else {}
+                self.assertEqual((erz._koerper(z["t"][0]), erz._koerper(z["t"][1])), (want, want), z["t"])
+        self.assertTrue(any("farbe" in z for tid in teil for z in t[tid]["zeilen"]))
+        statur = dict(t["nsc_statur"], zeilen=[{"t": ["hager", "gaunt"], "farbe": "rot"}] * 3)
+        self.assertTrue(tabellen.check_rules(dict(r, tabellen=[statur])))
+        haar = dict(t["nsc_haar"], zeilen=[{"t": ["rotes Haar", "red hair"], "farbe": "Rot!"}] * 3)
+        self.assertTrue(tabellen.check_rules(dict(r, tabellen=[haar])))
 
 
 if __name__ == "__main__":

@@ -278,6 +278,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_auftraege.py` | KI-Dungeon-Master: Aufträge von Personen. |
 | `app/panel/dungeon_auto.py` | KI-Dungeon-Master im Auto. |
 | `app/panel/dungeon_balance.py` | Gleichgewicht of the Dungeon Master's catalog: fixed tables, never the model. |
+| `app/panel/dungeon_bestiarium.py` | KI-Dungeon-Master: what a foe of the Bestiarium is: the field „wesen“ of every foe in dungeon_srd.json (thread „DnDAppFiles für den Dungeon-Master“) instead … |
 | `app/panel/dungeon_buch.py` | KI-Dungeon-Master: Heldenbuch aufs reMarkable. |
 | `app/panel/dungeon_chronik.py` | KI-Dungeon-Master: Chronikbuch zum Blättern. |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber. |

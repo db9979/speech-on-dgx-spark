@@ -278,6 +278,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_auftraege.py` | Dungeon-Master: Aufträge von Personen, Art, Ziel, Lohn und Spuren vom Panel, erfüllt nur durch Belege |
 | `app/panel/dungeon_auto.py` | Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde |
 | `app/panel/dungeon_balance.py` | Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark |
+| `app/panel/dungeon_bestiarium.py` | Dungeon-Master: was ein Gegner ist (wesen) und wer keinen Streit will |
 | `app/panel/dungeon_buch.py` | Dungeon-Master: Heldenbuch je Held als PDF im Format des reMarkable, Farbe oder Graustufen |
 | `app/panel/dungeon_chronik.py` | Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke |

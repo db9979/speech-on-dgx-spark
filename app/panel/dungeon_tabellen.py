@@ -3,7 +3,8 @@ alle punkte umgesetzt“; the data comes from the thread „DnDAppFiles für den
 
 r["tabellen"] = [{"id", "gruppe": "nsc"|"orakel", "name": [de, en], "zeilen": [{"t": [de, en], "welten"?: [...]}]}]: a row
 without "welten" counts in every world. A row of a FORMEN table (occupations) also names "m" and "w", the male and the
-female German form; „Aussehen“ holds only looks (no word of AUSSEHEN_NICHT). r["namensilben"] = {volk or "welt:<id>": {"anfang", "mitte", "ende"}}: a name is a
+female German form; „Aussehen“ holds only looks (no word of AUSSEHEN_NICHT). A row of a FARBE table (hair, eyes, beard,
+review 2026-10-27 Z9) may name "farbe", the fixed colour word the narrator's look check compares (dungeon_erzaehler). r["namensilben"] = {volk or "welt:<id>": {"anfang", "mitte", "ende"}}: a name is a
 start, at most one middle and an end (the Syllabore method, own syllables). The panel rolls, never the model; what it
 rolls goes to the model only as data. The oracle and many NPC rows are translated from Datasworn (CC-BY-4.0, the
 attribution stands in dungeon_srd.json "lizenz" and in the docs).
@@ -20,6 +21,8 @@ TITEL_LEN = 40
 _ID = re.compile(r"^[a-z0-9_]{2,40}$")
 FORMEN = ("nsc_beruf",)   # tables whose rows name the male and the female German form ("m", "w"), to fit the person's gender
 FORM_LEN = 40
+FARBE = ("nsc_haar", "nsc_augen", "nsc_bart")   # fixed looks the panel rolls onto a card; nsc_statur has no colour
+_FARBE = re.compile(r"^[a-z]{2,12}$")
 AUSSEHEN = "nsc_aussehen"
 AUSSEHEN_NICHT = ("wirkt", "spricht", "flüstert", "akzent", "begleitung", "energie", "gefasst", "nervös", "schrullig", "großspurig",
                   "unheimlich", "unheimliches", "blick", "art", "zerstreut", "einnehmende")   # manner, not looks: such rows go to „Art“
@@ -45,10 +48,14 @@ def check_rules(r):
             err.append(f"tabellen {tid}: {ZEILEN[0]} bis {ZEILEN[1]} zeilen")
             continue
         form = tid in FORMEN
+        keys = {"t", "welten", *(("m", "w") if form else ()), *(("farbe",) if tid in FARBE else ())}
         for x in z:
-            if not isinstance(x, dict) or not pair(x.get("t"), ZEILE_LEN) or not set(x) <= {"t", "welten", *(("m", "w") if form else ())} \
+            if not isinstance(x, dict) or not pair(x.get("t"), ZEILE_LEN) or not set(x) <= keys \
                     or "welten" in x and not (isinstance(x["welten"], list) and x["welten"] and set(x["welten"]) <= welten):
                 err.append(f"tabellen {tid}: jede Zeile {{\"t\": [deutsch, englisch]}} bis {ZEILE_LEN} Zeichen, welten nur bekannte Welten")
+                break
+            if "farbe" in x and not (isinstance(x["farbe"], str) and _FARBE.match(x["farbe"])):
+                err.append(f"tabellen {tid}: farbe ein festes Farbwort aus a-z")
                 break
             if form and not all(isinstance(x.get(k), str) and 0 < len(x[k].strip()) <= FORM_LEN for k in ("m", "w")):
                 err.append(f"tabellen {tid}: jede Zeile mit \"m\" und \"w\", der männlichen und der weiblichen Form (bis {FORM_LEN} Zeichen)")

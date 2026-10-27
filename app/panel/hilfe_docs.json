@@ -6085,6 +6085,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: was ein Gegner ist, Gefährten mit Geschlecht und Alter, feste Aussehen-Merkmale (V01.1.164, Daten und Prüfregeln, Dungeon-Prüfbericht 27.10. Z7, Z9, Z11 und T24a, Dominik „ok“, Thread „DnDAppFiles für den Dungeon-Master“): Jeder der 268 Gegner in app/panel/dungeon_srd.json trägt das Feld wesen, eines von mensch (ein gewöhnlicher Mensch), humanoid (ein anderes Volk in Menschengestalt: Elf, Zwerg, Goblin, Ork, Echsen- und Meervolk, Werwesen), riese (Riesen, Oger, Trolle), tier, untot, konstrukt (alles Gebaute: Golem, belebter Gegenstand, Roboter, Drohne, KI), drache, unhold (Teufel und Dämonen), elementar, fee (Feenwesen und Hexen), himmlisch, pflanze, schleim, aberration (fremdartige Wesen, auch die Xeno-Wesen) und monstrum (alle übrigen Sagengestalten). Das ist die eine Quelle statt der Handlisten im Bilder-Modul; die Lücken des Prüfberichts (Seeräuber, Dorfbewohner, Späher, Goblinkrieger, Werbär …) sind geschlossen. Das neue Modul app/panel/dungeon_bestiarium.py hält die Liste WESEN, den Leser wesen(g) und die Prüfung als Teil von dungeon.check_rules; ein eigener Gegner des Admins darf das Feld weglassen. Die Gefährten (ideen.gefaehrten und gefaehrten_kinder) tr"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "agen geschlecht (wie bei den Helden: weiblich, maennlich, divers), alter (jung, mittel, alt; nie Kind, denn Gefährten kämpfen) und art (mensch, tier, maschine): Grete ist eine Söldnerin mittleren Alters, Brunhild eine alte Bogenschützin, K-7 eine Maschine, Wuschel ein Tier. dungeon_ideen.check_rules verlangt die drei Felder. Neue NSC-Tabellen für feste Merkmale, die das Panel auf die Karte einer Person würfelt (Z9, das Würfeln baut der Hauptthread): nsc_haar (15 Zeilen, etwa „lockiges rotes Haar“, „eine Glatze“, in Science-Fiction „grell blaues Haar“), nsc_augen (7), nsc_bart (10, mit „kein Bart“, nur bei männlichen Personen ab jung) und nsc_statur (12). Eine Zeile von Haar, Augen und Bart nennt ihre Farbe als festes Wort (farbe: rot, braun, schwarz, grau, weiss, blau, gruen), und der Text zeigt genau diese Farbe, so dass die Aussehen-Prüfung des Erzählers sie erkennt; dungeon_tabellen.check_rules erlaubt farbe nur in diesen Tabellen (FARBE). Fünf Gegner tragen \"friedlich\": true (Dorfbewohner, Einhorn, Couatl, junger Silberdrache, Riesenseepferdchen; Prüfbericht T24a): das Begegnungsangebot zieht sie nie als Gegner (dungeon_bestiarium.friedlich). Selbsttest test_dungeon_srd (test_w"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "esen_und_gefaehrten)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
 },
 {
@@ -21166,6 +21190,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: occupations in both forms, looks only outward (V01.1.161, data and check rule, asked by the main thread, thread \"DnDAppFiles für den Dungeon-Master\"): Every row of the NPC table \"Occupation\" (nsc_beruf, 61 occupations) names besides t the male and the female German form (m, w: Heiler/Heilerin, Bergmann/Bergfrau, Gelehrter/Gelehrte, Hirte/Hirtin, Steuermann/Steuerfrau, Schiffsjunge/Schiffsmädchen, Wache/Wache), so the occupation fits the person's fixed gender; \"Bord-KI\" (ship AI) is no longer a person's occupation (review 27.10., Z2/Z8). \"Looks\" (nsc_aussehen) describes only the outside now: 12 rows about manner and behaviour moved to \"Manner\" (nsc_art) as a short trait (absent-minded, speaks with an accent, never travels alone, winning, full of energy, calm and composed, nervous, eccentric, swaggering, uncanny, shifty-eyed, speaks in a whisper). dungeon_tabellen.check_rules requires m and w on every occupation (FORMEN, nowhere else allowed) and refuses in \"Looks\" any word of the fixed list AUSSEHEN_NICHT. Self-test test_dungeon_srd (test_berufe_mit_formen_und_aussehen_nur_aeusseres)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: what a foe is, companions with gender and age, fixed looks (V01.1.164, data and check rules, Dungeon review 27.10. Z7, Z9, Z11 and T24a, Dominik \"ok\", thread \"DnDAppFiles für den Dungeon-Master\"): Each of the 268 foes in app/panel/dungeon_srd.json carries the field wesen, one of mensch (an ordinary human), humanoid (another folk of human shape: elf, dwarf, goblin, orc, lizard and sea folk, lycanthropes), riese (giants, ogres, trolls), tier (animal), untot (undead), konstrukt (anything built: golem, animated object, robot, drone, AI), drache (dragon), unhold (devils and demons), elementar, fee (fey and hags), himmlisch (celestial), pflanze (plant), schleim (ooze), aberration (alien beings, the xeno creatures too) and monstrum (every other creature of myth). This is the one source instead of the hand-made lists in the picture module; the gaps of the review (pirate, commoner, scout, goblin warrior, werebear …) are closed. The new module app/panel/dungeon_bestiarium.py holds the list WESEN, the reader wesen(g) and the check as part of dungeon.check_rules; an admin's own foe may leave the field out. The companions (ideen.gefaehrten and gefaehrten_kinder) carry geschle"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "cht (as for heroes: weiblich, maennlich, divers), alter (jung, mittel, alt; never a child, companions fight) and art (mensch, tier, maschine): Grete is a middle-aged sellsword, Brunhild an old archer, K-7 a machine, Wuschel an animal. dungeon_ideen.check_rules requires the three fields. New NPC tables for fixed looks the panel rolls onto a person's card (Z9, the main thread builds the roll): nsc_haar (hair, 15 rows such as \"curly red hair\", \"a bald head\", in science fiction \"bright blue hair\"), nsc_augen (eyes, 7), nsc_bart (beard, 10, with \"no beard\", only for male people from young on) and nsc_statur (build, 12). A row of hair, eyes and beard names its colour as a fixed word (farbe: rot, braun, schwarz, grau, weiss, blau, gruen), and the text shows exactly that colour, so the narrator's look check recognises it; dungeon_tabellen.check_rules allows farbe only in these tables (FARBE). Five foes carry \"friedlich\": true (commoner, unicorn, couatl, young silver dragon, giant seahorse; review T24a): the encounter offer never draws them as foes (dungeon_bestiarium.friedlich). Self-test test_dungeon_srd (test_wesen_und_gefaehrten)."
 },
 {
 "lang": "en",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.164** · 2026-10-27 · KI-Dungeon-Master: jeder Gegner sagt, was er ist (Mensch, Volk, Tier, Untoter, Konstrukt …, Feld „wesen“ statt Handlisten), Gefährten mit festem Geschlecht, Alter und Art, Tabellen für Haar, Augen, Bart und Statur, friedliche Wesen nie als Gegner
 - **V01.1.163** · 2026-10-27 · KI-Dungeon-Master: im Kampf zieht die Gruppe nicht weiter (nur nach gelungener Flucht), nach dem Weg fragen, das Schwert ziehen oder eine Tür aufbrechen ist kein Gehen mehr, und die Gruppe zieht nur, wenn die Mehrheit gehen will und keiner bleibt
 - **V01.1.162** · 2026-10-27 · KI-Dungeon-Master: in einer Welt nie Wirt und Wirtin zugleich, ein Szenenbild erkennt Namen nur als ganzes Wort
 - **V01.1.161** · 2026-10-27 · KI-Dungeon-Master: jeder Beruf der NSC-Tabelle mit männlicher und weiblicher Form (Bergmann/Bergfrau), keine „Bord-KI“ mehr als Beruf, „Aussehen“ nur noch Äußeres, 12 Zeilen über Art und Verhalten stehen unter „Art“, mit fester Prüfregel

@@ -4,7 +4,8 @@ only ideas): critical hits and fumbles (idea 2), landscapes with night watches a
 travel roles and travel events (9), scars (8), and a saying on every foe (12, the field „sage“ of the catalog's foes).
 Round 2 (Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): the prices of a near miss (knapp, idea 1),
 the props of a room or place (requisiten, 3), heart's wishes (wuensche, 7) and companions (gefaehrte_werte, gefaehrten,
-gefaehrten_kinder, 9).
+gefaehrten_kinder, 9). A companion names its gender (dungeon.GESCHLECHT), age (ALTER, never a child: companions fight)
+and art (GEF_ART), review 2026-10-27 Z7, for the portrait, the voice and the pronouns.
 
 All of it stands in dungeon_srd.json under „ideen“ (and „sage“ at the foes); this module checks it by fixed rules
 (check_rules, part of dungeon.check_rules, so a broken table never reaches a round). The panel rolls on these tables,
@@ -13,6 +14,7 @@ the model only gets the line as data, never picks it.
 import re
 
 import dungeon_kampf as kampf
+import dungeon_stimmen as stimmen
 
 TEILE = ("krit", "patzer", "landschaften", "nachtwachen", "fragekarten", "reise_rollen", "reise_ereignisse", "narben",
          "narben_kinder", "narben_sprueche", "knapp", "requisiten", "wuensche", "gefaehrte_werte", "gefaehrten",
@@ -30,6 +32,8 @@ KNAPP_KIND = ("laerm", "zeit")    # the mild prices, the only ones at a children
 WIRKUNGEN = ("schaden_gruppe", "umwerfen", "deckung", "vorteil", "fluchtweg")   # what a prop does, fixed rules
 WUNSCH_MAX = 160
 STUFEN = 10                 # a companion's values per level 1 to STUFEN
+GEF_ART = ("mensch", "tier", "maschine")   # what a companion is
+ALTER = tuple(a for a in stimmen.WORTE["alter"] if a != "kind")   # never a child: companions fight
 GEF_WERTE = {"leben": (1, 200), "ruestung": (8, 25), "angriff": (0, 15), "schaden": (2, 12), "schaden_plus": (0, 10), "sold": (0, 10000)}
 TEXT_MAX = 200              # a line of a table, per language
 SAGE_MAX = 200
@@ -158,12 +162,20 @@ def check_rules(r):
              "ideen.gefaehrte_werte: Stufe 1 bis %d je einmal mit %s" % (STUFEN, ", ".join(f"{k_} {lo} bis {hi}" for k_, (lo, hi) in GEF_WERTE.items())))
     if "gefaehrten" in i:
         g = i["gefaehrten"]
-        need(_ids(g) and all(x.get("welt") in welten_alle and _pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) and x.get("wert") in werte for x in g),
-             "ideen.gefaehrten: id, welt aus den Welten, name, satz und wert aus den Werten")
+        need(_ids(g) and all(x.get("welt") in welten_alle and _pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) and x.get("wert") in werte
+                             and _wer(x) for x in g),
+             f"ideen.gefaehrten: id, welt aus den Welten, name, satz, wert aus den Werten, geschlecht, alter ({', '.join(ALTER)}) und art ({', '.join(GEF_ART)})")
     if "gefaehrten_kinder" in i:
         g = i["gefaehrten_kinder"]
-        need(_ids(g) and all(_pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) for x in g), "ideen.gefaehrten_kinder: id, name und satz")
+        need(_ids(g) and all(_pair(x.get("name"), NAME_MAX) and _pair(x.get("satz")) and _wer(x) for x in g),
+             f"ideen.gefaehrten_kinder: id, name, satz, geschlecht, alter ({', '.join(ALTER)}) und art ({', '.join(GEF_ART)})")
     return err
+
+
+def _wer(x):
+    """A companion's gender, age and art by the fixed lists."""
+    import dungeon                       # loaded already: dungeon.check_rules calls here
+    return x.get("geschlecht") in dungeon.GESCHLECHT and x.get("alter") in ALTER and x.get("art") in GEF_ART
 
 
 def _ids(rows):

@@ -10045,6 +10045,7 @@
       },
       "ep": 50,
       "groesse": "klein",
+      "wesen": "humanoid",
       "schaden_art": "hieb",
       "sage": [
         "Man sagt, ein Goblin zählt nur bis drei, und alles darüber heißt „viele“.",
@@ -10084,6 +10085,7 @@
       },
       "ep": 25,
       "groesse": "klein",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Alte Bergleute erzählen, Kobolde hätten einst einem Drachen ein Ei gestohlen und dienen ihm seitdem.",
@@ -10123,6 +10125,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "hieb",
       "sage": [
         "Die Orks singen, ihr erster Häuptling habe einen Berg mit bloßen Fäusten gespalten.",
@@ -10161,6 +10164,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Hobgoblins sollen ein Buch der Kriegskunst haben, das so dick ist wie ein Amboss.",
@@ -10199,6 +10203,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Wenn im Lager plötzlich die Hunde schweigen, sagen die Jäger, ein Grottenschrat ist nah.",
@@ -10237,6 +10242,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Die Gnolle lachen, so heißt es, weil sie einen Witz kennen, den sonst niemand versteht.",
@@ -10275,6 +10281,7 @@
       },
       "ep": 25,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "sage": [
         "Jeder Bandit erzählt, er habe nur einmal einen schlechten Tag gehabt, der nie aufhörte.",
@@ -10314,6 +10321,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "angriffe": 3,
       "sage": [
@@ -10353,6 +10361,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "wucht",
       "angriffe": 2,
       "sage": [
@@ -10394,6 +10403,7 @@
       },
       "ep": 25,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "sage": [
         "Man flüstert, kein Kultist kennt den Namen dessen, dem er dient.",
@@ -10434,6 +10444,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "zustaende": [
         "veraengstigt"
       ],
@@ -10477,6 +10488,7 @@
       },
       "ep": 25,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "sage": [
         "Jede Wache kennt die Sage vom Wächter, der hundert Jahre am Tor stand und nie gefragt wurde.",
@@ -10515,6 +10527,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 3,
       "sage": [
@@ -10554,6 +10567,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -10594,6 +10608,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "sage": [
         "Die Nordleute sagen, ein Berserker träumt nicht, er rennt nur weiter.",
@@ -10632,6 +10647,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -10672,6 +10688,7 @@
       },
       "ep": 3900,
       "groesse": "mittel",
+      "wesen": "mensch",
       "zustaende": [
         "vergiftet"
       ],
@@ -10719,6 +10736,7 @@
       },
       "ep": 2300,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "sage": [
         "Abtrünnige Magier, sagt man, verbrennen ihre alten Lehrbücher, aber nie das erste.",
@@ -10758,6 +10776,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "wucht",
       "sage": [
         "Die Gläubigen erzählen, ein wahrer Priester segnet auch den, der ihn verflucht.",
@@ -10796,6 +10815,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "wucht",
       "angriffe": 3,
       "sage": [
@@ -10835,6 +10855,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "zustaende": [
         "vergiftet"
       ],
@@ -10877,6 +10898,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "resistenz": [
         "gift"
@@ -10919,6 +10941,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -10958,6 +10981,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -10997,6 +11021,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "riese",
       "zustaende": [
         "gepackt"
       ],
@@ -11040,6 +11065,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "fee",
       "zustaende": [
         "veraengstigt"
       ],
@@ -11082,6 +11108,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "fee",
       "schaden_art": "hieb",
       "sage": [
         "Im Dorf heißt es, die Waldhexe kennt jedes Kinderlied und singt es falsch herum.",
@@ -11120,6 +11147,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "unhold",
       "zustaende": [
         "erschoepft"
       ],
@@ -11171,6 +11199,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "stich",
       "immun": [
         "gift"
@@ -11217,6 +11246,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "wucht",
       "immun": [
         "gift"
@@ -11259,6 +11289,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "untot",
       "schaden_art": "wucht",
       "immun": [
         "gift"
@@ -11302,6 +11333,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "gelaehmt"
       ],
@@ -11347,6 +11379,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "gelaehmt",
         "vergiftet"
@@ -11396,6 +11429,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "erschoepft"
       ],
@@ -11455,6 +11489,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "nekrotisch",
       "resistenz": [
         "saeure",
@@ -11509,6 +11544,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "veraengstigt"
       ],
@@ -11566,6 +11602,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "stich",
       "resistenz": [
         "nekrotisch",
@@ -11615,6 +11652,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "nekrotisch",
       "resistenz": [
         "saeure",
@@ -11669,6 +11707,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "veraengstigt"
       ],
@@ -11722,6 +11761,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "gepackt"
       ],
@@ -11772,6 +11812,7 @@
       },
       "ep": 450,
       "groesse": "winzig",
+      "wesen": "untot",
       "schaden_art": "blitz",
       "resistenz": [
         "saeure",
@@ -11826,6 +11867,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "hieb",
       "resistenz": [
         "hieb",
@@ -11871,6 +11913,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "resistenz": [
         "hieb",
@@ -11917,6 +11960,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "schaden_art": "wucht",
       "angriffe": 2,
       "sage": [
@@ -11957,6 +12001,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -12001,6 +12046,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "schleim",
       "zustaende": [
         "festgesetzt"
       ],
@@ -12043,6 +12089,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "schleim",
       "schaden_art": "wucht",
       "resistenz": [
         "saeure",
@@ -12087,6 +12134,7 @@
       },
       "ep": 1100,
       "groesse": "gross",
+      "wesen": "schleim",
       "schaden_art": "wucht",
       "immun": [
         "saeure",
@@ -12131,6 +12179,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "schleim",
       "schaden_art": "wucht",
       "resistenz": [
         "saeure"
@@ -12176,6 +12225,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "aberration",
       "zustaende": [
         "kampfunfaehig"
       ],
@@ -12217,6 +12267,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "aberration",
       "zustaende": [
         "gepackt"
       ],
@@ -12260,6 +12311,7 @@
       },
       "ep": 1100,
       "groesse": "gross",
+      "wesen": "aberration",
       "zustaende": [
         "gelaehmt"
       ],
@@ -12305,6 +12357,7 @@
       },
       "ep": 3900,
       "groesse": "gross",
+      "wesen": "aberration",
       "zustaende": [
         "blind"
       ],
@@ -12349,6 +12402,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "aberration",
       "zustaende": [
         "bezaubert"
       ],
@@ -12393,6 +12447,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -12436,6 +12491,7 @@
       },
       "ep": 50,
       "groesse": "klein",
+      "wesen": "konstrukt",
       "schaden_art": "hieb",
       "immun": [
         "gift",
@@ -12479,6 +12535,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "zustaende": [
         "gepackt"
       ],
@@ -12524,6 +12581,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "resistenz": [
         "hieb",
@@ -12572,6 +12630,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "resistenz": [
         "hieb",
@@ -12622,6 +12681,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "elementar",
       "schaden_art": "stich",
       "resistenz": [
         "hieb",
@@ -12671,6 +12731,7 @@
       },
       "ep": 200,
       "groesse": "winzig",
+      "wesen": "unhold",
       "zustaende": [
         "vergiftet"
       ],
@@ -12723,6 +12784,7 @@
       },
       "ep": 200,
       "groesse": "winzig",
+      "wesen": "unhold",
       "zustaende": [
         "veraengstigt"
       ],
@@ -12776,6 +12838,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "unhold",
       "zustaende": [
         "brennend"
       ],
@@ -12820,6 +12883,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "unhold",
       "zustaende": [
         "brennend"
       ],
@@ -12865,6 +12929,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "unhold",
       "zustaende": [
         "bezaubert"
       ],
@@ -12917,6 +12982,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "unhold",
       "zustaende": [
         "blutend"
       ],
@@ -12969,6 +13035,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "unhold",
       "zustaende": [
         "brennend"
       ],
@@ -13021,6 +13088,7 @@
       },
       "ep": 25,
       "groesse": "klein",
+      "wesen": "unhold",
       "zustaende": [
         "vergiftet"
       ],
@@ -13071,6 +13139,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "unhold",
       "zustaende": [
         "betaeubt"
       ],
@@ -13124,6 +13193,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "riese",
       "schaden_art": "wucht",
       "sage": [
         "Die Bauern sagen, ein Oger kann eine Kuh essen, aber kein Schloss öffnen.",
@@ -13162,6 +13232,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "riese",
       "schaden_art": "hieb",
       "angriffe": 3,
       "sage": [
@@ -13201,6 +13272,7 @@
       },
       "ep": 1800,
       "groesse": "riesig",
+      "wesen": "riese",
       "zustaende": [
         "liegend"
       ],
@@ -13243,6 +13315,7 @@
       },
       "ep": 1100,
       "groesse": "gross",
+      "wesen": "riese",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -13282,6 +13355,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "liegend"
       ],
@@ -13323,6 +13397,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -13367,6 +13442,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "zustaende": [
         "bezaubert"
       ],
@@ -13409,6 +13485,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "zustaende": [
         "versteinert"
       ],
@@ -13451,6 +13528,7 @@
       },
       "ep": 2300,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "zustaende": [
         "versteinert"
       ],
@@ -13493,6 +13571,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "stich",
       "angriffe": 3,
       "sage": [
@@ -13532,6 +13611,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -13572,6 +13652,7 @@
       },
       "ep": 3900,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "stich",
       "angriffe": 5,
       "sage": [
@@ -13611,6 +13692,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "brennend"
       ],
@@ -13653,6 +13735,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "liegend"
       ],
@@ -13694,6 +13777,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -13736,6 +13820,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "vergiftet"
       ],
@@ -13779,6 +13864,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "zustaende": [
         "festgesetzt"
       ],
@@ -13823,6 +13909,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "vergiftet"
       ],
@@ -13866,6 +13953,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "schaden_art": "stich",
       "sage": [
         "Die Schmiede sagen, ein Rostmonster frisst lieber einen Nagel als einen Goldbarren.",
@@ -13905,6 +13993,7 @@
       },
       "ep": 100,
       "groesse": "klein",
+      "wesen": "monstrum",
       "zustaende": [
         "blind"
       ],
@@ -13948,6 +14037,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "schaden_art": "hieb",
       "resistenz": [
         "hieb",
@@ -13992,6 +14082,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -14033,6 +14124,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "stich",
       "immun": [
         "kaelte"
@@ -14074,6 +14166,7 @@
       },
       "ep": 100,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "liegend"
       ],
@@ -14117,6 +14210,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -14158,6 +14252,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "tier",
       "zustaende": [
         "liegend"
       ],
@@ -14200,6 +14295,7 @@
       },
       "ep": 200,
       "groesse": "gross",
+      "wesen": "tier",
       "zustaende": [
         "liegend"
       ],
@@ -14242,6 +14338,7 @@
       },
       "ep": 200,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "hieb",
       "sage": [
         "Die Jäger sagen: Sprich mit dem Bären wie mit einem alten Onkel, ruhig und mit Respekt.",
@@ -14281,6 +14378,7 @@
       },
       "ep": 200,
       "groesse": "gross",
+      "wesen": "tier",
       "zustaende": [
         "festgesetzt",
         "vergiftet"
@@ -14324,6 +14422,7 @@
       },
       "ep": 25,
       "groesse": "klein",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "In der Stadt heißt es, jede Riesenratte war einmal eine ganz normale Ratte mit großen Plänen.",
@@ -14365,6 +14464,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "tier",
       "schaden_art": "stich",
       "resistenz": [
         "wucht",
@@ -14410,6 +14510,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "tier",
       "schaden_art": "stich",
       "resistenz": [
         "wucht",
@@ -14455,6 +14556,7 @@
       },
       "ep": 25,
       "groesse": "winzig",
+      "wesen": "tier",
       "zustaende": [
         "blutend"
       ],
@@ -14497,6 +14599,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "tier",
       "zustaende": [
         "gepackt",
         "vergiftet"
@@ -14540,6 +14643,7 @@
       },
       "ep": 25,
       "groesse": "mittel",
+      "wesen": "tier",
       "zustaende": [
         "gepackt"
       ],
@@ -14582,6 +14686,7 @@
       },
       "ep": 200,
       "groesse": "gross",
+      "wesen": "tier",
       "zustaende": [
         "gepackt"
       ],
@@ -14623,6 +14728,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "Die Fischer sagen, ein Jagdhai riecht eine Lüge über drei Meilen Wasser.",
@@ -14661,6 +14767,7 @@
       },
       "ep": 1800,
       "groesse": "riesig",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "Man erzählt, ein Riesenhai hat einmal ein ganzes Ruderboot verschluckt und den Anker zurückgespuckt.",
@@ -14699,6 +14806,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "tier",
       "schaden_art": "stich",
       "resistenz": [
         "wucht",
@@ -14742,6 +14850,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "Jede Hafenkneipe kennt einen, der die Seeschlange gesehen hat, und jeder beschreibt sie anders.",
@@ -14780,6 +14889,7 @@
       },
       "ep": 700,
       "groesse": "riesig",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "Die Walfänger sagen, die Schwertwale singen Lieder über jeden, der sie gejagt hat.",
@@ -14818,6 +14928,7 @@
       },
       "ep": 25,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "wucht",
       "sage": [
         "Die Seeleute erzählen, wer einem Meermenschen hilft, findet nie wieder den Weg ins Unglück.",
@@ -14857,6 +14968,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "elementar",
       "zustaende": [
         "gepackt"
       ],
@@ -14908,6 +15020,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "elementar",
       "zustaende": [
         "brennend"
       ],
@@ -14959,6 +15072,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "elementar",
       "schaden_art": "wucht",
       "resistenz": [
         "hieb",
@@ -15010,6 +15124,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "elementar",
       "zustaende": [
         "liegend"
       ],
@@ -15062,6 +15177,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "elementar",
       "zustaende": [
         "brennend"
       ],
@@ -15107,6 +15223,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "elementar",
       "zustaende": [
         "brennend"
       ],
@@ -15160,6 +15277,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "elementar",
       "schaden_art": "stich",
       "resistenz": [
         "hieb",
@@ -15203,6 +15321,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "fee",
       "zustaende": [
         "bezaubert"
       ],
@@ -15244,6 +15363,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "fee",
       "zustaende": [
         "bezaubert"
       ],
@@ -15285,6 +15405,7 @@
       },
       "ep": 450,
       "groesse": "riesig",
+      "wesen": "pflanze",
       "schaden_art": "wucht",
       "resistenz": [
         "wucht",
@@ -15331,6 +15452,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "pflanze",
       "zustaende": [
         "festgesetzt"
       ],
@@ -15381,6 +15503,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "pflanze",
       "schaden_art": "nekrotisch",
       "angriffe": 2,
       "sage": [
@@ -15420,6 +15543,7 @@
       },
       "ep": 5000,
       "groesse": "riesig",
+      "wesen": "pflanze",
       "schaden_art": "wucht",
       "resistenz": [
         "wucht",
@@ -15466,6 +15590,7 @@
       },
       "ep": 50,
       "groesse": "winzig",
+      "wesen": "drache",
       "zustaende": [
         "bewusstlos"
       ],
@@ -15507,6 +15632,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "drache",
       "zustaende": [
         "brennend"
       ],
@@ -15552,6 +15678,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "drache",
       "schaden_art": "stich",
       "immun": [
         "saeure"
@@ -15593,6 +15720,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "drache",
       "schaden_art": "stich",
       "immun": [
         "kaelte"
@@ -15635,6 +15763,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "drache",
       "zustaende": [
         "vergiftet"
       ],
@@ -15677,6 +15806,7 @@
       },
       "ep": 3900,
       "groesse": "gross",
+      "wesen": "drache",
       "zustaende": [
         "vergiftet"
       ],
@@ -15722,6 +15852,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "drache",
       "zustaende": [
         "brennend"
       ],
@@ -15769,6 +15900,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "drache",
       "schaden_art": "stich",
       "immun": [
         "saeure"
@@ -15811,6 +15943,7 @@
       },
       "ep": 200,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -15850,6 +15983,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "himmlisch",
       "schaden_art": "wucht",
       "immun": [
         "gift"
@@ -15860,7 +15994,8 @@
         "Die Sage geht, ein Einhorn zeigt sich nur dem, der es nicht sucht.",
         "The legend goes that a unicorn only shows itself to the one who isn't looking for it."
       ],
-      "sg": 14
+      "sg": 14,
+      "friedlich": true
     },
     {
       "id": "zentaur",
@@ -15893,6 +16028,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "wucht",
       "angriffe": 2,
       "sage": [
@@ -15933,6 +16069,7 @@
       },
       "ep": 1100,
       "groesse": "gross",
+      "wesen": "monstrum",
       "zustaende": [
         "bezaubert"
       ],
@@ -15975,6 +16112,7 @@
       },
       "ep": 100,
       "groesse": "klein",
+      "wesen": "monstrum",
       "zustaende": [
         "versteinert"
       ],
@@ -16017,6 +16155,7 @@
       },
       "ep": 2900,
       "groesse": "riesig",
+      "wesen": "tier",
       "schaden_art": "wucht",
       "angriffe": 2,
       "sage": [
@@ -16057,6 +16196,7 @@
       },
       "ep": 3900,
       "groesse": "riesig",
+      "wesen": "tier",
       "zustaende": [
         "gepackt"
       ],
@@ -16099,6 +16239,7 @@
       },
       "ep": 2300,
       "groesse": "riesig",
+      "wesen": "tier",
       "zustaende": [
         "liegend"
       ],
@@ -16141,6 +16282,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "riese",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -16181,6 +16323,7 @@
       },
       "ep": 8400,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "resistenz": [
         "hieb",
@@ -16225,6 +16368,7 @@
       },
       "ep": 50,
       "groesse": "klein",
+      "wesen": "konstrukt",
       "schaden_art": "energie",
       "immun": [
         "gift",
@@ -16271,6 +16415,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "resistenz": [
         "hieb",
@@ -16321,6 +16466,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "energie",
       "sage": [
         "Die Frachterpiloten sagen, ein Raumpirat funkt immer zuerst freundlich.",
@@ -16359,6 +16505,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "energie",
       "resistenz": [
         "gift"
@@ -16405,6 +16552,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "aberration",
       "zustaende": [
         "vergiftet"
       ],
@@ -16451,6 +16599,7 @@
       },
       "ep": 3900,
       "groesse": "riesig",
+      "wesen": "aberration",
       "zustaende": [
         "gepackt",
         "vergiftet"
@@ -16506,6 +16655,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "hieb",
       "resistenz": [
         "hieb",
@@ -16556,6 +16706,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "zustaende": [
         "betaeubt"
       ],
@@ -16606,6 +16757,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "wucht",
       "resistenz": [
         "gift"
@@ -16648,6 +16800,7 @@
       },
       "ep": 1800,
       "groesse": "riesig",
+      "wesen": "aberration",
       "schaden_art": "stich",
       "resistenz": [
         "kaelte"
@@ -16689,6 +16842,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "energie",
       "resistenz": [
         "stich"
@@ -16738,6 +16892,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "veraengstigt"
       ],
@@ -16792,6 +16947,7 @@
       },
       "ep": 100,
       "groesse": "winzig",
+      "wesen": "fee",
       "schaden_art": "wucht",
       "sage": [
         "Man sagt, ein Schiff ohne Klabautermann sinkt beim ersten Sturm, eins mit ihm beim zweiten.",
@@ -16831,6 +16987,7 @@
       },
       "ep": 2300,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -16879,6 +17036,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "sage": [
         "An Bord heißt es: Jeder Meuterer war einmal der treueste Matrose.",
@@ -16917,6 +17075,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "boss": true,
       "angriffe": 2,
@@ -16957,6 +17116,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "mensch",
       "zustaende": [
         "bezaubert"
       ],
@@ -17002,6 +17162,7 @@
       },
       "ep": 450,
       "groesse": "klein",
+      "wesen": "untot",
       "zustaende": [
         "veraengstigt"
       ],
@@ -17052,6 +17213,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "zustaende": [
         "veraengstigt"
       ],
@@ -17101,6 +17263,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "untot",
       "zustaende": [
         "veraengstigt"
       ],
@@ -17149,6 +17312,7 @@
       },
       "ep": 100,
       "groesse": "klein",
+      "wesen": "konstrukt",
       "schaden_art": "feuer",
       "immun": [
         "gift",
@@ -17195,6 +17359,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "energie",
       "immun": [
         "gift",
@@ -17241,6 +17406,7 @@
       },
       "ep": 200,
       "groesse": "klein",
+      "wesen": "aberration",
       "schaden_art": "saeure",
       "resistenz": [
         "saeure"
@@ -17290,6 +17456,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "energie",
       "seit": "V01.1.039",
       "sage": [
@@ -17329,6 +17496,7 @@
       },
       "ep": 450,
       "groesse": "klein",
+      "wesen": "monstrum",
       "schaden_art": "feuer",
       "immun": [
         "feuer"
@@ -17377,6 +17545,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "psychisch",
       "resistenz": [
         "psychisch"
@@ -17422,6 +17591,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "schwaeche": [
         "blitz"
@@ -17468,6 +17638,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -17521,6 +17692,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "aberration",
       "schaden_art": "saeure",
       "immun": [
         "saeure"
@@ -17570,6 +17742,7 @@
       },
       "ep": 2900,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "hieb",
       "immun": [
         "gift"
@@ -17619,6 +17792,7 @@
       },
       "ep": 3900,
       "groesse": "mittel",
+      "wesen": "aberration",
       "schaden_art": "energie",
       "immun": [
         "gift"
@@ -17671,6 +17845,7 @@
       },
       "ep": 5000,
       "groesse": "riesig",
+      "wesen": "aberration",
       "schaden_art": "stich",
       "resistenz": [
         "stich",
@@ -17721,6 +17896,7 @@
       },
       "ep": 5900,
       "groesse": "riesig",
+      "wesen": "konstrukt",
       "schaden_art": "feuer",
       "immun": [
         "gift",
@@ -17776,6 +17952,7 @@
       },
       "ep": 8400,
       "groesse": "riesig",
+      "wesen": "konstrukt",
       "schaden_art": "blitz",
       "immun": [
         "gift",
@@ -17830,6 +18007,7 @@
       },
       "ep": 11500,
       "groesse": "riesig",
+      "wesen": "aberration",
       "schaden_art": "wucht",
       "immun": [
         "kaelte"
@@ -17884,6 +18062,7 @@
       },
       "ep": 13000,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "energie",
       "immun": [
         "gift"
@@ -17938,6 +18117,7 @@
       },
       "ep": 50,
       "groesse": "winzig",
+      "wesen": "tier",
       "schaden_art": "stich",
       "seit": "V01.1.039",
       "sage": [
@@ -17978,6 +18158,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "seit": "V01.1.039",
       "sage": [
@@ -18017,6 +18198,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "kaelte",
       "resistenz": [
         "kaelte"
@@ -18065,6 +18247,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "wucht",
       "resistenz": [
         "stich"
@@ -18115,6 +18298,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "nekrotisch",
       "immun": [
         "gift",
@@ -18171,6 +18355,7 @@
       },
       "ep": 2300,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "seit": "V01.1.039",
       "angriffe": 2,
@@ -18211,6 +18396,7 @@
       },
       "ep": 3900,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -18265,6 +18451,7 @@
       },
       "ep": 5000,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "wucht",
       "resistenz": [
         "kaelte"
@@ -18314,6 +18501,7 @@
       },
       "ep": 8400,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "nekrotisch",
       "immun": [
         "gift",
@@ -18369,6 +18557,7 @@
       },
       "ep": 13000,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "wucht",
       "immun": [
         "kaelte"
@@ -18423,6 +18612,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "resistenz": [
         "psychisch"
@@ -18472,6 +18662,7 @@
       },
       "ep": 450,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "stich",
       "immun": [
         "gift"
@@ -18522,6 +18713,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "gift",
       "immun": [
         "gift"
@@ -18570,6 +18762,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "aberration",
       "schaden_art": "nekrotisch",
       "immun": [
         "nekrotisch"
@@ -18624,6 +18817,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "elementar",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -18678,6 +18872,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "unhold",
       "schaden_art": "feuer",
       "immun": [
         "feuer"
@@ -18731,6 +18926,7 @@
       },
       "ep": 10000,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "nekrotisch",
       "immun": [
         "gift",
@@ -18788,6 +18984,7 @@
       },
       "ep": 13000,
       "groesse": "riesig",
+      "wesen": "aberration",
       "schaden_art": "psychisch",
       "immun": [
         "psychisch"
@@ -18843,6 +19040,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "energie",
       "immun": [
         "gift",
@@ -18897,6 +19095,7 @@
       },
       "ep": 5900,
       "groesse": "riesig",
+      "wesen": "riese",
       "schaden_art": "kaelte",
       "immun": [
         "kaelte"
@@ -18946,6 +19145,7 @@
       },
       "ep": 7200,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "hieb",
       "resistenz": [
         "donner"
@@ -18993,6 +19193,7 @@
       },
       "ep": 11500,
       "groesse": "mittel",
+      "wesen": "untot",
       "schaden_art": "nekrotisch",
       "immun": [
         "gift",
@@ -19049,6 +19250,7 @@
       },
       "ep": 13000,
       "groesse": "riesig",
+      "wesen": "drache",
       "schaden_art": "feuer",
       "immun": [
         "feuer"
@@ -19103,6 +19305,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "gift",
       "schwaeche": [
         "strahlend"
@@ -19150,6 +19353,7 @@
       },
       "ep": 3900,
       "groesse": "riesig",
+      "wesen": "pflanze",
       "schaden_art": "wucht",
       "resistenz": [
         "stich",
@@ -19200,6 +19404,7 @@
       },
       "ep": 2300,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "nekrotisch",
       "resistenz": [
         "nekrotisch"
@@ -19245,6 +19450,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "seit": "V01.1.039",
       "sage": [
@@ -19285,6 +19491,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "tier",
       "schaden_art": "stich",
       "zustaende": [
         "vergiftet"
@@ -19328,6 +19535,7 @@
       },
       "ep": 700,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "hieb",
       "zustaende": [
         "gepackt"
@@ -19371,6 +19579,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "monstrum",
       "schaden_art": "energie",
       "immun": [
         "psychisch"
@@ -19417,6 +19626,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -19471,6 +19681,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "feuer",
       "resistenz": [
         "feuer"
@@ -19517,6 +19728,7 @@
       },
       "ep": 10000,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "energie",
       "immun": [
         "psychisch"
@@ -19571,6 +19783,7 @@
       },
       "ep": 7200,
       "groesse": "mittel",
+      "wesen": "fee",
       "schaden_art": "psychisch",
       "immun": [
         "psychisch"
@@ -19622,6 +19835,7 @@
       },
       "ep": 2900,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "energie",
       "zustaende": [
         "betaeubt"
@@ -19666,6 +19880,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "monstrum",
       "schaden_art": "feuer",
       "immun": [
         "feuer"
@@ -19718,6 +19933,7 @@
       },
       "ep": 1100,
       "groesse": "klein",
+      "wesen": "konstrukt",
       "schaden_art": "donner",
       "immun": [
         "gift",
@@ -19767,6 +19983,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "konstrukt",
       "schaden_art": "hieb",
       "immun": [
         "gift",
@@ -19817,6 +20034,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "aberration",
       "schaden_art": "kaelte",
       "immun": [
         "kaelte"
@@ -19865,6 +20083,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "elementar",
       "schaden_art": "blitz",
       "immun": [
         "blitz"
@@ -19914,6 +20133,7 @@
       },
       "ep": 5900,
       "groesse": "riesig",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "immun": [
         "gift",
@@ -19969,6 +20189,7 @@
       },
       "ep": 7200,
       "groesse": "gross",
+      "wesen": "fee",
       "schaden_art": "psychisch",
       "immun": [
         "psychisch"
@@ -20023,6 +20244,7 @@
       },
       "ep": 7200,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "feuer",
       "immun": [
         "feuer"
@@ -20076,6 +20298,7 @@
       },
       "ep": 8400,
       "groesse": "mittel",
+      "wesen": "fee",
       "schaden_art": "strahlend",
       "immun": [
         "psychisch"
@@ -20129,6 +20352,7 @@
       },
       "ep": 8400,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "schaden_art": "donner",
       "immun": [
         "donner"
@@ -20182,6 +20406,7 @@
       },
       "ep": 8400,
       "groesse": "riesig",
+      "wesen": "konstrukt",
       "schaden_art": "feuer",
       "immun": [
         "gift",
@@ -20237,6 +20462,7 @@
       },
       "ep": 50,
       "groesse": "klein",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Die Goblins singen, der beste Krieger ist der, der zuletzt wegläuft.",
@@ -20276,6 +20502,7 @@
       },
       "ep": 200,
       "groesse": "klein",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -20315,6 +20542,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -20354,6 +20582,7 @@
       },
       "ep": 50,
       "groesse": "klein",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Man sagt, ein Koboldkrieger stellt drei Fallen, bevor er frühstückt.",
@@ -20393,6 +20622,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Die Steppenleute sagen, wenn nachts jemand kichert, zählt eure Pferde.",
@@ -20431,6 +20661,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "himmlisch",
       "schaden_art": "wucht",
       "sage": [
         "Die Sage geht, ein Pegasus trägt nur, wer ihm einen Stern zeigen kann.",
@@ -20469,6 +20700,7 @@
       },
       "ep": 100,
       "groesse": "winzig",
+      "wesen": "fee",
       "zustaende": [
         "vergiftet"
       ],
@@ -20510,6 +20742,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "fee",
       "schaden_art": "stich",
       "sage": [
         "Die Waldleute erzählen, ein Blinkhund ist nie dort, wo man ihn zuletzt gesehen hat.",
@@ -20548,6 +20781,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "himmlisch",
       "zustaende": [
         "gepackt"
       ],
@@ -20565,7 +20799,8 @@
         "Man sagt, ein Couatl erscheint nur, wenn die Welt einen Rat braucht, und meist dann, wenn keiner ihn hören will.",
         "They say a couatl only appears when the world needs counsel, usually when nobody wants to hear it."
       ],
-      "sg": 15
+      "sg": 15,
+      "friedlich": true
     },
     {
       "id": "werbaer",
@@ -20599,6 +20834,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -20640,6 +20876,7 @@
       },
       "ep": 1800,
       "groesse": "gross",
+      "wesen": "humanoid",
       "zustaende": [
         "liegend"
       ],
@@ -20684,6 +20921,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "schaden_art": "wucht",
       "resistenz": [
         "wucht",
@@ -20733,6 +20971,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "zustaende": [
         "versteinert"
       ],
@@ -20774,6 +21013,7 @@
       },
       "ep": 5000,
       "groesse": "gross",
+      "wesen": "drache",
       "zustaende": [
         "bewusstlos"
       ],
@@ -20819,6 +21059,7 @@
       },
       "ep": 5900,
       "groesse": "gross",
+      "wesen": "drache",
       "zustaende": [
         "gelaehmt"
       ],
@@ -20831,7 +21072,8 @@
         "Man erzählt, ein Silberdrache wohnt manchmal unerkannt als freundliche Nachbarin im Dorf.",
         "They tell that a silver dragon sometimes lives unrecognised as a kindly neighbour in the village."
       ],
-      "sg": 17
+      "sg": 17,
+      "friedlich": true
     },
     {
       "id": "junger_weisser_drache",
@@ -20864,6 +21106,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "drache",
       "schaden_art": "hieb",
       "immun": [
         "kaelte"
@@ -20906,6 +21149,7 @@
       },
       "ep": 3900,
       "groesse": "riesig",
+      "wesen": "riese",
       "zustaende": [
         "liegend"
       ],
@@ -20948,6 +21192,7 @@
       },
       "ep": 5000,
       "groesse": "riesig",
+      "wesen": "riese",
       "schaden_art": "hieb",
       "immun": [
         "kaelte"
@@ -20990,6 +21235,7 @@
       },
       "ep": 5900,
       "groesse": "riesig",
+      "wesen": "riese",
       "schaden_art": "wucht",
       "immun": [
         "feuer"
@@ -21032,6 +21278,7 @@
       },
       "ep": 100,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "hieb",
       "sage": [
         "Die Bauern sagen, ein Axtschnabel ist dümmer als ein Huhn, aber schneller als ein Pferd.",
@@ -21070,6 +21317,7 @@
       },
       "ep": 200,
       "groesse": "winzig",
+      "wesen": "himmlisch",
       "schaden_art": "hieb",
       "resistenz": [
         "nekrotisch",
@@ -21114,6 +21362,7 @@
       },
       "ep": 2900,
       "groesse": "gross",
+      "wesen": "konstrukt",
       "zustaende": [
         "gepackt"
       ],
@@ -21160,6 +21409,7 @@
       },
       "ep": 7200,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt"
       ],
@@ -21203,6 +21453,7 @@
       },
       "ep": 7200,
       "groesse": "riesig",
+      "wesen": "monstrum",
       "zustaende": [
         "gepackt",
         "brennend"
@@ -21250,6 +21501,7 @@
       },
       "ep": 200,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -21289,6 +21541,7 @@
       },
       "ep": 2900,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 3,
       "sage": [
@@ -21329,6 +21582,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "stich",
       "sage": [
         "Die Fischer sagen, das Meervolk lässt jedem Boot einen Fisch im Netz, das ihm einen Gruß hinterlässt.",
@@ -21367,6 +21621,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "hieb",
       "resistenz": [
         "saeure",
@@ -21410,6 +21665,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "tier",
       "schaden_art": "stich",
       "sage": [
         "Die Taucher sagen: Schwimm ruhig, der Riffhai mag keine Hektik.",
@@ -21449,12 +21705,14 @@
       },
       "ep": 100,
       "groesse": "gross",
+      "wesen": "tier",
       "schaden_art": "wucht",
       "sage": [
         "Man erzählt, ein Riesenseepferd findet jeden Weg nach Hause, auch durch den dichtesten Nebel.",
         "They tell that a giant seahorse finds the way home even through the thickest fog."
       ],
-      "sg": 12
+      "sg": 12,
+      "friedlich": true
     },
     {
       "id": "archelon",
@@ -21487,6 +21745,7 @@
       },
       "ep": 1800,
       "groesse": "riesig",
+      "wesen": "tier",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -21526,6 +21785,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "zustaende": [
         "bezaubert"
       ],
@@ -21572,6 +21832,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "untot",
       "zustaende": [
         "gepackt"
       ],
@@ -21624,6 +21885,7 @@
       },
       "ep": 450,
       "groesse": "gross",
+      "wesen": "untot",
       "zustaende": [
         "liegend"
       ],
@@ -21672,6 +21934,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "humanoid",
       "schaden_art": "wucht",
       "sage": [
         "Die Bergleute sagen: Ein Grimlock sieht nichts, aber er hört, wie dein Herz klopft.",
@@ -21712,6 +21975,7 @@
       },
       "ep": 2300,
       "groesse": "gross",
+      "wesen": "elementar",
       "schaden_art": "energie",
       "resistenz": [
         "wucht",
@@ -21759,12 +22023,14 @@
       },
       "ep": 10,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "wucht",
       "sage": [
         "Die Barden sagen, die größten Helden waren zuerst einfache Dorfbewohner.",
         "Bards say the greatest heroes were simple villagers first."
       ],
-      "sg": 10
+      "sg": 10,
+      "friedlich": true
     },
     {
       "id": "adliger",
@@ -21799,6 +22065,7 @@
       },
       "ep": 50,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "sage": [
         "Man sagt, ein Adliger kennt die Namen seiner Ahnen, aber nicht die seiner Diener.",
@@ -21837,6 +22104,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -21876,6 +22144,7 @@
       },
       "ep": 1800,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "hieb",
       "angriffe": 2,
       "sage": [
@@ -21915,6 +22184,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "sage": [
         "Die Wirte sagen, ein Raufbold zahlt immer, aber nie mit Geld.",
@@ -21953,6 +22223,7 @@
       },
       "ep": 1100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "stich",
       "angriffe": 2,
       "sage": [
@@ -21992,6 +22263,7 @@
       },
       "ep": 700,
       "groesse": "mittel",
+      "wesen": "mensch",
       "zustaende": [
         "festgesetzt"
       ],
@@ -22035,6 +22307,7 @@
       },
       "ep": 100,
       "groesse": "mittel",
+      "wesen": "mensch",
       "schaden_art": "strahlend",
       "sage": [
         "Man erzählt, jeder Akolyth hat am ersten Tag die Glocke zu früh geläutet.",
@@ -24335,6 +24608,337 @@
           ],
           "m": "Matrose",
           "w": "Matrosin"
+        }
+      ]
+    },
+    {
+      "id": "nsc_haar",
+      "gruppe": "nsc",
+      "name": [
+        "Haar",
+        "Hair"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "langes schwarzes Haar",
+            "long black hair"
+          ],
+          "farbe": "schwarz"
+        },
+        {
+          "t": [
+            "kurzes schwarzes Haar",
+            "short black hair"
+          ],
+          "farbe": "schwarz"
+        },
+        {
+          "t": [
+            "kurzes braunes Haar",
+            "short brown hair"
+          ],
+          "farbe": "braun"
+        },
+        {
+          "t": [
+            "lockiges braunes Haar",
+            "curly brown hair"
+          ],
+          "farbe": "braun"
+        },
+        {
+          "t": [
+            "langes braunes Haar",
+            "long brown hair"
+          ],
+          "farbe": "braun"
+        },
+        {
+          "t": [
+            "lockiges rotes Haar",
+            "curly red hair"
+          ],
+          "farbe": "rot"
+        },
+        {
+          "t": [
+            "kurzes rotes Haar",
+            "short red hair"
+          ],
+          "farbe": "rot"
+        },
+        {
+          "t": [
+            "glattes blondes Haar",
+            "straight blond hair"
+          ]
+        },
+        {
+          "t": [
+            "strohblondes Haar",
+            "straw-blond hair"
+          ]
+        },
+        {
+          "t": [
+            "schütteres graues Haar",
+            "thinning grey hair"
+          ],
+          "farbe": "grau"
+        },
+        {
+          "t": [
+            "weißes Haar",
+            "white hair"
+          ],
+          "farbe": "weiss"
+        },
+        {
+          "t": [
+            "eine Glatze",
+            "a bald head"
+          ]
+        },
+        {
+          "t": [
+            "kahl geschoren",
+            "shaved head"
+          ]
+        },
+        {
+          "t": [
+            "grell blaues Haar",
+            "bright blue hair"
+          ],
+          "farbe": "blau",
+          "welten": [
+            "scifi"
+          ]
+        },
+        {
+          "t": [
+            "grünes Haar",
+            "green hair"
+          ],
+          "farbe": "gruen",
+          "welten": [
+            "scifi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_augen",
+      "gruppe": "nsc",
+      "name": [
+        "Augen",
+        "Eyes"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "braune Augen",
+            "brown eyes"
+          ],
+          "farbe": "braun"
+        },
+        {
+          "t": [
+            "bernsteinfarbene Augen",
+            "amber eyes"
+          ]
+        },
+        {
+          "t": [
+            "blaue Augen",
+            "blue eyes"
+          ],
+          "farbe": "blau"
+        },
+        {
+          "t": [
+            "grüne Augen",
+            "green eyes"
+          ],
+          "farbe": "gruen"
+        },
+        {
+          "t": [
+            "graue Augen",
+            "grey eyes"
+          ],
+          "farbe": "grau"
+        },
+        {
+          "t": [
+            "dunkle Augen",
+            "dark eyes"
+          ]
+        },
+        {
+          "t": [
+            "schwarze Augen",
+            "black eyes"
+          ],
+          "farbe": "schwarz"
+        }
+      ]
+    },
+    {
+      "id": "nsc_bart",
+      "gruppe": "nsc",
+      "name": [
+        "Bart",
+        "Beard"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "kein Bart",
+            "no beard"
+          ]
+        },
+        {
+          "t": [
+            "glatt rasiert",
+            "clean-shaven"
+          ]
+        },
+        {
+          "t": [
+            "ein Stoppelbart",
+            "stubble"
+          ]
+        },
+        {
+          "t": [
+            "schwarzer Bart",
+            "black beard"
+          ],
+          "farbe": "schwarz"
+        },
+        {
+          "t": [
+            "brauner Bart",
+            "brown beard"
+          ],
+          "farbe": "braun"
+        },
+        {
+          "t": [
+            "roter Bart",
+            "red beard"
+          ],
+          "farbe": "rot"
+        },
+        {
+          "t": [
+            "grauer Bart",
+            "grey beard"
+          ],
+          "farbe": "grau"
+        },
+        {
+          "t": [
+            "weißer Bart",
+            "white beard"
+          ],
+          "farbe": "weiss"
+        },
+        {
+          "t": [
+            "ein Schnurrbart",
+            "a moustache"
+          ]
+        },
+        {
+          "t": [
+            "ein langer geflochtener Bart",
+            "a long braided beard"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nsc_statur",
+      "gruppe": "nsc",
+      "name": [
+        "Statur",
+        "Build"
+      ],
+      "zeilen": [
+        {
+          "t": [
+            "schmal gebaut",
+            "slender build"
+          ]
+        },
+        {
+          "t": [
+            "kräftig gebaut",
+            "sturdy build"
+          ]
+        },
+        {
+          "t": [
+            "hager",
+            "gaunt"
+          ]
+        },
+        {
+          "t": [
+            "rundlich",
+            "plump"
+          ]
+        },
+        {
+          "t": [
+            "breitschultrig",
+            "broad-shouldered"
+          ]
+        },
+        {
+          "t": [
+            "drahtig",
+            "wiry"
+          ]
+        },
+        {
+          "t": [
+            "untersetzt",
+            "stocky"
+          ]
+        },
+        {
+          "t": [
+            "schlaksig",
+            "lanky"
+          ]
+        },
+        {
+          "t": [
+            "zierlich",
+            "petite"
+          ]
+        },
+        {
+          "t": [
+            "stämmig",
+            "burly"
+          ]
+        },
+        {
+          "t": [
+            "hochgewachsen",
+            "tall"
+          ]
+        },
+        {
+          "t": [
+            "klein gewachsen",
+            "short"
+          ]
         }
       ]
     },
@@ -33988,7 +34592,10 @@
           "Söldnerin mit Speer, wortkarg und zuverlässig.",
           "A spear-carrying sellsword, curt and reliable."
         ],
-        "wert": "staerke"
+        "wert": "staerke",
+        "geschlecht": "weiblich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "ole",
@@ -34001,7 +34608,10 @@
           "Ein junger Bursche, der mehr Mut als Verstand hat.",
           "A young lad with more courage than sense."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "maennlich",
+        "alter": "jung",
+        "art": "mensch"
       },
       {
         "id": "brunhild",
@@ -34014,7 +34624,10 @@
           "Alte Bogenschützin, trifft eine Münze auf fünfzig Schritt.",
           "An old archer who hits a coin at fifty paces."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "weiblich",
+        "alter": "alt",
+        "art": "mensch"
       },
       {
         "id": "kasimir",
@@ -34027,7 +34640,10 @@
           "Ein Gnom mit Hammer und vielen Ratschlägen.",
           "A gnome with a hammer and plenty of advice."
         ],
-        "wert": "konstitution"
+        "wert": "konstitution",
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "ansgar",
@@ -34040,7 +34656,10 @@
           "Ein Totengräber mit Schaufel und ruhigen Händen.",
           "A gravedigger with a shovel and steady hands."
         ],
-        "wert": "staerke"
+        "wert": "staerke",
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "marta",
@@ -34053,7 +34672,10 @@
           "Eine Nonne mit Laterne, die keine Angst kennt.",
           "A nun with a lantern who knows no fear."
         ],
-        "wert": "weisheit"
+        "wert": "weisheit",
+        "geschlecht": "weiblich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "viktor",
@@ -34066,7 +34688,10 @@
           "Ein Jäger mit Silberkugeln und einer alten Rechnung.",
           "A hunter with silver bullets and an old score to settle."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "lene",
@@ -34079,7 +34704,10 @@
           "Ein Dienstmädchen, das jeden Gang im Herrenhaus kennt.",
           "A maid who knows every corridor of the manor."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "weiblich",
+        "alter": "jung",
+        "art": "mensch"
       },
       {
         "id": "k7",
@@ -34092,7 +34720,10 @@
           "Ein ausgemusterter Wachroboter, der höflich bleibt.",
           "A decommissioned guard robot that stays polite."
         ],
-        "wert": "konstitution"
+        "wert": "konstitution",
+        "geschlecht": "maennlich",
+        "alter": "alt",
+        "art": "maschine"
       },
       {
         "id": "rax",
@@ -34105,7 +34736,10 @@
           "Eine Söldnerin mit Lasergewehr und schlechten Witzen.",
           "A mercenary with a laser rifle and bad jokes."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "weiblich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "doc_imani",
@@ -34118,7 +34752,10 @@
           "Eine Sanitäterin, die nur ungern schießt.",
           "A medic who only shoots reluctantly."
         ],
-        "wert": "weisheit"
+        "wert": "weisheit",
+        "geschlecht": "weiblich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "tobu",
@@ -34131,7 +34768,10 @@
           "Ein Mechaniker, der mit allem einen Schraubenschlüssel wirft.",
           "A mechanic who throws a wrench at anything."
         ],
-        "wert": "staerke"
+        "wert": "staerke",
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "einaug",
@@ -34144,7 +34784,10 @@
           "Ein alter Matrose mit Entermesser und Seemannsgarn.",
           "An old sailor with a cutlass and tall tales."
         ],
-        "wert": "staerke"
+        "wert": "staerke",
+        "geschlecht": "maennlich",
+        "alter": "alt",
+        "art": "mensch"
       },
       {
         "id": "perle",
@@ -34157,7 +34800,10 @@
           "Eine Taucherin, die länger unter Wasser bleibt als jeder Fisch.",
           "A diver who stays underwater longer than any fish."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "weiblich",
+        "alter": "jung",
+        "art": "mensch"
       },
       {
         "id": "smutje_bo",
@@ -34170,7 +34816,10 @@
           "Ein Schiffskoch, der mit der Bratpfanne kämpft.",
           "A ship's cook who fights with a frying pan."
         ],
-        "wert": "konstitution"
+        "wert": "konstitution",
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "mensch"
       },
       {
         "id": "kiki",
@@ -34183,7 +34832,10 @@
           "Ein Schiffsjunge, der jeden Mast hinaufkommt.",
           "A cabin boy who can climb any mast."
         ],
-        "wert": "geschick"
+        "wert": "geschick",
+        "geschlecht": "maennlich",
+        "alter": "jung",
+        "art": "mensch"
       }
     ],
     "gefaehrten_kinder": [
@@ -34196,7 +34848,10 @@
         "satz": [
           "Ein zotteliger Hund, der jeden Stock bringt und laut bellt.",
           "A shaggy dog who fetches every stick and barks loudly."
-        ]
+        ],
+        "geschlecht": "maennlich",
+        "alter": "jung",
+        "art": "tier"
       },
       {
         "id": "pip",
@@ -34207,7 +34862,10 @@
         "satz": [
           "Ein kleiner Drache, so groß wie eine Katze, der Funken niest.",
           "A little dragon the size of a cat that sneezes sparks."
-        ]
+        ],
+        "geschlecht": "maennlich",
+        "alter": "jung",
+        "art": "tier"
       },
       {
         "id": "bummel",
@@ -34218,7 +34876,10 @@
         "satz": [
           "Ein freundlicher Bär, der gern Honig teilt.",
           "A friendly bear who likes to share honey."
-        ]
+        ],
+        "geschlecht": "maennlich",
+        "alter": "mittel",
+        "art": "tier"
       }
     ]
   },
