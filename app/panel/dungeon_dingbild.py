@@ -22,7 +22,7 @@ The map (dungeon_karte.py) adds its kinds of places and rooms to the catalog (wa
 picture of every visited place (ort-<hash>, dungeon_karte.queue_orte from due, shown only to seats of its round).
 The Bestiarium (dungeon.gegner) is painted alike, with its own fixed phrase FOE_EN, in the style of the worlds a foe
 belongs to, from its English name, description (info, when the word list lets it through), size (GROESSE_EN) and
-what it is by the panel's fixed lists MENSCH and HUMANOID (Dominik 2026-10-24 „2“). „Alle Bilder malen“ (grund
+what it is by its field „wesen“ (WESEN_EN, Dominik 2026-10-24 „2“, review 2026-10-27 Z11). „Alle Bilder malen“ (grund
 "alle") is the admin's run without the day limit. The hero form's peoples, classes and class abilities (Dominik 2026-10-24 „bilder keine icons“) are
 painted alike, once each in every world's style with their own fixed phrases HELD_EN (hero_prompt; Punkt 8a of
 2026-10-24: the style of the world, never fixed fantasy); the form shows the one of the world chosen, a round the one
@@ -85,20 +85,14 @@ FOE_EN = "creature art for a bestiary, the whole creature"   # the Bestiarium (g
 # no "plain dark background": the world's style asks for a detailed one (Dominik 2026-10-24 „2“: a foe from its name only
 # came out wrong, a Cultist as a horned demon), so the prompt has the English description (info), the size and what it is:
 GROESSE_EN = {"winzig": "tiny", "klein": "small", "mittel": "human-sized", "gross": "large", "riesig": "huge"}
-# what a foe is, by a fixed list of the panel (never the model's choice): people, and creatures shaped like people
-MENSCH = frozenset(("bandit", "banditenhauptmann", "schlaeger", "kultist", "kultfanatiker", "wache", "veteran", "ritter",
-                    "berserker", "spion", "assassine", "magier_gegner", "priester", "gladiator", "erzmagier", "raumpirat",
-                    "cyborg_soeldner", "mutant", "meuterer", "piratenkapitaen", "puppenspieler",
-                    # the bestiary's new foes (V01.1.039)
-                    "enterkommando", "psi_adept", "schmuggler", "seehexe", "marinekapitaen", "verfluchter_kapitaen",
-                    "puppenmacher", "seuchenarzt", "hexenmeister", "wegelagerer", "sternenfreibeuter"))
-HUMANOID = frozenset(("goblin", "kobold", "ork_krieger", "hobgoblin", "grottenschrat", "gnoll", "dunkelelf", "duergar",
-                      "echsenmensch", "sahuagin", "meerhexe", "waldhexe", "nachtvettel", "doppelgaenger", "vampirbrut",
-                      "meermensch", "oni", "geisterpirat", "klabautermann", "schattenkind", "oger", "troll", "huegelriese",
-                      "ettin", "azer", "dryade", "satyr", "zombie", "ghul", "grabschrecken", "grabunhold", "mumie",
-                      "kampfsynth", "sicherheitsdroide", "tarnjaeger", "schrottkrieger", "admiral_des_nichts", "geistermatrose",
-                      "die_bleiche_graefin", "lichkoenig", "frostriesin", "dunkelelf_klinge", "spiegelkoenigin", "schicksalsweber"))
-WESEN_EN = {"mensch": "an ordinary human person", "humanoid": "a humanoid with two arms and two legs"}
+# what a foe is, by the field „wesen“ of the Bestiarium (dungeon_bestiarium.wesen, review 2026-10-27 Z11: one source
+# instead of the id lists by hand), never the model's choice; the kinds a name already shows (an animal, a dragon, an
+# element, a plant, an ooze, a monster of the myths) need no phrase
+WESEN_EN = {"mensch": "an ordinary human person", "humanoid": "a humanoid with two arms and two legs",
+            "riese": "a giant-kin far taller and heavier than a human", "untot": "an undead being",
+            "konstrukt": "a built construct, not a living being", "fee": "a fey being of the wild places",
+            "unhold": "a fiend from a dark plane", "himmlisch": "a celestial being with a calm radiance",
+            "aberration": "an alien, unsettling being"}
 HELD_EN = {"volk": "character art, a {} adventurer of this world, head and shoulders",   # Dominik 2026-10-24 „bilder keine icons“
            "klasse": "character art, a {} of this world, the whole figure, where such a person works in this world",
            "kraft": "game ability art, one glowing moment of power in the middle of action, no person in the centre: {}",
@@ -275,7 +269,8 @@ def prompt(style, c):
     of the Bestiarium (no "art") its own fixed phrase."""
     if "art" not in c:
         import bilder
-        wesen = WESEN_EN["mensch"] if c.get("id") in MENSCH else WESEN_EN["humanoid"] if c.get("id") in HUMANOID else ""
+        import dungeon_bestiarium
+        wesen = WESEN_EN.get(dungeon_bestiarium.wesen(c), "")
         info = (c.get("info") or ["", ""])[1]
         info = "" if bilder.refuse_text("", info) else info          # a description the word list refuses stays out
         size = GROESSE_EN.get(c.get("groesse", "mittel"), "") if wesen or c.get("groesse", "mittel") != "mittel" else "medium-sized"

@@ -376,7 +376,11 @@ class Companions(Base):
         self.assertEqual(len(jobs), 1)
         _, key, n, p = jobs[0]
         self.assertEqual(key, "gf:grete")
+        rd0 = dungeon._read()["runden"][rid]
         self.assertIn("a companion of the heroes, a spear-carrying sellsword, curt and reliable", p)
+        self.assertIn("a middle aged woman, a companion", p)            # gender and age from the data (review Z7)
+        self.assertTrue(gesicht.text(rd0, {"k": "gf:wuschel", "id": "wuschel", "satz": ["", "A shaggy dog."]}).startswith(
+            gesicht.GEFAEHRTE_ART_EN["tier"]))
         self.assertIn(gesicht.GESICHT_EN, p)
         self.assertNotIn("Grete", p)                                # never the name
         self.assertEqual(gesicht.queue(), [])                       # once

@@ -289,8 +289,16 @@ class Catalog(Base):
         self.assertIn(db.WESEN_EN["humanoid"], db.prompt(style, next(g for g in r["gegner"] if g["id"] == "goblin")))
         wolf = db.prompt(style, next(g for g in r["gegner"] if g["id"] == "wolf"))
         self.assertFalse(any(w in wolf for w in db.WESEN_EN.values()))
-        ids = {g["id"] for g in r["gegner"]}
-        self.assertTrue(db.MENSCH <= ids and db.HUMANOID <= ids and not db.MENSCH & db.HUMANOID)
+        import dungeon_bestiarium                                          # what a foe is comes from its field „wesen“
+        self.assertLessEqual(set(db.WESEN_EN), set(dungeon_bestiarium.WESEN))   # (review 2026-10-27 Z11), no list by hand
+        for g in r["gegner"]:
+            w = db.WESEN_EN.get(dungeon_bestiarium.wesen(g))
+            self.assertTrue(w is None or w in db.prompt(style, g), g["id"])
+        for i in ("seeraeuber", "dorfbewohner", "adliger", "wachhauptmann"):   # people the old list had missed
+            g = next((g for g in r["gegner"] if g["id"] == i), None)
+            if g:
+                self.assertIn(db.WESEN_EN["mensch"], db.prompt(style, g), i)
+        self.assertNotIn(db.WESEN_EN["mensch"], db.prompt(style, {k: v for k, v in kult.items() if k != "wesen"}))   # an own foe without it
         ghul = dict(next(g for g in r["gegner"] if g["id"] == "ghul"),   # a description the word list refuses stays out (the
                     info=["Ein Ghul voller Blut.", "A ghoul covered in gore."])   # catalog's own is child-safe since the SRD 5.2.1)
         self.assertNotIn(ghul["info"][1].rstrip("."), db.prompt(style, ghul))

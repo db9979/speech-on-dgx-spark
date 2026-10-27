@@ -58,6 +58,7 @@ GESICHT_EN = "character portrait, head and shoulders, the face clearly visible"
 VORLAGE_EN = "{} from reference image {} with the same face"
 HELD_EN = "the hero"
 GEFAEHRTE_EN = "a companion of the heroes, "
+GEFAEHRTE_ART_EN = {"tier": "an animal companion of the heroes, ", "maschine": "a machine companion of the heroes, "}
 GEFAEHRTE_VORLAGE_EN = "the companion"
 _malt = set()              # portraits on their way (memory: a restart paints again the next day)
 _vorlagen = {}             # (rid, bid) -> portrait names of a scene picture on its way
@@ -121,8 +122,26 @@ def text(rd, x):
     """The person's fixed description from its card (English column of the tables); a companion's from its fixed line."""
     if gf.is_one(x.get("k")):
         s = str((x.get("satz") or ["", ""])[-1]).strip().rstrip(".")
-        return GEFAEHRTE_EN + s[:1].lower() + s[1:]
+        return _gefaehrte(x) + s[:1].lower() + s[1:]
     return _karte(x, who(rd, x))
+
+
+def _gefaehrte(x):
+    """A companion's fixed words before its line (review 2026-10-27 Z7: „a woman, a spear-carrying sellsword“): its
+    kind, gender and age from its data (ideen.gefaehrten: geschlecht, alter, art), never guessed from the line."""
+    i = dungeon.rules().get("ideen") or {}
+    row = next((y for y in (i.get("gefaehrten") or []) + (i.get("gefaehrten_kinder") or []) if y.get("id") == x.get("id")), {})
+    art, g, a = (row.get(f, x.get(f)) for f in ("art", "geschlecht", "alter"))
+    if art in GEFAEHRTE_ART_EN:
+        return GEFAEHRTE_ART_EN[art]
+    if art != "mensch" or g not in dungeon.GESCHLECHT:
+        return GEFAEHRTE_EN
+    if a == "kind":
+        w = {"weiblich": "a girl", "maennlich": "a boy"}.get(g, "a child")
+    else:
+        alter = stimmen.data()["npc"]["alter"]
+        w = f"{alter[a]} {dungeon.GESCHLECHT[g][2].split(' ', 1)[1]}" if a in alter else dungeon.GESCHLECHT[g][2]
+    return f"{w}, {GEFAEHRTE_EN}"
 
 
 def _karte(x, out):

@@ -4055,6 +4055,13 @@
 "titel": "Dungeon-Master: Stimmen aus Beschreibung",
 "text": "Funktionen → KI-Dungeon-Master → Personen: eine Person öffnen, Stimme wählen, ▶ Probe. A: Mit VoiceDesign an klingt die Probe nach der Wahl (alt, rau …), zwei Personen klingen verschieden. B: Ist VoiceDesign aus, steht über der Wahl der Satz mit dem Link zu Einstellungen → Sprachausgabe; der Link öffnet die Einstellung. C: In einer Runde mit Vorlesen an zeigt das Spielleiter-Pult denselben Satz, solange VoiceDesign aus ist.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P604",
+"v": 1173,
+"titel": "Dungeon-Master: Gegnerart und Gefährten im Bild",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber, Gesichter für NSCs und Gefährten anheuern an. A: Unter Funktionen → KI-Dungeon-Master → Regeln anpassen → „Bestiarium“ den Seeräuber oder den Dorfbewohner mit „Nochmal malen“ malen: ein Mensch, kein Wesen. B: Den Zombie malen: ein Untoter. C: In einer Siedlung Grete anheuern: ihr Gesicht zeigt eine Frau mittleren Alters.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

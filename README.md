@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.173** AI Dungeon Master: foe pictures take what a foe is from the Bestiarium (humans look human), companion faces with fixed gender and age
 - **V01.1.172** AI Dungeon Master: the sample of a person's voice looks afresh whether voices from a description run, and catalog and game master console say so with a jump link when not
 - **V01.1.171** AI Dungeon Master: ask back only without a verb and at most 30 s, no check for going, buying and resting, typed buying and resting get a fixed line, gold given to people is taken (review 27.10., package 6)
 - **V01.1.170** AI Dungeon Master: in a fight every action naming a foe is an attack (also „Ich greife den Goblin mit dem Schwert an“), „Ich heile Bela“ casts the healing spell, the spell line names the life (review 27.10., package 2)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.166** AI Dungeon Master: persuade to come along (switch, off), whether an asked person comes along is decided by its attitude towards the hero and a Charisma check of the panel, the devoted come without a check (LlamaTale idea 4)
 - **V01.1.165** AI Dungeon Master: real dice for attacks in a fight too, only 10 s wait after two turns without a throw, difficulty as a word
 - **V01.1.164** AI Dungeon Master: every foe says what it is; companions with fixed gender and age, fixed looks tables
-- **V01.1.163** AI Dungeon Master: in a fight the group does not move on (only after a flight that worked), asking the way, drawing a sword or breaking a door open is no going any more, and the group moves only when the majority wants to go and nobody stays
 
 
 
