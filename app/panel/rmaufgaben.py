@@ -343,7 +343,7 @@ async def send(uid, now=None, why="knopf"):
     areas = tuple(p for p in ("neu", "anmerkung") if part(uid, p))
     version = int(t.get("v", 0)) + 1
     local = datetime.datetime.fromtimestamp(now, _zone(uid))
-    m = rmpapier.model(rmpapier.model_key(uid, d))
+    m = rmpapier.model_of(uid, d)
     kinds = NEW_KINDS if features.allowed("tasks", uid) else NEW_KINDS[:2]
     quiet = None if its else await calm(uid, now, t.get("receipt") or [])
     built = build(m, its, version, t.get("receipt") or [], local.strftime("%d.%m.%Y"), areas, kinds, quiet)

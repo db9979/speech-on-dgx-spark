@@ -110,6 +110,15 @@ def model(key):
     return m
 
 
+def model_of(uid, d=None):
+    """The model a profile's sheets are made for, in colour only on a colour screen and while the profile keeps colour
+    (Ich → reMarkable „Farbe“, rm_color; Dominik 2026-10-27 „Farbe oder Graustufen“): the one place for both."""
+    m = model(model_key(uid, d))
+    if m["color"] and profiles.settings(uid).get("rm_color") == "grau":
+        m["color"] = False
+    return m
+
+
 # ---------------------------------------------------------------- building a sheet
 COLOR = {"acc": (91, 91, 240), "acc2": (14, 165, 198), "fg": (20, 24, 36), "mut": (95, 107, 133), "tint": (238, 240, 253),
          "tint2": (232, 247, 251), "line": (205, 209, 222), "paper": (255, 255, 255)}
@@ -606,7 +615,7 @@ def build_text(m, label, title, body, sub="", notes=True):
 def plain_pdf(uid, label, title, body, sub=""):
     """Without „Gestaltete Blätter“ (Morgenblatt, Wochenrückblick): the same reader and layout in the device's format,
     black and white, no boxes (nothing is read back), ruled lines and a lined page for handwriting."""
-    sh = Sheet(model(model_key(uid)), label, title, sub, _code(label, title, time.time()), weg=False, plain=True)
+    sh = Sheet(model_of(uid), label, title, sub, _code(label, title, time.time()), weg=False, plain=True)
     sh.text(body)
     sh.lines()
     sh.lined_page()
@@ -1089,7 +1098,7 @@ async def place(uid, art, title, built, kind, own="", pinned=False, auto=True):
 
 
 def built_text(uid, label, title, body, sub=""):
-    return build_text(model(model_key(uid)), label, title, body, sub)
+    return build_text(model_of(uid), label, title, body, sub)
 
 
 # ---------------------------------------------------------------- reading the sheets back (background)

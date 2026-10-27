@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.143** AI Dungeon Master: hero book to the reMarkable (switch, off), one book per hero in the own device's format with hero sheet, chronicle, people, bestiary and items, in colour on Paper Pro and Move, greyscale on the rm2, by itself after the evening and on "Send now", colour or greyscale under Me → reMarkable
 - **V01.1.142** AI Dungeon Master: combat audit wave 2, spells with a saving throw are now saved against by the foe (half damage, conditions such as prone or unconscious), Sleep and Hold Person work in a fight, Healing Hands heals a friend by name, and the foes' conditions take the bestiary's DC
 - **V01.1.141** Pebble test independent of the time of day: "My day" is checked with a fixed "now", shortly before midnight the test no longer turns red
 - **V01.1.140** AI Dungeon Master: saving throws, conditions and DCs from the SRD in the catalog (combat audit H4, N6, N7)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.136** AI Dungeon Master: own stories (switch, off), every story card has ⋯ with Edit, Copy and Delete, "＋ New story" comes first (tone, keywords, the language model writes it, the panel checks it), every host has the own ones, the admin sees all
 - **V01.1.135** AI Dungeon Master: album page "People", with the people catalog the album also shows the people met, after 1, 2 and 4 meetings with face, looks, occupation, manner, traits and attitude towards the hero, never wish or secret
 - **V01.1.134** AI Dungeon Master: ask back on unclear actions (switch, off), when an action is too short, has no deed or its pronoun points at nothing, the table asks back by fixed rules with three suggestions from the scene and “Leave it”, never holds up the round, read aloud in the car and as buttons on CarPlay
-- **V01.1.133** AI Dungeon Master: combat word boundaries, attacking a Nachtmahr or a Sicherheitsdroide works again (self-test over every foe), more attack and non-attack phrases, a hero down rolls no check
 
 
 

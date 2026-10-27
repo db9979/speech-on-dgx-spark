@@ -131,6 +131,7 @@ import dungeon_rast as rast
 import dungeon_reise as reise
 import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
+import dungeon_buch as heldenbuch
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_rueckfrage as rueckfrage
@@ -1330,6 +1331,7 @@ def fix_hero(r, h):
                    and _int(x.get("zuege"), 1, SCHUTZ_ZUEGE)][-len(kampf.SCHADEN_ARTEN):]
     album.fix(r, h)                       # the Monster-Album (D&D idea 12): only the catalog's foes
     narben.fix(r, h)                      # the wounds (D&D idea 8) as the table writes them
+    heldenbuch.pruefe(h)                  # the hero's chronicle: fixed kinds, catalog ids, whole numbers (dungeon_buch)
     return h
 
 
@@ -1978,6 +1980,7 @@ def _end(rd, now, why, rid):
     pay_ep(rules(), rd, rid)
     honour(rd)
     personen.collect(_me, rules(), rd, now)      # the people the table met into the catalog (Personen-Katalog 1)
+    heldenbuch.runde_ende(_me, rd, now)          # the evening into each hero's chronicle, its book queued (never raises)
     for p in rd["plaetze"].values():
         keep_seat(p)
     _log(rd, "system", text=["Die Runde ist zu Ende.", "The round has ended."])
@@ -2523,6 +2526,7 @@ def end_chapter(owner, rid, now=None):
         cover(rid, rd, kid, c)
         chronikbuch.page(_me, rules(), rd, c, now)   # the chapter's page of the book (D&D idea 11)
         _log(rd, "kapitel_ende", kapitel=rd.get("kapitel", 1))   # the one place a chapter's end is told (dungeon_lied)
+        heldenbuch.kapitel_ende(_me, rd, now)    # the chapter into each hero's chronicle, its book queued (never raises)
         c.update(kapitel=rd.get("kapitel", 1), vorher=c.get("bisher", ""), t=now, rid="", schreibt=True, entwurf=True,
                  quelle=[x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-QUELLE_MAX:],
                  helden=[{"uid": p["uid"], "hid": p["held"]["hid"], "name": p["held"]["name"]} for _, p in seated(rd) if p.get("uid")],
@@ -5863,7 +5867,7 @@ def own_clear(uid):
             v["plaetze"] = {k: p for k, p in v["plaetze"].items() if p.get("uid") != uid}
             v["offen"] = {k: a for k, a in v["offen"].items() if k in v["plaetze"]}
         _write(d)
-        for f in (_hfile(uid), _kfile(uid)):
+        for f in (_hfile(uid), _kfile(uid), heldenbuch._file(uid)):   # with the hero books' state (dungeon_buch.py)
             try:
                 os.remove(f)
             except FileNotFoundError:

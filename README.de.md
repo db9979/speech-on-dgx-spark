@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.143** KI-Dungeon-Master: Heldenbuch aufs reMarkable (Schalter, aus), je Held ein Buch im Format des eigenen Geräts mit Heldenbogen, Chronik, Personen, Bestiarium und Gegenständen, auf Paper Pro und Move in Farbe, rm2 in Graustufen, von selbst nach dem Abend und auf „Jetzt schicken“, Farbe oder Graustufen unter Ich → reMarkable
 - **V01.1.142** KI-Dungeon-Master: Kampf-Audit Welle 2, Zauber mit Rettungswurf würfelt jetzt der Gegner (halber Schaden, Zustände wie liegend oder bewusstlos), Schlaf und Person festhalten wirken im Kampf, Heilende Hände heilt einen Freund mit Namen, und Zustände der Gegner nehmen den SG des Bestiariums
 - **V01.1.141** Pebble-Test unabhängig von der Uhrzeit: „Mein Tag“ rechnet mit einem festen „jetzt“, kurz vor Mitternacht wird der Test nicht mehr rot
 - **V01.1.140** KI-Dungeon-Master: Rettungswürfe, Zustände und SG nach dem SRD im Katalog (Kampf-Audit H4, N6, N7)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.136** KI-Dungeon-Master: Eigene Geschichten (Schalter, aus), jede Geschichtenkarte hat ⋯ mit Bearbeiten, Kopieren und Löschen, „＋ Neue Geschichte“ steht vorn (Ton, Stichworte, das Sprachmodell schreibt sie, das Panel prüft sie), jeder Gastgeber hat seine eigenen, der Admin sieht alle
 - **V01.1.135** KI-Dungeon-Master: Album-Seite „Personen“, mit Personen-Katalog zeigt das Album auch die getroffenen Personen, nach 1, 2 und 4 Treffen mit Gesicht, Aussehen, Beruf, Art, Wesen und Haltung zum Helden, nie Wunsch oder Geheimnis
 - **V01.1.134** KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (Schalter, aus), ist eine Ansage zu kurz, ohne Tun oder zeigt ihr Fürwort auf nichts, fragt der Tisch nach feste Regeln mit drei Vorschlägen aus der Szene und „So lassen“, hält die Runde nie auf, im Auto vorgelesen und auf CarPlay als Knöpfe
-- **V01.1.133** KI-Dungeon-Master: Kampf-Wortgrenzen, „Ich greife Nachtmahr an“ und „Ich schlage Sicherheitsdroide“ sind wieder Angriffe (Selbsttest über jeden Gegner), „schlage dich nieder“ greift an, „Ich haue ab“ und „schlage Alarm“ nicht, wer am Boden liegt, würfelt keine Probe
 
 
 

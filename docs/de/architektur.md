@@ -276,6 +276,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_album.py` | Dungeon-Master: Monster-Album, je Held die besiegten Gegner und die getroffenen Personen, mehr Wissen je Stufe |
 | `app/panel/dungeon_auto.py` | Dungeon-Master im Auto: feste Befehle mit Rückfrage, Zusammenfassung, Runde wählen und neu, Stimmen der Runde |
 | `app/panel/dungeon_balance.py` | Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark |
+| `app/panel/dungeon_buch.py` | Dungeon-Master: Heldenbuch je Held als PDF im Format des reMarkable, Farbe oder Graustufen |
 | `app/panel/dungeon_chronik.py` | Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke |
 | `app/panel/dungeon_echt.py` | Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter |
@@ -614,6 +615,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
 | `users/ID/dungeon-helden.json` | KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten) | Zustand | – | ja | – |
 | `users/ID/dungeon-kampagnen.json` | KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste | Zustand | – | ja | – |
+| `users/ID/dungeon-buch.json` | KI-Dungeon-Master: Heldenbuch aufs reMarkable, je Held die letzte Ausgabe (Nummer, Zeit, Prüfsumme, Zahlen für „Neu seit“) und was noch wartet | Zustand | – | ja | – |
 | `users/ID/dungeon-wappen.json` | KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast | Zustand | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |

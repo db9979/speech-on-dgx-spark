@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.143** · 2026-10-27 · KI-Dungeon-Master: Heldenbuch aufs reMarkable (Schalter, aus), je Held ein Buch im Format des eigenen Geräts mit Heldenbogen, Chronik, Personen, Bestiarium und Gegenständen, auf Paper Pro und Move in Farbe, rm2 in Graustufen, von selbst nach dem Abend und auf „Jetzt schicken“, Farbe oder Graustufen unter Ich → reMarkable
 - **V01.1.142** · 2026-10-27 · KI-Dungeon-Master: Kampf-Audit Welle 2, Zauber mit Rettungswurf würfelt jetzt der Gegner (halber Schaden, Zustände wie liegend oder bewusstlos), Schlaf und Person festhalten wirken im Kampf, Heilende Hände heilt einen Freund mit Namen, und Zustände der Gegner nehmen den SG des Bestiariums
 - **V01.1.141** · 2026-10-27 · Pebble-Test unabhängig von der Uhrzeit (festes „jetzt“)
 - **V01.1.140** · 2026-10-26 · KI-Dungeon-Master: Rettungswürfe, Zustände und „halb“ an 40 Zaubern, Ziel „verbuendeter“ für 9 Heil- und Wiederbelebungszauber, SG für alle 268 Gegner nach dem SRD 5.2.1, die Wache sticht (Daten, Kampf-Audit H4, N6, N7)

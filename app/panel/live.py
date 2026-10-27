@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["chronik"] = {}
+    try:   # Heldenbuch aufs reMarkable (dungeon_buch.py): numbers on the game's line
+        import dungeon_buch
+        dgn["buch"] = dungeon_buch.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["buch"] = {}
     try:   # Personen-Katalog (dungeon_personen.py): numbers on the game's line
         import dungeon_personen
         dgn["personen"] = dungeon_personen.for_live() if dgn.get("on") else {}
@@ -2039,6 +2044,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("helfen") or {}).values()) else "")
                         + (f" · heute {dgn['schrift']['gefunden']} Schriftstücke gefunden, {dgn['schrift']['verworfen']} verworfen, {dgn['schrift']['geheim']} nur für einen Platz"
                            if any((dgn.get("schrift") or {}).values()) else "")
+                        + (f" · heute {dgn['buch']['gesendet']} Heldenbücher aufs reMarkable, {dgn['buch']['unveraendert']} unverändert, {dgn['buch']['fehler'] + dgn['buch']['abgelehnt']} nicht geschickt"
+                           if any((dgn.get("buch") or {}).values()) else "")
                         + (f" · heute {dgn['album']['eintraege']} neue Album-Einträge, {dgn['album']['aufgestiegen']} Album-Stufen erreicht, {dgn['album'].get('personen', 0)} Personen-Stufen"
                            if any((dgn.get("album") or {}).values()) else "")
                         + (f" · heute {dgn['narben']['narben']} Wunden, davon {dgn['narben']['folgen']} mit Folge und {dgn['narben']['pflaster']} Pflaster, {dgn['narben']['geheilt']}× beim Heiler"

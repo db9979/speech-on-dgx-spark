@@ -1319,6 +1319,9 @@ def public(uid):
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
             "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or []),
             "plus": rmplus.public(uid),
+            # Farbe oder Graustufen (rm_color): only offered while the device's screen can show colour (not on the rm2)
+            "color": {"can": rmpapier.model(rmpapier.model_key(uid, d))["color"],
+                      "value": profiles.settings(uid).get("rm_color") or "farbe"},
             "paper": rmpapier.public(uid) if features.admin_on("rmpapier") and features.allowed("rmsend", uid) else None}
 
 

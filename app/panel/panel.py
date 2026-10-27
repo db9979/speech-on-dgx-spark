@@ -119,6 +119,7 @@ import dungeon_wunsch  # noqa: E402
 import dungeon_lied  # noqa: E402
 import dungeon_rast  # noqa: E402
 import dungeon_chronik  # noqa: E402
+import dungeon_buch  # noqa: E402
 import dungeon_karte  # noqa: E402
 import dungeon_gesicht  # noqa: E402
 import dungeon_wappen  # noqa: E402
@@ -181,7 +182,7 @@ import einladung  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -572,6 +573,7 @@ async def remarkable_sync():
             try:
                 await remarkable.due_once(idle=not vorrang.speaking())
                 await rmplus.due_once(idle=not vorrang.speaking())    # Morgenblatt, @Spark, guide ... (rmplus.py)
+                await dungeon_buch.due_once(idle=not vorrang.speaking())   # the hero books after a round (dungeon_buch.py)
             except Exception as e:
                 print("remarkable:", type(e).__name__, flush=True)
     spawn(loop())

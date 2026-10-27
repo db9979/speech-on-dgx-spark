@@ -140,7 +140,7 @@ async def morning(uid, local):
                  "at": datetime.datetime.fromtimestamp(x["due"] / 1000, _zone(uid)).strftime("%H:%M")}
                 for x in profiles.reminders(uid) if x.get("due", 0) <= end and re.fullmatch(r"[0-9a-f]{8}", str(x.get("id")))]
         day = f"{DAYS[local.weekday()]}, {local.day}. {MONTHS[local.month - 1]}"
-        built = rmpapier.build_morning(rmpapier.model(rmpapier.model_key(uid)), day, "Guten Morgen", text, todo)
+        built = rmpapier.build_morning(rmpapier.model_of(uid), day, "Guten Morgen", text, todo)
         r = await rmpapier.place(uid, "morgen", title, built, "morgen")
         print("remarkable: morning sheet sent", flush=True)
         return r
@@ -628,19 +628,20 @@ ATTACH_TOOL = {"type": "function", "function": {
 SHEET_TOOL = {"type": "function", "function": {
     "name": "remarkable_sheet",
     "description": "Puts one of the Spark's own sheets onto the user's reMarkable right now: today's morning sheet, "
-                   "this week's review, the calibration sheet or the guide. Only when the user asks for it in this "
+                   "this week's review, the calibration sheet, the guide or the hero book of the game. Only when the user asks for it in this "
                    "message.",
     "parameters": {"type": "object", "properties": {
         "what": {"type": "string", "enum": [], "description": "Which sheet"}}, "required": ["what"]}}}
 HINT = ("remarkable_page puts a web page the user names onto the reMarkable; remarkable_attachment puts the newest PDF "
         "or EPUB from the user's mails there; remarkable_sheet makes one of the Spark's own sheets (morning sheet, "
-        "week review, calibration sheet, guide) now. Use them only when the user asks for exactly that.")
+        "week review, calibration sheet, guide, hero book) now. Use them only when the user asks for exactly that.")
 # "Leg mir das Morgenblatt noch mal aufs reMarkable" (Dominik 2026-10-13): the sheet the person names, by its switch
 SHEETS = {"morgen": (re.compile(r"morgen\s?blatt|tages\s?blatt|morning\s+sheet", re.I), "rmmorning"),
           "woche": (re.compile(r"wochen\s?rückblick|wochen\s?blatt|week(?:ly)?\s+review", re.I), "rmweek"),
           "abgleich": (re.compile(r"abgleich\w*[\s-]?blatt|kalibrier\w*|calibration\s+sheet", re.I), "rmpapier"),
           "anleitung": (re.compile(r"anleitung|\bguide\b", re.I), "rmguide"),
-          "aufgaben": (re.compile(r"aufgaben\s?blatt|aufgabenliste\b|task\s+sheet", re.I), "rmaufgaben")}
+          "aufgaben": (re.compile(r"aufgaben\s?blatt|aufgabenliste\b|task\s+sheet", re.I), "rmaufgaben"),
+          "heldenbuch": (re.compile(r"helden\s?buch|helden\s?bogen|hero\s?book|hero\s+sheet", re.I), "dungeonbuch")}
 SHEET_DONE = {"aufgaben": "Das Aufgabenblatt", "morgen": "Das Morgenblatt", "woche": "Der Wochenrückblick",
               "abgleich": "Das Abgleich-Blatt",
               "anleitung": "Die Anleitung"}
@@ -685,6 +686,10 @@ async def sheet_now(uid, what):
     elif what == "abgleich":
         r = await rmpapier.place(uid, "", "Abgleich für dein reMarkable",
                                  rmpapier.build_calibration(rmpapier.model(rmpapier.model_key(uid))), "kalib", auto=False)
+    elif what == "heldenbuch":                 # the book of the hero played last (dungeon_buch.py), its own sentence
+        import dungeon_buch
+        print(f"remarkable: sheet on request | {what}", flush=True)
+        return await dungeon_buch.sheet(uid)
     else:
         r = await guide(uid, force=True)
     print(f"remarkable: sheet on request | {what}", flush=True)

@@ -3915,6 +3915,13 @@
 "titel": "Dungeon-Master: Rettungswürfe der Gegner",
 "text": "A: Im Kampf als Heiler Heilige Flamme auf einen Gegner wirken: die Geschichte zeigt die Zeile „Rettungswurf Geschick = … gegen SG …“ (geschafft oder nicht) statt eines Angriffs gegen die RK. B: Eine Schriftrolle Feuerball aus der Tasche wirken und angreifen: schafft der Gegner den Rettungswurf, nimmt er den halben Schaden. C: Schlaf auf einen Gegner wirken: schafft er den Rettungswurf nicht, ist er bewusstlos und greift nicht an, die Ladung zählt. D: „Ich wirke Heilende Hände auf NAME“ mit dem Namen eines verletzten Mitspielers: geheilt wird dieser Held, nicht der Zaubernde.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P584",
+"v": 1143,
+"titel": "Heldenbuch aufs reMarkable",
+"text": "A: Als Admin Funktionen → KI-Dungeon-Master → Heldenbuch aufs reMarkable einschalten, ein Profil mit verbundenem reMarkable öffnet Dungeon-Master → Helden: unter den Helden steht „Heldenbuch aufs reMarkable“ mit Format und Farbe. B: „Vorschau (PDF)“: Inhalt, Heldenbogen, Chronik, Personen, Bestiarium und Gegenstände, die Reiter springen zu den Teilen, nichts ragt über den Rand. C: „Jetzt schicken“: auf dem reMarkable liegen „Heldenbuch – NAME“ und einmalig „Notizen – NAME“; ein zweites Mal ersetzt das Buch, die Notizen bleiben. D: Ein Kapitel zu Ende spielen: etwa eine halbe Stunde später kommt das Buch von selbst, mit „Neu seit der letzten Ausgabe“. E: Paper Pro oder Move: unter Ich → reMarkable „Farbe“ auf „In Graustufen“ stellen, das nächste Buch kommt grau, gut lesbar; beim reMarkable 2 gibt es die Auswahl nicht. F: Im Buch stehen bei Personen nie Wunsch oder Geheimnis, bei Mitspielern nur Name, Volk und Klasse; ein Gast bekommt kein Buch.",
+"thread": "Heldenbuch aufs reMarkable"
 }
 ]
 }

@@ -2,7 +2,7 @@
 // umsetzten“: „Spiel-Skripte erst beim Öffnen laden“). The page always has only this file: the menu entry needs only
 // who.dungeon; opening the page (goSec → dmOpen) or a seat link (#spiel=, #weiter=) loads the scripts of DM_SKRIPTE once,
 // in this order, with the running version as ?v= (panel._asset), then hands over to their own dmStart, dmOpen, dmHash.
-const DM_SKRIPTE=['dungeon.js','dungeonkarte.js','dungeon-ton.js','dungeonfenster.js','dungeonwarten.js','dungeonwappen.js'];
+const DM_SKRIPTE=['dungeon.js','dungeonkarte.js','dungeon-ton.js','dungeonfenster.js','dungeonwarten.js','dungeonwappen.js','dungeonbuch.js'];
 const DML={p:null,who:null};
 function dmLade(){return DML.p||(DML.p=DM_SKRIPTE.reduce((p,f)=>p.then(()=>new Promise((ok,no)=>{const s=document.createElement('script');
   s.src='/static/js/'+f+'?v='+encodeURIComponent(SPARK_VER);s.onload=ok;s.onerror=()=>{DML.p=null;no(new Error(f))};document.head.appendChild(s)})),Promise.resolve())

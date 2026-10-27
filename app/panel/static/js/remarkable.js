@@ -99,6 +99,8 @@ function rmSendTab(d,lib){const E=icEl,w=E('div');
   w.innerHTML=`<div class="fh">${esc(t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.'))}</div>`+
     (d.send?`<h4 class="ic-h4">${esc(t('Ablegen in','Put into'))}</h4><select id="rmtarget" aria-label="${esc(t('Ablegen in','Put into'))}"><option value="">${esc(t('Spark (Standard)','Spark (default)'))}</option>${lib.filter(x=>x.folder).map(x=>`<option value="${esc(x.id)}"${x.id===d.target?' selected':''}>${esc(x.path)}</option>`).join('')}</select>
     <div class="fh">${esc(t('Dorthin legt der Spark neue Dokumente; Bestehendes ändert er nie. Fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es dir.','New documents go there; the Spark never changes anything that exists. If the folder is gone later, it takes "Spark" again and tells you.'))}</div>
+    ${d.color&&d.color.can?`<h4 class="ic-h4">${esc(t('Farbe','Colour'))}</h4><select id="rmcolor" aria-label="${esc(t('Farbe','Colour'))}"><option value="farbe"${d.color.value!=='grau'?' selected':''}>${esc(t('In Farbe (Standard)','In colour (default)'))}</option><option value="grau"${d.color.value==='grau'?' selected':''}>${esc(t('In Graustufen','In greyscale'))}</option></select>
+    <div class="fh">${esc(t('Gilt für alles, was der Spark gestaltet aufs reMarkable legt (Blätter, Heldenbuch). Ein Wechsel gilt ab dem nächsten Versand.','Applies to everything the Spark lays out for the reMarkable (sheets, hero book). A change applies from the next sending.'))}</div>`:''}
     <div class="fh">${esc(t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: '))}${d.sent_today} / ${d.send_day}</div>`:'');
   xbind(w,showRm);rmBind(w);if(typeof pageGroup==='function')pageGroup(w);return w}
 function rmBind(root){const q=s=>root.querySelector(s);
@@ -106,6 +108,7 @@ function rmBind(root){const q=s=>root.querySelector(s);
     try{await api('/api/profile/remarkable/pair',xjson('POST',{code:q('#rmcode').value.trim().toLowerCase()}));xmsg('rmmsg',t('Verbunden. Die Liste deiner Notizbücher wird geladen.','Connected. The list of your notebooks is loading.'));showRm()}
     catch(e){xmsg('rmmsg',e.message,true)}};
   if(q('#rmtarget'))q('#rmtarget').onchange=async e=>{try{await api('/api/profile/remarkable/target',xjson('PUT',{id:e.target.value}));xmsg('rmmsg',t('Gespeichert.','Saved.'))}catch(x){xmsg('rmmsg',x.message,true)}};
+  if(q('#rmcolor'))q('#rmcolor').onchange=e=>{saveSet('rm_color',e.target.value);xmsg('rmmsg',t('Gespeichert.','Saved.'))};
   if(q('#rmsync'))q('#rmsync').onclick=async()=>{try{await api('/api/profile/remarkable/sync',{method:'POST'});showRm()}catch(e){xmsg('rmmsg',e.message,true)}};
   if(q('#rmdel'))q('#rmdel').onclick=rmDisconnect;
   if(q('#rmat'))q('#rmat').onchange=e=>{if(e.target.value)saveSet('rm_morning_at',e.target.value)};

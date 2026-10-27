@@ -5597,6 +5597,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Heldenbuch aufs reMarkable (V01.1.143, Dominik 2026-10-27 „Nach Empfehlung umsetzen, aber auch gerne in Farbe“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Heldenbuch aufs reMarkable* (chat.dungeon_buch, ab Werk aus, braucht „Aufs reMarkable schicken“; dungeon_buch.py, eigener Code und eigenes Satzbild „Altes Grimoire“). Jeder Held eines Profils bekommt ein Buch als PDF im Seitenformat des eigenen reMarkable (rmpapier.MODELS): Inhalt mit „Neu seit der letzten Ausgabe“, Heldenbogen (Werte, Leben, Rüstung, Gold, Last, die sechs Werte, Angelegtes, Fähigkeiten, Tasche, Schutz, Narben), Chronik der Begegnungen (je Kapitel Abende, Kämpfe, getroffene Personen, Stufen; Mitspieler nur mit Name, Volk und Klasse), Personen (nur was die Treffen freigeschaltet haben, nie Wunsch, Geheimnis, Rolle oder Ziel, „x von y“), Bestiarium (nach den Stufen des Monster-Albums, „x von y Arten“) und Gegenstände. Reiter am Rand (beim Move eine Leiste unten) und Lesezeichen springen zu den Teilen. Drei Layouts: reMarkable 2 zweispaltig in Graustufen, Paper Pro zweispaltig in kräftigen Farben, Paper Pro Move einspaltig mit relativ größerer Schrift, Tabellen umbrochen, der Heldenbogen üb"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "er mehrere Seiten; jeder Text wird gemessen, nichts ragt über die Seite. Bilder nur die des Panels (Porträt, Gesichter, Bilder von Bestien und Dingen), neu geöffnet und auf die Pixel des Geräts gebracht: Farbe auf Pro und Move, sonst 16 Graustufen mit Fehlerstreuung; ohne Bild ein gezeichnetes Symbol. Farbe ist nie das einzige Zeichen (Seltenheit steht als Wort, Stufen als Punkte). Die Auswahl „Farbe“ unter *Ich → reMarkable* (rm_color, „In Farbe“ oder „In Graustufen“, nur bei Paper Pro und Move zu sehen) gilt für alles, was der Spark gestaltet aufs reMarkable legt; ein Wechsel gilt ab dem nächsten Versand. Das Buch kommt von selbst eine halbe Stunde nach dem Ende einer Runde oder eines Kapitels (mehrere Kapitel an einem Abend werden ein Versand, höchstens einmal am Tag je Held, ein unverändertes Buch geht nicht noch einmal) und auf „Jetzt schicken“ unter *Dungeon-Master → Helden* (dort auch „Vorschau (PDF)“) oder mit „Schick mein Heldenbuch aufs reMarkable“. Solange niemand hineingeschrieben hat, ersetzt die neue Ausgabe die alte; mit Handschrift kommt eine neue Ausgabe und die alte geht ins Archiv. Einmal kommt „Notizen – NAME“ dazu, liniert mit denselben Reitern, das nie ersetzt"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " wird. Die Chronik des Helden (chronik, höchstens 300 Einträge) enthält nur feste Arten mit Katalog-IDs, ganzen Zahlen und den Namen, Völkern und Klassen der Mitspieler, nie Text des Modells; sie wird nur für Profile mit dem Schalter geschrieben und bei jedem Lesen geprüft. Gäste, Figur-Code und Gastkonten bekommen kein Buch; der Balance-Prüfstand schreibt nichts. Die Versände zählen in den Tageslimits des reMarkable. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (Rate-Limit dungeonpdf), POST …/buch/{hid}/senden. Zustand users/<id>/dungeon-buch.json. Live: heute geschickt, unverändert, nicht geschickt. Log dungeon: buch | gesendet | seiten 9 | bilder 7 | auto, | uebersprungen | unveraendert, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus. Selbsttests test_dungeon_buch."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gegner-Ansagen und Haltung (V01.1.117, D&D-Ideen Runde 2, Idee 2, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Gegner-Ansagen und Haltung* (chat.dungeon_haltung, ab Werk aus; dungeon_haltung.py, eigener Code). Nach jedem Kampfzug sagt jeder Gegner, der noch steht, seinen nächsten Hieb gegen einen stehenden Helden an (Würfel des Panels, rd[\"kampf\"][\"ansage\"], Log-Karte ansage): „zielt“ +2 zum Treffen, „holt aus“ −2 zum Treffen und bei einem Treffer doppelte Schadenswürfel, „lauert“ mit Vorteil. Im nächsten Gegnerzug geht sein erster Hieb an diesen Helden; ist er inzwischen gefallen, greift der Gegner wie bisher an. Die Haltung steht in der Aktion, mit festen Wörtern, auch per Sprache und im Auto (Knöpfe 🛡 und 💨 setzen sie ein): „Abwehr“ gibt +2 Rüstung gegen die Gegner, der eigene Angriff hat dann Nachteil; „Ausweichen“ gibt Vorteil auf Rettungswürfe gegen Zustände. Der Erzähler bekommt die Ansagen nur als Daten (ansagen) und die Belege wie_angesagt und haltung in den Gegnerzügen. Live: heute Ansagen, Abwehr, Ausweichen. Log dungeon: ansage | 2 gegner, dungeon: haltung | abwehr|ausweichen | 1."
 },
 {
@@ -11341,6 +11365,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Heldenbuch aufs reMarkable (Funktionen → Meine Daten → „Heldenbuch aufs reMarkable“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Je Held ein Buch auf dem reMarkable im Stil eines alten Grimoires: Inhalt mit Reitern zum Antippen, Heldenbogen (Werte, Leben, Rüstung, Gold, Last, Ausrüstung, Fähigkeiten, Narben), Chronik der Begegnungen (Abende, Kapitel, Kämpfe, Perso …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Umgebung nutzen (Funktionen → Meine Daten → „Umgebung nutzen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wo gekämpft wird, liegen zwei bis drei Dinge im Raum oder am Ort, etwa ein Kronleuchter, ein Pulverfass, eine dicke Säule oder ein Seil über dem Abgrund."
 },
 {
@@ -13725,7 +13757,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "erschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern."
+"text": "erschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern. - Heldenbuch aufs reMarkable (seit V01.1.143, Schalter unter Funktionen → KI-Dungeon-Master, aus): Das Buch eines Helden verlässt den Spark nur auf dem Weg des reMarkable (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn."
 },
 {
 "lang": "de",
@@ -20365,6 +20397,30 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: hero book to the reMarkable (V01.1.143, Dominik 2026-10-27 \"Nach Empfehlung umsetzen, aber auch gerne in Farbe\"): Admin switch *Features → AI Dungeon Master → Hero book to the reMarkable* (chat.dungeon_buch, off by default, needs \"Sending to the reMarkable\"; dungeon_buch.py, own code and own layout \"Old grimoire\"). Every hero of a profile gets a book as a PDF in the page format of the profile's own reMarkable (rmpapier.MODELS): contents with \"New since the last edition\", hero sheet (values, life, armour, gold, load, the six scores, what it wears, abilities, bag, protection, scars), chronicle of encounters (per chapter evenings, fights, people met, levels; fellow heroes only with name, people and class), people (only what the meetings unlocked, never wish, secret, role or goal, \"x of y\"), bestiary (by the stages of the monster album, \"x of y kinds\") and items. Tabs at the edge (a bar at the bottom on the Move) and bookmarks jump to the parts. Three layouts: reMarkable 2 in two columns in greyscale, Paper Pro in two columns in strong colours, Paper Pro Move in one column with relatively larger type, tables broken into lines, the hero sheet over several pages; every"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " text is measured, nothing reaches over the page. Pictures only the panel's own (portrait, faces, pictures of beasts and items), opened again and brought to the device's pixels: colour on Pro and Move, else 16 grey steps with error diffusion; without a picture a drawn symbol. Colour is never the only sign (rarity is written, stages are dots). The choice \"Colour\" under *Me → reMarkable* (rm_color, \"In colour\" or \"In greyscale\", shown only for Paper Pro and Move) applies to everything the Spark lays out for the reMarkable; a change applies from the next sending. The book comes by itself half an hour after the end of a round or a chapter (several chapters in one evening make one sending, at most once a day per hero, an unchanged book does not go again) and on \"Send now\" under *Dungeon Master → Heroes* (there also \"Preview (PDF)\") or with \"Send my hero book to the reMarkable\". As long as nobody wrote into it, the new edition replaces the old one; with handwriting a new edition comes and the old one goes to the archive. Once \"Notes – NAME\" comes along, lined with the same tabs, which is never replaced. The hero's chronicle (chronik, at most 300 entries) holds only fixed kinds with catal"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "og ids, whole numbers and the fellow heroes' names, peoples and classes, never a text of the model; it is written only for profiles with the switch and checked whenever it is read. Guests, figure codes and guest accounts get no book; the balance bench writes nothing. The sendings count in the reMarkable's daily limits. GET /api/profile/dungeon/buch, GET …/buch/{hid}.pdf (rate limit dungeonpdf), POST …/buch/{hid}/senden. State users/<id>/dungeon-buch.json. Live: sent today, unchanged, not sent. Log dungeon: buch | gesendet | seiten 9 | bilder 7 | auto, | uebersprungen | unveraendert, | chronik | kapitel | 2 helden, | notizen | gesendet, | abgelehnt | aus. Self-tests test_dungeon_buch."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: foe announcements and stance (V01.1.117, D&D ideas round 2, idea 2, Dominik 2026-10-26 \"1-9 umsetzten reihenfolge überlasse ich dir.\"): Admin switch *Features → AI Dungeon Master → Foe announcements and stance* (chat.dungeon_haltung, off by default; dungeon_haltung.py, own code). After every fought turn each foe still up announces its next blow at a standing hero (the panel's dice, rd[\"kampf\"][\"ansage\"], log card ansage): \"takes aim\" +2 to hit, \"winds up\" −2 to hit and double damage dice on a hit, \"waits for an opening\" with advantage. In the foes' next turn its first blow goes at that hero; if the hero fell meanwhile, the foe attacks as before. The stance stands in the action, with fixed words, also by voice and in the car (the buttons 🛡 and 💨 put it in): \"Defend\" gives +2 armour against the foes, the own attack is then at a disadvantage; \"Dodge\" gives advantage on saves against states. The narrator gets the announcements only as data (ansagen) and the receipts wie_angesagt and haltung in the foes' turns. Live: announcements, defend, dodge today. Log dungeon: ansage | 2 gegner, dungeon: haltung | abwehr|ausweichen | 1. Self-test Fight.test_foes_announce_and_hero"
 },
 {
@@ -25909,6 +25965,14 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
+"text": "- Hero book to the reMarkable (Features → My data → \"Hero book to the reMarkable\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): One book per hero on the reMarkable in the style of an old grimoire: contents with tabs to tap, hero sheet (values, life, armour, gold, load, gear, abilities, scars), chronicle of encounters (evenings, chapters, fights, people, levels; f …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
 "text": "- Use the surroundings (Features → My data → \"Use the surroundings\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Where a fight goes on, two to three things lie in the room or place, such as a chandelier, a powder keg, a thick pillar or a rope over the chasm."
 },
 {
@@ -28221,7 +28285,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched."
+"text": "nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched. - Hero book to the reMarkable (since V01.1.143, switch under Features → AI Dungeon Master, off): A hero's book leaves the Spark only on the reMarkable's way (its cloud, remarkable.place, daily limits). It holds only the panel's data: catalog, hero values, the own chronicle of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it."
 },
 {
 "lang": "en",

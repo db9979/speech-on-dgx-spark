@@ -311,6 +311,8 @@ FEATURES = (
     F("dungeonkalender", "Kalender der Welt", "Calendar of the world", "data", ("dungeon_kalender",), parent="dungeon", me="dmbox", guide="dungeonkalender"),
     # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
     F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
+    # Heldenbuch aufs reMarkable (dungeon_buch.py): one book per hero as a PDF in the device's format, needs rmsend (READY)
+    F("dungeonbuch", "Heldenbuch aufs reMarkable", "Hero book to the reMarkable", "data", ("dungeon_buch",), parent="dungeon", me="dmbox", guide="dungeonbuch"),
     # Gegner-Ansagen und Haltung (dungeon_haltung.py, D&D round 2, idea 2): foes announce their next blow, heroes defend or dodge
     # Umgebung nutzen (dungeon_umgebung.py, D&D round 2, idea 3): the props of a fight, one check of the panel, a fixed effect
     F("dungeonumgebung", "Umgebung nutzen", "Use the surroundings", "data", ("dungeon_umgebung",), parent="dungeon", me="dmbox", guide="dungeonumgebung"),
@@ -771,6 +773,7 @@ def _docling_set_up(c):
 
 
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
+         "dungeonbuch": lambda c: admin_on("rmsend", c),      # the hero book goes the way of „Aufs reMarkable schicken“
          "docling": _docling_set_up,                          # the Docling server needs its address
          "bilder": lambda c: bool(load_config("image").get("enabled")),   # the picture model installed (install.sh --bild)
          "musik": lambda c: bool(load_config("music").get("enabled")),    # the music model installed (install.sh --musik)

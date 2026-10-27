@@ -19,6 +19,7 @@ Journal: fixed words and numbers („dungeon: album | …“), Live only counts.
 """
 import re
 
+import dungeon_buch as heldenbuch
 import features
 from common import DayCounter
 
@@ -59,6 +60,7 @@ def win(dm, rd, gid):
             _day.bump("eintraege" if n == 1 else "aufgestiegen")
             print(f"dungeon: album | stufe {stage(n)}", flush=True)
         a[gid] = n
+        heldenbuch.notiere(rd, p, "kampf", gid)   # the hero's chronicle (dungeon_buch, never raises)
 
 
 def view(dm, r, rd, h, lang):
@@ -115,6 +117,7 @@ def met(dm, rd, cid):
             _day.bump("personen")
             print(f"dungeon: album | person stufe {people_stage(n)}", flush=True)
         a[cid] = n
+        heldenbuch.notiere(rd, p, "person", cid)   # the hero's chronicle (dungeon_buch, never raises)
 
 
 def people(dm, r, rd, h, lang):

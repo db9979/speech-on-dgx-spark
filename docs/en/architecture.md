@@ -276,6 +276,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_album.py` | KI-Dungeon-Master: Monster-Album. |
 | `app/panel/dungeon_auto.py` | KI-Dungeon-Master im Auto. |
 | `app/panel/dungeon_balance.py` | Gleichgewicht of the Dungeon Master's catalog: fixed tables, never the model. |
+| `app/panel/dungeon_buch.py` | KI-Dungeon-Master: Heldenbuch aufs reMarkable. |
 | `app/panel/dungeon_chronik.py` | KI-Dungeon-Master: Chronikbuch zum Blättern. |
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber. |
 | `app/panel/dungeon_echt.py` | KI-Dungeon-Master: echte Würfel am Tisch. |
@@ -614,6 +615,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
 | `users/ID/dungeon-helden.json` | AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only) | State | – | yes | – |
 | `users/ID/dungeon-kampagnen.json` | AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters | State | – | yes | – |
+| `users/ID/dungeon-buch.json` | AI Dungeon Master: hero book to the reMarkable, per hero the last edition (number, time, checksum, counts for „new since“) and what still waits | State | – | yes | – |
 | `users/ID/dungeon-wappen.json` | AI Dungeon Master: colour and charge you chose as host for your group's arms | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |

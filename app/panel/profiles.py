@@ -847,6 +847,7 @@ CHOICES = {
     "face": ("",) + FACES,
     "doc_deliver": ("", "pc", "rm", "tg", "mail", "box"),
     "rm_model": ("auto", "rm2", "pro", "move"),
+    "rm_color": ("farbe", "grau"),
     "pro_lead": (5, 10, 15, 20, 30, 45, 60),
     "svc_device": ("", "app", "and", "desk", "tg", "web", "all"),
     "msg_from": ("all", "chosen"),
@@ -914,6 +915,7 @@ SETTINGS = {
     "rm_tasks_new": (True, lambda v: isinstance(v, bool)),
     "rm_tasks_note": (True, lambda v: isinstance(v, bool)),
     "rm_model": ("auto", _in("rm_model")),   # the model whose page format the paper takes (rmpapier.MODELS)
+    "rm_color": ("farbe", _in("rm_color")),  # colour or grey on a device with a colour screen (rmpapier.model_of)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name
