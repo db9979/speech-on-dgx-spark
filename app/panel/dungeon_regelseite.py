@@ -312,7 +312,7 @@ def change(teil, was, i, eintrag=None):
 
 
 def _entry(teil, i):
-    x = {str(k): v for k, v in dungeon._by(dungeon.rules(), teil).items()}.get(str(i))
+    x = (personen.load() if teil == "personen" else {str(k): v for k, v in dungeon._by(dungeon.rules(), teil).items()}).get(str(i))
     if not x:
         raise LookupError("eintrag")
     return x
@@ -354,7 +354,7 @@ async def katalog_change(teil: str, request: Request):
 async def katalog_bild(teil: str, request: Request):
     """„Nochmal malen“ (was "malen"), then „Neues behalten“ ("neu") or „Altes behalten“ ("alt")."""
     guard.limit(request, "dungeonbild", admin=True)
-    if teil not in MIT_BILD:
+    if teil not in MIT_BILD and not (teil == "personen" and personen.admin_on()):   # a person's face (Dominik 2026-10-27)
         raise HTTPException(404, "teil")
     b = await json_body(request, 2000)
     was = b.get("was")

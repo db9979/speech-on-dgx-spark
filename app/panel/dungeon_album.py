@@ -124,6 +124,7 @@ def people(dm, r, rd, h, lang):
     """The own hero's page „Personen“, most met first: per stage only what the page knows; None while off."""
     if not h or not people_on(rd):
         return None
+    import dungeon_dingbild as db
     import dungeon_nsc as nsc
     import dungeon_personen as personen
     li = 1 if lang == "en" else 0
@@ -137,7 +138,8 @@ def people(dm, r, rd, h, lang):
         k = x.get("karte") or {}
         feld = lambda f: (k.get(f) or ["", ""])[li]   # noqa: E731
         e = {"id": cid, "name": x["name"], "treffen": n, "stufe": people_stage(n), "welt": welten.get(x.get("welt"), ""),
-             "aussehen": feld("aussehen"), "bild": (x.get("gesicht") or {}).get("n") or "", "zeichen": "👤",
+             "aussehen": feld("aussehen"), "bild": db.person_pic(r, x) or (x.get("gesicht") or {}).get("n") or "",   # as on the rules page
+             "zeichen": "👤",
              "naechste": next((s for s in PERSONEN_STUFEN if s > n), 0)}
         if people_stage(n) >= 2:
             e.update(beruf=feld("beruf"), art=feld("art"))

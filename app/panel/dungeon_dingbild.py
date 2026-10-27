@@ -480,7 +480,8 @@ def name_of(p):
 def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
     then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner), then
-    the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book)."""
+    the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book); the
+    services and the faces of the people catalog (people) before the foes."""
     return [(n, p) for n, p, _ in _want(r)]
 
 
@@ -491,7 +492,7 @@ def _want(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + \
+                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
@@ -759,6 +760,7 @@ def sweep(now=None, force=False):
                 iids.add(x.get("i"))
     d = dungeon._read()
     orte = dungeon_karte.keep(d)
+    keep |= dungeon_gesicht.keep(d)          # a catalog person's face a round or the catalog itself still names
     for v in d["runden"].values():
         for p in v["plaetze"].values():
             held(p.get("held"))
@@ -853,7 +855,11 @@ def picture_of(r, c, welt=""):
 
 def _current(r, c, teil="", welt=""):
     """(name of the current prompt's picture, prompt, key) of an entry of the rules page: an item or foe in its
-    world's style, a people, class or background in the style of welt (else the first world), a world in its own."""
+    world's style, a people, class or background in the style of welt (else the first world), a world in its own, a
+    person of the people catalog in its world's."""
+    if teil == "personen":
+        s, p = person_text(r, c)
+        return name_of(p), p, key_of(s, c, "person")
     if teil in HELD_TEILE:
         s = dungeon.style(r, {"welt": welt or r["welten"][0]["id"], "ton": None})
         p = _hero_text(s, HELD_TEILE[teil], c)
@@ -868,9 +874,73 @@ def _current(r, c, teil="", welt=""):
 def entry_pic(r, teil, c, welt=""):
     """The picture of an entry of the rules page as shown (_pick), and whether it is there."""
     n, _, k = _current(r, c, teil, welt)
+    if teil == "personen":
+        f = person_pic(r, c)
+        return f or n, bool(f)
     have = files()
     n = _pick(n, k, have)
     return n, n in have
+
+
+# ---------------------------------------------------------------- the people catalog's faces (dungeon_personen)
+# Dominik 2026-10-27 „portrait fehlt bei den npc“: a person of the catalog without a face from a round gets one as a
+# catalog picture (painted at night and with „Alle Bilder malen“, „Malen“ on the rules page), from fixed parts only:
+# its world's style, age and gender of its stored voice, its card's English column, the fixed lists; never its name.
+def person_on():
+    """Faces of the people catalog: the catalog pictures, „Gesichter für NSCs“ and the people catalog on the Spark."""
+    import dungeon_personen
+    return on() and features.admin_on(dungeon_gesicht.KEY) and dungeon_personen.admin_on()
+
+
+def person_text(r, x):
+    """(style, prompt) of a catalog person's face in its world's style."""
+    s = dungeon.style(r, {"welt": x.get("welt") or r["welten"][0]["id"], "ton": None})
+    f = flair(s, {"id": "person:" + str(x.get("id"))}, "gesicht")
+    return s, f"{s}, {dungeon_gesicht.GESICHT_EN}, {dungeon_gesicht.katalog_text(x)}, {f}, {dungeon.BILD_ENDE}"
+
+
+def _round_face(x, have):
+    g = x.get("gesicht")
+    n = g.get("n") if isinstance(g, dict) else None
+    return n if n and n in have else ""
+
+
+def people(r, s, have=None):
+    """[(name, prompt, key)] of the catalog's people in style s whose face is a catalog picture: those without a face
+    from a round, and those whose picture the admin kept by hand (fest)."""
+    import dungeon_personen
+    if not person_on():
+        return []
+    have = files() if have is None else have
+    fest, out = _seen()["fest"], []
+    for _, x in sorted(dungeon_personen.load().items()):
+        st, p = person_text(r, x)
+        k = key_of(st, x, "person")
+        if st == s and (not _round_face(x, have) or fest.get(k)):
+            out.append((name_of(p), p, k))
+    return out
+
+
+def person_pic(r, x, have=None):
+    """A catalog person's face as shown: the admin's own, then the one from a round, then the catalog picture (the
+    current prompt's or the last painted); "" while there is none."""
+    have = files() if have is None else have
+    s, p = person_text(r, x)
+    k = key_of(s, x, "person")
+    f = _seen()["fest"].get(k)
+    if f and f in have:
+        return f
+    n = _round_face(x, have) or _pick(name_of(p), k, have)
+    return n if n in have else ""
+
+
+def person_row(r, x, row, have, neu):
+    """dungeon_personen.view: a row's face for the rules page (bild, bv; neu, nv after „Nochmal malen“)."""
+    row["bild"] = person_pic(r, x, have)
+    n = name_of(person_text(r, x)[1])
+    row["neu"] = "neu-" + n[5:] if "neu-" + n[5:] in neu else ""
+    row["bv"], row["nv"] = dungeon.bild_v(row["bild"]), dungeon.bild_v(row["neu"])
+    return row
 
 
 def _welt(r, c):

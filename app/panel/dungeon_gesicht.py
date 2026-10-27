@@ -102,13 +102,31 @@ def who(rd, x):
     return f"{n['alter'][t['alter']]} {n['geschlecht'][t['geschlecht']]}"
 
 
+def katalog_text(x):
+    """A person of the people catalog (dungeon_personen) by its stored voice traits and card, for its catalog picture
+    (dungeon_dingbild.person_text): the same words as in a round, never its name."""
+    n = stimmen.data()["npc"]
+    t = x.get("stimme") if isinstance(x.get("stimme"), dict) else {}
+    a, g = t.get("alter"), t.get("geschlecht")
+    if a == "kind":
+        w = {"weiblich": "a girl", "maennlich": "a boy"}.get(g, "a child")
+    elif a in n["alter"] and g in n["geschlecht"]:
+        w = f"{n['alter'][a]} {n['geschlecht'][g]}"
+    else:
+        w = "a person"
+    return _karte(x, w)
+
+
 def text(rd, x):
     """The person's fixed description from its card (English column of the tables); a companion's from its fixed line."""
     if gf.is_one(x.get("k")):
         s = str((x.get("satz") or ["", ""])[-1]).strip().rstrip(".")
         return GEFAEHRTE_EN + s[:1].lower() + s[1:]
+    return _karte(x, who(rd, x))
+
+
+def _karte(x, out):
     k = x.get("karte") or {}
-    out = who(rd, x)
     if k.get("beruf"):
         out += f" ({k['beruf'][1]})"
     if k.get("aussehen"):

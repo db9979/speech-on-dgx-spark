@@ -13,6 +13,9 @@ reference picture for later scene pictures.
 - Only a seat of a round that names a face loads it; the sweep removes the faces nobody names; Live only counts.
 - A hired companion (round 2, idea 9) gets its face at once, from its fixed English line, never with its name, only while
   „Gefährten anheuern“ is allowed too; its row shows it, a scene that names it takes it as a reference, the sweep keeps it.
+- A person of the people catalog (Dominik 2026-10-27 „portrait fehlt bei den npc“) without a face from a round is a
+  catalog picture of its world's style (fixed parts, never its name); the rules page shows it in list and detail and
+  „Malen“ paints it; a face from a round stands as it is; a round's copy survives the sweep.
 
 No wall clock: the date comes from the picture module's clock, set by the tests.
 """
@@ -87,7 +90,7 @@ class Base(unittest.TestCase):
         cls.c, cls.uid = profile("Gesicht Greta")
 
     def setUp(self):
-        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_gesicht", "dungeon_bilder", "bilder", "dungeon_gefaehrte")
+        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_gesicht", "dungeon_bilder", "bilder", "dungeon_gefaehrte", "dungeon_personen")
         helpers.set_config(dungeon=True, dungeon_nsc=True, dungeon_gesicht=True, dungeon_bilder=False, bilder=True)
         self._image(True)
         self.addCleanup(self._image, False)
@@ -397,6 +400,64 @@ class Companions(Base):
         self.assertTrue(os.path.exists(dungeon.bild_file(n)))
         helpers.set_config(dungeon_gefaehrte=False)                 # off again: the row names no face
         self.assertNotIn("bild", (self.c.get(f"/api/profile/dungeon/{rid}").json().get("gefaehrten") or [{}])[0])
+
+
+class Katalog(Base):
+    def setUp(self):
+        super().setUp()
+        import dungeon_personen as pers
+        self.pers = pers
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        n = stimmen.data()["npc"]
+        stimme = dict({k: next(iter(n[k])) for k in stimmen.MERKMALE}, alter="alt", geschlecht="weiblich")
+        pers._save({"silas": {"id": "silas", "name": "Silas", "welt": "fantasy", "karte": {"beruf": ["Mystikerin", "mystic"],
+                    "aussehen": ["wirkt zerstreut", "seems absent-minded"]}, "wesen": {}, "rolle": "", "ziel": "", "stimme": stimme,
+                    "haltung": {}, "treffen": 1, "made": 1, "t": 1, "stand": "runde"},
+                    "odo": {"id": "odo", "name": "Odo", "welt": "fantasy", "karte": {}, "wesen": {}, "rolle": "", "ziel": "",
+                            "stimme": {}, "haltung": {}, "treffen": 1, "made": 1, "t": 1, "stand": "runde", "gesicht": {"n": "nsc-00000000000000bb"}}})
+        dungeon._bild_save("nsc-00000000000000bb", PNG)                  # Odo's face from a round
+        db._files["m"] = None
+
+    def test_a_catalog_person_gets_its_face(self):
+        r = dungeon.rules()
+        silas = self.pers.load()["silas"]
+        s, p = db.person_text(r, silas)
+        self.assertEqual(db.people(r, s), [])                              # off: „Bilder für Ausrüstung“, faces and catalog
+        helpers.set_config(dungeon_bilder=True, dungeon_personen=True)
+        want = db.people(r, s)
+        self.assertEqual([n for n, _, _ in want], [db.name_of(p)])          # Silas only: Odo has a face from a round
+        self.assertIn((db.name_of(p), p), db.missing(r))                    # the night run and „Alle Bilder malen“ paint it
+        self.assertTrue(p.startswith(s) and p.endswith(dungeon.BILD_ENDE), p)
+        self.assertIn(gesicht.GESICHT_EN, p)
+        self.assertIn("an old woman (mystic) who seems absent-minded", p)
+        self.assertNotIn("Silas", p)
+        self.assertTrue(db._ok_text(p, r), p)
+        K = "/api/admin/dungeon/katalog/personen"
+        rows = {x["id"]: x for x in ADMIN.get(K).json()["zeilen"]}
+        self.assertEqual((rows["silas"]["bild"], rows["odo"]["bild"]), ("", "nsc-00000000000000bb"))
+        self.assertTrue(ADMIN.get(K).json()["bilder_an"])
+        x = ADMIN.post(K + "/bild", json={"id": "silas", "was": "malen"})   # „🖌 Malen“ on the rules page
+        self.assertEqual(x.status_code, 200, x.text)
+        db._files["m"] = None
+        self.assertEqual(x.json()["bild"], db.name_of(p))
+        self.assertEqual({x["id"]: x["bild"] for x in ADMIN.get(K).json()["zeilen"]}["silas"], db.name_of(p))
+        self.assertEqual(ADMIN.get(f"/api/admin/dungeon/bild/{db.name_of(p)}").status_code, 200)
+        self.assertIn(self.c.post(K + "/bild", json={"id": "silas", "was": "malen"}).status_code, (401, 403))
+        self.assertEqual(ADMIN.post(K + "/bild", json={"id": "niemand", "was": "malen"}).status_code, 404)
+        # a round that took Silas over keeps the same face, the sweep keeps it while the round names it
+        rid = self.new_round()
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["nsc"] = {"silas": {"name": "Silas", "gesicht": {"n": db.name_of(p), "st": "ok"}, "gesehen": 0}}
+            dungeon._write(d)
+        self.pers._save({k: v for k, v in self.pers.load().items() if k != "silas"})
+        db.sweep(self.now[0], force=True)
+        self.assertTrue(os.path.exists(dungeon.bild_file(db.name_of(p))))
+        helpers.set_config(dungeon_gesicht=False)                           # off: nothing more to paint, the faces stay
+        self.assertEqual(db.people(r, s), [])
+        self.assertFalse(ADMIN.get(K).json()["bilder_an"])
 
 
 if __name__ == "__main__":

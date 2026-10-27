@@ -179,6 +179,11 @@ def adopt(r, rd, name):
     g = x.get("gesicht")
     if isinstance(g, dict) and g.get("n"):
         card["gesicht"] = {"n": g["n"], "st": "ok"}
+    elif not dm.kids(r, rd):                    # its catalog face (dungeon_dingbild.person_pic), never at the children's table
+        import dungeon_dingbild
+        n = dungeon_dingbild.person_pic(r, x)
+        if n:
+            card["gesicht"] = {"n": n, "st": "ok"}
     if isinstance(x.get("stimme"), dict):
         rd.setdefault("npc_stimmen", {})[k[:40]] = dict(x["stimme"])
     for p in (rd.get("wahrheit") or {}).get("personen") or []:
@@ -405,6 +410,8 @@ def view(lang="de"):
     r = dm.rules()
     welten = {w["id"]: w["name"][li] for w in r["welten"]}
     rows, entries = [], {}
+    import dungeon_dingbild                      # each person's face (Dominik 2026-10-27 „portrait fehlt bei den npc“)
+    have, neu = dungeon_dingbild.files(), set(dungeon_dingbild.candidates())
     for i, x in sorted(load().items(), key=lambda kv: kv[1]["name"].lower()):
         k = x.get("karte") or {}
         werte = [[FELD[f][li], k[f][li]] for f in nsc.KARTE if f in k]
@@ -418,9 +425,10 @@ def view(lang="de"):
                      "zeile": " · ".join(t for t in ((k.get("beruf") or ["", ""])[li], welten.get(x.get("welt"), ""),
                                                      (f"{x.get('treffen', 0)}× getroffen", f"met {x.get('treffen', 0)}×")[li]) if t),
                      "werte": werte})
+        dungeon_dingbild.person_row(r, x, rows[-1], have, neu)
         entries[i] = {"id": i, "name": x["name"], "welt": x.get("welt"), "rolle": x.get("rolle", ""), "ziel": x.get("ziel", ""),
                       "karte": k, "wesen": x.get("wesen") or {}}
-    return {"teil": "personen", "zeilen": rows, "eintraege": entries, "bilder_an": False, "neu": True,
+    return {"teil": "personen", "zeilen": rows, "eintraege": entries, "bilder_an": dungeon_dingbild.person_on(), "neu": True,
             "weltfilter": [{"id": w, "name": n} for w, n in welten.items()]}
 
 

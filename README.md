@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.149** AI Dungeon Master: portraits in the NPC catalog: every person shows its face in list and detail, whoever has none from a round gets a catalog picture from fixed parts (at night, with "Paint all pictures" or "Paint") and brings it into the next round
 - **V01.1.148** AI Dungeon Master: guide the players (switch, off), every narration names at least two things to take up and ends with a concrete choice, below it "What you can do here" as buttons only from the scene and checked ways of the narrator, level Beginner, Normal or Experienced per round, in the car "What can I do?", and quiet players get a question from the scene
 - **V01.1.147** Tests without chance: the phone, Pebble and warm-up tests check only text fields, not timestamps, random ids or sealed values that may hold a digit string by chance
 - **V01.1.146** AI Dungeon Master: 76 night foes in the bestiary, at night come undead, lycanthropes and night beasts (LlamaTale 1)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.142** AI Dungeon Master: combat audit wave 2, spells with a saving throw are now saved against by the foe (half damage, conditions such as prone or unconscious), Sleep and Hold Person work in a fight, Healing Hands heals a friend by name, and the foes' conditions take the bestiary's DC
 - **V01.1.141** Pebble test independent of the time of day: "My day" is checked with a fixed "now", shortly before midnight the test no longer turns red
 - **V01.1.140** AI Dungeon Master: saving throws, conditions and DCs from the SRD in the catalog (combat audit H4, N6, N7)
-- **V01.1.139** AI Dungeon Master: combat audit wave 2, an attack scroll cast makes the next attack its spell, healing spells work before the turn's hits, "rat" hits the giant rat instead of the rat swarm, and the fight's experience is divided rounded down
 
 
 

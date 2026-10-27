@@ -3936,6 +3936,13 @@
 "titel": "Dungeon-Master: Spieler anleiten",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Spieler anleiten an. A: Eine Runde spielen: jede Erzählung nennt mindestens zwei Dinge mit Namen, die man aufgreifen kann, und endet mit einer konkreten Wahl an eine Figur, nicht mit „Was tut ihr?“. B: Zu zweit spielen, einer schreibt zwei Züge nichts: der Erzähler fragt ihn mit Namen, etwa „Bela, sprichst du mit Grimma, oder gehst du nach Norden?“, im Kampf nach zwei Gegnern. C: Unter jeder Erzählung stehen drei Knöpfe „Das kannst du hier“; Antippen setzt den Text ins Feld. Gastgeber: im Spielleiter-Pult unter Erzähler Einsteiger wählen, dann vier Knöpfe mit „· Charisma“ und Co. D: Im Auto „Was kann ich tun?“ sagen: der Spark nennt die Knöpfe, CarPlay zeigt „Das kannst du hier“, „die erste“ schickt sie. E: Schalter aus: keine Knöpfe, die alte Zeile „was macht dein … währenddessen?“ kommt wieder.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P587",
+"v": 1149,
+"titel": "Dungeon-Master: Porträts im NSC-Katalog",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber, Gesichter für NSCs und Personen-Katalog an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“ öffnen: Personen mit Gesicht aus einer Runde zeigen es in Liste und Detail. B: Bei einer Person ohne Gesicht „🖌 Malen“: nach kurzer Zeit steht ihr Porträt da, ohne ihren Namen im Bild. C: „Nochmal malen“, dann „Neues behalten“: das neue bleibt. D: Trifft eine neue Runde diese Person wieder, zeigt „Leute und Chronik“ dasselbe Gesicht.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
