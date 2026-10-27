@@ -4104,6 +4104,13 @@
 "titel": "Dungeon-Master: Gehen nicht zuerst",
 "text": "Zu zweit spielen, der erste Spieler schreibt „Ich bleibe hier“. A: Beim zweiten Spieler steht unter den Vorschlägen „Ich sehe mich genau um.“ vor dem Weg. B: Schreibt der erste „Ich gehe nach Norden“, steht der Weg vorn.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P611",
+"v": 1180,
+"titel": "Dungeon-Master: Personen sind Personen",
+"text": "NSC-Gedächtnis an, eine Runde spielen und den Händler einer Siedlung besuchen. A: Ein Gegner oder „Schattenwächter“ erscheint nie als Händler oder im Personen-Katalog. B: Heißt der Händler „Alchemistin …“, verkauft er Tränke und steht im Katalog mit Bild. C: Kein Händler bietet einen Schatz an.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

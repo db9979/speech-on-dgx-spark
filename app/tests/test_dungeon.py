@@ -1906,6 +1906,80 @@ class Zugzeit(Base):
         self.assertEqual(rd["mehr"], {})                                     # a new turn: asked again
 
 
+class ReviewPersonen(Base):
+    """Review 27.10. Paket 8 (Dominik 2026-10-27 „ok“): people are people, merchants are people with the right goods."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+
+    def test_only_people_become_people(self):
+        """Z3: the six names of the review (a foe, a guard, a role compound, a hero, a companion, a ship's AI) are refused
+        with their reason by fixed rules, in the truth, when learnt from the narration and at the merchant."""
+        import dungeon_nsc as nsc
+        r, rd = dungeon.rules(), self.state(self.rid)
+        held = rd["plaetze"][self.host]["held"]["name"]
+        rd["gefaehrten"] = [{"name": "Grete"}]
+        rd["wahrheit"] = {"personen": [], "gruppen": [{"name": "Die Rote Hand", "will": ""}], "geheimnisse": []}
+        want = {"Goblin": "bestiarium", "Goblins": "bestiarium", "Wache": "bestiarium", "Schattenwächter": "rolle", held: "held",
+                "Grete": "gefaehrte", "Bord-KI": "rolle", "Die Rote Hand": "gruppe", "der Fremde": "rolle", "Mira": "", "Ritter Kunibert": ""}
+        self.assertEqual({n: nsc.ist_person(r, rd, n) for n in want}, want)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            t = dungeon.erz.check_truth(dungeon, r, rd, {"personen": [{"name": n} for n in ("Goblin", "Schattenwächter", "Mira")],
+                                                           "gruppen": [], "geheimnisse": []})
+            n = dungeon.erz.learn_people(dict(rd, wahrheit={"personen": [], "gruppen": [], "geheimnisse": []}),
+                                         {"npc": [{"name": "Wache", "sagt": "Halt!"}, {"name": "Odo", "sagt": "Willkommen."}]})
+        self.assertEqual([p["name"] for p in t["personen"]], ["Mira"])
+        self.assertEqual(n, 1)
+        self.assertIn("dungeon: wahrheit | person | abgelehnt | bestiarium | wahrheit", out.getvalue())
+        self.assertIn("dungeon: wahrheit | person | abgelehnt | rolle | wahrheit", out.getvalue())
+        self.assertNotIn("Schattenwächter", out.getvalue())                          # the log names no name
+        self.assertGreaterEqual(nsc.for_live([rd])["keine_person"], 3)
+
+    def test_a_merchant_sells_by_its_name_and_is_a_person(self):
+        """Z4/B15: the kind from the words of the name („Alchemistin Mira“ sells potions), a name that is no person gives the
+        default name (either form), a named merchant gets a card while the person memory is on, a treasure is never
+        offered."""
+        import dungeon_nsc as nsc
+        helpers.keep_chat(self, "dungeon_nsc")
+        helpers.set_config(dungeon_nsc=True)
+        r, rd = dungeon.rules(), self.state(self.rid)
+        rd["nsc"] = {}
+        for seed in range(8):
+            with contextlib.redirect_stdout(io.StringIO()):
+                dungeon.open_market(r, rd, "Alchemistin Mira", "", random.Random(seed))
+            self.assertEqual(rd["markt"]["art"], "alchemist")
+            with contextlib.redirect_stdout(io.StringIO()):
+                dungeon.open_market(r, rd, "", "Ein Schmied hämmert am Amboss.", random.Random(seed))
+            self.assertEqual(rd["markt"]["art"], "schmied")
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                dungeon.open_market(r, rd, "Schattenwächter", "", random.Random(seed))
+            m = rd["markt"]
+            self.assertIn(m["name"], (dungeon.HAENDLER[m["art"]][0][0], dungeon.HAENDLER_IN[m["art"]]))
+            self.assertIn("| abgelehnt | rolle | markt", out.getvalue())
+            self.assertFalse([x for x in m["ware"] if dungeon._c(r, x)["art"] in dungeon.NIE_ANGEBOT], seed)
+        if nsc.on(rd):
+            self.assertEqual(rd["nsc"]["alchemistin mira"]["karte"]["beruf"][0][:9], "Alchemist")
+            self.assertNotIn("schattenwächter", rd["nsc"])
+        self.assertIn("schatz", dungeon.HAENDLER["kraemer"][1])                      # still bought for half its worth
+
+    def test_a_person_who_fights_is_no_monster(self):
+        """Z8: a farmer or a ship's AI never fights as a guard; a person in a fight shows its portrait and counts for no
+        monster in the album."""
+        import dungeon_kampf as kampf
+        import dungeon_personen as P
+        r, rd = dungeon.rules(), self.state(self.rid)
+        for beruf, want in (("farmer", None), ("ship ai", None), ("sailor", "wache"), ("knight", "ritter")):
+            g = P.template(dungeon, r, rd, {"karte": {"beruf": ["x", beruf]}}, 10 ** 6)
+            self.assertEqual(g and g["id"], want, beruf)
+        rd["nsc"] = {"odo": {"name": "Odo", "gesicht": {"n": "nsc-0123456789abcdef", "st": "ok"}}}
+        self.assertEqual(kampf._picture(r, rd, "wache", frozenset({"nsc-0123456789abcdef"}), "odo"), "nsc-0123456789abcdef")
+        self.assertEqual(kampf._picture(r, rd, "wache", frozenset(), "odo"), "")
+        with open(kampf.__file__, encoding="utf-8") as f:
+            self.assertEqual(f.read().count('if not g.get("person"):'), 2)
+
+
 class Trade(Base):
     def setUp(self):
         super().setUp()
@@ -10380,8 +10454,9 @@ class Fight(Turns):
             m = rd["markt"]
             self.assertIn(m["art"], dungeon.HAENDLER)
             self.assertEqual(m["kasse"], dungeon.KASSE * stufe)
-            self.assertEqual(m["name"], dungeon.HAENDLER[m["art"]][0][0])
+            self.assertIn(m["name"], (dungeon.HAENDLER[m["art"]][0][0], dungeon.HAENDLER_IN[m["art"]]))   # either form (Paket 8, B15)
             self.assertFalse([x["id"] for x in m["ware"] if dungeon._c(r, x)["art"] not in dungeon.HAENDLER[m["art"]][1]], seed)
+            self.assertFalse([x["id"] for x in m["ware"] if dungeon._c(r, x)["art"] in dungeon.NIE_ANGEBOT], seed)
         rd["markt"] = dict(rd["markt"], art="schmied", kasse=1000)
         sword = dungeon.item(r, next(c["id"] for c in r["gegenstaende"] if c["art"] == "waffe" and "seltenheit" not in c), "selten")
         potion = dungeon.item(r, "elixier", "selten")

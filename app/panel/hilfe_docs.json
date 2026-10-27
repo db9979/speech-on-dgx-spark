@@ -5917,6 +5917,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Personen sind Personen (V01.1.180, Review 27.10. Paket 8, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, unter *NSC-Gedächtnis und Chronik*. 1. Eine feste Prüfung dungeon_nsc.ist_person sagt, ob ein Name eine Person sein darf, und sonst warum nicht: ein Held, ein Gefährte, ein Gegner des laufenden Kampfs, ein Name des Bestiariums (auch mit Ziffer oder in der Mehrzahl, „Goblins“), eine Gruppe der Wahrheit oder ein reines Rollenwort (ROLLENWORTE, „der Fremde“, „Bord-KI“, oder ein Wort auf ROLLEN_ENDE, „Schattenwächter“). Sie gilt bei der Wahrheit des Kapitels, beim Lernen aus der Erzählung, beim Händler und im Personen-Katalog; die Logzeile dungeon: wahrheit | person | abgelehnt | <Grund> | <wo> nennt nie den Namen. 2. Händler: Die Art kommt aus festen Wörtern des Namens oder Satzes (HAENDLER_WORT: „Alchemistin Mira“ verkauft Tränke), sonst gewürfelt; ein Name, der keine Person ist, gibt den Standardnamen, auf Deutsch in beiden Formen (HAENDLER_IN). Ein Händler mit eigenem Namen bekommt eine Karte mit der Händlerart als Beruf (dungeon_nsc.merchant, Log dungeon: markt | person | neu), damit Porträt, Stimme und Katalog greifen. Ein Schatz wird angekauft, nie angebote"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n (NIE_ANGEBOT). 3. Kämpfende Person: Ein Beruf ohne Kampfzeile wie Bauer oder Bord-KI kämpft nie als „Wache“ (dungeon_personen.NICHT_KAEMPFER); eine Person im Kampf zeigt ihr Porträt (dungeon_kampf._picture) und zählt im Album für kein Monster. Live: „heute N Namen als Person abgelehnt, M Händler mit Karte“. Selbsttests ReviewPersonen in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gehen nicht zuerst (V01.1.179, Review 27.10. Paket 5, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Die Gruppe zieht nur mit Mehrheit und ohne „Ich bleibe“ (dungeon_karte.gruppe). Haben in diesem Zug schon andere gehandelt und bleiben sie alle, stellen die Vorschläge der Rückfrage und von *Spieler anleiten* (dungeon_rueckfrage.points) „Ich sehe mich genau um.“ vor den Weg der Karte, damit ein Knopf nicht die Gruppe wegführt. Geht einer, bleibt die alte Reihenfolge. Selbsttest Rueckfrage.test_going_is_not_offered_first_when_the_others_stay in test_dungeon."
 },
 {
@@ -21254,6 +21270,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: people are people (V01.1.180, review 27.10. package 8, Dominik 2026-10-27 „ok“): No new switch, under *NPC memory and chronicle*. 1. One fixed check dungeon_nsc.ist_person says whether a name may be a person and otherwise why not: a hero, a companion, a foe of the running fight, a name of the bestiary (also with a number or in the plural, „Goblins“), a group of the truth or a mere role word (ROLLENWORTE, „der Fremde“, „ship AI“, or a word ending in ROLLEN_ENDE, „Schattenwächter“). It holds for the chapter's truth, for learning from the narration, for the merchant and in the people catalog; the log line dungeon: wahrheit | person | abgelehnt | <reason> | <where> never names the name. 2. Merchants: the kind comes from fixed words of the name or sentence (HAENDLER_WORT: „Alchemistin Mira“ sells potions), else it is drawn; a name that is no person gives the default name, in German in both forms (HAENDLER_IN). A merchant with a name of its own gets a card with the kind as occupation (dungeon_nsc.merchant, log dungeon: markt | person | neu), so portrait, voice and catalog work. A treasure is bought, never offered (NIE_ANGEBOT). 3. A person in a fight: an occupation wit"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "hout a fight row such as farmer or ship AI never fights as a „guard“ (dungeon_personen.NICHT_KAEMPFER); a person in a fight shows its portrait (dungeon_kampf._picture) and counts for no monster in the album. Live: „today N names refused as a person, M merchants with a card“. Self-tests ReviewPersonen in test_dungeon."
 },
 {
 "lang": "en",

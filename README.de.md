@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.180** KI-Dungeon-Master: nur Personen werden Personen, Gegner, Helden, Gefährten, Gruppen und Rollenwörter nie, ein Händler verkauft nach seinem Namen und bekommt eine Karte, eine kämpfende Person zeigt ihr Porträt (Review 27.10. Paket 8)
 - **V01.1.179** KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)
 - **V01.1.178** KI-Dungeon-Master: die Prüfung fängt „Er“ für eine Heldin, Orte, die es auf der Karte nicht gibt, verratene Geheimnisse, Spuren nach misslungener Suche und übergangene Aktionen (Review 27.10. Paket 7, Teil 3)
 - **V01.1.177** KI-Dungeon-Master: die Prüfung fängt eine gezogene Waffe ohne Besitzwort, einen Fund ohne Beute, Gold in Worten, Gegner ohne Begegnung und Zeitsprünge, Ausrüstung kommt nie ins Ding-Gedächtnis (Review 27.10. Paket 7, Teil 2)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.173** KI-Dungeon-Master: Gegnerbilder nehmen, was ein Gegner ist, aus dem Bestiarium (Menschen sehen wie Menschen aus), Gefährten-Gesichter mit festem Geschlecht und Alter
 - **V01.1.172** KI-Dungeon-Master: die Probe einer Person-Stimme prüft frisch, ob Stimmen aus Beschreibung laufen, und Katalog und Spielleiter-Pult sagen mit Sprung-Link, wenn nicht
 - **V01.1.171** KI-Dungeon-Master: Rückfrage nur ohne Verb und höchstens 30 s, keine Probe für Gehen, Kaufen und Rasten, getipptes Kaufen und Rasten mit fester Zeile, Gold an Personen wird abgebucht (Review 27.10., Paket 6)
-- **V01.1.170** KI-Dungeon-Master: im Kampf ist jede Aktion mit einem Gegnernamen ein Angriff (auch „Ich greife den Goblin mit dem Schwert an“), „Ich heile Bela“ wirkt den Heilzauber, die Zauberzeile nennt die Leben (Review 27.10., Paket 2)
 
 
 

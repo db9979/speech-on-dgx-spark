@@ -215,8 +215,8 @@ def collect(dm, r, rd, now=None):
         d = load()
         names = {(v.get("welt"), v["name"].lower()) for v in d.values()}
         for k, x in (rd.get("nsc") or {}).items():
-            if x.get("gesehen") is None:
-                continue
+            if x.get("gesehen") is None or nsc.no_person(r, dict(rd, kampf=None), x.get("name"), "katalog"):
+                continue                         # Review 27.10. Paket 8: never a foe, hero or role word in the catalog
             g = x.get("gesicht") if isinstance(x.get("gesicht"), dict) and (x.get("gesicht") or {}).get("st") == "ok" else None
             p = d.get(x.get("katalog") or "")
             if p and p.get("welt") == welt:
@@ -264,7 +264,10 @@ VORLAGE = (                # words of the occupation (the card's English text) �
     (("investigator", "agent", "spy", "courier"), ("spion", "bandit")),
     (("priest", "mystic", "pilgrim", "healer", "witch"), ("akolyth", "kultist", "wache")),   # no „priester“: its power are spells
     (("diplomat", "noble"), ("adliger", "wache")))
-SONST = ("wache",)         # any other occupation
+SONST = ("wache",)         # any other occupation, but not one of NICHT_KAEMPFER (Review 27.10. Paket 8, Z8: never as a guard)
+NICHT_KAEMPFER = ("artisan", "bard", "bell ringer", "butler", "cabin boy", "cartographer", "clockmaker", "farmer", "fisher", "forager",
+                  "herder", "historian", "innkeeper", "lamplighter", "performer", "researcher", "scholar", "cook", "shipwright",
+                  "technician", "trader", "traveller", "engineer", "pilot", "navigator", "ai", "child")
 # a person counts in the fight's budget and gives experience by its template's experience times this weight, measured
 # with the balance bench (dungeon_pruefstand, people only): a group wins 70 to 90 per cent at „mittel“ on average, every
 # level and group size within SPANNE (few templates, so single cells swing more than with the whole bestiary)
@@ -292,10 +295,13 @@ def pool(r):
 
 def template(dm, r, rd, x, b):
     """The bestiary entry a person fights with: by its occupation, the strongest of its row that plays in the world and
-    fits the encounter's budget b (it counts in it like any foe); None when none fits. The model never gives values."""
+    fits the encounter's budget b (it counts in it like any foe); None when none fits or the occupation has no row and
+    is one of NICHT_KAEMPFER. The model never gives values."""
     import dungeon_kampf as kampf
     beruf = ((x.get("karte") or {}).get("beruf") or ["", ""])[1].lower()
     row = next((ids for words, ids in VORLAGE if any(w in beruf for w in words)), SONST)
+    if row is SONST and any(re.search(r"(?<!\w)" + re.escape(w) + r"(?!\w)", beruf) for w in NICHT_KAEMPFER):
+        return None                              # a farmer, a bard, a ship's AI never fights as a guard
     by = dm._by(r, "gegner")
     return next((weighted(by[i]) for i in row + SONST if i in by and kampf.plays_in(r, by[i], rd.get("welt", ""))
                  and weighted(by[i])["ep"] <= b * kampf.SCHWER), None)

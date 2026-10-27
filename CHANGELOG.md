@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.180** · 2026-10-27 · KI-Dungeon-Master: nur Personen werden Personen, Gegner, Helden, Gefährten, Gruppen und Rollenwörter nie, ein Händler verkauft nach seinem Namen und bekommt eine Karte, eine kämpfende Person zeigt ihr Porträt (Review 27.10. Paket 8)
 - **V01.1.179** · 2026-10-27 · KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)
 - **V01.1.178** · 2026-10-27 · KI-Dungeon-Master: die Prüfung fängt „Er“ für eine Heldin, Orte, die es auf der Karte nicht gibt, verratene Geheimnisse, Spuren nach misslungener Suche und übergangene Aktionen (Review 27.10. Paket 7, Teil 3)
 - **V01.1.177** · 2026-10-27 · KI-Dungeon-Master: die Prüfung fängt eine gezogene Waffe ohne Besitzwort, einen Fund ohne Beute, Gold in Worten, Gegner ohne Begegnung und Zeitsprünge, Ausrüstung kommt nie ins Ding-Gedächtnis (Review 27.10. Paket 7, Teil 2)

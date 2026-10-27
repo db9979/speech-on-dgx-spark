@@ -172,15 +172,17 @@ def _part(dm, r, rd, x, n):
 
 
 def check_truth(dm, r, rd, obj):
-    """The truth by fixed rules: lengths, no refused word, no hero's name as a person, no name twice. None when no
-    person is left."""
+    """The truth by fixed rules: lengths, no refused word, only names that are people (dungeon_nsc.ist_person: no hero,
+    companion, foe, bestiary name, group or bare role word, Review 27.10. Paket 8), no name twice. None when no person
+    is left."""
+    import dungeon_nsc
     if not isinstance(obj, dict):
         return None
-    heroes = {p["held"]["name"].lower() for _, p in dm.seated(rd)}
     personen, seen = [], set()
+    gruppen_vorab = {"gruppen": [g for g in obj.get("gruppen") or [] if isinstance(g, dict)]}
     for p in (obj.get("personen") or [])[:PERSONEN[1]]:
         name = _part(dm, r, rd, (p or {}).get("name"), NAME_LEN) if isinstance(p, dict) else ""
-        if len(name) < 2 or name.lower() in heroes or name.lower() in seen:
+        if len(name) < 2 or name.lower() in seen or dungeon_nsc.no_person(r, dict(rd, wahrheit=gruppen_vorab), name, "wahrheit"):
             continue
         seen.add(name.lower())
         personen.append({"name": name, **{k: _part(dm, r, rd, p.get(k), TEIL_LEN) for k in ("rolle", "ziel", "sprache")},
@@ -207,7 +209,10 @@ async def make_truth(dm, r, rd):
 
 
 def learn_people(rd, story):
-    """A person the narration lets speak and the truth does not know joins it (no role yet), up to PERSONEN_MAX."""
+    """A person the narration lets speak and the truth does not know joins it (no role yet), up to PERSONEN_MAX; only a
+    name that is a person (dungeon_nsc.ist_person, Review 27.10. Paket 8: „Goblin“, „Wache“ or a hero never)."""
+    import dungeon
+    import dungeon_nsc
     w = rd.get("wahrheit")
     if not w or not story:
         return 0
@@ -215,7 +220,8 @@ def learn_people(rd, story):
     n = 0
     for x in story.get("npc") or []:
         name = str(x.get("name") or "")[:NAME_LEN]
-        if len(name) >= 2 and name.lower() not in known and len(w["personen"]) < PERSONEN_MAX:
+        if len(name) >= 2 and name.lower() not in known and len(w["personen"]) < PERSONEN_MAX \
+                and not dungeon_nsc.no_person(dungeon.rules(), rd, name, "lernen"):
             w["personen"].append({"name": name, "rolle": "", "ziel": "", "sprache": ""})
             known.add(name.lower())
             n += 1

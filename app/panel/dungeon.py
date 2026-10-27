@@ -415,6 +415,13 @@ ERKENNEN = 5              # a merchant names an unknown item for a fifth of its 
 HAENDLER = {"schmied": (("Schmied", "Smith"), ("waffe", "ruestung")),
             "alchemist": (("Alchemist", "Alchemist"), ("trank", "zauber")),
             "kraemer": (("Krämer", "Trader"), ("schmuck", "werkzeug", "rolle", "schatz"))}
+# Review 27.10. Paket 8 (Z4, B15): the kind from fixed words of the merchant's name or sentence, else drawn; the German
+# default name in both forms; a treasure is bought, never offered (24.10. Punkt 6 „kein Schatz“)
+HAENDLER_IN = {"schmied": "Schmiedin", "alchemist": "Alchemistin", "kraemer": "Krämerin"}
+HAENDLER_WORT = {"schmied": ("schmied", "smith", "waffen", "rüstung", "armour", "armor", "weapon"),
+                 "alchemist": ("alchemist", "apothek", "kräuter", "kraeuter", "trank", "tränke", "potion", "herbalist", "apothecary"),
+                 "kraemer": ("krämer", "kraemer", "trödler", "troedler", "hausierer", "pedlar", "peddler", "trinket")}
+NIE_ANGEBOT = ("schatz",)
 KASSE = 50
 FOLGE_ARTEN = ("schaden", "heilung")
 KOERPER_WERTE = ("staerke", "geschick", "konstitution")   # a failed check on these may hurt outside a fight (grounded)
@@ -1898,29 +1905,38 @@ def rarity(r, stufe, roll):
 
 
 def open_market(r, rd, name="", satz="", rng=None):
-    """A merchant at this place: its kind drawn (HAENDLER), its goods of that kind drawn by the panel (rarity by the
-    find table as for loot, never above what the level allows), known to it, priced by the rules, its purse KASSE
-    times the level. The model only names it; it stays until the place changes."""
+    """A merchant at this place: its kind by the words of its name or sentence (HAENDLER_WORT), else drawn (HAENDLER),
+    its goods of that kind drawn by the panel (rarity by the find table as for loot, never above what the level
+    allows, never a treasure: NIE_ANGEBOT), known to it, priced by the rules, its purse KASSE times the level. The
+    model only names it (a name that is no person, dungeon_nsc.ist_person, gives the default name in either form); a
+    named one gets a card (dungeon_nsc.merchant). It stays until the place changes."""
     if rd.get("kampf"):                          # Review 27.10. Paket 3: no merchant while a fight runs
         print("dungeon: markt | kampf", flush=True)
         return
     rng = rng or random
     li = 1 if rd["lang"] == "en" else 0
     stufe = group_level([p["held"] for _, p in seated(rd)])
-    art = rng.choice(sorted(HAENDLER))
-    arten = HAENDLER[art][1]
+    if name and nsc.no_person(r, rd, name, "markt"):   # „Schattenwächter“ never sells (Paket 8, Z3)
+        name = ""
+    low = f"{name} {satz}".lower()
+    art = next((a for a in sorted(HAENDLER) if any(w in low for w in HAENDLER_WORT[a])), "") or rng.choice(sorted(HAENDLER))
+    arten = [a for a in HAENDLER[art][1] if a not in NIE_ANGEBOT]
     ware = []
     for _ in range(rng.randint(*WARE)):
         stufen, s = rarity(r, stufe, rng.randint(1, 100))
         s = stufen[-2] if s["id"] == r["seltenheit"][-1]["id"] else s      # a legend never at a merchant (legenden)
         it = item(r, rng.choice([c for c in r["gegenstaende"] if c["art"] in arten and in_world(c, rd.get("welt")) and reaches(r, c, s)]
                                 or [c for c in r["gegenstaende"] if c["art"] in arten and "seltenheit" not in c]
-                                or [c for c in r["gegenstaende"] if "seltenheit" not in c])["id"], s["id"], rng)
+                                or [c for c in r["gegenstaende"] if "seltenheit" not in c and c["art"] not in NIE_ANGEBOT])["id"], s["id"], rng)
         it.pop("u", None)
         if _c(r, it)["art"] == "schatz":
             it["st"] = stufe
         ware.append(it)
-    rd["markt"] = {"name": name or HAENDLER[art][0][li], "satz": satz, "ware": ware, "art": art, "kasse": KASSE * stufe}
+    if name:
+        nsc.merchant(r, rd, name, HAENDLER[art][0], rng)
+    else:
+        name = HAENDLER[art][0][li] if li or rng.random() < 0.5 else HAENDLER_IN[art]
+    rd["markt"] = {"name": name, "satz": satz, "ware": ware, "art": art, "kasse": KASSE * stufe}
     _log(rd, "markt", name=rd["markt"]["name"], auf=True)
     _day.bump("maerkte")
     print(f"dungeon: markt | auf | {len(ware)} waren", flush=True)

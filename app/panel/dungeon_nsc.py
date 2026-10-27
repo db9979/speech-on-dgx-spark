@@ -77,6 +77,57 @@ TITEL = {"waechter": "guard", "wächter": "guard", "hueter": "guard", "hüter": 
          "späher": "scout", "gelehrt": "scholar", "kundschafter": "scout", "soeldner": "mercenary", "söldner": "mercenary"}
 
 
+# Review 27.10. Paket 8 (Z3, G30): a name is a person only by fixed rules, never by the model: no hero, no companion, no
+# foe of the fight (a person fighting stays one), no name of the bestiary (also with a number or a plural), no group of
+# the truth, no bare role word and no word ending in one („Schattenwächter“)
+ROLLENWORTE = ("wache", "wachen", "händler", "haendler", "händlerin", "wirt", "wirtin", "schmied", "schmiedin", "alchemist",
+               "alchemistin", "krämer", "kraemer", "krämerin", "bauer", "bäuerin", "fremder", "fremde", "mann", "frau", "kind",
+               "junge", "mädchen", "alte", "alter", "greis", "stimme", "gestalt", "diener", "dienerin", "bote", "botin", "soldat",
+               "soldaten", "krieger", "kriegerin", "erzähler", "erzählerin", "bord-ki", "ki", "computer", "guard", "guards",
+               "merchant", "trader", "innkeeper", "smith", "stranger", "man", "woman", "child", "boy", "girl", "voice", "figure",
+               "servant", "messenger", "soldier", "warrior", "narrator", "ship ai", "ai")
+ROLLEN_ENDE = ("wächter", "waechter", "wächterin", "hüter", "hueter", "hüterin", "wache", "krieger", "kriegerin", "soldat",
+               "guard", "warden", "keeper", "soldier", "warrior")
+ARTIKEL = ("der", "die", "das", "den", "dem", "ein", "eine", "einer", "the", "a", "an")
+
+
+def ist_person(r, rd, name):
+    """"" when name may be a person of the round, else why not: "held", "gefaehrte", "gegner", "bestiarium", "gruppe" or
+    "rolle" (dungeon_erzaehler.check_truth and learn_people, dungeon.open_market, dungeon_personen.collect)."""
+    n = re.sub(r"\s+\d+$", "", str(name or "").strip()).lower()
+    if len(n) < 2:
+        return "rolle"
+    if n in {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")}:
+        return "held"
+    if n in {str(c.get("name") or "").lower() for c in rd.get("gefaehrten") or []}:
+        return "gefaehrte"
+    if n in {re.sub(r"\s+\d+$", "", str(g.get("name") or "")).lower() for g in (rd.get("kampf") or {}).get("gegner") or [] if not g.get("person")}:
+        return "gegner"
+    for g in r.get("gegner") or []:
+        for b in g.get("name") or []:
+            b = str(b).lower()
+            if n == b or n in (b + "e", b + "en", b + "n", b + "s", b + "es"):
+                return "bestiarium"
+    if n in {str(g.get("name") or "").lower() for g in (rd.get("wahrheit") or {}).get("gruppen") or []}:
+        return "gruppe"
+    ws = [w for w in n.split() if w not in ARTIKEL] or n.split()   # „der Fremde“ is a role like „Fremder“
+    if n in ROLLENWORTE or all(w in ROLLENWORTE for w in ws) or len(ws) == 1 and ws[0].endswith(ROLLEN_ENDE):
+        return "rolle"
+    return ""
+
+
+_personen = DayCounter(keine_person=0, haendler_karte=0)   # names refused as people, merchants given a card (Live)
+
+
+def no_person(r, rd, name, wo):
+    """ist_person with its log line: True when name is refused (the line names where and why, never the name)."""
+    why = ist_person(r, rd, name)
+    if why:
+        print(f"dungeon: wahrheit | person | abgelehnt | {why} | {wo}", flush=True)
+        _personen.bump("keine_person")
+    return bool(why)
+
+
 def _beruf_rows(r, rd):
     t = tabellen.table(r, "nsc_beruf") or {}
     w = rd.get("welt")
@@ -204,6 +255,28 @@ def progress(dm, r, rd, rng=None):
 def note(rd, de, en):
     """A line in the chronicle (fixed words of the panel and names the round checked)."""
     rd["chronik"] = ((rd.get("chronik") or []) + [{"n": rd.get("zug", 0), "k": rd.get("kapitel", 1), "t": [de, en]}])[-CHRONIK_MAX:]
+
+
+def merchant(r, rd, name, paar, rng=None):
+    """Review 27.10. Paket 8 (Z4): a merchant with a name of its own becomes a person of the round with a card (its
+    occupation the market's kind, paar [de, en], its one gender from the name's form), so portrait, voice and the
+    catalog know it; only while the person memory is on and the name is a person (ist_person). Returns the gender."""
+    k = str(name or "").lower()
+    if not on(rd) or not k or ist_person(r, rd, name):
+        return ""
+    ns = rd.setdefault("nsc", {})
+    if k in ns:
+        return (ns[k].get("karte") or {}).get("geschlecht") or ns[k].get("geschlecht") or ""
+    import dungeon_stimmen
+    x = {"name": name, "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None, "wesen": traits(rng),
+         "ziele": goals(r, rd, "", rng)}
+    _, sex = beruf_of(r, rd, f"{name} {paar[0]}")
+    x["karte"]["beruf"] = list(paar)             # the panel's kind, never a drawn occupation
+    dungeon_stimmen.fix(rd, x, sex)
+    ns[k] = x
+    _personen.bump("haendler_karte")
+    print("dungeon: markt | person | neu", flush=True)
+    return sex
 
 
 def sync(r, rd, rng=None):
@@ -523,7 +596,9 @@ def view(rd, host, li):
 
 
 def for_live(rs):
-    return {"nsc_karten": sum(len(v.get("nsc") or {}) for v in rs), "chronik_zeilen": sum(len(v.get("chronik") or []) for v in rs)}
+    t = _personen.today()
+    return {"nsc_karten": sum(len(v.get("nsc") or {}) for v in rs), "chronik_zeilen": sum(len(v.get("chronik") or []) for v in rs),
+            "keine_person": t["keine_person"], "haendler_karte": t["haendler_karte"]}
 
 
 def keep(rd):

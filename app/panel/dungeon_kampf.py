@@ -1005,7 +1005,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
             dm._day.bump("besiegt")
-            album.win(dm, rd, g["id"])           # the Monster-Album (D&D idea 12): one more win for the fight's heroes
+            if not g.get("person"):              # a person is met on the page „Personen“, never a monster (Paket 8, Z8)
+                album.win(dm, rd, g["id"])       # the Monster-Album (D&D idea 12): one more win for the fight's heroes
         elif was == "phase2":
             dm._log(rd, "gegner", gegner=g["name"], was="phase2")
             print("dungeon: kampf | boss | phase2", flush=True)
@@ -1022,7 +1023,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
                 if hurt(g, x["schaden"]) == "besiegt":
                     dm._log(rd, "gegner", gegner=g["name"], was="besiegt")
                     dm._day.bump("besiegt")
-                    album.win(dm, rd, g["id"])
+                    if not g.get("person"):
+                        album.win(dm, rd, g["id"])
                 print("dungeon: kampf | gegner zustand", flush=True)
             continue
         g = by.get(x["k"])
@@ -1223,7 +1225,7 @@ def view(dm, r, rd, host=True):
     have = db.files() if db.on() else frozenset()
     lang, cat = "en" if rd.get("lang") == "en" else "de", dm._by(r, "gegner")
     out = [dict(card(dm, r, rd, g["id"], lang) if g["id"] in cat else {}, k=g["k"], id=g["id"], name=g["name"], zeichen=g["zeichen"],
-                leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], phase=g.get("phase", 1), bild=_picture(r, rd, g["id"], have),
+                leben=max(0, g["leben"]), max=g["max"], aus=g["aus"], phase=g.get("phase", 1), bild=_picture(r, rd, g["id"], have, g.get("person", "")),
                 lage=lage(g)[0], lage_name=lage(g)[1][1 if lang == "en" else 0],
                 **({"zust": [_zname(r, rd, x["id"]) for x in g["zust"] if x.get("bis", 0) >= rd.get("zug", 0)]} if g.get("zust") else {})) for g in k["gegner"]]
     if not host:
@@ -1231,8 +1233,13 @@ def view(dm, r, rd, host=True):
     return {"gegner": out, "gefahr": k["gefahr"], "stehen": len(up(rd))}
 
 
-def _picture(r, rd, gid, have):
+def _picture(r, rd, gid, have, person=""):
+    """A foe's picture: a person who fights shows its own portrait (Review 27.10. Paket 8, Z8), any other its bestiary
+    picture; "" while there is none."""
     import dungeon_dingbild as db
+    g = ((rd.get("nsc") or {}).get(person) or {}).get("gesicht") if person else None
+    if isinstance(g, dict) and g.get("st") == "ok" and g.get("n") in have:
+        return g["n"]
     c = next((x for x in r.get("gegner") or [] if x["id"] == gid), None)
     n = db.picture_of(r, c, rd.get("welt", ""))[0] if c and have else ""
     return n if n in have else ""
@@ -1243,7 +1250,7 @@ def pictures(dm, r, rd, out, host=True):
     life stays the host's (Tabletop-Punkt 11)."""
     import dungeon_dingbild as db
     have = db.files() if db.on() else frozenset()
-    out["log"] = [dict(e, gegner=[{k_: v for k_, v in dict(g, bild=_picture(r, rd, g["id"], have)).items() if host or k_ != "leben"}
+    out["log"] = [dict(e, gegner=[{k_: v for k_, v in dict(g, bild=_picture(r, rd, g["id"], have, g.get("person", ""))).items() if host or k_ != "leben"}
                                   for g in e["gegner"]]) if e.get("art") == "begegnung" else e
                   for e in out.get("log") or []]
 
