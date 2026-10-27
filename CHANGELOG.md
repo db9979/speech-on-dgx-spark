@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.174** · 2026-10-27 · KI-Dungeon-Master: der Spieltisch wird nie mehr neu aufgebaut, Bilder flackern nicht, Texte springen nicht, der Verlauf bleibt, wo man liest
 - **V01.1.173** · 2026-10-27 · KI-Dungeon-Master: Gegnerbilder nehmen, was ein Gegner ist, aus dem Bestiarium (Menschen sehen wie Menschen aus), Gefährten-Gesichter mit festem Geschlecht und Alter
 - **V01.1.172** · 2026-10-27 · KI-Dungeon-Master: die Probe einer Person-Stimme prüft frisch, ob Stimmen aus Beschreibung laufen, und Katalog und Spielleiter-Pult sagen mit Sprung-Link, wenn nicht
 - **V01.1.171** · 2026-10-27 · KI-Dungeon-Master: Rückfrage nur ohne Verb und höchstens 30 s, keine Probe für Gehen, Kaufen und Rasten, getipptes Kaufen und Rasten mit fester Zeile, Gold an Personen wird abgebucht (Review 27.10., Paket 6)

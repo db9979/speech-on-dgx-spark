@@ -5773,6 +5773,67 @@ class Windows(unittest.TestCase):
                         await br.close()
         asyncio.run(go())
 
+    def test_the_table_stays_put_across_polls(self):
+        """Dominik 2026-10-27 „die seite im spiel läd zum teil immer neu, bilder flackern, texte formatieren sich um und
+        springen“: a repaint of the table (a poll with something new) keeps every node that stays the same thing, so
+        pictures never load again and nothing moves; the feed keeps the place a reader scrolled to and goes to its end
+        only for a new entry."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        old_ask = dungeon.ask_model
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")
+        dungeon.ask_model = silent
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
+        rid = dungeon.make_round(uid, {"titel": "Ruhiger Tisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"].pop(rid, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            rd["dm"] = ""
+            for n in range(1, 13):
+                rd["log"].append({"art": "dm", "n": n, "k": n, "text": f"Zug {n}: Der Regen fällt auf die Dächer der Stadt, Uma geht "
+                                  "durch die Gassen und hört Stimmen hinter jeder Tür. " * 3, "npc": []})
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+        sig = "[...document.querySelectorAll('#dmview .dm-head, #dmview .dm-feed > *, #dmview .dm-group > *')].map(x=>{const r=x.getBoundingClientRect();return Math.round(r.top)+':'+Math.round(r.height)}).join()"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data")
+                        await pg.evaluate(f"DM.rid='{rid}';dmRound()")
+                        await b.until(pg, "!!DM.v&&document.querySelectorAll('#dmview .dm-feed .dm-dm').length>=12")
+                        await pg.evaluate("window._m=[...document.querySelectorAll('#dmview .dm-feed > *, #dmview .dm-group > *, #dmview .dm-head')];"
+                                          "const f=document.querySelector('#dmview .dm-feed');f.scrollTop=Math.max(0,f.scrollHeight/3)")
+                        top, before = await pg.evaluate("document.querySelector('#dmview .dm-feed').scrollTop"), await pg.evaluate(sig)
+                        for x in range(4):                                         # polls that bring something new
+                            await pg.evaluate(f"DM.v=Object.assign({{}},DM.v,{{tippt:['{x}'],plaetze:DM.v.plaetze.map(p=>Object.assign({{}},p,{{online:{str(x % 2 == 0).lower()}}}))}});dmDraw()")
+                        self.assertTrue(await pg.evaluate("window._m.every(x=>x.isConnected)"), w)   # no node built anew
+                        self.assertEqual(await pg.evaluate(sig), before, w)                        # nothing moved
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-feed').scrollTop"), top, w)
+                        await pg.evaluate("DM.v=Object.assign({},DM.v,{log:DM.v.log.concat([{art:'system',n:13,text:['Neu.','New.']}])});dmDraw()")
+                        self.assertTrue(await pg.evaluate("(()=>{const f=document.querySelector('#dmview .dm-feed');return f.scrollHeight-f.scrollTop-f.clientHeight<2})()"), w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
     def test_hero_sheet_merchant_and_item_windows(self):
         from tests.test_ui_browser import Browser, async_playwright
         import profiles

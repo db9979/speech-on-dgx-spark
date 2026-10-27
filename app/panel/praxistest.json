@@ -4062,6 +4062,13 @@
 "titel": "Dungeon-Master: Gegnerart und Gefährten im Bild",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber, Gesichter für NSCs und Gefährten anheuern an. A: Unter Funktionen → KI-Dungeon-Master → Regeln anpassen → „Bestiarium“ den Seeräuber oder den Dorfbewohner mit „Nochmal malen“ malen: ein Mensch, kein Wesen. B: Den Zombie malen: ein Untoter. C: In einer Siedlung Grete anheuern: ihr Gesicht zeigt eine Frau mittleren Alters.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P605",
+"v": 1174,
+"titel": "Dungeon-Master: Der Spieltisch bleibt ruhig",
+"text": "Eine Runde mit Bildern im Verlauf offen lassen, ein zweiter Spieler tippt und schickt. A: Bilder flackern nicht, Texte springen nicht. B: Im Verlauf nach oben scrollen: der Verlauf bleibt dort, bis ein neuer Eintrag kommt. C: Beim Tippen im Feld bleibt der Text und der Cursor.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

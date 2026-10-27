@@ -7,7 +7,7 @@
 const DM={on:false,data:null,rid:'',v:null,seq:0,busy:false,msg:'',err:false,made:null,at:0,ende:false,form:{},edit:'',kap:false};
 const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:'',konto:{tok:'',v:null,step:'',adr:'',msg:'',err:false,gebunden:false}};
 // read aloud (the last turn's WAV, the host's device plays it by itself) and the microphone of a seat
-const DMA={gtab:'',handy:'geschichte',hzug:{p:-1,g:-1},p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},rf:null,albseite:'',gesendet:0,mut:{p:0,g:0},kopf:false,app:false,gauf:{},ro:null};
+const DMA={gtab:'',handy:'geschichte',hzug:{p:-1,g:-1},p:{el:null,url:''},g:{el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:'',aendern:{p:0,g:0},rf:null,albseite:'',gesendet:0,mut:{p:0,g:0},kopf:false,app:false,gauf:{},ro:null,feedk:{p:'',g:''}};
 // the short guide for players at the table, the basics first (Punkt 6 of the table review of 2026-10-24): a small card
 // opens by itself once on this device, the pages by its button
 const DMHILFE=[['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
@@ -803,7 +803,7 @@ function dmGruppeZeile(v,mode,p,c){const k=mode+':'+p.pid,auf=!!DMA.gauf[k],low=
 document.body.addEventListener('click',e=>{const r=e.target.closest('.dm [data-dmgauf]');if(!r||e.target.closest('button,select,input,summary,details'))return;
   DMA.gauf[r.dataset.dmgauf]=!DMA.gauf[r.dataset.dmgauf];r.closest('#dgcard')?dgDraw():dmDraw()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.dm [data-dmgauf]')){e.preventDefault();e.target.click()}});
-function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),mk=typeof dmkKeep==='function'?dmkKeep(w):null,cols=dmColKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
+function dmTable(w,v,mode){DMCMP=v.vergleich||{};const dmkH=typeof DMK!=='undefined'?DMK.html:'',fe=w.querySelector('.dm-feed'),fEnd=!fe||fe.scrollHeight-fe.scrollTop-fe.clientHeight<48,fen=dmFenKeep(w),mk=typeof dmkKeep==='function'?dmkKeep(w):null,cols=dmColKeep(w),tk=dmTalkKeep(w),keep=w.querySelector('.dm-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;
   const st=v.status==='ende'?t('beendet','ended'):v.dm?t('der Dungeon-Master erzählt …','the Dungeon Master is narrating …'):v.pause?t('Pause','paused'):'';
   const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const seats=v.plaetze.filter(p=>!p.frei),col=pid=>Math.max(0,seats.findIndex(p=>p.pid===pid))%5;
@@ -859,10 +859,10 @@ function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),mk=typeo
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.classList.add('dm-amtisch');w.dataset.welt=v.welt_id||'';
   // the head (Punkt 1 of the table review of 2026-10-24): on the phone one row with title, turn, 🔊 and „⋯“; the rest
   // (back, sounds, guide, light or dark, full screen, the host's console) opens under „⋯“; no full screen in the app
-  w.innerHTML=`<div class="dm-head${DMA.kopf?' auf':''}">${mode==='p'?`<button type="button" class="b dm-kopfm" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut"><span class="dm-hmehr">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · </span>${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help dm-kopfm" data-dmhilfe="${DMA.hilfe===false||DMA.hilfe==='kurz'?0:'zu'}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}${DMA.app?'':dmVollKnopf()}${leitet?`<button type="button" class="b dm-kopfm dm-kopfpult" data-dmfen="pult">🎲 ${esc(t('Spielleiter-Pult','Game master console'))}</button>`:''}<button type="button" class="b dm-kopfk" data-dmkopf="1" aria-expanded="${!!DMA.kopf}" title="${esc(t('Mehr','More'))}" aria-label="${esc(t('Mehr','More'))}">⋯</button></div>
+  dmMorph(w,`<div class="dm-head${DMA.kopf?' auf':''}">${mode==='p'?`<button type="button" class="b dm-kopfm" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut"><span class="dm-hmehr">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · </span>${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${dmLesKnopf(v,mode)}${v.ich?`<button type="button" class="b dm-help dm-kopfm" data-dmhilfe="${DMA.hilfe===false||DMA.hilfe==='kurz'?0:'zu'}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}${DMA.app?'':dmVollKnopf()}${leitet?`<button type="button" class="b dm-kopfm dm-kopfpult" data-dmfen="pult">🎲 ${esc(t('Spielleiter-Pult','Game master console'))}</button>`:''}<button type="button" class="b dm-kopfk" data-dmkopf="1" aria-expanded="${!!DMA.kopf}" title="${esc(t('Mehr','More'))}" aria-label="${esc(t('Mehr','More'))}">⋯</button></div>
     ${v.ich?dmHilfe():''}<div class="dm-grid" data-dmpane="${DMA.handy}" style="--dm-side:${dmBreite()}px"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${dmBack(v)}${dmPauseBar(v,leitet)}${dmKalender(v)}${dmTageszeit(v)}${dmKnapp(v)}${dmRast(v)}${dmKampf(v)}<div class="dm-feed" aria-live="polite">${dmScene(v,mode)}${log}${dmMalt(v)}${dmWait(v)}</div>${input?`<div class="dm-handeln">${input}</div>`:''}${dmTalk(v,mode)}</div>
-    <div class="dm-col dm-side">${dmZiehe()}${dmAuftrag(v)}${dmAuftraege(v)}${dmMeKurz(v,mode)}${host?`<div class="dm-pultz">${host}</div>`:''}${dmSeite(v,mode)}</div></div>${input?'':dmMsg(S)}${dmUnten(v,mode)}${dmFenster(v,mode,pult)}`;
+    <div class="dm-col dm-side">${dmZiehe()}${dmAuftrag(v)}${dmAuftraege(v)}${dmMeKurz(v,mode)}${host?`<div class="dm-pultz">${host}</div>`:''}${dmSeite(v,mode)}</div></div>${input?'':dmMsg(S)}${dmUnten(v,mode)}${dmFenster(v,mode,pult)}`,(x,n)=>!!dmkH&&dmkH===DMK.html&&x.classList.contains('dmk')&&n.classList.contains('dmk'));
   if(mk)mk();                        // the map's node stays while its drawing is the same (dungeonkarte.js)
   fen();cols();tk();dmUntenPlatz(w);
   if(mode==='g')dmImgFill(w);
@@ -870,10 +870,32 @@ function dmTable(w,v,mode){DMCMP=v.vergleich||{};const fen=dmFenKeep(w),mk=typeo
   if(window.dmTon)dmTon(w,v,mode);   // music, sounds and the rolling d20 (dungeon-ton.js)
   dmWOthers(w,v);                    // another seat threw its die (dungeonwarten.js)
   DMLES[mode].w=w;dmMit(mode);       // the sentence being read stays marked (Tabletop 16)
-  const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
+  const f=w.querySelector('.dm-feed'),lk=(v.log||[]).length+':'+JSON.stringify((v.log||[]).slice(-1)[0]||'').length;
+  if(f&&(fEnd||DMA.feedk[mode]!==lk))f.scrollTop=f.scrollHeight;DMA.feedk[mode]=lk;
   const inp=w.querySelector('.dm-in');if(inp){if(DMA.rf&&DMA.rf.m===mode){inp.value=DMA.rf.t;DMA.rf=null;inp.focus({preventScroll:true})}else if(kv)inp.value=kv;else if(DMA.aendern[mode]===v.zug&&v.meine_aktion)inp.value=v.meine_aktion;if(kf||!keep&&DMA.aendern[mode]===v.zug)inp.focus({preventScroll:true})}
   dmLeft(S);
   dmLesung(mode,v)}
+// the table is never built anew (Dominik 2026-10-27 „die seite im spiel läd zum teil immer neu, bilder flackern, texte
+// formatieren sich um und springen“): the new HTML goes into the nodes there, a node stays when it is the same thing
+// (same tag, id, key or start of its text, looked for a few places ahead), only what changed is set; a picture keeps the
+// address its filler gave it (src, href), so nothing loads again, and scroll, focus and open details stay; a node stay(old, new)
+// names stays as it is (the map while its drawing is the same, dungeonkarte.js)
+const DMMORPH_VOR=6;
+function dmMorph(w,html,stay){if(!w.firstChild){w.innerHTML=html;return}const n=document.createElement(w.tagName);n.innerHTML=html;dmMorphKids(w,n,stay||(()=>false))}
+function dmMorphKey(x){return x.nodeType!==1?'#'+x.nodeType:x.nodeName+'|'+(x.id||x.getAttribute('data-key')||'')+'|'+(x.getAttribute('class')||'')+'|'+(x.textContent||'').slice(0,40)}
+function dmMorphKids(a,b,stay){let o=a.firstChild;
+  for(const nb of [...b.childNodes]){const k=dmMorphKey(nb);let m=o,i=0;
+    while(m&&i<DMMORPH_VOR&&dmMorphKey(m)!==k){m=m.nextSibling;i++}
+    if(m&&i<DMMORPH_VOR&&dmMorphKey(m)===k){while(o!==m){const x=o;o=o.nextSibling;x.remove()}}
+    else m=o&&o.nodeName===nb.nodeName&&o.nodeType===nb.nodeType?o:null;
+    if(m){if(m.nodeType!==1||!stay(m,nb))dmMorphNode(m,nb,stay);o=m.nextSibling}else a.insertBefore(nb,o)}
+  while(o){const x=o;o=o.nextSibling;x.remove()}}
+function dmMorphNode(a,b,stay){if(a.nodeType!==1){if(a.nodeValue!==b.nodeValue)a.nodeValue=b.nodeValue;return}
+  const pic=a.nodeName==='IMG'||a.nodeName.toLowerCase()==='image';
+  for(const at of [...a.attributes])if(!b.hasAttribute(at.name)&&!(pic&&(at.name==='src'||at.name==='href')))a.removeAttribute(at.name);
+  for(const at of [...b.attributes])if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
+  if(a.nodeName==='TEXTAREA'||a.nodeName==='INPUT'&&document.activeElement===a)return;   // what is typed stays (dmTable puts it back)
+  dmMorphKids(a,b,stay)}
 // on the phone the field stands above the bar in every pane (Punkt 3 of the table review): the table keeps room for
 // both under the story, measured again while the field grows
 function dmUntenPlatz(w){const h=w.querySelector('.dm-handeln'),u=w.querySelector('.dm-unten');

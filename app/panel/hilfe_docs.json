@@ -5917,6 +5917,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Der Spieltisch bleibt ruhig (V01.1.174, Dominik 2026-10-27 „die seite im spiel läd zum teil immer neu, bilder flakern, texte formatieren sich um und springen“): Ohne neuen Schalter. Bringt eine Abfrage etwas Neues (wer gerade tippt, wer da ist, ein Satz wird vorgelesen …), baute der Tisch bisher sein ganzes HTML neu auf: jedes Bild wurde neu gesetzt und geladen, Texte brachen neu um, Spalten sprangen, und der Verlauf ging jedes Mal ans Ende. Jetzt setzt dmMorph (static/js/dungeon.js) das neue HTML in die vorhandenen Knoten ein: ein Knoten bleibt, wenn er dasselbe ist (gleicher Tag, gleiche id, gleicher Schlüssel oder gleicher Textanfang, bis DMMORPH_VOR (6) Plätze voraus gesucht), nur Geändertes wird gesetzt, ein Bild behält die Adresse, die es schon hat. Eingabefeld, Fokus, offene Bereiche und Scrollstand bleiben. Der Verlauf geht nur noch ans Ende, wenn man schon dort war oder ein neuer Eintrag kommt. Browser-Selbsttest Windows.test_the_table_stays_put_across_polls in test_dungeon: vier Abfragen mit Neuem, kein Knoten neu, nichts verschoben, der Scrollstand bleibt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Stimmen aus Beschreibung sichtbar (V01.1.172, Dominik 2026-10-27 „stimmprobe nahm bei jedem charakter das standard model“, „stimme klang bei alles gleich“): Ohne neuen Schalter. Eine eigene Stimme je Person (Alter, Geschlecht, Klang, Wesen, Tempo) braucht VoiceDesign auf dem Spark (Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“). Läuft es nicht, spricht jede Person in der festen Stimme der Regeln (Frauen in der weiblichen), die Probe auch. Das Panel fragte die Sprachausgabe bisher nur aus der Ansicht einer Runde und höchstens alle 10 Minuten; der Katalog der Personen und seine Probe nahmen so nach einem Neustart immer die feste Stimme. Jetzt fragen Katalog und Probe selbst nach, solange VoiceDesign als aus gilt, höchstens alle DESIGN_NEU_S (30) Sekunden (dungeon.design_up). Läuft es nicht, steht im Katalog bei der Stimme und im Spielleiter-Pult (bei Vorlesen an) der Satz „Stimmen aus Beschreibung laufen gerade nicht: jede Person spricht in der festen Stimme“ mit dem Sprung-Link zur Einstellung. Fällt VoiceDesign mitten im Spiel aus, steht der Grund im Log („dungeon: stimmen | voicedesign … | feste stimme“). Selbsttest in test_dungeon_regel"
 },
 {
@@ -21182,6 +21190,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the game table stays calm (V01.1.174, Dominik 2026-10-27 „die seite im spiel läd zum teil immer neu, bilder flakern, texte formatieren sich um und springen“): No new switch. When a poll brought something new (who is typing, who is here, a sentence being read aloud …), the table used to build its whole HTML anew: every picture was set and loaded again, texts wrapped anew, columns jumped, and the feed went to its end every time. Now dmMorph (static/js/dungeon.js) puts the new HTML into the nodes there: a node stays when it is the same thing (same tag, id, key or start of its text, looked for up to DMMORPH_VOR (6) places ahead), only what changed is set, a picture keeps the address it already has. Input field, focus, open sections and scroll stay. The feed goes to its end only when you were there already or a new entry comes. Browser self-test Windows.test_the_table_stays_put_across_polls in test_dungeon: four polls with something new, no node built anew, nothing moved, the scroll stays."
 },
 {
 "lang": "en",
