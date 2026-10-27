@@ -13,6 +13,8 @@ State in the round (dungeon.py's rounds file):
                          a die has "geworfen" once its seat threw it (throw); the number is the panel's all along
     rd["warten_zuletzt"] {"satz": [...], "karte": [...], "tipp": [...]}  the keys shown last in this round
     rd["tisch"]          [{"n", "pid", "name", "text", "t"}]  the table talk, the last TISCH_MAX
+    rd["geste"]          {"zug", "n", "t"}  the small gestures of the idle time (LlamaTale idea 7): when the last came,
+                         how many this turn
     rd["wurf_offen"]     [{"pid", "name", "wert", "schwer", "n", "t"}]  own dice not thrown when the narration came
                          (Dominik 2026-10-25 „1a“): the seat's feed keeps the die at its place and the narration after it
                          veiled until the throw, at most WURF_MAX_S; the number stays the panel's, only the showing waits
@@ -24,6 +26,7 @@ import threading
 import time
 
 import dungeon_echt
+from common import DayCounter
 
 QUELLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_warten.json")
 SCHRITTE = ("lesen", "wuerfeln", "erzaehlen", "nachbessern")
@@ -38,6 +41,8 @@ TISCH_LEN = 200
 TIPPT_S = 6                # „X schreibt …“ while the last keystroke is this fresh
 WURF_S = 12                # a seat throws its own die (tap or shake); after this the others see it anyway
 WURF_MAX_S = 30            # an own die not thrown when the narration came waits this long in the feed (1a), then throws itself
+GESTE_S = 120              # a small gesture after this long without anything at the table, and so between two (LlamaTale idea 7)
+GESTE_ZUG = 2              # at most this many in one turn
 
 _data = {}
 _tippt = {}                # rid -> {pid: monotonic time of the last keystroke}; never written to disk
@@ -246,6 +251,72 @@ def talk(dm, rd, pid, text, now):
     log = rd.setdefault("tisch", [])
     log.append({"n": (log[-1]["n"] + 1) if log else 1, "pid": pid, "name": h["name"], "text": t, "t": now})
     del log[:-TISCH_MAX]
+
+
+# ---------------------------------------------------------------- small gestures while the table is idle (LlamaTale 7)
+# Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“ (ideas only). The main thread's dungeon_nsc.geste
+# picks the person and its fixed line (switch dungeongesten); here only when: the turn is open, nobody has done
+# anything at the table for GESTE_S (no action, no table talk, no gesture), no fight, no pause, no question waiting,
+# at most GESTE_ZUG a turn, never while a seat plays from the car. A gesture changes nothing in the round.
+_gesten = DayCounter(gezeigt=0, keine=0, auto=0)
+
+
+def _still_since(rd):
+    """When the last thing happened at the table: the turn's start, an action, a line of table talk, a gesture."""
+    return max([rd.get("zug_t", 0), (rd.get("geste") or {}).get("t", 0)]
+               + [x.get("t", 0) for x in (rd.get("offen") or {}).values()] + [x.get("t", 0) for x in (rd.get("tisch") or [])[-1:]])
+
+
+def geste_faellig(rd, now):
+    """Whether a small gesture is due now by the fixed rule (reads only; maybe_close asks on every request)."""
+    if rd.get("status") != "laeuft" or rd.get("pause") or rd.get("dm") or rd.get("kampf") or rd.get("echt_frage") \
+            or rd.get("knapp_frage") or not rd.get("owner") or not rd.get("nsc"):
+        return False
+    g = rd.get("geste") or {}
+    if g.get("zug") == rd.get("zug") and g.get("n", 0) >= GESTE_ZUG:
+        return False
+    import features
+    return now - _still_since(rd) >= GESTE_S and features.allowed("dungeongesten", rd["owner"])
+
+
+def geste(dm, rid, now):
+    """A small gesture into the feed when one is due (log art "geste" {nsc, geste: the kind, text}); the time counts as
+    a gesture also when nobody fits, so the next try comes only after another GESTE_S. Returns the gesture or None.
+    Never breaks the request that asked: an error is one journal line."""
+    try:
+        return _geste(dm, rid, now)
+    except Exception as e:  # noqa: BLE001 - a gesture is a nicety, the round's request goes on
+        print(f"dungeon: geste | fehler | {type(e).__name__}", flush=True)
+        return None
+
+
+def _geste(dm, rid, now):
+    import dungeon_auto
+    import dungeon_nsc
+    with dm._lock:
+        d = dm._read()
+        rd = d["runden"].get(rid)
+        if not rd or not geste_faellig(rd, now):
+            return None
+        g = rd.get("geste") or {}
+        rd["geste"] = {"zug": rd["zug"], "n": (g.get("n", 0) if g.get("zug") == rd["zug"] else 0) + 1, "t": now}
+        x = None
+        if any(dungeon_auto.im_auto(p.get("uid")) for p in rd["plaetze"].values() if p.get("uid")):
+            _gesten.bump("auto")
+            print("dungeon: geste | auto", flush=True)
+        else:
+            x = dungeon_nsc.geste(rd)
+            if x:
+                dm._log(rd, "geste", nsc=x["nsc"], geste=x["art"], text=x["text"])   # "art" is the log line's kind
+            _gesten.bump("gezeigt" if x else "keine")
+            print(f"dungeon: geste | {'gezeigt' if x else 'keine person'}", flush=True)
+        dm._write(d)
+    return x
+
+
+def gesten_live():
+    """Numbers only: gestures shown, none fitting, left out for the car today."""
+    return _gesten.counts()
 
 
 def view(rd, rid, pid, lang):

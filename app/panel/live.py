@@ -1446,6 +1446,8 @@ def snapshot(view="admin", now=None):
     try:   # Wandernde Personen and Kleine Gesten (dungeon_wandern.py): numbers on the game's line
         import dungeon_wandern
         dgn["wandern"] = dungeon_wandern.for_live() if dgn.get("on") else {}
+        import dungeon_warten
+        dgn["wandern"].update({"gesten_" + k: v for k, v in dungeon_warten.gesten_live().items()} if dgn.get("on") else {})   # the idle time's side
     except Exception:
         dgn["wandern"] = {}
     try:   # Aufträge von Personen (dungeon_auftraege.py): numbers on the game's line
@@ -2113,6 +2115,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['auftraege']['neu']} Aufträge vergeben, {dgn['auftraege']['erfuellt']} erfüllt, {dgn['auftraege']['zurueck']} zurückgegeben"
                            if any((dgn.get("auftraege") or {}).values()) else "")
                         + (f" · heute {dgn['wandern']['rasten']} lange Rasten auf der Karte, {dgn['wandern']['gewandert']} Personen gewandert, {dgn['wandern']['gesten']} Gesten"
+                           f" ({dgn['wandern'].get('gesten_keine', 0)}× niemand passend, {dgn['wandern'].get('gesten_auto', 0)}× im Auto ausgelassen)"
                            if any((dgn.get("wandern") or {}).values()) else "")
                         + (f" · heute {dgn['anleiten']['frage']} Fragen an stille Spieler aus der Szene, {dgn['anleiten']['frage_alt']}-mal zu wenig Ansatzpunkte, "
                            f"{dgn['anleiten']['zeile']} Zeilen „Das kannst du hier“, {dgn['anleiten']['genommen']} Knöpfe genommen, "

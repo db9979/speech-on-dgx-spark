@@ -4118,6 +4118,13 @@
 "titel": "Dungeon-Master: Porträt nach Geschlecht der Karte",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik sowie Gesichter für NSCs an. A: In einer Runde eine Person treffen, ihre Karte unter Personen (NSC) zeigt ein Geschlecht; das Porträt passt dazu. B: Zeigt eine Karte das Geschlecht „divers“, zeigt ihr Porträt eine androgyne Person.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P613",
+"v": 1183,
+"titel": "Dungeon-Master: kleine Gesten bei Stille",
+"text": "Funktionen → Meine Daten → Kleine Gesten an (dazu NSC-Gedächtnis und Chronik). A: In einer Runde mit einer Person in der Szene, die einen starken Wesenszug hat, 2 Minuten nichts tun: im Verlauf steht „🤲 … nickt euch freundlich zu.“ oder eine andere feste Geste. B: Nach weiteren 2 Minuten höchstens eine zweite, dann keine mehr in diesem Zug. C: Im Kampf oder in der Pause: keine. D: Mit CarPlay im Spiel: keine.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

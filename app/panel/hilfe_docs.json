@@ -6165,6 +6165,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: wann eine kleine Geste kommt (V01.1.183, LlamaTale-Idee 7, Dominik 2026-10-27 „1-7“): Die Gesten aus dungeon_nsc.geste erscheinen jetzt am Tisch. Das Panel prüft bei jeder Anfrage der Runde nach fester Regel (dungeon_warten.geste_faellig, aus dungeon.maybe_close): Der Zug ist offen, seit 2 Minuten (GESTE_S) ist am Tisch nichts geschehen (keine Aktion, kein Tischgespräch, keine Geste, gerechnet ab Beginn des Zugs), kein Kampf, keine Pause, der Erzähler antwortet nicht, keine Frage nach echten Würfeln wartet, und höchstens 2 Gesten je Zug (GESTE_ZUG). Dann schreibt dungeon_warten.geste die Zeile mit der Art „geste“ in den Verlauf (🤲, Felder nsc, geste für die Art der Geste, text de und en); sonst ändert sich nichts an der Runde. Passt niemand, zählt die Zeit trotzdem, der nächste Versuch kommt erst nach weiteren 2 Minuten. Spielt ein Platz gerade aus dem Auto (dungeon_auto.im_auto), kommt keine Geste. Ein Fehler hier bricht die Anfrage nie ab, er wird eine Zeile im Journal. Live: Gesten, niemand passend, im Auto ausgelassen (nur Zahlen); Log dungeon: geste | gezeigt, | keine person, | auto, | fehler | Art. Selbsttests test_dungeon_gesten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Aufträge von Personen (V01.1.155, LlamaTale-Idee 2, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Aufträge von Personen* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung liest dungeon_auftraege.seen jede offene Aktion mit festen Wortlisten (ARBEIT, GEBEN, ZURUECK) und der Person der Szene, die sie nennt (dungeon_nsc.scene, dungeon_nsc.named). Ein neuer Auftrag (Person nicht feindselig, ohne offenen Auftrag, höchstens OFFEN_MAX = 3 offen) kommt aus roll: Art aus ARTEN (bringen ein Ding des Marktes, reden mit einer anderen Person, besiegen einen Gegner der Welt bis zur Stufe der Gruppe), Lohn LOHN mal Stufe der Gruppe, Erfahrung EP für alle am Tisch, zwei Spuren aus festen Daten (wo die Person laut Karte zuletzt war und ihr Beruf, dass Händler das Ding führen und sein Text, die Sage und der Text des Gegners), der Grund ist der Wunsch der Person von ihrer Karte. Erfüllt nur durch Belege: bringen, wenn die Aktion der Person das Ding gibt und der Held es trägt (das Ding geht weg); reden, wenn die andere Person in der Szene "
 },
 {
@@ -21526,6 +21534,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ided by the round's waiting time (dungeon_warten), which writes it into the log with the art \"geste\". Logs dungeon: wandern | 1 personen, dungeon: karte | wandern | lange_rast | 1, dungeon: nsc | geste. Live overview: long rests on the map, people moved, gestures."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: when a small gesture comes (V01.1.183, LlamaTale idea 7, Dominik 2026-10-27 \"1-7\"): The gestures of dungeon_nsc.geste now show at the table. On every request of the round the panel checks by a fixed rule (dungeon_warten.geste_faellig, from dungeon.maybe_close): the turn is open, nothing has happened at the table for 2 minutes (GESTE_S; no action, no table talk, no gesture, counted from the turn's start), no fight, no pause, the narrator is not answering, no question for real dice waits, and at most 2 gestures a turn (GESTE_ZUG). Then dungeon_warten.geste writes the line of kind \"geste\" into the feed (🤲, fields nsc, geste for the gesture's kind, text de and en); nothing else in the round changes. If nobody fits, the time still counts and the next try comes only after another 2 minutes. While a seat plays from the car (dungeon_auto.im_auto) no gesture comes. An error here never breaks the request, it becomes a journal line. Live: gestures, nobody fitting, left out for the car (numbers only); log dungeon: geste | gezeigt, | keine person, | auto, | fehler | kind. Self-tests test_dungeon_gesten."
 },
 {
 "lang": "en",

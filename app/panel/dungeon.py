@@ -4575,6 +4575,8 @@ def maybe_close(rid, now=None, force=False):
     Dungeon Master in the background. Called on every request of the round (the timer is lazy)."""
     now = time.time() if now is None else now
     one = ablage.runde(rid, _fix)          # one round from the cache first: most polls find nothing due (Punkt 14)
+    if one and warten.geste_faellig(one, now):   # a small gesture while the table is idle (LlamaTale idea 7)
+        warten.geste(_me, rid, now)
     if not one or not (one["status"] == "laeuft" and one.get("until", 0) <= now or one.get("dm") and rid not in _running
                        or rid not in _running and (due(one, now) or force and one["offen"] and one["status"] == "laeuft" and not one.get("dm"))):
         return False
