@@ -320,6 +320,9 @@ POLL_S = 3
 ONLINE_S = 15
 STAND_S = 10              # „nichts neu“ (Punkt 14 of 2026-10-24): after this many seconds a poll gets the whole view again
 DM_S = 75                 # seconds one model answer may take
+AUSFALL_HALT = 2          # outages in one turn, then it waits for the host's „Jetzt weiter“ (Review 27.10. T2)
+AUSFALL_STOP = ("Der Dungeon-Master kommt gerade nicht durch. Der Zug wartet, bis der Gastgeber „Jetzt weiter“ drückt.",
+                "The Dungeon Master cannot get through right now. The turn waits until the host presses \"Go on now\".")
 ENDE_H = 24               # an ended round stays this long (Figur-Code, last look)
 FREI_H = 72               # a free seat nobody took goes after this long (Dominik 2026-10-24 „dass sich das nicht auffüllt“)
 BODY = 4096
@@ -462,7 +465,7 @@ _bilder_jobs = {}          # rid or "h:"+hid -> the heavy job's id of a picture 
 _sweep = [0.0]            # last look for portraits and covers nobody keeps (_bild_sweep)
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
 _stimmen = {"t": 0.0, "v": [], "design": False, "base": False, "laeuft": False}   # the speech output's voices a hero may take, whether it can make one from a description and whether its main model clones (Base) (STIMMEN_S)
-_day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
+_day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, ausfall_halt=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
                   wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0,
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
@@ -1005,7 +1008,7 @@ def new_hero(r, b, rng=None):
     """A hero from what was typed and picked: name, people, class, one sentence; the six scores from the fixed row
     as dragged (else the class's order) plus the people's bonus."""
     name = hero_name(b.get("name"))
-    if any(w.lower() in " " + name.lower() + " " for w in r["nie"]):   # the round's own words: join() and manage_seat()
+    if word_hit(r["nie"], name):                 # the round's own words: join() and manage_seat()
         raise ValueError("wortliste")
     volk, klasse = _by(r, "voelker").get(b.get("volk")), _by(r, "klassen").get(b.get("klasse"))
     if not volk or not klasse:
@@ -3076,6 +3079,9 @@ def due(rd, now):
     after it was written, so „Ändern“ still works."""
     if rd["status"] != "laeuft" or rd.get("pause") or rd.get("dm"):
         return False
+    a = rd.get("ausfall_zug") or {}
+    if a.get("zug") == rd["zug"] and (a.get("halt") or now - a.get("t", 0) < DM_S):
+        return False                             # after an outage the next try waits DM_S, after AUSFALL_HALT the host (outage)
     players = [pid for pid, p in seated(rd) if not p.get("ruht") and not zustand(p["held"])]   # „Nicht mehr warten“ of the host, a hero down: not waited for
     if not rd["offen"]:
         # nobody up but someone down (Punkt 1 of 2026-10-24): the turn is told when the clock runs out, so the count goes on
@@ -3102,12 +3108,20 @@ def act(rd, pid, text, turn, now):
     t = _clean(text, TEXT_MAX)
     if not t:
         raise ValueError("leer")
-    if bad_words(rules(), rd, t):                 # the round's tone, „nie“ and the story's taboos (Punkt 13)
+    mild = bad_words(rules(), rd, t) and rueckfrage.milder(t)   # Review 27.10. T19: „töten“ as „besiegen“, asked once
+    if mild and not bad_words(rules(), rd, mild):
+        t = mild
+        print("dungeon: aktion | wortliste | milder", flush=True)
+    elif bad_words(rules(), rd, t):               # the round's tone, „nie“ and the story's taboos (Punkt 13)
         print("dungeon: aktion | wortliste", flush=True)
         _day.bump("wortliste")
         raise ValueError("wortliste")
+    else:
+        mild = ""
     offered = anleiten.buttons(_me, rules(), rd, pid)   # „Das kannst du hier“ as the seat saw it
     rd["offen"][pid] = {"text": t, "t": now}
+    if mild:
+        rueckfrage.milder_frage(rd, pid)
     rd["plaetze"][pid].pop("ruht", None)          # back at the table: waited for again
     anleiten.taken(_me, rules(), rd, pid, t, offered)
 
@@ -3391,7 +3405,7 @@ def system_text(r, rd, task):
     if task == "erzaehlen" and dungeon_karte.asked_ways(rd):
         t += " " + WEG_REGEL[lang]
     if task in ("prolog", "erzaehlen"):
-        t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
+        t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + stimmen.AUFGABE[lang]
         t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
@@ -3400,6 +3414,8 @@ def system_text(r, rd, task):
         t += kampf.task(rd, lang)
     if task != "proben":
         t += dungeon_karte.task(rd)
+    if task in ("prolog", "erzaehlen"):          # Review 27.10. E7: the examples last, in their own bounded block, after every rule
+        t += erz.style_text(_me, r, rd, lang)
     return t + "\n\n" + (rd.get("prompt") or r["prompt"])
 
 
@@ -3419,12 +3435,23 @@ def plain(text, n):
     return t
 
 
+# Review 27.10. T1: harmless words that hold a word of a list („knackt“ holds „nackt“, „Blutbuche“ „blut“). Only these
+# fixed words are taken out before the check; every other part of a word still counts („Massenmord“, „splitternackt“).
+HARMLOS = re.compile(r"(?i)knack|blutbuche|blutorange|blutegel|schlachtr(oss|össer)|mordor|töte(t|n) keine(r)? fliege")
+
+
+def word_hit(words, text):
+    """Whether a text holds one of the words (lower case, also as part of a word, a space marks a word's edge), the
+    fixed harmless words (HARMLOS) left out. The one check of the round's lists (bad_words, new_hero, Personen)."""
+    low = " " + HARMLOS.sub("·", str(text or "")).lower() + " "
+    return any(w.lower() in low for w in words)
+
+
 def bad_words(r, rd, text):
     """Whether a text holds a word the round's tone, the list „nie“, the taboos of its story or the lines of its seats
-    (dungeon_grenzen) refuse (lower case, part of a word)."""
-    low = " " + text.lower() + " "
-    return any(w.lower() in low for w in list(_ton(r, rd)["woerter"]) + list(r["nie"]) + list((rd.get("plan") or {}).get("tabus") or [])
-               + grenzen.lines(rd))            # the lines of the seats at the table (Tabletop-Punkt 18)
+    (dungeon_grenzen) refuse (word_hit)."""
+    return word_hit(list(_ton(r, rd)["woerter"]) + list(r["nie"]) + list((rd.get("plan") or {}).get("tabus") or [])
+                    + grenzen.lines(rd), text)   # the lines of the seats at the table (Tabletop-Punkt 18)
 
 
 def _name_map(rd):
@@ -3891,7 +3918,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             print("dungeon: ep | akt", flush=True)
             mark("akt")
     else:
-        _log(rd, "dm", text=r["ausfall"][li], npc=[], frage="")
+        outage(r, rd)
     for pid, n in ep.items():
         if n <= 0:
             continue
@@ -3911,6 +3938,20 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         arrive(rd)                               # the fight is over: the ones at the edge come to the table
         anleiten.told(_me, r, rd)                # „Das kannst du hier“: the seats that get buttons now
     _narrated(rd)
+
+
+def outage(r, rd, now=None):
+    """No narration this turn (Review 27.10. T2): a system line, never one the model reads back as a narration
+    (told_here, the judge's repeats); the turn stays open, the next try waits DM_S (due), after AUSFALL_HALT outages
+    in the same turn it waits for the host's „Jetzt weiter“ (maybe_close force)."""
+    a = rd.get("ausfall_zug") if (rd.get("ausfall_zug") or {}).get("zug") == rd["zug"] else {}
+    n = a.get("k", 0) + 1
+    halt = n >= AUSFALL_HALT
+    rd["ausfall_zug"] = {"zug": rd["zug"], "k": n, "t": time.time() if now is None else now, **({"halt": True} if halt else {})}
+    _log(rd, "system", text=list(AUSFALL_STOP if halt else r["ausfall"]))
+    if halt:
+        _day.bump("ausfall_halt")
+    print(f"dungeon: ausfall | {'halt' if halt else 'neu'} | {n}", flush=True)
 
 
 def consequences(r, rd, folgen, names):
@@ -5890,7 +5931,7 @@ def for_live():
     t = _day.counts()
     return {"on": True, "runden": len(rs), "spieler": len(seats), "online": sum(1 for k, _ in seats if now - _seen.get(k, 0) < ONLINE_S),
             "gaeste": sum(1 for _, p in seats if p.get("gast")), "denkt": len(_running), "zuege": t["zuege"],
-            "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "verworfen": t["verworfen"],
+            "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "ausfall_halt": t["ausfall_halt"], "verworfen": t["verworfen"],
             "abgelehnt": t["abgelehnt"], "kampagnen": sum(len(campaigns(u)) for u in profiles.user_ids()),
             "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking), "vorlesen_fehler": t["vorlesen_fehler"], "vorlesen_ersatz": t["vorlesen_ersatz"],
             "klone": klone_count(), "klone_neu": t["klone"],

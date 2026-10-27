@@ -1970,6 +1970,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['pausiert']} pausiert" if dgn.get("pausiert") else "")
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
+                        + (f" · {dgn['ausfall_halt']} wartet auf Jetzt weiter" if dgn.get("ausfall_halt") else "")
                         + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
                         + (f" · {dgn['abgelehnt']} abgelehnt" if dgn.get("abgelehnt") else "")
                         + (" · erzählt gerade" if dgn.get("denkt") else "")
@@ -2132,7 +2133,7 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("haltung") or {}).values()) else "")
                         + (f" · {dgn['geschichten']['eigene']} eigene Geschichten, heute {dgn['geschichten']['gespeichert']} gespeichert, {dgn['geschichten']['erstellt']} erstellt, {dgn['geschichten']['kopiert']} kopiert, {dgn['geschichten']['geloescht']} gelöscht, {dgn['geschichten']['ausgeblendet']} ausgeblendet"
                            if any((dgn.get("geschichten") or {}).values()) else "")
-                        + (f" · heute {dgn['rueckfrage']['gefragt']} Rückfragen, {dgn['rueckfrage']['genommen']} Vorschläge genommen, {dgn['rueckfrage']['so_lassen']}-mal so gelassen"
+                        + (f" · heute {dgn['rueckfrage']['gefragt']} Rückfragen, {dgn['rueckfrage']['genommen']} Vorschläge genommen, {dgn['rueckfrage']['so_lassen']}-mal so gelassen, {dgn['rueckfrage'].get('milder', 0)} Aktionen gemildert"
                            if any((dgn.get("rueckfrage") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
                            if any((dgn.get("kommentar") or {}).values()) else "")

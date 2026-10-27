@@ -331,6 +331,7 @@ def check_style(r, need):
 
 STIL_LABEL = ("So klingt eine Erzählung hier (nur Beispiele für Ton, Rhythmus und Sinne; übernimm keinen Inhalt):",
               "This is how a narration sounds here (examples of tone, rhythm and senses only; take over no content):")
+STIL_BLOCK = (("[Beispiele]", "[Ende der Beispiele]"), ("[Examples]", "[End of the examples]"))   # Review 27.10. E7: no rule runs into them
 
 
 def style_text(dm, r, rd, lang):
@@ -340,7 +341,7 @@ def style_text(dm, r, rd, lang):
     beispiele = [p[li] for p in (welt.get("stil") or []) + (dm._ton(r, rd).get("stil") or [])] + dungeon_anleiten.example(r, rd, li)
     if not beispiele:
         return ""
-    return "\n\n" + STIL_LABEL[li] + "\n" + "\n".join(f"- {t}" for t in beispiele)
+    return "\n\n" + STIL_LABEL[li] + "\n" + STIL_BLOCK[li][0] + "\n" + "\n".join(f"- {t}" for t in beispiele) + "\n" + STIL_BLOCK[li][1]
 
 
 # ---------------------------------------------------------------- fixed checks with one rewrite

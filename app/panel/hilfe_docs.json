@@ -5909,6 +5909,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Nichts geht mehr kaputt (V01.1.168, Review 27.10. Paket 1, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Fehlerbehebungen. Prompt: Die Stilbeispiele der Welt und des Tons stehen jetzt ganz am Ende der Aufgabe, nach allen Regeln, in einem eigenen Block zwischen „[Beispiele]“ und „[Ende der Beispiele]“ (dungeon_erzaehler.STIL_BLOCK). Vorher hingen die Regeln zu Stimmen, Waffen, Zuständen und der Karte ohne Absatz an der letzten Beispielzeile und galten so als „nur Beispiel“. Wortlisten: Eine feste Liste harmloser Wörter, die ein Wort der Listen enthalten („knackt“ enthält „nackt“, „Blutbuche“, „Blutegel“, „Schlachtross“, „tötet keine Fliege“ …), wird vor der Prüfung herausgenommen (dungeon.HARMLOS, ein Helfer dungeon.word_hit für Runde, Heldenname und Personen-Katalog). Jeder andere Wortteil zählt weiter („Massenmord“, „splitternackt“), so geht kein echter Treffer verloren. Vorher fiel die ganze Erzählung aus, wenn das Modell „Ein Ast knackt“ schrieb. Ausfall-Bremse: Kommt keine brauchbare Erzählung, steht ein fester Satz als Systemzeile im Verlauf, nie als Erzählung, die das Modell im nächsten Zug als Vorgeschichte liest (dungeon.outage). Der nächste Vers"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "uch kommt frühestens nach DM_S (75) Sekunden, nach AUSFALL_HALT (2) Ausfällen im selben Zug wartet der Zug mit der Zeile „Der Dungeon-Master kommt gerade nicht durch …“, bis der Gastgeber „Jetzt weiter“ drückt. Vorher fragte das Panel bei jeder Abfrage neu, das Log lief voll. Kindertisch: Schreibt ein Platz ein Wort, das die Wortliste der Runde ablehnt und das eine feste Tabelle mildern kann (töten, ermorden, enthaupten, abschlachten, umbringen), nimmt das Panel die Aktion als „Ich besiege den Goblin.“ an und fragt den Platz einmal mit dem Satz „Hier werden Gegner besiegt, nicht getötet. Deine Aktion heißt so:“ (dungeon_rueckfrage.milder, auch ohne den Schalter der Rückfrage, nie blockierend). Was sich nicht mildern lässt, bleibt abgelehnt. „Besiegen“ zählt im Kampf als Angriff (dungeon_kampf.ANGRIFF_WORTE). Live: Zustand → Überblick zählt Züge, die auf „Jetzt weiter“ warten, und gemilderte Aktionen. Log-Zeilen „dungeon: ausfall | neu | 1“, „| halt | 2“, „dungeon: aktion | wortliste | milder“, „dungeon: rueckfrage | milder“. Selbsttests ReviewSofort in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Ein Geschlecht je Person (V01.1.167, Dominik 2026-10-27, Screenshot „Leute“: „silas - männliches bild - mystikerin“, „schattenwächter händler? stimmt das?“): Ohne neuen Schalter, unter *NSC-Gedächtnis und Chronik*. Bisher kamen Geschlecht, Beruf und Pronomen aus drei Quellen: das Porträt aus den Stimm-Merkmalen, der Beruf als Zufallszeile mit fester Endung, das Pronomen vom Modell. Jetzt wird das Geschlecht beim Anlegen der Karte einmal festgeschrieben (dungeon_stimmen.fix, auf der Karte rd[\"nsc\"][…][\"geschlecht\"] mit den Wörtern der Helden weiblich, maennlich, divers): aus der Wahrheit des Kapitels (neues Feld geschlecht, die Aufgabe verlangt einen Eigennamen statt eines Titels), sonst aus einem Titel oder einer Rolle („Schattenwächterin“ weiblich), sonst aus dem Namen. Porträt (dungeon_gesicht.who), Stimme, Berufswort (Form m oder w der Tabelle nsc_beruf, dungeon_nsc.beruf_wort) und die Pronomen des Erzählers (geschlecht in nsc_szene) folgen daraus. Nennt der Name oder die Rolle einen Beruf („Schattenwächter“ → Wache), nimmt die Karte diesen statt eines zufälligen (dungeon_nsc.beruf_of). Karten von vorher behalten das Geschlecht, in dem ihr Porträt gemalt wurde"
 },
 {
@@ -21070,6 +21086,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: nothing breaks any more (V01.1.168, review 27.10. package 1, Dominik 2026-10-27 „ok“): No new switch, these are fixes. Prompt: The style examples of the world and the tone now stand at the very end of the task, after every rule, in their own block between „[Examples]“ and „[End of the examples]“ (dungeon_erzaehler.STIL_BLOCK). Before, the rules for voices, weapons, conditions and the map ran into the last example line without a paragraph and so counted as „only an example“. Word lists: A fixed list of harmless words that hold a word of the lists („knackt“ holds „nackt“, „Blutbuche“, „Blutegel“, „Schlachtross“, „tötet keine Fliege“ …) is taken out before the check (dungeon.HARMLOS, one helper dungeon.word_hit for the round, the hero's name and the people catalog). Every other part of a word still counts („Massenmord“, „splitternackt“), so no real hit is lost. Before, the whole narration failed when the model wrote „Ein Ast knackt“. Outage brake: When no usable narration comes, a fixed sentence stands in the log as a system line, never as a narration the model reads as the story so far in the next turn (dungeon.outage). The next try comes after DM_S (75) seconds at"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " the earliest; after AUSFALL_HALT (2) outages in the same turn the turn waits with the line „The Dungeon Master cannot get through right now …“ until the host presses \"Go on now\". Before, the panel asked again on every request and the log filled up. Children's table: When a seat writes a word the round's word list refuses and a fixed table can soften (töten, ermorden, enthaupten, abschlachten, umbringen), the panel takes the action as „Ich besiege den Goblin.“ and asks the seat once with „Here foes are defeated, not killed. Your action reads:“ (dungeon_rueckfrage.milder, also without the Rückfrage's switch, never blocking). What cannot be softened stays refused. „Besiegen“ counts as an attack in a fight (dungeon_kampf.ANGRIFF_WORTE). Live: Status → Live counts turns waiting for \"Go on now\" and softened actions. Log lines „dungeon: ausfall | neu | 1“, „| halt | 2“, „dungeon: aktion | wortliste | milder“, „dungeon: rueckfrage | milder“. Self-tests ReviewSofort in test_dungeon."
 },
 {
 "lang": "en",

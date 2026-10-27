@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.168** AI Dungeon Master: word lists no longer hit harmless words („knackt“), a model outage brakes and waits for "Go on now" after two tries, "kill" becomes "defeat" at the children's table, style examples stand at the end of the prompt (review 27.10., package 1)
 - **V01.1.167** AI Dungeon Master: every person has one fixed gender, portrait, voice, occupation word and pronouns follow it, a title like „Schattenwächter“ decides the occupation
 - **V01.1.166** AI Dungeon Master: persuade to come along (switch, off), whether an asked person comes along is decided by its attitude towards the hero and a Charisma check of the panel, the devoted come without a check (LlamaTale idea 4)
 - **V01.1.165** AI Dungeon Master: real dice for attacks in a fight too, only 10 s wait after two turns without a throw, difficulty as a word
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.161** AI Dungeon Master: occupations in male and female form, no ship AI as an occupation, looks only outward (NPC tables)
 - **V01.1.160** Settings: the text beside a field is never squeezed again, "Time server in the home network" under Operation stood word by word, now a field moves below the text when less than about 180 px would be left beside it, also at 820 px window width beside both menus (Speech output, Language model, Defaults, Voices), and no select sticks out of its box any more
 - **V01.1.159** AI Dungeon Master: „go to the old library“ really leads there (no check, the narrator has to take the way, else the panel goes), „vague“ wants a point from the scene's data, no more „W-2“ on the dice card, the story fades out softly at the top
-- **V01.1.158** AI Dungeon Master: the map tells already before the narration whom an action asks to come along, so the panel can roll the Charisma check first (LlamaTale 4)
 
 
 

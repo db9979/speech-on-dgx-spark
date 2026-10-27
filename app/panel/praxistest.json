@@ -4020,6 +4020,13 @@
 "titel": "Dungeon-Master: Ein Geschlecht je Person",
 "text": "Mit NSC-Gedächtnis und Chronik eine neue Runde beginnen, unter „Leute“ ansehen: A: Porträt, Beruf (Mystiker/Mystikerin, Händler/Händlerin) und die Pronomen der Erzählung passen zueinander. B: Eine Person mit Titel als Name (etwa „…wächter“) hat den passenden Beruf (Wache). C: Eine Runde von vorher: das Porträt bleibt, der Beruf passt sich an sein Geschlecht an. D: Unter „Aussehen“ steht nur Äußerliches (sobald der DnDAppFiles-Thread die Tabelle umgestellt hat).",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P599",
+"v": 1168,
+"titel": "Dungeon-Master: Nichts geht mehr kaputt",
+"text": "A: In einer Runde „Er knackt das Schloss.“ schreiben: die Aktion geht durch, die Erzählung mit „knackt“ fällt nicht aus. B: Kindertisch (ab 8): „Ich töte den Goblin.“ schreiben: die Aktion heißt „Ich besiege den Goblin.“, darüber die Frage mit dem Satz, „So lassen“ oder der Vorschlag schickt sie ab. C: Sprachmodell kurz pausieren (sudo speech-spark pause llm 3): nach dem ersten Ausfall steht eine graue Systemzeile, gut eine Minute später ein zweiter Versuch, danach „Der Dungeon-Master kommt gerade nicht durch …“; nach „weiter“ und „Jetzt weiter“ geht der Zug normal weiter. D: Zustand → Überblick zeigt beim Dungeon-Master „wartet auf Jetzt weiter“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

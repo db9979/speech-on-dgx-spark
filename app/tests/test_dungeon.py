@@ -714,7 +714,7 @@ class Turns(Base):
         word = r["nie"][0]
         rd = self.play([{"proben": []}, {"erzaehlung": f"Ein langer Satz der Erzählung mit {word} darin.", "frage_an": ""}, "kein json"])
         self.assertEqual(rd["zug"], 1)                 # the turn stays open
-        self.assertEqual(rd["log"][-1]["text"], r["ausfall"][0])
+        self.assertEqual((rd["log"][-1]["art"], rd["log"][-1]["text"]), ("system", r["ausfall"]))   # a system line (Review T2)
         self.assertEqual(rd["dm"], "")
 
     def test_injection_changes_no_value(self):
@@ -868,6 +868,113 @@ class Rueckfrage(Turns):
         import dungeon_rueckfrage as rf
         tips = rf.suggestions(dungeon, dungeon.rules(), self.state(self.rid), self.host)
         self.assertFalse(any("Schlüssel" in x for x in tips), tips)
+
+
+class ReviewSofort(Turns):
+    """Review 27.10. Paket 1 (Dominik 2026-10-27 „ok“): nothing breaks any more."""
+
+    def test_the_examples_stand_last_in_their_own_block(self):
+        """E7: the style examples come after every rule in a bounded block; no rule runs into the last example."""
+        import dungeon_erzaehler as erz
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        for lang in ("de", "en"):
+            li = lang == "en"
+            t = dungeon.system_text(r, dict(rd, lang=lang), "erzaehlen")
+            a, z = erz.STIL_BLOCK[li]
+            self.assertIn(erz.STIL_LABEL[li] + "\n" + a + "\n- ", t)
+            block = t[t.index(a):t.index(z)]
+            self.assertTrue(all(x.startswith("- ") for x in block.split("\n")[1:] if x), block)   # only example lines inside
+            self.assertLess(t.index(dungeon.KANN_REGEL[lang]), t.index(a))       # the rules before the examples
+            self.assertLess(t.index(dungeon.stimmen.AUFGABE[lang].strip()), t.index(a))
+            self.assertIn(z + "\n\n", t)                                         # a paragraph after the block
+
+    def test_the_word_lists_hit_words_never_harmless_ones(self):
+        """T1: per tone harmless sentences pass and forbidden ones are hit; a fixed list of harmless words that hold a
+        word of a list (knackt, Blutbuche, …); every other part of a word still counts."""
+        r = dungeon.rules()
+        ton = {t["id"]: t for t in r["toene"]}
+        harmlos = ["Ein Ast knackt unter deinem Stiefel.", "Er knackte das Schloss.", "Die Truhe ist geknackt.",
+                   "Unter der Blutbuche liegt ein Stein.", "Ein Blutegel klebt am Stein.", "Er reitet ein Schlachtross.",
+                   "Der Wirt tötet keine Fliege.", "Sie trinkt Saft aus Blutorangen.", "Die Karte zeigt Mordor."]
+        verboten = {8: ["Blut tropft vom Messer.", "Er will den Wirt töten.", "Ein Massenmord geschah hier.", "Die Schlacht tobt.",
+                        "Sie ist splitternackt."],
+                    12: ["Man hat ihn gefoltert.", "Er enthauptet den Ork.", "Ein Gemetzel im Hof.", "Sie ist splitternackt."],
+                    16: ["Sie ist nackt.", "Ein Fall von Machtmissbrauch."]}
+        for tid, bad in verboten.items():
+            rd = dict(self.state(self.rid), ton=tid)
+            self.assertIn(tid, ton)
+            for t in harmlos:
+                self.assertFalse(dungeon.bad_words(r, rd, t), (tid, t))
+            for t in bad:
+                self.assertTrue(dungeon.bad_words(r, rd, t), (tid, t))
+        self.assertTrue(dungeon.word_hit(["nackt"], "Er ist halbnackt und knackt Nüsse."))   # a real hit beside a harmless one
+        x = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich knacke das Schloss der Truhe.", "zug": 1})
+        self.assertEqual(x.status_code, 200, x.text)
+
+    def test_an_outage_is_a_system_line_and_waits_then_stops(self):
+        """T2: an outage is a system line (never told_here, never the judge's repeats), the next try waits DM_S, after
+        AUSFALL_HALT outages in one turn the turn waits for the host's „Jetzt weiter“; Live counts it."""
+        import dungeon_erzaehler as erz
+        self.act_all()
+        r = dungeon.rules()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, "kein json", "kein json"])
+        self.assertIn("dungeon: ausfall | neu | 1", out.getvalue())
+        self.assertEqual((rd["zug"], rd["log"][-1]["art"]), (1, "system"))
+        self.assertFalse(any(e["art"] == "dm" and e["text"] == r["ausfall"][0] for e in rd["log"]))
+        self.assertNotIn(r["ausfall"][0], " ".join(dungeon.told_here(rd, 9)))
+        self.assertFalse(erz._alt(rd) & erz._triples(r["ausfall"][0]))
+        t = rd["ausfall_zug"]["t"]
+        self.assertFalse(dungeon.due(rd, t + dungeon.DM_S - 1))                # the next try waits DM_S
+        self.assertTrue(dungeon.due(rd, t + dungeon.DM_S))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, "kein json", "kein json"])
+        self.assertIn("dungeon: ausfall | halt | 2", out.getvalue())
+        self.assertEqual((rd["log"][-1]["art"], rd["log"][-1]["text"]), ("system", list(dungeon.AUSFALL_STOP)))
+        self.assertFalse(dungeon.due(rd, rd["ausfall_zug"]["t"] + 10 ** 6))    # stopped: only the host goes on
+        self.assertGreaterEqual(dungeon.for_live()["ausfall_halt"], 1)
+        self.spawned.clear()
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/weiter", json={}).status_code, 200)
+        self.assertEqual(self.spawned, ["dungeon"])                           # „Jetzt weiter“ tries again
+        nxt = copy.deepcopy(rd)
+        nxt["zug"] += 1
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.outage(r, nxt, now=0)
+        self.assertEqual(nxt["ausfall_zug"], {"zug": rd["zug"] + 1, "k": 1, "t": 0})   # a new turn counts anew
+
+    def test_a_killing_word_at_the_childrens_table_becomes_a_question(self):
+        """T19: at the children's table „Ich töte den Goblin.“ is kept as „Ich besiege den Goblin.“ by a fixed table and
+        the seat is asked once with it (also without the Rückfrage's switch), never blocking; a word the table cannot
+        soften is still refused; at the 12 table nothing changes."""
+        import dungeon_rueckfrage as rf
+        self.assertEqual(rf.milder("Ich töte den Goblin."), "Ich besiege den Goblin.")
+        self.assertEqual(rf.milder("Töte den Ork!"), "Besiege den Ork!")
+        self.assertEqual(rf.milder("Wir schlachten die Ratten ab."), "Wir besiegen die Ratten.")
+        self.assertEqual(rf.milder("Ich bringe den Troll um."), "Ich besiege den Troll.")
+        self.assertEqual(rf.milder("Ich öffne die Tür."), "")
+        x = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich töte den Goblin.", "zug": 1})
+        self.assertEqual(x.status_code, 200)
+        self.assertEqual(self.state(self.rid)["offen"][self.host]["text"], "Ich töte den Goblin.")   # 12: as written
+        kid = self.new_round(titel="Kinder", ton=min(t["id"] for t in dungeon.rules()["toene"]), held=dict(HERO, name="Ole"))
+        url = f"/api/profile/dungeon/{kid['rid']}/aktion"
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            x = self.c.post(url, json={"text": "Ich töte den Goblin.", "zug": 1})
+        self.assertEqual(x.status_code, 200, x.text)
+        self.assertIn("dungeon: aktion | wortliste | milder", out.getvalue())
+        self.assertIn("dungeon: rueckfrage | milder", out.getvalue())
+        rd = self.state(kid["rid"])
+        self.assertEqual(rd["offen"][kid["pid"]]["text"], "Ich besiege den Goblin.")
+        q = x.json()["rueckfrage"]
+        self.assertEqual((q["frage"], q["vorschlaege"]), (rf.MILDER_FRAGE[0], ["Ich besiege den Goblin."]))
+        self.assertTrue(rf.waiting(rd, kid["pid"]))
+        x = self.c.post(url, json={"text": "Ich foltere den Goblin.", "zug": 1})     # nothing to soften: refused
+        self.assertEqual((x.status_code, x.json()["detail"]), (400, "wortliste"))
+        self.assertEqual(self.spawned, [])                                     # the question waits for the seat
+        x = self.c.post(url, json={"text": "Ich besiege den Goblin.", "zug": 1})     # the suggestion taken
+        self.assertIsNone(x.json()["rueckfrage"])
+        self.assertEqual(self.spawned, ["dungeon"])                           # now the turn goes on
+        self.assertGreaterEqual(rf.for_live()["milder"], 1)
 
 
 class Permadeath(Turns):
@@ -6910,7 +7017,9 @@ class Fight(Turns):
                    "Ich trete zu", "Ich schlage die Wache", "Ich schlage auf den Ork ein", "Ich schieße einen Pfeil auf den Ork",
                    "I fight", "I punch him", "I kick", "I swing at it", "I attack", "I stab the guard",
                    # Nachprüfung V01.1.130
-                   "Ich schlage dich nieder", "Ich schlage euch nieder, Banditen", "Ich trete ein paar Mal nach der Wache"]
+                   "Ich schlage dich nieder", "Ich schlage euch nieder, Banditen", "Ich trete ein paar Mal nach der Wache",
+                   # Review 27.10. T19: the children's table's „besiegen“ (dungeon_rueckfrage.milder)
+                   "Ich besiege den Goblin.", "Wir besiegen die Ratten."]
         bezug = ["Ich ziele auf die Wache", "Ich werfe meinen Dolch auf die Wache", "boxe die Wache", "feuere auf die Wache",
                  "stürme auf die Wache los", "gehe auf die Wache los", "schneide der Wache die Kehle durch",
                  "I charge the guard", "I throw my dagger at the guard", "I aim at the guard", "Gebt Feuer auf die Wache",
@@ -6926,6 +7035,7 @@ class Fight(Turns):
                   "Ich schlage Alarm", "Ich trete die Tür ein", "Ich werfe der Wache Gold zu",
                   "Ich trete ein und schaue mich um", "I hit the road", "I strike a deal with the guard"]
         nichts += ["Ich verfluche die Wache", "Ich bete um Zuflucht"]      # Kampf-Audit M6: no flight
+        nichts += ["Ich breche das Siegel der Truhe", "Ich lese die Siegesinschrift"]   # Review T19: „besieg“ only
         frieden = ["Ergebt euch!", "Ich verhandle mit den Orks", "Lasst uns reden", "Ich biete Frieden an", "We surrender", "I parley"]
         # Kampf-Audit M6: running away (the attack words still win: „Ich schlage den verfluchten Ork“ attacks)
         flucht = ["Ich trete den Rückzug an", "I retreat", "Ich haue ab", "Wir fliehen durch die Tür!", "Ich flüchte in den Gang",
@@ -8978,6 +9088,10 @@ class Fight(Turns):
         self.assertEqual(rd["nsc"]["silas"]["karte"]["beruf"][0], {"maennlich": "Mystiker", "weiblich": "Mystikerin"}.get(sex, "Mystikerin"))
         self.assertEqual(dungeon_stimmen.fix(rd, rd["nsc"]["silas"], "weiblich" if sex == "maennlich" else "maennlich"), sex)   # never changes again
         self.assertEqual(dungeon_stimmen._of(rd, "Silas")["geschlecht"], sex)
+        import dungeon_gesicht
+        rd["nsc"]["silas"]["geschlecht"] = "divers"                              # the heroes' word on the card
+        self.assertEqual(dungeon_stimmen._of(rd, "Silas")["geschlecht"], "offen")   # the voice's word for it
+        self.assertTrue(dungeon_gesicht.who(rd, rd["nsc"]["silas"]))             # the portrait's words know it
         self.assertIn(nsc._sex_word(rd, "Mara", 0), ("männlich",))
         # the truth keeps a valid gender, drops another
         w = dungeon.erz.check_truth(dungeon, r, rd, {"personen": [{"name": "Hella", "rolle": "Küsterin", "geschlecht": "weiblich"},

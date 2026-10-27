@@ -227,7 +227,7 @@ def collect(dm, r, rd, now=None):
                 if g:
                     p["gesicht"] = {"n": g["n"]}
                 continue
-            if (welt, k) in names or len(x.get("name", "")) < 2 or any(w.lower() in x["name"].lower() for w in r["nie"]):
+            if (welt, k) in names or len(x.get("name", "")) < 2 or dm.word_hit(r["nie"], x["name"]):
                 continue
             pid = "p" + os.urandom(4).hex()
             t = rollen.get(k) or {}
@@ -367,8 +367,7 @@ def check(dm, r, e, have):
             out["stimme"] = stimmen.clean(e["stimme"])
         except ValueError:
             err.append("stimme: {} (nach dem Namen) oder je eines von " + ", ".join(f"{k} ({'/'.join(stimmen.data()['npc'][k])})" for k in stimmen.MERKMALE))
-    low = " " + _text(r, out).lower() + " "
-    if any(w.lower() in low for w in r["nie"]):
+    if dm.word_hit(r["nie"], _text(r, out)):
         err.append("Ein Wort steht in „nie“")
     if welt and any(v.get("welt") == welt and v["name"].lower() == name.lower() for v in have):
         err.append("name: diese Welt hat schon eine Person mit diesem Namen")

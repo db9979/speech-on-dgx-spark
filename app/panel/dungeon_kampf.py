@@ -94,7 +94,7 @@ ZIEL_MAX = 40
 # test_kampf_angriffswoerter_tabelle.
 _VOR = r"(?<!\w)(?:er|be|zu|nieder|ab|ver|drauf|los)?"
 ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
-                           r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|"
+                           r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|besieg|"
                            r"zerschmetter|erdolch|kämpf|kaempf|hau(?:e|t|en)?(?!\w)|hieb|prügel|prügl|pruegel|pruegl|dresch|"
                            r"schlitz|ramm|tret|tritt|spieß|spiess|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|fight|battle|"
                            r"punch|kick|swing|bash|cleave)")

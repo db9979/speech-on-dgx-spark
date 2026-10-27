@@ -59,7 +59,7 @@ FUERWORT = re.compile(r"(?i)(?<!\w)(?:es|ihn|ihm|das|dies|it|him|her|them|that|t
 _ANF = re.compile(r"[„“\"»«]")
 _VOKAL = re.compile(r"(?i)[aeiouäöüyáéíóú]")
 
-_day = DayCounter(gefragt=0, kurz=0, salat=0, fuerwort=0, kein_tun=0, genommen=0, so_lassen=0)
+_day = DayCounter(gefragt=0, kurz=0, salat=0, fuerwort=0, kein_tun=0, genommen=0, so_lassen=0, milder=0)
 
 
 def on(rd):
@@ -212,6 +212,38 @@ def check(dm, r, rd, pid, so_lassen=False):
     _day.bump("gefragt")
     _day.bump(why)
     print(f"dungeon: rueckfrage | regel | {why.replace('_', ' ')}", flush=True)
+
+
+# Review 27.10. T19: a fight word a list of the table refuses („Ich töte den Goblin“ at the children's table) becomes
+# „besiegen“ by this fixed table, never by the model; the seat is asked once with that sentence (milder_frage)
+_ENDUNG = {"": "e", "e": "e", "en": "en", "et": "t", "t": "t", "est": "st", "st": "st"}
+_TOETEN = re.compile(r"(?i)(?<![^\W\d_])(töt|ermord|enthaupt|abschlacht|abmurks|massakrier)(en|est|et|e|st|t)?(?![^\W\d_])")
+_AB = re.compile(r"(?i)(?<![^\W\d_])(schlacht|metzel|murks)(en|est|et|e|st|t)?(?![^\W\d_])(.*?)\s+(?:ab|nieder)(?=\W*$)")
+_UM = re.compile(r"(?i)(?<![^\W\d_])(bring)(en|st|t|e)?(?![^\W\d_])(.*?)\s+um(?=\W*$)")
+MILDER_FRAGE = ("Hier werden Gegner besiegt, nicht getötet. Deine Aktion heißt so:",
+                "Here foes are defeated, not killed. Your action reads:")
+
+
+def milder(text):
+    """The action with its killing words as „besiegen“ (the fixed table above), "" when nothing changed."""
+    def verb(m, rest=""):
+        w = "besieg" + _ENDUNG[(m.group(2) or "").lower()] + rest
+        return w[:1].upper() + w[1:] if m.group(1)[:1].isupper() else w
+    t = _AB.sub(lambda m: verb(m, m.group(3)), str(text or ""))
+    t = _UM.sub(lambda m: verb(m, m.group(3)), t)
+    t = _TOETEN.sub(verb, t)
+    return t if t != text else ""
+
+
+def milder_frage(rd, pid):
+    """In dungeon.act after the milder action was kept: the seat is asked once with it (the Rückfrage's view, the
+    car's question), never blocking; the turn waits for the seat's answer at most until its time runs out."""
+    a = rd["offen"][pid]
+    li = 1 if rd.get("lang") == "en" else 0
+    a["frage"] = {"grund": "milder", "frage": MILDER_FRAGE[li], "warum": "", "vorschlaege": [a["text"]]}
+    rd.setdefault("rueckfrage", {})[pid] = {"text": a["text"], "vorschlaege": [a["text"]], "zug": rd.get("zug")}
+    _day.bump("milder")
+    print("dungeon: rueckfrage | milder", flush=True)
 
 
 def waiting(rd, pid):

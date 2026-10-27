@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.168** · 2026-10-27 · KI-Dungeon-Master: Wortlisten treffen keine harmlosen Wörter mehr („knackt“), ein Ausfall des Modells bremst und wartet nach zwei Versuchen auf „Jetzt weiter“, „töten“ wird am Kindertisch zu „besiegen“, Stilbeispiele stehen am Ende des Prompts (Review 27.10., Paket 1)
 - **V01.1.167** · 2026-10-27 · KI-Dungeon-Master: jede Person hat ein festes Geschlecht, Porträt, Stimme, Beruf (Mystiker oder Mystikerin) und Pronomen folgen daraus, ein Titel wie „Schattenwächter“ bestimmt den Beruf
 - **V01.1.166** · 2026-10-27 · KI-Dungeon-Master: Überreden zum Mitkommen (Schalter, aus), ob eine gefragte Person mitkommt, entscheiden ihre Haltung zum Helden und eine Charisma-Probe des Panels, treu Ergebene kommen ohne Probe (LlamaTale-Idee 4)
 - **V01.1.165** · 2026-10-27 · KI-Dungeon-Master: echte Würfel auch für Angriffe (dungeon_kampf.attackers, eine Frage je Angreifer), nach zweimal nicht geworfen 10 s statt 30 s, Schwierigkeit mit Wort an Leiste und Frage (Review T14, Paket 12)
