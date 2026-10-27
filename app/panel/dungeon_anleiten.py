@@ -73,6 +73,7 @@ WAHL = {                   # the second person's choices of the quiet seat's que
 STUFEN = {"einsteiger": ("Einsteiger", "Beginner"), "normal": ("Normal", "Normal"), "erfahren": ("Erfahren", "Experienced")}
 STUFE = "normal"
 KNOEPFE = {"einsteiger": 4, "normal": 3, "erfahren": 0}
+WEGE = 3                   # ways of the map among the buttons (a crossing of three all, Dominik 2026-10-27 „Bibliothek fehlt“)
 MODELL_WEGE = 2            # the narrator's ways taken per turn at most
 WEG_MAX = 80
 WORT_MIN = 5               # letters of a word that names something (check_ways)
@@ -316,7 +317,7 @@ def buttons(dm, r, rd, pid):
     if a.get("zug") == rd.get("zug") and pid in (a.get("pids") or []):   # a failed check: another way to the same goal
         pts = _way_out(dm, r, rd, pid) + pts
     care = _care(dm, r, rd, h, li)
-    scene = rf.points(dm, r, rd, pid, wege=2)
+    scene = rf.points(dm, r, rd, pid, wege=WEGE)
     if rd.get("kampf"):
         pts += scene[:1] + care + scene[1:]
     else:
@@ -428,7 +429,9 @@ def _named(n, low):
 
 def vague(dm, rd, story):
     """The fixed check „vage“ (dungeon_erzaehler.judge): [] when the narration names enough of the scene's points
-    (two, or as many as the scene has) and ends without a hollow question; else up to three names to take up (or
+    (two, or as many as the scene has), at least one of them from the panel's data (a person here, a thing near, a
+    foe, a prop, a way by its target or direction; the narration's own things and speakers alone are no way on,
+    Dominik 2026-10-27 „eine Präsenz“) and ends without a hollow question; else up to three names to take up (or
     ["…"] when the scene has none). Only while on."""
     if not on(rd):
         return []
@@ -438,11 +441,19 @@ def vague(dm, rd, story):
     found = [n for n in names if _named(n, low)]
     last = [x for x in re.split(r"(?<=[.!?…])\s+", text.strip()) if x][-1:] or [""]
     hohl = last[0].rstrip().endswith("?") and bool(HOHL.search(last[0].rstrip().rstrip("?!.… ")))
-    if len(found) >= min(2, len(names)) and not hohl:
+    panel = scene_names(dm, rd)                  # the panel's own points: the narration's own things alone are no way on
+    eigen = not panel or any(_named(n, low) for n in panel) or any(_named(d, low) for d in _richtungen(rd))
+    if len(found) >= min(2, len(names)) and not hohl and eigen:
         return []
     _day.bump("vage")
-    print(f"dungeon: anleitung | vage | {'hohl' if hohl else 'zu wenig'}", flush=True)
-    return [n for n in names if n not in found][:3] or found[:3] or ["…"]
+    print(f"dungeon: anleitung | vage | {'hohl' if hohl else 'zu wenig' if len(found) < min(2, len(names)) else 'kein ansatz'}", flush=True)
+    return ([n for n in panel if n not in found] + [n for n in names if n not in found and n not in panel])[:3] or found[:3] or ["…"]
+
+
+def _richtungen(rd):
+    """The directions of the ways from here („nach Nordosten“ names that way too)."""
+    import dungeon_karte
+    return [w["richtung"] for w in dungeon_karte.wege(rd, ("de", "en")[_li(rd)]) if w.get("richtung") and w["richtung"] not in ("hinaus", "hinein", "outside", "inside")]
 
 
 def check_rules(r, need):

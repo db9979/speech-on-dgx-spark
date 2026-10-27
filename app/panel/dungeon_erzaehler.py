@@ -374,6 +374,10 @@ HINWEIS = {
                   "dorthin, nenne den Ort mit diesem Namen; bleibt sie, lass ort_id leer.",
                   "Note: with ort_id the group goes to {namen}, but your narration does not name the place. If it goes "
                   "there, name the place by this name; if it stays, leave ort_id empty."),
+    "gehen": ("Hinweis: Ein Held geht in seiner Aktion nach {namen}. Erzähle den Weg dorthin und die Ankunft, nenne den "
+              "Ort mit diesem Namen und setze szene.ort_id auf seine id aus karte.wege; ersetze den Gang durch nichts anderes.",
+              "Note: a hero's action goes to {namen}. Narrate the way there and the arrival, name the place by this name and "
+              "set szene.ort_id to its id from karte.wege; replace the walk by nothing else."),
     "anderswo": ("Hinweis: Diese Figuren sind an einem anderen Ort und können hier nicht sprechen: {namen}. Lass sie weg "
                  "oder erzähle, wie die Gruppe zu ihnen geht.",
                  "Note: these characters are at another place and cannot speak here: {namen}. Leave them out or tell how "
@@ -421,9 +425,12 @@ HINWEIS = {
               "Note: the table's way of telling is \"rich\", your narration is too short. Write at least {namen} characters "
               "in several paragraphs: senses, mood and for every hero who acted a moment of its own."),
     "vage": ("Hinweis: Deine Erzählung lässt offen, was die Gruppe tun kann. Nenne mindestens zwei greifbare Ansatzpunkte "
-             "mit Namen aus den Fakten, etwa {namen}, und ende mit einer konkreten Wahl an eine Figur statt mit einer leeren Frage.",
+             "mit Namen aus den Fakten, etwa {namen}, und ende mit einer konkreten Wahl an eine Figur statt mit einer leeren Frage. "
+             "Eine gelungene Probe bringt einen greifbaren Fund (eine Spur mit Richtung oder Ort, eine Person, einen Gegenstand), "
+             "keine bloße Ahnung.",
              "Note: your narration leaves open what the group can do. Name at least two things to take up with names from the "
-             "facts, such as {namen}, and end with a concrete choice for one figure instead of an empty question."),
+             "facts, such as {namen}, and end with a concrete choice for one figure instead of an empty question. A passed "
+             "check brings a tangible find (a trail with a direction or place, a person, a thing), not a mere hunch."),
     "kurz": ("Hinweis: Deine Erzählung ist zu knapp. Beschreibe, was die Figuren sehen, hören und spüren, und wie die "
              "Welt auf sie reagiert.",
              "Note: your narration is too short. Describe what the characters see, hear and feel and how the world "
@@ -517,6 +524,13 @@ def repair(rd, story, fault, missing):
     elif fault == "neuer_ort":                   # the narration tells no new place: the group stays (dungeon_karte.step)
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, ort_id="")
+    elif fault == "gehen":                       # the walk a hero asked for: the panel takes the way (dungeon_karte.step)
+        import dungeon_karte
+        j = sorted(set(dungeon_karte.asked_ways(rd).values()))[0]
+        name = rd["karte"]["orte"][j]["name"]
+        print(f"dungeon: nachbessern | fest | {fault}", flush=True)
+        return dict(story, ort_id=f"o{j + 1}", text=story["text"].rstrip() + " "
+                    + ("Ihr brecht auf, euer Ziel: {o}.", "You set off, your destination: {o}.")[li].format(o=name))
     elif fault == "anderswo":                    # people at another place do not speak here
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, npc=[n for n in story.get("npc") or [] if n.get("name") not in missing])
@@ -541,7 +555,8 @@ def repair(rd, story, fault, missing):
         print(f"dungeon: nachbessern | fest | {fault}", flush=True)
         return dict(story, text=text)
     elif fault == "beleg":                       # the receipts say the numbers, not the narration
-        add = [("Es gelten die Würfel-Belege: " if not li else "The dice receipts count: ") + ", ".join(m for m in missing if m.startswith("W-")) + "."]
+        add = [("Es gelten die Würfe auf den Karten: " if not li else "The rolls on the cards count: ")    # never the bare id W-n
+               + ", ".join(m.split(" ", 1)[-1] for m in missing if m.startswith("W-")) + "."]
     else:
         return story
     print(f"dungeon: nachbessern | fest | {fault}", flush=True)
@@ -868,7 +883,8 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     and is missing (one the model answered out of the game, ooc, may be missing), a failed check told as done
     (told_as_done, the check's wofuer), a foe of the encounter not named by
     its bestiary name (Dominik 2026-10-24: the card showed Dunkelelfen, the text Schattenwächter), a map place the group cannot be at,
-    a new place of ort_id the narration does not name (dungeon_karte.ort_fehlt),
+    a new place of ort_id the narration does not name (dungeon_karte.ort_fehlt), a way a hero's action takes that
+    the narration skips (way_skipped),
     a veil of the table more than once (dungeon_grenzen.veiled; the hint never repeats its words, they stay data),
     too much repeated from the last narrations, too few points to take up or a hollow question at the end
     (dungeon_anleiten.vague, while „Spieler anleiten“ is on)."""
@@ -914,6 +930,10 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     if neu:                                      # ort_id leads to a place the narration does not name (Karten-Thread)
         dm._day.bump("regel_neuer_ort")
         return "neuer_ort", [neu]
+    weg = way_skipped(rd, story)
+    if weg:                                      # a hero's action goes to a neighbouring place, the narration stays
+        dm._day.bump("regel_gehen")
+        return "gehen", weg
     away = elsewhere(rd, story)
     if away:
         return "anderswo", away
@@ -933,6 +953,19 @@ def judge(dm, rd, story, wuerfe=(), hits=(), zuege=()):
     if offen:                                    # Spieler anleiten: too few points to take up, or a hollow question
         return "vage", offen
     return "", []
+
+
+def way_skipped(rd, story):
+    """The places heroes' actions go to (dungeon_karte.asked_ways) when the narration's ort_id leads to none of them
+    (Dominik 2026-10-27, „gehe zur alten bibliothek“ got a check for tracking and the group stayed); [] in a fight or
+    when foes come up this turn."""
+    import dungeon_karte
+    walk = dungeon_karte.asked_ways(rd)
+    if not walk or rd.get("kampf") or story.get("begegnung"):
+        return []
+    if str(story.get("ort_id") or "") in {f"o{j + 1}" for j in walk.values()}:
+        return []
+    return [rd["karte"]["orte"][j]["name"] for j in sorted(set(walk.values()))]
 
 
 def elsewhere(rd, story):

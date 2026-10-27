@@ -764,6 +764,30 @@ def named_way(rd, text):
     return hits[0] if len(hits) == 1 else -1
 
 
+def asked_ways(rd):
+    """The seats whose action of this turn goes to one neighbouring place (Dominik 2026-10-27, „gehe zur alten
+    bibliothek“ got a check for tracking and the group stayed): a word of GEHEN or GEHEN_WORT and exactly one
+    neighbour named by its name or its direction. {pid: index of the place}; {} in a vault or without a map (pure;
+    the main thread drops the seat's check for it and the narrator must take the way, dungeon_erzaehler.judge)."""
+    k = rd.get("karte")
+    if not k or not k.get("orte") or vault(rd):
+        return {}
+    li, o, here = _li(rd), k["orte"], k["hier"]
+    nb = sorted(_nb(k)[here])
+    out = {}
+    for pid, a in (rd.get("offen") or {}).items():
+        w = _words(a.get("text")) if isinstance(a, dict) else []
+        if not any(x.startswith(GEHEN) or x in GEHEN_WORT for x in w):
+            continue
+        s = " " + " ".join(w) + " "
+        hits = [j for j in nb if _names(o[j]["name"], w)]
+        if not hits:
+            hits = [j for j in nb if " " + " ".join(_words(_dir((o[here]["x"], o[here]["y"]), (o[j]["x"], o[j]["y"]), li))) + " " in s]
+        if len(hits) == 1:
+            out[pid] = hits[0]
+    return out
+
+
 def ort_fehlt(rd, story):
     """The name of the new place story's ort_id leads to when the narration does not name it (Dominik 2026-10-25
     „laut karte und fahne aber in wolfshafen“): the story tells another place than the map would show; the narrator

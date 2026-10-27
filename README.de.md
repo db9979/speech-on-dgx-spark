@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.157** KI-Dungeon-Master: „gehe zur alten Bibliothek“ führt wirklich dorthin (keine Probe, der Erzähler muss den Weg nehmen, sonst geht das Panel), „vage“ verlangt einen Ansatzpunkt aus den Daten der Szene, kein „W-2“ mehr auf der Würfelkarte, die Geschichte blendet oben weich aus
 - **V01.1.153** KI-Dungeon-Master: Runen-Katalog mit 13 Runen und 7 Runenwörtern, geprüft nach festen Regeln (Runen und Sockel, Teil Daten)
 - **V01.1.152** KI-Dungeon-Master: Zeugen-Regel (Schalter, aus), was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach fester Tabelle, Angriff und Diebstahl Ziel −2 und alle Anwesenden −1, Geschenk und Hilfe Ziel +1, ein gelungener Diebstahl bleibt unbemerkt, der Erzähler zeigt nur die Reaktion (LlamaTale-Idee 3)
 - **V01.1.151** KI-Dungeon-Master: Spieler anleiten Schritt 3, eine Erzählung mit weniger als zwei Ansatzpunkten oder einer leeren Frage wie „Was tut ihr?“ wird einmal neu erzählt, 👎-Grund „Wusste nicht, was wir tun können“ und Prüfstand-Szene „Sackgasse“, dazu Stillstand-Wink in drei Stufen, ein anderer Weg nach einer misslungenen Untersuchung und Schritt 5, zwei bis drei Spuren je Akt zum Wendepunkt in allen 50 Geschichten, die der Erzähler nach und nach zeigt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.147** Tests ohne Zufall: Telefon-, Pebble- und Vorwärmen-Test prüfen nur Textfelder, nicht Zeitstempel, Zufalls-IDs oder verschlüsselte Werte, die eine Ziffernfolge zufällig enthalten können
 - **V01.1.146** KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium, nachts kommen Untote, Werwesen und Nachttiere (LlamaTale 1)
 - **V01.1.145** KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
-- **V01.1.144** KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
 
 
 

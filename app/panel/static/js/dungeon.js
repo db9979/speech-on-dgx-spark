@@ -741,7 +741,8 @@ const DMWIRKT={resistenz:['halbiert','halved'],immun:['wirkungslos','no effect']
 const DMEIG={leicht:['leicht','light'],finesse:['Finesse','finesse'],reichweite:['Reichweite','reach'],wurf:['Wurf','thrown'],schwer:['schwer','heavy'],vielseitig:['beidhändig','two hands']};
 function dmArt(e){return (e.sart&&DMART[e.sart]?` <small class="pill">${esc(t(...DMART[e.sart]))}</small>`:'')+(e.wirkt&&DMWIRKT[e.wirkt]?` <small class="pill ${e.wirkt==='schwaeche'?'ok':'warn'}">${esc(t(...DMWIRKT[e.wirkt]))}</small>`:'')+(e.eig||[]).filter(x=>DMEIG[x]).map(x=>` <small class="pill">${esc(t(...DMEIG[x]))}</small>`).join('')}
 // Würfel-Beleg (Tabletop-Punkt 2): every roll of the panel shows its receipt id; the narration may only tell its numbers
-const dmBeleg=e=>e.beleg?`<small class="dm-beleg" title="${esc(t('Würfel-Beleg: die Erzählung nennt nur Zahlen, die hier stehen.','Dice receipt: the narration tells only numbers that stand here.'))}">${esc(e.beleg)}${e.echt?` · ${esc(t('echt','real'))}`:''}</small>`:'';
+// the receipt id (W-2) only as the tooltip, never as a bare label on the card (Dominik 2026-10-27: „W-2“ unclear)
+const dmBeleg=e=>e.beleg&&e.echt?`<small class="dm-beleg" title="${esc(t('Würfel-Beleg ','Dice receipt ')+e.beleg+t(': die Erzählung nennt nur Zahlen, die hier stehen.',': the narration tells only numbers that stand here.'))}">${esc(t('echt gewürfelt','real dice'))}</small>`:'';
 function dmAngriff(e,W){if(e.kann_nicht)return `<div class="dm-wurf bad">⛓ ${esc(t(e.name+' kann nicht angreifen: '+e.kann_nicht+'.',e.name+' cannot attack: '+e.kann_nicht+'.'))}</div>`;
   if(e.gegner_rettung)return dmRettungG(e,W);
   const fx=(e.extra||[]).map(x=>` · ${esc(t('davon ','of it '))}${x.schaden} ${esc((DMART[x.art]||[x.art,x.art])[L==='en'?1:0])}`).join('')+(e.raub?' · '+esc(t(e.name+' heilt '+e.raub,e.name+' heals '+e.raub)):'')+(e.glueck?' · 🍀 '+esc(t('Glück','Luck')):'')
