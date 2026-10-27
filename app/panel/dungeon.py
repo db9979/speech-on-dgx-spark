@@ -264,6 +264,11 @@ def gender(x):
     return x if isinstance(x, str) and x in GESCHLECHT else ""
 
 
+def voice_fits(name, g):
+    """Whether a voice of the speech output fits a gender (STIMMEN_W female, every other male; divers or unset: all)."""
+    return g not in ("weiblich", "maennlich") or (str(name or "").lower() in STIMMEN_W) == (g == "weiblich")
+
+
 TITEL_MAX = 60
 EINSTIEG_MAX = 400
 PROMPT_MAX = 4000
@@ -1053,6 +1058,14 @@ def new_hero(r, b, rng=None):
     h["leben"] = h["leben_max"] = life(r, h)
     h["ladungen"] = full_charges(r, h)
     return h
+
+
+def made_hero(r, b):
+    """A hero a player makes (a new round, taking a seat): new_hero, with the gender chosen (Review 27.10. Paket 10, Z12;
+    ValueError „geschlecht“). The panel's own heroes (bench, test table) need none."""
+    if not gender((b or {}).get("geschlecht")):
+        raise ValueError("geschlecht")
+    return new_hero(r, b)
 
 
 def full_charges(r, h):
@@ -2301,7 +2314,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
         if not h:
             raise LookupError("held")
     else:
-        h = new_hero(r, hb)
+        h = made_hero(r, hb)
         if not keep_hero(owner, h):
             raise OverflowError("helden")
     with _lock:
@@ -2517,7 +2530,7 @@ def join(rid, pid, b, uid="", now=None, geraet=""):
         if uid and not keep_hero(uid, h):
             raise OverflowError("helden")
     else:
-        h = new_hero(r, b.get("held") if isinstance(b.get("held"), dict) else {})
+        h = made_hero(r, b.get("held") if isinstance(b.get("held"), dict) else {})
         if uid and not keep_hero(uid, h):
             raise OverflowError("helden")
     with _lock:
@@ -4855,7 +4868,7 @@ def voice_for(r, rd, h):
     taken = {x.lower() for x in voices(r).values() if x} | {str(p["held"].get("stimme", "")).lower() for _, p in seated(rd)}
     pool = [x for x in _stimmen["v"] if x.lower() not in taken] or [x for x in _stimmen["v"] if x.lower() not in {v.lower() for v in voices(r).values() if v}]
     g = h.get("geschlecht")                      # from the gender's voices (divers or unset: all), none left: any
-    pool = [x for x in pool if g not in ("weiblich", "maennlich") or (x.lower() in STIMMEN_W) == (g == "weiblich")] or pool
+    pool = [x for x in pool if voice_fits(x, g)] or pool
     return pool[int(hashlib.sha256(h["hid"].encode()).hexdigest(), 16) % len(pool)] if pool else ""
 
 
@@ -5846,7 +5859,7 @@ def view(rid, pid, now=None):
                         for k, q in sorted(rd["plaetze"].items(), key=lambda x: x[1].get("made", 0)) if q.get("wartet")],
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if shown(e, pid)][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S, "stand": stand,
-            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
+            "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimmen_w": [x for x in _stimmen["v"] if x.lower() in STIMMEN_W], "stimme_design": _stimmen["design"],
             **stimmen.view(rd, lang, host),
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
             "markt": market_view(r, rd, me.get("held"), lang), "boden": [item_view(r, x, lang) for x in rd.get("boden") or []], "boden_gold": rd.get("boden_gold", 0),
@@ -6126,6 +6139,10 @@ def hero_act(rid, pid, b):
                 h["geschlecht"] = b["geschlecht"]
                 h["bild_neu"] = True              # the old portrait stays until the new one is painted
                 print("dungeon: held | geschlecht | geaendert", flush=True)
+                neu = voice_for(r, rd, h) if h.get("stimme") and not h.get("klang") and not voice_fits(h["stimme"], h["geschlecht"]) else ""
+                if neu:                           # Review 27.10. Z12: a voice of the other gender, not described by the player
+                    h["stimme"] = neu
+                    print("dungeon: held | stimme | nach geschlecht", flush=True)
         elif was == "faehigkeit":
             if b.get("id") not in h["wahl"]:
                 raise ValueError("faehigkeit")

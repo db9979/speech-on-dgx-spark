@@ -4146,6 +4146,13 @@
 "titel": "Dungeon-Master: Alter und feste Merkmale",
 "text": "„NSC-Gedächtnis und Chronik“ an. Eine neue Runde spielen und die Personen ansehen: jede hat Haar, Augen und Statur, Männer ab jung oft einen Bart, graue oder weiße Haare nur Alte. Eine Ritterin, Wirtin oder ein Schmied ist nie ein Kind und das Porträt passt zu Alter und Geschlecht der Karte. Nennt die Erzählung eine andere Haarfarbe als die Karte, wird sie neu erzählt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P617",
+"v": 1187,
+"titel": "Dungeon-Master: Geschlecht wählen",
+"text": "Einen neuen Helden ohne Geschlecht anlegen: der Spark bittet um männlich, weiblich oder divers. Im Heldenbogen eine weibliche Stimme wählen und dann „männlich“: die Stimme wechselt zu einer männlichen, die Liste zeigt die männlichen zuerst.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

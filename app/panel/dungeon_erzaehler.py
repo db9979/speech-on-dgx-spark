@@ -1049,12 +1049,21 @@ FREMD_WORTE = ("der", "die", "das", "den", "dem", "des", "ein", "eine", "einen",
                "the", "a", "an", "him", "them")   # someone else between: „Lia packt den Mann an seinem Arm“
 
 
-def _pronoun_spots(rd, text):
-    """[(start, end, hero name, right word)] of wrong possessives and personal pronouns (ER) in text by the rules above;
-    right "" when there is no sure word (divers, German sein or ihr alone)."""
+def _figures(rd):
+    """{name lower: {"name", "geschlecht"}}: the heroes with a gender and the people with a card (dungeon_nsc, its one
+    gender; Review 27.10. Paket 10, Z12)."""
     import dungeon
-    helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values()
-              if p.get("held") and dungeon.gender(p["held"].get("geschlecht"))}
+    out = {str(x["name"]).lower(): {"name": x["name"], "geschlecht": x["geschlecht"]} for x in (rd.get("nsc") or {}).values()
+           if isinstance(x, dict) and x.get("name") and dungeon.gender(x.get("geschlecht"))}
+    return out | {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values()
+                  if p.get("held") and dungeon.gender(p["held"].get("geschlecht"))}
+
+
+def _pronoun_spots(rd, text):
+    """[(start, end, figure's name, right word)] of wrong possessives and personal pronouns (ER) in text by the rules
+    above, for heroes and people with a card (_figures); right "" when there is no sure word (divers, German sein or
+    ihr alone)."""
+    helden = _figures(rd)
     if not helden:
         return []
     alle = {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")} | \
@@ -1084,10 +1093,10 @@ def _pronoun_spots(rd, text):
 
 
 def wrong_pronoun(rd, text):
-    """Heroes the narration gives the wrong possessive (_pronoun_spots), "Name: geschlecht", three at most."""
+    """Heroes and people the narration gives the wrong possessive (_pronoun_spots), "Name: geschlecht", three at most."""
     import dungeon
     li = 1 if rd.get("lang") == "en" else 0
-    by = {str(p["held"]["name"]): p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    by = {str(x["name"]): x for x in _figures(rd).values()}
     return list(dict.fromkeys(f"{n}: {dungeon.GESCHLECHT[by[n]['geschlecht']][0][li]}" for _, _, n, _ in _pronoun_spots(rd, text)))[:3]
 
 

@@ -27,7 +27,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
-HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": ""}
+HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "maennlich"}
 _PROFILES = {}
 
 

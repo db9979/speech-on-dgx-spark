@@ -5925,6 +5925,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Ein Alter und feste Merkmale je Person (V01.1.186, Review 27.10. Paket 10, Dominik 2026-10-27 „ok“): Ohne neuen Schalter (unter „NSC-Gedächtnis und Chronik“). 1. Alter: Das Panel schreibt jeder Person einmal ein Alter auf die Karte (rd[\"nsc\"][k][\"alter\"]: kind, jung, mittel, alt; dungeon_nsc.age): aus den Wörtern ihres Aussehens („ist schon recht alt“, ALTER_AUSSEHEN), sonst nach dem Namen; mit einem Erwachsenenberuf (alles außer KIND_BERUF) nie ein Kind. Stimme (dungeon_stimmen._of), Porträt und Fakten (nsc_szene[].alter) lesen dieses Feld. 2. Geschlecht: Die Wahrheit des Kapitels hat kein Feld geschlecht mehr; das Geschlecht kommt aus Titel oder Rolle, sonst aus dem Namen. Alter und Geschlecht, die das Modell für eine Person mit Karte oder der Wahrheit meldet, verwirft das Panel (Log dungeon: nsc | stimme | verworfen). 3. Feste Merkmale: Haar, Augen, Bart und Statur würfelt das Panel aus den Tabellen nsc_haar, nsc_augen, nsc_bart, nsc_statur auf die Karte (dungeon_nsc.looks, MERKMALE): graues oder weißes Haar und ein solcher Bart nur im Alter, ein Bart nur für einen Mann ab jung. Die Prüfung der Erzählung vergleicht sie (dungeon_erzaehler.looks_off, auch „blond"
 },
 {
@@ -21350,6 +21358,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: choose the gender, voice and pronoun follow (V01.1.187, review 27.10. package 10, point Z12, Dominik 2026-10-27 „ok“): No new switch. 1. Whoever makes a hero (a new round, a seat link) must pick male, female or non-binary (dungeon.made_hero, else the error \"Please pick male, female or non-binary.\"); the panel's heroes (bench, test table) need none, old heroes stay unset. 2. In the hero sheet the voice list has two groups, \"Female voices\" and \"Male voices\", the hero's own first (stimmen_w, dmVoiceGroups). 3. When the gender changes and the voice belongs to the other (dungeon.voice_fits) and was not described by the player, the hero takes a fitting new one (voice_for, log dungeon: held | stimme | nach geschlecht). 4. People with a card (dungeon_nsc) get the same pronoun check as heroes (dungeon_erzaehler._figures): \"Grimma hebt seine Hand\" becomes \"ihre\", \"Er\" after a sentence only about Grimma becomes her name. Self-test test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
 "lang": "en",

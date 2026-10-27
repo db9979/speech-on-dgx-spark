@@ -46,7 +46,7 @@ from unittest import mock  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
-HERO = {"name": "Kira", "volk": "mensch", "klasse": "krieger", "satz": ""}
+HERO = {"name": "Kira", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "weiblich"}
 _PROFILES = {}
 
 

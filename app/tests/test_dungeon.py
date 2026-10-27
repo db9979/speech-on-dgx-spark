@@ -113,7 +113,7 @@ def code_of(link):
 
 
 PNG = b"\x89PNG\r\n\x1a\n" + bytes(24)   # what the picture service sends (bilder.paint checks the signature)
-HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": ""}
+HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "maennlich"}
 
 
 class Base(unittest.TestCase):
@@ -177,7 +177,7 @@ class Base(unittest.TestCase):
     def guest(self, rid, name="Bela", klasse="magier"):
         code = self.invite(rid)
         # every guest on a device of its own (one device, one hero: dungeon.GERAET); after the join the code is the key
-        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": name, "volk": "elf", "klasse": klasse}})
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": name, "volk": "elf", "klasse": klasse, "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         return code, r.json()["pid"]
 
@@ -249,7 +249,7 @@ class OffAndDoors(Base):
         v = self.new_round()
         rid = v["rid"]
         r = self.c.post(f"/api/profile/dungeon/{rid}/platz", json={"base": BASE})
-        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(j.status_code, 200, j.text)
         self.assertIs(self.c.get("/api/profile/dungeon").json()["runden"][0]["pause"], False)
         sent, jobs = [], []
@@ -298,7 +298,7 @@ class OffAndDoors(Base):
         takes it off the own list; a running round only ends."""
         v = self.new_round()
         r = self.c.post(f"/api/profile/dungeon/{v['rid']}/platz", json={"base": BASE})
-        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(j.status_code, 200, j.text)
         self.assertEqual(self.c2.delete(f"/api/profile/dungeon/{v['rid']}").status_code, 404)        # running: only the host ends it
         self.assertEqual(self.c.delete(f"/api/profile/dungeon/{v['rid']}").json()["runden"][0]["status"], "ende")
@@ -315,7 +315,7 @@ class OffAndDoors(Base):
         v = self.new_round()
         rid = v["rid"]
         r = self.c.post(f"/api/profile/dungeon/{rid}/platz", json={"base": BASE})
-        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        j = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(j.status_code, 200, j.text)
         self.assertEqual(self.c2.delete(f"/api/profile/dungeon/{rid}?loeschen=1").status_code, 404)   # a player cannot
         self.assertIn(rid, dungeon._read()["runden"])
@@ -1775,7 +1775,7 @@ class Moderation(Turns):
         self.assertEqual((r.status_code, r.json()["detail"]), (400, "wortliste"))
         self.assertEqual(self.state(self.rid)["plaetze"][self.gp]["held"]["name"], "Bela")
         code = self.invite(self.rid)                                      # a guest's hero name at this table
-        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Folterbert", "volk": "elf", "klasse": "magier"}})
+        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Folterbert", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual((r.status_code, r.json()["detail"]), (409, "wortliste"))
         nie = dungeon.rules()["nie"][0]                                   # „nie“ holds for every new hero
         r = self.c.post("/api/profile/dungeon/runde", json={"titel": "Zwei", "welt": "fantasy", "ton": 16, "zug_s": 120, "stunden": 6,
@@ -2622,6 +2622,51 @@ class Voice(Base):
                 self.assertTrue(E.repair(rd, story, "fuerwort", ["Lia: weiblich"])["text"].startswith("Lia hebt ihre Klinge"))
         self.assertIn("dungeon: nachbessern | fest | fuerwort", out.getvalue())
 
+    def test_gender_is_chosen_and_the_voice_follows(self):
+        """Review 27.10. Paket 10, Z12 (Dominik „ok“): a hero a player makes needs its gender (a new round, a seat link;
+        the panel's own heroes not); the hero sheet lists the voices grouped by gender, the hero's first; a new gender
+        takes a voice of it when the old one belongs to the other and was not described; people with a card get the
+        same pronoun check as heroes."""
+        r = dungeon.rules()
+        with self.assertRaises(ValueError) as e:
+            dungeon.made_hero(r, dict(HERO, geschlecht=""))
+        self.assertEqual(str(e.exception), "geschlecht")
+        self.assertEqual(dungeon.new_hero(r, dict(HERO, geschlecht=""))["geschlecht"], "")      # the panel's own heroes
+        self.assertEqual(self.c.post("/api/profile/dungeon/runde", json={"titel": "Ohne", "welt": "fantasy", "ton": 12,
+                                                                          "held": dict(HERO, geschlecht=None)}).status_code, 400)
+        v = self.new_round(held=dict(HERO, geschlecht="weiblich"))
+        rid, host = v["rid"], v["pid"]
+        code = self.invite(rid)
+        r2 = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Kim", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual((r2.status_code, r2.json().get("detail")), (400, "geschlecht"))
+        self.assertTrue(dungeon.voice_fits("Vivian", "weiblich") and not dungeon.voice_fits("Vivian", "maennlich") and dungeon.voice_fits("Aiden", "divers"))
+        dungeon._stimmen.update(t=__import__("time").time(), v=["Ryan", "Aiden", "Eric", "Vivian", "Sohee"])
+        self.addCleanup(dungeon._stimmen.update, t=0.0, v=[])
+        url = f"/api/profile/dungeon/{rid}"
+        self.assertEqual(self.c.get(url).json()["stimmen_w"], ["Vivian", "Sohee"])
+        self.assertEqual(self.c.post(url + "/held", json={"was": "stimme", "stimme": "Vivian"}).status_code, 200)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.c.post(url + "/held", json={"was": "geschlecht", "geschlecht": "maennlich"}).status_code, 200)
+        self.assertIn("dungeon: held | stimme | nach geschlecht", out.getvalue())
+        self.assertIn(self.c.get(url).json()["ich"]["stimme"], ("Aiden", "Eric"))
+        with dungeon._lock:                      # a voice the player described stays
+            d = dungeon._read()
+            d["runden"][rid]["plaetze"][host]["held"].update(stimme="Aiden", klang="tiefe raue Stimme")
+            dungeon._write(d)
+        self.c.post(url + "/held", json={"was": "geschlecht", "geschlecht": "weiblich"})
+        self.assertEqual(self.c.get(url).json()["ich"]["stimme"], "Aiden")
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("function dmVoiceGroups(", js)
+        self.assertIn("<optgroup", js)
+        # people with a card: the same pronoun check
+        rd = {"lang": "de", "plaetze": {"a": {"held": {"name": "Lia", "geschlecht": "weiblich"}}},
+              "nsc": {"grimma": {"name": "Grimma", "geschlecht": "weiblich"}, "bruno": {"name": "Bruno", "geschlecht": "maennlich"}}}
+        self.assertEqual(dungeon.erz.wrong_pronoun(rd, "Grimma hebt seine Hand zum Gruß."), ["Grimma: weiblich"])
+        self.assertEqual(dungeon.erz.fix_pronouns(rd, "Grimma hebt seine Hand zum Gruß.")[0], "Grimma hebt ihre Hand zum Gruß.")
+        self.assertEqual(dungeon.erz.wrong_pronoun(rd, "Bruno nickt. Er lacht."), [])
+        self.assertEqual(dungeon.erz.wrong_pronoun(rd, "Grimma nickt. Er lacht."), ["Grimma: weiblich"])
+
     def test_hero_voices_speak_only_quotes(self):
         self.assertEqual(dungeon.says('Ich ziehe das Schwert. „Halt, wer da?“ Dann "Zurück!"'), "Halt, wer da? Zurück!")
         self.assertEqual(dungeon.says("Ich schleiche weiter."), "")
@@ -2997,7 +3042,7 @@ class ReadAloud(Base):
         self.assertEqual((mp3.status_code, mp3.headers["content-type"]), (200, "audio/mpeg"))
         self.assertLess(len(mp3.content) * 4, len(wav.content))
         code = self.invite(rid)
-        self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier"}})
+        self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         g = self.v.post("/api/dungeon/ton", json={"code": code, "zug": 2, "k": 0, "mp3": True})
         self.assertEqual((g.status_code, g.headers["content-type"]), (200, "audio/mpeg"))
         self.assertIsNone(dungeon.mp3_of(b"kein wav"))
@@ -4711,7 +4756,7 @@ class StayingWithIt(Base):
         v = self.new_round()
         self.rid, self.host = v["rid"], v["pid"]
         r = self.c.post(f"/api/profile/dungeon/{self.rid}/platz", json={"base": BASE})
-        r = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        r = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         self.p2 = r.json()["pid"]
         self.code, self.gp = self.guest(self.rid)
@@ -4910,7 +4955,7 @@ class BetterStories(Base):
         self.assertIn("voller Briefe", dungeon.facts(dungeon.rules(), rd))                 # the model knows the secret
         self.assertIn("voller Briefe", json.dumps(self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["wahrheit"], ensure_ascii=False))
         code = self.invite(v["rid"])
-        self.assertEqual(self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "magier"}}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}}).status_code, 200)
         g = self.v.post("/api/dungeon/lage", json={"code": code}).json()
         self.assertNotIn("wahrheit", g)                                                     # a player never sees it
         self.assertEqual(g["faeden"], ["Wer hat die Glocke zum Schweigen gebracht?"])
@@ -7080,7 +7125,7 @@ class Windows(unittest.TestCase):
                 dungeon._write(d)
         self.addCleanup(drop)
         _, code = dungeon.make_seat(uid, rid)
-        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier"}})
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         with dungeon._lock:
             d = dungeon._read()
@@ -7587,7 +7632,7 @@ class Fight(Turns):
         group; once the fight is over it comes to the table and its first turn is the open one."""
         self.fight()
         code = self.invite(self.rid)
-        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler", "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         pid = r.json()["pid"]
         self.assertEqual((r.json()["ich"], r.json()["wartet"]["name"]), (None, "Cora"))
@@ -7621,7 +7666,7 @@ class Fight(Turns):
             d["runden"][self.rid]["zug"] = 3
             dungeon._write(d)
         code = self.invite(self.rid)
-        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        r = TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler", "geschlecht": "weiblich"}})
         pid = r.json()["pid"]
         i = self.give(self.rid, pid, "heiltrank")
         self.assertTrue(dungeon.fresh(self.state(self.rid), pid))
@@ -7666,16 +7711,16 @@ class Fight(Turns):
         """Punkt 6: a device (its cookie, only the hash at the seat) holds one seat of a round, a guest's as a profile's."""
         dev = TestClient(panel.app)
         a, b = self.invite(self.rid), self.invite(self.rid)
-        r = dev.post("/api/dungeon/beitreten", json={"code": a, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler"}})
+        r = dev.post("/api/dungeon/beitreten", json={"code": a, "held": {"name": "Cora", "volk": "elf", "klasse": "heiler", "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         tok = dev.cookies.get(dungeon.GERAET)
         self.assertTrue(tok and dungeon._GERAET.fullmatch(tok))
         self.assertEqual(self.state(self.rid)["plaetze"][r.json()["pid"]]["geraet"], dungeon.device(tok))
         self.assertNotIn(tok, json.dumps(self.state(self.rid)))           # never the token itself
-        r = dev.post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb"}})
+        r = dev.post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb", "geschlecht": "weiblich"}})
         self.assertEqual((r.status_code, r.json()["detail"]), (409, "geraet"))
         self.assertIn("'geraet':[", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
-        self.assertEqual(TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb"}}).status_code, 200)
+        self.assertEqual(TestClient(panel.app).post("/api/dungeon/beitreten", json={"code": b, "held": {"name": "Dora", "volk": "elf", "klasse": "dieb", "geschlecht": "weiblich"}}).status_code, 200)
         self.assertTrue({"am_rand", "rand", "held_geflohen", "neu_gesperrt", "geraet"} <= set(dungeon.for_live()))
 
     def set_foe(self, k, **kw):

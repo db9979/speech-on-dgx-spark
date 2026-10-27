@@ -40,7 +40,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
-HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": ""}
+HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "maennlich"}
 NOON = datetime.datetime(2026, 3, 4, 12, 0).timestamp()
 NIGHT = datetime.datetime(2026, 3, 4, 2, 0).timestamp()
 
@@ -177,7 +177,7 @@ class Base(unittest.TestCase):
     def guest(self, rid):
         r = self.c.post(f"/api/profile/dungeon/{rid}/platz", json={"base": "https://spark.example"})
         code = r.json()["link"].split("#spiel=", 1)[1]
-        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier"}})
+        r = self.v.post("/api/dungeon/beitreten", json={"code": code, "held": {"name": "Bela", "volk": "elf", "klasse": "magier", "geschlecht": "weiblich"}})
         self.assertEqual(r.status_code, 200, r.text)
         return code
 

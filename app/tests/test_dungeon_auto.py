@@ -245,7 +245,7 @@ class InTheCar(Base):
 
     def test_a_round_picked_by_rid_and_only_an_own_one(self):
         a = self.new_round(einstieg="Erste Runde.")
-        b = self.new_round(einstieg="Zweite Runde.", held={"name": "Uma", "volk": "mensch", "klasse": "krieger", "satz": ""})
+        b = self.new_round(einstieg="Zweite Runde.", held={"name": "Uma", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "weiblich"})
         with dungeon._lock:                                                        # made a minute apart
             d = dungeon._read()
             d["runden"][a["rid"]]["made"] -= 60
