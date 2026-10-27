@@ -5877,6 +5877,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Nacht-Gegner im SRD-Katalog (V01.1.146, Daten, LlamaTale 1 „Tageszeit vom Panel“, Thread „DnDAppFiles für den Dungeon-Master“): 76 Gegner in app/panel/dungeon_srd.json tragen \"nacht\": true: Wesen, die nach dem SRD vor allem nachts unterwegs sind (Untote wie Skelett, Zombie, Ghul, Gespenst, Schatten, Grabunhold, Vampirbrut und Todesalb; Werratte, Werwolf, Wertiger und Werbär; Wolf, Worg, Fledermäuse, Ratten, Spinnen und Eulenbär; Völker mit Lichtempfindlichkeit wie Kobolde und Dunkelelfen; Nachtmahr und Nachtvettel), dazu Banditen, Wegelagerer, Schläger und Spione, die im Dunkeln auflauern, und eigene Nachtwesen aus Horror, Sci-Fi und Piraten (Vogelscheuche, Schattenkind, Geisterpirat, Xeno-Kriecher, Wachdrohne). Es gibt sie auf jeder Stufe von 0 bis 15. In jeder Welt passen für einen Helden der Stufe 1 bis 3 mindestens 5 Nacht-Gegner ins Budget; Selbsttest test_dungeon_srd (test_nacht_gegner_je_welt_und_stufe)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
 },
 {
@@ -20686,6 +20694,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "a torch in a bag). 3. At night the panel offers foes of the night (bestiary nacht: true) when at least as many fit as it offers. The narrator gets the time of day as data and on the first turn after a change tageszeit_neu, then tells the change in one or two sentences; its field szene.tageszeit does not count while the switch is on. On top of the table stands \"🌇 Evening · 4 turns left\". Logs dungeon: tageszeit | nacht | panel, dungeon: tageszeit | zu | lehre, dungeon: tageszeit | dunkel. Live overview: changes, checks in the dark of the night, shops shut. Without the switch the narrator reports the time of day as before (only forward)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: night foes in the SRD catalog (V01.1.146, data, LlamaTale 1 \"time of day from the panel\", thread \"DnDAppFiles für den Dungeon-Master\"): 76 foes in app/panel/dungeon_srd.json carry \"nacht\": true: creatures that per the SRD are mostly about at night (undead such as skeleton, zombie, ghoul, specter, shadow, wight, vampire spawn and wraith; wererat, werewolf, weretiger and werebear; wolf, worg, bats, rats, spiders and owlbear; peoples with sunlight sensitivity such as kobolds and drow; nightmare and night hag), plus bandits, highwaymen, thugs and spies lying in wait in the dark, and own night creatures of horror, sci-fi and pirates (living scarecrow, shadow child, ghost pirate, xeno crawler, sentry drone). There are some on every level from 0 to 15. In every world at least 5 night foes fit the budget of one hero of level 1 to 3; self-test test_dungeon_srd (test_nacht_gegner_je_welt_und_stufe)."
 },
 {
 "lang": "en",

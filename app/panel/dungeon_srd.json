@@ -10050,7 +10050,8 @@
         "Man sagt, ein Goblin zählt nur bis drei, und alles darüber heißt „viele“.",
         "They say a goblin counts only to three, and everything above is \"lots\"."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "kobold",
@@ -10088,7 +10089,8 @@
         "Alte Bergleute erzählen, Kobolde hätten einst einem Drachen ein Ei gestohlen und dienen ihm seitdem.",
         "Old miners tell that kobolds once stole a dragon's egg and have served it ever since."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "ork_krieger",
@@ -10278,7 +10280,8 @@
         "Jeder Bandit erzählt, er habe nur einmal einen schlechten Tag gehabt, der nie aufhörte.",
         "Every bandit tells of one bad day that never ended."
       ],
-      "sg": 11
+      "sg": 11,
+      "nacht": true
     },
     {
       "id": "banditenhauptmann",
@@ -10356,7 +10359,8 @@
         "Die Wirte sagen: Ein Schläger vergisst kein Gesicht, aber jede Rechnung.",
         "Innkeepers say: a thug forgets no face, but every bill."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "kultist",
@@ -10395,7 +10399,8 @@
         "Man flüstert, kein Kultist kennt den Namen dessen, dem er dient.",
         "It is whispered that no cultist knows the name of the one they serve."
       ],
-      "sg": 11
+      "sg": 11,
+      "nacht": true
     },
     {
       "id": "kultfanatiker",
@@ -10438,7 +10443,8 @@
         "Die Prediger des Kults sollen im Schlaf in einer Sprache reden, die keiner gelernt hat.",
         "The cult's preachers are said to talk in their sleep in a tongue nobody learned."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "wache",
@@ -10632,7 +10638,8 @@
         "Ein altes Sprichwort: Wer einen Spion sucht, sollte zuerst den freundlichsten Gast fragen.",
         "An old saying: whoever seeks a spy should first ask the friendliest guest."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "assassine",
@@ -10677,7 +10684,8 @@
         "Es heißt, ein Assassine hinterlässt immer eine Feder, damit man weiß, dass es kein Zufall war.",
         "It is said an assassin always leaves a feather, so you know it was no accident."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "magier_gegner",
@@ -10835,7 +10843,8 @@
         "Die Dunkelelfen sollen ihre Kinder lehren, Licht sei eine Lüge der Oberwelt.",
         "The drow are said to teach their children that light is a lie of the surface."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "duergar",
@@ -11126,7 +11135,8 @@
         "Man legt ein Eisen unter das Kissen, sagen die Alten, dann bleibt die Nachtvettel fern.",
         "Put iron under your pillow, the old ones say, and the night hag stays away."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "skelett",
@@ -11172,7 +11182,8 @@
         "Die Totengräber sagen, ein Skelett klappert nur, wenn es sich an seinen Namen erinnert.",
         "Gravediggers say a skeleton only rattles when it remembers its name."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "zombie",
@@ -11214,7 +11225,8 @@
         "Man sagt, ein Zombie folgt immer dem Weg, den er im Leben am liebsten ging.",
         "They say a zombie always follows the path it liked best in life."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "ogerzombie",
@@ -11255,7 +11267,8 @@
         "Die Bauern glauben, ein Oger-Zombie sucht noch immer sein letztes Abendessen.",
         "Farmers believe an ogre zombie is still looking for its last supper."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "ghul",
@@ -11300,7 +11313,8 @@
         "Alte Grabwächter sagen, ein Ghul war einst ein Mensch, der nie genug bekam.",
         "Old grave wardens say a ghoul was once a person who never had enough."
       ],
-      "sg": 10
+      "sg": 10,
+      "nacht": true
     },
     {
       "id": "grabschrecken",
@@ -11348,7 +11362,8 @@
         "Es heißt, wo ein Grabschrecken haust, welken die Blumen am Grab über Nacht.",
         "It is said where a ghast lairs, the flowers on the graves wilt overnight."
       ],
-      "sg": 10
+      "sg": 10,
+      "nacht": true
     },
     {
       "id": "schatten",
@@ -11406,7 +11421,8 @@
         "Die Weisen sagen, jeder Schatten sucht den Menschen, dem er einmal gehörte.",
         "The wise say every shadow seeks the person it once belonged to."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "gespenst",
@@ -11458,7 +11474,8 @@
         "Man erzählt, ein Gespenst friert ewig, und darum greift es nach jeder Wärme.",
         "They tell that a specter is always cold, and that is why it reaches for every warmth."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "geist",
@@ -11514,7 +11531,8 @@
         "Jedes alte Haus hat seinen Geist, sagen die Leute, und jeder will nur eine Sache erledigen.",
         "Every old house has its ghost, people say, and each wants to finish just one thing."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "grabunhold",
@@ -11563,7 +11581,8 @@
         "Die Sage geht, Grabunholde waren Feldherren, die ihren letzten Feldzug nicht aufgeben wollten.",
         "The legend goes that wights were warlords who would not give up their last campaign."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "todesalb",
@@ -11615,7 +11634,8 @@
         "Man sagt, ein Todesalb ist nur ein Wunsch, der zu lange gewartet hat.",
         "They say a wraith is just a wish that waited too long."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "mumie",
@@ -11717,7 +11737,8 @@
         "Die Dörfler sagen, eine Vampirbrut kann nicht über fließendes Wasser, darum bauen sie Brücken schmal.",
         "Villagers say vampire spawn cannot cross running water, so they build their bridges narrow."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "irrlicht",
@@ -11770,7 +11791,8 @@
         "Folge nie dem dritten Licht im Moor, sagen die Alten, das erste und zweite sind Laternen.",
         "Never follow the third light on the moor, the old ones say, the first and second are lanterns."
       ],
-      "sg": 10
+      "sg": 10,
+      "nacht": true
     },
     {
       "id": "werwolf",
@@ -11815,7 +11837,8 @@
         "Die Großmütter sagen, ein Werwolf erkennt man daran, dass ihm die Augenbrauen zusammenwachsen.",
         "Grandmothers say you know a werewolf by eyebrows that grow together."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "werratte",
@@ -11859,7 +11882,8 @@
         "In der Unterstadt heißt es, die Werratten haben einen König mit sieben Schwänzen.",
         "In the undercity they say the wererats have a king with seven tails."
       ],
-      "sg": 11
+      "sg": 11,
+      "nacht": true
     },
     {
       "id": "doppelgaenger",
@@ -12290,7 +12314,8 @@
         "Die Sage geht, ein Mantler war einst der Umhang eines Königs, der nicht gehen wollte.",
         "The legend goes that a cloaker was once a king's cloak that refused to leave."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "aboleth",
@@ -12611,7 +12636,8 @@
         "Die Steinmetze sagen: Hau nie einem Wasserspeier ein Lächeln, sonst lacht er nachts.",
         "Stonemasons say: never carve a smile on a gargoyle, or it laughs at night."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "imp",
@@ -12805,7 +12831,8 @@
         "Wer im Traum Hufschlag hört, sagen die Alten, sollte vor dem Morgen aufwachen.",
         "Whoever hears hoofbeats in a dream, the old ones say, should wake before morning."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "verfuehrer",
@@ -12855,7 +12882,8 @@
         "Die Sage warnt: Wer zu schön lächelt, will etwas, das man nicht zurückbekommt.",
         "The legend warns: whoever smiles too beautifully wants something you never get back."
       ],
-      "sg": 15
+      "sg": 15,
+      "nacht": true
     },
     {
       "id": "bartteufel",
@@ -13304,7 +13332,8 @@
         "Die Jäger sagen: Ein Eulenbär ruft „Huhu“ und meint es nie freundlich.",
         "Hunters say: an owlbear calls \"hoo-hoo\" and never means it kindly."
       ],
-      "sg": 15
+      "sg": 15,
+      "nacht": true
     },
     {
       "id": "harpyie",
@@ -13715,7 +13744,8 @@
         "Es heißt, Phasenspinnen weben ihre Netze zwischen zwei Welten.",
         "It is said phase spiders weave their webs between two worlds."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "ettercap",
@@ -13758,7 +13788,8 @@
         "Die Holzfäller sagen, jede Spinne im Wald gehorcht dem Pfiff des Ettercaps.",
         "Woodcutters say every spider in the forest obeys the ettercap's whistle."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "drider",
@@ -13801,7 +13832,8 @@
         "Man flüstert, ein Drider war einst der stolzeste Krieger der Dunkelelfen.",
         "It is whispered that a drider was once the proudest warrior of the drow."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "rostmonster",
@@ -13881,7 +13913,8 @@
         "Die Höhlenführer sagen: Wenn die Fackel ohne Grund ausgeht, schau nach oben.",
         "Cave guides say: when the torch goes out for no reason, look up."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "grick",
@@ -14049,7 +14082,8 @@
         "Man sagt, ein Warg versteht jedes Wort, er antwortet nur nicht.",
         "They say a worg understands every word, it just doesn't answer."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "todeshund",
@@ -14089,7 +14123,8 @@
         "Die Wüstenvölker sagen, ein Todeshund hat zwei Köpfe, damit er nie schlafen muss.",
         "Desert peoples say a death dog has two heads so it never has to sleep."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "wolf",
@@ -14131,7 +14166,8 @@
         "Die Hirten sagen, der Wolf ist nur so böse wie der Winter lang.",
         "Shepherds say the wolf is only as wicked as the winter is long."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "schreckenswolf",
@@ -14172,7 +14208,8 @@
         "Man erzählt, die Schreckenswölfe sind die Großeltern aller Wölfe und erinnern sich an die Eiszeit.",
         "They tell that dire wolves are the grandparents of all wolves and remember the ice age."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "braunbaer",
@@ -14253,7 +14290,8 @@
         "Man sagt, in den Netzen der Riesenspinnen hängen die verlorenen Hüte ganzer Generationen.",
         "They say the hats lost by whole generations hang in the giant spiders' webs."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "riesenratte",
@@ -14291,7 +14329,8 @@
         "In der Stadt heißt es, jede Riesenratte war einmal eine ganz normale Ratte mit großen Plänen.",
         "In the city they say every giant rat was once an ordinary rat with big plans."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "rattenschwarm",
@@ -14336,7 +14375,8 @@
         "Die Müller sagen: Wo eine Ratte ist, sind hundert, und wo hundert sind, ist bald keine Mühle mehr.",
         "Millers say: where there is one rat there are a hundred, and where there are a hundred there is soon no mill."
       ],
-      "sg": 10
+      "sg": 10,
+      "nacht": true
     },
     {
       "id": "fledermausschwarm",
@@ -14380,7 +14420,8 @@
         "Man erzählt, ein Fledermausschwarm kennt jeden Ausgang einer Höhle.",
         "They tell that a swarm of bats knows every exit of a cave."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "stirge",
@@ -14422,7 +14463,8 @@
         "Die Sumpfleute sagen, die Riesenmücke summt in der Tonart, in der man einschläft.",
         "Marsh folk say the giant mosquito hums in the key you fall asleep to."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "riesenskorpion",
@@ -14506,7 +14548,8 @@
         "Die Strandkinder sagen, eine Riesenkrabbe läuft immer seitwärts, nur nicht, wenn sie dich jagt.",
         "Beach children say a giant crab always walks sideways, except when it chases you."
       ],
-      "sg": 11
+      "sg": 11,
+      "nacht": true
     },
     {
       "id": "riesenkrake",
@@ -16104,7 +16147,8 @@
         "Die Mütter sagen, ein Oni klopft nie an, er wartet, bis jemand die Tür offen lässt.",
         "Mothers say an oni never knocks, it waits until someone leaves the door open."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "erzmagier",
@@ -16193,7 +16237,8 @@
         "Die Mechaniker sagen, jede Wachdrohne hat einen Lieblingsgang, und dort ist sie am schnellsten.",
         "Mechanics say every sentry drone has a favourite corridor, and that is where it is fastest."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "kampfroboter",
@@ -16371,7 +16416,8 @@
         "Die Stationscrews sagen: Wenn es in den Schächten tropft und es regnet nicht, lauf.",
         "Station crews say: when it drips in the shafts and it isn't raining, run."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "xeno_koenigin",
@@ -16568,7 +16614,8 @@
         "Die Siedler sagen, jeder Mutant trägt noch ein Stück seines alten Lebens bei sich.",
         "Settlers say every mutant still carries a piece of its old life."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "weltraumhai",
@@ -16711,7 +16758,8 @@
         "Die Seeleute sagen, ein Geisterpirat sucht noch immer die Insel, auf der er seinen Schatz vergraben hat.",
         "Sailors say a ghost pirate still seeks the island where he buried his treasure."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "klabautermann",
@@ -16749,7 +16797,8 @@
         "Man sagt, ein Schiff ohne Klabautermann sinkt beim ersten Sturm, eins mit ihm beim zweiten.",
         "They say a ship without a kobold sinks in the first storm, one with it in the second."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "krakenbrut",
@@ -16969,7 +17018,8 @@
         "Die Ammen sagen, ein Schattenkind will nur spielen, aber nie aufhören.",
         "Nannies say a shadow child only wants to play, but never wants to stop."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "vogelscheuche",
@@ -17017,7 +17067,8 @@
         "Die Bauern sagen: Stell die Vogelscheuche nie mit dem Gesicht zum Haus.",
         "Farmers say: never set the scarecrow facing the house."
       ],
-      "sg": 11
+      "sg": 11,
+      "nacht": true
     },
     {
       "id": "kirchhofbestie",
@@ -17064,7 +17115,8 @@
         "Man erzählt, die Kirchhofbestie bellt nur einmal im Jahr, und dann weiß jeder, warum.",
         "They tell that the churchyard beast barks only once a year, and then everyone knows why."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "reparaturbot",
@@ -17204,7 +17256,8 @@
         "Die Ärzte der Flotte sagen: Wer plötzlich nach Kälte hungert, sollte sich untersuchen lassen.",
         "Fleet doctors say: whoever suddenly craves cold should get checked."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "enterkommando",
@@ -17381,7 +17434,8 @@
         "Die Soldaten erzählen, einen Tarnjäger erkennt man nur an dem Regen, der um ihn herumfällt.",
         "Soldiers tell that you only recognise a cloaked hunter by the rain falling around it."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "frachtlader_mech",
@@ -17583,7 +17637,8 @@
         "Die Raumfahrer sagen: Wenn dein Kaffee nach oben tropft, bete zum Gravitationsgeist um Gnade.",
         "Spacers say: when your coffee drips upwards, pray to the gravity wraith for mercy."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "schwarmmutter",
@@ -17889,7 +17944,8 @@
         "An Bord sagt man: Wenn die Deckratten das Schiff verlassen, verlass es auch.",
         "Aboard they say: when the deck rats leave the ship, leave it too."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "schmuggler",
@@ -18081,7 +18137,8 @@
         "Die Seeleute erzählen, ein Geistermatrose wartet noch immer auf den Befehl „Feierabend“.",
         "Sailors tell that a ghost sailor is still waiting for the order \"stand down\"."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "marinekapitaen",
@@ -18381,7 +18438,8 @@
         "Man flüstert, der Puppenmacher näht jeder Puppe ein kleines Geheimnis ein.",
         "It is whispered that the dollmaker sews a small secret into every doll."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "knochenhund",
@@ -18430,7 +18488,8 @@
         "Die Totengräber sagen, ein Knochenhund holt jeden Stock, aber nie einen aus Holz.",
         "Gravediggers say a bone hound fetches every stick, but never one of wood."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "seuchenarzt",
@@ -18530,7 +18589,8 @@
         "Man sagt, der Schattenweber webt jeden Abend die Nacht ein Stück länger.",
         "They say the shadow weaver weaves the night a little longer every evening."
       ],
-      "sg": 16
+      "sg": 16,
+      "nacht": true
     },
     {
       "id": "kirchturmwaechter",
@@ -18637,7 +18697,8 @@
         "Man erzählt, wer am Morgen Hufspuren auf der Bettdecke findet, hatte Besuch vom Albtraumreiter.",
         "They tell that whoever finds hoofprints on the blanket in the morning was visited by the nightmare rider."
       ],
-      "sg": 15
+      "sg": 15,
+      "nacht": true
     },
     {
       "id": "die_bleiche_graefin",
@@ -18693,7 +18754,8 @@
         "Die Dienstboten flüstern, die bleiche Gräfin hat seit dreihundert Jahren nicht in einen Spiegel gesehen.",
         "The servants whisper that the Pale Countess has not looked in a mirror for three hundred years."
       ],
-      "sg": 19
+      "sg": 19,
+      "nacht": true
     },
     {
       "id": "das_ding_im_brunnen",
@@ -18747,7 +18809,8 @@
         "Man sagt, das Ding im Brunnen antwortet, wenn man seinen Namen hinunterruft, aber es ist nie der eigene.",
         "They say the Thing in the Well answers when you call your name down, but it is never your own."
       ],
-      "sg": 15
+      "sg": 15,
+      "nacht": true
     },
     {
       "id": "runenwaechter",
@@ -18952,7 +19015,8 @@
         "Die Sage geht, der Lichkönig hat seine Seele in einem Kinderspielzeug versteckt, weil dort niemand sucht.",
         "The legend goes that the lich king hid his soul in a child's toy, because nobody looks there."
       ],
-      "sg": 17
+      "sg": 17,
+      "nacht": true
     },
     {
       "id": "feuerdrache_alt",
@@ -19052,7 +19116,8 @@
         "Die Zwerge sagen: Wenn die Fackeln flackern und keiner atmet, ist eine Dunkelelfen-Klinge nah.",
         "Dwarves say: when torches flicker and nobody breathes, a dark elf blade is near."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "waldwandler",
@@ -19186,7 +19251,8 @@
         "Die Händler sagen: Jede Biegung hat ihren Wegelagerer, aber nur jede dritte ist hungrig.",
         "Merchants say: every bend has its highwayman, but only every third one is hungry."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "tollwuetiger_wolf",
@@ -19228,7 +19294,8 @@
         "Die Hirten warnen: Ein Wolf, der am Tag in die Stadt kommt, ist kein gewöhnlicher Wolf.",
         "Shepherds warn: a wolf that comes into town by day is no ordinary wolf."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "hoehlenbaer",
@@ -19922,7 +19989,8 @@
         "Man sagt, wer morgens nicht weiß, was er geträumt hat, hatte Besuch vom Traumfresser.",
         "They say whoever can't recall their dream in the morning was visited by the dream eater."
       ],
-      "sg": 17
+      "sg": 17,
+      "nacht": true
     },
     {
       "id": "glutwurm",
@@ -20174,7 +20242,8 @@
         "Die Goblins singen, der beste Krieger ist der, der zuletzt wegläuft.",
         "Goblins sing that the best warrior is the one who runs away last."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "goblinboss",
@@ -20290,7 +20359,8 @@
         "Man sagt, ein Koboldkrieger stellt drei Fallen, bevor er frühstückt.",
         "They say a kobold warrior sets three traps before breakfast."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "gnollkrieger",
@@ -20535,7 +20605,8 @@
         "Die Dörfer im Wald erzählen, ein Werbär bringt Honig vor die Türen derer, die gut zu ihm waren.",
         "Forest villages tell that a werebear leaves honey at the doors of those who were kind to it."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "wertiger",
@@ -20578,7 +20649,8 @@
         "Man sagt, ein Wertiger kann seine Streifen nicht verbergen, nicht einmal in Menschengestalt.",
         "They say a weretiger can't hide its stripes, not even in human form."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "lehmgolem",
@@ -21466,7 +21538,8 @@
         "Man flüstert, ein Vampirdiener zählt die Tage bis zu seiner Belohnung, und sie kommt nie.",
         "It is whispered that a vampire familiar counts the days to its reward, and it never comes."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "kriechklauen",
@@ -21516,7 +21589,8 @@
         "Die Kinder erzählen sich, die kriechenden Klauen kitzeln nur, wenn man lacht.",
         "Children tell each other that the crawling claws only tickle if you laugh."
       ],
-      "sg": 12
+      "sg": 12,
+      "nacht": true
     },
     {
       "id": "minotaurusskelett",
@@ -21564,7 +21638,8 @@
         "Man sagt, ein Minotaurusskelett findet den Weg durchs Labyrinth noch immer mit geschlossenen Augen.",
         "They say a minotaur skeleton still finds its way through the labyrinth with its eyes closed."
       ],
-      "sg": 14
+      "sg": 14,
+      "nacht": true
     },
     {
       "id": "grimlock",
@@ -21602,7 +21677,8 @@
         "Die Bergleute sagen: Ein Grimlock sieht nichts, aber er hört, wie dein Herz klopft.",
         "Miners say: a grimlock sees nothing, but it hears your heart beat."
       ],
-      "sg": 13
+      "sg": 13,
+      "nacht": true
     },
     {
       "id": "unsichtbarer_jaeger",

@@ -30,6 +30,9 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - Kampf-Audit Welle 2 (H4, N6, N7): ein Zauber mit Rettungswurf nennt genau einen der sechs Werte, ein Zustand nur aus
   der Liste und nur mit Rettungswurf, „halb“ nur als true bei Schaden mit Rettungswurf; jeder Zauber ohne Schaden mit
   Zustand hat einen Rettungswurf; „verbuendeter“ nur bei Heilung; jeder Gegner hat einen SG von 5 bis 30, die Wache sticht.
+- Nacht-Gegner (LlamaTale 1 „Tageszeit vom Panel“): „nacht“ nur als true; in jeder Welt passen für einen Helden der
+  Stufe 1, 2 und 3 mindestens 5 Nacht-Gegner ins Budget (sonst bietet das Panel nachts alle an), auf jeder Stufe des
+  Bestiariums von 0 bis 5 gibt es welche.
 """
 import json
 import os
@@ -314,6 +317,17 @@ class Srd(unittest.TestCase):
         for g in s["gegner"]:
             self.assertTrue(isinstance(g.get("sg"), int) and not isinstance(g["sg"], bool) and 5 <= g["sg"] <= 30, g["id"])
         self.assertEqual(next(g for g in s["gegner"] if g["id"] == "wache")["schaden_art"], "stich")
+
+    def test_nacht_gegner_je_welt_und_stufe(self):
+        s, r = srd(), dungeon._base_rules()
+        self.assertEqual([g["id"] for g in s["gegner"] if g.get("nacht", True) is not True], [])
+        nacht = [g for g in s["gegner"] if g.get("nacht")]
+        for w in [x["id"] for x in r["welten"]]:
+            for stufe in (1, 2, 3):
+                b = kampf.BUDGET[stufe - 1] * kampf.GRUPPE[0] * kampf.SCHWER    # one hero, the smallest budget at the table
+                n = [g["id"] for g in nacht if kampf.plays_in(r, g, w) and 0 < g["ep"] <= b]
+                self.assertGreaterEqual(len(n), 5, f"{w} Stufe {stufe}: {n}")
+        self.assertLessEqual(set(range(6)), {int(g["stufe"]) for g in nacht})
 
 
 if __name__ == "__main__":
