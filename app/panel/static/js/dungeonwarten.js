@@ -42,12 +42,16 @@ function dmWFeed(v,col){let out='',veil='';
   return veil?out+`<div class="dm-verhuellt"><div aria-hidden="true">${veil}</div><em>🎲 ${esc(t('Erst würfeln, dann geht es weiter','Throw first, then it goes on'))}</em></div>`:out}
 function dmWAuto(v,k,rest){if(DMWT.auto[k])return;DMWT.auto[k]=setTimeout(()=>{const b=document.querySelector(`[data-dmwkey="${CSS.escape(k)}"] [data-dmwurf]`);if(b&&!b.disabled)dmThrow(b)},Math.max(0,rest)*1000)}
 // the bar of a check: the die, the bonus (with the tool's part) up to the red line of the difficulty
+// the difficulty as a word (review 2026-10-27 Paket 12, E14: „15 · mittel“), the steps of the SRD's table of
+// difficulty classes: 5 very easy, 10 easy, 15 medium, 20 hard, 25 very hard, 30 nearly impossible (a number between: the step below)
+const DMSTUFE=[[30,'fast unmöglich','nearly impossible'],[25,'sehr schwer','very hard'],[20,'schwer','hard'],[15,'mittel','medium'],[10,'leicht','easy'],[0,'sehr leicht','very easy']];
+const dmStufe=n=>{const s=DMSTUFE.find(([m])=>n>=m)||DMSTUFE[DMSTUFE.length-1];return t(s[1],s[2])};
 function dmLeiste(x,el){if(!('w' in x))return '';const an=el!=null&&el<1300,dl=i=>an?` animation-delay:${([0,.35,.6][i]-el/1000).toFixed(2)}s`:'';const tool=x.werkzeug?(x.werkzeug_plus||0):0,rest=x.bonus-tool,max=Math.max(20,x.schwer,x.gesamt)+2,pc=n=>(100*Math.max(0,n)/max).toFixed(1)+'%';
   const seg=rest>=0?`<em class="dm-lw" style="width:${pc(x.w)};${dl(0)}"></em><em class="dm-lb" style="width:${pc(rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`
     :`<em class="dm-lw" style="width:${pc(x.gesamt-tool)};${dl(0)}"></em><em class="dm-lm" style="width:${pc(-rest)};${dl(1)}"></em>${tool?`<em class="dm-lt" style="width:${pc(tool)};${dl(2)}"></em>`:''}`;
   const knapp=Math.abs(x.gesamt-x.schwer)<=1,nat=x.w===20?t('natürliche 20: immer geschafft','natural 20: always a success'):x.w===1?t('natürliche 1: immer daneben','natural 1: always a miss'):'';
   return `<div class="dm-leiste${x.ok?' ok':' bad'}${an?' dm-lan':''}" role="img" aria-label="${esc(t('Würfel ','Die ')+x.w+', Bonus '+dmSign(x.bonus)+' = '+x.gesamt+t(', Ziel ',', target ')+x.schwer)}"><div class="dm-lbar">${seg}<i class="dm-lziel" style="left:${pc(x.schwer)}"></i></div>
-    <small class="mut">🎲 ${x.w} · ${esc(t('Bonus','bonus'))} ${dmSign(rest)}${tool?' · 🔧 +'+tool:''} = <b>${x.gesamt}</b> · ${esc(t('Ziel','target'))} ${x.schwer}${nat?' · '+esc(nat):knapp?' · '+esc(x.ok?t('ganz knapp!','just made it!'):t('knapp daneben','just missed')):''}</small></div>`}
+    <small class="mut">🎲 ${x.w} · ${esc(t('Bonus','bonus'))} ${dmSign(rest)}${tool?' · 🔧 +'+tool:''} = <b>${x.gesamt}</b> · ${esc(t('Ziel','target'))} ${x.schwer} (${esc(dmStufe(x.schwer))})${nat?' · '+esc(nat):knapp?' · '+esc(x.ok?t('ganz knapp!','just made it!'):t('knapp daneben','just missed')):''}</small></div>`}
 // the throw: the big die rolls about a second, lands on the panel's number with its sound, a 20 throws sparks
 function dmThrow(el){const box=el.closest('[data-dmwkey]'),mode=el.closest('#dgcard')?'g':'p',v=mode==='g'?DG.v:DM.v;if(!box||!v)return;
   const k=box.dataset.dmwkey,x=((v.warten&&v.warten.w)||[]).find(d=>dmWKey(v,d)===k)||(v.log||[]).find(e=>e.art==='wurf'&&dmWKey(v,e)===k);if(!x||DMWT.thrown[k])return;DMWT.thrown[k]=true;clearTimeout(DMWT.auto[k]);
@@ -86,7 +90,8 @@ function dmEcht(v){const e=v.echt,W=v.werte||{};if(DMECHT.zug!==e.zug){DMECHT.zu
   const andere=e.andere.length?`<small class="mut">🎲 ${esc(e.andere.join(', '))} ${esc(e.andere.length===1?t('würfelt am Tisch …','is throwing at the table …'):t('würfeln am Tisch …','are throwing at the table …'))}</small>`:'';
   if(!e.fragen.length)return `<div class="dm-echt">${e.fertig?`<b>✓ ${esc(t('Deine Zahl ist da, der Spark rechnet.','Your number is in, the Spark does the maths.'))}</b>`:''}${andere}</div>`;
   const n=e.fragen.reduce((a,f)=>a+f.n,0),z=DMECHT.z,voll=z.length>=n;
-  const was=e.fragen.map(f=>`<b class="dm-echtwas">${esc(f.n>1?t('Wirf 2 W20','Throw 2 d20'):t('Wirf W20','Throw a d20'))} ${esc(t('für','for'))} ${esc(W[f.wert]||f.wert)} ${esc(t('gegen','against'))} ${f.schwer}</b>`).join('');
+  const was=e.fragen.map(f=>`<b class="dm-echtwas">${esc(f.n>1?t('Wirf 2 W20','Throw 2 d20'):t('Wirf W20','Throw a d20'))} ${f.angriff?esc(t('für den Angriff','for the attack')+(f.gegner?t(' auf ',' on ')+f.gegner:''))
+    :`${esc(t('für','for'))} ${esc(W[f.wert]||f.wert)} ${esc(t('gegen','against'))} ${f.schwer} · ${esc(dmStufe(f.schwer))}`}</b>`).join('');   // T14: an attack in a fight too
   const pad=Array.from({length:e.seiten},(_,i)=>`<button type="button" class="b" data-dmechtz="${i+1}"${voll?' disabled':''}>${i+1}</button>`).join('');
   const mic=typeof dmMic==='function'&&dmMic.length>1?`<button type="button" class="b" data-dmechtmic="1" aria-label="${esc(t('Zahl sagen','Say the number'))}">🎤</button>`:'';
   return `<div class="dm-echt" role="group" aria-label="${esc(t('Eigener Würfel','Own die'))}">${was}

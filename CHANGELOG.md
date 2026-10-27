@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.165** · 2026-10-27 · KI-Dungeon-Master: echte Würfel auch für Angriffe (dungeon_kampf.attackers, eine Frage je Angreifer), nach zweimal nicht geworfen 10 s statt 30 s, Schwierigkeit mit Wort an Leiste und Frage (Review T14, Paket 12)
 - **V01.1.164** · 2026-10-27 · KI-Dungeon-Master: jeder Gegner sagt, was er ist (Mensch, Volk, Tier, Untoter, Konstrukt …, Feld „wesen“ statt Handlisten), Gefährten mit festem Geschlecht, Alter und Art, Tabellen für Haar, Augen, Bart und Statur, friedliche Wesen nie als Gegner
 - **V01.1.163** · 2026-10-27 · KI-Dungeon-Master: im Kampf zieht die Gruppe nicht weiter (nur nach gelungener Flucht), nach dem Weg fragen, das Schwert ziehen oder eine Tür aufbrechen ist kein Gehen mehr, und die Gruppe zieht nur, wenn die Mehrheit gehen will und keiner bleibt
 - **V01.1.162** · 2026-10-27 · KI-Dungeon-Master: in einer Welt nie Wirt und Wirtin zugleich, ein Szenenbild erkennt Namen nur als ganzes Wort

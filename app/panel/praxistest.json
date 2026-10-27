@@ -3999,6 +3999,13 @@
 "titel": "Dungeon-Master: Wirt und Namen im Bild",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Gold mit Zweck, Gefährten anheuern und Bilder für Ausrüstung und Zauber an. A: In einer Siedlung die Dienste ansehen: nie steht dort zugleich „die Wirtin“ und „der Wirt“. B: Mit einem Gefährten „Perle“ (Piratenwelt) erzählt der Spielleiter von Perlen: das Szenenbild nimmt nicht ihr Gesicht. C: Nennt er „Perle“ selbst, nimmt es ihr Gesicht.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P596",
+"v": 1165,
+"titel": "Dungeon-Master: echte Würfel im Kampf, kurze Wartezeit",
+"text": "Funktionen → KI-Dungeon-Master → Echte Würfel am Tisch an, im Spielleiter-Pult einen Platz mit eigenem Würfel wählen. A: Im Kampf „Ich greife an“: die Wartezeit fragt „Wirf W20 für den Angriff auf …“, die Zahl steht am Angriff mit „echt gewürfelt“. B: Zweimal keine Zahl geben: beim dritten Mal zählt die Uhr nur 10 s. Einmal werfen: wieder 30 s. C: Unter einem Wurf steht „Ziel 15 (mittel)“, bei 12 „(leicht)“.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

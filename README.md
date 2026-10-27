@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.165** AI Dungeon Master: real dice for attacks in a fight too, only 10 s wait after two turns without a throw, difficulty as a word
 - **V01.1.164** AI Dungeon Master: every foe says what it is; companions with fixed gender and age, fixed looks tables
 - **V01.1.163** AI Dungeon Master: in a fight the group does not move on (only after a flight that worked), asking the way, drawing a sword or breaking a door open is no going any more, and the group moves only when the majority wants to go and nobody stays
 - **V01.1.162** AI Dungeon Master: never innkeeper and landlady at once in one world, a scene picture knows names only as a whole word
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.158** AI Dungeon Master: the map tells already before the narration whom an action asks to come along, so the panel can roll the Charisma check first (LlamaTale 4)
 - **V01.1.157** AI Dungeon Master: the hero book also arrives on a slow line (ReadTimeout when sending), pictures as JPEG and made only once per book (with 60 pictures below 2 MB instead of several MB), uploads to the reMarkable wait by file size with a second try, "Send now" works in the background with a status, the log names the step; book and notes lie in their own folder "Dungeon-Master"
 - **V01.1.156** AI Dungeon Master: wandering people and small gestures (two switches, off), during a long rest people of the map move on by fixed rules towards their goal or the place of their occupation and you hear it as a rumour, while waiting a person of the scene shows a fixed gesture by their nature (LlamaTale ideas 6 and 7)
-- **V01.1.155** AI Dungeon Master: errands from people (switch, off), whoever asks a person for work gets an errand from the panel (bring, talk, defeat) with reward, experience and two clues, done only by a handover, a talk or a victory, the narrator only tells the reason and the thanks (LlamaTale idea 2)
 
 
 

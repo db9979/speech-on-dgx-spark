@@ -7141,6 +7141,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: echte Würfel auch im Kampf, kurze Wartezeit, Schwierigkeit mit Wort (V01.1.165, Dungeon-Review 2026-10-27 T14 und Paket 12, Dominik „ok“): Bisher fragte „Echte Würfel am Tisch“ nur nach den Proben des Modells, im Kampf nie. Jetzt fragt der Spark im Kampf jeden Platz mit eigenen Würfeln, dessen Aktion nach den festen Regeln des Panels angreift (dungeon_kampf.attackers, dieselbe Auswahl wie beim Angriff selbst), „Wirf W20 für den Angriff auf X“ statt seiner Proben; X ist der genannte Gegner, sonst der erste, der noch steht. Die Zahl geht in den Angriffswurf, der Angriff sagt „echt gewürfelt“. Bei Vorteil oder Nachteil würfelt der Spark den zweiten W20. Wen eine Requisite im Kampf nimmt, würfelt deren Probe. Gibt ein Platz zweimal hintereinander keine Zahl, wartet der Zug auf ihn nur noch 10 Sekunden (KURZ_S, sonst 30), bis er wieder selbst wirft; der Zähler steht in der Runde (echt_aus) und vergisst einen Platz, den der Gastgeber abwählt. Die Proben-Leiste unter jedem Wurf und die Frage nennen die Schwierigkeit jetzt mit Wort nach der SRD-Tabelle („Ziel 15 (mittel)“: 5 sehr leicht, 10 leicht, 15 mittel, 20 schwer, 25 sehr schwer, 30 fast unmöglich, eine Zahl dazwis"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "chen die Stufe darunter, dmStufe). Live: Angriffe gefragt und kurze Wartezeiten (nur Zahlen); Log dungeon: echt | frage | n plaetze | n angriff | n kurz. Selbsttests Rules.test_an_attack_is_one_question_instead_of_the_checks, Rules.test_two_turns_without_a_number_wait_short und Table.test_an_attack_in_a_fight_takes_the_own_die."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Töne für knapp daneben, Gegner-Ansage, Alarm und Fackel (V01.1.098, D&D-Ideen Runde 2, Punkte 1, 2 und 6, Dominik 2026-10-26 „1-9 umsetzten reihenfolge überlasse ich dir.“): Alles klingt im Browser (dungeon-ton.js, WebAudio, keine Dateien) und folgt nur Feldern, die das Panel setzt; das Modell nennt keinen Ton. Knapp daneben: Trägt ein Wurf im Würfel-Beleg knapp (die Probe fehlte um 1 oder 2 und der Held hat den Preis gezahlt, dungeon_knapp setzt dann ok), übernimmt die Wartezeit knapp, die feste Preis-ID preis und den Text des Preises preis_t (dungeon_warten.step, für andere Plätze erst, wenn der Würfel offen ist); die Würfelkarte zeigt „Knapp geschafft, mit Preis: …“ mit einem kurzen Wackeln (mit „Bewegung reduzieren“ ohne), dazu zwei leicht fallende Töne statt des Tons für geschafft (seit V01.1.125). Gegner-Ansage: Ein Log-Eintrag der Art ansage bläst ein tiefes Warnhorn. Krit und Patzer beim Angriff: Trägt ein Log-Eintrag angriff (oder wurf) krit_tabelle oder patzer_tabelle, klingt ein heller Lauf oder drei fallende Töne. Gewölbe: Steigt karte.alarm (0 bis 6, Karten-Thread) auf 3, schlägt einmal eine Glocke, auf 6 die Sturmglocke. Solange karte.fackel eine Za"
 },
 {
@@ -22198,6 +22214,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "the table\" in the admin window counts its columns from the moods: first the world, then one column per mood (since V01.1.094, Dominik 2026-10-26 \"table shifted\"; the browser test test_dungeon_musik.Grid checks the alignment)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: real dice in a fight too, short wait, difficulty as a word (V01.1.165, dungeon review 2026-10-27 T14 and package 12, Dominik \"ok\"): Until now \"Real dice at the table\" asked only for the model's checks, never in a fight. Now in a fight the Spark asks every seat with own dice whose action attacks by the panel's fixed rules (dungeon_kampf.attackers, the same choice as the attack itself) \"Throw a d20 for the attack on X\" instead of its checks; X is the foe named, else the first still standing. The number goes into the attack roll, the attack says \"real dice\". With advantage or disadvantage the Spark rolls the second d20. A hero a prop of the fight takes rolls the prop's check. If a seat gives no number twice in a row, the turn waits for it only 10 seconds (KURZ_S, else 30) until it throws again; the count is kept in the round (echt_aus) and forgets a seat the host deselects. The check bar under every roll and the question now give the difficulty as a word after the SRD table (\"target 15 (medium)\": 5 very easy, 10 easy, 15 medium, 20 hard, 25 very hard, 30 nearly impossible, a number between takes the step below, dmStufe). Live: attacks asked and short waits (numbers "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "only); log dungeon: echt | frage | n plaetze | n angriff | n kurz. Self-tests Rules.test_an_attack_is_one_question_instead_of_the_checks, Rules.test_two_turns_without_a_number_wait_short and Table.test_an_attack_in_a_fight_takes_the_own_die."
 },
 {
 "lang": "en",

@@ -4,13 +4,18 @@ Whoever sits at the real table throws their own d20: before the panel rolls a tu
 own dice (rd["echt"], the host's choice in the console: choose) sees „Wirf W20 für Geschick gegen 14“ and taps or says
 the number. The panel then rolls on as always, only this seat's d20 is the number given (dungeon.roll and
 dungeon_kampf.attacks with the Hand); the Würfel-Beleg says "echt". After WARTE_S without a number the panel rolls
-itself, as it always did. Never in the car (CarPlay): a seat
+itself, as it always did. In a fight a hero whose action attacks by the panel's rules (dungeon_kampf.attackers) is
+asked „Wirf W20 für den Angriff auf X“ instead of the model's checks (review 2026-10-27 T14); with advantage or
+disadvantage the second d20 is the panel's. A seat that gave no number twice in a row waits only KURZ_S, until it
+throws again. Never in the car (CarPlay): a seat
 whose profile plays from the car is not asked (dungeon_auto.im_auto); a guest seat has no car.
 
 Off by default: the admin's switch dungeonechtwuerfel (features.py, chat.dungeon_echtwuerfel) for the round's host.
 The number is data: only the own seat, only whole numbers 1 to 20, only for the turn asked, an own rate limit.
 State in the round (dungeon.py's rounds file), only while a turn waits for numbers:
-    rd["echt_frage"]  {"zug", "t", "plaetze": {pid: {"fragen": [{"wert", "schwer", "n"}], "zahlen": [..] | None}}}
+    rd["echt_frage"]  {"zug", "t", "plaetze": {pid: {"fragen": [{"wert", "schwer", "n"} | {"angriff": True, "gegner",
+                      "n"}], "zahlen": [..] | None, "max": seconds}}}
+    rd["echt_aus"]    {pid: turns in a row without a number}; from AUS_N on the seat waits only KURZ_S
 Journal: fixed words and numbers („dungeon: echt | …“), Live only counts.
 
     POST /api/profile/dungeon/{rid}/echt   {zug, zahlen}: the seat's numbers (a profile)
@@ -29,11 +34,13 @@ from core import assistant, browser_profile, json_body
 router = APIRouter()
 KEY = "dungeonechtwuerfel"
 WARTE_S = 30               # the seats have this long for their numbers, then the panel rolls (as WURF_MAX_S of the wait)
+KURZ_S = 10                # a seat that did not throw AUS_N times in a row waits only this long (T14)
+AUS_N = 2
 TAKT_S = 0.5               # how often the waiting turn looks for the numbers
 SEITEN = 20                # a d20: 1 to 20
 BODY = 512
 
-_day = DayCounter(gefragt=0, echt=0, rueckfall=0, abgelehnt=0)
+_day = DayCounter(gefragt=0, echt=0, rueckfall=0, abgelehnt=0, angriff=0, kurz=0)
 
 
 def on(rd):
@@ -52,16 +59,38 @@ def _im_auto(uid):
     return True if f is None else bool(uid) and bool(f(uid))
 
 
-def seats(rd, proben):
-    """{pid: [questions]}: the checks of this turn whose seat throws its own die."""
+def seats(rd, proben, angriffe=()):
+    """{pid: [questions]}: the checks of this turn whose seat throws its own die; angriffe [(pid, foe's name)]: the
+    heroes attacking this fight turn (dungeon_kampf.attackers), one question each instead of their checks."""
     out = {}
+    ok = lambda pid: pid in (rd.get("echt") or []) and (rd["plaetze"].get(pid) or {}).get("held") \
+        and not _im_auto((rd["plaetze"].get(pid) or {}).get("uid"))
+    hit = {pid for pid, _ in angriffe}
     for p in proben or []:
         pid = p.get("pid")
-        seat = rd["plaetze"].get(pid) or {}
-        if pid not in (rd.get("echt") or []) or not seat.get("held") or _im_auto(seat.get("uid")):
+        if pid in hit or not ok(pid):
             continue
         out.setdefault(pid, []).append({"wert": p.get("wert", ""), "schwer": int(p.get("schwer") or 0), "n": 2 if p.get("vt") else 1})
+    for pid, gegner in angriffe:
+        if ok(pid):
+            out[pid] = [{"angriff": True, "gegner": gegner or "", "n": 1}]
     return out
+
+
+def attacking(dm, rd, proben):
+    """[(pid, foe's name)]: the heroes who attack this fight turn by the panel's rules; a hero a prop of the fight took
+    (dungeon_umgebung's check) makes that check instead."""
+    if not rd.get("kampf"):
+        return []
+    import dungeon_kampf
+    prop = {p.get("pid") for p in proben or [] if p.get("umgebung")}
+    first = next((g for g in dungeon_kampf.up(rd) if g["leben"] > 0), None)   # none named: the first standing (as attacks)
+    return [(p["pid"], (g or first or {}).get("name", "")) for p, g, _ in dungeon_kampf.attackers(dm, dm.rules(), rd, proben, skip=prop)]
+
+
+def wait_s(rd, pid):
+    """How long the turn waits for this seat: KURZ_S after AUS_N turns in a row without its number, else WARTE_S."""
+    return KURZ_S if (rd.get("echt_aus") or {}).get(pid, 0) >= AUS_N else WARTE_S
 
 
 class Hand:
@@ -87,9 +116,10 @@ async def real_ask(dm, rid, turn, rd, proben):
     seat of this turn throws its own die (then the panel rolls as always)."""
     if not on(rd):
         return None
-    ask = seats(rd, proben)
+    ask = seats(rd, proben, attacking(dm, rd, proben))
     if not ask:
         return None
+    frist = {pid: wait_s(rd, pid) for pid in ask}
 
     def put():
         with dm._lock:
@@ -97,7 +127,7 @@ async def real_ask(dm, rid, turn, rd, proben):
             cur = d["runden"].get(rid)
             if not cur or cur["zug"] != turn:
                 return False
-            cur["echt_frage"] = {"zug": turn, "t": time.time(), "plaetze": {pid: {"fragen": f, "zahlen": None} for pid, f in ask.items()}}
+            cur["echt_frage"] = {"zug": turn, "t": time.time(), "plaetze": {pid: {"fragen": f, "zahlen": None, "max": frist[pid]} for pid, f in ask.items()}}
             if cur.get("dm"):
                 dm.warten.step(cur, "wuerfeln")
             dm._write(d)
@@ -106,7 +136,10 @@ async def real_ask(dm, rid, turn, rd, proben):
     if not await asyncio.to_thread(put):
         return None
     _day.bump("gefragt", len(ask))
-    print(f"dungeon: echt | frage | {len(ask)} plaetze", flush=True)
+    n_ang, n_kurz = sum(1 for f in ask.values() if f[0].get("angriff")), sum(1 for x in frist.values() if x == KURZ_S)
+    _day.bump("angriff", n_ang)
+    _day.bump("kurz", n_kurz)
+    print(f"dungeon: echt | frage | {len(ask)} plaetze | {n_ang} angriff | {n_kurz} kurz", flush=True)
     t0 = time.monotonic()
     got = {}
     while True:
@@ -115,7 +148,8 @@ async def real_ask(dm, rid, turn, rd, proben):
         if q.get("zug") != turn:
             break
         got = {pid: x["zahlen"] for pid, x in q["plaetze"].items() if x.get("zahlen")}
-        if len(got) == len(ask) or time.monotonic() - t0 >= WARTE_S:
+        el = time.monotonic() - t0
+        if all(pid in got or el >= frist[pid] for pid in ask):
             break
         await asyncio.sleep(TAKT_S)
 
@@ -125,6 +159,16 @@ async def real_ask(dm, rid, turn, rd, proben):
             cur = d["runden"].get(rid)
             if cur and (cur.get("echt_frage") or {}).get("zug") == turn:
                 cur.pop("echt_frage", None)
+                aus = dict(cur.get("echt_aus") or {})
+                for pid in ask:                   # a seat that threw is back to the long wait
+                    if pid in got:
+                        aus.pop(pid, None)
+                    else:
+                        aus[pid] = min(9, aus.get(pid, 0) + 1)
+                if aus:
+                    cur["echt_aus"] = aus
+                else:
+                    cur.pop("echt_aus", None)
                 dm._write(d)
 
     await asyncio.to_thread(clear)
@@ -176,6 +220,11 @@ def choose(rd, pids):
         rd["echt"] = list(pids)
     else:
         rd.pop("echt", None)
+    aus = {k: v for k, v in (rd.get("echt_aus") or {}).items() if k in pids}
+    if aus:
+        rd["echt_aus"] = aus
+    else:
+        rd.pop("echt_aus", None)
 
 
 def view(rd, pid, now=None):
@@ -187,15 +236,17 @@ def view(rd, pid, now=None):
     now = time.time() if now is None else now
     names = {p: (x.get("held") or {}).get("name", "") for p, x in rd["plaetze"].items()}
     me = q["plaetze"].get(pid)
-    return {"zug": q["zug"], "rest": max(0, round(WARTE_S - (now - q["t"]))), "max": WARTE_S, "seiten": SEITEN,
+    mx = (me or {}).get("max", WARTE_S)
+    return {"zug": q["zug"], "rest": max(0, round(mx - (now - q["t"]))), "max": mx, "seiten": SEITEN,
             "fragen": me["fragen"] if me and not me.get("zahlen") else [], "fertig": bool(me and me.get("zahlen")),
             "andere": sorted(names[p] for p, x in q["plaetze"].items() if p != pid and not x.get("zahlen") and names.get(p))}
 
 
 def for_live():
-    """Numbers only: seats asked, numbers given, turns the panel rolled itself after the wait, refused inputs today."""
+    """Numbers only: seats asked, numbers given, turns the panel rolled itself after the wait, refused inputs, attacks
+    asked and short waits today."""
     t = _day.counts()
-    return {"gefragt": t["gefragt"], "echt": t["echt"], "rueckfall": t["rueckfall"], "abgelehnt": t["abgelehnt"]}
+    return {k: t[k] for k in ("gefragt", "echt", "rueckfall", "abgelehnt", "angriff", "kurz")}
 
 
 # ---------------------------------------------------------------- routes

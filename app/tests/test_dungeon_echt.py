@@ -6,6 +6,8 @@
 - The number is data: only the own seat, only the turn asked, only whole numbers 1 to 20, as many as asked, once.
 - The panel waits at most WARTE_S, then rolls itself; a seat's d20 comes from its numbers first, then from the dice.
 - Live and the journal: numbers and fixed words only.
+- In a fight a hero whose action attacks is asked for the attack (T14), one die instead of the model's checks; a hero a
+  prop takes makes the prop's check. A seat that gave no number twice waits only KURZ_S, until it throws again.
 - The host chooses the seats in the console (only seats with a hero, only with the switch, only the host sees it);
   a turn takes the seat's number into the roll and the receipt says "echt", without a second tap.
 
@@ -52,6 +54,24 @@ class Rules(unittest.TestCase):
                   {"pid": "p3", "wert": "ges", "schwer": 10}, {"pid": "p9", "wert": "ges", "schwer": 10}]
         self.assertEqual(echt.seats(rd, proben), {"p1": [{"wert": "ges", "schwer": 14, "n": 1}], "p2": [{"wert": "str", "schwer": 12, "n": 2}]})
         self.assertEqual(echt.seats(round_dict(("p2",)), proben), {"p2": [{"wert": "str", "schwer": 12, "n": 2}]})   # only the host's seats
+
+    def test_an_attack_is_one_question_instead_of_the_checks(self):
+        rd = round_dict(("p1", "p2"))
+        proben = [{"pid": "p1", "wert": "ges", "schwer": 14}, {"pid": "p1", "wert": "str", "schwer": 9}, {"pid": "p2", "wert": "str", "schwer": 12}]
+        self.assertEqual(echt.seats(rd, proben, [("p1", "Goblin"), ("p3", "Goblin")]),
+                         {"p1": [{"angriff": True, "gegner": "Goblin", "n": 1}], "p2": [{"wert": "str", "schwer": 12, "n": 1}]})
+        self.assertEqual(echt.attacking(dungeon, rd, proben), [])         # no fight: no attack
+
+    def test_two_turns_without_a_number_wait_short(self):
+        rd = round_dict(("p1",))
+        self.assertEqual(echt.wait_s(rd, "p1"), echt.WARTE_S)
+        rd["echt_aus"] = {"p1": echt.AUS_N - 1}
+        self.assertEqual(echt.wait_s(rd, "p1"), echt.WARTE_S)
+        rd["echt_aus"] = {"p1": echt.AUS_N}
+        self.assertEqual(echt.wait_s(rd, "p1"), echt.KURZ_S)
+        self.assertLess(echt.KURZ_S, echt.WARTE_S)
+        rd["echt_frage"] = {"zug": 3, "t": 100.0, "plaetze": {"p1": {"fragen": [{"angriff": True, "gegner": "", "n": 1}], "zahlen": None, "max": echt.KURZ_S}}}
+        self.assertEqual((echt.view(rd, "p1", now=104.0)["rest"], echt.view(rd, "p1", now=104.0)["max"]), (echt.KURZ_S - 4, echt.KURZ_S))
 
     def test_never_in_the_car(self):
         car(self, lambda uid: uid == "u1")
@@ -189,6 +209,60 @@ class Table(Base):
         self.assertTrue(1 <= hand.d20(self.gpid, random.Random(1)) <= 20)
         self.assertEqual(echt.for_live()["rueckfall"], before + 1)
         self.assertNotIn("echt_frage", self.state(self.rid))
+
+    def test_an_attack_in_a_fight_takes_the_own_die(self):
+        """T14: a hero attacking in a fight is asked for the attack and the attack takes the number; after two turns
+        without a number the seat waits only KURZ_S, a number brings the long wait back."""
+        import dungeon_kampf as kampf
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            held = dungeon._living(rd)
+            kampf.start(dungeon, r, rd, held, [(kampf.offer(dungeon, r, rd, held)[0], 1)], 0)
+            rd["echt"] = [self.gpid]
+            rd["offen"] = {self.gpid: {"text": "Ich greife an!"}}
+            dungeon._write(d)
+        foe = kampf.up(self.state(self.rid))[0]["name"]
+
+        def player(turn):
+            self.wait_for_question()
+            q = self.state(self.rid)["echt_frage"]["plaetze"][self.gpid]
+            self.assertEqual((q["fragen"], q["max"]), ([{"angriff": True, "gegner": foe, "n": 1}], echt.WARTE_S))
+            self.assertEqual(self.v.post("/api/dungeon/echt", json={"code": self.code, "zug": turn, "zahlen": [19]}).status_code, 200)
+        out = {}
+
+        async def go(give):
+            cur = self.state(self.rid)
+            t = threading.Thread(target=give, args=(cur["zug"],)) if give else None
+            if t:
+                t.start()
+            out["hand"] = await echt.real_ask(dungeon, self.rid, cur["zug"], cur, [{"pid": self.gpid, "wert": "geschick", "schwer": 12}])
+            if t:
+                await asyncio.to_thread(t.join)
+            out["rd"] = cur
+        asyncio.run(go(player))
+        _, hits = kampf.attacks(dungeon, r, out["rd"], [{"pid": self.gpid, "wert": "geschick", "schwer": 12}], rng=random.Random(2), hand=out["hand"])
+        mine = [x for x in hits if x["pid"] == self.gpid]
+        self.assertEqual(len(mine), 1)
+        self.assertTrue(mine[0].get("echt"))
+        self.assertIn(19, mine[0]["ws"])
+        self.assertNotIn("echt_aus", self.state(self.rid))
+        echt.WARTE_S, echt.KURZ_S = 0.3, 0.05
+        self.addCleanup(setattr, echt, "KURZ_S", 10)
+        for n in range(echt.AUS_N):                                      # nobody throws
+            asyncio.run(go(None))
+            self.assertEqual(self.state(self.rid)["echt_aus"], {self.gpid: n + 1})
+        t0 = time.monotonic()
+        asyncio.run(go(None))
+        self.assertLess(time.monotonic() - t0, 0.25)                     # the short wait
+        self.assertEqual(self.state(self.rid)["echt_aus"], {self.gpid: echt.AUS_N + 1})
+        echt.WARTE_S = 5
+        asyncio.run(go(lambda turn: (self.wait_for_question(), self.v.post("/api/dungeon/echt", json={"code": self.code, "zug": turn, "zahlen": [4]}))))
+        self.assertNotIn("echt_aus", self.state(self.rid))               # thrown again: the long wait again
+        self.set_round(echt=[self.gpid, self.host], echt_aus={self.gpid: 2, self.host: 2})
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/erzaehler", json={"echt": [self.host]}).status_code, 200)
+        self.assertEqual(self.state(self.rid)["echt_aus"], {self.host: 2})   # a seat no longer chosen forgets its count
 
     def test_doors(self):
         self.set_round(echt=[self.gpid], echt_frage={"zug": 9, "t": time.time(), "plaetze": {self.gpid: {"fragen": [{"wert": "ges", "schwer": 14, "n": 1}], "zahlen": None}}})

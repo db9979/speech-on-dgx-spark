@@ -2065,7 +2065,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute Spielleiter-Regler {dgn.get('regler_hoch', 0)}× schwerer, {dgn.get('regler_runter', 0)}× leichter"
                            if dgn.get("regler_hoch") or dgn.get("regler_runter") else "")
                         + (f" · heute {dgn['heldenmut']}× Heldenmut" if dgn.get("heldenmut") else "")
-                        + (f" · heute {dgn['echt']['echt']} echte Würfe, {dgn['echt']['rueckfall']} nach 30 s vom Panel, {dgn['echt']['abgelehnt']} abgelehnt"
+                        + (f" · heute {dgn['echt']['echt']} echte Würfe ({dgn['echt'].get('angriff', 0)} Angriffe gefragt), {dgn['echt']['rueckfall']} nach der Wartezeit vom Panel"
+                           f" ({dgn['echt'].get('kurz', 0)} mit kurzer Wartezeit), {dgn['echt']['abgelehnt']} abgelehnt"
                            if (dgn.get("echt") or {}).get("gefragt") or (dgn.get("echt") or {}).get("abgelehnt") else "")
                         + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
                            f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"

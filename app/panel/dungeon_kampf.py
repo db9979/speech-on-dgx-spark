@@ -513,25 +513,18 @@ def _dice(rng, n, w):
     return sum(rng.randint(1, w) for _ in range(n))
 
 
-def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
-    """The attacks of a fight turn, made by the panel from the actions (Kampf-Audit 1, Dominik 2026-10-26): a hero whose
-    action attacks (intent), or who casts a spell with a damage kind (Kampf-Audit 2), attacks whether the model asked a
-    check for it or not; the model's checks for that hero are dropped. The target: the foe the action names, else the
-    one the model's ziel names, else the first still standing (a target fallen this turn: the next one); with none
-    standing the attack lapses, no check, no experience. The model's ziel alone never makes an attack (Nachprüfung
-    Welle 1); a hero casting a spell on foes (KONTROLLE) has no check of the model in a fight either. skip: heroes a prop of the fight already took (dungeon_umgebung). Returns (the other checks, the attack
-    results); every number from here: the foe's life is only changed in apply (hit). hand (dungeon_echt.Hand): the
-    d20 a seat threw at the real table come first, the attack says "echt"."""
-    rng = rng or random
+def attackers(dm, r, rd, proben, skip=()):
+    """[(check, foe or None, by the model)]: the heroes whose action attacks this fight turn by the fixed rules, in the
+    order of the seats (attacks; dungeon_echt asks the seats with own dice for these attacks before the roll, T14).
+    Reads only: no foe's life, no journal."""
     if not rd.get("kampf"):
-        return [{k: v for k, v in p.items() if k != "ziel"} for p in proben], []
-    rest, out, life = [], [], {g["k"]: g["leben"] for g in up(rd)}
-    li = 1 if rd["lang"] == "en" else 0
+        return []
+    life = {g["k"]: g["leben"] for g in up(rd)}
     cat = dm._by(r, "gegenstaende")
     model = {}
     for p in proben:
         model.setdefault(p["pid"], p)
-    los = []                                     # (check, foe) in the order of the seats
+    out = []
     offen = rd.get("offen") or {}
     for pid in list(offen) + [q for q in model if q not in offen]:
         a = offen.get(pid) or {}
@@ -547,7 +540,29 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
         magie = not spell and bool(MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
         if not (was == "angriff" or dmg or (was == "bezug" or magie) and named):   # the model's ziel only picks the target
             continue
-        los.append((dict(m or {"pid": pid, "wert": "staerke", "schwer": 10, "wofuer": ""}, pid=pid), named or by_model))
+        out.append((dict(m or {"pid": pid, "wert": "staerke", "schwer": 10, "wofuer": ""}, pid=pid), named or by_model, bool(m)))
+    return out
+
+
+def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
+    """The attacks of a fight turn, made by the panel from the actions (Kampf-Audit 1, Dominik 2026-10-26): a hero whose
+    action attacks (intent), or who casts a spell with a damage kind (Kampf-Audit 2), attacks whether the model asked a
+    check for it or not; the model's checks for that hero are dropped. The target: the foe the action names, else the
+    one the model's ziel names, else the first still standing (a target fallen this turn: the next one); with none
+    standing the attack lapses, no check, no experience. The model's ziel alone never makes an attack (Nachprüfung
+    Welle 1); a hero casting a spell on foes (KONTROLLE) has no check of the model in a fight either. skip: heroes a prop of the fight already took (dungeon_umgebung). Returns (the other checks, the attack
+    results); every number from here: the foe's life is only changed in apply (hit). hand (dungeon_echt.Hand): the
+    d20 a seat threw at the real table come first, the attack says "echt"."""
+    rng = rng or random
+    if not rd.get("kampf"):
+        return [{k: v for k, v in p.items() if k != "ziel"} for p in proben], []
+    rest, out, life = [], [], {g["k"]: g["leben"] for g in up(rd)}
+    li = 1 if rd["lang"] == "en" else 0
+    cat = dm._by(r, "gegenstaende")
+    los = []                                     # (check, foe) in the order of the seats
+    offen = rd.get("offen") or {}
+    for p, g, m in attackers(dm, r, rd, proben, skip):
+        los.append((p, g))
         print(f"dungeon: kampf | angriff | {'aus aktion' if m else 'modell ohne probe'}", flush=True)
     angreifer = {p["pid"] for p, _ in los}
     for p in proben:
