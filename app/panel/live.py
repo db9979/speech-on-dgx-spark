@@ -2078,7 +2078,7 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("anleiten") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
-                        + (f" · Personen-Katalog {dgn['personen']['personen']}, heute {dgn['personen']['neu']} neu, {dgn['personen']['wieder']} wiedergetroffen, {dgn['personen']['erkannt']} erkannten Helden, {dgn['personen']['geaendert']} geändert, {dgn['personen']['geloescht']} gelöscht, {dgn['personen'].get('geschichte', 0)} aus Geschichten"
+                        + (f" · Personen-Katalog {dgn['personen']['personen']}, heute {dgn['personen']['neu']} neu, {dgn['personen']['wieder']} wiedergetroffen, {dgn['personen']['erkannt']} erkannten Helden, {dgn['personen']['geaendert']} geändert, {dgn['personen']['geloescht']} gelöscht, {dgn['personen'].get('geschichte', 0)} aus Geschichten, {dgn['personen'].get('stimme', 0)} Stimmen gesetzt"
                            if any((dgn.get("personen") or {}).values()) else "")
                         + (f" · heute {dgn['gefaehrte']['angeheuert']} Gefährten angeheuert, {dgn['gefaehrte']['hiebe']} Hiebe, {dgn['gefaehrte']['am_boden']} am Boden, {dgn['gefaehrte']['geflohen']} geflohen, {dgn['gefaehrte']['gegangen']} gegangen, {dgn['gefaehrte']['sold']}-mal Lohn"
                            if any((dgn.get("gefaehrte") or {}).values()) else "")

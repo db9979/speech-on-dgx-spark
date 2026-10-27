@@ -3943,6 +3943,13 @@
 "titel": "Dungeon-Master: Porträts im NSC-Katalog",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber, Gesichter für NSCs und Personen-Katalog an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“ öffnen: Personen mit Gesicht aus einer Runde zeigen es in Liste und Detail. B: Bei einer Person ohne Gesicht „🖌 Malen“: nach kurzer Zeit steht ihr Porträt da, ohne ihren Namen im Bild. C: „Nochmal malen“, dann „Neues behalten“: das neue bleibt. D: Trifft eine neue Runde diese Person wieder, zeigt „Leute und Chronik“ dasselbe Gesicht.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P588",
+"v": 1150,
+"titel": "Dungeon-Master: Stimme einer Person",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“, eine Person antippen. A: Im Detail steht „Stimme“, bei einer Person ohne eigene mit „(nach dem Namen)“. B: Unter „Stimme, wenn die Person spricht“ Alter, Geschlecht, Klang, Wesen und Tempo wählen, „▶ Probe“: der Spark spricht den Probesatz in dieser Stimme (ohne VoiceDesign in der festen NSC-Stimme mit Hinweis). C: „Stimme speichern“: die Zeile „Stimme“ zeigt die Wahl, der Hinweis „aus einer Runde“ bleibt. D: Eine Runde in der Welt spielen, in der die Person wieder auftaucht: sie spricht mit der gewählten Stimme. E: „Nach dem Namen“: die eigene Stimme ist weg, wieder „(nach dem Namen)“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -32,6 +32,7 @@ import time
 
 import dungeon_album as album
 import dungeon_nsc as nsc
+import dungeon_stimmen as stimmen
 import features
 from common import STATE, DayCounter, read_json, write_json
 
@@ -45,7 +46,7 @@ FELD_LEN = 120             # a card's field per language
 TEIL_LEN = 80              # role and goal
 _ID = re.compile(r"^[a-z0-9_]{1,40}$")
 _lock = threading.Lock()
-_day = DayCounter(neu=0, wieder=0, erkannt=0, gekaempft=0, geaendert=0, geloescht=0, geschichte=0)
+_day = DayCounter(neu=0, wieder=0, erkannt=0, gekaempft=0, geaendert=0, geloescht=0, geschichte=0, stimme=0)
 FELD = {"aussehen": ("Aussehen", "Looks"), "art": ("Art", "Manner"), "beruf": ("Beruf", "Occupation"),
         "wunsch": ("Wunsch", "Wish"), "geheimnis": ("Geheimnis", "Secret")}
 
@@ -361,6 +362,11 @@ def check(dm, r, e, have):
         wesen[k] = v
     out = {"name": name, "welt": welt, "karte": karte, "wesen": wesen, "rolle": _clean(dm, e.get("rolle"), TEIL_LEN),
            "ziel": _clean(dm, e.get("ziel"), TEIL_LEN)}
+    if "stimme" in e:                      # left out: the person keeps its voice
+        try:
+            out["stimme"] = stimmen.clean(e["stimme"])
+        except ValueError:
+            err.append("stimme: {} (nach dem Namen) oder je eines von " + ", ".join(f"{k} ({'/'.join(stimmen.data()['npc'][k])})" for k in stimmen.MERKMALE))
     low = " " + _text(r, out).lower() + " "
     if any(w.lower() in low for w in r["nie"]):
         err.append("Ein Wort steht in „nie“")
@@ -370,7 +376,8 @@ def check(dm, r, e, have):
 
 
 def change(was, i, eintrag=None, now=None):
-    """The admin sets („setzen“, a new id makes a new person) or deletes („zurueck“, „aus“) one person."""
+    """The admin sets („setzen“, a new id makes a new person), gives one a voice („stimme“, eintrag {"stimme"}: only
+    that, the person stays as it came) or deletes („zurueck“, „aus“) one person."""
     import dungeon as dm
     r = dm.rules()
     with _lock:
@@ -389,6 +396,16 @@ def change(was, i, eintrag=None, now=None):
             now = int(time.time() if now is None else now)
             d[i] = dict(d.get(i) or {"id": i, "stimme": {}, "haltung": {}, "treffen": 0, "made": now}, **e, t=now, stand="eigen")
             _day.bump("geaendert")
+        elif was == "stimme":
+            if i not in d:
+                print("dungeon: personen | abgelehnt | fehlt", flush=True)
+                raise LookupError("eintrag")
+            try:
+                d[i]["stimme"] = stimmen.clean((eintrag or {}).get("stimme") if isinstance(eintrag, dict) else None)
+            except ValueError:
+                print("dungeon: personen | abgelehnt | stimme", flush=True)
+                raise ValueError(["stimme"])
+            _day.bump("stimme")
         elif was in ("zurueck", "aus"):
             if i not in d:
                 print("dungeon: personen | abgelehnt | fehlt", flush=True)
@@ -419,6 +436,8 @@ def view(lang="de"):
         if wesen:
             werte.append([("Wesen", "Traits")[li], ", ".join(wesen)])
         werte += [[n, x[f]] for f, n in (("rolle", ("Rolle", "Role")[li]), ("ziel", ("Ziel", "Goal")[li])) if x.get(f)]
+        werte.append([("Stimme", "Voice")[li], stimmen.words(stimmen.of_name(x["name"], x.get("stimme")), li)
+                      + ("" if x.get("stimme") else (" (nach dem Namen)", " (by the name)")[li])])
         if x.get("haltung"):
             werte.append([("Kennt", "Knows")[li], ", ".join(f"{h.title()}: {nsc.word(v, li)}" for h, v in sorted(x["haltung"].items()))])
         rows.append({"id": i, "name": x["name"], "zeichen": "👤", "art": "", "stand": x.get("stand", "runde"), "welten": [x.get("welt")],
@@ -427,12 +446,14 @@ def view(lang="de"):
                      "werte": werte})
         dungeon_dingbild.person_row(r, x, rows[-1], have, neu)
         entries[i] = {"id": i, "name": x["name"], "welt": x.get("welt"), "rolle": x.get("rolle", ""), "ziel": x.get("ziel", ""),
-                      "karte": k, "wesen": x.get("wesen") or {}}
-    return {"teil": "personen", "zeilen": rows, "eintraege": entries, "bilder_an": dungeon_dingbild.person_on(), "neu": True,
+                      "karte": k, "wesen": x.get("wesen") or {}, "stimme": dict(x.get("stimme") or {}),
+                      "stimme_jetzt": stimmen.of_name(x["name"], x.get("stimme"))}
+    return {"teil": "personen", "zeilen": rows, "eintraege": entries, "bilder_an": dungeon_dingbild.person_on(), "neu": True, "stimmwahl": stimmen.choices(li),
             "weltfilter": [{"id": w, "name": n} for w, n in welten.items()]}
 
 
 def for_live():
-    """Numbers only: people in the catalog; new, met again, recognised, fought, changed, deleted, brought by a story today."""
+    """Numbers only: people in the catalog; new, met again, recognised, fought, changed, deleted, brought by a story,
+    voices set today."""
     t = _day.counts()
-    return dict({k: t[k] for k in ("neu", "wieder", "erkannt", "gekaempft", "geaendert", "geloescht", "geschichte")}, personen=len(load()))
+    return dict({k: t[k] for k in ("neu", "wieder", "erkannt", "gekaempft", "geaendert", "geloescht", "geschichte", "stimme")}, personen=len(load()))

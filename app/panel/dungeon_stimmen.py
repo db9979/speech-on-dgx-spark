@@ -158,7 +158,7 @@ def learn(rd, npcs):
 def _of(rd, name, sex=""):
     """An NPC's traits: kept, else those of its name; sex sets the gender of one nobody named (the pronoun after its
     quote, vortrag.pronoun)."""
-    t = dict(_traits(str(name or "?")), **((rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]) or {}))  # a trait added later: by the name
+    t = of_name(name, (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]))  # a trait added later: by the name
     return dict(t, geschlecht=sex) if sex else t
 
 
@@ -170,11 +170,57 @@ def sex(rd, name):
 
 def npc(rd, name, sex=""):
     """One NPC's description: its traits as fixed English words."""
+    return describe(_of(rd, name, sex))
+
+
+def describe(t):
+    """The description of a full set of traits (one of each MERKMALE) as fixed English words."""
     n = data()["npc"]
-    t = _of(rd, name, sex)
     who = {"weiblich": "a girl", "maennlich": "a boy"}.get(t["geschlecht"], "a child") if t["alter"] == "kind" \
         else f"{n['alter'][t['alter']]} {n['geschlecht'][t['geschlecht']]}"
     return f"{who[0].upper()}{who[1:]}, {n['klang'][t['klang']]}, {n['wesen'][t['wesen']]}, {n['tempo'][t['tempo']]}"
+
+
+# the traits' words for people (the catalog's voice choice, Dominik 2026-10-27 „stimmen verändern, die genutzt werden
+# wenn diese etwas sagen“): one per value of dungeon_stimmen.json „npc“, German and English
+WORTE = {
+    "alter": {"kind": ("Kind", "child"), "jung": ("jung", "young"), "mittel": ("mittleres Alter", "middle aged"), "alt": ("alt", "old")},
+    "geschlecht": {"weiblich": ("weiblich", "female"), "maennlich": ("männlich", "male"), "offen": ("offen", "open")},
+    "klang": {"tief": ("tief", "deep"), "hell": ("hell", "high"), "rau": ("rau", "rough"), "sanft": ("sanft", "soft"),
+              "kraeftig": ("kräftig", "strong"), "duenn": ("dünn", "thin"), "heiser": ("heiser", "hoarse"),
+              "nasal": ("nasal", "nasal"), "samtig": ("samtig", "velvety"), "kratzig": ("kratzig", "scratchy")},
+    "wesen": {"freundlich": ("freundlich", "friendly"), "finster": ("finster", "grim"), "listig": ("listig", "sly"),
+              "aengstlich": ("ängstlich", "timid"), "stolz": ("stolz", "proud"), "froehlich": ("fröhlich", "cheerful"),
+              "muede": ("müde", "tired"), "weise": ("weise", "wise")},
+    "tempo": {"langsam": ("langsam", "slow"), "ruhig": ("ruhig", "even"), "schnell": ("schnell", "quick"), "stockend": ("stockend", "halting")}}
+MERKMAL_NAME = {"alter": ("Alter", "Age"), "geschlecht": ("Geschlecht", "Gender"), "klang": ("Klang", "Sound"),
+                "wesen": ("Wesen", "Manner"), "tempo": ("Tempo", "Pace")}
+
+
+def clean(s):
+    """A voice set by hand, by fixed rules: {} (by the name) or one value of each MERKMALE from the fixed lists;
+    ValueError for anything else."""
+    if s in (None, {}):
+        return {}
+    n = data()["npc"]
+    if not isinstance(s, dict) or set(s) != set(MERKMALE) or any(s[k] not in n[k] for k in MERKMALE):
+        raise ValueError("stimme")
+    return {k: s[k] for k in MERKMALE}
+
+
+def of_name(name, kept=None):
+    """A person's traits: those kept for it, else those of its name."""
+    return dict(_traits(str(name or "?")), **(kept or {}))
+
+
+def words(t, li):
+    """The traits as words of the language, in the order of MERKMALE."""
+    return ", ".join(WORTE[k][t[k]][li] for k in MERKMALE if t.get(k) in WORTE[k])
+
+
+def choices(li):
+    """The lists for the catalog's voice choice: [{k, name, werte: [[id, word]]}]."""
+    return [{"k": k, "name": MERKMAL_NAME[k][li], "werte": [[v, WORTE[k][v][li]] for v in data()["npc"][k]]} for k in MERKMALE]
 
 
 def weiblich(rd, name, sex=""):

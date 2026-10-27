@@ -1361,7 +1361,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 // Dominik 2026-10-24 „die regel seite sollte für den admin hier sein“, „unübersichtlich“: the sections on the left,
 // the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
 // detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
-const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{}};
+const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{},st:null};
 const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende','tabellen'];
 // the parts with a list and a detail: the rules, and the people of the catalog while it is on (Personen-Katalog 1)
 const dmRKats=()=>DMRKAT.concat(DMP.d&&DMP.d.personen_an?['personen']:[]);
@@ -1469,6 +1469,12 @@ function dmRSelLadder(K,x){if(!K.seltenheiten)return '';
   if(x.selten){const s=K.seltenheiten.find(z=>z.id===x.selten);return s?`<div class="fh dm-rsfest"><i class="dm-rth ${DMSEL[s.id]||''}"></i>${esc(x.preis==null?t(`Immer ${s.name}: +${s.bonus}, Preis ×${s.preis}`,`Always ${s.name}: +${s.bonus}, price ×${s.preis}`):x.preis?t(`Immer ${s.name}: +${s.bonus}, Preis ${x.preis} Gold`,`Always ${s.name}: +${s.bonus}, price ${x.preis} gold`):t(`Immer ${s.name}: +${s.bonus}, unverkäuflich`,`Always ${s.name}: +${s.bonus}, not for sale`))}</div>`:''}
   return `<div class="dm-rsleiter"><div class="fh">${esc(t('Die Seltenheit wird beim Fund gewürfelt (W100 nach einer festen Tabelle je Stufe, Truhen und Bosse würfeln höher) und gibt den Rahmen:','The rarity is rolled when it is found (d100 by a fixed table per level, chests and bosses roll higher) and gives the frame:'))}</div>
     ${K.seltenheiten.map(s=>`<div class="dm-rsl"><i class="dm-rth ${DMSEL[s.id]||''}"></i><b>${esc(s.name)}</b><small>${esc(t(`+${s.bonus} · Preis ×${s.preis}${s.stufe>1?` · ab Stufe ${s.stufe}`:s.stufe?'':' · nie'}`,`+${s.bonus} · price ×${s.preis}${s.stufe>1?` · from level ${s.stufe}`:s.stufe?'':' · never'}`))}</small></div>`).join('')}</div>`}
+// a person's voice (Dominik 2026-10-27 „stimmen verändern, die genutzt werden wenn diese etwas sagen“): five fixed
+// lists, „▶ Probe“ before saving, „Nach dem Namen“ gives the voice back to the name; only the panel's fixed words
+function dmRStimme(K,x,e){const cur=(DMR.st&&DMR.st.id===String(x.id))?DMR.st.t:(e.stimme_jetzt||{});
+  return `<div class="dm-voice dm-rstimme"><label>${esc(t('🎙 Stimme, wenn die Person spricht','🎙 Voice when the person speaks'))}</label>
+    <div class="dm-rstw">${(K.stimmwahl||[]).map(m=>`<select data-dmrst="${esc(m.k)}" aria-label="${esc(m.name)}">${m.werte.map(([v,w])=>`<option value="${esc(v)}"${v===cur[m.k]?' selected':''}>${esc(m.name+': '+w)}</option>`).join('')}</select>`).join('')}</div>
+    <div class="row"><button type="button" class="b" data-dmrstimme="probe">${esc('▶ '+t('Probe','Sample'))}</button><button type="button" class="b p" data-dmrstimme="setzen">${esc(t('Stimme speichern','Save voice'))}</button>${Object.keys(e.stimme||{}).length?`<button type="button" class="b" data-dmrstimme="name">${esc(t('Nach dem Namen','By the name'))}</button>`:''}</div></div>`}
 function dmRDet(teil){const K=DMR.k[teil],St=DMRSTAND(),x=K.zeilen.find(z=>String(z.id)===DMR.sel)||(DMR.edit&&DMR.edit.neu?{id:DMR.edit.e.id,name:t('Neue Person','New person')}:null);
   if(!x)return `<div class="ic-empty">${esc(t('Tippe links einen Eintrag an.','Tap an entry on the left.'))}</div>`;
   const e=K.eintraege[String(x.id)]||{},li=L==='en'?1:0,tx=v=>Array.isArray(v)?v[li]||v[0]:v||'';
@@ -1482,7 +1488,7 @@ function dmRDet(teil){const K=DMR.k[teil],St=DMRSTAND(),x=K.zeilen.find(z=>Strin
       :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild,x.bv):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
       <div class="row">${K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(DMR.busy===String(x.id)?t('Malt gerade …','Painting …'):x.bild?t('Nochmal malen','Paint again'):t('Malen','Paint'))}</button>`:`<small class="mut">${esc(t('Die Bilder sind aus; einschalten im Abschnitt „Bilder“.','Pictures are off; switch them on in the part "Pictures".'))}</small>`}</div></div>`:'';
   return `<div class="dm-rdkopf"><div><b class="dm-rname">${esc(x.zeichen||'')} ${esc(x.name)}</b> <span class="pill">${esc(St[x.stand])}</span>${m?` <span class="pill ${DMRMARKE[m.marke]}">${esc(m.name)}</span>`:''}</div></div>
-    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${(x.werte||[]).length?`<dl class="dm-rwerte">${x.werte.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:''}${dmRSelLadder(K,x)}${x.tafel?dmRTafel(x):''}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}
+    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${(x.werte||[]).length?`<dl class="dm-rwerte">${x.werte.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:''}${dmRSelLadder(K,x)}${x.tafel?dmRTafel(x):''}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}${teil==='personen'&&K.stimmwahl?dmRStimme(K,x,e):''}
       <div class="row"><button type="button" class="b" data-dmrdo="aendern">${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmrdo="kopie">${esc(t('Eigene Kopie','Own copy'))}</button>
       ${x.stand==='aus'||x.stand==='geaendert'?`<button type="button" class="b" data-dmrdo="zurueck">${esc(t('Zurück auf mitgeliefert','Back to shipped'))}</button>`:''}
       ${x.stand==='eigen'||teil==='personen'?`<button type="button" class="b danger" data-dmrdo="zurueck">${esc(teil==='personen'?t('Person löschen','Delete person'):t('Eigenen Eintrag löschen','Delete own entry'))}</button>`:x.stand!=='aus'?`<button type="button" class="b" data-dmrdo="aus">${esc(t('Ausblenden','Hide'))}</button>`:''}</div></div>${pic}</div>`}
@@ -1518,6 +1524,13 @@ document.body.addEventListener('click',async e=>{const c=e.target.closest('#dmad
       DMR.edit.e=ent;await dmRDo(teil,'setzen',String(ent.id),ent);return}
     if(db.classList.contains('danger')&&db.dataset.sure!=='1'){db.dataset.sure='1';db.textContent=t('Wirklich löschen?','Really delete?');return}
     await dmRDo(teil,was,String(x.id));return}
+  const vb=e.target.closest('[data-dmrstimme]');if(vb){const id=DMR.sel,was=vb.dataset.dmrstimme,st={};
+    c.querySelectorAll('[data-dmrst]').forEach(s=>{st[s.dataset.dmrst]=s.value});
+    if(was==='probe'){DMR.st={id,t:st};try{const r=await api('/api/admin/dungeon/personen/probe',xjson('POST',{stimme:st,lang:dmLang()}));
+        if(!r.ok){sayToast(t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'));return}
+        if(r.headers.get('X-Stimme')==='fest')sayToast(t('Stimmen aus Beschreibung laufen gerade nicht, die Probe kommt in der festen Stimme.','Voices from a description are not running right now, the sample uses the fixed voice.'));
+        const A=DMA.p;if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(err){}return}
+    DMR.st=null;await dmRDo(teil,'stimme',id,{id,stimme:was==='name'?{}:st});return}
   const pb=e.target.closest('[data-dmrbild]');if(pb){const id=pb.dataset.id,was=pb.dataset.dmrbild;if(DMR.busy)return;
     if(was==='malen'){DMR.busy=id;dmRDraw()}
     const {r,d}=await apiTry('/api/admin/dungeon/katalog/'+teil+'/bild',xjson('POST',{id,was,welt:DMR.welt[teil]||(DMR.k[teil]||{}).welt||''}));DMR.busy='';

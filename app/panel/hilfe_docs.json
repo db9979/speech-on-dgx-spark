@@ -5797,6 +5797,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Stimme einer Person wählen (V01.1.150, Dominik 2026-10-27 „stimmen verändern, die genutzt werden wenn diese etwas sagen“): Unter *Funktionen → KI-Dungeon-Master → Regeln anpassen → „Personen (NSC)“* zeigt jede Person ihre Stimme, die eigene oder „(nach dem Namen)“, wenn sie noch keine hat (dungeon_stimmen.of_name). Unter „Stimme, wenn die Person spricht“ wählt der Admin je eines von Alter, Geschlecht, Klang, Wesen und Tempo aus den festen Listen von dungeon_stimmen.json („npc“, Wörter dungeon_stimmen.WORTE). „▶ Probe“ (POST /api/admin/dungeon/personen/probe, nur Admin, nur mit Personen-Katalog an, Rate-Limit „dungeonprobe“) spricht den festen Probesatz in der Beschreibung, die das Panel aus festen englischen Wörtern baut (dungeon_stimmen.describe), ohne VoiceDesign in der festen NSC-Stimme der Regeln. „Stimme speichern“ (was „stimme“ am Katalog-Endpunkt) setzt nur die Stimme, die Person bleibt sonst wie sie war, auch „aus einer Runde“; „Nach dem Namen“ nimmt die eigene Stimme wieder weg. Eine falsche Stimme lehnt dungeon_stimmen.clean ab, nichts wird geschrieben; im JSON von „Ändern“ gilt dieselbe Prüfung. Trifft eine Runde die Person, spricht sie mit dieser Stim"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "me (adopt legt sie in npc_stimmen). Das Porträt der Person malt der Bilder-Thread (dungeon_dingbild). Log „dungeon: personen | stimme“ und „dungeon: personen | probe“, Live zählt „Stimmen gesetzt“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (V01.1.134, Plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 „wie empfehlung umsetzen“: Stufe 1 und 3, das Modell als Stufe 2 erst später): Admin-Schalter *Funktionen → KI-Dungeon-Master → Rückfrage bei unklaren Aktionen* (chat.dungeon_rueckfrage, ab Werk aus), freigegeben für jedes Profil; Gäste am Tisch bekommen sie genauso, es ist Teil des Spiels. Beim Absenden prüft das Panel die Aktion mit festen Regeln (dungeon_rueckfrage.unclear): zu kurz (weniger als 2 Wörter oder 8 Buchstaben, „ok“, „hm“), Buchstabensalat (ein Zeichen viermal, die Hälfte der Wörter ohne Vokal), nur ein Fürwort als letztes Ziel, wenn mehreres passt („Ich greife ihn an“ bei zwei Gegnern, „nimm es“), oder kein Tun (kein Wort aus TUN_WORTE und den Kampf-Wortlisten, kein Name der Szene, keine wörtliche Rede). Dann bleibt die Aktion wie geschrieben liegen, ist aber markiert: Unter der eigenen Aktion steht „❓ Was genau tut Morpheus?“ mit dem Grund, bis zu drei Vorschlägen und „So lassen“. Die Vorschläge baut das Panel aus festen Mustern und den Daten der Szene (stehende Gegner, Dinge im Kampf, der eigene Angriffszauber, Personen hier, Wege der Karte), nie au"
 },
 {
@@ -20662,6 +20678,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "alog off: no list, nothing in the truth. Log dungeon: personen | geschichte | N in der wahrheit."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: choose a person's voice (V01.1.150, Dominik 2026-10-27 \"stimmen verändern, die genutzt werden wenn diese etwas sagen\"): Under *Features → AI Dungeon Master → Adjust rules → \"People (NPC)\"* every person shows its voice, its own or \"(by the name)\" when it has none yet (dungeon_stimmen.of_name). Below \"Voice when the person speaks\" the admin picks one each of age, gender, sound, manner and pace from the fixed lists of dungeon_stimmen.json (\"npc\", words dungeon_stimmen.WORTE). \"▶ Sample\" (POST /api/admin/dungeon/personen/probe, admin only, only with the people catalog on, rate limit \"dungeonprobe\") speaks the fixed sample sentence in the description the panel builds from fixed English words (dungeon_stimmen.describe), without VoiceDesign in the rules' fixed NPC voice. \"Save voice\" (was \"stimme\" at the catalog endpoint) sets only the voice, the person otherwise stays as it was, also \"from a round\"; \"By the name\" takes the own voice away again. dungeon_stimmen.clean refuses a wrong voice and nothing is written; the JSON of \"Edit\" gets the same check. When a round meets the person, it speaks with that voice (adopt puts it into npc_stimmen). The person's portrait is pain"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ted by the pictures thread (dungeon_dingbild). Log \"dungeon: personen | stimme\" and \"dungeon: personen | probe\", Live counts \"Stimmen gesetzt\"."
 },
 {
 "lang": "en",

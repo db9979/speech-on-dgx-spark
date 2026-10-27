@@ -2859,3 +2859,4 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-albsage{margin:6px 0;font-style:italic;font-family:Georgia,"Times New Roman",serif}.dm-albw{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0}.dm-albw span{display:flex;flex-direction:column;align-items:center}.dm-albe>div{margin:4px 0}
 .dm-narben{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}.dm-narbez{margin:6px 0;font-style:italic}
 .dm-rast{margin:8px 0;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(234,88,12,.14),rgba(250,204,21,.10));border:1px solid rgba(234,88,12,.35)}.dm-wachen{margin:6px 0 0 18px;padding:0}.dm-frage{margin-top:8px}
+.dm-rstimme{border-top:1px solid var(--line);padding-top:10px}.dm-rstw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.dm-rstw select{width:100%;margin:0}

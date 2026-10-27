@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.150** · 2026-10-27 · KI-Dungeon-Master: Stimme einer Person wählen, unter Regeln → Personen (NSC) zeigt jede Person ihre Stimme, der Admin wählt Alter, Geschlecht, Klang, Wesen und Tempo aus festen Listen, hört eine Probe und speichert, die Runde spricht die Person dann mit dieser Stimme
 - **V01.1.149** · 2026-10-27 · KI-Dungeon-Master: Porträts im NSC-Katalog: jede Person zeigt ihr Gesicht in Liste und Detail, wer keins aus einer Runde hat, bekommt ein Katalogbild aus festen Teilen (nachts, mit „Alle Bilder malen“ oder „Malen“) und bringt es in die nächste Runde mit
 - **V01.1.148** · 2026-10-27 · KI-Dungeon-Master: Spieler anleiten (Schalter, aus), jede Erzählung nennt mindestens zwei greifbare Ansatzpunkte und endet mit einer konkreten Wahl, darunter „Das kannst du hier“ als Knöpfe nur aus der Szene und geprüften Wegen des Erzählers, Stufe Einsteiger, Normal oder Erfahren je Runde, im Auto „Was kann ich tun?“, und stille Spieler bekommen eine Frage aus der Szene
 - **V01.1.147** · 2026-10-27 · Tests prüfen nur Textfelder statt Zeitstempel und Zufalls-IDs (Telefon, Pebble, Vorwärmen)

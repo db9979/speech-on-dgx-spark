@@ -104,6 +104,79 @@ class Page(Base):
         self.assertEqual(ADMIN.post(K + "personen", json={"was": "zurueck", "id": "oskar"}).status_code, 404)
         self.assertGreaterEqual((pers.for_live()["geaendert"], pers.for_live()["geloescht"]), (2, 1))
 
+    def test_a_persons_voice(self):
+        """Dominik 2026-10-27 „stimmen verändern, die genutzt werden wenn diese etwas sagen“: every person shows its voice
+        (kept, or by its name); „Stimme speichern“ sets one value of each fixed list and nothing else of the person (a
+        person from a round stays one), „Nach dem Namen“ gives it back; a wrong voice is refused and nothing is written;
+        „▶ Probe“ speaks the fixed sentence in the panel's own description of the choice, only for the admin and only
+        while the catalog is on; a round that meets the person speaks with that voice."""
+        import contextlib
+        import io
+        import itertools
+        from unittest import mock
+        import dungeon_personen as pers
+        import dungeon_stimmen as st
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        if os.path.exists(pers.FILE):
+            os.remove(pers.FILE)
+        self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
+        P = "/api/admin/dungeon/personen/probe"
+        v = {"alter": "alt", "geschlecht": "weiblich", "klang": "rau", "wesen": "weise", "tempo": "langsam"}
+        self.assertEqual(ADMIN.post(P, json={"stimme": v}).status_code, 404)              # the catalog off
+        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        pers._save({"silas": {"id": "silas", "name": "Silas", "welt": "fantasy", "karte": {"beruf": ["Mystikerin", "Mystic"]},
+                              "wesen": {}, "rolle": "", "ziel": "", "stimme": {}, "haltung": {}, "treffen": 1, "made": 1, "t": 1, "stand": "runde"}})
+        rows, d = self.rows("personen")
+        self.assertEqual([m["k"] for m in d["stimmwahl"]], list(st.MERKMALE))
+        self.assertTrue(all(len(m["werte"]) == len(st.data()["npc"][m["k"]]) for m in d["stimmwahl"]))
+        by_name = st.of_name("Silas")
+        self.assertIn(["Stimme", st.words(by_name, 0) + " (nach dem Namen)"], rows["silas"]["werte"])
+        self.assertEqual((d["eintraege"]["silas"]["stimme"], d["eintraege"]["silas"]["stimme_jetzt"]), ({}, by_name))
+        for bad in ({"alter": "alt"}, dict(v, klang="laut"), dict(v, extra="x"), "rau", [v]):
+            x = ADMIN.post(K + "personen", json={"was": "stimme", "id": "silas", "eintrag": {"id": "silas", "stimme": bad}})
+            self.assertEqual(x.status_code, 422, bad)
+        self.assertEqual(pers.load()["silas"]["stimme"], {})                             # nothing written
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "stimme", "id": "keiner", "eintrag": {"stimme": v}}).status_code, 404)
+        self.assertIn(self.c.post(K + "personen", json={"was": "stimme", "id": "silas", "eintrag": {"stimme": v}}).status_code, (401, 403))
+        x = ADMIN.post(K + "personen", json={"was": "stimme", "id": "silas", "eintrag": {"id": "silas", "stimme": v}})
+        self.assertEqual(x.status_code, 200, x.text)
+        p = pers.load()["silas"]
+        self.assertEqual((p["stimme"], p["stand"], p["karte"]), (v, "runde", {"beruf": ["Mystikerin", "Mystic"]}))
+        (row,) = x.json()["zeilen"]
+        self.assertIn(["Stimme", "alt, weiblich, rau, weise, langsam"], row["werte"])
+        en = ADMIN.get(K + "personen?lang=en").json()["zeilen"][0]
+        self.assertIn(["Voice", "old, female, rough, wise, slow"], en["werte"])
+        # a round that meets the person speaks with the voice (adopt puts it into the round's npc_stimmen)
+        rd = {"npc_stimmen": {"silas": dict(p["stimme"])}}
+        self.assertEqual(st.npc(rd, "Silas"), "An old woman, rough voice, wise and calm, slow speech")
+        self.assertTrue(st.weiblich(rd, "Silas"))
+        # the JSON of „Ändern“ carries the voice too, checked the same way
+        e = dict(d["eintraege"]["silas"], stimme=dict(v, tempo="eilig"))
+        e.pop("stimme_jetzt")
+        self.assertEqual(ADMIN.post(K + "personen", json={"was": "setzen", "id": "silas", "eintrag": e}).status_code, 422)
+        x = ADMIN.post(K + "personen", json={"was": "stimme", "id": "silas", "eintrag": {"id": "silas", "stimme": {}}})
+        self.assertEqual(pers.load()["silas"]["stimme"], {})                             # „Nach dem Namen“
+        # „▶ Probe“: the panel's own words, the female fixed voice without VoiceDesign
+        self.assertIn(self.c.post(P, json={"stimme": v}).status_code, (401, 403))
+        self.assertEqual(ADMIN.post(P, json={"stimme": {}}).status_code, 400)
+        self.assertEqual(ADMIN.post(P, json={"stimme": dict(v, wesen="boese")}).status_code, 400)
+        said = []
+
+        async def probe(voice, lang, klang="", fest=""):
+            said.append((voice, lang, klang, fest))
+            return b"RIFF", False
+        with mock.patch("dungeon.probe", probe), contextlib.redirect_stdout(io.StringIO()) as out:
+            x = ADMIN.post(P, json={"stimme": v, "lang": "en"})
+        self.assertEqual((x.status_code, x.headers["content-type"]), (200, "audio/wav"))
+        voices = dungeon.voices(dungeon.rules())
+        self.assertEqual(said, [("", "en", "An old woman, rough voice, wise and calm, slow speech", voices["npc_w"])])
+        self.assertIn("dungeon: personen | probe", out.getvalue())
+        n = st.data()["npc"]
+        for t in itertools.product(*(n[k] for k in st.MERKMALE)):                         # every choice fits the speech output
+            self.assertRegex(st.describe(dict(zip(st.MERKMALE, t))), dungeon.KLANG)
+            self.assertLessEqual(len(st.describe(dict(zip(st.MERKMALE, t)))), 80)
+        self.assertGreaterEqual(pers.for_live()["stimme"], 2)
+
     def test_a_table_shows_every_row_and_its_sign(self):
         """Dominik 2026-10-25 „ich sehe gar nicht die tabellen“: the detail holds every row with its number and the
         worlds of a row that counts only in some, the die is the number of rows, every table has a sign."""

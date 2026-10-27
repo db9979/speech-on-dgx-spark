@@ -26,6 +26,7 @@ import dungeon_balance as balance
 import dungeon_dingbild as dingbild
 import dungeon_kampf as kampf
 import dungeon_personen as personen
+import dungeon_stimmen as stimmen
 import guard
 from common import write_json
 from core import app_version, auth, json_body
@@ -348,6 +349,32 @@ async def katalog_change(teil: str, request: Request):
     out = await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
     out["hinweis"] = hint
     return out
+
+
+@router.post("/api/admin/dungeon/personen/probe", dependencies=[Depends(auth)])
+async def personen_probe(request: Request):
+    """{"stimme": {alter, geschlecht, klang, wesen, tempo}, "lang"}: the fixed sentence in the voice the admin chose for a
+    person of the catalog (dungeon_stimmen's fixed words; without VoiceDesign the rules' fixed NPC voice), as WAV."""
+    guard.limit(request, "dungeonprobe", admin=True)
+    if not personen.admin_on():
+        raise HTTPException(404, "personen aus")
+    b = await json_body(request, 2000)
+    try:
+        t = stimmen.clean(b.get("stimme"))
+        if not t:
+            raise ValueError("stimme")
+        r = await asyncio.to_thread(dungeon.rules)
+        v = dungeon.voices(r)
+        wav, ersatz = await dungeon.probe("", "en" if b.get("lang") == "en" else "de", stimmen.describe(t),
+                                          v["npc_w"] if t["geschlecht"] == "weiblich" else v["npc"])
+    except ValueError:
+        print("dungeon: personen | probe | abgelehnt", flush=True)
+        raise HTTPException(400, "stimme")
+    except (RuntimeError, asyncio.TimeoutError) as e:
+        print(f"dungeon: stimmprobe | fehler | klang | {str(e)[:20] or type(e).__name__}", flush=True)
+        raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
+    print("dungeon: personen | probe", flush=True)
+    return dungeon._probe_out(wav, ersatz)
 
 
 @router.post("/api/admin/dungeon/katalog/{teil}/bild", dependencies=[Depends(auth)])
