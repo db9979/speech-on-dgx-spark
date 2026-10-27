@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Ein Alter und feste Merkmale je Person (V01.1.186, Review 27.10. Paket 10, Dominik 2026-10-27 „ok“): Ohne neuen Schalter (unter „NSC-Gedächtnis und Chronik“). 1. Alter: Das Panel schreibt jeder Person einmal ein Alter auf die Karte (rd[\"nsc\"][k][\"alter\"]: kind, jung, mittel, alt; dungeon_nsc.age): aus den Wörtern ihres Aussehens („ist schon recht alt“, ALTER_AUSSEHEN), sonst nach dem Namen; mit einem Erwachsenenberuf (alles außer KIND_BERUF) nie ein Kind. Stimme (dungeon_stimmen._of), Porträt und Fakten (nsc_szene[].alter) lesen dieses Feld. 2. Geschlecht: Die Wahrheit des Kapitels hat kein Feld geschlecht mehr; das Geschlecht kommt aus Titel oder Rolle, sonst aus dem Namen. Alter und Geschlecht, die das Modell für eine Person mit Karte oder der Wahrheit meldet, verwirft das Panel (Log dungeon: nsc | stimme | verworfen). 3. Feste Merkmale: Haar, Augen, Bart und Statur würfelt das Panel aus den Tabellen nsc_haar, nsc_augen, nsc_bart, nsc_statur auf die Karte (dungeon_nsc.looks, MERKMALE): graues oder weißes Haar und ein solcher Bart nur im Alter, ein Bart nur für einen Mann ab jung. Die Prüfung der Erzählung vergleicht sie (dungeon_erzaehler.looks_off, auch „blond"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "“ ist eine Farbe), der Tisch sieht sie unter den Personen, der Katalog speichert sie. 4. Kampf: Ein Kind kämpft nie (dungeon_personen.fighters). 5. Rolle und Beruf: Nennt die Rolle der Wahrheit einen anderen Beruf der Tabelle, setzt das Panel den Beruf danach (Log dungeon: nsc | beruf | nach rolle), nie bei einer Person aus dem Katalog. 6. Katalog: collect speichert Geschlecht, Alter und die Stimme mit beiden, adopt bringt sie mit, eine dort gewählte Stimme setzt beide; die Regelseite „Personen (NSC)“ zeigt Geschlecht, Alter und Merkmale. Live: Berufe nach der Rolle, Alter oder Geschlecht vom Modell verworfen. Selbsttest test_one_age_and_fixed_looks_per_person in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fortschritt der Geschichte (V01.1.185, Review 27.10. E12, Entscheidung 4, Dominik 2026-10-27 „ok“): Stillstand-Zähler, Wink in drei Stufen und Spuren zum Wendepunkt (Schritte 4 und 5 von „Spieler anleiten“) sind Kern der Geschichte und haben den eigenen Admin-Schalter *Funktionen → KI-Dungeon-Master → Fortschritt der Geschichte*, ab Werk an (features.DEFAULT_ON „chat.dungeon_fortschritt“, kein Modellaufruf mehr). dungeon_anleiten.kern gilt für progress, seen, clue_facts, facts und die Aufgaben WINK_TASK und SPUR_TASK; ist „Spieler anleiten“ aus, zählt die Stufe Normal (Wink nach zwei Zügen ohne Fortschritt). Form der Erzählung, Knöpfe „Das kannst du hier“, Fragen an stille Spieler, die Prüfung „vage“ und der Ausweg-Knopf bleiben unter „Spieler anleiten“ (ab Werk aus). Live: eigener Abschnitt „Fortschritt der Geschichte“ mit Stillstand-Winken je Stufe und gezeigten Spuren (KERN_ZAEHLER). Selbsttest test_story_progress_is_core_and_on_from_the_start in test_dungeon."
 },
 {
@@ -21334,6 +21350,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: one age and fixed looks per person (V01.1.186, review 27.10. package 10, Dominik 2026-10-27 „ok“): No new switch (under \"NPC memory and chronicle\"). 1. Age: the panel writes one age per person onto the card once (rd[\"nsc\"][k][\"alter\"]: kind, jung, mittel, alt; dungeon_nsc.age): from the words of its looks (\"is quite old\", ALTER_AUSSEHEN), else by the name; with an adult occupation (any but KIND_BERUF) never a child. Voice (dungeon_stimmen._of), portrait and facts (nsc_szene[].alter) read this field. 2. Gender: the chapter's truth no longer has a field geschlecht; the gender comes from a title or role, else from the name. Age and gender the model reports for a person with a card or of the truth are dropped (log dungeon: nsc | stimme | verworfen). 3. Fixed looks: the panel rolls hair, eyes, beard and build from the tables nsc_haar, nsc_augen, nsc_bart, nsc_statur onto the card (dungeon_nsc.looks, MERKMALE): grey or white hair and such a beard only when old, a beard only for a man from young on. The narration check compares them (dungeon_erzaehler.looks_off, \"blond\" is a colour too), the table sees them among the people, the catalog keeps them. 4. Fight: a child nev"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "er fights (dungeon_personen.fighters). 5. Role and occupation: when the truth's role names another occupation of the table, the panel sets it (log dungeon: nsc | beruf | nach rolle), never for a person from the catalog. 6. Catalog: collect keeps gender, age and the voice with both, adopt brings them, a voice chosen there sets both; the rules page \"People (NPC)\" shows gender, age and looks. Live: occupations by the role, age or gender from the model dropped. Self-test test_one_age_and_fixed_looks_per_person in test_dungeon."
 },
 {
 "lang": "en",

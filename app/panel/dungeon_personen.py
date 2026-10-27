@@ -48,7 +48,8 @@ _ID = re.compile(r"^[a-z0-9_]{1,40}$")
 _lock = threading.Lock()
 _day = DayCounter(neu=0, wieder=0, erkannt=0, gekaempft=0, geaendert=0, geloescht=0, geschichte=0, stimme=0)
 FELD = {"aussehen": ("Aussehen", "Looks"), "art": ("Art", "Manner"), "beruf": ("Beruf", "Occupation"),
-        "wunsch": ("Wunsch", "Wish"), "geheimnis": ("Geheimnis", "Secret")}
+        "wunsch": ("Wunsch", "Wish"), "geheimnis": ("Geheimnis", "Secret"), "haar": ("Haar", "Hair"), "augen": ("Augen", "Eyes"),
+        "bart": ("Bart", "Beard"), "statur": ("Statur", "Build")}
 
 
 def on(rd):
@@ -176,7 +177,8 @@ def adopt(r, rd, name):
     heroes = {p["held"]["name"].lower() for p in rd["plaetze"].values() if p.get("held")}
     haltung = {h: v for h, v in (x.get("haltung") or {}).items() if h in heroes and isinstance(v, int)}
     card = {"name": x["name"], "karte": {f: list(v) for f, v in (x.get("karte") or {}).items()}, "kanten": [], "haltung": haltung,
-            "gesehen": None, "wesen": dict(x.get("wesen") or {}) or nsc.traits(), "ziele": nsc.goals(r, rd, x.get("ziel", "")), "katalog": x["id"]}
+            "gesehen": None, "wesen": dict(x.get("wesen") or {}) or nsc.traits(), "ziele": nsc.goals(r, rd, x.get("ziel", "")), "katalog": x["id"],
+            **_fixed(x)}                                 # its one gender and age (Review 27.10. Paket 10)
     g = x.get("gesicht")
     if isinstance(g, dict) and g.get("n"):
         card["gesicht"] = {"n": g["n"], "st": "ok"}
@@ -199,6 +201,14 @@ def adopt(r, rd, name):
         wer = ", ".join(names[h] for h in sorted(haltung))
         nsc.note(rd, f"{x['name']} erkennt {wer} wieder.", f"{x['name']} recognises {wer}.")
     return card
+
+
+def _fixed(x):
+    """A catalog person's one gender and age: its own fields, else those of the voice the admin chose."""
+    st = x.get("stimme") if isinstance(x.get("stimme"), dict) else {}
+    g = x.get("geschlecht") or {v: k for k, v in stimmen.KARTE.items()}.get(st.get("geschlecht"))
+    a = x.get("alter") or st.get("alter")
+    return {**({"geschlecht": g} if g in stimmen.KARTE else {}), **({"alter": a} if a in nsc.ALTER_WORT else {})}
 
 
 def collect(dm, r, rd, now=None):
@@ -233,7 +243,8 @@ def collect(dm, r, rd, now=None):
             t = rollen.get(k) or {}
             d[pid] = {"id": pid, "name": x["name"][:NAME_LEN], "welt": welt, "karte": {f: list(v) for f, v in (x.get("karte") or {}).items()},
                       "wesen": dict(x.get("wesen") or {}), "rolle": t.get("rolle", "")[:TEIL_LEN], "ziel": t.get("ziel", "")[:TEIL_LEN],
-                      "stimme": dict(stimmen.get(k[:40]) or {}), "haltung": {h: v for h, v in (x.get("haltung") or {}).items() if isinstance(v, int)},
+                      **{f: x[f] for f in ("geschlecht", "alter") if x.get(f)},   # the card's, the catalog picture reads the same
+                      "stimme": _voice(rd, x, stimmen.get(k[:40])), "haltung": {h: v for h, v in (x.get("haltung") or {}).items() if isinstance(v, int)},
                       "treffen": 1, "made": now, "t": now, "stand": "runde", **({"gesicht": {"n": g["n"]}} if g else {})}
             names.add((welt, k))
             album.met(dm, rd, pid)
@@ -246,6 +257,15 @@ def collect(dm, r, rd, now=None):
         _day.bump("neu", n)
     print(f"dungeon: personen | gesammelt | {n} neu", flush=True)
     return n
+
+
+def _voice(rd, x, kept):
+    """The voice the catalog keeps: the traits heard, with the card's gender and age (one source with the portrait); {}
+    when it never spoke and the card has neither."""
+    t = dict(kept or {})
+    if t or x.get("geschlecht") or x.get("alter"):
+        t = dict(stimmen._of(rd, x["name"]), **{k: v for k, v in t.items() if k not in stimmen.PANEL})
+    return t
 
 
 def portraits():
@@ -316,8 +336,9 @@ def fighters(dm, r, rd, held, b):
     out = []
     for k in nsc.scene(rd):
         x = rd["nsc"][k]
-        if x.get("kampf") or any(isinstance(v, int) and v >= FREUND for h, v in (x.get("haltung") or {}).items() if h in heroes):
-            continue
+        if x.get("kampf") or x.get("alter") == "kind" \
+                or any(isinstance(v, int) and v >= FREUND for h, v in (x.get("haltung") or {}).items() if h in heroes):
+            continue                             # a child never fights (Review 27.10. Z5)
         g = template(dm, r, rd, x, b)
         if g:
             out.append(dict(g, name=[x["name"], x["name"]], person=k, oid=("p:" + k)[:40]))
@@ -354,8 +375,8 @@ def check(dm, r, e, have):
     karte = {}
     for f, v in (e.get("karte") if isinstance(e.get("karte"), dict) else {}).items():
         v = [v, v] if isinstance(v, str) else v
-        if f not in nsc.KARTE or not isinstance(v, list) or len(v) != 2:
-            err.append(f"karte.{f}: eines von {', '.join(nsc.KARTE)} mit [Deutsch, Englisch]")
+        if f not in nsc.FELDER or not isinstance(v, list) or len(v) != 2:
+            err.append(f"karte.{f}: eines von {', '.join(nsc.FELDER)} mit [Deutsch, Englisch]")
             continue
         v = [_clean(dm, t, FELD_LEN) for t in v]
         if all(v):
@@ -407,6 +428,10 @@ def change(was, i, eintrag=None, now=None):
                 raise LookupError("eintrag")
             try:
                 d[i]["stimme"] = stimmen.clean((eintrag or {}).get("stimme") if isinstance(eintrag, dict) else None)
+                if d[i]["stimme"]:                   # the chosen voice sets its one gender and age (Review 27.10. Paket 10)
+                    for f in ("geschlecht", "alter"):
+                        d[i].pop(f, None)
+                    d[i].update(_fixed(d[i]))
             except ValueError:
                 print("dungeon: personen | abgelehnt | stimme", flush=True)
                 raise ValueError(["stimme"])
@@ -424,6 +449,11 @@ def change(was, i, eintrag=None, now=None):
     print(f"dungeon: personen | {was}", flush=True)
 
 
+def _sex_name(g, li):
+    import dungeon as dm
+    return dm.GESCHLECHT[g][0][li] if g in dm.GESCHLECHT else ""
+
+
 def view(lang="de"):
     """{"teil", "zeilen", "eintraege"} for the rules page: every person with its card (wish and secret too: the admin),
     traits, role, goal, whom it knows and how often it was met."""
@@ -436,7 +466,9 @@ def view(lang="de"):
     have, neu = dungeon_dingbild.files(), set(dungeon_dingbild.candidates())
     for i, x in sorted(load().items(), key=lambda kv: kv[1]["name"].lower()):
         k = x.get("karte") or {}
-        werte = [[FELD[f][li], k[f][li]] for f in nsc.KARTE if f in k]
+        werte = [[FELD[f][li], k[f][li]] for f in nsc.FELDER if f in k]
+        werte += [[n, w] for n, w in ((("Geschlecht", "Gender")[li], _sex_name(x.get("geschlecht"), li)),
+                                      (("Alter", "Age")[li], nsc.ALTER_WORT.get(x.get("alter"), ("", ""))[li])) if w]
         wesen = nsc.trait_words(x, li)
         if wesen:
             werte.append([("Wesen", "Traits")[li], ", ".join(wesen)])

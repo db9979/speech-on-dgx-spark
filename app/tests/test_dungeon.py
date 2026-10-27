@@ -9310,7 +9310,7 @@ class Fight(Turns):
         r = dungeon.rules()
         self.assertEqual(set(rd["nsc"]), {"oskar", "mira"})
         for x in rd["nsc"].values():
-            self.assertTrue(set(x["karte"]) <= set(nsc.KARTE) and "aussehen" in x["karte"] and "geheimnis" in x["karte"])
+            self.assertTrue(set(x["karte"]) <= set(nsc.FELDER) and "aussehen" in x["karte"] and "geheimnis" in x["karte"])
             z = next(z for z in nsc._beruf_rows(r, rd) if z["t"][1] == x["karte"]["beruf"][1])   # a row, in the person's form
             self.assertIn(x["karte"]["beruf"][0], {z["t"][0], z.get("m"), z.get("w")})
         self.assertEqual(rd["nsc"]["oskar"]["haltung"], {"arvid": 1})
@@ -9747,8 +9747,8 @@ class Fight(Turns):
 
     def test_a_person_has_one_gender_and_fitting_occupation(self):
         """Dominik 2026-10-27 („silas - männliches bild - mystikerin“, „schattenwächter händler? stimmt das?“): a person's
-        gender is written once when its card is made (the truth's geschlecht, else a title's, else the name's;
-        dungeon_stimmen.fix) and portrait, voice, occupation word (the table's form m or w) and the narration's pronouns
+        gender is written once when its card is made (a title's or role's, else the name's, never the model's: Review
+        27.10. Paket 10; dungeon_stimmen.fix) and portrait, voice, occupation word (the table's form m or w) and the narration's pronouns
         follow it; a name or role that is a title names the occupation; cards made before keep their portrait's gender."""
         import copy
         import dungeon_nsc as nsc
@@ -9771,7 +9771,7 @@ class Fight(Turns):
         sw, mara, edda = rd["nsc"]["schattenwächter"], rd["nsc"]["mara"], rd["nsc"]["edda"]
         self.assertEqual(sw["karte"]["beruf"][1], "guard")                       # the title names the occupation
         self.assertEqual(dungeon_stimmen.sex(rd, "Schattenwächter"), "maennlich")
-        self.assertEqual((dungeon_stimmen.sex(rd, "Mara"), mara["karte"]["beruf"]), ("maennlich", ["Mystiker", "mystic"]))   # the truth's gender wins
+        self.assertEqual((dungeon_stimmen.sex(rd, "Mara"), mara["karte"]["beruf"]), ("weiblich", ["Mystikerin", "mystic"]))   # the role's, never the model's
         self.assertEqual((dungeon_stimmen.sex(rd, "Edda"), edda["karte"]["beruf"]), ("weiblich", ["Mystikerin", "mystic"]))
         self.assertEqual(nsc.beruf_of(r, rd, "Schattenwächterin"), (["Wache", "guard"], "weiblich"))
         self.assertEqual(nsc.beruf_of(r, rd, "ein stiller Mann"), (None, ""))
@@ -9788,12 +9788,86 @@ class Fight(Turns):
         rd["nsc"]["silas"]["geschlecht"] = "divers"                              # the heroes' word on the card
         self.assertEqual(dungeon_stimmen._of(rd, "Silas")["geschlecht"], "offen")   # the voice's word for it
         self.assertTrue(dungeon_gesicht.who(rd, rd["nsc"]["silas"]))             # the portrait's words know it
-        self.assertIn(nsc._sex_word(rd, "Mara", 0), ("männlich",))
-        # the truth keeps a valid gender, drops another
+        self.assertEqual(nsc._sex_word(rd, "Mara", 0), "weiblich")
+        # the truth never carries a gender (the panel's, Review 27.10. Paket 10)
         w = dungeon.erz.check_truth(dungeon, r, rd, {"personen": [{"name": "Hella", "rolle": "Küsterin", "geschlecht": "weiblich"},
                                                                    {"name": "Brann", "rolle": "Fischer", "geschlecht": "x"}]})
-        self.assertEqual([p.get("geschlecht") for p in w["personen"]], ["weiblich", None])
+        self.assertEqual([p.get("geschlecht") for p in w["personen"]], [None, None])
+        self.assertNotIn("geschlecht", json.dumps(dungeon.erz.SCHEMA_WAHRHEIT))
         self.assertIn("kein Titel", dungeon.erz.AUFGABE_WAHRHEIT["de"])
+
+    def test_one_age_and_fixed_looks_per_person(self):
+        """Review 27.10. Paket 10 (Z1, Z5, Z6, Z9, Z10; Dominik „ok“): the panel writes one age per person (its looks'
+        words, else its name, never a child with an adult's occupation) and fixed looks (hair, eyes, beard, build: grey
+        or white only when old, a beard only for a man from young on); the model's age and gender of a person with a
+        card are dropped; facts, voice and the catalog read the card; the look check compares the fixed looks (blond is
+        a colour); a role naming another occupation sets it."""
+        import dungeon_nsc as nsc
+        import dungeon_personen as pers
+        import dungeon_stimmen
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        helpers.set_config(dungeon_nsc=True)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        rd["nsc"], rd["npc_stimmen"] = {}, {}
+        rd["wahrheit"] = {"personen": [{"name": "Edda", "rolle": "Ritterin"}, {"name": "Bruno", "rolle": "Schmied"}],
+                          "gruppen": [], "geheimnisse": []}
+        with contextlib.redirect_stdout(io.StringIO()) as out:              # the model's age and gender of a person of the truth
+            dungeon_stimmen.learn(rd, [{"name": "Edda", "stimme": {"alter": "kind", "geschlecht": "maennlich", "klang": "rau"}},
+                                       {"name": "Fremder", "stimme": {"alter": "kind", "geschlecht": "maennlich", "klang": "rau"}}])
+        self.assertIn("dungeon: nsc | stimme | verworfen", out.getvalue())
+        self.assertEqual(rd["npc_stimmen"]["edda"]["alter"], dungeon_stimmen._traits("edda")["alter"])
+        self.assertEqual(rd["npc_stimmen"]["fremder"]["alter"], "kind")      # no card: the model's voice stays
+        real = dungeon_stimmen._traits
+        with mock.patch.object(dungeon_stimmen, "_traits", lambda n: dict(real(n), alter="kind")):   # every name a child's
+            nsc.sync(r, rd, random.Random(5))
+        edda, bruno = rd["nsc"]["edda"], rd["nsc"]["bruno"]
+        self.assertEqual((edda["karte"]["beruf"][1], edda["alter"]), ("knight", "jung"))   # a knight is never a child
+        self.assertEqual(bruno["alter"], "jung")
+        self.assertEqual(dungeon_stimmen._of(rd, "Edda")["alter"], "jung")                 # the voice reads the card
+        self.assertEqual((edda["geschlecht"], bruno["geschlecht"]), ("weiblich", "maennlich"))
+        self.assertEqual(set(nsc.MERKMALE) & set(edda["karte"]), {"haar", "augen", "statur"})   # no beard for a woman
+        self.assertIn("bart", bruno["karte"])
+        # the looks' words set the age, grey and white only when old, a beard only for a man from young on
+        old = {"name": "Greta", "karte": {"aussehen": ["ist schon recht alt", "is quite old"], "beruf": ["Bäuerin", "farmer"]}}
+        self.assertEqual(nsc.age(rd, old), "alt")
+        for i in range(40):
+            x = {"name": f"Person {i}", "karte": {}, "geschlecht": ("weiblich", "maennlich")[i % 2], "alter": ("jung", "alt")[i // 20]}
+            nsc.looks(r, rd, x, random.Random(i))
+            farbe = {z["t"][0]: z.get("farbe") for t in ("nsc_haar", "nsc_bart") for z in dungeon.tabellen.table(r, t)["zeilen"]}
+            if x["alter"] != "alt":
+                self.assertFalse({farbe.get(x["karte"].get(f, [""])[0]) for f in ("haar", "bart")} & set(nsc.ALT_FARBE), x)
+            self.assertEqual("bart" in x["karte"], x["geschlecht"] == "maennlich", x)
+        kind = {"name": "Kind", "karte": {}, "geschlecht": "maennlich", "alter": "kind"}
+        nsc.looks(r, rd, kind, random.Random(1))
+        self.assertNotIn("bart", kind["karte"])
+        # facts and the table's view name age and looks
+        edda["gesehen"] = rd["zug"]
+        rd["log"].append({"art": "dm", "text": "Edda und Bruno stehen am Tor.", "npc": [], "n": rd["zug"]})
+        f = {p["name"]: p for p in nsc.facts(r, rd, 0)["nsc_szene"]}
+        self.assertEqual(f["Edda"]["alter"], "jung")
+        self.assertEqual(f["Edda"]["haar"], edda["karte"]["haar"][0])
+        self.assertIn("haar", nsc.view(rd, False, 0)[0]["leute"][0])
+        # the look check compares the fixed looks; blond is a colour
+        edda["karte"]["haar"] = ["kurzes rotes Haar", "short red hair"]
+        self.assertEqual(dungeon.erz.looks_off(rd, "Edda mit blonden Haaren tritt vor."), ["Edda"])
+        self.assertEqual(dungeon.erz.looks_off(rd, "Edda streicht das rote Haar zurück."), [])
+        edda["karte"]["haar"] = ["glattes blondes Haar", "straight blond hair"]
+        self.assertEqual(dungeon.erz.looks_off(rd, "Edda mit roten Haaren tritt vor."), ["Edda"])
+        # a role naming another occupation sets it
+        rd["wahrheit"]["personen"][1]["rolle"] = "Wirt der Schenke"
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            nsc.sync(r, rd, random.Random(5))
+        self.assertEqual(bruno["karte"]["beruf"][1], "innkeeper")
+        self.assertIn("dungeon: nsc | beruf | nach rolle", out.getvalue())
+        t = nsc.for_live([rd])
+        self.assertTrue(t["beruf_rolle"] >= 1 and t["stimme_verworfen"] >= 1, t)
+        # the catalog keeps gender, age and the voice with them
+        helpers.set_config(dungeon_personen=True)
+        voice = pers._voice(rd, edda, {"alter": "kind", "geschlecht": "maennlich", "klang": "rau"})
+        self.assertEqual((voice["alter"], voice["klang"]), ("jung", "rau"))
+        self.assertEqual(pers._fixed({"stimme": {"geschlecht": "offen", "alter": "alt"}}), {"geschlecht": "divers", "alter": "alt"})   # the admin's voice
+        self.assertEqual(pers._fixed({"geschlecht": "weiblich", "stimme": {"geschlecht": "maennlich"}}), {"geschlecht": "weiblich"})
 
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
@@ -9880,8 +9954,10 @@ class Fight(Turns):
         (pid, x), = pers.load().items()
         self.assertEqual((x["name"], x["welt"], x["rolle"], x["ziel"], x["stand"], x["treffen"]),
                          ("Oskar", rd["welt"], "Wirt", "die Schenke retten", "runde", 1))
-        self.assertEqual((x["karte"], x["wesen"], x["haltung"], x["stimme"]),
-                         (rd["nsc"]["oskar"]["karte"], rd["nsc"]["oskar"]["wesen"], {"arvid": 2}, {"stimme": "tief"}))
+        o = rd["nsc"]["oskar"]
+        self.assertEqual((x["karte"], x["wesen"], x["haltung"], x["stimme"]["stimme"], x["geschlecht"], x["alter"]),
+                         (o["karte"], o["wesen"], {"arvid": 2}, "tief", o["geschlecht"], o["alter"]))
+        self.assertEqual((x["stimme"]["geschlecht"], x["stimme"]["alter"]), (dungeon.stimmen.KARTE[o["geschlecht"]], o["alter"]))   # one source (Paket 10)
         self.assertEqual(pers.portraits(), {"oskar.webp"})                               # its face stays (dungeon_gesicht.keep)
         # another round of the same world: Oskar on offer, only as data
         nxt = dict(copy.deepcopy(rd), nsc={}, chronik=[], npc_stimmen={}, made=rd.get("made", 0) + 1,
@@ -9900,7 +9976,7 @@ class Fight(Turns):
         self.assertEqual((o["karte"], o["wesen"], o["haltung"], o["katalog"], o["gesehen"]),
                          (x["karte"], x["wesen"], {"arvid": 2}, pid, None))              # the same person, knows Arvid again
         self.assertEqual(o["gesicht"], {"n": "oskar.webp", "st": "ok"})
-        self.assertEqual(nxt["npc_stimmen"]["oskar"], {"stimme": "tief"})
+        self.assertEqual(nxt["npc_stimmen"]["oskar"], x["stimme"])
         self.assertEqual(nxt["wahrheit"]["personen"][0]["rolle"], "Wirt")
         self.assertEqual(nxt["chronik"][-1]["t"][0], "Oskar erkennt Arvid wieder.")
         self.assertNotIn("katalog", nxt["nsc"]["gundel"])                                # any other name: a new person
@@ -10052,6 +10128,9 @@ class Fight(Turns):
         self.assertEqual(rd["chronik"][-1]["t"][0], "Oskar wurde im Kampf besiegt.")
         left = {g["oid"] for g in kampf.offer(dungeon, r, rd, held) if g.get("person")}
         self.assertEqual(left, {"p:ilse"})                                                    # beaten: never again this round
+        rd["nsc"]["ilse"]["alter"] = "kind"
+        self.assertFalse(any(g.get("person") for g in kampf.offer(dungeon, r, rd, held)))   # a child never fights (Review 27.10. Z5)
+        rd["nsc"]["ilse"]["alter"] = "jung"
         rd["nsc"]["ilse"]["haltung"] = {held[0]["name"].lower(): pers.FREUND}
         self.assertFalse(any(g.get("person") for g in kampf.offer(dungeon, r, rd, held)))   # a friend of a hero: never
         self.assertGreaterEqual(pers.for_live()["gekaempft"], 1)

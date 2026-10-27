@@ -143,16 +143,27 @@ def _traits(name):
     return {k: list(n[k])[h[i] % len(n[k])] for i, k in enumerate(MERKMALE)}
 
 
+PANEL = ("alter", "geschlecht")   # traits only the panel sets for a person with a card (Review 27.10. Paket 10)
+
+
 def learn(rd, npcs):
-    """The traits the model gave for NPCs that speak for the first time (only values of the fixed lists)."""
+    """The traits the model gave for NPCs that speak for the first time (only values of the fixed lists); for a person
+    with a card or of the truth (it gets one, dungeon_nsc.sync) never age and gender (PANEL: the card's, else the name's)."""
+    import dungeon_nsc
     n, keep = data()["npc"], rd.setdefault("npc_stimmen", {})
+    karte = set(rd.get("nsc") or {}) | {str(p.get("name") or "").lower() for p in (rd.get("wahrheit") or {}).get("personen") or []} \
+        if dungeon_nsc.on(rd) else set()
     for x in npcs or []:
         name = str(x.get("name") or "").strip().lower()[:40]
         if not name or name in keep or len(keep) >= NPC_MAX:
             continue
         s = x.get("stimme") if isinstance(x.get("stimme"), dict) else {}
         base = _traits(name)
-        keep[name] = {k: s[k] if s.get(k) in n[k] else base[k] for k in MERKMALE}
+        panel = PANEL if name in karte else ()
+        if any(s.get(k) in n[k] and s[k] != base[k] for k in panel):
+            dungeon_nsc.zaehle("stimme_verworfen")
+            print("dungeon: nsc | stimme | verworfen", flush=True)
+        keep[name] = {k: s[k] if s.get(k) in n[k] and k not in panel else base[k] for k in MERKMALE}
 
 
 KARTE = {"weiblich": "weiblich", "maennlich": "maennlich", "divers": "offen"}   # the card's word (the heroes') → the voice's
@@ -175,7 +186,10 @@ def _of(rd, name, sex=""):
     of one nobody named (the pronoun after its quote, vortrag.pronoun)."""
     k = str(name or "").strip().lower()
     t = of_name(name, (rd.get("npc_stimmen") or {}).get(k[:40]))  # a trait added later: by the name
-    sex = sex or KARTE.get(((rd.get("nsc") or {}).get(k) or {}).get("geschlecht"), "")
+    c = (rd.get("nsc") or {}).get(k) or {}
+    if c.get("alter") in data()["npc"]["alter"]:                  # the card's age (dungeon_nsc.age) wins
+        t["alter"] = c["alter"]
+    sex = sex or KARTE.get(c.get("geschlecht"), "")
     return dict(t, geschlecht=sex) if sex else t
 
 

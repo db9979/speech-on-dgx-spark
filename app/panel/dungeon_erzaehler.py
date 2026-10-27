@@ -120,7 +120,7 @@ _MERKMAL = {"stoff": {"holz": ("holz", "hölzern", "morsch", "eiche", "eichen", 
                       "kristall": ("kristall", "kristallen", "crystal")},
             "farbe": {"rot": ("rot", "red"), "blau": ("blau", "blue"), "gruen": ("grün", "green"), "gelb": ("gelb", "yellow"),
                       "schwarz": ("schwarz", "black"), "weiss": ("weiß", "weiss", "white"), "grau": ("grau", "grey", "gray"),
-                      "braun": ("braun", "brown")}}
+                      "braun": ("braun", "brown"), "blond": ("blond", "blonde", "strohblond", "flachsblond")}}
 _FORM = {w: (k, v) for k, vs in _MERKMAL.items() for v, ws in vs.items() for w in ws}
 _ENDUNG = re.compile(r"(e|es|er|en|em|n|s)?$")
 _WORT = re.compile(r"[a-zäöüß]+")
@@ -144,22 +144,20 @@ def _strs(n, k):
     return {"type": "string", "maxLength": n + 40} if k is None else {"type": "array", "maxItems": k, "items": {"type": "string", "maxLength": n + 40}}
 
 
-GESCHLECHT = ("maennlich", "weiblich", "offen")   # a person's gender in the truth, fixed from then on (dungeon_stimmen.fix)
 SCHEMA_WAHRHEIT = {"type": "object", "additionalProperties": False, "required": ["personen"], "properties": {
     "personen": {"type": "array", "maxItems": PERSONEN[1], "items": {"type": "object", "additionalProperties": False,
                  "required": ["name", "rolle"], "properties": {"name": _strs(NAME_LEN, None), "rolle": _strs(TEIL_LEN, None),
-                                                               "ziel": _strs(TEIL_LEN, None), "sprache": _strs(TEIL_LEN, None),
-                                                               "geschlecht": {"type": "string", "enum": list(GESCHLECHT)}}}},
+                                                               "ziel": _strs(TEIL_LEN, None), "sprache": _strs(TEIL_LEN, None)}}},
     "gruppen": {"type": "array", "maxItems": GRUPPEN_MAX, "items": {"type": "object", "additionalProperties": False,
                 "required": ["name"], "properties": {"name": _strs(NAME_LEN, None), "will": _strs(TEIL_LEN, None)}}},
     "geheimnisse": _strs(GEHEIM_LEN, GEHEIM_MAX)}}
 AUFGABE_WAHRHEIT = {
     "de": f"Aufgabe: Lege die feste Wahrheit dieses Kapitels fest, bevor es beginnt: {PERSONEN[0]} bis {PERSONEN[1]} "
-          f"Personen der Welt (name: ein Eigenname, kein Titel; geschlecht; rolle, ziel, sprache: wie sie redet), bis zu {GRUPPEN_MAX} Gruppen mit dem, was "
+          f"Personen der Welt (name: ein Eigenname, kein Titel; rolle, ziel, sprache: wie sie redet), bis zu {GRUPPEN_MAX} Gruppen mit dem, was "
           f"sie wollen, und bis zu {GEHEIM_MAX} Geheimnisse, die die Gruppe aufdecken kann. Passend zu Welt, Ort, "
           "Einstieg und Geschichte; keine Figur der Gruppe. Kurz, ohne Werte.",
     "en": f"Task: set the fixed truth of this chapter before it begins: {PERSONEN[0]} to {PERSONEN[1]} people of the "
-          f"world (name: a proper name, no title; geschlecht: gender; rolle: role, ziel: goal, sprache: how they talk), up to {GRUPPEN_MAX} groups with what they "
+          f"world (name: a proper name, no title; rolle: role, ziel: goal, sprache: how they talk), up to {GRUPPEN_MAX} groups with what they "
           f"want, and up to {GEHEIM_MAX} secrets the group can uncover. Fitting world, place, opening and story; no "
           "character of the group. Short, no values."}
 WAHRHEIT_LABEL = ("Feste Wahrheit dieses Kapitels (halte dich daran, Geheimnisse nur aufdecken, wenn die Gruppe sie "
@@ -185,8 +183,7 @@ def check_truth(dm, r, rd, obj):
         if len(name) < 2 or name.lower() in seen or dungeon_nsc.no_person(r, dict(rd, wahrheit=gruppen_vorab), name, "wahrheit"):
             continue
         seen.add(name.lower())
-        personen.append({"name": name, **{k: _part(dm, r, rd, p.get(k), TEIL_LEN) for k in ("rolle", "ziel", "sprache")},
-                         **({"geschlecht": p["geschlecht"]} if p.get("geschlecht") in GESCHLECHT else {})})
+        personen.append({"name": name, **{k: _part(dm, r, rd, p.get(k), TEIL_LEN) for k in ("rolle", "ziel", "sprache")}})
     if not personen:
         return None
     gruppen = []
@@ -1116,11 +1113,13 @@ def _koerper(text):
 
 def looks_off(rd, text):
     """People the narration describes against their card (Regel 5, the NSC memory of dungeon_nsc): a sentence with the
-    person's name and a colour of hair, eyes or beard that differs from the card's „aussehen“."""
+    person's name and a colour of hair, eyes or beard that differs from the card's „aussehen“ or its fixed looks
+    (dungeon_nsc.MERKMALE, Review 27.10. Z9)."""
+    import dungeon_nsc
     out = []
     for x in (rd.get("nsc") or {}).values():
-        a = (x.get("karte") or {}).get("aussehen")
-        kept = _koerper(" ".join(a) if isinstance(a, list) else str(a or ""))
+        k = x.get("karte") or {}
+        kept = _koerper(" ".join(" ".join(v) if isinstance(v, list) else str(v or "") for f, v in k.items() if f in ("aussehen",) + dungeon_nsc.MERKMALE))
         if not kept:
             continue
         for satz in _saetze(text):

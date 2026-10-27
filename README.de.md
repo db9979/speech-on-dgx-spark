@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.186** KI-Dungeon-Master: jede Person hat ein festes Alter und feste Haare, Augen, Bart und Statur vom Panel, Alter und Geschlecht nie vom Modell, kein Kind mit Erwachsenenberuf und nie als Gegner, die Rolle setzt den Beruf (Review 27.10. Paket 10)
 - **V01.1.185** KI-Dungeon-Master: der Fortschritt der Geschichte ist Kern und ab Werk an: Stillstand-Wink, Ereignis, Tipp und Spuren zum Wendepunkt auch ohne „Spieler anleiten“, mit eigenem Admin-Schalter (Review 27.10. E12)
 - **V01.1.184** KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
 - **V01.1.183** KI-Dungeon-Master: kleine Gesten erscheinen am Tisch, nach 2 Minuten Stille, höchstens zweimal je Zug, nie im Kampf oder im Auto
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.179** KI-Dungeon-Master: bleiben die anderen, schlagen Rückfrage und Spieler-Hilfe das Gehen nicht mehr zuerst vor (Review 27.10. Paket 5)
 - **V01.1.178** KI-Dungeon-Master: die Prüfung fängt „Er“ für eine Heldin, Orte, die es auf der Karte nicht gibt, verratene Geheimnisse, Spuren nach misslungener Suche und übergangene Aktionen (Review 27.10. Paket 7, Teil 3)
 - **V01.1.177** KI-Dungeon-Master: die Prüfung fängt eine gezogene Waffe ohne Besitzwort, einen Fund ohne Beute, Gold in Worten, Gegner ohne Begegnung und Zeitsprünge, Ausrüstung kommt nie ins Ding-Gedächtnis (Review 27.10. Paket 7, Teil 2)
-- **V01.1.176** KI-Dungeon-Master: die Prüfung der Erzählung meldet alle Fehler, die Reparatur streicht zuerst und prüft danach Namen und Ort erneut, nach misslungener Probe verfällt die Beute (Review 27.10. Paket 7, Teil 1)
 
 
 

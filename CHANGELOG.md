@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.186** · 2026-10-27 · KI-Dungeon-Master: jede Person hat ein festes Alter und feste Haare, Augen, Bart und Statur vom Panel, Alter und Geschlecht nie vom Modell, kein Kind mit Erwachsenenberuf und nie als Gegner, die Rolle setzt den Beruf (Review 27.10. Paket 10)
 - **V01.1.185** · 2026-10-27 · KI-Dungeon-Master: der Fortschritt der Geschichte ist Kern und ab Werk an: Stillstand-Wink, Ereignis, Tipp und Spuren zum Wendepunkt auch ohne „Spieler anleiten“, mit eigenem Admin-Schalter (Review 27.10. E12)
 - **V01.1.184** · 2026-10-27 · KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
 - **V01.1.183** · 2026-10-27 · KI-Dungeon-Master: Auslöser der kleinen Gesten (dungeon_warten.geste_faellig/geste aus maybe_close): 2 Minuten Stille, höchstens 2 je Zug, nie im Kampf, in der Pause oder im Auto (LlamaTale 7)

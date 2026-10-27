@@ -4139,6 +4139,13 @@
 "titel": "Dungeon-Master: Fortschritt der Geschichte",
 "text": "Funktionen → KI-Dungeon-Master: „Spieler anleiten“ aus, „Fortschritt der Geschichte“ an (ab Werk). Eine Runde spielen und drei Züge lang nur „Ich warte“ schicken: im dritten Zug zeigt die Erzählung etwas Greifbares, im vierten passiert etwas (ein Bote, ein Geräusch), im fünften steht „Tipp: Ihr könnt …“ am Ende. Zustand → Live zeigt „Fortschritt der Geschichte“ mit den Winken.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P616",
+"v": 1186,
+"titel": "Dungeon-Master: Alter und feste Merkmale",
+"text": "„NSC-Gedächtnis und Chronik“ an. Eine neue Runde spielen und die Personen ansehen: jede hat Haar, Augen und Statur, Männer ab jung oft einen Bart, graue oder weiße Haare nur Alte. Eine Ritterin, Wirtin oder ein Schmied ist nie ein Kind und das Porträt passt zu Alter und Geschlecht der Karte. Nennt die Erzählung eine andere Haarfarbe als die Karte, wird sie neu erzählt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

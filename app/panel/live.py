@@ -2057,6 +2057,8 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['nsc_karten']} Figuren mit Karte" if dgn.get("nsc_karten") else "")
                         + (f" · heute {dgn.get('keine_person', 0)} Namen als Person abgelehnt, {dgn.get('haendler_karte', 0)} Händler mit Karte"
                            if dgn.get("keine_person") or dgn.get("haendler_karte") else "")
+                        + (f" · heute {dgn.get('beruf_rolle', 0)} Berufe nach der Rolle, {dgn.get('stimme_verworfen', 0)}-mal Alter oder Geschlecht vom Modell verworfen"
+                           if dgn.get("beruf_rolle") or dgn.get("stimme_verworfen") else "")
                         + (f" · Gesichter {dgn['gesicht']['da']}, heute {dgn['gesicht']['gemalt']} gemalt, {dgn['gesicht']['weg']} nicht, "
                            f"{dgn['gesicht']['vorlagen']} Szenen mit Vorlage" + (f" · malt {dgn['gesicht']['malt']} Gesichter" if dgn['gesicht']['malt'] else "")
                            if dgn.get("gesicht", {}).get("on") else "")

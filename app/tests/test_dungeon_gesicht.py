@@ -156,7 +156,9 @@ class Base(unittest.TestCase):
             if zug is not None:
                 rd["zug"] = zug
             w = rd.setdefault("wahrheit", {"personen": []})
-            w.setdefault("personen", []).append({"name": name, "rolle": "", "ziel": "", "sprache": "", "geschlecht": "weiblich"})   # written on the card (V01.1.162)
+            w.setdefault("personen", []).append({"name": name, "rolle": "", "ziel": "", "sprache": ""})
+            rd.setdefault("nsc", {})[name.lower()] = {"name": name, "karte": nsc.card(r, rd, random.Random(7)), "kanten": [], "haltung": {},
+                                                      "gesehen": None, "geschlecht": "weiblich", "alter": "alt"}   # the panel's card (Paket 10)
             nsc.sync(r, rd, random.Random(7))
             rd["nsc"][name.lower()]["gesehen"] = rd.get("zug", 0)
             if spoke:

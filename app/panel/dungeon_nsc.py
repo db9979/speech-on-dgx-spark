@@ -15,7 +15,14 @@ and, only as data, into the next narration. Only while „NSC-Gedächtnis und Ch
 "dungeonnsc"). The fields:
 
     rd["nsc"]     {name.lower(): {"name", "karte": {feld: [de, en]}, "kanten": [{"art", "ziel"}], "haltung": {held: −3..3},
-                   "gesehen": turn | None, "wesen": {zug: −3..3}, "ziele": [{"ebene", "t": [de, en], "stand", "voll"}]}}
+                   "gesehen": turn | None, "wesen": {zug: −3..3}, "ziele": [{"ebene", "t": [de, en], "stand", "voll"}],
+                   "geschlecht": weiblich|maennlich|divers, "alter": kind|jung|mittel|alt}}
+
+One gender and one age per person (Review 27.10. Paket 10, Z1, Z5, Z9): the panel writes both onto the card once (gender:
+a title or role word, else the name; dungeon_stimmen.fix; age: the looks' words, else the name, never a child with an
+adult's occupation; age), the model's statements are dropped. Occupation word, voice, portrait, facts and catalog read
+only these fields. Then the panel rolls the fixed looks (MERKMALE: hair, eyes, beard, build) by the age and gender
+(grey or white only when old, a beard only for a man from young on), which the narrator's look check compares.
     rd["ziel_neu"] [{"name", "ebene", "t": [de, en]}]   the goals reached after the last told turn (for the next narration)
     rd["chronik"] [{"n": turn, "k": chapter, "t": [de, en]}]
 """
@@ -26,7 +33,14 @@ import dungeon_tabellen as tabellen
 from common import DayCounter
 
 KARTE = ("aussehen", "art", "beruf", "wunsch", "geheimnis")      # tables nsc_<feld>
-OFFEN = ("aussehen", "art", "beruf")                            # what the table sees once met; wish and secret: host and model
+MERKMALE = ("haar", "augen", "bart", "statur")                  # fixed looks, tables nsc_<feld>, rolled after gender and age
+FELDER = KARTE + MERKMALE                                       # every field of a card
+OFFEN = ("aussehen", "art", "beruf") + MERKMALE                 # what the table sees once met; wish and secret: host and model
+ALTER_WORT = {"kind": ("Kind", "child"), "jung": ("jung", "young"), "mittel": ("mittleren Alters", "middle-aged"), "alt": ("alt", "old")}
+ALTER_AUSSEHEN = (("alt", ("recht alt", "greis", "betagt")), ("jung", ("sehr jung",)))   # words of the looks (German) that set the age
+KIND_BERUF = ("cabin boy",)                                     # occupations (English column) a child may have; any other: never a child
+ALT_FARBE = ("grau", "weiss")                                   # hair and beard colours only for the old
+BART_AB = ("jung", "mittel", "alt")
 KANTEN = {"schuldet": ("schuldet", "owes"), "fuerchtet": ("fürchtet", "fears"), "mag": ("mag", "likes"),
           "weiss": ("weiß von", "knows about")}
 KANTEN_MAX = 4             # relations kept per person (the oldest goes)
@@ -116,7 +130,13 @@ def ist_person(r, rd, name):
     return ""
 
 
-_personen = DayCounter(keine_person=0, haendler_karte=0)   # names refused as people, merchants given a card (Live)
+_personen = DayCounter(keine_person=0, haendler_karte=0, beruf_rolle=0, stimme_verworfen=0)   # names refused as people, merchants
+# given a card, occupations set by a role, the model's age or gender dropped (Live)
+
+
+def zaehle(k):
+    """One more of the day's count k (dungeon_stimmen.learn: stimme_verworfen)."""
+    _personen.bump(k)
 
 
 def no_person(r, rd, name, wo):
@@ -164,14 +184,49 @@ def beruf_wort(r, rd, b, sex):
     return (z.get("w") if sex == "weiblich" else z.get("m") if sex == "maennlich" else None) or b[0]
 
 
-def gender(r, rd, x):
-    """The person's one gender (dungeon_stimmen.fix, written once on the card), its occupation word made to fit."""
+def gender(r, rd, x, rng=None):
+    """The person's one gender (dungeon_stimmen.fix) and age (age), written once on the card, its occupation word made
+    to fit, and its fixed looks (looks)."""
     import dungeon_stimmen
     sex = dungeon_stimmen.fix(rd, x)
     b = (x.get("karte") or {}).get("beruf")
     if isinstance(b, list) and len(b) == 2:
         x["karte"]["beruf"] = [beruf_wort(r, rd, b, sex), b[1]]
+    age(rd, x)
+    looks(r, rd, x, rng)
     return sex
+
+
+def age(rd, x):
+    """The person's one age (x["alter"], kind, jung, mittel, alt), written once: a word of its looks („ist schon recht
+    alt“, ALTER_AUSSEHEN), else the one its name gives (dungeon_stimmen._traits, never the model's); a person with an
+    adult's occupation (any but KIND_BERUF) is never a child. Returns it."""
+    import dungeon_stimmen
+    if x.get("alter") in ALTER_WORT:
+        return x["alter"]
+    k = x.get("karte") or {}
+    low = str((k.get("aussehen") or [""])[0]).lower()
+    a = next((a for a, ws in ALTER_AUSSEHEN if any(w in low for w in ws)), "") or dungeon_stimmen._traits(x["name"])["alter"]
+    if a == "kind" and str((k.get("beruf") or ["", ""])[1]).lower() not in KIND_BERUF:
+        a = "jung"
+    x["alter"] = a
+    return a
+
+
+def looks(r, rd, x, rng=None):
+    """The fixed looks rolled once onto the card (MERKMALE, tables nsc_haar, nsc_augen, nsc_bart, nsc_statur): grey or
+    white hair and beard (ALT_FARBE) only when old, a beard only for a man from young on (BART_AB)."""
+    k = x.setdefault("karte", {})
+    if any(f in k for f in MERKMALE):
+        return
+    t = lambda f: [z for z in (tabellen.table(r, "nsc_" + f) or {}).get("zeilen") or []   # noqa: E731
+                   if (not z.get("welten") or rd.get("welt") in z["welten"]) and (x.get("alter") == "alt" or z.get("farbe") not in ALT_FARBE)]
+    for f in MERKMALE:
+        if f == "bart" and not (x.get("geschlecht") == "maennlich" and x.get("alter") in BART_AB):
+            continue
+        zs = t(f)
+        if zs:
+            k[f] = list((rng or random).choice(zs)["t"])
 
 
 def on(rd):
@@ -273,6 +328,7 @@ def merchant(r, rd, name, paar, rng=None):
     _, sex = beruf_of(r, rd, f"{name} {paar[0]}")
     x["karte"]["beruf"] = list(paar)             # the panel's kind, never a drawn occupation
     dungeon_stimmen.fix(rd, x, sex)
+    gender(r, rd, x, rng)
     ns[k] = x
     _personen.bump("haendler_karte")
     print("dungeon: markt | person | neu", flush=True)
@@ -295,13 +351,20 @@ def sync(r, rd, rng=None):
                 b, sex = beruf_of(r, rd, f"{p['name']} {p.get('rolle') or ''}")   # a title or role names the occupation
                 if b:
                     x["karte"]["beruf"] = b
-                dungeon_stimmen.fix(rd, x, p.get("geschlecht") or sex)   # one gender from now on
+                dungeon_stimmen.fix(rd, x, sex)          # one gender from now on, never the model's
             ns[k] = x
             n += 1
+        else:                                     # Z10: a role naming another occupation sets it (never a catalog card)
+            b, _ = beruf_of(r, rd, p.get("rolle") or "")
+            c = ns[k].setdefault("karte", {})
+            if b and not ns[k].get("katalog") and (c.get("beruf") or ["", ""])[1] != b[1]:
+                c["beruf"] = b
+                _personen.bump("beruf_rolle")
+                print("dungeon: nsc | beruf | nach rolle", flush=True)
         if "wesen" not in ns[k]:                  # traits and goals (Tabletop-Punkt 6), also for cards made before
             ns[k].update(wesen=traits(rng), ziele=goals(r, rd, p.get("ziel") or "", rng))
     for x in ns.values():                         # also cards made before: the gender their portrait was painted in
-        gender(r, rd, x)
+        gender(r, rd, x, rng)
     return n
 
 
@@ -548,7 +611,9 @@ def facts(r, rd, li, rng=None):
     szene = []
     for k in here:
         x, p = ns[k], w.get(k) or {}
-        szene.append({"name": x["name"], "geschlecht": _sex_word(rd, x["name"], li), **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
+        szene.append({"name": x["name"], "geschlecht": _sex_word(rd, x["name"], li),
+                      **({"alter": ALTER_WORT[x["alter"]][li]} if x.get("alter") in ALTER_WORT else {}),
+                      **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
                       **{f: v[li] for f, v in x["karte"].items()},
                       **({"kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]]} if x["kanten"] else {}),
                       **({"haltung": {hn.get(h, h): word(v, li) for h, v in x["haltung"].items()}} if x["haltung"] else {}),
@@ -598,7 +663,8 @@ def view(rd, host, li):
 def for_live(rs):
     t = _personen.today()
     return {"nsc_karten": sum(len(v.get("nsc") or {}) for v in rs), "chronik_zeilen": sum(len(v.get("chronik") or []) for v in rs),
-            "keine_person": t["keine_person"], "haendler_karte": t["haendler_karte"]}
+            "keine_person": t["keine_person"], "haendler_karte": t["haendler_karte"], "beruf_rolle": t["beruf_rolle"],
+            "stimme_verworfen": t["stimme_verworfen"]}
 
 
 def keep(rd):
