@@ -5829,7 +5829,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (V01.1.134, Plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 „wie empfehlung umsetzen“: Stufe 1 und 3, das Modell als Stufe 2 erst später): Admin-Schalter *Funktionen → KI-Dungeon-Master → Rückfrage bei unklaren Aktionen* (chat.dungeon_rueckfrage, ab Werk aus), freigegeben für jedes Profil; Gäste am Tisch bekommen sie genauso, es ist Teil des Spiels. Beim Absenden prüft das Panel die Aktion mit festen Regeln (dungeon_rueckfrage.unclear): zu kurz (weniger als 2 Wörter oder 8 Buchstaben, „ok“, „hm“), Buchstabensalat (ein Zeichen viermal, die Hälfte der Wörter ohne Vokal), nur ein Fürwort als letztes Ziel, wenn mehreres passt („Ich greife ihn an“ bei zwei Gegnern, „nimm es“), oder kein Tun (kein Wort aus TUN_WORTE und den Kampf-Wortlisten, kein Name der Szene, keine wörtliche Rede). Dann bleibt die Aktion wie geschrieben liegen, ist aber markiert: Unter der eigenen Aktion steht „❓ Was genau tut Morpheus?“ mit dem Grund, bis zu drei Vorschlägen und „So lassen“. Die Vorschläge baut das Panel aus festen Mustern und den Daten der Szene (stehende Gegner, Dinge im Kampf, der eigene Angriffszauber, Personen hier, Wege der Karte), nie au"
+"text": "KI-Dungeon-Master: Rückfrage bei unklaren Aktionen (V01.1.134, Plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 „wie empfehlung umsetzen“: Stufe 1 und 3, das Modell als Stufe 2 erst später): Admin-Schalter *Funktionen → KI-Dungeon-Master → Rückfrage bei unklaren Aktionen* (chat.dungeon_rueckfrage, ab Werk aus), freigegeben für jedes Profil; Gäste am Tisch bekommen sie genauso, es ist Teil des Spiels. Beim Absenden prüft das Panel die Aktion mit festen Regeln (dungeon_rueckfrage.unclear): zu kurz (weniger als 2 Wörter oder 8 Buchstaben, „ok“, „hm“), Buchstabensalat (ein Zeichen viermal, die Hälfte der Wörter ohne Vokal), nur ein Fürwort als letztes Ziel, wenn mehreres passt („Ich greife ihn an“ bei zwei Gegnern, „nimm es“), oder kein Tun (kein Wort aus TUN_WORTE und den Kampf-Wortlisten, kein Subjekt mit Verb wie „Ich durchsuche …“ oder „Wir rasten“, kein Name der Szene, keine wörtliche Rede). Dann bleibt die Aktion wie geschrieben liegen, ist aber markiert: Unter der eigenen Aktion steht „❓ Was genau tut Morpheus?“ mit dem Grund, bis zu drei Vorschlägen und „So lassen“. Die Vorschläge baut das Panel aus festen Mustern und den Daten der Szene (stehende Gegner, Dinge im Kampf, d"
 },
 {
 "lang": "de",
@@ -5837,7 +5837,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "s Modelltext; jeder Vorschlag ist selbst klar. Antippen setzt ihn ins Eingabefeld, man kann ihn noch ändern. Solange die Frage offen ist, zählt der Platz nicht als „hat gehandelt“ (dungeon.due), der Zug schließt also nicht vorzeitig; läuft die Zugzeit ab, gilt die Aktion wie geschrieben. Für denselben Text fragt das Panel nur einmal je Zug, „So lassen“ (so_lassen) nimmt die Markierung weg. Im Auto (dungeon_auto) wird die Aktion sofort wie gesagt eingetragen und die Frage mit „Erstens …, zweitens …“ vorgelesen; die CarPlay-Liste „Was genau?“ zeigt die Vorschläge und „So lassen“ als Knöpfe, „die erste“ oder „so lassen“ antwortet per Sprache, nur Vorschläge des Panels zählen. Das Modell sieht die Frage nie. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live zählt Rückfragen, genommene Vorschläge und „so gelassen“. Selbsttests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_action_is_asked_back."
+"text": "er eigene Angriffszauber, Personen hier, Wege der Karte), nie aus Modelltext; jeder Vorschlag ist selbst klar. Antippen setzt ihn ins Eingabefeld, man kann ihn noch ändern. Solange die Frage offen ist, zählt der Platz nicht als „hat gehandelt“ (dungeon.due), der Zug wartet aber höchstens WARTE_S (30) Sekunden nach der Aktion, dann gilt sie wie geschrieben (Review 27.10. Paket 6). Für denselben Text fragt das Panel nur einmal je Zug, „So lassen“ (so_lassen) nimmt die Markierung weg. Im Auto (dungeon_auto) wird die Aktion sofort wie gesagt eingetragen und die Frage mit „Erstens …, zweitens …“ vorgelesen; die CarPlay-Liste „Was genau?“ zeigt die Vorschläge und „So lassen“ als Knöpfe, „die erste“ oder „so lassen“ antwortet per Sprache, nur Vorschläge des Panels zählen. Das Modell sieht die Frage nie. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live zählt Rückfragen, genommene Vorschläge und „so gelassen“. Selbsttests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_a"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ction_is_asked_back."
 },
 {
 "lang": "de",
@@ -5902,6 +5910,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "ill und keiner „Ich bleibe“ schreibt (dungeon_karte.gruppe); sonst bleibt sie, der Erzähler bekommt karte.bleibt mit den Namen derer, die nicht mitgehen, und der Gang zu einem Nachbarort (asked_ways) wird nicht erzwungen. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Die Eingabe verstehen (V01.1.171, Review 27.10. Paket 6, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Fehlerbehebungen. Rückfrage: „Kein Tun“ fragt nur noch, wenn der Satz kein Verb hat: ein Subjekt (ich, wir, du, ihr, er, sie, der Name eines Helden am Tisch) mit einem Wort danach, das wie ein Verb endet (-e, -n, -t; englisch jedes Wort), gilt als Tun (dungeon_rueckfrage.subject_verb), nie ein Wort aus KEIN_VERB („Ich bin müde“, „Ich habe Hunger“). TUN_WORTE kennt dazu durchsuchen, verbinden, rasten, bestellen, befragen, verfolgen, plündern, entschärfen, steigen, zünden, ducken, bewachen und kaufen. Eine Rückfrage hält den Zug höchstens WARTE_S (30) Sekunden nach der Aktion auf, nie mehr die ganze Zugzeit. Vorher fragte das Spiel bei 32 von 45 klaren Sätzen nach („Ich durchsuche die Truhe“). Proben: Reine Bewegung (ein Wort zum Gehen, keins zum Schleichen oder Klettern, keins zum Suchen, Öffnen, Nehmen oder Angreifen), Kaufen, Verkaufen und Rasten nach den Worten des Spielers brauchen keine Probe, egal was das Modell schreibt (dungeon.typed; Log „dungeon: probe | verworfen | kauf“). Getippte Spielmechanik: Kaufen und Verkaufen gehen nur über „⚖ Händler“"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ", eine Rast ruft der Gastgeber im Spielleiter-Pult. Tippt ein Platz „Ich kaufe …“ oder „Wir rasten“, bekommt nur dieser Platz eine feste Zeile mit dem Knopf, der das Fenster öffnet („⚖ Händler ›“ bei offenem Markt, „🎲 Spielleiter-Pult ›“ für den Gastgeber), und der Erzähler hört nicht_erfolgt: er erzählt es höchstens als Absicht, ohne Gold, Ware oder Heilung. „Ich gebe Grimma 10 Gold“ mit einer Person der Szene bucht das Gold wirklich ab (Zeile „⚖ Arvid gibt Grimma · 10 Gold“, der Erzähler hört gegeben); mehr Gold, als der Held hat, bleibt mit einer festen Zeile liegen. Dinge gibt man weiter wie bisher über einen Auftrag „bringen“. Vorher verpufften solche Sätze: „Ich kaufe bei Grimma einen Heiltrank“ ließ Gold und Tasche unverändert. Kleinkram: „Heiltrank“, „Heiligtum“ und „heilig“ zählen nicht mehr als Hilfe für die Haltung einer Person (dungeon_zeugen.TATEN), und ein Verb prüft nur Dinge seiner Art: „Ich lese das alte Schild“ sucht Schriftrollen, keinen Schild (dungeon.DING_ART). Live: Zustand → Überblick zählt getippte Hinweise und gegebenes Gold. Log-Zeilen „dungeon: getippt | kauf | hinweis“ (verkauf, rast, gold), „dungeon: getippt | geben | gold“. Die eine gemeinsame Einordn"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ung aller Wortlisten kommt erst in der großen Aufräumaktion (Richtlinie Teil 17). Selbsttests ReviewEingabe in test_dungeon mit den 45 und 50 Sätzen aus dem Bericht (E2, E3, E13, E16, T15, T16)."
 },
 {
 "lang": "de",
@@ -11869,7 +11901,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Rückfrage bei unklaren Aktionen (Funktionen → Meine Daten → „Rückfrage bei unklaren Aktionen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Schickt ein Spieler eine Aktion, die zu kurz ist („ok“), unleserlich („asdf“), nur ein Fürwort nennt, wenn mehreres passt („nimm es“), oder gar kein Tun und keinen Namen der Szene enthält, fragt das Spiel nach: „Was genau tut Morpheus?“ …"
+"text": "- Rückfrage bei unklaren Aktionen (Funktionen → Meine Daten → „Rückfrage bei unklaren Aktionen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Schickt ein Spieler eine Aktion, die zu kurz ist („ok“), unleserlich („asdf“), nur ein Fürwort nennt, wenn mehreres passt („nimm es“), oder kein Verb und keinen Namen der Szene enthält (ein Satz wie „Ich durchsuche die Truhe“ oder „Wir r …"
 },
 {
 "lang": "de",
@@ -21045,7 +21077,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: ask back on unclear actions (V01.1.134, plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 \"wie empfehlung umsetzen\": stages 1 and 3, the model as stage 2 only later): Admin switch *Features → AI Dungeon Master → Ask back on unclear actions* (chat.dungeon_rueckfrage, off by default), released for every profile; guests at the table get it the same way, it is part of the game. When an action is sent the panel checks it by fixed rules (dungeon_rueckfrage.unclear): too short (fewer than 2 words or 8 letters, \"ok\", \"hm\"), gibberish (one character four times, half the words without a vowel), only a pronoun as the last target while several fit (\"I attack him\" with two foes, \"take it\"), or no doing (no word of TUN_WORTE and the fight's word lists, no name of the scene, no quoted speech). Then the action stays as written but marked: below the own action stands \"❓ What exactly does Morpheus do?\" with the reason, up to three suggestions and \"Keep it\". The panel builds the suggestions from fixed patterns and the scene's data (foes still up, things in a fight, the own attack spell, people here, ways of the map), never from the model's text; every suggestion is clear itself"
+"text": "AI Dungeon Master: ask back on unclear actions (V01.1.134, plan plaene/dungeon-rueckfrage.md, Dominik 2026-10-26 \"wie empfehlung umsetzen\": stages 1 and 3, the model as stage 2 only later): Admin switch *Features → AI Dungeon Master → Ask back on unclear actions* (chat.dungeon_rueckfrage, off by default), released for every profile; guests at the table get it the same way, it is part of the game. When an action is sent the panel checks it by fixed rules (dungeon_rueckfrage.unclear): too short (fewer than 2 words or 8 letters, \"ok\", \"hm\"), gibberish (one character four times, half the words without a vowel), only a pronoun as the last target while several fit (\"I attack him\" with two foes, \"take it\"), or no doing (no word of TUN_WORTE and the fight's word lists, no subject with a verb like \"Ich durchsuche …\" or \"Wir rasten\", no name of the scene, no quoted speech). Then the action stays as written but marked: below the own action stands \"❓ What exactly does Morpheus do?\" with the reason, up to three suggestions and \"Keep it\". The panel builds the suggestions from fixed patterns and the scene's data (foes still up, things in a fight, the own attack spell, people here, ways of the map"
 },
 {
 "lang": "en",
@@ -21053,7 +21085,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": ". Tapping one puts it into the input, where it can still be changed. While the question is open the seat does not count as \"has acted\" (dungeon.due), so the turn does not close early; when the turn's time runs out the action counts as written. The panel asks only once a turn for the same text, \"Keep it\" (so_lassen) takes the mark off. In the car (dungeon_auto) the action goes in at once as said and the question is read with \"First …, second …\"; the CarPlay list \"What exactly?\" shows the suggestions and \"Keep it\" as buttons, \"the first\" or \"keep it\" answers by voice, only the panel's suggestions count. The model never sees the question. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live counts questions, suggestions taken and \"kept\". Self-tests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_action_is_asked_back."
+"text": "), never from the model's text; every suggestion is clear itself. Tapping one puts it into the input, where it can still be changed. While the question is open the seat does not count as \"has acted\" (dungeon.due), but the turn waits at most WARTE_S (30) seconds after the action, then it counts as written (review 27.10. package 6). The panel asks only once a turn for the same text, \"Keep it\" (so_lassen) takes the mark off. In the car (dungeon_auto) the action goes in at once as said and the question is read with \"First …, second …\"; the CarPlay list \"What exactly?\" shows the suggestions and \"Keep it\" as buttons, \"the first\" or \"keep it\" answers by voice, only the panel's suggestions count. The model never sees the question. Log dungeon: rueckfrage | regel | kurz (salat, fuerwort, kein tun), | vorschlag genommen, | so lassen, | klar; Live counts questions, suggestions taken and \"kept\". Self-tests Rueckfrage.test_the_table_of_clear_and_unclear_actions, test_asked_at_the_table_never_blocking, test_asked_once_for_the_same_text, test_never_from_the_model_and_only_the_own_seat, InTheCar.test_an_unclear_action_is_asked_back."
 },
 {
 "lang": "en",
@@ -21118,6 +21150,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: understanding the input (V01.1.171, review 27.10. package 6, Dominik 2026-10-27 „ok“): No new switch, these are fixes. Ask back: „No doing“ asks only when the sentence has no verb: a subject (ich, wir, du, ihr, er, sie, the name of a hero at the table) with a word after it that ends like a verb (-e, -n, -t; in English any word) counts as doing (dungeon_rueckfrage.subject_verb), never a word of KEIN_VERB („Ich bin müde“, „Ich habe Hunger“). TUN_WORTE also knows durchsuchen, verbinden, rasten, bestellen, befragen, verfolgen, plündern, entschärfen, steigen, zünden, ducken, bewachen and kaufen. A question holds the turn at most WARTE_S (30) seconds after the action, never the turn's whole time any more. Before, the game asked back for 32 of 45 clear sentences („Ich durchsuche die Truhe“). Checks: Plain moving (a word of going, none of sneaking or climbing, none of searching, opening, taking or attacking), buying, selling and resting by the player's own words need no check, whatever the model writes (dungeon.typed; log „dungeon: probe | verworfen | kauf“). Typed game mechanics: Buying and selling work only over „⚖ Merchant“, a rest is called by the host in the game ma"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ster console. When a seat types „Ich kaufe …“ or „Wir rasten“, only that seat gets a fixed line with the button that opens the window („⚖ Merchant ›“ while a market is open, „🎲 Game master console ›“ for the host), and the narrator hears nicht_erfolgt: it tells it at most as an intention, without gold, goods or healing. „Ich gebe Grimma 10 Gold“ with a person of the scene really takes the gold (line „⚖ Arvid gives Grimma · 10 gold“, the narrator hears gegeben); more gold than the hero has stays with a fixed line. Things go on as before over an errand „bringen“. Before, such sentences came to nothing: „Ich kaufe bei Grimma einen Heiltrank“ left gold and bag unchanged. Small things: „Heiltrank“, „Heiligtum“ and „heilig“ no longer count as help for a person's attitude (dungeon_zeugen.TATEN), and a verb checks only things of its kind: „Ich lese das alte Schild“ looks for scrolls, no shield (dungeon.DING_ART). Live: Status → Live counts typed hints and gold given. Log lines „dungeon: getippt | kauf | hinweis“ (verkauf, rast, gold), „dungeon: getippt | geben | gold“. The one shared classification of every word list comes only in the big tidy action (guideline part 17). Self-tests ReviewE"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ingabe in test_dungeon with the 45 and 50 sentences of the report (E2, E3, E13, E16, T15, T16)."
 },
 {
 "lang": "en",
@@ -26893,7 +26949,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- Ask back on unclear actions (Features → My data → \"Ask back on unclear actions\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a player sends an action that is too short (\"ok\"), unreadable (\"asdf\"), only names a pronoun while several things fit (\"take it\"), or holds no doing and no name of the scene, the game asks back: \"What exactly does Morpheus do?\" with …"
+"text": "- Ask back on unclear actions (Features → My data → \"Ask back on unclear actions\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a player sends an action that is too short (\"ok\"), unreadable (\"asdf\"), only names a pronoun while several things fit (\"take it\"), or holds no verb and no name of the scene (a sentence like \"I search the chest\" or \"We rest\" is clear …"
 },
 {
 "lang": "en",

@@ -23,8 +23,9 @@ TATEN = {                  # deeds besides an attack (dungeon_kampf.intent), by 
     "diebstahl": re.compile(r"(?i)(?<!\w)(?:stiehl|stehl|stahl|klau|entwend|stibitz|mops|bestehl|steal|stole|pickpocket|pilfer|swipe|snatch)"),
     "geschenk": re.compile(r"(?i)(?<!\w)(?:schenk|beschenk|überreich|ueberreich|spendier|gift|present|(?:gebe?|gib|gab)\s+(?:[\w'-]+\s+){0,4}"
                            r"(?:ihm|ihr|ihnen|dir)(?!\w)|give\s+(?:him|her|them)(?!\w)|hand\s+(?:him|her|them)(?!\w))"),
-    "hilfe": re.compile(r"(?i)(?<!\w)(?:helf|hilf|half|heil|rette|verbind|stütz|stuetz|beschütz|beschuetz|help|heal|rescue|bandage|aid|protect)"),
+    "hilfe": re.compile(r"(?i)(?<!\w)(?:helf|hilf|half|heil(?:e|t|en|st|te)?(?!\w)|rette|verbind|stütz|stuetz|beschütz|beschuetz|help|heal|rescue|bandage|aid|protect)"),
 }
+# „heil“ only as the verb (Review 27.10. Paket 6, E16): Heiltrank, Heiligtum and heilig help nobody
 FOLGE = {"angriff": (-2, -1), "diebstahl": (-2, -1), "geschenk": (1, 0), "hilfe": (1, 0)}   # steps for (target, witnesses)
 TAT_WORT = {"angriff": ("greift {ziel} an", "attacks {ziel}"), "diebstahl": ("bestiehlt {ziel}", "steals from {ziel}"),
             "geschenk": ("beschenkt {ziel}", "gives {ziel} a gift"), "hilfe": ("hilft {ziel}", "helps {ziel}")}

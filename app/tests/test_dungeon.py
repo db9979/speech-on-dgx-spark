@@ -870,6 +870,145 @@ class Rueckfrage(Turns):
         self.assertFalse(any("Schlüssel" in x for x in tips), tips)
 
 
+class ReviewEingabe(Turns):
+    """Review 27.10. Paket 6 (Dominik 2026-10-27 „ok“): the panel understands the input instead of asking back."""
+
+    KLAR = ["Ich durchsuche die Truhe.", "Ich durchsuche den Raum.", "Ich verbinde Belas Wunde.", "Wir rasten.",
+            "Ich ruhe mich aus.", "Ich esse etwas.", "Ich trinke den Heiltrank.", "Ich kaufe einen Heiltrank.",
+            "Ich verkaufe meinen alten Dolch.", "Ich bezahle den Wirt.", "Ich zünde eine Fackel an.", "Ich entzünde das Lagerfeuer.",
+            "Ich bete zu den Göttern.", "Ich betrete die Höhle.", "Ich steige die Treppe hinab.", "Ich klopfe an die Tür.",
+            "Ich verstecke mich hinter dem Fass.", "Ich schleiche zum Fenster.", "Ich durchquere den Fluss.", "Ich übernachte in der Taverne.",
+            "Ich bestelle ein Bier.", "Ich miete ein Zimmer.", "Ich schlafe.", "Ich halte Wache.", "Ich zeichne eine Karte.",
+            "Ich befrage den Gefangenen.", "Ich verhöre den Dieb.", "Ich bedrohe den Händler.", "Ich tröste das Kind.",
+            "Ich folge den Spuren.", "Ich verfolge den Dieb.", "Ich durchwühle die Taschen der Leiche.", "Ich plündere die Leichen.",
+            "Ich sammle Kräuter.", "Ich jage ein Kaninchen.", "Ich fessle den Gefangenen.", "Ich befreie die Gefangenen.",
+            "Ich entschärfe die Falle.", "Ich knacke das Schloss.", "Ich rüttele an der Tür.", "Ich tausche mit Bela.",
+            "Ich rufe um Hilfe.", "Ich singe ein Lied.", "Ich tanze mit der Wirtin.", "Ich umarme Bela.",
+            # the review's table of 46 inputs (teil2_out_einordnung) and T15, as far as they are clear
+            "gehe zur alten bibliothek", "wir gehen in den keller", "Ich frage den Wirt nach dem Weg zur Burg.",
+            "ich frag den wirt ob er was gehört hat", "ich schau in die kiste", "Ich öffne die Truhe vorsichtig.",
+            "Ich greife den Ork mit dem Schwert an.", "ich hau dem ork eine rein", "Ich schieße mit dem Bogen auf den Ork.",
+            "Ich ziehe mein Schwert und warte.", "Ich stelle mich vor Bela und decke sie mit dem Schild.", "Ich renne weg!",
+            "wir rasten", "Wir schlagen ein Lager auf und ruhen uns aus.", "ich will beim schmied ein schwert kaufen",
+            "Ich schleiche mich an den Wachen vorbei.", "ich schleich mich vorbei", "Ich klettere über die Mauer.",
+            "Ich lese die Inschrift am Tor.", "Ich trinke meinen Heiltrank.", "Ich stehle dem Händler den Geldbeutel.",
+            "Ich gebe Grimma 10 Gold.", "Hast du Arbeit für uns, Grimma?", "Grimma, komm mit uns!", "„Wer seid ihr?“",
+            "Arvid und Bela gehen nach Norden.", "Ich helfe Bela beim Klettern.", "Ich untersuche die Leiche nach Hinweisen.",
+            "Ich lausche an der Tür.", "ich gehe ztr tavrne", "ich schuae mich um", "Was steht auf dem Zettel?",
+            "Ich überrede den Wächter, uns durchzulassen.", "ich warte ab", "Ich breche die Tür auf.", "ich ziehe weiter richtung wald",
+            "Ich reinige mein Schwert.", "Ich lese weiter im Tagebuch.", "Ich durchsuche den Karren.", "Ich kaufe Brot.",
+            "Ich ducke mich.", "Bela lacht leise vor sich hin", "I search the chest.", "We rest by the fire."]
+    UNKLAR = [("ok", "kurz"), ("mach was", "kurz"), ("nimm es", "kurz"), ("Ich bin müde und hungrig", "kein_tun"),
+              ("Irgendwie so halt, weißt du", "kein_tun"), ("Leise und irgendwie seltsam", "kein_tun"),
+              ("Ich habe Hunger und Durst", "kein_tun"), ("I am tired and hungry", "kein_tun"), ("Ich weiß nicht so recht", "kein_tun")]
+
+    def test_the_table_of_everyday_sentences(self):
+        """E3/T15: the 45 + 50 everyday sentences are clear (a subject with a verb is a doing), only a sentence without
+        a verb asks „kein Tun“."""
+        import dungeon_rueckfrage as rf
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        wrong = [t for t in self.KLAR if rf.unclear(dungeon, r, rd, self.host, t)]
+        self.assertEqual(wrong, [])
+        for t, want in self.UNKLAR:
+            self.assertEqual(rf.unclear(dungeon, r, rd, self.host, t), want, t)
+
+    def test_a_question_holds_the_turn_at_most_thirty_seconds(self):
+        """G3: a marked action holds the turn at most WARTE_S after it was written, never the turn's whole time."""
+        import dungeon_rueckfrage as rf
+        helpers.keep_chat(self, "dungeon_rueckfrage")
+        helpers.set_config(dungeon_rueckfrage=True)
+        url = f"/api/profile/dungeon/{self.rid}"
+        self.assertIsNotNone(self.c.post(url + "/aktion", json={"text": "mach was", "zug": 1}).json()["rueckfrage"])
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich öffne die Tür.", "zug": 1}).status_code, 200)
+        rd = self.state(self.rid)
+        t = rd["offen"][self.host]["t"]
+        self.assertLess(t + rf.WARTE_S, dungeon.turn_end(rd))
+        self.assertTrue(rf.waiting(rd, self.host) and rf.waiting(rd, self.host, t + rf.WARTE_S - 1))
+        self.assertFalse(dungeon.due(rd, t + dungeon.GNADE_S + 1))                 # the question waits for the seat …
+        self.assertFalse(rf.waiting(rd, self.host, t + rf.WARTE_S))
+        self.assertTrue(dungeon.due(rd, t + rf.WARTE_S))                           # … at most WARTE_S
+
+    def test_typed_going_buying_resting_need_no_check(self):
+        """E2/G4: plain going, buying and resting by the player's own words need no check, whatever the model writes."""
+        self.assertEqual([dungeon.typed(t) for t in ("wir gehen in den keller", "Ich gehe zur alten Bibliothek.", "Ich kaufe einen Heiltrank.",
+                                                       "Ich verkaufe meinen alten Dolch.", "wir rasten", "Ich ruhe mich aus.",
+                                                       "Wir schlagen ein Lager auf.", "I buy a rope.", "We rest.")],
+                         ["gehen", "gehen", "kauf", "verkauf", "rast", "rast", "rast", "kauf", "rast"])
+        for t in ("Ich gehe leise an der Wache vorbei.", "Ich gehe zur Truhe und öffne sie.", "Ich frage den Wirt nach dem Weg.",
+                  "Ich frage, ob er Brot verkauft.", "Ich bleibe ruhig.", "Ich durchsuche die Truhe.", "Ich frage den Kaufmann nach Neuigkeiten.",
+                  "Ich schleiche an der schlafenden Wache vorbei.", "Ich gehe auf den Ork los und greife ihn an."):
+            self.assertEqual(dungeon.typed(t), "", t)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        names = {pid: p["held"]["name"] for pid, p in dungeon.seated(rd)}
+        for text, wofuer, keep in (("wir gehen in den keller", "Den dunklen Keller erkunden", False),
+                                   ("Ich kaufe einen Heiltrank.", "Mit dem Händler feilschen", False),
+                                   ("wir rasten", "Eine ruhige Nacht im Freien überstehen", False),
+                                   ("Ich durchsuche die Truhe.", "Die Truhe durchsuchen", True)):
+            rd["offen"] = {self.host: {"text": text, "t": 0}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                out, drop = dungeon.check_proben(r, rd, {"proben": [{"wer": names[self.host], "wert": "weisheit", "schwer": 12, "wofuer": wofuer}]})
+            self.assertEqual((len(out), drop), (1, 0) if keep else (0, 1), text)
+
+    def test_typed_buying_resting_and_gold_given(self):
+        """E13/G6: typed buying, selling and resting get a fixed line only at the own seat with the window that does it,
+        the narrator hears nicht_erfolgt; gold typed to a person of the scene is really taken; too much gold is not."""
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["nsc"] = {"grimma": {"name": "Grimma", "karte": {}, "haltung": {}}}
+            rd["log"].append({"art": "dm", "text": "Grimma steht hinter ihrem Tresen.", "npc": [], "n": rd["zug"]})
+            gold = rd["plaetze"][self.host]["held"]["gold"] = 30
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        rd["offen"] = {self.host: {"text": "Ich gebe Grimma 10 Gold.", "t": 0}, self.gp: {"text": "Ich kaufe bei Grimma einen Heiltrank.", "t": 0}}
+        ev = dungeon.typed_seen(r, rd)
+        self.assertEqual(ev, [{"was": "geben", "pid": self.host, "an": "Grimma", "gold": 10}, {"was": "nicht", "pid": self.gp, "art": "kauf"}])
+        f = dungeon.typed_facts(rd, ev)
+        names = {pid: p["held"]["name"] for pid, p in dungeon.seated(rd)}
+        self.assertEqual(f, {"nicht_erfolgt": [{"held": names[self.gp], "was": "kauf"}], "gegeben": [{"held": names[self.host], "an": "Grimma", "gold": 10}]})
+        rd["_getippt"] = ev
+        self.assertIn(dungeon.AUFGABE_GETIPPT["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertIn('"nicht_erfolgt"', dungeon.facts(r, rd).split("\n<<<", 1)[0])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.typed_apply(rd, ev)
+        self.assertIn("dungeon: getippt | geben | gold", out.getvalue())
+        self.assertIn("dungeon: getippt | kauf | hinweis", out.getvalue())
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], gold - 10)
+        e = [x for x in rd["log"] if x["art"] == "ooc"][-1]
+        self.assertEqual((e["pid"], e["fen"], e["text"]), (self.gp, "haendler", dungeon.TIPP["kauf"][0][0]))
+        self.assertEqual(rd["log"][-2]["art"], "handel")
+        self.assertFalse(dungeon.shown(e, self.host))                               # only that seat sees the line
+        rd["offen"] = {self.host: {"text": "Ich gebe Grimma 500 Gold.", "t": 0}, self.gp: {"text": "Wir rasten.", "t": 0}}
+        ev = dungeon.typed_seen(r, rd)
+        self.assertEqual([x.get("art") for x in ev], ["gold", "rast"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.typed_apply(rd, ev)
+        self.assertEqual(rd["plaetze"][self.host]["held"]["gold"], gold - 10)      # too much: nothing taken
+        self.assertEqual([x.get("fen") for x in rd["log"][-2:]], [None, "pult"])
+        self.assertGreaterEqual(dungeon.for_live()["getippt"], 3)
+        self.assertGreaterEqual(dungeon.for_live()["gegeben"], 1)
+
+    def test_small_things_heal_potion_and_an_old_sign(self):
+        """E16/G7: Heiltrank and Heiligtum are no help; T16/G8: reading a sign is no shield (the verb's kind of thing)."""
+        import dungeon_zeugen as zeugen
+        hilfe = zeugen.TATEN["hilfe"]
+        for t in ("Ich kaufe einen Heiltrank.", "Ich trinke meinen Heiltrank.", "Ich betrete das Heiligtum.", "Ein heiliger Ort."):
+            self.assertIsNone(hilfe.search(t.lower()), t)
+        for t in ("Ich heile Grimma.", "Ich heilte sie gestern.", "Ich helfe Grimma."):
+            self.assertIsNotNone(hilfe.search(t.lower()), t)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        rd["plaetze"][self.host]["held"]["tasche"] = []
+        for text, fehlt in (("Ich lese das alte Schild.", False), ("Ich trinke den Heiltrank.", True)):
+            rd["offen"] = {self.host: {"text": text, "t": 0}}
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                dungeon.check_items(r, rd, self.host)
+            self.assertIn("dungeon: ding | fehlt" if fehlt else "dungeon: ding | dabei", out.getvalue(), text)
+
+
 class ReviewSofort(Turns):
     """Review 27.10. Paket 1 (Dominik 2026-10-27 „ok“): nothing breaks any more."""
 

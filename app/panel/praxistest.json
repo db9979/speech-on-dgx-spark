@@ -4041,6 +4041,13 @@
 "titel": "Dungeon-Master: Angriffe und Heilen erkennen",
 "text": "Im Kampf: A: „Ich greife den Goblin mit dem Schwert an.“ würfelt einen Angriff mit Schaden. B: „Ich stürze mich auf den Ork.“ greift den Ork-Krieger an. C: „Ich rede mit dem Goblin.“ greift nicht an. D: Mit einem Heiler „Ich heile Bela.“: ein Heilzauber wirkt, die Zeile zeigt „Bela +N Leben“, eine Ladung ist weg.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P602",
+"v": 1171,
+"titel": "Dungeon-Master: Die Eingabe verstehen",
+"text": "Rückfrage an: A: „Ich durchsuche die Truhe.“ fragt nicht nach. B: „mach was“ fragt nach, nach 30 Sekunden ohne Antwort geht der Zug weiter. C: „Ich kaufe einen Heiltrank.“ zeigt nur dir die Zeile mit „⚖ Händler ›“, Gold bleibt gleich, keine Probe. D: „Wir rasten.“ zeigt die Zeile zum Spielleiter-Pult. E: Mit einer Person der Szene „Ich gebe Grimma 10 Gold.“: 10 Gold weniger, Zeile „gibt Grimma“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

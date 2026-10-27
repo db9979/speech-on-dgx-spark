@@ -471,7 +471,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, ausfall_halt=0, verworf
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0,
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0, getippt=0, gegeben=0,
                   oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_gehen=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
@@ -1101,6 +1101,10 @@ def _named(text, names):
 
 
 _DING_VERB = re.compile(r"(?i)\b(trink|benutz|wirf|werf|lies|les|use|drink|throw|read|quaff)")
+# the kinds of thing a verb can mean (Review 27.10. Paket 6, T16: „Ich lese das alte Schild“ reads a sign, no shield)
+DING_ART = ((re.compile(r"(?i)\b(trink|drink|quaff)"), {"trank"}), (re.compile(r"(?i)\b(lies|les|read)"), {"rolle"}),
+            (re.compile(r"(?i)\b(wirf|werf|throw)"), {"waffe", "trank", "werkzeug", "schatz"}),
+            (re.compile(r"(?i)\b(benutz|use)"), None))
 
 
 def check_items(r, rd, pid):
@@ -1111,9 +1115,12 @@ def check_items(r, rd, pid):
     if not a or not _DING_VERB.search(a["text"]):
         return
     li = 1 if rd["lang"] == "en" else 0
-    bag, ways = {it["id"] for it in h["tasche"]}, {}
+    bag, ways, arten = {it["id"] for it in h["tasche"]}, {}, set()
+    for rx, kinds in DING_ART:
+        if rx.search(a["text"]):
+            arten = None if kinds is None or arten is None else arten | kinds
     for c in r["gegenstaende"]:
-        if c.get("art") and c["art"] != "zauber":
+        if c.get("art") and c["art"] != "zauber" and (arten is None or c["art"] in arten):
             for n in c["name"]:
                 if len(n) >= 4:
                     ways.setdefault(n.lower(), set()).add(c["id"])
@@ -3166,7 +3173,7 @@ def due(rd, now):
         # nobody up but someone down (Punkt 1 of 2026-10-24): the turn is told when the clock runs out, so the count goes on
         return not any(not zustand(p["held"]) for _, p in seated(rd)) and any(zustand(p["held"]) == "boden" for _, p in seated(rd)) \
             and now >= turn_end(rd)
-    if all(pid in rd["offen"] and not rueckfrage.waiting(rd, pid) for pid in players):   # a Rückfrage open: not yet
+    if all(pid in rd["offen"] and not rueckfrage.waiting(rd, pid, now) for pid in players):   # a Rückfrage open: at most WARTE_S
         return now - max(x.get("t", 0) for x in rd["offen"].values()) >= GNADE_S
     return now >= turn_end(rd)
 
@@ -3438,6 +3445,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(auftraege.facts(rd, rd.get("_auftraege")))   # errands from people and this turn's events (LlamaTale idea 2)
     fakten.update(wandern.facts(rd))                     # people who moved on during the long rest (LlamaTale idea 6)
     fakten.update(mitkommen.facts(rd))                   # who was asked along and the panel's answer (LlamaTale idea 4)
+    fakten.update(typed_facts(rd, rd.get("_getippt")))   # typed buying, resting, gold: not done or given (Review 27.10. Paket 6)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
@@ -3469,7 +3477,7 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang) + wandern.task(rd, lang) + mitkommen.task(rd, lang))).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang) + wandern.task(rd, lang) + mitkommen.task(rd, lang) + (AUFGABE_GETIPPT[lang] if rd.get("_getippt") else ""))).rstrip()
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
@@ -3554,9 +3562,107 @@ def just_going(wofuer):
     return bool(GEHEN.search(low)) and not any(x in low for x in RISIKO)
 
 
+# Review 27.10. Paket 6 (E2, E13): what the player typed, by fixed word lists, never the model's words. Buying, selling
+# and resting go only over the panel's buttons: a fixed line to the seat and the fact nicht_erfolgt for the narrator;
+# gold typed to a person of the scene goes over for real (typed_seen, typed_apply); plain going, buying and resting
+# need no check. The one module for every such word list waits for the big tidy action (Richtlinie Teil 17).
+KAUF = re.compile(r"(?i)(?<!\w)(?:(?:ein|ab)?kauf(?:e|en|st|t|te|ten)?|erwerb(?:e|en)?|bezahl(?:e|en|st|t)?|buy|buys|buying|bought|purchas\w*|pay|pays|paying|paid)(?!\w)")
+VERKAUF = re.compile(r"(?i)(?<!\w)(?:verkauf(?:e|en|st|t|te|ten)?|sell|sells|selling|sold)(?!\w)")
+RAST = re.compile(r"(?i)(?<!\w)(?:rast(?:e|en|et|est)?|ruh(?:e|en|t)\s+(?:\w+\s+){0,2}aus|ausruh\w*|schlaf(?:e|en|t)?|übernacht\w*|uebernacht\w*|"
+                  r"schlag(?:e|en|t)?\s+(?:\w+\s+){0,2}lager|rest|rests|resting|sleep|sleeps|make\s+camp|camp)(?!\w)")
+MEHR_ALS_GEHEN = re.compile(r"(?i)(?<!\w)(?:such|durchsuch|untersuch|öffn|oeffn|nimm|nehm|greif|pack|heb|lies|les|prüf|pruef|knack|brech|"
+                            r"stiehl|stehl|klau|schlag|hau|kämpf|kaempf|wirk|zauber|frag|sprech|sprich|red|beobacht|lausch|horch|spür|spuer|"
+                            r"search|open|take|grab|read|examine|steal|attack|fight|cast|ask|talk|listen|watch|track)")
+GOLD_ZAHL = re.compile(r"(?i)(?<!\w)(\d{1,5})\s*(?:gold\w*|münz\w*|muenz\w*|coins?|gp|gm)(?!\w)")
+ZAHL_WORTE = re.compile(r"(?i)(?<!\w)(?:bezahl|zahl|pay|paid)")
+TIPP = {"kauf": (("Kaufen geht über „⚖ Händler“, wenn ein Händler da ist.", "Buying works over \"⚖ Merchant\" when a merchant is here."), "haendler"),
+        "verkauf": (("Verkaufen geht über „⚖ Händler“, wenn ein Händler da ist.", "Selling works over \"⚖ Merchant\" when a merchant is here."), "haendler"),
+        "rast": (("Eine Rast ruft der Gastgeber im Spielleiter-Pult: ☕ Kurze Rast oder 🔥 Lange Rast.",
+                  "The host calls a rest in the game master console: ☕ Short rest or 🔥 Long rest."), "pult"),
+        "gold": (("So viel Gold hat {name} nicht.", "{name} does not have that much gold."), "")}
+AUFGABE_GETIPPT = {
+    "de": (" nicht_erfolgt nennt getippte Handlungen (kauf, verkauf, rast, gold), die das Panel nicht ausgeführt hat: erzähl "
+           "sie höchstens als Absicht, nie als geschehen, und gib dafür kein Gold, keine Ware und keine Heilung. gegeben nennt "
+           "Gold, das ein Held einer Person gegeben hat; das Panel hat es schon abgebucht, nenne keine andere Zahl."),
+    "en": (" nicht_erfolgt names typed actions (kauf = buying, verkauf = selling, rast = resting, gold) the panel did not carry out: "
+           "tell them at most as an intention, never as done, and give no gold, goods or healing for them. gegeben names gold a "
+           "hero gave a person; the panel has already taken it, name no other number."),
+}
+
+
+def typed(text):
+    """What a typed action does by the fixed lists: "verkauf", "kauf", "rast", "gehen" (a word of GEHEN, none of RISIKO,
+    of MEHR_ALS_GEHEN or of an attack) or "" (also for an action that only asks, erz.asks)."""
+    low = str(text or "").lower()
+    if not low or erz.asks(low):
+        return ""
+    for kind, rx in (("verkauf", VERKAUF), ("kauf", KAUF), ("rast", RAST)):
+        if rx.search(low):
+            return kind
+    if GEHEN.search(low) and not any(x in low for x in RISIKO) and not MEHR_ALS_GEHEN.search(low) and not kampf.ANGRIFF_WORTE.search(low):
+        return "gehen"
+    return ""
+
+
+def typed_seen(r, rd):
+    """Before the narration (on run_turn's copy): gold typed to a person of the scene ({was: geben, pid, an, gold}), or
+    buying, selling, resting and too much gold the panel does not carry out ({was: nicht, pid, art})."""
+    out, ns, here = [], rd.get("nsc") or {}, nsc.scene(rd)
+    for pid, a in (rd.get("offen") or {}).items():
+        h = (rd["plaetze"].get(pid) or {}).get("held")
+        if not h or not isinstance(a, dict) or zustand(h):
+            continue
+        t = str(a.get("text") or "")
+        low = t.lower()
+        to = next((ns[k]["name"] for k in here if nsc.named(ns[k], low)), "")
+        g = GOLD_ZAHL.search(low)
+        if to and g and int(g.group(1)) > 0 and (auftraege.GEBEN.search(low) or ZAHL_WORTE.search(low)) and not erz.asks(low):
+            n = int(g.group(1))
+            out.append({"was": "geben", "pid": pid, "an": to, "gold": n} if n <= h.get("gold", 0) else {"was": "nicht", "pid": pid, "art": "gold"})
+            continue
+        kind = typed(t)
+        if kind in TIPP:
+            out.append({"was": "nicht", "pid": pid, "art": kind})
+    return out
+
+
+def typed_facts(rd, events):
+    """For the narration: what did not happen ({nicht_erfolgt: [{held, was}]}) and the gold given ({gegeben: […]})."""
+    names = {pid: (p.get("held") or {}).get("name", "") for pid, p in rd["plaetze"].items()}
+    out = {}
+    nicht = [{"held": names.get(e["pid"], ""), "was": e["art"]} for e in events or () if e["was"] == "nicht"]
+    gab = [{"held": names.get(e["pid"], ""), "an": e["an"], "gold": e["gold"]} for e in events or () if e["was"] == "geben"]
+    if nicht:
+        out["nicht_erfolgt"] = nicht
+    if gab:
+        out["gegeben"] = gab
+    return out
+
+
+def typed_apply(rd, events):
+    """After the narration: the fixed line only for that seat (with the window it opens, fen) and the gold given."""
+    li = 1 if rd["lang"] == "en" else 0
+    for e in events or ():
+        h = (rd["plaetze"].get(e["pid"]) or {}).get("held")
+        if not h:
+            continue
+        if e["was"] == "geben" and h.get("gold", 0) >= e["gold"]:
+            h["gold"] -= e["gold"]
+            _log(rd, "handel", was="geben", name=h["name"], ding=e["an"], gold=e["gold"])
+            _day.bump("gegeben")
+            print("dungeon: getippt | geben | gold", flush=True)
+            continue
+        art = e["art"] if e["was"] == "nicht" else "gold"
+        (text, fen) = TIPP[art]
+        _log(rd, "ooc", pid=e["pid"], panel=True, text=text[li].format(name=h["name"]), **({"fen": fen} if fen else {}))
+        _day.bump("getippt")
+        print(f"dungeon: getippt | {art} | hinweis", flush=True)
+
+
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped, none only for going somewhere (just_going, or the seat's action goes to a
+    of the list, the difficulty clamped, none for plain going, buying or resting by the player's own words (typed),
+    only for going somewhere (just_going, or the seat's action goes to a
     neighbouring place without a word of RISIKO, dungeon_karte.asked_ways) or for a hero down (zustand), for an action that only asks or
     talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
@@ -3567,9 +3673,10 @@ def check_proben(r, rd, obj):
         if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not isinstance(p.get("schwer"), int):
             drop += 1
             continue
-        if just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
+        kind = typed(rd["offen"][pid].get("text"))
+        if kind or just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
             drop += 1
-            print("dungeon: probe | verworfen | gehen", flush=True)
+            print(f"dungeon: probe | verworfen | {kind or 'gehen'}", flush=True)
             continue
         if zustand((rd["plaetze"].get(pid) or {}).get("held") or {}):
             drop += 1                            # a hero down, unconscious or dead rolls nothing, so earns no check's experience
@@ -4153,6 +4260,7 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
     rd["_gedanken"] = any(w.get("gedanken") for w in wuerfe)   # only on this copy: a mind read, never told (LlamaTale idea 5)
     mitkommen.seen(rd, wuerfe)                          # only on this copy: who comes along, by the panel (LlamaTale idea 4)
     rd["_auftraege"] = auftraege.seen(_me, r, rd, hits)  # only on this copy: errands given, done, given back (LlamaTale idea 2)
+    rd["_getippt"] = typed_seen(r, rd)                  # only on this copy: typed buying, resting, gold (Review 27.10. Paket 6)
     story, best, extra, drop, tries = None, None, "", 0, []
     for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
         if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
@@ -4185,6 +4293,8 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
         story["auftraege"] = rd["_auftraege"]            # the errands change in keep (auftraege.apply)
     if story and rd["_mitkommen"]:
         story["mitkommen"] = rd["_mitkommen"]            # the map takes them along in keep (mitkommen.apply)
+    if story and rd["_getippt"]:
+        story["getippt"] = rd["_getippt"]                # the lines and the gold in keep (typed_apply)
     return story, drop, tries
 
 
@@ -4252,6 +4362,7 @@ async def run_turn(rid, turn):
                     gedanken.apply(_me, cur, [w for w in wuerfe if w["pid"] in seats])   # the thoughts only for that seat (LlamaTale idea 5)
                     auftraege.apply(_me, cur, [e for e in story.get("auftraege") or [] if e.get("pid") in seats])   # LlamaTale idea 2
                     mitkommen.apply(_me, cur, [e for e in story.get("mitkommen") or [] if e.get("pid") in seats])   # LlamaTale idea 4
+                    typed_apply(cur, [e for e in story.get("getippt") or [] if e.get("pid") in seats])   # Review 27.10. Paket 6
                     wandern.told(cur)                        # the rest's moves were told once (LlamaTale idea 6)
                     nsc.learn(_me, r, cur, story, turn)     # cards, attitudes, relations, the chronicle (Tabletop-Punkt 5)
                     fraktionen.learn(_me, cur, story)       # the factions' clocks (Tabletop-Punkt 7)
@@ -5528,7 +5639,7 @@ def view(rid, pid, now=None):
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     runs = rd["offen"] and not rd.get("pause")
     left = max(0, int(turn_end(rd) - max(now, turn_start(rd)))) if runs else rd["zug_s"] + MEHR_S * len(rd.get("mehr") or {})
-    alle = bool(rd["offen"]) and all(x in rd["offen"] and not rueckfrage.waiting(rd, x) for x, p in seated(rd) if not p.get("ruht") and not zustand(p["held"]))
+    alle = bool(rd["offen"]) and all(x in rd["offen"] and not rueckfrage.waiting(rd, x, now) for x, p in seated(rd) if not p.get("ruht") and not zustand(p["held"]))
     gnade = max(0, int(GNADE_S - (now - max(x.get("t", 0) for x in rd["offen"].values())))) if alle and not rd.get("pause") else 0
     mehr = [rd["plaetze"][x]["held"]["name"] for x in (rd.get("mehr") or {}) if (rd["plaetze"].get(x) or {}).get("held")]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
@@ -6046,7 +6157,7 @@ def for_live():
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "oel", "beleg_falsch", "hoer_namen",
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",

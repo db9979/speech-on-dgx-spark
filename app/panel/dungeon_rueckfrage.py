@@ -8,7 +8,9 @@ quoted speech). Then the action is kept as written but marked (rd["offen"][pid][
 tut Morpheus?“ with up to VORSCHLAEGE suggestions and „So lassen“. The suggestions come only from fixed patterns and the
 scene's data (foes still up, the props of the fight, people here, the ways of the map, the hero's own attack spell),
 never from the model's words. A marked action does not count as „everyone acted“ (dungeon.due), so the turn waits
-for the seat until its time runs out; then the action counts as written. Tapping a suggestion puts its text into the
+for the seat at most WARTE_S after the action (Review 27.10. Paket 6, never the turn's whole time); then the action
+counts as written. A sentence with a subject and a word with a verb's ending after it („Ich durchsuche die Truhe“, „Wir
+rasten“, „Bela lacht“) is a doing (subject_verb), only a sentence without a verb asks „kein Tun“. Tapping a suggestion puts its text into the
 field; sending it replaces the action. „So lassen“ (so_lassen) takes the mark off. Never twice for the same text, never
 blocking.
 
@@ -31,6 +33,7 @@ WOERTER_MIN = 2           # words of an action at least
 BUCHSTABEN_MIN = 8        # letters of an action at least
 VORSCHLAEGE = 3           # suggestions at most
 VORSCHLAG_MAX = 80        # characters of one suggestion
+WARTE_S = 30              # a question holds the turn at most this long after the action (Review 27.10. Paket 6)
 
 FRAGE = ("Was genau tut {name}?", "What exactly does {name} do?")
 WARUM = {"kurz": ("Die Aktion ist sehr kurz.", "The action is very short."),
@@ -53,7 +56,18 @@ TUN_WORTE = re.compile(
     r"say|ask|call|answer|talk|speak|tell|beg|offer|threaten|persuade|lie|"
     r"take|grab|pick|give|hand|show|put|pull|drink|eat|open|close|shut|"
     r"search|examine|inspect|check|look|watch|listen|smell|feel|read|"
-    r"cast|heal|help|protect|pray|sing|play|build|repair|break|cut|throw|use|nutz|benutz|verwend)\w*")
+    r"cast|heal|help|protect|pray|sing|play|build|repair|break|cut|throw|use|nutz|benutz|verwend|"
+    r"durchsuch|verbind|rast|bestell|befrag|verfolg|plünder|pluender|entschärf|entschaerf|steig|zünd|zuend|duck|bewach|kauf)\w*")
+# a subject and a word with a verb's ending after it is a doing (Review 27.10. Paket 6: „Ich durchsuche die Truhe“ is no
+# question); never one of these words after the subject („Ich bin müde“, „Ich habe Hunger“, „I'm tired“)
+SUBJEKT = ("ich", "wir", "du", "ihr", "er", "sie", "man", "i", "we", "you", "he", "she", "they")
+KEIN_VERB = {"bin", "bist", "ist", "sind", "seid", "war", "waren", "warst", "wäre", "waere", "habe", "hab", "hast", "hat", "haben",
+             "habt", "hatte", "fühle", "fuehle", "glaube", "denke", "weiß", "weiss", "heiße", "heisse", "finde", "werde", "wurde",
+             "auch", "so", "halt", "mal", "noch", "nicht", "einfach", "irgendwie", "eigentlich", "wohl", "und", "oder", "aber",
+             "denn", "selbst", "allein", "alleine", "müde", "muede", "hier", "da", "dort", "jetzt", "gerade", "schon",
+             "am", "is", "are", "was", "were", "feel", "have", "has", "had", "think", "guess", "m", "re", "ve", "d", "ll",
+             "just", "also", "not", "really", "maybe", "too", "here", "there", "now", "alone", "tired"}
+VERB_ENDE = ("e", "n", "t")    # German: ich gehe, wir rasten, Bela lacht (English after a subject: any word but KEIN_VERB)
 # a pronoun as the last thing the action names („nimm es“, „greif ihn an“, „take it“), never an article before a noun
 FUERWORT = re.compile(r"(?i)(?<!\w)(?:es|ihn|ihm|das|dies|it|him|her|them|that|this)\s*(?:an|auf|mit|um|weg|hoch|ab|up|on|down|out)?\W*$")
 _ANF = re.compile(r"[„“\"»«]")
@@ -115,9 +129,21 @@ def unclear(dm, r, rd, pid, text):
                  or dungeon_kampf.MAGIE_WORTE.search(low) or dungeon_kampf.FRIEDEN_WORTE.search(low))
     if doing and not named and FUERWORT.search(low) and len(words) <= 6 and _choices(r, rd) > 1:
         return "fuerwort"                        # „nimm es“, „greif ihn an“ while more than one fits
-    if not doing and not named:
+    if not doing and not named and not subject_verb(dm, rd, words):
         return "kein_tun"
     return ""
+
+
+def subject_verb(dm, rd, words):
+    """Whether a subject (SUBJEKT or a seated hero's name) has a word after it that is a verb by its ending (VERB_ENDE,
+    English any word), never one of KEIN_VERB."""
+    heroes = {str(p["held"]["name"]).lower() for _, p in dm.seated(rd) if p.get("held")}
+    for i, w in enumerate(words[:-1]):
+        if w in SUBJEKT or w in heroes:
+            nxt = words[i + 1]
+            if nxt not in KEIN_VERB and nxt not in SUBJEKT and len(nxt) >= 2 and (nxt.endswith(VERB_ENDE) or w in ("i", "we", "you", "they")):
+                return True
+    return False
 
 
 def _choices(r, rd):
@@ -246,9 +272,11 @@ def milder_frage(rd, pid):
     print("dungeon: rueckfrage | milder", flush=True)
 
 
-def waiting(rd, pid):
-    """Whether the seat's action still waits for its answer to the question (dungeon.due waits for it)."""
-    return bool(((rd.get("offen") or {}).get(pid) or {}).get("frage"))
+def waiting(rd, pid, now=None):
+    """Whether the seat's action still waits for its answer to the question (dungeon.due waits for it, with now at
+    most WARTE_S after the action)."""
+    a = (rd.get("offen") or {}).get(pid) or {}
+    return bool(a.get("frage")) and (now is None or now - a.get("t", 0) < WARTE_S)
 
 
 def view(rd, pid):
