@@ -56,17 +56,71 @@ SCHEMA = {"type": "array", "maxItems": AENDERUNGEN_MAX, "items": {"type": "objec
 AUFGABE = {
     "de": (f" In nsc meldest du höchstens {AENDERUNGEN_MAX} Änderungen bei Figuren dieser Szene (nsc_szene): haltung "
            "besser oder schlechter, wenn ein Held (held) die Figur für sich gewinnt oder verärgert; kante schuldet, fürchtet, "
-           "mag oder weiss mit ziel (ein Held oder eine Figur), wenn eine neue Beziehung entsteht. Bleib bei Aussehen, Art und "
-           "Beruf einer Figur aus nsc_szene; Wunsch und Geheimnis treiben sie an, verrate das Geheimnis nicht ohne Grund. "
+           "mag oder weiss mit ziel (ein Held oder eine Figur), wenn eine neue Beziehung entsteht. Bleib bei Geschlecht, Aussehen, Art "
+           "und Beruf einer Figur aus nsc_szene; Wunsch und Geheimnis treiben sie an, verrate das Geheimnis nicht ohne Grund. "
            "Wesen und Ziele einer Figur bestimmen, was sie tut; nsc_ziel_erreicht nennt, wer gerade ein Ziel erreicht hat: "
            "lass es in der Welt spürbar werden. Für eine neue Figur nimm einen Namen aus freie_namen."),
     "en": (f" In nsc report at most {AENDERUNGEN_MAX} changes for people of this scene (nsc_szene): haltung besser or "
            "schlechter when a hero (held) wins the person over or angers them; kante schuldet, fuerchtet, mag or weiss with "
-           "ziel (a hero or a person) when a new relation begins. Keep to the looks, manner and occupation of a person from "
+           "ziel (a hero or a person) when a new relation begins. Keep to the gender, looks, manner and occupation of a person from "
            "nsc_szene; wish and secret drive them, do not give the secret away without a reason. Traits (wesen) and goals "
            "(ziele) decide what a person does; nsc_ziel_erreicht names who just reached a goal: let the world feel it. For a "
            "new person take a name from freie_namen."),
 }
+
+
+# a name or role that is a title names the occupation (Dominik 2026-10-27 „schattenwächter händler? stimmt das?“): the
+# German stems besides the occupation table's own words (nsc_beruf, its forms m and w), mapped to the table's English word
+TITEL = {"waechter": "guard", "wächter": "guard", "hueter": "guard", "hüter": "guard", "haendler": "trader", "kaufmann": "trader",
+         "magier": "mystic", "zauberer": "mystic", "seher": "mystic", "priester": "priest", "jaeger": "hunter", "jäger": "hunter",
+         "ritter": "knight", "schmied": "smith", "dieb": "thief", "wirt": "innkeeper", "heiler": "healer", "spaeher": "scout",
+         "späher": "scout", "gelehrt": "scholar", "kundschafter": "scout", "soeldner": "mercenary", "söldner": "mercenary"}
+
+
+def _beruf_rows(r, rd):
+    t = tabellen.table(r, "nsc_beruf") or {}
+    w = rd.get("welt")
+    return [z for z in t.get("zeilen") or [] if not z.get("welten") or w in z["welten"]]
+
+
+def _sex_of_word(word, form, row):
+    """The gender a word of a name or role gives: the table's feminine or masculine form, a German „-in“ ending."""
+    if row.get("w") and form == row["w"].lower() or word.endswith(form + "in") or form.endswith("in") and not row.get("m"):
+        return "weiblich"
+    return "maennlich" if row.get("m") and form == row["m"].lower() or form in TITEL else ""
+
+
+def beruf_of(r, rd, text):
+    """The occupation a name or role names (([de, en], gender) or (None, "")): a word that is or ends in a form of the
+    occupation table (nsc_beruf: t, m, w) or a stem of TITEL („Schattenwächter“ → guard, masculine)."""
+    rows = _beruf_rows(r, rd)
+    by_en = {z["t"][1]: z for z in rows}
+    for word in re.findall(r"\w+", str(text or "").lower()):
+        for z in rows:
+            for f in {str(x).lower() for x in (z.get("m"), z.get("w"), z["t"][0]) if x}:
+                if len(f) >= 4 and (word == f or word.endswith(f) or word.endswith(f + "in")):
+                    return list(z["t"]), _sex_of_word(word, f, z)
+        for f, en in TITEL.items():
+            if en in by_en and (word.endswith(f) or word.endswith(f + "in")):
+                z = by_en[en]
+                return list(z["t"]), "weiblich" if word.endswith(f + "in") else "maennlich"
+    return None, ""
+
+
+def beruf_wort(r, rd, b, sex):
+    """The occupation's German word in the person's gender: the table's form m or w when it has them, else as rolled."""
+    z = next((z for z in _beruf_rows(r, rd) if z["t"][1] == b[1]), None) or {}
+    return (z.get("w") if sex == "weiblich" else z.get("m") if sex == "maennlich" else None) or b[0]
+
+
+def gender(r, rd, x):
+    """The person's one gender (dungeon_stimmen.fix, written once on the card), its occupation word made to fit."""
+    import dungeon_stimmen
+    sex = dungeon_stimmen.fix(rd, x)
+    b = (x.get("karte") or {}).get("beruf")
+    if isinstance(b, list) and len(b) == 2:
+        x["karte"]["beruf"] = [beruf_wort(r, rd, b, sex), b[1]]
+    return sex
 
 
 def on(rd):
@@ -161,10 +215,20 @@ def sync(r, rd, rng=None):
         k = p["name"].lower()
         if k not in ns:
             import dungeon_personen                # a known person of the catalog comes with its own card (Personen-Katalog 3)
-            ns[k] = dungeon_personen.adopt(r, rd, p["name"]) or {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
+            import dungeon_stimmen
+            x = dungeon_personen.adopt(r, rd, p["name"])
+            if not x:
+                x = {"name": p["name"], "karte": card(r, rd, rng), "kanten": [], "haltung": {}, "gesehen": None}
+                b, sex = beruf_of(r, rd, f"{p['name']} {p.get('rolle') or ''}")   # a title or role names the occupation
+                if b:
+                    x["karte"]["beruf"] = b
+                dungeon_stimmen.fix(rd, x, p.get("geschlecht") or sex)   # one gender from now on
+            ns[k] = x
             n += 1
         if "wesen" not in ns[k]:                  # traits and goals (Tabletop-Punkt 6), also for cards made before
             ns[k].update(wesen=traits(rng), ziele=goals(r, rd, p.get("ziel") or "", rng))
+    for x in ns.values():                         # also cards made before: the gender their portrait was painted in
+        gender(r, rd, x)
     return n
 
 
@@ -411,7 +475,7 @@ def facts(r, rd, li, rng=None):
     szene = []
     for k in here:
         x, p = ns[k], w.get(k) or {}
-        szene.append({"name": x["name"], **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
+        szene.append({"name": x["name"], "geschlecht": _sex_word(rd, x["name"], li), **{f: p[f] for f in ("rolle", "ziel", "sprache") if p.get(f)},
                       **{f: v[li] for f, v in x["karte"].items()},
                       **({"kanten": [f"{KANTEN[c['art']][li]} {c['ziel']}" for c in x["kanten"]]} if x["kanten"] else {}),
                       **({"haltung": {hn.get(h, h): word(v, li) for h, v in x["haltung"].items()}} if x["haltung"] else {}),
@@ -427,6 +491,12 @@ def facts(r, rd, li, rng=None):
     if ruf(rd, li):
         out["ruf"] = ruf(rd, li)
     return out
+
+
+def _sex_word(rd, name, li):
+    """The person's gender as a word of the language, for the pronouns of the narration."""
+    import dungeon_stimmen
+    return dungeon_stimmen.WORTE["geschlecht"][dungeon_stimmen._of(rd, name)["geschlecht"]][li]
 
 
 def task(rd, lang):

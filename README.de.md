@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.167** KI-Dungeon-Master: jede Person hat ein festes Geschlecht, Porträt, Stimme, Beruf (Mystiker oder Mystikerin) und Pronomen folgen daraus, ein Titel wie „Schattenwächter“ bestimmt den Beruf
 - **V01.1.166** KI-Dungeon-Master: Überreden zum Mitkommen (Schalter, aus), ob eine gefragte Person mitkommt, entscheiden ihre Haltung zum Helden und eine Charisma-Probe des Panels, treu Ergebene kommen ohne Probe (LlamaTale-Idee 4)
 - **V01.1.165** KI-Dungeon-Master: echte Würfel auch für Angriffe im Kampf, nach zweimal nicht geworfen nur 10 s Wartezeit, Schwierigkeit mit Wort
 - **V01.1.164** KI-Dungeon-Master: jeder Gegner sagt, was er ist; Gefährten mit festem Geschlecht und Alter, feste Aussehen-Tabellen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.160** Einstellungen: Text neben einem Feld wird nie mehr schmal gedrückt, „Zeitserver im Heimnetz“ unter Betrieb stand Wort für Wort untereinander, jetzt rückt ein Feld unter den Text, wenn daneben weniger als etwa 180 px blieben, auch bei 820 px Fensterbreite neben beiden Menüs (Sprachausgabe, Sprachmodell, Vorgaben, Stimmen), und kein Auswahlfeld ragt mehr aus seinem Kasten
 - **V01.1.159** KI-Dungeon-Master: „gehe zur alten Bibliothek“ führt wirklich dorthin (keine Probe, der Erzähler muss den Weg nehmen, sonst geht das Panel), „vage“ verlangt einen Ansatzpunkt aus den Daten der Szene, kein „W-2“ mehr auf der Würfelkarte, die Geschichte blendet oben weich aus
 - **V01.1.158** KI-Dungeon-Master: die Karte sagt schon vor der Erzählung, wen eine Aktion zum Mitkommen fragt, damit das Panel die Charisma-Probe vorher würfeln kann (LlamaTale 4)
-- **V01.1.157** KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 
 
 

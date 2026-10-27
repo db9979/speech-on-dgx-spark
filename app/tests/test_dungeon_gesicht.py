@@ -156,7 +156,7 @@ class Base(unittest.TestCase):
             if zug is not None:
                 rd["zug"] = zug
             w = rd.setdefault("wahrheit", {"personen": []})
-            w.setdefault("personen", []).append({"name": name, "rolle": "", "ziel": "", "sprache": ""})
+            w.setdefault("personen", []).append({"name": name, "rolle": "", "ziel": "", "sprache": "", "geschlecht": "weiblich"})   # written on the card (V01.1.162)
             nsc.sync(r, rd, random.Random(7))
             rd["nsc"][name.lower()]["gesehen"] = rd.get("zug", 0)
             if spoke:

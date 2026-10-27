@@ -5909,6 +5909,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Ein Geschlecht je Person (V01.1.167, Dominik 2026-10-27, Screenshot „Leute“: „silas - männliches bild - mystikerin“, „schattenwächter händler? stimmt das?“): Ohne neuen Schalter, unter *NSC-Gedächtnis und Chronik*. Bisher kamen Geschlecht, Beruf und Pronomen aus drei Quellen: das Porträt aus den Stimm-Merkmalen, der Beruf als Zufallszeile mit fester Endung, das Pronomen vom Modell. Jetzt wird das Geschlecht beim Anlegen der Karte einmal festgeschrieben (dungeon_stimmen.fix, auf der Karte rd[\"nsc\"][…][\"geschlecht\"] mit den Wörtern der Helden weiblich, maennlich, divers): aus der Wahrheit des Kapitels (neues Feld geschlecht, die Aufgabe verlangt einen Eigennamen statt eines Titels), sonst aus einem Titel oder einer Rolle („Schattenwächterin“ weiblich), sonst aus dem Namen. Porträt (dungeon_gesicht.who), Stimme, Berufswort (Form m oder w der Tabelle nsc_beruf, dungeon_nsc.beruf_wort) und die Pronomen des Erzählers (geschlecht in nsc_szene) folgen daraus. Nennt der Name oder die Rolle einen Beruf („Schattenwächter“ → Wache), nimmt die Karte diesen statt eines zufälligen (dungeon_nsc.beruf_of). Karten von vorher behalten das Geschlecht, in dem ihr Porträt gemalt wurde"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "; ihr Berufswort passt sich an. Die Tabellen selbst (beide Formen je Beruf, „Aussehen“ nur Äußerliches) pflegt der DnDAppFiles-Thread."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Überreden zum Mitkommen (V01.1.166, LlamaTale-Idee 4, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Überreden zum Mitkommen* (aus; baut auf „NSC-Gedächtnis und Chronik“ und braucht eine Runde mit Karte). Ohne den Schalter nimmt ein Wort wie „komm mit“ oder „begleite uns“ eine Person der Karte sofort mit. Mit ihm entscheidet das Panel, wer mitkommt (dungeon_mitkommen.py, die Frage erkennt dungeon_karte.fragen des Karten-Threads): Steht die Person nicht am Ort der Gruppe, hat sie keine Karte oder ist sie dem Helden höchstens neutral gesonnen (Haltung unter +1), bleibt sie ohne Probe; „treu ergeben“ (+3) kommt ohne Probe mit; dazwischen würfelt das Panel statt des Modells eine Charisma-Probe (freundlich 13, herzlich 11). Die Antwort steht in den Fakten der Erzählung (mitkommen), das Modell schreibt nur den Satz der Person und entscheidet nichts. Nach der Erzählung nimmt die Karte die Person mit (dungeon_karte.mitnehmen), im Verlauf steht „Grimma kommt mit euch.“ oder „Grimma bleibt hier.“, die Chronik notiert den Beitritt. Wer mitkommt, reist und spricht mit der Gruppe,"
 },
 {
@@ -21054,6 +21070,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: one gender per person (V01.1.167, Dominik 2026-10-27, screenshot „Leute“: „silas - männliches bild - mystikerin“, „schattenwächter händler? stimmt das?“): No new switch, under *NPC memory and chronicle*. Until now gender, occupation and pronouns came from three sources: the portrait from the voice traits, the occupation as a random row with a fixed ending, the pronoun from the model. Now the gender is written once when the card is made (dungeon_stimmen.fix, on the card rd[\"nsc\"][…][\"geschlecht\"] with the heroes' words weiblich, maennlich, divers): from the chapter's truth (new field geschlecht, the task asks for a proper name instead of a title), else from a title or role („Schattenwächterin“ female), else from the name. Portrait (dungeon_gesicht.who), voice, occupation word (form m or w of the table nsc_beruf, dungeon_nsc.beruf_wort) and the narrator's pronouns (geschlecht in nsc_szene) follow it. When the name or role names an occupation („Schattenwächter“ → guard), the card takes it instead of a random one (dungeon_nsc.beruf_of). Cards made before keep the gender their portrait was painted in; their occupation word adapts. The tables themselves (both forms per"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " occupation, „looks“ only outward things) are kept by the DnDAppFiles thread."
 },
 {
 "lang": "en",

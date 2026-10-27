@@ -155,17 +155,36 @@ def learn(rd, npcs):
         keep[name] = {k: s[k] if s.get(k) in n[k] else base[k] for k in MERKMALE}
 
 
+KARTE = {"weiblich": "weiblich", "maennlich": "maennlich", "divers": "offen"}   # the card's word (the heroes') → the voice's
+
+
+def fix(rd, card, sex=""):
+    """A person's gender written on its card for good (card["geschlecht"], the heroes' words weiblich, maennlich,
+    divers; Dominik 2026-10-27, „silas - männliches bild - mystikerin“): the given one (maennlich, weiblich, offen),
+    else the one its voice and portrait had so far (kept traits, else the name's); a written one stays. One source
+    for the voice, the portrait (dungeon_gesicht.who), the occupation's word and the pronouns. Returns it in the
+    voice's words."""
+    if card.get("geschlecht") not in KARTE:
+        g = sex if sex in data()["npc"]["geschlecht"] else _of(rd, card["name"])["geschlecht"]
+        card["geschlecht"] = {v: k for k, v in KARTE.items()}.get(g, "divers")
+    return KARTE[card["geschlecht"]]
+
+
 def _of(rd, name, sex=""):
-    """An NPC's traits: kept, else those of its name; sex sets the gender of one nobody named (the pronoun after its
-    quote, vortrag.pronoun)."""
-    t = of_name(name, (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40]))  # a trait added later: by the name
+    """An NPC's traits: kept, else those of its name; the gender written on its card (fix) wins; sex sets the gender
+    of one nobody named (the pronoun after its quote, vortrag.pronoun)."""
+    k = str(name or "").strip().lower()
+    t = of_name(name, (rd.get("npc_stimmen") or {}).get(k[:40]))  # a trait added later: by the name
+    sex = sex or KARTE.get(((rd.get("nsc") or {}).get(k) or {}).get("geschlecht"), "")
     return dict(t, geschlecht=sex) if sex else t
 
 
 def sex(rd, name):
     """A known NPC's gender ("maennlich", "weiblich"), "" for anyone else (a hero, a name never heard)."""
-    t = (rd.get("npc_stimmen") or {}).get(str(name or "").strip().lower()[:40])
-    return t["geschlecht"] if t and t.get("geschlecht") in ("maennlich", "weiblich") else ""
+    k = str(name or "").strip().lower()
+    t = (rd.get("npc_stimmen") or {}).get(k[:40])
+    g = KARTE.get(((rd.get("nsc") or {}).get(k) or {}).get("geschlecht")) or (t or {}).get("geschlecht")
+    return g if g in ("maennlich", "weiblich") else ""
 
 
 def npc(rd, name, sex=""):

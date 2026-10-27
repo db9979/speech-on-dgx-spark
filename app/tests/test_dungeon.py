@@ -8505,7 +8505,8 @@ class Fight(Turns):
         self.assertEqual(set(rd["nsc"]), {"oskar", "mira"})
         for x in rd["nsc"].values():
             self.assertTrue(set(x["karte"]) <= set(nsc.KARTE) and "aussehen" in x["karte"] and "geheimnis" in x["karte"])
-            self.assertIn(x["karte"]["beruf"], tabellen.rows(r, "nsc_beruf", rd["welt"]))
+            z = next(z for z in nsc._beruf_rows(r, rd) if z["t"][1] == x["karte"]["beruf"][1])   # a row, in the person's form
+            self.assertIn(x["karte"]["beruf"][0], {z["t"][0], z.get("m"), z.get("w")})
         self.assertEqual(rd["nsc"]["oskar"]["haltung"], {"arvid": 1})
         self.assertEqual(rd["nsc"]["oskar"]["kanten"], [{"art": "schuldet", "ziel": "Bela"}])
         self.assertEqual(rd["nsc"]["mira"]["haltung"], {})
@@ -8937,6 +8938,52 @@ class Fight(Turns):
         self.assertTrue(all(len(v) == 2 and all("{n}" in x for x in v) for v in nsc.GESTEN.values()))
         t = wa.for_live()
         self.assertTrue(t["rasten"] >= 1 and t["gewandert"] >= 1 and t["gesten"] >= 1, t)
+
+    def test_a_person_has_one_gender_and_fitting_occupation(self):
+        """Dominik 2026-10-27 („silas - männliches bild - mystikerin“, „schattenwächter händler? stimmt das?“): a person's
+        gender is written once when its card is made (the truth's geschlecht, else a title's, else the name's;
+        dungeon_stimmen.fix) and portrait, voice, occupation word (the table's form m or w) and the narration's pronouns
+        follow it; a name or role that is a title names the occupation; cards made before keep their portrait's gender."""
+        import copy
+        import dungeon_nsc as nsc
+        import dungeon_stimmen
+        helpers.keep_chat(self, "dungeon_nsc")
+        helpers.set_config(dungeon_nsc=True)
+        r = copy.deepcopy(dungeon.rules())
+        rows = next(t for t in r["tabellen"] if t["id"] == "nsc_beruf")["zeilen"]
+        for z in rows:                                   # the forms as the DnDAppFiles thread adds them
+            if z["t"][1] == "mystic":
+                z.update(m="Mystiker", w="Mystikerin")
+            if z["t"][1] == "guard":
+                z.update(m="Wache", w="Wache")
+        rd = self.state(self.rid)
+        rd["nsc"], rd["npc_stimmen"] = {}, {}
+        rd["wahrheit"] = {"personen": [{"name": "Schattenwächter", "rolle": "hütet die Ruinen"},
+                                       {"name": "Mara", "rolle": "Mystikerin der Gilde", "geschlecht": "maennlich"},
+                                       {"name": "Edda", "rolle": "Mystikerin der Gilde"}], "gruppen": [], "geheimnisse": []}
+        nsc.sync(r, rd, random.Random(3))
+        sw, mara, edda = rd["nsc"]["schattenwächter"], rd["nsc"]["mara"], rd["nsc"]["edda"]
+        self.assertEqual(sw["karte"]["beruf"][1], "guard")                       # the title names the occupation
+        self.assertEqual(dungeon_stimmen.sex(rd, "Schattenwächter"), "maennlich")
+        self.assertEqual((dungeon_stimmen.sex(rd, "Mara"), mara["karte"]["beruf"]), ("maennlich", ["Mystiker", "mystic"]))   # the truth's gender wins
+        self.assertEqual((dungeon_stimmen.sex(rd, "Edda"), edda["karte"]["beruf"]), ("weiblich", ["Mystikerin", "mystic"]))
+        self.assertEqual(nsc.beruf_of(r, rd, "Schattenwächterin"), (["Wache", "guard"], "weiblich"))
+        self.assertEqual(nsc.beruf_of(r, rd, "ein stiller Mann"), (None, ""))
+        # a card made before: the gender its portrait was painted in (the name's) is written down, the word follows
+        rd["nsc"]["silas"] = {"name": "Silas", "karte": {"beruf": ["Mystikerin", "mystic"]}, "kanten": [], "haltung": {}, "gesehen": None}
+        sex = dungeon_stimmen._of(rd, "Silas")["geschlecht"]
+        nsc.sync(r, rd, random.Random(3))
+        self.assertEqual(rd["nsc"]["silas"]["geschlecht"], {"offen": "divers"}.get(sex, sex))   # on the card, the heroes' words
+        self.assertNotIn("silas", rd["npc_stimmen"])                                # no voice yet: the portrait still waits for it
+        self.assertEqual(rd["nsc"]["silas"]["karte"]["beruf"][0], {"maennlich": "Mystiker", "weiblich": "Mystikerin"}.get(sex, "Mystikerin"))
+        self.assertEqual(dungeon_stimmen.fix(rd, rd["nsc"]["silas"], "weiblich" if sex == "maennlich" else "maennlich"), sex)   # never changes again
+        self.assertEqual(dungeon_stimmen._of(rd, "Silas")["geschlecht"], sex)
+        self.assertIn(nsc._sex_word(rd, "Mara", 0), ("männlich",))
+        # the truth keeps a valid gender, drops another
+        w = dungeon.erz.check_truth(dungeon, r, rd, {"personen": [{"name": "Hella", "rolle": "Küsterin", "geschlecht": "weiblich"},
+                                                                   {"name": "Brann", "rolle": "Fischer", "geschlecht": "x"}]})
+        self.assertEqual([p.get("geschlecht") for p in w["personen"]], ["weiblich", None])
+        self.assertIn("kein Titel", dungeon.erz.AUFGABE_WAHRHEIT["de"])
 
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):

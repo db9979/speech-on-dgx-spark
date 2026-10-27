@@ -4013,6 +4013,13 @@
 "titel": "Dungeon-Master: Überreden zum Mitkommen",
 "text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Überreden zum Mitkommen an. A: In einer Runde mit Karte eine Person, die euch noch nicht kennt (neutral), mit „Komm mit uns, <Name>.“ fragen: im Verlauf „<Name> bleibt hier.“, keine Probe. B: Der Person helfen oder etwas schenken (Haltung freundlich), dann wieder fragen: eine Würfelkarte „<Name> zum Mitkommen überreden“ (Charisma); gelungen „<Name> kommt mit euch.“, die Person zieht auf der Karte mit. C: Die Antwort der Person in der Erzählung passt zur Entscheidung. D: Schalter aus: „komm mit“ nimmt die Person sofort mit.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P598",
+"v": 1167,
+"titel": "Dungeon-Master: Ein Geschlecht je Person",
+"text": "Mit NSC-Gedächtnis und Chronik eine neue Runde beginnen, unter „Leute“ ansehen: A: Porträt, Beruf (Mystiker/Mystikerin, Händler/Händlerin) und die Pronomen der Erzählung passen zueinander. B: Eine Person mit Titel als Name (etwa „…wächter“) hat den passenden Beruf (Wache). C: Eine Runde von vorher: das Porträt bleibt, der Beruf passt sich an sein Geschlecht an. D: Unter „Aussehen“ steht nur Äußerliches (sobald der DnDAppFiles-Thread die Tabelle umgestellt hat).",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -137,20 +137,22 @@ def _strs(n, k):
     return {"type": "string", "maxLength": n + 40} if k is None else {"type": "array", "maxItems": k, "items": {"type": "string", "maxLength": n + 40}}
 
 
+GESCHLECHT = ("maennlich", "weiblich", "offen")   # a person's gender in the truth, fixed from then on (dungeon_stimmen.fix)
 SCHEMA_WAHRHEIT = {"type": "object", "additionalProperties": False, "required": ["personen"], "properties": {
     "personen": {"type": "array", "maxItems": PERSONEN[1], "items": {"type": "object", "additionalProperties": False,
                  "required": ["name", "rolle"], "properties": {"name": _strs(NAME_LEN, None), "rolle": _strs(TEIL_LEN, None),
-                                                               "ziel": _strs(TEIL_LEN, None), "sprache": _strs(TEIL_LEN, None)}}},
+                                                               "ziel": _strs(TEIL_LEN, None), "sprache": _strs(TEIL_LEN, None),
+                                                               "geschlecht": {"type": "string", "enum": list(GESCHLECHT)}}}},
     "gruppen": {"type": "array", "maxItems": GRUPPEN_MAX, "items": {"type": "object", "additionalProperties": False,
                 "required": ["name"], "properties": {"name": _strs(NAME_LEN, None), "will": _strs(TEIL_LEN, None)}}},
     "geheimnisse": _strs(GEHEIM_LEN, GEHEIM_MAX)}}
 AUFGABE_WAHRHEIT = {
     "de": f"Aufgabe: Lege die feste Wahrheit dieses Kapitels fest, bevor es beginnt: {PERSONEN[0]} bis {PERSONEN[1]} "
-          f"Personen der Welt (name, rolle, ziel, sprache: wie sie redet), bis zu {GRUPPEN_MAX} Gruppen mit dem, was "
+          f"Personen der Welt (name: ein Eigenname, kein Titel; geschlecht; rolle, ziel, sprache: wie sie redet), bis zu {GRUPPEN_MAX} Gruppen mit dem, was "
           f"sie wollen, und bis zu {GEHEIM_MAX} Geheimnisse, die die Gruppe aufdecken kann. Passend zu Welt, Ort, "
           "Einstieg und Geschichte; keine Figur der Gruppe. Kurz, ohne Werte.",
     "en": f"Task: set the fixed truth of this chapter before it begins: {PERSONEN[0]} to {PERSONEN[1]} people of the "
-          f"world (name, rolle: role, ziel: goal, sprache: how they talk), up to {GRUPPEN_MAX} groups with what they "
+          f"world (name: a proper name, no title; geschlecht: gender; rolle: role, ziel: goal, sprache: how they talk), up to {GRUPPEN_MAX} groups with what they "
           f"want, and up to {GEHEIM_MAX} secrets the group can uncover. Fitting world, place, opening and story; no "
           "character of the group. Short, no values."}
 WAHRHEIT_LABEL = ("Feste Wahrheit dieses Kapitels (halte dich daran, Geheimnisse nur aufdecken, wenn die Gruppe sie "
@@ -174,7 +176,8 @@ def check_truth(dm, r, rd, obj):
         if len(name) < 2 or name.lower() in heroes or name.lower() in seen:
             continue
         seen.add(name.lower())
-        personen.append({"name": name, **{k: _part(dm, r, rd, p.get(k), TEIL_LEN) for k in ("rolle", "ziel", "sprache")}})
+        personen.append({"name": name, **{k: _part(dm, r, rd, p.get(k), TEIL_LEN) for k in ("rolle", "ziel", "sprache")},
+                         **({"geschlecht": p["geschlecht"]} if p.get("geschlecht") in GESCHLECHT else {})})
     if not personen:
         return None
     gruppen = []
