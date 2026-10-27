@@ -1083,7 +1083,8 @@ class Permadeath(Turns):
 
     def test_rescue_rolls_get_a_hero_up(self):
         """Dominik 2026-10-25 „1 und 2“, Punkt 1: rescue rolls by the panel as in D&D, from the second told turn down. RETTUNG
-        or more succeeds, a 1 counts as two failures, a 20 gets it up at once, BODEN_ZUEGE successes too, with 1 life."""
+        or more succeeds, a 1 counts as two failures, a 20 gets it up at once with 1 life; BODEN_ZUEGE successes make it
+        stable (Review 27.10. B2): no more rolls, with no fight it comes to with 1 life."""
         r = dungeon.rules()
         self.down_bela()
 
@@ -1107,14 +1108,69 @@ class Permadeath(Turns):
         self.assertEqual([(e["wurf"], e["ok"], e["erfolge"], e["fehl"]) for e in rd["log"] if e["art"] == "todeswurf"],
                          [(12, True, 1, 0), (1, False, 1, 2), (20, True, 3, 2)])
         self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "zustand"][-1], "auf")
-        # down again: the first turn lies without a roll, then three successes get it up
+        # down again: the first turn lies without a roll, then three successes make it stable, then it comes to
         self.set_hero(self.gp, leben=0)
         rd = roll(dungeon.RETTUNG, dungeon.RETTUNG, 19)          # the first call starts the count, it rolls nothing
         self.assertEqual(rd["plaetze"][self.gp]["held"]["rettung"], [2, 0])
-        rd = roll(dungeon.RETTUNG)
-        self.assertEqual(rd["plaetze"][self.gp]["held"]["leben"], 1)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = roll(dungeon.RETTUNG)
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual((bela["leben"], bela.get("stabil"), "rettung" in bela), (0, True, False))   # stable, not up
+        self.assertIn("dungeon: zustand | stabil", out.getvalue())
+        self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "zustand"][-1], "stabil")
+        rd = roll(1)                                             # no fight: it comes to with 1 life, it rolls nothing
+        bela = rd["plaetze"][self.gp]["held"]
+        self.assertEqual((bela["leben"], "stabil" in bela), (1, False))
         js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
         self.assertIn("if(e.art==='todeswurf')return", js)
+
+    def test_the_whole_group_down_is_spared_and_a_won_fight_gives_breath(self):
+        """Review 27.10. B2 and B5 (Dominik 2026-10-27 „ok“, decisions 1 and 2): every hero at the table down in a fight,
+        one of them already lying: the fight ends in mercy for all (1 life, half the gold, one thing, no experience);
+        after a won fight every hero up gets a quarter of its life back (Verschnaufen, no switch); the budget of the next
+        encounter shrinks with the group's share of its life, at least ANTEIL_MIN."""
+        r = dungeon.rules()
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            held = dungeon._living(rd)
+            full = kampf.budget(dungeon, r, rd, held)
+            for h in held:
+                h["leben"] = h["leben_max"] // 2
+            share = sum(h["leben"] for h in held) / sum(h["leben_max"] for h in held)
+            self.assertLessEqual(abs(kampf.budget(dungeon, r, rd, held) - full * share), 1)
+            for h in held:
+                h["leben"] = 0
+            self.assertLessEqual(abs(kampf.budget(dungeon, r, rd, held) - full * kampf.ANTEIL_MIN), 1)
+            foe = kampf.offer(dungeon, r, rd, held)[0]
+            kampf.start(dungeon, r, rd, held, [(foe, 1)], 0)
+            with mock.patch.object(dungeon, "save_roll", return_value=dungeon.RETTUNG - 1), \
+                    contextlib.redirect_stdout(io.StringIO()) as out:
+                dungeon.down(r, rd, random.Random(3))            # both fall this turn: no mercy yet
+                self.assertIn("kampf", rd)
+                dungeon.down(r, rd, random.Random(3))            # both lay already: mercy for all
+            self.assertIn("dungeon: zustand | gnade | gruppe | 2", out.getvalue())
+            self.assertNotIn("kampf", rd)
+            self.assertEqual([e["was"] for e in rd["log"] if e["art"] == "kampf"][-1], "gnade")
+            self.assertEqual([(dungeon.zustand(p["held"]), p["held"]["leben"]) for _, p in dungeon.seated(rd)], [("", 1), ("", 1)])
+            self.assertEqual(len([e for e in rd["log"] if e["art"] == "zustand" and e["was"] == "gnade"]), 2)
+            # a won fight: the heroes up catch their breath, nothing for a flight
+            kampf.start(dungeon, r, rd, held, [(foe, 1)], 0)
+            with contextlib.redirect_stdout(io.StringIO()):
+                kampf.end(dungeon, r, rd, {self.host: 0, self.gp: 0}, "flucht")
+            self.assertEqual([p["held"]["leben"] for _, p in dungeon.seated(rd)], [1, 1])
+            kampf.start(dungeon, r, rd, held, [(foe, 1)], 0)
+            rd["kampf"]["gegner"][0].update(leben=0, aus="besiegt")
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                kampf.end(dungeon, r, rd, {self.host: 0, self.gp: 0})
+            self.assertIn("dungeon: kampf | verschnaufen | 2", out.getvalue())
+            self.assertEqual([p["held"]["leben"] for _, p in dungeon.seated(rd)],
+                             [1 + max(1, p["held"]["leben_max"] // dungeon.VERSCHNAUFEN) for _, p in dungeon.seated(rd)])
+            self.assertEqual([e.get("grund") for e in rd["log"] if e["art"] == "folge"][-2:], ["verschnaufen"] * 2)
+            self.assertGreaterEqual(dungeon.for_live()["verschnauft"], 2)
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("e.was==='stabil'", js)
+        self.assertIn("e.grund==='verschnaufen'", js)
 
     def test_the_only_hero_is_spared(self):
         """Punkt 2 (Gnade): the only living hero at the table does not fall. It wakes with 1 life, the fight ends without
@@ -7263,8 +7319,14 @@ class Fight(Turns):
         self.assertIn("dungeon: kampf | flucht | gestellt", out.getvalue())
         w = dungeon.roll(r, rd2, proben, Dice(20, 1))                               # half of them passed: away
         n0 = len([e for e in rd2["log"] if e["art"] == "ep"])
-        with contextlib.redirect_stdout(io.StringIO()) as out:
+        seen, step = [], dungeon_karte.step
+
+        def spy(r_, rd_, *a, **k):
+            seen.append((rd_.get("kampf") or {}).get("entkommen"))
+            return step(r_, rd_, *a, **k)
+        with mock.patch.object(dungeon_karte, "step", spy), contextlib.redirect_stdout(io.StringIO()) as out:
             dungeon.apply(r, rd2, w, story, self.rid, random.Random(1), kampfwuerfe=([], []))
+        self.assertEqual(seen, [True])                                              # the map knows it before it moves (Review Paket 3)
         self.assertNotIn("kampf", rd2)
         self.assertIn("dungeon: kampf | flucht | entkommen", out.getvalue())
         self.assertEqual(rd2["log"][[e["art"] for e in rd2["log"]].index("kampf")]["was"], "flucht")
@@ -10986,6 +11048,43 @@ class Fight(Turns):
         kampf.apply(dungeon, r, peace, [], [], "", ep, Dice(20))
         self.assertNotIn("kampf", peace)
         self.assertEqual(peace["log"][-1]["was"], "frieden")
+
+    def test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life(self):
+        """Review 27.10. Paket 3 and 4a: while a fight runs no merchant comes, the host cannot open the market, nobody buys
+        or sells (a scroll still reads); a boss counts in the budget with its life factor (kampf.wert), at most one boss
+        an encounter; a room of the map brings its foes in the count the map wants (raum_gegner anzahl, at most
+        ANZAHL_MAX, 1 without)."""
+        r = dungeon.rules()
+        bosse = [g for g in r["gegner"] if g.get("boss")][:2]
+        plain = next(g for g in r["gegner"] if not g.get("boss"))
+        self.assertEqual(kampf.wert(bosse[0], 3), int(bosse[0]["ep"] * (1 + 2 * kampf.BOSS_LEBEN)))
+        self.assertEqual((kampf.wert(bosse[0], 1), kampf.wert(plain, 5)), (bosse[0]["ep"], plain["ep"]))
+        self.assertEqual(kampf.adjusted([bosse[0]], 3), kampf.wert(bosse[0], 3))
+        rd, held = self.held()
+        rd["raum_gegner"] = {"raum": "gw-r9", "ids": [g["id"] for g in bosse]}
+        self.assertEqual([g["id"] for g, _ in kampf.check_encounter(dungeon, r, rd, held, [{"id": g["id"]} for g in bosse])],
+                         [bosse[0]["id"]])                                          # one boss an encounter
+        rd["raum_gegner"] = {"raum": "gw-r5", "ids": ["oger"], "anzahl": {"oger": 3}}
+        self.assertEqual([(g["id"], n) for g, n in kampf.check_encounter(dungeon, r, rd, held, [{"id": "oger"}])], [("oger", 3)])
+        rd["raum_gegner"]["anzahl"] = {"oger": 99}
+        self.assertEqual([n for _, n in kampf.check_encounter(dungeon, r, rd, held, [{"id": "oger"}])], [kampf.ANZAHL_MAX])
+        rd["raum_gegner"]["anzahl"] = {"oger": True}
+        self.assertEqual([n for _, n in kampf.check_encounter(dungeon, r, rd, held, [{"id": "oger"}])], [1])
+        rd, foe = self.encounter()
+        self.assertIn("kampf", rd)
+        x = self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True})
+        self.assertEqual((x.status_code, x.json()["detail"]), (409, "markt kampf"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertIsNone(dungeon.open_market(r, rd))
+        self.assertNotIn("markt", rd)
+        self.assertIn("dungeon: markt | kampf", out.getvalue())
+        h = rd["plaetze"][self.host]["held"]
+        rd["markt"] = {"name": "Grimma", "satz": "", "ware": [], "art": "kraemer", "kasse": 100}
+        for was in ("kaufen", "verkaufen", "erkennen"):
+            with self.assertRaises(FileExistsError), contextlib.redirect_stdout(io.StringIO()):
+                dungeon.shop(r, rd, self.host, h, was, {"i": 1}, None)
+        with self.assertRaises(ValueError):                                         # a scroll of knowing still reads
+            dungeon.shop(r, rd, self.host, h, "erkennen", {"i": 1, "mit": 2}, None)
 
     def test_a_room_of_the_map_brings_its_own_foes_and_says_when_it_is_won(self):
         r = dungeon.rules()

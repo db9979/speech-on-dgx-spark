@@ -211,8 +211,8 @@ HELDEN_MAX = 8            # kept heroes per profile
 GERAET = "dmgeraet"       # the cookie of a device that took a seat (only its hash stays at the seat)
 _GERAET = re.compile(r"[A-Za-z0-9_\-]{32}")
 NEU_GEBEN = ("schenken", "tauschen", "annehmen")     # moves of a new hero's first turn that give to others
-GNADE_FAKT = ("lag allein am Boden, ein Fremder hat ihn gefunden und in Sicherheit gebracht; der Kampf ist vorbei, er hat dabei Gold und ein Ding verloren",
-              "lay alone on the ground, a stranger found them and brought them to safety; the fight is over, they lost gold and a thing")
+GNADE_FAKT = ("lag am Boden, ein Fremder hat die Gruppe gefunden und in Sicherheit gebracht; der Kampf ist vorbei, dabei gingen Gold und ein Ding verloren",
+              "lay on the ground, a stranger found the group and brought it to safety; the fight is over, gold and a thing were lost")
 NEU_FAKT = ("gerade angekommen: hilft, heilt und gibt in diesem Zug noch niemandem", "just arrived: helps, heals and gives nobody anything this turn")
 FIGUREN_MAX = 200         # Figur-Codes on the Spark
 FIGUR_TAGE = 30
@@ -471,7 +471,7 @@ _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, ausfall_halt=0, verworf
                   kann_nicht=0, kraefte=0, verborgen=0, wortliste=0, vorlesen_fehler=0, vorlesen_ersatz=0, klone=0,
                   zu_boden=0, gefallen=0, ohnmacht=0, aufgestanden=0, geholfen=0, kraft_wirkt=0, widerspruch=0,
                   begegnungen=0, kaempfe=0, treffer=0, daneben=0, besiegt=0, geflohen=0, dienste=0, legenden=0,
-                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, geschuetzt=0,
+                  rand=0, held_geflohen=0, neu_gesperrt=0, geraet=0, rettungswurf=0, gnade=0, stabil=0, verschnauft=0, geschuetzt=0,
                   oel=0, beleg_falsch=0, regel_fehlt=0, regel_gefallen=0, regel_gold=0, regel_fremd=0, regel_aussehen=0, regel_dabei=0, regel_fuerwort=0, regel_richtung=0, regel_frage=0, regel_neuer_ort=0, regel_gehen=0, regel_knapp=0, richter_ok=0, richter_neu=0, richter_aus=0, krit_gewuerfelt=0, patzer_gewuerfelt=0, ehrungen=0, neu_erzaehlt=0, ding_fehlt=0, tageszeit_weg=0, hoer_namen=0, grenzen=0, x_karte=0, schleier=0, schreiber_an=0, schreiber_weg=0, zufall_treffer=0, zufall_daneben=0,
                   nsc_haltung=0, nsc_kanten=0, chronik=0, nsc_ziel_weiter=0, nsc_ziel_erreicht=0, orakel=0,
                   fraktion_weiter=0, fraktion_helden=0, fraktion_voll=0,
@@ -1474,6 +1474,7 @@ def stood_up(rd, pid, h, was):
     """A hero down with life again stands up: the count of its turns down starts anew."""
     if was <= 0 < h["leben"]:
         h.pop("rettung", None)
+        h.pop("stabil", None)
         _log(rd, "zustand", pid=pid, name=h["name"], was="auf")
         _day.bump("aufgestanden")
         print("dungeon: zustand | auf", flush=True)
@@ -1486,12 +1487,21 @@ def save_roll(rng=None):
 
 
 def down(r, rd, rng=None):
-    """After a told turn: a hero at 0 life lies down; each told turn after that it makes a rescue roll (RETTUNG). With
-    BODEN_ZUEGE successes or a 20 it stands up with 1 life, with BODEN_ZUEGE failures it falls (fall), unless it is the
-    only living hero at the table (spare)."""
+    """After a told turn: a hero at 0 life lies down; each told turn after that it makes a rescue roll (RETTUNG). A 20
+    stands it up with 1 life; BODEN_ZUEGE successes make it stable (Review 27.10. B2: unconscious, no more rolls, up
+    again by healing, or with 1 life once no fight runs); BODEN_ZUEGE failures make it fall (fall), unless it is the
+    only living hero at the table (spare). When every hero at the table lies during a fight and one of them lay already,
+    the fight ends in mercy for all (group mercy, Review 27.10. B2, as decided on 2026-10-25)."""
+    lagen = {pid for pid, p in seated(rd) if zustand(p["held"]) in ("boden", "ohnmacht") and
+             ("rettung" in p["held"] or p["held"].get("stabil") or p["held"].get("ohnmacht"))}
     for pid, p in seated(rd):
         h = p["held"]
         if zustand(h) != "boden":
+            continue
+        if h.get("stabil"):
+            if not rd.get("kampf"):              # stable and no fight: comes to with 1 life
+                h["leben"] = 1
+                stood_up(rd, pid, h, 0)
             continue
         if "rettung" not in h:
             h["rettung"] = [0, 0]
@@ -1505,13 +1515,25 @@ def down(r, rd, rng=None):
         _log(rd, "todeswurf", pid=pid, name=h["name"], wurf=w, ok=w >= RETTUNG, erfolge=min(ok, BODEN_ZUEGE), fehl=min(fail, BODEN_ZUEGE))
         _day.bump("rettungswurf")
         print(f"dungeon: rettung | {'gelungen' if w >= RETTUNG else 'misslungen'} | {min(ok, BODEN_ZUEGE)} zu {min(fail, BODEN_ZUEGE)}", flush=True)
-        if ok >= BODEN_ZUEGE:
+        if w == 20:
             h["leben"] = 1
             stood_up(rd, pid, h, 0)
+        elif ok >= BODEN_ZUEGE:
+            h.pop("rettung", None)
+            h["stabil"] = True
+            _log(rd, "zustand", pid=pid, name=h["name"], was="stabil")
+            _day.bump("stabil")
+            print("dungeon: zustand | stabil", flush=True)
         elif fail >= BODEN_ZUEGE:
             spare(r, rd, pid, h, rng) if alone(rd, pid) else fall(r, rd, pid, h)
         else:
             h["rettung"] = [ok, fail]
+    alle = [(pid, p["held"]) for pid, p in seated(rd) if zustand(p["held"]) != "tot"]
+    if rd.get("kampf") and alle and lagen & {pid for pid, _ in alle} and all(zustand(h) in ("boden", "ohnmacht") for _, h in alle):
+        print(f"dungeon: zustand | gnade | gruppe | {len(alle)}", flush=True)
+        for pid, h in alle:
+            if zustand(h) == "boden":
+                spare(r, rd, pid, h, rng)
 
 
 def alone(rd, pid):
@@ -1519,11 +1541,31 @@ def alone(rd, pid):
     return not any(q != pid and zustand(p["held"]) in ("", "boden") for q, p in seated(rd))
 
 
+VERSCHNAUFEN = 4          # after a won fight every hero up gets a quarter of its life back (Review 27.10. B5, no switch:
+                          # part of the fight's rules like the rescue rolls, Dominik 2026-10-27 „ok“ to decision 2)
+
+
+def breather(rd):
+    """Verschnaufen: after a won fight (kampf.end) each hero up at the table +1/VERSCHNAUFEN of its life."""
+    n = 0
+    for pid, p in seated(rd):
+        h = p["held"]
+        if zustand(h) or h["leben"] >= h["leben_max"]:
+            continue
+        x = heal(h, max(1, h["leben_max"] // VERSCHNAUFEN))
+        _log(rd, "folge", pid=pid, name=h["name"], was="heilung", zahl=x, leben=h["leben"], grund="verschnaufen")
+        n += 1
+    if n:
+        _day.bump("verschnauft", n)
+    print(f"dungeon: kampf | verschnaufen | {n}", flush=True)
+
+
 def spare(r, rd, pid, h, rng=None):
     """Gnade (Dominik 2026-10-25 „1 und 2“, Punkt 2): the only living hero does not fall. A stranger finds it, it wakes
     with 1 life, the fight ends without experience, it loses half its gold and one thing from its bag."""
     rng = rng or random
     h.pop("rettung", None)
+    h.pop("stabil", None)
     rd["offen"].pop(pid, None)
     if rd.get("kampf"):
         kampf.end(_me, r, rd, {}, "gnade")
@@ -1816,6 +1858,9 @@ def open_market(r, rd, name="", satz="", rng=None):
     """A merchant at this place: its kind drawn (HAENDLER), its goods of that kind drawn by the panel (rarity by the
     find table as for loot, never above what the level allows), known to it, priced by the rules, its purse KASSE
     times the level. The model only names it; it stays until the place changes."""
+    if rd.get("kampf"):                          # Review 27.10. Paket 3: no merchant while a fight runs
+        print("dungeon: markt | kampf", flush=True)
+        return
     rng = rng or random
     li = 1 if rd["lang"] == "en" else 0
     stufe = group_level([p["held"] for _, p in seated(rd)])
@@ -3800,6 +3845,10 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     mark("probe")
     if story:
+        fl = [w for w in wuerfe if w.get("flucht")] if rd.get("kampf") else []   # Kampf-Audit M6: at least half of the fleeing passed
+        if fl:                                   # before the map's step (Review 27.10. Paket 3): a fled group may leave this turn
+            rd["kampf"]["entkommen"] = 2 * sum(1 for w in fl if w["ok"]) >= len(fl)
+            print(f"dungeon: kampf | flucht | {'entkommen' if rd['kampf']['entkommen'] else 'gestellt'}", flush=True)
         orte = len(rd["karte"]["besucht"]) if rd.get("karte") else None
         von = rd["karte"]["hier"] if rd.get("karte") else None
         if dungeon_karte.step(r, rd, story, ep, rng):   # the map moves the group (a new place: merchant and ground stay behind)
@@ -3853,10 +3902,6 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             if rd["kampf"]["geschafft"] or any(w.get("frieden") for w in wuerfe):
                 rd["kampf"]["frieden"] = True    # once a fight (kampf.peace)
                 print(f"dungeon: kampf | frieden | probe {'ok' if rd['kampf']['geschafft'] else 'nein'}", flush=True)
-            fl = [w for w in wuerfe if w.get("flucht")]      # Kampf-Audit M6: at least half of the fleeing passed
-            if fl:
-                rd["kampf"]["entkommen"] = 2 * sum(1 for w in fl if w["ok"]) >= len(fl)
-                print(f"dungeon: kampf | flucht | {'entkommen' if rd['kampf']['entkommen'] else 'gestellt'}", flush=True)
             if any(w["ok"] and w.get("wert") == KENNER for w in wuerfe):   # Punkt 6: a passed Intelligenz check knows the foes
                 for g in kampf.up(rd):
                     c = _by(r, "gegner").get(g["id"]) or {}
@@ -5763,6 +5808,9 @@ def shop(r, rd, pid, h, was, b, it):
     a scroll of knowing from the bag (mit), merchant or not."""
     li = 1 if rd["lang"] == "en" else 0
     m = rd.get("markt")
+    if rd.get("kampf") and not (was == "erkennen" and b.get("mit")):
+        print("dungeon: markt | kampf", flush=True)
+        raise FileExistsError("markt kampf")     # Review 27.10. Paket 3: no buying or selling while a fight runs (a scroll still reads)
     if was == "erkennen":
         x = next((x for x in h["tasche"] + worn(h) if x["i"] == b.get("i") and x.get("u")), None)
         rolle = next((y for y in h["tasche"] if y["i"] == b.get("mit") and _c(r, y).get("erkennt")), None) if b.get("mit") else None
@@ -5956,7 +6004,7 @@ def for_live():
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
-            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "oel", "beleg_falsch", "hoer_namen",
+            **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
                                  "nsc_haltung", "nsc_kanten", "chronik", "nsc_ziel_weiter", "nsc_ziel_erreicht", "orakel",
                                  "fraktion_weiter", "fraktion_helden", "fraktion_voll",
@@ -6488,6 +6536,8 @@ async def markt(rid: str, request: Request, prof=Depends(browser_profile)):
             rd = _round(d, rid)
             if rd["owner"] != uid or rd["status"] == "ende":
                 raise LookupError("gastgeber")
+            if b.get("auf") and rd.get("kampf"):
+                raise FileExistsError("markt kampf")   # Review 27.10. Paket 3: first the fight
             if b.get("auf") and not rd.get("markt"):
                 open_market(r, rd)
             elif not b.get("auf"):

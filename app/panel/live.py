@@ -1984,8 +1984,8 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['am_rand']} warten am Rand" if dgn.get("am_rand") else "")
                         + (f" · heute {dgn.get('rand', 0)} Beitritte im Kampf, {dgn.get('held_geflohen', 0)} im Kampf gegangen, {dgn.get('neu_gesperrt', 0)} Hilfen im ersten Zug gesperrt, {dgn.get('geraet', 0)} zweite Helden am selben Gerät abgelehnt"
                            if any(dgn.get(k) for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet")) else "")
-                        + (f" · heute {dgn.get('zu_boden', 0)} zu Boden, {dgn.get('aufgestanden', 0)} wieder auf, {dgn.get('geholfen', 0)} Tränke für Freunde, {dgn.get('gefallen', 0)} gefallen, {dgn.get('ohnmacht', 0)} ohnmächtig, {dgn.get('rettungswurf', 0)} Rettungswürfe, {dgn.get('gnade', 0)} durch Gnade gerettet, {dgn.get('kraft_wirkt', 0)} Kräfte gewirkt"
-                           if any(dgn.get(k) for k in ("zu_boden", "gefallen", "ohnmacht", "kraft_wirkt", "rettungswurf", "gnade")) else "")
+                        + (f" · heute {dgn.get('zu_boden', 0)} zu Boden, {dgn.get('aufgestanden', 0)} wieder auf, {dgn.get('geholfen', 0)} Tränke für Freunde, {dgn.get('gefallen', 0)} gefallen, {dgn.get('ohnmacht', 0)} ohnmächtig, {dgn.get('rettungswurf', 0)} Rettungswürfe, {dgn.get('gnade', 0)} durch Gnade gerettet, {dgn.get('stabil', 0)} stabil, {dgn.get('verschnauft', 0)}-mal verschnauft, {dgn.get('kraft_wirkt', 0)} Kräfte gewirkt"
+                           if any(dgn.get(k) for k in ("zu_boden", "gefallen", "ohnmacht", "kraft_wirkt", "rettungswurf", "gnade", "stabil", "verschnauft")) else "")
                         + (" · schreibt Bisher geschah" if dgn.get("schreibt") else "")
                         + f" · {dgn.get('geschichten', 0)} Geschichten, heute {dgn.get('akte', 0)} Akte weiter, {dgn.get('vorschlaege', 0)} Vorschläge"
                         + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe"

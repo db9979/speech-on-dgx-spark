@@ -5909,6 +5909,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kämpfe halten fest und entschärft (V01.1.169, Review 27.10. Pakete 3 und 4, Dominik 2026-10-27 „ok“ mit den Entscheidungen 1 und 2): Ohne neuen Schalter, es sind Kampfregeln. Der Kampf hält fest: Solange ein Kampf läuft, kommt kein Händler (open_market), der Gastgeber kann den Markt nicht öffnen und niemand kauft, verkauft oder lässt ein Ding benennen (Hinweis „Erst der Kampf …“, Grund markt kampf); eine Schriftrolle des Erkennens wirkt weiter. Die Flucht-Würfe zählen jetzt vor dem Schritt der Karte, eine gelungene Flucht kann also noch im selben Zug zum Nachbarort führen; den Ortswechsel im Kampf sperrt der Karten-Thread. Boss: Ein Boss zählt im Budget mit seinem Lebensfaktor (dungeon_kampf.wert, faktor, dieselbe Zahl wie sein Leben, auch für die Räume der Karte), je Begegnung höchstens ein Boss. Ein Raum der Karte bringt seine Gegner in der Zahl, die die Karte festlegt (raum_gegner.anzahl, höchstens ANZAHL_MAX, ohne das Feld 1). Liegen alle: Liegt im Kampf jeder Held am Tisch am Boden oder ohnmächtig und lag einer schon, endet der Kampf mit Gnade für alle: Jeder wacht mit 1 Leben auf, verliert halbes Gold und ein Ding, es gibt keine EP (dungeon.down, Log „dunge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "on: zustand | gnade | gruppe | n“). Liegt einer, während andere noch kämpfen, bleibt der Tod wie bisher möglich. Stabil: Drei gelungene Rettungswürfe heißen jetzt „stabil, aber bewusstlos“ statt „steht auf“: keine Würfe mehr, Heilung hilft auf, ohne Kampf kommt der Held mit 1 Leben zu sich. Eine 20 holt ihn wie bisher sofort hoch. Verschnaufen: Nach jedem gewonnenen Kampf bekommt jeder stehende Held ein Viertel seines Lebens zurück (dungeon.breather, VERSCHNAUFEN), ohne Schalter, als Teil der Kampfregel wie die Rettungswürfe. Folgekämpfe: Das Budget einer Begegnung wächst mit dem Lebensanteil der Gruppe (Summe Leben durch Summe Höchstleben, mindestens ANTEIL_MIN 0,4), die Gefahr-Anzeige nutzt denselben Wert. Live: Zustand → Überblick zählt stabile Helden und Verschnaufen. Selbsttests Permadeath.test_the_whole_group_down_is_spared_and_a_won_fight_gives_breath, test_rescue_rolls_get_a_hero_up, Fight.test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life und die Flucht vor dem Kartenschritt in test_kampf_flucht_nur_mit_mehrheit_und_panelprobe."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Nichts geht mehr kaputt (V01.1.168, Review 27.10. Paket 1, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Fehlerbehebungen. Prompt: Die Stilbeispiele der Welt und des Tons stehen jetzt ganz am Ende der Aufgabe, nach allen Regeln, in einem eigenen Block zwischen „[Beispiele]“ und „[Ende der Beispiele]“ (dungeon_erzaehler.STIL_BLOCK). Vorher hingen die Regeln zu Stimmen, Waffen, Zuständen und der Karte ohne Absatz an der letzten Beispielzeile und galten so als „nur Beispiel“. Wortlisten: Eine feste Liste harmloser Wörter, die ein Wort der Listen enthalten („knackt“ enthält „nackt“, „Blutbuche“, „Blutegel“, „Schlachtross“, „tötet keine Fliege“ …), wird vor der Prüfung herausgenommen (dungeon.HARMLOS, ein Helfer dungeon.word_hit für Runde, Heldenname und Personen-Katalog). Jeder andere Wortteil zählt weiter („Massenmord“, „splitternackt“), so geht kein echter Treffer verloren. Vorher fiel die ganze Erzählung aus, wenn das Modell „Ein Ast knackt“ schrieb. Ausfall-Bremse: Kommt keine brauchbare Erzählung, steht ein fester Satz als Systemzeile im Verlauf, nie als Erzählung, die das Modell im nächsten Zug als Vorgeschichte liest (dungeon.outage). Der nächste Vers"
 },
 {
@@ -21086,6 +21102,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: fights hold and are less deadly (V01.1.169, review 27.10. packages 3 and 4, Dominik 2026-10-27 „ok“ with decisions 1 and 2): No new switch, these are rules of the fight. The fight holds: While a fight runs no merchant comes (open_market), the host cannot open the market and nobody buys, sells or has a thing named (hint „First the fight …“, reason markt kampf); a scroll of knowing still works. The flight rolls now count before the map's step, so a successful flight can still lead to a neighbouring place in the same turn; the map thread blocks the change of place in a fight. Boss: A boss counts in the budget with its life factor (dungeon_kampf.wert, faktor, the same number as its life, also for the map's rooms), at most one boss an encounter. A room of the map brings its foes in the number the map sets (raum_gegner.anzahl, at most ANZAHL_MAX, 1 without the field). All down: When in a fight every hero at the table is down or unconscious and one of them lay already, the fight ends in mercy for all: each wakes with 1 life, loses half its gold and one thing, there is no experience (dungeon.down, log „dungeon: zustand | gnade | gruppe | n“). When one lies while others s"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "till fight, death stays possible as before. Stable: Three successful rescue rolls now mean „stable but unconscious“ instead of „stands up“: no more rolls, healing gets it up, with no fight the hero comes to with 1 life. A 20 gets it up at once as before. Breather: After every won fight each hero up gets a quarter of its life back (dungeon.breather, VERSCHNAUFEN), without a switch, as part of the fight's rules like the rescue rolls. Follow-up fights: An encounter's budget grows with the group's share of its life (sum of life over sum of maximum life, at least ANTEIL_MIN 0.4), the danger display uses the same value. Live: Status → Live counts stable heroes and breathers. Self-tests Permadeath.test_the_whole_group_down_is_spared_and_a_won_fight_gives_breath, test_rescue_rolls_get_a_hero_up, Fight.test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life and the flight before the map's step in test_kampf_flucht_nur_mit_mehrheit_und_panelprobe."
 },
 {
 "lang": "en",

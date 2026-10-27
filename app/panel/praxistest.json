@@ -4027,6 +4027,13 @@
 "titel": "Dungeon-Master: Nichts geht mehr kaputt",
 "text": "A: In einer Runde „Er knackt das Schloss.“ schreiben: die Aktion geht durch, die Erzählung mit „knackt“ fällt nicht aus. B: Kindertisch (ab 8): „Ich töte den Goblin.“ schreiben: die Aktion heißt „Ich besiege den Goblin.“, darüber die Frage mit dem Satz, „So lassen“ oder der Vorschlag schickt sie ab. C: Sprachmodell kurz pausieren (sudo speech-spark pause llm 3): nach dem ersten Ausfall steht eine graue Systemzeile, gut eine Minute später ein zweiter Versuch, danach „Der Dungeon-Master kommt gerade nicht durch …“; nach „weiter“ und „Jetzt weiter“ geht der Zug normal weiter. D: Zustand → Überblick zeigt beim Dungeon-Master „wartet auf Jetzt weiter“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P600",
+"v": 1169,
+"titel": "Dungeon-Master: Kämpfe halten fest und entschärft",
+"text": "A: Im Kampf den Markt öffnen oder etwas kaufen: der Hinweis „Erst der Kampf …“, nichts ändert sich. B: Mit zwei Helden kämpfen und beide auf 0 Leben bringen lassen: im Zug danach rettet ein Fremder beide, je 1 Leben, halbes Gold, ein Ding weniger. C: Einen Kampf gewinnen, ein Held ist angeschlagen: unter dem Kampfende steht „+N Leben · verschnauft nach dem Kampf“. D: Drei gelungene Rettungswürfe: „ist stabil, aber bewusstlos“, nach dem Kampf steht der Held mit 1 Leben wieder. E: Ein Boss gegen eine volle Gruppe kommt allein, nicht zu zweit.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

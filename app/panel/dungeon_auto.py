@@ -156,6 +156,7 @@ SAGEN = {
     "todeswurf": ("{name} würfelt einen Rettungswurf: {wurf}.", "{name} rolls a death save: {wurf}."),
     "tot": ("{name} ist gefallen.", "{name} has fallen."),
     "auf": ("{name} steht wieder.", "{name} is up again."),
+    "stabil": ("{name} ist stabil, aber bewusstlos.", "{name} is stable but unconscious."),
     "zauber": ("{name} wirkt {zauber}.", "{name} casts {zauber}."),
     "sieg": ("Der Kampf ist gewonnen.", "The fight is won."),
     "kampf_ende": ("Der Kampf ist vorbei.", "The fight is over."),
@@ -231,7 +232,7 @@ def summary(r, rd, pid, li, seit):
                 out.append(_say("beute_gold", li, name=n, gold=e["gold"]))
         elif a == "stufe":
             out.append(_say("stufe", li, name=n, stufe=e.get("stufe", 0)))
-        elif a == "zustand" and e.get("was") in ("boden", "ohnmacht", "tot", "auf", "gnade"):
+        elif a == "zustand" and e.get("was") in ("boden", "ohnmacht", "tot", "auf", "gnade", "stabil"):
             out.append(_say(e["was"], li, name=n, noch=e.get("noch", 0)))
         elif a == "todeswurf":
             out.append(_say("todeswurf", li, name=n, wurf=e.get("wurf", 0)))

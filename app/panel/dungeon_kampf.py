@@ -60,8 +60,9 @@ import dungeon_narben as narben
 # D&D 5e: experience of a medium encounter per character by its level (1..20)
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with the Kampf-Audit (V01.1.127:
-# an attack whose foe fell this turn takes the next one, none is lost); beyond the heroes' top level the D&D table
-BUDGET = (125, 175, 291, 380, 490, 560, 780, 880, 625, 615, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# an attack whose foe fell this turn takes the next one, none is lost), level 7 anew with the boss's life factor in the
+# budget (Review 27.10. Paket 4a); beyond the heroes' top level the D&D table
+BUDGET = (125, 175, 291, 380, 490, 560, 860, 880, 625, 615, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
@@ -172,6 +173,7 @@ GEIST = ("bezaubert", "veraengstigt")   # states of the mind: saved with Weishei
 BRENNT = 4                 # schaden_pro_zug: 1W4 at each of the foes' turns
 KRIT = "dungeonkrit"       # the switch „Krit- und Patzer-Tabellen“ (D&D idea 2, features.py) for the round's host
 BOSS_LEBEN = 0.5           # a boss: its life times 1 + this per hero beyond the first
+ANTEIL_MIN = 0.4           # the budget times the group's share of its life, at least this (Review 27.10. B5)
 BOSS_PHASE = 2             # a boss at half life: this much more to hit, once
 
 SCHEMA_BEGEGNUNG = {"type": "array", "maxItems": 3, "items": {"type": "object", "additionalProperties": False, "required": ["id"],
@@ -257,10 +259,12 @@ def _mal(n):
 
 def budget(dm, r, rd, held, stufe=True):
     """The experience an encounter of this group may have: BUDGET per hero, times GRUPPE for the group's size, half at
-    the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium). Every companion up
-    counts as gefaehrte.ANTEIL of a hero (round 2, idea 9)."""
+    the children's table, the dial, and the host's stage (stage_factor; stufe=False: the medium), times the group's
+    share of its life (at least ANTEIL_MIN). Every companion up counts as gefaehrte.ANTEIL of a hero (round 2, idea 9)."""
     mehr = gefaehrte.share(rd)
-    b = sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (1 + mehr / max(1, len(held))) \
+    voll = sum(max(1, h.get("leben_max") or 1) for h in held)    # Review 27.10. B5: a battered group gets less, at least ANTEIL_MIN
+    anteil = max(ANTEIL_MIN, min(1, sum(max(0, h.get("leben", h.get("leben_max") or 1)) for h in held) / voll)) if held else 1
+    b = anteil * sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (1 + mehr / max(1, len(held))) \
         * (GRUPPE[0] + GRUPPE[1] * (len(held) + mehr - 1))
     return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100) * (stage_factor(r, rd, held) if stufe else 1))
 
@@ -388,8 +392,19 @@ def offer_facts(dm, r, rd, held, li):
              **({"person": True} if g.get("person") else {})} for g in offer(dm, r, rd, held)]
 
 
-def adjusted(foes):
-    return int(sum(g["ep"] for g in foes) * _mal(len(foes)))
+def faktor(g, n_held):
+    """A boss's life grows by BOSS_LEBEN per hero beyond the first (lineup); every other foe 1."""
+    return 1 + BOSS_LEBEN * max(0, n_held - 1) if g.get("boss") else 1
+
+
+def wert(g, n_held):
+    """A foe's experience as the budget counts it (Review 27.10. Paket 4a): a boss with its life factor (faktor). Also
+    for the map's rooms (dungeon_karte._room_foes)."""
+    return int(g["ep"] * faktor(g, n_held))
+
+
+def adjusted(foes, n_held=1):
+    return int(sum(wert(g, n_held) for g in foes) * _mal(len(foes)))
 
 
 def check_encounter(dm, r, rd, held, obj):
@@ -403,15 +418,23 @@ def check_encounter(dm, r, rd, held, obj):
     for x in obj[:3]:
         if not isinstance(x, dict) or x.get("id") not in have or x["id"] in seen:
             continue
+        if have[x["id"]].get("boss") and any(g.get("boss") for g, _ in out):
+            continue                             # Review 27.10. Paket 4a: at most one boss an encounter
         seen.add(x["id"])
         n = x.get("anzahl") if isinstance(x.get("anzahl"), int) and not isinstance(x.get("anzahl"), bool) and not have[x["id"]].get("person") else 1
-        out.append([have[x["id"]], max(1, min(ANZAHL_MAX, n))])
+        out.append([have[x["id"]], 1 if have[x["id"]].get("boss") else max(1, min(ANZAHL_MAX, n))])
     b = budget(dm, r, rd, held) * SCHWER
-    if room(r, rd):                              # a room's guardian or boss comes once each, as the map wants it
-        return [(g, 1) for g, _ in out]
+    if room(r, rd):                              # a room's guardian or boss as the map wants it, its count by "anzahl" (Paket 4 B1)
+        anz, out_ = (rd.get("raum_gegner") or {}).get("anzahl") or {}, []
+        for g, _ in out:
+            n = anz.get(g["id"]) if isinstance(anz.get(g["id"]), int) and not isinstance(anz.get(g["id"]), bool) else 1
+            n = 1 if g.get("boss") or g.get("person") else max(1, min(ANZAHL_MAX, n, GEGNER_MAX - sum(m for _, m in out_)))
+            if sum(m for _, m in out_) < GEGNER_MAX:
+                out_.append((g, n))
+        return out_
     while out:
         flat = [g for g, n in out for _ in range(n)]
-        if len(flat) <= GEGNER_MAX and (adjusted(flat) <= b or len(flat) == 1):
+        if len(flat) <= GEGNER_MAX and (adjusted(flat, len(held)) <= b or len(flat) == 1):
             break
         i = max(range(len(out)), key=lambda j: (out[j][0]["ep"], out[j][1]))
         out[i][1] -= 1
@@ -434,7 +457,7 @@ def lineup(wahl, li, n_held):
                            "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1),
                            **({"person": g["person"]} if g.get("person") else {})})
             if g.get("boss"):
-                gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * (1 + BOSS_LEBEN * max(0, n_held - 1)))
+                gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * faktor(g, n_held))
     return gegner
 
 
@@ -449,7 +472,7 @@ def start(dm, r, rd, held, wahl, li):
         return None
     gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
-    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner), budget(dm, r, rd, held, False)),
+    rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner, len(held)), budget(dm, r, rd, held, False)),
                    "leben0": sum(max(0, h["leben"]) for h in held),
                    "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")]}   # the group the fight was made for
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
@@ -1159,6 +1182,8 @@ def end(dm, r, rd, ep, why=""):
     if k.get("raum") and not why:
         rd["sieg"] = k["raum"]
         rd.pop("raum_gegner", None)
+    if not why:
+        dm.breather(rd)                          # Verschnaufen after a won fight (Review 27.10. B5)
     dm._log(rd, "kampf", was=why or "sieg", besiegt=len(besiegt), geflohen=len(flohen), ep=each, boss=any(g.get("boss") for g in besiegt),
             frieden=len(frieden))
     rd["kampf_aus"] = {"leben0": k.get("leben0", 0), "why": why}      # for the dial, after the last hits are in (turn_dial)

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.169** KI-Dungeon-Master: im Kampf kein Markt und kein Handel, Flucht gilt schon für den Weg, ein Boss zählt mit seinem Leben, liegen alle, rettet ein Fremder die ganze Gruppe, Verschnaufen nach einem Sieg, angeschlagene Gruppen bekommen kleinere Kämpfe (Review 27.10., Pakete 3 und 4)
 - **V01.1.168** KI-Dungeon-Master: Wortlisten treffen keine harmlosen Wörter mehr („knackt“), ein Ausfall des Modells bremst und wartet nach zwei Versuchen auf „Jetzt weiter“, „töten“ wird am Kindertisch zu „besiegen“, Stilbeispiele stehen am Ende des Prompts (Review 27.10., Paket 1)
 - **V01.1.167** KI-Dungeon-Master: jede Person hat ein festes Geschlecht, Porträt, Stimme, Beruf (Mystiker oder Mystikerin) und Pronomen folgen daraus, ein Titel wie „Schattenwächter“ bestimmt den Beruf
 - **V01.1.166** KI-Dungeon-Master: Überreden zum Mitkommen (Schalter, aus), ob eine gefragte Person mitkommt, entscheiden ihre Haltung zum Helden und eine Charisma-Probe des Panels, treu Ergebene kommen ohne Probe (LlamaTale-Idee 4)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.162** KI-Dungeon-Master: in einer Welt nie Wirt und Wirtin zugleich, ein Szenenbild erkennt Namen nur als ganzes Wort
 - **V01.1.161** KI-Dungeon-Master: Berufe in männlicher und weiblicher Form, keine Bord-KI als Beruf, Aussehen nur noch Äußeres (NSC-Tabellen)
 - **V01.1.160** Einstellungen: Text neben einem Feld wird nie mehr schmal gedrückt, „Zeitserver im Heimnetz“ unter Betrieb stand Wort für Wort untereinander, jetzt rückt ein Feld unter den Text, wenn daneben weniger als etwa 180 px blieben, auch bei 820 px Fensterbreite neben beiden Menüs (Sprachausgabe, Sprachmodell, Vorgaben, Stimmen), und kein Auswahlfeld ragt mehr aus seinem Kasten
-- **V01.1.159** KI-Dungeon-Master: „gehe zur alten Bibliothek“ führt wirklich dorthin (keine Probe, der Erzähler muss den Weg nehmen, sonst geht das Panel), „vage“ verlangt einen Ansatzpunkt aus den Daten der Szene, kein „W-2“ mehr auf der Würfelkarte, die Geschichte blendet oben weich aus
 
 
 

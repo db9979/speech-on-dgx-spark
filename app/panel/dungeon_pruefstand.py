@@ -122,7 +122,7 @@ def encounter(r, held, gefahr, rng, tries=200, pool=None):
         kinds = rng.sample(fit, min(len(fit), rng.choice((1, 2))))
         wahl = [(g, rng.randint(1, kampf.ANZAHL_MAX)) for g in kinds]
         flat = [g for g, n in wahl for _ in range(n)]
-        if len(flat) <= kampf.GEGNER_MAX and kampf.danger(kampf.adjusted(flat), b) == gefahr:
+        if len(flat) <= kampf.GEGNER_MAX and kampf.danger(kampf.adjusted(flat, len(held)), b) == gefahr:
             return wahl
     return []
 
