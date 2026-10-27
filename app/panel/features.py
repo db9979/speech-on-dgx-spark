@@ -317,6 +317,8 @@ FEATURES = (
     F("dungeonzeugen", "Zeugen-Regel", "Witness rule", "data", ("dungeon_zeugen",), parent="dungeon", me="dmbox", guide="dungeonzeugen"),
     # Gedanken lesen (dungeon_gedanken.py, LlamaTale idea 5): the panel's check, the thoughts only for the reading seat
     F("dungeongedanken", "Gedanken lesen", "Read thoughts", "data", ("dungeon_gedanken",), parent="dungeon", me="dmbox", guide="dungeongedanken"),
+    # Überreden zum Mitkommen (dungeon_mitkommen.py, LlamaTale idea 4): attitude and the panel's Charisma check decide
+    F("dungeonmitkommen", "Überreden zum Mitkommen", "Persuade to come along", "data", ("dungeon_mitkommen",), parent="dungeon", me="dmbox", guide="dungeonmitkommen"),
     # Aufträge von Personen (dungeon_auftraege.py, LlamaTale idea 2): the panel rolls errands and checks them by receipts
     F("dungeonauftraege", "Aufträge von Personen", "Errands from people", "data", ("dungeon_auftraege",), parent="dungeon", me="dmbox", guide="dungeonauftraege"),
     # Wandernde Personen and Kleine Gesten (dungeon_wandern.py, dungeon_nsc.ziel_ort/geste, LlamaTale ideas 6 and 7)

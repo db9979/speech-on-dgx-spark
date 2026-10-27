@@ -1458,6 +1458,11 @@ def snapshot(view="admin", now=None):
         dgn["gedanken"] = dungeon_gedanken.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["gedanken"] = {}
+    try:   # Überreden zum Mitkommen (dungeon_mitkommen.py): numbers on the game's line
+        import dungeon_mitkommen
+        dgn["mitkommen"] = dungeon_mitkommen.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["mitkommen"] = {}
     try:   # Spieler anleiten (dungeon_anleiten.py): numbers on the game's line
         import dungeon_anleiten
         dgn["anleiten"] = dungeon_anleiten.for_live() if dgn.get("on") else {}
@@ -2098,6 +2103,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("zeugen") or {}).values()) else "")
                         + (f" · heute {dgn['gedanken']['versuche']}-mal Gedanken lesen, {dgn['gedanken']['gelesen']} gelesen, {dgn['gedanken']['verschlossen']} verschlossen"
                            if any((dgn.get("gedanken") or {}).values()) else "")
+                        + (f" · heute {dgn['mitkommen']['gefragt']}-mal zum Mitkommen gefragt, {dgn['mitkommen']['ja']} mitgekommen, {dgn['mitkommen']['nein']} geblieben"
+                           if any((dgn.get("mitkommen") or {}).values()) else "")
                         + (f" · heute {dgn['auftraege']['neu']} Aufträge vergeben, {dgn['auftraege']['erfuellt']} erfüllt, {dgn['auftraege']['zurueck']} zurückgegeben"
                            if any((dgn.get("auftraege") or {}).values()) else "")
                         + (f" · heute {dgn['wandern']['rasten']} lange Rasten auf der Karte, {dgn['wandern']['gewandert']} Personen gewandert, {dgn['wandern']['gesten']} Gesten"

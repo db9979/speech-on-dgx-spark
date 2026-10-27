@@ -306,6 +306,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_kommentar.py` | KI-Dungeon-Master: Helden kommentieren selbst. |
 | `app/panel/dungeon_legenden.py` | KI-Dungeon-Master: legendäre Einzelstücke je Welt. |
 | `app/panel/dungeon_lied.py` | KI-Dungeon-Master: Heldenlied des Barden. |
+| `app/panel/dungeon_mitkommen.py` | KI-Dungeon-Master: Überreden zum Mitkommen. |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik, Geräusche, Würfel. |
 | `app/panel/dungeon_mut.py` | KI-Dungeon-Master: Heldenmut. |
 | `app/panel/dungeon_narben.py` | KI-Dungeon-Master: Narben und bleibende Wunden. |

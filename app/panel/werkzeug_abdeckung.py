@@ -191,6 +191,7 @@ WITHOUT = {
     "dungeonwandern": "dungeon_wandern.py: kein Werkzeug, das Panel lässt Personen nach festen Regeln über die Kartenwege ziehen, der Erzähler erzählt nur das Wiedersehen",
     "dungeongesten": "dungeon_nsc.geste: kein Werkzeug, feste Sätze nach den Wesenszügen der Person, kein Modell, kein Zustand",
     "dungeonauftraege": "dungeon_auftraege.py: kein Werkzeug, das Panel würfelt Aufträge aus festen Tabellen und prüft die Erfüllung an Belegen, der Erzähler erzählt nur Grund und Dank",
+    "dungeonmitkommen": "dungeon_mitkommen.py: kein Werkzeug, Haltung und eine Charisma-Probe des Panels entscheiden, das Modell schreibt nur die Antwort der Person",
     "dungeongedanken": "dungeon_gedanken.py: kein Werkzeug, das Panel würfelt die Probe und schreibt eine feste Zeile aus der Karte der Person, das Modell erzählt nur das Lauschen",
     "dungeonzeugen": "dungeon_zeugen.py: kein Werkzeug, feste Wortlisten und eine feste Tabelle ändern die Haltung der Zeugen, der Erzähler zeigt nur die Reaktion",
     "dungeonanleiten": "dungeon_anleiten.py: kein Werkzeug, feste Form für die Erzählung und Fragen an stille Spieler und Knöpfe „Das kannst du hier“ aus den Daten der Szene",

@@ -8685,6 +8685,83 @@ class Fight(Turns):
         t = gd.for_live()
         self.assertTrue(t["versuche"] >= 1 and t["gelesen"] >= 1 and t["verschlossen"] >= 1, t)
 
+    def test_persuading_a_person_to_come_along(self):
+        """LlamaTale idea 4 (Dominik 2026-10-27 „1-7“, switch dungeonmitkommen): asking a person of the map along no
+        longer takes it at once; the panel decides by its attitude towards the hero (below +1 no, „treu ergeben“ yes,
+        in between a Charisma check, SG 13 or 11, in place of the model's), a person at another place stays; the
+        narration gets the answer as data, the map takes the person along after it (dungeon_karte.mitnehmen); off the
+        old way, one word of MIT."""
+        import dungeon_mitkommen as mk
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_mitkommen")
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Grimma", "rolle": "Schmiedin", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        helpers.set_config(dungeon_nsc=True)
+        self.spawned.clear()
+        self.act_all("Wir gehen zur Schmiede.")
+        self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela treten in die Schmiede. Grimma hämmert am Amboss.", "frage_an": "", "nsc": []}])
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        self.assertIn("grimma", rd["nsc"])
+        k = rd["karte"]
+        k.setdefault("leute", {})["Grimma"] = {"ort": k["hier"], "mit": False}
+        arvid = rd["plaetze"][self.host]["held"]["name"].lower()
+        model = [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "wofuer": "reden"}]
+        rd["offen"] = {self.host: {"text": "Komm mit uns, Grimma.", "t": 0}}
+        self.assertEqual(mk.checks(dungeon, r, rd, model), model)                     # off: the map's old way
+        helpers.set_config(dungeon_mitkommen=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            for v, want in ((0, "abgelehnt"), (-2, "abgelehnt"), (3, "treu")):
+                rd["nsc"]["grimma"]["haltung"] = {arvid: v}
+                self.assertEqual(mk.checks(dungeon, r, rd, model), model)
+                self.assertEqual([(e["grund"], e["ja"]) for e in rd["_mitkommen"]], [(want, want == "treu")])
+            for v, sg in ((1, 13), (2, 11)):
+                rd["nsc"]["grimma"]["haltung"] = {arvid: v}
+                p = mk.checks(dungeon, r, rd, model)
+                self.assertEqual([(x["pid"], x["wert"], x["schwer"], x.get("mitkommen")) for x in p], [(self.host, "charisma", sg, "Grimma")])
+                self.assertEqual(rd["_mitkommen"], [])
+            k["leute"]["Grimma"]["ort"] = (k["hier"] + 1) % len(k["orte"])            # at another place: stays
+            self.assertEqual(mk.checks(dungeon, r, rd, model), model)
+            self.assertEqual(rd["_mitkommen"][0]["grund"], "weg")
+        self.assertIn("dungeon: mitkommen | probe", out.getvalue())
+        k["leute"]["Grimma"]["ort"] = k["hier"]
+        rd["nsc"]["grimma"]["haltung"] = {arvid: 1}
+        w = dungeon.roll(r, rd, mk.checks(dungeon, r, rd, model), rng=mock.Mock(randint=lambda a, b: 20))
+        self.assertEqual((w[0]["mitkommen"], w[0]["ok"]), ("Grimma", True))
+        self.assertEqual(mk.seen(rd, w)[0], {"name": "Grimma", "pid": self.host, "ja": True, "grund": "probe"})
+        self.assertEqual(mk.facts(rd)["mitkommen"][0]["antwort"], "ja")
+        self.assertIn("mitkommen nennt", mk.task(rd, "de"))
+        # the whole turn: the check, the answer as data, the map takes Grimma along
+        with dungeon._lock:
+            d = dungeon._read()
+            cur = d["runden"][self.rid]
+            cur["karte"].setdefault("leute", {})["Grimma"] = {"ort": cur["karte"]["hier"], "mit": False}
+            cur["nsc"]["grimma"]["haltung"] = {arvid: 1}
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        self.spawned.clear()
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Komm mit uns, Grimma.", "zug": rd["zug"]}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich schaue mich um.", "zug": rd["zug"]}).status_code, 200)
+        seen = []
+        real = dungeon.system_text
+
+        def system(r, rd, *a, **kw):
+            seen.append(real(r, rd, *a, **kw) + json.dumps(dungeon.facts(r, rd), ensure_ascii=False))
+            return seen[-1]
+        with mock.patch("dungeon.system_text", system), mock.patch("dungeon.random.randint", lambda a, b: 20), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, {"erzaehlung": "Grimma legt den Hammer weg und nickt: „Ich komme mit.“", "frage_an": "", "nsc": []}])
+        self.assertIn("dungeon: mitkommen | probe", out.getvalue())
+        self.assertIn("dungeon: karte | mitkommen | ja", out.getvalue())
+        self.assertTrue(any("mitkommen nennt" in x and "Grimma" in x for x in seen))
+        self.assertTrue(rd["karte"]["leute"]["Grimma"]["mit"])
+        self.assertNotIn("fragt", rd["karte"]["leute"]["Grimma"])
+        self.assertTrue(any(e["art"] == "system" and "Grimma kommt mit euch." in str(e.get("text")) for e in rd["log"]))
+        t = mk.for_live()
+        self.assertTrue(t["gefragt"] >= 1 and t["ja"] >= 1, t)
+
     def test_errands_from_people_done_only_by_receipts(self):
         """LlamaTale idea 2 (Dominik 2026-10-27 „1-7“, switch dungeonauftraege): a hero asking a person of the scene for
         work gets an errand the panel rolls (kind, target, reward times the group's level, experience, two clues from

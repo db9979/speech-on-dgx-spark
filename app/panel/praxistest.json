@@ -4006,6 +4006,13 @@
 "titel": "Dungeon-Master: echte Würfel im Kampf, kurze Wartezeit",
 "text": "Funktionen → KI-Dungeon-Master → Echte Würfel am Tisch an, im Spielleiter-Pult einen Platz mit eigenem Würfel wählen. A: Im Kampf „Ich greife an“: die Wartezeit fragt „Wirf W20 für den Angriff auf …“, die Zahl steht am Angriff mit „echt gewürfelt“. B: Zweimal keine Zahl geben: beim dritten Mal zählt die Uhr nur 10 s. Einmal werfen: wieder 30 s. C: Unter einem Wurf steht „Ziel 15 (mittel)“, bei 12 „(leicht)“.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P597",
+"v": 1166,
+"titel": "Dungeon-Master: Überreden zum Mitkommen",
+"text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Überreden zum Mitkommen an. A: In einer Runde mit Karte eine Person, die euch noch nicht kennt (neutral), mit „Komm mit uns, <Name>.“ fragen: im Verlauf „<Name> bleibt hier.“, keine Probe. B: Der Person helfen oder etwas schenken (Haltung freundlich), dann wieder fragen: eine Würfelkarte „<Name> zum Mitkommen überreden“ (Charisma); gelungen „<Name> kommt mit euch.“, die Person zieht auf der Karte mit. C: Die Antwort der Person in der Erzählung passt zur Entscheidung. D: Schalter aus: „komm mit“ nimmt die Person sofort mit.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

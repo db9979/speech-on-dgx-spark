@@ -195,6 +195,7 @@ MODULE = {
     "dungeon_zeugen": ("dienste", "Dungeon-Master: Zeugen-Regel, Taten vor Leuten ändern ihre Haltung nach fester Tabelle"),
     "dungeon_wandern": ("dienste", "Dungeon-Master: Wandernde Personen bei langer Rast als Gerücht, kleine Gesten der Personen beim Warten"),
     "dungeon_auftraege": ("dienste", "Dungeon-Master: Aufträge von Personen, Art, Ziel, Lohn und Spuren vom Panel, erfüllt nur durch Belege"),
+    "dungeon_mitkommen": ("dienste", "Dungeon-Master: Überreden zum Mitkommen, Haltung und Charisma-Probe des Panels, die Karte nimmt die Person mit"),
     "dungeon_gedanken": ("dienste", "Dungeon-Master: Gedanken lesen, Probe vom Panel, Wunsch und Geheimnis nur für den lesenden Platz"),
     "dungeon_anleiten": ("dienste", "Dungeon-Master: Spieler anleiten, Erzählung mit Ansatzpunkten, Knöpfe „Das kannst du hier“, Fragen an stille Spieler"),
     "dungeon_tageszeit": ("dienste", "Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht"),
