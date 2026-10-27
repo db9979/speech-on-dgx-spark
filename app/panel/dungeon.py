@@ -132,6 +132,7 @@ import dungeon_reise as reise
 import dungeon_sprachen as sprachen
 import dungeon_kalender as kalender
 import dungeon_buch as heldenbuch
+import dungeon_tageszeit as tageszeit
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_rueckfrage as rueckfrage
@@ -701,13 +702,13 @@ def check_rules(r):
              and isinstance(x.get("werte"), dict) and set(x["werte"]) == werte and all(_int(w, 1, 30) for w in x["werte"].values())
              and x.get("groesse", "mittel") in GROESSEN
              and isinstance(x.get("zustaende", []), list) and set(x.get("zustaende", [])) <= zids
-             and x.get("schaden_art", "hieb") in kampf.SCHADEN_ARTEN and x.get("boss", False) in (True, False)
+             and x.get("schaden_art", "hieb") in kampf.SCHADEN_ARTEN and x.get("boss", False) in (True, False) and x.get("nacht", False) in (True, False)
              and ("angriffe" not in x or _int(x["angriffe"], 2, ANGRIFFE_MAX))
              and all(isinstance(x.get(f, []), list) and set(x.get(f, [])) <= set(kampf.SCHADEN_ARTEN) for f in ("resistenz", "immun", "schwaeche"))
              and not (set(x.get("resistenz", [])) | set(x.get("immun", []))) & set(x.get("schwaeche", [])),
              f"gegner {x.get('id')}: zeichen, info, welten, stufe 0 bis 30, leben, ruestung, angriff, schaden, ep, "
              f"die sechs werte, groesse ({', '.join(GROESSEN)}), zustaende aus zustaende, schaden_art, resistenz, immun und "
-             f"schwaeche aus {', '.join(kampf.SCHADEN_ARTEN)} (nichts zugleich schwach und geschützt), boss true oder false, "
+             f"schwaeche aus {', '.join(kampf.SCHADEN_ARTEN)} (nichts zugleich schwach und geschützt), boss und nacht true oder false, "
              f"angriffe 2 bis {ANGRIFFE_MAX} (fehlt = 1)")
     for x in r.get("hintergruende") or []:
         need(_pair(x.get("info"), INFO_MAX) and isinstance(x.get("werte", {}), dict) and set(x.get("werte", {})) <= werte
@@ -3181,8 +3182,7 @@ AUFGABE_ERZAEHLEN = {
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
-          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. Ändert sich die Tageszeit, "
-          "melde sie in szene.tageszeit (morgen, tag, abend, nacht). {bild}",
+          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.{zeit} {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks ({m}at most {n} characters); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
@@ -3190,8 +3190,7 @@ AUFGABE_ERZAEHLEN = {
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
           "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
-          "sentence); the panel sets goods and prices, name none. When the time of day changes, report it in "
-          "szene.tageszeit (morgen, tag, abend, nacht). {bild}"}
+          "sentence); the panel sets goods and prices, name none.{zeit} {bild}"}
 
 
 def schema_proben(r):
@@ -3271,6 +3270,8 @@ def facts(r, rd, wuerfe=None, zuege=None):
               for p in names.values()]
     bisher = told_here(rd, 2 if rd.get("kurz") else BISHER)
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
+    if tageszeit.on(rd) and not isinstance(rd.get("uhr"), dict):
+        tageszeit.sync(rd, -1)                   # the panel's clock from the first narration on (LlamaTale idea 1)
     fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": dict(rd["szene"], tageszeit=rd.get("tageszeit", "tag")), "bisher": bisher, "still": still,
               **erz.facts_extra(rd, li)}
     zauber = [{"wer": x["name"], "zauber": x["zauber"], "wirkung": x["satz"]} for x in rd["log"] if x["art"] == "zauber" and x["n"] == rd["zug"]]
@@ -3305,6 +3306,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(rast.facts(rd))                        # the camp of a rest (D&D idea 4)
     fakten.update(reise.facts(rd))                       # the journey of the last way (D&D idea 9)
     fakten.update(kalender.facts(r, rd))                 # the world's date, only as data (D&D idea 6)
+    fakten.update(tageszeit.facts(rd))                   # a change of the panel's time of day (LlamaTale idea 1)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
@@ -3336,7 +3338,7 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang))).rstrip()
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
@@ -3487,8 +3489,8 @@ def roll(r, rd, proben, rng=None, hand=None):
         vt = kampf._state_vt(r, h, vt, "probe")   # a state from a foe's hit (vergiftet, verängstigt …): checks at a disadvantage
         if h.get("nachteil_zug") == rd["zug"]:    # the price „nachteil“ of a near miss last turn (dungeon_knapp.pay)
             vt = "" if vt == "vorteil" else "nachteil"
-        dark = alarm.dunkel(r, rd, h)
-        if dark:                                 # a dark vault without darkvision (dungeon_alarm, D&D round 2 idea 6)
+        dark = alarm.dunkel(r, rd, h) or tageszeit.dunkel(r, rd, h)
+        if dark:                                 # a dark vault (dungeon_alarm, D&D round 2 idea 6) or night without light (LlamaTale 1)
             vt = "" if vt == "vorteil" else "nachteil"
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
         bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
@@ -3743,7 +3745,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
-        if story.get("tageszeit") and story["tageszeit"] != rd.get("tageszeit", "tag"):
+        if tageszeit.on(rd):                     # LlamaTale idea 1: the panel's clock, the model's tageszeit is ignored
+            tageszeit.zug(r, rd)
+        elif story.get("tageszeit") and story["tageszeit"] != rd.get("tageszeit", "tag"):
             if tageszeit_ok(rd.get("tageszeit", "tag"), story["tageszeit"]):
                 rd["tageszeit"] = story["tageszeit"]   # the stage's day or night picture (dungeon_dingbild), the next narrations
                 print(f"dungeon: tageszeit | {story['tageszeit']}", flush=True)
@@ -5393,6 +5397,7 @@ def view(rid, pid, now=None):
     out["gefaehrten"] = gefaehrte.view(_me, rd)                  # the hired companions (round 2, idea 9)
     out["fluestern"] = fluestern.view(rd, pid, host)            # the own whispers; the host only that and with whom (round 2, idea 5)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
+    out["tageszeit"] = tageszeit.view(rd)                      # the panel's time of day (LlamaTale idea 1)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
     out["mail_vorschau"] = rd.get("mail_vorschau", True) if host and gastkonto.on() and any(x.get("konto") for x in rd["plaetze"].values()) else None
     kampf.pictures(_me, r, rd, out, host)
@@ -5651,6 +5656,8 @@ def shop(r, rd, pid, h, was, b, it):
     if was == "erkennen":
         x = next((x for x in h["tasche"] + worn(h) if x["i"] == b.get("i") and x.get("u")), None)
         rolle = next((y for y in h["tasche"] if y["i"] == b.get("mit") and _c(r, y).get("erkennt")), None) if b.get("mit") else None
+        if not b.get("mit") and m and tageszeit.zu(rd, "markt"):
+            raise LookupError("nacht")           # LlamaTale idea 1: at night the merchant is shut
         if not x or b.get("mit") and not rolle or not rolle and (not m or h["gold"] < name_price(r, x)):
             raise ValueError("erkennen")
         if rolle:
@@ -5663,6 +5670,8 @@ def shop(r, rd, pid, h, was, b, it):
         return
     if not m:
         raise LookupError("haendler")
+    if tageszeit.zu(rd, "markt"):
+        raise LookupError("nacht")
     if was == "kaufen":
         w = next((x for x in m["ware"] if x["i"] == b.get("i")), None)
         if not w or h["gold"] < buy_price(r, h, w) or not room(r, h, [w]):
@@ -5705,7 +5714,8 @@ def market_view(r, rd, h, lang):
             "art": k[0][li] if k else "", "kauft": [ART[a][li] for a in k[1]] if k else [],
             "ware": [dict(item_view(r, x, lang), preis=buy_price(r, h, x) if h else buy_price_full(r, x)) for x in m["ware"]],
             "verkauf": {x["i"]: sell_price(r, x, m) for x in h["tasche"]} if h else {},
-            "erkennen": {x["i"]: name_price(r, x) for x in (h["tasche"] + worn(h) if h else []) if x.get("u")}}
+            "erkennen": {x["i"]: name_price(r, x) for x in (h["tasche"] + worn(h) if h else []) if x.get("u")},
+            **({"zu": True} if tageszeit.nachts(rd) else {})}   # shut at night (LlamaTale idea 1)
 
 
 def buy_price_full(r, it):

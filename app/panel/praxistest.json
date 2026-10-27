@@ -3922,6 +3922,13 @@
 "titel": "Heldenbuch aufs reMarkable",
 "text": "A: Als Admin Funktionen → KI-Dungeon-Master → Heldenbuch aufs reMarkable einschalten, ein Profil mit verbundenem reMarkable öffnet Dungeon-Master → Helden: unter den Helden steht „Heldenbuch aufs reMarkable“ mit Format und Farbe. B: „Vorschau (PDF)“: Inhalt, Heldenbogen, Chronik, Personen, Bestiarium und Gegenstände, die Reiter springen zu den Teilen, nichts ragt über den Rand. C: „Jetzt schicken“: auf dem reMarkable liegen „Heldenbuch – NAME“ und einmalig „Notizen – NAME“; ein zweites Mal ersetzt das Buch, die Notizen bleiben. D: Ein Kapitel zu Ende spielen: etwa eine halbe Stunde später kommt das Buch von selbst, mit „Neu seit der letzten Ausgabe“. E: Paper Pro oder Move: unter Ich → reMarkable „Farbe“ auf „In Graustufen“ stellen, das nächste Buch kommt grau, gut lesbar; beim reMarkable 2 gibt es die Auswahl nicht. F: Im Buch stehen bei Personen nie Wunsch oder Geheimnis, bei Mitspielern nur Name, Volk und Klasse; ein Gast bekommt kein Buch.",
 "thread": "Heldenbuch aufs reMarkable"
+},
+{
+"id": "P585",
+"v": 1145,
+"titel": "Dungeon-Master: Tageszeit vom Panel",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Tageszeit vom Panel an. A: Eine Runde spielen: oben am Tisch steht „🌅 Morgen · noch 6 Züge“, nach sechs Zügen wird es Tag, nach zwölf Abend; der Erzähler erzählt den Wechsel kurz. B: Nachts in einer Siedlung: Schmied und Lehrstunde zeigen „🌙 Nachts zu“, das Gasthaus geht; nach dem Gasthaus ist Morgen. C: Nachts draußen ohne Fackel mit einem Menschen würfeln: die Probe hat Nachteil, mit einer Fackel in der Tasche nicht. D: Schalter aus: der Erzähler meldet die Tageszeit wieder selbst.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

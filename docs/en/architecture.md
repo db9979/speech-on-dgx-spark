@@ -320,6 +320,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_sprachen.py` | KI-Dungeon-Master: Sprachen der Völker. |
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
 | `app/panel/dungeon_tabellen.py` | KI-Dungeon-Master: the fixed tables of the catalog. |
+| `app/panel/dungeon_tageszeit.py` | KI-Dungeon-Master: Tageszeit vom Panel. |
 | `app/panel/dungeon_umgebung.py` | KI-Dungeon-Master: Umgebung nutzen. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
 | `app/panel/dungeon_wappen.py` | KI-Dungeon-Master: Wappen für Gruppe und Fraktionen (D&D-Idee 10 of 2026-10-25, Dominik „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“, plan … |

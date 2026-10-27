@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.145** AI Dungeon Master: time of day by the panel, morning, day, evening and night by calendar and turns instead of the model, at night the shops are shut, without a light you roll outdoors in the dark at a disadvantage, and at night foes of the night come
 - **V01.1.144** AI Dungeon Master: the map remembers who asks a person to come along and lets people with a goal wander along the ways (the map's part of LlamaTale 4 and 6)
 - **V01.1.143** AI Dungeon Master: hero book to the reMarkable (switch, off), one book per hero in the own device's format with hero sheet, chronicle, people, bestiary and items, in colour on Paper Pro and Move, greyscale on the rm2, by itself after the evening and on "Send now", colour or greyscale under Me → reMarkable
 - **V01.1.142** AI Dungeon Master: combat audit wave 2, spells with a saving throw are now saved against by the foe (half damage, conditions such as prone or unconscious), Sleep and Hold Person work in a fight, Healing Hands heals a friend by name, and the foes' conditions take the bestiary's DC
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.138** AI Dungeon Master: combat audit wave 2, blessings no longer stack (the highest counts, a new spell ends the same hero's last blessing), Shield and Haste raise the armour class, Berserker Rage hits harder, and the group flees only by the panel's Dexterity check
 - **V01.1.137** AI Dungeon Master: in the story planner you tick up to three known people from the catalog, a round of that story brings them with their fixed card, role and attitude, the language model may use them in the draft
 - **V01.1.136** AI Dungeon Master: own stories (switch, off), every story card has ⋯ with Edit, Copy and Delete, "＋ New story" comes first (tone, keywords, the language model writes it, the panel checks it), every host has the own ones, the admin sees all
-- **V01.1.135** AI Dungeon Master: album page "People", with the people catalog the album also shows the people met, after 1, 2 and 4 meetings with face, looks, occupation, manner, traits and attitude towards the hero, never wish or secret
 
 
 

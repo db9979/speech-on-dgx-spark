@@ -3318,6 +3318,106 @@ class Equipment(Base):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("${dmKalender(v)}", f.read())
 
+    def test_the_time_of_day_comes_from_the_panel(self):
+        """LlamaTale idea 1 (Tageszeit vom Panel, switch dungeontageszeit): off by default, the narrator reports it as
+        before; on, the calendar's half and ZUEGE told turns a section set it, after a half day the calendar runs on by
+        itself, a long rest ends at the next morning, the model's tageszeit is ignored and a change is told once as data;
+        at night the shops and the merchant are shut (the inn stays open), outdoors a hero without darkvision and
+        without a light in the group rolls at a disadvantage, and the night's foes are offered when enough fit."""
+        import features
+        import dungeon_gold
+        import dungeon_kalender as kal
+        import dungeon_rast as rast
+        import dungeon_tageszeit as tz
+        self.assertNotIn(tz.KEY, features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["dungeon_tageszeit"], False)
+        r = self.r
+        self.assertIsNone(dungeon.view(self.rid, self.host)["tageszeit"])
+        rd = self.state(self.rid)
+        self.assertIn(tz.MELDEN["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))      # off: the narrator reports it
+        helpers.keep_chat(self, "dungeon_tageszeit", "dungeon_rast")
+        helpers.set_config(dungeon_tageszeit=True, dungeon_rast=True)
+        rd = self.state(self.rid)
+        rd.update(kalender={"start": 0, "halbe": 0}, tageszeit="tag", zug=1)
+        rd.pop("uhr", None)
+        rd.pop("karte", None)
+        rd.pop("markt", None)
+        self.assertEqual(tz.view(rd)["zeit"], "morgen")                                    # before the first narration: by the rules
+        self.assertIn(tz.TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertNotIn(tz.MELDEN["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            tz.sync(rd, -1)
+            self.assertEqual(rd["tageszeit"], "morgen")
+            for _ in range(tz.ZUEGE):
+                tz.zug(r, rd)
+            self.assertEqual((rd["tageszeit"], rd["uhr"]["wechsel"]), ("tag", 2))
+            rd["zug"] = 2
+            self.assertEqual(tz.facts(rd), {"tageszeit_neu": "Tag"})                     # told once, on the next turn
+            rd["zug"] = 3
+            self.assertEqual(tz.facts(rd), {})
+            for _ in range(tz.ZUEGE):
+                tz.zug(r, rd)
+            self.assertEqual((rd["tageszeit"], kal.ensure(rd)["halbe"], rd["uhr"]["zuege"]), ("abend", 1, 0))
+            for _ in range(tz.ZUEGE):
+                tz.zug(r, rd)
+        self.assertEqual(rd["tageszeit"], "nacht")
+        self.assertIn("dungeon: kalender | 1 halbe tage | zeit", out.getvalue())
+        self.assertIn("dungeon: tageszeit | nacht | panel", out.getvalue())
+        self.assertEqual(tz.view(rd)["zuege"], tz.ZUEGE)
+        # at night the shops are shut, the inn is open
+        h = rd["plaetze"][self.host]["held"]
+        h["gold"] = 1000
+        with mock.patch.object(dungeon_gold, "here", lambda rd: "Kesselbruck"), mock.patch.object(dungeon_gold, "on", lambda rd: True), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            with self.assertRaises(LookupError) as e:
+                dungeon_gold.serve(dungeon, r, rd, self.host, h, {"id": "lehre", "wert": "staerke"})
+            self.assertEqual(str(e.exception), "nacht")
+            v = {x["id"]: x for x in dungeon_gold.view(dungeon, r, rd, self.host)["dienste"]}
+            self.assertEqual((v["lehre"]["frei"], v["lehre"].get("zu")), (False, True))
+            self.assertNotIn("zu", v["gasthaus"])
+            rd["markt"] = {"name": "Krämer", "satz": "", "ware": [], "art": "", "kasse": 10}
+            with self.assertRaises(LookupError) as e:
+                dungeon.shop(r, rd, self.host, h, "kaufen", {"i": "x"}, None)
+            self.assertEqual(str(e.exception), "nacht")
+            self.assertIs(dungeon.market_view(r, rd, h, "de")["zu"], True)
+        self.assertIn("dungeon: tageszeit | zu | lehre", out.getvalue())
+        rd.pop("markt")
+        # outdoors at night: dark without darkvision and without a light in the group
+        for _, p in dungeon.seated(rd):
+            p["held"]["tasche"] = [x for x in p["held"]["tasche"] if not (dungeon._c(r, x) or {}).get("licht")]
+            p["held"]["faehigkeiten"] = [f for f in p["held"].get("faehigkeiten") or [] if f != "lichtzauber"]
+        h["volk"] = "mensch"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(tz.dunkel(r, rd, h))
+            self.assertFalse(tz.dunkel(r, rd, dict(h, volk="zwerg")))
+            w = dungeon.roll(r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10, "vt": ""}], Dice(15, 3))
+            self.assertEqual((w[0].get("dunkel"), w[0]["w"]), (True, 3))                     # the check at a disadvantage
+            with mock.patch.object(dungeon_gold, "here", lambda rd: "Kesselbruck"):
+                self.assertFalse(tz.dunkel(r, rd, h))                                      # a settlement has its lanterns
+            h["tasche"].append(dungeon.item(r, "holzfackel"))
+            self.assertFalse(tz.dunkel(r, rd, h))                                          # a torch in a bag
+        # the night's foes when enough fit, else all
+        fit = [{"id": "a", "nacht": True}, {"id": "b"}, {"id": "c", "nacht": True}]
+        self.assertEqual([g["id"] for g in tz.night_foes(rd, fit, 2)], ["a", "c"])
+        self.assertEqual(len(tz.night_foes(rd, fit, 3)), 3)
+        self.assertEqual(dungeon.check_rules(dict(r, gegner=[dict(r["gegner"][0], nacht="ja")] + r["gegner"][1:])) != [], True)
+        # a long rest ends at the next morning
+        with contextlib.redirect_stdout(io.StringIO()):
+            rast.rest(dungeon, r, rd, "lang", random.Random(1))
+        self.assertEqual((kal.ensure(rd)["halbe"], rd["tageszeit"], rd["uhr"]["zuege"]), (2, "morgen", 0))
+        story = {"text": "Die Sonne sinkt.", "npc": [], "npc_stimme": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
+                 "haendler": None, "akt_fertig": False, "ooc": [], "bild": "", "ort_id": "", "begegnung": [], "fremd": [],
+                 "faeden": [], "dinge": [], "tageszeit": "nacht", "folgen": [], "kampf_ende": ""}
+        rd["offen"] = {}
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.apply(r, rd, [], story, self.rid, random.Random(1), kampfwuerfe=([], []))
+        self.assertEqual((rd["tageszeit"], rd["uhr"]["zuege"]), ("morgen", 1))               # the model's tageszeit is ignored
+        self.assertGreaterEqual(tz.for_live()["wechsel"], 4)
+        for f, x in (("dungeon.js", "${dmTageszeit(v)}"), ("dungeonfenster.js", "m.zu")):
+            with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", f), encoding="utf-8") as fh:
+                self.assertIn(x, fh.read())
+
 
 class _Die:
     """A d20 that always shows the same number."""

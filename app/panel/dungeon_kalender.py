@@ -4,7 +4,8 @@ umsetzten kannst.“; the idea of fantasycalendar/Fantasy-Calendar, no licence, 
 Every world has twelve months of DAUER days, one or two moons and festivals from the fixed lists below (the children's
 table takes the lists of „alle“). The round's first day comes from its start time and title (start); time runs only by fixed rules
 (weiter): a stage of a way half a day (way: the stages of dungeon_karte.etappen, a journey of dungeon_reise lost a day
-more), a long rest or a night at the inn a whole day (dungeon_rast.rest, dungeon_gold.serve). The table shows the date,
+more), a long rest or a night at the inn a whole day (dungeon_rast.rest, dungeon_gold.serve), with the panel's time of day
+(dungeon_tageszeit) until the next morning and half a day after its turns. The table shows the date,
 the moons, today's festival or the next one within BALD days and the market day of a settlement (every MARKT days); on
 a festival a settlement's services cost FEST_AUFSCHLAG percent more (dungeon_gold.price). The narrator gets the date as
 data (facts) and may not change it.
@@ -117,11 +118,18 @@ def text(r, rd, li):
     return " · ".join([datum] + [f"{m['name'][li]} {m['phase'][li]}" for m in h["monde"]])
 
 
+MORGEN = ("rast", "gasthaus")   # with the time of day of the panel (dungeon_tageszeit) these end at the next morning
+
+
 def weiter(r, rd, halbe, warum):
-    """Time runs by a fixed rule: halbe half days for warum (weg, reise, rast, gasthaus); a festival reached counts."""
-    if not on(rd) or not isinstance(halbe, int) or halbe <= 0:
+    """Time runs by a fixed rule: halbe half days for warum (weg, reise, rast, gasthaus, zeit: the turns of a half day
+    of dungeon_tageszeit); a festival reached counts. Runs while the calendar or the time of day is on."""
+    import dungeon_tageszeit as tageszeit
+    if not (on(rd) or tageszeit.on(rd)) or not isinstance(halbe, int) or halbe <= 0:
         return
     k = ensure(rd)
+    if warum in MORGEN and tageszeit.on(rd):
+        halbe = 2 - k["halbe"] % 2               # sleep until the next morning: the next even half
     before = tag(rd)
     k["halbe"] = min(10 ** 7, k["halbe"] + min(halbe, HALB_MAX))
     feste = sum(1 for d in range(before + 1, tag(rd) + 1) if _fest_an(r, rd, d))
@@ -129,13 +137,16 @@ def weiter(r, rd, halbe, warum):
     if feste:
         _day.bump("feste", feste)
     print(f"dungeon: kalender | {min(halbe, HALB_MAX)} halbe tage | {warum}" + (" | fest" if feste else ""), flush=True)
+    if warum in MORGEN and tageszeit.on(rd):
+        tageszeit.sync(rd)                       # between turns: the morning is told on the next turn
 
 
 def way(r, rd, von, reise):
     """A way on the map: half a day a stage, a journey that went astray a day more; nothing inside a vault."""
     import dungeon_karte
+    import dungeon_tageszeit as tageszeit
     k = rd.get("karte") or {}
-    if not on(rd) or dungeon_karte.vault(rd) or not isinstance(von, int) or not 0 <= von < len(k.get("orte") or []) or von == k.get("hier"):
+    if not (on(rd) or tageszeit.on(rd)) or dungeon_karte.vault(rd) or not isinstance(von, int) or not 0 <= von < len(k.get("orte") or []) or von == k.get("hier"):
         return
     e = reise["etappen"] if reise else dungeon_karte.etappen(k, von, k["hier"])
     weiter(r, rd, e + (2 if reise and reise["ergebnis"] == "verirrt" else 0), "reise" if reise else "weg")

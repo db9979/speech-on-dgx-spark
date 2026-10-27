@@ -1438,6 +1438,11 @@ def snapshot(view="admin", now=None):
         dgn["kalender"] = dungeon_kalender.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["kalender"] = {}
+    try:   # Tageszeit vom Panel (dungeon_tageszeit.py): numbers on the game's line
+        import dungeon_tageszeit
+        dgn["tageszeit"] = dungeon_tageszeit.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["tageszeit"] = {}
     try:   # Chronikbuch (dungeon_chronik.py): numbers on the game's line
         import dungeon_chronik
         dgn["chronik"] = dungeon_chronik.for_live() if dgn.get("on") else {}
@@ -2060,6 +2065,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("sprachen") or {}).values()) else "")
                         + (f" · heute {dgn['kalender']['halbe_tage']} halbe Tage der Welt vergangen, {dgn['kalender']['feste']} Feste"
                            if any((dgn.get("kalender") or {}).values()) else "")
+                        + (f" · heute {dgn['tageszeit']['wechsel']} Tageszeit-Wechsel, {dgn['tageszeit']['dunkel']} Proben im Dunkeln der Nacht, {dgn['tageszeit']['zu']}-mal Laden zu"
+                           if any((dgn.get("tageszeit") or {}).values()) else "")
                         + (f" · heute {dgn['chronik']['seiten']} Chronikseiten, {dgn['chronik']['pdf']} PDF, {dgn['chronik']['geloescht']} gelöscht, {dgn['chronik']['abgelehnt']} abgelehnt"
                            if any((dgn.get("chronik") or {}).values()) else "")
                         + (f" · Personen-Katalog {dgn['personen']['personen']}, heute {dgn['personen']['neu']} neu, {dgn['personen']['wieder']} wiedergetroffen, {dgn['personen']['erkannt']} erkannten Helden, {dgn['personen']['geaendert']} geändert, {dgn['personen']['geloescht']} gelöscht, {dgn['personen'].get('geschichte', 0)} aus Geschichten"

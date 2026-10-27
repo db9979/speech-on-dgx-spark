@@ -5861,6 +5861,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Tageszeit vom Panel (V01.1.145, LlamaTale-Idee 1, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“; nur die Idee von LlamaTale, LGPL-3.0, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Tageszeit vom Panel* (chat.dungeon_tageszeit, aus). Die Tageszeit setzt das Panel nach festen Regeln, nie das Modell (dungeon_tageszeit.py): ein gerader halber Tag des Kalenders der Welt ist Morgen und Tag, ein ungerader Abend und Nacht, je ZUEGE = 6 erzählte Züge. Nach zwölf Zügen eines halben Tages läuft der Kalender von selbst einen halben Tag weiter (kalender.weiter „zeit“), auch wenn der Kalender der Welt aus ist (dann zählt er still). Wege und Reisen laufen wie bisher, eine lange Rast und das Gasthaus enden immer am nächsten Morgen. Feste Wirkungen: 1. Nachts haben Schmied, Lehrstunde, Verbessern, Heiler und der Händler zu (tageszeit.LADEN_ZU, Ablehnung „nacht“, im Siedlungs-Fenster „🌙 Nachts zu“); Gasthaus, Gerücht und Gefährten bleiben offen. 2. Nachts draußen (nicht im Gewölbe, dort zählt dungeon_alarm die Fackeln, und nicht in einer Siedlung) würfelt ein Held ohne Dunkelsicht Proben mit Nachteil, wenn niemand in der Gruppe Licht hat (Licht"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "zauber, ein Ding mit licht, eine Fackel in der Tasche). 3. Nachts bietet das Panel Gegner der Nacht an (Bestiarium nacht: true), wenn mindestens so viele passen, wie es anbietet. Der Erzähler bekommt die Tageszeit als Daten und im ersten Zug nach einem Wechsel tageszeit_neu, dann erzählt er den Übergang in ein oder zwei Sätzen; sein Feld szene.tageszeit gilt nicht, solange der Schalter an ist. Oben am Tisch steht „🌇 Abend · noch 4 Züge“. Logs dungeon: tageszeit | nacht | panel, dungeon: tageszeit | zu | lehre, dungeon: tageszeit | dunkel. Live-Übersicht: Wechsel, Proben im Dunkeln der Nacht, Laden zu. Ohne Schalter meldet der Erzähler die Tageszeit wie bisher (nur vorwärts)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
 },
 {
@@ -11358,6 +11374,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Kalender der Welt (Funktionen → Meine Daten → „Kalender der Welt“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jede Welt hat zwölf Monate zu 30 Tagen, einen oder zwei Monde und Feste."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Tageszeit vom Panel (Funktionen → Meine Daten → „Tageszeit vom Panel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Die Tageszeit bestimmt der Spark nach festen Regeln, nie das Modell: ein halber Tag der Welt ist Morgen und Tag, der nächste Abend und Nacht, je 6 erzählte Züge."
 },
 {
 "lang": "de",
@@ -20653,6 +20677,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: time of day by the panel (V01.1.145, LlamaTale idea 1, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\"; only the idea of LlamaTale, LGPL-3.0, own code): Admin switch *Features → AI Dungeon Master → Time of day by the panel* (chat.dungeon_tageszeit, off). The panel sets the time of day by fixed rules, never the model (dungeon_tageszeit.py): an even half day of the world's calendar is morning and day, an odd one evening and night, ZUEGE = 6 told turns each. After twelve turns of a half day the calendar runs half a day on by itself (kalender.weiter \"zeit\"), also while the calendar of the world is off (it then counts silently). Ways and journeys run as before, a long rest and the inn always end at the next morning. Fixed effects: 1. At night smith, lesson, improving gear, healer and the merchant are shut (tageszeit.LADEN_ZU, refusal \"nacht\", in the settlement window \"🌙 Shut at night\"); inn, rumour and companions stay open. 2. At night outdoors (not in a vault, where dungeon_alarm counts the torches, and not in a settlement) a hero without darkvision rolls checks at a disadvantage when nobody in the group has a light (light spell, a thing with licht, "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "a torch in a bag). 3. At night the panel offers foes of the night (bestiary nacht: true) when at least as many fit as it offers. The narrator gets the time of day as data and on the first turn after a change tageszeit_neu, then tells the change in one or two sentences; its field szene.tageszeit does not count while the switch is on. On top of the table stands \"🌇 Evening · 4 turns left\". Logs dungeon: tageszeit | nacht | panel, dungeon: tageszeit | zu | lehre, dungeon: tageszeit | dunkel. Live overview: changes, checks in the dark of the night, shops shut. Without the switch the narrator reports the time of day as before (only forward)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: combat audit wave 2, the foes' saving throws (V01.1.142, report dungeon-kampf-audit/bericht.md points H4 and N6, data from V01.1.140): No new switch. 1. H4 spells with a saving throw: when a spell of the catalog has a saving throw (rettung, 44 spells, such as Fireball, Sacred Flame, Sleep), in a fight the hero no longer rolls against the armour class; the panel rolls for the foe: d20 + the bonus of its value from the bestiary against 10 + the proficiency bonus + the caster's value (as for a check) + the spell's bonus above the blessing on it (kampf.ZAUBER_SG, kampf.spell_save; 8 in D&D, but a save knows no critical hit and no advantage, with 10 the balance bench keeps its aim); a 20 always passes, a 1 never. Failed: the full damage and the spell's condition (zustand, such as prone, restrained, unconscious) for its turns; passed: with halb half the damage, else nothing. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; the story shows a row of its own \"saving throw Wisdom = 3 vs DC 15 · failed\" with damage and condition. 2. Banishing spells: a spell without damage with a saving throw and a condition (kampf.bann: Sleep, Entangle, Hold Person, Comm"
 },
 {
@@ -25966,6 +26006,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Calendar of the world (Features → My data → \"Calendar of the world\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every world has twelve months of 30 days, one or two moons and festivals."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Time of day by the panel (Features → My data → \"Time of day by the panel\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The Spark sets the time of day by fixed rules, never the model: one half day of the world is morning and day, the next evening and night, 6 told turns each."
 },
 {
 "lang": "en",

@@ -309,6 +309,8 @@ FEATURES = (
     F("dungeonsprachen", "Sprachen der Völker", "Tongues of the peoples", "data", ("dungeon_sprachen",), parent="dungeon", me="dmbox", guide="dungeonsprachen"),
     # Kalender der Welt (dungeon_kalender.py, D&D idea 6): months, moons and festivals; time runs only by fixed rules
     F("dungeonkalender", "Kalender der Welt", "Calendar of the world", "data", ("dungeon_kalender",), parent="dungeon", me="dmbox", guide="dungeonkalender"),
+    # Tageszeit vom Panel (dungeon_tageszeit.py, LlamaTale idea 1): morning to night by fixed rules, shops shut at night
+    F("dungeontageszeit", "Tageszeit vom Panel", "Time of day by the panel", "data", ("dungeon_tageszeit",), parent="dungeon", me="dmbox", guide="dungeontageszeit"),
     # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
     F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
     # Heldenbuch aufs reMarkable (dungeon_buch.py): one book per hero as a PDF in the device's format, needs rmsend (READY)

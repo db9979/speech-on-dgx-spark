@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.145** KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
 - **V01.1.144** KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
 - **V01.1.143** KI-Dungeon-Master: Heldenbuch aufs reMarkable (Schalter, aus), je Held ein Buch im Format des eigenen Geräts mit Heldenbogen, Chronik, Personen, Bestiarium und Gegenständen, auf Paper Pro und Move in Farbe, rm2 in Graustufen, von selbst nach dem Abend und auf „Jetzt schicken“, Farbe oder Graustufen unter Ich → reMarkable
 - **V01.1.142** KI-Dungeon-Master: Kampf-Audit Welle 2, Zauber mit Rettungswurf würfelt jetzt der Gegner (halber Schaden, Zustände wie liegend oder bewusstlos), Schlaf und Person festhalten wirken im Kampf, Heilende Hände heilt einen Freund mit Namen, und Zustände der Gegner nehmen den SG des Bestiariums
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.138** KI-Dungeon-Master: Kampf-Audit Welle 2, Segen stapeln nicht mehr (der höchste zählt, ein neuer Zauber beendet den vorigen Segen desselben Helden), Schild und Hast heben die Rüstungsklasse, Berserkerwut trifft härter, und die Gruppe flieht nur mit einer Geschick-Probe des Panels
 - **V01.1.137** KI-Dungeon-Master: Im Geschichten-Planer kreuzt du bis zu drei bekannte Personen aus dem Katalog an, eine Runde dieser Geschichte bringt sie mit ihrer festen Karte, Rolle und Haltung, das Sprachmodell darf sie im Entwurf nutzen
 - **V01.1.136** KI-Dungeon-Master: Eigene Geschichten (Schalter, aus), jede Geschichtenkarte hat ⋯ mit Bearbeiten, Kopieren und Löschen, „＋ Neue Geschichte“ steht vorn (Ton, Stichworte, das Sprachmodell schreibt sie, das Panel prüft sie), jeder Gastgeber hat seine eigenen, der Admin sieht alle
-- **V01.1.135** KI-Dungeon-Master: Album-Seite „Personen“, mit Personen-Katalog zeigt das Album auch die getroffenen Personen, nach 1, 2 und 4 Treffen mit Gesicht, Aussehen, Beruf, Art, Wesen und Haltung zum Helden, nie Wunsch oder Geheimnis
 
 
 

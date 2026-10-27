@@ -213,6 +213,7 @@
     "dungeon_reise": false,
     "dungeon_sprachen": false,
     "dungeon_kalender": false,
+    "dungeon_tageszeit": false,
     "dungeon_chronik": false,
     "dungeon_buch": false,
     "dungeon_haltung": false,

@@ -11,6 +11,8 @@ hero may pay for fixed offers of the panel, never of the model, priced by the gr
 - Heiler (Narben, D&D idea 8, only while dungeon_narben is on): takes every wound's consequence, the scars stay;
 - Gefährte anheuern (D&D round 2, idea 9, only while dungeon_gefaehrte is on): a companion goes with the group, its
   pay for the first chapter now (dungeon_gefaehrte.hire, the price by the companions' table).
+At night (dungeon_tageszeit, LlamaTale idea 1) the shops of tageszeit.LADEN_ZU are shut; the inn, the rumour and
+hiring a companion stay open.
 The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
 (dungeon_pruefstand.economy) and its self-test keeps income to expenses between 1.2 and 2.
 Only while „Gold mit Zweck“ is allowed for the round's host (features "dungeongold"). The hero's move goes through the
@@ -20,6 +22,7 @@ import time
 
 import dungeon_gefaehrte as gefaehrte
 import dungeon_narben as narben
+import dungeon_tageszeit as tageszeit
 
 SIEDLUNG = ("dorf", "stadt", "taverne", "station", "basar", "hafen")
 DIENSTE = ("gasthaus", "schmied", "lehre", "geruecht", "verbessern")
@@ -151,6 +154,8 @@ def serve(dm, r, rd, pid, h, b):
     if not here(rd) or rd.get("kampf"):
         print(f"dungeon: dienst | {was} | keine siedlung", flush=True)
         raise LookupError("siedlung")
+    if tageszeit.zu(rd, was):                   # LlamaTale idea 1: at night the shops are shut, the inn is open
+        raise LookupError("nacht")
     pieces = dm.worn(h) + h["tasche"]
     teil = next((x for x in pieces if x["i"] == b.get("i")), None) if was == "verbessern" else None
     if was == "verbessern" and (not teil or not better(dm, r, teil)):
@@ -243,13 +248,14 @@ def view(dm, r, rd, pid):
             "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser),
             "heiler": bool(narben.to_heal(h)), "gefaehrte": bool(gefaehrte.candidates(dm, r, rd))}
     held = dm._living(rd)
+    zu = set(tageszeit.LADEN_ZU) if tageszeit.nachts(rd) else set()   # shut at night (LlamaTale idea 1), not counted
     # Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 3a 5b): the time of day for the head, the group's gold only
     # shown, and per service the calculation of its price (gold per level, level, heroes for the inn)
     return {"name": here(rd), "gold": h["gold"], "lehre": (h.get("lehre") or {}).get("wert", ""),
             "gold_gruppe": sum(p["held"]["gold"] for _, p in dm.seated(rd)), "tageszeit": rd.get("tageszeit") or "tag",
             "stufe": dm.group_level(held), "helden": len(held),
-            "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x],
-                         "je": per_level(x)} for x in offers(rd, h)],
+            "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x] and x not in zu,
+                         "je": per_level(x), **({"zu": True} if x in zu else {})} for x in offers(rd, h)],
             "spruch": narben.saying(r, rd, dm.seated(rd)),          # people ask about a scar (D&D idea 8)
             "gefaehrten": gefaehrte.candidates(dm, r, rd),         # the companions to hire (D&D round 2, idea 9)
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],

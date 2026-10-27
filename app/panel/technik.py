@@ -192,6 +192,7 @@ MODULE = {
     "dungeon_buch": ("dienste", "Dungeon-Master: Heldenbuch je Held als PDF im Format des reMarkable, Farbe oder Graustufen"),
     "dungeon_chronik": ("dienste", "Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark"),
     "dungeon_kalender": ("dienste", "Dungeon-Master: Kalender der Welt, Monate, Monde und Feste, die Zeit läuft nur über Wege, Rasten und das Gasthaus"),
+    "dungeon_tageszeit": ("dienste", "Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht"),
     "dungeon_sprachen": ("dienste", "Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann"),
     "dungeon_reise": ("dienste", "Dungeon-Master: Reise-Etappen, Rollen mit je einem Wurf und ein Ereignis der Landschaft auf langen Wegen"),
     "dungeon_rast": ("dienste", "Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten"),

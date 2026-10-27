@@ -375,7 +375,8 @@ def offer(dm, r, rd, held):
     if room(r, rd):
         return room(r, rd)
     b = budget(dm, r, rd, held)
-    fit = [g for g in _foes(dm, r, rd) if 0 < g["ep"] <= b * SCHWER]
+    import dungeon_tageszeit                     # LlamaTale idea 1: at night the foes of the night table
+    fit = dungeon_tageszeit.night_foes(rd, [g for g in _foes(dm, r, rd) if 0 < g["ep"] <= b * SCHWER], ANGEBOT)
     fit.sort(key=lambda g: (abs(g["ep"] - b / 3), g["id"]))
     top = fit[:12]
     import dungeon_personen                      # people of the scene with a template by occupation (Personen-Katalog 4)
