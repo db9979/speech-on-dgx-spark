@@ -5917,6 +5917,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Nichts Erfundenes (V01.1.177, Review 27.10. Paket 7 Teil 2, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, neue feste Prüfungen der Erzählung (dungeon_erzaehler), jede mit Hinweis für den nächsten Versuch und, scheitert er, mit gestrichenem Satz. 1. Waffe ohne Besitzwort („dabei“): Name des Helden, dann ein Wort aus ZIEHT (zieht, zückt, packt, trinkt …), dann das Kopfwort einer Katalogwaffe, einer Rüstung, eines Schilds oder Tranks (SCHUTZ_KOPF), die er nicht trägt, ohne andere Person dazwischen; nennt seine eigene Aktion das Ding, zählt es nicht. Ausrüstung kommt nie ins Ding-Gedächtnis (check_things). 2. Fund („fund“, found_untold): ein Satz mit dem Helden, einem Wort aus FINDET und dem Kopfwort eines Katalogdings (FUND_ARTEN), das weder Beute noch Quest-Fund noch in seiner Tasche ist. 3. Gold in Worten: „zwanzig Goldmünzen“, „eine Handvoll Münzen“ (GOLD_WORT) zählen wie Ziffern. 4. Gegner ohne Begegnung („gegner_neu“, foe_untold): ein Name des Bestiariums mit einem Wort aus ERSCHEINT (bricht durch, taucht auf, greift an …), den weder die Begegnung dieses Zugs noch der Kampf noch die Aktion eines Helden hat; friedliche Wesen, Menschen (wesen „mensch“), Personen"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " der Runde und Wörter wie „Roch“ oder „Schatten“ (GEGNER_MEHRDEUTIG) zählen nie, Namen nur als ganzes Wort („Wolfshafen“ ist kein Wolf). 5. Zeitsprung („zeitsprung“, ZEITSPRUNG): „Drei Tage später“, „am nächsten Morgen“, ohne laufende Rast und ohne Reise (ort_id). Kopfwörter, die auch Alltagswörter sind (MEHRDEUTIG: Feuer, Gift, Glück …), zählen nie. Tageszähler regel_fund, regel_gegner_neu, regel_zeitsprung (in „Erzähl-Regeln“ der Live-Übersicht). Selbsttest ReviewPruefung.test_invented_gear_finds_foes_and_time_jumps_are_caught in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Die Prüfung fängt alles (V01.1.176, Review 27.10. Paket 7 Teil 1, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Korrekturen der festen Prüfung. 1. Alle Fehler: dungeon_erzaehler.faults liefert jeden Fehler eines Versuchs, nicht nur den ersten (judge gibt weiter den ersten); der Hinweis für den nächsten Versuch nennt alle (hints), und behalten wird der mildeste Versuch (milder: der schwerste Fehler zuerst, dann weniger Fehler). 2. Reparatur nachgeprüft: Scheitern alle Versuche, arbeitet repair_all alle Fehler ab, erst das Streichen, dann die festen Sätze; danach prüft es erneut: fehlt ein Held, der gehandelt hat, kommt ein fester Satz aus seinem Würfelbeleg („Silas versucht es: Schloss öffnen, misslungen.“) oder „… wartet ab“; führt ort_id an einen Ort, den der Text nicht nennt, bleibt die Gruppe (Log dungeon: nachbessern | nachgeprueft | namen oder | neuer_ort). 3. Probe misslungen: Ein Satz, der die misslungene Probe als gelungen erzählt, wird jetzt erkannt, auch wenn er nur den Namen des Helden und ein Erfolgswort trägt, und gestrichen, statt einen Widerspruch anzuhängen; danach verfällt die Beute dieses Zugs (| beute verfallen). 4. Antwort im NSC-Feld"
 },
 {
@@ -21214,6 +21230,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: nothing invented (V01.1.177, review 27.10. package 7 part 2, Dominik 2026-10-27 „ok“): No new switch, new fixed checks of the narration (dungeon_erzaehler), each with a hint for the next try and, when that fails, a struck sentence. 1. Weapon without a possessive („dabei“): the hero's name, then a word of ZIEHT (draws, grabs, drinks …), then the head noun of a catalog weapon, armour, shield or potion (SCHUTZ_KOPF) the hero does not carry, nobody else named between; when the hero's own action names the thing it does not count. Gear never goes into the thing memory (check_things). 2. Find („fund“, found_untold): a sentence with the hero, a word of FINDET and the head noun of a catalog thing (FUND_ARTEN) that is neither loot nor a quest find nor in the bag. 3. Gold in words: „twenty gold pieces“, „a handful of coins“ (GOLD_WORT) count like figures. 4. Foes without an encounter („gegner_neu“, foe_untold): a bestiary name with a word of ERSCHEINT (bursts in, appears, attacks …) that neither this turn's encounter nor the fight nor a hero's action has; peaceful beings, humans (wesen „mensch“), people of the round and words such as „Roch“ or „Schatten“ (GEGNER_MEHRDEUTIG)"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " never count, names only as a whole word („Wolfshafen“ is no wolf). 5. Time jump („zeitsprung“, ZEITSPRUNG): „three days later“, „the next morning“, with no rest running and no travel (ort_id). Head nouns that are common words too (MEHRDEUTIG: fire, poison, luck …) never count. Day counters regel_fund, regel_gegner_neu, regel_zeitsprung (in the live overview's narration rules). Self-test ReviewPruefung.test_invented_gear_finds_foes_and_time_jumps_are_caught in test_dungeon."
 },
 {
 "lang": "en",

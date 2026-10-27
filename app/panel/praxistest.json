@@ -4083,6 +4083,13 @@
 "titel": "Dungeon-Master: Die Prüfung fängt alles",
 "text": "Eine Runde spielen, in der eine Probe misslingt. A: Die Erzählung sagt nicht, dass es doch gelang, und es gibt in diesem Zug keine Beute. B: Jeder Held, der gehandelt hat, kommt in der Erzählung vor. C: Eine Frage an eine Person bekommt eine Antwort.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P608",
+"v": 1177,
+"titel": "Dungeon-Master: Nichts Erfundenes",
+"text": "Eine Runde spielen und auf die Erzählung achten. A: Kein Held zieht eine Waffe, die er nicht trägt. B: Niemand findet Dinge oder Gold, die nicht als Beute kommen. C: Es tauchen keine Gegner ohne Begegnung auf, und ohne Rast oder Reise springt die Zeit nicht.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

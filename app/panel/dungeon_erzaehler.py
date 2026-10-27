@@ -65,6 +65,11 @@ TOT = ("tot", "regungslos", "leblos", "liegt", "gefallen", "leiche", "reglos", "
 STIRBT = ("stirbt", "tot zusammen", "fällt tot", "ist tot", "sinkt leblos", "haucht", "regt sich nicht mehr", "dies",
           "falls dead", "is dead", "drops dead", "breathes its last")
 GOLD = re.compile(r"(?i)\b\d{1,5}\s*(gold|goldstück\w*|goldmünze\w*|münze\w*|taler|silberling\w*|coins?|gold pieces)\b")
+# Review 27.10. Paket 7 (E10): an amount of gold in words too („zwanzig Goldmünzen“, „eine Handvoll Münzen“)
+GOLD_WORT = re.compile(r"(?i)(?<!\w)(?:eine?n?|zwei|drei|vier|fünf|fuenf|sechs|sieben|acht|neun|zehn|elf|zwölf|zwoelf|zwanzig|dreißig|"
+                       r"dreissig|vierzig|fünfzig|fuenfzig|hundert|tausend|einige|ein paar|etliche|handvoll|beutel voll|a|one|two|three|"
+                       r"four|five|six|seven|eight|nine|ten|twenty|thirty|fifty|hundred|some|a few|handful of)\s+(?:[\w-]+\s+)?"
+                       r"(?:gold|goldstück\w*|goldmünze\w*|münze\w*|taler|silberling\w*|coins?|gold pieces)(?!\w)")
 FINDET = ("findet", "finden", "erhält", "erhalten", "bekommt", "steckt", "nimmt", "sammelt", "klimpert", "finds", "receives",
           "gets", "pockets", "takes", "collects")
 ENTSCHEIDET = ("entscheidet", "beschließt", "greift", "zieht", "rennt", "läuft", "öffnet", "nimmt", "packt", "springt",
@@ -87,7 +92,8 @@ UNTEN = ("keller", "nach unten", "hinunter", "hinab", "herunter", "runter", "abw
          "basement", "downstairs", "down the stairs", "goes down", "go down", "beneath")
 OBEN = ("nach oben", "hinauf", "herauf", "oben angekommen", "treppe hoch", "empor", "aufwärts", "obergeschoss", "dachboden",
         "upstairs", "up the stairs", "goes up", "go up", "attic", "upper floor")
-WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung", "dabei")   # repair strikes these sentences
+WEG_SATZ = ("gefallen", "gold", "fremd", "fehlt", "aussehen", "karte", "widerspruch", "richtung", "dabei", "fund", "gegner_neu",
+            "zeitsprung")   # repair strikes these sentences
 HART = ("probe", "gegner", "beleg", "schleier")   # faults that get a third try and, failing it, a fixed repair by the panel (repair)
 RICHTER = "dungeonrichter"   # the switch „Dungeon-Richter“ (features.py): the model's second opinion after the fixed checks
 RICHTER_MIN = 0.9            # the panel writes anew only from this probability of a contradiction (a fixed threshold)
@@ -408,6 +414,18 @@ HINWEIS = {
                  "nie er oder sie, nie sein oder ihr.",
                  "Note: these characters have a fixed geschlecht, refer to them exactly so: {namen}. For non-binary use "
                  "they, their or the name."),
+    "fund": ("Hinweis: Diese Figuren finden in deiner Erzählung etwas, das das Panel nicht vergeben hat: {namen}. Beute "
+             "vergibt nur das Panel (in den Daten beute oder quest_fund); erzähle keinen Fund außerhalb davon.",
+             "Note: these characters find something in your narration the panel did not hand out: {namen}. Only the panel "
+             "hands out loot (beute or quest_fund in the data); tell no find beyond that."),
+    "gegner_neu": ("Hinweis: In deiner Erzählung tauchen Gegner auf, die es in diesem Zug nicht gibt: {namen}. Gegner kommen "
+                   "nur aus der Begegnung des Panels (begegnung, kampf); lass sie weg.",
+                   "Note: foes come up in your narration that this turn does not have: {namen}. Foes only come from the "
+                   "panel's encounter (begegnung, kampf); leave them out."),
+    "zeitsprung": ("Hinweis: Deine Erzählung springt in der Zeit ({namen}). Ohne Rast und ohne Reise bleibt die Zeit bei "
+                   "diesem Zug: erzähle, was jetzt geschieht.",
+                   "Note: your narration jumps in time ({namen}). Without a rest and without travel the time stays with "
+                   "this turn: tell what happens now."),
     "dabei": ("Hinweis: Diese Waffe trägt die Figur nicht bei sich: {namen}. Beschreibe nur, was auf ihrem Heldenblatt "
               "steht (held: an und tasche).",
               "Note: the character does not carry this weapon: {namen}. Describe only what is on its hero sheet (held: an "
@@ -520,7 +538,9 @@ def repair(rd, story, fault, missing, wuerfe=()):
         story = dict(story, beute=None)          # a turn repaired so loses its loot (Paket 7, T7)
         print("dungeon: nachbessern | beute verfallen", flush=True)
     elif fault in WEG_SATZ:                      # the sentences with the fault leave, when enough new ones stay (Regeln 1-5)
-        bad = {"gold": lambda x: bool(GOLD.search(x)) and _hat(x, FINDET), "widerspruch": lambda x: bool(contradicts(rd, x)),
+        bad = {"gold": lambda x: bool(gold_told(x)), "widerspruch": lambda x: bool(contradicts(rd, x)),
+               "fund": lambda x: bool(found_untold(rd, dict(story, text=x))), "gegner_neu": lambda x: bool(foe_untold(rd, dict(story, text=x))),
+               "zeitsprung": lambda x: bool(time_jump(rd, dict(story, text=x))),
                "aussehen": lambda x: bool(looks_off(rd, x)), "fremd": lambda x: bool(for_others(rd, x)),
                "dabei": lambda x: bool(not_carried(rd, x)),
                "gefallen": lambda x: bool(fight_off(rd, x)),
@@ -730,8 +750,104 @@ def fight_off(rd, text, hits=()):
 
 
 def gold_told(text):
-    """Sentences that hand out an amount of gold or coins (Regel 3): the panel sets loot, the narration names none."""
-    return [x.strip()[:60] for x in _saetze(text) if GOLD.search(x) and _hat(x, FINDET) and not _hat(x, HAELT)][:3]
+    """Sentences that hand out an amount of gold or coins (Regel 3), in figures or words (GOLD_WORT, Review 27.10.
+    Paket 7): the panel sets loot, the narration names none."""
+    return [x.strip()[:60] for x in _saetze(text) if (GOLD.search(x) or GOLD_WORT.search(x)) and _hat(x, FINDET) and not _hat(x, HAELT)][:3]
+
+
+# Review 27.10. Paket 7 Teil 2 (E10, G18, G21): a thing found, a foe coming up and a time jump only by the panel's data
+FUND_ARTEN = ("waffe", "ruestung", "trank", "schmuck", "schatz", "werkzeug", "rolle")   # catalog things a narration may not hand out
+ERSCHEINT = ("bricht durch", "bricht herein", "taucht auf", "erscheint", "stürzt sich", "stuerzt sich", "greift an", "greift euch",
+             "springt", "stürmt", "stuermt", "brüllt", "faucht", "attackiert", "kriecht hervor", "appears", "bursts", "charges",
+             "lunges", "attacks", "leaps", "emerges")
+ZEITSPRUNG = re.compile(r"(?i)(?:\w+\s+)?(?:tage|wochen|monate|stunden|jahre|days|weeks|months|hours|years)\s+(?:später|spaeter|later|vergehen|"
+                        r"vergingen|pass)|am\s+(?:nächsten|naechsten|folgenden)\s+(?:morgen|tag|abend)|the\s+(?:next|following)\s+"
+                        r"(?:morning|day|evening)|(?:nach|after)\s+(?:einer|einigen|vielen|zwei|drei|a|several|two|three)\s+"
+                        r"(?:woche|wochen|tagen|monaten|week|weeks|days|months)")
+
+
+MEHRDEUTIG = ("augen", "blitz", "energie", "feuer", "geist", "gift", "glück", "kälte", "leder", "verfall", "laute", "säure", "brand",
+              "cell", "chart", "eye", "eyes", "glass", "kit", "luck", "module", "star", "stick", "stone", "suit", "water", "tools",
+              "supplies", "bunch", "cube", "dew", "ember", "plate", "mail", "pin", "tongue", "thrower", "slayer", "avenger", "habit",
+              "hook", "trap")   # catalog heads that are common words too: never a find or a weapon by themselves
+
+
+def _heads(r, arten, li):
+    """The head nouns (_kopf) of the catalog things of these kinds in the round's language (li), no MEHRDEUTIG word."""
+    return {_kopf(c["name"][li]) for c in r["gegenstaende"] if c.get("art") in arten and c.get("name")} - {""} - set(DING_ALLGEMEIN) - set(MEHRDEUTIG)
+
+
+def _wort_in(word, satz):
+    """A word as a whole word in a sentence (lower case), a German ending allowed („Troll“ in „Trolle“)."""
+    return re.search(r"(?<!\w)" + re.escape(word) + r"(?:e|en|es|er|n|s)?(?!\w)", satz) is not None
+
+
+def _gear(r, li):
+    """The head nouns of a hero's gear in the catalog: every weapon, armour, shield and potion ending in SCHUTZ_KOPF."""
+    return _heads(r, ("waffe",), li) | {k for k in _heads(r, ("ruestung", "trank"), li) if k.endswith(SCHUTZ_KOPF)}
+
+
+def found_untold(rd, story, r=None):
+    """Heroes the narration lets find a thing of the catalog (FUND_ARTEN): a sentence with the hero's name, a word of
+    FINDET and the head of such a thing, none of NEIN, when the thing is neither the turn's loot nor a quest find nor in
+    the hero's bag. "Name: Ding" for each, three at most (the fault „fund“, its sentence is struck)."""
+    import dungeon
+    r = r or dungeon.rules()
+    erlaubt = " ".join(str(x) for x in [((story.get("beute") or {}).get("name")), *[(q or {}).get("name") for q in
+                                        (story.get("quest_fund") or [] if isinstance(story.get("quest_fund"), list) else [story.get("quest_fund")])]]
+                       if x).lower()
+    koepfe = {k for k in _heads(r, FUND_ARTEN, 1 if rd.get("lang") == "en" else 0) if len(k) >= 4}
+    out = []
+    for satz in _saetze(story["text"]):
+        low = satz.lower()
+        if not _hat(low, FINDET) or _hat(low, NEIN):
+            continue
+        for p in (rd.get("plaetze") or {}).values():
+            h = p.get("held")
+            if not h or not _name_in(h["name"], low):
+                continue
+            have = _dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])
+            for k in koepfe:
+                if _wort_in(k, low) and k not in erlaubt and not any(w.endswith(k) for w in have):
+                    out.append(f"{h['name']}: {k[:1].upper() + k[1:]}")
+    return list(dict.fromkeys(out))[:3]
+
+
+def foe_untold(rd, story, r=None):
+    """Foes of the bestiary the narration lets come up or attack (a word of ERSCHEINT, none of NEIN) although neither
+    this turn's encounter nor the fight has them; peaceful ones, humans (wesen „mensch“), GEGNER_MEHRDEUTIG, people of
+    the round and heroes never count (the fault „gegner_neu“, its sentence is struck)."""
+    import dungeon
+    import dungeon_bestiarium
+    r = r or dungeon.rules()
+    da = {re.sub(r"\s+\d+$", "", str(n)).lower() for g in [*((rd.get("kampf") or {}).get("gegner") or [])] for n in [g.get("name")]}
+    da |= {str(n).lower() for g, _ in story.get("begegnung") or [] for n in g.get("name") or []}
+    leute = {str(x.get("name", "")).lower() for x in (rd.get("nsc") or {}).values()} | \
+            {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    out = []
+    for satz in _saetze(story["text"]):
+        low = satz.lower()
+        if not _hat(low, ERSCHEINT) or _hat(low, NEIN):
+            continue
+        for g in r.get("gegner") or []:
+            if dungeon_bestiarium.friedlich(g) or dungeon_bestiarium.wesen(g) == "mensch":
+                continue                             # a human may be anybody of the scene
+            for n in g.get("name") or []:
+                n = str(n).lower()
+                if len(n) >= 4 and n not in GEGNER_MEHRDEUTIG and n not in da and n not in leute and not any(n in d or d in n for d in da if d) and _wort_in(n, low):
+                    out.append(g["name"][1 if rd.get("lang") == "en" else 0])
+    return list(dict.fromkeys(out))[:3]
+
+
+GEGNER_MEHRDEUTIG = ("roch", "geist", "schatten", "mimik", "greif", "shadow", "ghost", "spirit")   # foes' names that are words too
+
+
+def time_jump(rd, story):
+    """Sentences that let days, weeks or a night pass (ZEITSPRUNG) while no rest is told (dungeon_rast: rd["rast"]) and
+    the group does not travel (no ort_id): the fault „zeitsprung“, the sentence is struck."""
+    if rd.get("rast") or story.get("ort_id"):
+        return []
+    return [x.strip()[:60] for x in _saetze(story["text"]) if ZEITSPRUNG.search(x)][:3]
 
 
 def for_others(rd, text, ooc=()):
@@ -800,6 +916,13 @@ def told_unknown(rd, text):
 BESITZ = re.compile(r"(?i)(?<!\w)(?:sein|seine|seinen|seinem|seiner|seines|ihr|ihre|ihren|ihrem|ihrer|ihres|his|her|their)"
                     r"\s+(?:[\w-]+\s+)?([\w-]+)")
 DING_ALLGEMEIN = ("waffe", "waffen", "klinge", "weapon", "blade")   # words for any weapon: never a fault
+# Review 27.10. Paket 7 (G18, T11): armour, shields and potions too (heads ending so), and a weapon drawn without a
+# possessive („Arvid zieht einen Dolch“): the hero's name, then a word of ZIEHT, then the thing, nobody named between
+SCHUTZ_KOPF = ("rüstung", "ruestung", "panzer", "schild", "helm", "trank", "elixier", "armour", "armor", "shield", "helmet",
+               "potion", "elixir")
+ZIEHT = ("zieht", "zückt", "zueckt", "hebt", "schwingt", "reißt", "reisst", "packt", "umklammert", "greift zu", "greift nach",
+         "legt an", "streift", "trinkt", "leert", "schluckt", "draws", "pulls out", "raises", "wields", "swings", "grabs", "drinks",
+         "quaffs", "dons", "puts on")
 
 
 def _kopf(name):
@@ -828,7 +951,7 @@ def not_carried(rd, text, r=None):
     import dungeon
     import dungeon_kampf
     r = r or dungeon.rules()
-    waffen = {_kopf(n) for c in r["gegenstaende"] if c.get("art") == "waffe" for n in c["name"]} - {""} - set(DING_ALLGEMEIN)
+    waffen = _gear(r, 1 if rd.get("lang") == "en" else 0)
     helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held")}
     andere = {re.sub(r"\s+\d+$", "", str(x.get("name", ""))).lower() for x in [*(rd.get("nsc") or {}).values(),
               *((rd.get("kampf") or {}).get("gegner") or [])]} - {""}
@@ -847,6 +970,22 @@ def not_carried(rd, text, r=None):
                 continue
             have = _dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])
             if not any(w.endswith(ding) for w in have):
+                out.append(f"{h['name']}: {ding[:1].upper() + ding[1:]}")
+        if _hat(low, NEIN):
+            continue
+        for i, (pos, n) in enumerate(wer):           # without a possessive: name, a drawing verb, the thing (G18)
+            if n not in helden:
+                continue
+            end = next((q for q, _ in wer[i + 1:] if q > pos), len(low))
+            stueck = low[pos + len(n):end]
+            v = next((stueck.index(z) + len(z) for z in ZIEHT if z in stueck), -1)
+            if v < 0:
+                continue
+            ding = next((k for w in re.findall(r"[\w-]+", stueck[v:]) for k in waffen if k in set(dungeon_kampf._stems(w))), "")
+            h = helden[n]
+            tat = " ".join(str(a.get("text") or "") for q, a in (rd.get("offen") or {}).items()
+                           if ((rd.get("plaetze") or {}).get(q) or {}).get("held") is h).lower()
+            if ding and ding not in tat and not any(w.endswith(ding) for w in _dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])):
                 out.append(f"{h['name']}: {ding[:1].upper() + ding[1:]}")
     return list(dict.fromkeys(out))[:3]
 
@@ -982,7 +1121,8 @@ def faults(dm, rd, story, wuerfe=(), hits=(), zuege=()):
                        ("gold", lambda: gold_told(text)), ("fremd", lambda: for_others(rd, text, ooc)),
                        ("richtung", lambda: wrong_way(rd, text)), ("frage", lambda: not_asked(rd, text, story.get("npc"))),
                        ("aussehen", lambda: looks_off(rd, text)), ("dabei", lambda: not_carried(rd, text)),
-                       ("fuerwort", lambda: wrong_pronoun(rd, text))):
+                       ("fuerwort", lambda: wrong_pronoun(rd, text)), ("fund", lambda: found_untold(rd, story)),
+                       ("gegner_neu", lambda: foe_untold(rd, story)), ("zeitsprung", lambda: time_jump(rd, story))):
         x = found()
         if x:
             dm._day.bump("regel_" + why)
@@ -1315,6 +1455,7 @@ def check_things(dm, r, rd, obj):
     contradicts a kept thing of the same kind. [{name, merkmale}]."""
     heroes = {p["held"]["name"].lower() for _, p in dm.seated(rd)}
     known = {x["name"].lower() for x in rd.get("dinge") or []}
+    gear = _gear(r, 1 if rd.get("lang") == "en" else 0)
     out = []
     for x in (obj if isinstance(obj, list) else [])[:DINGE_NEU * 3]:
         if not isinstance(x, dict) or len(out) >= DINGE_NEU:
@@ -1322,6 +1463,8 @@ def check_things(dm, r, rd, obj):
         name, mm = _part(dm, r, rd, x.get("name"), DING_NAME), _part(dm, r, rd, x.get("merkmale"), DING_MERKMALE)
         if len(name) < 3 or not head(name) or name.lower() in known | heroes or contradicts(rd, f"{mm} {name}", head(name)):
             continue
+        if head(name) in gear or any(w in gear for w in _WORT.findall(name.lower())):
+            continue                             # a hero's gear is never a thing of the scene (Review 27.10. Paket 7, G18)
         known.add(name.lower())
         out.append({"name": name, "merkmale": mm})
     return out

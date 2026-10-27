@@ -1072,6 +1072,56 @@ class ReviewPruefung(Turns):
         self.assertEqual(erz.not_asked(rd, text, [{"name": "Odo", "sagt": "Der Turm steht im Norden am Fluss."}]), [])
         self.assertEqual(erz.not_asked(rd, text, [{"name": "Odo", "sagt": "Hm."}]), [a])
 
+    def test_invented_gear_finds_foes_and_time_jumps_are_caught(self):
+        """E10/G18/G21: a weapon drawn without a possessive, a catalog thing found that is no loot, gold in words, a foe
+        of the bestiary without an encounter and a time jump without a rest are faults by fixed rules; their sentences
+        are struck, and a hero's gear never goes into the thing memory."""
+        erz = dungeon.erz
+        rd, a, b = self.seats()
+        r = dungeon.rules()
+        h = next(p["held"] for pid, p in dungeon.seated(rd) if pid == self.host)
+        have = erz._dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])
+        fremd = next(k for k in ("hellebarde", "dreizack", "lanze", "peitsche") if not any(w.endswith(k) for w in have))
+        F = fremd.capitalize()
+        self.assertEqual(erz.not_carried(rd, f"{a} zieht eine {F} aus dem Gürtel."), [f"{a}: {F}"])   # no possessive (G18)
+        self.assertEqual(erz.not_carried(rd, f"{a} zieht keine {F}, der Gürtel ist leer."), [])
+        self.assertEqual(erz.not_carried(rd, f"{a} sieht, wie {b} eine {F} zieht."), [])            # another hero's
+        rd["offen"][self.host]["text"] = f"Ich nehme die {F} von der Wand."
+        self.assertEqual(erz.not_carried(rd, f"{a} packt die {F} an der Wand."), [])                 # the action names it
+        self.assertEqual(erz.check_things(dungeon, r, rd, [{"name": F, "merkmale": "rostig"}, {"name": "Torbogen", "merkmale": "Stein"}]),
+                         [{"name": "Torbogen", "merkmale": "Stein"}])
+        ring = f"{a} findet einen Ring im Staub zwischen den Steinen."
+        if not any(w.endswith("ring") for w in have):
+            self.assertEqual(erz.found_untold(rd, {"text": ring}), [f"{a}: Ring"])
+        self.assertEqual(erz.found_untold(rd, {"text": ring, "beute": {"name": "Silberner Ring"}}), [])   # the loot
+        self.assertEqual(erz.found_untold(rd, {"text": f"{a} findet keinen Ring im Staub."}), [])
+        for t in (f"{a} findet zwanzig Goldmünzen.", f"{a} nimmt eine Handvoll Münzen.", "Bela finds twenty gold pieces."):
+            self.assertTrue(erz.gold_told(t), t)
+        self.assertEqual(erz.gold_told(f"{a} findet keine Münzen."), [])
+        troll = "Ein Troll bricht durch die Tür und brüllt."
+        self.assertEqual(erz.foe_untold(rd, {"text": troll}), ["Troll"])
+        self.assertEqual(erz.foe_untold(rd, {"text": troll, "begegnung": [(next(g for g in r["gegner"] if g["name"][0] == "Troll"), 1)]}), [])
+        for t in ("In Wolfshafen springt ein Junge über den Zaun.", "Er roch den Rauch und springt auf.",
+                  "Ein Dorfbewohner erscheint am Fenster.", "Eine Wache taucht auf."):
+            self.assertEqual(erz.foe_untold(rd, {"text": t}), [], t)
+        jump = "Drei Tage später erreicht ihr das Ufer."
+        self.assertTrue(erz.time_jump(rd, {"text": jump}))
+        self.assertEqual(erz.time_jump(rd, {"text": jump, "ort_id": "o2"}), [])                     # travel
+        self.assertEqual(erz.time_jump(dict(rd, rast={"art": "lang"}), {"text": "Am nächsten Morgen weckt euch der Hahn."}), [])
+        text = (f"Der Nebel hängt schwer über dem Hof, und die Fackeln flackern im Wind über den Mauern. {a} untersucht die Spuren am Tor. "
+                f"{b} hält Wache am Eingang und lauscht in die Nacht. {ring} {troll} Drei Tage später ist alles still.")
+        with contextlib.redirect_stdout(io.StringIO()):
+            fs = erz.faults(dungeon, rd, {"text": text, "ooc": [], "npc": []})
+            fixed = erz.repair_all(rd, {"text": text, "ooc": [], "npc": []}, fs)
+        kinds = [w for w, _ in fs]
+        self.assertTrue({"gegner_neu", "zeitsprung"} <= set(kinds), kinds)
+        for gone in ("Troll", "Drei Tage"):
+            self.assertNotIn(gone, fixed["text"])
+        self.assertIn("lauscht in die Nacht", fixed["text"])
+        for k in ("fund", "gegner_neu", "zeitsprung"):
+            self.assertIn(k, erz.WEG_SATZ)
+            self.assertEqual(len(erz.HINWEIS[k]), 2)
+
 
 class ReviewSofort(Turns):
     """Review 27.10. Paket 1 (Dominik 2026-10-27 „ok“): nothing breaks any more."""
