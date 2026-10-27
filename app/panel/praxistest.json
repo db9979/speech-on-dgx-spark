@@ -3908,6 +3908,13 @@
 "titel": "Dungeon-Master: Schriftrollen, Reihenfolge und Ziele",
 "text": "A: Im Kampf eine Schriftrolle Feuerball aus der Tasche wirken und danach angreifen: der Angriff ist ein Feuerball mit Feuerschaden, der nächste wieder die Waffe. B: Ein Heiler mit wenig Leben heilt sich, während ihn ein Gegner trifft: erst kommt die Heilung, dann der Treffer. C: Gegen Riesenratte und Rattenschwarm „Ich greife die Ratte an“: getroffen wird die Riesenratte. D: Nach einem gewonnenen Kampf zu zweit: die Erfahrung ist gleich verteilt und abgerundet.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P583",
+"v": 1142,
+"titel": "Dungeon-Master: Rettungswürfe der Gegner",
+"text": "A: Im Kampf als Heiler Heilige Flamme auf einen Gegner wirken: die Geschichte zeigt die Zeile „Rettungswurf Geschick = … gegen SG …“ (geschafft oder nicht) statt eines Angriffs gegen die RK. B: Eine Schriftrolle Feuerball aus der Tasche wirken und angreifen: schafft der Gegner den Rettungswurf, nimmt er den halben Schaden. C: Schlaf auf einen Gegner wirken: schafft er den Rettungswurf nicht, ist er bewusstlos und greift nicht an, die Ladung zählt. D: „Ich wirke Heilende Hände auf NAME“ mit dem Namen eines verletzten Mitspielers: geheilt wird dieser Held, nicht der Zaubernde.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

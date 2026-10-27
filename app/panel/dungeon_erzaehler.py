@@ -594,6 +594,7 @@ def _allowed(wuerfe, hits, zuege):
                 out.add(abs(x[k]))
         out |= {v for v in x.get("ws") or [] if isinstance(v, int)}
         out |= {e["schaden"] for e in x.get("extra") or [] if isinstance(e.get("schaden"), int)}
+        out |= {abs(v) for k, v in (x.get("gegner_rettung") or {}).items() if k in ("w", "gesamt", "gegen") and isinstance(v, int)}
     return out
 
 

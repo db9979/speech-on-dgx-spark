@@ -32,8 +32,11 @@ Teil 2 (Kampf-Tiefe, Bestiarium-Punkte 4-6 and item point 2, Dominik 2026-10-24 
     kinds      every hit has a damage kind (the weapon's schaden_art, a spell's, a foe's); a foe's resistenz halves it,
                immun stops it, schwaeche doubles it
     states     a foe's hit may cause one of its zustaende: the hero saves with d20 + Konstitution (Weisheit for the mind)
-               against RETTUNG + a quarter of the foe's level; failed, the state lasts its runden turns and works by its
-               wirkung (ZUSTAND_WIRKUNG); all end with the fight
+               against the bestiary's sg (Kampf-Audit N6), else RETTUNG + a quarter of the foe's level; failed, the
+               state lasts its runden turns and works by its wirkung (ZUSTAND_WIRKUNG); all end with the fight
+    saves      a spell with rettung (Kampf-Audit H4): the foe saves with d20 + its value against ZAUBER_SG + the
+               caster's attack bonus (spell_save); failed, the damage and the spell's zustand, passed, half with halb;
+               a spell without damage with rettung and zustand (bann: Schlaf …) works on a foe that way
     bosses     a foe with boss: more life per hero (BOSS_LEBEN), a second phase at half life (+BOSS_PHASE to hit, once
                a log line), at least two attacks a turn, its find one rarity better (dungeon.give_loot „boss“)
     multiattack a foe with "angriffe" (2 to 5, Tabletop-Punkt 12, from the SRD's Multiattack) attacks that often a turn
@@ -111,10 +114,19 @@ NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|di
                            r"suggest|propose|hits?\s+the\s+road|strik\w*\s+(?:a\s+)?(?:deal|bargain|match|light)")
 FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
                            r"überred|ueberred|ruhig\s+bleiben|surrender|give\s+up|parley|negotiat|truce|peace|stand\s+down")
-# Kampf-Audit 5: spells that work on foes but have no damage kind; until the foes' saving throws are built they cost no
-# charge in a fight (dungeon.cast_powers) and say so to the seat
+# Kampf-Audit 5: spells that work on foes but have no damage kind; those with a saving throw and a state work by it
+# (bann, Kampf-Audit H4), the others cost no charge in a fight (dungeon.cast_powers) and say so to the seat
 KONTROLLE = ("befehl", "farbspray", "furcht", "gegenzauber", "hypnosemuster", "person_beherrschen", "person_festhalten", "schlaf",
              "stinkwolke", "unheil", "verbannung", "verlangsamen", "verstricken", "verwandlung", "verwirrung")
+ZAUBER_SG = 10             # Kampf-Audit H4: a spell's save DC is this + proficiency + the caster's value (8 in 5e: a
+                           # save has no critical hit and no advantage, with 10 the balance bench keeps its aim)
+
+
+def bann(c):
+    """Kampf-Audit H4: a spell without damage that works on a foe by its saving throw (rettung) with a state (zustand)."""
+    return bool(c and c.get("art") == "zauber" and not c.get("schaden_art") and (c.get("rettung") or {}).get("wert") and c.get("zustand"))
+
+
 FRIEDEN_SG = (12, 10)      # the panel's peace check: Charisma against the higher of 12 and 10 + the strongest foe's level
 # Kampf-Audit M6: the group flees only when most heroes who can act say so, then by the panel's Geschick check
 FLUCHT_WORTE = re.compile(r"(?i)flieh|flücht|fluecht|(?<!ver)(?<!zu)flucht|(?:rückzug|rueckzug)|(?:renn|lauf|spring)\w*\s+(?:[\w'-]+\s+){0,5}(?:weg|davon|fort)(?!\w)|"
@@ -530,7 +542,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
         named = _named(rd, NICHT_ANGRIFF.sub(" ", str(a.get("text") or "")), life, text=True)
         m = model.get(pid) or {}
         by_model = _named(rd, m.get("ziel"), life) if m.get("ziel") else None
-        dmg = bool(spell and spell.get("art") == "zauber" and spell.get("schaden_art"))
+        dmg = bool(spell and spell.get("art") == "zauber" and spell.get("schaden_art")) or bann(spell)   # H4: a spell on a foe too
         magie = not spell and bool(MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
         if not (was == "angriff" or dmg or (was == "bezug" or magie) and named):   # the model's ziel only picks the target
             continue
@@ -558,8 +570,9 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                 continue
         h = rd["plaetze"][p["pid"]]["held"]
         spell = cat.get(a.get("kraft") or "")
+        gebannt = spell if bann(spell) else None  # Kampf-Audit H4: Schlaf, Person festhalten … on this foe
         if spell and spell.get("art") == "zauber" and not spell.get("schaden_art"):
-            spell = None                          # Schild, Segnen, Schlaf … beside an attack: the attack is the weapon's
+            spell = None                          # Schild, Segnen … beside an attack: the attack is the weapon's
         ro = h.get("rolle")
         if not spell and ro and ro.get("bis", -1) >= rd.get("zug", 0) and (cat.get(ro.get("id")) or {}).get("art") == "zauber" \
                 and cat[ro["id"]].get("schaden_art"):
@@ -604,6 +617,11 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                         "ws": [], "vt": "", "bonus": 0, "gesamt": 0, "rk": g["rk"], "treffer": False, "krit": False, "schaden": 0,
                         "faellt": False, "kann_nicht": blocked(r, h)})
             continue
+        if gebannt or (spell and (spell.get("rettung") or {}).get("wert")):   # Kampf-Audit H4: the foe saves, no attack roll
+            c = gebannt or spell
+            cw = max(geist, key=lambda x: (dm.body(r, h, x, dinge=False), x == (c.get("segen") or {}).get("wert"))) if gebannt and geist else wert
+            out.append(spell_save(dm, r, rd, h, p["pid"], g, c, cw, wuerfel, art, c["name"][li].split(": ", 1)[-1] if gebannt else mit, life, rng))
+            continue
         # Kampf-Audit M3: a spell's own bonus does not stack with the blessing already on the value (the higher counts)
         bonus = dm.total(r, h, wert) + prof(h["stufe"]) + (max(0, plus - dm.blessing(h, wert)) if spell else 0)
         mut = False
@@ -645,6 +663,35 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
                     **({"echt": True} if hand and hand.used(p["pid"]) else {}),
                     **table(dm, r, rd, krit and hit, w == 1 and not krit, art, bool(spell), wirft or wert == "geschick" and "finesse" not in eig, rng)})
     return rest, out
+
+
+def spell_save(dm, r, rd, h, pid, g, c, wert, wuerfel, art, mit, life, rng):
+    """Kampf-Audit H4: a spell with a saving throw on a foe. The panel rolls the foe's d20 + the bonus of its value of
+    the bestiary against ZAUBER_SG + the bonus the spell's attack roll would have (proficiency, the caster's value for
+    a check, dungeon.total, and the spell's own bonus above the blessing on it, M3). Failed: the damage
+    (if the spell has a kind) and the spell's state for the state's turns; passed: half the damage with halb, else
+    nothing. A natural 20 always passes, a 1 always fails."""
+    by = dm._by(r, "gegner").get(g["id"]) or {}
+    rw = c["rettung"]["wert"]
+    sg = (c.get("segen") or {}).get("bonus", 0) if (c.get("segen") or {}).get("wert") == wert else 0
+    dc = ZAUBER_SG + prof(h["stufe"]) + dm.total(r, h, wert) + max(0, sg - dm.blessing(h, wert))   # 10 + the attack's bonus
+    w = rng.randint(1, 20)
+    mod = dm.mod((by.get("werte") or {}).get(rw, 10))
+    ok = w == 20 or (w != 1 and w + mod >= dc)
+    n, wirkt = 0, ""
+    if c.get("schaden_art"):
+        n = max(1, _dice(rng, 1, wuerfel) + dm.body(r, h, wert, dinge=False))
+        n = (n // 2 if c.get("halb") else 0) if ok else n
+        if n:
+            n, wirkt = against(g, art, n, magisch=True)
+    zs = {z["id"]: z for z in r.get("zustaende") or []}
+    z = zs.get(c.get("zustand")) if not ok else None
+    life[g["k"]] -= n
+    print(f"dungeon: kampf | rettung gegner | {'geschafft' if ok else 'nicht geschafft'}", flush=True)
+    return {"pid": pid, "name": h["name"], "ziel": g["k"], "gegner": g["name"], "mit": mit, "wert": wert, "w": 0, "ws": [], "vt": "",
+            "bonus": 0, "gesamt": 0, "rk": g["rk"], "treffer": bool(n or z), "krit": False, "schaden": n, "faellt": bool(n) and life[g["k"]] <= 0,
+            "art": art if n else "", "wirkt": wirkt, "eig": [], "gegner_rettung": {"wert": rw, "w": w, "gesamt": w + mod, "gegen": dc, "ok": ok},
+            **({"zauber_zustand": {"id": z["id"], "zuege": z["runden"]}} if z else {})}
 
 
 def tables_on(rd):
@@ -822,7 +869,8 @@ def foes_turn(dm, r, rd, hits, rng=None):
             if hit and frei and not h.get("gefaehrte"):   # the hit may cause a state: the hero saves
                 z = frei[rng.randrange(len(frei))]
                 wert = "weisheit" if z in GEIST else "konstitution"
-                dc = RETTUNG + int(dm._by(r, "gegner").get(g["id"], {}).get("stufe", 0) // 4)
+                c = dm._by(r, "gegner").get(g["id"], {})      # Kampf-Audit N6: the bestiary's DC, else 10 + a quarter of its level
+                dc = c["sg"] if isinstance(c.get("sg"), int) and not isinstance(c.get("sg"), bool) else RETTUNG + int(c.get("stufe", 0) // 4)
                 rw = max(rng.randint(1, 20), rng.randint(1, 20)) if steht == "ausweichen" else rng.randint(1, 20)
                 x["rettung"] = {"zustand": z, "wert": wert, "w": rw, "gesamt": rw + dm.total(r, h, wert), "gegen": dc,
                                 "ok": rw + dm.total(r, h, wert) >= dc}
@@ -888,7 +936,8 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
         dm._log(rd, "angriff", pid=x["pid"], name=x["name"], gegner=g["name"], mit=x["mit"], w=x["w"], ws=x["ws"], vt=x["vt"],
                 bonus=x["bonus"], gesamt=x["gesamt"], rk=x["rk"], treffer=x["treffer"], krit=x["krit"], schaden=x["schaden"],
                 sart=x.get("art", ""), wirkt=x.get("wirkt", ""), eig=x.get("eig", []),
-                **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "krit_tabelle", "patzer_tabelle", "beleg") if x.get(k)})
+                **{k: x[k] for k in ("mut", "extra", "raub", "glueck", "echt", "krit_tabelle", "patzer_tabelle", "beleg", "gegner_rettung") if x.get(k)},
+                **({"zustand": _zname(r, rd, x["zauber_zustand"]["id"])} if x.get("zauber_zustand") else {}))
         dm._day.bump("treffer" if x["treffer"] else "daneben")
         ehre.count(rd, "" if gefaehrte.is_one(x["pid"]) else x["pid"], treffer=int(x["treffer"]), krit=int(x["treffer"] and x["krit"]), schaden=x["schaden"] if x["treffer"] else 0,
                    zwanzig=int(x["w"] == 20), eins=int(x["w"] == 1))     # Ehrungen des Abends (D&D idea 1), the panel's own numbers
@@ -902,6 +951,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
             used_oil(dm, r, rd, x["pid"], held)
         was = hurt(g, x["schaden"]) if x["treffer"] else ""
         st(rd, g, x.get("krit_zustand") if x["treffer"] and not was == "besiegt" else None)   # D&D idea 2: the critical hit's state
+        st(rd, g, x.get("zauber_zustand") if not was == "besiegt" else None)     # Kampf-Audit H4: the spell's state
         st(rd, held, x.get("patzer_zustand") if held and not dm.zustand(held) else None)    # the fumble's, on the hero
         if was == "besiegt":
             dm._log(rd, "gegner", gegner=g["name"], was="besiegt")

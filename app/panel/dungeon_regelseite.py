@@ -137,7 +137,14 @@ def werte(teil, x, r, li):
         if x.get("wert"):
             out.append([L("Zählt auf", "Uses"), w.get(x["wert"], x["wert"])])
         if x.get("ziel"):
-            out.append([L("Für", "For"), {"selbst": L("sich selbst", "oneself"), "gruppe": L("die ganze Gruppe", "the whole group")}.get(x["ziel"], x["ziel"])])
+            out.append([L("Für", "For"), {"selbst": L("sich selbst", "oneself"), "gruppe": L("die ganze Gruppe", "the whole group"),
+                                          "verbuendeter": L("einen Freund, den die Aktion nennt", "a friend the action names")}.get(x["ziel"], x["ziel"])])
+        if isinstance(x.get("rettung"), dict) and x["rettung"].get("wert"):   # Kampf-Audit H4: the foe's saving throw
+            out.append([L("Rettungswurf des Gegners", "Foe's saving throw"), w.get(x["rettung"]["wert"], x["rettung"]["wert"])
+                        + (L(", geschafft: halber Schaden", ", passed: half damage") if x.get("halb") else L(", geschafft: keine Wirkung", ", passed: no effect"))])
+        if x.get("art") == "zauber" and x.get("zustand"):
+            z = {v["id"]: _name(v, li) for v in r.get("zustaende") or []}
+            out.append([L("Zustand beim Gegner", "Condition on the foe"), z.get(x["zustand"], x["zustand"])])
         if x.get("grad"):
             out.append([L("Zaubergrad", "Spell grade"), str(x["grad"])])
         if x.get("klassen"):
@@ -162,6 +169,8 @@ def werte(teil, x, r, li):
         if x.get("zustaende"):
             z = {c["id"]: _name(c, li) for c in r.get("zustaende") or []}
             out.append([L("Kann bewirken", "Can cause"), ", ".join(z.get(c, c) for c in x["zustaende"])])
+            sg = x["sg"] if isinstance(x.get("sg"), int) else kampf.RETTUNG + int(x.get("stufe", 0) // 4)   # Kampf-Audit N6
+            out.append([L("Rettungswurf dagegen", "Save against it"), L(f"SG {sg}", f"DC {sg}")])
         if x.get("groesse"):
             out.append([L("Größe", "Size"), str(x["groesse"])])
         a = arten(x)

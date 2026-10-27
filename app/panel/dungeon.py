@@ -1191,8 +1191,9 @@ def cast_powers(r, rd, kampf_zug=False, angriffe=()):
     """The class spells named in the told turn's actions: a charge of its grade used (grade 0 none), its healing and
     blessing by the catalog, as „Wirken“ from the bag does. In a fight turn (kampf_zug) no charge without an effect
     (Kampf-Audit 2 and 5, Dominik 2026-10-26): a spell with a damage kind only when its attack came (angriffe: the
-    heroes who attacked), a spell on foes (kampf.KONTROLLE: Schlaf, Person festhalten …) not at all until the foes'
-    saving throws are built; the seat hears why."""
+    heroes who attacked), a spell on a foe by its saving throw (kampf.bann: Schlaf, Person festhalten …, Kampf-Audit H4)
+    only then too and without a blessing for the caster, the other spells on foes (kampf.KONTROLLE) not at all; the
+    seat hears why. A spell for a friend (ziel verbuendeter) works on the hero named in the action (friend)."""
     li = 1 if rd["lang"] == "en" else 0
     for pid, a in rd["offen"].items():
         z, p = a.get("kraft"), rd["plaetze"].get(pid)
@@ -1203,7 +1204,9 @@ def cast_powers(r, rd, kampf_zug=False, angriffe=()):
         if z not in pw or pw[z]["rest"] == 0:
             continue
         c = _by(r, "gegenstaende")[z]
-        warum = "kontrolle" if kampf_zug and z in kampf.KONTROLLE else "kein angriff" if kampf_zug and c.get("schaden_art") and pid not in angriffe else ""
+        bann = kampf.bann(c)                     # Kampf-Audit H4: a spell on a foe by its saving throw (kampf.spell_save)
+        warum = "kontrolle" if kampf_zug and z in kampf.KONTROLLE and not bann else \
+            "kein angriff" if kampf_zug and (c.get("schaden_art") or bann) and pid not in angriffe else ""
         if warum:
             n = pw[z]["name"]
             _log(rd, "ooc", pid=pid, panel=True, text=(
@@ -1214,7 +1217,8 @@ def cast_powers(r, rd, kampf_zug=False, angriffe=()):
             continue
         if pw[z]["grad"]:
             h["ladungen"][pw[z]["grad"] - 1] -= 1
-        _cast(r, rd, pid, h, _by(r, "gegenstaende")[z], 0, pw[z]["name"])
+        if not (kampf_zug and bann):             # cast on the foe: no blessing of its own for the caster
+            _cast(r, rd, pid, h, c, 0, pw[z]["name"], friend(rd, pid, a.get("text")))
         _day.bump("kraefte")
         print(f"dungeon: kraft | grad {pw[z]['grad']}", flush=True)
 
@@ -3945,7 +3949,11 @@ def roll_facts(r, rd, wuerfe, hits, zuege):
     facts_w += [{"beleg": x["beleg"], "angriff": f"{x['name']} → {x['gegner']}", "mit": x["mit"], "wurf": x["w"], "gesamt": x["gesamt"],
                  "ruestung": x["rk"], "trifft": x["treffer"], "schaden": x["schaden"], **({"faellt": True} if x["faellt"] else {}),
                  **({"wirkt": x["wirkt"]} if x.get("wirkt") else {}), **({"kann_nicht": x["kann_nicht"]} if x.get("kann_nicht") else {}),
-                 **({"kritisch": x["krit_tabelle"]} if x.get("krit_tabelle") else {}), **({"patzer": x["patzer_tabelle"]} if x.get("patzer_tabelle") else {})}
+                 **({"kritisch": x["krit_tabelle"]} if x.get("krit_tabelle") else {}), **({"patzer": x["patzer_tabelle"]} if x.get("patzer_tabelle") else {}),
+                 **({"rettungswurf_gegner": {"wert": x["gegner_rettung"]["wert"], "wurf": x["gegner_rettung"]["w"],   # Kampf-Audit H4
+                                             "gesamt": x["gegner_rettung"]["gesamt"], "gegen": x["gegner_rettung"]["gegen"],
+                                             "geschafft": x["gegner_rettung"]["ok"]}} if x.get("gegner_rettung") else {}),
+                 **({"zustand": kampf._zname(r, rd, x["zauber_zustand"]["id"])} if x.get("zauber_zustand") else {})}
                 for x in hits]
     facts_z = [dict(kampf.zug_facts(r, rd, x), **({"beleg": x["beleg"]} if x.get("beleg") else {})) for x in zuege]
     return facts_w, facts_z
@@ -5422,9 +5430,16 @@ def start_powers(r, k, lang, welt=""):
     return {"f": pw["faehigkeiten"], "z": [{x: z[x] for x in ("grad", "name", "satz", "info", "art", "bild", "bilder") if x in z} for z in pw["zauber"]]}
 
 
-def _cast(r, rd, pid, h, c, bonus, name):
-    """A spell's healing and blessing for the hero or the whole group, by the catalog; the model only hears that it was
-    cast (facts) and narrates it."""
+def friend(rd, pid, text):
+    """Kampf-Audit H4: the other hero an action names by its exact name (the target of a spell for a friend), else None."""
+    t = str(text or "").lower()
+    return next((q for q, p in seated(rd) if q != pid and re.search(r"(?<!\w)" + re.escape(p["held"]["name"].lower()) + r"(?!\w)", t)), None)
+
+
+def _cast(r, rd, pid, h, c, bonus, name, an=None):
+    """A spell's healing and blessing for the hero, the whole group or (ziel verbuendeter, Kampf-Audit H4) the friend an
+    names, else the hero; a friend down gets up with it, one unconscious or dead never. By the catalog; the model
+    only hears that it was cast (facts) and narrates it."""
     if c.get("segen"):                    # concentration (Kampf-Audit M3): a caster's new blessing ends the caster's last
         n = 0
         for _, p in seated(rd):
@@ -5433,7 +5448,10 @@ def _cast(r, rd, pid, h, c, bonus, name):
             n += len(alt) - len(p["held"]["segen"])
         if n:
             print(f"dungeon: segen | konzentration | {n} beendet", flush=True)
-    for xp, x in ([(q, p["held"]) for q, p in seated(rd)] if c["ziel"] == "gruppe" else [(pid, h)]):
+    sitz = dict(seated(rd))
+    ziele = [(q, p["held"]) for q, p in sitz.items()] if c["ziel"] == "gruppe" else \
+        [(an, sitz[an]["held"])] if c["ziel"] == "verbuendeter" and an in sitz else [(pid, h)]
+    for xp, x in ziele:
         if x.get("tot") or x.get("ohnmacht"):
             continue
         if c.get("heilung"):
@@ -5466,7 +5484,8 @@ def hero_act(rid, pid, b):
             raise LookupError("held")
         it0 = next((x for x in h["tasche"] if x["i"] == b.get("i")), None)
         if fresh(rd, pid) and (was in NEU_GEBEN or was == "trinken" and b.get("an") and b.get("an") != pid
-                               or was == "wirken" and it0 and _c(r, it0).get("ziel") == "gruppe"):
+                               or was == "wirken" and it0 and (_c(r, it0).get("ziel") == "gruppe"
+                                                                     or _c(r, it0).get("ziel") == "verbuendeter" and b.get("an") not in (None, pid))):
             print(f"dungeon: held | {was} | neu", flush=True)     # the first turn gives nothing to others (Punkt 2)
             _day.bump("neu_gesperrt")
             raise PermissionError("neu")
@@ -5544,7 +5563,8 @@ def hero_act(rid, pid, b):
             if not c or c["art"] != "zauber":
                 raise ValueError("kein zauber")
             use_one(h, it)
-            _cast(r, rd, pid, h, c, it.get("bonus", 0), item_view(r, it, rd["lang"])["name"])
+            _cast(r, rd, pid, h, c, it.get("bonus", 0), item_view(r, it, rd["lang"])["name"],
+                  b.get("an") if b.get("an") != pid else None)      # Kampf-Audit H4: a spell for a friend from the bag
             if c.get("schaden_art"):              # Kampf-Audit M4: a scroll of an attack spell makes the next attack it
                 h["rolle"] = {"id": it["id"], "bis": rd.get("zug", 0) + 1}
                 print("dungeon: rolle | bereit", flush=True)

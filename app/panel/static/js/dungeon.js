@@ -739,11 +739,16 @@ function dmArt(e){return (e.sart&&DMART[e.sart]?` <small class="pill">${esc(t(..
 // Würfel-Beleg (Tabletop-Punkt 2): every roll of the panel shows its receipt id; the narration may only tell its numbers
 const dmBeleg=e=>e.beleg?`<small class="dm-beleg" title="${esc(t('Würfel-Beleg: die Erzählung nennt nur Zahlen, die hier stehen.','Dice receipt: the narration tells only numbers that stand here.'))}">${esc(e.beleg)}${e.echt?` · ${esc(t('echt','real'))}`:''}</small>`:'';
 function dmAngriff(e,W){if(e.kann_nicht)return `<div class="dm-wurf bad">⛓ ${esc(t(e.name+' kann nicht angreifen: '+e.kann_nicht+'.',e.name+' cannot attack: '+e.kann_nicht+'.'))}</div>`;
+  if(e.gegner_rettung)return dmRettungG(e,W);
   const fx=(e.extra||[]).map(x=>` · ${esc(t('davon ','of it '))}${x.schaden} ${esc((DMART[x.art]||[x.art,x.art])[L==='en'?1:0])}`).join('')+(e.raub?' · '+esc(t(e.name+' heilt '+e.raub,e.name+' heals '+e.raub)):'')+(e.glueck?' · 🍀 '+esc(t('Glück','Luck')):'')
     +(e.krit_tabelle||e.patzer_tabelle?` · <i class="dm-tab" data-tab="${e.krit_tabelle?'krit':'patzer'}">${e.krit_tabelle?'💥 '+esc(t('Kritisch: ','Critical: ')):'🙃 '+esc(t('Patzer: ','Fumble: '))}${esc(e.krit_tabelle||e.patzer_tabelle)}</i>`:'');   // D&D idea 2: the table's line, panel data
   const res=e.treffer?`<b>${esc(e.krit?t('Kritischer Treffer!','Critical hit!'):t('Treffer','Hit'))}</b> −${e.schaden} ${esc(t('Leben','life'))}${dmArt(e)}${fx}`:`<b>${esc(t('daneben','miss'))}</b>${fx}`;
   return e.von_gegner?`<div class="dm-wurf dm-gzug ${e.treffer?'bad':'ok'}"><span class="dm-d20">${e.w}</span>${esc(e.gegner)} → ${esc(e.name)} · ${dmBo(e.bonus)} = <b>${e.gesamt}</b> ${esc(t('gegen RK','vs AC'))} ${e.rk} · ${res}${dmBeleg(e)}</div>`
     :`<div class="dm-wurf ${e.treffer?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${dmVt(e)}${e.mut?`<span class="dm-vt dm-mutw">⭐ ${esc(t('Heldenmut','Heroic courage'))}</span> `:''}${esc(e.name)} → ${esc(e.gegner)}${e.mit?' · '+esc(e.mit):''} · ${esc(W[e.wert]||e.wert)} ${dmBo(e.bonus)} = <b>${e.gesamt}</b> ${esc(t('gegen RK','vs AC'))} ${e.rk} · ${res}${dmBeleg(e)}</div>`}
+// Kampf-Audit H4: a spell with a saving throw: the foe's d20 against the spell's DC, the damage and the state, panel data
+function dmRettungG(e,W){const r=e.gegner_rettung;
+  const res=(r.ok?`<b>${esc(t('geschafft','passed'))}</b>`:`<b>${esc(t('nicht geschafft','failed'))}</b>`)+(e.schaden?` −${e.schaden} ${esc(t('Leben','life'))}${dmArt(e)}`:'')+(e.zustand?` <small class="pill warn">${esc(e.zustand)}</small>`:'');
+  return `<div class="dm-wurf ${r.ok?'bad':'ok'}"><span class="dm-d20">${r.w}</span>${esc(e.name)} → ${esc(e.gegner)}${e.mit?' · '+esc(e.mit):''} · ${esc(t('Rettungswurf','saving throw'))} ${esc(W[r.wert]||r.wert)} = <b>${r.gesamt}</b> ${esc(t('gegen SG','vs DC'))} ${r.gegen} · ${res}${dmBeleg(e)}</div>`}
 // Schriftstücke (D&D idea 3, dungeon_schrift): a found writing as a parchment; the host chooses who sees it (all, one
 // seat, nobody) with chips, a seat sees only what the panel sends it
 function dmPergament(v,s,klein){const sp=v.plaetze.filter(p=>!p.frei),wer=s.sicht==='alle'?t('alle sehen es','everyone sees it'):s.sicht==='niemand'?t('nur du siehst es','only you see it'):t('nur für ','only for ')+(s.fuer||'');

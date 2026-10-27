@@ -5837,6 +5837,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ngswurf und Zustand (kampf.bann: Schlaf, Verstricken, Person festhalten, Befehl, Furcht, Hypnosemuster, Stinkwolke, Verbannung und andere, 13 Zauber) wirkt im Kampf jetzt auf einen Gegner und kostet eine Ladung, wenn er auf einen gewirkt wird; der Zaubernde bekommt dabei keinen eigenen Segen. Nur die übrigen Kontrollzauber ohne Rettungswurf (Gegenzauber, Unheil, Verlangsamen, Verwandlung, Verwirrung) wirken im Kampf weiter nicht und kosten nichts. 3. Heilen für einen Freund: Ein Zauber mit dem Ziel „verbuendeter“ (Heilende Hände, Heilendes Wort, Wunden heilen und andere, 10 Zauber) wirkt auf den Helden, dessen Name in der Aktion steht (dungeon.friend, nur der genaue Name), sonst auf den Zaubernden; nie auf einen Toten oder Bewusstlosen. Die Regelseite zeigt die neuen Zeilen „Rettungswurf des Gegners“ und „Zustand beim Gegner“. 4. N6 Rettungswurf der Helden: Verursacht der Treffer eines Gegners einen Zustand, würfelt der Held gegen den SG des Bestiariums (sg, 10 bis 19), nur ohne ihn gegen 10 + ein Viertel der Stufe des Gegners."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Schriftrollen, Reihenfolge und Ziele (V01.1.139, Bericht dungeon-kampf-audit/bericht.md Punkte M4, M7, N1, N2 und N4): Ohne neuen Schalter. 1. M4 Angriffs-Schriftrollen: Wer eine Rolle mit Schadenszauber aus der Tasche wirkt (Feuerball, Eislanze, Kettenblitz), dessen nächster Angriff in diesem oder dem nächsten Zug ist dieser Zauber, mit seiner Schadensart und seinem Würfel, einmal (h[\"rolle\"], Logs dungeon: rolle | bereit und dungeon: kampf | rolle | angriff); ungenutzt verfällt sie. 2. M7 Reihenfolge: Festgelegt ist: erst handeln alle Helden, dann alle Gegner. Darum wirken Heilung und Segen eines Zaubers (cast_powers) jetzt vor den Treffern des Zuges (consequences); eine Heilerin mit 1 Leben, die sich um 8 heilt und 9 Schaden nimmt, liegt danach am Boden. Eine Initiative gibt es nicht. 3. N2 Ziele: Nennt ein Ziel mehrere Gegner, gewinnt der ganze Name, dann die Art (das Ende des Namens: „Ratte“ ist die Riesenratte, nie der Rattenschwarm), dann der Anfang; unter mehreren derselben Art der mit dem wenigsten Leben. 4. N4 Erfahrung: Die Erfahrung eines Kampfes wird abgerundet geteilt (25 für 2 Helden: je 12). Der Anteil eines Helden, der im Kam"
 },
 {
@@ -20566,6 +20582,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: combat audit wave 2, the foes' saving throws (V01.1.142, report dungeon-kampf-audit/bericht.md points H4 and N6, data from V01.1.140): No new switch. 1. H4 spells with a saving throw: when a spell of the catalog has a saving throw (rettung, 44 spells, such as Fireball, Sacred Flame, Sleep), in a fight the hero no longer rolls against the armour class; the panel rolls for the foe: d20 + the bonus of its value from the bestiary against 10 + the proficiency bonus + the caster's value (as for a check) + the spell's bonus above the blessing on it (kampf.ZAUBER_SG, kampf.spell_save; 8 in D&D, but a save knows no critical hit and no advantage, with 10 the balance bench keeps its aim); a 20 always passes, a 1 never. Failed: the full damage and the spell's condition (zustand, such as prone, restrained, unconscious) for its turns; passed: with halb half the damage, else nothing. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; the story shows a row of its own \"saving throw Wisdom = 3 vs DC 15 · failed\" with damage and condition. 2. Banishing spells: a spell without damage with a saving throw and a condition (kampf.bann: Sleep, Entangle, Hold Person, Comm"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "and, Fear, Hypnotic Pattern, Stinking Cloud, Banishment and others, 13 spells) now works on a foe in a fight and costs a charge when it is cast at one; the caster gets no blessing of their own from it. Only the other control spells without a saving throw (Counterspell, Bane, Slow, Polymorph, Confusion) still do not work in a fight and cost nothing. 3. Healing a friend: a spell with the target \"verbuendeter\" (Healing Hands, Healing Word, Cure Wounds and others, 10 spells) works on the hero whose name is in the action (dungeon.friend, only the exact name), else on the caster; never on a dead or unconscious hero. The rules page shows the new rows \"Foe's saving throw\" and \"Condition on the foe\". 4. N6 the heroes' saving throw: when a foe's hit causes a condition, the hero rolls against the bestiary's DC (sg, 10 to 19), only without one against 10 + a quarter of the foe's level."
 },
 {
 "lang": "en",

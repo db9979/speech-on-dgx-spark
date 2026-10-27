@@ -5370,6 +5370,12 @@ class Windows(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-feed .dm-bildk').length"), 1, w)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-act .dm-avb img').length"), 2, w)
                         self.assertTrue(await pg.evaluate("dmPic('','Elf','gross').includes('dm-pz')&&dmPic('','Elf','gross').includes('Noch kein Bild')"))
+                        rw = await pg.evaluate("dmAngriff({art:'angriff',name:'Mira',gegner:'Ork',mit:'Schlaf',treffer:true,schaden:0,zustand:'bewusstlos',"   # Kampf-Audit H4
+                                               "gegner_rettung:{wert:'weisheit',w:4,gesamt:3,gegen:15,ok:false}},{weisheit:'Weisheit'})")
+                        self.assertIn("Rettungswurf Weisheit = <b>3</b> gegen SG 15", rw)
+                        self.assertIn("nicht geschafft", rw)
+                        self.assertIn("bewusstlos", rw)
+                        self.assertNotIn("RK", rw)
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                         if os.environ.get("DMF_SHOT"):
                             await pg.locator("#dmview .dm-story").screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"bilder-{w}.png"))
@@ -6559,8 +6565,8 @@ class Fight(Turns):
 
     def test_kampf_schadenszauber_immer_angriff_und_keine_ladung_ohne_wirkung(self):
         """Kampf-Audit 2 and 5: a spell with a damage kind named in a fight is one attack of its kind and costs exactly one
-        charge; with no foe left standing it lapses and costs none; a spell on foes (kampf.KONTROLLE) costs none in a
-        fight until the foes' saving throws are built, and the seat hears why."""
+        charge; with no foe left standing it lapses and costs none; a spell on foes (kampf.KONTROLLE) without a saving
+        throw and state in the catalog (H4: kampf.bann) costs none in a fight, and the seat hears why."""
         r = dungeon.rules()
         cat = dungeon._by(r, "gegenstaende")
         self.assertEqual([z for z in kampf.KONTROLLE if z not in cat or cat[z].get("schaden_art")], [])
@@ -6568,10 +6574,11 @@ class Fight(Turns):
         g = rd["kampf"]["gegner"][0]
         g.update(rk=2, immun=[], resistenz=[], schwaeche=[], leben=99, max=99)
         h = rd["plaetze"][self.host]["held"]
-        k = next(k for k in r["klassen"] if "schlaf" in (k.get("zauber") or {}).get("1", []))     # a class of its own spells
+        frei = lambda k: [z for zs in (k.get("zauber") or {}).values() for z in zs if z in kampf.KONTROLLE and not kampf.bann(cat.get(z))]
+        k = next(k for k in r["klassen"] if frei(k) and any(z in cat and cat[z].get("schaden_art") for z in (k.get("zauber") or {}).get("1", [])))
         dmg = next(cat[z] for z in k["zauber"]["1"] if z in cat and cat[z].get("schaden_art"))
-        ctl = cat["schlaf"]
-        h.update(klasse=k["id"], stufe=max(1, h.get("stufe") or 1), ladungen=[5] * 5)
+        ctl = cat[frei(k)[0]]                                                     # a spell on foes the catalog gives no save yet
+        h.update(klasse=k["id"], stufe=10, ladungen=[5] * 5)
         rd["offen"] = {self.host: {"text": f"Ich wirke {dmg['name'][0].split(': ', 1)[-1]} auf {g['name']}.", "kraft": dmg["id"]}}
         _, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10, "vt": "", "wofuer": "x"}], Dice(10, 3))
         self.assertEqual([(x["ziel"], x["art"]) for x in hits], [("g1", dmg["schaden_art"])])
@@ -6584,7 +6591,7 @@ class Fight(Turns):
             dungeon.cast_powers(r, rd, True, set())                  # its attack did not come: no charge
         self.assertEqual(h["ladungen"], vor)
         self.assertIn("dungeon: kraft | keine ladung | kein angriff", out.getvalue())
-        rd["offen"] = {self.host: {"text": f"Ich wirke Schlaf auf {g['name']}.", "kraft": ctl["id"]}}
+        rd["offen"] = {self.host: {"text": f"Ich wirke {ctl['name'][0].split(': ', 1)[-1]} auf {g['name']}.", "kraft": ctl["id"]}}
         with contextlib.redirect_stdout(io.StringIO()) as out:
             dungeon.cast_powers(r, rd, True, set())
         self.assertEqual(h["ladungen"], vor)
@@ -6821,6 +6828,106 @@ class Fight(Turns):
             kampf.end(dungeon, r, rd, ep)
         self.assertEqual(ep, {pid: 12 for pid in held})
 
+    def test_kampf_zauber_mit_rettungswurf_des_gegners(self):
+        """Kampf-Audit H4: a spell with rettung on a foe: the panel rolls the foe's d20 + its value of the bestiary against
+        8 + proficiency + the caster's value; failed, the spell's state (Schlaf: bewusstlos, no blow) and the damage;
+        passed, half with halb, else nothing; the armour class does not count; such a spell costs its charge in a fight
+        and gives the caster no blessing of its own."""
+        r = copy.deepcopy(dungeon.rules())
+        cat = dungeon._by(r, "gegenstaende")
+        rd, foe = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g.update(rk=40, leben=99, max=99, immun=[], resistenz=[], schwaeche=[], zust=[])
+        h = rd["plaetze"][self.host]["held"]
+        k = next(k for k in r["klassen"] if "schlaf" in (k.get("zauber") or {}).get("1", []))
+        dmg = next(cat[z] for z in k["zauber"]["1"] if z in cat and cat[z].get("schaden_art"))
+        cat["schlaf"].update(rettung={"wert": "weisheit"}, zustand="bewusstlos")
+        dmg.update(rettung={"wert": "geschick"}, halb=True)
+        h.update(klasse=k["id"], stufe=1, ladungen=[5] * 5, segen=[])
+        bw = next(x for x in r["gegner"] if x["id"] == g["id"])
+        bw["werte"] = dict(bw.get("werte") or {}, weisheit=1, geschick=1)          # −5: fails a 10
+        self.assertTrue(kampf.bann(cat["schlaf"]) and not kampf.bann(dmg) and not kampf.bann(cat["segnen"]))
+        rd["offen"] = {self.host: {"text": f"Ich wirke Schlaf auf {g['name']}.", "kraft": "schlaf"}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rest, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "intelligenz", "schwer": 13, "vt": "", "wofuer": "Schlaf"}], Dice(10))
+        x = hits[0]
+        sg = kampf.ZAUBER_SG + kampf.prof(1) + max(dungeon.body(r, h, w, dinge=False) for w in kampf.ZAUBERWERTE)
+        self.assertEqual((rest, x["schaden"], x["zauber_zustand"]["id"]), ([], 0, "bewusstlos"))
+        self.assertEqual(x["gegner_rettung"], {"wert": "weisheit", "w": 10, "gesamt": 5, "gegen": sg, "ok": False})
+        self.assertIn("dungeon: kampf | rettung gegner | nicht geschafft", out.getvalue())
+        facts = dungeon.roll_facts(r, rd, [], [dict(x, beleg="W-1")], [])[0][0]
+        self.assertEqual((facts["rettungswurf_gegner"]["geschafft"], facts["zustand"]), (False, kampf._zname(r, rd, "bewusstlos")))
+        with contextlib.redirect_stdout(io.StringIO()):
+            kampf.apply(dungeon, r, rd, hits, [], "", {})
+        self.assertTrue(kampf.foe_has(r, rd, g, "kein_zug"))                          # asleep: no blow
+        vor = list(h["ladungen"])
+        with contextlib.redirect_stdout(io.StringIO()) as out, mock.patch.object(dungeon, "rules", lambda: r):
+            dungeon.cast_powers(r, rd, True, {self.host})
+        self.assertEqual(sum(vor) - sum(h["ladungen"]), 1)                           # it works now: the charge counts
+        self.assertEqual((h["segen"], "kontrolle" in out.getvalue()), ([], False))   # no blessing of its own
+        bw["werte"].update(weisheit=30, geschick=30)                                  # +10: passes
+        g["zust"] = []
+        with contextlib.redirect_stdout(io.StringIO()):
+            x = kampf.attacks(dungeon, r, rd, [], Dice(10))[1][0]
+        self.assertEqual((x["gegner_rettung"]["ok"], x.get("zauber_zustand"), x["treffer"]), (True, None, False))
+        rd["offen"] = {self.host: {"text": f"Ich wirke {dmg['name'][0].split(': ', 1)[-1]} auf {g['name']}.", "kraft": dmg["id"]}}
+        with contextlib.redirect_stdout(io.StringIO()):
+            ok = kampf.attacks(dungeon, r, rd, [], Dice(10, 4))[1][0]                 # passed: half, through armour 40
+        bw["werte"].update(geschick=1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            fail = kampf.attacks(dungeon, r, rd, [], Dice(10, 4))[1][0]
+        self.assertEqual((ok["art"], fail["art"]), (dmg["schaden_art"], dmg["schaden_art"]))
+        self.assertEqual(ok["schaden"], fail["schaden"] // 2)
+        self.assertGreater(fail["schaden"], 0)
+
+    def test_kampf_heilzauber_fuer_einen_freund(self):
+        """Kampf-Audit H4: a spell with ziel verbuendeter heals the friend the action names by its exact name (one down
+        gets up), never one unconscious or dead; nobody named: the caster."""
+        r = copy.deepcopy(dungeon.rules())
+        cat = dungeon._by(r, "gegenstaende")
+        rd, _ = self.encounter()
+        h, h2 = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
+        heil = next(c for c in r["gegenstaende"] if c["art"] == "zauber" and c.get("heilung") and c.get("ziel") == "selbst")
+        heil["ziel"] = "verbuendeter"
+        self.assertEqual(dungeon.friend(rd, self.host, f"Ich heile {h2['name']}!"), self.gp)
+        self.assertIsNone(dungeon.friend(rd, self.host, f"Ich heile {h['name']}."))
+        h["leben"], h2["leben"] = 1, 1
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, heil, 0, "Heilen", self.gp)
+        self.assertEqual((h["leben"], h2["leben"] > 1), (1, True))
+        h2["leben"] = 0
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, heil, 0, "Heilen", self.gp)
+        self.assertGreater(h2["leben"], 0)                                            # down: up again
+        h2.update(leben=0, ohnmacht=True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, heil, 0, "Heilen", self.gp)
+        self.assertEqual(h2["leben"], 0)                                              # unconscious: never
+        h2.update(leben=0, tot=True, ohnmacht=False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, heil, 0, "Heilen", self.gp)
+        self.assertEqual(h2["leben"], 0)                                              # the dead: never
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, heil, 0, "Heilen", None)
+        self.assertGreater(h["leben"], 1)                                             # nobody named: the caster
+
+    def test_kampf_zustand_sg_aus_dem_bestiarium(self):
+        """Kampf-Audit N6: the DC of a foe's state against a hero is the bestiary's sg; without one 10 + a quarter of
+        its level."""
+        r = copy.deepcopy(dungeon.rules())
+        rd, _ = self.encounter()
+        g = rd["kampf"]["gegner"][0]
+        g["zustaende"] = ["vergiftet"]
+        rd["plaetze"][self.host]["held"]["zust"] = []
+        rd["plaetze"][self.gp]["held"]["zust"] = []
+        bw = next(x for x in r["gegner"] if x["id"] == g["id"])
+        bw.pop("sg", None)
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20, *[99] * (2 * g["wuerfel"]), 1))
+        self.assertEqual(next(y for y in z if y.get("rettung"))["rettung"]["gegen"], kampf.RETTUNG + int(bw.get("stufe", 0) // 4))
+        bw["sg"] = 17
+        z = kampf.foes_turn(dungeon, r, rd, [], Dice(20, *[99] * (2 * g["wuerfel"]), 1))
+        self.assertEqual(next(y for y in z if y.get("rettung"))["rettung"]["gegen"], 17)
+
     def test_kampf_modellziel_allein_kein_angriff(self):
         """Nachprüfung Welle 1 (b): the model's ziel only picks the target, it never makes an action an attack; a hero
         casting a spell on foes (KONTROLLE) keeps no check of the model in a fight (no experience for nothing)."""
@@ -6837,9 +6944,11 @@ class Fight(Turns):
         with contextlib.redirect_stdout(io.StringIO()):
             _, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "ziel": g["name"]}], Dice(10))
         self.assertEqual([x["ziel"] for x in hits], [g["k"]])
-        rd["offen"] = {self.host: {"text": f"Ich wirke Schlaf auf {g['name']}.", "kraft": "schlaf"}}
+        cat = dungeon._by(r, "gegenstaende")
+        ctl = next(z for z in kampf.KONTROLLE if not kampf.bann(cat.get(z)))        # without a save in the catalog (H4)
+        rd["offen"] = {self.host: {"text": f"Ich wirke {ctl} auf {g['name']}.", "kraft": ctl}}
         with contextlib.redirect_stdout(io.StringIO()) as out:
-            rest, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "intelligenz", "schwer": 13, "vt": "", "wofuer": "Schlaf"}], Dice(10))
+            rest, hits = kampf.attacks(dungeon, r, rd, [{"pid": self.host, "wert": "intelligenz", "schwer": 13, "vt": "", "wofuer": ctl}], Dice(10))
         self.assertEqual((rest, hits), ([], []))
         self.assertIn("dungeon: probe | kampf | kontrolle verworfen", out.getvalue())
 
@@ -6961,7 +7070,11 @@ class Fight(Turns):
                     dungeon.apply(r, rd, wuerfe, story, "rsim", rng, kampfwuerfe=(hits, zuege))
                     neu = [e for e in rd["log"] if e.get("n") == zug0]
                     for x in hits:                                                       # (a)
-                        if not x.get("kann_nicht") and x["treffer"] != (x["krit"] or (x["w"] != 1 and x["gesamt"] >= x["rk"])) and not x.get("mut"):
+                        rw = x.get("gegner_rettung")                                     # H4: the foe's save instead of the armour
+                        if rw and (x["treffer"] != bool(x["schaden"] or x.get("zauber_zustand")) or rw["ok"] and x.get("zauber_zustand")
+                                   or rw["ok"] != (rw["w"] == 20 or rw["w"] != 1 and rw["gesamt"] >= rw["gegen"])):
+                            bad["treffer_regel"] += 1
+                        elif not rw and not x.get("kann_nicht") and x["treffer"] != (x["krit"] or (x["w"] != 1 and x["gesamt"] >= x["rk"])) and not x.get("mut"):
                             bad["treffer_regel"] += 1
                     for g in gegner:                                                     # (b) (c)
                         lost = vor_g[g["k"]][0] - g["leben"]
