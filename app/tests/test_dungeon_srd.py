@@ -36,6 +36,10 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
 - Runen und Sockel (Plan dungeon-runen, Dominik 2026-10-27 „1a 2b 3a …“): 13 Runen mit den Rängen 1 bis 13 und den Preisen
   der Plan-Tabelle, 7 Runenwörter aus vorhandenen Runen mit Sockelzahl = Zahl der Runen; dungeon_runen.check_rules
   lehnt fremde Schlüssel, Treffer außerhalb der Waffe, Effekte am falschen Ort, Lücken im Rang und falsche Sockel ab.
+- NSC-Tabellen (Hauptthread 2026-10-27): jeder Beruf nennt die männliche und die weibliche Form („m“, „w“), die erste
+  Spalte ist eine davon; „Aussehen“ beschreibt nur Äußeres, Art und Verhalten stehen unter „Art“ (feste Wortliste
+  dungeon_tabellen.AUSSEHEN_NICHT), keine Zeile steht in beiden Tabellen; kein Beruf ist eine Maschine („Bord-KI“,
+  Prüfbericht 2026-10-27 Z2/Z8).
 """
 import json
 import os
@@ -356,6 +360,25 @@ class Srd(unittest.TestCase):
         woerter = next(t for t in r["toene"] if t["id"] == 8)["woerter"]
         namen = [n for x in s["runen"] + s["runenwoerter"] for n in x["name"] + x.get("sinn", [])]
         self.assertEqual([n for n in namen if any(w in " " + n.lower() + " " for w in woerter)], [])
+
+    def test_berufe_mit_formen_und_aussehen_nur_aeusseres(self):
+        import dungeon_tabellen as tabellen
+        s, r = srd(), dungeon._base_rules()
+        t = {x["id"]: x for x in s["tabellen"]}
+        self.assertEqual([z["t"][0] for z in t["nsc_beruf"]["zeilen"] if z["t"][0] not in (z.get("m"), z.get("w"))], [])
+        bergmann = next(z for z in t["nsc_beruf"]["zeilen"] if z["t"][0] == "Bergmann")
+        self.assertEqual((bergmann["m"], bergmann["w"]), ("Bergmann", "Bergfrau"))
+        self.assertEqual([z["t"][0] for z in t["nsc_beruf"]["zeilen"] if re.search(r"\bKI\b|roboter|droide", z["t"][0], re.I)], [])   # a person, no machine
+        aussehen = {z["t"][0] for z in t["nsc_aussehen"]["zeilen"]}
+        self.assertEqual(aussehen & {z["t"][0] for z in t["nsc_art"]["zeilen"]}, set())
+        self.assertNotIn("wirkt zerstreut", aussehen)
+        self.assertIn("zerstreut", {z["t"][0] for z in t["nsc_art"]["zeilen"]})
+        self.assertEqual(tabellen.check_rules(r), [])
+        tab = lambda tid, zeilen: dict(r, tabellen=[dict(tabellen.table(r, tid), zeilen=zeilen)])   # noqa: E731
+        beruf = tabellen.table(r, "nsc_beruf")["zeilen"]
+        self.assertIn("\"m\" und \"w\"", " ".join(tabellen.check_rules(tab("nsc_beruf", [{"t": ["Wirt", "innkeeper"]}] + beruf))))
+        self.assertNotEqual(tabellen.check_rules(tab("nsc_art", [{"t": ["still", "quiet"], "m": "x", "w": "y"}] * 6)), [])
+        self.assertIn("nsc_art", " ".join(tabellen.check_rules(tab("nsc_aussehen", [{"t": ["wirkt zerstreut", "seems distracted"]}] * 6))))
 
 
 if __name__ == "__main__":

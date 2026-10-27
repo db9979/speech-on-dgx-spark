@@ -6061,6 +6061,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Berufe mit beiden Formen, Aussehen nur Äußeres (V01.1.161, Daten und Prüfregel, Wunsch des Hauptthreads, Thread „DnDAppFiles für den Dungeon-Master“): Jede Zeile der NSC-Tabelle „Beruf“ (nsc_beruf, 61 Berufe) nennt neben t die männliche und die weibliche deutsche Form (m, w: Heiler/Heilerin, Bergmann/Bergfrau, Gelehrter/Gelehrte, Hirte/Hirtin, Steuermann/Steuerfrau, Schiffsjunge/Schiffsmädchen, Wache/Wache), damit der Beruf zum festen Geschlecht der Person passt; „Bord-KI“ ist kein Beruf einer Person mehr (Prüfbericht 27.10., Z2/Z8). „Aussehen“ (nsc_aussehen) beschreibt nur noch Äußeres: 12 Zeilen über Art und Verhalten stehen jetzt unter „Art“ (nsc_art) als kurze Eigenschaft (zerstreut, spricht mit Akzent, nie allein unterwegs, einnehmend, voller Energie, ruhig und gefasst, nervös, schrullig, großspurig, unheimlich, mit unstetem Blick, spricht im Flüsterton). dungeon_tabellen.check_rules verlangt m und w bei jedem Beruf (FORMEN, sonst sind sie nirgends erlaubt) und lehnt in „Aussehen“ jedes Wort der festen Liste AUSSEHEN_NICHT ab. Selbsttest test_dungeon_srd (test_berufe_mit_formen_und_aussehen_nur_aeusseres)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-Audit Welle 2, Rettungswürfe der Gegner (V01.1.142, Bericht dungeon-kampf-audit/bericht.md Punkte H4 und N6, Daten aus V01.1.140): Ohne neuen Schalter. 1. H4 Zauber mit Rettungswurf: Hat ein Zauber im Katalog einen Rettungswurf (rettung, 44 Zauber, etwa Feuerball, Heilige Flamme, Schlaf), würfelt im Kampf nicht mehr der Held gegen die Rüstungsklasse, sondern das Panel für den Gegner: d20 + der Bonus seines Werts aus dem Bestiarium gegen 10 + Übungsbonus + den Wert des Zaubernden (wie bei einer Probe) + den Bonus des Zaubers über dem Segen darauf (kampf.ZAUBER_SG, kampf.spell_save; in D&D 8, doch ein Rettungswurf kennt keinen kritischen Treffer und keinen Vorteil, mit 10 hält der Balance-Prüfstand sein Ziel); eine 20 schafft es immer, eine 1 nie. Nicht geschafft: der volle Schaden und der Zustand des Zaubers (zustand, etwa liegend, festgesetzt, bewusstlos) für seine Züge; geschafft: mit halb der halbe Schaden, sonst nichts. Logs dungeon: kampf | rettung gegner | geschafft / nicht geschafft; die Geschichte zeigt eine eigene Zeile „Rettungswurf Weisheit = 3 gegen SG 15 · nicht geschafft“ mit Schaden und Zustand. 2. Bannzauber: Ein Zauber ohne Schaden mit Rettu"
 },
 {
@@ -21110,6 +21118,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "both as part of dungeon.check_rules (own ids, ranks without a gap, prices up to \"epic\", only these keys, a runeword's runes exist and are possible at its place, sockets = number of runes, no sequence twice). Self-test test_dungeon_srd (test_runen_und_runenwoerter)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: occupations in both forms, looks only outward (V01.1.161, data and check rule, asked by the main thread, thread \"DnDAppFiles für den Dungeon-Master\"): Every row of the NPC table \"Occupation\" (nsc_beruf, 61 occupations) names besides t the male and the female German form (m, w: Heiler/Heilerin, Bergmann/Bergfrau, Gelehrter/Gelehrte, Hirte/Hirtin, Steuermann/Steuerfrau, Schiffsjunge/Schiffsmädchen, Wache/Wache), so the occupation fits the person's fixed gender; \"Bord-KI\" (ship AI) is no longer a person's occupation (review 27.10., Z2/Z8). \"Looks\" (nsc_aussehen) describes only the outside now: 12 rows about manner and behaviour moved to \"Manner\" (nsc_art) as a short trait (absent-minded, speaks with an accent, never travels alone, winning, full of energy, calm and composed, nervous, eccentric, swaggering, uncanny, shifty-eyed, speaks in a whisper). dungeon_tabellen.check_rules requires m and w on every occupation (FORMEN, nowhere else allowed) and refuses in \"Looks\" any word of the fixed list AUSSEHEN_NICHT. Self-test test_dungeon_srd (test_berufe_mit_formen_und_aussehen_nur_aeusseres)."
 },
 {
 "lang": "en",

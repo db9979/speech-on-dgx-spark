@@ -22054,18 +22054,6 @@
       "zeilen": [
         {
           "t": [
-            "spricht mit Akzent",
-            "speaks with an accent"
-          ]
-        },
-        {
-          "t": [
-            "hat stets Begleitung",
-            "is always accompanied"
-          ]
-        },
-        {
-          "t": [
             "trägt viel Schmuck",
             "wears a lot of jewellery"
           ]
@@ -22074,12 +22062,6 @@
           "t": [
             "ist schon recht alt",
             "is quite old"
-          ]
-        },
-        {
-          "t": [
-            "hat eine einnehmende Art",
-            "has a winning manner"
           ]
         },
         {
@@ -22114,24 +22096,6 @@
         },
         {
           "t": [
-            "wirkt zerstreut",
-            "seems distracted"
-          ]
-        },
-        {
-          "t": [
-            "ist herrlich schrullig",
-            "is delightfully eccentric"
-          ]
-        },
-        {
-          "t": [
-            "sprüht vor Energie",
-            "bursts with energy"
-          ]
-        },
-        {
-          "t": [
             "ist auffällig gekleidet",
             "is flashily dressed"
           ]
@@ -22150,7 +22114,7 @@
         },
         {
           "t": [
-            "wirkt müde und abgekämpft",
+            "sieht müde und abgekämpft aus",
             "looks tired and worn out"
           ]
         },
@@ -22180,12 +22144,6 @@
         },
         {
           "t": [
-            "ist ruhig und gefasst",
-            "is calm and poised"
-          ]
-        },
-        {
-          "t": [
             "hat eine Narbe im Gesicht",
             "has a scar on the face"
           ]
@@ -22194,12 +22152,6 @@
           "t": [
             "ist etwas zerzaust",
             "is a bit scruffy"
-          ]
-        },
-        {
-          "t": [
-            "hat einen unsteten Blick",
-            "has a shifty look"
           ]
         },
         {
@@ -22216,26 +22168,8 @@
         },
         {
           "t": [
-            "tritt großspurig auf",
-            "swaggers"
-          ]
-        },
-        {
-          "t": [
             "ist tätowiert",
             "is tattooed"
-          ]
-        },
-        {
-          "t": [
-            "wirkt bedrängt und nervös",
-            "seems hard-pressed and nervous"
-          ]
-        },
-        {
-          "t": [
-            "hat etwas Unheimliches an sich",
-            "has something uncanny about them"
           ]
         },
         {
@@ -22359,15 +22293,6 @@
           "t": [
             "trägt eine Laterne bei sich",
             "carries a lantern"
-          ],
-          "welten": [
-            "horror"
-          ]
-        },
-        {
-          "t": [
-            "flüstert beim Sprechen",
-            "whispers when speaking"
           ],
           "welten": [
             "horror"
@@ -23060,6 +22985,81 @@
             "wachsam",
             "watchful"
           ]
+        },
+        {
+          "t": [
+            "spricht mit Akzent",
+            "speaks with an accent"
+          ]
+        },
+        {
+          "t": [
+            "nie allein unterwegs",
+            "never travels alone"
+          ]
+        },
+        {
+          "t": [
+            "einnehmend",
+            "winning"
+          ]
+        },
+        {
+          "t": [
+            "zerstreut",
+            "absent-minded"
+          ]
+        },
+        {
+          "t": [
+            "schrullig",
+            "eccentric"
+          ]
+        },
+        {
+          "t": [
+            "voller Energie",
+            "full of energy"
+          ]
+        },
+        {
+          "t": [
+            "ruhig und gefasst",
+            "calm and composed"
+          ]
+        },
+        {
+          "t": [
+            "mit unstetem Blick",
+            "shifty-eyed"
+          ]
+        },
+        {
+          "t": [
+            "großspurig",
+            "swaggering"
+          ]
+        },
+        {
+          "t": [
+            "nervös",
+            "nervous"
+          ]
+        },
+        {
+          "t": [
+            "unheimlich",
+            "uncanny"
+          ]
+        },
+        {
+          "t": [
+            "spricht im Flüsterton",
+            "speaks in a whisper"
+          ],
+          "welten": [
+            "horror"
+          ]
         }
       ]
     },
@@ -23731,157 +23731,209 @@
           "t": [
             "Heilerin",
             "healer"
-          ]
+          ],
+          "m": "Heiler",
+          "w": "Heilerin"
         },
         {
           "t": [
             "Führer",
             "guide"
-          ]
+          ],
+          "m": "Führer",
+          "w": "Führerin"
         },
         {
           "t": [
             "Gauklerin",
             "performer"
-          ]
+          ],
+          "m": "Gaukler",
+          "w": "Gauklerin"
         },
         {
           "t": [
             "Bergmann",
             "miner"
-          ]
+          ],
+          "m": "Bergmann",
+          "w": "Bergfrau"
         },
         {
           "t": [
             "Söldnerin",
             "mercenary"
-          ]
+          ],
+          "m": "Söldner",
+          "w": "Söldnerin"
         },
         {
           "t": [
             "Ausgestoßener",
             "outcast"
-          ]
+          ],
+          "m": "Ausgestoßener",
+          "w": "Ausgestoßene"
         },
         {
           "t": [
             "Landstreicher",
             "vagrant"
-          ]
+          ],
+          "m": "Landstreicher",
+          "w": "Landstreicherin"
         },
         {
           "t": [
             "Reisende",
             "traveller"
-          ]
+          ],
+          "m": "Reisender",
+          "w": "Reisende"
         },
         {
           "t": [
             "Mystikerin",
             "mystic"
-          ]
+          ],
+          "m": "Mystiker",
+          "w": "Mystikerin"
         },
         {
           "t": [
             "Pilger",
             "pilgrim"
-          ]
+          ],
+          "m": "Pilger",
+          "w": "Pilgerin"
         },
         {
           "t": [
             "Abenteurerin",
             "adventurer"
-          ]
+          ],
+          "m": "Abenteurer",
+          "w": "Abenteurerin"
         },
         {
           "t": [
             "Anführer",
             "leader"
-          ]
+          ],
+          "m": "Anführer",
+          "w": "Anführerin"
         },
         {
           "t": [
             "Wache",
             "guard"
-          ]
+          ],
+          "m": "Wache",
+          "w": "Wache"
         },
         {
           "t": [
             "Handwerkerin",
             "artisan"
-          ]
+          ],
+          "m": "Handwerker",
+          "w": "Handwerkerin"
         },
         {
           "t": [
             "Kundschafter",
             "scout"
-          ]
+          ],
+          "m": "Kundschafter",
+          "w": "Kundschafterin"
         },
         {
           "t": [
             "Jägerin",
             "hunter"
-          ]
+          ],
+          "m": "Jäger",
+          "w": "Jägerin"
         },
         {
           "t": [
             "Händler",
             "trader"
-          ]
+          ],
+          "m": "Händler",
+          "w": "Händlerin"
         },
         {
           "t": [
             "Bäuerin",
             "farmer"
-          ]
+          ],
+          "m": "Bauer",
+          "w": "Bäuerin"
         },
         {
           "t": [
             "Gelehrter",
             "scholar"
-          ]
+          ],
+          "m": "Gelehrter",
+          "w": "Gelehrte"
         },
         {
           "t": [
             "Botin",
             "courier"
-          ]
+          ],
+          "m": "Bote",
+          "w": "Botin"
         },
         {
           "t": [
             "Ermittler",
             "investigator"
-          ]
+          ],
+          "m": "Ermittler",
+          "w": "Ermittlerin"
         },
         {
           "t": [
             "Diplomatin",
             "diplomat"
-          ]
+          ],
+          "m": "Diplomat",
+          "w": "Diplomatin"
         },
         {
           "t": [
             "Forscher",
             "researcher"
-          ]
+          ],
+          "m": "Forscher",
+          "w": "Forscherin"
         },
         {
           "t": [
             "Diebin",
             "thief"
-          ]
+          ],
+          "m": "Dieb",
+          "w": "Diebin"
         },
         {
           "t": [
             "Schmuggler",
             "smuggler"
-          ]
+          ],
+          "m": "Schmuggler",
+          "w": "Schmugglerin"
         },
         {
           "t": [
             "Wirtin",
             "innkeeper"
-          ]
+          ],
+          "m": "Wirt",
+          "w": "Wirtin"
         },
         {
           "t": [
@@ -23892,7 +23944,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Förster",
+          "w": "Försterin"
         },
         {
           "t": [
@@ -23903,7 +23957,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Hirte",
+          "w": "Hirtin"
         },
         {
           "t": [
@@ -23914,7 +23970,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Priester",
+          "w": "Priesterin"
         },
         {
           "t": [
@@ -23925,7 +23983,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Sammler",
+          "w": "Sammlerin"
         },
         {
           "t": [
@@ -23936,7 +23996,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Schmied",
+          "w": "Schmiedin"
         },
         {
           "t": [
@@ -23947,7 +24009,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Barde",
+          "w": "Bardin"
         },
         {
           "t": [
@@ -23958,7 +24022,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Ritter",
+          "w": "Ritterin"
         },
         {
           "t": [
@@ -23969,7 +24035,9 @@
             "fantasy",
             "horror",
             "eigene"
-          ]
+          ],
+          "m": "Kräuterhexer",
+          "w": "Kräuterhexe"
         },
         {
           "t": [
@@ -23978,7 +24046,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Laternenanzünder",
+          "w": "Laternenanzünderin"
         },
         {
           "t": [
@@ -23987,7 +24057,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Glöckner",
+          "w": "Glöcknerin"
         },
         {
           "t": [
@@ -23996,7 +24068,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Nachtwächter",
+          "w": "Nachtwächterin"
         },
         {
           "t": [
@@ -24005,7 +24079,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Uhrmacher",
+          "w": "Uhrmacherin"
         },
         {
           "t": [
@@ -24014,7 +24090,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Geisterjäger",
+          "w": "Geisterjägerin"
         },
         {
           "t": [
@@ -24023,7 +24101,9 @@
           ],
           "welten": [
             "horror"
-          ]
+          ],
+          "m": "Hausdiener",
+          "w": "Hausdienerin"
         },
         {
           "t": [
@@ -24032,16 +24112,9 @@
           ],
           "welten": [
             "scifi"
-          ]
-        },
-        {
-          "t": [
-            "Bord-KI",
-            "ship AI"
           ],
-          "welten": [
-            "scifi"
-          ]
+          "m": "Agent",
+          "w": "Agentin"
         },
         {
           "t": [
@@ -24050,7 +24123,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Kopfgeldjäger",
+          "w": "Kopfgeldjägerin"
         },
         {
           "t": [
@@ -24059,7 +24134,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Crewmitglied",
+          "w": "Crewmitglied"
         },
         {
           "t": [
@@ -24068,7 +24145,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Ingenieur",
+          "w": "Ingenieurin"
         },
         {
           "t": [
@@ -24077,7 +24156,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Entdecker",
+          "w": "Entdeckerin"
         },
         {
           "t": [
@@ -24086,7 +24167,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Gesetzeshüter",
+          "w": "Gesetzeshüterin"
         },
         {
           "t": [
@@ -24095,7 +24178,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Navigator",
+          "w": "Navigatorin"
         },
         {
           "t": [
@@ -24104,7 +24189,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Pilot",
+          "w": "Pilotin"
         },
         {
           "t": [
@@ -24113,7 +24200,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Schrottsammler",
+          "w": "Schrottsammlerin"
         },
         {
           "t": [
@@ -24122,7 +24211,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Schiffsbauer",
+          "w": "Schiffsbauerin"
         },
         {
           "t": [
@@ -24131,7 +24222,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Raumfahrer",
+          "w": "Raumfahrerin"
         },
         {
           "t": [
@@ -24140,7 +24233,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Techniker",
+          "w": "Technikerin"
         },
         {
           "t": [
@@ -24149,7 +24244,9 @@
           ],
           "welten": [
             "scifi"
-          ]
+          ],
+          "m": "Historiker",
+          "w": "Historikerin"
         },
         {
           "t": [
@@ -24158,7 +24255,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Kanonier",
+          "w": "Kanonierin"
         },
         {
           "t": [
@@ -24167,7 +24266,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Steuermann",
+          "w": "Steuerfrau"
         },
         {
           "t": [
@@ -24176,7 +24277,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Smutje",
+          "w": "Smutje"
         },
         {
           "t": [
@@ -24185,7 +24288,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Kartenzeichner",
+          "w": "Kartenzeichnerin"
         },
         {
           "t": [
@@ -24194,7 +24299,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Schiffsjunge",
+          "w": "Schiffsmädchen"
         },
         {
           "t": [
@@ -24203,7 +24310,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Hafenmeister",
+          "w": "Hafenmeisterin"
         },
         {
           "t": [
@@ -24212,7 +24321,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Fischer",
+          "w": "Fischerin"
         },
         {
           "t": [
@@ -24221,7 +24332,9 @@
           ],
           "welten": [
             "piraten"
-          ]
+          ],
+          "m": "Matrose",
+          "w": "Matrosin"
         }
       ]
     },
