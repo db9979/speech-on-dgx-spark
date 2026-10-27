@@ -69,6 +69,14 @@ class Static(unittest.TestCase):
         html = read("index.html")
         self.assertIn('<div class="ctl full"><input class="wide" id="nakeyname"', html)
 
+    def test_text_fields_in_a_row_say_how_wide(self):
+        # „Zeitserver im Heimnetz“ had a bare <input>: 100 % wide beside its text, which shrank to one word per line
+        # (V01.1.160); a field directly in a setting row is a short number (num), a wide one (wide) or a switch/slider
+        html = read("index.html")
+        bare = [m.group(0)[:80] for m in re.finditer(r'<div class="setrow[^"]*"[^>]*><div class="lbl">.*?</div>(<input[^>]*>)', html)
+                if not re.search(r'class="[^"]*\b(num|wide)\b|type="(checkbox|range|hidden|radio|file)"', m.group(1))]
+        self.assertEqual(bare, [])
+
     def test_settings_are_where_they_belong(self):
         # plaene/einstellungen-anordnung.md: Update and Sicherung are two pages, the traffic light sits on
         # "Auf einen Blick", "Notaus von selbst" under Notaus, the live overview has its own section under Betrieb
@@ -177,6 +185,34 @@ class Frame(unittest.TestCase):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_text_beside_a_field_keeps_its_width(self):
+        """Every setting row at 390, 820 (box narrow beside both menus) and 1440 px: the text keeps at least 120 px
+        (or the whole row), no field lies over it and none sticks out of its row or the page (V01.1.160)."""
+        check = """(p=>[...document.querySelectorAll('#pane-'+p+' .setrow')].filter(r=>r.offsetParent&&r.closest('.sgrp')).map(r=>{
+            const l=r.querySelector(':scope>.lbl');if(!l||!l.querySelector('b'))return null;
+            const R=r.getBoundingClientRect(),L=l.getBoundingClientRect(),name=l.querySelector('b').textContent.trim().slice(0,30);
+            if(L.width<Math.min(120,R.width-1))return name+': text '+Math.round(L.width)+' px';
+            for(const e of r.querySelectorAll(':scope>:not(.lbl)')){if(!e.offsetParent)continue;const b=e.getBoundingClientRect();
+              if(!b.width)continue;
+              if(b.left<L.right-1&&b.right>L.left+1&&b.top<L.bottom-1&&b.bottom>L.top+1)return name+': field over the text';
+              if(b.right>R.right+1||b.left<R.left-1)return name+': field out of the row'}
+            return null}).filter(Boolean))"""
+        async def go():
+            async with async_playwright() as p:
+                for w in (390, 820, 1440):
+                    br, pg, errors = await self.page(p, w, 900)
+                    try:
+                        for p_id in await self.panes(pg):
+                            await self.open_pane(pg, p_id)
+                            await pg.evaluate(f"document.querySelectorAll('#pane-{p_id} details.adv').forEach(d=>d.open=true)")
+                            rows = await pg.evaluate(f"document.querySelectorAll('#pane-{p_id} .sgrp .setrow').length")
+                            bad = await pg.evaluate(check, p_id)
+                            self.assertEqual(bad, [], f"{w} px {p_id} ({rows} rows)")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
     def test_segments_follow_the_select(self):

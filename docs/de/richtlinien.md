@@ -233,7 +233,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Menü** (Stand 2026-10-11): Assistent · Ich | Zustand · Funktionen · Personen und Geräte · Einstellungen, dazu Strg/⌘ K. Die Einstellungsgruppen sind Assistent, Sprache und Spark. (D; 🧪 test_guides.MenuStructure)
 - **Seitengerüst** (`docs/de/technik.md` → Bausteine), nur diese Teile verwenden:
   - **Kopf:** `h2.pt` mit `.pintro` (ein Satz). Abschnitte sind `h3.sec`, die `seite.js` in Kästen `.sgrp` legt.
-  - **Zeile:** `setrow` mit Name und einem Satz links, genau ein Bedienelement rechts. Schalter `.tgl`, nie `label.chk`. Für 2 bis 4 Möglichkeiten Segmentknöpfe.
+  - **Zeile:** `setrow` mit Name und einem Satz links, genau ein Bedienelement rechts; ein Feld direkt in der Zeile ist `num` (kurze Zahl) oder `wide`, nie ein nacktes `<input>`, und rückt unter den Text, wenn daneben weniger als etwa 180 px blieben (🧪 test_einstellungen_neu). Schalter `.tgl`, nie `label.chk`. Für 2 bis 4 Möglichkeiten Segmentknöpfe.
   - **Hilfetext:** höchstens ein Satz und ≤ 140 Zeichen sichtbar, der Rest hinter „Mehr“. „Erweitert“ steht immer in `details.adv`.
   - **Speichern:** eine schwebende Speichern-Leiste pro Seite. Sofort-Aktionen stehen in einem eigenen Abschnitt „wirkt sofort“.
   - **Listen:** Muster „Liste mit Detailbereich“ (`ld-`), am Handy wird das Detail eine eigene Seite. Ich-Seiten nutzen `ichteile.js` (Unterreiter mit Zahl, Statuskarte, ⋯-Menü, 10 Zeilen + „Weitere zeigen“, Gefahrenzone) und **keine inneren Scroll-Kästen**.

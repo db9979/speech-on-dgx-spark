@@ -1186,10 +1186,12 @@ select.segsel{display:none!important}
   .segc button{padding:6px 10px}
 }
 .setrow .ctl>input:not(.num):not([type=checkbox]){flex:1 1 auto;min-width:0}
-/* narrow: a control that leaves the text less than ~180 px moves below it instead of squeezing it */
-@media (max-width:760px){.sgrp .setrow{flex-wrap:wrap}.sgrp .setrow:not(:has(>.ctl.full,>input.wide,>select.wide))>.lbl{flex:1 1 180px}
-  .sgrp .setrow:has(>input[type=range])>.lbl{flex-basis:110px}.sgrp .setrow>.ctl{flex-wrap:wrap}
-  .sgrp .setrow:has(>.tgl){flex-wrap:nowrap}.sgrp .setrow:has(>.tgl)>.lbl{flex-basis:0}}
+/* a control that leaves the text less than ~180 px moves below it instead of squeezing it: at every width, the box is
+   narrow beside the two menus too (820 px), and a field next to it never shrinks the text to one word per line */
+.sgrp .setrow{flex-wrap:wrap}.sgrp .setrow>.lbl{flex:1 1 180px}.sgrp .setrow>:not(.lbl){min-width:0}
+.sgrp .setrow:has(>input[type=range])>.lbl{flex-basis:110px}.sgrp .setrow>.ctl{flex-wrap:wrap}
+.sgrp .setrow:has(>.tgl){flex-wrap:nowrap}.sgrp .setrow:has(>.tgl)>.lbl{flex-basis:0}
+@media (max-width:760px){.sgrp .setrow:has(>.ctl.full,>input.wide,>select.wide)>.lbl{flex:1}}
 /* settings menu with a coloured symbol per page (js/seite.js) */
 .cic{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;color:#fff;flex:none;order:-1}
 .cic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}

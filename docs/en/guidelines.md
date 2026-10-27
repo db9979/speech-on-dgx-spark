@@ -233,7 +233,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Menu** (as of 2026-10-11): Assistant · Me | Status · Features · People and devices · Settings, plus Ctrl/⌘ K. The settings groups are Assistant, Speech and Spark. (D; 🧪 test_guides.MenuStructure)
 - **Page skeleton** (`docs/de/technik.md` → building blocks), use only these parts:
   - **Head:** `h2.pt` with `.pintro` (one sentence). Sections are `h3.sec`, which `seite.js` puts into boxes `.sgrp`.
-  - **Row:** `setrow` with name and one sentence on the left, exactly one control on the right. Switch `.tgl`, never `label.chk`. For 2 to 4 options segment buttons.
+  - **Row:** `setrow` with name and one sentence on the left, exactly one control on the right; a field directly in the row is `num` (short number) or `wide`, never a bare `<input>`, and moves below the text when less than about 180 px would be left beside it (🧪 test_einstellungen_neu). Switch `.tgl`, never `label.chk`. For 2 to 4 options segment buttons.
   - **Help text:** at most one sentence and ≤ 140 characters visible, the rest behind "More". "Advanced" always sits in `details.adv`.
   - **Saving:** one floating save bar per page. Immediate actions are in a section of their own "takes effect immediately".
   - **Lists:** pattern "list with detail area" (`ld-`), on the phone the detail becomes a page of its own. Me pages use `ichteile.js` (sub-tabs with count, status card, ⋯ menu, 10 rows + "Show more", danger zone) and **no inner scroll boxes**.
