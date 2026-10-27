@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.181** AI Dungeon Master: guardian and master rooms of the vaults follow the fight's budget, the panel fills the number of foes by experience, a boss counts with its life factor
 - **V01.1.180** AI Dungeon Master: only people become people, never foes, heroes, companions, groups or role words, a merchant sells by its name and gets a card, a person in a fight shows its portrait (review 27.10. package 8)
 - **V01.1.179** AI Dungeon Master: when the others stay, the ask-back and the player help no longer offer going first (review 27.10. package 5)
 - **V01.1.178** AI Dungeon Master: the check catches „he“ for a heroine, places the map does not have, secrets told, tracks after a failed search and actions passed over (review 27.10. package 7, part 3)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.174** AI Dungeon Master: the game table is never built anew, pictures do not flicker, texts do not jump, the feed stays where you read
 - **V01.1.173** AI Dungeon Master: foe pictures take what a foe is from the Bestiarium (humans look human), companion faces with fixed gender and age
 - **V01.1.172** AI Dungeon Master: the sample of a person's voice looks afresh whether voices from a description run, and catalog and game master console say so with a jump link when not
-- **V01.1.171** AI Dungeon Master: ask back only without a verb and at most 30 s, no check for going, buying and resting, typed buying and resting get a fixed line, gold given to people is taken (review 27.10., package 6)
 
 
 

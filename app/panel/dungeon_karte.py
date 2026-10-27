@@ -23,7 +23,8 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   trap's difficulty (raised by the group's level): failed the whole damage, made half (armour does not count); a riddle door keeps its ways shut until an
   action holds one of the fixed answers (umlauts and case do not count), after VERSUCHE turns the hint is shown; a
   guardian or the master keeps its ways shut until the fight is won: entering, the panel picks the room's foes from the
-  Bestiarium of the world by the group's level (_room_foes) and offers only them (rd["raum_gegner"]); the fight's
+  Bestiarium of the world by the group's level within the fight's budget (_room_foes, WAECHTER, HERR) and offers only
+  them with their counts (rd["raum_gegner"]: ids, anzahl); the fight's
   victory (rd["sieg"], dungeon_kampf) opens the room; a treasure room gives
   the catalog's loot „truhe“ once, a spring heals every hero (QUELLE), an altar blesses one value (ALTAR). The answer never reaches the model, only whether it was found.
 - A world that goes on (Tabletop-Idee 7): a vault left NEU_NACH steps ago has new dwellers when the group comes back
@@ -130,6 +131,10 @@ ANFANG = DANACH + ("ab", "hin", "off")    # a sentence beginning so and naming a
 ICH_MIT = ("komme mit", "kommen mit", "i come along", "we come along", "i ll come", "i will come")   # a seat going with the others
 ICH_BLEIB = ("ich bleibe", "wir bleiben", "bleibe hier", "bleibe ich", "ich warte hier", "i stay", "i ll stay", "i will stay",
              "we stay", "i wait here")   # a seat staying: the group stays (the narrator hears „bleibt“)
+WAECHTER = (0.8, 1.0)     # Paket 4 (B1): a guardian's room in these times the fight's budget (dungeon_kampf.budget)
+HERR = (1.1, 1.25)        # the master's room: still „mittel“, at its top
+HERR_MAX = 1.5            # a master alone above this many budgets gives way to the next weaker one
+NAH = 12                  # the kinds of the nearest challenge the panel tries as a room's leader
 BLICK = 560               # the seat's view of the plane is at least this wide (view: box)
 ORT_EN = "map vignette art, one single place seen from a high angle, a small round scene, plain light background"
 RAUM_EN = "dungeon art, one room of an underground vault seen from a high angle, no people"
@@ -1214,14 +1219,22 @@ def _enter_room(r, rd, v, j, rng):
             if room["art"] == "falle" and room.get("getroffen"):
                 alarm.laerm(rd, 1, "falle")      # a trap sprung is heard
     if alarm.streife(rd, room):                  # the alarm's patrol (Alarm und Fackeln): guardian foes in a plain room
-        room["streife"], room["gegner"], room["fertig"] = True, _room_foes(r, rd, False, rng), False
+        room["streife"], room["fertig"] = True, False
+        room["gegner"], room["anzahl"] = _room_foes(r, rd, False, rng)
         _say(rd, "Eine Streife stellt euch!", "A patrol confronts you!")
     if (room["art"] in ("waechter", "boss") or room.get("streife")) and not room["fertig"]:
-        room.setdefault("gegner", _room_foes(r, rd, room["art"] == "boss", rng))
+        if "gegner" not in room:
+            room["gegner"], room["anzahl"] = _room_foes(r, rd, room["art"] == "boss", rng)
+        anz = room.setdefault("anzahl", {})
         if alarm.bereit(rd, room):               # the whole vault awake: one more at the master's side
-            room["gegner"] = (room["gegner"] + _room_foes(r, rd, False, rng)[:1])[:5]
+            for i in _room_foes(r, rd, False, rng)[0][:1]:
+                if i in room["gegner"]:
+                    anz[i] = anz.get(i, 1) + 1
+                elif len(room["gegner"]) < 5:
+                    room["gegner"].append(i)
+                    anz[i] = 1
         if room["gegner"]:
-            rd["raum_gegner"] = {"raum": _room_id(rd, j), "ids": room["gegner"]}
+            rd["raum_gegner"] = {"raum": _room_id(rd, j), "ids": room["gegner"], "anzahl": dict(anz)}
 
 
 def won(rd):
@@ -1249,27 +1262,57 @@ def _room_id(rd, j):
 
 def _room_foes(r, rd, boss, rng):
     """The foes of a guardian's or the master's room from the Bestiarium of the world (dungeon_kampf.plays_in, the one
-    rule), by the group's level L: a
-    guardian is one foe (two from 3 heroes on) of the challenge nearest L/2, the master one of the challenge nearest
-    L+1 with up to two of the nearest L/4 at his side (from 2 heroes on); never more than 5."""
+    rule) within the fight's budget (Dungeon-Review 2026-10-27 Paket 4 B1, Dominik „ok“): the kinds by the group's
+    level L as before, the nearest first, the guardian's of the challenge nearest L/2, the master's nearest L+1 (a
+    master alone above HERR_MAX budgets gives way to the next weaker one) with helpers nearest L/4; the panel fills
+    the count by experience (dungeon_kampf.adjusted, a boss with its life factor, dungeon_kampf.wert) into WAECHTER or
+    HERR times dungeon_kampf.budget, at most two kinds, ANZAHL_MAX of a kind and GEGNER_MAX in all: the first of the
+    NAH nearest kinds that fits, else the one nearest the band. Returns (ids, {id: count})."""
     import dungeon
-    held = dungeon.seated(rd)
-    lv = dungeon.group_level([p["held"] for _, p in held])
-    import dungeon_kampf
-    tab = [x for x in r.get("gegner") or [] if dungeon_kampf.plays_in(r, x, rd.get("welt", ""))]
+    import dungeon_kampf as kampf
+    held = [p["held"] for _, p in dungeon.seated(rd)]
+    tab = [x for x in r.get("gegner") or [] if kampf.plays_in(r, x, rd.get("welt", "")) and x.get("ep", 0) > 0]
+    if not tab or not held:
+        return [], {}
+    n, lv = len(held), dungeon.group_level(held)
+    b = max(1, kampf.budget(dungeon, r, rd, held))
 
-    def near(t, n, but=()):
-        c = [x for x in tab if x["id"] not in but]
-        if not c:
-            return []
-        d = min(abs(x["stufe"] - t) for x in c)
-        c = [x["id"] for x in c if abs(x["stufe"] - t) == d]
+    def near(t, top, many=NAH):                  # the kinds nearest the challenge t of those one alone fits, ties by the dice
+        c = [x for x in tab if kampf.wert(x, n) <= top * b]
         rng.shuffle(c)
-        return c[:n]
+        return sorted(c, key=lambda x: abs(x["stufe"] - t))[:many]
+
+    def off(foes, band):                         # how far the room's experience lies from the band (0 inside)
+        e = kampf.adjusted(foes, n) / b
+        return max(band[0] - e, e - band[1], 0)
+
+    def pick(leads, most, helps, band):          # the first leader (and helper kind) inside the band, else the nearest
+        best = None
+        for g in leads + [x for x in more(leads, band) if x not in leads]:
+            for m in range(most, 0, -1):
+                base = [g] * m
+                if m > 1 and kampf.adjusted(base, n) > band[1] * b:
+                    continue
+                for h in [None] + [x for x in helps if x["id"] != g["id"]]:
+                    k = next((k for k in range(min(kampf.ANZAHL_MAX, kampf.GEGNER_MAX - m), 0, -1)
+                              if kampf.adjusted(base + [h] * k, n) <= band[1] * b), 0) if h else 0
+                    d = off(base + [h] * k, band)
+                    if best is None or d < best[0]:
+                        best = (d, {g["id"]: m, **({h["id"]: k} if k else {})})
+                    if not d:
+                        return best[1]
+        return best[1]
+    def more(leads, band):                       # no leader of the nearest fits: every kind of at least half their challenge
+        t = min((x["stufe"] for x in leads), default=0) / 2
+        return sorted((x for x in tab if x["stufe"] >= t and kampf.wert(x, n) <= band[1] * b), key=lambda x: -x["stufe"])
+    weak = sorted(tab, key=lambda x: (kampf.wert(x, n), x["id"]))
+    helps = near(max(0.125, lv / 4), HERR[1], len(tab))              # helpers: every kind, the nearest L/4 first
     if not boss:
-        return near(max(0.125, lv / 2), 2 if len(held) >= 3 else 1)
-    herr = near(lv + 1, 1)
-    return (herr + near(max(0.125, lv / 4), 2 if len(held) >= 2 else 0, herr))[:5]
+        kinds = near(max(0.125, lv / 2), WAECHTER[1])
+        out = pick(kinds or weak[:1], min(kampf.ANZAHL_MAX, kampf.GEGNER_MAX), helps, WAECHTER)
+    else:
+        out = pick(near(lv + 1, HERR_MAX) or weak[:1], 1, helps, HERR)
+    return list(out), out
 
 
 def on_the_way(r, rd, rng):
@@ -1358,7 +1401,7 @@ def refill(rd, v):
     for j in neu:
         rm = v["raeume"][j]
         rm["fertig"] = False
-        for x in ("gegner", "getroffen", "bemerkt"):
+        for x in ("gegner", "anzahl", "getroffen", "bemerkt"):
             rm.pop(x, None)
         if j in v["besucht"]:
             v["besucht"].remove(j)

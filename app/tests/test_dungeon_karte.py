@@ -640,17 +640,17 @@ class Vaults(unittest.TestCase):
         K._enter_room(r, rd, v, j, random.Random(2))                                       # the patrol in the plain room
         room = v["raeume"][j]
         self.assertTrue(room["streife"] and room["gegner"])
-        self.assertEqual(rd["raum_gegner"], {"raum": f"gw{k['drin']}-r{j + 1}", "ids": room["gegner"]})
+        self.assertEqual(rd["raum_gegner"], {"raum": f"gw{k['drin']}-r{j + 1}", "ids": room["gegner"], "anzahl": room["anzahl"]})
         self.assertEqual(v["streife"], 2)
         rd["sieg"] = f"gw{k['drin']}-r{j + 1}"
         K.won(rd)
         self.assertTrue(room["fertig"])
         self.assertEqual(v["licht"], 3)                                                    # one room burnt
         boss = next(i for i, x in enumerate(v["raeume"]) if x["art"] == "boss")
-        calm = len(K._room_foes(r, rd, True, random.Random(5)))
+        calm = sum(K._room_foes(r, rd, True, random.Random(5))[1].values())
         self.assertEqual(K.laerm(rd, 3, "tuer"), 6)
         K._enter_room(r, rd, v, boss, random.Random(5))
-        self.assertEqual(len(v["raeume"][boss]["gegner"]), min(5, calm + 1))                 # the master is ready
+        self.assertEqual(sum(v["raeume"][boss]["anzahl"].values()), calm + 1)                 # the master is ready
         self.assertTrue(v["raeume"][boss]["bereit"])
         self.assertEqual(K.facts(r, rd)["herr"], "bereit")
         for _ in range(3):
@@ -728,24 +728,36 @@ class Vaults(unittest.TestCase):
         if beyond:
             self.assertNotEqual(v["hier"], j)
 
-    def test_room_foes_by_the_groups_level(self):
-        """A guardian: one or two foes of the challenge nearest L/2; the master: the one nearest L+1 and helpers."""
-        import dungeon
-        lv = dungeon.group_level([p["held"] for _, p in dungeon.seated(self.rd)])
-        import dungeon_kampf
-        tab = [x for x in self.r["gegner"] if dungeon_kampf.plays_in(self.r, x, self.rd["welt"])]
-        by = {x["id"]: x for x in tab}
-        best = lambda t: min(abs(x["stufe"] - t) for x in tab)
-        for seed in range(20):
-            g = K._room_foes(self.r, self.rd, False, random.Random(seed))
-            self.assertTrue(1 <= len(g) <= 2 and len(set(g)) == len(g))
-            self.assertTrue(all(abs(by[i]["stufe"] - max(0.125, lv / 2)) == best(max(0.125, lv / 2)) for i in g))
-            b = K._room_foes(self.r, self.rd, True, random.Random(seed))
-            self.assertTrue(1 <= len(b) <= 5 and len(set(b)) == len(b))
-            self.assertEqual(abs(by[b[0]]["stufe"] - (lv + 1)), best(lv + 1))
-        own = dict(self.rd, welt="eigene")      # a world no foe names takes the fantasy foes (dungeon_kampf.plays_in)
-        g = K._room_foes(self.r, own, True, random.Random(1))
-        self.assertTrue(g and all(dungeon_kampf.plays_in(self.r, by.get(i) or next(x for x in self.r["gegner"] if x["id"] == i), "eigene") for i in g))
+    def test_vault_rooms_within_the_budget(self):
+        """Dungeon-Review 2026-10-27 Paket 4 (B1, Dominik „ok“): in every world, level 1 to 10 and 1 to 5 heroes the
+        guardian's room lies within WAECHTER, the master's within HERR times the fight's budget (the count filled by
+        experience, a boss with its life factor), never more than 0.05 off where the Bestiarium has no fitting
+        numbers; at most two kinds, ANZAHL_MAX of a kind, GEGNER_MAX in all, a master alone never above HERR_MAX."""
+        import dungeon_kampf as kampf
+        by = {x["id"]: x for x in self.r["gegner"]}
+        welten = sorted({w for x in self.r["gegner"] for w in x.get("welten") or []}) + ["eigene"]
+        cells = inside = 0
+        for welt in welten:
+            for lv in range(1, 11):
+                for nh in range(1, 6):
+                    rd = rd_of(welt)
+                    h0 = rd["plaetze"]["pa"]["held"]
+                    rd["plaetze"] = {f"p{i}": {"held": dict(copy.deepcopy(h0), name=f"H{i}", stufe=lv), "made": i} for i in range(nh)}
+                    b = kampf.budget(dungeon, self.r, rd, [p["held"] for _, p in dungeon.seated(rd)])
+                    for boss, band in ((False, K.WAECHTER), (True, K.HERR)):
+                        ids, anz = K._room_foes(self.r, rd, boss, random.Random(lv * 10 + nh))
+                        cell = (welt, lv, nh, boss, anz)
+                        self.assertTrue(1 <= len(ids) <= 2 and set(ids) == set(anz), cell)
+                        self.assertTrue(all(1 <= m <= kampf.ANZAHL_MAX for m in anz.values()) and sum(anz.values()) <= kampf.GEGNER_MAX, cell)
+                        self.assertTrue(all(kampf.plays_in(self.r, by[i], welt) for i in ids), cell)
+                        e = kampf.adjusted([by[i] for i in ids for _ in range(anz[i])], nh) / b
+                        self.assertTrue(band[0] - 0.05 <= e <= band[1] + 0.05, (cell, round(e, 2)))
+                        if boss:
+                            self.assertEqual(anz[ids[0]], 1)
+                            self.assertLessEqual(kampf.wert(by[ids[0]], nh), K.HERR_MAX * b, cell)
+                        cells += 1
+                        inside += band[0] <= e <= band[1]
+        self.assertGreaterEqual(inside / cells, 0.95)
 
     def test_ways_for_a_voice(self):
         """wege (CarPlay): the same ways as „Von hier aus“, with direction and goal, in the asked language."""

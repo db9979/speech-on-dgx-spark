@@ -5901,6 +5901,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Wächter- und Herrenräume im Kampfbudget (V01.1.181, Dungeon-Review 2026-10-27 Paket 4 B1, Dominik „ok“, Teil der Karte): Ohne neuen Schalter. Bisher hatten die Räume eines Gewölbes kein Budget: ein Wächter war ein Gegner nahe S/2 (ab 3 Helden zwei), der Herr einer nahe S+1 mit Helfern. Allein oder zu dritt war der Herr kaum zu schaffen (0 bis 48 % Siege), auf Stufe 9 und 10 auch der Wächter nicht. Jetzt richtet das Panel beide nach dungeon_kampf.budget aus: ein Wächterraum liegt bei 0,8 bis 1,0, ein Herrenraum bei 1,1 bis 1,25 mal dem Budget (dungeon_karte.WAECHTER, HERR), gezählt mit dungeon_kampf.adjusted und einem Boss mit seinem Lebensfaktor (dungeon_kampf.wert). Die Arten wählt das Panel wie bisher nach dem Herausforderungsgrad, die nächsten zuerst, höchstens zwei Arten, bis zu 4 je Art und 6 in allem; die Anzahl füllt es nach Erfahrung auf (raum_gegner.anzahl). Ein Herr allein über 1,5 Budgets (HERR_MAX) weicht dem nächstschwächeren. Passt keine der nächsten Arten, nimmt das Panel die stärkste Art ab der halben Herausforderung, die passt. Der Selbsttest prüft jede Welt, Stufe 1 bis 10 und 1 bis 5 Helden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf hält die Gruppe fest, Gehen nur mit Mehrheit (V01.1.163, Dungeon-Review 2026-10-27 Pakete 3 und 5, Dominik „ok“, Teil der Karte): Ohne neuen Schalter. Solange ein Kampf steht, zieht die Gruppe nirgendwohin, auch wenn das Modell eine ort_id setzt, und unterwegs passiert nichts; wer gehen wollte, liest „Ihr steckt im Kampf: erst siegen, Frieden schließen oder fliehen, dann zieht ihr weiter.“, der Erzähler bekommt karte.festgehalten. Nur eine gelungene Flucht (kampf.entkommen) gibt den Weg frei. Gehen erkennt das Panel jetzt nur an einem Satz ohne Frage-Verb (dungeon_karte.geht): „Ich frage den Wirt nach dem Weg“, „Ich ziehe mein Schwert“, „Ich breche die Tür auf“, „Ich reinige mein Schwert“ und „Ich lese weiter“ sind kein Gehen mehr; „ziehen“, „brechen“, „weiter“, „kommen“ und „rein“ zählen nur mit einer Richtung, einem Nachbarort oder einem Wort wie „weiter“, „auf“, „los“, „nach“ direkt danach („Wir brechen auf“, „Wir ziehen weiter“), „Ab nach Süden!“ und „Zur alten Mühle!“ gehen weiter. Wer jemanden mitnimmt („komm mit uns“) oder „Ich komme mit“ schreibt, geht mit. Die Gruppe zieht nur, wenn mehr als die Hälfte der Plätze, die in diesem Zug handeln, gehen w"
 },
 {
@@ -21254,6 +21262,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: guardian and master rooms within the fight's budget (V01.1.181, Dungeon review 2026-10-27 package 4 B1, Dominik \"ok\", the map's part): No new switch. Until now the rooms of a vault had no budget: a guardian was one foe near L/2 (two from 3 heroes on), the master one near L+1 with helpers. Alone or three strong the master could hardly be beaten (0 to 48 % wins), at level 9 and 10 not even the guardian. Now the panel fits both to dungeon_kampf.budget: a guardian's room lies at 0.8 to 1.0, a master's room at 1.1 to 1.25 times the budget (dungeon_karte.WAECHTER, HERR), counted with dungeon_kampf.adjusted and a boss with its life factor (dungeon_kampf.wert). The panel picks the kinds by challenge as before, the nearest first, at most two kinds, up to 4 of a kind and 6 in all; it fills the count by experience (raum_gegner.anzahl). A master alone above 1.5 budgets (HERR_MAX) gives way to the next weaker one. When none of the nearest kinds fits, the panel takes the strongest kind from half the challenge on that does. The self-test checks every world, level 1 to 10 and 1 to 5 heroes."
 },
 {
 "lang": "en",
