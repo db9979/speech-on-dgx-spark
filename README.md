@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.163** AI Dungeon Master: in a fight the group does not move on (only after a flight that worked), asking the way, drawing a sword or breaking a door open is no going any more, and the group moves only when the majority wants to go and nobody stays
 - **V01.1.162** AI Dungeon Master: never innkeeper and landlady at once in one world, a scene picture knows names only as a whole word
 - **V01.1.161** AI Dungeon Master: occupations in male and female form, no ship AI as an occupation, looks only outward (NPC tables)
 - **V01.1.160** Settings: the text beside a field is never squeezed again, "Time server in the home network" under Operation stood word by word, now a field moves below the text when less than about 180 px would be left beside it, also at 820 px window width beside both menus (Speech output, Language model, Defaults, Voices), and no select sticks out of its box any more
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.156** AI Dungeon Master: wandering people and small gestures (two switches, off), during a long rest people of the map move on by fixed rules towards their goal or the place of their occupation and you hear it as a rumour, while waiting a person of the scene shows a fixed gesture by their nature (LlamaTale ideas 6 and 7)
 - **V01.1.155** AI Dungeon Master: errands from people (switch, off), whoever asks a person for work gets an errand from the panel (bring, talk, defeat) with reward, experience and two clues, done only by a handover, a talk or a victory, the narrator only tells the reason and the thanks (LlamaTale idea 2)
 - **V01.1.154** AI Dungeon Master: read thoughts (switch, off), with the spell or the potion the panel rolls an Intelligence check, only the reading player sees the person's wish, secret and attitude, the narrator only tells the listening (LlamaTale idea 5)
-- **V01.1.153** AI Dungeon Master: rune catalog with 13 runes and 7 runewords, checked by fixed rules (runes and sockets, data part)
 
 
 

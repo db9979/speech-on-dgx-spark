@@ -111,13 +111,25 @@ BLEIB = ("bleib hier", "bleibt hier", "bleib zurueck", "warte hier", "wartet hie
 ZURUECK = ("zurueck", "umkehren", "kehren um", "kehrt um", "back", "turn around", "return")   # a way back must be asked
 # a move only when an action of the turn wants one (Dominik 2026-10-25 „laut karte und fahne aber in wolfshafen“): a
 # word of going (the start of a word; English short words whole), a neighbouring place or room, or a direction
-GEHEN = ("geh", "ging", "weiter", "reis", "brech", "zieh", "zog", "lauf", "renn", "folg", "betret", "eintret", "hinein",
-         "hinaus", "raus", "rein", "verlass", "klett", "schleich", "wander", "marschier", "reit", "ritt", "fahr", "segel",
+GEHEN = ("geh", "ging", "reis", "lauf", "renn", "folg", "betret", "eintret", "hinein",
+         "hinaus", "raus", "verlass", "klett", "schleich", "wander", "marschier", "reit", "ritt", "fahr", "segel",
          "flieh", "floh", "eil", "steig", "kehr", "zurueck", "richtung", "aufbruch", "unterwegs",
          "travel", "walk", "head", "follow", "enter", "leav", "mov", "sail", "climb", "sneak", "flee", "fled", "return",
          "continu", "proceed", "march", "hurr", "wander", "journey")
 GEHEN_WORT = ("go", "goes", "going", "went", "gone", "run", "runs", "ran", "ride", "rides", "rode", "back", "out",
               "weg", "wege", "weges")
+# Dungeon-Review 2026-10-27 Paket 5 (E4/T6, Dominik „ok“): a word of going counts only in a sentence without a verb of
+# asking (dungeon_erzaehler.asks); „weg“ not after WEG_VOR („nach dem Weg“); these starts of words („ziehe mein
+# Schwert“, „breche die Tür auf“, „lese weiter“) and the word „rein“ („reinige“) only with DANACH right after them or a
+# direction or neighbour in the sentence; a sentence beginning with ANFANG and naming one goes too („Zur alten Mühle!“);
+# asking a person along (MIT) or ICH_MIT is going with the others (the majority counts them, Paket 5)
+VIELDEUTIG = ("zieh", "zog", "brech", "weiter", "komm", "kam")
+DANACH = ("weiter", "auf", "los", "fort", "nach", "zur", "zum", "richtung", "zurueck", "hinaus", "hinein", "on", "off", "to", "towards")
+WEG_VOR = ("dem", "den", "der", "einen", "the", "a")
+ANFANG = DANACH + ("ab", "hin", "off")    # a sentence beginning so and naming a direction or neighbour goes („Ab nach Süden!“)
+ICH_MIT = ("komme mit", "kommen mit", "i come along", "we come along", "i ll come", "i will come")   # a seat going with the others
+ICH_BLEIB = ("ich bleibe", "wir bleiben", "bleibe hier", "bleibe ich", "ich warte hier", "i stay", "i ll stay", "i will stay",
+             "we stay", "i wait here")   # a seat staying: the group stays (the narrator hears „bleibt“)
 BLICK = 560               # the seat's view of the plane is at least this wide (view: box)
 ORT_EN = "map vignette art, one single place seen from a high angle, a small round scene, plain light background"
 RAUM_EN = "dungeon art, one room of an underground vault seen from a high angle, no people"
@@ -766,8 +778,8 @@ def named_way(rd, text):
 
 def asked_ways(rd):
     """The seats whose action of this turn goes to one neighbouring place (Dominik 2026-10-27, „gehe zur alten
-    bibliothek“ got a check for tracking and the group stayed): a word of GEHEN or GEHEN_WORT and exactly one
-    neighbour named by its name or its direction. {pid: index of the place}; {} in a vault or without a map (pure;
+    bibliothek“ got a check for tracking and the group stayed): a seat going (geht) when the group goes (gruppe,
+    Paket 5) and exactly one neighbour named by its name or its direction. {pid: index of the place}; {} in a vault or without a map (pure;
     the main thread drops the seat's check for it and the narrator must take the way, dungeon_erzaehler.judge)."""
     k = rd.get("karte")
     if not k or not k.get("orte") or vault(rd):
@@ -775,9 +787,12 @@ def asked_ways(rd):
     li, o, here = _li(rd), k["orte"], k["hier"]
     nb = sorted(_nb(k)[here])
     out = {}
+    g = gruppe(None, rd)
+    if not g["zieht"]:
+        return {}                            # Paket 5: no majority to go, the narrator need not take the way
     for pid, a in (rd.get("offen") or {}).items():
         w = _words(a.get("text")) if isinstance(a, dict) else []
-        if not any(x.startswith(GEHEN) or x in GEHEN_WORT for x in w):
+        if pid not in g["gehen"]:
             continue
         s = " " + " ".join(w) + " "
         hits = [j for j in nb if _names(o[j]["name"], w)]
@@ -816,20 +831,65 @@ def _said(rd):
     return [w for _, w in _said_by(rd)]
 
 
-def _move_asked(r, rd):
-    """Whether an action of this turn wants to go somewhere: a word of GEHEN or GEHEN_WORT, the name of a neighbouring
-    place or room, or a direction (pure; the model's ort_id alone never moves the group)."""
+def _ziele(r, rd):
+    """The words of the directions and the names of the neighbouring places or rooms (for geht; r only in a vault)."""
     k, v = rd.get("karte") or {}, vault(rd)
     if v:
         names = [(_table(r, "raeume", v["raeume"][j]["t"]) or {"name": ["", ""]})["name"][_li(rd)] for j in _vnb(v)[v["hier"]]]
     else:
         names = [k["orte"][j]["name"] for j in _nb(k)[k["hier"]]] if k.get("orte") else []
-    dirs = {w for pair in RICHTUNG for x in pair for w in _words(x)}
-    for a in (rd.get("offen") or {}).values():
-        w = _words(a.get("text")) if isinstance(a, dict) else []
-        if any(x.startswith(GEHEN) or x in GEHEN_WORT or x in dirs for x in w) or any(n and _names(n, w) for n in names):
+    return {w for pair in RICHTUNG for x in pair for w in _words(x)}, [n for n in names if n]
+
+
+def geht(text, ziele=(frozenset(), ())):
+    """Whether an action wants to go (Paket 5): a sentence without a verb of asking with a word of GEHEN or GEHEN_WORT,
+    a word of VIELDEUTIG or „rein“ with DANACH right after it or a direction or neighbour (ziele from _ziele), or one
+    beginning with ANFANG and naming one; or a word of MIT or ICH_MIT. Pure, the one rule of _move_asked and asked_ways."""
+    import dungeon_erzaehler
+    dirs, names = ziele
+    low = " " + " ".join(_words(text)) + " "
+    if any(f" {x} " in low for x in ICH_MIT) or any(f" {x}" in low for x in MIT):
+        return True
+    for satz in re.split(r"[.!?;:\n]+", str(text or "")):
+        w = _words(satz)
+        if not w or dungeon_erzaehler.asks(satz):
+            continue
+        hin = any(x in dirs for x in w) or any(_names(n, w) for n in names)
+        if hin and w[0] in ANFANG:
             return True
+        for i, x in enumerate(w):
+            if x in GEHEN_WORT:
+                if not (x.startswith("weg") and i and w[i - 1] in WEG_VOR):
+                    return True
+            elif x.startswith(GEHEN):
+                return True
+            elif (x.startswith(VIELDEUTIG) or x == "rein") and (hin or (i + 1 < len(w) and w[i + 1] in DANACH)
+                                                                or x[6:].startswith(GEHEN + ("zieh",))):   # „weitergehen“
+                return True
     return False
+
+
+def bleibt(text):
+    """Whether an action stays where it is (a word of ICH_BLEIB, pure)."""
+    low = " " + " ".join(_words(text)) + " "
+    return any(f" {x} " in low for x in ICH_BLEIB)
+
+
+def gruppe(r, rd):
+    """Who of the acting seats wants to go and who stays (Paket 5, majority): {"gehen": [pid], "bleiben": [pid],
+    "zieht": bool}. The group goes only when more than half of the seats acting this turn want to go and none
+    writes a word of ICH_BLEIB (pure)."""
+    z = _ziele(r, rd)
+    acts = [(pid, a.get("text")) for pid, a in (rd.get("offen") or {}).items() if isinstance(a, dict)]
+    go = [pid for pid, t in acts if geht(t, z) and not bleibt(t)]
+    stay = [pid for pid, _ in acts if pid not in go]
+    return {"gehen": go, "bleiben": stay, "zieht": bool(go) and 2 * len(go) > len(acts) and not any(bleibt(t) for _, t in acts)}
+
+
+def _move_asked(r, rd):
+    """Whether the group may go this turn: the majority of the acting seats want to go (gruppe; the model's ort_id
+    alone never moves the group)."""
+    return gruppe(r, rd)["zieht"]
 
 
 def _back_asked(rd):
@@ -1006,7 +1066,7 @@ def facts(r, rd):
         if room.get("streife") and not room["fertig"]:
             out["gegner"] = ("eine Streife, ihre Gegner stehen im Angebot", "a patrol, its foes are in the offer")[li]
         import dungeon_alarm
-        return dict(out, **dungeon_alarm.facts(rd), **_on_way(r, rd))
+        return dict(out, **dungeon_alarm.facts(rd), **_on_way(r, rd), **_stays(r, rd))
     here = k["hier"]
     p = (o[here]["x"], o[here]["y"])
     kd = _kind(r, o[here]["art"])
@@ -1027,7 +1087,19 @@ def facts(r, rd):
     if has_vault(r, k, here):
         out["wege"].append({"id": "ein", "name": ("ins Gewölbe", "into the vault")[li], "richtung": ("hinein", "inside")[li],
                             "besucht": str(here) in k["gw"]})
-    return dict(out, **_on_way(r, rd))
+    return dict(out, **_on_way(r, rd), **_stays(r, rd))
+
+
+def _stays(r, rd):
+    """Paket 3 and 5 for the narration: someone wants to go but the group stays, held by the fight („kampf“) or for
+    want of a majority (the heroes who do not go, „bleibt“)."""
+    g = gruppe(r, rd)
+    if not g["gehen"] or (g["zieht"] and not rd.get("kampf")):
+        return {}
+    if rd.get("kampf"):
+        return {"festgehalten": ("im Kampf", "in the fight")[_li(rd)]}
+    pl = rd.get("plaetze") or {}
+    return {"bleibt": [pl[pid]["held"]["name"] for pid in g["bleiben"] if (pl.get(pid) or {}).get("held")]}
 
 
 def _on_way(r, rd):
@@ -1326,8 +1398,14 @@ def step(r, rd, story, ep, rng=None):
     if not want and named_way(rd, story.get("text")) >= 0:
         want = f"o{named_way(rd, story.get('text')) + 1}"
         print("dungeon: karte | name statt id", flush=True)
+    if rd.get("kampf") and not rd["kampf"].get("entkommen") and (want or gruppe(r, rd)["gehen"]):
+        if gruppe(r, rd)["gehen"]:                # Paket 3 (T3): the fight holds the group, only a flight that worked frees it
+            _say(rd, "Ihr steckt im Kampf: erst siegen, Frieden schließen oder fliehen, dann zieht ihr weiter.",
+                 "You are caught in the fight: win, make peace or flee first, then you move on.")
+        print("dungeon: karte | verworfen | kampf", flush=True)
+        want = ""
     if want and not _move_asked(r, rd):
-        print("dungeon: karte | verworfen | ungefragt", flush=True)   # nobody wanted to go: the group stays
+        print("dungeon: karte | verworfen | ungefragt", flush=True)   # no majority wanted to go: the group stays
         want = ""
     if not vault(rd) and want.startswith("o") and ort_fehlt(rd, dict(story, ort_id=want)):
         print("dungeon: karte | verworfen | nicht erzaehlt", flush=True)   # the narration tells another place: the group stays

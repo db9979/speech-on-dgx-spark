@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.163** KI-Dungeon-Master: im Kampf zieht die Gruppe nicht weiter (nur nach gelungener Flucht), nach dem Weg fragen, das Schwert ziehen oder eine Tür aufbrechen ist kein Gehen mehr, und die Gruppe zieht nur, wenn die Mehrheit gehen will und keiner bleibt
 - **V01.1.162** KI-Dungeon-Master: in einer Welt nie Wirt und Wirtin zugleich, ein Szenenbild erkennt Namen nur als ganzes Wort
 - **V01.1.161** KI-Dungeon-Master: Berufe in männlicher und weiblicher Form, keine Bord-KI als Beruf, Aussehen nur noch Äußeres (NSC-Tabellen)
 - **V01.1.160** Einstellungen: Text neben einem Feld wird nie mehr schmal gedrückt, „Zeitserver im Heimnetz“ unter Betrieb stand Wort für Wort untereinander, jetzt rückt ein Feld unter den Text, wenn daneben weniger als etwa 180 px blieben, auch bei 820 px Fensterbreite neben beiden Menüs (Sprachausgabe, Sprachmodell, Vorgaben, Stimmen), und kein Auswahlfeld ragt mehr aus seinem Kasten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.156** KI-Dungeon-Master: Wandernde Personen und kleine Gesten (zwei Schalter, aus), bei langer Rast ziehen Personen der Karte nach festen Regeln zu ihrem Ziel oder dem Ort ihres Berufs weiter und man hört es als Gerücht, beim Warten zeigt eine Person der Szene eine feste Geste nach ihrem Wesen (LlamaTale-Ideen 6 und 7)
 - **V01.1.155** KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
 - **V01.1.154** KI-Dungeon-Master: Gedanken lesen (Schalter, aus), mit dem Zauber oder dem Trank würfelt das Panel eine Intelligenz-Probe, nur der lesende Spieler sieht Wunsch, Geheimnis und Haltung der Person, der Erzähler erzählt nur das Lauschen (LlamaTale-Idee 5)
-- **V01.1.153** KI-Dungeon-Master: Runen-Katalog mit 13 Runen und 7 Runenwörtern, geprüft nach festen Regeln (Runen und Sockel, Teil Daten)
 
 
 

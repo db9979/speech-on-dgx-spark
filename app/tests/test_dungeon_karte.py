@@ -208,6 +208,61 @@ class Moves(unittest.TestCase):
         self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
         self.assertEqual(k["hier"], j)
 
+    def test_going_takes_a_going_sentence_and_the_majority(self):
+        """Dungeon-Review 2026-10-27 Paket 5 (E4/T6, Dominik „ok“): asking the way, drawing a sword, breaking a door
+        open, reading on is no going; the group goes only when more than half of the acting seats want to go and nobody
+        stays; asked_ways forces no way then, the narrator hears who stays."""
+        k = self.k
+        start, j = k["hier"], K._nb(k)[k["hier"]][0]
+        z = K._ziele(self.r, self.rd)
+        d = K._dir((k["orte"][start]["x"], k["orte"][start]["y"]), (k["orte"][j]["x"], k["orte"][j]["y"]), 0)
+        for still in ("Ich frage den Wirt nach dem Weg zur Burg.", "Ich ziehe mein Schwert.", "Ich breche die Tür auf.",
+                      "Ich reinige mein Schwert.", "Ich lese weiter.", "Wir suchen den Weg.", "Ich schaue mich um."):
+            self.assertFalse(K.geht(still, z), still)
+        for go in ("Wir ziehen weiter.", "Wir brechen auf.", f"Ab nach {d}!", "Weitergehen!", f"Wir ziehen nach {d}.",
+                   "Ich frage den Wirt nach dem Weg. Dann gehe ich los.", f"Wir gehen weiter zu „{k['orte'][j]['name']}“.",
+                   "Ich komme mit.", "Lio, komm mit uns!", "We head out."):
+            self.assertTrue(K.geht(go, z), go)
+        lio = self.rd["plaetze"]["pb"]["held"]["name"]
+        self.rd["plaetze"]["pc"] = {"held": dict(self.rd["plaetze"]["pb"]["held"], name="Bela"), "made": 3}
+        way = f"Ich gehe nach {k['orte'][j]['name']}."
+        self.rd["offen"] = {"pa": {"text": way}, "pb": {"text": "Ich untersuche die Truhe."}, "pc": {"text": "Ich summe ein Lied."}}
+        self.assertEqual(K.gruppe(self.r, self.rd), {"gehen": ["pa"], "bleiben": ["pb", "pc"], "zieht": False})   # one of three
+        self.assertEqual(K.asked_ways(self.rd), {})
+        self.assertEqual(K.facts(self.r, self.rd)["bleibt"], [lio, "Bela"])
+        self.assertFalse(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], start)
+        self.rd["offen"]["pb"] = {"text": "Ich komme mit."}                                          # two of three
+        self.assertTrue(K.gruppe(self.r, self.rd)["zieht"])
+        self.assertEqual(K.asked_ways(self.rd), {"pa": j})
+        self.assertNotIn("bleibt", K.facts(self.r, self.rd))
+        self.rd["offen"]["pc"] = {"text": "Ich bleibe in der Schenke."}                              # nobody is pulled along
+        self.assertFalse(K.gruppe(self.r, self.rd)["zieht"])
+        self.assertEqual(K.facts(self.r, self.rd)["bleibt"], ["Bela"])
+        self.assertFalse(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], start)
+        self.rd["offen"] = {"pa": {"text": way}, "pb": {"text": "Wir ziehen weiter."}, "pc": {"text": "Ich folge euch."}}
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], j)
+
+    def test_the_fight_holds_the_group(self):
+        """Dungeon-Review 2026-10-27 Paket 3 (T3): while a fight stands nobody moves, no encounter on the way; the table
+        hears it once, the narrator too; a flight that worked (rd["kampf"]["entkommen"]) frees the group."""
+        k = self.k
+        start, j = k["hier"], K._nb(k)[k["hier"]][0]
+        self.rd["kampf"] = {"gegner": [{"k": "g1", "name": "Wolf", "leben": 5}]}
+        self.rd["offen"] = {"pa": {"text": f"Wir gehen weiter zu „{k['orte'][j]['name']}“."}}
+        with mock.patch.object(K, "on_the_way") as weg, mock.patch("builtins.print") as out:
+            self.assertFalse(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        weg.assert_not_called()
+        self.assertEqual(k["hier"], start)
+        self.assertIn("dungeon: karte | verworfen | kampf", [c.args[0] for c in out.call_args_list])
+        self.assertIn("Ihr steckt im Kampf", self.rd["log"][-1]["text"][0])
+        self.assertEqual(K.facts(self.r, self.rd)["festgehalten"], "im Kampf")
+        self.rd["kampf"]["entkommen"] = True
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
+        self.assertEqual(k["hier"], j)
+
     def test_a_move_the_narration_does_not_tell_stays(self):
         """Dominik 2026-10-25 („laut karte und fahne aber in wolfshafen“), the main thread's wish: a narration that does
         not name the place of its ort_id tells another place than the map; ort_fehlt names it for the narrator's
