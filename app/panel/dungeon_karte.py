@@ -782,9 +782,14 @@ def ort_fehlt(rd, story):
     return name
 
 
+def _said_by(rd):
+    """This turn's actions as (pid, one plain string of words) (pure)."""
+    return [(pid, " " + " ".join(_words(a.get("text"))) + " ") for pid, a in (rd.get("offen") or {}).items() if isinstance(a, dict)]
+
+
 def _said(rd):
     """This turn's actions, each as one plain string of words (pure)."""
-    return [" " + " ".join(_words(a.get("text"))) + " " for a in (rd.get("offen") or {}).values() if isinstance(a, dict)]
+    return [w for _, w in _said_by(rd)]
 
 
 def _move_asked(r, rd):
@@ -820,6 +825,28 @@ def _switch(key, rd):
     return key in features.BY_KEY and bool(rd.get("owner")) and features.allowed(key, rd["owner"])
 
 
+def _wants(name, said):
+    """What the open actions want of this person: ("bleib", None) with a word of BLEIB, ("mit", pid) with a word of
+    MIT (the first seat asking), else (None, None)."""
+    hits = [(pid, w) for pid, w in said if _names(name, w.split()) or set(_words(name)) & set(w.split())]
+    if any(f" {x}" in w for _, w in hits for x in BLEIB):
+        return "bleib", None
+    go = next((pid for pid, w in hits if any(f" {x}" in w for x in MIT)), None)
+    return ("mit", go) if go is not None else (None, None)
+
+
+def fragen(rd):
+    """Pure: [(name, pid)] of the map's people not along whom a seat's open action asks along with a word of MIT, for
+    the main thread's Charisma check before the narration (LlamaTale idea 4); the same words as _people."""
+    said = _said_by(rd)
+    out = []
+    for name, p in ((rd.get("karte") or {}).get("leute") or {}).items():
+        was, pid = _wants(name, said)
+        if was == "mit" and not p.get("mit"):
+            out.append((name, pid))
+    return out
+
+
 def _people(rd, story):
     """Who the group meets stays at that place (k["leute"]: name → place index, mit): a new name of the narration's
     npc is put where the group is; one comes along when an action names them with a word of MIT, and stays when an
@@ -833,20 +860,18 @@ def _people(rd, story):
         if name and name not in le:
             le[name] = {"ort": k["hier"], "mit": False}
     asks = _switch(MITKOMMEN, rd)
-    said = [(pid, " " + " ".join(_words(a.get("text"))) + " ") for pid, a in (rd.get("offen") or {}).items() if isinstance(a, dict)]
+    said = _said_by(rd)
     for name, p in le.items():
-        hits = [(pid, w) for pid, w in said if _names(name, w.split()) or set(_words(name)) & set(w.split())]
-        if any(f" {x}" in w for _, w in hits for x in BLEIB):
+        was, go = _wants(name, said)
+        if was == "bleib":
             p["mit"] = False
             p["ort"] = k["hier"]
             p.pop("fragt", None)
-        else:
-            go = next((pid for pid, w in hits if any(f" {x}" in w for x in MIT)), None)
-            if go is not None and not p["mit"] and asks:
-                p["fragt"] = go
-                print("dungeon: karte | mitkommen | gefragt", flush=True)
-            elif go is not None:
-                p["mit"] = True
+        elif go is not None and not p["mit"] and asks:
+            p["fragt"] = go
+            print("dungeon: karte | mitkommen | gefragt", flush=True)
+        elif go is not None:
+            p["mit"] = True
         if p["mit"]:
             p["ort"] = k["hier"]
     while len(le) > LEUTE_MAX:

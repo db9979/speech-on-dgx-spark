@@ -233,7 +233,7 @@ class Moves(unittest.TestCase):
     def test_asked_along_and_people_on_the_move(self):
         """LlamaTale ideas 4 and 6 (Dominik 2026-10-27 „1-7“): with the main thread's switch dungeonmitkommen a word of
         MIT only asks (fragt = the seat), mitnehmen answers and clears it; without the switch (or before it exists)
-        MIT takes the person along as before. wandern moves a person with a goal (dungeon_nsc.ziel_ort) one way along
+        MIT takes the person along as before; fragen tells the same asks before the narration, pure. wandern moves a person with a goal (dungeon_nsc.ziel_ort) one way along
         the map towards it, never one travelling along, never without a way."""
         import dungeon_nsc
         import features
@@ -243,7 +243,10 @@ class Moves(unittest.TestCase):
         K.step(self.r, self.rd, self.story("", npc=[{"name": "Mara", "sagt": "Hallo"}, {"name": "Brom", "sagt": "Na"}]), {}, random.Random(1))
         self.assertFalse(K._switch("gibtsnicht", self.rd))                                    # a missing switch is off
         with mock.patch.object(K, "_switch", lambda key, rd: key == K.MITKOMMEN):
-            self.rd["offen"] = {"pb": {"text": "Mara, komm mit uns!"}}
+            self.rd["offen"] = {"pb": {"text": "Mara, komm mit uns!"}, "pa": {"text": "Brom, bleib hier."}}
+            before = json.dumps(self.rd, sort_keys=True)
+            self.assertEqual(K.fragen(self.rd), [("Mara", "pb")])                                   # before the story
+            self.assertEqual(json.dumps(self.rd, sort_keys=True), before)                           # pure
             K._people(self.rd, {})
             self.assertEqual((k["leute"]["Mara"]["mit"], k["leute"]["Mara"]["fragt"]), (False, "pb"))   # only asked
             self.assertTrue(K.mitnehmen(self.rd, "Mara", False))
@@ -253,6 +256,7 @@ class Moves(unittest.TestCase):
             K._people(self.rd, {})
             self.assertTrue(K.mitnehmen(self.rd, "Mara", True))
             self.assertEqual((k["leute"]["Mara"]["mit"], "fragt" in k["leute"]["Mara"]), (True, False))
+            self.assertEqual(K.fragen(self.rd), [])                                                  # along already
         self.rd["offen"] = {"pa": {"text": "Brom, kommt mit!"}}
         K._people(self.rd, {})
         self.assertTrue(k["leute"]["Brom"]["mit"])                                                   # switch off: as before

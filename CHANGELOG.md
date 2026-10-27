@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.158** · 2026-10-27 · KI-Dungeon-Master: die Karte sagt schon vor der Erzählung, wen eine Aktion zum Mitkommen fragt, damit das Panel die Charisma-Probe vorher würfeln kann (LlamaTale 4)
 - **V01.1.157** · 2026-10-27 · KI-Dungeon-Master: Heldenbuch kommt auch auf langsamer Leitung an (ReadTimeout beim Senden), Bilder als JPEG und je Buch nur einmal gebaut (mit 60 Bildern unter 2 MB statt einige MB), Hochladen aufs reMarkable mit Wartezeit nach Dateigröße und einem zweiten Versuch, „Jetzt schicken“ arbeitet im Hintergrund mit Status, Log nennt den Schritt; Buch und Notizen liegen im eigenen Ordner „Dungeon-Master“
 - **V01.1.156** · 2026-10-27 · KI-Dungeon-Master: Wandernde Personen und kleine Gesten (zwei Schalter, aus), bei langer Rast ziehen Personen der Karte nach festen Regeln zu ihrem Ziel oder dem Ort ihres Berufs weiter und man hört es als Gerücht, beim Warten zeigt eine Person der Szene eine feste Geste nach ihrem Wesen (LlamaTale-Ideen 6 und 7)
 - **V01.1.155** · 2026-10-27 · KI-Dungeon-Master: Aufträge von Personen (Schalter, aus), wer eine Person nach Arbeit fragt, bekommt vom Panel einen Auftrag (bringen, reden, besiegen) mit Lohn, Erfahrung und zwei Spuren, erfüllt nur durch Übergabe, Gespräch oder Sieg, der Erzähler erzählt nur Grund und Dank (LlamaTale-Idee 2)
@@ -15,7 +16,7 @@ Every version in one line, newest first (taken from the commit messages, so some
 - **V01.1.147** · 2026-10-27 · Tests prüfen nur Textfelder statt Zeitstempel und Zufalls-IDs (Telefon, Pebble, Vorwärmen)
 - **V01.1.146** · 2026-10-27 · KI-Dungeon-Master: 76 Nacht-Gegner im Bestiarium (Untote, Werwesen, Nachttiere, Lauerer im Dunkeln), in jeder Welt mindestens 5 für Stufe 1 bis 3 (Daten, LlamaTale 1)
 - **V01.1.145** · 2026-10-27 · KI-Dungeon-Master: Tageszeit vom Panel, Morgen, Tag, Abend und Nacht nach Kalender und Zügen statt vom Modell, nachts haben Läden zu, ohne Licht würfelt man draußen im Dunkeln mit Nachteil, und nachts kommen Gegner der Nacht
-- **V01.1.144** · 2026-10-25 · KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
+- **V01.1.144** · 2026-10-27 · KI-Dungeon-Master: die Karte merkt sich, wer eine Person zum Mitkommen fragt, und lässt Personen mit Ziel über die Wege wandern (Teil der Karte für LlamaTale 4 und 6)
 - **V01.1.143** · 2026-10-27 · KI-Dungeon-Master: Heldenbuch aufs reMarkable (Schalter, aus), je Held ein Buch im Format des eigenen Geräts mit Heldenbogen, Chronik, Personen, Bestiarium und Gegenständen, auf Paper Pro und Move in Farbe, rm2 in Graustufen, von selbst nach dem Abend und auf „Jetzt schicken“, Farbe oder Graustufen unter Ich → reMarkable
 - **V01.1.142** · 2026-10-27 · KI-Dungeon-Master: Kampf-Audit Welle 2, Zauber mit Rettungswurf würfelt jetzt der Gegner (halber Schaden, Zustände wie liegend oder bewusstlos), Schlaf und Person festhalten wirken im Kampf, Heilende Hände heilt einen Freund mit Namen, und Zustände der Gegner nehmen den SG des Bestiariums
 - **V01.1.141** · 2026-10-27 · Pebble-Test unabhängig von der Uhrzeit (festes „jetzt“)
