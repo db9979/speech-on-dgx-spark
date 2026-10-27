@@ -135,6 +135,7 @@ import dungeon_buch as heldenbuch
 import dungeon_tageszeit as tageszeit
 import dungeon_anleiten as anleiten
 import dungeon_zeugen as zeugen
+import dungeon_gedanken as gedanken
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_rueckfrage as rueckfrage
@@ -1328,6 +1329,8 @@ def fix_hero(r, h):
     for x in h["segen"]:
         if not (isinstance(x.get("k"), str) and 0 < len(x["k"]) <= 40):
             x.pop("k", None)              # the caster whose concentration holds it (Kampf-Audit M3)
+        if not (isinstance(x.get("q"), str) and x["q"] in _by(r, "gegenstaende")):
+            x.pop("q", None)              # the spell or potion it comes from (dungeon_gedanken)
     ro = h.get("rolle")                   # a scroll's attack spell for the next attack (Kampf-Audit M4)
     c = _by(r, "gegenstaende").get(ro.get("id")) if isinstance(ro, dict) else None
     if not (c and c["art"] == "zauber" and c.get("schaden_art") and _int(ro.get("bis"), 0, 10 ** 6)):
@@ -1403,10 +1406,11 @@ def total(r, h, wert):
     return v + (1 if (h.get("lehre") or {}).get("wert") == wert else 0)     # a lesson in a settlement (dungeon_gold)
 
 
-def bless(h, sg, name, k=None):
+def bless(h, sg, name, k=None, q=None):
     """A blessing of a potion or spell: its bonus for the next turns (the newest SEGEN_MAX count). The same blessing
-    again renews it; k: the hero whose spell it is (its concentration, _cast)."""
-    neu = {"wert": sg["wert"], "bonus": sg["bonus"], "zuege": sg["zuege"], "von": name[:40], **({"k": k} if k else {})}
+    again renews it; k: the hero whose spell it is (its concentration, _cast); q: the catalog id of the spell or potion
+    (dungeon_gedanken reads minds while one of its QUELLEN blesses)."""
+    neu = {"wert": sg["wert"], "bonus": sg["bonus"], "zuege": sg["zuege"], "von": name[:40], **({"k": k} if k else {}), **({"q": q} if q else {})}
     alt = [x for x in h.get("segen") or [] if (x["wert"], x.get("von")) != (neu["wert"], neu["von"])]
     h["segen"] = (alt + [neu])[-SEGEN_MAX:]
 
@@ -3355,7 +3359,7 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang))).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang))).rstrip()
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
@@ -3538,7 +3542,8 @@ def roll(r, rd, proben, rng=None, hand=None):
             extra["hilfe"] = von
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
                     "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, "wofuer": p.get("wofuer", ""), **extra,
-                    **({"frieden": True} if p.get("frieden") else {}), **({"flucht": True} if p.get("flucht") else {})})
+                    **({"frieden": True} if p.get("frieden") else {}), **({"flucht": True} if p.get("flucht") else {}),
+                    **({"gedanken": p["gedanken"]} if p.get("gedanken") else {})})
     return helfen.group(out) if helfen.on(rd) else out     # Gruppenprobe: half of the group passing is enough
 
 
@@ -3998,6 +4003,7 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
     rd["_moment"] = moment_of(rd, wuerfe, hits)      # only on this copy: the narration's length (erz_max)
     print(f"dungeon: laenge | {rd['_moment'] or 'normal'} | {erz_max(rd)}", flush=True)
     rd["_zeugen"] = zeugen.seen(_me, r, rd, wuerfe)     # only on this copy: deeds in front of witnesses (LlamaTale idea 3)
+    rd["_gedanken"] = any(w.get("gedanken") for w in wuerfe)   # only on this copy: a mind read, never told (LlamaTale idea 5)
     story, best, extra, drop, tries = None, None, "", 0, []
     for n in range(3):                    # a second try when the first fails the checks (erz.judge: one rewrite),
         if n == 2 and not (best and best[1] in erz.HART):   # a third only for a hard one (erz.HART)
@@ -4051,6 +4057,7 @@ async def run_turn(rid, turn):
             proben, hits = kampf.attacks(_me, r, rd, proben, hand=hand, skip={x["pid"] for x in wirft + nutzt})
             proben = kampf.peace(_me, r, rd, proben, hits)    # a hero asking for peace: the panel's check (Kampf-Audit 3)
             proben = kampf.escape(_me, r, rd, proben, hits)   # most of the group flees: the panel's check (Kampf-Audit M6)
+            proben = gedanken.checks(_me, r, rd, proben)       # a hero reads a person's mind: the panel's check (LlamaTale idea 5)
             hits = wirft + hits
             hits += gefaehrte.attacks(_me, r, rd, hits)       # the companions strike by the panel's dice (round 2, idea 9)
             wuerfe = roll(r, rd, proben, hand=hand)
@@ -4088,6 +4095,7 @@ async def run_turn(rid, turn):
                 if story:
                     erz.learn_people(cur, story)
                     story["nsc"] = zeugen.drop(story.get("nsc"), zeugen.apply(_me, cur, story.get("zeugen")))   # LlamaTale idea 3
+                    gedanken.apply(_me, cur, [w for w in wuerfe if w["pid"] in seats])   # the thoughts only for that seat (LlamaTale idea 5)
                     nsc.learn(_me, r, cur, story, turn)     # cards, attitudes, relations, the chronicle (Tabletop-Punkt 5)
                     fraktionen.learn(_me, cur, story)       # the factions' clocks (Tabletop-Punkt 7)
                     quest.learn(_me, r, cur, story, take)   # quest things taken, found, dropped, the act's thing (Punkt 15)
@@ -5424,6 +5432,7 @@ def view(rid, pid, now=None):
     out["wunsch"] = wunsch.view(_me, r, rd, pid, host)          # the own heart's wish; the host every seat's (round 2, idea 7)
     out["gefaehrten"] = gefaehrte.view(_me, rd)                  # the hired companions (round 2, idea 9)
     out["fluestern"] = fluestern.view(rd, pid, host)            # the own whispers; the host only that and with whom (round 2, idea 5)
+    out["gedanken"] = gedanken.view(rd, pid, host)              # the thoughts the own hero read; the host only whose (LlamaTale idea 5)
     out["kalender"] = kalender.view(r, rd)                     # the world's date on top of the table (D&D idea 6)
     out["tageszeit"] = tageszeit.view(rd)                      # the panel's time of day (LlamaTale idea 1)
     out["fremd"] = sprachen.view(rd, pid, host)                # the meaning of a people's tongue, only who understands it (D&D idea 7)
@@ -5496,7 +5505,7 @@ def _cast(r, rd, pid, h, c, bonus, name, an=None):
             heal(x, c["heilung"] + bonus)
             stood_up(rd, xp, x, was)
         if c.get("segen"):
-            bless(x, c["segen"], name, pid)
+            bless(x, c["segen"], name, pid, c["id"])
     _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe", satz=c["satz"][1 if rd["lang"] == "en" else 0])
 
 
@@ -5580,7 +5589,7 @@ def hero_act(rid, pid, b):
                 _log(rd, "folge", pid=zid, name=z["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=z["leben"])
                 stood_up(rd, zid, z, was0)
             if c.get("segen"):
-                bless(z, c["segen"], item_view(r, it, rd["lang"])["name"])
+                bless(z, c["segen"], item_view(r, it, rd["lang"])["name"], q=c["id"])
             if c.get("widerstand"):
                 shield(z, c["widerstand"], item_view(r, it, rd["lang"])["name"])
                 print(f"dungeon: schutz | trank | {len(c['widerstand'])} arten", flush=True)

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.154** AI Dungeon Master: read thoughts (switch, off), with the spell or the potion the panel rolls an Intelligence check, only the reading player sees the person's wish, secret and attitude, the narrator only tells the listening (LlamaTale idea 5)
 - **V01.1.153** AI Dungeon Master: rune catalog with 13 runes and 7 runewords, checked by fixed rules (runes and sockets, data part)
 - **V01.1.152** AI Dungeon Master: witness rule (switch, off), what a hero does in front of people of the scene changes their attitude by a fixed table, attack and theft target −2 and everyone present −1, gift and help target +1, a successful theft stays unseen, the narrator only shows the reaction (LlamaTale idea 3)
 - **V01.1.151** AI Dungeon Master: guide the players step 3, a narration with fewer than two points to take up or an empty question such as "What do you do?" is told again once, 👎 reason "Did not know what we could do" and bench scene "Sackgasse", plus a stall hint in three stages, another way after a failed search and step 5, two to three clues per act to the turning point in all 50 stories that the narrator shows one by one
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.147** Tests without chance: the phone, Pebble and warm-up tests check only text fields, not timestamps, random ids or sealed values that may hold a digit string by chance
 - **V01.1.146** AI Dungeon Master: 76 night foes in the bestiary, at night come undead, lycanthropes and night beasts (LlamaTale 1)
 - **V01.1.145** AI Dungeon Master: time of day by the panel, morning, day, evening and night by calendar and turns instead of the model, at night the shops are shut, without a light you roll outdoors in the dark at a disadvantage, and at night foes of the night come
-- **V01.1.144** AI Dungeon Master: the map remembers who asks a person to come along and lets people with a goal wander along the ways (the map's part of LlamaTale 4 and 6)
 
 
 

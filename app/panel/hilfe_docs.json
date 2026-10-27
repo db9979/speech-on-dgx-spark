@@ -5877,6 +5877,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gedanken lesen (V01.1.154, LlamaTale-Idee 5, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Gedanken lesen* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung prüft dungeon_gedanken.checks jede offene Aktion: wirkt sie in diesem Zug den Zauber gedanken_lesen (kraft aus check_powers) oder hat der Held noch den Segen des Zaubers oder des Tranks gedankentrank (Segen mit q aus QUELLEN, dungeon.bless merkt sich dafür die Katalog-Id) und ein Wort aus LESEN, und nennt sie eine Person der Szene (dungeon_nsc.scene, dungeon_nsc.named), würfelt das Panel eine Intelligenz-Probe statt der Proben des Modells für diesen Platz; die Schwierigkeit kommt aus der Haltung der Person zum Helden (SG: feindlich 15, neutral 13, zugeneigt 11). Die Erzählung bekommt die Probe als Beleg und nur in diesem Zug die Aufgabe, allein das Lauschen zu erzählen, nie den Inhalt: das Modell schreibt keine Zeile dafür, so kann das Geheimnis nicht über die Erzählung an den Tisch. Nach der Erzählung schreibt gedanken.apply eine feste Zeile aus der Karte der Perso"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n (Wunsch, Geheimnis, Haltung zum Helden) nach rd[\"gedanken\"][pid], misslungen „… verschließt die Gedanken vor dir.“. Nur dieser Platz sieht die Zeile (gedanken.view), der Gastgeber nur, wer wessen Gedanken las; neues Geheimnis gedanken in dungeon_sicht.GEHEIM. Im Auto wird die Zeile nie vorgelesen, weil dort andere mithören können. Logs dungeon: gedanken | probe, | gelesen, | verschlossen, | kein ziel. Live-Übersicht: wie oft Gedanken lesen, gelesen, verschlossen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Zeugen-Regel (V01.1.152, LlamaTale-Idee 3, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Zeugen-Regel* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung liest dungeon_zeugen.seen jede offene Aktion: ein Angriff nach dungeon_kampf.intent, Diebstahl, Geschenk oder Hilfe nach den festen Wortlisten TATEN, dazu eine Person der Szene (dungeon_nsc.scene) mit ganzem Namen oder letztem Namenswort. Die feste Tabelle FOLGE gibt die Schritte: Angriff und Diebstahl Ziel −2, alle anderen Anwesenden −1; Geschenk und Hilfe Ziel +1. Ein Diebstahl, dessen Geschick-Probe in diesem Zug gelingt, bleibt unbemerkt; ein Angriff auf einen Gegner des laufenden Kampfes ist keine Tat. Die Erzählung bekommt die Taten und die neue Haltung als Daten (zeugen, dazu eine Aufgabe nur in diesem Zug) und erzählt nur die Reaktion. Nach der Erzählung setzt zeugen.apply die Haltung (je Person und Held einmal im Zug, in −3 bis +3), der Verlauf zeigt jede Änderung, Angriff und Diebstahl kommen mit „vor Zeugen“ in die Chronik; eine eigene Meldung des Modells für"
 },
 {
@@ -11518,6 +11534,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Zeugen-Regel (Funktionen → Meine Daten → „Zeugen-Regel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach einer festen Tabelle, nicht nach dem Modell: Greift er jemanden an oder bestiehlt ihn, sinkt die Haltung des Opfers um zwei Stufen und die aller anderen Anwesenden um eine."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Gedanken lesen (Funktionen → Meine Daten → „Gedanken lesen“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wirkt ein Held den Zauber „Gedanken lesen“ oder hat er dessen Segen oder den des „Trank des Gedankenlesens“ und will in der Aktion die Gedanken einer Person der Szene hören, würfelt das Panel eine Intelligenz-Probe statt des Modells."
 },
 {
 "lang": "de",
@@ -20829,6 +20853,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: read thoughts (V01.1.154, LlamaTale idea 5, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\", idea only, own code): Admin switch *Features → AI Dungeon Master → Read thoughts* (off; builds on \"NPC memory and chronicle\", applies to the round's host). Before the narration dungeon_gedanken.checks looks at every open action: when it casts the spell gedanken_lesen this turn (kraft from check_powers) or the hero still has the blessing of the spell or of the potion gedankentrank (a blessing with q from QUELLEN, dungeon.bless keeps the catalog id for it) and a word of LESEN, and it names a person of the scene (dungeon_nsc.scene, dungeon_nsc.named), the panel rolls an Intelligence check in place of the model's checks for that seat; how hard comes from the person's attitude towards the hero (SG: hostile 15, neutral 13, fond 11). The narration gets the check as a receipt and, only in this turn, the task to tell only the listening, never the content: the model writes no line for it, so the secret cannot reach the table through the narration. After the narration gedanken.apply writes a fixed line from the person's card (wish, secret, attitude towards the hero)"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " into rd[\"gedanken\"][pid], failed \"… shuts their thoughts away from you.\". Only this seat sees the line (gedanken.view), the host only who read whose thoughts; new secret gedanken in dungeon_sicht.GEHEIM. The car never reads the line aloud, because others may listen there. Logs dungeon: gedanken | probe, | gelesen, | verschlossen, | kein ziel. Live overview: how often thoughts were read, read, shut away."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: witness rule (V01.1.152, LlamaTale idea 3, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\", idea only, own code): Admin switch *Features → AI Dungeon Master → Witness rule* (off; builds on \"NPC memory and chronicle\", applies to the round's host). Before the narration dungeon_zeugen.seen reads every open action: an attack by dungeon_kampf.intent, theft, a gift or help by the fixed word lists TATEN, plus a person of the scene (dungeon_nsc.scene) by its whole name or the last word of its name. The fixed table FOLGE gives the steps: attack and theft target −2, everyone else present −1; gift and help target +1. A theft whose Dexterity check passes this turn stays unseen; an attack on a foe of the running fight is no deed. The narration gets the deeds and the new attitude as data (zeugen, plus a task only in this turn) and only tells the reaction. After the narration zeugen.apply sets the attitude (once per person and hero a turn, within −3 to +3), the log shows every change, attack and theft go into the chronicle \"in front of witnesses\"; the model's own report for the same pair is dropped this turn (zeugen.drop). Logs dungeon: zeugen | diebstahl | 1 z"
 },
 {
@@ -26286,6 +26326,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Witness rule (Features → My data → \"Witness rule\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): What a hero does in front of people of the scene changes their attitude by a fixed table, not by the model: attacking or robbing someone lowers the victim's attitude by two steps and that of everyone else present by one."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Read thoughts (Features → My data → \"Read thoughts\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): When a hero casts the spell \"Read thoughts\" or still has its blessing or that of the \"Potion of mind reading\" and the action wants to hear the thoughts of a person of the scene, the panel rolls an Intelligence check instead of the model."
 },
 {
 "lang": "en",

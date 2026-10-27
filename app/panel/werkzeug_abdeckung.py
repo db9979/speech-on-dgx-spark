@@ -188,6 +188,7 @@ WITHOUT = {
     "dungeonbuch": "dungeon_buch.py: kein eigenes Werkzeug; „Schick mein Heldenbuch aufs reMarkable“ geht über remarkable_sheet (rmplus.SHEETS heldenbuch), sonst schickt das Panel nach Rundenende von selbst",
     "dungeonchronik": "dungeon_chronik.py: kein Werkzeug, das Panel schreibt die Kapitelseite aus vorhandenen Daten, das Modell schreibt nichts dafür",
     "dungeonkalender": "dungeon_kalender.py: kein Werkzeug, das Panel zählt die Tage nach festen Regeln, das Modell bekommt das Datum nur als Daten",
+    "dungeongedanken": "dungeon_gedanken.py: kein Werkzeug, das Panel würfelt die Probe und schreibt eine feste Zeile aus der Karte der Person, das Modell erzählt nur das Lauschen",
     "dungeonzeugen": "dungeon_zeugen.py: kein Werkzeug, feste Wortlisten und eine feste Tabelle ändern die Haltung der Zeugen, der Erzähler zeigt nur die Reaktion",
     "dungeonanleiten": "dungeon_anleiten.py: kein Werkzeug, feste Form für die Erzählung und Fragen an stille Spieler und Knöpfe „Das kannst du hier“ aus den Daten der Szene",
     "dungeontageszeit": "dungeon_tageszeit.py: kein Werkzeug, das Panel setzt die Tageszeit nach festen Regeln, das Modell bekommt sie nur als Daten",

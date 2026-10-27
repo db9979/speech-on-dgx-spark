@@ -315,6 +315,8 @@ FEATURES = (
     F("dungeonanleiten", "Spieler anleiten", "Guide the players", "data", ("dungeon_anleiten",), parent="dungeon", me="dmbox", guide="dungeonanleiten"),
     # Zeugen-Regel (dungeon_zeugen.py, LlamaTale idea 3): deeds in front of people change their attitude by a fixed table
     F("dungeonzeugen", "Zeugen-Regel", "Witness rule", "data", ("dungeon_zeugen",), parent="dungeon", me="dmbox", guide="dungeonzeugen"),
+    # Gedanken lesen (dungeon_gedanken.py, LlamaTale idea 5): the panel's check, the thoughts only for the reading seat
+    F("dungeongedanken", "Gedanken lesen", "Read thoughts", "data", ("dungeon_gedanken",), parent="dungeon", me="dmbox", guide="dungeongedanken"),
     # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
     F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
     # Heldenbuch aufs reMarkable (dungeon_buch.py): one book per hero as a PDF in the device's format, needs rmsend (READY)

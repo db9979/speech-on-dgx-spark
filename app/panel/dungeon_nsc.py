@@ -20,6 +20,7 @@ and, only as data, into the next narration. Only while „NSC-Gedächtnis und Ch
     rd["chronik"] [{"n": turn, "k": chapter, "t": [de, en]}]
 """
 import random
+import re
 
 import dungeon_tabellen as tabellen
 
@@ -184,6 +185,14 @@ def scene(rd):
             low = str(e.get("text", "")).lower()
             near |= {n for n in ns if n in low}
     return [n for n in ns if n in near]
+
+
+def named(x, low):
+    """Whether a lower-case action names a person: its whole name, or its last word of three letters or more, also with
+    the genitive s („Oskars“, „Oskar's“)."""
+    name = x["name"].lower()
+    last = name.split()[-1] if name.split() else ""
+    return any(re.search(r"(?<!\w)" + re.escape(n) + r"(?:s|['’]s)?(?!\w)", low) for n in {name, last} if len(n) >= 3)
 
 
 def word(v, li):

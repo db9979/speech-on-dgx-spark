@@ -8557,6 +8557,85 @@ class Fight(Turns):
         t = zg.for_live()
         self.assertTrue(t["taten"] >= 2 and t["zeugen"] >= 1 and t["unbemerkt"] >= 1, t)
 
+    def test_a_mind_read_only_for_the_reader(self):
+        """LlamaTale idea 5 (Dominik 2026-10-27 „1-7“, switch dungeongedanken): a hero who casts „Gedanken lesen“ this turn,
+        or still has its blessing or the potion's and asks for thoughts, on a person of the scene by name, rolls the
+        panel's Intelligenz check (how hard by the person's attitude) in place of the model's; passed, only that seat
+        sees a fixed line with the person's wish, secret and attitude, failed that it shut its thoughts away; the host
+        sees only whose thoughts were read, the guest's seat nothing, the narration only the task to tell the listening
+        and never the secret; off nothing."""
+        import dungeon_gedanken as gd
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_gedanken")
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        helpers.set_config(dungeon_nsc=True)
+        self.spawned.clear()
+        self.act_all("Wir betreten die Schenke.")
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen.", "frage_an": "", "nsc": []}])
+        r = dungeon.rules()
+        with dungeon._lock:                          # the person's card as the panel rolled it, with a known secret
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd["nsc"]["oskar"]["karte"].update(wunsch=["Ein ruhiges Leben", "A quiet life"], geheimnis=["Er schuldet der Gilde Gold", "He owes the guild gold"])
+            rd["nsc"]["oskar"]["haltung"] = {"arvid": -1}
+            dungeon._write(d)
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        model = [{"pid": self.host, "wert": "charisma", "schwer": 10, "vt": "", "wofuer": "reden"}]
+        rd["offen"] = {self.host: {"text": "Ich wirke Gedanken lesen auf Oskar.", "t": 0, "kraft": "gedanken_lesen"},
+                       self.gp: {"text": "Ich lausche Oskars Gedanken.", "t": 0}}
+        self.assertEqual(gd.checks(dungeon, r, rd, model), model)                     # off
+        helpers.set_config(dungeon_gedanken=True)
+        p = gd.checks(dungeon, r, rd, model)
+        self.assertEqual([(x["pid"], x["wert"], x["schwer"], x.get("gedanken")) for x in p], [(self.host, "intelligenz", 15, "oskar")])
+        self.assertEqual(gd.hard({"haltung": {"arvid": 2}}, "arvid"), 11)
+        self.assertEqual(gd.hard({"haltung": {}}, "arvid"), 13)
+        rd["offen"][self.host] = {"text": "Ich lausche Oskars Gedanken.", "t": 0}            # no spell, no blessing: no check
+        self.assertEqual(gd.checks(dungeon, r, rd, []), [])
+        h["segen"] = [{"wert": "intelligenz", "bonus": 3, "zuege": 2, "von": "Trank", "q": "gedankentrank"}]
+        self.assertEqual(len(gd.checks(dungeon, r, rd, [])), 1)                        # the potion's blessing still on
+        rd["offen"][self.host] = {"text": "Ich trinke ein Bier mit Oskar.", "t": 0}         # no word of reading
+        self.assertEqual(gd.checks(dungeon, r, rd, []), [])
+        dungeon.bless(h, {"wert": "intelligenz", "bonus": 3, "zuege": 2}, "Gedanken lesen", self.host, "gedanken_lesen")
+        self.assertEqual(h["segen"][-1]["q"], "gedanken_lesen")
+        w = dungeon.roll(r, rd, p, rng=mock.Mock(randint=lambda a, b: 20))
+        self.assertEqual((w[0]["gedanken"], w[0]["ok"]), ("oskar", True))
+        # the whole turn: the check, the task without the secret, the line only for the reader
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["plaetze"][self.host]["held"]["segen"] = [{"wert": "intelligenz", "bonus": 3, "zuege": 2, "von": "Trank", "q": "gedankentrank"}]
+            dungeon._write(d)
+        self.spawned.clear()
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich lausche Oskars Gedanken.", "zug": rd["zug"]}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich schaue mich um.", "zug": rd["zug"]}).status_code, 200)
+        seen = []
+        real = dungeon.system_text
+
+        def system(r, rd, *a, **k):
+            seen.append(real(r, rd, *a, **k) + dungeon.facts(r, rd))
+            return seen[-1]
+        with mock.patch("dungeon.system_text", system), mock.patch("dungeon.random.randint", lambda a, b: 20), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, {"erzaehlung": "Arvid lauscht still, Oskar wischt weiter den Tresen.", "frage_an": "", "nsc": []}])
+        self.assertIn("dungeon: gedanken | probe", out.getvalue())
+        self.assertIn("dungeon: gedanken | gelesen", out.getvalue())
+        self.assertTrue(any("Gedanken lesen" in x and "nie, was die" in x for x in seen))
+        mine = rd["gedanken"][self.host]
+        self.assertEqual(mine[-1]["zeile"][0], "Oskar denkt: Wunsch: Ein ruhiges Leben. Verbirgt: Er schuldet der Gilde Gold. Dir gegenüber: misstrauisch.")
+        hv, gv = dungeon.view(self.rid, self.host), dungeon.view(self.rid, self.gp)
+        self.assertIn("Er schuldet der Gilde Gold", json.dumps(hv["gedanken"], ensure_ascii=False))
+        self.assertEqual(gv["gedanken"], {"meine": []})
+        self.assertNotIn("schuldet der Gilde", json.dumps(gv, ensure_ascii=False))
+        gd.apply(dungeon, rd, [{"pid": self.gp, "ok": False, "gedanken": "oskar"}])          # failed: shut away, the host sees whose
+        self.assertEqual(rd["gedanken"][self.gp][-1]["zeile"][0], "Oskar verschließt die Gedanken vor dir.")
+        self.assertEqual([x["nsc"] for x in gd.view(rd, self.host, True)["andere"]], ["Oskar"])
+        self.assertNotIn("zeile", gd.view(rd, self.host, True)["andere"][0])
+        t = gd.for_live()
+        self.assertTrue(t["versuche"] >= 1 and t["gelesen"] >= 1 and t["verschlossen"] >= 1, t)
+
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
         every person has six traits from −3 to +3 and a goal on three levels (today 2 steps, soon 4 from the truth's

@@ -1443,6 +1443,11 @@ def snapshot(view="admin", now=None):
         dgn["zeugen"] = dungeon_zeugen.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["zeugen"] = {}
+    try:   # Gedanken lesen (dungeon_gedanken.py): numbers on the game's line
+        import dungeon_gedanken
+        dgn["gedanken"] = dungeon_gedanken.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["gedanken"] = {}
     try:   # Spieler anleiten (dungeon_anleiten.py): numbers on the game's line
         import dungeon_anleiten
         dgn["anleiten"] = dungeon_anleiten.for_live() if dgn.get("on") else {}
@@ -2079,6 +2084,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("tageszeit") or {}).values()) else "")
                         + (f" · heute {dgn['zeugen']['taten']} Taten vor Zeugen, {dgn['zeugen']['zeugen']} Zeugen mit neuer Haltung, {dgn['zeugen']['unbemerkt']} Diebstähle unbemerkt"
                            if any((dgn.get("zeugen") or {}).values()) else "")
+                        + (f" · heute {dgn['gedanken']['versuche']}-mal Gedanken lesen, {dgn['gedanken']['gelesen']} gelesen, {dgn['gedanken']['verschlossen']} verschlossen"
+                           if any((dgn.get("gedanken") or {}).values()) else "")
                         + (f" · heute {dgn['anleiten']['frage']} Fragen an stille Spieler aus der Szene, {dgn['anleiten']['frage_alt']}-mal zu wenig Ansatzpunkte, "
                            f"{dgn['anleiten']['zeile']} Zeilen „Das kannst du hier“, {dgn['anleiten']['genommen']} Knöpfe genommen, "
                            f"{dgn['anleiten']['weg']} Wege des Erzählers übernommen, {dgn['anleiten']['weg_verworfen']} verworfen, {dgn['anleiten'].get('vage', 0)}-mal vage neu erzählt, "

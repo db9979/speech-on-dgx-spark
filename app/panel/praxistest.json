@@ -3964,6 +3964,13 @@
 "titel": "Dungeon-Master: Zeugen-Regel",
 "text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Zeugen-Regel an. A: In einer Runde mit einer Person in der Szene (etwa Grimma) schreiben „Ich schenke Grimma einen Apfel.“: im Verlauf steht „Grimma ist … gegenüber jetzt freundlich.“, der Erzähler zeigt ihre Freude. B: Mit zwei Personen in der Szene „Ich stehle Grimma den Beutel.“: Grimma sinkt um zwei Stufen, die andere Person um eine, in der Chronik steht „… bestiehlt Grimma, vor Zeugen.“. C: Gelingt dabei eine Geschick-Probe, bleibt der Diebstahl unbemerkt (Zustand → Logs „dungeon: zeugen | diebstahl | unbemerkt“). D: Im Kampf einen Gegner angreifen: keine Zeugen-Änderung. E: Schalter aus: die Haltung ändert sich nur wie bisher über den Erzähler.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P591",
+"v": 1154,
+"titel": "Dungeon-Master: Gedanken lesen",
+"text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Gedanken lesen an. A: Mit einem Magier oder Dieb, der den Zauber hat, in einer Szene mit einer Person (etwa Oskar) schreiben „Ich wirke Gedanken lesen auf Oskar.“: der Würfel zeigt „Gedanken lesen: Oskar“ als Intelligenz-Probe. B: Gelingt sie, steht nur bei diesem Spieler unter dem Eingabefeld „🧠 Oskar denkt: Wunsch: … Verbirgt: … Dir gegenüber: …“; die Erzählung verrät den Inhalt nicht. C: Auf dem Gerät eines anderen Spielers steht die Zeile nicht; der Gastgeber sieht nur „… liest die Gedanken von Oskar.“. D: Den Trank des Gedankenlesens trinken und im nächsten Zug „Ich lausche Oskars Gedanken.“: wieder eine Probe. E: Im Auto wird die Zeile nicht vorgelesen. F: Schalter aus: der Zauber gibt nur seinen Segen auf Intelligenz.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -42,13 +42,6 @@ def on(rd):
     return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd)
 
 
-def _named(x, low):
-    """Whether an action names a person: its whole name, or its last word of three letters or more."""
-    name = x["name"].lower()
-    last = name.split()[-1] if name.split() else ""
-    return any(re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", low) for n in {name, last} if len(n) >= 3)
-
-
 def deed(text):
     """The deed of an action by the fixed word lists: angriff, diebstahl, geschenk, hilfe or ""."""
     import dungeon_kampf
@@ -76,7 +69,7 @@ def seen(dm, r, rd, wuerfe=()):
             continue
         tat = deed(a.get("text"))
         low = str(a.get("text") or "").lower()
-        ziel = next((k for k in here if _named(ns[k], low)), None)
+        ziel = next((k for k in here if nsc.named(ns[k], low)), None)
         if not tat or not ziel:
             continue
         if tat == "angriff" and ns[ziel]["name"].lower() in foes:      # a foe of the running fight: no deed
