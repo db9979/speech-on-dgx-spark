@@ -3957,6 +3957,13 @@
 "titel": "Dungeon-Master: Spieler anleiten, vage Erzählung, Stillstand und Spuren",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Spieler anleiten an. A: Eine Runde spielen: kommt eine Erzählung ohne greifbare Ansatzpunkte oder mit „Was tut ihr?“ am Ende, steht unter Zustand → Logs „dungeon: anleitung | vage“ und die Erzählung kommt neu. B: 👎 an einer Erzählung: der Grund „Wusste nicht, was wir tun können“ steht zur Wahl, mit Schalter aus nicht. C: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an, dort „Jetzt prüfen“: die Szene „Sackgasse“ ist dabei. D: Zwei Züge nur reden, ohne weiterzugehen: erst zeigt der Erzähler etwas Greifbares, dann passiert etwas, dann steht „Tipp: Ihr könnt …“ unter der Erzählung. F: Eine mitgelieferte Geschichte spielen: im Plan des Gastgebers stehen je Akt Spuren mit 🔎; taucht eine in der Erzählung auf, wird sie ✓ und im Log steht „dungeon: anleitung | spur | 1/2“. E: Eine Untersuchung misslingt: der erste Knopf im nächsten Zug ist etwa „Ich frage Grimma danach.“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P590",
+"v": 1152,
+"titel": "Dungeon-Master: Zeugen-Regel",
+"text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Zeugen-Regel an. A: In einer Runde mit einer Person in der Szene (etwa Grimma) schreiben „Ich schenke Grimma einen Apfel.“: im Verlauf steht „Grimma ist … gegenüber jetzt freundlich.“, der Erzähler zeigt ihre Freude. B: Mit zwei Personen in der Szene „Ich stehle Grimma den Beutel.“: Grimma sinkt um zwei Stufen, die andere Person um eine, in der Chronik steht „… bestiehlt Grimma, vor Zeugen.“. C: Gelingt dabei eine Geschick-Probe, bleibt der Diebstahl unbemerkt (Zustand → Logs „dungeon: zeugen | diebstahl | unbemerkt“). D: Im Kampf einen Gegner angreifen: keine Zeugen-Änderung. E: Schalter aus: die Haltung ändert sich nur wie bisher über den Erzähler.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

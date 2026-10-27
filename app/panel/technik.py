@@ -192,6 +192,7 @@ MODULE = {
     "dungeon_buch": ("dienste", "Dungeon-Master: Heldenbuch je Held als PDF im Format des reMarkable, Farbe oder Graustufen"),
     "dungeon_chronik": ("dienste", "Dungeon-Master: Chronikbuch, eine Seite je Kapitel aus den Daten der Runde, als PDF auf dem Spark"),
     "dungeon_kalender": ("dienste", "Dungeon-Master: Kalender der Welt, Monate, Monde und Feste, die Zeit läuft nur über Wege, Rasten und das Gasthaus"),
+    "dungeon_zeugen": ("dienste", "Dungeon-Master: Zeugen-Regel, Taten vor Leuten ändern ihre Haltung nach fester Tabelle"),
     "dungeon_anleiten": ("dienste", "Dungeon-Master: Spieler anleiten, Erzählung mit Ansatzpunkten, Knöpfe „Das kannst du hier“, Fragen an stille Spieler"),
     "dungeon_tageszeit": ("dienste", "Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht"),
     "dungeon_sprachen": ("dienste", "Dungeon-Master: Sprachen der Völker, fremde Laute aus den Namenssilben, die Bedeutung nur für wer die Sprache kann"),

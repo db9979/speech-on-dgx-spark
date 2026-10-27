@@ -5877,6 +5877,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Zeugen-Regel (V01.1.152, LlamaTale-Idee 3, Plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 „1-7“, nur die Idee, eigener Code): Admin-Schalter *Funktionen → KI-Dungeon-Master → Zeugen-Regel* (aus; baut auf „NSC-Gedächtnis und Chronik“, gilt für den Gastgeber der Runde). Vor der Erzählung liest dungeon_zeugen.seen jede offene Aktion: ein Angriff nach dungeon_kampf.intent, Diebstahl, Geschenk oder Hilfe nach den festen Wortlisten TATEN, dazu eine Person der Szene (dungeon_nsc.scene) mit ganzem Namen oder letztem Namenswort. Die feste Tabelle FOLGE gibt die Schritte: Angriff und Diebstahl Ziel −2, alle anderen Anwesenden −1; Geschenk und Hilfe Ziel +1. Ein Diebstahl, dessen Geschick-Probe in diesem Zug gelingt, bleibt unbemerkt; ein Angriff auf einen Gegner des laufenden Kampfes ist keine Tat. Die Erzählung bekommt die Taten und die neue Haltung als Daten (zeugen, dazu eine Aufgabe nur in diesem Zug) und erzählt nur die Reaktion. Nach der Erzählung setzt zeugen.apply die Haltung (je Person und Held einmal im Zug, in −3 bis +3), der Verlauf zeigt jede Änderung, Angriff und Diebstahl kommen mit „vor Zeugen“ in die Chronik; eine eigene Meldung des Modells für"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " dasselbe Paar fällt in diesem Zug weg (zeugen.drop). Logs dungeon: zeugen | diebstahl | 1 zeugen, dungeon: zeugen | diebstahl | unbemerkt. Live-Übersicht: Taten vor Zeugen, Zeugen mit neuer Haltung, Diebstähle unbemerkt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spieler anleiten, Schritt 3 bis 5 (V01.1.151, Plan dungeon-anleitung/plan.md Ideen 4, 12, 6 und 11): Unter demselben Schalter *Funktionen → KI-Dungeon-Master → Spieler anleiten*. Neue feste Prüfung „vage“ in erz.judge (dungeon_anleiten.vague): Nennt die Erzählung weniger als zwei Ansatzpunkte der Szene (Personen hier, Dinge in der Nähe und der Erzählung, Gegner und Requisiten im Kampf, sprechende Personen, Ziele der Wege; so viele, wie die Szene hat, wenn es weniger sind) oder endet sie mit einer leeren Frage aus HOHL („Was tut ihr?“, „Was macht ihr nun?“, „What do you do?“), schreibt der Erzähler sie einmal neu, mit einem Hinweis, der bis zu drei Namen zum Aufgreifen nennt; der zweite Versuch bleibt, wie er ist (erz.repair, „nachbessern | bleibt | vage“). Ein 👎 kann den festen Grund „Wusste nicht, was wir tun können“ tragen (dungeon_erzaehlstand.GRUENDE „vage“, nur solange der Schalter an ist). Der Erzähler-Prüfstand hat die Szene „Sackgasse“ (eine Halle mit Grimma, Wegen der Karte und einer Truhe; die Erzählung muss zwei davon nennen und mit einer konkreten Wahl enden; die Prüfung gilt dort immer). Logs dungeon: anleitung | vage | zu wenig, dungeon: anleitung |"
 },
 {
@@ -11478,6 +11494,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Spieler anleiten (Funktionen → Meine Daten → „Spieler anleiten“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Der Erzähler bekommt eine feste Form: erst, was die Taten bewirken, dann, was jetzt zu sehen ist, und in jeder Erzählung mindestens zwei greifbare Ansatzpunkte mit Namen (eine Person, ein Ding, ein Weg)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Zeugen-Regel (Funktionen → Meine Daten → „Zeugen-Regel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Was ein Held vor Leuten der Szene tut, ändert ihre Haltung nach einer festen Tabelle, nicht nach dem Modell: Greift er jemanden an oder bestiehlt ihn, sinkt die Haltung des Opfers um zwei Stufen und die aller anderen Anwesenden um eine."
 },
 {
 "lang": "de",
@@ -20789,6 +20813,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: witness rule (V01.1.152, LlamaTale idea 3, plan plaene/dungeon-llamatale-ideen.md, Dominik 2026-10-27 \"1-7\", idea only, own code): Admin switch *Features → AI Dungeon Master → Witness rule* (off; builds on \"NPC memory and chronicle\", applies to the round's host). Before the narration dungeon_zeugen.seen reads every open action: an attack by dungeon_kampf.intent, theft, a gift or help by the fixed word lists TATEN, plus a person of the scene (dungeon_nsc.scene) by its whole name or the last word of its name. The fixed table FOLGE gives the steps: attack and theft target −2, everyone else present −1; gift and help target +1. A theft whose Dexterity check passes this turn stays unseen; an attack on a foe of the running fight is no deed. The narration gets the deeds and the new attitude as data (zeugen, plus a task only in this turn) and only tells the reaction. After the narration zeugen.apply sets the attitude (once per person and hero a turn, within −3 to +3), the log shows every change, attack and theft go into the chronicle \"in front of witnesses\"; the model's own report for the same pair is dropped this turn (zeugen.drop). Logs dungeon: zeugen | diebstahl | 1 z"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "eugen, dungeon: zeugen | diebstahl | unbemerkt. Live overview: deeds in front of witnesses, witnesses with a new attitude, thefts unseen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: guide the players, steps 3 to 5 (V01.1.151, plan dungeon-anleitung/plan.md ideas 4, 12, 6 and 11): Under the same switch *Features → AI Dungeon Master → Guide the players*. New fixed check \"vage\" in erz.judge (dungeon_anleiten.vague): if the narration names fewer than two points of the scene (people here, things nearby and of the narration, foes and props in a fight, speaking people, targets of the ways; as many as the scene has when there are fewer) or ends with an empty question of HOHL (\"Was tut ihr?\", \"Was macht ihr nun?\", \"What do you do?\"), the narrator writes it once again with a hint naming up to three names to take up; the second try stays as it is (erz.repair, \"nachbessern | bleibt | vage\"). A 👎 can carry the fixed reason \"Did not know what we could do\" (dungeon_erzaehlstand.GRUENDE \"vage\", only while the switch is on). The narrator bench has the scene \"Sackgasse\" (a hall with Grimma, ways of the map and a chest; the narration must name two of them and end with a concrete choice; the check always counts there). Logs dungeon: anleitung | vage | zu wenig, dungeon: anleitung | vage | hohl. Live overview: told again as vague. Step 4, stall hint (anleiten.pr"
 },
 {
@@ -26206,6 +26246,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Guide the players (Features → My data → \"Guide the players\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): The narrator gets a fixed form: first what the deeds cause, then what is to be seen now, and in every narration at least two things to take up, with names (a person, a thing, a way)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Witness rule (Features → My data → \"Witness rule\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): What a hero does in front of people of the scene changes their attitude by a fixed table, not by the model: attacking or robbing someone lowers the victim's attitude by two steps and that of everyone else present by one."
 },
 {
 "lang": "en",

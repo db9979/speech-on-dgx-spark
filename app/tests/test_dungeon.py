@@ -8497,6 +8497,66 @@ class Fight(Turns):
         self.assertIn("Diebin im Hafen", dungeon.facts(r, rd))                          # off: the truth as before
         self.assertEqual(nsc.check(dungeon, r, rd, [{"name": "Oskar", "held": "Arvid", "haltung": "besser"}], text), [])
 
+    def test_deeds_in_front_of_witnesses(self):
+        """LlamaTale idea 3 (Dominik 2026-10-27 „1-7“, switch dungeonzeugen): what a hero does to a person of the scene
+        (an attack by kampf.intent, a theft, a gift, help by fixed words, the person by name) changes the attitudes by
+        the fixed table FOLGE before the model may: target −2 and every other person present −1 for an attack or a
+        theft, +1 for the target of a gift or help; a theft whose Geschick check passed stays unseen, an attack on a foe
+        of the running fight is no deed; the narration gets the deeds as data and the model's own step for the same
+        person and hero is dropped; off nothing."""
+        import dungeon_nsc as nsc
+        import dungeon_zeugen as zg
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_zeugen")
+        self.assertEqual([zg.deed(t) for t in ("Ich greife Oskar an.", "Ich greife nach dem Seil.", "Ich stehle Mira den Beutel.",
+                                               "Ich gebe ihm einen Silberling.", "I help Mira up.", "Ich schaue mich um.")],
+                         ["angriff", "", "diebstahl", "geschenk", "hilfe", ""])
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""},
+                                                              {"name": "Mira", "rolle": "Gast", "ziel": "", "sprache": ""}],
+                                                 "gruppen": [], "geheimnisse": []}
+            dungeon._write(d)
+        helpers.set_config(dungeon_nsc=True)
+        self.spawned.clear()
+        self.act_all("Wir betreten die Schenke.")
+        rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen, Mira sitzt am Fenster.",
+                                         "frage_an": "", "nsc": []}])
+        r = dungeon.rules()
+        self.assertEqual(sorted(nsc.scene(rd)), ["mira", "oskar"])
+        rd["offen"] = {self.host: {"text": "Ich schenke Oskar einen Silberling.", "t": 0}, self.gp: {"text": "Ich stehle Mira den Beutel.", "t": 0}}
+        self.assertEqual(zg.seen(dungeon, r, rd), [])                                  # off
+        helpers.set_config(dungeon_zeugen=True)
+        deeds = zg.seen(dungeon, r, rd)
+        self.assertEqual([(x["tat"], x["ziel"], x["schritte"]) for x in deeds],
+                         [("geschenk", "oskar", {"oskar": 1}), ("diebstahl", "mira", {"mira": -2, "oskar": -1})])
+        f = zg.facts(rd, deeds)["zeugen"]
+        self.assertEqual(f[1], {"held": "Bela", "tat": "bestiehlt Mira", "haltung": {"Mira": "feindselig", "Oskar": "misstrauisch"}})
+        self.assertEqual(zg.seen(dungeon, r, rd, [{"pid": self.gp, "ok": True, "wert": "geschick"}])[1:], [])   # unseen
+        k = copy.deepcopy(rd)
+        k["kampf"] = {"gegner": [{"name": "Oskar"}]}
+        k["offen"] = {self.host: {"text": "Ich greife Oskar an.", "t": 0}}
+        self.assertEqual(zg.seen(dungeon, r, k), [])                                   # a foe of the fight: no deed
+        # the whole turn: the panel's steps, the model's own step for Oskar and Bela dropped, the chronicle
+        self.spawned.clear()
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich schenke Oskar einen Silberling.", "zug": rd["zug"]}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich stehle Mira den Beutel.", "zug": rd["zug"]}).status_code, 200)
+        seen = []
+        real = dungeon.facts
+
+        def facts(r, rd, *a, **k):
+            seen.append(real(r, rd, *a, **k))
+            return seen[-1]
+        with mock.patch("dungeon.facts", facts), contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": []}, {"erzaehlung": "Oskar strahlt Arvid an, Mira schreit auf, und Oskar funkelt Bela böse an.",
+                                             "frage_an": "", "nsc": [{"name": "Oskar", "held": "Bela", "haltung": "besser"}]}])
+        self.assertIn('"zeugen"', seen[-1])
+        self.assertEqual((rd["nsc"]["oskar"]["haltung"], rd["nsc"]["mira"]["haltung"]), ({"arvid": 1, "bela": -1}, {"bela": -2}))
+        self.assertIn("dungeon: zeugen | diebstahl | 1 zeugen", out.getvalue())
+        self.assertIn("dungeon: zeugen | geschenk | 0 zeugen", out.getvalue())
+        self.assertTrue(any(c["t"][0] == "Bela bestiehlt Mira, vor Zeugen." for c in rd["chronik"]))
+        t = zg.for_live()
+        self.assertTrue(t["taten"] >= 2 and t["zeugen"] >= 1 and t["unbemerkt"] >= 1, t)
+
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
         every person has six traits from −3 to +3 and a goal on three levels (today 2 steps, soon 4 from the truth's

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.152** AI Dungeon Master: witness rule (switch, off), what a hero does in front of people of the scene changes their attitude by a fixed table, attack and theft target −2 and everyone present −1, gift and help target +1, a successful theft stays unseen, the narrator only shows the reaction (LlamaTale idea 3)
 - **V01.1.151** AI Dungeon Master: guide the players step 3, a narration with fewer than two points to take up or an empty question such as "What do you do?" is told again once, 👎 reason "Did not know what we could do" and bench scene "Sackgasse", plus a stall hint in three stages, another way after a failed search and step 5, two to three clues per act to the turning point in all 50 stories that the narrator shows one by one
 - **V01.1.150** AI Dungeon Master: choose a person's voice, under Rules → People (NPC) every person shows its voice, the admin picks age, gender, sound, manner and pace from fixed lists, hears a sample and saves, the round then speaks the person with that voice
 - **V01.1.149** AI Dungeon Master: portraits in the NPC catalog: every person shows its face in list and detail, whoever has none from a round gets a catalog picture from fixed parts (at night, with "Paint all pictures" or "Paint") and brings it into the next round
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.145** AI Dungeon Master: time of day by the panel, morning, day, evening and night by calendar and turns instead of the model, at night the shops are shut, without a light you roll outdoors in the dark at a disadvantage, and at night foes of the night come
 - **V01.1.144** AI Dungeon Master: the map remembers who asks a person to come along and lets people with a goal wander along the ways (the map's part of LlamaTale 4 and 6)
 - **V01.1.143** AI Dungeon Master: hero book to the reMarkable (switch, off), one book per hero in the own device's format with hero sheet, chronicle, people, bestiary and items, in colour on Paper Pro and Move, greyscale on the rm2, by itself after the evening and on "Send now", colour or greyscale under Me → reMarkable
-- **V01.1.142** AI Dungeon Master: combat audit wave 2, spells with a saving throw are now saved against by the foe (half damage, conditions such as prone or unconscious), Sleep and Hold Person work in a fight, Healing Hands heals a friend by name, and the foes' conditions take the bestiary's DC
 
 
 
