@@ -3978,6 +3978,13 @@
 "titel": "Dungeon-Master: Aufträge von Personen",
 "text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik und Aufträge von Personen an. A: In einer Szene mit einer Person (etwa Oskar) schreiben „Oskar, hast du Arbeit für mich?“: im Verlauf „Neuer Auftrag von Oskar …“, am Rand des Tisches „📜 …“ mit Lohn, aufgeklappt zwei Spuren; der Erzähler nennt den Grund. B: Ein Bring-Auftrag: das Ding kaufen und „Ich gebe Oskar den …“ schreiben: „Auftrag erfüllt“, Gold beim Helden, Erfahrung bei allen am Tisch, Oskar eine Stufe wärmer. Ohne das Ding in der Tasche passiert nichts. C: Ein Rede-Auftrag: die andere Person in der Szene mit Namen ansprechen: erfüllt. Ein Kampf-Auftrag: so einen Gegner fällen: erfüllt. D: „Ich gebe Oskar den Auftrag zurück.“: zurückgegeben, Oskar eine Stufe kühler. E: Höchstens drei offen; Zustand → Logs „dungeon: auftraege | kein neuer“. F: Schalter aus: keine Aufträge von Personen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P593",
+"v": 1156,
+"titel": "Dungeon-Master: Wandernde Personen und kleine Gesten",
+"text": "Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik, Lagerfeuer und Rast, Wandernde Personen und Kleine Gesten an. A: In einer Runde mit Karte, in der man Personen getroffen hat, als Gastgeber „🔥 Lange Rast“ wählen: steht im Verlauf „Am Lagerfeuer hört ihr: … ist von … nach … gezogen.“, ist die Person auf der Karte dort. B: Der nächste Zug: trifft die Gruppe die Person dort wieder, erzählt der Erzähler das Wiedersehen; sonst lässt er niemanden wandern. C: Eine Person, die mit der Gruppe reist, bleibt. D: Beim Warten auf Aktionen erscheint ab und zu „🤲 … nickt euch freundlich zu.“ oder eine andere Geste einer Person der Szene; im Auto nie. E: Schalter aus: niemand wandert, keine Gesten.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -327,6 +327,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_tageszeit.py` | KI-Dungeon-Master: Tageszeit vom Panel. |
 | `app/panel/dungeon_umgebung.py` | KI-Dungeon-Master: Umgebung nutzen. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
+| `app/panel/dungeon_wandern.py` | KI-Dungeon-Master: Wandernde Personen und kleine Gesten. |
 | `app/panel/dungeon_wappen.py` | KI-Dungeon-Master: Wappen für Gruppe und Fraktionen (D&D-Idee 10 of 2026-10-25, Dominik „1-12 reihenfolge bestimmst du wie du alles umsetzten kannst.“, plan … |
 | `app/panel/dungeon_warten.py` | KI-Dungeon-Master: the wait between turns made pleasant. |
 | `app/panel/dungeon_wunsch.py` | KI-Dungeon-Master: Herzenswunsch je Held. |

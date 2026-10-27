@@ -137,6 +137,7 @@ import dungeon_anleiten as anleiten
 import dungeon_zeugen as zeugen
 import dungeon_gedanken as gedanken
 import dungeon_auftraege as auftraege
+import dungeon_wandern as wandern
 import dungeon_chronik as chronikbuch
 import dungeon_haltung as haltung
 import dungeon_rueckfrage as rueckfrage
@@ -3330,6 +3331,7 @@ def facts(r, rd, wuerfe=None, zuege=None):
     fakten.update(anleiten.facts(rd))                    # the stall hint of Spieler anleiten (step 4)
     fakten.update(zeugen.facts(rd, rd.get("_zeugen")))   # deeds in front of witnesses (LlamaTale idea 3)
     fakten.update(auftraege.facts(rd, rd.get("_auftraege")))   # errands from people and this turn's events (LlamaTale idea 2)
+    fakten.update(wandern.facts(rd))                     # people who moved on during the long rest (LlamaTale idea 6)
     fakten.update(haltung.facts(rd, li))                 # the foes' announced blows (round 2, idea 2)
     fakten.update(umgebung.facts(r, rd, li))             # the props of the fight (round 2, idea 3)
     fakten.update(wunsch.facts(_me, rd))                 # whose heart's wish this act carries (round 2, idea 7)
@@ -3361,7 +3363,7 @@ def system_text(r, rd, task):
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
                    erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang))).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang) + wandern.task(rd, lang))).rstrip()
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
@@ -4102,6 +4104,7 @@ async def run_turn(rid, turn):
                     story["nsc"] = zeugen.drop(story.get("nsc"), zeugen.apply(_me, cur, story.get("zeugen")))   # LlamaTale idea 3
                     gedanken.apply(_me, cur, [w for w in wuerfe if w["pid"] in seats])   # the thoughts only for that seat (LlamaTale idea 5)
                     auftraege.apply(_me, cur, [e for e in story.get("auftraege") or [] if e.get("pid") in seats])   # LlamaTale idea 2
+                    wandern.told(cur)                        # the rest's moves were told once (LlamaTale idea 6)
                     nsc.learn(_me, r, cur, story, turn)     # cards, attitudes, relations, the chronicle (Tabletop-Punkt 5)
                     fraktionen.learn(_me, cur, story)       # the factions' clocks (Tabletop-Punkt 7)
                     quest.learn(_me, r, cur, story, take)   # quest things taken, found, dropped, the act's thing (Punkt 15)

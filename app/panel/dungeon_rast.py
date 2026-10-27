@@ -114,6 +114,8 @@ def rest(dm, r, rd, art, rng=None):
         e["wachen"] = watches(r, rd, rng, dm.kids(r, rd))
         e["gestoert"] = any(x["art"] == "ueberfall" for x in e["wachen"])
         e["fragen"] = cards(dm, r, rd, rng)
+        import dungeon_wandern
+        dungeon_wandern.rest(dm, r, rd, rng)     # people of the map move on, a rumour at the campfire (LlamaTale idea 6)
         for pid, p in up:
             h = p["held"]
             was = h["leben"]

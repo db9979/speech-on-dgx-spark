@@ -23,6 +23,7 @@ import random
 import re
 
 import dungeon_tabellen as tabellen
+from common import DayCounter
 
 KARTE = ("aussehen", "art", "beruf", "wunsch", "geheimnis")      # tables nsc_<feld>
 OFFEN = ("aussehen", "art", "beruf")                            # what the table sees once met; wish and secret: host and model
@@ -185,6 +186,79 @@ def scene(rd):
             low = str(e.get("text", "")).lower()
             near |= {n for n in ns if n in low}
     return [n for n in ns if n in near]
+
+
+# LlamaTale idea 6 (dungeon_wandern): the kinds of places a person of this occupation (the card's beruf, English) heads for
+BERUF_ORT = {"trader": ("stadt", "dorf", "basar", "hafen"), "innkeeper": ("taverne",), "miner": ("berg", "hoehle", "mine"),
+             "priest": ("kirche", "stadt"), "pilgrim": ("kirche", "krypta", "ruine"), "hunter": ("wald", "sumpf", "dschungel"),
+             "forester": ("wald",), "forager": ("wald", "sumpf"), "herb witch": ("sumpf", "wald"), "herder": ("dorf", "muehle"),
+             "farmer": ("dorf", "muehle"), "guard": ("festung", "stadt", "turm"), "knight": ("festung", "stadt"),
+             "mercenary": ("lager", "festung"), "scholar": ("turm", "ruine", "labor"), "researcher": ("labor", "ruine", "turm"),
+             "mystic": ("turm", "krypta"), "smuggler": ("hafen", "hoehle", "lagune"), "smith": ("stadt", "dorf"),
+             "artisan": ("stadt", "dorf"), "healer": ("dorf", "stadt", "kirche"), "ghost hunter": ("friedhof", "gruft", "herrenhaus"),
+             "pilot": ("hangar", "station"), "navigator": ("hangar", "station", "hafen"), "engineer": ("station", "hangar"),
+             "scavenger": ("wrack", "schiffswrack", "krater")}
+# LlamaTale idea 7 (switch dungeongesten): a small gesture of a person of the scene by a strong trait (±2 or more)
+GESTEN = {("freundlich", 1): ("{n} nickt euch freundlich zu.", "{n} nods at you kindly."),
+          ("freundlich", -1): ("{n} mustert euch mit verschränkten Armen.", "{n} eyes you with folded arms."),
+          ("ruhig", 1): ("{n} sitzt still da und beobachtet die Gruppe.", "{n} sits still and watches the group."),
+          ("ruhig", -1): ("{n} trommelt ungeduldig mit den Fingern.", "{n} drums impatient fingers."),
+          ("mut", 1): ("{n} steht breitbeinig da und wartet.", "{n} stands firm and waits."),
+          ("mut", -1): ("{n} wirft einen nervösen Blick zur Tür.", "{n} glances nervously at the door."),
+          ("grosszuegig", 1): ("{n} schiebt euch wortlos einen Becher Wasser hin.", "{n} silently pushes a cup of water towards you."),
+          ("grosszuegig", -1): ("{n} zählt leise ein paar Münzen nach.", "{n} quietly counts a few coins again."),
+          ("ehrlich", 1): ("{n} schaut euch offen in die Augen.", "{n} looks you openly in the eye."),
+          ("ehrlich", -1): ("{n} tuschelt kurz mit jemandem in der Ecke.", "{n} whispers briefly with someone in the corner."),
+          ("treu", 1): ("{n} bleibt dicht bei der Gruppe.", "{n} stays close to the group."),
+          ("treu", -1): ("{n} sieht sich nach anderer Gesellschaft um.", "{n} looks around for other company.")}
+
+
+def ziel_ort(rd, name):
+    """The map's place a person heads for (dungeon_karte.wandern, LlamaTale idea 6), by fixed rules: a place of the map
+    its open goals name, else the nearest fitting place of its occupation (BERUF_ORT: the person's own place when it
+    fits, else the first in the map's order); None without a map, card or fitting place."""
+    k = rd.get("karte")
+    x = (rd.get("nsc") or {}).get(str(name or "").lower())
+    if not k or not x or not isinstance(k.get("orte"), list):
+        return None
+    orte = k["orte"]
+    texte = " ".join(str(t).lower() for z in x.get("ziele") or [] if isinstance(z, dict) and z.get("stand", 0) < z.get("voll", 1)
+                     for t in z.get("t") or [])
+    for i, o in enumerate(orte):
+        n = str(o.get("name", "")).lower()
+        if len(n) >= 3 and re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", texte):
+            return i
+    b = (x.get("karte") or {}).get("beruf")
+    arten = BERUF_ORT.get(str(b[1]).lower()) if isinstance(b, list) and len(b) == 2 else None
+    if not arten:
+        return None
+    hier = ((k.get("leute") or {}).get(x["name"]) or {}).get("ort")
+    if isinstance(hier, int) and 0 <= hier < len(orte) and orte[hier].get("art") in arten:
+        return hier
+    return next((i for i, o in enumerate(orte) if o.get("art") in arten), None)
+
+
+def geste(rd, rng=None):
+    """A small gesture for the idle time (LlamaTale idea 7, the music thread's dungeon_warten asks when one is due): a
+    person of the scene with a strong trait and its fixed line (GESTEN), {nsc, art, text: [de, en]}; None while the
+    switch dungeongesten is off or nobody fits. No state changes, no model."""
+    import features
+    if not on(rd) or not features.allowed("dungeongesten", rd["owner"]):
+        return None
+    rng = rng or random
+    ns = rd.get("nsc") or {}
+    wahl = [(k, w, 1 if v > 0 else -1) for k in scene(rd) for w, v in sorted((ns[k].get("wesen") or {}).items())
+            if isinstance(v, int) and abs(v) >= 2 and (w, 1 if v > 0 else -1) in GESTEN]
+    if not wahl:
+        return None
+    k, w, sg = rng.choice(wahl)
+    name = ns[k]["name"]
+    _gesten.bump("gesten")
+    print("dungeon: nsc | geste", flush=True)
+    return {"nsc": name, "art": f"{w}{'+' if sg > 0 else '-'}", "text": [t.format(n=name) for t in GESTEN[(w, sg)]]}
+
+
+_gesten = DayCounter(gesten=0)       # gestures given today (Live, through dungeon_wandern.for_live)
 
 
 def named(x, low):

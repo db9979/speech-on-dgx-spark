@@ -8742,6 +8742,76 @@ class Fight(Turns):
         t = au.for_live()
         self.assertTrue(t["neu"] >= 1 and t["erfuellt"] >= 1 and t["zurueck"] >= 1, t)
 
+    def test_people_wander_on_a_long_rest_and_gesture(self):
+        """LlamaTale ideas 6 and 7 (Dominik 2026-10-27 „1-7“, switches dungeonwandern and dungeongesten): over a long rest
+        a person of the map not with the group moves one way towards the place its open goals name, else the fitting
+        place of its occupation (dungeon_nsc.ziel_ort); a rumour in the feed, the next narration gets the moves once;
+        a gesture is a fixed line of a person of the scene with a strong trait; off nothing."""
+        import dungeon_karte
+        import dungeon_nsc as nsc
+        import dungeon_wandern as wa
+        helpers.keep_chat(self, "dungeon_nsc", "dungeon_wandern", "dungeon_gesten")
+        helpers.set_config(dungeon_nsc=True)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        dungeon_karte.make(r, rd, random.Random(3))
+        k = rd["karte"]
+        n = len(k["orte"])
+        for i, o in enumerate(k["orte"]):
+            o["art"] = "wald"
+        stadt = next(i for i in range(n) if i != k["hier"] and any(k["hier"] in w and i in w for w in k["wege"]))
+        k["orte"][stadt]["art"] = "stadt"
+        rd["nsc"] = {"oskar": {"name": "Oskar", "karte": {"beruf": ["Händler", "trader"]}, "kanten": [], "haltung": {}, "gesehen": rd["zug"],
+                               "wesen": {"freundlich": 3, "mut": 0}, "ziele": []}}
+        k["leute"] = {"Oskar": {"ort": k["hier"], "mit": False}}
+        self.assertEqual(nsc.ziel_ort(rd, "Oskar"), stadt)                                   # by occupation
+        rd["nsc"]["oskar"]["ziele"] = [{"ebene": "heute", "t": [f"nach {k['orte'][k['hier']]['name']} zurück", "x"], "stand": 0, "voll": 2}]
+        self.assertEqual(nsc.ziel_ort(rd, "oskar"), k["hier"])                               # a goal naming a place first
+        rd["nsc"]["oskar"]["ziele"][0]["stand"] = 2                                          # reached: no longer
+        self.assertEqual(nsc.ziel_ort(rd, "oskar"), stadt)
+        rd["nsc"]["oskar"]["karte"] = {}
+        self.assertIsNone(nsc.ziel_ort(rd, "oskar"))
+        rd["nsc"]["oskar"]["karte"] = {"beruf": ["Händler", "trader"]}
+        always = mock.Mock(randrange=lambda a: 0)
+        self.assertEqual(wa.rest(dungeon, r, rd, always), [])                                  # off
+        helpers.set_config(dungeon_wandern=True)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            moves = wa.rest(dungeon, r, rd, always)
+        self.assertEqual([(m["name"], m["nach"]) for m in moves], [("Oskar", k["orte"][stadt]["name"])])
+        self.assertEqual(k["leute"]["Oskar"]["ort"], stadt)
+        self.assertIn("dungeon: wandern | 1 personen", out.getvalue())
+        self.assertTrue(any(e["art"] == "system" and "Am Lagerfeuer hört ihr: Oskar" in e["text"][0] for e in rd["log"]))
+        self.assertEqual(wa.facts(rd), {"gewandert": [{"name": "Oskar", "nach": k["orte"][stadt]["name"]}]})
+        self.assertIn("Wiedersehen", wa.task(rd, "de"))
+        wa.told(rd)
+        self.assertEqual((wa.facts(rd), wa.task(rd, "de")), ({}, ""))
+        k["leute"]["Oskar"]["mit"] = True                                                    # along with the group: stays
+        self.assertEqual(wa.rest(dungeon, r, rd, always), [])
+        # the whole long rest by the host's button moves people too
+        with dungeon._lock:
+            d = dungeon._read()
+            x = d["runden"][self.rid]
+            x.update(karte=k, nsc=rd["nsc"])
+            x["karte"]["leute"] = {"Oskar": {"ort": k["hier"], "mit": False}}
+            dungeon._write(d)
+        helpers.keep_chat(self, "dungeon_rast")
+        helpers.set_config(dungeon_rast=True)
+        with mock.patch("random.randrange", lambda *a: 0), contextlib.redirect_stdout(io.StringIO()) as out:
+            res = self.c.post(f"/api/profile/dungeon/{self.rid}/rast", json={"art": "lang"})
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertIn("dungeon: wandern |", out.getvalue())
+        # gestures: off none, on a fixed line of a person of the scene with a strong trait
+        rd["log"].append({"art": "dm", "text": "Oskar steht am Tresen.", "npc": [], "n": rd["zug"]})
+        self.assertIsNone(nsc.geste(rd, random.Random(1)))
+        helpers.set_config(dungeon_gesten=True)
+        g = nsc.geste(rd, random.Random(1))
+        self.assertEqual(g, {"nsc": "Oskar", "art": "freundlich+", "text": ["Oskar nickt euch freundlich zu.", "Oskar nods at you kindly."]})
+        rd["nsc"]["oskar"]["wesen"] = {"freundlich": 1}
+        self.assertIsNone(nsc.geste(rd, random.Random(1)))                                   # no strong trait
+        self.assertTrue(all(len(v) == 2 and all("{n}" in x for x in v) for v in nsc.GESTEN.values()))
+        t = wa.for_live()
+        self.assertTrue(t["rasten"] >= 1 and t["gewandert"] >= 1 and t["gesten"] >= 1, t)
+
     def test_npc_traits_and_goals_move_between_turns(self):
         """Tabletop-Punkt 6 of 2026-10-25 (Dominik „ich hätte gerne alle punkte umgesetzt“, idea from NarrativeEngine-P):
         every person has six traits from −3 to +3 and a goal on three levels (today 2 steps, soon 4 from the truth's

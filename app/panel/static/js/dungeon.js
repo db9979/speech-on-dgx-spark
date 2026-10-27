@@ -620,6 +620,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='fraktion')return `<div class="dm-sys ${e.was==='voll'?'bad':'mut'}">⏳ ${esc(e.was==='voll'?t(e.name+' hat erreicht, was sie wollten. Die Welt ist nicht mehr dieselbe.',e.name+' have got what they wanted. The world is not the same any more.')
     :e.was==='hilft'?t('Die Helden bringen '+e.name+' ihrem Ziel näher: '+e.stand+' von '+e.felder+'.','The heroes bring '+e.name+' closer to their goal: '+e.stand+' of '+e.felder+'.')
     :t('Die Helden stören '+e.name+': die Uhr fällt auf '+e.stand+' von '+e.felder+'.','The heroes hinder '+e.name+': the clock falls to '+e.stand+' of '+e.felder+'.'))}</div>`;
+  if(e.art==='geste')return `<div class="dm-sys mut">🤲 ${esc(e.text[L==='en'?1:0])}</div>`;   // a small gesture (LlamaTale idea 7, dungeon_nsc.geste)
   if(e.art==='nsc')return `<div class="dm-sys ${e.haltung>0?'ok':e.haltung<0?'bad':'mut'}">🤝 ${esc(e.text[L==='en'?1:0])}</div>`;
   if(e.art==='zufall')return `<div class="dm-sys ${e.treffer?'bad':'mut'}">🎲 ${esc(t('Zufallsregel','Random rule'))} „${esc(e.regel)}“${e.name?' ('+esc(e.name)+')':''}: ${e.w} ${esc(t('von 100, bis','of 100, up to'))} ${e.prozent} ${esc(e.treffer?t('→ trifft','→ hits'):t('→ nichts','→ nothing'))}</div>`;
   if(e.art==='kraft')return `<div class="dm-zauber">🛡 ${esc(t(e.name+' fängt mit '+e.kraft+' den Treffer für '+e.fuer+' ab.',e.name+' takes the hit for '+e.fuer+' with '+e.kraft+'.'))}</div>`;

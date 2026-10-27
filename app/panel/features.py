@@ -319,6 +319,9 @@ FEATURES = (
     F("dungeongedanken", "Gedanken lesen", "Read thoughts", "data", ("dungeon_gedanken",), parent="dungeon", me="dmbox", guide="dungeongedanken"),
     # Aufträge von Personen (dungeon_auftraege.py, LlamaTale idea 2): the panel rolls errands and checks them by receipts
     F("dungeonauftraege", "Aufträge von Personen", "Errands from people", "data", ("dungeon_auftraege",), parent="dungeon", me="dmbox", guide="dungeonauftraege"),
+    # Wandernde Personen and Kleine Gesten (dungeon_wandern.py, dungeon_nsc.ziel_ort/geste, LlamaTale ideas 6 and 7)
+    F("dungeonwandern", "Wandernde Personen", "Wandering people", "data", ("dungeon_wandern",), parent="dungeon", me="dmbox", guide="dungeonwandern"),
+    F("dungeongesten", "Kleine Gesten", "Small gestures", "data", ("dungeon_gesten",), parent="dungeon", me="dmbox", guide="dungeongesten"),
     # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
     F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
     # Heldenbuch aufs reMarkable (dungeon_buch.py): one book per hero as a PDF in the device's format, needs rmsend (READY)

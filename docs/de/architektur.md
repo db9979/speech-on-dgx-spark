@@ -327,6 +327,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_tageszeit.py` | Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht |
 | `app/panel/dungeon_umgebung.py` | Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |
+| `app/panel/dungeon_wandern.py` | Dungeon-Master: Wandernde Personen bei langer Rast als Gerücht, kleine Gesten der Personen beim Warten |
 | `app/panel/dungeon_wappen.py` | Dungeon-Master-Wappen: SVG für Gruppe und Fraktionen aus eigenen Teilen, geprüft, ohne Bildmodell |
 | `app/panel/dungeon_warten.py` | Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch |
 | `app/panel/dungeon_wunsch.py` | Dungeon-Master: Herzenswunsch je Held, geheim, je Akt einer reihum für den Erzähler, Erfahrung nach fester Regel |
