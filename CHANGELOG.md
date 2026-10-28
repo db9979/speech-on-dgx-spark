@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.192** · 2026-10-28 · KI-Dungeon-Master: eine Rune, die erst die Erzählung vergibt, ist ein erfundener Fund, der Satz wird gestrichen (Review 27.10. Paket 7, Runen)
 - **V01.1.191** · 2026-10-28 · KI-Dungeon-Master: die Fähigkeiten der 7 SRD-Klassen versprechen nur noch, was das Panel rechnet, und das Handauflegen des Paladins heilt wirklich
 - **V01.1.190** · 2026-10-28 · KI-Dungeon-Master: Runen und Sockel, Stufe 1: Funde bringen Sockel und Runen, der Krämer verkauft die ersten vier, einsetzen mit Vorschau und nie im Kampf, Wirkung und Deckel rechnet das Panel (Plan „Runen und Sockel“)
 - **V01.1.189** · 2026-10-28 · KI-Dungeon-Master: Porträts zeigen Haar, Augen, Bart und Statur von der Karte der Person

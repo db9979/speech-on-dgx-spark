@@ -5925,6 +5925,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Erfundene Rune (V01.1.192, Review 27.10. Paket 7, bericht „Abstimmung mit den Runen“ 7, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Das Panel würfelt Runen erst nach der Erzählung (put_find), also vergibt die Erzählung nie eine. Die Prüfung „Fund“ (found_untold) fängt deshalb auch eine Rune in einem Satz mit einem Wort aus FINDET und keinem aus NEIN, mit oder ohne Heldennamen („Ihr findet eine Tiwaz-Rune.“ wird „Gruppe: Tiwaz“): den Namen einer Rune des Katalogs (ab vier Buchstaben, nie der Name einer Person der Runde), „Runenwort“ und das Wort der Welt für eine Rune in der Einzahl als ganzes Wort (Rune, Chip, Perle, Siegel; „Perlen“ am Strand und „alte Runen“ an der Wand zählen nicht, _rune_terms). Eine Rune, die der genannte Held schon hat (im Runenbeutel oder in einem seiner Dinge), zählt nicht. Die Namen der Runenwörter (Glut, Morgenröte …) sind Alltagswörter und zählen nie, „Sockel“ auch nicht (ein Sockel ist auch ein Steinsockel). Hinweis, Tageszähler regel_fund und gestrichener Satz wie bei jedem erfundenen Fund. Selbsttest Table.test_a_rune_told_as_found_is_struck in test_dungeon_runen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Runen und Sockel, Stufe 1 (V01.1.190, Plan „Runen und Sockel“, Dominik 2026-10-27 „1a 2b 3a 4a 5a 6a 7a 8a 10a 11a“, Deckel 9a, Schalter 13a, Review 27.10. „Abstimmung mit den Runen“): Admin-Schalter *Funktionen → KI-Dungeon-Master → Runen und Sockel* (chat.dungeon_runen, standardmäßig aus), gilt für jede Runde mit einem Profil als Gastgeber. 1. Sockel: Waffen und Rüstungen von gewöhnlich bis „rar“ kommen aus einem Fund zu 30 von 100 mit Sockeln (it[\"so\"]), die Zahl fest nach dem Grundteil: eine Waffe mit W8 oder mehr 3, sonst 2; Körper 3; Schild und Kopf 2; Hände und Füße 1 (dungeon_runen.sockel_max). 2. Runen (die 13 des Katalogs, Rang 1 bis 13): der Fund nach einem Kampf bringt zu 5, eine Truhe zu 15, eine Belohnung zu 20 von 100 eine Rune, ein Boss immer; nach 8 Kampffunden ohne Rune kommt die nächste sicher (PECH). Der höchste Rang ist die Gruppenstufe + 2, die niedrigen kommen öfter. Die Rune geht an den Helden mit den wenigsten Runen dieser Runde, in seinen Runenbeutel (h[\"runen\"], neben der Tasche, belegt keinen Platz, höchstens 40). Der Krämer verkauft die Ränge 1 bis 4 (je 1 bis 3), jeder Händler kauft Runen für den halben Preis. 3. Einsetzen: Im Helden"
 },
 {
@@ -21438,6 +21446,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: invented rune (V01.1.192, review 27.10. package 7, report \"Abstimmung mit den Runen\" 7, Dominik 2026-10-27 \"ok\"): No new switch. The panel rolls runes only after the narration (put_find), so the narration never hands one out. The check \"find\" (found_untold) therefore also catches a rune in a sentence with a word of FINDET and none of NEIN, with or without a hero's name (\"You find a Tiwaz rune.\" becomes \"Group: Tiwaz\"): the name of a catalog rune (four letters or more, never the name of a person of the round), \"runeword\" and the world's word for a rune in the singular as a whole word (rune, chip, pearl, seal; \"pearls\" on the beach and \"old runes\" on the wall do not count, _rune_terms). A rune the named hero has already (in the rune bag or in one of its things) does not count. The runewords' names (Ember, Daybreak …) are everyday words and never count, nor does \"socket\". Hint, day counter regel_fund and struck sentence as with every invented find. Self-test Table.test_a_rune_told_as_found_is_struck in test_dungeon_runen."
 },
 {
 "lang": "en",

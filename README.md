@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.192** AI Dungeon Master: a rune only the narration hands out is an invented find, its sentence is struck (review 27.10. package 7, runes)
 - **V01.1.191** AI Dungeon Master: honest abilities of the SRD classes, the paladin's Lay on hands heals
 - **V01.1.190** AI Dungeon Master: runes and sockets, stage 1: finds bring sockets and runes, the trader sells the first four, set with a preview and never in a fight, the panel works out effect and cap (plan "runes and sockets")
 - **V01.1.189** AI Dungeon Master: portraits show hair, eyes, beard and build from the person's card
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.185** AI Dungeon Master: story progress is core and on from the start: stall wink, event, tip and clues to the turning point also without "Guide the players", with its own admin switch (review 27.10. E12)
 - **V01.1.184** AI Dungeon Master: the panel decides, the model tells: checks only with a level and the table value, loot before the narration to the finder, healing only by rest, potion and spell, act end and goal only with their words (review 27.10. package 9)
 - **V01.1.183** AI Dungeon Master: small gestures show at the table, after 2 minutes of quiet, at most twice a turn, never in a fight or the car
-- **V01.1.182** AI Dungeon Master: a person's portrait follows the gender on its card, "divers" is painted androgynous
 
 
 

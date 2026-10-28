@@ -287,6 +287,29 @@ class Table(Base):
         self.assertEqual(sheet["runen"]["runen"][0]["id"], "isa")
         self.assertEqual(self.held(tun="einsetzen", rune="isa", i="i00000000").status_code, 400)   # not own
 
+    def test_a_rune_told_as_found_is_struck(self):
+        """Bericht „Abstimmung mit den Runen“ 7: the panel draws runes only after the narration, so a rune the narration
+        hands out is the fault „fund“ (its sentence is struck); the world's word only whole („Perle“, not „Perlen“), a
+        rune the hero has already and a person's name never count."""
+        erz = dungeon.erz
+        rd = self.state(self.rid)
+        a = rd["plaetze"][self.pid]["held"]["name"]
+        self.assertEqual(erz.found_untold(rd, {"text": "Im Staub glimmt etwas. Ihr findet eine Tiwaz-Rune."}), ["Gruppe: Tiwaz"])
+        self.assertEqual(erz.found_untold(rd, {"text": f"{a} findet eine Rune unter dem Stein."}), [])   # has runes already
+        self.assertEqual(erz.found_untold(rd, {"text": f"{a} findet eine Tiwaz-Rune unter dem Stein."}), [f"{a}: Tiwaz"])
+        self.assertEqual(erz.found_untold(rd, {"text": f"{a} nimmt die Kenaz-Rune aus dem Beutel."}), [])   # her own
+        self.assertEqual(erz.found_untold(rd, {"text": "Ihr findet keine Rune, der Boden ist leer."}), [])
+        self.assertEqual(erz.found_untold(rd, {"text": "An der Wand sind alte Runen, die Gruppe findet den Weg."}), [])
+        rd["welt"] = "piraten"
+        self.assertEqual(erz.found_untold(rd, {"text": "Ihr findet eine Perle in der Muschel."}), ["Gruppe: Perle"])
+        self.assertEqual(erz.found_untold(rd, {"text": "Ihr findet Perlen am Strand."}), [])
+        rd["nsc"] = {"n1": {"name": "Tiwaz"}}
+        self.assertEqual(erz.found_untold(rd, {"text": "Ihr findet Tiwaz am Hafen."}), [])        # a person of the round
+        story = {"text": f"Die Flut steigt langsam über die schwarzen Felsen der Bucht, und der Wind riecht nach Salz und Teer. {a} "
+                         "kniet am Ufer und findet eine Tiwaz-Perle im nassen Sand. Über dem Wrack kreischen die Möwen, und "
+                         "die Laternen des Hafens schaukeln im Wind.", "ooc": [], "npc": []}
+        self.assertIn("fund", [k for k, _ in erz.faults(dungeon, rd, story)])
+
     def test_never_in_a_fight(self):
         with dungeon._lock:
             d = dungeon._read()

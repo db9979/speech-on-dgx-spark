@@ -823,7 +823,9 @@ def _gear(r, li):
 def found_untold(rd, story, r=None):
     """Heroes the narration lets find a thing of the catalog (FUND_ARTEN): a sentence with the hero's name, a word of
     FINDET and the head of such a thing, none of NEIN, when the thing is neither the turn's loot nor a quest find nor in
-    the hero's bag. "Name: Ding" for each, three at most (the fault „fund“, its sentence is struck)."""
+    the hero's bag; and a rune found in any sentence of finding (_rune_terms; the panel draws runes only after the narration,
+    so none is ever the turn's), unless the named hero has it already (rune bag or set in a thing). "Name: Ding" for each, three at most
+    (the fault „fund“, its sentence is struck)."""
     import dungeon
     r = r or dungeon.rules()
     erlaubt = " ".join(str(x) for x in [((story.get("beute") or {}).get("name")), (rd.get("_fund") or {}).get("was"), *[(q or {}).get("name") for q in
@@ -843,7 +845,33 @@ def found_untold(rd, story, r=None):
             for k in koepfe:
                 if _wort_in(k, low) and k not in erlaubt and not any(w.endswith(k) for w in have):
                     out.append(f"{h['name']}: {k[:1].upper() + k[1:]}")
+    for satz in _saetze(story["text"]):              # a rune the narration hands out (bericht „Abstimmung mit den Runen“ 7)
+        low = satz.lower()
+        if not _hat(low, FINDET) or _hat(low, NEIN):
+            continue
+        wer = next((p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held") and _name_in(p["held"]["name"], low)), None)
+        mein = {k for k, n in ((wer or {}).get("runen") or {}).items() if n} | \
+               {x for it in [*((wer or {}).get("tasche") or []), *(dungeon.worn(wer) if wer else [])] for x in it.get("ru") or []}
+        for k, rid in _rune_terms(r, rd):
+            if re.search(r"(?<!\w)" + re.escape(k) + r"(?!\w)", low) and not (rid in mein if rid else mein):
+                out.append(f"{wer['name'] if wer else GRUPPE[1 if rd.get('lang') == 'en' else 0]}: {k[:1].upper() + k[1:]}")
+                break                                # one a sentence, the rune's name before the world's word
     return list(dict.fromkeys(out))[:3]
+
+
+GRUPPE = ("Gruppe", "Group")
+
+
+def _rune_terms(r, rd):
+    """The words of a rune find, each with its rune id or "", names first: each rune's name of at least four letters that
+    is no person's name of the round, „Runenwort“, and the world's word for a rune in the singular (dungeon_runen.word;
+    as a whole word, „Perle“ is not „Perlen“). A runeword's own name (Glut, Morgenröte) is an everyday word and never counts."""
+    import dungeon_runen
+    li = 1 if rd.get("lang") == "en" else 0
+    leute = {str(x.get("name", "")).lower() for x in (rd.get("nsc") or {}).values()} | \
+            {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")}
+    namen = [(n, x["id"]) for x in r.get("runen") or [] for n in [str(x["name"][li]).lower()] if len(n) >= 4 and n not in leute]
+    return namen + [(("runenwort", "runeword")[li], ""), (dungeon_runen.word(rd.get("welt", ""), li).lower(), "")]
 
 
 def foe_untold(rd, story, r=None):

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.192** KI-Dungeon-Master: eine Rune, die erst die Erzählung vergibt, ist ein erfundener Fund, der Satz wird gestrichen (Review 27.10. Paket 7, Runen)
 - **V01.1.191** KI-Dungeon-Master: ehrliche Fähigkeiten der SRD-Klassen, Paladin-Handauflegen heilt
 - **V01.1.190** KI-Dungeon-Master: Runen und Sockel, Stufe 1: Funde bringen Sockel und Runen, der Krämer verkauft die ersten vier, einsetzen mit Vorschau und nie im Kampf, Wirkung und Deckel rechnet das Panel (Plan „Runen und Sockel“)
 - **V01.1.189** KI-Dungeon-Master: Porträts zeigen Haar, Augen, Bart und Statur von der Karte der Person
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.185** KI-Dungeon-Master: der Fortschritt der Geschichte ist Kern und ab Werk an: Stillstand-Wink, Ereignis, Tipp und Spuren zum Wendepunkt auch ohne „Spieler anleiten“, mit eigenem Admin-Schalter (Review 27.10. E12)
 - **V01.1.184** KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
 - **V01.1.183** KI-Dungeon-Master: kleine Gesten erscheinen am Tisch, nach 2 Minuten Stille, höchstens zweimal je Zug, nie im Kampf oder im Auto
-- **V01.1.182** KI-Dungeon-Master: das Porträt einer Person folgt dem Geschlecht ihrer Karte, „divers“ wird androgyn gemalt
 
 
 
