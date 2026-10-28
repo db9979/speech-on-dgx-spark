@@ -211,7 +211,8 @@ class Moves(unittest.TestCase):
     def test_going_takes_a_going_sentence_and_the_majority(self):
         """Dungeon-Review 2026-10-27 Paket 5 (E4/T6, Dominik „ok“): asking the way, drawing a sword, breaking a door
         open, reading on is no going; the group goes only when more than half of the acting seats want to go and nobody
-        stays; asked_ways forces no way then, the narrator hears who stays."""
+        stays; asked_ways forces no way then, the narrator hears who stays; a move tells the table who wanted it
+        (Paket 12, E14)."""
         k = self.k
         start, j = k["hier"], K._nb(k)[k["hier"]][0]
         z = K._ziele(self.r, self.rd)
@@ -244,6 +245,13 @@ class Moves(unittest.TestCase):
         self.rd["offen"] = {"pa": {"text": way}, "pb": {"text": "Wir ziehen weiter."}, "pc": {"text": "Ich folge euch."}}
         self.assertTrue(K.step(self.r, self.rd, self.story(f"o{j + 1}"), {}, random.Random(1)))
         self.assertEqual(k["hier"], j)
+        self.assertEqual(self.rd["log"][-1]["text"], [f"Weiter nach {k['orte'][j]['name']}, weil die Mehrheit gehen wollte.",
+                                                      f"On to {k['orte'][j]['name']}, because the majority wanted to go."])   # Paket 12 (E14)
+        back = k["vorher"]
+        self.rd["offen"] = {"pa": {"text": "Wir gehen zurück."}, "pb": {"text": "Ich komme mit."}, "pc": {"text": "Ich summe."}}
+        self.assertTrue(K.step(self.r, self.rd, self.story(f"o{back + 1}"), {}, random.Random(1)))
+        held = self.rd["plaetze"]["pa"]["held"]["name"]
+        self.assertEqual(self.rd["log"][-1]["text"][0], f"Weiter nach {k['orte'][back]['name']}, weil {held} und {lio} gehen wollten.")
 
     def test_the_fight_holds_the_group(self):
         """Dungeon-Review 2026-10-27 Paket 3 (T3): while a fight stands nobody moves, no encounter on the way; the table

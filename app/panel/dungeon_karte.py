@@ -1414,6 +1414,20 @@ def refill(rd, v):
     return len(neu)
 
 
+def _weiter(rd, ort, go):
+    """Review Paket 12 (E14): the table hears why the group moved, by the majority rule (gruppe): „Weiter nach X, weil
+    Arvid gehen wollte“, two by name, more as „die Mehrheit“ (fixed words and the heroes' names; the journal counts)."""
+    pl = rd.get("plaetze") or {}
+    names = [pl[pid]["held"]["name"] for pid in go if (pl.get(pid) or {}).get("held")]
+    if len(names) > 2 or not names:
+        de, en = "die Mehrheit gehen wollte", "the majority wanted to go"
+    else:
+        de = " und ".join(names) + (" gehen wollten" if len(names) == 2 else " gehen wollte")
+        en = " and ".join(names) + " wanted to go"
+    _say(rd, f"Weiter nach {ort}, weil {de}.", f"On to {ort}, because {en}.")
+    print(f"dungeon: karte | weiter | {len(go)}", flush=True)
+
+
 def place_name(r, rd):
     """The scene's place: the map's name, in a vault with the room's."""
     k, v = rd["karte"], vault(rd)
@@ -1459,6 +1473,7 @@ def step(r, rd, story, ep, rng=None):
         want = ""
     k.pop("bleibt", None)
     before = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier"))
+    go = gruppe(r, rd)["gehen"] if want else []
     won(rd)
     v = vault(rd)
     if v:
@@ -1500,6 +1515,8 @@ def step(r, rd, story, ep, rng=None):
         print("dungeon: karte | verworfen | weg", flush=True)
     story["szene"] = {"ort": place_name(r, rd), "stimmung": (story.get("szene") or rd.get("szene") or {}).get("stimmung", "")}
     changed = (k["hier"], k.get("drin"), (vault(rd) or {}).get("hier")) != before
+    if changed and go and before[1] == k.get("drin"):     # a way or a room; going in or out of a vault tells itself
+        _weiter(rd, place_name(r, rd), go)
     if k["hier"] == before[0] and not vault(rd):
         told, said = _words(story.get("text")), _said(rd)
         named = [j for j in _nb(k)[k["hier"]] if _names(k["orte"][j]["name"], told) and any(_names(k["orte"][j]["name"], w.split()) for w in said)]

@@ -5901,6 +5901,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: warum die Gruppe weiterzieht (V01.1.200, Dungeon-Review 2026-10-27 Paket 12 E14, Teil der Karte): Ohne neuen Schalter. Zieht die Gruppe nach der Mehrheitsregel zu einem anderen Ort oder in einen anderen Raum, steht am Tisch eine feste Zeile wie „Weiter nach Silberhafen, weil Arvid gehen wollte.“, bei zweien mit beiden Namen, bei mehr „weil die Mehrheit gehen wollte“. Das Betreten und Verlassen eines Gewölbes hat schon eigene Zeilen. Log dungeon: karte | weiter | <anzahl>."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Wächter- und Herrenräume im Kampfbudget (V01.1.181, Dungeon-Review 2026-10-27 Paket 4 B1, Dominik „ok“, Teil der Karte): Ohne neuen Schalter. Bisher hatten die Räume eines Gewölbes kein Budget: ein Wächter war ein Gegner nahe S/2 (ab 3 Helden zwei), der Herr einer nahe S+1 mit Helfern. Allein oder zu dritt war der Herr kaum zu schaffen (0 bis 48 % Siege), auf Stufe 9 und 10 auch der Wächter nicht. Jetzt richtet das Panel beide nach dungeon_kampf.budget aus: ein Wächterraum liegt bei 0,8 bis 1,0, ein Herrenraum bei 1,1 bis 1,25 mal dem Budget (dungeon_karte.WAECHTER, HERR), gezählt mit dungeon_kampf.adjusted und einem Boss mit seinem Lebensfaktor (dungeon_kampf.wert). Die Arten wählt das Panel wie bisher nach dem Herausforderungsgrad, die nächsten zuerst, höchstens zwei Arten, bis zu 4 je Art und 6 in allem; die Anzahl füllt es nach Erfahrung auf (raum_gegner.anzahl). Ein Herr allein über 1,5 Budgets (HERR_MAX) weicht dem nächstschwächeren. Passt keine der nächsten Arten, nimmt das Panel die stärkste Art ab der halben Herausforderung, die passt. Der Selbsttest prüft jede Welt, Stufe 1 bis 10 und 1 bis 5 Helden."
 },
 {
@@ -21510,6 +21518,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: why the group moves on (V01.1.200, Dungeon review 2026-10-27 package 12 E14, the map's part): No new switch. When the group goes to another place or into another room by the majority rule, the table reads a fixed line like \"On to Silberhafen, because Arvid wanted to go.\", with both names for two, \"because the majority wanted to go\" for more. Going into or out of a vault has its own lines already. Log dungeon: karte | weiter | <anzahl>."
 },
 {
 "lang": "en",
