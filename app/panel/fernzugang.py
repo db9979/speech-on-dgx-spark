@@ -659,9 +659,17 @@ class Sitzung:
         self.anker.kanaele.pop(self.n, None)
         with contextlib.suppress(Exception):
             await self.anker.send_json({"typ": "zu", "kanal": self.n})
-        for s in (self.ours,):
-            with contextlib.suppress(OSError):
-                s.close()
+        # the pipe's reader leaves the event loop before the socket closes: a closed socket still waiting in the
+        # loop's selector keeps its number there, and the next connection that gets that number (a login, a page)
+        # would never be read (the panel's tests hung on it after a few sessions)
+        with contextlib.suppress(Exception):
+            self.loop.remove_reader(self.ours)
+            self.loop.remove_writer(self.ours)
+        for t in self.tasks[:1]:     # _to_anker, waiting on that reader
+            if t is not asyncio.current_task():
+                t.cancel()
+        with contextlib.suppress(OSError):
+            self.ours.close()
 
         def _shut():
             for x in (self.chan, self.transport, self.theirs):

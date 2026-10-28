@@ -2887,52 +2887,95 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzcmd{white-space:pre-wrap;overflow-wrap:anywhere;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg2,var(--bg));border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0}
 .fzsha{display:block;overflow-wrap:anywhere;font-size:12px}
 .fzdanger{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;border:1px dashed color-mix(in srgb,var(--bad) 55%,transparent)}
-/* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page */
-.fzbanner{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0 0 12px;background:#dc2626;color:#fff;border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
-.fzbanner[hidden]{display:none}.fzbanner .fzbtext{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.fzbanner .fzrec{flex:none;width:8px;height:8px;border-radius:50%;background:#fff}
+/* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page;
+   system, time and the idle limit there, everything else behind its ⓘ (Dominik 2026-10-28 20:07, layout A) */
+.fzbanner{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0 0 8px;background:#dc2626;color:#fff;border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
+.fzbanner[hidden]{display:none}.fzbanner .fzbtext{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.fzbanner .fzrec{flex:none;width:8px;height:8px;border-radius:50%;background:#fff}
+.fzbanner .fzbleer{flex:0 2 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:400;opacity:.92}.fzbanner .fzbfill{flex:1}
+.fzbanner .fzbi{flex:none;width:18px;height:18px;padding:0;border-radius:50%;border:1.5px solid #fff;background:transparent;color:#fff;font:700 11px/1 Georgia,serif;cursor:pointer}.fzbanner .fzbi[hidden]{display:none}
 .fzbanner .fzbtn{flex:none;font:inherit;font-size:12px;line-height:20px;padding:0 8px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}.fzbanner .fzbtn:hover{background:#fff;color:#dc2626}
+.fzinfopop{position:fixed;z-index:9600;width:min(360px,calc(100vw - 16px));box-sizing:border-box;padding:10px 12px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.fzinfopop[hidden]{display:none}.fzinfopop .fzfacts{margin:0 0 8px}.fzinfopop .row{gap:8px;flex-wrap:wrap}.fzok{color:var(--ok);font-weight:600}
 .fzrec{width:10px;height:10px;border-radius:50%;background:#fff;flex:none}
-.fzview{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px;margin-top:8px}
-.fzterm{background:#0b1020;border-radius:12px;padding:8px;min-height:62vh;height:62vh;overflow:hidden}
-.fzside .card{margin:0 0 10px}.fzchips{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+/* the terminal (layout A): terminal with its icon bar, one row of chips below it, the assistant as a column on the right
+   (width dragged 280–520 px and kept, folds away); the height from fzLayout, so the page itself never scrolls */
+#fzbox.fzoffen>.ld-head,#fzbox.fzoffen>.pintro{display:none}#fzbox.fzoffen{padding-top:8px;padding-bottom:8px}
+.fzview{display:grid;grid-template-columns:minmax(0,1fr) 10px var(--fzcol,340px);grid-template-rows:minmax(0,1fr);height:var(--fzh,70vh);min-height:260px;margin:0}
+.fzview.fzzu,.fzview:not(.fzki){grid-template-columns:minmax(0,1fr)}
+.fzview.fzzu .fzside,.fzview.fzzu .fzgriff,.fzview:not(.fzki) .fzside,.fzview:not(.fzki) .fzgriff,.fzview:not(.fzki) #fzspalte,.fzview:not(.fzki) .fzfragbtn{display:none}
+.fzleft{display:flex;flex-direction:column;min-width:0;min-height:0}
+.fzthead{flex:none;display:flex;align-items:center;gap:8px;height:36px;padding:0 6px 0 12px;background:#0b1020;color:#e2e8f0;border-radius:12px 12px 0 0;border-bottom:1px solid #1e293b;font-size:13px;white-space:nowrap;overflow:hidden}
+.fzthead .fzti{width:16px;height:16px;flex:none;color:#94a3b8}.fzthead b{min-width:0;overflow:hidden;text-overflow:ellipsis}.fztart{color:#94a3b8}.fztkey{color:#4ade80}.fztkey[hidden]{display:none}
+.fzticons{margin-left:auto;display:flex;gap:2px;flex:none}
+.fzicon{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:inherit;cursor:pointer}
+.fzicon svg{width:18px;height:18px}.fzicon:hover:not(:disabled){background:rgba(148,163,184,.18)}.fzicon:disabled{opacity:.35;cursor:default}
+.fzicon[aria-pressed="true"],.fzicon[aria-expanded="true"]{background:rgba(129,140,248,.25);color:#c7d2fe}
+.fzthead .fzschmal{display:none}
+.fzterm{flex:1;min-height:0;background:#0b1020;border-radius:0 0 12px 12px;padding:6px 8px;overflow:hidden}
+.fzchiprow{flex:none;display:flex;align-items:center;gap:6px;height:34px;margin-top:6px;min-width:0}
+.fzchiplbl{flex:none;font-size:13px;color:var(--mut)}.fzchiphint{flex:0 1 auto;max-width:38%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--acc,inherit);font-weight:600}.fzchiphint[hidden],.fzchipwas[hidden]{display:none}
+.fzchipwas{flex:none;font-size:12px;color:var(--mut)}
+.fzchips{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.fzchiprow .fzchips{flex:1;min-width:0;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;margin:0;scrollbar-width:none}.fzchiprow .fzchips::-webkit-scrollbar{display:none}
 .fzchip{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--fg)}
 .fzchip code{overflow-wrap:anywhere}.fzchip small{color:var(--acc);flex:none}
-.fzjrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}.fzjrow:first-child{border-top:0}.fzjrow .fh{margin:0}
+.fzchiprow .fzchip{flex:none;padding:3px 8px;gap:4px;white-space:nowrap;font-size:12.5px}.fzchiprow .fzchip code{overflow-wrap:normal}
+.fzchiprow .fzchip small{display:none}.fzchiprow .fzchip.scharf small{display:inline}.fzchip .fzstern{color:var(--acc);flex:none}
+.fzgriff{cursor:col-resize;position:relative;touch-action:none}.fzgriff::after{content:"";position:absolute;top:30%;bottom:30%;left:4px;width:2px;border-radius:2px;background:var(--line)}
+.fzgriff:hover::after,.fzgriff:focus-visible::after,.fzgriff.zieht::after{background:var(--acc);top:0;bottom:0}
+.fzside{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.fzhilfe{display:flex;flex-direction:column;flex:1;min-height:0}.fzhilfe[hidden]{display:none}
+.fzshead{flex:none;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line)}.fzshead b{flex:1}
+.fzfrageform{flex:none;display:flex;gap:6px;align-items:flex-end;padding:8px 10px 0;border-top:1px solid var(--line)}.fzfrageform textarea{flex:1;min-width:0;resize:none}
+.fzsend{flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:var(--acc);color:#fff;cursor:pointer}.fzsend svg{width:18px;height:18px}
+.fzchk{display:flex;gap:6px;align-items:center;margin:6px 10px 0}.fzkurz{margin:4px 10px 8px}
 .fzverlauf summary{font-weight:600;cursor:pointer}.fzvrow{display:grid;grid-template-columns:8em 1fr auto;gap:8px;padding:3px 0;border-top:1px solid var(--line);font-size:.92em}
-.fzhilfe summary{font-weight:600;cursor:pointer}.fzhilfe textarea{width:100%;margin-top:6px}.fzchk{display:flex;gap:6px;align-items:center;margin:6px 0}
-.fzantwort{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}.fzantwort pre{margin:6px 0 2px;padding:6px 8px;border-radius:6px;background:#0b1020;color:#e6e9f2;white-space:pre-wrap}
+.fzjrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}.fzjrow:first-child{border-top:0}.fzjrow .fh{margin:0}
+.fzantwort{flex:1;min-height:0;overflow:auto;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere}.fzantwort pre{margin:6px 0 2px;padding:6px 8px;border-radius:6px;background:#0b1020;color:#e6e9f2;white-space:pre-wrap}
+.fzantwort .fzchip{margin:4px 0}
 .fzvorsicht{color:#fff;background:var(--bad);border-radius:4px;padding:0 5px;font-size:.8em;font-weight:600;margin-right:6px}.fzchip.fzgefahr{border-color:var(--bad)}.fzchip.scharf{outline:2px solid var(--bad)}
-.fzkeys{display:none;gap:6px;grid-column:1/-1}.fzkeys .b.on{background:var(--acc);color:#fff}
-@media (max-width:760px){.fztiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fzcols,.fzview{grid-template-columns:1fr}
-  .fzterm{height:55vh;min-height:55vh}.fzkeys{display:flex;flex-wrap:wrap}.fzside{order:3}.fzdanger{flex-direction:column;align-items:stretch}}
+.fzkeys{display:none;gap:6px}.fzkeys .b.on{background:var(--acc);color:#fff}.fzfragbtn{display:none}
+/* the panel's menu folds away while a terminal is open (Dominik 2026-10-28 20:07, „Menü ausblenden“, kept per browser) */
+@media (min-width:761px){body.adm.fzohnemenu{padding-left:0}body.adm.fzohnemenu header{display:none}
+  body.fzterminal main{padding-bottom:8px!important}body.fzterminal #credit{display:none}}   /* over the general 110 px foot of admin pages */
+/* phone: terminal, one row of chips to swipe, the key row and „Frag den Assistenten“, which opens a sheet from below */
+@media (max-width:760px){.fztiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fzcols{grid-template-columns:1fr}.fzdanger{flex-direction:column;align-items:stretch}
+  .fzview,.fzview.fzzu{grid-template-columns:minmax(0,1fr)}.fzgriff,#fzmenu,.fzthead .fzbreit{display:none!important}.fzthead .fzschmal{display:inline-grid}
+  .fzkeys{display:flex;flex:none;flex-wrap:nowrap;overflow-x:auto;margin-top:6px;scrollbar-width:none}.fzkeys .b{flex:none;min-width:40px;padding:6px 8px}.fzview.fzohnetasten .fzkeys{display:none}
+  .fzview.fzki .fzfragbtn{display:block;flex:none;margin-top:6px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font:inherit;text-align:left;cursor:pointer}
+  .fzview.fzki .fzside,.fzview.fzki.fzzu .fzside{display:flex;position:fixed;left:0;right:0;bottom:0;height:min(70vh,560px);z-index:9500;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.3);transform:translateY(105%);visibility:hidden;transition:transform .2s}
+  #fzbox.fzoffen{padding:6px}  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer{display:none}}
 .fzview[hidden],.fzdetail[hidden]{display:none}
 .fzq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mut);cursor:help;vertical-align:middle}
-.fzchiphint{color:var(--acc,inherit);font-weight:600}.fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
+.fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
 /* xterm's own scroll bar dark and thin, no light strip at the terminal's edge */
 .fzterm .xterm,.fzterm .xterm-viewport{background:#0b1020!important}.fzterm .xterm-viewport{scrollbar-width:thin;scrollbar-color:#334155 #0b1020}
 .fzterm .xterm-viewport::-webkit-scrollbar{width:8px}.fzterm .xterm-viewport::-webkit-scrollbar-track{background:#0b1020}.fzterm .xterm-viewport::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
-/* „Alle Tasten“: the terminal fills the screen; chips and assistant in a drawer from the right (closed at first) */
+/* „Alle Tasten“: the terminal fills the screen with a thin row of chips at its foot; the assistant is a drawer from the
+   right (360 px, closed at first) that pushes the terminal instead of covering it */
 .fzvollbar,.fzvollhint,.fzdrawertab{display:none}
-html.fzvoll{overflow:hidden}   /* no page scroll bar beside the full screen terminal */
+html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fzterminal){scrollbar-gutter:auto}   /* no gutter kept free: the page with a terminal never scrolls */   /* no page scroll bar beside the full screen terminal */
 .fzview:fullscreen{display:block;width:100vw;height:100vh;margin:0;padding:0;background:#0b1020;overflow:hidden}
-.fzview:fullscreen .fzterm{position:absolute;top:0;left:0;bottom:0;right:0;height:auto;min-height:0;border-radius:0;padding:4px;box-sizing:border-box}
-.fzview.fzlade:fullscreen .fzterm{right:340px}
-.fzview:fullscreen .fzside{position:absolute;top:0;right:0;bottom:0;width:340px;overflow:auto;padding:10px;box-sizing:border-box;background:var(--bg);color:var(--ink,inherit);transform:translateX(100%);visibility:hidden;transition:transform .2s;z-index:3}
+.fzview:fullscreen .fzleft{position:absolute;top:0;left:0;bottom:0;right:0}
+.fzview.fzlade:fullscreen .fzleft{right:360px}
+.fzview:fullscreen .fzthead,.fzview:fullscreen .fzkeys,.fzview:fullscreen .fzfragbtn,.fzview:fullscreen .fzgriff{display:none!important}
+.fzview:fullscreen .fzterm{border-radius:0;padding:4px}
+.fzview:fullscreen .fzchiprow{height:24px;margin:0;padding:0 6px;background:#0b1020;border-top:1px solid #1e293b}
+.fzview:fullscreen .fzchiprow .fzchip{padding:0 6px;font-size:11px;background:#111a2e;border-color:#1e293b;color:#cbd5e1}.fzview:fullscreen .fzchiplbl{font-size:11px;color:#94a3b8}
+.fzview.fzki:fullscreen .fzside{display:flex;position:absolute;top:0;right:0;bottom:0;width:360px;border-radius:0;border-width:0 0 0 1px;transform:translateX(100%);visibility:hidden;transition:transform .2s;z-index:3}
 .fzview.fzlade:fullscreen .fzside{transform:none;visibility:visible}
-.fzview:fullscreen .fzinfocard,.fzview:fullscreen .fzkeys{display:none}
-.fzview:fullscreen .fzdrawertab{display:block;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:4;width:22px;height:64px;padding:0;border:0;border-radius:8px 0 0 8px;background:rgba(148,163,184,.35);color:#fff;font-size:16px;cursor:pointer}
-.fzview.fzlade:fullscreen .fzdrawertab{right:340px}
+.fzview.fzki:fullscreen .fzdrawertab{display:block;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:4;width:22px;height:64px;padding:0;border:0;border-radius:8px 0 0 8px;background:rgba(148,163,184,.35);color:#fff;font-size:16px;cursor:pointer}
+.fzview.fzlade:fullscreen .fzdrawertab{right:360px}
 .fzview:fullscreen .fzvollbar{display:flex;align-items:center;gap:6px;position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:5;height:22px;padding:0 10px;border-radius:6px;background:rgba(220,38,38,.85);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none}
 .fzview:fullscreen .fzvollbar .fzrec{width:7px;height:7px;border-radius:50%;background:#fff}
 .fzview:fullscreen .fzvollhint:not([hidden]){display:block;position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:5;padding:6px 12px;border-radius:8px;background:rgba(15,23,42,.8);color:#fff;font-size:13px;pointer-events:none}
-/* „Herauslösen“ (#fernfenster): the panel page in its own window shows only the terminal, over the whole page */
+/* „Herauslösen“ (#fernfenster): the panel page in its own window: the same order (line, terminal, chips, column), no menu */
 .fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:#dc2626}.fzweg[hidden]{display:none}
-.fzfenrow{margin-top:6px}
 body.fzfenster .fzbanner{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0;border-radius:0}
 /* the own window opens on the panel's start page: only the Fernzugang page counts there, whatever page the router picks */
 body.fzfenster main>section{display:none!important}body.fzfenster main>section#fern{display:block!important;animation:none}
-body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;background:var(--bg);padding:62px 8px 8px;margin:0;overflow:hidden}
-body.fzfenster .fzterm{height:calc(100vh - 150px);min-height:200px}body.fzfenster #fzheraus{display:none}
+body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;height:auto;background:var(--bg);padding:38px 8px 8px;margin:0;overflow:hidden}
+body.fzfenster #fzheraus,body.fzfenster #fzmenu{display:none}
 /* Siedlung neu ordnen (dungeonfenster.js dmSiedlung, Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): a slim head, the houses as a list beside the chosen one, one row per offer */
 .dm-sied-kopf{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:4px 2px 10px;border-bottom:1px solid var(--t-linie,var(--line))}.dm-sied-kopf>b{font-size:19px}.dm-sied-gold{margin-left:auto}.dm-sied-gold b{font-size:19px;font-variant-numeric:tabular-nums}
 .dm-sied{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0 16px;margin-top:10px;align-items:start}.dm-sied.handy{grid-template-columns:minmax(0,1fr)}

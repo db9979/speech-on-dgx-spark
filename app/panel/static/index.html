@@ -61,7 +61,8 @@
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button data-s="dungeon" hidden><i class="ni" data-ni="dungeon"></i>Dungeon-Master</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="fern" hidden><i class="ni" data-ni="fern"></i>Fernzugang</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
-<div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div>
+<div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><span class="fzbleer" id="fzbleer"></span><button class="fzbi" type="button" id="fzbinfo" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung" hidden>i</button><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div>
+<div class="fzinfopop" id="fzinfopop" role="dialog" aria-label="Diese Sitzung" hidden><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzalle2">Alle trennen</button><button class="b" type="button" id="fzkeycopy">Ganzen Schlüssel kopieren</button></div></div>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
 <div id="alerts"></div>
@@ -1109,22 +1110,34 @@
   <div class="fzview" id="fzview" hidden>
     <div class="fzvollbar" id="fzvollbar" role="status"><span class="fzrec"></span><span id="fzvolltext"></span></div>
     <div class="fzvollhint" id="fzvollhint" role="status" hidden>Alle Tasten aktiv · Esc 2 s halten zum Verlassen</div>
-    <button class="fzdrawertab" type="button" id="fzdrawertab" aria-expanded="false" aria-controls="fzside" title="Vorschläge und Assistent (Strg+Umschalt+Leertaste)" aria-label="Vorschläge und Assistent">‹</button>
-    <div class="fzterm" id="fzterm"></div>
-    <div class="fzside" id="fzside">
-      <div class="card"><h3>Vorschläge <span class="fzq" tabindex="0" title="Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. Der Assistent sieht die Ausgabe nicht. Die Vorschläge passen sich nach festen Regeln an deinen letzten Befehl an, nichts verlässt den Browser.">?</span></h3><div class="fh fzchiphint" id="fzchiphint" hidden></div><div class="fh" id="fzchipwas" hidden>Passend zu deinem letzten Befehl:</div><div class="fzchips" id="fzchips"></div></div>
-      <details class="card fzhilfe" id="fzhilfe" hidden><summary>Assistent</summary>
-        <div class="fh">Fragt nur das eigene Sprachmodell. Er tippt nie und drückt nie Enter: ein Befehl landet erst mit „Einfügen“ in der Zeile. Mit gehen deine Frage, Name und System des Servers und deine letzten Befehle; der Bildschirm nur, wenn du ihn mitschickst. Nichts davon wird gespeichert.</div>
-        <textarea id="fzfrage" rows="2" maxlength="500" placeholder="Frag den Assistenten" aria-label="Frag den Assistenten"></textarea>
-        <label class="fzchk"><input type="checkbox" id="fzschirm"> Bildschirm mitschicken</label>
-        <div class="row"><button class="b p" type="button" id="fzfragen">Fragen</button></div>
-        <div class="fzantwort" id="fzantwort" role="status"></div>
-      </details>
-      <div class="card fzinfocard"><h3>Diese Sitzung</h3><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzstop">Trennen</button><button class="b" type="button" id="fzalle2">Alle trennen</button></div>
-        <div class="row fzfenrow"><button class="b" type="button" id="fzheraus">Herauslösen</button><button class="b" type="button" id="fzalletasten">Alle Tasten</button></div>
-        <div class="fh">„Herauslösen“ öffnet die Shell in einem eigenen Fenster. „Alle Tasten“ schickt auch Strg+W, Strg+T oder Esc an die Shell (Chrome, Edge); Esc 2 Sekunden halten zum Verlassen.</div></div>
+    <button class="fzdrawertab" type="button" id="fzdrawertab" aria-expanded="false" aria-controls="fzside" title="Assistent (Strg+Umschalt+Leertaste)" aria-label="Assistent">‹</button>
+    <div class="fzleft" id="fzleft">
+      <div class="fzthead"><svg class="fzti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg><b id="fztname"></b><span class="fztart">SSH</span><span class="fztkey" id="fztkey" hidden>Host-Schlüssel ✓</span>
+        <span class="fzticons">
+          <button class="fzicon" type="button" id="fzmenu" aria-pressed="true" title="Menü ausblenden" aria-label="Menü ausblenden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+          <button class="fzicon" type="button" id="fzheraus" title="Herauslösen: die Shell in einem eigenen Fenster" aria-label="Herauslösen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
+          <button class="fzicon" type="button" id="fzalletasten" title="Alle Tasten · Vollbild (Esc 2 s halten zum Verlassen)" aria-label="Alle Tasten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+          <button class="fzicon" type="button" disabled title="Dateien (später)" aria-label="Dateien (später)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+          <button class="fzicon fzbreit" type="button" disabled title="Bildschirm (später)" aria-label="Bildschirm (später)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button>
+          <button class="fzicon fzschmal" type="button" id="fztasten" aria-pressed="true" title="Tastenreihe ein/aus" aria-label="Tastenreihe ein/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></button>
+          <button class="fzicon" type="button" id="fzinfobtn" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          <button class="fzicon fzbreit" type="button" id="fzspalte" aria-pressed="true" aria-controls="fzside" title="Assistent ein/aus" aria-label="Assistent ein/aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
+        </span></div>
+      <div class="fzterm" id="fzterm"></div>
+      <div class="fzchiprow"><span class="fzchiplbl">Vorschläge <span class="fzq" tabindex="0" title="Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. ✦ = vom Assistenten, sonst feste Regeln nach deinem letzten Befehl; nichts davon verlässt den Browser. Der Assistent sieht die Ausgabe nicht.">?</span></span><span class="fzchiphint" id="fzchiphint" hidden></span><span class="fzchipwas" id="fzchipwas" hidden></span><div class="fzchips" id="fzchips"></div></div>
+      <div class="fzkeys" id="fzkeys"></div>
+      <button class="fzfragbtn" type="button" id="fzfragbtn" aria-controls="fzside">✦ Frag den Assistenten …</button>
     </div>
-    <div class="fzkeys" id="fzkeys"></div>
+    <div class="fzgriff" id="fzgriff" role="separator" aria-orientation="vertical" aria-controls="fzside" tabindex="0" title="Ziehen ändert die Breite, Doppelklick klappt zu" aria-label="Breite des Assistenten"></div>
+    <aside class="fzside" id="fzside">
+      <div class="fzhilfe" id="fzhilfe" hidden>
+        <div class="fzshead"><b>✦ Assistent</b><button class="fzicon" type="button" id="fzspaltezu" title="Assistent zuklappen" aria-label="Assistent zuklappen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+        <div class="fzantwort" id="fzantwort" role="status"></div>
+        <div class="fzfrageform"><textarea id="fzfrage" rows="2" maxlength="500" placeholder="Frag den Assistenten …" aria-label="Frag den Assistenten"></textarea><button class="fzsend" type="button" id="fzfragen" title="Fragen" aria-label="Fragen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
+        <label class="fzchk"><input type="checkbox" id="fzschirm"> Bildschirm mitschicken <span class="fzq" tabindex="0" title="Fragt nur das eigene Sprachmodell. Mit gehen deine Frage, Name und System des Servers und deine letzten Befehle; der Bildschirm nur, wenn du ihn mitschickst. Nichts davon wird gespeichert.">?</span></label>
+        <div class="fh fzkurz">Er tippt nie. „Einfügen“ setzt den Befehl in die Zeile, Enter drückst du.</div>
+      </div>
+    </aside>
   </div>
   <div class="mut" id="fzmsg" role="status"></div>
 </div></section>

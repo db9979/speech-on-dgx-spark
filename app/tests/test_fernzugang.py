@@ -1754,7 +1754,7 @@ class InBrowser(unittest.TestCase):
         asyncio.run(go())
 
     def test_assistant_inserts_only_and_danger_needs_two_taps(self):
-        """Stage 2b in the page: suggestions after Enter only with the box open (one in 5 s), the screen only when
+        """Stage 2b in the page: suggestions after Enter only with the column open (one in 5 s), the screen only when
         sent, a dangerous command red with „Vorsicht“ and inserted only on the second tap, never with Enter."""
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
 
@@ -1782,6 +1782,7 @@ class InBrowser(unittest.TestCase):
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
                 await pg.evaluate("goSec('fern')")
                 await pg.wait_for_function("FZ.d!==null", timeout=10000)      # the page's own load first, then ours
+                await pg.add_style_tag(content="#wizmodal{display:none!important}")   # the first-start wizard of a new Spark
                 await pg.evaluate("""window.__pasted=[];clearTimeout(FZ.timer);
                     FZ.d={chips:['uptime'],folge:[],hilfe:true,gefahr:""" + json.dumps({k: [list(g) for g in v] for k, v in fernzugang.GEFAHR.items()}) + """,
                       hilfe_zeilen:60,hilfe_schirm:8192,hilfe_befehle:10,vorschlag_s:5};
@@ -1789,10 +1790,10 @@ class InBrowser(unittest.TestCase):
                     FZ.term={paste(c){window.__pasted.push(c)},focus(){},buffer:{active:{length:3,getLine(i){return{translateToString(){return 'zeile'+i}}}}}};
                     $('fzview').hidden=false;$('fzmain').hidden=true;fzHilfeNeu();fzChips()""")
                 self.assertFalse(await pg.evaluate("$('fzhilfe').hidden"))
-                await pg.evaluate("fzZeile('ls -la\\r')")                  # the box is closed: nothing asked
+                await pg.evaluate("fzSpalte(false);fzZeile('ls -la\\r')")  # the column is folded: nothing asked
                 await pg.wait_for_timeout(1600)
                 self.assertEqual(asked, [])
-                await pg.evaluate("$('fzhilfe').open=true;fzZeile('systemctl status nginx\\r')")
+                await pg.evaluate("fzSpalte(true);fzZeile('systemctl status nginx\\r')")
                 await pg.wait_for_function("document.querySelector('#fzchips .fzvorsicht')", timeout=10000)
                 url, body = asked[0]
                 self.assertIn("art=vorschlag", url)
@@ -1869,14 +1870,15 @@ class ShellForReal(Base):
             self.ws.sock.shutdown(socket.SHUT_RDWR)
         super().tearDown()
 
-    def run_page(self, body, init=""):
+    def run_page(self, body, init="", size=(1280, 900)):
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
 
         async def go():
             async with async_playwright() as pw:
                 exe = chromium()
                 br = await pw.chromium.launch(**({"executable_path": exe} if exe else {}))
-                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                ctx = await br.new_context(viewport={"width": size[0], "height": size[1]}, locale="de-DE", bypass_csp=True,
+                                           is_mobile=size[0] < 500, has_touch=size[0] < 500)
                 if init:
                     await ctx.add_init_script(init)
 
@@ -1885,12 +1887,13 @@ class ShellForReal(Base):
                 await ctx.route("**/api/admin/fernzugang/sitzung**", with_code)
                 pg = await ctx.new_page()
                 base = f"http://127.0.0.1:{self.port}"
-                await pg.goto(base + "/")
+                await pg.goto(base + "/", wait_until="domcontentloaded")
                 r = await pg.request.post(base + "/api/login", data={"password": "secret-admin", "code": "123456"})
                 self.assertEqual(r.status, 200)
-                await pg.goto(base + "/")
+                await pg.goto(base + "/", wait_until="domcontentloaded")
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
-                await pg.add_style_tag(content="#wizmodal{display:none!important}")   # the first-start wizard of a new Spark
+                # the first-start wizard of a new Spark and the bar „restart needed“ other tests leave: not this test's page
+                await pg.add_style_tag(content="#wizmodal,#confbar{display:none!important}")
                 await pg.evaluate("goSec('fern')")
                 await pg.wait_for_function("FZ.d&&(FZ.d.geraete||[]).length===1", timeout=15000)
                 await pg.locator("#fzlist button", has_text="Shell").first.click()
@@ -1928,25 +1931,34 @@ class ShellForReal(Base):
         self.run_page(body)
 
     def test_alle_tasten_fills_the_screen_with_the_terminal_and_a_drawer(self):
-        """Dominik 2026-10-28 19:58: full screen only the terminal (no cards beside it, no empty space, the size sent
-        to the shell), chips and assistant in a drawer from the right on Strg+Umschalt+Leertaste or the edge tab
-        (never sent to the shell); leaving restores the page."""
+        """Dominik 2026-10-28 19:58 and 20:07 (layout A): full screen only the terminal with a thin row of chips at its
+        foot (no cards beside it, no empty space, the size sent to the shell); the assistant a drawer of 360 px from the
+        right on Strg+Umschalt+Leertaste or the edge tab (never sent to the shell); leaving restores the page."""
         lock = """Object.defineProperty(Navigator.prototype,'keyboard',{configurable:true,get(){return {lock(){window.__locked=(window.__locked||0)+1;return Promise.resolve()},unlock(){}}}});"""
+        helpers.set_config(fernzugang_hilfe=True)
 
         async def body(ctx, pg):
             before = await pg.evaluate("[FZ.term.cols,FZ.term.rows]")
             await pg.click("#fzalletasten")
             await pg.wait_for_function("document.fullscreenElement===$('fzview')", timeout=10000)
             await pg.wait_for_function("FZ.term.cols>" + str(before[0]), timeout=10000)
-            await pg.wait_for_function("Math.round($('fzterm').getBoundingClientRect().width)===innerWidth", timeout=10000)   # settled
-            look = lambda: pg.evaluate("""(()=>{const t=$('fzterm').getBoundingClientRect(),W=innerWidth,H=innerHeight,bad=[];
+            for _ in range(100):                                                     # settled
+                w = await pg.evaluate("[Math.round($('fzleft').getBoundingClientRect().width),innerWidth,Math.round($('fzview').getBoundingClientRect().width),document.documentElement.className,document.documentElement.clientWidth,$('fzview').className]")
+                if w[0] == w[1]:
+                    break
+                await pg.wait_for_timeout(100)
+            self.assertEqual(w[0], w[1], w)
+            look = lambda: pg.evaluate("""(()=>{const l=$('fzleft').getBoundingClientRect(),t=$('fzterm').getBoundingClientRect(),c=$('fzchips').getBoundingClientRect(),W=innerWidth,H=innerHeight,bad=[];
                 for(const [x,y] of [[.1,.1],[.5,.5],[.9,.9],[.9,.2],[.2,.9],[.98,.7]]){const e=document.elementFromPoint(x*W,y*H);
                   if(!e||!(e.closest('#fzterm')||e.closest('#fzdrawertab')||e.closest('#fzvollhint')))bad.push([x,y,e&&(e.id||e.className)])}
                 const vis=id=>{const r=$(id).getBoundingClientRect();return r.width>0&&getComputedStyle($(id)).visibility!=='hidden'&&r.left<W};
-                return {t:[t.left,t.top,t.width,t.height],W,H,bad,side:vis('fzside'),cols:FZ.term.cols,rows:FZ.term.rows,
+                return {l:[l.left,l.top,l.width,l.height],tw:t.width,tb:t.bottom,cb:c.bottom,W,H,bad,side:vis('fzside'),cols:FZ.term.cols,rows:FZ.term.rows,
                         bar:$('fzvolltext').textContent,hint:!$('fzvollhint').hidden}})()""")
             a = await look()
-            self.assertEqual([round(x) for x in a["t"]], [0, 0, a["W"], a["H"]], a)   # the terminal is the screen
+            self.assertEqual([round(x) for x in a["l"]], [0, 0, a["W"], a["H"]], a)   # terminal and chips are the screen
+            self.assertEqual(round(a["tw"]), a["W"], a)
+            self.assertGreater(a["tb"], a["H"] - 40, a)                              # the chips a thin row at the foot
+            self.assertLessEqual(a["cb"], a["H"] + 1, a)
             self.assertEqual(a["bad"], [], a)                                        # no card, no page around it
             self.assertFalse(a["side"], a)
             self.assertTrue(a["bar"].startswith("Fernsitzung aktiv · vps-1"), a)
@@ -1959,10 +1971,10 @@ class ShellForReal(Base):
             await pg.click("#fzterm")
             await pg.keyboard.press("Control+Shift+Space")
             await pg.wait_for_function("FZ.term.cols<" + str(a["cols"]), timeout=10000)
-            await pg.wait_for_function("$('fzside').getBoundingClientRect().left<=innerWidth-339", timeout=10000)   # slid in
+            await pg.wait_for_function("$('fzside').getBoundingClientRect().left<=innerWidth-359", timeout=10000)   # slid in
             b = await look()
             self.assertTrue(b["side"], b)
-            self.assertEqual(round(b["t"][2]), a["W"] - 340, b)
+            self.assertEqual(round(b["l"][2]), a["W"] - 360, b)                      # pushed, not covered
             await pg.wait_for_timeout(300)
             self.assertNotIn("echo: ", await pg.evaluate(self.TEXT))               # the shortcut never reached the shell
             await pg.click("#fzdrawertab")
@@ -1972,10 +1984,110 @@ class ShellForReal(Base):
             await pg.wait_for_function("!document.fullscreenElement", timeout=10000)
             await pg.wait_for_function("FZ.term.cols<" + str(a["cols"]), timeout=10000)
             c = await pg.evaluate("[$('fzside').getBoundingClientRect().width,getComputedStyle($('fzside')).visibility]")
-            self.assertGreater(c[0], 200, c)                                       # the page as before
+            self.assertGreater(c[0], 200, c)                                       # the page as before: the column
             self.assertEqual(c[1], "visible")
             self.assertEqual(await pg.evaluate("window.__locked"), 1)
         self.run_page(body, lock)
+
+    LOOK = """(()=>{const d=document.documentElement,t=$('fzterm').getBoundingClientRect(),s=$('fzside').getBoundingClientRect(),h=document.querySelector('header');
+        return {scroll:d.scrollHeight-innerHeight,wide:d.scrollWidth-innerWidth,tw:t.width,th:t.height,bottom:t.bottom,H:innerHeight,cols:FZ.term.cols,rows:FZ.term.rows,
+                side:s.width,menu:!!h&&getComputedStyle(h).display!=='none',zu:$('fzview').classList.contains('fzzu')}})()"""
+
+    def test_layout_a_never_scrolls_and_the_menu_and_column_give_way(self):
+        """Dominik 2026-10-28 20:07 (layout A): with a session open the page never scrolls at 1440 × 900 and 1920 × 1080;
+        the panel's menu is folded away while the terminal is open (the terminal grows), „Menü ausblenden“ brings it
+        back and the choice stays; the column is 340 px, its width dragged between 280 and 520 px and kept, a double
+        click folds it (the terminal grows); the session's facts behind the ⓘ, the host key shortened."""
+        self.layout_a((1440, 900))
+
+    def test_layout_a_at_1920(self):
+        """The same at 1920 × 1080 (about 150 columns)."""
+        self.layout_a((1920, 1080))
+
+    def layout_a(self, size):
+        helpers.set_config(fernzugang_hilfe=True)
+
+        async def body(ctx, pg):
+            await pg.wait_for_function("FZ.fp", timeout=30000)
+            await pg.wait_for_function("document.documentElement.scrollHeight<=innerHeight", timeout=5000)   # settled
+            a = await pg.evaluate(self.LOOK)
+            self.assertLessEqual(a["scroll"], 0, a)                          # the page never scrolls
+            self.assertLessEqual(a["wide"], 0, a)
+            self.assertFalse(a["menu"], a)                                   # the menu folded away
+            self.assertEqual(round(a["side"]), 340, a)
+            self.assertGreater(a["th"], size[1] * 0.6, a)                    # the terminal takes the height
+            self.assertGreater(a["cols"], 90 if size[0] == 1440 else 140, a)
+            await pg.click("#fzmenu")                                        # the menu back: the terminal narrower
+            await pg.wait_for_function("FZ.term.cols<" + str(a["cols"]), timeout=10000)
+            b = await pg.evaluate(self.LOOK)
+            self.assertTrue(b["menu"], b)
+            self.assertLessEqual(b["scroll"], 0, b)
+            self.assertEqual(await pg.evaluate("localStorage.getItem('fzmenu')"), "zeigen")
+            await pg.click("#fzmenu")
+            await pg.wait_for_function("FZ.term.cols===" + str(a["cols"]), timeout=10000)
+            # drag the edge: wider column, kept in this browser, never outside 280–520
+            g = await pg.locator("#fzgriff").bounding_box()
+            x, y = g["x"] + g["width"] / 2, g["y"] + g["height"] / 2
+            await pg.mouse.move(x, y)
+            await pg.mouse.down()
+            await pg.mouse.move(x - 100, y, steps=5)
+            await pg.mouse.up()
+            w = await pg.evaluate("$('fzside').getBoundingClientRect().width")
+            self.assertEqual(round(w), 440)
+            self.assertEqual(await pg.evaluate("localStorage.getItem('fzcol')"), "440")
+            await pg.mouse.move(x - 100, y)
+            await pg.mouse.down()
+            await pg.mouse.move(x - 600, y, steps=5)
+            await pg.mouse.up()
+            self.assertEqual(round(await pg.evaluate("$('fzside').getBoundingClientRect().width")), 520)
+            cols = await pg.evaluate("FZ.term.cols")
+            await pg.dblclick("#fzgriff")                                    # a double click folds it
+            await pg.wait_for_function("FZ.term.cols>" + str(cols), timeout=10000)
+            c = await pg.evaluate(self.LOOK)
+            self.assertTrue(c["zu"], c)
+            self.assertEqual(await pg.evaluate("localStorage.getItem('fzspalte')"), "zu")
+            await pg.click("#fzspalte")
+            await pg.wait_for_function("FZ.term.cols===" + str(cols), timeout=10000)
+            # the ⓘ in the red line: the facts, the host key shortened, whole on hover
+            await pg.click("#fzbinfo")
+            info = await pg.evaluate("""(()=>{const p=$('fzinfopop'),dd=document.querySelector('#fzinfo dd[data-voll]'),r=p.getBoundingClientRect();
+                return {open:!p.hidden,text:p.textContent,short:dd&&dd.firstChild.textContent.trim(),full:dd&&dd.title,in:r.right<=innerWidth&&r.left>=0}})()""")
+            self.assertTrue(info["open"] and info["in"], info)
+            self.assertTrue(info["full"].startswith("SHA256:"), info)
+            self.assertIn("…", info["short"])
+            self.assertLess(len(info["short"]), 25, info)
+            for word in ("Alle trennen", "Ganzen Schlüssel kopieren", "geprüft", "vps-1"):
+                self.assertIn(word, info["text"])
+            await pg.mouse.click(5, size[1] - 5)                             # a click elsewhere closes it
+            self.assertTrue(await pg.evaluate("$('fzinfopop').hidden"))
+            self.assertNotIn("Diese Sitzung", await pg.evaluate("$('fzview').textContent"))
+            # a bar that comes later above the page (here 54 px): the terminal makes room, the page still never scrolls
+            rows = await pg.evaluate("FZ.term.rows")
+            await pg.evaluate("const b=document.createElement('div');b.id='spaeter';b.style.height='54px';document.body.prepend(b)")
+            await pg.wait_for_function("FZ.term.rows<" + str(rows) + "&&document.documentElement.scrollHeight<=innerHeight", timeout=10000)
+        self.run_page(body, size=size)
+
+    def test_phone_chips_keys_and_the_assistant_as_a_sheet(self):
+        """Dominik 2026-10-28 20:07 (phone): terminal over the whole width, one row of chips to swipe, the key row, and
+        „Frag den Assistenten“ opens a sheet from below; „Einfügen“ closes it and the terminal has the focus."""
+        helpers.set_config(fernzugang_hilfe=True)
+
+        async def body(ctx, pg):
+            a = await pg.evaluate("""(()=>{const r=id=>$(id).getBoundingClientRect(),c=r('fzchips'),k=r('fzkeys'),b=r('fzfragbtn'),t=r('fzterm');
+                return {W:innerWidth,wide:document.documentElement.scrollWidth-innerWidth,tw:t.width,ch:c.height,kh:k.height,b:b.height,
+                        side:r('fzside').top>=innerHeight-1||getComputedStyle($('fzside')).visibility==='hidden'}})()""")
+            self.assertLessEqual(a["wide"], 0, a)
+            self.assertGreater(a["tw"], a["W"] - 60, a)
+            self.assertLess(a["ch"], 40, a)                                          # one row of chips
+            self.assertLess(a["kh"], 60, a)                                          # one row of keys
+            self.assertGreater(a["b"], 20, a)
+            self.assertTrue(a["side"], a)                                            # the sheet closed at first
+            await pg.click("#fzfragbtn")
+            await pg.wait_for_function("getComputedStyle($('fzside')).visibility==='visible'&&$('fzside').getBoundingClientRect().bottom<=innerHeight+1", timeout=10000)
+            await pg.evaluate("fzEinfuegen('ls')")
+            await pg.wait_for_function("!$('fzview').classList.contains('fzblatt')", timeout=10000)
+            self.assertTrue(await pg.evaluate("$('fzterm').contains(document.activeElement)"))
+        self.run_page(body, size=(390, 844))
 
 
 def secrets_ticket(gid, cols, rows):

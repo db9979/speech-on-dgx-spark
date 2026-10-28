@@ -59,7 +59,7 @@ FENSTER = {
     ".pcard.split .pside": "the sticky side column of a person",
     ".choice .chrows": "a choice card inside the conversation",
     ".cx-list": "Chats: the list of chats beside the messages",
-    ".fzview:fullscreen .fzside": "Fernzugang in full screen: the drawer with suggestions and assistant beside the terminal",
+    ".fzantwort": "Fernzugang: the assistant's answers in its column beside the terminal; the newest stays in view",
     ".cx-log": "Chats: the messages",
     ".cx-pane": "Chats: the side pane",
     ".dkvpic": "the companion's screen picture",
