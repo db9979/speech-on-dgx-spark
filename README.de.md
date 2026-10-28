@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.193** KI-Dungeon-Master: der Prüfstand spielt jede Gruppe auch mit den Runen, die sie bis zu ihrer Stufe findet, und hält sie bei höchstens 8 Punkten mehr Siegen (Review 27.10. Paket 11.5)
 - **V01.1.192** KI-Dungeon-Master: eine Rune, die erst die Erzählung vergibt, ist ein erfundener Fund, der Satz wird gestrichen (Review 27.10. Paket 7, Runen)
 - **V01.1.191** KI-Dungeon-Master: ehrliche Fähigkeiten der SRD-Klassen, Paladin-Handauflegen heilt
 - **V01.1.190** KI-Dungeon-Master: Runen und Sockel, Stufe 1: Funde bringen Sockel und Runen, der Krämer verkauft die ersten vier, einsetzen mit Vorschau und nie im Kampf, Wirkung und Deckel rechnet das Panel (Plan „Runen und Sockel“)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.186** KI-Dungeon-Master: jede Person hat ein festes Alter und feste Haare, Augen, Bart und Statur vom Panel, Alter und Geschlecht nie vom Modell, kein Kind mit Erwachsenenberuf und nie als Gegner, die Rolle setzt den Beruf (Review 27.10. Paket 10)
 - **V01.1.185** KI-Dungeon-Master: der Fortschritt der Geschichte ist Kern und ab Werk an: Stillstand-Wink, Ereignis, Tipp und Spuren zum Wendepunkt auch ohne „Spieler anleiten“, mit eigenem Admin-Schalter (Review 27.10. E12)
 - **V01.1.184** KI-Dungeon-Master: das Panel entscheidet, das Modell erzählt: Proben nur mit Stufe und Tabellenwert, Beute vor der Erzählung an den Finder, Heilung nur über Rast, Trank und Zauber, Akt-Ende und Ziel nur mit ihren Worten (Review 27.10. Paket 9)
-- **V01.1.183** KI-Dungeon-Master: kleine Gesten erscheinen am Tisch, nach 2 Minuten Stille, höchstens zweimal je Zug, nie im Kampf oder im Auto
 
 
 

@@ -714,7 +714,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dungeon-musik` | KI-Dungeon-Master: Musikstücke je Welt und Stimmung vom eigenen Musikmodell (MP3, für alle Runden, nichts Persönliches) | – | nein |
 | `state/dungeon-musik.json` | KI-Dungeon-Master: Musik vorbereiten an oder aus, Stücke je Welt und Stimmung, Speicherplatz | – | ja |
 | `state/dungeon-personen.json` | KI-Dungeon-Master: Personen-Katalog mit Karte, Wesen, Rolle, Stimme, Gesicht und Haltung zu den Helden (nur Spieldaten) | – | ja |
-| `state/dungeon-pruefstand.json` | KI-Dungeon-Master: Ergebnis des Balance-Prüfstands (Siege, verlorenes Leben und Runden je Stufe und Gruppengröße) | – | ja |
+| `state/dungeon-pruefstand.json` | KI-Dungeon-Master: Ergebnis des Balance-Prüfstands (Siege, verlorenes Leben und Runden je Stufe und Gruppengröße, ohne und mit Runen) | – | ja |
 | `state/dungeon-regeln.json` | KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins | – | ja |
 | `state/dungeon-runden` | KI-Dungeon-Master: eine Datei je Runde mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung | nur Hashes | nein |
 | `state/dungeon-runden.json` | KI-Dungeon-Master: gemeinsame Werte aller Runden (Bilder des Tages, Daumen je Welt) | – | ja |

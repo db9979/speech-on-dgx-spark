@@ -242,7 +242,7 @@ def _pruefstand():
         return ""
     c = dungeon_pruefstand.counts()
     return (f" · Prüfstand {c['zellen']} Felder, {c['unter']} unter und {c['ueber']} über dem Ziel" if c["zellen"] else " · Prüfstand noch ohne Lauf") + \
-        (" · Prüfstand spielt gerade" if c["laeuft"] else "")
+        (f" · mit Runen {c['runen_plus']:+} Punkte".replace(".", ",") if c["runen_plus"] is not None else "") + (" · Prüfstand spielt gerade" if c["laeuft"] else "")
 
 
 def _abenteuerimport():

@@ -714,7 +714,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-musik` | AI Dungeon Master: music pieces per world and mood from the own music model (MP3, for every round, nothing personal) | – | no |
 | `state/dungeon-musik.json` | AI Dungeon Master: prepare music on or off, pieces per world and mood, storage | – | yes |
 | `state/dungeon-personen.json` | AI Dungeon Master: people catalog with card, traits, role, voice, face and attitude towards the heroes (game data only) | – | yes |
-| `state/dungeon-pruefstand.json` | AI Dungeon Master: the balance bench's result (wins, life lost and turns per level and group size) | – | yes |
+| `state/dungeon-pruefstand.json` | AI Dungeon Master: the balance bench's result (wins, life lost and turns per level and group size, without and with runes) | – | yes |
 | `state/dungeon-regeln.json` | AI Dungeon Master: the admin's own rules and catalog entries | – | yes |
 | `state/dungeon-runden` | AI Dungeon Master: one file per round with seats (hashes of the links), heroes, actions and narration | hashes only | no |
 | `state/dungeon-runden.json` | AI Dungeon Master: shared values of all rounds (pictures of the day, thumbs per world) | – | yes |

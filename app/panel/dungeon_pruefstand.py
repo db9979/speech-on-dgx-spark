@@ -23,10 +23,15 @@ fight, a healing potion for a third of its life every second fight, two rumours 
 lesson and „Ausrüstung verbessern“ are what the surplus is for. The self-test keeps income to expenses (median) within
 WIRTSCHAFT and no find worth more than JACKPOT times a level's income.
 
+With runes (Review 27.10., bericht „Abstimmung mit den Runen“ 4; only while „Runen und Sockel“ works,
+dungeon_runen.wirkt): the same groups with the runes a group has found up to its level by the real find and trader
+rates (with_runes), set as strong as the caps allow; the self-test keeps their wins at most RUNEN_PLUS points above
+those without (the mean of all cells), and the economy sells every rune found.
+
 The night's run (NACHT, once a night) and the admin's „Jetzt durchspielen“ write the table into STATE/dungeon-pruefstand.json
 (dateien.py): {"zeit", "kaempfe", "gefahr", "zellen": {"stufe/gruppe": {"siege", "leben", "runden"}},
-"wirtschaft": {"stufe": {"kaempfe", "einnahmen", "zehntel", "ausgaben", "verhaeltnis", "fund_max"}}}. Only while
-„Balance-Prüfstand“ is on (features.py, below the Dungeon-Master).
+"runen": the same with runes ({} while they are off), "wirtschaft": {"stufe": {"kaempfe", "einnahmen", "zehntel",
+"ausgaben", "verhaeltnis", "fund_max"}}}. Only while „Balance-Prüfstand“ is on (features.py, below the Dungeon-Master).
 
     GET  /api/admin/dungeon/pruefstand         the last table, the aim, whether it is on and running
     POST /api/admin/dungeon/pruefstand         „Jetzt durchspielen“ (rate-limited, one run at a time)
@@ -45,6 +50,7 @@ import dungeon
 import dungeon_bestiarium
 import dungeon_gold as gold
 import dungeon_kampf as kampf
+import dungeon_runen as runen
 import features
 import guard
 from common import STATE, read_json, write_json
@@ -66,6 +72,7 @@ JACKPOT = 10                   # no single find sells for more than this many ti
 LAEUFE = 200                   # runs per level of the economy
 GRUPPE_W = 4                   # heroes of the economy's group
 RAETSEL = 0.25                 # the part of the experience from riddles, places and acts (no fight, no find)
+RUNEN_PLUS = 8                 # per cent points a group may win more often with its runes than without (Review 27.10.)
 KNOPF_S = 60                   # „Jetzt durchspielen“ at most once a minute
 clock = time.time              # the tests set it (no wall clock in a test)
 _lock = threading.Lock()
@@ -113,9 +120,10 @@ def raise_to(r, h, stufe, rng):
     return h
 
 
-def party(r, n, stufe, rng):
+def party(r, n, stufe, rng, runen_rng=None):
     """n heroes of this level built like at the table (Review 27.10. B6): every class of the world in turn from a start
-    the seed draws, raised level by level (raise_to), gear of the find table's rarity (gear_rarity)."""
+    the seed draws, raised level by level (raise_to), gear of the find table's rarity (gear_rarity); with runen_rng
+    also the runes found up to the level (with_runes, its own dice: the same group as without)."""
     ks = [k["id"] for k in r["klassen"]]
     volk = r["voelker"][0]["id"]
     selten = gear_rarity(r, stufe)
@@ -129,7 +137,50 @@ def party(r, n, stufe, rng):
         if a:
             h["an"]["koerper"] = dungeon.item(r, a["id"], selten, rng)
         out.append(h)
-    return out
+    return with_runes(r, out, stufe, runen_rng) if runen_rng else out
+
+
+def occasions(r, stufe, rng):
+    """The finds of one level (Wirtschaft Punkt 6): every fight the level takes (the experience to the next level, a
+    RAETSEL part from riddles, places and acts), a chest every third fight, a reward and every other level a boss."""
+    ep = r["stufen_ep"]
+    dxp = ep[stufe] - ep[stufe - 1] if stufe < len(ep) else ep[-1] - ep[-2]
+    k = max(1, round((1 - RAETSEL) * dxp / kampf.BUDGET[stufe - 1]))
+    return ["gegner"] * k + ["truhe"] * (k // 3) + ["belohnung"] + (["boss"] if rng.random() < 0.5 else [])
+
+
+def with_runes(r, held, stufe, rng):
+    """The group's runes as at the table (Review 27.10., bericht „Abstimmung mit den Runen“ 4): sockets on weapon and
+    body armour by dungeon_runen.sockets, the runes of every level's finds (occasions) by dungeon_runen.draw at that
+    level's rank, and from the trader every rune of the ranks it sells (KRAEMER, the gold assumed); then each hero
+    fills every socket with the rune that makes the thing strongest within the caps (dungeon_runen.fits), a rune not
+    yet in the thing first (per value only the strongest bonus counts), the weapon first. More than a player gets: the
+    bench's runes are the upper bound."""
+    for h in held:
+        for it in (h["an"].get("haupthand"), h["an"].get("koerper")):
+            if it:
+                runen.sockets(dungeon, r, it, rng)
+    rd = {}
+    for s in range(1, stufe + 1):
+        for anlass in occasions(r, s, rng):
+            runen.draw(dungeon, r, rd, held, anlass, rng, stufe=s)
+    for h in held:
+        frei = [it for it in (h["an"].get("haupthand"), h["an"].get("koerper")) if it and it.get("so")]
+        rb = h.setdefault("runen", {})
+        for x in r.get("runen") or []:
+            if x["rang"] <= runen.KRAEMER:
+                rb[x["id"]] = rb.get(x["id"], 0) + sum(it["so"] for it in frei)
+        for it in frei:
+            while len(it["ru"]) < it["so"]:
+                z = [(rid not in it["ru"], c[1]["nachher"], rid) for rid in sorted(h["runen"]) if h["runen"][rid]
+                     for c in [runen.fits(dungeon, r, h, it, rid)] if c[0] == "ok"]
+                if not z:
+                    break
+                rid = max(z)[2]
+                it["ru"].append(rid)
+                h["runen"][rid] -= 1
+        h["leben"] = h["leben_max"] = dungeon.life(r, h)
+    return held
 
 
 def _spell(r, h):
@@ -206,13 +257,14 @@ def fight(r, held, wahl, rng):
     return {"sieg": sieg, "leben": 1 - sum(max(0, h["leben"]) for h in held) / max(1, voll), "runden": n}
 
 
-def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None):
+def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None, mit_runen=False):
     """The bench for one level and group size: {"siege": per cent, "leben": per cent lost in the won fights,
-    "runden": mean turns}; None when no encounter of the danger fits."""
+    "runden": mean turns}; None when no encounter of the danger fits. mit_runen: the same groups with their runes."""
     rng = random.Random(f"{seed}|{stufe}|{gruppe}|{gefahr}")
+    rrng = random.Random(f"{seed}|{stufe}|{gruppe}|{gefahr}|runen") if mit_runen else None
     won, lost, runden, n = 0, [], 0, 0
     for _ in range(kaempfe):
-        held = party(r, gruppe, stufe, rng)
+        held = party(r, gruppe, stufe, rng, rrng)
         wahl = encounter(r, held, gefahr, rng, pool=pool)
         if not wahl:
             continue
@@ -227,39 +279,43 @@ def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None):
     return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
 
 
-def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, pool=None):
-    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. pool: only these foes."""
+def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, pool=None, mit_runen=False):
+    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. pool: only these foes;
+    mit_runen: the groups with their runes (with_runes; the runes do something only while dungeon_runen.wirkt)."""
     out = {}
     for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
         for g in gruppen or range(1, GRUPPE_MAX + 1):
-            c = cell(r, s, g, gefahr, kaempfe, seed, pool)
+            c = cell(r, s, g, gefahr, kaempfe, seed, pool, mit_runen)
             if c:
                 out[f"{s}/{g}"] = c
     return out
 
 
-def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None):
+def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False):
     """The economy per level {"stufe": {"kaempfe", "einnahmen" (median of a hero), "zehntel" (the worst tenth),
-    "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services."""
+    "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services;
+    mit_runen: every rune of the finds (dungeon_runen.draw, its own dice) sold too."""
     out = {}
     welt = r["welten"][0]["id"]
-    ep = r["stufen_ep"]
     for stufe in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
         rng = random.Random(f"{seed}|{stufe}")
-        dxp = ep[stufe] - ep[stufe - 1] if stufe < len(ep) else ep[-1] - ep[-2]
-        kaempfe = max(1, round((1 - RAETSEL) * dxp / kampf.BUDGET[stufe - 1]))
+        rrng = random.Random(f"{seed}|{stufe}|runen")
+        kaempfe = occasions(r, stufe, random.Random(0)).count("gegner")
         kasse = kaempfe / 4 * dungeon.KASSE * stufe          # a merchant every fourth fight
         ein, top, leben = [], 0, 0
         for _ in range(laeufe):
             held = party(r, GRUPPE_W, stufe, rng)
             for h in held:
                 h["gold"] = 0
-            verkauf = 0
-            for anlass in ["gegner"] * kaempfe + ["truhe"] * (kaempfe // 3) + ["belohnung"] + (["boss"] if rng.random() < 0.5 else []):
+            verkauf, rd = 0, {}
+            for anlass in occasions(r, stufe, rng):
                 _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt)
                 x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
                 verkauf += x
                 top = max(top, x)
+                rid = mit_runen and runen.draw(dungeon, r, rd, held, anlass, rrng, stufe=stufe)[1]
+                if rid:
+                    verkauf += runen.sell_price(r, rid)
             ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / GRUPPE_W)
             leben = sum(h["leben_max"] for h in held) / GRUPPE_W
         aus = (kaempfe / 4 * gold.PREIS["gasthaus"] * stufe + kaempfe / 2 * dungeon.HEIL_GOLD * leben / 3
@@ -287,9 +343,12 @@ def _go(grund):
         t0 = time.monotonic()
         r = dungeon.rules()
         z = bench(r)
-        w = economy(r)
+        zr = bench(r, mit_runen=True) if runen.wirkt() else {}
+        w = economy(r, mit_runen=bool(zr))
         write_json(FILE, {"zeit": int(clock()), "kaempfe": KAEMPFE, "gefahr": "mittel", "zellen": z, "wirtschaft": w,
-                          "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
+                          "runen": zr, "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
+        if zr:
+            print(f"dungeon: pruefstand | runen | {runes_plus(z, zr)} punkte", flush=True)
         unter = sum(1 for c in z.values() if c["siege"] < AIM[0])
         aussen = sum(1 for c in w.values() if not WIRTSCHAFT[0] <= c["verhaeltnis"] <= WIRTSCHAFT[1])
         print(f"dungeon: pruefstand | fertig | {len(z)} zellen | {unter} unter dem ziel | {aussen} stufen wirtschaft ausserhalb | {int(time.monotonic() - t0)} s", flush=True)
@@ -298,6 +357,12 @@ def _go(grund):
     finally:
         _run["laeuft"] = False
     return True
+
+
+def runes_plus(z, zr):
+    """How many per cent points more the groups win with their runes, the mean over the cells of both tables."""
+    ks = [k for k in z if k in zr]
+    return round(sum(zr[k]["siege"] - z[k]["siege"] for k in ks) / max(1, len(ks)), 1)
 
 
 def _date():
@@ -321,7 +386,8 @@ def view():
     d = last()
     return {"an": on(), "laeuft": _run["laeuft"], "ziel": list(AIM), "gruppe_max": GRUPPE_MAX, "zeit": d.get("zeit", 0),
             "kaempfe": d.get("kaempfe", 0), "gefahr": d.get("gefahr", "mittel"), "zellen": d.get("zellen", {}),
-            "wirtschaft": d.get("wirtschaft", {}), "wirtschaft_ziel": list(WIRTSCHAFT)}
+            "wirtschaft": d.get("wirtschaft", {}), "wirtschaft_ziel": list(WIRTSCHAFT), "runen": d.get("runen", {}),
+            "runen_plus": runes_plus(d.get("zellen", {}), d.get("runen", {})) if d.get("runen") else None, "runen_ziel": RUNEN_PLUS}
 
 
 @router.get("/api/admin/dungeon/pruefstand", dependencies=[Depends(auth)])
@@ -350,6 +416,8 @@ async def now(request: Request):
 
 def counts():
     """For the live overview: the table's cells, how many below and above the aim, whether a run is on."""
-    z = last().get("zellen") or {}
+    d = last()
+    z = d.get("zellen") or {}
     return {"zellen": len(z), "unter": sum(1 for c in z.values() if c["siege"] < AIM[0]),
-            "ueber": sum(1 for c in z.values() if c["siege"] > AIM[1]), "laeuft": _run["laeuft"]}
+            "ueber": sum(1 for c in z.values() if c["siege"] > AIM[1]), "laeuft": _run["laeuft"],
+            "runen_plus": runes_plus(z, d["runen"]) if d.get("runen") else None}

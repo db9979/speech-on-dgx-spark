@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Runen im Prüfstand (V01.1.193, Review 27.10. Paket 11.5, bericht „Abstimmung mit den Runen“ 4, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Ist *Runen und Sockel* an, spielt der Balance-Prüfstand jede Zelle ein zweites Mal mit denselben Gruppen und ihren Runen (dungeon_pruefstand.with_runes, eigene Würfel): Sockel an Waffe und Körperrüstung wie bei einem Fund (dungeon_runen.sockets), die Runen aller Funde jeder Stufe bis zur eigenen (occasions: jeder Kampf, den die Stufe braucht, jede dritte eine Truhe, eine Belohnung, jede zweite Stufe ein Boss) nach der echten Fundregel und dem Rang dieser Stufe (dungeon_runen.draw, dieselbe Regel wie am Tisch), dazu jede Rune des Krämers (Rang 1 bis 4, das Gold vorausgesetzt). Jeder Held füllt jeden Sockel mit der Rune, die das Ding innerhalb der Deckel am stärksten macht (dungeon_runen.fits), eine neue Rune vor einer zweiten gleichen, die Waffe zuerst; das ist mehr, als ein Spieler bekommt, also die Obergrenze. Gemessen (200 Kämpfe je Zelle): mit Runen im Mittel +2,1 Punkte Siege, die einzelnen Zellen zwischen −5 und +13. Der Selbsttest test_runes_win_at_most_eight_points_more hält den Mittelwert bei höchstens +8 (RUNEN_PLU"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "S) und jede Zelle mit Runen bei höchstens 98 % (Ziel + 8), und die Wirtschaft verkauft jede gefundene Rune zum halben Preis und bleibt im Ziel (1,2 bis 2). Die Budget-Tabelle bleibt die aus V01.1.188. Die Seite des Prüfstands zeigt die Spalte *mit Runen* und den Mittelwert, die Datei dungeon-pruefstand.json hat dafür runen. Live: „mit Runen +N Punkte“. Log dungeon: pruefstand | runen | N punkte. Die Fund-, Sockel- und Einsetzregeln stehen nur einmal in dungeon_runen (sockets, draw, fits); Tisch und Prüfstand rufen dieselben."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Erfundene Rune (V01.1.192, Review 27.10. Paket 7, bericht „Abstimmung mit den Runen“ 7, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Das Panel würfelt Runen erst nach der Erzählung (put_find), also vergibt die Erzählung nie eine. Die Prüfung „Fund“ (found_untold) fängt deshalb auch eine Rune in einem Satz mit einem Wort aus FINDET und keinem aus NEIN, mit oder ohne Heldennamen („Ihr findet eine Tiwaz-Rune.“ wird „Gruppe: Tiwaz“): den Namen einer Rune des Katalogs (ab vier Buchstaben, nie der Name einer Person der Runde), „Runenwort“ und das Wort der Welt für eine Rune in der Einzahl als ganzes Wort (Rune, Chip, Perle, Siegel; „Perlen“ am Strand und „alte Runen“ an der Wand zählen nicht, _rune_terms). Eine Rune, die der genannte Held schon hat (im Runenbeutel oder in einem seiner Dinge), zählt nicht. Die Namen der Runenwörter (Glut, Morgenröte …) sind Alltagswörter und zählen nie, „Sockel“ auch nicht (ein Sockel ist auch ein Steinsockel). Hinweis, Tageszähler regel_fund und gestrichener Satz wie bei jedem erfundenen Fund. Selbsttest Table.test_a_rune_told_as_found_is_struck in test_dungeon_runen."
 },
 {
@@ -21446,6 +21462,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: runes in the bench (V01.1.193, review 27.10. package 11.5, report \"Abstimmung mit den Runen\" 4, Dominik 2026-10-27 \"ok\"): No new switch. While *Runes and sockets* is on, the balance bench plays every cell a second time with the same groups and their runes (dungeon_pruefstand.with_runes, own dice): sockets on weapon and body armour as with a find (dungeon_runen.sockets), the runes of every level's finds up to its own (occasions: every fight the level takes, a chest every third, a reward, a boss every other level) by the real find rule and that level's rank (dungeon_runen.draw, the same rule as at the table), and every rune of the trader (ranks 1 to 4, the gold assumed). Each hero fills every socket with the rune that makes the thing strongest within the caps (dungeon_runen.fits), a new rune before a second of the same, the weapon first; that is more than a player gets, so it is the upper bound. Measured (200 fights a cell): with runes +2.1 points of wins on average, the single cells between −5 and +13. The self-test test_runes_win_at_most_eight_points_more keeps the mean at +8 at most (RUNEN_PLUS) and every cell with runes at 98 % at most (aim + 8), and the econom"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "y sells every rune found for half its price and stays within its aim (1.2 to 2). The budget table stays the one of V01.1.188. The bench's page shows the column *with runes* and the mean, the file dungeon-pruefstand.json has runen for it. Live: \"mit Runen +N Punkte\". Log dungeon: pruefstand | runen | N punkte. The rules of finds, sockets and setting stand only once in dungeon_runen (sockets, draw, fits); table and bench call the same."
 },
 {
 "lang": "en",

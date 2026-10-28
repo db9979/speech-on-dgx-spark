@@ -213,12 +213,20 @@ def sockel_max(dm, r, it):
 
 def give_sockets(dm, r, rd, it, rng=None):
     """A find of a thing that can have sockets comes with them in SOCKEL_FUND of a hundred (only while on)."""
-    rng = rng or random
-    n = sockel_max(dm, r, it)
-    if n and on(rd) and "so" not in it and rng.randrange(100) < SOCKEL_FUND:
-        it["so"], it["ru"] = n, []
+    n = on(rd) and sockets(dm, r, it, rng)
+    if n:
         _day.bump("sockel")
         print(f"dungeon: rune | sockel | {n}", flush=True)
+
+
+def sockets(dm, r, it, rng=None):
+    """The roll of give_sockets (the balance bench rolls it too): the sockets the thing gets now, 0 for none."""
+    rng = rng or random
+    n = sockel_max(dm, r, it)
+    if not n or "so" in it or rng.randrange(100) >= SOCKEL_FUND:
+        return 0
+    it["so"], it["ru"] = n, []
+    return n
 
 
 def _w(r, it, ort, ru=None):
@@ -365,6 +373,12 @@ def check(dm, r, rd, h, it, rid):
         return "aus", {}
     if rd.get("kampf"):
         return "kampf", {}
+    return fits(dm, r, h, it, rid)
+
+
+def fits(dm, r, h, it, rid):
+    """The rules part of check (the balance bench sets its runes by it): "sockel", "voll", "deckel" or "ok", with
+    the numbers."""
     o, rs = place(dm, r, it), by(r)
     if rid not in rs or not it.get("so") or not o or not rs[rid].get(o) or not (h.get("runen") or {}).get(rid):
         return "sockel", {}
@@ -481,31 +495,43 @@ def find(dm, r, rd, held, anlass, rng=None):
     """A find's rune (4a): FUND percent by its occasion, a boss always, after PECH fights' finds without one surely;
     its rank by _rank; to the hero of held with the fewest runes found this round (the first on a tie), into its rune
     bag (a full bag: none). Returns the rune id or ""."""
-    rng = rng or random
-    if not on(rd) or not held or anlass not in FUND or not r.get("runen"):
+    if not on(rd):
         return ""
+    h, rid = draw(dm, r, rd, held, anlass, rng)
+    if not rid:
+        return ""
+    li = 1 if rd.get("lang") == "en" else 0
+    k = by(r)[rid]["rang"]
+    dm._log(rd, "rune", was="fund", name=h["name"], rune=by(r)[rid]["name"][li], wort=word(rd.get("welt", ""), li), rang=k)
+    _day.bump("gefunden")
+    print(f"dungeon: rune | fund | rang {k}", flush=True)
+    return rid
+
+
+def draw(dm, r, rd, held, anlass, rng=None, stufe=None):
+    """The roll of find (the balance bench draws by it too): (hero, rune id) into its rune bag, (None, "") for none;
+    the rank by the group's level or stufe."""
+    rng = rng or random
+    if not held or anlass not in FUND or not r.get("runen"):
+        return None, ""
     kampf_fund = anlass in ("gegner", "boss")
     pech = rd.get("runen_pech", 0)
     if not (rng.randrange(100) < FUND[anlass] or kampf_fund and pech >= PECH):
         if kampf_fund:
             rd["runen_pech"] = pech + 1
-        return ""
+        return None, ""
     rd["runen_pech"] = 0
     gezaehlt = rd.setdefault("runen_fund", {})
     h = min(held, key=lambda x: (gezaehlt.get(x["hid"], 0), held.index(x)))
     if sum((h.get("runen") or {}).values()) >= BEUTEL_MAX:
         print("dungeon: rune | fund | beutel voll", flush=True)
-        return ""
-    k = _rank(r, dm.group_level(held), rng)
+        return None, ""
+    k = _rank(r, stufe or dm.group_level(held), rng)
     rid = next(x["id"] for x in r["runen"] if x["rang"] == k)
     rb = h.setdefault("runen", {})
     rb[rid] = rb.get(rid, 0) + 1
     gezaehlt[h["hid"]] = gezaehlt.get(h["hid"], 0) + 1
-    li = 1 if rd.get("lang") == "en" else 0
-    dm._log(rd, "rune", was="fund", name=h["name"], rune=by(r)[rid]["name"][li], wort=word(rd.get("welt", ""), li), rang=k)
-    _day.bump("gefunden")
-    print(f"dungeon: rune | fund | rang {k}", flush=True)
-    return rid
+    return h, rid
 
 
 def stock(dm, r, rd, art, rng=None):

@@ -106,6 +106,27 @@ class Bench(unittest.TestCase):
         self.assertTrue(ps.AIM[0] <= mean <= ps.AIM[1], mean)
         self.assertEqual({k: c["siege"] for k, c in z.items() if not P.SPANNE[0] <= c["siege"] <= P.SPANNE[1]}, {})
 
+    def test_runes_win_at_most_eight_points_more(self):
+        """Review 27.10. 11.5 with the runes (bericht „Abstimmung mit den Runen“ 4, Dominik 2026-10-27 „ok“): the same
+        groups with the runes found up to their level by the real find and trader rates, set as strong as the caps
+        allow, win at most RUNEN_PLUS points more often than without (the mean of all cells), no cell makes a fight
+        trivial (above the aim + RUNEN_PLUS), and the economy with every rune sold keeps its aim."""
+        import random
+        r = dungeon.rules()
+        with mock.patch("dungeon_runen.wirkt", return_value=True):
+            held = ps.party(r, 3, 8, random.Random(1), random.Random(2))
+            self.assertTrue(any(it.get("ru") for h in held for it in dungeon.worn(h)))
+            self.assertEqual([h["klasse"] for h in held], [h["klasse"] for h in ps.party(r, 3, 8, random.Random(1))])   # the same group
+            for h in held:
+                self.assertEqual(h["leben"], dungeon.life(r, h))
+            ohne = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest")
+            mit = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest", mit_runen=True)
+            self.assertEqual(set(mit), set(ohne))
+            self.assertLessEqual(ps.runes_plus(ohne, mit), ps.RUNEN_PLUS)
+            self.assertEqual({k: c["siege"] for k, c in mit.items() if c["siege"] > ps.AIM[1] + ps.RUNEN_PLUS}, {})
+            w = ps.economy(r, laeufe=ps.LAEUFE // 2, mit_runen=True)
+        self.assertEqual({k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {})
+
     def test_the_economy_keeps_its_aim(self):
         """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
         costs (median), and no find sells for more than ten times a level's income; the inn grows with the level."""
