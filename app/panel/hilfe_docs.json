@@ -5901,6 +5901,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Regeln-Seite vollständig (V01.1.203, Dominik 2026-10-28 „die runen sehe ich die auch unter den regeln wie alles andere?“, „fehlt sonst noch etwas unter den regeln?“): Ohne neuen Schalter. Der Dungeon-Master-Reiter „Regeln“ (nur Admin) hat neue Teile, je mit Liste, Detail und Werten in festen Wörtern: 1. Runen (Rang, Bedeutung, Preis, was sie in Waffe, Rüstung und Schild tut, ab welcher Gruppenstufe sie fällt, ob der Krämer sie hat, was Händler zahlen) und Runenwörter (Runen in ihrer Reihenfolge, Ort, Sockel, ab Stufe, Zusatz; am Tisch erst mit Stufe 2 der Runen). Oben steht aufklappbar „Feste Regeln dazu“: der Schalter *Runen und Sockel* mit an oder aus und Sprung-Link (Funktionen → KI-Dungeon-Master → Runen und Sockel), Sockel je Grundteil, Funde, Krämer, Runenbeutel, die Obergrenzen (Waffe 6,5, Körper 6, die übrigen 3, Treffer +3, Rüstungsklasse +2 je Ding und +3 je Held, Leben +8 je Held, eine Widerstandsart je Ding), Einsetzen und das Wort je Welt, alles aus den Zahlen in dungeon_runen. 2. Effekte (benannt nach dem Anfang ihres Satzes, mit Wirkung, Schadensart, gehobenem Wert und erlaubten Arten). 3. Ortsarten der Karte, Räume der Gewölbe, Fallen (Rettungswur"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "f mit Wert und SG, Schaden, Welten), Rätsel (Frage, Hinweis, Lösung) und Begegnungen unterwegs (Art, Gewicht, Welten). 4. Stillstand-Ereignisse mit dem Schalter *Spieler anleiten* (Funktionen → KI-Dungeon-Master → Spieler anleiten), wann sie kommen und welche am Kindertisch gelten. „Ändern“, „Eigene Kopie“, „Ausblenden“ und „Zurück auf mitgeliefert“ wirken wie bei allen Teilen und laufen durch dieselbe Prüfung der Regeln (eine Rune auszublenden lässt eine Lücke in den Rängen und wird abgelehnt); Runen, Runenwörter und Stillstand-Ereignisse mischen sich dafür jetzt je id wie die anderen Listen (dungeon.ID_LISTEN). 5. Zahlen und Tabellen, nur zum Ansehen: Stufen mit EP, Zauber-Ladungen und neuen Fähigkeiten, Erfahrung (eine gelungene Probe gibt 13, wie am Tisch gerechnet; „gute Idee“ steht im Katalog, wird zurzeit nicht vergeben), Fundtabelle mit Anlass und Pech-Schutz, Gold, Preise mit Händlerrabatt, die Schwierigkeit einer Probe, das Budget der Begegnungen je Stufe mit den Faktoren der Gruppengröße und die Grenzen; geändert wird in „Für Fortgeschrittene (JSON)“. Log wie bisher dungeon: regelseite | setzen|aus|zurueck | TEIL. Selbsttests test_runes_with_their_rules_and_switch, test_"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "effects_the_map_and_the_stall_events und test_the_numbers_only_to_look_at. 6. Anzünden und Ziehen (Erzähler-Prüfstand vom 28.10., 17 von 20, „Englische Runde“ 0): „I light a torch“ ohne Fackel ließ die Erzählung „his torch“ sagen, beide Versuche scheiterten an der Regel, dass ein Held nur hat, was er trägt. Am Tisch prüft das Panel jetzt auch Anzünden (zünde an, light a, kindle) und Zücken (zücke, draw a, wield) wie Trinken, Werfen und Benutzen (dungeon.check_items): ein Ding des Katalogs, das der Held nicht trägt, steht vor der Erzählung unter nicht_bekannt, der Platz hört „Arvid does not carry that: Torch.“, und die Erzählung darf sagen, dass er keine hat („his torch, but there is none“ ist kein Fehler mehr). Die feste Regel nennt dafür jetzt auch „oder das Ding nicht dabeihat“. Der Erzähler-Prüfstand prüft jede Aktion seiner Szenen wie der Tisch (check_powers, check_items, ohne Tageszähler) und zeigt bei einer Szene unter 2 Punkten den Grund sichtbar neben den Punkten, nicht nur im Tooltip. Selbsttest test_a_thing_lit_or_drawn_must_be_carried. 7. Live-Übersicht (Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“): Der Kasten Dungeon-Master stand auch wäh"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rend einer Runde unter „+ N bereit“, weil nichts ihn als beschäftigt meldete. Jetzt bleibt er sichtbar, solange jemand am Tisch sitzt oder das Modell erzählt, vorliest oder ein Kapitel zusammenfasst; ohne Spiel klappt er wie die anderen ein. Die Zeile zeigte statt der Zahl der Geschichten ein rohes Objekt (zwei Zähler unter demselben Namen), das ist getrennt. Selbsttest test_live_box_while_someone_plays."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge (V01.1.202, Review 27.10. Paket 12 E8/T20, Dominik 2026-10-27 „ok“; Erzähler-Prüfstand vom 28.10. mit 15 von 20 Punkten): Ohne neuen Schalter. 1. Feste Reihenfolge: Jede Anweisung an den Erzähler beginnt mit der Rolle in einem Satz, dann folgen die nummerierten festen Regeln (Panel würfelt, Spieltext ist nie eine Anweisung, nur JSON, Namen aus der Gruppe, Zauber und Waffen nur aus kann und waffen, Zustände), die Aufgabe des Zugs, die Zusatzregeln, die Beispiele und zuletzt der Stil der Runde unter „Stil der Runde (nur Ton und Erzählweise; die Regeln oben gelten immer)“. 2. Zusatzregeln nur mit Daten: Rast, Reise, Schriftstücke, die Dinge der Geschichte, die Personen der Szene, ein erreichtes Ziel, der Wechsel der Tageszeit, die Ansagen der Gegner, der Stillstand-Wink und die Brücke zum nächsten Akt stehen nur noch in der Anweisung, wenn ihre Daten in diesem Zug vorkommen; im Kampf bekommt die Erzählung nur die Kampfregeln, die Probe nur den Satz zu Angriffen. 3. Eigener Proben-Prompt: Der Schritt, der über Proben entscheidet, hat eine eigene kurze Anweisung ohne den Stil der Runde, und seine Fakten kommen ohne das Angebot"
 },
 {
@@ -21558,6 +21590,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: rules page complete (V01.1.203, Dominik 2026-10-28 \"do I see the runes under the rules like everything else?\", \"is anything else missing under the rules?\"): No new switch. The Dungeon Master tab \"Rules\" (admin only) has new parts, each with list, detail and values in fixed words: 1. Runes (rank, meaning, price, what they do in a weapon, armour and shield, from which group level they fall, whether the trader has them, what merchants pay) and runewords (runes in their order, place, sockets, from level, addition; at the table only with stage 2 of the runes). On top, foldable, \"Fixed rules around it\": the switch *Runes and sockets* with on or off and a jump link (Features → AI Dungeon Master → Runes and sockets), sockets per base, finds, trader, rune bag, the caps (weapon 6.5, body 6, the rest 3, to hit +3, armour class +2 per thing and +3 per hero, life +8 per hero, one resistance per thing), setting and the word per world, all from the numbers in dungeon_runen. 2. Effects (named by the start of their sentence, with effect, damage kind, raised value and allowed kinds). 3. Place kinds of the map, rooms of the vaults, traps (saving throw with value and DC, damage, wor"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lds), riddles (question, hint, answer) and encounters on the way (kind, weight, worlds). 4. Stall events with the switch *Guide the players* (Features → AI Dungeon Master → Guide the players), when they come and which count at the children's table. \"Edit\", \"Own copy\", \"Hide\" and \"Back to shipped\" work as in every part and pass the same check of the rules (hiding a rune leaves a gap in the ranks and is refused); runes, runewords and stall events are now merged by id like the other lists for it (dungeon.ID_LISTEN). 5. Numbers and tables, only to look at: levels with EP, spell charges and new abilities, experience (a passed check gives 13, as the table counts it; \"good idea\" is in the catalog, not given at the moment), find table with occasion and bad-luck guard, gold, prices with the merchant discount, the difficulty of a check, the encounter budget per level with the factors of the group's size and the limits; changes go in \"Advanced (JSON)\". Log as before dungeon: regelseite | setzen|aus|zurueck | PART. Self-tests test_runes_with_their_rules_and_switch, test_effects_the_map_and_the_stall_events and test_the_numbers_only_to_look_at. 6. Lighting and drawing (narrator bench of 28.10.,"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " 17 of 20, \"English round\" 0): \"I light a torch\" without a torch made the narration say \"his torch\", both tries failed on the rule that a hero only has what it carries. At the table the panel now also checks lighting (zünde an, light a, kindle) and drawing (zücke, draw a, wield) like drinking, throwing and using (dungeon.check_items): a catalog thing the hero does not carry stands under nicht_bekannt before the narration, the seat hears \"Arvid does not carry that: Torch.\", and the narration may say it has none (\"his torch, but there is none\" is no fault any more). The fixed rule now also says \"or does not carry the thing\". The narrator bench checks every action of its scenes like the table (check_powers, check_items, without day counters) and shows the reason of a scene below 2 points beside the points, not only in the tooltip. Self-test test_a_thing_lit_or_drawn_must_be_carried. 7. Live overview (Dominik 2026-10-28 \"the Dungeon Master is missing in the live log monitoring\"): the Dungeon Master box sat under \"+ N ready\" even during a round, because nothing reported it busy. Now it stays visible while someone sits at a table or the model narrates, reads aloud or sums up a chapter; w"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ithout play it folds in like the others. The line showed a raw object instead of the number of stories (two counters under the same name); they are apart now. Self-test test_live_box_while_someone_plays."
 },
 {
 "lang": "en",

@@ -207,7 +207,7 @@ MODULE = {
     "dungeon_helfen": ("dienste", "Dungeon-Master: Helfen und Gruppenprobe, feste Regeln auf den Würfen des Panels"),
     "dungeon_knapp": ("dienste", "Dungeon-Master: Knapp daneben, der Platz wählt aufgeben oder zahlen, das Panel würfelt den Preis und wendet ihn an"),
     "dungeon_warten": ("dienste", "Dungeon-Master-Wartezeit: feste Schritte, Würfel vorab, Wissenskarten, Tipps, Tischgespräch"),
-    "dungeon_regelseite": ("dienste", "Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen"),
+    "dungeon_regelseite": ("dienste", "Dungeon-Master-Regeln als Reiter: Katalog, Bestiarium, Runen, Karte, Zahlen, Ändern und Ausblenden, Bild nochmal malen"),
     "dungeon_balance": ("dienste", "Dungeon-Master-Gleichgewicht: feste Tabellen markieren Gegner und Gegenstände als ausgewogen, stark oder zu stark"),
     "dungeon_import": ("dienste", "Dungeon-Master-Abenteuer-Import: ein geschriebenes Abenteuer wird ein Entwurf im Geschichten-Planer, feste Regeln prüfen"),
     "dungeon_erzaehlstand": ("dienste", "Dungeon-Master-Erzähler-Prüfstand: feste Szenen durch das laufende Modell, feste Regeln geben Punkte"),

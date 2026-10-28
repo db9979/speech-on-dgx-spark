@@ -546,6 +546,8 @@ def _base_rules(srd=True):
 LICHT_MAX = 20              # a light of the catalog burns at most this many rooms („licht“, the map thread counts them)
 _rules = {"key": None, "r": None}
 LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte") + dungeon_karte.LISTS + LEER_OK
+ID_LISTEN = ("runen", "runenwoerter", "stillstand")   # lists with their own checks, merged by id like LISTS (the rules page
+# changes one entry: dungeon_regelseite)
 
 
 
@@ -572,7 +574,7 @@ def merge(base, own):
     for k, v in (own or {}).items():
         if k in ("zweck",):
             continue
-        if k in LISTS and isinstance(v, list):
+        if k in LISTS + ID_LISTEN and isinstance(v, list):
             have = {x.get("id"): i for i, x in enumerate(r.setdefault(k, []))}
             for e in v:
                 if not isinstance(e, dict):
@@ -1161,17 +1163,23 @@ def _named(text, names):
     return [n for n in names if re.search(r"(?<![\w])" + re.escape(n) + r"(?![\w])", low)]
 
 
-_DING_VERB = re.compile(r"(?i)\b(trink|benutz|wirf|werf|lies|les|use|drink|throw|read|quaff)")
+# Erzähler-Prüfstand 28.10. („I light a torch“ without a torch: the narration told his torch, both tries failed): lighting
+# a thing and drawing a weapon are using it too
+_ZUENDET = r"(?:an|ent)?zünd|anzuend|entzuend|light(?:s)?\s+(?:a|an|the|my|up)\b|kindle|ignite"
+_ZUECKT = r"zück|zueck|draw(?:s)?\s+(?:a|an|the|my)\b|wield"
+_DING_VERB = re.compile(r"(?i)\b(trink|benutz|wirf|werf|lies|les|use|drink|throw|read|quaff|" + _ZUENDET + "|" + _ZUECKT + ")")
 # the kinds of thing a verb can mean (Review 27.10. Paket 6, T16: „Ich lese das alte Schild“ reads a sign, no shield)
 DING_ART = ((re.compile(r"(?i)\b(trink|drink|quaff)"), {"trank"}), (re.compile(r"(?i)\b(lies|les|read)"), {"rolle"}),
             (re.compile(r"(?i)\b(wirf|werf|throw)"), {"waffe", "trank", "werkzeug", "schatz"}),
+            (re.compile(r"(?i)\b(" + _ZUENDET + ")"), {"werkzeug", "waffe"}), (re.compile(r"(?i)\b(" + _ZUECKT + ")"), {"waffe"}),
             (re.compile(r"(?i)\b(benutz|use)"), None))
 
 
-def check_items(r, rd, pid):
+def check_items(r, rd, pid, count=True):
     """A seat's action that uses a thing of the catalog its hero does not carry (Dominik 2026-10-25 „1-7“, Regel 2;
     fixed rules, never the model): an OOC line „… hat das nicht dabei“, the thing goes to nicht_bekannt like an unknown
-    power, and the narration may not tell it used (erz.told_unknown). Runs after check_powers."""
+    power, and the narration may not tell it used (erz.told_unknown). Runs after check_powers; count=False for the
+    Erzähler-Prüfstand (no day counters)."""
     a, h = rd["offen"].get(pid), rd["plaetze"][pid]["held"]
     if not a or not _DING_VERB.search(a["text"]):
         return
@@ -1190,17 +1198,18 @@ def check_items(r, rd, pid):
         print("dungeon: ding | dabei", flush=True)
         return
     a["nicht"] = (a.get("nicht") or []) + gone
-    _day.bump("ding_fehlt")
+    if count:
+        _day.bump("ding_fehlt")
     t = (f"{h['name']} hat das nicht dabei: {', '.join(gone)}." if not li else f"{h['name']} does not carry that: {', '.join(gone)}.")
     if not any(e["art"] == "ooc" and e.get("pid") == pid and e.get("text") == t and e["n"] == rd["zug"] for e in rd["log"]):
         _log(rd, "ooc", pid=pid, text=t, panel=True)
     print("dungeon: ding | fehlt", flush=True)
 
 
-def check_powers(r, rd, pid):
+def check_powers(r, rd, pid, count=True):
     """A seat's action that names a spell or ability (fixed rules, never the model): one its hero cannot use gives it an
     OOC line „Das kann … noch nicht“ and the model hears nicht_bekannt; a spell of its class with a charge left (or of
-    grade 0) is cast when the turn is told (cast_powers)."""
+    grade 0) is cast when the turn is told (cast_powers). count=False for the Erzähler-Prüfstand (no day counters)."""
     a, h = rd["offen"].get(pid), rd["plaetze"][pid]["held"]
     if not a:
         return
@@ -1274,7 +1283,8 @@ def check_powers(r, rd, pid):
     for t in lines:
         if not any(e["art"] == "ooc" and e.get("pid") == pid and e.get("text") == t and e["n"] == rd["zug"] for e in rd["log"]):
             _log(rd, "ooc", pid=pid, text=t, panel=True)
-            _day.bump("kann_nicht")
+            if count:
+                _day.bump("kann_nicht")
     print(f"dungeon: kann | {'nicht' if nicht else 'leer' if leer else 'szene' if szene else 'wirkt' if a.get('wirkt') else 'ok'} | {len(hits)} namen", flush=True)
 
 
@@ -3480,11 +3490,11 @@ ZUSTAND_REGEL = {
           "confirms\" or the like: what the panel decides stands in its own lines."}
 KANN_REGEL = {
     "de": "Eine Figur wirkt nur Zauber und Kräfte aus ihrer Liste kann. Steht etwas unter nicht_bekannt, gelingt es "
-          "nicht: erzähle, dass die Figur es noch nicht beherrscht oder keine Kraft mehr dafür hat. Eine Figur trägt nur "
+          "nicht: erzähle, dass die Figur es noch nicht beherrscht, keine Kraft mehr dafür hat oder das Ding nicht dabeihat. Eine Figur trägt nur "
           "die Waffen aus ihrer Liste waffen (leer: keine, sie kämpft mit den Fäusten). Hat eine Figur ein geschlecht, nenne "
           "sie genau so (er, sie, oder bei divers nur ihren Namen, nie er oder sie).",
     "en": "A character only uses spells and powers from its list kann. Whatever stands under nicht_bekannt does not "
-          "work: tell that the character has not mastered it yet or has no power left for it. A character only carries "
+          "work: tell that the character has not mastered it yet, has no power left for it or does not carry the thing. A character only carries "
           "the weapons from its list waffen (empty: none, it fights with its fists). When a character has a geschlecht, "
           "refer to it exactly so (he, she, or for non-binary they or its name)."}
 AUFGABE_PROBEN = {
@@ -8141,7 +8151,7 @@ async def admin_save(request: Request):
     own = b.get("eigene")
     if not isinstance(own, dict):
         raise HTTPException(400, "eigene")
-    errs = [f"{k}: höchstens {EIGENE_MAX} eigene Einträge" for k in LISTS if isinstance(own.get(k), list) and len(own[k]) > EIGENE_MAX]
+    errs = [f"{k}: höchstens {EIGENE_MAX} eigene Einträge" for k in LISTS + ID_LISTEN if isinstance(own.get(k), list) and len(own[k]) > EIGENE_MAX]
     errs += check_rules(merge(await asyncio.to_thread(_base_rules), own))
     if errs:
         print(f"dungeon: regeln abgelehnt | {len(errs)} fehler", flush=True)

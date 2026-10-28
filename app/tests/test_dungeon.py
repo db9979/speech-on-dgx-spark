@@ -209,6 +209,28 @@ class OffAndDoors(Base):
         helpers.set_config(dungeon=True)
         self.assertEqual(self.v.post("/api/dungeon/platz", json={"code": code}).status_code, 200)
 
+    def test_live_box_while_someone_plays(self):
+        """Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“: the game's box stays out of
+        „+ N bereit“ while a seat is at a table (or the model narrates), folds in when nobody plays; the line shows the
+        planner's count of stories, never a raw object."""
+        import live
+        v = self.new_round()
+        with dungeon._lock:
+            seats = [k for k, p in dungeon._read()["runden"][v["rid"]]["plaetze"].items() if p.get("held")]
+        for k in seats:
+            dungeon._seen.pop(k, None)
+        box = lambda: next(t for t in live.snapshot()["targets"] if t["id"] == "dungeon")   # noqa: E731
+        with contextlib.redirect_stdout(io.StringIO()):
+            idle = box()
+        self.assertTrue(idle["quiet"])
+        self.assertNotIn("{", idle["sub"])
+        self.assertIn(" Geschichten, heute", idle["sub"])
+        for k in seats:
+            dungeon._seen[k] = time.time()
+        self.addCleanup(lambda: [dungeon._seen.pop(k, None) for k in seats])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(box()["quiet"])
+
     def test_seat_link_hash_once_lockout_origin(self):
         v = self.new_round()
         code = self.invite(v["rid"])
@@ -7717,6 +7739,26 @@ class Windows(unittest.TestCase):
                             self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmadmcard .dm-rrow.on').length"), 1)
                             if os.environ.get("DMF_SHOT"):
                                 await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], "regeln-gegenstaende.png"))
+                        # Dominik 2026-10-28 „die runen sehe ich die auch unter den regeln?“: runes with the fixed rules
+                        # around them and the switch's jump link; the numbers only to look at, with their tables
+                        await pg.click("#dmadmcard [data-dmrteil=runen]")
+                        await b.until(pg, f"{n}==13&&!!document.querySelector('#dmadmcard .dm-rkasten a.wayl')")
+                        await pg.click("#dmadmcard [data-dmrsel=uruz]")
+                        await b.until(pg, "/Schaden/.test((document.querySelector('#dmrdet .dm-rwerte')||{}).textContent||'')")
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"regeln-runen-{w}.png"), full_page=True)
+                        for teil in ("runenwoerter", "effekte", "ortsarten", "raeume", "fallen", "raetsel", "begegnungen", "stillstand"):
+                            await pg.click(f"#dmadmcard [data-dmrteil={teil}]")
+                            await b.until(pg, f"{n}>0")
+                        await pg.click("#dmadmcard [data-dmrteil=zahlen]")
+                        await b.until(pg, f"{n}==8")
+                        await pg.click("#dmadmcard [data-dmrsel=fund]")
+                        await b.until(pg, "!!document.querySelector('#dmrdet .dm-rtab td')")
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('#dmrdet [data-dmrdo]')"))   # nothing to change here
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                        if os.environ.get("DMF_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMF_SHOT"], f"regeln-zahlen-{w}.png"), full_page=True)
                         await pg.click("#dmadmcard [data-dmrteil=json]")
                         await b.until(pg, "!!document.getElementById('dmadmtxt')")
                         await pg.click("#dmadmcard [data-dmrteil=geschichten]")

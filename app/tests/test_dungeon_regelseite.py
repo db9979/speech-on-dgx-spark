@@ -273,6 +273,94 @@ class Page(Base):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(dungeon.own_rules()["toene"], [{"id": tone["id"], "aus": True}])
 
+    def test_runes_with_their_rules_and_switch(self):
+        """Dominik 2026-10-28 „die runen sehe ich die auch unter den regeln wie alles andere?“: runes and runewords
+        are parts of the page, with the fixed rules around them (sockets, caps) and the switch with its way."""
+        helpers.keep_chat(self, "dungeon_runen")
+        helpers.set_config(dungeon_runen=False)
+        rows, d = self.rows("runen")
+        self.assertEqual(len(rows), 13)
+        self.assertEqual((rows["uruz"]["stand"], rows["uruz"]["zeichen"]), ("srd", "ᚱ"))
+        self.assertIn("Rang 1", rows["uruz"]["zeile"])
+        w = dict(rows["uruz"]["werte"])
+        self.assertEqual(w["In einer Waffe"], "+1 Schaden")
+        self.assertIn("Krämer", w["Fällt"])
+        k = d["kasten"]
+        self.assertEqual((k["schalter"]["name"], k["schalter"]["an"]), ("Runen und Sockel", False))
+        self.assertEqual(k["schalter"]["weg"], "Funktionen → KI-Dungeon-Master → Runen und Sockel")
+        z = dict(k["zeilen"])
+        self.assertIn(f"Treffer höchstens +{rs.runen.TREFFER_MAX}", z["Obergrenzen"])
+        self.assertIn("Waffe 6,5", z["Obergrenzen"])
+        self.assertIn(f"zu {rs.runen.SOCKEL_FUND} von 100", z["Sockel"])
+        helpers.set_config(dungeon_runen=True)
+        self.assertIs(self.rows("runen")[1]["kasten"]["schalter"]["an"], True)
+        words, d = self.rows("runenwoerter")
+        self.assertEqual(len(words), 7)
+        self.assertIn("Kenaz + Uruz", words["glut"]["zeile"])
+        self.assertIn("noch nicht", dict(d["kasten"]["zeilen"])["Am Tisch"])
+        en = ADMIN.get(K + "runen?lang=en").json()
+        self.assertEqual(en["kasten"]["schalter"]["weg"], "Features → AI Dungeon Master → Runes and sockets")
+        # a rune changed by its id (merged like every list), taken back; hiding one leaves a gap in the ranks: refused
+        e = dict(dungeon._by(dungeon.rules(), "runen")["uruz"], preis=30)
+        r = ADMIN.post(K + "runen", json={"was": "setzen", "id": "uruz", "eintrag": e})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual({x["id"]: x for x in r.json()["zeilen"]}["uruz"]["stand"], "geaendert")
+        self.assertEqual((len(dungeon.rules()["runen"]), dungeon._by(dungeon.rules(), "runen")["uruz"]["preis"]), (13, 30))
+        self.assertEqual(ADMIN.post(K + "runen", json={"was": "aus", "id": "uruz"}).status_code, 422)
+        ADMIN.post(K + "runen", json={"was": "zurueck", "id": "uruz"})
+        self.assertNotIn("runen", dungeon.own_rules())
+
+    def test_effects_the_map_and_the_stall_events(self):
+        """The rest of the catalog's lists (Dominik 2026-10-28 „fehlt sonst noch etwas unter den regeln?“): effects,
+        the map's tables, the stall events; an entry without a name is named by its sentence."""
+        r = dungeon.rules()
+        eff, _ = self.rows("effekte")
+        self.assertEqual(eff["feuer"]["name"], "Treffer brennen")
+        self.assertIn("Feuer", eff["feuer"]["zeile"])
+        self.assertEqual(dict(eff["riese"]["werte"])["Hebt"], "Stärke +2")
+        traps, _ = self.rows("fallen")
+        t = r["fallen"][0]
+        self.assertIn(f"SG {t['schwer']}", traps[t["id"]]["zeile"])
+        riddles, _ = self.rows("raetsel")
+        q = r["raetsel"][0]
+        self.assertEqual(dict(riddles[q["id"]]["werte"])["Lösung"], " / ".join(q["loesung"][0]))
+        for teil in ("ortsarten", "raeume", "begegnungen"):
+            rows, _ = self.rows(teil)
+            self.assertTrue(all(x["zeile"] and x["zeichen"] for x in rows.values()), teil)
+        stall, d = self.rows("stillstand")
+        self.assertEqual(d["kasten"]["schalter"]["weg"], "Funktionen → KI-Dungeon-Master → Spieler anleiten")
+        self.assertTrue(stall["bote"]["name"].startswith("Ein Bote"))
+        self.assertLessEqual(len(stall["bote"]["name"]), rs.NAME_KURZ + 2)
+        self.assertEqual(dict(stall["bote"]["werte"])["Am Kindertisch"], "ja")
+        res = ADMIN.post(K + "stillstand", json={"was": "aus", "id": "bote"})
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertEqual({x["id"]: x for x in res.json()["zeilen"]}["bote"]["stand"], "aus")
+        self.assertNotIn("bote", [x["id"] for x in dungeon.rules()["stillstand"]])
+        self.assertEqual(len(dungeon.rules()["stillstand"]), len(r["stillstand"]) - 1)
+        ADMIN.post(K + "stillstand", json={"was": "zurueck", "id": "bote"})
+        self.assertEqual(len(dungeon.rules()["stillstand"]), len(r["stillstand"]))
+
+    def test_the_numbers_only_to_look_at(self):
+        """„Zahlen und Tabellen“: the fixed numbers the panel uses, from the rules and the code, never changed here."""
+        r = dungeon.rules()
+        res = ADMIN.get(K + rs.ZAHLEN)
+        self.assertEqual(res.status_code, 200, res.text)
+        d = res.json()
+        self.assertIs(d["fest"], True)
+        rows = {x["id"]: x for x in d["zeilen"]}
+        self.assertEqual(set(rows), {"stufen", "erfahrung", "fund", "gold", "preise", "sg", "budget", "grenzen"})
+        st = rows["stufen"]["tabelle"]
+        self.assertEqual([z[1] for z in st["zeilen"]], [str(x) for x in r["stufen_ep"]])
+        fund = rows["fund"]["tabelle"]
+        self.assertEqual(len(fund["kopf"]), len(r["seltenheit"]))
+        self.assertEqual(fund["zeilen"][0][2], "nie")              # „rar“ never at level 1
+        self.assertEqual(rows["budget"]["tabelle"]["zeilen"][0][1], str(rs.kampf.BUDGET[0]))
+        self.assertEqual(dict(rows["sg"]["werte"])["mittel"], f"SG {dungeon.PROBE_SG['mittel']}")
+        self.assertEqual(dict(rows["erfahrung"]["werte"])["gelungene Probe"], str(r["ep"]["probe"] * dungeon.PROBE_EP_SG // 10))
+        self.assertEqual(ADMIN.post(K + rs.ZAHLEN, json={"was": "aus", "id": "gold"}).status_code, 404)
+        self.assertIn(self.c.get(K + rs.ZAHLEN).status_code, (401, 403))
+        self.assertEqual(ADMIN.get(K + "zahlen?lang=en").json()["zeilen"][0]["name"], "Levels and experience")
+
 
 class Repaint(Base):
     def paint(self, cid, was):

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.203** · 2026-10-28 · KI-Dungeon-Master: die Regeln zeigen auch Runen und Runenwörter mit Sockeln, Obergrenzen und Schalter, Effekte, die Tabellen der Karte, die Stillstand-Ereignisse und alle festen Zahlen; wer eine Fackel anzündet oder eine Waffe zückt, die er nicht hat, hört das vor der Erzählung, der Dungeon-Master bleibt in der Live-Übersicht sichtbar, solange gespielt wird
 - **V01.1.202** · 2026-10-28 · KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge, die Probe mit eigenem kurzem Prompt, Alltägliches ohne Probe, englische Runden mit englischem Stil, der Erzähler-Prüfstand zeigt Prozent bis 100 (Review 27.10. Paket 12, Prüfstand 28.10.)
 - **V01.1.201** · 2026-10-28 · KI-Dungeon-Master: Budget und Belohnung zählen jeden Gegner nach seinem gemessenen Kampf-EP, Budget neu gemessen (Review 27.10. Paket 11.6)
 - **V01.1.200** · 2026-10-27 · KI-Dungeon-Master: zieht die Gruppe weiter, sagt eine feste Zeile am Tisch, wer gehen wollte („Weiter nach Silberhafen, weil Arvid gehen wollte“)

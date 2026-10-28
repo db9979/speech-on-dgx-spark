@@ -41,8 +41,8 @@ def model(foe, good=True):
                  "Staub rieselt von der Decke." if good else
                  "Arvid wirft sich mit aller Kraft gegen die alte Holztür, und die Holztür bricht auf. Staub rieselt von der Decke herab.")
         elif "cellar" in user:
-            t = ("Arvid lights the torch and the cellar comes alive: old barrels, cobwebs and a narrow stair that leads down "
-                 "into the dark." if good else
+            t = ("Arvid reaches for a torch, but has none. In the grey light from above the cellar shows old "
+                 "barrels, cobwebs and a narrow stair that leads down into the dark." if good else
                  "Arvid zündet die Fackel an und der Keller ist voller Fässer und Spinnweben, und die Treppe führt nach unten ins Dunkel.")
         elif "Oskar" in user:
             t = "Oskar wischt den Tresen ab und brummt: „Der alte Turm? Hinter dem Moor, zwei Stunden nach Norden.“ Arvid nickt ihm zu."
@@ -109,6 +109,36 @@ class Bench(Base):
         self.assertEqual(dict(dungeon._day), before)                    # nothing of the bench counts
         self.assertEqual(self._rounds(), runden)                         # no round written
         self.assertNotIn("einordnung", good["zwei"])                    # Einordnung off: none
+
+    def test_a_thing_lit_or_drawn_must_be_carried(self):
+        """Prüfstand 28.10. („I light a torch“ without a torch: both tries told his torch, 0 points): lighting a thing
+        and drawing a weapon are using it, the panel says before the narration that the hero does not carry it
+        (nicht_bekannt, an OOC line), the narration may tell it missing; the bench meets the same action checks."""
+        import dungeon_erzaehler as E
+        r = dungeon.rules()
+
+        def act(text, lang="de", tasche=()):
+            rd = {"lang": lang, "zug": 3, "log": [], "offen": {"p1": {"text": text}},
+                  "plaetze": {"p1": {"held": {"name": "Uma", "tasche": [{"id": i, "i": n} for n, i in enumerate(tasche)]}}}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                dungeon.check_items(r, rd, "p1")
+            return rd["offen"]["p1"].get("nicht")
+        self.assertEqual(act("Ich zünde eine Fackel an und sehe mich um."), ["Fackel"])
+        self.assertEqual(act("I light a torch and look around the cellar.", "en"), ["Torch"])
+        self.assertIsNone(act("Ich zünde die Fackel an.", tasche=("holzfackel",)))
+        self.assertIsNone(act("Ich gehe ins Licht der Laterne."))                      # no verb of using it
+        self.assertEqual(act("I draw a dagger.", "en"), ["Dagger"])
+        self.assertIsNone(act("I draw a dagger.", "en", tasche=("dolch",)))
+        rd = {"lang": "en", "offen": {"p1": {"text": "I light a torch.", "nicht": ["Torch"]}},
+              "plaetze": {"p1": {"held": {"name": "Arvid", "tasche": []}}}}
+        self.assertEqual(E.not_carried(rd, "Arvid lights his torch and looks around.", r), ["Arvid: Torch"])
+        self.assertEqual(E.not_carried(rd, "Arvid reaches for his torch, but there is none in his pack.", r), [])
+        self.assertEqual(E.told_unknown(rd, "Arvid reaches for a torch, but has none."), [])
+        rd, _ = es.scene(r, "englisch")
+        with contextlib.redirect_stdout(io.StringIO()):
+            es._aktionen(r, rd)
+        self.assertEqual(rd["offen"]["p0"]["nicht"], ["Torch"])
+        self.assertIn("nicht_bekannt", dungeon.facts(r, rd))
 
     def test_everyday_acts_need_no_check(self):
         """Erzähler-Prüfstand 28.10. („Harmlose Aktion ohne Probe“ 0 points): greeting, eating, unpacking are never a

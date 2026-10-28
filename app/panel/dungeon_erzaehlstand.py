@@ -249,11 +249,21 @@ def same_dice(r, rd, proben, oks):
     return out
 
 
+def _aktionen(r, rd):
+    """The table's checks of every typed action (dungeon._act: powers and things not carried) before the turn runs,
+    so a scene meets the same rules as at the table (Prüfstand 28.10.: „I light a torch“ without one)."""
+    for pid in list(rd["offen"]):
+        dungeon.check_powers(r, rd, pid, count=False)
+        dungeon.check_items(r, rd, pid, count=False)
+    return rd
+
+
 async def play(r, sid, own=None):
     """One scene through the real steps of a turn (own: a scene taken over from a case); returns its result."""
     t0 = time.monotonic()
     if own:
         rd, proben, oks = own_scene(r, own)
+        _aktionen(r, rd)
         wuerfe = same_dice(r, rd, proben, oks)
         erz.receipts(rd, wuerfe, [], [])
         story, _, tries = await dungeon.tell(r, rd, wuerfe, [], [], count=False)
@@ -262,6 +272,7 @@ async def play(r, sid, own=None):
                 "versuche": len(tries), "laenge": len((story or {}).get("text") or ""), "sekunden": round(time.monotonic() - t0, 1),
                 **({"erst": tries[0] or "abgelehnt"} if punkte == 1 else {})}
     rd, proben = scene(r, sid)
+    _aktionen(r, rd)
     if proben is None and sid == "kampfzug":              # whatever the model asks: fighting a foe is an attack
         got, _ = await dungeon.ask_checks(r, rd)
         rest, hits = kampf.attacks(dungeon, r, rd, got, _Fest())

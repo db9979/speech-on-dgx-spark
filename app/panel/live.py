@@ -1530,9 +1530,9 @@ def snapshot(view="admin", now=None):
         dgn["haltung"] = {}
     try:   # Eigene Geschichten (dungeon_geschichten.py): numbers on the game's line
         import dungeon_geschichten
-        dgn["geschichten"] = dungeon_geschichten.for_live() if dgn.get("on") else {}
+        dgn["eigene_g"] = dungeon_geschichten.for_live() if dgn.get("on") else {}   # beside the planner's count „geschichten“
     except Exception:
-        dgn["geschichten"] = {}
+        dgn["eigene_g"] = {}
     try:   # Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): numbers on the game's line
         import dungeon_rueckfrage
         dgn["rueckfrage"] = dungeon_rueckfrage.for_live() if dgn.get("on") else {}
@@ -2158,8 +2158,8 @@ def snapshot(view="admin", now=None):
                            if any((dgn.get("umgebung") or {}).values()) else "")
                         + (f" · heute {dgn['haltung']['ansagen']} Gegner-Ansagen, {dgn['haltung']['abwehr']}-mal Abwehr, {dgn['haltung']['ausweichen']}-mal Ausweichen"
                            if any((dgn.get("haltung") or {}).values()) else "")
-                        + (f" · {dgn['geschichten']['eigene']} eigene Geschichten, heute {dgn['geschichten']['gespeichert']} gespeichert, {dgn['geschichten']['erstellt']} erstellt, {dgn['geschichten']['kopiert']} kopiert, {dgn['geschichten']['geloescht']} gelöscht, {dgn['geschichten']['ausgeblendet']} ausgeblendet"
-                           if any((dgn.get("geschichten") or {}).values()) else "")
+                        + (f" · {dgn['eigene_g']['eigene']} eigene Geschichten, heute {dgn['eigene_g']['gespeichert']} gespeichert, {dgn['eigene_g']['erstellt']} erstellt, {dgn['eigene_g']['kopiert']} kopiert, {dgn['eigene_g']['geloescht']} gelöscht, {dgn['eigene_g']['ausgeblendet']} ausgeblendet"
+                           if any((dgn.get("eigene_g") or {}).values()) else "")
                         + (f" · heute {dgn['rueckfrage']['gefragt']} Rückfragen, {dgn['rueckfrage']['genommen']} Vorschläge genommen, {dgn['rueckfrage']['so_lassen']}-mal so gelassen, {dgn['rueckfrage'].get('milder', 0)} Aktionen gemildert"
                            if any((dgn.get("rueckfrage") or {}).values()) else "")
                         + (f" · heute {dgn['kommentar']['gesagt']} Heldenkommentare, {dgn['kommentar']['verworfen']} verworfen"
@@ -2232,7 +2232,10 @@ def snapshot(view="admin", now=None):
     except Exception:
         pause = {"on": False}
     work = {"telefon": tel.get("calls"), "docling": dlg.get("busy") or dlg.get("wait") or dlg.get("down"),
-            "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait")}
+            "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait"),
+            # Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“: its box stays out of „+ N bereit“
+            # while someone sits at a table, the model narrates, reads aloud or sums up a chapter
+            "dungeon": dgn.get("online") or dgn.get("denkt") or dgn.get("liest") or dgn.get("schreibt")}
     ruhe(targets, {k for k, v in work.items() if v} | {h["at"] for h in hs} | {k for k, v in svc.items() if v.get("st") != "ok"}
          | {s["to"] for r in reqs if not r["done"] for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if not r["done"] and r["to"]}, now)
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,

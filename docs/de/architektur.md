@@ -316,7 +316,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_pruefstand.py` | Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell |
 | `app/panel/dungeon_quest.py` | Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund |
 | `app/panel/dungeon_rast.py` | Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten |
-| `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als eigener Reiter: Katalog, Bestiarium, Ändern und Ausblenden je Eintrag, Bild nochmal malen |
+| `app/panel/dungeon_regelseite.py` | Dungeon-Master-Regeln als Reiter: Katalog, Bestiarium, Runen, Karte, Zahlen, Ändern und Ausblenden, Bild nochmal malen |
 | `app/panel/dungeon_reise.py` | Dungeon-Master: Reise-Etappen, Rollen mit je einem Wurf und ein Ereignis der Landschaft auf langen Wegen |
 | `app/panel/dungeon_rueckfrage.py` | Dungeon-Master: Rückfrage bei unklaren Aktionen, feste Regeln und Vorschläge aus der Szene |
 | `app/panel/dungeon_runen.py` | Dungeon-Master: Runen und Sockel, Katalog, Sockel, Runenbeutel, Deckel und Einsetzen mit Vorschau |

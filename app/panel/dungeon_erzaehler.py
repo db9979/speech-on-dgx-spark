@@ -74,7 +74,7 @@ FINDET = ("findet", "finden", "erhält", "erhalten", "bekommt", "steckt", "nimmt
           "gets", "pockets", "takes", "collects")
 ENTSCHEIDET = ("entscheidet", "beschließt", "greift", "zieht", "rennt", "läuft", "öffnet", "nimmt", "packt", "springt",
                "decides", "attacks", "draws", "runs", "opens", "takes", "grabs", "jumps")
-NEIN = HAELT + ("leer", "fehlt", "vergebens", "ins leere", "keine", "empty", "missing")
+NEIN = HAELT + ("leer", "fehlt", "vergebens", "ins leere", "keine", "ohne", "empty", "missing", " no ", "none", "without")
 KOERPER = {"haar": ("haar", "haare", "haaren", "hair"), "augen": ("augen", "auge", "eyes", "eye"), "bart": ("bart", "beard")}
 _TEIL = {w: k for k, ws in KOERPER.items() for w in ws}
 # the action's intent (Dominik 2026-10-25 „ich frage nach dem keller - es geht nach oben!?“: „frage den Kellner, ob du in den
@@ -1018,6 +1018,7 @@ def not_carried(rd, text, r=None):
     helden = {str(p["held"]["name"]).lower(): p["held"] for p in (rd.get("plaetze") or {}).values() if p.get("held")}
     andere = {re.sub(r"\s+\d+$", "", str(x.get("name", ""))).lower() for x in [*(rd.get("nsc") or {}).values(),
               *((rd.get("kampf") or {}).get("gegner") or [])]} - {""}
+    nicht = [n for a in (rd.get("offen") or {}).values() for n in a.get("nicht") or []]   # dungeon.check_items: told as missing
     out = []
     for satz in _saetze(text):
         low = satz.lower()
@@ -1029,7 +1030,7 @@ def not_carried(rd, text, r=None):
             h = helden[vor[-1]]
             words = m.group(0).split()[1:]
             ding = next((k for w in words for k in waffen if k in set(dungeon_kampf._stems(w))), "")
-            if not ding:
+            if not ding or _hat(low, NEIN) and ding in " ".join(str(n).lower() for n in nicht):   # „he has no torch of his own“
                 continue
             have = _dinge(r, [*(h.get("tasche") or []), *dungeon.worn(h)])
             if not any(w.endswith(ding) for w in have):

@@ -1427,11 +1427,15 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 // the chosen one on the right; a part of the catalog as a list with picture, values and the balance mark, the
 // detail below it. Without a profile (admin only) the same page opens as a card from Funktionen.
 const DMR={teil:'geschichten',k:{},sel:'',q:'',f:'alle',m:'alle',gw:'alle',edit:null,err:'',neu:{},busy:'',v:1,welt:{},st:null};
-const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende','tabellen'];
+const DMRKAT=['gegenstaende','gegner','klassen','voelker','hintergruende','welten','toene','zustaende','tabellen',
+  'runen','runenwoerter','effekte','ortsarten','raeume','fallen','raetsel','begegnungen','stillstand','zahlen'];
+const DMRTRENN=new Set(['runen','ortsarten','zahlen']);   // a line in the menu before these (Dominik 2026-10-28 „fehlt sonst noch etwas unter den regeln?“)
 // the parts with a list and a detail: the rules, and the people of the catalog while it is on (Personen-Katalog 1)
-const dmRKats=()=>DMRKAT.concat(DMP.d&&DMP.d.personen_an?['personen']:[]);
+const dmRKats=()=>{const k=DMRKAT.slice();if(DMP.d&&DMP.d.personen_an)k.splice(k.indexOf('tabellen')+1,0,'personen');return k};
 const dmRNamen=()=>({geschichten:t('Geschichten','Stories'),personen:t('Personen (NSC)','People (NPC)'),gegenstaende:t('Gegenstände','Items'),gegner:t('Gegner (Bestiarium)','Foes (bestiary)'),klassen:t('Klassen','Classes'),
   voelker:t('Völker','Peoples'),hintergruende:t('Hintergründe','Backgrounds'),welten:t('Welten','Worlds'),toene:t('Töne','Tones'),zustaende:t('Zustände','Conditions'),tabellen:t('Tabellen','Tables'),
+  runen:t('Runen','Runes'),runenwoerter:t('Runenwörter','Runewords'),effekte:t('Effekte','Effects'),ortsarten:t('Ortsarten der Karte','Place kinds of the map'),raeume:t('Räume der Gewölbe','Rooms of the vaults'),
+  fallen:t('Fallen','Traps'),raetsel:t('Rätsel','Riddles'),begegnungen:t('Begegnungen unterwegs','Encounters on the way'),stillstand:t('Stillstand-Ereignisse','Stall events'),zahlen:t('Zahlen und Tabellen','Numbers and tables'),
   stimmen:t('Stimmen','Voices'),bilder:t('Bilder','Pictures'),musik:t('Musik','Music'),gaeste:t('Gäste mit E-Mail','Guests with e-mail'),ankommt:t('Wie es ankommt','How it lands'),pruefstand:t('Balance-Prüfstand','Balance bench'),erzaehlstand:t('Erzähler-Prüfstand','Narrator bench'),erzaehlfehler:t('Erzähler-Fehler','Narrator errors'),json:t('Für Fortgeschrittene (JSON)','Advanced (JSON)')});
 const dmRTab=()=>!!(PROFILE&&DM.on&&ADMIN);
 async function dmRules(){if(dmRTab()&&$('dmroot')){icTabSet('dungeon','regeln');goSec('dungeon');return}
@@ -1451,7 +1455,7 @@ function dmRulesDraw(d,err){const c=$('dmadmcard');if(!c)return;DMP.d=d;const S=
   const n={geschichten:(d.geschichten||[]).length,gegenstaende:S.gegenstaende,klassen:S.klassen,voelker:S.voelker,welten:S.welten,toene:S.toene};
   for(const k of dmRKats())if(DMR.k[k])n[k]=DMR.k[k].zeilen.length;
   const nb=k=>`<button type="button" class="${DMR.teil===k?'on':''}" data-dmrteil="${k}"${DMR.teil===k?' aria-current="true"':''}><span>${esc(N[k])}</span>${n[k]!=null?`<small>${n[k]}</small>`:''}</button>`;
-  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${dmRKats().map(nb).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand','erzaehlstand','erzaehlfehler'].map(nb).join('')}<hr>${nb('json')}</nav>`;
+  const nav=`<nav class="dm-rnav" aria-label="${esc(t('Teile der Regeln','Parts of the rules'))}">${nb('geschichten')}${dmRKats().map(k=>(DMRTRENN.has(k)?'<hr>':'')+nb(k)).join('')}<hr>${['stimmen','bilder','musik','gaeste','ankommt','pruefstand','erzaehlstand','erzaehlfehler'].map(nb).join('')}<hr>${nb('json')}</nav>`;
   c.innerHTML=`<div class="dm-rhead"><h2>${esc(t('Dungeon-Master: Regeln','Dungeon Master: rules'))}</h2>${tab?'':`<button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button>`}</div>
     <div class="dm-rlay">${nav}<div class="dm-rin">${dmRTeil(d,err)}</div></div>`;
   if(DMR.teil==='musik'&&window.dmMusikAdm)dmMusikAdm();
@@ -1522,8 +1526,16 @@ function dmKat(teil){const K=DMR.k[teil],N=dmRNamen(),St=DMRSTAND();
     <div class="dm-rsrch">${wsel}${gsel}<input type="search" class="dmr-q" value="${esc(DMR.q)}" placeholder="${esc(t('Suchen …','Search …'))}" aria-label="${esc(t('Suchen','Search'))}">
       ${F?`<div class="lseg dm-rseg">${F.map(([v,l])=>`<button type="button" class="${DMR.f===v?'on':''}" data-dmrf="${v}">${esc(l)}</button>`).join('')}</div>`:''}
       ${hasM?`<select class="dmr-m" aria-label="${esc(t('Gleichgewicht','Balance'))}">${['alle','stark','zu_stark','schwach'].map(v=>`<option value="${v}"${DMR.m===v?' selected':''}>${esc(v==='alle'?t('Gleichgewicht: alle','Balance: all'):nm[v])}</option>`).join('')}</select>`:''}</div>
-    ${K.seltenheiten?dmRSelLeg(K):''}<div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
+    ${K.kasten?dmRKasten(K.kasten):''}${K.seltenheiten?dmRSelLeg(K):''}<div class="dm-rkat"><div class="dm-rlist" role="list">${list||`<div class="ic-empty">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}${rows.length>MAX?`<div class="mut dm-rmehr">${esc(t(`${rows.length-MAX} weitere, bitte genauer suchen`,`${rows.length-MAX} more, please search more closely`))}</div>`:''}</div>
     <div class="dm-rdet" id="dmrdet">${dmRDet(teil)}</div></div>`}
+// the fixed rules around a part (runes: sockets, caps, the switch with its way; stall events; the numbers)
+function dmRKasten(k){const s=k.schalter;
+  return `<details class="dm-rkasten" open><summary>${esc(t('Feste Regeln dazu','Fixed rules around it'))}</summary>${s?`<div class="fh"><span class="pill${s.an?' ok':''}">${esc(s.name+': '+(s.an?t('an','on'):t('aus','off')))}</span> <a href="#" class="wayl" data-way="${esc(s.weg)}">${esc(s.weg)}</a></div>`:''}
+    <dl class="dm-rwerte">${k.zeilen.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>`}
+// a table with its own columns (the numbers: levels, find table, prices, budget)
+function dmRTabelle(x){const T=x.tabelle;
+  return `<div class="dm-rtafel dm-rtab" role="region" tabindex="0" aria-label="${esc(x.name)}"><table><thead><tr>${T.kopf.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead>
+    <tbody>${T.zeilen.map(z=>`<tr>${z.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
 // a table of the catalog in full (Dominik 2026-10-25 „ich sehe gar nicht die tabellen“): the die, every row, the worlds of a row
 function dmRTafel(x){const w=x.tafel.some(z=>z.w);
   return `<div class="dm-rtafel" role="region" tabindex="0" aria-label="${esc(t('Tabelle','Table'))}"><table><thead><tr><th>${esc(t('W','d')+x.tafel.length)}</th><th>${esc(t('Ergebnis','Result'))}</th>${w?`<th>${esc(t('Nur in','Only in'))}</th>`:''}</tr></thead>
@@ -1555,10 +1567,10 @@ function dmRDet(teil){const K=DMR.k[teil],St=DMRSTAND(),x=K.zeilen.find(z=>Strin
       :`<div class="dm-rvgl"><figure>${x.bild?dmRImg(x.bild,x.bv):`<span class="dm-rno">${esc(x.zeichen||'')}</span>`}<figcaption>${esc(x.bild?t('jetzt','now'):t('noch kein Bild','no picture yet'))}</figcaption></figure></div>`}
       <div class="row">${K.bilder_an?`<button type="button" class="b" data-dmrbild="malen" data-id="${esc(x.id)}"${DMR.busy?' disabled':''}>🖌 ${esc(DMR.busy===String(x.id)?t('Malt gerade …','Painting …'):x.bild?t('Nochmal malen','Paint again'):t('Malen','Paint'))}</button>`:`<small class="mut">${esc(t('Die Bilder sind aus; einschalten im Abschnitt „Bilder“.','Pictures are off; switch them on in the part "Pictures".'))}</small>`}</div></div>`:'';
   return `<div class="dm-rdkopf"><div><b class="dm-rname">${esc(x.zeichen||'')} ${esc(x.name)}</b> <span class="pill">${esc(St[x.stand])}</span>${m?` <span class="pill ${DMRMARKE[m.marke]}">${esc(m.name)}</span>`:''}</div></div>
-    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${(x.werte||[]).length?`<dl class="dm-rwerte">${x.werte.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:''}${dmRSelLadder(K,x)}${x.tafel?dmRTafel(x):''}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}${teil==='personen'&&K.stimmwahl?dmRStimme(K,x,e):''}
-      <div class="row"><button type="button" class="b" data-dmrdo="aendern">${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmrdo="kopie">${esc(t('Eigene Kopie','Own copy'))}</button>
+    <div class="dm-rdgrid"><div><div class="dm-rzeile">${esc(x.zeile)}</div>${(x.werte||[]).length?`<dl class="dm-rwerte">${x.werte.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:''}${dmRSelLadder(K,x)}${x.tafel?dmRTafel(x):''}${x.tabelle?dmRTabelle(x):''}${m&&m.grund?`<div class="fh dm-rgrund">${esc(m.grund)}</div>`:''}${tx(e.info||e.satz)?`<p class="dm-rinfo">${esc(tx(e.info||e.satz))}</p>`:''}${teil==='personen'&&K.stimmwahl?dmRStimme(K,x,e):''}
+      ${K.fest?`<div class="fh">${esc(t('Nur zum Ansehen. Ändern unter „Für Fortgeschrittene (JSON)“.','Only to look at. Change it under "Advanced (JSON)".'))}</div>`:`<div class="row"><button type="button" class="b" data-dmrdo="aendern">${esc(t('Ändern','Edit'))}</button><button type="button" class="b" data-dmrdo="kopie">${esc(t('Eigene Kopie','Own copy'))}</button>
       ${x.stand==='aus'||x.stand==='geaendert'?`<button type="button" class="b" data-dmrdo="zurueck">${esc(t('Zurück auf mitgeliefert','Back to shipped'))}</button>`:''}
-      ${x.stand==='eigen'||teil==='personen'?`<button type="button" class="b danger" data-dmrdo="zurueck">${esc(teil==='personen'?t('Person löschen','Delete person'):t('Eigenen Eintrag löschen','Delete own entry'))}</button>`:x.stand!=='aus'?`<button type="button" class="b" data-dmrdo="aus">${esc(t('Ausblenden','Hide'))}</button>`:''}</div></div>${pic}</div>`}
+      ${x.stand==='eigen'||teil==='personen'?`<button type="button" class="b danger" data-dmrdo="zurueck">${esc(teil==='personen'?t('Person löschen','Delete person'):t('Eigenen Eintrag löschen','Delete own entry'))}</button>`:x.stand!=='aus'?`<button type="button" class="b" data-dmrdo="aus">${esc(t('Ausblenden','Hide'))}</button>`:''}</div>`}</div>${pic}</div>`}
 // the list keeps its place when it is drawn again (Dominik 2026-10-24 „beim Klicken hüpft die Liste“)
 function dmRDraw(){const c=$('dmadmcard');if(!c||!DMP.d)return;const l=c.querySelector('.dm-rlist'),top=l?l.scrollTop:0;
   dmRulesDraw(DMP.d,'');const n=c.querySelector('.dm-rlist');if(n)n.scrollTop=top}
@@ -1669,10 +1681,11 @@ document.addEventListener('click',async e=>{const b=e.target.closest('#dmpruef [
   b.disabled=true;const {r,d}=await apiTry('/api/admin/dungeon/pruefstand',xjson('POST',{}));
   if(!r.ok){sayToast(dmErr(r.status,d.detail));b.disabled=false;return}DMPS.d=d;$('dmpruef').innerHTML=dmPruefBox(d);DMPS.t=setTimeout(dmPruefLook,3000)});
 // Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the running model, points by fixed
-// rules per scene and model side by side; the model's own Einordnung only as a hint beside it
+// rules per scene and model side by side; the model's own Einordnung only as a hint beside it; why a scene lost points stands beside it, not
+// only in the tooltip (Prüfstand 28.10.: a phone has no tooltip)
 const DMES={t:0};
 function dmErzBox(x){const ms=Object.entries(x.modelle||{}).sort((a,b)=>b[1].zeit-a[1].zeit),mx=2*x.szenen.length;
-  const dot=s=>s?`<span class="dm-es-p" data-p="${s.punkte}" title="${esc(s.grund)}${s.erst?' · '+esc(t('zuerst','first'))+' '+esc(s.erst):''}${s.versuche?' · '+s.versuche+' '+esc(t('Versuche','tries')):''} · ${s.sekunden} s">${s.punkte}</span>${s.einordnung?`<small class="mut" title="${esc(t('eigene Einschätzung des Modells','the model\'s own view'))}"> ${Math.round(s.einordnung.lebendig*100)}/${Math.round(s.einordnung.folgt*100)}</small>`:''}`:'–';
+  const dot=s=>s?`<span class="dm-es-p" data-p="${s.punkte}" title="${esc(s.grund)}${s.erst?' · '+esc(t('zuerst','first'))+' '+esc(s.erst):''}${s.versuche?' · '+s.versuche+' '+esc(t('Versuche','tries')):''} · ${s.sekunden} s">${s.punkte}</span>${s.punkte<2&&s.grund?`<small class="dm-es-g"> ${esc(s.punkte?t('zuerst','first')+' '+(s.erst||''):s.grund)}</small>`:''}${s.einordnung?`<small class="mut" title="${esc(t('eigene Einschätzung des Modells','the model\'s own view'))}"> ${Math.round(s.einordnung.lebendig*100)}/${Math.round(s.einordnung.folgt*100)}</small>`:''}`:'–';
   const tab=ms.length?`<div class="dm-ps-w"><table class="dm-ps-t dm-es-t"><thead><tr><th>${esc(t('Szene','Scene'))}</th>${ms.map(([n])=>`<th>${esc(n)}</th>`).join('')}</tr></thead><tbody>
     ${x.szenen.map(([id,nm])=>`<tr><td>${esc(nm[L==='en'?1:0])}</td>${ms.map(([,m])=>`<td>${dot((m.szenen||{})[id])}</td>`).join('')}</tr>`).join('')}
     <tr class="dm-es-sum"><td>${esc(t('Punkte','Points'))}</td>${ms.map(([,m])=>`<td><b>${m.punkte}</b> / ${m.max||mx}</td>`).join('')}</tr>
