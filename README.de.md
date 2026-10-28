@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.206** KI-Dungeon-Master: ein Ding mit erwachtem Runenwort bekommt ein eigenes Bild mit leuchtenden Runen, die Runen-Dienste des Schmieds haben Bilder
 - **V01.1.205** KI-Dungeon-Master: Runen und Sockel bis zum Schluss: Runenwörter erwachen in der richtigen Reihenfolge ab ihrer Stufe, der Schmied bohrt Sockel, löst und verschmilzt Runen, Runen gehen an andere Helden, eine Rune lässt sich auf das Ding ziehen, und das Auto kennt Runen
 - **V01.1.204** KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen
 - **V01.1.203** KI-Dungeon-Master: die Regeln zeigen auch Runen und Runenwörter mit Sockeln, Obergrenzen und Schalter, Effekte, die Tabellen der Karte, die Stillstand-Ereignisse und alle festen Zahlen; wer eine Fackel anzündet oder eine Waffe zückt, die er nicht hat, hört das vor der Erzählung, der Dungeon-Master bleibt in der Live-Übersicht sichtbar, solange gespielt wird
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.199** KI-Dungeon-Master: die Würfelkarte nennt die Stufe, der Tisch sagt, warum keine Probe kam und wer die Beute bekommt (Review 27.10. Paket 12)
 - **V01.1.198** KI-Dungeon-Master: der Prüfstand misst Herr und Boss, jede Gruppengröße gewinnt im Mittel mindestens 60 % (Review 27.10. B1, B3)
 - **V01.1.197** KI-Dungeon-Master: jeder Held bekommt Erfahrung nach seiner Stufe, gleich wie viele mitkämpfen, Funde und Gold je Held statt geteilt (Review 27.10. Paket 11.8)
-- **V01.1.196** KI-Dungeon-Master: das Modell wählt nur die Arten, wie viele Gegner kommen setzt das Panel, Personen kämpfen mit ihren Wachen, der Prüfstand misst wie am Tisch (Review 27.10. Paket 11.7)
 
 
 

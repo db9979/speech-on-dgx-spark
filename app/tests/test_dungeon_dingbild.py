@@ -849,6 +849,8 @@ class Settlement(Base):
         r = dungeon.rules()
         self.assertLessEqual(set(dungeon_gold.DIENSTE) | {dungeon_gold.HEILER, dungeon_gold.GEFAEHRTE}, set(db.DIENST_EN))   # the healer (idea 8), the companion (round 2, idea 9)
         self.assertIn("verbessern", db.DIENST_EN)
+        import dungeon_runen
+        self.assertLessEqual(set(dungeon_runen.DIENSTE), set(db.DIENST_EN))     # the smith's rune services (Runen Stufe 2 and 3)
         want = dict(db.wanted(r))
         for st in db.styles(r) + [dungeon.BILD_KIND]:
             for n, p, k in db.services(st):
@@ -958,6 +960,40 @@ class Runes(Base):
         self.assertEqual(ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "neu", "welt": scifi}).status_code, 200)
         db.sweep(force=True)                                                    # off: not painted, but kept
         self.assertIn(n, db.files())
+
+    def test_an_awakened_runeword_gets_its_own_picture(self):
+        """Plan 11a: a new picture of the item only when its runeword wakes (dungeon.py calls runenwort once after
+        setting it["rw"]); it counts to the game's day limit, an earlier runeword's picture goes first; a plain item
+        with sockets keeps the catalog's picture."""
+        r = dungeon.rules()
+        w = r["runenwoerter"][0]
+        rid = self.new_round()
+        x = self.give(rid, cid="schwert", s="gewoehnlich", so=len(w["runen"]), ru=list(w["runen"]))
+        self.assertEqual(db.queue_finds(), [])                                 # sockets and runes alone: no picture
+        x["rw"] = w["id"]
+        with dungeon._lock:
+            d = dungeon._read()
+            h = next(p["held"] for p in d["runden"][rid]["plaetze"].values() if p.get("held"))
+            next(i for i in h["tasche"] if i["i"] == x["i"])["rw"] = w["id"]
+            dungeon._write(d)
+            db.runenwort(r, d["runden"][rid], x)
+        n0 = dungeon._bild_count(dungeon._read())
+        jobs = db.queue_finds()
+        self.assertEqual([n for n, _ in jobs], ["fund-" + x["i"]])
+        self.assertIn(f"awakened by the runeword {w['name'][1]}", jobs[0][1])
+        import dungeon_runen
+        self.assertIn(db.rune_farbe(dungeon_runen.by(r)[w["runen"][0]])[0], jobs[0][1])   # the runes' colours
+        self.assertEqual(dungeon._bild_count(dungeon._read()), n0 + 1)          # counts to the game's day limit
+        asyncio.run(db.paint_find(*jobs[0]))
+        self.assertEqual(db.queue_finds(), [])
+        rd = dungeon._read()["runden"][rid]
+        v = dict(dungeon.item_view(r, x, "de"), rw=w["name"][0])
+        self.assertEqual(db.add(r, rd, {"t": [v]})["t"][0]["bild"], "fund-" + x["i"])
+        self.assertNotEqual(db.add(r, rd, {"t": [dict(v, rw="")]})["t"][0]["bild"], "fund-" + x["i"])   # freed again: the catalog's
+        db.runenwort(r, rd, x)                                                  # a new runeword: the old picture goes
+        db._files["m"] = None
+        self.assertNotIn("fund-" + x["i"], db.files())
+        self.assertEqual([n for n, _ in db.queue_finds()], ["fund-" + x["i"]])
 
     def test_view_gives_bag_trader_and_sockets_their_picture_and_colour(self):
         import dungeon_runen

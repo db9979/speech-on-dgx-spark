@@ -143,7 +143,11 @@ DIENST_EN = {"gasthaus": "the common room of an inn of this world with a firepla
              "geruecht": "a busy corner of a tavern or market of this world where rumours are told",
              "verbessern": "a workbench of this world where gear is improved, fine tools and parts",
              "heiler": "a calm healer's room of this world with drying herbs, clean bandages, a cot and small potion bottles",
-             "gefaehrte": "a hiring corner by the door of an inn of this world, a notice board with offers, a travelling pack and a shield against the wall"}
+             "gefaehrte": "a hiring corner by the door of an inn of this world, a notice board with offers, a travelling pack and a shield against the wall",
+             # Runen und Sockel, Stufe 2 and 3 (dungeon_gold.DIENSTE): the smith bores a socket, frees a rune, fuses three into one
+             "sockel": "a smith's workbench of this world with a steady vice and fine drills, a shield with a freshly bored socket",
+             "loesen": "a smith's table of this world with fine tongs and small tools beside an item with an empty socket",
+             "verschmelzen": "a small crucible of this world over a blue flame where small glowing stones melt into one"}
 # Runen und Sockel (dungeon_runen, plan dungeon-runen 11a): a rune's catalog picture in the world's word (dungeon_runen.ART_WELT,
 # English), glowing in its fixed colour; the colour by the rune's rank (1 to dungeon_runen.RAENGE) is also the socket's dot
 RUNE_EN = {"rune": "a small rune stone with one carved sign glowing {}", "chip": "a small data chip with one etched sign glowing {}",
@@ -677,20 +681,55 @@ async def _run(grund):
 
 
 # ---------------------------------------------------------------- a named find's own picture
-def _finds(r, rd):
-    """The named items of the round's heroes and its ground that are known and rare enough."""
+def _own(r, it):
+    """An item with a picture of its own (fund-<i>): a named find, known and rare enough, or one whose runeword woke
+    (it["rw"], Runen und Sockel Stufe 2)."""
     rank = [x["id"] for x in r["seltenheit"]]
+    return not it.get("u") and (bool(it.get("eigen")) and it.get("s") in rank and rank.index(it["s"]) >= RANG_FUND
+                                or it.get("rw") in _runeword(r))
+
+
+def _runeword(r):
+    return {x["id"]: x for x in r.get("runenwoerter") or [] if isinstance(x, dict)}
+
+
+def _finds(r, rd):
+    """The items of the round's heroes and its ground with a picture of their own (_own)."""
     items = list(rd.get("boden") or [])
     for p in rd["plaetze"].values():
         h = p.get("held") or {}
         items += [x for x in (h.get("an") or {}).values() if x] + list(h.get("tasche") or [])
-    return [it for it in items if it.get("eigen") and not it.get("u") and it.get("s") in rank and rank.index(it["s"]) >= RANG_FUND
-            and it.get("id") in dungeon._by(r, "gegenstaende")]
+    return [it for it in items if _own(r, it) and it.get("id") in dungeon._by(r, "gegenstaende")]
 
 
 def find_prompt(r, rd, it):
+    """A named find by its name and sentence; a runeword's item with its runes glowing in their colours."""
     c = dungeon._by(r, "gegenstaende")[it["id"]]
+    w = _runeword(r).get(it.get("rw"))
+    if w and not it.get("eigen"):
+        import dungeon_runen
+        rs = dungeon_runen.by(r)
+        farben = list(dict.fromkeys(rune_farbe(rs[k])[0] for k in it.get("ru") or [] if k in rs))
+        glow = ", ".join(farben[:-1]) + " and " + farben[-1] if len(farben) > 1 else "".join(farben) or "white"
+        return (f"{ART_EN[c['art']]}, {c['name'][1]}, awakened by the runeword {w['name'][1]}, "
+                f"{len(it.get('ru') or [])} runes set into its sockets glowing {glow}, a faint aura around it")
     return f"{ART_EN[c['art']]}, {c['name'][1]}, a unique treasure named {it['eigen']}" + (f", {it['satz']}" if it.get("satz") else "")
+
+
+def runenwort(r, rd, it):
+    """Runen und Sockel Stufe 2 (dungeon.py calls it once after setting it["rw"], inside dungeon._lock): the item gets
+    its own picture with the runes glowing (queue_finds paints it within the minute, it counts to the game's day
+    limit); the picture of an earlier runeword of the same item goes first."""
+    iid = str(it.get("i") or "")
+    if not iid or not _own(r, it):
+        print("dungeon: dingbild | runenwort | ohne bild", flush=True)
+        return
+    d = _state()
+    if d["funde"].pop(iid, None) is not None:
+        _save(d)
+    if "fund-" + iid in files():
+        dungeon._bild_rm("fund-" + iid)
+    print("dungeon: dingbild | runenwort | fund", flush=True)
 
 
 def queue_finds():
@@ -837,14 +876,16 @@ def add(r, rd, out):
     style = dungeon.style(r, rd)
     cat = dungeon._by(r, "gegenstaende")
     rs = dungeon_runen.by(r)
+    rank = [x["id"] for x in r["seltenheit"]]
     farbe = {nm: rune_farbe(c)[1] for c in rs.values() for nm in c["name"]}   # the view names the set runes (item_view "ru")
 
     def item(x):
         c = cat.get(x["id"])
         bild = ""
         if c and have:
-            f = "fund-" + str(x.get("i"))
-            bild = f if not x.get("u") and f in have else _pick(name_of(prompt(style, c)), key_of(style, c), have)
+            f = "fund-" + str(x.get("i"))      # its own picture: a named find (rank) or a runeword's item (rw, the view's name)
+            mine = x.get("rw") or x.get("selten") in rank[RANG_FUND:]
+            bild = f if not x.get("u") and mine and f in have else _pick(name_of(prompt(style, c)), key_of(style, c), have)
             bild = bild if bild in have else ""
         sockel = {"ru_farbe": [farbe.get(n, "") for n in x.get("ru") or []]} if x.get("so") else {}   # dungeonsockel.js
         return dict(x, zeichen=ZEICHEN.get(x.get("art"), dungeon.ZEICHEN), bild=bild, **sockel)

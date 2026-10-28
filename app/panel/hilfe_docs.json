@@ -8381,6 +8381,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: eigenes Bild beim erwachten Runenwort, Bilder der Runen-Dienste beim Schmied (V01.1.206, Plan „Runen und Sockel“ Punkt 11a, Stufe 2): Erwacht in einem Ding ein Runenwort (it[\"rw\"]), ruft das Panel einmal dungeon_dingbild.runenwort auf: Das Ding bekommt wie ein benanntes Fundstück ein eigenes Bild (fund-<i>) mit den Runen in ihren Farben und dem Namen des Runenworts, gemalt binnen einer Minute über die Warteschlange und gezählt zum Tageslimit der Spielbilder. Das Bild eines früheren Runenworts desselben Dings geht vorher weg; ist das Runenwort wieder gelöst, zeigt das Ding das Katalogbild. Die neuen Dienste des Schmieds, Sockel bohren, Rune lösen und Runen verschmelzen, haben je Welt ein Bild ohne Personen und Zeilen voller Leben in der Siedlung (DIENST_EN, dungeon_siedlung.json). Kein neuer Schalter, kein neuer Endpunkt; das Modell entscheidet nichts davon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -24022,6 +24030,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: rune pictures on the rules page (V01.1.204, Dominik 2026-10-28 \"in den regeln sehe ich diese nicht.\"): In the part \"Runes\" of the rules tab (Features → AI Dungeon Master → Adjust rules) every rune now has its picture with \"Paint\", \"Paint again\" and \"Keep new\"/\"Keep old\" like items and foes. \"Pictures in: …\" above the list chooses the world; the rune shows as that world's word and in its style (rune, chip, pearl, seal; dungeon_regelseite.WELT_WAHL, dungeon_dingbild._current with rune_text). A rune picture stays while \"Runes and sockets\" is off: the sweep keeps it, only nothing is painted at night then."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a picture of its own for an awakened runeword, pictures of the smith's rune services (V01.1.206, plan \"Runes and sockets\" point 11a, stage 2): When a runeword wakes in a thing (it[\"rw\"]), the panel calls dungeon_dingbild.runenwort once: like a named find the thing gets a picture of its own (fund-<i>) with the runes in their colours and the runeword's name, painted within a minute through the queue and counted to the day limit of the game's pictures. The picture of an earlier runeword of the same thing goes first; once the runeword is freed again the thing shows the catalog picture. The smith's new services, boring a socket, freeing a rune and fusing runes, have a picture per world without people and lines of life in the settlement (DIENST_EN, dungeon_siedlung.json). No new switch, no new endpoint; the model decides none of it."
 },
 {
 "lang": "en",

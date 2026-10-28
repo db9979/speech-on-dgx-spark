@@ -22,7 +22,16 @@
         ["Auf dem Regal stehen kleine Fläschchen mit bunten Tropfen.", "Little bottles of coloured drops stand on the shelf."]],
       "gefaehrte": [["Am Brett neben der Tür hängen Zettel: Begleitung zu haben, gegen Lohn.", "On the board by the door hang notes: company to be had, for pay."],
         ["Auf der Bank wartet jemand mit gepacktem Bündel und schaut euch an.", "Someone waits on the bench with a packed bundle and looks at you."],
-        ["Ein Nicken vom Tresen zur Ecke: Dort sitzen die, die mitkommen würden.", "A nod from the counter towards the corner: there sit those who would come along."]]
+        ["Ein Nicken vom Tresen zur Ecke: Dort sitzen die, die mitkommen würden.", "A nod from the counter towards the corner: there sit those who would come along."]],
+      "sockel": [["Der Bohrer singt leise, Span um Span wird der Sockel tiefer.", "The drill hums softly, shaving by shaving the socket grows deeper."],
+        ["Im Schraubstock wartet ein Schild, daneben eine Reihe feiner Bohrer.", "A shield waits in the vice, a row of fine drills beside it."],
+        ["Mit Kreide ist auf dem Griff markiert, wo der neue Sockel sitzen soll.", "Chalk marks on the grip show where the new socket is to sit."]],
+      "loesen": [["Eine feine Zange liegt bereit, daneben ein Tuch für das, was frei wird.", "Fine tongs lie ready, beside them a cloth for what comes free."],
+        ["Behutsam lockert die Werkstatt, was lange fest im Sockel saß.", "Carefully the workshop loosens what sat firm in its socket for long."],
+        ["Ein leises Klicken, und ein schwaches Leuchten liegt in der offenen Hand.", "A soft click, and a faint glow lies in the open hand."]],
+      "verschmelzen": [["Im kleinen Tiegel glimmt es: zwei Lichter werden langsam eins.", "Something glows in the small crucible: two lights slowly become one."],
+        ["Über blauer Flamme summt der Tiegel, die Luft riecht nach Metall.", "Over a blue flame the crucible hums, the air smells of metal."],
+        ["Drei kleine Steine liegen nebeneinander und warten auf das Feuer.", "Three small stones lie side by side and wait for the fire."]]
     },
     "horror": {
       "gasthaus": [["Der Wirt zählt die Gäste zweimal und verriegelt die Tür.", "The innkeeper counts the guests twice and bolts the door."],

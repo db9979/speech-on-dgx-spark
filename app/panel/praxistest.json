@@ -4209,6 +4209,13 @@
 "titel": "Dungeon-Master: Runenwörter, Schmied, Schenken und Runen im Auto",
 "text": "Admin: Runen und Sockel und Gold mit Zweck an. A: Im Heldenbogen unter Tasche zeigt der Runenbeutel „Runenwörter“ mit allen sieben, fehlende Runen gestrichelt. B: Kenaz und Uruz in ein gewöhnliches Schwert mit 2 Sockeln (ab Stufe 3): die Vorschau sagt „Dann erwacht das Runenwort Glut“, nach Einsetzen steht es am Tisch und am Schwert. C: Eine Rune auf das Ding ziehen: passende Dinge leuchten, die Vorschau kommt. D: In einer Siedlung beim Schmied einen Sockel bohren, Runen retten und drei gleiche verschmelzen; Preise wie angezeigt. E: Eine Rune über „Geben …“ an einen zweiten Helden. F: Im Auto „Welche Runen habe ich?“ und „Setze Uruz ins Langschwert“ mit „ja“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P626",
+"v": 1206,
+"titel": "Dungeon-Master: Bild beim Runenwort",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Runen und Sockel an. A: Die Runen eines Runenworts in der richtigen Reihenfolge in ein gewöhnliches Ding setzen: binnen einer Minute bekommt das Ding ein eigenes Bild mit leuchtenden Runen. B: Beim Schmied in einer Siedlung zeigen Sockel bohren, Rune lösen und Verschmelzen je ein Bild und eine Zeile.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
