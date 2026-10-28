@@ -314,7 +314,7 @@ RAHMEN = {                # without a story plan the panel picks the quest's kin
     "flucht": ("Flucht: die Gruppe sitzt fest oder wird gejagt und muss heil hinausfinden.",
                "Escape: the group is trapped or hunted and must get out unharmed.")}
 OOC_MAX = 160             # one out-of-character line to a single player
-OOC_PANEL = re.compile(r"(?i)\bpanel")   # „Das Panel bestätigt …“ in an ooc line: the model speaks for the panel (Dominik 2026-10-24)
+OOC_PANEL = re.compile(r"(?i)\bpanel")   # „Das Panel bestätigt …“ in an ooc line or the story: the model speaks for the panel (Dominik 2026-10-24, 2026-10-28)
 VORTEIL = ("vorteil", "nachteil")   # two d20, the higher or the lower counts
 NPC_MAX = 3
 NPC_SAGT = 300
@@ -444,6 +444,9 @@ HAENDLER_IN = {"schmied": "Schmiedin", "alchemist": "Alchemistin", "kraemer": "K
 HAENDLER_WORT = {"schmied": ("schmied", "smith", "waffen", "rüstung", "armour", "armor", "weapon"),
                  "alchemist": ("alchemist", "apothek", "kräuter", "kraeuter", "trank", "tränke", "potion", "herbalist", "apothecary"),
                  "kraemer": ("krämer", "kraemer", "trödler", "troedler", "hausierer", "pedlar", "peddler", "trinket")}
+MARKT_WORT = ("händler", "haendler", "krämer", "kraemer", "alchemist", "apothek", "schmied", "verkäuf", "verkaeuf", "hausierer",
+              "trödler", "troedler", "marktstand", "kaufmann", "kauffrau", "merchant", "trader", "vendor", "pedlar", "peddler",
+              "shopkeeper", "smith", "apothecary", "herbalist")   # a merchant only when the story shows one (check_story)
 NIE_ANGEBOT = ("schatz",)
 KASSE = 50
 FOLGE_ARTEN = ("schaden", "heilung")   # what a consequence does (consequences: the model's damage, the host's random rules)
@@ -3822,7 +3825,8 @@ def _name_map(rd):
 # going somewhere needs no check (Dominik 2026-10-25, „gehe nach wolfshafen“ got „Sich durch die Gassen von Wolfshafen
 # bewegen“ on Geschick): a check whose wofuer has a word of GEHEN and none of RISIKO is dropped; the map moves the group
 GEHEN = re.compile(r"(?i)\b(geh(e|en|t|st)?|lauf(e|en|t)?|läufs?t|reis(e|en|t)|beweg\w*|wander\w*|marschier\w*|"
-                   r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?)\b")
+                   r"betr(e|i)t\w*|eintret\w*|tr(e|i)tt?(e|st|en|et)?\s+in\s+(\w+\s+){0,3}?ein|"   # „betrete die Bibliothek“ (Dominik 2026-10-28)
+                   r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?|enter(s|ing|ed)?)\b")
 RISIKO = ("unbemerkt", "unauffällig", "ablenk", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
           "verfolg", "balancier", "sneak", "quiet", "unseen", "hidden", "climb", "jump", "swim", "flee", "past", "chase", "balanc")
 
@@ -3891,7 +3895,7 @@ def typed(text):
     for kind, rx in (("verkauf", VERKAUF), ("kauf", KAUF), ("rast", RAST)):
         if rx.search(low):
             return kind
-    if GEHEN.search(low) and not any(x in low for x in RISIKO) and not MEHR_ALS_GEHEN.search(low) and not kampf.ANGRIFF_WORTE.search(low):
+    if GEHEN.search(low) and not any(x in low for x in RISIKO) and not MEHR_ALS_GEHEN.search(low) and kampf.intent(low) != "angriff":
         return "gehen"
     return ""
 
@@ -3988,8 +3992,8 @@ def check_proben(r, rd, obj):
         if kind or just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
             drop += 1
             print(f"dungeon: probe | verworfen | {kind or 'gehen'}", flush=True)
-            if kind in ("", "gehen"):            # buying, selling and resting have their own line (TIPP)
-                rd["_ohne"].append((pid, "gehen"))
+            if kind in ("", "gehen"):            # buying, selling and resting have their own line (TIPP); who only asks hears
+                rd["_ohne"].append((pid, "absicht" if erz.asks(rd["offen"][pid].get("text")) else "gehen"))   # that (2026-10-28)
             continue
         if everyday(rd["offen"][pid].get("text")):
             drop += 1                            # greeting, eating, unpacking: never a check (ALLTAG)
@@ -4168,6 +4172,14 @@ def moment_of(rd, wuerfe, hits):
     return ""
 
 
+PANEL_EN = re.compile(r"(?i)\b(?:roll|rolls|rolled|check|checks|confirm\w*|decide\w*|dice)\b")   # „the panel rolls“, not a door panel
+
+
+def panel_says(rd, satz):
+    """A sentence of the story in which the panel speaks (OOC_PANEL; in English only with a word of PANEL_EN)."""
+    return bool(OOC_PANEL.search(satz)) and (rd.get("lang") != "en" or bool(PANEL_EN.search(satz)))
+
+
 def check_story(r, rd, obj):
     """The narration by fixed rules. Returns (story or None, dropped): None when the text is missing, too short or
     holds a refused word; dropped counts the parts taken out (unknown names, kinds, numbers)."""
@@ -4177,6 +4189,12 @@ def check_story(r, rd, obj):
     if len(text) < 20 or bad_words(r, rd, text):
         return None, 1
     names, drop = _name_map(rd), 0
+    if any(panel_says(rd, x) for x in erz._saetze(text)):   # „Das Panel würfelt …“ in the story itself (Dominik 2026-10-28): it leaves
+        text = " ".join(x for x in erz._saetze(text) if not panel_says(rd, x)).strip()
+        drop += 1
+        print("dungeon: erzaehlung | panel satz weg", flush=True)
+        if len(text) < 20:
+            return None, drop
     out = {"text": text, "npc": [], "npc_stimme": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
            "akt_fertig": obj.get("akt_fertig") is True, "ooc": [], "bild": "", "ort_id": dungeon_karte.ort_id(obj)}
     if obj.get("bild"):
@@ -4237,7 +4255,12 @@ def check_story(r, rd, obj):
     hd = obj.get("haendler")
     if isinstance(hd, dict):
         name, satz = plain(hd.get("name"), 40), plain(hd.get("satz"), SATZ_MAX)
-        out["haendler"] = {"name": "" if bad_words(r, rd, name) else name, "satz": "" if bad_words(r, rd, satz) else satz}
+        low = text.lower()
+        if name and len(name) >= 3 and name.lower() in low or any(w in low for w in MARKT_WORT):
+            out["haendler"] = {"name": "" if bad_words(r, rd, name) else name, "satz": "" if bad_words(r, rd, satz) else satz}
+        else:                                    # a merchant the story never shows (Dominik 2026-10-28: an alchemist kept
+            drop += 1                            # turning up in the empty library) opens no market
+            print("dungeon: markt | nicht erzaehlt", flush=True)
     elif hd is not None:
         drop += 1
     fr = str(obj.get("frage_an") or "").strip().lower()
@@ -6241,8 +6264,9 @@ def _cast(r, rd, pid, h, c, bonus, name, an=None):
             stood_up(rd, xp, x, was)
         if c.get("segen"):
             bless(x, c["segen"], name, pid, c["id"])
-    _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe", satz=c["satz"][1 if rd["lang"] == "en" else 0],
-         **({"heilt": plus} if plus else {}))
+    _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe",
+         satz="" if c.get("schaden_art") else c["satz"][1 if rd["lang"] == "en" else 0],   # a damage spell's hit only by its attack line
+         **({"heilt": plus} if plus else {}))                                             # (Dominik 2026-10-28: „entzündet das Ziel“ on a miss)
 
 
 def hero_act(rid, pid, b):

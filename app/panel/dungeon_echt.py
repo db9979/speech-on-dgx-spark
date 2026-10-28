@@ -13,7 +13,7 @@ whose profile plays from the car is not asked (dungeon_auto.im_auto); a guest se
 Off by default: the admin's switch dungeonechtwuerfel (features.py, chat.dungeon_echtwuerfel) for the round's host.
 The number is data: only the own seat, only whole numbers 1 to 20, only for the turn asked, an own rate limit.
 State in the round (dungeon.py's rounds file), only while a turn waits for numbers:
-    rd["echt_frage"]  {"zug", "t", "plaetze": {pid: {"fragen": [{"wert", "schwer", "n"} | {"angriff": True, "gegner",
+    rd["echt_frage"]  {"zug", "t", "plaetze": {pid: {"fragen": [{"wert", "schwer", "n", "sg"?} | {"angriff": True, "gegner",
                       "n"}], "zahlen": [..] | None, "max": seconds}}}
     rd["echt_aus"]    {pid: turns in a row without a number}; from AUS_N on the seat waits only KURZ_S
 Journal: fixed words and numbers („dungeon: echt | …“), Live only counts.
@@ -70,7 +70,8 @@ def seats(rd, proben, angriffe=()):
         pid = p.get("pid")
         if pid in hit or not ok(pid):
             continue
-        out.setdefault(pid, []).append({"wert": p.get("wert", ""), "schwer": int(p.get("schwer") or 0), "n": 2 if p.get("vt") else 1})
+        out.setdefault(pid, []).append({"wert": p.get("wert", ""), "schwer": int(p.get("schwer") or 0), "n": 2 if p.get("vt") else 1,
+                                        **({"sg": p["sg"]} if p.get("sg") else {})})   # the panel's level word (dungeonwarten.js dmStufe)
     for pid, gegner in angriffe:
         if ok(pid):
             out[pid] = [{"angriff": True, "gegner": gegner or "", "n": 1}]

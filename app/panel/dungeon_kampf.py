@@ -118,6 +118,7 @@ NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|di
                            r"lagerfeuer|feuer\s+(?:machen|entzünd|an)|reach\s+for|meet\s+with|"
                            # Nachprüfung Welle 1 (2026-10-26): stepping, proposing, fleeing, a look, a light are no attack;
                            # Nachprüfung V01.1.130: each ends at a word, so a foe's name („Nachtmahr“, „Sicherheitsdroide“) stays whole
+                           r"(?:tret|tritt|trat)\w*\s+in\s+(?:[\w-]+\s+){0,3}(?:ein|hinein)(?!\w)|"   # „trete in die Halle ein“ (2026-10-28)
                            r"(?:tret|tritt|trat)\w*\s+(?:den\s+(?:rückzug|rueckzug)|zur\s+seite|zurück|zurueck|beiseite|ein(?=\s*(?:[.,;:!?]|$|und(?!\w)))|vor(?!\w)|"
                            r"näher|naeher|(?:die|eine|das)\s+(?:tür|tuer|tor|fenster|kiste|truhe)\w*\s+ein(?!\w))|"
                            r"(?:schlag|schläg|schlug)\w*\s+(?:vor(?!\w)|(?:mich|uns|dich|euch|sich)(?!\w)(?!\s+nieder)|alarm)|hau\w*\s+ab(?!\w)|"

@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.236** AI Dungeon Master: faults of the round in the Old Library: the dice bar names the same difficulty as the card, a damage spell claims no hit, sentences about the panel leave the story, "enter" is walking, a merchant only when the story shows one
 - **V01.1.235** AI Dungeon Master: a word for "no name" such as "keine", "nobody" or "unknown" never becomes a person, such a card of a running round goes away
 - **V01.1.234** AI Dungeon Master: in the settlement window a house's picture stands whole as a square beside name and line instead of cut off as a band
 - **V01.1.233** Remote access stage 3b: big files in pieces with SHA-256, pause and resume, by link (curl on the server) or from the NAS; at home the anchor (1.4.0) goes straight to the Spark
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.229** Status → Architecture, Overview shows remote access: a box „Remote access“ (shell, files, screen, spontaneous help) and „Remote servers“ with the anchor, both with a node page; plus the pop-out test waits without fixed times
 - **V01.1.228** Remote access goal mode: "Pursue as goal" pins the question to the assistant; after each own command the own language model suggests exactly one next command with a reason, until "Done" or "End goal" (only with "Send the screen along", never Enter, at most 6 a minute, the same screen not twice); and "Lines" picks 80, 300 or 1000 lines (chat.fernzugang_ki_zeilen, at most 60 000 characters, else "shortened")
 - **V01.1.227** Spontaneous help page tidied (variant A): list on the left like Systems (running, history), on the right only the next step with four dots, the number with a countdown ring, New number and Discard, the ways Link, Email and Shell as tabs with only one line; pointer and full screen only while sharing, at 0:00 Expired – New number; messages as a toast instead of a line, on Systems too
-- **V01.1.226** Remote access keeps the line: a heartbeat every 20 s and SSH keepalive; when the line drops the shell stays open 2 minutes with its last output and the page reconnects quietly (a new one-time ticket, the same sign-in, unlocked); a countdown before the idle end, the unlock end and the Spontaneous help end with Keep working or Extend; every end message names the reason and offers Connect again
 
 
 

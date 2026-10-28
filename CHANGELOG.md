@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.236** · 2026-10-29 · KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt
 - **V01.1.235** · 2026-10-29 · KI-Dungeon-Master: ein Wort für „kein Name“ wie „keine“, „niemand“ oder „unknown“ wird nie eine Person, eine solche Karte aus einer laufenden Runde verschwindet
 - **V01.1.234** · 2026-10-29 · KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
 - **V01.1.233** · 2026-10-29 · Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark

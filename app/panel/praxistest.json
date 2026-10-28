@@ -4419,6 +4419,13 @@
 "titel": "Dungeon-Master: keine Person namens keine",
 "text": "Eine Runde in einer Siedlung mit Wachen spielen. A: Im Reiter Personen und auf der Karte steht keine Person „keine“, „niemand“ oder „unbekannt“. B: Eine Runde, die schon so eine Karte hatte: nach dem nächsten Zug ist sie weg. C: Benannte Personen wie vorher.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P656",
+"v": 1236,
+"titel": "Dungeon-Master: Bibliothek-Fehler behoben",
+"text": "Eine Runde spielen. A: Bei einer Probe mit Ziel 13 sagen Karte und Würfelleiste beide „mittel“. B: Im Kampf Feuerpfeil wirken: die Zauberzeile sagt nur „wirkt Feuerpfeil“, Treffer oder daneben steht in der Angriffszeile. C: „Ich betrete die Halle“: keine Probe. D: „Ich frage X danach“ ohne Probe: Hinweis „Wer nur fragt …“. E: In der Erzählung steht nie „Das Panel …“. F: Ein Händler erscheint nur, wenn die Erzählung ihn zeigt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

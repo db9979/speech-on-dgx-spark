@@ -2180,6 +2180,65 @@ class ReviewPanel(Turns):
         self.assertIn("dungeon: beute | ort schon", out.getvalue())
 
 
+class Bibliothek(Base):
+    """Dominik 2026-10-28 („passt das alles?“, a round in the Alte Bibliothek, „1-9“): the faults of that log by fixed
+    rules."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+
+    def test_the_faults_of_the_library_round(self):
+        r, rd = dungeon.rules(), self.state(self.rid)
+        name = rd["plaetze"][self.host]["held"]["name"]
+        # 1: the bar names the panel's level (13 is „mittel“), the same word as the card
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeonwarten.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("dmStufe(x.schwer,x.sg)", js)
+        self.assertEqual(dungeon.PROBE_SG["mittel"], 13)
+        # 2: a damage spell's line never says it hit, only its attack line does
+        c = next(x for x in r["gegenstaende"] if x["id"] == "feuerpfeil")
+        h = rd["plaetze"][self.host]["held"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon._cast(r, rd, self.host, h, c, 0, "Feuerpfeil")
+        self.assertEqual([e["satz"] for e in rd["log"] if e["art"] == "zauber"][-1], "")
+        # 4: a sentence in which the panel speaks leaves the story, a door panel in English stays
+        story = (f"{name} steht vor dem Regal und sieht sich die alten Bücher an. Das Panel würfelt für die Untersuchung. "
+                 "Staub tanzt im schmalen Licht des hohen Fensters, und irgendwo tropft Wasser auf den kalten Stein.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            s, _ = dungeon.check_story(r, rd, {"erzaehlung": story, "frage_an": ""})
+        self.assertNotIn("Panel", s["text"])
+        self.assertIn("Staub tanzt", s["text"])
+        self.assertIn("dungeon: erzaehlung | panel satz weg", out.getvalue())
+        self.assertTrue(dungeon.panel_says({"lang": "en"}, "The panel rolls for the search."))
+        self.assertFalse(dungeon.panel_says({"lang": "en"}, "A carved oak panel hides the door."))
+        # 5 and 6: entering goes without a check whatever the model adds; who only asks hears so, not „Gehen“
+        self.assertEqual(dungeon.typed("betrete die biblithek"), "gehen")
+        self.assertEqual(dungeon.typed("Ich trete in die Halle ein"), "gehen")
+        for text, art in (("Ich betrete die Bibliothek", ""), ("Ich trete in die Halle ein", ""), ("Ich trete den Goblin", "angriff")):
+            self.assertEqual(dungeon.kampf.intent(text), art, text)
+        for text, warum in (("betrete die biblithek", "gehen"), ("Ich frage Silas danach.", "absicht")):
+            rd["offen"] = {self.host: {"text": text, "t": 0}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                got, drop = dungeon.check_proben(r, rd, {"proben": [{"wer": name, "wert": "geschick", "stufe": "mittel",
+                                                                      "wofuer": "Leise und unauffällig zu Silas gehen"}]})
+            self.assertEqual((got, drop, rd["_ohne"]), ([], 1, [(self.host, warum)]), text)
+        # 7: one fixed sentence for a group at its goal, whatever its name
+        import dungeon_fraktionen
+        with open(dungeon_fraktionen.__file__, encoding="utf-8") as f:
+            self.assertNotIn("was sie wollten", f.read())
+        # 8: a merchant only when the story shows one
+        lang = (f"{name} tritt in die stille Halle der alten Bibliothek, Staub liegt auf den Regalen und das Licht fällt schräg "
+                "durch das Fenster.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            s, _ = dungeon.check_story(r, rd, {"erzaehlung": lang, "haendler": {"name": "", "satz": ""}, "frage_an": ""})
+            s2, _ = dungeon.check_story(r, rd, {"erzaehlung": lang + " Ein Alchemist hat seine Tränke auf einem Tisch aufgebaut.",
+                                                "haendler": {"name": "", "satz": ""}, "frage_an": ""})
+        self.assertIsNone(s["haendler"])
+        self.assertIsNotNone(s2["haendler"])
+        self.assertIn("dungeon: markt | nicht erzaehlt", out.getvalue())
+
+
 class ReviewPersonen(Base):
     """Review 27.10. Paket 8 (Dominik 2026-10-27 „ok“): people are people, merchants are people with the right goods."""
     def setUp(self):

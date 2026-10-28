@@ -92,7 +92,7 @@ def turn(dm, rd, k, schritt):
         x.update(voll=rd.get("zug", 0), bekannt=True, ort=dm.where(rd).get("ort"))
         rd["fraktion_neu"] = (rd.get("fraktion_neu") or []) + [k]
         dm._log(rd, "fraktion", name=x["name"], was="voll", stand=neu, felder=x["felder"])
-        _note(rd, f"{x['name']} hat erreicht, was sie wollten.", f"{x['name']} have got what they wanted.")
+        _note(rd, f"Ziel erreicht: {x['name']}.", f"Goal reached: {x['name']}.")   # one form for every name (2026-10-28)
         dm._day.bump("fraktion_voll")
     elif neu < x["felder"] and x["voll"] is not None:
         x.update(voll=None, ort=None)

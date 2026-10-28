@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.236** KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt
 - **V01.1.235** KI-Dungeon-Master: ein Wort für „kein Name“ wie „keine“, „niemand“ oder „unknown“ wird nie eine Person, eine solche Karte aus einer laufenden Runde verschwindet
 - **V01.1.234** KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
 - **V01.1.233** Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.229** Zustand → Technik, Überblick zeigt den Fernzugang: eigener Kasten „Fernzugang“ (Shell, Dateien, Bildschirm, Spontanhilfe) und „Fern-Server“ mit dem Anker, beide mit Knoten-Seite; dazu wartet der Test zum Herauslösen ohne feste Zeiten
 - **V01.1.228** Fernzugang Ziel-Modus: „Als Ziel verfolgen“ heftet die Frage an den Assistenten an; nach jedem eigenen Befehl schlägt das eigene Sprachmodell genau einen nächsten Befehl mit Grund vor, bis „Fertig“ oder „Ziel beenden“ (nur mit „Bildschirm mitschicken“, nie Enter, höchstens 6 je Minute, derselbe Bildschirm nicht zweimal); dazu wählt „Zeilen“ 80, 300 oder 1000 Zeilen (chat.fernzugang_ki_zeilen, höchstens 60 000 Zeichen, sonst „gekürzt“)
 - **V01.1.227** Spontanhilfe-Seite aufgeräumt (Variante A): Liste links wie bei Systeme (Läuft, Verlauf), rechts nur der nächste Schritt mit vier Punkten, Nummer mit Countdown-Ring, Neue Nummer und Verwerfen, die Wege Link, E-Mail und Shell als Reiter mit nur einer Zeile; Zeigepfeil und Vollbild erst beim Teilen, bei 0:00 Abgelaufen – Neue Nummer; Meldungen als Einblendung statt Textzeile, auch bei Systeme
-- **V01.1.226** Fernzugang hält die Verbindung: Lebenszeichen alle 20 s und SSH-Keepalive; reißt die Leitung ab, bleibt die Shell 2 Minuten mit ihrer letzten Ausgabe offen und die Seite verbindet sich still wieder (neues Einmal-Ticket, dieselbe Anmeldung, entsperrt); Countdown vor Leerlauf, Entsperrung und Spontanhilfe-Ende mit Weiterarbeiten oder Verlängern; jede End-Meldung nennt den Grund und bietet Neu verbinden
 
 
 
