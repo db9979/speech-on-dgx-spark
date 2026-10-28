@@ -102,6 +102,7 @@ class Off(unittest.TestCase):
 class Invite(unittest.TestCase):
     def setUp(self):
         reset_guard()
+        helpers.keep_chat(self, "weather", "tasks", "mfa")
         helpers.set_config(weather=True, tasks=False, mfa=False)
         switch(mode="invite", mfa="data")
 

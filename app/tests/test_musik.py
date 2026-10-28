@@ -381,6 +381,8 @@ class Rules(On):
         for asked, want in ((None, 120), (True, 120), ("90", 120), (-5, 120), (3, musik.MIN_S), (90, 90),
                             (99999, lim["max_s"])):
             self.assertEqual(musik.length(asked, lim), want, asked)
+        # back afterwards: left at 60, test_ui_browser's music page later in the run found no 2-minute chip
+        self.addCleanup(music, max_s=lim["max_s"])
         music(max_s=60)
         self.assertEqual(musik.limits()["default_s"], 60)
 

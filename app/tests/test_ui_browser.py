@@ -66,6 +66,40 @@ VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 PAGE_READY = "!!document.getElementById('ver')&&document.getElementById('ver').textContent.length>0"
 
 
+def _close_chromes(cls):
+    """Class cleanup of Browser.setUpClass: the class's Chromium and Playwright, then its event loop."""
+    async def close():
+        for br in cls._chromes.values():
+            await br.close()
+        if cls._pw:
+            await cls._pw.stop()
+    try:
+        cls._loop.run_until_complete(close())
+    finally:
+        cls._loop.close()
+        cls._loop, cls._chromes, cls._pw = None, {}, None
+
+
+class _Contexts:
+    """What Browser.page hands a test as its browser when the class's Chromium is shared: new_context as on a
+    browser, close() closes the contexts this test opened (all its pages), never the shared Chromium."""
+
+    def __init__(self, browser):
+        self.browser, self.contexts = browser, []
+
+    async def new_context(self, **kw):
+        ctx = await self.browser.new_context(**kw)
+        self.contexts.append(ctx)
+        return ctx
+
+    async def close(self):
+        while self.contexts:
+            try:
+                await self.contexts.pop().close()
+            except Exception:
+                pass   # already closed with the test
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Browser(unittest.TestCase):
     @classmethod
@@ -81,9 +115,27 @@ class Browser(unittest.TestCase):
             profiles.add_user("Uitest", "4711")
         except Exception:
             pass   # already there from an earlier test class
+        # one Chromium for the whole class (V01.1.305): every test gets a fresh context (own storage, cookies,
+        # viewport), the browser is launched once per set of arguments on the class's own event loop and closed with
+        # the class; 77 launches were a minute of every run
+        cls._loop, cls._chromes, cls._pw = asyncio.new_event_loop(), {}, None
+        cls.addClassCleanup(_close_chromes, cls)   # also for classes that borrow this setUpClass
 
     def run_async(self, coro):
-        return asyncio.run(coro)
+        loop = type(self).__dict__.get("_loop")
+        if loop is None:
+            return asyncio.run(coro)   # Browser("run") from another module: its own loop and browser as before
+        return loop.run_until_complete(coro)
+
+    async def _chrome(self, args, exe):
+        """The class's Chromium for these launch arguments, launched at its first use."""
+        cls = type(self)
+        key = tuple(args)
+        if key not in cls._chromes:
+            if cls._pw is None:
+                cls._pw = await async_playwright().start()
+            cls._chromes[key] = await cls._pw.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
+        return cls._chromes[key]
 
     async def loaded(self, pg):
         """After opening a page: until every box it loads is there (laden.js lzIdle). A switch flipped earlier would be
@@ -109,7 +161,12 @@ class Browser(unittest.TestCase):
         exe = chromium()
         args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
                 "--autoplay-policy=no-user-gesture-required"] if mic else []
-        br = await p.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
+        loop = type(self).__dict__.get("_loop")
+        if loop is not None and asyncio.get_running_loop() is loop:
+            br = _Contexts(await self._chrome(args, exe))      # the class's Chromium, closed with the class
+            self.addCleanup(lambda: loop.run_until_complete(br.close()))   # a red test leaves no context behind
+        else:
+            br = await p.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
         # Playwright's wait_for_function evaluates its text in the page, which the strict CSP refuses: tests that
         # walk the pages with the CSP on (csp=True) wait for selectors only, the others leave it out
         ctx = await br.new_context(viewport={"width": width, "height": height}, locale="de-DE",
@@ -2293,8 +2350,11 @@ class Browser(unittest.TestCase):
                     self.assertIn("Uitest", await pg.inner_text("#logreq .rlist"))
                     if name == "handy":
                         self.assertFalse(await pg.is_visible("#logreq .rdet"))
-                        await pg.click("#logreq .rq")
-                        await pg.wait_for_selector("#logreq .rdet")
+                    # the own request with the tool, not the newest: on a busy run the panel's update check (traced as
+                    # „Von selbst“) came after it, and the way shown was that one's
+                    await pg.click("#logreq .rq:has-text('Merken')")
+                    await pg.wait_for_selector("#logreq .rdet")
+                    if name == "handy":
                         self.assertTrue(await pg.is_visible("#logreq .rback"))
                     self.assertTrue(await pg.is_visible("#logreq .rtl"))
                     self.assertIn("Sprachmodell", await pg.inner_text("#logreq .rdet"))

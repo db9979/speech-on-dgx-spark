@@ -249,6 +249,10 @@ class Browser(unittest.TestCase):
 
     async def show(self, pg, tab, js):
         await pg.evaluate(f"openMe('{tab}')")
+        if tab == "mailbox":
+            # the mailbox list comes from the panel; when its answer came late (a slow runner late in a part), its
+            # mailRender drew the tidy card anew in the middle of the test and took the open form away (V01.1.305)
+            await pg.wait_for_selector("#maillist li", state="attached")
         await pg.evaluate(js)
         await pg.wait_for_timeout(300)
 

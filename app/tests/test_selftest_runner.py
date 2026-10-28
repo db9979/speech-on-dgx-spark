@@ -203,6 +203,41 @@ class Runner(unittest.TestCase):
             data = json.load(f)
         self.assertTrue(data and all(isinstance(v, (int, float)) and v >= 0 for v in data.values()))
 
+    def test_a_stale_duration_is_found(self):
+        """V01.1.305: a unit without an entry in dauer.json or far off it (STALE_S and twice) is stale; GitHub warns
+        about it (--sum), tools/vorpush.py names it. Small drifts stay, so the file does not churn."""
+        have = {"test_a": 10.0, "test_b": 100.0, "test_c": 0.0, "test_d": 300.0}
+        measured = {"test_a": 40.0, "test_b": 250.0, "test_c": 237.3, "test_d": 120.0, "test_new": 1437.2}
+        self.assertEqual(selftest.stale(have, measured), {"test_b": 250.0, "test_c": 237.3, "test_d": 120.0, "test_new": 1437.2})
+        self.assertEqual(selftest.stale(have, {"test_a": 11.0, "test_b": 160.0}), {})
+
+    def test_every_test_module_has_its_duration(self):
+        """GitHub cuts its parts by dauer.json; a module without an entry counted NEW_UNIT seconds, and
+        test_dungeon_pruefstand (24 min) made one part 40 min long while the others took 12 (V01.1.188-.211).
+        tools/vorpush.py enters a new module itself (commit dauer.json with it); an entry of a module that is gone goes."""
+        here = os.path.join(APP, "tests")
+        mods = {n[:-3] for n in os.listdir(here) if n.startswith("test_") and n.endswith(".py")}
+        have = {k.split(".", 1)[0] for k in selftest._durations(here)}
+        self.assertEqual(sorted(mods - have), [], "test modules without an entry in tests/dauer.json (python3 tools/vorpush.py)")
+        self.assertEqual(sorted(have - mods), [], "entries in tests/dauer.json of test modules that are gone")
+
+    def test_a_part_of_one_module_is_timed(self):
+        """tools/vorpush.py runs each module as --part 1/1 with -p, so it measures every unit like a GitHub part."""
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "tests"))
+            for name in ("test_one.py", "test_two.py"):
+                with open(os.path.join(d, "tests", name), "w") as f:
+                    f.write("import unittest\nclass C(unittest.TestCase):\n    def test_a(self):\n        print('RAN %s')\n" % name)
+            env = {k: v for k, v in os.environ.items() if k not in ("GITHUB_ACTIONS", "GITHUB_STEP_SUMMARY")}
+            env["SELFTEST_REPORT"] = os.path.join(d, "r.json")
+            p = subprocess.run([sys.executable, RUNNER, "discover", "-s", "tests", "-p", "test_two.py", "--part", "1/1"],
+                               cwd=d, env=env, capture_output=True, text=True, timeout=120)
+            self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+            self.assertIn("RAN test_two.py", p.stdout)
+            self.assertNotIn("RAN test_one.py", p.stdout)
+            with open(env["SELFTEST_REPORT"], encoding="utf-8") as f:
+                self.assertEqual(list(json.load(f)["dauer"]), ["test_two"])
+
     def test_github_runs_all_parts(self):
         path = os.path.join(os.path.dirname(APP), ".github", "workflows", "tests.yml")
         if not os.path.exists(path):
@@ -213,6 +248,7 @@ class Runner(unittest.TestCase):
         self.assertIn(f"part: {list(range(1, n + 1))}", text)
         self.assertIn(f"--part ${{{{ matrix.part }}}}/{n}", text)
         self.assertIn(f'selftest.py --sum "$RUNNER_TEMP/teile" {n}', text)
+        self.assertIn("app/tests/dauer.json", text.split("ergebnis:", 1)[1])    # --sum compares with it
         self.assertIn("cancel-in-progress: false", text)
 
     def test_github_and_the_spark_use_it(self):

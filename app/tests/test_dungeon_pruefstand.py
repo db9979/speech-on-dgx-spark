@@ -29,6 +29,7 @@ from tests import helpers  # noqa: E402
 P = "/api/admin/dungeon/pruefstand"
 NIGHT = datetime.datetime(2026, 3, 4, 3, 0).timestamp()
 NOON = datetime.datetime(2026, 3, 4, 12, 0).timestamp()
+W = 4   # the long tables four cells at a time (dungeon_pruefstand._map, the same table as one after the other)
 
 
 class Bench(unittest.TestCase):
@@ -64,6 +65,20 @@ class Bench(unittest.TestCase):
         self.assertEqual(set(a["2/3"]), {"siege", "leben", "runden"})
         self.assertEqual(dict(dungeon._day), before)                               # no fight of the bench counts
 
+    def test_at_the_same_time_the_same_tables(self):
+        """The self-tests play the long tables in W processes at once (dungeon_pruefstand._map); every cell and every
+        level throws its own dice, so each table is exactly the one played one after the other, with runes too."""
+        r = dungeon.rules()
+        kw = {"kaempfe": 6, "seed": "gleich", "stufen": [1, 4, 9], "gruppen": [1, 3, 5]}
+        self.assertEqual(ps.bench(r, workers=W, **kw), ps.bench(r, **kw))
+        self.assertEqual(ps.bench(r, personen=True, workers=W, **kw), ps.bench(r, personen=True, **kw))
+        self.assertEqual(ps.bosses(r, workers=W, **kw), ps.bosses(r, **kw))
+        self.assertEqual(ps.economy(r, laeufe=6, stufen=[1, 2, 7], workers=W), ps.economy(r, laeufe=6, stufen=[1, 2, 7]))
+        with mock.patch("dungeon_runen.wirkt", return_value=True):
+            self.assertEqual(ps.bench(r, mit_runen=True, workers=W, **kw), ps.bench(r, mit_runen=True, **kw))
+            self.assertEqual(ps.economy(r, laeufe=6, stufen=[3, 8], mit_runen=True, workers=W),
+                             ps.economy(r, laeufe=6, stufen=[3, 8], mit_runen=True))
+
     def test_heroes_like_at_the_table(self):
         """Review 27.10. B6 and B11 (Dominik 2026-10-27 „ok“): the bench's heroes are raised like a player's, level by
         level with the first of the two abilities offered and every point on the class's order; every class of the world
@@ -92,7 +107,7 @@ class Bench(unittest.TestCase):
 
     def test_the_aim_at_medium_for_every_level_and_group(self):
         """The self-test of the balance (Dominik 2026-10-24, Idee 5 „Ein Selbsttest hält das Ziel“)."""
-        z = ps.bench(dungeon.rules(), kaempfe=ps.KAEMPFE, seed="selbsttest")      # as at night: 200 per cell
+        z = ps.bench(dungeon.rules(), kaempfe=ps.KAEMPFE, seed="selbsttest", workers=W)      # as at night: 200 per cell
         self.assertEqual(len(z), dungeon.rules()["grenzen"]["stufe_max"] * ps.GRUPPE_MAX)
         off = {k: c["siege"] for k, c in z.items() if not ps.AIM[0] <= c["siege"] <= ps.AIM[1]}
         self.assertEqual(off, {}, "Stufe/Gruppe außerhalb des Ziels")
@@ -109,7 +124,7 @@ class Bench(unittest.TestCase):
         for i in ("wache", "schlaeger"):                    # Paket 11.6: on the fight experience, measured or not
             self.assertEqual(P.weighted(by[i])["ep_kampf"], round(dungeon_bestiarium.ep_kampf(by[i]) * P.GEWICHT[i]))
             self.assertEqual(P.weighted(by[i])["ep"], by[i]["ep"])
-        z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", personen=True)
+        z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", personen=True, workers=W)
         self.assertGreaterEqual(len(z), 40)
         mean = sum(c["siege"] for c in z.values()) / len(z)
         self.assertTrue(ps.AIM[0] <= mean <= ps.AIM[1], mean)
@@ -161,12 +176,12 @@ class Bench(unittest.TestCase):
             self.assertEqual([h["klasse"] for h in held], [h["klasse"] for h in ps.party(r, 3, 8, random.Random(1))])   # the same group
             for h in held:
                 self.assertEqual(h["leben"], dungeon.life(r, h))
-            ohne = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest")
-            mit = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest", mit_runen=True)
+            ohne = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest", workers=W)
+            mit = ps.bench(r, kaempfe=ps.KAEMPFE // 2, seed="selbsttest", mit_runen=True, workers=W)
             self.assertEqual(set(mit), set(ohne))
             self.assertLessEqual(ps.runes_plus(ohne, mit), ps.RUNEN_PLUS)
             self.assertEqual({k: c["siege"] for k, c in mit.items() if c["siege"] > ps.AIM[1] + ps.RUNEN_PLUS}, {})
-            w = ps.economy(r, mit_runen=True)       # the same runs as without (LAEUFE): the runes only add
+            w = ps.economy(r, mit_runen=True, workers=W)       # the same runs as without (LAEUFE): the runes only add
         self.assertEqual({k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {})
 
     def test_the_master_and_a_lone_boss_are_won_often_enough(self):
@@ -174,7 +189,7 @@ class Bench(unittest.TestCase):
         (dungeon_karte._room_foes) and one boss of the world alone worth BOSS_BAND times the budget: every group size
         wins at least BOSS_ZIEL per cent on average over the levels; the master has a room at every level and size."""
         r = dungeon.rules()
-        b = ps.bosses(r, kaempfe=40, seed="selbsttest")
+        b = ps.bosses(r, kaempfe=40, seed="selbsttest", workers=W)
         self.assertEqual(len(b["herr"]), r["grenzen"]["stufe_max"] * ps.GRUPPE_MAX)
         self.assertTrue(b["boss"])
         for art, z in b.items():
@@ -188,12 +203,12 @@ class Bench(unittest.TestCase):
         costs (median), and no find sells for more than ten times a level's income; the inn grows with the level. Review
         27.10. B10: so for a hero alone and groups of 3 and 5 too (finds by dungeon.funde, coins never divided)."""
         import dungeon_gold as gold
-        w = ps.economy(dungeon.rules())
+        w = ps.economy(dungeon.rules(), workers=W)
         self.assertEqual(len(w), dungeon.rules()["grenzen"]["stufe_max"])
         off = {k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}
         self.assertEqual(off, {}, "Stufe außerhalb des Ziels")
         for n in (1, 3, 5):
-            wn = ps.economy(dungeon.rules(), gruppe=n)
+            wn = ps.economy(dungeon.rules(), gruppe=n, workers=W)
             self.assertEqual({k: c["verhaeltnis"] for k, c in wn.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {},
                              f"{n} Helden: Stufe außerhalb des Ziels")
         self.assertEqual([dungeon.funde(n, "truhe") for n in (1, 2, 3, 4, 5)], [1, 1, 2, 2, 3])
@@ -209,7 +224,8 @@ class Page(Base):
         helpers.keep_chat(self, "dungeon_pruefstand")
         helpers.set_config(dungeon_pruefstand=False)
         self.t = [NOON]
-        for target, new in (("dungeon_pruefstand.clock", lambda: self.t[0]), ("dungeon_pruefstand.KAEMPFE", 2)):
+        for target, new in (("dungeon_pruefstand.clock", lambda: self.t[0]), ("dungeon_pruefstand.KAEMPFE", 2),
+                            ("dungeon_pruefstand.WORKERS", W)):
             p = mock.patch(target, new)
             p.start()
             self.addCleanup(p.stop)

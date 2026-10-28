@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.305** Tests auf GitHub schneller: sechs Teile statt vier nach frisch gemessenen Dauern (vorpush trägt fehlende Module in dauer.json ein, ein Selbsttest verlangt jedes, „Ergebnis“ warnt bei veralteten), der Balance-Prüfstand rechnet seine Tabellen in vier Prozessen mit gleichem Ergebnis und verteilt sich Test für Test, Chromium aus dem Cache und eins je Testklasse, sieben wackelnde Tests und Reihenfolge-Lecks an der Ursache repariert
 - **V01.1.304** Terminal-Programm (uConsole): F5 Kalender stürzte mit neueren Textual-Versionen ab (eigener Wochenzähler hieß wie Textuals offset), jetzt spark-tui 1.0.4; Wächter gegen eigene Namen, die Textual schon benutzt
 - **V01.1.303** Finden zeigt die Größe des Index in MB oder GB: unter Finden → Einstellungen als Summe, aufgeklappt nach Quellen (geschätzt) und „Dokumente und Wissen“; der Admin sieht sie beim Profil, Live als Summe aller Profile, die iPhone-App unter Finden → Einstellungen; „Index löschen“ gibt den Platz sofort zurück
 - **V01.1.302** Mappen begrenzen die Suche: der Assistent und Finden suchen auf Wunsch nur in einer Mappe, das iPhone zeigt Mappen nativ mit Stufen zum Umschalten
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.298** ROT-FIX: der Anker-Test von „Dateien als anderer Benutzer“ schrieb die nur lesbare sudoers-Attrappe neu, auf GitHub (nicht root) verweigert; jetzt ersetzt er sie (Test geprüft ohne Root-Dateirechte)
 - **V01.1.297** Protokoll prüfen zeigte einem Admin-Profil nur „Das gehört zum Notzugang (Panel-Passwort)“: die Prüfung der Kette und der NAS-Kopie geht jetzt für jeden Admin (nur lesen), Wächter fängt auch Wege mit Abfrage
 - **V01.1.296** Fernzugang: Dateien als anderer Benutzer (eigener Schalter, aus): auf dem Server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers nur für den eigenen sftp-server mit -R, geprüft mit visudo, aus und Entfernen löschen es), im Panel je System einschalten mit Code oder Passkey; „Dateien als root“ über sudo -n, erst nur lesen, Schreiben mit frischem Code je Sitzung; Windows: icacls nur auf genannte Ordner; macOS mit Hinweis auf den Festplattenvollzugriff; iPhone zeigt und schaltet es
-- **V01.1.295** Test-Fix: vier Tests, die auf GitHub im ersten Versuch wackelten: E-Mail und Dokumente erstellen melden sich mit eigenen Profilen an, die Siegel-Tests räumen beiseite gelegte Dateien weg, Funde zählen auch am ersten Ort der Dungeon-Karte nur einmal
 
 
 

@@ -150,8 +150,8 @@ class Others(Lines):
 
     def test_every_tool_call(self):
         a, uid = profile("Log-Tilda")
+        helpers.keep_chat(self, "tasks")
         helpers.set_config(tasks=True)
-        self.addCleanup(helpers.set_config, tasks=False)
         a.put("/api/profile/settings", json={"tasks_on": True})
         got = self.lines(lambda: a.post("/api/chat", json={"messages": [{"role": "user", "content":
                          'TOOL tasks_add {"list": "einkauf", "items": ["' + SECRET + '"]}'}], "convo": "t1"}), "Log-Tilda")

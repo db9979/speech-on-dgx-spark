@@ -45,6 +45,7 @@ Journal lines „dungeon: pruefstand | …“ with fixed words and numbers only.
 import asyncio
 import os
 import random
+import sys
 import threading
 import time
 
@@ -80,6 +81,7 @@ RUNEN_PLUS = 8                 # per cent points a group may win more often with
 BOSS_ZIEL = 60                 # per cent wins at least against a vault's master and a lone boss, per group size (B1, B3)
 BOSS_BAND = (0.8, 1.2)         # a lone boss of the world worth these times the budget (B3, dungeon_kampf.wert)
 KNOPF_S = 60                   # „Jetzt durchspielen“ at most once a minute
+WORKERS = 1                    # cells at the same time in the night's run and on the button (_map); the self-tests set 4
 clock = time.time              # the tests set it (no wall clock in a test)
 _lock = threading.Lock()
 _run = {"laeuft": False, "seit": 0}
@@ -359,15 +361,38 @@ def boss_cell(r, stufe, gruppe, art, kaempfe, seed):
     return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
 
 
-def bosses(r, kaempfe=KAEMPFE, seed="boss", stufen=None, gruppen=None):
+def _quiet():
+    """A worker of the pool starts here: its lines go nowhere. It is a fork of a process with threads, and one of them
+    may have held the lock of stdout at that moment."""
+    sys.stdout = sys.stderr = open(os.devnull, "w")
+
+
+def _map(fn, jobs, workers=1):
+    """[fn(*job) for job in jobs], in that order; with workers > 1 in that many forked processes (the self-tests: four
+    at a time, the night and the button one after the other). Every job throws its own dice from its own seed (cell,
+    boss_cell, _economy_level), so the result is the same either way (test_dungeon_pruefstand checks it). Fork, so a
+    worker sees the module as the caller does (a test's mock.patch of dungeon_runen.wirkt included); a worker only
+    computes, it opens nothing."""
+    if workers <= 1 or len(jobs) < 2:
+        return [fn(*j) for j in jobs]
+    import concurrent.futures
+    import multiprocessing
+    with concurrent.futures.ProcessPoolExecutor(min(workers, len(jobs)), mp_context=multiprocessing.get_context("fork"),
+                                                initializer=_quiet) as ex:
+        return list(ex.map(fn, *zip(*jobs)))
+
+
+def _grid(r, stufen, gruppen):
+    return [(s, g) for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1) for g in gruppen or range(1, GRUPPE_MAX + 1)]
+
+
+def bosses(r, kaempfe=KAEMPFE, seed="boss", stufen=None, gruppen=None, workers=1):
     """Both boss tables {"herr": {"stufe/gruppe": cell}, "boss": {…}}; a cell without a fitting boss is left out."""
     out = {"herr": {}, "boss": {}}
-    for art in out:
-        for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
-            for g in gruppen or range(1, GRUPPE_MAX + 1):
-                c = boss_cell(r, s, g, art, kaempfe, seed)
-                if c:
-                    out[art][f"{s}/{g}"] = c
+    jobs = [(art, s, g) for art in out for s, g in _grid(r, stufen, gruppen)]
+    for (art, s, g), c in zip(jobs, _map(boss_cell, [(r, s, g, art, kaempfe, seed) for art, s, g in jobs], workers)):
+        if c:
+            out[art][f"{s}/{g}"] = c
     return out
 
 
@@ -384,58 +409,60 @@ def boss_below(b):
     return sum(1 for z in (b or {}).values() for m in per_group(z).values() if m < BOSS_ZIEL)
 
 
-def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, personen=False, mit_runen=False):
+def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, personen=False, mit_runen=False,
+          workers=1):
     """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. personen: only people (people);
-    mit_runen: the groups with their runes (with_runes; the runes do something only while dungeon_runen.wirkt)."""
-    out = {}
-    for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
-        for g in gruppen or range(1, GRUPPE_MAX + 1):
-            c = cell(r, s, g, gefahr, kaempfe, seed, personen, mit_runen)
-            if c:
-                out[f"{s}/{g}"] = c
-    return out
+    mit_runen: the groups with their runes (with_runes; the runes do something only while dungeon_runen.wirkt);
+    workers: cells at the same time (_map), the same table."""
+    jobs = _grid(r, stufen, gruppen)
+    cells = _map(cell, [(r, s, g, gefahr, kaempfe, seed, personen, mit_runen) for s, g in jobs], workers)
+    return {f"{s}/{g}": c for (s, g), c in zip(jobs, cells) if c}
 
 
-def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False, gruppe=GRUPPE_W):
+def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False, gruppe=GRUPPE_W, workers=1):
     """The economy per level {"stufe": {"kaempfe", "einnahmen" (median of a hero), "zehntel" (the worst tenth),
     "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services, for a
     group of gruppe heroes (Review 27.10. B10: dungeon.funde finds an occasion, the coins with the first); mit_runen:
-    every rune of the finds (dungeon_runen.draw, its own dice) sold too."""
-    out = {}
+    every rune of the finds (dungeon_runen.draw, its own dice) sold too; workers: levels at the same time (_map)."""
+    jobs = list(stufen or range(1, r["grenzen"]["stufe_max"] + 1))
+    rows = _map(_economy_level, [(r, stufe, laeufe, seed, mit_runen, gruppe) for stufe in jobs], workers)
+    return {str(stufe): row for stufe, row in zip(jobs, rows)}
+
+
+def _economy_level(r, stufe, laeufe, seed, mit_runen, gruppe):
+    """One level of economy(), with its own dice."""
     welt = r["welten"][0]["id"]
-    for stufe in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
-        rng = random.Random(f"{seed}|{stufe}")
-        rrng = random.Random(f"{seed}|{stufe}|runen")
-        kaempfe = occasions(r, stufe, random.Random(0)).count("gegner")
-        kasse = kaempfe / 4 * dungeon.KASSE * stufe          # a merchant every fourth fight
-        ein, top, leben = [], 0, 0
-        for _ in range(laeufe):
-            held = party(r, gruppe, stufe, rng)
-            for h in held:
-                h["gold"] = 0
-            verkauf, rd = 0, {}
-            for anlass in occasions(r, stufe, rng):
-                n = dungeon.funde(gruppe, anlass, rng)
-                if not n:                            # only the coins (dungeon.give_loot)
-                    for h in held:
-                        h["gold"] += dungeon.coins(r, anlass, stufe, rng)
-                for j in range(n):
-                    _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt, gold=not j)
-                    x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
-                    verkauf += x
-                    top = max(top, x)
-                    rid = mit_runen and runen.draw(dungeon, r, rd, held, anlass, rrng, stufe=stufe)[1]
-                    if rid:
-                        verkauf += runen.sell_price(r, rid)
-            ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / gruppe)
-            leben = sum(h["leben_max"] for h in held) / gruppe
-        aus = (kaempfe / 4 * gold.PREIS["gasthaus"] * stufe + kaempfe / 2 * dungeon.HEIL_GOLD * leben / 3
-               + (2 * gold.PREIS["geruecht"] + gold.PREIS["schmied"]) * stufe / gruppe)
-        ein.sort()
-        med = ein[len(ein) // 2]
-        out[str(stufe)] = {"kaempfe": kaempfe, "einnahmen": round(med), "zehntel": round(ein[len(ein) // 10]),
-                           "ausgaben": round(aus), "verhaeltnis": round(med / max(1, aus), 2), "fund_max": top}
-    return out
+    rng = random.Random(f"{seed}|{stufe}")
+    rrng = random.Random(f"{seed}|{stufe}|runen")
+    kaempfe = occasions(r, stufe, random.Random(0)).count("gegner")
+    kasse = kaempfe / 4 * dungeon.KASSE * stufe          # a merchant every fourth fight
+    ein, top, leben = [], 0, 0
+    for _ in range(laeufe):
+        held = party(r, gruppe, stufe, rng)
+        for h in held:
+            h["gold"] = 0
+        verkauf, rd = 0, {}
+        for anlass in occasions(r, stufe, rng):
+            n = dungeon.funde(gruppe, anlass, rng)
+            if not n:                            # only the coins (dungeon.give_loot)
+                for h in held:
+                    h["gold"] += dungeon.coins(r, anlass, stufe, rng)
+            for j in range(n):
+                _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt, gold=not j)
+                x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
+                verkauf += x
+                top = max(top, x)
+                rid = mit_runen and runen.draw(dungeon, r, rd, held, anlass, rrng, stufe=stufe)[1]
+                if rid:
+                    verkauf += runen.sell_price(r, rid)
+        ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / gruppe)
+        leben = sum(h["leben_max"] for h in held) / gruppe
+    aus = (kaempfe / 4 * gold.PREIS["gasthaus"] * stufe + kaempfe / 2 * dungeon.HEIL_GOLD * leben / 3
+           + (2 * gold.PREIS["geruecht"] + gold.PREIS["schmied"]) * stufe / gruppe)
+    ein.sort()
+    med = ein[len(ein) // 2]
+    return {"kaempfe": kaempfe, "einnahmen": round(med), "zehntel": round(ein[len(ein) // 10]),
+            "ausgaben": round(aus), "verhaeltnis": round(med / max(1, aus), 2), "fund_max": top}
 
 
 # ---------------------------------------------------------------- the run, the night, the page
@@ -453,10 +480,10 @@ def _go(grund):
     try:
         t0 = time.monotonic()
         r = dungeon.rules()
-        z = bench(r)
-        zr = bench(r, mit_runen=True) if runen.wirkt() else {}
-        w = economy(r, mit_runen=bool(zr))
-        bo = bosses(r, KAEMPFE)
+        z = bench(r, workers=WORKERS)
+        zr = bench(r, mit_runen=True, workers=WORKERS) if runen.wirkt() else {}
+        w = economy(r, mit_runen=bool(zr), workers=WORKERS)
+        bo = bosses(r, KAEMPFE, workers=WORKERS)
         write_json(FILE, {"zeit": int(clock()), "kaempfe": KAEMPFE, "gefahr": "mittel", "zellen": z, "wirtschaft": w,
                           "runen": zr, **bo, "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
         if zr:
