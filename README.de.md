@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.207** KI-Dungeon-Master: Spielleiter gibt Dinge: der Gastgeber gibt als Admin im Spielleiter-Pult einem Helden einen Gegenstand bis „episch“, Gold, Runen oder Erfahrung, nach den Grenzen des Spiels, und die Erzählung macht daraus einen Fund oder ein Geschenk
 - **V01.1.206** KI-Dungeon-Master: ein Ding mit erwachtem Runenwort bekommt ein eigenes Bild mit leuchtenden Runen, die Runen-Dienste des Schmieds haben Bilder
 - **V01.1.205** KI-Dungeon-Master: Runen und Sockel bis zum Schluss: Runenwörter erwachen in der richtigen Reihenfolge ab ihrer Stufe, der Schmied bohrt Sockel, löst und verschmilzt Runen, Runen gehen an andere Helden, eine Rune lässt sich auf das Ding ziehen, und das Auto kennt Runen
 - **V01.1.204** KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.200** KI-Dungeon-Master: zieht die Gruppe weiter, sagt eine feste Zeile am Tisch, wer gehen wollte („Weiter nach Silberhafen, weil Arvid gehen wollte“)
 - **V01.1.199** KI-Dungeon-Master: die Würfelkarte nennt die Stufe, der Tisch sagt, warum keine Probe kam und wer die Beute bekommt (Review 27.10. Paket 12)
 - **V01.1.198** KI-Dungeon-Master: der Prüfstand misst Herr und Boss, jede Gruppengröße gewinnt im Mittel mindestens 60 % (Review 27.10. B1, B3)
-- **V01.1.197** KI-Dungeon-Master: jeder Held bekommt Erfahrung nach seiner Stufe, gleich wie viele mitkämpfen, Funde und Gold je Held statt geteilt (Review 27.10. Paket 11.8)
 
 
 

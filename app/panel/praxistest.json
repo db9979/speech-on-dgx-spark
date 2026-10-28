@@ -4216,6 +4216,13 @@
 "titel": "Dungeon-Master: Bild beim Runenwort",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Runen und Sockel an. A: Die Runen eines Runenworts in der richtigen Reihenfolge in ein gewöhnliches Ding setzen: binnen einer Minute bekommt das Ding ein eigenes Bild mit leuchtenden Runen. B: Beim Schmied in einer Siedlung zeigen Sockel bohren, Rune lösen und Verschmelzen je ein Bild und eine Zeile.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P627",
+"v": 1207,
+"titel": "Dungeon-Master: Spielleiter gibt Dinge",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Spielleiter gibt Dinge an. Als Admin angemeldet eine Runde als Gastgeber öffnen. A: Spielleiter-Pult, Nur für dich, „🎁 Geben“: Held wählen, Gegenstand suchen (z. B. Langschwert), Seltenheit episch, Geben: es liegt in der Tasche, am Tisch steht „Der Spielleiter gibt …“, die nächste Erzählung nennt es als Fund oder Geschenk. B: Gold 1000 geht, mehr nicht. C: Erfahrung bis zur nächsten Stufe: der Held steigt auf. D: Mit Runen und Sockel an: 5 Runen. E: Volle Tasche: Hinweis, nichts geht verloren. F: Ein Mitspieler ohne Admin sieht keinen Reiter Geben.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

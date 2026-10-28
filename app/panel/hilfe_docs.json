@@ -5901,6 +5901,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spielleiter gibt Dinge (V01.1.207, Dominik 2026-10-28 „der admin soll die möglichkeit haben den karakteren items zu geben (gegenstände gold runen etc.)“, „1a 2a 3a 4a 5a“): Neuer Admin-Schalter *Funktionen → KI-Dungeon-Master → Spielleiter gibt Dinge* (chat.dungeon_geben, standardmäßig aus, 5a). 1. Wo (1a): Im Spielleiter-Pult unter „Nur für dich“ der Reiter „🎁 Geben“, nur für den Gastgeber und nur in der Admin-Ansicht; jede Anfrage prüft den Admin neu (dungeon_geben.admin): die Admin-Anmeldung des Panels oder die eigene Anmeldung des Gastgebers als Admin-Profil (Rolle Admin, kein Verwalter), nie ein Gast, ein anderer Platz oder das Sprachmodell. 2. Was (2a): ein Gegenstand aus dem Katalog der Welt der Runde mit Seltenheit bis „episch“ (feste Seltenheit bleibt, das Ding ist gleich erkannt), stapelbare Dinge wie Tränke und Zauber bis 5 Stück; Gold bis 1000 auf einmal; Runen bis 5 einer Art, nur mit *Runen und Sockel*; Erfahrung höchstens bis zur nächsten Stufe. Nie eine Legende, nie ein fest legendäres Ding, nie ein Quest-Gegenstand. Die Liste kommt einmal beim Öffnen (GET /api/profile/dungeon/{rid}/geben), mit Suche. 3. Grenzen (3a): wie im Spiel: volle oder zu s"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "chwere Tasche (dungeon.room), Gold nie über 100000 (GOLD_MAX), Runenbeutel 40, eine Stufe je Spielabend (dungeon.gain), danach erwacht ein wartendes Runenwort. 4. Am Tisch (4a): eine feste Zeile „🎁 Der Spielleiter gibt Arvid: Langschwert.“ (Log-Art geben); die nächste Erzählung bekommt sie als Daten (spielleiter_gibt) mit der Aufgabe, sie als Fund oder Geschenk zu erzählen, ohne etwas dazuzuerfinden. Live: Dinge, Gold, Runen und EP vom Spielleiter heute, abgelehnt (nur Zahlen). Log dungeon: geben | ding|gold|rune|ep | ok|nein, dungeon: geben | ding | voll, dungeon: geben | kein admin. Selbsttests test_dungeon_geben."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Runen und Sockel, Stufe 2 und 3 (V01.1.205, Plan „Runen und Sockel“, Dominik 2026-10-28 „mit runen weiter machen bis zum schluss“): Unter dem Schalter *Funktionen → KI-Dungeon-Master → Runen und Sockel* (chat.dungeon_runen, aus), kein neuer Schalter. 1. Runenwörter: Sitzen die Runen eines Runenworts in seiner Reihenfolge in einem gewöhnlichen, erkannten Ding mit genau so vielen Sockeln an seinem Ort (Waffe, Schild, Kopf oder Körper; dungeon_runen.match), erwacht es, sobald der Held seine Stufe hat: gleich beim Einsetzen oder später beim Stufenaufstieg (wake). Das Panel setzt it[\"rw\"], die Zusatzwirkung kommt über dieselben Regeln wie jede Rune (Effekt, Wert, Treffer und Schaden nur beim Angriff, Rüstungsklasse, Heiltränke) und hat ihren eigenen Deckel (9a): höchstens wie „legendär“ (Waffe 10, Körper 8, die übrigen 4), zwei Widerstandsarten je Ding, Treffer weiter höchstens +3. Der Wert ist Grundpreis + Runenpreise + Grundpreis × 8. Die Vorschau sagt vorher „Dann erwacht das Runenwort Sturmlied: …“ oder „erwacht erst ab Stufe 5“; am Tisch steht „Runenwort Sturmlied erwacht in Langschwert von Arvid: …“, am Ding „Runenwort Sturmlied: …“. Alle sieben Runenwörter steh"
 },
 {
@@ -12566,6 +12582,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Runen und Sockel (Funktionen → Meine Daten → „Runen und Sockel“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Wie in Diablo 2: Manche Waffen und Rüstungen bis „rar“ kommen aus einem Fund mit Sockeln (Waffe 2 oder 3, Körper 3, Schild und Kopf 2, Hände und Füße 1)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Spielleiter gibt Dinge (Funktionen → Meine Daten → „Spielleiter gibt Dinge“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Als Admin gibst du als Gastgeber einer Runde einem Helden am Tisch etwas aus dem Katalog: einen Gegenstand bis „episch“ (auch Tränke, Pfeile und Zauber, bis 5 Stück), Gold (bis 1000 auf einmal), Runen (bis 5, nur mit „Runen und Sockel“) …"
 },
 {
 "lang": "de",
@@ -21645,6 +21669,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: game master gives things (V01.1.207, Dominik 2026-10-28 \"the admin should be able to give the characters items (things gold runes etc.)\", \"1a 2a 3a 4a 5a\"): New admin switch *Features → AI Dungeon Master → Game master gives things* (chat.dungeon_geben, off by default, 5a). 1. Where (1a): in the game master console under \"Only for you\" the tab \"🎁 Give\", only for the host and only in the admin view; every request checks the admin again (dungeon_geben.admin): the panel's admin login or the host's own login as an admin profile (role admin, not manager), never a guest, another seat or the language model. 2. What (2a): an item of the catalog of the round's world with a rarity up to \"epic\" (a fixed rarity stays, the thing is known at once), stackable things like potions and spells up to 5 pieces; gold up to 1000 at once; runes up to 5 of a kind, only with *Runes and sockets*; experience at most up to the next level. Never a legend, never a fixed legendary thing, never a quest item. The list comes once on opening (GET /api/profile/dungeon/{rid}/geben), with a search. 3. Limits (3a): as in the game: a full or too heavy bag (dungeon.room), gold never above 100000 (GOLD_MAX"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "), rune bag 40, one level a game evening (dungeon.gain), after which a waiting runeword wakes. 4. At the table (4a): a fixed line \"🎁 The game master gives Arvid: Longsword.\" (log kind geben); the next narration gets it as data (spielleiter_gibt) with the task to tell it as a find or a gift, inventing nothing more. Live: things, gold, runes and experience from the game master today, refused (numbers only). Log dungeon: geben | ding|gold|rune|ep | ok|nein, dungeon: geben | ding | voll, dungeon: geben | kein admin. Self-tests test_dungeon_geben."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: runes and sockets, stage 2 and 3 (V01.1.205, plan \"Runes and sockets\", Dominik 2026-10-28 \"go on with the runes to the end\"): Under the switch *Features → AI Dungeon Master → Runes and sockets* (chat.dungeon_runen, off), no new switch. 1. Runewords: when the runes of a runeword sit in its order in a plain, known thing with exactly as many sockets at its place (weapon, shield, head or body; dungeon_runen.match), it wakes as soon as the hero has its level: right at the insert or later on a new level (wake). The panel sets it[\"rw\"], the extra effect comes through the same rules as every rune (effect, value, to hit and damage only in attacks, armour class, healing potions) and has its own cap (9a): at most like \"legendary\" (weapon 10, body 8, the rest 4), two kinds of resistance a thing, to hit still at most +3. The worth is base price + rune prices + base price × 8. The preview says beforehand \"Then the runeword Stormsong wakes: …\" or \"wakes only from level 5\"; the table shows \"Runeword Stormsong wakes in Arvid's Longsword: …\", the thing \"Runeword Stormsong: …\". All seven runewords stand in the rune bag under \"Runewords\" as goals: runes in order (the ones there high"
 },
 {
@@ -28094,6 +28134,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Runes and sockets (Features → My data → \"Runes and sockets\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Like Diablo 2: some weapons and armour up to \"rare\" come from a find with sockets (weapon 2 or 3, body 3, shield and head 2, hands and feet 1)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Game master gives things (Features → My data → \"Game master gives things\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): As admin and host of a round you give a hero at the table something from the catalog: an item up to \"epic\" (potions, arrows and spells too, up to 5 pieces), gold (up to 1000 at once), runes (up to 5, only with \"Runes and sockets\") or exp …"
 },
 {
 "lang": "en",

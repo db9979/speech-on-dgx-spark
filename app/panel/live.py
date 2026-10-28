@@ -1419,6 +1419,11 @@ def snapshot(view="admin", now=None):
         dgn["runen"] = dungeon_runen.for_live() if dgn.get("on") else {}
     except Exception:
         dgn["runen"] = {}
+    try:   # Spielleiter gibt Dinge (dungeon_geben.py): numbers on the game's line
+        import dungeon_geben
+        dgn["geben"] = dungeon_geben.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["geben"] = {}
     try:   # Helden kommentieren selbst (dungeon_kommentar.py): numbers on the game's line
         import dungeon_kommentar
         dgn["kommentar"] = dungeon_kommentar.for_live() if dgn.get("on") else {}
@@ -2099,6 +2104,9 @@ def snapshot(view="admin", now=None):
                            f"{dgn['runen'].get('runenwoerter', 0)} Runenwörter erwacht, {dgn['runen'].get('gebohrt', 0)} Sockel gebohrt, "
                            f"{dgn['runen'].get('geloest', 0)}× gelöst, {dgn['runen'].get('verschmolzen', 0)}× verschmolzen, {dgn['runen'].get('geschenkt', 0)} geschenkt"
                            if any((dgn.get("runen") or {}).values()) else "")
+                        + (f" · heute vom Spielleiter gegeben {dgn['geben']['ding']} Dinge, {dgn['geben']['gold']}× Gold, {dgn['geben']['rune']}× Runen, "
+                           f"{dgn['geben']['ep']}× EP, {dgn['geben']['abgelehnt']} abgelehnt"
+                           if any((dgn.get("geben") or {}).values()) else "")
                         + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
                            f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"
                            if (dgn.get("knapp") or {}).get("gefragt") or (dgn.get("knapp") or {}).get("abgelehnt") else "")

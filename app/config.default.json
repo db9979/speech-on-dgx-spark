@@ -241,6 +241,7 @@
     "dungeon_echtwuerfel": false,
     "dungeon_heldenlied": false,
     "dungeon_runen": false,
+    "dungeon_geben": false,
     "dungeon_grenzen": true,
     "dungeon_schreiber": false,
     "dungeon_zufall": false,

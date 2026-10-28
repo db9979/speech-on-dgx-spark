@@ -84,6 +84,8 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/grenzen     {linien, schleier}: the own seat's lines and veils; {x: true} the X-Karte (dungeon_grenzen)
     POST   /api/profile/dungeon/{rid}/zufall      host: {regeln} the round's own random rules (dungeon_zufall)
     POST   /api/profile/dungeon/{rid}/orakel      host: {frage?, wahrscheinlichkeit?, tabellen?, chaos?} the oracle (dungeon_orakel)
+    GET    /api/profile/dungeon/{rid}/geben       host as admin: the things of the catalog to give (dungeon_geben.catalog)
+    POST   /api/profile/dungeon/{rid}/geben       host as admin: {an, art, id?, s?, n} a thing, gold, runes or experience to a hero (dungeon_geben)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
     POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
@@ -159,6 +161,7 @@ import dungeon_tabellen as tabellen
 import dungeon_bestiarium as bestiarium
 import dungeon_runen as runen
 import dungeon_gold as gold
+import dungeon_geben as geben
 import dungeon_legenden as legenden
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
@@ -3685,6 +3688,8 @@ def facts(r, rd, wuerfe=None, zuege=None, proben=False):
     fakten.update(grenzen.facts(rd))                     # lines and veils of the table, only as data (Tabletop-Punkt 18)
     fakten.update(zufall.facts(rd.get("zufall_hinweise") or []))   # the hints of the host's random rules (Tabletop-Punkt 9)
     fakten.update(orakel.facts(rd, li))                  # this turn's oracle answers, only as data (Tabletop-Punkt 8)
+    if gab := geben.facts(rd):
+        fakten["spielleiter_gibt"] = gab                 # what the host gave this turn, told as a find or a gift (dungeon_geben, 4a)
     fakten.update(fraktionen.facts(rd))                  # the factions and their clocks, only as data (Tabletop-Punkt 7)
     fakten.update(quest.facts(_me, rd))                  # the quest things carried, lying here, taken now (Punkt 15)
     fakten.update(schrift.facts(rd))                     # the writings found last (D&D idea 3)
@@ -3758,7 +3763,7 @@ def system_text(r, rd, task):
         t += FUND_AUFGABE[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + stimmen.AUFGABE[lang]
-        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
+        t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + geben.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
     if rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang] + (FOLGE_BRUECKE[lang] if (rd.get("bruecke") or {}).get("zug") == rd["zug"] else "")
     if task == "erzaehlen":
@@ -6136,6 +6141,7 @@ def view(rid, pid, now=None):
     out["grenzen"] = grenzen.view(rd, pid) if me.get("held") else None
     out["zufall"] = zufall.view(rd, host, lang)
     out["orakel"] = orakel.view(rd, host, li)                   # the host's oracle (Tabletop-Punkt 8)
+    out["geben"] = geben.view(_me, r, rd, me.get("uid"), lang) if host else None   # the host gives things as admin (dungeon_geben)
     out["nsc"], out["nsc_geheim"] = nsc.view(rd, host, li)      # the people met, chronicle, reputation (Tabletop-Punkt 5)
     out["fraktionen"], out["fraktionen_geheim"] = fraktionen.view(rd, host)   # the factions' clocks (Tabletop-Punkt 7)
     out["quest"], out["quest_geheim"] = quest.view(_me, rd, pid if me.get("held") else "", host)   # quest things (Punkt 15)
@@ -7347,6 +7353,52 @@ async def orakel_fragen(rid: str, request: Request, prof=Depends(browser_profile
             if rd["owner"] != uid or rd["status"] == "ende":
                 raise LookupError("gastgeber")
             orakel.ask(_me, rules(), rd, b)
+            _write(d)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.get("/api/profile/dungeon/{rid}/geben", dependencies=[Depends(assistant)])
+async def geben_liste(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host as admin: the catalog things this round's world may get (dungeon_geben.catalog), once for the console."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    if not geben.admin(request, uid):
+        print("dungeon: geben | kein admin", flush=True)
+        raise _http(PermissionError("geben admin"))
+
+    def go():
+        rd = _host(rid, uid)
+        if not geben.on(rd):
+            raise PermissionError("geben aus")
+        return {"dinge": geben.catalog(_me, rules(), rd, rd["lang"])}
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/geben", dependencies=[Depends(assistant)])
+async def geben_an(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host as admin: {an, art, id?, s?, n} gives a hero a catalog thing, gold, runes or experience by the game's rules
+    (Dominik 2026-10-28 „1a 2a 3a 4a 5a“, dungeon_geben.give); a fixed line at the table."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    if not geben.admin(request, uid):                     # the own login acting as admin, never a guest or a manager
+        print("dungeon: geben | kein admin", flush=True)
+        raise _http(PermissionError("geben admin"))
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            geben.give(_me, rules(), rid, rd, uid, b)
             _write(d)
         return view(rid, _seat_uid(rid, uid))
     try:

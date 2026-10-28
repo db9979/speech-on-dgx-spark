@@ -289,6 +289,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_fluestern.py` | KI-Dungeon-Master: Flüstern mit einer Figur. |
 | `app/panel/dungeon_fraktionen.py` | KI-Dungeon-Master: Fraktionen mit Uhren. |
 | `app/panel/dungeon_gast.py` | KI-Dungeon-Master: Gäste mit E-Mail. |
+| `app/panel/dungeon_geben.py` | KI-Dungeon-Master: Spielleiter gibt Dinge (Dominik 2026-10-28 „der admin soll die möglichkeit haben den karakteren items zu geben (gegenstände gold runen etc … |
 | `app/panel/dungeon_gedanken.py` | KI-Dungeon-Master: Gedanken lesen. |
 | `app/panel/dungeon_gefaehrte.py` | KI-Dungeon-Master: Gefährten anheuern. |
 | `app/panel/dungeon_geschichten.py` | KI-Dungeon-Master: Eigene Geschichten. |

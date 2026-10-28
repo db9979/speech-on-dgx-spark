@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.207** AI Dungeon Master: game master gives things: the host as admin gives a hero an item up to "epic", gold, runes or experience in the game master console, within the game's limits, and the narration makes it a find or a gift
 - **V01.1.206** AI Dungeon Master: a thing whose runeword wakes gets a picture of its own with glowing runes, the smith's rune services have pictures
 - **V01.1.205** AI Dungeon Master: runes and sockets to the end: runewords wake in the right order from their level, the smith drills sockets, takes runes out and fuses them, runes go to other heroes, a rune can be dragged onto the thing, and the car knows runes
 - **V01.1.204** AI Dungeon Master: runes have their picture on the rules page, per world as rune, chip, pearl or seal, with paint and paint again
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.200** AI Dungeon Master: when the group moves on, a fixed line at the table tells who wanted to go ("On to Silberhafen, because Arvid wanted to go")
 - **V01.1.199** AI Dungeon Master: the dice card names the level, the table says why no check came and who gets the loot (review 27.10. package 12)
 - **V01.1.198** AI Dungeon Master: the bench measures master and boss, every group size wins at least 60 % on average (review 27.10. B1, B3)
-- **V01.1.197** AI Dungeon Master: every hero gets experience by its level, however many fight along, finds and gold per hero instead of divided (review 27.10. package 11.8)
 
 
 

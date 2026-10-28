@@ -113,6 +113,11 @@ const DMGRUND={
   'rune kampf':['Erst der Kampf: Solange er läuft, setzt niemand eine Rune ein.','First the fight: nobody sets a rune while it runs.'],
   'rune sockel':['Das passt dort nicht: ein Ding mit freiem Sockel, an dem diese Rune wirkt.','That does not fit there: a thing with a free socket where this rune works.'],
   'rune voll':['Jeder Sockel dieses Dings ist schon belegt.','Every socket of this thing is taken already.'],
+  'geben':['Das geht so nicht: ein Held am Tisch, ein Ding dieser Welt bis „episch“ und nicht mehr als erlaubt.','That does not work: a hero at the table, a thing of this world up to "epic" and no more than allowed.'],
+  'geben aus':['Spielleiter gibt Dinge ist aus. Admin: Funktionen → KI-Dungeon-Master → Spielleiter gibt Dinge.','Game master gives things is off. Admin: Features → AI Dungeon Master → Game master gives things.'],
+  'geben admin':['Geben geht nur mit der Anmeldung als Admin.','Giving works only when signed in as admin.'],
+  'geben ep':['Zu viel Erfahrung: höchstens bis zur nächsten Stufe.','Too much experience: at most up to the next level.'],
+  'geben voll':['Die Tasche dieses Helden ist voll oder zu schwer. Erst etwas ablegen.','This hero\'s bag is full or too heavy. Put something down first.'],
   'rune schenken':['Das geht so nicht: eine eigene Rune, nicht im Kampf, und im Beutel des anderen ist noch Platz.','That does not work: an own rune, not in a fight, and the other bag has room left.'],
   'bohren':['Da bohrt der Schmied keinen Sockel: nur Waffen und Rüstung bis „rar“, einer je Ding, nie in ein Runenwort.','The smith drills no socket there: only weapons and armour up to "rare", one a thing, never into a runeword.'],
   'loesen':['Aus diesem Ding löst der Schmied nichts: es hat keine Runen.','The smith takes nothing out of this thing: it has no runes.'],
@@ -648,6 +653,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
     :e.was==='runenwort'?t('Runenwort '+e.runenwort+' erwacht in '+e.ding+' von '+e.name+': '+e.wirkung+'.','Runeword '+e.runenwort+' wakes in '+e.name+'\'s '+e.ding+': '+e.wirkung+'.')
     :e.was==='geschenkt'?t(e.name+' gibt '+e.an+' '+e.wort+' '+e.rune+'.',e.name+' gives '+e.an+' '+e.wort+' '+e.rune+'.')
     :t(e.name+' setzt '+e.wort+' '+e.rune+' in '+e.ding+' ein. Sie sitzt jetzt fest.',e.name+' sets '+e.wort+' '+e.rune+' into '+e.ding+'. It stays in for good.'))}</div>`;   // Runen und Sockel (dungeon_runen)
+  if(e.art==='geben')return `<div class="dm-sys ok dm-geben">🎁 ${esc(t('Der Spielleiter gibt '+e.name+': '+e.ding+'.','The game master gives '+e.name+': '+e.ding+'.'))}</div>`;   // Spielleiter gibt Dinge (dungeon_geben)
   if(e.art==='beute')return `<div class="dm-beute"><div class="dm-n">${esc(t('Beute für ','Loot for '))}${esc(e.name)}${e.grund?` <small class="mut">${esc(e.grund==='finder'?t('(hat es gefunden)','(found it)'):t('(am längsten ohne Fund)','(longest without a find)'))}</small>`:''}</div><div data-dmbeute="${esc('b:'+e.n+':'+(e.item&&e.item.i||''))}">${dmItem(e.item)}</div>${e.boden?`<small class="mut">${esc(t('Zu schwer oder kein Platz: liegt hier am Boden.','Too heavy or no room: lies here on the ground.'))}</small>`:''}${e.gold?`<small class="mut">${esc(t('Gold für jeden: ','Gold for everyone: '))}${e.gold}</small>`:''}</div>`;
   if(e.art==='markt')return `<div class="dm-akt">⚖ ${esc(e.name)} ${esc(e.auf?t('bietet hier Waren an.','offers goods here.'):t('zieht weiter.','moves on.'))}</div>`;
   if(e.art==='quest'){const w={genommen:t('nimmt','takes'),gefunden:t('findet','finds'),gegeben:t('gibt','gives'),abgelegt:t('legt ab:','puts down:'),verbraucht:t('braucht auf:','uses up:')}[e.was]||e.was;
@@ -906,7 +912,7 @@ function dmTable(w,v,mode){DMCMP=v.vergleich||{};const dmkH=typeof DMK!=='undefi
   const karte=(k,ic,ti,inner)=>inner.trim()?`<div class="dm-pult-sp" role="group" aria-label="${esc(ti)}" data-pult="${k}"><h5>${ic} ${esc(ti)}</h5>${inner}</div>`:'';
   const wer=seats.map(p=>`<span class="dm-pwer${p.gehandelt?' ok':''}">${p.gehandelt?'✓':p.ruht||p.zustand?'–':'…'} ${esc(p.name)}</span>`).join('');
   const geh=[['plan','📖',t('Geschichte','Story'),dmPlanHost(v)],['wahr','🔒',t('Wahrheit','Truth'),dmTruth(v)],['dinge','🧰',t('Dinge','Things'),dmThings(v)],
-    ['zufall','🎲',t('Zufallsregeln','Random rules'),dmZufallHost(v)],['orakel','🔮',t('Orakel','Oracle'),dmOrakelHost(v)]].filter(x=>x[3]);
+    ['zufall','🎲',t('Zufallsregeln','Random rules'),dmZufallHost(v)],['orakel','🔮',t('Orakel','Oracle'),dmOrakelHost(v)],['geben','🎁',t('Geben','Give'),dmGebenHost(v)]].filter(x=>x[3]);
   const gt=(geh.find(x=>x[0]===(DM.ding!=null?'dinge':DMA.gtab))||geh[0]||[])[0];
   const geheim=geh.length?`<div class="dm-pgeheim"><h5>🔒 ${esc(t('Nur für dich','Only for you'))}</h5><div class="dm-gtabs" role="tablist">${geh.map(([k,ic,n])=>`<button type="button" role="tab" class="dm-gtab${k===gt?' on':''}" aria-selected="${k===gt}" data-dmgtab="${k}">${ic} ${esc(n)}</button>`).join('')}</div><div class="dm-gpane" role="tabpanel">${geh.find(x=>x[0]===gt)[3].replace(/^\s*<details\b/,'<details open')}</div></div>`:'';
   const pult=leitet?`<div class="dm-pkopf">${weiter}${wer?`<div class="dm-pwerl">${wer}</div>`:''}</div><div class="dm-pult">${karte('zug','🎲',t('Zug','Turn'),zug)}${karte('tisch','👥',t('Am Tisch','At the table'),tisch)}${karte('erz','📜',t('Erzähler','Narrator'),erzaehler)}${karte('schwer','⚔',t('Schwierigkeit','Difficulty'),schwer)}</div>${geheim}`:'';
@@ -964,6 +970,41 @@ function dmColKeep(w){const s=['.dm-group','.dm-side'].map(c=>{const x=w.querySe
   return ()=>{s.forEach(([c,t])=>{const x=w.querySelector(c);if(x&&t)x.scrollTop=t});if(Math.abs(window.scrollY-y)>1)window.scrollTo(0,y)}}
 // Orakel (Tabletop-Punkt 8): the host asks yes or no with a likelihood, or rolls up to three tables; the chaos grade
 // moves the chance; the answer is a line in the feed and goes to the narration only as data
+// Spielleiter gibt Dinge (dungeon_geben): the host as admin gives a hero a thing, gold, runes or experience; the panel
+// checks the game's limits, the table gets a fixed line; the things come once when the tab opens (GET …/geben)
+const DMGEB={rid:'',dinge:null,laedt:false,an:'',art:'ding',id:'',s:'',n:1,q:''};
+function dmGebenHost(v){const G=v.geben;if(!G||!ADMIN||!G.helden.length)return '';const D=DMGEB;
+  if(D.rid!==DM.rid){Object.assign(D,{rid:DM.rid,dinge:null,an:'',id:'',q:''})}
+  if(!D.dinge&&!D.laedt){D.laedt=true;apiTry(`/api/profile/dungeon/${DM.rid}/geben`).then(({r,d})=>{D.laedt=false;if(r.ok){D.dinge=d.dinge;dmDraw()}else dmSay(DM,dmErr(r.status,d.detail),true)})}
+  const h=G.helden.find(x=>x.pid===D.an)||G.helden[0];D.an=h.pid;
+  const arten=[['ding',t('Gegenstand','Item')],['gold',t('Gold','Gold')],...(G.runen.length?[['rune',t('Runen','Runes')]]:[]),['ep',t('Erfahrung','Experience')]];
+  if(!arten.some(x=>x[0]===D.art))D.art='ding';
+  const opt=(l,cur)=>l.map(([k,n])=>`<option value="${esc(k)}"${k===cur?' selected':''}>${esc(n)}</option>`).join('');
+  const num=(max)=>`<label class="dm-gebn">${esc(t('Anzahl','Amount'))} <input type="number" data-dmgebn min="1" max="${max}" value="${Math.min(Math.max(1,D.n|0),max)}"></label>`;
+  let feld='';
+  if(D.art==='ding'){const q=D.q.trim().toLowerCase(),xs=(D.dinge||[]).filter(x=>!q||x.name.toLowerCase().includes(q)).slice(0,300),c=(D.dinge||[]).find(x=>x.id===D.id)||xs[0];
+    if(c)D.id=c.id;const stapel=c&&['trank','zauber','rolle','werkzeug','schatz'].includes(c.art);
+    feld=!D.dinge?`<small class="mut">${esc(t('Lädt den Katalog …','Loading the catalog …'))}</small>`:`<input type="search" data-dmgebq maxlength="40" value="${esc(D.q)}" placeholder="${esc(t('Suchen, z. B. Heiltrank','Search, e.g. healing potion'))}" aria-label="${esc(t('Suchen','Search'))}">
+      <select data-dmgebid aria-label="${esc(t('Gegenstand','Item'))}">${xs.map(x=>`<option value="${esc(x.id)}"${c&&x.id===c.id?' selected':''}>${esc(x.name)}${x.s?' · '+esc((G.selten.find(r=>r.id===x.s)||{}).name||x.s):''}</option>`).join('')}</select>
+      <div class="dm-hostb"><select data-dmgebs aria-label="${esc(t('Seltenheit','Rarity'))}"${c&&c.s?' disabled':''}>${opt(G.selten.map(r=>[r.id,r.name]),c&&c.s?c.s:D.s||G.selten[0].id)}</select>${stapel?num(G.stapel_max):''}</div>`}
+  else if(D.art==='gold')feld=`<div class="dm-hostb">${num(G.gold_max)}<small class="mut">${esc(t('hat '+h.gold+' Gold','has '+h.gold+' gold'))}</small></div>`;
+  else if(D.art==='rune'){if(!G.runen.some(x=>x.id===D.id))D.id=G.runen[0].id;feld=`<div class="dm-hostb"><select data-dmgebid aria-label="${esc(t('Rune','Rune'))}">${opt(G.runen.map(x=>[x.id,x.name]),D.id)}</select>${num(G.runen_max)}</div>`}
+  else feld=h.ep_max?`<div class="dm-hostb">${num(h.ep_max)}<small class="mut">${esc(t('höchstens '+h.ep_max+' bis zur nächsten Stufe','at most '+h.ep_max+' up to the next level'))}</small></div>`:`<small class="mut">${esc(t('Schon auf der höchsten Stufe.','Already at the top level.'))}</small>`;
+  const geht=D.art==='ep'?h.ep_max>0:D.art==='ding'?!!(D.dinge&&D.id):true;
+  return `<details class="dm-zeile-d dm-geben" data-dmauf="geben"${DMA.auf==='geben'?' open':''}><summary class="dm-zeile"><span>🎁 ${esc(t('Geben','Give'))}</span><small>${esc(t('als Admin','as admin'))} ›</small></summary>
+    <small class="mut">${esc(t('Gib einem Helden etwas aus dem Katalog: Gegenstand bis „episch“, Gold, Runen oder Erfahrung. Das Panel prüft die Grenzen des Spiels, am Tisch steht eine feste Zeile, die Erzählung macht daraus einen Fund oder ein Geschenk.','Give a hero something from the catalog: an item up to "epic", gold, runes or experience. The panel checks the game\'s limits, the table gets a fixed line, the narration makes it a find or a gift.'))}</small>
+    <div class="dm-hostb"><select data-dmgeban aria-label="${esc(t('Held','Hero'))}">${G.helden.map(x=>`<option value="${esc(x.pid)}"${x.pid===h.pid?' selected':''}>${esc(x.name)} · ${esc(t(x.platz+' Plätze frei',x.platz+' places free'))}</option>`).join('')}</select></div>
+    <div class="dm-pseg" role="radiogroup" aria-label="${esc(t('Was','What'))}">${arten.map(([k,n])=>`<label${k===D.art?' class="on"':''}><input type="radio" name="dmgebart" data-dmgebart value="${k}"${k===D.art?' checked':''}><span>${esc(n)}</span></label>`).join('')}</div>
+    ${feld}<div class="dm-hostb"><button type="button" class="b p" data-dmgeben="1"${geht?'':' disabled'}>🎁 ${esc(t('Geben','Give'))}</button></div></details>`}
+function dmGebDraft(box){const D=DMGEB,q=s=>box.querySelector(s);if(q('[data-dmgeban]'))D.an=q('[data-dmgeban]').value;const a=q('[data-dmgebart]:checked');if(a)D.art=a.value;
+  if(q('[data-dmgebq]'))D.q=q('[data-dmgebq]').value;if(q('[data-dmgebid]'))D.id=q('[data-dmgebid]').value;if(q('[data-dmgebs]'))D.s=q('[data-dmgebs]').value;if(q('[data-dmgebn]'))D.n=+q('[data-dmgebn]').value||1}
+document.body.addEventListener('input',e=>{const b=e.target.closest('#dmview details[data-dmauf="geben"]');if(!b||!e.target.matches('[data-dmgebq]'))return;dmGebDraft(b);DMGEB.id='';DMA.auf='geben';
+  clearTimeout(DMGEB.tq);DMGEB.tq=setTimeout(()=>{dmDraw();const f=document.querySelector('#dmview [data-dmgebq]');if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length)}},250)});
+document.body.addEventListener('change',e=>{const b=e.target.closest('#dmview details[data-dmauf="geben"]');if(!b||e.target.matches('[data-dmgebq]'))return;const art=DMGEB.art;dmGebDraft(b);DMA.auf='geben';
+  if(DMGEB.art!==art){DMGEB.id='';DMGEB.n=1}dmDraw()});
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmgeben]');if(!b)return;const D=DMGEB;dmGebDraft(b.closest('details'));DMA.auf='geben';
+  const body={an:D.an,art:D.art,n:Math.max(1,D.n|0)};if(D.art==='ding'||D.art==='rune')body.id=D.id;if(D.art==='ding')body.s=D.s;
+  const d=await dmSend(`/api/profile/dungeon/${DM.rid}/geben`,body,DM);if(d){DM.v=d;DM.at=Date.now();D.n=1;dmSay(DM,t('Gegeben.','Given.'),false)}dmDraw()});
 function dmOrakelHost(v){const O=v.orakel;if(!O)return '';const D=DMA.ork||{frage:'',odds:'offen',tab:[]};
   const chips=O.tabellen.map(([id,n,g])=>`<label class="dm-otab"><input type="checkbox" data-dmotab="${esc(id)}"${D.tab.includes(id)?' checked':''}${!D.tab.includes(id)&&D.tab.length>=O.max?' disabled':''}> ${esc(n)}${g==='eigen'?' ✎':''}</label>`).join('');
   return `<details class="dm-zeile-d" data-dmauf="orakel"${DMA.auf==='orakel'?' open':''}><summary class="dm-zeile"><span>🔮 ${esc(t('Orakel','Oracle'))}</span><small>${esc(t('Chaos ','Chaos '))}${O.chaos} · ${esc(t('noch '+O.frei+' in diesem Zug','left this turn: '+O.frei))} ›</small></summary>

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.207** · 2026-10-28 · KI-Dungeon-Master: Spielleiter gibt Dinge: der Gastgeber gibt als Admin im Spielleiter-Pult einem Helden einen Gegenstand bis „episch“, Gold, Runen oder Erfahrung, nach den Grenzen des Spiels, und die Erzählung macht daraus einen Fund oder ein Geschenk
 - **V01.1.206** · 2026-10-28 · KI-Dungeon-Master: ein Ding mit erwachtem Runenwort bekommt ein eigenes Bild mit leuchtenden Runen, die Runen-Dienste des Schmieds haben Bilder
 - **V01.1.205** · 2026-10-28 · KI-Dungeon-Master: Runen und Sockel bis zum Schluss: Runenwörter erwachen in der richtigen Reihenfolge ab ihrer Stufe, der Schmied bohrt Sockel, löst und verschmilzt Runen, Runen gehen an andere Helden, eine Rune lässt sich auf das Ding ziehen, und das Auto kennt Runen
 - **V01.1.204** · 2026-10-28 · KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen

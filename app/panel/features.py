@@ -411,6 +411,10 @@ FEATURES = (
     # Runen und Sockel (dungeon_runen.py, plan dungeon-runen Stufe 1): sockets in finds, runes from finds and the trader,
     # set with a preview; caps and effects by the panel's fixed rules, never the model
     F("dungeonrunen", "Runen und Sockel", "Runes and sockets", "data", ("dungeon_runen",), parent="dungeon", me="dmbox", guide="dungeonrunen"),
+    # Spielleiter gibt Dinge (dungeon_geben.py, Dominik 2026-10-28 „1a 2a 3a 4a 5a“): the host as admin gives a hero a
+    # catalog thing, gold, runes or experience in the console; the game's caps by fixed rules, never the model
+    F("dungeongeben", "Spielleiter gibt Dinge", "Game master gives things", "data", ("dungeon_geben",), parent="dungeon",
+      me="dmbox", guide="dungeongeben"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
