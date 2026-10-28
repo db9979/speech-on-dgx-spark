@@ -323,10 +323,11 @@ def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, g
     return out
 
 
-def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False):
+def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False, gruppe=GRUPPE_W):
     """The economy per level {"stufe": {"kaempfe", "einnahmen" (median of a hero), "zehntel" (the worst tenth),
-    "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services;
-    mit_runen: every rune of the finds (dungeon_runen.draw, its own dice) sold too."""
+    "ausgaben", "verhaeltnis", "fund_max" (the most one find sold for)}} by the real loot, prices and services, for a
+    group of gruppe heroes (Review 27.10. B10: dungeon.funde finds an occasion, the coins with the first); mit_runen:
+    every rune of the finds (dungeon_runen.draw, its own dice) sold too."""
     out = {}
     welt = r["welten"][0]["id"]
     for stufe in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
@@ -336,22 +337,27 @@ def economy(r, laeufe=LAEUFE, seed="wirtschaft", stufen=None, mit_runen=False):
         kasse = kaempfe / 4 * dungeon.KASSE * stufe          # a merchant every fourth fight
         ein, top, leben = [], 0, 0
         for _ in range(laeufe):
-            held = party(r, GRUPPE_W, stufe, rng)
+            held = party(r, gruppe, stufe, rng)
             for h in held:
                 h["gold"] = 0
             verkauf, rd = 0, {}
             for anlass in occasions(r, stufe, rng):
-                _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt)
-                x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
-                verkauf += x
-                top = max(top, x)
-                rid = mit_runen and runen.draw(dungeon, r, rd, held, anlass, rrng, stufe=stufe)[1]
-                if rid:
-                    verkauf += runen.sell_price(r, rid)
-            ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / GRUPPE_W)
-            leben = sum(h["leben_max"] for h in held) / GRUPPE_W
+                n = dungeon.funde(gruppe, anlass, rng)
+                if not n:                            # only the coins (dungeon.give_loot)
+                    for h in held:
+                        h["gold"] += dungeon.coins(r, anlass, stufe, rng)
+                for j in range(n):
+                    _, it, _ = dungeon.loot(r, held, anlass, stufe, rng, welt=welt, gold=not j)
+                    x = min(dungeon.sell_price(r, it, {"art": rng.choice(sorted(dungeon.HAENDLER))}), dungeon.KASSE * stufe)
+                    verkauf += x
+                    top = max(top, x)
+                    rid = mit_runen and runen.draw(dungeon, r, rd, held, anlass, rrng, stufe=stufe)[1]
+                    if rid:
+                        verkauf += runen.sell_price(r, rid)
+            ein.append((sum(h["gold"] for h in held) + min(verkauf, kasse)) / gruppe)
+            leben = sum(h["leben_max"] for h in held) / gruppe
         aus = (kaempfe / 4 * gold.PREIS["gasthaus"] * stufe + kaempfe / 2 * dungeon.HEIL_GOLD * leben / 3
-               + (2 * gold.PREIS["geruecht"] + gold.PREIS["schmied"]) * stufe / GRUPPE_W)
+               + (2 * gold.PREIS["geruecht"] + gold.PREIS["schmied"]) * stufe / gruppe)
         ein.sort()
         med = ein[len(ein) // 2]
         out[str(stufe)] = {"kaempfe": kaempfe, "einnahmen": round(med), "zehntel": round(ein[len(ein) // 10]),

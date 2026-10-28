@@ -2095,8 +2095,8 @@ def close_market(rd):
         print("dungeon: markt | zu", flush=True)
 
 
-def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd=None, wer=None):
-    """(receiver index, item, gold each) of one find by the panel's rule: rarity by d100 + occasion + level, never
+def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd=None, wer=None, gold=True):
+    """(receiver index, item, gold each; gold=False: none) of one find by the panel's rule: rarity by d100 + occasion + level, never
     above what the level allows, pity after pech_schutz finds without „selten“; the receiver is the finder (wer, an
     index of held, Review 27.10. Paket 9), else who went longest without a find (first seat on a tie); the item fits
     that hero's class. A legendary find is one of the world's legends (dungeon_legenden: boss, reward or chest, each
@@ -2119,10 +2119,25 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt="", rd
     it = legenden.make(_me, r, leg, rng) if leg else item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
     if _c(r, it)["art"] == "schatz":
         it["st"] = max(1, gruppe_stufe)          # Punkt 2: its worth by the level it was found at
-    lo, hi = r["gold"][anlass]
-    each = rng.randint(lo, hi) * max(1, gruppe_stufe) // len(held)
+    each = coins(r, anlass, gruppe_stufe, rng) if gold else 0
     found(held, rec, stufen.index(s) > 0, each)
     return rec, it, each
+
+
+def coins(r, anlass, stufe, rng=None):
+    """The coins of an occasion for every hero (the catalog's gold range times the level; Review 27.10. B10: never
+    divided by the group)."""
+    lo, hi = r["gold"][anlass]
+    return (rng or random).randint(lo, hi) * max(1, stufe)
+
+
+def funde(n, anlass="gegner", rng=None):
+    """The finds of one occasion (Review 27.10. B10): one for every two heroes; an odd hero brings one more half the
+    time after a fight (1, 3, 5 heroes: 0 or 1, 1 or 2, 2 or 3), rounded up at a chest, a reward and a boss (at least
+    one); the coins come anyway, with the first or alone."""
+    if anlass != "gegner":
+        return max(1, (n + 1) // 2)
+    return n // 2 + (1 if n % 2 and (rng or random).random() < 0.5 else 0)
 
 
 def found(held, rec, selten, each):
@@ -4308,6 +4323,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
             i = held.index(hf)
             found(held, i, f["selten"], f["gold"])
             put_find(r, rd, held, i, f["it"], f["gold"], "truhe")
+            more_finds(r, rd, held, "truhe", stufe, rng)
         if story["beute"] and held and fund_ort(rd) not in (rd.get("fundorte") or []):
             b = story["beute"]
             tat = [held.index(h) for pid in rd["offen"] for h in [(rd["plaetze"].get(pid) or {}).get("held")] if h in held]
@@ -4448,10 +4464,28 @@ def consequences(r, rd, folgen, names):
 
 
 def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz="", wer=None):
-    """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
-    heavy (2a); the log and the journal say so."""
+    """The occasion's finds (funde; one the model named always comes) from the catalog (loot) into the bag of their
+    receivers, or on the ground when there is no place or it is too heavy (2a); the log and the journal say so."""
+    n = max(1 if eigen else 0, funde(len(held), anlass, rng))
+    if not n:                                    # no find this time (B10): only the coins, on the fight's line
+        each = coins(r, anlass, stufe, rng)
+        for x in held:
+            x["gold"] += each
+        if rd.get("log") and rd["log"][-1].get("art") == "kampf":
+            rd["log"][-1]["gold"] = each
+        print(f"dungeon: beute | {anlass} | nur gold", flush=True)
+        return
     i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd, wer)
     put_find(r, rd, held, i, it, gold, anlass, rng)
+    more_finds(r, rd, held, anlass, stufe, rng, n)
+
+
+def more_finds(r, rd, held, anlass, stufe, rng=None, n=None):
+    """The occasion's further finds for a bigger group (funde, n of them in all), without coins, each to who went
+    longest without one."""
+    for _ in range((funde(len(held), anlass, rng) if n is None else n) - 1):
+        i, it, _ = loot(r, held, anlass, stufe, rng, welt=rd.get("welt", ""), rd=rd, gold=False)
+        put_find(r, rd, held, i, it, 0, anlass, rng)
 
 
 def first_find(r, rd, wuerfe, rng=None):

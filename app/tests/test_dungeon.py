@@ -7811,8 +7811,8 @@ class Fight(Turns):
         self.assertIn(dungeon.NEU_FAKT[0], facts)
 
     def test_leaving_a_fight_is_fleeing_and_the_share_stays_out(self):
-        """Punkt 3: the experience of a fight is divided by the heroes it began with; a seat that left during it has fled
-        (its share stays out, a line in the log), a hero who came later gets none."""
+        """Punkt 3: the experience of a fight goes to the heroes it began with (Review 27.10. B9: each its own reward); a
+        seat that left during it has fled (its share stays out, a line in the log), a hero who came later gets none."""
         self.fight()
         rd = self.state(self.rid)
         self.assertEqual(sorted(rd["kampf"]["helden"]), sorted([self.host, self.gp]))
@@ -7824,10 +7824,10 @@ class Fight(Turns):
             rd = d["runden"][self.rid]
             for g in rd["kampf"]["gegner"]:
                 g["aus"] = "besiegt"
-            alle = sum(g["ep"] for g in rd["kampf"]["gegner"])
+            k, stufe = dict(rd["kampf"]), rd["plaetze"][self.host]["held"]["stufe"]
             ep = {self.host: 0}
             kampf.end(dungeon, dungeon.rules(), rd, ep)
-        self.assertEqual(ep[self.host], -(-alle // 2))      # half: Bela's share stays out
+        self.assertEqual(ep, {self.host: kampf.reward(k, stufe)})      # its own reward (B9), Bela's stays out
 
     def test_one_device_one_hero(self):
         """Punkt 6: a device (its cookie, only the hash at the seat) holds one seat of a round, a guest's as a profile's."""
@@ -8263,18 +8263,28 @@ class Fight(Turns):
         self.assertEqual(kampf._named(rd, "Riesenratte 2")["k"], "g3")              # the whole name first
 
     def test_kampf_ep_abgerundet(self):
-        """Kampf-Audit N4: the fight's experience divided by the heroes is rounded down (25 for 2 heroes: 12 each)."""
+        """Kampf-Audit N4: a hero's experience is rounded down (Review 27.10. B9: half of a level's budget against twice
+        it gives a level-1 hero 12 of 25); a fight begun before B9 (no reference) is still divided (25 for 2 heroes: 12
+        each)."""
         r = dungeon.rules()
-        rd, _ = self.encounter()
-        held = dict(dungeon.seated(rd))
-        self.assertEqual(len(held), 2)
-        for g in rd["kampf"]["gegner"]:
-            g.update(aus="besiegt", ep=25)
-        rd["kampf"]["gegner"] = rd["kampf"]["gegner"][:1]
-        ep = {pid: 0 for pid in held}
-        with contextlib.redirect_stdout(io.StringIO()):
-            kampf.end(dungeon, r, rd, ep)
-        self.assertEqual(ep, {pid: 12 for pid in held})
+        rd0, _ = self.encounter()
+        for alt in (False, True):
+            rd = copy.deepcopy(rd0)
+            held = dict(dungeon.seated(rd))
+            self.assertEqual(len(held), 2)
+            for g in rd["kampf"]["gegner"]:
+                g.update(aus="besiegt", ep=25)
+            rd["kampf"]["gegner"] = rd["kampf"]["gegner"][:1]
+            for p in held.values():
+                p["held"]["stufe"] = 1
+            if alt:
+                rd["kampf"].pop("bezug")
+            else:
+                rd["kampf"].update(wert=25, bezug=2 * kampf.BUDGET[0])        # 12.5
+            ep = {pid: 0 for pid in held}
+            with contextlib.redirect_stdout(io.StringIO()):
+                kampf.end(dungeon, r, rd, ep)
+            self.assertEqual(ep, {pid: 12 for pid in held}, alt)
 
     def test_kampf_zauber_mit_rettungswurf_des_gegners(self):
         """Kampf-Audit H4: a spell with rettung on a foe: the panel rolls the foe's d20 + its value of the bestiary against
@@ -10841,9 +10851,10 @@ class Fight(Turns):
     def test_a_merchant_of_a_kind_with_a_purse(self):
         """Wirtschaft Punkt 3 (Dominik 2026-10-25 „1-12“): a merchant has a kind and sells only its kind; it pays half
         the worth for its own kind, a quarter for anything else, from a purse of 50 gold times the level that buying
-        fills; an empty purse refuses with its own sentence. A foe gives 5 to 15 gold times the level to the group."""
+        fills; an empty purse refuses with its own sentence. A foe gives 1 to 3 gold times the level to every hero (Review
+        27.10. B10: never divided by the group)."""
         r = dungeon.rules()
-        self.assertEqual(r["gold"]["gegner"], [5, 15])
+        self.assertEqual(r["gold"]["gegner"], [1, 3])
         rd, _ = self.encounter()
         rd.pop("kampf", None)
         h = rd["plaetze"][self.host]["held"]
@@ -10933,10 +10944,12 @@ class Fight(Turns):
         kampf.start(dungeon, r, rd, held, allein, 0)
         self.assertTrue(rd["kampf"]["allein"])
         rd["kampf"]["gegner"][0].update(leben=0, aus="besiegt")
+        k = dict(rd["kampf"])
         ep = {pid: 0 for pid, _ in dungeon.seated(rd)}
         with contextlib.redirect_stdout(io.StringIO()):
             kampf.end(dungeon, r, rd, ep)
-        self.assertEqual(sum(ep.values()) // max(1, len(ep)), int(o[0]["ep"] * kampf.ALLEIN) // len(ep))
+        self.assertEqual(ep, {pid: kampf.reward(k, p["held"]["stufe"], kampf.ALLEIN) for pid, p in dungeon.seated(rd)})
+        self.assertGreater(min(ep.values()), 0)
 
     def test_a_foes_life_is_a_word_for_the_players(self):
         """Tabletop-Punkt 11 (Dominik 2026-10-25 „alle punkte“, from improved-initiative): only the host sees a foe's life
@@ -11905,7 +11918,7 @@ class Fight(Turns):
     def test_a_whole_fight_through_the_turns(self):
         r = dungeon.rules()
         rd, foe = self.encounter(allein=True)
-        k = rd["kampf"]
+        k, stufe = rd["kampf"], rd["plaetze"][self.host]["held"]["stufe"]
         self.assertEqual([g["id"] for g in k["gegner"]], [foe["id"]])
         card = next(e for e in rd["log"] if e["art"] == "begegnung")
         self.assertEqual((card["gegner"][0]["id"], card["gegner"][0]["anzahl"], card["gefahr"]), (foe["id"], 1, k["gefahr"]))
@@ -11940,7 +11953,7 @@ class Fight(Turns):
         self.assertEqual([(e["gegner"], e["was"]) for e in rd["log"] if e["art"] == "gegner"], [(g["name"], "besiegt")])
         self.assertNotIn("kampf", rd)
         end = next(e for e in rd["log"] if e["art"] == "kampf")
-        each = int(foe["ep"] * kampf.ALLEIN) // 2                                  # alone (B8): half the reward
+        each = kampf.reward(k, stufe, kampf.ALLEIN)                               # alone (B8): half the reward (B9)
         self.assertEqual((end["was"], end["besiegt"], end["ep"]), ("sieg", 1, each))
         self.assertGreaterEqual(rd["plaetze"][self.gp]["held"]["ep_tisch"], each)
         self.assertEqual(len([e for e in rd["log"] if e["art"] == "beute"]), 1)        # one find of the foe, none of the model's boss

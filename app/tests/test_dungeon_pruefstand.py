@@ -11,7 +11,9 @@ Idee 5).
 No wall clock: the module's clock is set by the tests.
 """
 import asyncio
+import contextlib
 import datetime
+import io
 import os
 import unittest
 from unittest import mock
@@ -110,11 +112,44 @@ class Bench(unittest.TestCase):
         self.assertTrue(ps.AIM[0] <= mean <= ps.AIM[1], mean)
         self.assertEqual({k: c["siege"] for k, c in z.items() if not P.SPANNE[0] <= c["siege"] <= P.SPANNE[1]}, {})
 
+    def test_a_heroes_reward_does_not_hang_on_the_group(self):
+        """Review 27.10. B9 (Dominik 2026-10-27 „ok“): a hero's experience from a won fight is its level's budget times
+        the encounter against the reference budget, so a hero alone and one of five need about as many fights: up to
+        the top level at most 25 per cent apart, on each level at most 35 (a hero alone at level 1 meets only foes a
+        little above its budget, and they give more); a fight gives about the level's budget."""
+        import random
+        r = dungeon.rules()
+        ep_st = r["stufen_ep"]
+        kaempfe = {1: 0.0, 5: 0.0}
+        for stufe in range(1, r["grenzen"]["stufe_max"] + 1):
+            je = {}
+            for n in (1, 5):
+                rng, got = random.Random(f"b9|{stufe}|{n}"), []
+                for _ in range(40):
+                    held = ps.party(r, n, stufe, rng)
+                    wahl = ps.encounter(r, held, "mittel", rng)
+                    rd = {"lang": "de", "zug": 0, "offen": {}, "log": [], "plaetze": {f"p{i}": {"held": h, "made": i} for i, h in enumerate(held)}}
+                    kampf.start(dungeon, r, rd, held, wahl, 0)
+                    for g in rd["kampf"]["gegner"]:
+                        g.update(leben=0, aus="besiegt")
+                    ep = {pid: 0 for pid in rd["plaetze"]}
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        kampf.end(dungeon, r, rd, ep)
+                    got.append(sum(ep.values()) / n)
+                je[n] = sum(got) / len(got)
+                if stufe < len(ep_st):
+                    kaempfe[n] += (1 - ps.RAETSEL) * (ep_st[stufe] - ep_st[stufe - 1]) / je[n]
+            self.assertTrue(1 / 1.35 <= je[1] / je[5] <= 1.35, (stufe, je))
+            self.assertTrue(0.7 <= je[5] / kampf.BUDGET[stufe - 1] <= 1.3, (stufe, je))
+        self.assertTrue(0.8 <= kaempfe[1] / kaempfe[5] <= 1.25, kaempfe)
+
     def test_runes_win_at_most_eight_points_more(self):
         """Review 27.10. 11.5 with the runes (bericht „Abstimmung mit den Runen“ 4, Dominik 2026-10-27 „ok“): the same
         groups with the runes found up to their level by the real find and trader rates, set as strong as the caps
         allow, win at most RUNEN_PLUS points more often than without (the mean of all cells), no cell makes a fight
-        trivial (above the aim + RUNEN_PLUS), and the economy with every rune sold keeps its aim."""
+        trivial (above the aim + RUNEN_PLUS), and the economy with every rune sold keeps its aim (Review 27.10. B10: over
+        the same runs as without, where a merchant's purse binds a group at level 1; half of them alone can fall just
+        below the aim)."""
         import random
         r = dungeon.rules()
         with mock.patch("dungeon_runen.wirkt", return_value=True):
@@ -128,17 +163,24 @@ class Bench(unittest.TestCase):
             self.assertEqual(set(mit), set(ohne))
             self.assertLessEqual(ps.runes_plus(ohne, mit), ps.RUNEN_PLUS)
             self.assertEqual({k: c["siege"] for k, c in mit.items() if c["siege"] > ps.AIM[1] + ps.RUNEN_PLUS}, {})
-            w = ps.economy(r, laeufe=ps.LAEUFE // 2, mit_runen=True)
+            w = ps.economy(r, mit_runen=True)       # the same runs as without (LAEUFE): the runes only add
         self.assertEqual({k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {})
 
     def test_the_economy_keeps_its_aim(self):
         """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
-        costs (median), and no find sells for more than ten times a level's income; the inn grows with the level."""
+        costs (median), and no find sells for more than ten times a level's income; the inn grows with the level. Review
+        27.10. B10: so for a hero alone and groups of 3 and 5 too (finds by dungeon.funde, coins never divided)."""
         import dungeon_gold as gold
         w = ps.economy(dungeon.rules())
         self.assertEqual(len(w), dungeon.rules()["grenzen"]["stufe_max"])
         off = {k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}
         self.assertEqual(off, {}, "Stufe außerhalb des Ziels")
+        for n in (1, 3, 5):
+            wn = ps.economy(dungeon.rules(), gruppe=n)
+            self.assertEqual({k: c["verhaeltnis"] for k, c in wn.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {},
+                             f"{n} Helden: Stufe außerhalb des Ziels")
+        self.assertEqual([dungeon.funde(n, "truhe") for n in (1, 2, 3, 4, 5)], [1, 1, 2, 2, 3])
+        self.assertEqual([dungeon.funde(n) for n in (2, 4)], [1, 2])
         self.assertEqual({k: c["fund_max"] for k, c in w.items() if c["fund_max"] > ps.JACKPOT * c["einnahmen"]}, {})
         self.assertEqual(gold.PREIS["gasthaus"], 10)
         self.assertEqual(ps.economy(dungeon.rules(), laeufe=5, stufen=[2]), ps.economy(dungeon.rules(), laeufe=5, stufen=[2]))

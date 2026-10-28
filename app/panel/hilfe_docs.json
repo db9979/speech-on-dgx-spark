@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Belohnung je Held (V01.1.197, Review 27.10. Paket 11.8, Punkte B9 und B10, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Kampf- und Fundregeln. 1. Erfahrung (B9): Die Erfahrung eines gewonnenen Kampfs wird nicht mehr durch die Helden geteilt. Jeder Held, mit dem der Kampf begann, bekommt das Budget seiner Stufe (dungeon_kampf.BUDGET) mal das angepasste EP der Begegnung geteilt durch das Bezugsbudget der Gruppe (reference: Budget je Held mal Gruppenfaktor samt Gefährten, ohne Lebensanteil, Regler, Kampfstufe und Kindertisch), mal dem Anteil, der gewonnen wurde (Geflohene und Frieden halb, ein einzelner Gegner allein halb). So gibt ein schwererer Kampf mehr, und ein Held allein braucht etwa so viele Kämpfe für die nächste Stufe wie einer von fünf. Ein Kampf, der vor dieser Regel begann, wird wie bisher geteilt. 2. Funde (B10): Je zwei Helden gibt es einen Fund (dungeon.funde): nach einem Kampf bringt ein ungerader Held in der Hälfte der Fälle einen mehr (1, 3, 5 Helden: 0 oder 1, 1 oder 2, 2 oder 3), bei Truhe, Belohnung und Boss wird aufgerundet (mindestens einer). Ohne Fund kommen nur die Münzen, die Kampfzeile zeigt „+N Gold für jeden“ (Log dungeon: beu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "te | gegner | nur gold); jeder weitere Fund geht an den, der am längsten ohne war. Ein Fund, den das Modell nennt, kommt immer. 3. Gold (B10): Die Münzen werden nicht mehr geteilt, jeder Held bekommt sie ganz (dungeon.coins, Bereich des Katalogs mal Stufe); die Bereiche in dungeon_regeln.json sind dafür kleiner: Gegner 1 bis 3, Truhe 2 bis 9, Belohnung 3 bis 11, Boss 8 bis 26. Neu gemessen (dungeon_pruefstand.economy für 1, 3, 4 und 5 Helden): ein Held verdient auf jeder Stufe das 1,26- bis 1,79-Fache dessen, was das Spiel kostet, im Ziel 1,2 bis 2. Selbsttests test_a_heroes_reward_does_not_hang_on_the_group (ein Held allein und einer von fünf brauchen bis zur letzten Stufe höchstens 25 % mehr oder weniger Kämpfe, ein Kampf gibt etwa das Budget der Stufe) und test_the_economy_keeps_its_aim für 1, 3 und 5 Helden (test_dungeon_pruefstand)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gegnerzahl vom Panel, Personen mit Wachen (V01.1.196, Review 27.10. Paket 11.7, Punkte B8, B14 und B16, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Kampfregeln. 1. Wie viele kommen (B8): Das Modell nennt in begegnung höchstens zwei Arten aus dem Angebot, nur mit id (dungeon_kampf.ARTEN, die Zahl anzahl gibt es nicht mehr). Das Panel setzt die Zahl nach fester Regel (fill): jede Art einmal, dann immer eine mehr von der Art, die das angepasste EP am nächsten ans Budget bringt, solange es höchstens das 1,1-Fache bleibt, bis es mindestens das 0,9-Fache ist (BAND), höchstens 6 Gegner und 4 einer Art; liegt es noch über dem 1,1-Fachen, geht der Stärkste, ein Boss und eine Person zuletzt. Das Budget ist das der Kampfstufe des Gastgebers. 2. Allein: Verlangt die Szene einen einzelnen Gegner (ein Duell, ein einsamer Wächter), setzt das Modell bei seiner einzigen Art allein: true; dann kommt genau einer, für die halbe Belohnung (ALLEIN, Log dungeon: begegnung | allein). 3. Personen (B14): Eine Person kämpft mit der Vorlage ihrer Berufsreihe, deren EP am nächsten an der Hälfte des Budgets liegt (dungeon_personen.nearest, HALB), nicht mehr mit der stärksten, und b"
 },
 {
@@ -21494,6 +21510,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: reward per hero (V01.1.197, review 27.10. package 11.8, points B9 and B10, Dominik 2026-10-27 \"ok\"): No new switch, these are fight and find rules. 1. Experience (B9): the experience of a won fight is no longer divided among the heroes. Every hero the fight began with gets its level's budget (dungeon_kampf.BUDGET) times the encounter's adjusted experience divided by the group's reference budget (reference: budget per hero times the group factor with companions, without the life share, the dial, the fight stage and the children's table), times the share won (the fled and peace half, a lone foe allein half). So a harder fight gives more, and a hero alone needs about as many fights for the next level as one of five. A fight begun before this rule is divided as before. 2. Finds (B10): there is one find for every two heroes (dungeon.funde): after a fight an odd hero brings one more half the time (1, 3, 5 heroes: 0 or 1, 1 or 2, 2 or 3), at a chest, a reward and a boss it is rounded up (at least one). Without a find only the coins come, the fight's line shows \"+N gold each\" (log dungeon: beute | gegner | nur gold); every further find goes to who went longest without on"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e. A find the model names always comes. 3. Gold (B10): the coins are no longer divided, every hero gets them whole (dungeon.coins, the catalog's range times the level); the ranges in dungeon_regeln.json are smaller for it: foes 1 to 3, chest 2 to 9, reward 3 to 11, boss 8 to 26. Measured anew (dungeon_pruefstand.economy for 1, 3, 4 and 5 heroes): a hero earns 1.26 to 1.79 times what play costs at every level, the aim is 1.2 to 2. Self-tests test_a_heroes_reward_does_not_hang_on_the_group (a hero alone and one of five need at most 25 % more or fewer fights up to the last level, a fight gives about the level's budget) and test_the_economy_keeps_its_aim for 1, 3 and 5 heroes (test_dungeon_pruefstand)."
 },
 {
 "lang": "en",

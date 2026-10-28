@@ -21,8 +21,9 @@ what the dice say.
                and Schildwall work on it as on every hit (dungeon.consequences)
     flight     a foe at a quarter of its life or less flees on a d20 of FLUCHT_W or less (never at the children's table:
                there it gives up)
-    end        all foes down or fled, or the model's kampf_ende („frieden“, „flucht“): the experience of the defeated
-               (half for the fled) divided by the heroes the fight began with (a seat that left counts, its share stays out), one find (anlass „gegner“) for the group
+    end        all foes down or fled, or the model's kampf_ende („frieden“, „flucht“): every hero the fight began with
+               gets its level's budget times the share won of the encounter against reference (Review 27.10. B9), the
+               finds of the occasion „gegner“ by dungeon.funde
 
 Teil 2 (Kampf-Tiefe, Bestiarium-Punkte 4-6 and item point 2, Dominik 2026-10-24 „alles nach empfehlung umsetzten“):
     weapons    eigenschaften of the catalog, each a fixed rule (EIGENSCHAFT_REGEL): finesse and a throw take the better
@@ -296,6 +297,21 @@ def budget(dm, r, rd, held, stufe=True):
     return int(b * (KIND if dm.kids(r, rd) else 1) * (1 + dial(rd) / 100) * (stage_factor(r, rd, held) if stufe else 1))
 
 
+def reference(dm, r, rd, held):
+    """The budget a reward is measured against (Review 27.10. B9): BUDGET per hero times GRUPPE for the group with its
+    companions, without the life share, the dial, the host's stage and the children's table, so a harder fight gives
+    more and a hero's reward does not hang on how many stand with it."""
+    mehr = gefaehrte.share(rd)
+    return max(1, int(sum(BUDGET[min(len(BUDGET), max(1, h["stufe"])) - 1] for h in held) * (1 + mehr / max(1, len(held)))
+                      * group_factor(len(held) + mehr)))
+
+
+def reward(k, stufe, anteil=1):
+    """A hero's experience from the fight k (Review 27.10. B9): its level's BUDGET times the encounter's adjusted
+    experience (k["wert"]) against the reference budget (k["bezug"]), times the share won; rounded down."""
+    return int(BUDGET[min(len(BUDGET), max(1, stufe)) - 1] * k["wert"] * anteil / max(1, k["bezug"]))
+
+
 def stages_on(rd):
     """The host may choose the stage: „Kampfstufen“ allowed for the round's host."""
     import features
@@ -525,6 +541,7 @@ def start(dm, r, rd, held, wahl, li):
     gegner = lineup(wahl, li, len(held))
     b = budget(dm, r, rd, held)
     rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner, len(held)), budget(dm, r, rd, held, False)),
+                   "bezug": reference(dm, r, rd, held), "wert": adjusted(gegner, len(held)),
                    "leben0": sum(max(0, h["leben"]) for h in held),
                    "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")],   # the group the fight was made for
                    **({"allein": True} if any(g.get("allein") for g, _ in wahl) else {})}
@@ -1215,9 +1232,11 @@ def expire(dm, rd, all_=False):
 
 
 def end(dm, r, rd, ep, why=""):
-    """The fight is over: the defeated foes' experience (half for the fled ones; Idee 7: all of the foes still up when
-    it ends in peace in a turn with a check passed, k["geschafft"], dungeon.apply) divided by the heroes it began with (k["helden"], living or gone, never one who came later) into ep
-    (pid -> number, apply gives it to the table), one find for the group, a line for the log. A won fight of a room
+    """The fight is over: the share of the foes' experience won (all for the defeated, half for the fled ones; Idee 7:
+    all of the foes still up when it ends in peace in a turn with a check passed, k["geschafft"], dungeon.apply) gives
+    every hero it began with (k["helden"], never one who came later) its own reward (Review 27.10. B9): BUDGET of its
+    level times the encounter's adjusted experience against the reference budget (reference), so it does not hang on
+    the group's size; into ep (pid -> number, apply gives it to the table), a line for the log. A won fight of a room
     of the map leaves rd["sieg"] = the room's tag for dungeon_karte (the way is free)."""
     k = rd.pop("kampf", None)
     if not k:
@@ -1237,9 +1256,16 @@ def end(dm, r, rd, ep, why=""):
     start = k.get("helden")
     teil = [pid for pid in ep if start is None or pid in start]
     zahl = len(teil) if start is None else len([pid for pid in start if pid in ep or pid not in rd["plaetze"]])   # the fallen out
-    each = alle // max(1, zahl) if teil else 0      # Kampf-Audit N4: rounded down (25 for 2 heroes: 12 each)
+    anteil = alle / max(1, sum(g["ep"] for g in k["gegner"]))
+    got = []
     for pid in teil:
-        ep[pid] += each
+        h = (rd["plaetze"].get(pid) or {}).get("held") or {}
+        if k.get("bezug"):                      # B9: the hero's level's budget times the encounter against the reference
+            got.append(reward(k, h.get("stufe", 1), anteil))
+        else:                                   # a fight begun before B9: divided (Kampf-Audit N4: rounded down)
+            got.append(alle // max(1, zahl))
+        ep[pid] += got[-1]
+    each = sum(got) // max(1, len(got))
     if k.get("raum") and not why:
         rd["sieg"] = k["raum"]
         rd.pop("raum_gegner", None)

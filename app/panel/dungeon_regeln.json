@@ -104,7 +104,7 @@
   ],
   "preise": {"waffe": 15, "ruestung": 20, "schmuck": 30, "trank": 10, "zauber": 25, "rolle": 8, "werkzeug": 8, "schatz": 50},
   "anlass": {"gegner": 0, "truhe": 10, "belohnung": 10, "boss": 25},
-  "gold": {"gegner": [5, 15], "truhe": [10, 40], "belohnung": [15, 50], "boss": [40, 120]},
+  "gold": {"gegner": [1, 3], "truhe": [2, 9], "belohnung": [3, 11], "boss": [8, 26]},
   "pech_schutz": 6,
   "effekte": [
     {"id": "feuer", "satz": ["Treffer brennen: +1W6 Feuerschaden.", "Hits burn: +1d6 fire damage."], "wert": "staerke", "bonus": 0, "wirkung": "schaden", "art": "feuer", "nur": ["waffe"]},
