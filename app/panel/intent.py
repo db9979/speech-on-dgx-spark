@@ -97,7 +97,9 @@ SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|pane
                          r"best practice\w*|empfiehlst du|was empfiehlst|was (soll|sollte|kann) ich (hier )?(noch )?(einstellen|einschalten|ändern)|"
                          r"wie stelle ich|wo stelle ich|wo schalte ich|wo finde ich (die|den|das) (einstellung|schalter)|"
                          r"(beim|im|am|vom|den|dem|der) spark\b|spark-\w+|zweiten? anmeldeschritt\w*|weiche\b|"
-                         r"ich-seite|funktionen-seite|zustand-seite|live-übersicht)")
+                         r"ich-seite|funktionen-seite|zustand-seite|live-übersicht|"
+                         # Fernzugang (fernzugang.py): „Öffne eine Shell auf dem VPS“ only leads to the page, never runs anything
+                         r"fernzugang\w*|fern-?server\w*|(öffne|starte|zeig)\w* (mir )?(eine |die )?(shell|konsole|ssh)\b|(ssh|shell) auf\b)")
 PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*|"
                          # calling and navigating (iphone_action): „Ruf Mama an“, „Navigiere nach Hause“
                          r"(?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|navigier\w*|route nach|bring mich nach|call \w+|navigate)\b")

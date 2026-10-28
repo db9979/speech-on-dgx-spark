@@ -17710,6 +17710,56 @@
           }
         }
       }
+    },
+    "Fernzugang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote access"
+          }
+        }
+      }
+    },
+    "Online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online"
+          }
+        }
+      }
+    },
+    "Offene Sitzungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open sessions"
+          }
+        }
+      }
+    },
+    "Warten auf Abbau": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for removal"
+          }
+        }
+      }
+    },
+    "Host-Schlüssel falsch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host key wrong"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

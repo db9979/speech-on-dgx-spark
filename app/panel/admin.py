@@ -429,7 +429,13 @@ def _status(cfg, healths):
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
             "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Überblick → Rechner)
-            "rundlauf": rundlauf.fuer_status()}      # the last round trip through the models (Zustand → Überblick → Rundlauf)
+            "rundlauf": rundlauf.fuer_status(),      # the last round trip through the models (Zustand → Überblick → Rundlauf)
+            "fernzugang": _fernzugang()}             # paired servers, online, sessions (Zustand → Überblick → Fernzugang), numbers only
+
+
+def _fernzugang():
+    import fernzugang
+    return fernzugang.for_live()
 
 
 def glance(cfg):
@@ -647,6 +653,10 @@ def validate(new):
         raise HTTPException(400, why)
     import werkstattseite
     why = werkstattseite.check(ch)
+    if why:
+        raise HTTPException(400, why)
+    import fernzugang
+    why = fernzugang.check(ch)
     if why:
         raise HTTPException(400, why)
     import schirm

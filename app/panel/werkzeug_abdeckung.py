@@ -243,6 +243,7 @@ WITHOUT = {
     "werkstattnacht": "werkstattseite.py: feste Nachtregel im Panel (Testlauf, danach Code-Messung), kein Werkzeug",
     "angriffsprobe": "angriffsprobe.py: Knopf auf der Werkstatt-Seite, misst das Sprachmodell, kein Werkzeug",
     "werkstatt": "werkstattseite.py: Aufträge nur vom Admin auf der Seite oder nach der festen Nachtregel; der Agent bekommt kein Werkzeug, das Code laufen lässt",
+    "fernzugang": "fernzugang.py: die Shell eines Fern-Servers nur vom Admin auf Funktionen → Fernzugang; das Modell bekommt kein Werkzeug und nie eine Ausgabe der Shell",
     "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",
     "wachposten": "wachposten.py: feste Regeln auf dem Änderungsprotokoll melden den Admins, nichts zu fragen, kein Werkzeug",

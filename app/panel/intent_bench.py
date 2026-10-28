@@ -173,6 +173,8 @@ BENCH = [
     ("was kannst du mir zur frauenkirche in dresden alles mitteilen. schaue im archiv oder kiwix.", "archiv"),
     ("was kannst du mir zur Frauen kirche in dresden erzählen?", ""),
     ("Schalte die Websuche ein", "spark"),
+    ("Öffne eine Shell auf dem VPS", "spark"),
+    ("Wie richte ich den Fernzugang ein?", "spark"),
     ("Mach das Wetter aus", "spark"),
     ("Schalte die Funktion Pakete an", "spark"),
     ("Danke", "plaudern"),

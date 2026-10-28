@@ -10,7 +10,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_ROLE=who.admin_role||nu
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
     document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test'&&x[0]!=='werk'&&x[0]!=='verb'&&x[0]!=='usage'&&x[0]!=='models'&&x[0]!=='praxis'&&x[0]!=='tech');
     // Funktionen: only the guides, not the settings form; the blocks (to lift them) are under Personen und Geräte
-    GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route');lastSec.feat='int'}
+    GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route'&&x[0]!=='fern');lastSec.feat='int'}
   // signing out is the profile's own sign-out: the admin rights end with it
   const b=$('logoutbtn');b.onclick=async()=>{try{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'})}catch{}location.reload()}}
 // Ich → Sicherheit: the profile's own role, and why it rests when it does

@@ -232,6 +232,21 @@ struct StatusView: View {
                     LabeledContent("Ganzer Weg") { Text(verbatim: bad.isEmpty ? Self.ms(ms["ganz"]) : "–") }
                 }
             }
+            // Zustand → Überblick → Fernzugang (fernzugang.py): paired servers, online, open sessions; numbers only
+            let fz = d["fernzugang"] as? [String: Any] ?? [:]
+            if fz["on"] as? Bool == true {
+                Section("Fernzugang") {
+                    LabeledContent("Gekoppelt") { Text(verbatim: Self.num(fz["gekoppelt"] ?? 0)) }
+                    LabeledContent("Online") { Text(verbatim: Self.num(fz["online"] ?? 0)) }
+                    LabeledContent("Offene Sitzungen") {
+                        Text(verbatim: Self.num(fz["sitzungen"] ?? 0)).foregroundStyle((fz["sitzungen"] as? Int ?? 0) > 0 ? .red : .primary)
+                    }
+                    if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
+                    if (fz["hostkey"] as? Int ?? 0) > 0 {
+                        LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(.red) }
+                    }
+                }
+            }
             // the "Heute" tiles of Zustand → Überblick (admin.glance): counts and times only; orange by the panel's rules
             let g = d["glance"] as? [String: Any] ?? [:]
             Section("Heute (24 Std.)") {

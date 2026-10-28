@@ -80,6 +80,8 @@
   <div class="zrechner" id="zrechner" hidden></div>
   <h3 class="zsec" id="zrundh" hidden>Rundlauf <small>Sprechen, Hören, Sprachmodell · echter Probelauf</small></h3>
   <div class="zrechner zrund" id="zrund" hidden></div>
+  <h3 class="zsec" id="zfernh" hidden>Fernzugang <small>Fern-Server über ihren Anker · nur Zahlen</small></h3>
+  <div class="zrechner zrund" id="zfern" hidden></div>
   <h3 class="zsec zareash">Bereiche</h3>
   <div class="zareas" id="zareas">
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
@@ -264,6 +266,13 @@
         <div class="fh">Testen, untersuchen und reparieren unter Zustand → Werkstatt.</div>
       </div>
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, angerufen über seinen Anker. Nur Admins mit zweitem Anmeldeschritt, jede Sitzung mit neuem Code.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
+      <div data-show="chat.fernzugang" style="margin-left:36px">
+        <label for="chat.fernzugang_leerlauf_min">Leerlauf trennt nach (Minuten)</label><input class="num" id="chat.fernzugang_leerlauf_min" type="number" min="1" max="120"><div class="fh">1 bis 120, Standard 15.</div>
+        <label for="chat.fernzugang_sitzungen">Sitzungen gleichzeitig</label><input class="num" id="chat.fernzugang_sitzungen" type="number" min="1" max="4"><div class="fh">1 bis 4, Standard 2.</div>
+        <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
+        <div class="fh">Koppeln und die Shell öffnen unter Funktionen → Fernzugang.</div>
+      </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
       <div class="setrow" data-show="chat.bewerten" style="margin-left:36px"><div class="lbl"><b>Rückmeldung, wenn es behoben ist</b><span>Wer 👎 gemeldet hat, hört nach der Nachkontrolle, dass eine Änderung geholfen hat.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten_back"><i></i></label></div>
@@ -1073,6 +1082,32 @@
     <div class="card"><h3 data-wht="locks"></h3><div id="whlocks"></div></div>
   </div>
 </section>
+<div class="fzbanner" id="fzbanner" role="status" hidden><span class="fzrec"></span><span id="fzbtext"></span><button class="b" type="button" id="fzbtrennen">Trennen</button></div>
+<section id="fern"><div class="card ld-box" id="fzbox">
+  <div class="ld-head"><h2>Fernzugang</h2></div>
+  <div class="pintro">Fern-Server rufen von sich aus an. Du öffnest ihre Shell hier im Browser. Nur Admins, nie Gäste. Kein neuer Port.</div>
+  <div class="note" id="fzoff" hidden>Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern.</div>
+  <div class="note err" id="fznotaus" hidden>Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.</div>
+  <div id="fzmain" hidden>
+    <div class="fztiles" id="fztiles"></div>
+    <div class="row fzneu"><input id="fzname" maxlength="40" autocomplete="off" placeholder="Name des Servers, z. B. vps-hetzner" aria-label="Name des Servers"><button class="b p" type="button" id="fzgo">Koppeln (Code)</button></div>
+    <div class="ld-split"><div class="ld-list fzlist" id="fzlist"></div><div class="ld-detail fzdetail" id="fzdetail" hidden></div></div>
+    <div class="fzcols">
+      <div class="card"><h3>Neues System koppeln</h3><div id="fzcode"></div></div>
+      <div class="card"><h3>Was das Panel aufschreibt</h3><div class="fh">Nur feste Wörter und Zahlen, nie Tasten oder Ausgaben. Beispiel:</div><pre class="fzcmd" id="fzlog"></pre></div>
+    </div>
+    <div class="card fzdanger"><div><b>Alle trennen</b><div class="fh">Schließt jede Sitzung und jeden Anker sofort. Der Notaus tut dasselbe.</div></div><button class="b danger" type="button" id="fzalle">Alle trennen</button></div>
+  </div>
+  <div class="fzview" id="fzview" hidden>
+    <div class="fzterm" id="fzterm"></div>
+    <div class="fzside">
+      <div class="card"><h3>Vorschläge</h3><div class="fh">Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. Der Assistent sieht die Ausgabe nicht.</div><div class="fzchips" id="fzchips"></div></div>
+      <div class="card"><h3>Diese Sitzung</h3><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzstop">Trennen</button><button class="b" type="button" id="fzalle2">Alle trennen</button></div></div>
+    </div>
+    <div class="fzkeys" id="fzkeys"></div>
+  </div>
+  <div class="mut" id="fzmsg" role="status"></div>
+</div></section>
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>
     <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Funktionen und im Ich.</div>
@@ -1457,6 +1492,7 @@
 <script src="/static/js/verbrauch.js"></script>
 <script src="/static/js/modelle.js"></script>
 <script src="/static/js/werkstatt.js"></script>
+<script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/praxistest.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>

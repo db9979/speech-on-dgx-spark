@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "63b98636da",
+        "stand": "943ca924fb",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -648,11 +648,12 @@ SEITEN = {
               ("Browser, App, Lautsprecher, Telegram, MCP", "browser, app, speaker, Telegram, MCP"),
               ("Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen "
                "Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, "
-               "MCP, andere Sparks, Wyoming, Telefon, Telegram) steht mit seinem Schutz in der Sicherheits-Doku unter "
-               "„Wege hinein“.",
+               "MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs) steht mit seinem "
+               "Schutz in der Sicherheits-Doku unter „Wege hinein“.",
                "At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or "
                "signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, "
-               "phone, Telegram) stands with its protection in the security docs under \"Ways in\".")),
+               "phone, Telegram, the anchors and the web terminal of remote access) stands with its protection in the security "
+               "docs under \"Ways in\".")),
             S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
               ("notaus.blocks", "notaus.blocks"),
               ("Der Notaus hat drei Stufen von außen nach innen: Stufe {notaus.STAGE.internet} sperrt das Internet, Stufe "

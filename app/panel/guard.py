@@ -552,6 +552,10 @@ LIVE_WORDS = {
     "chat_key_added": ("Eingang", "Gerät für private Chats eingetragen"), "chat_key_removed": ("Eingang", "Gerät für private Chats entfernt"),
     "chat_history_shared": ("Eingang", "Verlauf privater Chats an neues Gerät übertragen"),
     "verbund_code": ("Eingang", "Kopplungs-Code für einen anderen Spark erstellt"), "verbund_paired": ("Eingang", "Mit einem anderen Spark gekoppelt"),
+    "fernzugang_code": ("Eingang", "Kopplungs-Code für einen Fern-Server erstellt"), "fernzugang_paired": ("Eingang", "Fern-Server gekoppelt"),
+    "fernzugang_koppeln_failed": ("Eingang", "Fern-Server mit falschem Code abgewiesen"), "fernzugang_anker_failed": ("Eingang", "Anker mit unbekanntem Schlüssel abgewiesen"),
+    "fernzugang_hostkey": ("Wächter", "Host-Schlüssel eines Fern-Servers geändert, keine Verbindung"), "fernzugang_revoked": ("Eingang", "Fern-Server entfernt"),
+    "fernzugang_removed": ("Eingang", "Fern-Server hat seinen Anker abgebaut"), "fernzugang_allow": ("Eingang", "Fern-Server zugelassen oder gesperrt"),
     "verbund_peer_allow": ("Eingang", "Anderen Spark erlaubt"), "verbund_peer_block": ("Eingang", "Anderen Spark gesperrt"),
     "verbund_peer_remove": ("Eingang", "Anderen Spark entfernt"),
     "invite_made": ("Eingang", "Einladung erstellt"), "invite_revoked": ("Eingang", "Einladung zurückgezogen"),
@@ -665,7 +669,7 @@ RATE = {"chat": (30, 120), "dungeon": (0, 120), "dungeongast": (150, 150), "dung
         "make": (0, 60), "bilder": (0, 60), "bildmalen": (0, 6), "bildfoto": (0, 20), "bildschnell": (0, 30), "bildjob": (0, 120), "bilddatei": (0, 120), "bildtest": (0, 3), "musiktest": (0, 3), "musikdatei": (0, 60), "musik": (0, 60), "musikmachen": (0, 6), "musiktext": (0, 10), "musikhochladen": (0, 6), "musikjob": (0, 120), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10),
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
-        "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "modelle": (0, 30), "modelle_wechsel": (0, 6), "modelle_messen": (0, 6), "werkstatt": (0, 60), "werkstatt_auftrag": (0, 10), "weiche_abstimmen": (0, 6), "gehaeuse": (0, 60), "gehaeuse_wunsch": (0, 6), "modelle_eigen": (0, 10), "praxistest": (0, 60), "technikseite": (0, 90),
+        "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "modelle": (0, 30), "modelle_wechsel": (0, 6), "modelle_messen": (0, 6), "werkstatt": (0, 60), "werkstatt_auftrag": (0, 10), "fernzugang": (0, 60), "fernzugang_code": (0, 6), "fernzugang_sitzung": (0, 10), "fernzugang_koppeln": (10, 10), "fernzugang_laden": (10, 10), "fernzugang_anker": (30, 30), "weiche_abstimmen": (0, 6), "gehaeuse": (0, 60), "gehaeuse_wunsch": (0, 6), "modelle_eigen": (0, 10), "praxistest": (0, 60), "technikseite": (0, 90),
         "aufgaben": (0, 60), "listen": (0, 120), "mitschreib": (20, 20), "kalender": (0, 60), "kalenderteilen": (0, 20), "geteilt": (0, 60), "teilen": (0, 20), "caldav": (0, 240), "kalenderserver": (0, 20), "kalenderaendern": (0, 30), "kontakte": (0, 60), "einladung": (0, 30), "post": (0, 60), "postmehr": (0, 30), "postbild": (0, 240), "postordnen": (0, 60), "mailsenden": (0, 30), "mailvorschlag": (0, 30), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20),
         "feeds": (0, 30), "feedsadd": (0, 10), "feedsnow": (0, 4)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together

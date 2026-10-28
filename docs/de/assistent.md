@@ -1752,5 +1752,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Jede Nacht testen** (Funktionen → Zugang → „Jede Nacht testen“; baut auf „Werkstatt“): Einmal pro Nacht startet die Werkstatt von selbst den Testlauf (alle Selbsttests wie auf GitHub, ohne Sprachmodell).
 
+- **Fernzugang zu Servern** (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi.
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

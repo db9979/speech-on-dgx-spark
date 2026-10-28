@@ -179,10 +179,11 @@ import mitschreiblink  # noqa: E402
 import mitteilungen  # noqa: E402
 import kontaktserver  # noqa: E402
 import einladung  # noqa: E402
+import fernzugang  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -750,6 +751,20 @@ def script_file(name: str, request: Request):
     if not re.fullmatch(r"[a-z0-9\-]+\.js", name) or not os.path.isfile(os.path.join(STATIC, "js", name)):
         raise HTTPException(404, "not found")
     return _asset(request, os.path.join(STATIC, "js", name), "text/javascript")
+
+
+@app.get("/static/xterm/{name}")
+def xterm_file(name: str, request: Request):
+    """xterm.js for Funktionen → Fernzugang (MIT, pinned in fernzugang.XTERM, served only from here: script-src 'self')."""
+    path, media = fernzugang.xterm_file(name)
+    return _asset(request, path, media)
+
+
+@app.get("/fernzugang/anker")
+def fernzugang_anker(request: Request):
+    """The spark-anker program for `curl … | sudo python3 - einrichten` (public: no secret in it; 404 while
+    Funktionen → Fernzugang zu Servern is off)."""
+    return fernzugang.download(request)
 
 
 @app.get("/manifest.webmanifest")

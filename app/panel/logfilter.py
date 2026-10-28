@@ -35,6 +35,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("pc", r"^(begleiter|meinmcp|docmake|mcp-server):"), ("bild", r"^(bilder|bild):"), ("musik", r"^musik:"), ("dungeon", r"^dungeon:"), ("schwer", r"^schwer:"), ("remarkable", r"^remarkable:"),
          ("apps", r"^(iphone|android|app|join|onboard|terminal):"), ("vonselbst", r"^(proactive|agent|tipps|feeds|vorgang):"),
          ("verbessern", r"^(berater|faelle|tagebuch|meldung):"),
+         ("fernzugang", r"^fernzugang:"),
          ("system", r"^(notaus|notzugang|wartung|guard|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
                     r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|rechner|schirm|praxistest|rundlauf|werkstatt|wachposten|loopwacht|offline)\b"),
          ("ereignis", r"^ereignis:"))

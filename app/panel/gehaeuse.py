@@ -391,8 +391,16 @@ def zeilen(key, now=None):
             stufe = str(notaus.level())
         except Exception:
             stufe = "?"
-        return ["Sicherheit", f"Anmeldung falsch {n.get('door_out', '-')}", f"Waechter geblockt {n.get('guard_bad', '-')}",
-                f"Notaus Stufe {stufe}"]
+        out = ["Sicherheit", f"Anmeldung falsch {n.get('door_out', '-')}", f"Waechter geblockt {n.get('guard_bad', '-')}",
+               f"Notaus Stufe {stufe}"]
+        try:   # Fernzugang (fernzugang.py): servers online of paired, open sessions; numbers only
+            import fernzugang
+            fz = fernzugang.for_live(now)
+            if fz.get("on"):
+                out.append(f"Fern {fz['online']}/{fz['gekoppelt']} Sitz {fz['sitzungen']}")
+        except Exception:
+            pass
+        return out
     if key == "geraete":
         return ["Geraete", f"Lautsprecher {_geraete('esp32')}", f"Apps {_geraete('apps')}", "Verbund " + _dienst("verbund")]
     if key == "haus":

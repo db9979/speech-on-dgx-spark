@@ -1533,7 +1533,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten "
+"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App"
 },
 {
 "lang": "de",
@@ -1541,7 +1541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie b"
+"text": "-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit "
 },
 {
 "lang": "de",
@@ -1549,7 +1549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirg"
+"text": "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Ant"
 },
 {
 "lang": "de",
@@ -1557,7 +1557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": "wort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -1893,7 +1893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (170) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (172) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1909,7 +1909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 170 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 172 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2429,7 +2429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "innt mit einem Wort aus logfilter.AREAS (34 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
 },
 {
 "lang": "de",
@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 93). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 94). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 93 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 94 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3605,7 +3605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (34 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -3629,7 +3629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 33 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 34 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -13757,6 +13757,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Fernzugang zu Servern (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Angriffsprobe (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home). <!-- /funktionen:liste -->"
 },
 {
@@ -15142,6 +15150,54 @@
 "head": "Werkstatt",
 "title": "Werkstatt",
 "text": " in der Startstunde einmal der Testlauf; bis 5 Stunden danach die Code-Messung, wenn das laufende Sprachmodell noch keine hat (nach einem Modellwechsel). Nie während ein Auftrag läuft. - *Angriffsprobe* (chat.angriffsprobe unter der Werkstatt, aus; V01.0.921, Thread „NeMo Guardrails prüfen“): fünfte Kachel *Angriffe prüfen* auf der Seite Zustand → Werkstatt. app/panel/angriffsprobe.py schickt jeden Fall der Sammlung angriffe.json, der über ein Lese-Werkzeug hereinkommt, an das laufende Sprachmodell: die Frage, der Aufruf des Lese-Werkzeugs und sein Ergebnis mit dem versteckten Befehl, eingepackt wie im echten Gespräch (chat.wrap_outside, für Mail mail._wrap, Marken entschärft); angeboten sind nur das Lese-Werkzeug und das angegriffene. Ein Aufruf je Fall über vorrang (Gespräche gehen vor). Es läuft nie ein Werkzeug; gezählt wird nur, ob das Modell das angegriffene aufgerufen hätte. Ergebnis „gehorcht X von N“ je Tarnung und je Werkzeug, mit Modellname und Version; in STATE/angriffsprobe.json die letzten 20 Läufe nur mit Fall-Kennungen und Zahlen. Live zeigt „Angriffsprobe X/N gehorcht“, das Protokoll „werkstatt: angriffsprobe …“. Die Sperren des Panels hängen nicht an dieser Zahl. "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "Nur für Admins, standardmäßig aus (Schalter *Funktionen → Fernzugang zu Servern*), bedient unter *Funktionen → Fernzugang* (Plan ssh-vermittlung, Stufe 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Wie Raspberry Pi Connect, nur ist der Vermittler der eigene Pi: ein Server anderswo ruft das Panel über seinen Anker an, der Admin öffnet dessen Shell im Browser."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "- Weg: Anker spark-anker auf dem Server → WebSocket über TLS an /api/fernzugang/anker (dieselbe https-Adresse wie der Browser, auch durch den Reverse Proxy der Synology; dort „WebSocket“ unter Benutzerdefinierter Header setzen) → Panel. Der Anker reicht nur Bytes an den eigenen sshd auf 127.0.0.1:22 weiter. Das Panel ist der SSH-Client (paramiko 5.0.0 aus der Lock-Datei): SSH läuft Ende zu Ende zwischen Panel und sshd, Proxy und Anker sehen nur verschlüsselte Bytes. Kein neuer Port. - Koppeln: Name eintippen, *Koppeln (Code)* fragt einen frischen Code oder Passkey (Stufe „Schutz ändern“) und zeigt einen Einmal-Code (10 Minuten, nur sein Hash bleibt) und die eine Zeile curl -fsSL https://<Panel>/fernzugang/anker | sudo python3 - einrichten https://<Panel>; über die Heim-Adresse mit eigenem Zertifikat ist es festgelegt (curl --pinnedpubkey, --fp). Der Code steht nie im Befehl, in einer Adresse, einem Argument oder einer Umgebungsvariable: der Anker liest ihn im Terminal (/dev/tty). Unter *Prüfen* steht die SHA-256 des Programms. Der Anker prüft das Zertifikat des Panels (Zertifizierungsstellen oder der festgelegte Fingerabdruck, angezeigt), schickt Code und ed25519-Host-Schlüssel des"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": " Servers, bekommt seinen Geräteschlüssel und den öffentlichen Schlüssel, den das Panel für diesen Server neu macht (der private liegt versiegelt im Tresor, nie angezeigt), holt sich selbst noch einmal und vergleicht mit der SHA-256 aus der Antwort. - Auf dem Server: Benutzer spark (neu angelegt, wenn es ihn nicht gab; kein sudo) mit der Zeile from=\"127.0.0.1,::1\",restrict,pty ssh-ed25519 … spark-fernzugang-<id> in ~/.ssh/authorized_keys; Systemnutzer spark-anker für den Dienst spark-anker.service (NoNewPrivileges, ProtectSystem=strict, ProtectHome, keine Capabilities, MemoryDenyWriteExecute, nur IPv4/IPv6, beschreibbar nur /var/lib/spark-anker); Einstellungen /etc/spark-anker/anker.json (0640), Programm /usr/local/lib/spark-anker/spark-anker.py, Befehl /usr/local/bin/spark-anker; spark-anker-abbau.path (root) wartet auf den Abbau. - Sitzung: *Shell* fragt jedes Mal frisch nach Code oder Passkey (Schutz ändern), dann gibt es ein Ticket (30 Sekunden, einmal, an die Anmeldung gebunden, nur sein Hash gespeichert). Der Terminal-WebSocket prüft selbst Schalter, Origin (gleiche Seite), Admin im eigenen Browser (nie Verwalter, Gäste, Geräteschlüssel oder eine App), Notaus und Ticket. Der H"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "ost-Schlüssel muss dem bei der Kopplung festgelegten gleichen: sonst keine Verbindung, Wachposten „Schutz geändert“, Dienst-Wächter-Warnung, der Server ist bis zum neuen Koppeln gesperrt. Höchstens chat.fernzugang_sitzungen Sitzungen (1 bis 4, Standard 2), Leerlauf chat.fernzugang_leerlauf_min (1 bis 120, Standard 15), 64 KB je Nachricht. Oben steht rot „Fernsitzung aktiv“ mit *Trennen*. xterm.js 5.5.0 (MIT) liegt im Panel (static/xterm/, SHA-256 fest in fernzugang.XTERM), die CSP bleibt script-src 'self'. Am Handy Zusatztasten (Esc, Tab, Strg, Pfeile, Enter). - Vorschläge: neben dem Terminal feste Befehle, die nur lesen (fernzugang.CHIPS); ein Tipp setzt den Befehl in die Zeile, Enter drückt der Mensch. Kein Werkzeug, die Ausgabe erreicht nie ein Modell. - Entfernen: *Entfernen* (Bestätigen) macht den Geräteschlüssel sofort ungültig und löscht Panel-Schlüssel und Host-Schlüssel; der Anker hört „abbauen“ (sofort oder beim nächsten Kontakt; ein entfernter Schlüssel bekommt nichts anderes), schreibt die Markierung, spark-anker-abbau entfernt als root beide Dienste, Programm, Einstellungen, /var/lib/spark-anker, den Benutzer spark-anker, die Zeile in authorized_keys und den Benutzer s"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "park samt Home, wenn der Anker ihn angelegt hat, und meldet es dem Panel; dann vergisst das Panel den Server (nach 90 Tagen ohne Kontakt sowieso). Von Hand: sudo spark-anker entfernen (auch curl … | sudo python3 - entfernen). *Darf sich verbinden* aus weist den Anker ab, *Trennen* und *Alle trennen* schließen sofort; der Notaus (jede Stufe) schließt alles und lässt nichts herein. - Überwachung: Logs-Bereich „Fernzugang“ mit fernzugang: <Wort> | <Grund> | <Zahl> für jedes Ergebnis (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu mit leerlauf, notaus …; abbauen, abgebaut; hostkey_falsch; download); nie Tasten, Ausgaben, Codes, Schlüssel oder Adressen, aufgezeichnet wird nichts. *Zustand → Live* Kasten „Fernzugang“, *Zustand → Überblick*, die Steuerzentrale, die OLED-Seite „Sicherheit“ und die iPhone-App zeigen nur Zahlen (gekoppelt, online, offene Sitzungen, warten auf Abbau). Jede Sitzung steht ohne Inhalt im Anfrage-Verlauf. Der Dienst-Wächter meldet einen Server, der länger als chat.fernzugang_offline_min Minuten (5 bis 1440, Standard 30) weg ist. Der Wachposten meldet eine neue Kopplung als „Neuer Zugang“. Selbsttest test_fernzugang "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "(auch ein ganzer Lauf: Anker-Programm über TLS, Panel, paramiko, kleiner SSH-Server). - Stufe 2 (später): *Bildschirm* (Desktop), Apps."
 },
 {
 "lang": "de",
@@ -17437,7 +17493,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram) stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows p"
+"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access) stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device ke"
 },
 {
 "lang": "en",
@@ -17445,7 +17501,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ersonal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures"
+"text": "y is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), i"
 },
 {
 "lang": "en",
@@ -17453,7 +17509,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textn"
+"text": "n a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported)"
 },
 {
 "lang": "en",
@@ -17461,7 +17517,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "orm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": ". Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -17797,7 +17853,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (170) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (172) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -17813,7 +17869,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 170 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 172 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -18317,7 +18373,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (34 areas), profiles only through profiles.log_na"
 },
 {
 "lang": "en",
@@ -19069,7 +19125,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 93). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 94). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -19085,7 +19141,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 93 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 94 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -19461,7 +19517,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (34 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -19485,7 +19541,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 33 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 34 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -29309,6 +29365,14 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Remote access to servers (Features → Access → \"Remote access to servers\"): The shell of a server elsewhere (a VPS, a NAS at friends', a Raspberry Pi) right in the browser, like Raspberry Pi Connect, only the relay is your own Pi."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Attack probe (Features → Access → \"Attack probe\"; builds on \"Workshop\"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home). <!-- /funktionen:liste -->"
 },
 {
@@ -30606,6 +30670,46 @@
 "head": "Workshop",
 "title": "Workshop",
 "text": "e an order runs. - *Attack probe* (chat.angriffsprobe below the workshop, off; V01.0.921, thread \"NeMo Guardrails prüfen\"): a fifth tile *Probe attacks* on the page Status → Workshop. app/panel/angriffsprobe.py sends every case of the collection angriffe.json that comes in through a reading tool to the running language model: the question, the reading tool's call and its result with the hidden order, wrapped as in a real conversation (chat.wrap_outside, for mail mail._wrap, markers defused); offered are only the reading tool and the attacked one. One request per case through vorrang (conversations go first). No tool ever runs; counted is only whether the model would have called the attacked one. Result \"obeyed X of N\" per disguise and per tool, with model name and version; STATE/angriffsprobe.json keeps the last 20 runs with case ids and numbers only. Live shows \"Angriffsprobe X/N gehorcht\", the log \"werkstatt: angriffsprobe …\". The panel's locks do not depend on this number. iPhone app: *Manage Spark → Workshop* (probe attacks, result, delete). - Watching: *Status → Live* box \"Workshop\" (what runs, last night green and red, code measurement \"n/m\"; never a text or a patch), *Status"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": "Admins only, off by default (switch *Features → Remote access to servers*), used under *Features → Remote access* (plan ssh-vermittlung, stage 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Like Raspberry Pi Connect, only the relay is your own Pi: a server elsewhere calls the panel through its anchor and the admin opens its shell in the browser."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": "- Way: anchor spark-anker on the server → WebSocket over TLS to /api/fernzugang/anker (the same https address as the browser, also through the Synology's reverse proxy; set \"WebSocket\" under Custom header there) → panel. The anchor only passes bytes to its own sshd on 127.0.0.1:22. The panel is the SSH client (paramiko 5.0.0 from the lock file): SSH runs end to end between panel and sshd, proxy and anchor see only encrypted bytes. No new port. - Pairing: type a name, *Pair (code)* asks for a fresh code or passkey (level \"Change protection\") and shows a one-time code (10 minutes, only its hash stays) and the one line curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - einrichten https://<panel>; over the home address with its own certificate it is pinned (curl --pinnedpubkey, --fp). The code is never in the command, an address, an argument or an environment variable: the anchor reads it in the terminal (/dev/tty). *Check* shows the program's SHA-256. The anchor checks the panel's certificate (authorities or the pinned fingerprint, shown), sends the code and the server's ed25519 host key, gets its device key and the public key the panel makes new for this server (the private"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": " one lies sealed in the vault, never shown), fetches itself once more and compares it with the SHA-256 from the answer. - On the server: user spark (made when it did not exist; no sudo) with the line from=\"127.0.0.1,::1\",restrict,pty ssh-ed25519 … spark-fernzugang-<id> in ~/.ssh/authorized_keys; system user spark-anker for the service spark-anker.service (NoNewPrivileges, ProtectSystem=strict, ProtectHome, no capabilities, MemoryDenyWriteExecute, IPv4/IPv6 only, only /var/lib/spark-anker writable); settings /etc/spark-anker/anker.json (0640), program /usr/local/lib/spark-anker/spark-anker.py, command /usr/local/bin/spark-anker; spark-anker-abbau.path (root) waits for the removal. - Session: *Shell* asks for a fresh code or passkey every time (Change protection), then there is a ticket (30 seconds, once, bound to the sign-in, only its hash kept). The terminal WebSocket checks the switch, the Origin (same page), an admin in their own browser (never the manager, guests, device keys or an app), the emergency stop and the ticket itself. The host key must equal the one pinned at pairing: else no connection, sentry \"Protection changed\", a service watch warning, the server is blocked until"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": " it is paired again. At most chat.fernzugang_sitzungen sessions (1 to 4, default 2), idle chat.fernzugang_leerlauf_min (1 to 120, default 15), 64 KB per message. On top a red \"Remote session active\" with *Disconnect*. xterm.js 5.5.0 (MIT) lies in the panel (static/xterm/, SHA-256 pinned in fernzugang.XTERM), the CSP stays script-src 'self'. On phones extra keys (Esc, Tab, Ctrl, arrows, Enter). - Suggestions: beside the terminal fixed commands that only read (fernzugang.CHIPS); a tap puts the command into the line, the person presses Enter. No tool, the output never reaches a model. - Removing: *Remove* (Confirm) makes the device key invalid at once and deletes the panel key and the host key; the anchor hears \"abbauen\" (at once or at its next contact; a removed key gets nothing else), writes the marker, spark-anker-abbau as root removes both services, the program, the settings, /var/lib/spark-anker, the user spark-anker, the line in authorized_keys and the user spark with its home when the anchor made it, and tells the panel; then the panel forgets the server (after 90 days without contact anyway). By hand: sudo spark-anker entfernen (also curl … | sudo python3 - entfernen). *May co"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": "nnect* off refuses the anchor, *Disconnect* and *Disconnect all* close at once; the emergency stop (any stage) closes everything and lets nothing in. - Watching: log area \"Remote access\" with fernzugang: <word> | <reason> | <number> for every result (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu with leerlauf, notaus …; abbauen, abgebaut; hostkey_falsch; download); never keystrokes, output, codes, keys or addresses, nothing is recorded. *Status → Live* box \"Remote access\", *Status → Summary*, the control centre, the OLED page \"Security\" and the iPhone app show numbers only (paired, online, open sessions, waiting for removal). Every session is in the request history without content. The service watch reports a server that is gone longer than chat.fernzugang_offline_min minutes (5 to 1440, default 30). The sentry reports a new pairing as \"New way in\". Self-test test_fernzugang (also a whole run: anchor program over TLS, panel, paramiko, a small SSH server). - Stage 2 (later): *Screen* (desktop), apps."
 },
 {
 "lang": "en",

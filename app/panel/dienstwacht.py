@@ -106,6 +106,10 @@ SVC = {
     # Steuerzentrale (schirm.py): the screen program asks the panel once a second; the probe only looks when it last did
     "schirm": ("Steuerzentrale am Bildschirm", "Control centre on the screen", "Der Bildschirm am Panel-Rechner zeigt gerade nichts; alles andere läuft weiter.",
                SLOW, "schirm"),
+    # Fernzugang (fernzugang.py): a paired server's anchor is connected; gone only after chat.fernzugang_offline_min
+    # minutes away or with a changed host key (no question of its own, one part per server)
+    "fernzugang": ("Fern-Server (Fernzugang)", "Remote server (remote access)", "Die Shell dieses Fern-Servers geht gerade nicht; alles andere läuft weiter.",
+                   EVERY, "fernzugang"),
     # Rundlauf-Wächter (rundlauf.py): its own loop speaks, hears and asks the model; the probe only looks that the loop
     # runs, the step that hakt comes as a warning of its own (warn)
     "rundlauf": ("Rundlauf", "Round trip", "Der Probelauf durch Sprechen, Hören und Sprachmodell kommt nicht durch.", EVERY,
@@ -327,6 +331,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import fernzugang
+        p = dict(list(fernzugang.probes(c).items())[:MAX_PARTS])
+        if p:
+            out["fernzugang"] = p
+    except Exception:
+        pass
+    try:
         import rundlauf
         if rundlauf.an(c):
             out["rundlauf"] = {"own": {"rundlauf": True}}
@@ -508,6 +519,9 @@ async def probe(sid, key, p, cfg):
         if p.get("schirm"):  # Steuerzentrale: the screen asked the panel lately (schirm.sieht), no question of its own
             import schirm
             return Probe(schirm.sieht())
+        if p.get("fernanker"):  # Fernzugang: the anchor is connected or not long away (fernzugang.anker_ok), no question
+            import fernzugang
+            return Probe(fernzugang.anker_ok(p["fernanker"]))
         if p.get("rundlauf"):  # Rundlauf: its own loop ran lately (rundlauf.lebt), no question of its own
             import rundlauf
             return Probe(rundlauf.lebt())

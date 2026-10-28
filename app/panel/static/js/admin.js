@@ -140,7 +140,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
     const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
   box.appendChild(mc);
   if(rp)box.appendChild(zRTile(rp));
-  box.classList.toggle('z5',!!rp);zRechner(R);zRund(s.rundlauf||{});
+  box.classList.toggle('z5',!!rp);zRechner(R);zRund(s.rundlauf||{});zFern(s.fernzugang||{});
   const meta=$('zmeta');meta.textContent='';
   for(const x of [g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean)){const sp=document.createElement('span');sp.textContent=x;meta.appendChild(sp)}
   // „Heute“: each tile opens where its number comes from (way.js wayFirst): the requests, the own speakers, the logs
@@ -275,6 +275,16 @@ const ZRD_WHY={zeit:t('antwortet nicht rechtzeitig','does not answer in time'),f
 const ZRD_AUS={start:t('Panel startet','panel starting'),notaus:'Notaus',update:'Update',gespraech:t('Gespräch läuft','conversation going on'),nacht:t('Update-Nacht','update night'),
   wartung:t('Wartungspause','maintenance pause'),bild:t('Bild entsteht','picture being made'),musik:t('Lied entsteht','song being made')};
 const zMs=v=>v==null?'–':v>=1000?fmt(v/1000,' s',1):v+' ms';
+// Zustand → Überblick → Fernzugang (fernzugang.py): numbers only, red while a remote shell is open
+function zFern(F){const box=$('zfern'),h=$('zfernh');if(!box)return;box.hidden=h.hidden=!F.on;box.textContent='';if(!F.on)return;
+  const card=document.createElement('div');card.className='card zrcard';card.dataset.lvl=F.hostkey?'bad':F.sitzungen?'warn':'ok';
+  const hd=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=t('Fern-Server','Remote servers');
+  pl.className='pill '+card.dataset.lvl;pl.textContent=F.hostkey?t('Host-Schlüssel falsch','Host key wrong'):F.sitzungen?t('Sitzung offen','Session open'):t('ruhig','quiet');
+  hd.append(nm,pl);card.appendChild(hd);
+  for(const [k,de,en] of [['gekoppelt','gekoppelt','paired'],['online','online','online'],['sitzungen','offene Sitzungen','open sessions'],['abbau','warten auf Abbau','waiting for removal']]){
+    const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
+    kk.textContent=t(de,en);b.textContent=String(F[k]||0);tx.append(kk,b);r.appendChild(tx);card.appendChild(r)}
+  card.appendChild(wayEl(t('Funktionen → Fernzugang','Features → Remote access'),t('Funktionen → Fernzugang','Features → Remote access')));box.appendChild(card)}
 function zRund(R){const box=$('zrund'),h=$('zrundh');if(!box)return;box.hidden=h.hidden=!R.an;box.textContent='';if(!R.an)return;
   const la=R.letzt,st=R.stoerung,card=document.createElement('div');card.className='card zrcard';
   card.dataset.lvl=st?'bad':!la?'':la.ok?(R.langsam||[]).length?'warn':'ok':'warn';

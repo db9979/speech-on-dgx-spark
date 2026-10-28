@@ -461,6 +461,12 @@ def gate(request):
 # ---------------------------------------------------------------- what happens right after a change
 async def after_change(old, new, by, channel):
     """Holds what runs (agent jobs, speakers, room mode) and tells the admins; never raises."""
+    if new >= STAGE["aussen"] > old:
+        try:
+            import fernzugang
+            await fernzugang.notaus_close()   # every remote shell and anchor; none comes in while it is on
+        except Exception as e:
+            print("notaus: fernzugang", type(e).__name__, flush=True)
     if new >= 2 > old:
         try:
             import agent

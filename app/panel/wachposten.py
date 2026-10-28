@@ -49,10 +49,10 @@ RULES = {
 }
 EVENTS = {
     "zugang": ("trusted_browser", "passkey_added", "mcp_connect", "verbund_paired", "invite_used", "invite_app",
-               "review_used", "chat_key_added"),
+               "review_used", "chat_key_added", "fernzugang_paired"),
     "schutz": ("admin_password_changed", "admin_mfa_off", "profile_mfa_reset", "admin_mfa_forget", "admin_role",
                "admin_roles_switch", "admin_main", "notaus_key_new", "config_sensitive", "github_token", "report_token",
-               "notzugang_cli", "restore", "backup_download", "offsite_settings"),
+               "notzugang_cli", "restore", "backup_download", "offsite_settings", "fernzugang_hostkey"),
     "protokoll": ("audit_chain_broken",),
 }
 RULE_OF = {e: r for r, evs in EVENTS.items() for e in evs}
