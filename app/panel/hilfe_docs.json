@@ -8341,6 +8341,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Runenbilder auf der Regeln-Seite (V01.1.204, Dominik 2026-10-28 „in den regeln sehe ich diese nicht.“): Im Teil „Runen“ des Regeln-Reiters (Funktionen → KI-Dungeon-Master → Regeln anpassen) hat jede Rune jetzt ihr Bild mit „Malen“, „Nochmal malen“ und „Neues behalten“/„Altes behalten“ wie Gegenstände und Gegner. „Bilder in: …“ über der Liste wählt die Welt; die Rune erscheint dort in deren Wort und Stil (Rune, Chip, Perle, Siegel; dungeon_regelseite.WELT_WAHL, dungeon_dingbild._current mit rune_text). Ein Runenbild bleibt auch bei ausgeschaltetem „Runen und Sockel“ erhalten: Das Aufräumen behält es, nur nachts gemalt wird dann keines."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -23950,6 +23958,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: pictures for runes and glowing sockets (V01.1.194, plan \"Runes and sockets\" point 11a, Dominik \"empfehlung\" 2026-10-27): With \"Runes and sockets\" on, each of the 13 runes gets a catalog picture per style, as its world's word (rune, chip, pearl, seal; dungeon_runen.word) and in its fixed colour by rank (dungeon_dingbild.RUNE_FARBE, rune_text); it is painted at night or with \"Paint all pictures\" like every catalog picture, none while the switch is off. The rune bag in the hero sheet and the trader's runes show the picture instead of \"ᚱ\" once it is there. A thing's sockets are no new picture: dungeonsockel.js (dmSockel) lays them as dots over the picture or sign there is, a free socket dark, a set rune glowing in its colour (ru_farbe from dungeon_dingbild.add). The picture of a finished runeword comes with stage 2. The model decides none of it; no new switch, no new endpoint."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: rune pictures on the rules page (V01.1.204, Dominik 2026-10-28 \"in den regeln sehe ich diese nicht.\"): In the part \"Runes\" of the rules tab (Features → AI Dungeon Master → Adjust rules) every rune now has its picture with \"Paint\", \"Paint again\" and \"Keep new\"/\"Keep old\" like items and foes. \"Pictures in: …\" above the list chooses the world; the rune shows as that world's word and in its style (rune, chip, pearl, seal; dungeon_regelseite.WELT_WAHL, dungeon_dingbild._current with rune_text). A rune picture stays while \"Runes and sockets\" is off: the sweep keeps it, only nothing is painted at night then."
 },
 {
 "lang": "en",

@@ -4195,6 +4195,13 @@
 "titel": "Dungeon-Master: Regeln mit Runen, Karte und Zahlen, Fackel ohne Fackel",
 "text": "Admin: Dungeon-Master → Regeln. A: Links stehen Runen, Runenwörter, Effekte, die Teile der Karte, Stillstand-Ereignisse und Zahlen und Tabellen. B: Bei Runen zeigt „Feste Regeln dazu“ den Schalter Runen und Sockel mit an oder aus, der Sprung-Link öffnet ihn, Sockel und Obergrenzen stehen da. C: Uruz zeigt, was sie in Waffe, Rüstung und Schild tut. D: Zahlen und Tabellen → Fundtabelle zeigt die Tabelle je Stufe, ohne Ändern-Knopf. E: Ein Stillstand-Ereignis ausblenden und zurückholen geht. F: Nach dem Pi-Update hat im Erzähler-Prüfstand „Englische Runde auf Englisch“ wieder Punkte; am Tisch hört „Ich zünde eine Fackel an“ ohne Fackel „… hat das nicht dabei: Fackel.“",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P624",
+"v": 1204,
+"titel": "Dungeon-Master: Runenbilder in den Regeln",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Runen: jede Rune hat ein Bildfeld mit Malen. B: Über der Liste „Bilder in: Science-Fiction“ wählen und Uruz malen: ein Chip. C: Nochmal malen, Neues behalten: das neue Bild bleibt.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
