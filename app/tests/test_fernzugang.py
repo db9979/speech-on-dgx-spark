@@ -587,39 +587,183 @@ class Program(unittest.TestCase):
         self.assertFalse(os.path.exists(ak))
 
 
-    def test_the_anchor_stops_with_a_fixed_sentence_on_macos_and_windows(self):
-        """Dominik ran the Linux one-liner on his Mac: on Darwin and Windows the anchor says so and sets up nothing."""
+    def test_the_anchor_stops_with_a_fixed_sentence_on_windows(self):
+        """Not yet set up there: the anchor says so and sets up nothing (macOS is set up since stage 6)."""
         p = program()
         ran = []
         p.cmd_setup = lambda *a, **k: ran.append("setup")
         p.cmd_remove = lambda *a, **k: ran.append("remove")
-        for system, want in (("Darwin", "macOS wird ab der nächsten Version unterstützt (Stufe 6); bitte Panel aktualisieren"),
-                             ("Windows", "Windows wird ab einer späteren Version unterstützt (Stufe 5)")):
-            for argv in (["einrichten", "https://spark.example.org"], ["entfernen"], ["lauf"], ["zustand"]):
-                out = io.StringIO()
-                with contextlib.redirect_stdout(out):
-                    self.assertEqual(p.main(argv, system=system), 1)
-                self.assertIn(want, out.getvalue())
-                self.assertIn("nichts eingerichtet", out.getvalue())
+        for argv in (["einrichten", "https://spark.example.org"], ["entfernen"], ["lauf"], ["zustand"]):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(p.main(argv, system="Windows"), 1)
+            self.assertIn("Windows wird ab einer späteren Version unterstützt (Stufe 5)", out.getvalue())
+            self.assertIn("nichts eingerichtet", out.getvalue())
         self.assertEqual(ran, [])
         self.assertIsNone(p.not_yet("Linux"))
+        self.assertIsNone(p.not_yet("Darwin"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            p.main(["einrichten", "https://spark.example.org"], system="Darwin")
+        self.assertEqual(ran, ["setup"])
 
     def test_a_missing_host_key_or_sshd_says_how_to_fix_it(self):
         p = program()
-        p.load = lambda root="/": None
+        p.load = lambda *a, **k: None
         p.HOSTKEY = os.path.join(tempfile.mkdtemp(prefix="anker-"), "nope.pub")
         args = argparse.Namespace(adresse="https://spark.example.org", fp="")
-        with unittest.mock.patch.object(p.os, "geteuid", lambda: 0):
+        ctx = p.Ctx(system="Linux", run=lambda c: self.fail(c))   # nothing runs before both checks
+        ctx.euid = lambda: 0
+        with self.assertRaises(p.Fehler) as e:
+            p.cmd_setup(args, ctx=ctx)
+        self.assertIn("sudo ssh-keygen -A", str(e.exception))
+        self.assertIn("openssh-server", str(e.exception))
+        with open(p.HOSTKEY, "w") as f:
+            f.write("ssh-ed25519 AAAAx root@h\n")
+        p.SSHD = ("127.0.0.1", 9)                      # nothing listens there
+        with self.assertRaises(p.Fehler) as e:
+            p.cmd_setup(args, ctx=ctx)
+        self.assertIn("systemctl enable --now ssh", str(e.exception))
+
+
+class MacAnchor(unittest.TestCase):
+    """Stage 6: the same one-liner on macOS goes through launchd and dscl, with a temporary root and recorded
+    commands; no Linux path and no Linux command on Darwin, Entfernte Anmeldung back as it was."""
+
+    LINUX_ONLY = ("etc/systemd", "var/lib", "usr/local/lib", "/home/")
+
+    def mac(self, login_before=False, include=True, xcode=True, sshd_ok=True):
+        p = program()
+        root = tempfile.mkdtemp(prefix="anker-mac-")
+        os.makedirs(os.path.join(root, "usr", "bin"))
+        open(os.path.join(root, "usr", "bin", "python3"), "w").close()
+        os.makedirs(os.path.join(root, "etc", "ssh"))
+        with open(os.path.join(root, "etc", "ssh", "sshd_config"), "w") as f:
+            f.write(("Include /etc/ssh/sshd_config.d/*\n" if include else "") + "Subsystem sftp /usr/libexec/sftp-server\n")
+        state = {"port": login_before}
+        ran = []
+
+        def run(cmd):
+            ran.append(cmd)
+            if cmd[0].endswith("xcode-select"):
+                return 0 if xcode else 2
+            if cmd[0].endswith("ssh-keygen"):
+                with open(os.path.join(root, p.HOSTKEY.lstrip("/")), "w") as f:
+                    f.write("ssh-ed25519 AAAAmac root@mac\n")
+            if cmd[0].endswith("sshd"):
+                return 0 if sshd_ok else 255
+            if cmd[1:3] == [".", "-read"]:
+                return 1                                         # no such group yet
+            if cmd[:2] == ["/bin/launchctl", "bootstrap"] and cmd[-1].endswith("ssh.plist"):
+                state["port"] = True
+            if cmd[:2] == ["/bin/launchctl", "bootout"] and cmd[-1] == "system/com.openssh.sshd":
+                state["port"] = False
+            return 0
+        ctx = p.Ctx(system="Darwin", root=root, run=run)
+        ctx.euid = lambda: 0
+        ctx.ids = lambda name: None
+        ctx.chown = lambda *a: None
+        ctx.port_open = lambda: state["port"]
+        ctx.wait = lambda s: None
+        def out(cmd):                                            # dscl -list, with what the anchor made since
+            made = "".join(f"n {c[5]}\n" for c in ran if c[3:5] in (["/Users/spark", "UniqueID"], ["/Users/_sparkanker", "UniqueID"]))
+            return ("root 0\nnobody -2\n_www 70\nme 501\n" if cmd[3] == "/Users" else "staff 20\nwheel 0\nx 401\n") + made
+        ctx.out = out
+        prog = b"#!/usr/bin/env python3\n"
+        p.tls_connect = lambda base, fp: (io.BytesIO(), "ab" * 32)
+        p.http_call = lambda base, fp, method, path, body=None, key=None, timeout=20: (
+            (200, json.dumps({"id": "g_1", "key": "fz_k", "pi_key": "ssh-ed25519 AAAApi spark-fernzugang-g_1",
+                              "anker_sha256": hashlib.sha256(prog).hexdigest()}).encode()) if path.endswith("/koppeln")
+            else (200, prog) if path == "/fernzugang/anker" else (200, b"{}"))
+        return p, root, ran, ctx, state
+
+    def setup(self, p, ctx):
+        with contextlib.redirect_stdout(io.StringIO()):
+            return p.cmd_setup(argparse.Namespace(adresse="https://spark.example.org", fp=""), code_reader=lambda: "ABC", ctx=ctx)
+
+    def files(self, root):
+        return [os.path.relpath(os.path.join(d, f), root) for d, _, fs in os.walk(root) for f in fs]
+
+    def no_linux(self, root, ran):
+        for f in self.files(root):
+            self.assertFalse(any(x in "/" + f for x in self.LINUX_ONLY), f)
+        for cmd in ran:
+            self.assertTrue(cmd[0].startswith(("/usr/bin/", "/bin/", "/usr/sbin/")), cmd)
+            self.assertNotIn(os.path.basename(cmd[0]), ("useradd", "userdel", "systemctl"), cmd)
+
+    def test_set_up_with_remote_login_off_and_removed_again(self):
+        p, root, ran, ctx, state = self.mac()
+        self.assertEqual(self.setup(p, ctx), 0)
+        self.assertIn(["/usr/bin/ssh-keygen", "-A"], ran)                 # the missing host key made, as sshd would
+        made = [c for c in ran if c[:3] == ["/usr/bin/dscl", ".", "-create"]]
+        self.assertIn(["/usr/bin/dscl", ".", "-create", "/Users/spark", "UniqueID", "402"], made)   # first free below 500
+        self.assertIn(["/usr/bin/dscl", ".", "-create", "/Users/spark", "IsHidden", "1"], made)
+        self.assertIn(["/usr/bin/dscl", ".", "-create", "/Users/spark", "Password", "*"], made)     # no password
+        self.assertIn(["/usr/bin/dscl", ".", "-create", "/Users/_sparkanker", "UniqueID", "403"], made)
+        self.assertIn(["/usr/bin/dscl", ".", "-create", "/Users/_sparkanker", "UserShell", "/usr/bin/false"], made)
+        self.assertIn(["/usr/sbin/dseditgroup", "-o", "edit", "-a", "spark", "-t", "user", "com.apple.access_ssh"], ran)
+        self.assertIn(["/bin/launchctl", "enable", "system/com.openssh.sshd"], ran)
+        self.assertLess(ran.index(["/usr/sbin/sshd", "-t"]), ran.index(["/bin/launchctl", "enable", "system/com.openssh.sshd"]))
+        with open(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))) as f:
+            sshd = f.read()
+        self.assertIn("AllowUsers spark@127.0.0.1", sshd)
+        self.assertIn("PasswordAuthentication no", sshd)
+        self.assertIn("ListenAddress 127.0.0.1", sshd)
+        with open(os.path.join(root, p.MAC_PLISTS[0].lstrip("/"))) as f:
+            job = f.read()
+        self.assertIn("<string>de.speech-spark.anker</string>", job)
+        self.assertIn("<key>UserName</key><string>_sparkanker</string>", job)
+        self.assertIn("<string>/usr/bin/python3</string><string>-I</string>", job)
+        with open(os.path.join(root, p.MAC_PLISTS[1].lstrip("/"))) as f:
+            self.assertIn("<string>/var/db/spark-anker/abbauen</string>", f.read())
+        with open(os.path.join(root, "var", "spark", ".ssh", "authorized_keys")) as f:
+            self.assertEqual(f.read(), p.key_line("ssh-ed25519 AAAApi spark-fernzugang-g_1") + "\n")
+        conf = p.load(root, p.MAC)
+        self.assertEqual((conf["anmeldung_vorher"], conf["anmeldung_an"], conf["ssh_gruppe"], conf["user_neu"]),
+                         (False, True, "neu", True))
+        self.assertTrue(os.path.islink(os.path.join(root, "usr", "local", "bin", "spark-anker")))
+        self.no_linux(root, ran)
+        ran.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(p.cmd_remove(None, tell=False, home=os.path.join(root, "var", "spark"), ctx=ctx), 0)
+        self.assertEqual([x for x in p.remove_paths(root, p.MAC) if os.path.lexists(x)], [])
+        self.assertFalse(os.path.exists(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))))
+        self.assertFalse(os.path.exists(os.path.join(root, "var", "spark")))
+        for cmd in (["/usr/bin/dscl", ".", "-delete", "/Users/spark"], ["/usr/bin/dscl", ".", "-delete", "/Users/_sparkanker"],
+                    ["/usr/sbin/dseditgroup", "-o", "delete", "com.apple.access_ssh"],
+                    ["/bin/launchctl", "bootout", "system/com.openssh.sshd"], ["/bin/launchctl", "disable", "system/com.openssh.sshd"]):
+            self.assertIn(cmd, ran)
+        self.assertFalse(state["port"])                                    # Entfernte Anmeldung off again, as before
+        self.assertEqual(ran[0], ["/bin/launchctl", "bootout", "system/de.speech-spark.anker"])
+        self.assertEqual(ran[-1], ["/bin/launchctl", "bootout", "system/de.speech-spark.anker-abbau"])  # itself last
+        self.no_linux(root, ran)
+
+    def test_remote_login_that_was_on_stays_as_it_was(self):
+        p, root, ran, ctx, state = self.mac(login_before=True)
+        self.assertEqual(self.setup(p, ctx), 0)
+        self.assertFalse(os.path.exists(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))))   # the owner's sshd untouched
+        self.assertNotIn(["/bin/launchctl", "enable", "system/com.openssh.sshd"], ran)
+        self.assertFalse(any(c[0].endswith("dseditgroup") for c in ran))  # no list „nur diese Benutzer“ made
+        ran.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            p.cmd_remove(None, tell=False, home=os.path.join(root, "var", "spark"), ctx=ctx)
+        self.assertNotIn(["/bin/launchctl", "bootout", "system/com.openssh.sshd"], ran)
+        self.assertTrue(state["port"])
+        self.no_linux(root, ran)
+
+    def test_without_python_or_include_nothing_is_set_up(self):
+        for kw, want in (({"xcode": False}, "xcode-select --install"), ({"include": False}, "macOS 13"),
+                         ({"sshd_ok": False}, "sshd nimmt die Einstellungen")):
+            p, root, ran, ctx, state = self.mac(**kw)
+            before = sorted(self.files(root))
             with self.assertRaises(p.Fehler) as e:
-                p.cmd_setup(args)
-            self.assertIn("sudo ssh-keygen -A", str(e.exception))
-            self.assertIn("openssh-server", str(e.exception))
-            with open(p.HOSTKEY, "w") as f:
-                f.write("ssh-ed25519 AAAAx root@h\n")
-            p.SSHD = ("127.0.0.1", 9)                      # nothing listens there
-            with self.assertRaises(p.Fehler) as e:
-                p.cmd_setup(args)
-            self.assertIn("systemctl enable --now ssh", str(e.exception))
+                self.setup(p, ctx)
+            self.assertIn(want, str(e.exception), kw)
+            self.assertNotIn(["/bin/launchctl", "enable", "system/com.openssh.sshd"], ran)
+            self.assertFalse(state["port"])
+            if "sshd_ok" not in kw:
+                self.assertEqual(sorted(self.files(root)), before, kw)      # not a single file written
+                self.assertFalse(any(c[1:3] == [".", "-create"] for c in ran), kw)
+            self.assertFalse(os.path.exists(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))))
 
 
 class Pieces(Base):

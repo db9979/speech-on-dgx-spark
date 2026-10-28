@@ -4272,6 +4272,13 @@
 "titel": "Fernzugang: schmaler Balken oben, Anker auf macOS",
 "text": "Voraussetzung: P628 (ein gekoppelter Server). A: Shell öffnen, dann zu Funktionen, Zustand und Einstellungen wechseln: oben im Inhalt steht eine schmale rote Zeile „Fernsitzung aktiv · <Server> · <Minuten>“ mit „Trennen“, nicht mehr ein großer Block unten. B: Lange Seite nach unten scrollen: die Zeile bleibt oben, unter der Kopfleiste, und verdeckt sie nicht. C: Mit der Maus auf die Zeile zeigen: der Hinweis „Notaus trennt sofort“ erscheint. D: Am Handy (oder schmales Fenster): dieselbe Zeile unter der oberen Leiste, ein zu langer Name endet mit „…“. E: „Trennen“ in der Zeile beendet die Sitzung, die Zeile verschwindet. F: „Herauslösen“: im eigenen Fenster steht dieselbe schmale Zeile ganz oben. G: Den Befehl aus „Koppeln (Code)“ auf einem Mac im Terminal ausführen: es erscheint nur „macOS wird ab der nächsten Version unterstützt (Stufe 6); bitte Panel aktualisieren. Es wurde nichts eingerichtet.“, `sudo spark-anker zustand` gibt es danach nicht. H: Auf einem Linux ohne `/etc/ssh/ssh_host_ed25519_key.pub`: die Meldung nennt `sudo ssh-keygen -A` und `openssh-server`.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P635",
+"v": 1216,
+"titel": "Fernzugang: Anker auf dem Mac",
+"text": "Voraussetzung: ein Mac ab macOS 13, Fernzugang an. A: Systemeinstellungen → Allgemein → Teilen: „Entfernte Anmeldung“ ist aus. Im Panel „Koppeln (Code)“, die Zeile im Terminal des Macs einfügen, den Code eingeben: „eingerichtet … der Dienst de.speech-spark.anker läuft (launchd)“. B: Im Panel steht der Mac als gekoppelt mit „macOS 15…“; Shell öffnen: Anmeldung als spark, `id` zeigt eine Nummer unter 500, im Anmeldefenster und unter Benutzer erscheint spark nicht. C: Teilen zeigt „Entfernte Anmeldung“ an, „Zugriff erlauben“ nur spark; von einem anderen Rechner `ssh <dein Name>@<Mac>` wird abgewiesen. D: `sudo launchctl print system/de.speech-spark.anker` zeigt den Dienst als _sparkanker. E: Im Panel „Entfernen“: nach etwa einer Minute ist die Entfernte Anmeldung wieder aus, `id spark` kennt den Benutzer nicht mehr, /Library/LaunchDaemons/de.speech-spark.anker*.plist und /etc/ssh/sshd_config.d/000-spark-anker.conf sind weg. F: Dasselbe mit vorher eingeschalteter Entfernter Anmeldung: sie bleibt nach dem Entfernen an, die eigene Anmeldung per ssh geht weiter. G: Ohne Befehlszeilen-Werkzeuge (frischer Mac): die Zeile sagt nur „xcode-select --install“ und richtet nichts ein.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

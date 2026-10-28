@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Fern-Server).
+"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Fern-Server). Linux and macOS.
 
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - einrichten https://<panel>   set up once (asks the code)
     sudo spark-anker entfernen                                                              removes everything again
@@ -22,6 +22,15 @@ Set up (as root, once):
 - the system user `spark-anker` runs the anchor (systemd unit spark-anker, hardened: no new privileges, read-only
   system, no home, only its own folder /var/lib/spark-anker writable);
 - a second unit (spark-anker-abbau.path, root) watches for the panel's „abbauen“: then `spark-anker entfernen` runs.
+
+On macOS (13 or newer; the same one-liner, /usr/bin/python3 from Apple's command line tools) the same steps go through
+launchd and dscl: the hidden user `spark` (number below 500, home /var/spark) and `_sparkanker`, the jobs
+/Library/LaunchDaemons/de.speech-spark.anker.plist and …anker-abbau.plist (WatchPaths), the program in
+/Library/Application Support/SparkAnker, the settings in /Library/Preferences/SparkAnker. When Entfernte Anmeldung
+(Remote Login) was off, the anchor switches it on only for itself: /etc/ssh/sshd_config.d/000-spark-anker.conf
+(AllowUsers spark@127.0.0.1, no passwords) and the list „nur diese Benutzer“ with spark alone; removing switches it
+off again. When it was on, spark joins an existing list and nothing else of sshd changes. Missing host keys are made
+with `ssh-keygen -A`.
 
 Removing (`entfernen`, or „Entfernen“ in the panel): stops and deletes both units, the program, the configuration,
 the anchor's folder, the user spark-anker, the panel's line in authorized_keys and the user spark with its home when
@@ -321,17 +330,19 @@ def _mask(data, mask):
     return (int.from_bytes(data, "big") ^ m).to_bytes(len(data), "big") if data else b""
 
 
-# ---------------------------------------------------------------- running (systemd unit spark-anker)
-def load(root="/"):
+# ---------------------------------------------------------------- running (systemd unit or launchd job spark-anker)
+def load(root="/", s=None):
     try:
-        with open(here(root, CONF)) as f:
+        with open(here(root, (s or Ctx().s).conf)) as f:
             d = json.load(f)
     except (OSError, ValueError):
         return None
     return d if isinstance(d, dict) and d.get("url") and d.get("key") else None
 
 
-def os_name():
+def os_name(s=None):
+    if (s or Ctx().s) is MAC:
+        return WORD.sub("", "macOS " + platform.mac_ver()[0]).strip()[:40]
     try:
         with open("/etc/os-release") as f:
             m = re.search(r'^PRETTY_NAME="?([^"\n]*)', f.read(), re.M)
@@ -443,7 +454,7 @@ def cmd_run(args):
             if Lauf(ws).run() == "abbauen":
                 say("das Panel verlangt den Abbau")
                 try:
-                    with open(FLAG, "w") as f:   # spark-anker-abbau.path (root) runs `entfernen`
+                    with open(Ctx().s.flag, "w") as f:   # spark-anker-abbau.path or the launchd job (root) runs `entfernen`
                         f.write("1\n")
                     ws.send_json({"typ": "abbau_laeuft"})
                 except OSError:
@@ -494,35 +505,314 @@ def write(path, text, mode=0o644):
     os.chmod(path, mode)
 
 
-def cmd_setup(args, code_reader=read_code, run=run_cmd):
-    if os.geteuid() != 0:
+class Ctx:
+    """Everything setting up and removing touch outside this file: the system's paths, commands, users, the own
+    sshd's port. The self-tests pass a temporary root and record the commands; nothing else changes it."""
+
+    def __init__(self, system=None, root="/", run=run_cmd):
+        self.s = MAC if (system or platform.system()) == "Darwin" else LINUX
+        self.root = root
+        self.run = run
+
+    def path(self, p):
+        return here(self.root, p)
+
+    def out(self, cmd):
+        """A command's output (empty when it fails); only for reading (dscl -list)."""
+        r = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        return r.stdout if r.returncode == 0 else ""
+
+    def euid(self):
+        return os.geteuid()
+
+    def ids(self, name):
+        """(uid, gid, home) of a user, None when there is none."""
+        try:
+            pw = pwd.getpwnam(name)
+        except KeyError:
+            return None
+        return pw.pw_uid, pw.pw_gid, pw.pw_dir
+
+    def chown(self, path, uid, gid):
+        os.chown(path, uid, gid)
+
+    def port_open(self):
+        try:
+            socket.create_connection(SSHD, timeout=3).close()
+            return True
+        except OSError:
+            return False
+
+    def wait(self, seconds):
+        time.sleep(seconds)
+
+
+# ---------------------------------------------------------------- Linux (systemd, useradd)
+def linux_check(ctx):
+    """Before anything changes: the host key and the own sshd (only explained, never installed here)."""
+    if not os.path.isfile(ctx.path(HOSTKEY)):
+        raise Fehler(f"{HOSTKEY} fehlt: sshd mit einem ed25519-Schlüssel ist nötig. Abhilfe: `sudo ssh-keygen -A` "
+                     "legt die fehlenden Schlüssel an; ist sshd gar nicht da, erst `sudo apt install openssh-server` "
+                     "(Fedora: `sudo dnf install openssh-server`), dann den Befehl aus dem Panel noch einmal")
+    if not ctx.port_open():
+        raise Fehler("sshd hört nicht auf 127.0.0.1:22. Abhilfe: `sudo systemctl enable --now ssh` "
+                     "(Fedora: `sshd`), dann den Befehl aus dem Panel noch einmal")
+    return {}
+
+
+def linux_users(ctx, conf):
+    if conf["user_neu"] and ctx.run(["useradd", "--create-home", "--shell", "/bin/bash", USER]):
+        raise Fehler(f"Benutzer {USER} ließ sich nicht anlegen")
+    if not ctx.ids(RUNNER) and ctx.run(["useradd", "--system", "--no-create-home", "--shell", "/usr/sbin/nologin", RUNNER]):
+        raise Fehler(f"Benutzer {RUNNER} ließ sich nicht anlegen")
+    return ctx.ids(USER), ctx.ids(RUNNER)
+
+
+def linux_start(ctx, runner):
+    for path, text in zip(UNITS, (UNIT_RUN, UNIT_PATH, UNIT_ABBAU)):
+        write(ctx.path(path), text)
+    ctx.run(["systemctl", "daemon-reload"])
+    if ctx.run(["systemctl", "enable", "--now", "spark-anker.service", "spark-anker-abbau.path"]):
+        raise Fehler("systemd ließ den Dienst nicht starten (journalctl -u spark-anker)")
+
+
+def linux_stop(ctx, conf):
+    ctx.run(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path"])
+
+
+def linux_after(ctx, conf, home_gone):
+    ctx.run(["systemctl", "daemon-reload"])
+    if conf.get("user_neu") and (ctx.root != "/" or ctx.ids(USER)):
+        ctx.run(["userdel", "--remove", USER])
+    if ctx.root != "/" or ctx.ids(RUNNER):
+        ctx.run(["userdel", RUNNER])
+
+
+def linux_last(ctx, conf):
+    pass
+
+
+# ---------------------------------------------------------------- macOS (launchd, dscl, Entfernte Anmeldung)
+MAC_LIB = "/Library/Application Support/SparkAnker"
+MAC_ETC = "/Library/Preferences/SparkAnker"
+MAC_VAR = "/var/db/spark-anker"
+MAC_JOB = "de.speech-spark.anker"
+MAC_JOB_ABBAU = "de.speech-spark.anker-abbau"
+MAC_PLISTS = ("/Library/LaunchDaemons/" + MAC_JOB + ".plist", "/Library/LaunchDaemons/" + MAC_JOB_ABBAU + ".plist")
+MAC_SSHD_CONF = "/etc/ssh/sshd_config.d/000-spark-anker.conf"
+MAC_SSHD_MAIN = "/etc/ssh/sshd_config"
+MAC_SSH_GROUP = "com.apple.access_ssh"   # „Zugriff erlauben: nur diese Benutzer“ of Entfernte Anmeldung
+MAC_RUNNER = "_sparkanker"
+MAC_HOME = "/var/spark"
+MAC_PY = "/usr/bin/python3"
+MAC_IDS = range(401, 500)                # below 500: hidden from the login window and the user list
+MAC_TEILEN = "Systemeinstellungen → Allgemein → Teilen → „Entfernte Anmeldung“"
+# Only when Entfernte Anmeldung was off before: sshd then lets in nobody but the anchor (first value wins, the
+# include stands at the top of macOS's sshd_config). ListenAddress counts when sshd runs on its own; launchd's
+# socket on port 22 ignores it, AllowUsers and the access group hold either way.
+MAC_SSHD_TEXT = """# spark-anker: Entfernte Anmeldung nur für den Fernzugang des Spark-Panels
+# (geht wieder mit `sudo spark-anker entfernen`, dann ist die Entfernte Anmeldung wieder aus)
+ListenAddress 127.0.0.1
+ListenAddress ::1
+AllowUsers spark@127.0.0.1 spark@::1
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+"""
+MAC_PLIST = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key><string>{label}</string>
+	<key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>-I</string><string>{prog}</string>{args}</array>
+{extra}</dict>
+</plist>
+"""
+MAC_RUN_EXTRA = f"""	<key>UserName</key><string>{MAC_RUNNER}</string>
+	<key>GroupName</key><string>{MAC_RUNNER}</string>
+	<key>RunAtLoad</key><true/>
+	<key>KeepAlive</key><true/>
+	<key>ThrottleInterval</key><integer>10</integer>
+	<key>Umask</key><integer>63</integer>
+	<key>ProcessType</key><string>Background</string>
+	<key>StandardOutPath</key><string>{MAC_VAR}/anker.log</string>
+	<key>StandardErrorPath</key><string>{MAC_VAR}/anker.log</string>
+"""
+MAC_ABBAU_EXTRA = f"""	<key>WatchPaths</key><array><string>{MAC_VAR}/abbauen</string></array>
+"""
+
+
+def mac_check(ctx):
+    """Before anything changes: /usr/bin/python3 for the service, sshd's include folder, missing host keys made."""
+    if ctx.run(["/usr/bin/xcode-select", "-p"]) or not os.path.exists(ctx.path(MAC_PY)):
+        raise Fehler("/usr/bin/python3 fehlt (die Befehlszeilen-Werkzeuge von Apple). Abhilfe: `xcode-select --install`, "
+                     "danach den Befehl aus dem Panel noch einmal. Es wurde nichts eingerichtet.")
+    before = ctx.port_open()
+    if not before:
+        try:
+            with open(ctx.path(MAC_SSHD_MAIN)) as f:
+                main = f.read()
+        except OSError:
+            main = ""
+        if not re.search(r"^\s*Include\s+/etc/ssh/sshd_config\.d/\*", main, re.M | re.I):
+            raise Fehler("dieses macOS liest /etc/ssh/sshd_config.d nicht (erst ab macOS 13). Es wurde nichts eingerichtet.")
+    if not os.path.isfile(ctx.path(HOSTKEY)) and ctx.run(["/usr/bin/ssh-keygen", "-A"]):
+        raise Fehler("die Host-Schlüssel ließen sich nicht anlegen (`sudo ssh-keygen -A`). Es wurde nichts eingerichtet.")
+    return {"anmeldung_vorher": before}
+
+
+def mac_free_id(ctx):
+    used = set()
+    for kind, key in (("/Users", "UniqueID"), ("/Groups", "PrimaryGroupID")):
+        used |= {int(x) for x in re.findall(r"(-?\d+)\s*$", ctx.out(["/usr/bin/dscl", ".", "-list", kind, key]), re.M)}
+    for n in MAC_IDS:
+        if n not in used:
+            return n
+    raise Fehler("keine freie Benutzernummer unter 500")
+
+
+def mac_make(ctx, name, real, shell, home):
+    """A hidden user with its own group of the same number (dscl, as System Settings does it underneath)."""
+    if ctx.run(["/usr/bin/dscl", ".", "-read", "/Groups/" + name]) == 0:
+        raise Fehler(f"eine Gruppe {name} gibt es schon; bitte zuerst entfernen")
+    n = mac_free_id(ctx)
+    cmds = [["/usr/bin/dscl", ".", "-create", "/Groups/" + name],
+            ["/usr/bin/dscl", ".", "-create", "/Groups/" + name, "PrimaryGroupID", str(n)],
+            ["/usr/bin/dscl", ".", "-create", "/Groups/" + name, "Password", "*"],
+            ["/usr/bin/dscl", ".", "-create", "/Users/" + name]]
+    for key, value in (("UniqueID", str(n)), ("PrimaryGroupID", str(n)), ("UserShell", shell), ("NFSHomeDirectory", home),
+                       ("RealName", real), ("Password", "*"), ("IsHidden", "1")):
+        cmds.append(["/usr/bin/dscl", ".", "-create", "/Users/" + name, key, value])
+    for cmd in cmds:
+        if ctx.run(cmd):
+            raise Fehler(f"Benutzer {name} ließ sich nicht anlegen")
+    return n, n, home
+
+
+def mac_users(ctx, conf):
+    if conf["user_neu"]:
+        uid, gid, home = mac_make(ctx, USER, "Spark Fernzugang", "/bin/zsh", MAC_HOME)
+        os.makedirs(ctx.path(home), mode=0o700, exist_ok=True)
+        ctx.chown(ctx.path(home), uid, gid)
+        user = (uid, gid, home)
+    else:
+        user = ctx.ids(USER)
+    runner = ctx.ids(MAC_RUNNER) or mac_make(ctx, MAC_RUNNER, "Spark-Anker", "/usr/bin/false", "/var/empty")
+    # only these users may use Entfernte Anmeldung: spark joins an existing list; when it was off, a list with spark alone
+    if ctx.run(["/usr/bin/dscl", ".", "-read", "/Groups/" + MAC_SSH_GROUP]) == 0:
+        conf["ssh_gruppe"] = "dazu"
+    elif not conf["anmeldung_vorher"]:
+        if ctx.run(["/usr/sbin/dseditgroup", "-o", "create", "-r", "Remote Login", MAC_SSH_GROUP]):
+            raise Fehler("die Liste der Benutzer für die Entfernte Anmeldung ließ sich nicht anlegen")
+        conf["ssh_gruppe"] = "neu"
+    if conf.get("ssh_gruppe") and ctx.run(["/usr/sbin/dseditgroup", "-o", "edit", "-a", USER, "-t", "user", MAC_SSH_GROUP]):
+        raise Fehler(f"{USER} ließ sich nicht zur Entfernten Anmeldung hinzufügen")
+    if not conf["anmeldung_vorher"]:
+        write(ctx.path(MAC_SSHD_CONF), MAC_SSHD_TEXT, 0o644)
+        conf["sshd_conf"] = True
+        if ctx.run(["/usr/sbin/sshd", "-t"]):
+            os.remove(ctx.path(MAC_SSHD_CONF))
+            raise Fehler("sshd nimmt die Einstellungen des Ankers nicht an; nichts an sshd geändert")
+        mac_login(ctx, True)
+        for _ in range(10):
+            if ctx.port_open():
+                break
+            ctx.wait(0.5)
+        else:
+            ctx.run(["/usr/sbin/systemsetup", "-f", "-setremotelogin", "on"])
+            if not ctx.port_open():
+                mac_login(ctx, False)
+                raise Fehler(f"die Entfernte Anmeldung ließ sich nicht einschalten. Abhilfe: {MAC_TEILEN} einschalten, "
+                             "dann den Befehl aus dem Panel noch einmal")
+        conf["anmeldung_an"] = True
+    return user, runner
+
+
+def mac_login(ctx, on):
+    """Entfernte Anmeldung (Apple's sshd under launchd) on or off; systemsetup would need Full Disk Access."""
+    if on:
+        ctx.run(["/bin/launchctl", "enable", "system/com.openssh.sshd"])
+        ctx.run(["/bin/launchctl", "bootstrap", "system", "/System/Library/LaunchDaemons/ssh.plist"])
+    else:
+        ctx.run(["/bin/launchctl", "bootout", "system/com.openssh.sshd"])
+        ctx.run(["/bin/launchctl", "disable", "system/com.openssh.sshd"])
+
+
+def mac_start(ctx, runner):
+    var = ctx.path(MAC_VAR)
+    os.makedirs(var, mode=0o700, exist_ok=True)
+    ctx.chown(var, runner[0], runner[1])
+    for path, label, args, extra in ((MAC_PLISTS[0], MAC_JOB, "<string>lauf</string>", MAC_RUN_EXTRA),
+                                     (MAC_PLISTS[1], MAC_JOB_ABBAU, "<string>entfernen</string><string>--vom-panel</string>", MAC_ABBAU_EXTRA)):
+        write(ctx.path(path), MAC_PLIST.format(label=label, prog=MAC.prog, args=args, extra=extra), 0o644)
+        ctx.chown(ctx.path(path), 0, 0)
+        if ctx.run(["/bin/launchctl", "bootstrap", "system", path]):
+            raise Fehler(f"launchd ließ den Dienst nicht starten (sudo launchctl print system/{label})")
+
+
+def mac_stop(ctx, conf):
+    ctx.run(["/bin/launchctl", "bootout", "system/" + MAC_JOB])
+
+
+def mac_after(ctx, conf, home_gone):
+    if conf.get("sshd_conf") and os.path.isfile(ctx.path(MAC_SSHD_CONF)):
+        os.remove(ctx.path(MAC_SSHD_CONF))
+    if conf.get("ssh_gruppe") == "neu":
+        ctx.run(["/usr/sbin/dseditgroup", "-o", "delete", MAC_SSH_GROUP])
+    elif conf.get("ssh_gruppe") == "dazu":
+        ctx.run(["/usr/sbin/dseditgroup", "-o", "edit", "-d", USER, "-t", "user", MAC_SSH_GROUP])
+    if conf.get("user_neu"):
+        ctx.run(["/usr/bin/dscl", ".", "-delete", "/Users/" + USER])
+        ctx.run(["/usr/bin/dscl", ".", "-delete", "/Groups/" + USER])
+        if home_gone:
+            shutil.rmtree(home_gone, ignore_errors=True)
+    if ctx.root != "/" or ctx.ids(MAC_RUNNER):
+        ctx.run(["/usr/bin/dscl", ".", "-delete", "/Users/" + MAC_RUNNER])
+        ctx.run(["/usr/bin/dscl", ".", "-delete", "/Groups/" + MAC_RUNNER])
+    if conf.get("anmeldung_an"):                       # the anchor switched it on: off again, as it was
+        mac_login(ctx, False)
+
+
+def mac_last(ctx, conf):
+    """The removal job stops itself only at the very end (launchd would end this very process)."""
+    ctx.run(["/bin/launchctl", "bootout", "system/" + MAC_JOB_ABBAU])
+
+
+class System:
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+
+LINUX = System(name="Linux", lib=LIB, prog=PROG, bin=BIN, etc=ETC, conf=CONF, var=VAR, flag=FLAG, services=UNITS,
+               runner=RUNNER, check=linux_check, users=linux_users, start=linux_start, stop=linux_stop,
+               after=linux_after, last=linux_last, started="der Dienst spark-anker läuft")
+MAC = System(name="Darwin", lib=MAC_LIB, prog=MAC_LIB + "/spark-anker.py", bin=BIN,
+             etc=MAC_ETC, conf=MAC_ETC + "/anker.json", var=MAC_VAR, flag=MAC_VAR + "/abbauen", services=MAC_PLISTS,
+             runner=MAC_RUNNER, check=mac_check, users=mac_users, start=mac_start, stop=mac_stop,
+             after=mac_after, last=mac_last, started="der Dienst de.speech-spark.anker läuft (launchd)")
+
+
+def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
+    ctx = ctx or Ctx(run=run)
+    s = ctx.s
+    if ctx.euid() != 0:
         say("bitte mit sudo")
         return 1
-    if load():
+    if load(ctx.root, s):
         say("schon eingerichtet; erst `sudo spark-anker entfernen`")
         return 1
     base = base_url(args.adresse)
     fp = (args.fp or "").lower()
     if fp and not FP.fullmatch(fp):
         raise Fehler("--fp: 64 Zeichen 0-9 a-f")
-    try:
-        with open(HOSTKEY) as f:
-            hostkey = " ".join(f.read().split()[:2])
-    except OSError:
-        raise Fehler(f"{HOSTKEY} fehlt: sshd mit einem ed25519-Schlüssel ist nötig. Abhilfe: `sudo ssh-keygen -A` "
-                     "legt die fehlenden Schlüssel an; ist sshd gar nicht da, erst `sudo apt install openssh-server` "
-                     "(Fedora: `sudo dnf install openssh-server`), dann den Befehl aus dem Panel noch einmal")
-    try:
-        socket.create_connection(SSHD, timeout=3).close()
-    except OSError:
-        raise Fehler("sshd hört nicht auf 127.0.0.1:22. Abhilfe: `sudo systemctl enable --now ssh` "
-                     "(Fedora: `sshd`), dann den Befehl aus dem Panel noch einmal")
-    s, got = tls_connect(base, fp)
-    s.close()
+    state = s.check(ctx)
+    with open(ctx.path(HOSTKEY)) as f:
+        hostkey = " ".join(f.read().split()[:2])
+    sock, got = tls_connect(base, fp)
+    sock.close()
     say(f"Panel {base}, Zertifikat SHA-256 {got[:16]}…{got[-8:]}" + (" (festgelegt)" if fp else " (geprüft gegen die Zertifizierungsstellen)"))
     code = code_reader()
     status, raw = http_call(base, fp, "POST", "/api/fernzugang/anker/koppeln",
-                            {"code": code, "hostkey": hostkey, "os": os_name(), "version": VERSION})
+                            {"code": code, "hostkey": hostkey, "os": os_name(s), "version": VERSION})
     code = ""
     if status != 200:
         raise Fehler({403: "Code falsch oder abgelaufen", 404: "Fernzugang im Panel ist aus",
@@ -531,43 +821,38 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd):
     status, prog = http_call(base, fp, "GET", "/fernzugang/anker")
     if status != 200 or not hmac.compare_digest(hashlib.sha256(prog).hexdigest(), str(d.get("anker_sha256", ""))):
         raise Fehler("das Programm vom Panel passt nicht zu seiner Prüfsumme")
-    made = not user_exists(USER)
-    if made and run(["useradd", "--create-home", "--shell", "/bin/bash", USER]):
-        raise Fehler(f"Benutzer {USER} ließ sich nicht anlegen")
-    if not user_exists(RUNNER) and run(["useradd", "--system", "--no-create-home", "--shell", "/usr/sbin/nologin", RUNNER]):
-        raise Fehler(f"Benutzer {RUNNER} ließ sich nicht anlegen")
-    pw = pwd.getpwnam(USER)
-    ssh = os.path.join(pw.pw_dir, ".ssh")
+    conf = {"url": base, "fp": fp, "id": d["id"], "key": d["key"], "user_neu": not ctx.ids(USER), "seit": int(time.time()),
+            **state}
+    user, runner = s.users(ctx, conf)
+    ssh = ctx.path(os.path.join(user[2], ".ssh"))
     os.makedirs(ssh, mode=0o700, exist_ok=True)
     ak = os.path.join(ssh, "authorized_keys")
     with open(ak, "a") as f:
         f.write(key_line(str(d["pi_key"])) + "\n")
     for p, m in ((ssh, 0o700), (ak, 0o600)):
-        os.chown(p, pw.pw_uid, pw.pw_gid)
+        ctx.chown(p, user[0], user[1])
         os.chmod(p, m)
-    write(PROG, prog.decode(), 0o755)
-    if os.path.lexists(BIN):
-        os.remove(BIN)
-    os.symlink(PROG, BIN)
-    conf = {"url": base, "fp": fp, "id": d["id"], "key": d["key"], "user_neu": made, "seit": int(time.time())}
-    write(CONF, json.dumps(conf, indent=1), 0o640)
-    os.chown(CONF, 0, pwd.getpwnam(RUNNER).pw_gid)
-    os.chown(ETC, 0, pwd.getpwnam(RUNNER).pw_gid)
-    os.chmod(ETC, 0o750)
-    for path, text in zip(UNITS, (UNIT_RUN, UNIT_PATH, UNIT_ABBAU)):
-        write(path, text)
-    run(["systemctl", "daemon-reload"])
-    if run(["systemctl", "enable", "--now", "spark-anker.service", "spark-anker-abbau.path"]):
-        raise Fehler("systemd ließ den Dienst nicht starten (journalctl -u spark-anker)")
-    say(f"eingerichtet: der Panel-Schlüssel darf als {USER} nur über den Anker herein; der Dienst spark-anker läuft")
+    write(ctx.path(s.prog), prog.decode(), 0o755)
+    bin_ = ctx.path(s.bin)
+    os.makedirs(os.path.dirname(bin_), exist_ok=True)
+    if os.path.lexists(bin_):
+        os.remove(bin_)
+    os.symlink(s.prog, bin_)
+    write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+    ctx.chown(ctx.path(s.conf), 0, runner[1])
+    ctx.chown(ctx.path(s.etc), 0, runner[1])
+    os.chmod(ctx.path(s.etc), 0o750)
+    s.start(ctx, runner)
+    say(f"eingerichtet: der Panel-Schlüssel darf als {USER} nur über den Anker herein; {s.started}")
     say("entfernen: sudo spark-anker entfernen (oder im Panel „Entfernen“)")
     return 0
 
 
 # ---------------------------------------------------------------- removing everything
-def remove_paths(root="/"):
+def remove_paths(root="/", s=None):
     """Every path the anchor made (the user spark's home only when the anchor made the user)."""
-    return [here(root, p) for p in (*UNITS, BIN, LIB, ETC, VAR)]
+    s = s or LINUX
+    return [here(root, p) for p in (*s.services, s.bin, s.lib, s.etc, s.var)]
 
 
 def strip_key(path):
@@ -588,36 +873,34 @@ def strip_key(path):
     return True
 
 
-def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None):
-    if root == "/" and os.geteuid() != 0:
+def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
+    ctx = ctx or Ctx(root=root, run=run)
+    s = ctx.s
+    if ctx.root == "/" and ctx.euid() != 0:
         say("bitte mit sudo")
         return 1
-    conf = load(root) or {}
-    run(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path"])
-    for p in remove_paths(root):
+    conf = load(ctx.root, s) or {}
+    s.stop(ctx, conf)
+    for p in remove_paths(ctx.root, s):
         if os.path.islink(p) or os.path.isfile(p):
             os.remove(p)
         elif os.path.isdir(p):
             shutil.rmtree(p, ignore_errors=True)
-    run(["systemctl", "daemon-reload"])
     if home is None:
-        try:
-            home = pwd.getpwnam(USER).pw_dir
-        except KeyError:
-            home = ""
+        found = ctx.ids(USER)
+        home = found[2] if found else ""
     if home:
         strip_key(os.path.join(home, ".ssh", "authorized_keys"))
-    if conf.get("user_neu") and (root != "/" or user_exists(USER)):
-        run(["userdel", "--remove", USER])
-    if root != "/" or user_exists(RUNNER):
-        run(["userdel", RUNNER])
-    say("entfernt: Dienste, Programm, Einstellungen, Schlüssel" + (f", Benutzer {USER}" if conf.get("user_neu") else ""))
+    s.after(ctx, conf, home if conf.get("user_neu") else "")
+    say("entfernt: Dienste, Programm, Einstellungen, Schlüssel" + (f", Benutzer {USER}" if conf.get("user_neu") else "")
+        + (", Entfernte Anmeldung wieder aus" if conf.get("anmeldung_an") else ""))
     if tell and conf.get("url") and conf.get("key"):
         try:
             status, _ = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/abgebaut", {}, conf["key"], 10)
             say("dem Panel gemeldet" if status == 200 else f"Panel antwortet {status}")
         except (OSError, Fehler):
             say("Panel nicht erreicht; dort „Entfernen“ wählen")
+    s.last(ctx, conf)
     return 0
 
 
@@ -632,13 +915,12 @@ def cmd_state(args):
 
 # Systems the anchor does not set up (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
-    "Darwin": "macOS wird ab der nächsten Version unterstützt (Stufe 6); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
     "Windows": "Windows wird ab einer späteren Version unterstützt (Stufe 5); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
 }
 
 
 def not_yet(system=None):
-    """The fixed sentence for a system the anchor cannot set up, else None (Linux and the like)."""
+    """The fixed sentence for a system the anchor cannot set up, else None (Linux, macOS)."""
     return NOT_YET.get(system or platform.system())
 
 
@@ -654,7 +936,7 @@ def main(argv=None, system=None):
     a.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
     r = sub.add_parser("entfernen", help="alles entfernen, was der Anker eingerichtet hat")
     r.add_argument("--vom-panel", action="store_true", help=argparse.SUPPRESS)
-    sub.add_parser("lauf", help="der Dienst (startet systemd)")
+    sub.add_parser("lauf", help="der Dienst (startet systemd bzw. launchd)")
     sub.add_parser("zustand", help="eingerichtet? welches Panel?")
     args = p.parse_args(argv)
     try:
