@@ -5901,6 +5901,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Siedlung neu ordnen (V01.1.209, Dominik 2026-10-28 „können wir die anzeige der siedlung verbessern.. ist sehr unübersichtlich“, Vorschlag mit Bildern, „1a 2a 3a 4a 5a 6a“): Ohne neuen Schalter (*Funktionen → KI-Dungeon-Master → Gold mit Zweck*). Das Fenster „🏘 Siedlung“ ersetzt die bis zu zehn gleich großen Karten aus V01.1.055: 1. Häuser (1a): Die Dienste gehören zu einem Haus (dungeon_gold.HAEUSER, eine Quelle): Gasthaus (Übernachten, Gerücht, Gefährte anheuern), Schmiede (Flicken, Verbessern, Sockel bohren, Runen lösen, Runen verschmelzen), Heiler, Lehrmeister; die Sicht liefert haeuser mit den Diensten, die es hier gibt. 2. Liste und Haus (2a): links die Häuser mit kleinem Bild und dem, was dort gerade geht („2 Angebote“, „gerade nichts“, „🌙 zu bis zum Morgen“), rechts das gewählte Haus; am Handy erst die Liste, ein Tippen öffnet das Haus mit „‹ Häuser“. 3. Zeilen (3a): je Angebot eine Zeile mit Name, kurzem Satz und Knopf mit Verb und Preis; zu teuer ist der Knopf grau mit „Es fehlen N Gold“; die Preisrechnung steht nur noch einmal klein unten im Haus. 4. Leeres (4a): was gerade nicht geht, ist eine dünne gestrichelte Zeile mit dem Grund (heute schon übernac"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "htet, nichts zerbrochen, kein Gerücht mehr, nachts zu); ein Haus ohne Angebot steht blass unten. 5. Kopf (5a): eine schmale Zeile mit Ort, Tageszeit, dem eigenen Gold groß und dem der Gruppe klein. 6. Bilder (6a): ein Bild je Haus und Welt malt der Bilder-Thread (haeuser[].bild); bis dahin zeigt das Haus das erste Bild seiner Dienste, sonst das Ortsbild, sonst sein Zeichen. Selbsttests in test_dungeon (Häuser der Sicht, Fenster auf Rechner und Handy)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spielleiter gibt Dinge (V01.1.207, Dominik 2026-10-28 „der admin soll die möglichkeit haben den karakteren items zu geben (gegenstände gold runen etc.)“, „1a 2a 3a 4a 5a“): Neuer Admin-Schalter *Funktionen → KI-Dungeon-Master → Spielleiter gibt Dinge* (chat.dungeon_geben, standardmäßig aus, 5a). 1. Wo (1a): Im Spielleiter-Pult unter „Nur für dich“ der Reiter „🎁 Geben“, nur für den Gastgeber und nur in der Admin-Ansicht; jede Anfrage prüft den Admin neu (dungeon_geben.admin): die Admin-Anmeldung des Panels oder die eigene Anmeldung des Gastgebers als Admin-Profil (Rolle Admin, kein Verwalter), nie ein Gast, ein anderer Platz oder das Sprachmodell. 2. Was (2a): ein Gegenstand aus dem Katalog der Welt der Runde mit Seltenheit bis „episch“ (feste Seltenheit bleibt, das Ding ist gleich erkannt), stapelbare Dinge wie Tränke und Zauber bis 5 Stück; Gold bis 1000 auf einmal; Runen bis 5 einer Art, nur mit *Runen und Sockel*; Erfahrung höchstens bis zur nächsten Stufe. Nie eine Legende, nie ein fest legendäres Ding, nie ein Quest-Gegenstand. Die Liste kommt einmal beim Öffnen (GET /api/profile/dungeon/{rid}/geben), mit Suche. 3. Grenzen (3a): wie im Spiel: volle oder zu s"
 },
 {
@@ -21718,6 +21734,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: settlement reordered (V01.1.209, Dominik 2026-10-28 \"can we improve the settlement view.. it is very cluttered\", proposal with pictures, \"1a 2a 3a 4a 5a 6a\"): No new switch (*Features → AI Dungeon Master → Gold with a purpose*). The window \"🏘 Settlement\" replaces the up to ten equally big cards of V01.1.055: 1. Houses (1a): the services belong to a house (dungeon_gold.HAEUSER, one source): inn (stay the night, rumour, hire a companion), smithy (mend, improve, drill a socket, take runes out, fuse runes), healer, teacher; the view gives haeuser with the services there are here. 2. List and house (2a): the houses on the left with a small picture and what works there right now (\"2 offers\", \"nothing right now\", \"🌙 shut until morning\"), the chosen house on the right; on the phone first the list, a tap opens the house with \"‹ Houses\". 3. Rows (3a): one row per offer with its name, a short sentence and a button with verb and price; too dear, the button is grey with \"N gold short\"; the price calculation stands only once, small, at the bottom of the house. 4. Empty (4a): what does not work right now is a thin dashed row with the reason (slept here tonight, nothing broken, "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "no rumour left, shut at night); a house without an offer stands pale at the bottom. 5. Head (5a): one slim line with place, time of day, the own gold big and the group's small. 6. Pictures (6a): one picture per house and world is the picture thread's (haeuser[].bild); until then the house shows the first picture of its services, else the place's, else its sign. Self-tests in test_dungeon (the view's houses, the window on computer and phone)."
 },
 {
 "lang": "en",

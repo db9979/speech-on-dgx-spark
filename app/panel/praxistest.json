@@ -4230,6 +4230,13 @@
 "titel": "Fernzugang zu einem Server",
 "text": "Voraussetzung: Admin mit zweitem Anmeldeschritt, ein Linux-Server mit sshd (z. B. ein VPS). A: Funktionen → Fernzugang zu Servern an; Funktionen → Fernzugang zeigt vier Kacheln und „Koppeln (Code)“. B: Name „vps-test“, „Koppeln (Code)“: nach Code oder Passkey stehen der Einmal-Code und eine Zeile curl … | sudo python3 - einrichten …; „Kopieren“. C: Auf dem Server die Zeile einfügen: Fingerabdruck des Panels, Frage nach dem Code (nicht im Befehl), danach „eingerichtet“; systemctl status spark-anker läuft. D: Im Panel steht vps-test mit grünem Punkt, Zustand → Live hat den Kasten Fernzugang mit „1 online“, Zustand → Logs → Bereich Fernzugang zeigt koppeln ok und anker_auf. E: „Shell“: Code oder Passkey, oben rot „Fernsitzung aktiv“, das Terminal zeigt den Prompt von spark@…; ein Vorschlag „df -h“ landet in der Zeile ohne Enter. F: 15 Minuten nichts tippen: die Sitzung ist zu. G: Notaus Stufe 1: die Sitzung endet sofort, Shell geht nicht; Notaus aufheben. H: „Entfernen“: auf dem Server ist spark-anker weg (systemctl status spark-anker: nicht gefunden, id spark: kein Benutzer, wenn er neu war), im Panel ist vps-test weg. I: iPhone-App: Spark verwalten → Zustand zeigt „Fernzugang“ mit Zahlen.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P629",
+"v": 1209,
+"titel": "Dungeon-Master: Siedlung mit Häusern",
+"text": "Admin: Gold mit Zweck an. Am Tisch in einer Siedlung „🏘 Siedlung“ öffnen. A: Oben eine schmale Zeile mit Ort, Tageszeit und Gold. B: Links Gasthaus, Schmiede, Lehrmeister (mit Runen und Wunden auch die Runen-Dienste und der Heiler), je mit „N Angebote“; rechts das gewählte Haus mit einer Zeile je Angebot. C: Ein Haus antippen wechselt rechts. D: Am Handy erst die Häuser, dann das Haus mit „‹ Häuser“. E: Zu teuer: grauer Knopf mit „Es fehlen N Gold“; nichts zerbrochen: gestrichelte Zeile. F: Übernachten und Lernen funktionieren wie vorher.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

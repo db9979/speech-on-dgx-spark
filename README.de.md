@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.209** KI-Dungeon-Master: die Siedlung ist übersichtlich: links die Häuser Gasthaus, Schmiede, Heiler und Lehrmeister, rechts das gewählte Haus mit einer Zeile je Angebot, am Handy erst die Häuser, dann das Haus
 - **V01.1.208** Fernzugang zu Servern (Stufe 1): ein Server anderswo ruft das Panel über seinen Anker, Admins öffnen seine Shell unter Funktionen → Fernzugang im Browser, mit Einmal-Code beim Koppeln, frischem Code je Sitzung und SSH Ende zu Ende
 - **V01.1.207** KI-Dungeon-Master: Spielleiter gibt Dinge: der Gastgeber gibt als Admin im Spielleiter-Pult einem Helden einen Gegenstand bis „episch“, Gold, Runen oder Erfahrung, nach den Grenzen des Spiels, und die Erzählung macht daraus einen Fund oder ein Geschenk
 - **V01.1.206** KI-Dungeon-Master: ein Ding mit erwachtem Runenwort bekommt ein eigenes Bild mit leuchtenden Runen, die Runen-Dienste des Schmieds haben Bilder
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.202** KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge, die Probe mit eigenem kurzem Prompt, Alltägliches ohne Probe, englische Runden mit englischem Stil, der Erzähler-Prüfstand zeigt Prozent bis 100 (Review 27.10. Paket 12, Prüfstand 28.10.)
 - **V01.1.201** KI-Dungeon-Master: Budget und Belohnung zählen jeden Gegner nach seinem gemessenen Kampf-EP, Budget neu gemessen (Review 27.10. Paket 11.6)
 - **V01.1.200** KI-Dungeon-Master: zieht die Gruppe weiter, sagt eine feste Zeile am Tisch, wer gehen wollte („Weiter nach Silberhafen, weil Arvid gehen wollte“)
-- **V01.1.199** KI-Dungeon-Master: die Würfelkarte nennt die Stufe, der Tisch sagt, warum keine Probe kam und wer die Beute bekommt (Review 27.10. Paket 12)
 
 
 

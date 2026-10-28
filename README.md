@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.209** AI Dungeon Master: the settlement is clear: the houses inn, smithy, healer and teacher on the left, the chosen house with one row per offer on the right, on the phone first the houses, then the house
 - **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Features → Remote access, with a one-time code for pairing, a fresh code per session and SSH end to end
 - **V01.1.207** AI Dungeon Master: game master gives things: the host as admin gives a hero an item up to "epic", gold, runes or experience in the game master console, within the game's limits, and the narration makes it a find or a gift
 - **V01.1.206** AI Dungeon Master: a thing whose runeword wakes gets a picture of its own with glowing runes, the smith's rune services have pictures
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.202** AI Dungeon Master: shorter instructions in a fixed order, the check with its own short prompt, everyday acts without a check, English rounds with an English style, the narrator bench shows per cent up to 100 (review 27.10. package 12, bench 28.10.)
 - **V01.1.201** AI Dungeon Master: budget and reward count every foe by its measured fight experience, budget measured anew (review 27.10. package 11.6)
 - **V01.1.200** AI Dungeon Master: when the group moves on, a fixed line at the table tells who wanted to go ("On to Silberhafen, because Arvid wanted to go")
-- **V01.1.199** AI Dungeon Master: the dice card names the level, the table says why no check came and who gets the loot (review 27.10. package 12)
 
 
 

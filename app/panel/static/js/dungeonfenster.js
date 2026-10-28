@@ -86,38 +86,66 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     body=k==='weg'?{name,weg:true}:k==='w'?{name,will:row.querySelector('[data-dmfrakw]').value.trim()}:{name,schritt:+k}}
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/fraktion`,body,DM);if(d){DM.v=d;DM.at=Date.now();if(k==='neu')DMA.frak=null}dmDraw()});
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
-const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿',gefaehrte:'🤝',sockel:'◎',loesen:'⛏',verschmelzen:'🔥'};
-// Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
-// purse; a card per service with its picture on top and a line of life; the price's calculation small above a verb
-// button; what the hero cannot pay is grey with how much is missing; the lesson as six values before → after
+// Siedlung neu ordnen (Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): the services by their house (dungeon_gold.HAEUSER) as a
+// list beside the chosen house, on the phone the list first and the house with „‹ Häuser“; a slim head with place, time
+// of day and the purse (the group's only shown); one row per offer with a verb and its price, too dear grey with how
+// much is missing; what cannot be had now is a thin dashed row, a house without anything to do is pale at the end; the
+// calculation of the prices once at the bottom; one picture a house (the picture thread's), until then the first
+// picture of its services or the place's
+const DMHAUS={gasthaus:'🍺',schmiede:'🔨',heiler:'🌿',lehre:'📖'};
 const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed'],gefaehrte:['Anheuern','Hire'],sockel:['Bohren','Drill'],loesen:['Lösen','Take out'],verschmelzen:['Verschmelzen','Fuse']};
+const DMSLEER={gasthaus:['Heute Nacht habt ihr schon hier geschlafen.','You already slept here tonight.'],schmied:['Nichts zerbrochen.','Nothing broken.'],
+  geruecht:['Hier gibt es kein Gerücht mehr.','No rumour left here.'],verbessern:['Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'],
+  heiler:['Keine Wunde zu heilen.','No wound to heal.'],gefaehrte:['Die Gruppe ist voll, kein Gefährte mehr frei.','The group is full, no companion free.'],
+  sockel:['Nichts, was noch einen Sockel bekommt: Waffen und Rüstung bis „rar“, einer je Ding.','Nothing that takes another socket: weapons and armour up to "rare", one a thing.'],
+  loesen:['Kein Ding mit Runen.','No thing with runes.'],verschmelzen:['Dafür braucht es drei gleiche, höchstens bis Rang 9.','That takes three of the same, up to rank 9.']};
+const DMSEINS=['gasthaus','geruecht','heiler'];   // one offer: its row says it all, no heading above it
 const DMZEIT={morgen:['🌅','Morgen','Morning'],tag:['☀️','Tag','Day'],abend:['🌇','Abend','Evening'],nacht:['🌙','Nacht','Night']};
 const dmPlus=n=>(n>=0?'+':'')+n;
-function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0,p-s.gold),
-    knopf=(d,attr,label,preis)=>{const p=preis==null?d.preis:preis,f=d.frei?fehlt(p):0;
-      return `<button type="button" class="b p" data-dmhero="dienst" data-id="${d.id}"${attr||''}${!d.frei||f?' disabled':''}>${esc(label||t(...DMVERB[d.id]))} · ${p} ${esc(G)}</button>${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}`},
-    rech=d=>d.je?`<small class="mut dm-rech">${d.je} × ${esc(t('Stufe','level'))} ${s.stufe}${d.id==='gasthaus'?` × ${s.helden} ${esc(t('Helden','heroes'))}`:''} = ${d.preis} ${esc(G)}</small>`:'',
+function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),by=Object.fromEntries(s.dienste.map(d=>[d.id,d])),handy=dmHandy();
+  const fehlt=p=>Math.max(0,p-s.gold),
+    knopf=(d,attr,label,preis,neben)=>{const p=preis==null?d.preis:preis,f=fehlt(p);
+      return `<button type="button" class="b${neben?'':' p'}" data-dmhero="dienst" data-id="${d.id}"${attr||''}${f?' disabled':''}>${esc(label||t(...DMVERB[d.id]))} · ${p} ${esc(G)}</button>`},
+    row=(titel,satz,knoepfe,preis)=>{const f=preis==null?0:fehlt(preis);
+      return `<div class="dm-srow"><span class="dm-srow-w"><b>${esc(titel)}</b>${satz?`<small>${esc(satz)}</small>`:''}${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}</span><span class="dm-srow-k">${knoepfe}</span></div>`},
+    leer=x=>`<div class="dm-srow leer"><small>${esc(x)}</small></div>`,
     werte=(v.ich&&v.ich.werte)||[],
-    lehre=d=>{const f=fehlt(d.preis);return `<small class="mut">${esc(t('Lernen: tippe auf einen Wert.','Learn: tap a value.'))}</small><div class="dm-lehre">${werte.map(w=>{const an=s.lehre===w.id;
-      return `<button type="button" class="b dm-lwert${an?' an':''}" data-dmhero="dienst" data-id="lehre" data-wert="${esc(w.id)}" title="${esc(w.name)}"${an||f?' disabled':''}><b>${esc(w.kurz)}</b><span>${an?esc(t('gelernt','learned')):dmPlus(w.gesamt)+' → '+dmPlus(w.gesamt+1)}</span></button>`}).join('')}</div>${rech(d)}${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}`},
-    card=d=>`<div class="dm-ware dm-dienstk${d.frei?'':' dm-zu'}" data-dmdienst="${d.id}">${d.bild?`<span class="dm-dienst-bild">${dmDing({bild:d.bild},1)}</span>`:`<span class="dm-dienst-bild dm-dz" aria-hidden="true">${DMDIENST[d.id]}</span>`}<b>${esc(d.name)}</b>${d.zeile?`<small class="dm-isatz">„${esc(d.zeile)}“</small>`:''}<small>${esc(d.satz)}</small>${d.zu?`<small class="dm-fehlt">🌙 ${esc(t('Nachts zu, ab dem Morgen wieder offen.','Shut at night, open again from the morning.'))}</small>`:''}${
-    d.id==='schmied'?(s.kaputt.length?rech(d)+s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
-    :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{frei:true}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu,it.preis)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
-    :d.id==='sockel'||d.id==='loesen'||d.id==='verschmelzen'?dmSiedRunen(s,d,knopf)
-    :d.id==='lehre'?lehre(d)
-    :d.id==='gefaehrte'?(s.gefaehrten&&s.gefaehrten.length?s.gefaehrten.map(g=>`<small class="dm-isatz"><b>${esc(g.name)}</b>: ${esc(g.satz)}</small>`+knopf(d,` data-i="${esc(g.id)}"`,t('Anheuern: ','Hire: ')+g.name)).join(''):`<small class="mut">${esc(t('Die Gruppe ist voll, kein Gefährte mehr frei.','The group is full, no companion free.'))}</small>`)
-    :rech(d)+knopf(d)}</div>`,
-    z=DMZEIT[s.tageszeit]||DMZEIT.tag;
-  return `<div class="dm-sied-kopf${s.kopf?'':' leer'}">${s.kopf?dmDing({bild:s.kopf},1):''}<div class="dm-sied-titel"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span>💰 ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b> · ${esc(t('Gruppe','Group'))}: ${s.gold_gruppe}</span></div></div>
-    ${s.spruch?`<p class="dm-isatz dm-narbsp">🩸 ${esc(s.spruch.text)} <small class="mut">· ${esc(s.spruch.name)}</small></p>`:''}<small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest. Jeder zahlt aus seinem eigenen Gold.','The panel sets the prices by the group\'s level. Everyone pays from their own gold.'))}</small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
-// the smith's rune services (dungeon_runen.smith_view): drill a socket, take the runes out broken or whole (a
-// runeword goes out), fuse three of a rune into the next rank; every price by the panel
-function dmSiedRunen(s,d,knopf){const R=s.runen||{},f=Object.assign({},d,{frei:true}),leer=x=>`<small class="mut">${esc(x)}</small>`;
-  if(d.id==='sockel')return (R.sockel||[]).length?R.sockel.map(it=>knopf(f,` data-i="${esc(it.i)}"`,t(`${it.name}: ${it.neu} Sockel`,`${it.name}: ${it.neu} sockets`),it.preis)).join(''):leer(t('Nichts, was noch einen Sockel bekommt: Waffen und Rüstung bis „rar“, einer je Ding.','Nothing that takes another socket: weapons and armour up to "rare", one a thing.'));
-  if(d.id==='loesen')return (R.loesen||[]).length?R.loesen.map(it=>`<small class="dm-isatz"><b>${esc(it.name)}</b>: ${esc((it.ru||[]).join(' · '))}${it.runenwort?' · '+esc(t('Runenwort ','Runeword ')+it.runenwort+t(' erlischt',' goes out')):''}</small>`
-    +knopf(Object.assign({},d,{frei:it.platz}),` data-i="${esc(it.i)}" data-wert="retten"`,t('Retten','Save'),it.retten)+(it.platz?'':`<small class="dm-fehlt">${esc(t('Der Runenbeutel ist zu voll dafür.','The rune bag is too full for that.'))}</small>`)
-    +knopf(f,` data-i="${esc(it.i)}" data-wert="zerstoeren"`,t('Zerbrechen','Break'),it.zerstoeren)).join(''):leer(t('Kein Ding mit '+(R.wort||'Runen')+'.','No thing with '+(R.wort||'runes')+'.'));
-  return (R.verschmelzen||[]).length?R.verschmelzen.map(x=>knopf(f,` data-wert="${esc(x.id)}"`,`3 × ${x.name} → ${x.neu}`,x.preis)).join(''):leer(t('Dafür braucht es drei gleiche, höchstens bis Rang 9.','That takes three of the same, up to rank 9.'))}
+    lehre=d=>{const f=fehlt(d.preis);return `<div class="dm-lehre">${werte.map(w=>{const an=s.lehre===w.id;
+      return `<button type="button" class="b dm-lwert${an?' an':''}" data-dmhero="dienst" data-id="lehre" data-wert="${esc(w.id)}" title="${esc(w.name)}"${an||f?' disabled':''}><b>${esc(w.kurz)}</b><span>${an?esc(t('gelernt','learned')):dmPlus(w.gesamt)+' → '+dmPlus(w.gesamt+1)}</span></button>`}).join('')}</div>${f?`<small class="dm-fehlt">${esc(t(`Es fehlen ${f} Gold`,`${f} gold short`))}</small>`:''}`},
+    R=s.runen||{},
+    zeilen=d=>{if(d.zu)return leer('🌙 '+t('Nachts zu, ab dem Morgen wieder offen.','Shut at night, open again from the morning.'));
+      if(!d.frei)return leer(t(...DMSLEER[d.id]||['','']));
+      const l=d.id==='schmied'?s.kaputt.map(it=>row(it.name,t('zerbrochen','broken'),knopf(d,` data-i="${esc(it.i)}"`),d.preis))
+        :d.id==='verbessern'?s.verbessern.map(it=>row(it.name+' → '+it.neu,'',knopf(d,` data-i="${esc(it.i)}"`,null,it.preis),it.preis))
+        :d.id==='gefaehrte'?(s.gefaehrten||[]).map(g=>row(g.name,g.satz,knopf(d,` data-i="${esc(g.id)}"`),d.preis))
+        :d.id==='sockel'?(R.sockel||[]).map(it=>row(t(`${it.name}: ${it.neu} Sockel`,`${it.name}: ${it.neu} sockets`),'',knopf(d,` data-i="${esc(it.i)}"`,null,it.preis),it.preis))
+        :d.id==='loesen'?(R.loesen||[]).map(it=>row(it.name,(it.ru||[]).join(' · ')+(it.runenwort?' · '+t('Runenwort ','Runeword ')+it.runenwort+t(' erlischt',' goes out'):'')+(it.platz?'':' · '+t('Der Runenbeutel ist zu voll zum Retten.','The rune bag is too full to save them.')),
+            (it.platz?knopf(d,` data-i="${esc(it.i)}" data-wert="retten"`,t('Retten','Save'),it.retten):'')+knopf(d,` data-i="${esc(it.i)}" data-wert="zerstoeren"`,t('Zerbrechen','Break'),it.zerstoeren,true),Math.min(it.platz?it.retten:it.zerstoeren,it.zerstoeren)))
+        :d.id==='verschmelzen'?(R.verschmelzen||[]).map(x=>row(`3 × ${x.name} → ${x.neu}`,'',knopf(d,` data-wert="${esc(x.id)}"`,null,x.preis),x.preis))
+        :d.id==='lehre'?[lehre(d)]
+        :[row(d.name,d.satz,knopf(d),d.preis)];
+      return l.join('')||leer(t(...DMSLEER[d.id]||['','']))};
+  // what a house has to do now: its open offers; shut at night when every service of it is
+  const haus=(s.haeuser||[]).map(x=>{const ds=x.dienste.map(i=>by[i]).filter(Boolean),n=ds.filter(d=>d.frei).length;
+    return Object.assign({},x,{ds,n,zu:ds.length&&ds.every(d=>d.zu),bild:x.bild||(ds.find(d=>d.bild)||{}).bild||s.kopf||'',zeile:x.zeile||(ds.find(d=>d.zeile)||{}).zeile||''})});
+  const liste=[...haus.filter(h=>h.n),...haus.filter(h=>!h.n)];
+  if(!liste.some(h=>h.id===DMA.sied))DMA.sied=(liste[0]||{}).id;
+  const cur=liste.find(h=>h.id===DMA.sied),auf=!handy||DMA.siedAuf;
+  const status=h=>h.zu?'🌙 '+t('zu bis zum Morgen','shut until morning'):h.id==='lehre'&&s.lehre?t('gelernt: ','learned: ')+((werte.find(w=>w.id===s.lehre)||{}).kurz||s.lehre)
+    :h.n?(h.id==='lehre'?t('+1 auf einen Wert','+1 on one value'):h.n===1?t('1 Angebot','1 offer'):t(h.n+' Angebote',h.n+' offers')):t('gerade nichts','nothing right now');
+  const bild=(h,k)=>h.bild?dmDing({bild:h.bild},k):`<span class="dm-haus-z" aria-hidden="true">${DMHAUS[h.id]||'🏠'}</span>`;
+  const nav=`<div class="dm-sied-liste" role="group" aria-label="${esc(t('Häuser','Houses'))}">${liste.map(h=>`<button type="button" class="dm-haus${h.id===DMA.sied&&!handy?' on':''}${h.n?'':' leer'}" data-dmsied="${esc(h.id)}"${handy?'':` aria-pressed="${h.id===DMA.sied}"`}><span class="dm-haus-b">${bild(h)}</span><span><b>${esc(h.name)}</b><small>${esc(status(h))}</small></span></button>`).join('')}</div>`;
+  const rech=cur?cur.ds.filter(d=>d.je&&!d.zu).map(d=>`${t(...DMVERB[d.id])} ${d.je} × ${t('Stufe','level')} ${s.stufe}${d.id==='gasthaus'?` × ${s.helden} ${t('Helden','heroes')}`:''}`).join(' · '):'';
+  const det=cur?`<div class="dm-sied-haus" data-dmhaus="${esc(cur.id)}">${handy?`<button type="button" class="dm-sied-zur" data-dmsiedzu="1">‹ ${esc(t('Häuser','Houses'))}</button>`:''}
+    <div class="dm-haus-bild${cur.bild?'':' leer'}">${bild(cur,1)}</div><b class="dm-haus-n">${esc(cur.name)}</b>${cur.zeile?`<small class="dm-isatz">„${esc(cur.zeile)}“</small>`:''}
+    ${cur.ds.map(d=>`<div class="dm-sdienst" data-dmdienst="${d.id}">${DMSEINS.includes(d.id)&&d.frei&&!d.zu?'':`<h5>${esc(d.name)}</h5><small class="mut">${esc(d.satz)}</small>`}${zeilen(d)}</div>`).join('')}
+    <small class="mut dm-rech">${esc((rech?t('Preise vom Panel: ','Prices by the panel: ')+rech+'. ':'')+t('Jeder zahlt aus seinem eigenen Gold.','Everyone pays from their own gold.'))}</small></div>`:'';
+  const z=DMZEIT[s.tageszeit]||DMZEIT.tag;
+  return `<div class="dm-sied-kopf"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span class="dm-sied-gold">💰 ${esc(t('Dein Gold','Your gold'))} <b>${s.gold}</b> <small>· ${esc(t('Gruppe','Group'))} ${s.gold_gruppe}</small></span></div>
+    ${s.spruch?`<p class="dm-isatz dm-narbsp">🩸 ${esc(s.spruch.text)} <small class="mut">· ${esc(s.spruch.name)}</small></p>`:''}
+    <div class="dm-sied${handy?' handy':''}">${handy&&auf?'':nav}${auf?det:''}</div>`}
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmsied],#dmview [data-dmsiedzu],#dgcard [data-dmsied],#dgcard [data-dmsiedzu]');if(!b)return;
+  if(b.dataset.dmsied){DMA.sied=b.dataset.dmsied;DMA.siedAuf=true}else DMA.siedAuf=false;b.closest('#dgcard')?dgDraw():dmDraw()});
 // the merchant as big cards: picture in the rarity's frame, lines, price; below what the own bag can sell or have named
 function dmShop(v){const h=v.ich,m=v.markt;
   if(m.zu)return `<p class="dm-isatz">🌙 ${esc(t(`${m.name} hat nachts zu. Ab dem Morgen könnt ihr wieder handeln.`,`${m.name} is shut at night. From the morning you can trade again.`))}</p>`;   // LlamaTale idea 1

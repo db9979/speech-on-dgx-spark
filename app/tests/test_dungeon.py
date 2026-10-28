@@ -6692,15 +6692,33 @@ class Windows(unittest.TestCase):
                         else:                                                                             # on a phone it fills the screen: ✕
                             await pg.click("#dmview .dm-fen [data-dmfenzu]")
                         await b.until(pg, "!document.querySelector('#dmview .dm-fen')")
-                        # Siedlung mit Leben (1a 2a 3a 5b): a head with name, time of day and the purse (the group's only
-                        # shown), a card per service with a verb, the lesson as six values before → after, too dear grey
+                        # Siedlung neu ordnen (Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): a slim head with name, time of day and
+                        # the purse (the group's only shown); the services by house as a list beside the chosen house, on
+                        # the phone the list first and the house with „‹ Häuser“; one row per offer with its verb; the
+                        # lesson as six values before → after; too dear grey
                         await pg.click("#dmview [data-dmfen=siedlung]")
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen .dm-sied-kopf')")
-                        self.assertEqual(await pg.evaluate("[document.querySelectorAll('#dmview .dm-fen .dm-dienstk').length,"
-                                                           "document.querySelectorAll('#dmview .dm-fen .dm-lehre .dm-lwert').length]"), [5, 6])
-                        self.assertRegex(await pg.evaluate("document.querySelector('#dmview .dm-sied-titel').textContent"), r"Tag.*Dein Gold.*Gruppe")
+                        self.assertRegex(await pg.evaluate("document.querySelector('#dmview .dm-sied-kopf').textContent"), r"Tag.*Dein Gold.*Gruppe")
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen .dm-haus')].map(x=>x.dataset.dmsied)"),
+                                         ["gasthaus", "schmiede", "lehre"])
+                        if w < 760:                      # the phone: the list alone, a house with its way back
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-sied-haus')"))
+                            await pg.click("#dmview [data-dmsied=gasthaus]")
+                            await b.until(pg, "!!document.querySelector('#dmview [data-dmsiedzu]')")
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-haus')"))
                         self.assertIn("Übernachten", await pg.evaluate("document.querySelector('#dmview [data-dmdienst=gasthaus]').textContent"))
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmview .dm-sied-haus [data-dmdienst]').length"), 2)   # inn and rumour
                         self.assertTrue(await pg.evaluate(fits), w)
+                        if w < 760:
+                            await pg.click("#dmview [data-dmsiedzu]")
+                            await b.until(pg, "!!document.querySelector('#dmview .dm-haus')")
+                        await pg.click("#dmview [data-dmsied=lehre]")
+                        await b.until(pg, "document.querySelectorAll('#dmview .dm-fen .dm-lehre .dm-lwert').length===6")
+                        if w < 760:
+                            await pg.click("#dmview [data-dmsiedzu]")
+                            await b.until(pg, "!!document.querySelector('#dmview .dm-haus')")
+                        await pg.click("#dmview [data-dmsied=gasthaus]")
+                        await b.until(pg, "!!document.querySelector('#dmview [data-dmdienst=gasthaus]')")
                         poor = await pg.evaluate("(()=>{const v=structuredClone(DM.v);v.siedlung.gold=0;const d=document.createElement('div');"
                                                  "d.innerHTML=dmSiedlung(v);return [d.querySelectorAll('.dm-fehlt').length>0,"
                                                  "d.querySelectorAll('[data-dmhero=dienst]:not([disabled])').length]})()")
@@ -10630,6 +10648,12 @@ class Fight(Turns):
         self.assertEqual({x["id"]: x["preis"] for x in v["dienste"]},
                          {"gasthaus": gold.PREIS["gasthaus"] * stufe * 2, "schmied": gold.PREIS["schmied"] * stufe,
                           "lehre": gold.PREIS["lehre"] * stufe, "geruecht": gold.PREIS["geruecht"] * stufe, "verbessern": 0})
+        # Siedlung neu ordnen (6a): every service lives in exactly one house; the view names only houses with a service
+        alle = [x for _, _, ds in gold.HAEUSER for x in ds]
+        self.assertEqual(sorted(alle), sorted(gold.NAMEN))
+        self.assertEqual(v["haeuser"], [{"id": "gasthaus", "name": "Gasthaus", "dienste": ["gasthaus", "geruecht"]},
+                                        {"id": "schmiede", "name": "Schmiede", "dienste": ["schmied", "verbessern"]},
+                                        {"id": "lehre", "name": "Lehrmeister", "dienste": ["lehre"]}])
         # Siedlung mit Leben (1a 3a 5b): the head's time of day and the group's gold, the calculation of each price
         self.assertEqual((v["tageszeit"], v["gold_gruppe"], v["stufe"], v["helden"]), ("tag", 1000, stufe, 2))
         self.assertEqual({x["id"]: x["je"] for x in v["dienste"]}, dict(gold.PREIS, verbessern=0))

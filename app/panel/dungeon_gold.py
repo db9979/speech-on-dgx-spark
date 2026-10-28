@@ -45,6 +45,12 @@ NAMEN = {"gasthaus": (("Gasthaus", "Inn"), ("Eine Nacht für alle: volles Leben 
          "sockel": (("Sockel bohren", "Drill a socket"), ("Ein Sockel mehr in einer Waffe oder Rüstung, höchstens einer je Ding.", "One more socket in a weapon or armour, at most one a thing.")),
          "loesen": (("Runen lösen", "Take runes out"), ("Bricht die Runen heraus oder rettet sie in den Beutel; ein Runenwort erlischt.", "Breaks the runes out or saves them into the bag; a runeword goes out.")),
          "verschmelzen": (("Runen verschmelzen", "Fuse runes"), ("Drei gleiche Runen werden eine des nächsten Rangs.", "Three of the same rune become one of the next rank."))}
+# Siedlung neu ordnen (Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): the services by the house they happen in, in this order;
+# the window shows the houses as a list with the chosen one beside it, the picture thread paints one picture a house
+HAEUSER = (("gasthaus", ("Gasthaus", "Inn"), ("gasthaus", "geruecht", GEFAEHRTE)),
+           ("schmiede", ("Schmiede", "Smithy"), ("schmied", "verbessern") + runen.DIENSTE),
+           ("heiler", ("Heiler", "Healer"), (HEILER,)),
+           ("lehre", ("Lehrmeister", "Teacher"), ("lehre",)))
 RICHTUNG = (("im Osten", "to the east"), ("im Südosten", "to the south-east"), ("im Süden", "to the south"), ("im Südwesten", "to the south-west"),
             ("im Westen", "to the west"), ("im Nordwesten", "to the north-west"), ("im Norden", "to the north"), ("im Nordosten", "to the north-east"))
 clock = time.time
@@ -246,6 +252,11 @@ def serve(dm, r, rd, pid, h, b):
     print(f"dungeon: dienst | {was} | {preis} gold", flush=True)
 
 
+def houses(ids, li):
+    """The houses with at least one of these services: [{id, name, dienste}] in HAEUSER's order."""
+    return [{"id": k, "name": n[li], "dienste": [x for x in ds if x in ids]} for k, n, ds in HAEUSER if any(x in ids for x in ds)]
+
+
 def view(dm, r, rd, pid):
     """The settlement's offers for the own seat; None while off, outside a settlement or in a fight."""
     p = rd["plaetze"].get(pid) or {}
@@ -269,6 +280,7 @@ def view(dm, r, rd, pid):
             "stufe": dm.group_level(held), "helden": len(held),
             "dienste": [{"id": x, "name": NAMEN[x][0][li], "satz": NAMEN[x][1][li], "preis": price(dm, rd, x), "frei": frei[x] and x not in zu,
                          "je": per_level(x), **({"zu": True} if x in zu else {})} for x in offers(rd, h)],
+            "haeuser": houses(offers(rd, h), li),
             "spruch": narben.saying(r, rd, dm.seated(rd)),          # people ask about a scar (D&D idea 8)
             "gefaehrten": gefaehrte.candidates(dm, r, rd),         # the companions to hire (D&D round 2, idea 9)
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
