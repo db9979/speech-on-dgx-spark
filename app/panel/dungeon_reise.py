@@ -115,7 +115,7 @@ AUFGABE = {
 
 
 def task(rd, lang):
-    return AUFGABE[lang] if on(rd) else ""
+    return AUFGABE[lang] if facts(rd) else ""   # only with its data this turn (Review 27.10. T20)
 
 
 def for_live():

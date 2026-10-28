@@ -1672,7 +1672,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('#dmpruef [
 // rules per scene and model side by side; the model's own Einordnung only as a hint beside it
 const DMES={t:0};
 function dmErzBox(x){const ms=Object.entries(x.modelle||{}).sort((a,b)=>b[1].zeit-a[1].zeit),mx=2*x.szenen.length;
-  const dot=s=>s?`<span class="dm-es-p" data-p="${s.punkte}" title="${esc(s.grund)}${s.versuche?' · '+s.versuche+' '+esc(t('Versuche','tries')):''} · ${s.sekunden} s">${s.punkte}</span>${s.einordnung?`<small class="mut" title="${esc(t('eigene Einschätzung des Modells','the model\'s own view'))}"> ${Math.round(s.einordnung.lebendig*100)}/${Math.round(s.einordnung.folgt*100)}</small>`:''}`:'–';
+  const dot=s=>s?`<span class="dm-es-p" data-p="${s.punkte}" title="${esc(s.grund)}${s.erst?' · '+esc(t('zuerst','first'))+' '+esc(s.erst):''}${s.versuche?' · '+s.versuche+' '+esc(t('Versuche','tries')):''} · ${s.sekunden} s">${s.punkte}</span>${s.einordnung?`<small class="mut" title="${esc(t('eigene Einschätzung des Modells','the model\'s own view'))}"> ${Math.round(s.einordnung.lebendig*100)}/${Math.round(s.einordnung.folgt*100)}</small>`:''}`:'–';
   const tab=ms.length?`<div class="dm-ps-w"><table class="dm-ps-t dm-es-t"><thead><tr><th>${esc(t('Szene','Scene'))}</th>${ms.map(([n])=>`<th>${esc(n)}</th>`).join('')}</tr></thead><tbody>
     ${x.szenen.map(([id,nm])=>`<tr><td>${esc(nm[L==='en'?1:0])}</td>${ms.map(([,m])=>`<td>${dot((m.szenen||{})[id])}</td>`).join('')}</tr>`).join('')}
     <tr class="dm-es-sum"><td>${esc(t('Punkte','Points'))}</td>${ms.map(([,m])=>`<td><b>${m.punkte}</b> / ${m.max||mx}</td>`).join('')}</tr>

@@ -3448,7 +3448,9 @@ class Stories(Base):
         self.assertIn('"bruecke": "Die Krypta', dungeon.plan_facts(x))
         x["zug"] += 1
         self.assertNotIn("bruecke", dungeon.plan_facts(x))
-        self.assertIn("bruecke", dungeon.AUFGABE_FOLGE["de"])
+        self.assertIn("bruecke", dungeon.FOLGE_BRUECKE["de"])                    # Review 27.10. T20: only on the bridge's turn
+        self.assertIn(dungeon.FOLGE_BRUECKE["de"].strip(), dungeon.system_text(r, dict(rd, bruecke={"zug": rd["zug"], "wende": krypta}), "erzaehlen"))
+        self.assertNotIn(dungeon.FOLGE_BRUECKE["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
         x["zug"] = x["akt_zug"] + dungeon.AKT_MIN - 1
         self.assertFalse(dungeon.goal_told(x, "Morwen wird aufgehalten."))      # the goal only in the last act (G27)
         self.assertEqual(dungeon.step_act(x, True, "Morwen stürzt in die Tiefe."), "modell")
@@ -4574,7 +4576,8 @@ class Equipment(Base):
         self.assertEqual(an.progress(dungeon, r, rd, {}, [], random.Random(1)), "")     # off: nothing
         self.assertNotIn("stillstand", rd)
         helpers.set_config(dungeon_anleiten=True, dungeon_fortschritt=True)
-        self.assertIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
+        self.assertNotIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))   # Review 27.10. T20: only with a wink
+        self.assertIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, dict(rd, anleitwink={"zug": rd["zug"], "stufe": 1}), "erzaehlen"))
 
         def turn(story=None, wuerfe=()):
             with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -4703,7 +4706,7 @@ class Equipment(Base):
         rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
         rd.update(offen={}, dm=False, status="laeuft", plan={"akte": [{"titel": "Turm", "spuren": ["Frisches Wachs klebt am Glockenseil."]}]}, akt=0)
         self.assertTrue(an.kern(rd) and not an.on(rd))
-        sys_t = dungeon.system_text(r, rd, "erzaehlen")
+        sys_t = dungeon.system_text(r, dict(rd, anleitwink={"zug": rd["zug"], "stufe": 1}), "erzaehlen")   # T20: the wink with its data
         self.assertIn(an.WINK_TASK["de"].strip(), sys_t)
         self.assertIn(an.SPUR_TASK["de"].strip(), sys_t)
         self.assertNotIn(an.TASK["de"].strip(), sys_t)                                    # the form stays with anleiten

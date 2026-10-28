@@ -160,7 +160,7 @@ def task(rd, lang):
     (step 2) and the stall hint (step 4); the clues and the stall hint follow kern, the rest on, "" while both are off."""
     k, o = kern(rd), on(rd)
     return ((TASK[lang] if o else "") + (SPUR_TASK[lang] if k and rd.get("plan") else "")
-            + (WEGE_TASK[lang] if o and KNOEPFE[stufe(rd)] else "") + (WINK_TASK[lang] if k and WINK[stufe(rd)] else ""))
+            + (WEGE_TASK[lang] if o and KNOEPFE[stufe(rd)] else "") + (WINK_TASK[lang] if k and WINK[stufe(rd)] and facts(rd) else ""))   # the stall hint only with one (T20)
 
 
 def example(r, rd, li):

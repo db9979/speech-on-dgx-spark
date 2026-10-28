@@ -115,11 +115,11 @@ def night_foes(rd, fit, angebot):
 
 
 TASK = {
-    "de": (" Die Tageszeit setzt das Panel (szene.tageszeit in den Fakten), lass szene.tageszeit leer und ändere sie nie. "
-           "Steht tageszeit_neu in den Fakten, erzähle den Übergang in ein oder zwei Sätzen."),
-    "en": (" The panel sets the time of day (szene.tageszeit in the facts), leave szene.tageszeit empty and never change it. "
-           "When the facts hold tageszeit_neu, tell the change in one or two sentences."),
+    "de": " Die Tageszeit setzt das Panel (szene.tageszeit in den Fakten), lass szene.tageszeit leer und ändere sie nie.",
+    "en": " The panel sets the time of day (szene.tageszeit in the facts), leave szene.tageszeit empty and never change it.",
 }
+NEU_TASK = {"de": " Steht tageszeit_neu in den Fakten, erzähle den Übergang in ein oder zwei Sätzen.",   # only with it (T20)
+            "en": " When the facts hold tageszeit_neu, tell the change in one or two sentences."}
 MELDEN = {
     "de": " Ändert sich die Tageszeit, melde sie in szene.tageszeit (morgen, tag, abend, nacht).",
     "en": " When the time of day changes, report it in szene.tageszeit (morgen, tag, abend, nacht).",
@@ -128,7 +128,7 @@ MELDEN = {
 
 def task(rd, lang):
     """The narrator's sentence on the time of day: the panel's while on, else the model reports it."""
-    return TASK[lang] if on(rd) else MELDEN[lang]
+    return TASK[lang] + (NEU_TASK[lang] if facts(rd) else "") if on(rd) else MELDEN[lang]
 
 
 def facts(rd):

@@ -4181,6 +4181,13 @@
 "titel": "Dungeon-Master: Runenbilder und leuchtende Sockel",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Runen und Sockel an. A: Ein Ding mit Sockeln im Heldenbogen: Über seinem Bild stehen dunkle Punkte, je Sockel einer. B: Eine Rune einsetzen: Ihr Punkt leuchtet in ihrer Farbe, der Tooltip nennt die Rune. C: Nach „Alle Bilder malen“ zeigt der Runenbeutel Bilder statt ᚱ, in Science-Fiction als Chips.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P622",
+"v": 1202,
+"titel": "Dungeon-Master: Erzähler-Prüfstand nach Paket 12",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand → „Jetzt prüfen“. A: „Englische Runde auf Englisch“ und „Harmlose Aktion ohne Probe“ haben 2 Punkte. B: Die kleinen Zahlen liegen zwischen 0 und 100. C: Eine Szene mit 1 Punkt nennt im Tooltip nach „zuerst“, woran der erste Versuch scheiterte. D: Eine englische Runde erzählt durchgehend Englisch, am Tisch hört ein Platz nach „Ich grüße den Wirt“ „Keine Probe: Alltägliches braucht keine.“, wenn das Modell eine Probe wollte.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

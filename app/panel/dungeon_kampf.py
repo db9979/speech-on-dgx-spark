@@ -207,19 +207,22 @@ AUFGABE_ANGEBOT = {
           "id only from the list angebot of the facts and tell how they appear, each by its name from angebot, without a "
           "number; name no other foes. The panel decides how many come and how strong they are. Only when the scene "
           "wants a single foe (a duel, a lone guard), set allein: true for it."}
-AUFGABE_KAMPF = {
+AUFGABE_ANGRIFF = {             # the checks step in a fight (Review 27.10. E8: the narration gets only AUFGABE_KAMPF)
     "de": "Es wird gekämpft (Fakten kampf). Das Panel würfelt jeden Angriff: Greift eine Figur in ihrer Aktion einen "
           "Gegner an, gib ihr eine Probe mit ziel = dem Namen des Gegners genau wie in kampf und dem Wert, mit dem sie "
-          "angreift; schwer zählt dabei nicht. Erzähle genau, was die Würfe in proben und gegner_zuege sagen: wer "
+          "angreift; schwer zählt dabei nicht.",
+    "en": "There is a fight (facts kampf). The panel rolls every attack: when a character attacks a foe in its action, "
+          "give it a check with ziel = the foe's name exactly as in kampf and the value it attacks with; schwer does "
+          "not count then."}
+AUFGABE_KAMPF = {
+    "de": "Es wird gekämpft (Fakten kampf), das Panel hat jeden Angriff gewürfelt. Erzähle genau, was die Würfe in proben und gegner_zuege sagen: wer "
           "trifft, wer verfehlt, wer fällt oder flieht. Melde für den Kampf keinen Schaden in folgen und lass keinen "
           "Gegner ohne Wurf fallen. wirkt sagt, ob der Gegner den Schaden halbiert (resistenz), gar nicht nimmt (immun) "
           "oder doppelt (schwaeche); zustand mit gerettet false heißt, die Figur leidet jetzt daran (erzähle es), "
           "kann_nicht, dass sie wegen eines Zustands nicht angreifen konnte. Ein Gegner mit boss und phase 2 wird "
           "jetzt gefährlicher. Ob die Gruppe entkommt, entscheidet das Panel (Probe „Fliehen“ in proben); Frieden gibt es nur, wenn die Probe „Frieden anbieten“ "
           "in proben geschafft ist. Melde im Kampf keine heilung in folgen: geheilt wird nur durch Zauber und Tränke des Panels.",
-    "en": "There is a fight (facts kampf). The panel rolls every attack: when a character attacks a foe in its action, "
-          "give it a check with ziel = the foe's name exactly as in kampf and the value it attacks with; schwer does "
-          "not count then. Tell exactly what the rolls in proben and gegner_zuege say: who hits, who misses, who falls "
+    "en": "There is a fight (facts kampf), the panel has rolled every attack. Tell exactly what the rolls in proben and gegner_zuege say: who hits, who misses, who falls "
           "or flees. Report no damage of the fight in folgen and let no foe fall without a roll. wirkt says whether the "
           "foe halves the damage (resistenz), takes none (immun) or double (schwaeche); zustand with gerettet false means "
           "the character now suffers it (tell it), kann_nicht that a state kept it from attacking. A foe with boss "
@@ -1025,7 +1028,11 @@ def facts(dm, r, rd, held, li):
     return {"angebot": o} if o else {}
 
 
-def task(rd, lang):
+def task(rd, lang, proben=False):
+    """The fight's sentence of a system text: the checks step only in a fight (AUFGABE_ANGRIFF), the narration the
+    fight's rules or, without one, the offer."""
+    if proben:
+        return " " + AUFGABE_ANGRIFF[lang] if rd.get("kampf") else ""
     return " " + (AUFGABE_KAMPF if rd.get("kampf") else AUFGABE_ANGEBOT)[lang]
 
 

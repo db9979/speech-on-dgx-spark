@@ -259,7 +259,8 @@ async def play(r, sid, own=None):
         story, _, tries = await dungeon.tell(r, rd, wuerfe, [], [], count=False)
         punkte = 2 if tries[:1] == [""] else 1 if "" in tries else 0
         return {"punkte": punkte, "grund": "ok" if punkte else next((f for f in reversed(tries) if f), "abgelehnt"),
-                "versuche": len(tries), "laenge": len((story or {}).get("text") or ""), "sekunden": round(time.monotonic() - t0, 1)}
+                "versuche": len(tries), "laenge": len((story or {}).get("text") or ""), "sekunden": round(time.monotonic() - t0, 1),
+                **({"erst": tries[0] or "abgelehnt"} if punkte == 1 else {})}
     rd, proben = scene(r, sid)
     if proben is None and sid == "kampfzug":              # whatever the model asks: fighting a foe is an attack
         got, _ = await dungeon.ask_checks(r, rd)
@@ -283,7 +284,8 @@ async def play(r, sid, own=None):
         punkte, grund = 0, "name fehlt"
     if punkte and sid == "englisch" and len(DEUTSCH.findall(text)) > ENGLISCH_MAX:
         punkte, grund = 0, "deutsch"
-    out = {"punkte": punkte, "grund": grund, "versuche": len(tries), "laenge": len(text), "sekunden": round(time.monotonic() - t0, 1)}
+    out = {"punkte": punkte, "grund": grund, "versuche": len(tries), "laenge": len(text), "sekunden": round(time.monotonic() - t0, 1),
+           **({"erst": tries[0] or "abgelehnt"} if punkte == 1 else {})}   # a rewrite's first fault (a fixed word)
     e = await _einordnung(rd, text) if text else None
     if e:
         out["einordnung"] = e
@@ -297,7 +299,8 @@ def questions():
 
 
 async def _einordnung(rd, text):
-    """The model's own view (systemone use "erzaehler"), the scene as data; None when Einordnung is off or unsure."""
+    """The model's own view (systemone use "erzaehler"), the scene as data, each 0 to 1 (systemone's score runs over
+    the LEVELS, 0 to 2; Prüfstand 28.10.: shown as 185 per cent before); None when Einordnung is off or unsure."""
     import systemone
     if not features.admin_on("einordnung"):
         return None
@@ -306,7 +309,7 @@ async def _einordnung(rd, text):
         ans = await systemone.ask(load_config().get("chat", {}), "erzaehler", f"Aktionen:\n{taten}\nErzählung: {text}", questions(), timeout=30)
     except systemone.Unavailable:
         return None
-    return {k: round(ans[k]["score"], 2) for k in ("lebendig", "folgt")}
+    return {k: round(ans[k]["score"] / (len(LEVELS) - 1), 2) for k in ("lebendig", "folgt")}   # 0..1 (the score is 0..2)
 
 
 def last():

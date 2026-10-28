@@ -110,7 +110,7 @@ AUFGABE = {
 
 
 def task(rd, lang):
-    return AUFGABE[lang] if on(rd) and rd.get("kampf") else ""
+    return AUFGABE[lang] if facts(rd, 0) else ""   # only with announcements this turn (Review 27.10. T20)
 
 
 def for_live():

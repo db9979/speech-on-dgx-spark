@@ -40,15 +40,20 @@ SCHEMA = {"type": "array", "maxItems": 1, "items": {"type": "object", "additiona
           "properties": {"wer": {"type": "string", "maxLength": 40}, "name": {"type": "string", "maxLength": NAME_LEN + 10},
                          "info": {"type": "string", "maxLength": INFO_LEN + 40}}}}
 AUFGABE = {
-    "de": (" Besondere Dinge der Geschichte: quest_gruppe trägt die Gruppe, quest_hier liegt hier, quest_genommen hat ein "
-           "Held gerade an sich genommen. Sie wiegen nichts und sind nicht zu verkaufen; erzähle sie nur so, wie die Daten "
-           "sagen. Findet ein Held in deiner Erzählung einen neuen Gegenstand, den die Geschichte wirklich braucht (einen "
+    "de": (" Findet ein Held in deiner Erzählung einen neuen Gegenstand, den die Geschichte wirklich braucht (einen "
            "Schlüssel, eine Karte, ein Siegel), meldest du ihn in quest_fund: höchstens einen, mit seinem Namen, wer ihn "
            "findet und einem kurzen Satz; nenne ihn in der Erzählung beim Namen."),
-    "en": (" Special things of the story: quest_gruppe the group carries, quest_hier lies here, quest_genommen a hero has "
-           "just taken. They weigh nothing and cannot be sold; tell them only as the data says. When a hero finds a new "
+    "en": (" When a hero finds a new "
            "thing in your narration that the story really needs (a key, a map, a seal), report it in quest_fund: at most "
            "one, with its name, who finds it and a short sentence; name it in the narration."),
+}
+
+DATEN = {                 # only while the story's things are there (Review 27.10. T20)
+    "de": (" Besondere Dinge der Geschichte: quest_gruppe trägt die Gruppe, quest_hier liegt hier, quest_genommen hat ein "
+           "Held gerade an sich genommen. Sie wiegen nichts und sind nicht zu verkaufen; erzähle sie nur so, wie die Daten "
+           "sagen."),
+    "en": (" Special things of the story: quest_gruppe the group carries, quest_hier lies here, quest_genommen a hero has "
+           "just taken. They weigh nothing and cannot be sold; tell them only as the data says."),
 }
 
 
@@ -340,7 +345,7 @@ def facts(dm, rd):
 
 
 def task(rd, lang):
-    return AUFGABE[lang] if on(rd) else ""
+    return (DATEN[lang] if _all(rd) else "") + AUFGABE[lang] if on(rd) else ""
 
 
 def view(dm, rd, pid, host):

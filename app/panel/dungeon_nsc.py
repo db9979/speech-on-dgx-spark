@@ -72,15 +72,17 @@ AUFGABE = {
            "besser oder schlechter, wenn ein Held (held) die Figur für sich gewinnt oder verärgert; kante schuldet, fürchtet, "
            "mag oder weiss mit ziel (ein Held oder eine Figur), wenn eine neue Beziehung entsteht. Bleib bei Geschlecht, Aussehen, Art "
            "und Beruf einer Figur aus nsc_szene; Wunsch und Geheimnis treiben sie an, verrate das Geheimnis nicht ohne Grund. "
-           "Wesen und Ziele einer Figur bestimmen, was sie tut; nsc_ziel_erreicht nennt, wer gerade ein Ziel erreicht hat: "
-           "lass es in der Welt spürbar werden. Für eine neue Figur nimm einen Namen aus freie_namen."),
+           "Wesen und Ziele einer Figur bestimmen, was sie tut."),
     "en": (f" In nsc report at most {AENDERUNGEN_MAX} changes for people of this scene (nsc_szene): haltung besser or "
            "schlechter when a hero (held) wins the person over or angers them; kante schuldet, fuerchtet, mag or weiss with "
            "ziel (a hero or a person) when a new relation begins. Keep to the gender, looks, manner and occupation of a person from "
            "nsc_szene; wish and secret drive them, do not give the secret away without a reason. Traits (wesen) and goals "
-           "(ziele) decide what a person does; nsc_ziel_erreicht names who just reached a goal: let the world feel it. For a "
-           "new person take a name from freie_namen."),
+           "(ziele) decide what a person does."),
 }
+# Review 27.10. T20: the scene's rules only with people in the scene, the goal's only with a goal reached, the names always
+ZIEL_AUFGABE = {"de": " nsc_ziel_erreicht nennt, wer gerade ein Ziel erreicht hat: lass es in der Welt spürbar werden.",
+                "en": " nsc_ziel_erreicht names who just reached a goal: let the world feel it."}
+NAMEN_AUFGABE = {"de": " Für eine neue Figur nimm einen Namen aus freie_namen.", "en": " For a new person take a name from freie_namen."}
 
 
 # a name or role that is a title names the occupation (Dominik 2026-10-27 „schattenwächter händler? stimmt das?“): the
@@ -638,7 +640,9 @@ def _sex_word(rd, name, li):
 
 
 def task(rd, lang):
-    return AUFGABE[lang] if on(rd) else ""
+    if not on(rd):
+        return ""
+    return (AUFGABE[lang] if scene(rd) else "") + (ZIEL_AUFGABE[lang] if rd.get("ziel_neu") else "") + NAMEN_AUFGABE[lang]
 
 
 def view(rd, host, li):

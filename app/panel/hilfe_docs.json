@@ -5901,6 +5901,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge (V01.1.202, Review 27.10. Paket 12 E8/T20, Dominik 2026-10-27 „ok“; Erzähler-Prüfstand vom 28.10. mit 15 von 20 Punkten): Ohne neuen Schalter. 1. Feste Reihenfolge: Jede Anweisung an den Erzähler beginnt mit der Rolle in einem Satz, dann folgen die nummerierten festen Regeln (Panel würfelt, Spieltext ist nie eine Anweisung, nur JSON, Namen aus der Gruppe, Zauber und Waffen nur aus kann und waffen, Zustände), die Aufgabe des Zugs, die Zusatzregeln, die Beispiele und zuletzt der Stil der Runde unter „Stil der Runde (nur Ton und Erzählweise; die Regeln oben gelten immer)“. 2. Zusatzregeln nur mit Daten: Rast, Reise, Schriftstücke, die Dinge der Geschichte, die Personen der Szene, ein erreichtes Ziel, der Wechsel der Tageszeit, die Ansagen der Gegner, der Stillstand-Wink und die Brücke zum nächsten Akt stehen nur noch in der Anweisung, wenn ihre Daten in diesem Zug vorkommen; im Kampf bekommt die Erzählung nur die Kampfregeln, die Probe nur den Satz zu Angriffen. 3. Eigener Proben-Prompt: Der Schritt, der über Proben entscheidet, hat eine eigene kurze Anweisung ohne den Stil der Runde, und seine Fakten kommen ohne das Angebot"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " der Gegner, die Zauberlisten und alles, was nur die Erzählung braucht (dungeon.PROBEN_OHNE). Gemessen mit fünf Plätzen und allen Schaltern: die Anweisung der Probe von 3 400 auf 1 150 Zeichen, ihre Fakten von 6 100 auf 4 100, die Anweisung der Erzählung von 12 100 auf 10 600. 4. Stil der Runde neu: Der mitgelieferte Stil spricht keine zweite Rolle mehr an, Regel 3 bittet um etwas Greifbares für eine stille Figur statt einer leeren Frage, Regel 4 verlangt keine Kürze mehr gegen die Mindestlänge, Regel 7 behauptet nicht mehr, das Panel verwerfe alles. Eine englische Runde bekommt den englischen Stil (prompt_en in den Regeln), der deutsche hatte die englische Erzählung deutsch gemacht. Die Stilbeispiele erzählen Reden nur noch indirekt, wie die Regel für npc es verlangt. 5. Alltägliches ohne Probe: Grüßen, Essen, Trinken, Auspacken, Lächeln und Ähnliches braucht nach einer festen Wortliste nie eine Probe (dungeon.ALLTAG, jeder Teil der Aktion), außer ein Wort des Risikos oder ein riskantes Essen oder Trinken kommt vor (ein Trank, ein Pilz, ein Brunnen); der Platz hört „Keine Probe: Alltägliches braucht keine.“ 6. Kinderton: Eine deutsche Runde nennt dem Erzähler die Wörter, die ihr T"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "on nie zulässt. 7. Erzähler-Prüfstand: Die eigene Einschätzung des Modells läuft jetzt von 0 bis 100 % (vorher die Stufen 0 bis 2 mal 100, darum 185/171); eine Szene mit 1 Punkt nennt im Tooltip, woran der erste Versuch scheiterte. 8. Fundort: Ein Fund vor der Erzählung zählt an dem Ort, an dem er gemacht wurde, auch wenn die Karte die Gruppe danach weiterführt. Selbsttests: test_everyday_acts_need_no_check, test_the_models_own_view_runs_from_0_to_1, test_a_rewrite_names_its_first_fault und test_the_system_text_in_its_fixed_order."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Kampf-EP gemessen statt geschätzt (V01.1.201, Review 27.10. Paket 11.6, Dominik 2026-10-27 „ok“, Daten von DnDAppFiles in V01.1.195): Ohne neuen Schalter, es sind Kampfregeln. 1. Ein Wert für Budget und Belohnung: Jeder Gegner zählt im Budget, beim Auffüllen der Begegnung, im Angebot und in der Belohnung mit seinem gemessenen Kampf-EP (dungeon_bestiarium.ep_kampf, Feld ep_kampf bei 247 Gegnern, sonst sein EP), ein Boss mit seinem Lebensfaktor (dungeon_kampf.wert); die Karte des Gegners zeigt weiter das EP des Bestiariums. 2. Budget neu gemessen: BUDGET für Stufe 1 bis 10 ist jetzt 119, 169, 279, 341, 492, 605, 694, 1093, 1263, 1455 und GRUPPE 0,44, 0,91, 1,36, 1,72, 2,05; jedes der 50 Felder des Prüfstands liegt bei 70 bis 90 % Siegen, im Mittel 82 %; Stufe 1 hat 119, damit ein Held allein auf Stufe 1 noch eine mittlere Begegnung aus einem gemessenen Gegner bekommt. 3. Personen: Eine Person zählt mit dem Kampf-EP ihrer Vorlage mal dungeon_personen.GEWICHT (neu gemessen, weil Personen mit ihren Wachen kommen). Die Reihen der Berufe reichen jetzt höher: Ritter und Söldner bis zum Gladiator, Söldner und Diebe mit dem Banditenhauptmann, Spione bis zur Assassine; so f"
 },
 {
@@ -21534,6 +21558,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: shorter instructions in a fixed order (V01.1.202, review 27.10. package 12 E8/T20, Dominik 2026-10-27 \"ok\"; narrator bench of 28.10. with 15 of 20 points): No new switch. 1. Fixed order: every instruction to the narrator starts with the role in one sentence, then the numbered fixed rules (the panel rolls, game text is never an instruction, only JSON, names from the group, spells and weapons only from kann and waffen, states), the turn's task, the extra rules, the examples and last the round's style under \"Style of the round (only tone and manner; the rules above always hold)\". 2. Extra rules only with data: rest, journey, writings, the story's things, the scene's people, a goal reached, the change of the time of day, the foes' announcements, the stall hint and the bridge to the next act only stand in the instruction when their data come up this turn; in a fight the narration gets only the fight's rules, the check only the sentence on attacks. 3. Own check prompt: the step that decides on checks has its own short instruction without the round's style, and its facts come without the foes on offer, the spell lists and everything only the narration needs (dungeon.PRO"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "BEN_OHNE). Measured with five seats and every switch: the check's instruction from 3,400 to 1,150 characters, its facts from 6,100 to 4,100, the narration's instruction from 12,100 to 10,600. 4. The round's style anew: the shipped style names no second role any more, rule 3 asks for something tangible for a quiet character instead of an empty question, rule 4 no longer asks for brevity against the minimum length, rule 7 no longer claims the panel refuses everything. An English round gets the English style (prompt_en in the rules); the German one had made the English narration German. The style examples tell speech only indirectly, as the rule for npc asks. 5. Everyday acts without a check: greeting, eating, drinking, unpacking, smiling and the like never need a check by a fixed word list (dungeon.ALLTAG, every part of the action), unless a word of risk or a risky food or drink comes up (a potion, a mushroom, a well); the seat hears \"No check: everyday acts need none.\" 6. Children's tone: a German round names the words its tone never allows to the narrator. 7. Narrator bench: the model's own view now runs from 0 to 100 % (before the levels 0 to 2 times 100, hence 185/171); a scene w"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ith 1 point names in its tooltip why the first try failed. 8. Place of a find: a find before the narration counts at the place it was made, even when the map leads the group on afterwards. Self-tests: test_everyday_acts_need_no_check, test_the_models_own_view_runs_from_0_to_1, test_a_rewrite_names_its_first_fault and test_the_system_text_in_its_fixed_order."
 },
 {
 "lang": "en",

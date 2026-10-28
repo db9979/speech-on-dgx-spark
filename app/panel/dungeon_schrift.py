@@ -33,13 +33,13 @@ SCHEMA = {"type": "object", "additionalProperties": False, "required": ["titel",
 AUFGABE = {
     "de": (" Finden die Helden in deiner Erzählung etwas Geschriebenes (einen Brief, einen Steckbrief, einen Vers, eine "
            "Tagebuchseite, eine Notiz, eine Inschrift), gibst du es in schriftstueck an: titel, den text so, wie er "
-           "dasteht (höchstens 600 Zeichen), art und von (wer es schrieb, leer wenn unbekannt); höchstens eines je Zug. "
-           "schriftstuecke sind die zuletzt gefundenen; bleib bei dem, was dort steht."),
+           "dasteht (höchstens 600 Zeichen), art und von (wer es schrieb, leer wenn unbekannt); höchstens eines je Zug."),
     "en": (" When the heroes find something written in your narration (a letter, a wanted poster, a verse, a diary page, a "
            "note, an inscription), give it in schriftstueck: titel, the text as it stands (at most 600 characters), art and "
-           "von (who wrote it, empty when unknown); at most one a turn. schriftstuecke are the ones found last; keep to "
-           "what stands there."),
+           "von (who wrote it, empty when unknown); at most one a turn."),
 }
+GEFUNDEN = {"de": " schriftstuecke sind die zuletzt gefundenen; bleib bei dem, was dort steht.",   # only with writings (T20)
+            "en": " schriftstuecke are the ones found last; keep to what stands there."}
 
 _day = DayCounter(gefunden=0, verworfen=0, geheim=0)
 
@@ -49,7 +49,7 @@ def on(rd):
 
 
 def task(rd, lang):
-    return AUFGABE[lang] if on(rd) else ""
+    return AUFGABE[lang] + (GEFUNDEN[lang] if facts(rd) else "") if on(rd) else ""
 
 
 def check(dm, r, rd, obj):
