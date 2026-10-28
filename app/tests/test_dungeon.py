@@ -2222,7 +2222,7 @@ class ReviewPersonen(Base):
         import dungeon_kampf as kampf
         import dungeon_personen as P
         r, rd = dungeon.rules(), self.state(self.rid)
-        for beruf, want in (("farmer", None), ("ship ai", None), ("sailor", "wache"), ("knight", "ritter")):
+        for beruf, want in (("farmer", None), ("ship ai", None), ("sailor", "wache"), ("knight", "gladiator")):   # the row's strongest
             g = P.template(dungeon, r, rd, {"karte": {"beruf": ["x", beruf]}}, 10 ** 6)
             self.assertEqual(g and g["id"], want, beruf)
         rd["nsc"] = {"odo": {"name": "Odo", "gesicht": {"n": "nsc-0123456789abcdef", "st": "ok"}}}
@@ -7812,6 +7812,11 @@ class Fight(Turns):
         rd = self.state(self.rid)
         return rd, dungeon._living(rd)
 
+    def peace_reward(self, k, rd, foe):
+        """The heroes' experience of a lone foe left in peace (half, alone half again): each its own reward (B9)."""
+        anteil = int(foe["ep"] // 2 * kampf.ALLEIN) / foe["ep"]
+        return sum(kampf.reward(k, p["held"]["stufe"], anteil) for _, p in dungeon.seated(rd))
+
     def act(self, text="Ich greife an."):
         z = self.state(self.rid)["zug"]
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": z}).status_code, 200)
@@ -8161,11 +8166,12 @@ class Fight(Turns):
         held = dict(dungeon.seated(rd))
         ep = {pid: 0 for pid in held}
         rd["kampf"]["geschafft"] = True
+        k = copy.deepcopy(rd["kampf"])
         with contextlib.redirect_stdout(io.StringIO()):
             kampf.apply(dungeon, r, rd, [], [], "", ep, Dice(20))
         self.assertNotIn("kampf", rd)
         self.assertEqual(rd["log"][-1]["was"], "frieden")
-        self.assertEqual(sum(ep.values()), int(foe["ep"] // 2 * kampf.ALLEIN) // len(ep) * len(ep))
+        self.assertEqual(sum(ep.values()), self.peace_reward(k, rd, foe))
 
     def test_kampf_flucht_nur_mit_mehrheit_und_panelprobe(self):
         """Kampf-Audit M6: kampf_ende flucht of the model alone ends nothing; only when most heroes who can act flee
@@ -8496,6 +8502,7 @@ class Fight(Turns):
         r = dungeon.rules()
         rd, foe = self.encounter(allein=True)
         rd2 = copy.deepcopy(rd)                                                       # the same fight once more, for a success
+        k2 = copy.deepcopy(rd2["kampf"])
         rd["offen"] = {self.host: {"text": "Ergebt euch!"}}
         with contextlib.redirect_stdout(io.StringIO()):
             proben = kampf.peace(dungeon, r, rd, [], [])
@@ -8522,7 +8529,7 @@ class Fight(Turns):
         self.assertNotIn("kampf", rd2)
         ep = [e for e in rd2["log"] if e["art"] == "ep"][n0:]
         self.assertEqual({tuple(e["grund"]) for e in ep}, {("kampf",)}, ep)           # only the fight's half, no check's experience
-        self.assertEqual(sum(e["zahl"] for e in ep), int(foe["ep"] // 2 * kampf.ALLEIN) // len(ep) * len(ep))
+        self.assertEqual(sum(e["zahl"] for e in ep), self.peace_reward(k2, rd2, foe))
         self.assertEqual(rd2["log"][[e["art"] for e in rd2["log"]].index("kampf")]["was"], "frieden")
 
     def test_kampf_invarianten_simulation(self):
@@ -8692,8 +8699,9 @@ class Fight(Turns):
         # a goal and an act's end while the fight runs: they wait until it is over
         self.act("Ich beobachte den Raum.")
         z = self.state(self.rid)["zug"]
-        rd = self.play([{"proben": []}, {"erzaehlung": f"{g['name']} lauert im Schatten, die Gruppe hält den Atem an.",
-                                         "erfolg": [{"art": "ziel"}], "akt_fertig": True, "frage_an": ""}])
+        with mock.patch.object(kampf, "random", Dice(*[1] * 40)):            # the foe's turn misses: nobody goes down, so
+            rd = self.play([{"proben": []}, {"erzaehlung": f"{g['name']} lauert im Schatten, die Gruppe hält den Atem an.",   # both still act
+                                             "erfolg": [{"art": "ziel"}], "akt_fertig": True, "frage_an": ""}])
         self.assertEqual(rd["zug"], z + 1)
         self.assertTrue(rd.get("kampf") and rd.get("ziel_wartet"))
         self.assertFalse([e for e in rd["log"] if e["art"] == "ep" and "ziel" in e.get("grund", [])])
@@ -10360,12 +10368,14 @@ class Fight(Turns):
         by = {g["oid"]: g for g in kampf.offer(dungeon, r, rd, held) if g.get("person")}
         self.assertEqual(set(by), {"p:oskar", "p:ilse"})
         self.assertEqual((by["p:oskar"]["id"], by["p:oskar"]["name"]), ("wache", ["Oskar", "Oskar"]))
-        self.assertLessEqual(by["p:ilse"]["ep"], b * kampf.SCHWER)                         # a knight at level 1: not the knight's values
+        ek = kampf.best.ep_kampf                                                            # Paket 11.6: the fight value
+        self.assertLessEqual(ek(by["p:ilse"]), b * kampf.SCHWER)                           # a knight at level 1: not the knight's values
         self.assertEqual(by["p:ilse"]["id"], pers.template(dungeon, r, rd, rd["nsc"]["ilse"], b)["id"])
         reihe = [pers.weighted(dungeon._by(r, "gegner")[i]) for i in ("ritter", "veteran", "wache")]
-        reihe = [g for g in reihe if g["ep"] <= b * kampf.SCHWER and kampf.plays_in(r, g, rd.get("welt", ""))]
-        self.assertEqual(abs(by["p:ilse"]["ep"] - pers.HALB * b), min(abs(g["ep"] - pers.HALB * b) for g in reihe))   # B14: nearest to half
-        self.assertEqual(pers.template(dungeon, r, rd, rd["nsc"]["ilse"], 10_000)["id"], "ritter")   # with the budget for it: the knight
+        reihe = [g for g in reihe if ek(g) <= b * kampf.SCHWER and kampf.plays_in(r, g, rd.get("welt", ""))]
+        self.assertEqual(abs(ek(by["p:ilse"]) - pers.HALB * b), min(abs(ek(g) - pers.HALB * b) for g in reihe))   # B14: nearest to half
+        self.assertEqual(pers.template(dungeon, r, rd, rd["nsc"]["ilse"], 2_000)["id"], "ritter")    # with the budget for it: the knight
+        self.assertEqual(pers.template(dungeon, r, rd, rd["nsc"]["ilse"], 100_000)["id"], "gladiator")   # high up the row's strongest
         f = {x["id"]: x for x in kampf.offer_facts(dungeon, r, rd, held, 0)}
         self.assertEqual((f["p:oskar"]["name"], f["p:oskar"]["person"]), ("Oskar", True))
         self.assertNotIn("ruestung", f["p:oskar"])                                           # values stay the panel's
@@ -10378,8 +10388,9 @@ class Fight(Turns):
         k = kampf.start(dungeon, r, rd, held, wahl[:1], 0)
         (o,) = k["gegner"]
         w = dungeon._by(r, "gegner")["wache"]
-        self.assertEqual((o["name"], o["person"], o["rk"], o["max"], o["ep"]), ("Oskar", "oskar", w["ruestung"], w["leben"], pers.weighted(w)["ep"]))
-        self.assertNotEqual(pers.weighted(w)["ep"], w["ep"])                                 # its weight counts (balancing)
+        self.assertEqual((o["name"], o["person"], o["rk"], o["max"], o["ep"], o["ep_kampf"]),
+                         ("Oskar", "oskar", w["ruestung"], w["leben"], w["ep"], pers.weighted(w)["ep_kampf"]))
+        self.assertNotEqual(pers.weighted(w)["ep_kampf"], kampf.best.ep_kampf(w))           # its weight counts (balancing)
         self.assertEqual(rd["log"][-1]["gegner"][0]["name"], "Oskar")
         self.assertEqual(kampf.offer(dungeon, r, rd, held), [])                              # in a fight: no offer
         o["aus"] = "besiegt"
@@ -12043,6 +12054,7 @@ class Fight(Turns):
         r = dungeon.rules()
         rd, _ = self.encounter(allein=True)
         g = rd["kampf"]["gegner"][0]
+        g["angriffe"] = 1                                 # one blow (the first offered foe may strike more; multiattack has its own test)
         z = kampf.foes_turn(dungeon, r, rd, [], Dice(20))
         self.assertEqual(len(z), 1)
         h = rd["plaetze"][z[0]["pid"]]["held"]
@@ -12157,8 +12169,9 @@ class Fight(Turns):
         r = dungeon.rules()
         bosse = [g for g in r["gegner"] if g.get("boss")][:2]
         plain = next(g for g in r["gegner"] if not g.get("boss"))
-        self.assertEqual(kampf.wert(bosse[0], 3), int(bosse[0]["ep"] * (1 + 2 * kampf.BOSS_LEBEN)))
-        self.assertEqual((kampf.wert(bosse[0], 1), kampf.wert(plain, 5)), (bosse[0]["ep"], plain["ep"]))
+        ek = kampf.best.ep_kampf                                                       # Paket 11.6: the measured fight value
+        self.assertEqual(kampf.wert(bosse[0], 3), int(ek(bosse[0]) * (1 + 2 * kampf.BOSS_LEBEN)))
+        self.assertEqual((kampf.wert(bosse[0], 1), kampf.wert(plain, 5)), (ek(bosse[0]), ek(plain)))
         self.assertEqual(kampf.adjusted([bosse[0]], 3), kampf.wert(bosse[0], 3))
         rd, held = self.held()
         rd["raum_gegner"] = {"raum": "gw-r9", "ids": [g["id"] for g in bosse]}

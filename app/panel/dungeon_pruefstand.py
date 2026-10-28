@@ -211,7 +211,7 @@ def encounter(r, held, gefahr, rng, tries=200, personen=False):
             if wahl and kampf.danger(kampf.adjusted(flat, len(held)), b) == gefahr:
                 return wahl
         return []
-    fit = [g for g in r.get("gegner") or [] if 0 < g["ep"] <= b * kampf.SCHWER
+    fit = [g for g in r.get("gegner") or [] if 0 < g["ep"] and dungeon_bestiarium.ep_kampf(g) <= b * kampf.SCHWER
            and not dungeon_bestiarium.friedlich(g)]          # like the table (dungeon_kampf._foes): never a peaceful one
     if not fit:
         return []

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.201** · 2026-10-28 · KI-Dungeon-Master: Budget und Belohnung zählen jeden Gegner nach seinem gemessenen Kampf-EP, Budget neu gemessen (Review 27.10. Paket 11.6)
 - **V01.1.200** · 2026-10-27 · KI-Dungeon-Master: zieht die Gruppe weiter, sagt eine feste Zeile am Tisch, wer gehen wollte („Weiter nach Silberhafen, weil Arvid gehen wollte“)
 - **V01.1.199** · 2026-10-28 · KI-Dungeon-Master: die Würfelkarte nennt die Stufe, der Tisch sagt, warum keine Probe kam und wer die Beute bekommt (Review 27.10. Paket 12)
 - **V01.1.198** · 2026-10-28 · KI-Dungeon-Master: der Prüfstand misst Herr und Boss, jede Gruppengröße gewinnt im Mittel mindestens 60 % (Review 27.10. B1, B3)

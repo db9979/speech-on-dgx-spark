@@ -5901,6 +5901,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Kampf-EP gemessen statt geschätzt (V01.1.201, Review 27.10. Paket 11.6, Dominik 2026-10-27 „ok“, Daten von DnDAppFiles in V01.1.195): Ohne neuen Schalter, es sind Kampfregeln. 1. Ein Wert für Budget und Belohnung: Jeder Gegner zählt im Budget, beim Auffüllen der Begegnung, im Angebot und in der Belohnung mit seinem gemessenen Kampf-EP (dungeon_bestiarium.ep_kampf, Feld ep_kampf bei 247 Gegnern, sonst sein EP), ein Boss mit seinem Lebensfaktor (dungeon_kampf.wert); die Karte des Gegners zeigt weiter das EP des Bestiariums. 2. Budget neu gemessen: BUDGET für Stufe 1 bis 10 ist jetzt 119, 169, 279, 341, 492, 605, 694, 1093, 1263, 1455 und GRUPPE 0,44, 0,91, 1,36, 1,72, 2,05; jedes der 50 Felder des Prüfstands liegt bei 70 bis 90 % Siegen, im Mittel 82 %; Stufe 1 hat 119, damit ein Held allein auf Stufe 1 noch eine mittlere Begegnung aus einem gemessenen Gegner bekommt. 3. Personen: Eine Person zählt mit dem Kampf-EP ihrer Vorlage mal dungeon_personen.GEWICHT (neu gemessen, weil Personen mit ihren Wachen kommen). Die Reihen der Berufe reichen jetzt höher: Ritter und Söldner bis zum Gladiator, Söldner und Diebe mit dem Banditenhauptmann, Spione bis zur Assassine; so f"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "indet eine starke Gruppe noch Gegner, die zur Hälfte ihres Budgets passen. Der Personen-Prüfstand misst 47 Felder, im Mittel 83 %, jedes zwischen 64 und 96 %. Gegen den Herrn eines Gewölbes und einen Boss allein gewinnt jede Gruppengröße im Mittel mindestens 64 %. 4. Selbsttest stabil: test_a_fight_turn_keeps_to_the_panels_rules würfelt im Zug der Gegner feste Fehlwürfe, damit kein Held zufällig zu Boden geht und der Zug vor der Aktion des anderen schließt. 5. Gewölbe: Passt kein Raum ins Band, nimmt der Wächterraum auch eine Anzahl knapp darüber, wenn sie näher liegt (zwei Banditen statt einem, dungeon_karte._room_foes). Selbsttests: die Personen in test_people_who_fight_keep_the_aim, Budget und Boss in test_the_aim_at_medium_for_every_level_and_group und test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life, das Gewölbe in test_vault_rooms_within_the_budget, die Belohnung eines Helden in test_a_heroes_reward_does_not_hang_on_the_group."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: warum die Gruppe weiterzieht (V01.1.200, Dungeon-Review 2026-10-27 Paket 12 E14, Teil der Karte): Ohne neuen Schalter. Zieht die Gruppe nach der Mehrheitsregel zu einem anderen Ort oder in einen anderen Raum, steht am Tisch eine feste Zeile wie „Weiter nach Silberhafen, weil Arvid gehen wollte.“, bei zweien mit beiden Namen, bei mehr „weil die Mehrheit gehen wollte“. Das Betreten und Verlassen eines Gewölbes hat schon eigene Zeilen. Log dungeon: karte | weiter | <anzahl>."
 },
 {
@@ -21518,6 +21534,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: fight experience measured instead of guessed (V01.1.201, review 27.10. package 11.6, Dominik 2026-10-27 \"ok\", data from DnDAppFiles in V01.1.195): No new switch, these are fight rules. 1. One value for budget and reward: every foe counts in the budget, when the encounter is filled, in the offer and in the reward with its measured fight experience (dungeon_bestiarium.ep_kampf, field ep_kampf on 247 foes, else its experience), a boss with its life factor (dungeon_kampf.wert); the foe's card still shows the bestiary's experience. 2. Budget measured anew: BUDGET for levels 1 to 10 is now 119, 169, 279, 341, 492, 605, 694, 1093, 1263, 1455 and GRUPPE 0.44, 0.91, 1.36, 1.72, 2.05; every one of the bench's 50 cells lies at 70 to 90 % wins, 82 % on average; level 1 has 119 so a lone hero at level 1 still gets a medium encounter from one measured foe. 3. People: a person counts with its template's fight experience times dungeon_personen.GEWICHT (measured anew, since people come with their guards). The occupations' rows now reach higher: knights and mercenaries up to the gladiator, mercenaries and thieves with the bandit captain, spies up to the assassin; so a strong group"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " still meets foes that fit half its budget. The people bench measures 47 cells, 83 % on average, each between 64 and 96 %. Against a vault's master and a lone boss every group size wins at least 64 % on average. 4. Self-test steady: test_a_fight_turn_keeps_to_the_panels_rules rolls fixed misses in the foes' turn, so no hero goes down by chance and the turn closes before the other's action. 5. Vaults: when no room fits the band, a guardian's room also takes a count just above it when that lies nearer (two bandits instead of one, dungeon_karte._room_foes). Self-tests: the people in test_people_who_fight_keep_the_aim, budget and boss in test_the_aim_at_medium_for_every_level_and_group and test_a_fight_shuts_the_market_and_a_boss_counts_with_its_life, the vault in test_vault_rooms_within_the_budget, a hero's reward in test_a_heroes_reward_does_not_hang_on_the_group."
 },
 {
 "lang": "en",

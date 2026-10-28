@@ -52,6 +52,7 @@ import random
 import re
 
 import dungeon_album as album
+import dungeon_bestiarium as best
 import dungeon_ehre as ehre
 import dungeon_gefaehrte as gefaehrte
 import dungeon_haltung as haltung
@@ -62,16 +63,16 @@ import dungeon_narben as narben
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with heroes raised like at the
 # table, every class, gear of the find table (Review 27.10. B6, B11) and abilities only when used, only the strongest
-# bonus (B7, B13), and with the counts set into BAND (B8: level 2 and five heroes a little more); beyond the heroes' top
-# level the D&D table
-BUDGET = (99, 152, 242, 314, 440, 547, 635, 1003, 1138, 1350, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# bonus (B7, B13), with the counts set into BAND (B8), and since Review 27.10. Paket 11.6 counting every foe by its
+# measured fight experience (wert, dungeon_bestiarium.ep_kampf); beyond the heroes' top level the D&D table
+BUDGET = (119, 169, 279, 341, 492, 605, 694, 1093, 1263, 1455, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
 REGLER_RUNTER = 15         # after a fight with a hero down, lost or fled from: this much easier
 # the budget times this for 1 to 5 heroes (more heroes hit more often), 0.33 more for each further one; measured with
-# the balance bench (Review 27.10. B6: every class, alone too, heroes raised like at the table)
-GRUPPE = (0.42, 0.92, 1.36, 1.69, 2.08)
+# the balance bench (Review 27.10. B6: every class, alone too, heroes raised like at the table; Paket 11.6 by ep_kampf)
+GRUPPE = (0.44, 0.91, 1.36, 1.72, 2.05)
 GRUPPE_PLUS = 0.33
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
@@ -398,9 +399,8 @@ def plays_in(r, g, welt):
 
 def _foes(dm, r, rd):
     """The foes of the round's world; a peaceful one (dungeon_bestiarium.friedlich, Review 27.10. Paket 11) never."""
-    import dungeon_bestiarium
     welt = rd.get("welt", "")
-    return [g for g in r.get("gegner") or [] if plays_in(r, g, welt) and not dungeon_bestiarium.friedlich(g)]
+    return [g for g in r.get("gegner") or [] if plays_in(r, g, welt) and not best.friedlich(g)]
 
 
 def _seed(rd, held, *more):
@@ -425,11 +425,11 @@ def offer(dm, r, rd, held):
         return room(r, rd)
     b = budget(dm, r, rd, held)
     import dungeon_tageszeit                     # LlamaTale idea 1: at night the foes of the night table
-    fit = dungeon_tageszeit.night_foes(rd, [g for g in _foes(dm, r, rd) if 0 < g["ep"] <= b * SCHWER], ANGEBOT)
-    fit.sort(key=lambda g: (abs(g["ep"] - b / 3), g["id"]))
+    fit = dungeon_tageszeit.night_foes(rd, [g for g in _foes(dm, r, rd) if 0 < g["ep"] and best.ep_kampf(g) <= b * SCHWER], ANGEBOT)
+    fit.sort(key=lambda g: (abs(best.ep_kampf(g) - b / 3), g["id"]))
     top = fit[:12]
     import dungeon_personen                      # people of the scene with a template by occupation (Personen-Katalog 4)
-    return sorted(_seed(rd, held).sample(top, min(ANGEBOT, len(top))), key=lambda g: g["ep"]) + dungeon_personen.fighters(dm, r, rd, held, b)
+    return sorted(_seed(rd, held).sample(top, min(ANGEBOT, len(top))), key=best.ep_kampf) + dungeon_personen.fighters(dm, r, rd, held, b)
 
 
 def offer_facts(dm, r, rd, held, li):
@@ -443,9 +443,10 @@ def faktor(g, n_held):
 
 
 def wert(g, n_held):
-    """A foe's experience as the budget counts it (Review 27.10. Paket 4a): a boss with its life factor (faktor). Also
-    for the map's rooms (dungeon_karte._room_foes)."""
-    return int(g["ep"] * faktor(g, n_held))
+    """A foe's experience as the budget and the reward count it (Review 27.10. Paket 4a): its measured fight experience
+    (Paket 11.6, dungeon_bestiarium.ep_kampf, else its ep), a boss with its life factor (faktor). Also for the map's
+    rooms (dungeon_karte._room_foes)."""
+    return int(best.ep_kampf(g) * faktor(g, n_held))
 
 
 def adjusted(foes, n_held=1):
@@ -522,7 +523,7 @@ def lineup(wahl, li, n_held):
                            "angriff": g["angriff"], "schaden": g["schaden"], "plus": g.get("schaden_plus", 0),
                            "wuerfel": g.get("anzahl_wuerfel", 1), "ep": g["ep"], "aus": "", "art": g.get("schaden_art", ""),
                            **{x: list(g.get(x) or []) for x in ("resistenz", "immun", "schwaeche", "zustaende")},
-                           "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1),
+                           "boss": bool(g.get("boss")), "phase": 1, "angriffe": g.get("angriffe", 1), "ep_kampf": best.ep_kampf(g),
                            **({"person": g["person"]} if g.get("person") else {})})
             if g.get("boss"):
                 gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * faktor(g, n_held))

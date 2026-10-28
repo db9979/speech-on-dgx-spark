@@ -31,6 +31,7 @@ import threading
 import time
 
 import dungeon_album as album
+import dungeon_bestiarium as best
 import dungeon_nsc as nsc
 import dungeon_stimmen as stimmen
 import features
@@ -276,23 +277,24 @@ def portraits():
 # ---------------------------------------------------------------- a person who fights (Personen-Katalog 4)
 KAEMPFER = 2               # people of the scene the panel offers as foes at most
 VORLAGE = (                # words of the occupation (the card's English text) → templates of the bestiary, strongest first
-    (("knight",), ("ritter", "veteran", "wache")),
-    (("mercenary", "bounty hunter", "gunner", "adventurer", "leader"), ("veteran", "schlaeger", "wache")),
+    (("knight",), ("gladiator", "ritter", "veteran", "wache")),
+    (("mercenary", "bounty hunter", "gunner", "adventurer", "leader"), ("gladiator", "veteran", "banditenhauptmann", "schlaeger", "wache")),
     (("guard", "watch", "lawkeeper"), ("wache",)),
     (("scout", "hunter", "forester", "explorer", "guide"), ("spaeher", "wache")),
-    (("thief", "smuggler", "outcast", "vagrant", "scavenger"), ("bandit",)),
-    (("investigator", "agent", "spy", "courier"), ("spion", "bandit")),
+    (("thief", "smuggler", "outcast", "vagrant", "scavenger"), ("banditenhauptmann", "bandit")),
+    (("investigator", "agent", "spy", "courier"), ("assassine", "spion", "bandit")),
     (("priest", "mystic", "pilgrim", "healer", "witch"), ("akolyth", "kultist", "wache")),   # no „priester“: its power are spells
     (("diplomat", "noble"), ("adliger", "wache")))
 SONST = ("wache",)         # any other occupation, but not one of NICHT_KAEMPFER (Review 27.10. Paket 8, Z8: never as a guard)
 NICHT_KAEMPFER = ("artisan", "bard", "bell ringer", "butler", "cabin boy", "cartographer", "clockmaker", "farmer", "fisher", "forager",
                   "herder", "historian", "innkeeper", "lamplighter", "performer", "researcher", "scholar", "cook", "shipwright",
                   "technician", "trader", "traveller", "engineer", "pilot", "navigator", "ai", "child")
-# a person counts in the fight's budget and gives experience by its template's experience times this weight, measured
+# a person counts in the fight's budget and gives experience by its template's fight experience (ep_kampf, Review 27.10.
+# Paket 11.6, else its experience) times this weight (people come with their guards), measured
 # with the balance bench (dungeon_pruefstand, people only): a group wins 70 to 90 per cent at „mittel“ on average, every
 # level and group size within SPANNE (few templates, so single cells swing more than with the whole bestiary)
-GEWICHT = {"adliger": 0.66, "akolyth": 0.55, "bandit": 1.43, "kultist": 0.88, "ritter": 1.15, "schlaeger": 1.65, "spaeher": 1.1,
-           "spion": 0.77, "veteran": 1.15, "wache": 1.54}
+GEWICHT = {"adliger": 0.87, "akolyth": 1.04, "assassine": 0.75, "bandit": 1.68, "banditenhauptmann": 0.89, "gladiator": 0.85,
+           "kultist": 1.12, "ritter": 0.94, "schlaeger": 1.15, "spaeher": 1.29, "spion": 1.21, "veteran": 0.93, "wache": 1.63}
 SPANNE = (50, 98)
 HALB = 0.5                 # a person's template nearest to this share of the budget (Review 27.10. B14)
 FREUND = 2                 # a person at least this friendly to a hero at the table never comes as a foe
@@ -305,8 +307,9 @@ def templates():
 
 
 def weighted(g):
-    """A template as a person fights with it: its experience times GEWICHT (budget and reward alike)."""
-    return dict(g, ep=max(1, round(g["ep"] * GEWICHT.get(g["id"], 1.0))))
+    """A template as a person fights with it: its fight experience (dungeon_bestiarium.ep_kampf) times GEWICHT, for the
+    budget and the reward alike; its experience in the bestiary stays."""
+    return dict(g, ep_kampf=max(1, round(best.ep_kampf(g) * GEWICHT.get(g["id"], 1.0))))
 
 
 def _row(x):
@@ -331,8 +334,8 @@ def nearest(dm, r, welt, row, b):
     import dungeon_kampf as kampf
     by = dm._by(r, "gegner")
     fit = [weighted(by[i]) for i in dict.fromkeys(tuple(row) + SONST) if i in by and kampf.plays_in(r, by[i], welt)
-           and weighted(by[i])["ep"] <= b * kampf.SCHWER]
-    return min(fit, key=lambda g: (abs(g["ep"] - HALB * b), -g["ep"]), default=None)
+           and best.ep_kampf(weighted(by[i])) <= b * kampf.SCHWER]
+    return min(fit, key=lambda g: (abs(best.ep_kampf(g) - HALB * b), -best.ep_kampf(g)), default=None)
 
 
 def escort(dm, r, rd, g):
@@ -348,7 +351,7 @@ def guards(dm, r, welt, row):
     import dungeon_kampf as kampf
     by = dm._by(r, "gegner")
     fit = [weighted(by[i]) for i in dict.fromkeys(tuple(row) + SONST) if i in by and kampf.plays_in(r, by[i], welt)]
-    return min(fit, key=lambda w: (w["ep"], w["id"]), default=None)
+    return min(fit, key=lambda w: (best.ep_kampf(w), w["id"]), default=None)
 
 
 def fighters(dm, r, rd, held, b):

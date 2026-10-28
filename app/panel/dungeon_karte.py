@@ -1291,9 +1291,7 @@ def _room_foes(r, rd, boss, rng):
         best = None
         for g in leads + [x for x in more(leads, band) if x not in leads]:
             for m in range(most, 0, -1):
-                base = [g] * m
-                if m > 1 and kampf.adjusted(base, n) > band[1] * b:
-                    continue
+                base = [g] * m                   # a count above the band only as the nearest (V01.1.201: two just above)
                 for h in [None] + [x for x in helps if x["id"] != g["id"]]:
                     k = next((k for k in range(min(kampf.ANZAHL_MAX, kampf.GEGNER_MAX - m), 0, -1)
                               if kampf.adjusted(base + [h] * k, n) <= band[1] * b), 0) if h else 0

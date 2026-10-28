@@ -20,6 +20,7 @@ from unittest import mock
 
 from tests.test_dungeon_dingbild import ADMIN, Base
 import dungeon  # noqa: E402
+import dungeon_bestiarium  # noqa: E402
 import dungeon_kampf as kampf  # noqa: E402
 import dungeon_pruefstand as ps  # noqa: E402
 import live  # noqa: E402
@@ -99,13 +100,15 @@ class Bench(unittest.TestCase):
 
     def test_people_who_fight_keep_the_aim(self):
         """Personen-Katalog, balancing (Dominik 2026-10-26 „das ganze muss natürlich im balancing berücksichtigt
-        werden“): encounters of people only, with their templates' weighted experience (dungeon_personen.GEWICHT), win
+        werden“): encounters of people only, with their templates' fight experience (ep_kampf) weighted by dungeon_personen.GEWICHT, win
         70 to 90 per cent on average at „mittel“, every cell within SPANNE; the weight counts in the budget and the reward."""
         import dungeon_personen as P
         r = dungeon.rules()
-        self.assertEqual(set(P.GEWICHT), set(P.templates()))
         by = dungeon._by(r, "gegner")
-        self.assertEqual(P.weighted(by["schlaeger"])["ep"], round(by["schlaeger"]["ep"] * P.GEWICHT["schlaeger"]))
+        self.assertEqual(set(P.GEWICHT), set(P.templates()))
+        for i in ("wache", "schlaeger"):                    # Paket 11.6: on the fight experience, measured or not
+            self.assertEqual(P.weighted(by[i])["ep_kampf"], round(dungeon_bestiarium.ep_kampf(by[i]) * P.GEWICHT[i]))
+            self.assertEqual(P.weighted(by[i])["ep"], by[i]["ep"])
         z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", personen=True)
         self.assertGreaterEqual(len(z), 40)
         mean = sum(c["siege"] for c in z.values()) / len(z)
