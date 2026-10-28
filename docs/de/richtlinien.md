@@ -351,7 +351,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **`cancel-in-progress: false`** in `tests.yml` nie wieder auf true setzen. (M [[tests-lauf-nicht-abbrechen]])
 - **Update-Schranke:** tars spielt nur den neuesten main-Commit mit grünem „Tests“-Lauf ein. (🧪 test_hardening)
 - **Releases:** Alte GitHub-Releases immer löschen, nur das neueste pro Reihe behalten. Ein neuer Release-Workflow kommt in die `workflow_run`-Liste von `releases-aufraeumen.yml`. (PA, M [[releases-aufraeumen]]; 🧪 test_releases_aufraeumen)
-- **Ubuntu 26:** GitHub `ubuntu-latest` wechselt ab 2026-10-19. GitHub nutzt Python 3.11. (M)
+- **Ubuntu 26:** GitHub `ubuntu-latest` wechselt ab 2026-10-19. GitHub nutzt Python 3.11. Die Tests laufen fest auf `ubuntu-24.04` (V01.1.219): auf 26.04 installiert Playwright kein Chromium, der Lauf wurde rot, bevor ein Test lief. Ein Workflow mit Playwright oder apt-Paketen nimmt eine feste Ubuntu-Version, nie `ubuntu-latest`. (M)
 
 ---
 

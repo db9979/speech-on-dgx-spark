@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.219** · 2026-10-28 · ROT-FIX: Tests auf GitHub fest auf ubuntu-24.04 (ubuntu-latest ist jetzt 26.04, dort installiert Playwright kein Chromium; der Lauf zu V01.1.218 war rot, bevor ein Test lief)
 - **V01.1.218** · 2026-10-28 · Fernzugang: Terminal im Layout A (Assistent als Spalte rechts, ziehbar und zuklappbar, Vorschläge als eine Zeile, Sitzungsangaben im ⓘ der roten Zeile, Symbolleiste, Menü klappt weg, Seite scrollt nie; Handy mit Blatt von unten); eine endende Sitzung ließ eine spätere Verbindung hängen
 - **V01.1.217** · 2026-10-28 · Fernzugang: „Herauslösen“ zeigt im eigenen Fenster wieder das Terminal (statt der Startseite); „Alle Tasten“ füllt den Bildschirm nur mit dem Terminal, Vorschläge und Assistent in einer Schublade (Strg+Umschalt+Leertaste); Vorschläge für screen und tmux statt uptime und df -h; der Anker auf dem Mac: Zertifizierungsstellen des Systems, wenn Python keine mitbringt, Code direkt vom Terminal (auch unter curl | sudo), eigene Zeile mit /usr/bin/python3
 - **V01.1.216** · 2026-10-28 · Fernzugang Stufe 6: der Anker richtet sich auch auf dem Mac ein (dieselbe Zeile, ab macOS 13): versteckter Benutzer spark, launchd-Dienst, Entfernte Anmeldung nur für den Anker eingeschaltet und beim Entfernen wieder so wie vorher

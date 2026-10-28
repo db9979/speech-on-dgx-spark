@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.219** ROT-FIX: Tests auf GitHub fest auf ubuntu-24.04 (ubuntu-latest ist jetzt 26.04, dort installiert Playwright kein Chromium; der Lauf zu V01.1.218 war rot, bevor ein Test lief)
 - **V01.1.218** Fernzugang: Terminal im Layout A (Assistent als Spalte rechts, ziehbar und zuklappbar, Vorschläge als eine Zeile, Sitzungsangaben im ⓘ der roten Zeile, Symbolleiste, Menü klappt weg, Seite scrollt nie; Handy mit Blatt von unten); eine endende Sitzung ließ eine spätere Verbindung hängen
 - **V01.1.217** Fernzugang: „Herauslösen“ zeigt im eigenen Fenster wieder das Terminal (statt der Startseite); „Alle Tasten“ füllt den Bildschirm nur mit dem Terminal, Vorschläge und Assistent in einer Schublade (Strg+Umschalt+Leertaste); Vorschläge für screen und tmux statt uptime und df -h; der Anker auf dem Mac: Zertifizierungsstellen des Systems, wenn Python keine mitbringt, Code direkt vom Terminal (auch unter curl | sudo), eigene Zeile mit /usr/bin/python3
 - **V01.1.216** Fernzugang Stufe 6: der Anker richtet sich auch auf dem Mac ein (dieselbe Zeile, ab macOS 13): versteckter Benutzer spark, launchd-Dienst, Entfernte Anmeldung nur für den Anker eingeschaltet und beim Entfernen wieder so wie vorher
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.212** KI-Dungeon-Master: englische Gegnernamen wie im SRD
 - **V01.1.211** KI-Dungeon-Master: die Prüfung erkennt Gegner auch gebeugt und in anderer Wortfolge („giant, red-eyed rats“, „Wölfe“, „jungen roten Drachen“), der Erzähler-Prüfstand zeigt, welcher Gegner fehlt
 - **V01.1.210** KI-Dungeon-Master: jedes Haus der Siedlung (Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild
-- **V01.1.209** KI-Dungeon-Master: die Siedlung ist übersichtlich: links die Häuser Gasthaus, Schmiede, Heiler und Lehrmeister, rechts das gewählte Haus mit einer Zeile je Angebot, am Handy erst die Häuser, dann das Haus
 
 
 

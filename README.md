@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.219** RED FIX: tests on GitHub pinned to ubuntu-24.04 (ubuntu-latest is now 26.04, where Playwright installs no Chromium; the run of V01.1.218 was red before any test ran)
 - **V01.1.218** Remote access: terminal in layout A (assistant as a column on the right, draggable and foldable, suggestions in one row, session facts behind the ⓘ of the red line, icon bar, menu folds away, page never scrolls; phone with a sheet from below); an ending session could leave a later connection hanging
 - **V01.1.217** Remote access: "Detach" shows the terminal in its own window again (instead of the start page); "All keys" fills the screen with the terminal only, suggestions and assistant in a drawer (Ctrl+Shift+Space); suggestions for screen and tmux instead of uptime and df -h; the anchor on a Mac: the system's authorities when Python brings none, the code straight from the terminal (also under curl | sudo), its own line with /usr/bin/python3
 - **V01.1.216** Remote access stage 6: the anchor also sets itself up on a Mac (the same line, from macOS 13): hidden user spark, launchd service, Remote Login switched on only for the anchor and back as it was on removal
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.212** AI Dungeon Master: English foe names as in the SRD
 - **V01.1.211** AI Dungeon Master: the check knows foes also bent and in another word order ("giant, red-eyed rats", "wolves", "jungen roten Drachen"), the narrator bench shows which foe is missing
 - **V01.1.210** AI Dungeon Master: every house of the settlement (inn, smithy, healer, teacher) has a picture of its own per world
-- **V01.1.209** AI Dungeon Master: the settlement is clear: the houses inn, smithy, healer and teacher on the left, the chosen house with one row per offer on the right, on the phone first the houses, then the house
 
 
 

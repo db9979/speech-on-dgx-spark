@@ -24,7 +24,7 @@ jobs:
   # modules by their duration in app/tests/dauer.json; together the parts hold every test exactly once
   test:
     name: Teil ${{ matrix.part }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned (V01.1.219): ubuntu-latest moved to 26.04, where Playwright installs no Chromium
     timeout-minutes: 60   # 45 was cut off by a slow Azure mirror on the 94 MB ffmpeg download (V01.0.951, 2026-10-23); 30 twice on 2026-10-12 (V01.0.459, .461), 20 before
     strategy:
       fail-fast: false    # every part runs to its end, so a red run shows all failures at once
@@ -75,7 +75,7 @@ jobs:
     name: Ergebnis
     needs: test
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # only for the issues "main rot" and "Wackelnde Tests" (V01.0.820): nobody noticed main red for 10 h over night
     permissions:
