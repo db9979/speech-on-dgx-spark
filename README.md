@@ -41,16 +41,16 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.213** Remote access stage 2: its own menu entry Remote access (admins only, while the switch is on); the shell can be detached into a window of its own (its own one-time ticket, never in the address) and brought back; browser shortcuts go to the shell, "All keys" in full screen also Ctrl+W and Esc; suggestions adapt to the last command by fixed rules, nothing leaves the browser; "Connected now" and Live show who, from where (home/internet) and how long, a 30-day history without content, a notification to the admins for a session from the internet; the iPhone app shows the remote servers under Manage the Spark → Remote access with Disconnect, May connect and Remove, Android under Manage; the server's first bytes are no longer lost while a session opens
 - **V01.1.212** AI Dungeon Master: English foe names as in the SRD
 - **V01.1.211** AI Dungeon Master: the check knows foes also bent and in another word order ("giant, red-eyed rats", "wolves", "jungen roten Drachen"), the narrator bench shows which foe is missing
 - **V01.1.210** AI Dungeon Master: every house of the settlement (inn, smithy, healer, teacher) has a picture of its own per world
 - **V01.1.209** AI Dungeon Master: the settlement is clear: the houses inn, smithy, healer and teacher on the left, the chosen house with one row per offer on the right, on the phone first the houses, then the house
-- **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Features → Remote access, with a one-time code for pairing, a fresh code per session and SSH end to end
+- **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Remote access → Remote servers, with a one-time code for pairing, a fresh code per session and SSH end to end
 - **V01.1.207** AI Dungeon Master: game master gives things: the host as admin gives a hero an item up to "epic", gold, runes or experience in the game master console, within the game's limits, and the narration makes it a find or a gift
 - **V01.1.206** AI Dungeon Master: a thing whose runeword wakes gets a picture of its own with glowing runes, the smith's rune services have pictures
 - **V01.1.205** AI Dungeon Master: runes and sockets to the end: runewords wake in the right order from their level, the smith drills sockets, takes runes out and fuses them, runes go to other heroes, a rune can be dragged onto the thing, and the car knows runes
 - **V01.1.204** AI Dungeon Master: runes have their picture on the rules page, per world as rune, chip, pearl or seal, with paint and paint again
-- **V01.1.203** AI Dungeon Master: the rules also show runes and runewords with sockets, caps and switch, effects, the map's tables, the stall events and every fixed number; whoever lights a torch or draws a weapon they do not have hears so before the narration, the Dungeon Master stays visible in the live overview while people play
 
 
 

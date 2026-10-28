@@ -16,6 +16,8 @@ one is no connection, a Wachposten note („Schutz geändert“) and a Dienst-W�
 Rules (fixed, Sicherheits-Checkliste):
 - Admin switch chat.fernzugang (Funktionen → Fernzugang zu Servern), off. Admins only (the panel password or a profile
   with the role Admin in its own browser), never the Verwalter, never guests, never a device key; no tool for the model.
+  Stage 2 (apps): the own iPhone app of an admin profile (is_admin_app) may look, allow, disconnect and remove; the
+  shell and pairing it opens as a panel page with a browser login (Android shows the panel itself).
 - Pairing: „Koppeln (Code)“ asks for a fresh code or passkey (stufen „Schutz ändern“) and shows a one-time code
   (CODE_S, kopplung.Codes, only its hash kept); the anchor trades it once for its own device key (only the SHA-256
   kept, compared with hmac.compare_digest). At most MAX_ANKER systems.
@@ -29,17 +31,28 @@ Rules (fixed, Sicherheits-Checkliste):
 - Notaus (any stage) closes every session and anchor and lets none in until it is lifted.
 - Logs: „fernzugang: <word> | <reason> | <number>“, fixed words and numbers only, profiles only as
   profiles.log_name; never keystrokes, never output, never a code, key or address. Nothing is recorded.
+- Who is on (Dominik 2026-10-28): Live and the apps show per session its kind, Zuhause or Internet and the minutes,
+  names only with logs.live_names; the page „Gerade verbunden“ adds the admin, the client and a shortened address,
+  „Verlauf“ the sessions of chat.fernzugang_verlauf_tage days (STATE/fernzugang-verlauf.json, no content). The remote
+  server's journal gets MELDUNG_REMOTE; the admins get MELDUNG_PUSH for a session from the internet or a new place
+  (chat.fernzugang_meldung, on under the switch).
 - The assistant never types: next to the terminal it only shows fixed command chips (CHIPS); a tap puts one into the
-  line, Enter is the person's. Shell output never goes to the model.
+  line, Enter is the person's. Shell output never goes to the model. After the person's own command the page picks
+  other chips by fixed rules (FOLGE); it keeps only that last line in the browser, never the output, and sends it
+  nowhere.
 
-    admin (core.auth):
-    GET    /api/admin/fernzugang                         systems, counts, sessions, the anchor file (size, SHA-256), chips
+    admin (core.auth; „browser or app“: is_admin_browser or is_admin_app, else the browser only):
+    GET    /api/admin/fernzugang                         systems, counts, sessions, the anchor file, chips (browser or app)
     POST   /api/admin/fernzugang/koppeln {name}          one-time code (admin_code_fresh)
     POST   /api/admin/fernzugang/sitzung {geraet, cols, rows}  ticket for the terminal (admin_code_fresh)
-    PUT    /api/admin/fernzugang/geraete/{gid} {erlaubt} may connect or not
-    POST   /api/admin/fernzugang/geraete/{gid}/trennen   ends its sessions and its anchor connection
-    DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code)
-    POST   /api/admin/fernzugang/alle-trennen            ends every session and anchor connection
+    POST   /api/admin/fernzugang/sitzung/{sid}/fenster {fenster}  ticket that moves the open shell of this login into
+                                                         its own window or back („Herauslösen“, „Zurückholen“)
+    PUT    /api/admin/fernzugang/geraete/{gid} {erlaubt} may connect or not (browser or app)
+    POST   /api/admin/fernzugang/geraete/{gid}/trennen   ends its sessions and its anchor connection (browser or app)
+    DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code; browser or app)
+    POST   /api/admin/fernzugang/sitzung/{sid}/trennen   ends that one session („Gerade verbunden“; browser or app)
+    DELETE /api/admin/fernzugang/verlauf                 empties the history (admin_code; browser or app)
+    POST   /api/admin/fernzugang/alle-trennen            ends every session and anchor connection (browser or app)
     WS     /api/fernzugang/terminal?t=<ticket>           the terminal (binary: keys in, output out; text: size, state)
     anchor (no cookies):
     GET    /fernzugang/anker                             the program (public, no secrets; 404 while off)
@@ -81,6 +94,7 @@ from core import admin_code, admin_code_fresh, auth, json_body
 router = APIRouter()
 
 FILE = os.path.join(STATE, "fernzugang.json")
+VERLAUF = os.path.join(STATE, "fernzugang-verlauf.json")   # who was connected when: no content (VERLAUF_TAGE)
 PROGRAM = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "anker", "spark-anker.py")
 XTERM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "xterm")
 # xterm.js 5.5.0 (MIT, npm @xterm/xterm, the package's sha512 checked when it was taken in), unchanged and served
@@ -102,6 +116,15 @@ USER = "spark"          # the user on the remote server (its own, sudo only when
 LEERLAUF = (1, 120)     # chat.fernzugang_leerlauf_min, minutes
 SITZUNGEN = (1, 4)      # chat.fernzugang_sitzungen
 OFFLINE = (5, 1440)     # chat.fernzugang_offline_min: the Dienst-Wächter warns after this long offline
+VERLAUF_TAGE = (1, 365)  # chat.fernzugang_verlauf_tage: how long the history keeps a session (default 30)
+VERLAUF_MAX = 2000       # entries at most
+ARTEN = {"shell": ("Shell", "Shell")}   # what a session is (Dateien and Bildschirm follow in stages 3 and 4)
+CLIENTS = {"browser": ("Browser", "Browser"), "iphone": ("iPhone", "iPhone"), "android": ("Android", "Android"),
+           "fenster": ("Fenster", "Window")}
+# what the remote server's journal gets when a session opens (logger -t spark-fernzugang), with the admin's name
+MELDUNG_REMOTE = "Spark-Fernzugang: {admin} verbunden"
+# the push to the admins on a session from the internet or from a new place (chat.fernzugang_meldung)
+MELDUNG_PUSH = ("Fernsitzung geöffnet", "{admin} hat die Shell von {system} geöffnet, {wie}.")
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._\- ]{0,39}")
 GID = re.compile(r"g_[0-9a-f]{12}")
 HOSTKEY = re.compile(r"ssh-ed25519 [A-Za-z0-9+/]{60,100}={0,2}")
@@ -110,9 +133,24 @@ ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"   # no 0/O, 1/I: typed from the sc
 # the assistant's chips beside the terminal: fixed commands that only read, never chosen by a model, never with Enter
 CHIPS = ("uptime", "df -h", "free -h", "systemctl --failed", "journalctl -p err -n 20 --no-pager",
          "ip -br address", "ss -tlnp", "top -bn1 | head -15")
+# the chips after the person's own last command (fernzugang.js keeps only that line, in the browser): fixed rules, never a
+# model. (command words, follow-ups); {1} is the person's own first argument after the words, shell-quoted in the
+# browser; a follow-up whose {1} is missing is left out; no rule fits: CHIPS. Still only inserted, never with Enter.
+FOLGE = ((("systemctl", "status"), ("journalctl -u {1} -n 50 --no-pager", "systemctl restart {1}", "systemctl is-enabled {1}")),
+         (("systemctl", "restart"), ("systemctl status {1} --no-pager", "journalctl -u {1} -n 50 --no-pager")),
+         (("journalctl", "-u"), ("systemctl status {1} --no-pager", "systemctl restart {1}")),
+         (("docker", "ps"), ("docker logs --tail 50 ", "docker stats --no-stream", "docker ps -a")),
+         (("docker", "logs"), ("docker ps", "docker restart ")),
+         (("df", "-h"), ("du -sh /var/* 2>/dev/null | sort -h | tail", "journalctl --disk-usage", "du -sh ~/* 2>/dev/null | sort -h | tail")),
+         (("apt", "update"), ("apt list --upgradable", "df -h")),
+         (("cd",), ("ls -la", "pwd", "du -sh .")),
+         (("git", "status"), ("git diff --stat", "git log --oneline -5")),
+         (("top",), ("free -h", "uptime")),
+         (("htop",), ("free -h", "uptime")),
+         (("free", "-h"), ("top -bn1 | head -15", "uptime")))
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
-         "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download")
+         "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung")
 
 
 def _code():
@@ -156,6 +194,15 @@ def max_sitzungen(c=None):
     return _num("fernzugang_sitzungen", SITZUNGEN, c) or SITZUNGEN[0]
 
 
+def verlauf_s(c=None):
+    return 86400 * (_num("fernzugang_verlauf_tage", VERLAUF_TAGE, c) or 30)
+
+
+def meldung_on(c=None):
+    """Funktionen → Fernzugang zu Servern → Meldung bei Fernsitzung (on by default under the switch, DEFAULT_ON)."""
+    return features.admin_on("fernzugangmeldung", c)
+
+
 def offline_s(c=None):
     return 60 * (_num("fernzugang_offline_min", OFFLINE, c) or OFFLINE[1])
 
@@ -163,7 +210,7 @@ def offline_s(c=None):
 def check(c):
     """None when the settings in chat are fine, else the reason (admin.validate)."""
     for key, (lo, hi) in (("fernzugang_leerlauf_min", LEERLAUF), ("fernzugang_sitzungen", SITZUNGEN),
-                          ("fernzugang_offline_min", OFFLINE)):
+                          ("fernzugang_offline_min", OFFLINE), ("fernzugang_verlauf_tage", VERLAUF_TAGE)):
         if key in c and _num(key, (lo, hi), c) is None:
             return f"{key}: {lo} bis {hi}"
     return None
@@ -302,6 +349,18 @@ def is_admin_browser(conn):
     return bool(s and s["role"] == "admin" and s["via"] == "b")
 
 
+def is_admin_app(conn):
+    """The iPhone app of an admin profile (role Admin, its own app key made after the second step; coadmin.session
+    checks both with every request), never the Verwalter. It may look at the systems, let them connect or not,
+    disconnect and remove them (stage 2, Dominik 2026-10-28 „2-4“); the shell, pairing and later files and screen
+    stay with a login in a browser, which the app opens as a panel page (Fernzugang → Fern-Server)."""
+    if not conn.headers.get(profiles.DEVICE_HEADER):
+        return False
+    import coadmin
+    s = coadmin.session(conn)
+    return bool(s and s["role"] == "admin" and s["via"] != "b")
+
+
 def same_origin(conn):
     """The WebSocket's Origin is the panel's own page. Browsers always send Origin with a WebSocket; a missing or
     foreign one is refused (the http middleware's CSRF check never sees WebSockets)."""
@@ -324,13 +383,35 @@ def counts(now=None):
 
 
 def for_live(now=None):
+    """Live, Zustand, the Steuerzentrale, the OLED page and the apps: counts, and per open session its kind, origin
+    class and minutes; the names of system and admin only with logs.live_names (else „System 1“, „Admin“), never an
+    address or anything of what runs."""
     if not admin_on():
         return {"on": False}
-    return {"on": True, **counts(now)}
+    now = time.time() if now is None else now
+    named = _live_names()
+    g = _read(now)["geraete"]
+    order = [k for k in sorted(g, key=lambda k: str(g[k].get("name", "")).lower()) if g[k].get("stand") != "abbau"]
+    nr = {k: i for i, k in enumerate(order, 1)}
+    sysname = lambda k: str(g.get(k, {}).get("name", "")) if named else f"System {nr.get(k, 0)}"
+    offen = [{"art": ARTEN.get(x.art, ARTEN["shell"])[0], "system": sysname(x.gid),
+              "admin": (x.admin_name if named else "Admin"), "herkunft": "Internet" if x.herkunft == "internet" else "Zuhause",
+              "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
+    return {"on": True, **counts(now), "offen": offen,
+            "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
+
+
+def _live_names():
+    try:
+        import live
+        return live.cfg().get("live_names") is True
+    except Exception:
+        return False
 
 
 def live_sub(d):
-    return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
+    offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
+    return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen" + offen
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else ""))
 
@@ -394,6 +475,11 @@ class Sitzung:
         self.id = secrets.token_hex(4)
         self.gid, self.anker, self.n, self.browser = gid, anker, n, browser
         self.who, self.uid = who, uid
+        self.login = ""        # the hash of the login that opened it: only that login takes it into another window
+        self.fenster = False   # the terminal runs in its own window („Herauslösen“)
+        self.art = "shell"      # ARTEN
+        self.admin_name = "Admin"   # the admin profile's name (the panel password: „Admin“), shown per live_names
+        self.herkunft, self.ip_kurz, self.client = "zuhause", "", "browser"   # where from (never the whole address)
         self.seit = self.zuletzt = time.time()
         self.loop = asyncio.get_running_loop()
         self.ende = asyncio.Event()
@@ -441,7 +527,22 @@ class Sitzung:
         chan.get_pty(term="xterm-256color", width=cols, height=rows)
         chan.invoke_shell()
         self.transport, self.chan = t, chan
+        self._remote_note(t)
         return ""
+
+    def _remote_note(self, t):
+        """The remote server sees who is on: one fixed line in its journal (logger -t spark-fernzugang, no broadcast to terminals),
+        with the admin's name in safe letters only and quoted for the shell. Best effort, never the session's end."""
+        import shlex
+        name = re.sub(r"[^A-Za-z0-9ÄÖÜäöüß ._-]", "", self.admin_name)[:40] or "Admin"
+        try:
+            c = t.open_session(timeout=5)
+            c.exec_command("logger -t spark-fernzugang -- " + shlex.quote(MELDUNG_REMOTE.format(admin=name)))
+            c.status_event.wait(5)
+            c.close()
+            log("meldung", "server", 1)
+        except Exception:
+            log("meldung", "server nicht", 0)
 
     def _reader(self, q):
         """In a thread: the shell's output into the queue of the event loop (never kept, never logged)."""
@@ -459,10 +560,12 @@ class Sitzung:
             data = await q.get()
             if not data:
                 break
+            ws = self.browser
             try:
-                await self.browser.send_bytes(data)
+                await ws.send_bytes(data)
             except Exception:
-                break
+                if ws is self.browser:     # the window was taken over meanwhile: the output goes on to the new one
+                    break
         await self.end("shell")
 
     async def _idle(self):
@@ -501,8 +604,87 @@ class Sitzung:
             await self.browser.close(1000)
         mins = int((time.time() - self.seit) // 60)
         log("sitzung_zu", why, mins)
+        if self.offen:
+            await asyncio.to_thread(verlauf_add, self)
         _live(f"Fernsitzung beendet ({why})")
         await asyncio.to_thread(_update, self.gid, zuletzt=int(time.time()))
+
+
+def _wo(s, conn):
+    """Where the session's window is: Zuhause or Internet (live.shown_outside), the address shortened (live.short_ip,
+    for the admin's page only), the kind of client (the iPhone and Android apps open the panel page)."""
+    import live
+    try:
+        s.herkunft = "internet" if live.shown_outside(conn) else "zuhause"
+        s.ip_kurz = live.short_ip(live.sender(conn))
+    except Exception:
+        s.herkunft, s.ip_kurz = "zuhause", "?"
+    ua = str(conn.headers.get("user-agent", ""))
+    s.client = "fenster" if s.fenster else "iphone" if "iPhone" in ua else "android" if "Android" in ua else "browser"
+
+
+def _admin_name(uid):
+    p = profiles.by_id(uid) if uid else None
+    return str(p.get("name") or "Admin")[:40] if p else "Admin"
+
+
+def _admins():
+    """Who hears of a remote session: the main admin profile and every profile whose role Admin counts."""
+    import coadmin
+    out = [u for u in [coadmin.main_uid()] if u]
+    for u in profiles.user_ids():
+        if u not in out and coadmin.acts(u) == "admin":
+            out.append(u)
+    return out
+
+
+def _quelle(s):
+    """A place as a hash of the shortened address and the admin: tells a new place, keeps no address."""
+    return hashlib.sha256(f"{s.uid or 'admin'}|{s.ip_kurz}".encode()).hexdigest()[:16]
+
+
+async def _melden(s, g):
+    """A push to the admins when a session opens from the internet or from a place this admin was not seen at in
+    the history (MELDUNG_PUSH, fixed words; system and admin names only to the admins)."""
+    try:
+        neu = _quelle(s) not in {x.get("quelle") for x in verlauf_read()}
+        if not meldung_on() or not (s.herkunft == "internet" or neu):
+            return
+        import push
+        wie = "über das Internet" if s.herkunft == "internet" else "von einem neuen Ort"
+        title, body = MELDUNG_PUSH[0], MELDUNG_PUSH[1].format(admin=s.admin_name, system=str(g.get("name", "")), wie=wie)
+        n = 0
+        for uid in _admins():
+            with contextlib.suppress(Exception):
+                n += await push.send(uid, title, body, tag="admin", private=True, why="fernzugang")
+        log("meldung", "push", n)
+    except Exception:
+        log("meldung", "push fehler", 0)
+
+
+# ---------------------------------------------------------------- the history (no content)
+_vlock = threading.Lock()
+
+
+def verlauf_read(now=None):
+    """The sessions of the last chat.fernzugang_verlauf_tage days, newest first: time, system, admin, kind, minutes,
+    origin class and a hash of the place; never an address, a key or anything of what ran."""
+    now = time.time() if now is None else now
+    d = read_json(VERLAUF, {})
+    rows = d.get("eintraege") if isinstance(d, dict) and isinstance(d.get("eintraege"), list) else []
+    cut = now - verlauf_s()
+    return [x for x in rows if isinstance(x, dict) and isinstance(x.get("t"), (int, float)) and x["t"] >= cut]
+
+
+def verlauf_add(s, now=None):
+    now = time.time() if now is None else now
+    g = _read(now)["geraete"].get(s.gid) or {}
+    row = {"t": int(s.seit), "system": str(g.get("name", ""))[:40], "admin": s.admin_name, "art": s.art,
+           "min": int((now - s.seit) // 60), "herkunft": s.herkunft, "client": s.client, "quelle": _quelle(s)}
+    with _vlock:
+        rows = [row] + verlauf_read(now)
+        write_json(VERLAUF, {"eintraege": rows[:VERLAUF_MAX]}, mode=0o600)
+    log("verlauf", "neu", len(rows[:VERLAUF_MAX]))
 
 
 def _free_channel(a):
@@ -533,6 +715,8 @@ async def terminal_ws(ws: WebSocket):
     tk = TICKETS.pop(h, None) if h else None
     if not tk or tk["until"] < time.time() or not hmac.compare_digest(tk["login"], _login(ws)):
         return await _refuse(ws, "ticket")
+    if tk.get("sid"):              # „Herauslösen“ or „Zurückholen“: the open session moves to this window
+        return await _take_over(ws, tk)
     if len(SITZUNG) >= max_sitzungen():
         return await _refuse(ws, "voll", 4429)
     g = _read()["geraete"].get(tk["gid"])
@@ -551,8 +735,12 @@ async def terminal_ws(ws: WebSocket):
     if rec is not None:
         rec.step("in", "Fernsitzung", t0)
     s = Sitzung(tk["gid"], a, n, ws, tk["who"], tk.get("uid"))
+    s.login = tk["login"]
+    _wo(s, ws)
+    s.admin_name = _admin_name(tk.get("uid"))
     fut = asyncio.get_running_loop().create_future()
     a.wait[n] = fut
+    a.kanaele[n] = s      # before „auf“: the server's first bytes may come right behind the anchor's „offen“
     ok = ""
     try:
         await a.send_json({"typ": "auf", "kanal": n})
@@ -562,6 +750,10 @@ async def terminal_ws(ws: WebSocket):
     finally:
         a.wait.pop(n, None)
     if ok != "offen":
+        a.kanaele.pop(n, None)
+        for x in (s.ours, s.theirs):
+            with contextlib.suppress(OSError):
+                x.close()
         await s._say({"typ": "fehler", "grund": ok})
         live_end = (rec, False, ok)
         await asyncio.to_thread(live.end, *live_end)
@@ -569,7 +761,6 @@ async def terminal_ws(ws: WebSocket):
         with contextlib.suppress(Exception):
             await ws.close(4502)
         return
-    a.kanaele[n] = s
     SITZUNG[s.id] = s
     s.tasks.append(asyncio.create_task(s._to_anker()))
     await s._say({"typ": "stand", "stand": "ssh"})
@@ -597,12 +788,41 @@ async def terminal_ws(ws: WebSocket):
     STATS["sitzungen"] += 1
     log("sitzung_auf", s.who, len(SITZUNG))
     _live("Fernsitzung geöffnet")
+    s.tasks.append(asyncio.create_task(_melden(s, g)))
     q = asyncio.Queue()
     threading.Thread(target=s._reader, args=(q,), name="fernzugang-lesen", daemon=True).start()
     s.tasks += [asyncio.create_task(s._to_browser(q)), asyncio.create_task(s._idle())]
-    await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g["hostkey"]), "leerlauf": leerlauf_s() // 60})
+    await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g["hostkey"]), "leerlauf": leerlauf_s() // 60,
+                  "id": s.id})
+    await _terminal_loop(s, ws)
+
+
+async def _take_over(ws, tk):
+    """The session of the ticket moves to this WebSocket (its own window, or back into the tab): the SSH session
+    stays, the window before hears „weg“ and closes without ending it. Counts as the same one session."""
+    s = SITZUNG.get(tk["sid"])
+    if s is None or s.ende.is_set() or not hmac.compare_digest(s.login, tk["login"]):
+        return await _refuse(ws, "keine sitzung", 4404)
+    await ws.accept()
+    old, s.browser, s.fenster = s.browser, ws, bool(tk.get("fenster"))
+    _wo(s, ws)
+    with contextlib.suppress(Exception):
+        await old.send_text(json.dumps({"typ": "weg", "fenster": s.fenster}))
+    with contextlib.suppress(Exception):
+        await old.close(4001)
+    s.zuletzt = time.time()
+    log("sitzung_auf", "fenster" if s.fenster else "zurueck", len(SITZUNG))
+    _live("Fernsitzung im eigenen Fenster" if s.fenster else "Fernsitzung zurückgeholt")
+    g = _read()["geraete"].get(s.gid) or {}
+    await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g.get("hostkey", "")), "leerlauf": leerlauf_s() // 60,
+                  "id": s.id})
+    await _terminal_loop(s, ws)
+
+
+async def _terminal_loop(s, ws):
+    """Keys and sizes from this window into the shell, until it closes, the session ends or another window takes it."""
     try:
-        while not s.ende.is_set():
+        while not s.ende.is_set() and s.browser is ws:
             msg = await ws.receive()
             if msg.get("type") == "websocket.disconnect":
                 break
@@ -631,7 +851,8 @@ async def terminal_ws(ws: WebSocket):
     except Exception as e:
         log("sitzung_zu", "fehler " + type(e).__name__[:20])
     finally:
-        await s.end(s.grund or "browser")
+        if s.browser is ws:        # a window that was taken over leaves the session open
+            await s.end(s.grund or ("fenster" if s.fenster else "browser"))
 
 
 def _size(cols, rows):
@@ -861,6 +1082,12 @@ def _browser(request: Request):
         raise HTTPException(403, "only an admin in the browser")
 
 
+def _admin_here(request: Request):
+    """An admin in the browser or in the own iPhone app (is_admin_app): the doors that only look or take away."""
+    if not (is_admin_browser(request) or is_admin_app(request)):
+        raise HTTPException(403, "only an admin in the browser or the own app")
+
+
 def _on(request: Request):
     if not admin_on():
         raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
@@ -925,11 +1152,12 @@ def _program():
 
 @router.get("/api/admin/fernzugang", dependencies=[Depends(auth)])
 def admin_get(request: Request):
+    _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     c = features.chat_cfg()
     out = {"on": admin_on(c), "leerlauf": leerlauf_s(c) // 60, "max": max_sitzungen(c), "max_anker": MAX_ANKER,
-           "chips": list(CHIPS), "anker": _program(), "code_s": CODE_S, "counts": counts(),
-           "notaus": _notaus()}
+           "chips": list(CHIPS), "folge": [[list(w), list(f)] for w, f in FOLGE], "anker": _program(), "code_s": CODE_S, "counts": counts(),
+           "notaus": _notaus(), "browser": is_admin_browser(request)}
     rows = []
     now = time.time()
     for gid, x in sorted(_read(now)["geraete"].items(), key=lambda kv: str(kv[1].get("name", "")).lower()):
@@ -941,7 +1169,10 @@ def admin_get(request: Request):
                      "fp": fingerprint(x.get("hostkey", "")),
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid)})
     out["geraete"] = rows
-    out["offen"] = [{"id": s.id, "geraet": s.gid, "seit": int(s.seit)} for s in SITZUNG.values()]
+    out["offen"] = [{"id": s.id, "geraet": s.gid, "seit": int(s.seit), "art": s.art, "admin": s.admin_name,
+                     "client": s.client, "herkunft": s.herkunft, "ip": s.ip_kurz} for s in SITZUNG.values()]
+    out["verlauf"] = [{k: x.get(k) for k in ("t", "system", "admin", "art", "min", "herkunft", "client")} for x in verlauf_read()[:200]]
+    out["verlauf_tage"] = verlauf_s(c) // 86400
     return out
 
 
@@ -1003,9 +1234,62 @@ async def admin_session(request: Request):
     return {"ticket": t, "gilt_s": TICKET_S}
 
 
+@router.post("/api/admin/fernzugang/sitzung/{sid}/fenster", dependencies=[Depends(auth)])
+async def admin_window(sid: str, request: Request):
+    """„Herauslösen“ (fenster: true) or „Zurückholen“: a new one-time ticket (TICKET_S, once, this login) for the open
+    shell of this login; the window that opens the terminal with it takes the session over. No new code: the session
+    asked for one when it opened, and only the same login gets it."""
+    _on(request)
+    guard.limit(request, "fernzugang_sitzung", admin=True)
+    body = await json_body(request, MAX_BODY)
+    s = SITZUNG.get(str(sid))
+    if s is None or s.ende.is_set() or not s.login or not hmac.compare_digest(s.login, _login(request)):
+        log("ticket", "keine sitzung", 0)
+        raise HTTPException(404, "no such session")
+    t = secrets.token_urlsafe(32)
+    now = time.time()
+    for k in [k for k, v in TICKETS.items() if v["until"] < now]:
+        TICKETS.pop(k, None)
+    TICKETS[hashlib.sha256(t.encode()).hexdigest()] = {"gid": s.gid, "login": s.login, "until": now + TICKET_S,
+                                                       "sid": s.id, "fenster": body.get("fenster") is True,
+                                                       "who": s.who, "uid": s.uid, "cols": 80, "rows": 24}
+    log("ticket", "fenster" if body.get("fenster") is True else "zurueck", 1)
+    return {"ticket": t, "gilt_s": TICKET_S}
+
+
+@router.post("/api/admin/fernzugang/sitzung/{sid}/trennen", dependencies=[Depends(auth)])
+async def admin_cut_session(sid: str, request: Request):
+    """„Gerade verbunden“ → „Trennen“: ends this one session (browser or app)."""
+    _admin_here(request)
+    guard.limit(request, "fernzugang", admin=True)
+    s = SITZUNG.get(str(sid))
+    if s is None:
+        log("trennen", "keine sitzung", 0)
+        raise HTTPException(404, "no such session")
+    await s.end("getrennt")
+    log("trennen", "sitzung", 1)
+    return {"ok": True}
+
+
+@router.delete("/api/admin/fernzugang/verlauf", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_clear_history(request: Request):
+    """„Verlauf löschen“ (Bestätigen): the history of the sessions is gone."""
+    _admin_here(request)
+    guard.limit(request, "fernzugang", admin=True)
+    with _vlock:
+        with contextlib.suppress(OSError):
+            os.remove(VERLAUF)
+    log("verlauf", "geloescht", 0)
+    return {"ok": True}
+
+
 @router.put("/api/admin/fernzugang/geraete/{gid}", dependencies=[Depends(auth)])
 async def admin_allow(gid: str, request: Request):
-    _on(request)
+    if not admin_on():
+        raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
+    _admin_here(request)
+    if _notaus(count=True):
+        raise HTTPException(503, "Notaus: Fernzugang gesperrt")
     guard.limit(request, "fernzugang", admin=True)
     on = (await json_body(request, 256)).get("erlaubt")
     if not isinstance(on, bool) or not GID.fullmatch(gid):
@@ -1027,7 +1311,7 @@ async def admin_allow(gid: str, request: Request):
 async def admin_cut(gid: str, request: Request):
     """Ends the system's sessions and its anchor connection now (it comes back after its pause; to keep it out, switch
     „Darf sich verbinden“ off)."""
-    _browser(request)
+    _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     n = 0
     for s in [s for s in SITZUNG.values() if s.gid == gid]:
@@ -1042,7 +1326,7 @@ async def admin_cut(gid: str, request: Request):
 
 @router.post("/api/admin/fernzugang/alle-trennen", dependencies=[Depends(auth)])
 async def admin_cut_all(request: Request):
-    _browser(request)
+    _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     n = await close_all("alle")
     log("alle_trennen", _who(request), n)
@@ -1054,7 +1338,7 @@ async def admin_cut_all(request: Request):
 async def admin_remove(gid: str, request: Request):
     """„Entfernen“: the key stops at once, the Pi's key and the pinned host key are deleted here; the anchor hears
     „abbauen“ now or at its next contact and removes everything it set up on the server."""
-    _browser(request)
+    _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     with _lock:
         d = _read()

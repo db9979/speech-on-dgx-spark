@@ -2895,10 +2895,18 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzside .card{margin:0 0 10px}.fzchips{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .fzchip{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--fg)}
 .fzchip code{overflow-wrap:anywhere}.fzchip small{color:var(--acc);flex:none}
+.fzjrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}.fzjrow:first-child{border-top:0}.fzjrow .fh{margin:0}
+.fzverlauf summary{font-weight:600;cursor:pointer}.fzvrow{display:grid;grid-template-columns:8em 1fr auto;gap:8px;padding:3px 0;border-top:1px solid var(--line);font-size:.92em}
 .fzkeys{display:none;gap:6px;grid-column:1/-1}.fzkeys .b.on{background:var(--acc);color:#fff}
 @media (max-width:760px){.fztiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fzcols,.fzview{grid-template-columns:1fr}
   .fzterm{height:55vh;min-height:55vh}.fzkeys{display:flex;flex-wrap:wrap}.fzside{order:3}.fzdanger{flex-direction:column;align-items:stretch}}
 .fzview[hidden],.fzdetail[hidden]{display:none}
+/* „Herauslösen“ (#fernfenster): the panel page in its own window shows only the terminal, over the whole page */
+.fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:#dc2626}.fzweg[hidden]{display:none}
+.fzfenrow{margin-top:6px}
+body.fzfenster .fzbanner{position:fixed;left:8px;right:8px;top:8px;z-index:9001;margin:0}
+body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;background:var(--bg);padding:62px 8px 8px;margin:0;overflow:hidden}
+body.fzfenster .fzterm{height:calc(100vh - 150px);min-height:200px}body.fzfenster #fzheraus{display:none}
 /* Siedlung neu ordnen (dungeonfenster.js dmSiedlung, Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): a slim head, the houses as a list beside the chosen one, one row per offer */
 .dm-sied-kopf{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:4px 2px 10px;border-bottom:1px solid var(--t-linie,var(--line))}.dm-sied-kopf>b{font-size:19px}.dm-sied-gold{margin-left:auto}.dm-sied-gold b{font-size:19px;font-variant-numeric:tabular-nums}
 .dm-sied{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0 16px;margin-top:10px;align-items:start}.dm-sied.handy{grid-template-columns:minmax(0,1fr)}

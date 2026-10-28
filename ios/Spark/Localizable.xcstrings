@@ -17760,6 +17760,276 @@
           }
         }
       }
+    },
+    "Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emergency stop: remote access is locked until the emergency stop is lifted."
+          }
+        }
+      }
+    },
+    "Systeme verbunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systems connected"
+          }
+        }
+      }
+    },
+    "Leerlauf trennt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle ends"
+          }
+        }
+      }
+    },
+    "Nur Zahlen und feste Wörter; aufgezeichnet wird nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numbers and fixed words only; nothing is recorded."
+          }
+        }
+      }
+    },
+    "Online seit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online since"
+          }
+        }
+      }
+    },
+    "Offline seit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline since"
+          }
+        }
+      }
+    },
+    "Letzte Sitzung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last session"
+          }
+        }
+      }
+    },
+    "Anker": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchor"
+          }
+        }
+      }
+    },
+    "Host-Schlüssel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host key"
+          }
+        }
+      }
+    },
+    "Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server shows another host key than at pairing: no connection. If it was reinstalled, \"Remove\" and pair again."
+          }
+        }
+      }
+    },
+    "Darf sich verbinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "May connect"
+          }
+        }
+      }
+    },
+    "Shell im Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the shell in the panel"
+          }
+        }
+      }
+    },
+    "Wird beim nächsten Kontakt abgebaut. Von Hand auf dem Server: sudo spark-anker entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed at its next contact. By hand on the server: sudo spark-anker entfernen"
+          }
+        }
+      }
+    },
+    "Noch kein Server gekoppelt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No server paired yet."
+          }
+        }
+      }
+    },
+    "Neues System koppeln (im Panel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair a new system (in the panel)"
+          }
+        }
+      }
+    },
+    "Alle trennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect all"
+          }
+        }
+      }
+    },
+    "Jede Sitzung und jeden Anker jetzt trennen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect every session and anchor now?"
+          }
+        }
+      }
+    },
+    "Diesen Server entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem Server alles ab, was er eingerichtet hat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this server? The key stops at once; the anchor removes everything it set up on the server."
+          }
+        }
+      }
+    },
+    "Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote access is off. Switch it on under Features → Remote access to servers."
+          }
+        }
+      }
+    },
+    "Shell und Koppeln fragen im Panel jedes Mal frisch nach Code oder Passkey; beim ersten Mal meldest du dich dort an wie im Browser. Die Seite: Fernzugang → Fern-Server.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shell and pairing ask for a fresh code or passkey in the panel every time; the first time you sign in there like in the browser. The page: Remote access → Remote servers."
+          }
+        }
+      }
+    },
+    "wird abgebaut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "being removed"
+          }
+        }
+      }
+    },
+    "gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "blocked"
+          }
+        }
+      }
+    },
+    "online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "online"
+          }
+        }
+      }
+    },
+    "offline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "offline"
+          }
+        }
+      }
+    },
+    "Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected. The anchor comes back after its pause while it may connect."
+          }
+        }
+      }
+    },
+    "Getrennt: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected: %lld"
+          }
+        }
+      }
+    },
+    "Entfernt. Der Anker baut sich ab; ist er offline, beim nächsten Kontakt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed. The anchor removes itself; when offline, at its next contact."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

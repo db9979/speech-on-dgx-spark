@@ -132,6 +132,7 @@ LIST = {
     ("POST", "/api/admin/modelle/platz"): (CONFIRM, "Spark", "Lange Gespräche einstellen", "Set long conversations"),
     ("POST", "/api/admin/modelle/zurueck"): (CONFIRM, "Spark", "Das vorige Modell zurückholen", "Bring back the previous model"),
     ("DELETE", "/api/admin/fernzugang/geraete/{gid}"): (CONFIRM, "Spark", "Fern-Server entfernen (Anker baut sich ab)", "Remove a remote server (the anchor removes itself)"),
+    ("DELETE", "/api/admin/fernzugang/verlauf"): (CONFIRM, "Spark", "Verlauf des Fernzugangs löschen", "Delete the remote access history"),
     ("POST", "/api/admin/werkstatt/auftrag"): (CONFIRM, "Spark", "Werkstatt: Diagnose, Reparatur oder Code-Messung", "Workshop: diagnosis, repair or code measurement"),
     ("POST", "/api/admin/modelle/messen"): (CONFIRM, "Spark", "Ein Modell messen", "Measure a model"),
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),

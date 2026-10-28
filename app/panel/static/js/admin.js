@@ -284,7 +284,7 @@ function zFern(F){const box=$('zfern'),h=$('zfernh');if(!box)return;box.hidden=h
   for(const [k,de,en] of [['gekoppelt','gekoppelt','paired'],['online','online','online'],['sitzungen','offene Sitzungen','open sessions'],['abbau','warten auf Abbau','waiting for removal']]){
     const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
     kk.textContent=t(de,en);b.textContent=String(F[k]||0);tx.append(kk,b);r.appendChild(tx);card.appendChild(r)}
-  card.appendChild(wayEl(t('Funktionen → Fernzugang','Features → Remote access'),t('Funktionen → Fernzugang','Features → Remote access')));box.appendChild(card)}
+  card.appendChild(wayEl(t('Fernzugang → Fern-Server','Remote access → Remote servers'),t('Fernzugang → Fern-Server','Remote access → Remote servers')));box.appendChild(card)}
 function zRund(R){const box=$('zrund'),h=$('zrundh');if(!box)return;box.hidden=h.hidden=!R.an;box.textContent='';if(!R.an)return;
   const la=R.letzt,st=R.stoerung,card=document.createElement('div');card.className='card zrcard';
   card.dataset.lvl=st?'bad':!la?'':la.ok?(R.langsam||[]).length?'warn':'ok':'warn';
@@ -532,6 +532,7 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
     if(pane.contains($('chat.face'))){setFaceSpark(n.chat.face);faceApply();setFaceLife(n.chat.face_life===true)}
     if(typeof hilfeRefresh==='function')hilfeRefresh();   // Funktionen → Hilfe zum Spark: the face follows at once
+    if(pane.contains($('chat.fernzugang'))&&window.fzStart)api('/api/whoami').then(r=>r.json()).then(fzStart).catch(()=>{});   // the menu entry Fernzugang follows its switch
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance();
     sayToast(r.errors&&r.errors.length?t('Gespeichert, mit Fehlern (siehe unten).','Saved, with errors (see below).'):t('Gespeichert.','Saved.'),2500)}   // the bar leaves its floating place: say it where the person looks
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});

@@ -3189,7 +3189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 94). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 95). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3213,7 +3213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 94 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 95 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -13805,6 +13805,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Meldung bei Fernsitzung (Funktionen → Zugang → „Meldung bei Fernsitzung“; baut auf „Fernzugang zu Servern“): Öffnet ein Admin die Shell eines Servers aus dem Internet oder von einem Ort, von dem er sie noch nie geöffnet hat, bekommen alle Admins eine Mitteilung aufs Handy mit festem Text: wer, welcher Server, Zuhause oder Internet, nie eine Adr …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Angriffsprobe (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home). <!-- /funktionen:liste -->"
 },
 {
@@ -14157,7 +14165,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "en und gezielte Werkzeugwahl. Das Gedächtnis steht seit V01.0.723 unter Meine Sachen. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Überblick („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen), Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen) und Werkstatt (seit V01.0.886, nur Admin: die Ergebnisse der Werkstatt, das neueste oben, je mit Erklärung und nächstem Schritt; Ursache untersuchen und Reparieren öffnen die Seite Zustand → Werkstatt des Panels in der App). Unter Ändern: Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als"
+"text": "en und gezielte Werkzeugwahl. Das Gedächtnis steht seit V01.0.723 unter Meine Sachen. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Überblick („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen), Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen) und Werkstatt (seit V01.0.886, nur Admin: die Ergebnisse der Werkstatt, das neueste oben, je mit Erklärung und nächstem Schritt; Ursache untersuchen und Reparieren öffnen die Seite Zustand → Werkstatt des Panels in der App). Unter Ändern: Fernzugang (seit V01.1.213, nur Admin: die gekoppelten Fern-Server mit Zustand, Trennen, Alle trennen, Darf sich verbinden und Entfernen; Shell und Koppeln öffnen die Seite Fernzugang → Fern-Server des Panels in der App), Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter"
 },
 {
 "lang": "de",
@@ -14165,7 +14173,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": " Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Überblick, Logs und Personen und Geräte; dort hebt er Sperren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur der Admin, seit V01.0.551). - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweite"
+"text": " selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Überblick, Logs und Personen und Geräte; dort hebt er Sperren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur der Admin, seit V01.0.551). - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einr"
 },
 {
 "lang": "de",
@@ -14173,7 +14181,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "n Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
+"text": "ichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
 },
 {
 "lang": "de",
@@ -15197,7 +15205,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Fernzugang",
 "title": "Fernzugang",
-"text": "Nur für Admins, standardmäßig aus (Schalter *Funktionen → Fernzugang zu Servern*), bedient unter *Funktionen → Fernzugang* (Plan ssh-vermittlung, Stufe 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Wie Raspberry Pi Connect, nur ist der Vermittler der eigene Pi: ein Server anderswo ruft das Panel über seinen Anker an, der Admin öffnet dessen Shell im Browser."
+"text": "Nur für Admins, standardmäßig aus (Schalter *Funktionen → Fernzugang zu Servern*), bedient im eigenen Menüpunkt *Fernzugang* unter „Spark verwalten“ (seit V01.1.213; nur für Admins im eigenen Browser und nur, solange der Schalter an ist), dort *Fernzugang → Fern-Server* (Plan ssh-vermittlung, Stufe 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Wie Raspberry Pi Connect, nur ist der Vermittler der eigene Pi: ein Server anderswo ruft das Panel über seinen Anker an, der Admin öffnet dessen Shell im Browser."
 },
 {
 "lang": "de",
@@ -15221,7 +15229,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Fernzugang",
 "title": "Fernzugang",
-"text": "ost-Schlüssel muss dem bei der Kopplung festgelegten gleichen: sonst keine Verbindung, Wachposten „Schutz geändert“, Dienst-Wächter-Warnung, der Server ist bis zum neuen Koppeln gesperrt. Höchstens chat.fernzugang_sitzungen Sitzungen (1 bis 4, Standard 2), Leerlauf chat.fernzugang_leerlauf_min (1 bis 120, Standard 15), 64 KB je Nachricht. Oben steht rot „Fernsitzung aktiv“ mit *Trennen*. xterm.js 5.5.0 (MIT) liegt im Panel (static/xterm/, SHA-256 fest in fernzugang.XTERM), die CSP bleibt script-src 'self'. Am Handy Zusatztasten (Esc, Tab, Strg, Pfeile, Enter). - Vorschläge: neben dem Terminal feste Befehle, die nur lesen (fernzugang.CHIPS); ein Tipp setzt den Befehl in die Zeile, Enter drückt der Mensch. Kein Werkzeug, die Ausgabe erreicht nie ein Modell. - Entfernen: *Entfernen* (Bestätigen) macht den Geräteschlüssel sofort ungültig und löscht Panel-Schlüssel und Host-Schlüssel; der Anker hört „abbauen“ (sofort oder beim nächsten Kontakt; ein entfernter Schlüssel bekommt nichts anderes), schreibt die Markierung, spark-anker-abbau entfernt als root beide Dienste, Programm, Einstellungen, /var/lib/spark-anker, den Benutzer spark-anker, die Zeile in authorized_keys und den Benutzer s"
+"text": "ost-Schlüssel muss dem bei der Kopplung festgelegten gleichen: sonst keine Verbindung, Wachposten „Schutz geändert“, Dienst-Wächter-Warnung, der Server ist bis zum neuen Koppeln gesperrt. Höchstens chat.fernzugang_sitzungen Sitzungen (1 bis 4, Standard 2), Leerlauf chat.fernzugang_leerlauf_min (1 bis 120, Standard 15), 64 KB je Nachricht. Oben steht rot „Fernsitzung aktiv“ mit *Trennen*. xterm.js 5.5.0 (MIT) liegt im Panel (static/xterm/, SHA-256 fest in fernzugang.XTERM), die CSP bleibt script-src 'self'. Am Handy Zusatztasten (Esc, Tab, Strg, Pfeile, Enter). - Vorschläge: neben dem Terminal feste Befehle, die nur lesen (fernzugang.CHIPS); ein Tipp setzt den Befehl in die Zeile, Enter drückt der Mensch. Kein Werkzeug, die Ausgabe erreicht nie ein Modell. Die Vorschläge passen sich nach festen Regeln an, nichts verlässt den Browser (V01.1.213): nur der zuletzt eingegebene Befehl bleibt im Speicher der Seite, genommen aus der eigenen Zeile beim Enter, nie aus der Ausgabe, nie an den Server geschickt, nie gespeichert oder aufgeschrieben. Die Regeltafel fernzugang.FOLGE (Befehl → 2 bis 4 Folgebefehle, etwa systemctl status x → journalctl -u x -n 50, systemctl restart x) kommt mit den "
 },
 {
 "lang": "de",
@@ -15229,7 +15237,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Fernzugang",
 "title": "Fernzugang",
-"text": "park samt Home, wenn der Anker ihn angelegt hat, und meldet es dem Panel; dann vergisst das Panel den Server (nach 90 Tagen ohne Kontakt sowieso). Von Hand: sudo spark-anker entfernen (auch curl … | sudo python3 - entfernen). *Darf sich verbinden* aus weist den Anker ab, *Trennen* und *Alle trennen* schließen sofort; der Notaus (jede Stufe) schließt alles und lässt nichts herein. - Überwachung: Logs-Bereich „Fernzugang“ mit fernzugang: <Wort> | <Grund> | <Zahl> für jedes Ergebnis (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu mit leerlauf, notaus …; abbauen, abgebaut; hostkey_falsch; download); nie Tasten, Ausgaben, Codes, Schlüssel oder Adressen, aufgezeichnet wird nichts. *Zustand → Live* Kasten „Fernzugang“, *Zustand → Überblick*, die Steuerzentrale, die OLED-Seite „Sicherheit“ und die iPhone-App zeigen nur Zahlen (gekoppelt, online, offene Sitzungen, warten auf Abbau). Jede Sitzung steht ohne Inhalt im Anfrage-Verlauf. Der Dienst-Wächter meldet einen Server, der länger als chat.fernzugang_offline_min Minuten (5 bis 1440, Standard 30) weg ist. Der Wachposten meldet eine neue Kopplung als „Neuer Zugang“. Selbsttest test_fernzugang "
+"text": "Vorschlägen aus einer Quelle; ein Platzhalter wird nur mit dem eigenen Argument gefüllt, für die Shell maskiert ('…'); passt keine Regel, stehen die festen Vorschläge da. Auch diese setzen nur ein, nie Enter. - Herauslösen (V01.1.213): *Herauslösen* öffnet die laufende Shell in einem eigenen Fenster derselben Seite. Das Fenster holt sich über das Panel-Fenster, das es geöffnet hat (postMessage, nur gleiche Herkunft), ein eigenes Einmal-Ticket (30 Sekunden, an dieselbe Anmeldung gebunden, POST /api/admin/fernzugang/sitzung/<id>/fenster), nie in seiner Adresse; die Sitzung zieht dorthin um, der Reiter zeigt „Die Shell läuft im eigenen Fenster“ mit *Zurückholen* und *Trennen*. Schließen des Fensters beendet die Sitzung (fernzugang: sitzung_zu | fenster); es zählt zu den Sitzungen gleichzeitig. - Tasten (V01.1.213): Im Terminal hält das Panel die Kürzel des Browsers zurück (Strg+F, L, S, P, R, D, K, F1 bis F12, Tab, Alt-Kombinationen, Strg+Umschalt+…) und schickt sie an die Shell; Kopieren und Einfügen bleiben. *Alle Tasten* schaltet Vollbild und die Keyboard Lock API ein (Chrome, Edge), dann gehen auch Strg+W, Strg+T oder Esc an die Shell; Esc 2 Sekunden halten verlässt es. Ohne die A"
 },
 {
 "lang": "de",
@@ -15237,7 +15245,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Fernzugang",
 "title": "Fernzugang",
-"text": "(auch ein ganzer Lauf: Anker-Programm über TLS, Panel, paramiko, kleiner SSH-Server). - Stufe 2 (später): *Bildschirm* (Desktop), Apps."
+"text": "PI steht da: „Alle Tasten nur in Chrome oder Edge; sonst das Panel als App installieren.“ Die Tastenzeile unter dem Terminal hat Esc, Tab, Strg, Alt, Pfeile und F1 bis F12. - Entfernen: *Entfernen* (Bestätigen) macht den Geräteschlüssel sofort ungültig und löscht Panel-Schlüssel und Host-Schlüssel; der Anker hört „abbauen“ (sofort oder beim nächsten Kontakt; ein entfernter Schlüssel bekommt nichts anderes), schreibt die Markierung, spark-anker-abbau entfernt als root beide Dienste, Programm, Einstellungen, /var/lib/spark-anker, den Benutzer spark-anker, die Zeile in authorized_keys und den Benutzer spark samt Home, wenn der Anker ihn angelegt hat, und meldet es dem Panel; dann vergisst das Panel den Server (nach 90 Tagen ohne Kontakt sowieso). Von Hand: sudo spark-anker entfernen (auch curl … | sudo python3 - entfernen). *Darf sich verbinden* aus weist den Anker ab, *Trennen* und *Alle trennen* schließen sofort; der Notaus (jede Stufe) schließt alles und lässt nichts herein. - Überwachung: Logs-Bereich „Fernzugang“ mit fernzugang: <Wort> | <Grund> | <Zahl> für jedes Ergebnis (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu mit leerlauf"
 },
 {
 "lang": "de",
@@ -19165,7 +19173,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 94). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 95). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -19181,7 +19189,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 94 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 95 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -29453,6 +29461,14 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Note on a remote session (Features → Access → \"Note on a remote session\"; builds on \"Remote access to servers\"): When an admin opens the shell of a server from the internet or from a place they never opened it from, all admins get a note on their phone with a fixed text: who, which server, home or internet, never an address."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Attack probe (Features → Access → \"Attack probe\"; builds on \"Workshop\"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home). <!-- /funktionen:liste -->"
 },
 {
@@ -29765,7 +29781,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "mory is under My things. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Summary (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share), Checks (function check, quality test, priority check) and Workshop (since V01.0.886, admin only: the workshop's results, newest first, each with what it means and the next step; looking into a cause and repairing open the panel's page Status → Workshop in the app). Under Change: Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only the su"
+"text": "mory is under My things. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Summary (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share), Checks (function check, quality test, priority check) and Workshop (since V01.0.886, admin only: the workshop's results, newest first, each with what it means and the next step; looking into a cause and repairing open the panel's page Status → Workshop in the app). Under Change: Remote access (since V01.1.213, admin only: the paired remote servers with their state, Disconnect, Disconnect all, May connect and Remove; shell and pairing open the panel's page Remote access → Remote servers in the app), Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove"
 },
 {
 "lang": "en",
@@ -29773,7 +29789,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "mmary, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the admin does, since V01.0.551). - Teach your voice: the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail, calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep"
+"text": " devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only the summary, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the admin does, since V01.0.551). - Teach your voice: the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail"
 },
 {
 "lang": "en",
@@ -29781,7 +29797,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": " it."
+"text": ", calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
 },
 {
 "lang": "en",
@@ -30757,7 +30773,7 @@
 "file": "Security and operation",
 "head": "Remote access",
 "title": "Remote access",
-"text": "Admins only, off by default (switch *Features → Remote access to servers*), used under *Features → Remote access* (plan ssh-vermittlung, stage 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Like Raspberry Pi Connect, only the relay is your own Pi: a server elsewhere calls the panel through its anchor and the admin opens its shell in the browser."
+"text": "Admins only, off by default (switch *Features → Remote access to servers*), used in its own menu entry *Remote access* under \"Manage the Spark\" (since V01.1.213; only for admins in their own browser and only while the switch is on), there *Remote access → Remote servers* (plan ssh-vermittlung, stage 1; app/panel/fernzugang.py, app/anker/spark-anker.py). Like Raspberry Pi Connect, only the relay is your own Pi: a server elsewhere calls the panel through its anchor and the admin opens its shell in the browser."
 },
 {
 "lang": "en",
@@ -30781,7 +30797,7 @@
 "file": "Security and operation",
 "head": "Remote access",
 "title": "Remote access",
-"text": " it is paired again. At most chat.fernzugang_sitzungen sessions (1 to 4, default 2), idle chat.fernzugang_leerlauf_min (1 to 120, default 15), 64 KB per message. On top a red \"Remote session active\" with *Disconnect*. xterm.js 5.5.0 (MIT) lies in the panel (static/xterm/, SHA-256 pinned in fernzugang.XTERM), the CSP stays script-src 'self'. On phones extra keys (Esc, Tab, Ctrl, arrows, Enter). - Suggestions: beside the terminal fixed commands that only read (fernzugang.CHIPS); a tap puts the command into the line, the person presses Enter. No tool, the output never reaches a model. - Removing: *Remove* (Confirm) makes the device key invalid at once and deletes the panel key and the host key; the anchor hears \"abbauen\" (at once or at its next contact; a removed key gets nothing else), writes the marker, spark-anker-abbau as root removes both services, the program, the settings, /var/lib/spark-anker, the user spark-anker, the line in authorized_keys and the user spark with its home when the anchor made it, and tells the panel; then the panel forgets the server (after 90 days without contact anyway). By hand: sudo spark-anker entfernen (also curl … | sudo python3 - entfernen). *May co"
+"text": " it is paired again. At most chat.fernzugang_sitzungen sessions (1 to 4, default 2), idle chat.fernzugang_leerlauf_min (1 to 120, default 15), 64 KB per message. On top a red \"Remote session active\" with *Disconnect*. xterm.js 5.5.0 (MIT) lies in the panel (static/xterm/, SHA-256 pinned in fernzugang.XTERM), the CSP stays script-src 'self'. On phones extra keys (Esc, Tab, Ctrl, arrows, Enter). - Suggestions: beside the terminal fixed commands that only read (fernzugang.CHIPS); a tap puts the command into the line, the person presses Enter. No tool, the output never reaches a model. The suggestions adapt by fixed rules, nothing leaves the browser (V01.1.213): only the last command typed stays in the page's memory, taken from the own line on Enter, never from the output, never sent to the server, never stored or written down. The rule table fernzugang.FOLGE (command → 2 to 4 follow-up commands, e.g. systemctl status x → journalctl -u x -n 50, systemctl restart x) comes with the suggestions from one source; a placeholder is filled only with the own argument, quoted for the shell ('…'); when no rule fits, the fixed suggestions stay. These too only insert, never Enter. - Detach (V01.1.2"
 },
 {
 "lang": "en",
@@ -30789,7 +30805,15 @@
 "file": "Security and operation",
 "head": "Remote access",
 "title": "Remote access",
-"text": "nnect* off refuses the anchor, *Disconnect* and *Disconnect all* close at once; the emergency stop (any stage) closes everything and lets nothing in. - Watching: log area \"Remote access\" with fernzugang: <word> | <reason> | <number> for every result (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu with leerlauf, notaus …; abbauen, abgebaut; hostkey_falsch; download); never keystrokes, output, codes, keys or addresses, nothing is recorded. *Status → Live* box \"Remote access\", *Status → Summary*, the control centre, the OLED page \"Security\" and the iPhone app show numbers only (paired, online, open sessions, waiting for removal). Every session is in the request history without content. The service watch reports a server that is gone longer than chat.fernzugang_offline_min minutes (5 to 1440, default 30). The sentry reports a new pairing as \"New way in\". Self-test test_fernzugang (also a whole run: anchor program over TLS, panel, paramiko, a small SSH server). - Stage 2 (later): *Screen* (desktop), apps."
+"text": "13): *Detach* opens the running shell in a window of its own on the same page. The window gets its own one-time ticket through the panel window that opened it (postMessage, same origin only; 30 seconds, bound to the same sign-in, POST /api/admin/fernzugang/sitzung/<id>/fenster), never in its address; the session moves there, the tab shows \"The shell runs in its own window\" with *Bring back* and *Disconnect*. Closing the window ends the session (fernzugang: sitzung_zu | fenster); it counts toward the sessions at once. - Keys (V01.1.213): in the terminal the panel holds back the browser's shortcuts (Ctrl+F, L, S, P, R, D, K, F1 to F12, Tab, Alt combinations, Ctrl+Shift+…) and sends them to the shell; copy and paste stay. *All keys* turns on full screen and the Keyboard Lock API (Chrome, Edge), then Ctrl+W, Ctrl+T or Esc go to the shell too; holding Esc for 2 seconds leaves. Without the API it says: \"All keys only in Chrome or Edge; otherwise install the panel as an app.\" The key row under the terminal has Esc, Tab, Ctrl, Alt, arrows and F1 to F12. - Removing: *Remove* (Confirm) makes the device key invalid at once and deletes the panel key and the host key; the anchor hears \"abbauen\""
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Remote access",
+"title": "Remote access",
+"text": " (at once or at its next contact; a removed key gets nothing else), writes the marker, spark-anker-abbau as root removes both services, the program, the settings, /var/lib/spark-anker, the user spark-anker, the line in authorized_keys and the user spark with its home when the anchor made it, and tells the panel; then the panel forgets the server (after 90 days without contact anyway). By hand: sudo spark-anker entfernen (also curl … | sudo python3 - entfernen). *May connect* off refuses the anchor, *Disconnect* and *Disconnect all* close at once; the emergency stop (any stage) closes everything and lets nothing in. - Watching: log area \"Remote access\" with fernzugang: <word> | <reason> | <number> for every result (koppeln ok, falsch, abgelaufen; anker_auf, anker_zu, anker_abgewiesen; sitzung_auf, sitzung_zu with leerlauf, notaus …; abbauen, abgebaut; hostkey_falsch; download); never keystrokes, output, codes, keys or addresses, nothing is recorded. *Status → Live* box \"Remote access\", *Status → Summary*, the control centre, the OLED page \"Security\" and the iPhone app show numbers only (paired, online, open sessions, waiting for removal). Every session is in the request history with"
 },
 {
 "lang": "en",

@@ -153,14 +153,15 @@ const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 
   prof:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.4.6 4 2.4 4 5.2"/>',int:'<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/>',
   feat:'<rect x="3" y="4" width="18" height="6" rx="3"/><circle cx="16" cy="7" r="1.6"/><rect x="3" y="14" width="18" height="6" rx="3"/><circle cx="8" cy="17" r="1.6"/>',
   cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',post:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',listen:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',offen:'<path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 6 4 13v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5l-1.5-7a1 1 0 0 0-1-1h-11a1 1 0 0 0-1 1z"/>',kontakte:'<circle cx="12" cy="9" r="3.5"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/><rect x="3" y="3" width="18" height="18" rx="3"/>',dungeon:'<path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 2v20M3 7l9 5 9-5"/>',wbuch:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><circle cx="10" cy="9" r="1.6"/><circle cx="15" cy="12" r="1.6"/><path d="m11.4 9.8 2.2 1.4"/>',
+  fern:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
   more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
 document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(NI[e.dataset.ni]||'')+'</svg>');
 // the phone bar marks the page that is open (Ich while its window is open, else the section's menu entry)
 function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',chats:'chats',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
-const GROUPS={chat:[['chat','']],chats:[['chats','']],cal:[['cal','']],post:[['post','']],listen:[['listen','']],offen:[['offen','']],kontakte:[['kontakte','']],wbuch:[['wbuch','']],dungeon:[['dungeon','']],spiel:[['spiel','']],mon:[['mon',t('Überblick','Summary')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['werk',t('Werkstatt','Workshop')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
-  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Routing')],['fern',t('Fernzugang','Remote access')],['int',t('Anleitungen','Guides')]],
+const GROUPS={chat:[['chat','']],chats:[['chats','']],cal:[['cal','']],post:[['post','']],listen:[['listen','']],offen:[['offen','']],kontakte:[['kontakte','']],wbuch:[['wbuch','']],dungeon:[['dungeon','']],spiel:[['spiel','']],fern:[['fern','']],mon:[['mon',t('Überblick','Summary')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['werk',t('Werkstatt','Workshop')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
+  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Routing')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
@@ -189,7 +190,6 @@ const SUBDESC={mon:()=>($('ztitle')||{}).textContent||'',test:()=>t('Funktionspr
   usage:()=>t('Tokens und Sekunden je Modell, Bereich und Profil','Tokens and seconds per model, area and profile'),models:()=>t('Katalog, laufende Modelle, Speicher-Budget, Messung','Catalog, running models, memory budget, measurement'),int:()=>t('Zu jedem Dienst: einrichten, benutzen, ausschalten','For every service: set up, use, switch off'),
   feat:()=>t('Was der Assistent können soll, für den Spark und jedes Profil','What the assistant may do, for the Spark and each profile'),
   route:()=>t('Welche Werkzeuge eine Frage bekommt, mit Testsätzen','Which tools a question gets, with test sentences'),
-  fern:()=>t('Shell von Fern-Servern im Browser, gekoppelt über ihren Anker','Shell of remote servers in the browser, paired through their anchor'),
   prof:()=>t('Profile, Gäste und Geräte mit Schlüssel','Profiles, guests and devices with a key'),
   apps:()=>t('Open WebUI, andere Apps, Pebble, Siri, curl und Python','Open WebUI, other apps, Pebble, Siri, curl and Python')};
 const GNAME={mon:t('Zustand','Status'),feat:t('Funktionen','Features'),prof:t('Personen und Geräte','People and devices')};

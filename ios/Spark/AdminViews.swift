@@ -101,6 +101,8 @@ struct AdminView: View {
                 Section {
                     // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)
                     if s.role != "manager" { NavigationLink("Funktionen") { FeaturesView() } }
+                    // Fernzugang → Fern-Server (fernzugang.py): the cards, disconnect and remove here; the shell in the panel
+                    if s.role != "manager" { NavigationLink("Fernzugang") { FernzugangView() } }
                     NavigationLink("Personen und Geräte") { AdminProfilesView() }
                     if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
                 } header: { Text("Ändern") } footer: {
@@ -244,6 +246,14 @@ struct StatusView: View {
                     if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
                     if (fz["hostkey"] as? Int ?? 0) > 0 {
                         LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(.red) }
+                    }
+                    // per open session: kind, system, admin (names only with the panel's live_names), Zuhause or Internet, minutes
+                    ForEach(Array((fz["offen"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, o in
+                        LabeledContent {
+                            Text(verbatim: "\(o["admin"] as? String ?? "Admin") · \(o["herkunft"] as? String ?? "") · \(Self.num(o["min"] ?? 0)) min").foregroundStyle(.red)
+                        } label: {
+                            Text(verbatim: "\(o["art"] as? String ?? "Shell") · \(o["system"] as? String ?? "")")
+                        }
                     }
                 }
             }
@@ -1946,5 +1956,180 @@ struct BackupsView: View {
         guard Self.valid(name) else { return }
         do { parse(try await s.object("DELETE", "api/backups/\(name)")) }
         catch { self.error = error.localizedDescription }
+    }
+}
+
+// ---------------------------------------------------------------- Fernzugang → Fern-Server (fernzugang.py, stage 2)
+
+/// One remote server as the Spark lists it (GET /api/admin/fernzugang): numbers, times and fixed words only.
+struct FernServer: Identifiable {
+    let id: String
+    let name: String
+    let os: String
+    let anker: String
+    let online: Bool
+    let onlineSeit: Date?
+    let weg: Date?
+    let zuletzt: Date?
+    let stand: String
+    let erlaubt: Bool
+    let hostkeyFalsch: Bool
+    let fp: String
+    let sitzungen: Int
+}
+
+/// The cards of Fernzugang → Fern-Server in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
+/// and „Entfernen“ (the same levels as in the panel, stufen.py). The shell and pairing need a login in a browser:
+/// they open the panel page inside the app (SFSafariViewController), never the app's own key.
+struct FernzugangView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var servers: [FernServer] = []
+    @State private var error: String?
+    @State private var note: String?
+    @State private var loaded = false
+    @State private var open: PanelPlace?
+    @State private var askAll = false
+    @State private var askRemove: FernServer?
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if !loaded { LadeZeilen(rows: 3) }
+            if loaded && d["on"] as? Bool == false {
+                Text(SparkAPI.way(String(localized: "Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern."))).foregroundStyle(.secondary)
+            } else if loaded {
+                if d["notaus"] as? Bool == true {
+                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(.red)
+                }
+                let c = d["counts"] as? [String: Any] ?? [:]
+                Section {
+                    LabeledContent("Systeme verbunden") { Text(verbatim: "\(Self.num(c["online"])) / \(Self.num(c["gekoppelt"]))") }
+                    LabeledContent("Offene Sitzungen") {
+                        Text(verbatim: "\(Self.num(c["sitzungen"])) / \(Self.num(d["max"]))").foregroundStyle(Self.num(c["sitzungen"]) > 0 ? .red : .primary)
+                    }
+                    LabeledContent("Leerlauf trennt") { Text(verbatim: "\(Self.num(d["leerlauf"])) min") }
+                } footer: {
+                    Text("Nur Zahlen und feste Wörter; aufgezeichnet wird nichts.")
+                }
+                ForEach(servers) { g in
+                    Section {
+                        LabeledContent {
+                            Text(Self.word(g)).foregroundStyle(Self.color(g))
+                        } label: {
+                            Label { Text(verbatim: g.name) } icon: { Image(systemName: "circle.fill").foregroundStyle(Self.color(g)) }
+                        }
+                        if let s = g.onlineSeit, g.online {
+                            LabeledContent("Online seit") { Text(s, format: .dateTime.day().month().hour().minute()) }
+                        } else if let w = g.weg {
+                            LabeledContent("Offline seit") { Text(w, format: .dateTime.day().month().hour().minute()) }
+                        }
+                        if let z = g.zuletzt { LabeledContent("Letzte Sitzung") { Text(z, format: .dateTime.day().month().hour().minute()) } }
+                        if !g.os.isEmpty || !g.anker.isEmpty {
+                            LabeledContent("Anker") { Text(verbatim: [g.anker, g.os].filter { !$0.isEmpty }.joined(separator: " · ")) }
+                        }
+                        if !g.fp.isEmpty {
+                            LabeledContent("Host-Schlüssel") { Text(verbatim: g.fp).font(.caption).lineLimit(1).truncationMode(.middle) }
+                        }
+                        if g.sitzungen > 0 { LabeledContent("Offene Sitzungen") { Text(verbatim: "\(g.sitzungen)").foregroundStyle(.red) } }
+                        if g.hostkeyFalsch {
+                            Text("Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.").foregroundStyle(.red)
+                        }
+                        if g.stand != "abbau" {
+                            Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } }))
+                            Button("Shell im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt)
+                            Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
+                            Button("Entfernen", role: .destructive) { askRemove = g }
+                        }
+                    } footer: {
+                        if g.stand == "abbau" { Text("Wird beim nächsten Kontakt abgebaut. Von Hand auf dem Server: sudo spark-anker entfernen") }
+                    }
+                }
+                Section {
+                    if servers.isEmpty { Text("Noch kein Server gekoppelt.").foregroundStyle(.secondary) }
+                    Button("Neues System koppeln (im Panel)") { panel() }
+                    Button("Alle trennen", role: .destructive) { askAll = true }
+                } footer: {
+                    Text(SparkAPI.way(String(localized: "Shell und Koppeln fragen im Panel jedes Mal frisch nach Code oder Passkey; beim ersten Mal meldest du dich dort an wie im Browser. Die Seite: Fernzugang → Fern-Server.")))
+                }
+            }
+        }
+        .navigationTitle("Fernzugang")
+        .refreshable { await load() }
+        .task { await load() }
+        .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
+        .confirmationDialog("Jede Sitzung und jeden Anker jetzt trennen?", isPresented: $askAll, titleVisibility: .visible) {
+            Button("Alle trennen", role: .destructive) { Task { await cutAll() } }
+        }
+        .confirmationDialog("Diesen Server entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem Server alles ab, was er eingerichtet hat.",
+                            isPresented: Binding(get: { askRemove != nil }, set: { if !$0 { askRemove = nil } }), titleVisibility: .visible) {
+            Button("Entfernen", role: .destructive) { if let g = askRemove { Task { await remove(g) } } }
+        }
+    }
+
+    private func panel() {
+        if let url = SparkAPI.panelLink("go=fern") { open = PanelPlace(url: url) }
+    }
+
+    static func num(_ v: Any?) -> Int { (v as? NSNumber)?.intValue ?? 0 }
+    private static func date(_ v: Any?) -> Date? {
+        let s = (v as? NSNumber)?.doubleValue ?? 0
+        return s > 0 ? Date(timeIntervalSince1970: s) : nil
+    }
+    static func word(_ g: FernServer) -> LocalizedStringKey {
+        g.stand == "abbau" ? "wird abgebaut" : g.hostkeyFalsch ? "Host-Schlüssel falsch" : !g.erlaubt ? "gesperrt" : g.online ? "online" : "offline"
+    }
+    static func color(_ g: FernServer) -> Color {
+        g.hostkeyFalsch ? .red : g.stand == "abbau" || !g.erlaubt ? .orange : g.online ? .green : .secondary
+    }
+
+    private func load() async {
+        defer { loaded = true }
+        do {
+            d = try await AdminSession.shared.object("GET", "api/admin/fernzugang")
+            servers = (d["geraete"] as? [[String: Any]] ?? []).prefix(20).compactMap { x in
+                guard let id = x["id"] as? String, id.range(of: #"^g_[0-9a-f]{12}$"#, options: .regularExpression) != nil else { return nil }
+                return FernServer(id: id, name: String((x["name"] as? String ?? "").prefix(40)), os: String((x["os"] as? String ?? "").prefix(40)),
+                                  anker: String((x["anker"] as? String ?? "").prefix(20)), online: x["online"] as? Bool ?? false,
+                                  onlineSeit: Self.date(x["online_seit"]), weg: Self.date(x["weg"]), zuletzt: Self.date(x["zuletzt"]),
+                                  stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true,
+                                  hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
+                                  sitzungen: Self.num(x["sitzungen"]))
+            }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func allow(_ g: FernServer, _ on: Bool) async {
+        do { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/geraete/\(g.id)", body: ["erlaubt": on]); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func cut(_ g: FernServer) async {
+        do {
+            _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/geraete/\(g.id)/trennen", body: [:])
+            note = String(localized: "Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func cutAll() async {
+        do {
+            let r = try await AdminSession.shared.object("POST", "api/admin/fernzugang/alle-trennen", body: [:])
+            note = String(localized: "Getrennt: \(Self.num(r["n"]))")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func remove(_ g: FernServer) async {
+        do {
+            _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/geraete/\(g.id)")
+            note = String(localized: "Entfernt. Der Anker baut sich ab; ist er offline, beim nächsten Kontakt.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
     }
 }

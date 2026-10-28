@@ -1762,5 +1762,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Fernzugang zu Servern** (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi.
 
+- **Meldung bei Fernsitzung** (Funktionen → Zugang → „Meldung bei Fernsitzung“; baut auf „Fernzugang zu Servern“): Öffnet ein Admin die Shell eines Servers aus dem Internet oder von einem Ort, von dem er sie noch nie geöffnet hat, bekommen alle Admins eine Mitteilung aufs Handy mit festem Text: wer, welcher Server, Zuhause oder Internet, nie eine Adr …
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

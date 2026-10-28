@@ -717,6 +717,8 @@ FEATURES = (
     # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
     # browser; the server's anchor calls the panel, admins only, no tool for the model
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
+    # a push to the admins when a remote session opens from the internet or a new place (on under the switch)
+    F("fernzugangmeldung", "Meldung bei Fernsitzung", "Note on a remote session", "sec", ("fernzugang_meldung",), parent="fernzugang", guide="fernzugangmeldung"),
     # angriffsprobe.py: how often the real model would follow an order in outside text (numbers only, nothing runs)
     F("angriffsprobe", "Angriffsprobe", "Attack probe", "sec", ("angriffsprobe",), parent="werkstatt", guide="angriffsprobe"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
@@ -819,7 +821,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
@@ -827,6 +829,7 @@ SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check"
 # chat.defaults are presets of a profile's own manners (hands-free, barge-in …), not functions: they never switch
 # a function on (test_features.test_presets_never_switch_a_function_on).
 DEFAULT_ON = {
+    "chat.fernzugang_meldung": "Schutz (Dominik 2026-10-28): Admins erfahren von jeder Fernsitzung über das Internet oder von einem neuen Ort; wirkt nur, wenn der Fernzugang an ist",
     "asr.enabled": "Hören ist die Grundaufgabe des Sparks",
     "tts.enabled": "Sprechen ist die Grundaufgabe des Sparks",
     "tts.clean_text": "Qualität: Emojis, Code und Markdown werden nicht vorgelesen",

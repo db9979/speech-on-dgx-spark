@@ -381,6 +381,8 @@
     "fernzugang_leerlauf_min": 15,
     "fernzugang_sitzungen": 2,
     "fernzugang_offline_min": 30,
+    "fernzugang_meldung": true,
+    "fernzugang_verlauf_tage": 30,
     "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,

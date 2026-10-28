@@ -50,6 +50,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(window.wbStart)wbStart(who);   // Wissensbuch (wissensbuch.js): the menu entry only when the admin released it
   if(window.dmStart)dmStart(who);   // KI-Dungeon-Master (dungeon.js): the menu entry only when the admin released it
   if(window.vgStart)vgStart(who);   // Offen (offen.js): the menu entry, the cards in the conversation and their stream
+  if(window.fzStart)fzStart(who);   // Fernzugang (fernzugang.js): the menu entry only for an admin while the switch is on
   if(window.konStart)konStart(who);   // Kontakte (kontakte.js): the menu entry only for a profile with contacts
   // a program's OAuth sign-in (mcpserver.py): kept until the profile is signed in, then Ich → Spark als MCP-Server asks
   try{const m=/^#mcpauth=([A-Za-z0-9_-]{20,48})$/.exec(location.hash);if(m){sessionStorage.setItem('mcpauth',m[1]);history.replaceState(null,'',location.pathname+location.search)}}catch{}

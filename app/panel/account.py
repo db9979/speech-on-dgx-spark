@@ -103,6 +103,12 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze"}
 
 
+def _fern_admin(request):
+    """Who sees the menu entry Fernzugang: the same check as its endpoints (never the Verwalter, a device or a guest)."""
+    import fernzugang
+    return fernzugang.is_admin_browser(request)
+
+
 # the Ich page of a function without a page of its own in features.py (me): reminders live under Mitteilungen
 OWN_BOX = {"reminders": "notebox"}
 
@@ -178,6 +184,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "locked": _locked(prof, request, chat),
             # Logs → Anfragen: main admin and profiles with the role Admin (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
+            # the menu entry Fernzugang (fernzugang.py): the admin in the own browser, while the admin switch is on
+            "fernzugang": features.admin_on("fernzugang", chat) and _fern_admin(request),
             # Zustand → Live (live.py): the same people
             "live": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("live", False) is True,
             # the profile's own face (Ich → Gespräch → Anzeige), else the Spark's (Einstellungen → Vorgaben); guests the Spark's

@@ -64,7 +64,7 @@ const IC={start:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],fe
   'z:usage':['violet','M4 20V10M10 20V4M16 20v-7M22 20H2'],'z:models':['violet','M12 3a4 4 0 00-4 4 4 4 0 00-3 6.5A4 4 0 009 20h6a4 4 0 004-6.5A4 4 0 0016 7a4 4 0 00-4-4zM12 3v17'],
   'z:tech':['violet','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'],
   // Funktionen and Personen und Geräte the same way (Dominik 2026-10-17: „durchgängigen Style verwenden“)
-  'z:feat':['violet','M4 6h16M4 12h16M4 18h16'],'z:route':['teal','M6 3v6a6 6 0 006 6h6M15 12l3 3-3 3M6 21v-6'],'z:fern':['red','M4 5h16v14H4zM7 9l3 3-3 3M12 15h5'],
+  'z:feat':['violet','M4 6h16M4 12h16M4 18h16'],'z:route':['teal','M6 3v6a6 6 0 006 6h6M15 12l3 3-3 3M6 21v-6'],
   'z:int':['amber','M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7'],
   'z:prof':['blue','M9 11a4 4 0 100-8 4 4 0 000 8zM2 21a7 7 0 0114 0M17 3.5a4 4 0 010 7M22 21a7 7 0 00-5-6.7'],
   'z:apps':['green','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z']};

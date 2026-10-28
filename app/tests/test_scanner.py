@@ -70,7 +70,7 @@ OPEN = {
     "/pebble/speech-spark.pbw": "the watch app",
     "/pebble/spark-zifferblatt.pbw": "the Spark watchface (Paket 2), a public app file like the watch app",
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
-    "/static/xterm/{name}": "page files (xterm.js for Funktionen → Fernzugang, pinned in fernzugang.XTERM)",
+    "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Fern-Server, pinned in fernzugang.XTERM)",
     "/api/fernzugang/anker/koppeln": "an anchor's first contact; only with a one-time code the admin made (fresh code first), lockout, 404 while off",
     "/api/fernzugang/anker/abgebaut": "the anchor says it removed itself; only with its own device key (Bearer), 404 while off",
     "/tui/spark-tui.py": "the terminal client program; no data, its SHA-256 is shown under Ich → Terminal",

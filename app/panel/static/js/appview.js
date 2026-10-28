@@ -202,11 +202,11 @@ function lookAct(a){if(a==='lang')$('langbtn').click();else if(a==='theme')$('th
   else if(a==='logout')$('logoutbtn').click();else if(a==='find')palOpen();else if(a==='notaus'&&window.naOpen)naOpen()}
 // ---------------------------------------------------------------- Verwalten
 let mSig='';
-const manageSig=()=>['mon','feat','prof','cfg'].map(s=>{const b=navBtn(s);return b&&!b.hidden&&b.style.display!=='none'?1:0}).join('')+(($('ztitle')||{}).textContent||'')+(($('ztext')||{}).textContent||'');
+const manageSig=()=>['mon','feat','prof','fern','cfg'].map(s=>{const b=navBtn(s);return b&&!b.hidden&&b.style.display!=='none'?1:0}).join('')+(($('ztitle')||{}).textContent||'')+(($('ztext')||{}).textContent||'');
 function renderManage(){mSig=manageSig();const z=$('zhead'),lvl=(z&&z.dataset.lvl)||'',zt=(($('ztitle')||{}).textContent||'').trim(),zx=(($('ztext')||{}).textContent||'').trim();
   const can=s=>{const b=navBtn(s);return b&&!b.hidden&&b.style.display!=='none'};
   const ver=(document.querySelector('meta[name=spark-version]')||{}).content||'';
-  const pages=[['mon',t('Zustand','Status')],['feat',t('Funktionen','Features')],['prof',t('Personen und Geräte','People and devices')],['cfg',t('Einstellungen','Settings')]]
+  const pages=[['mon',t('Zustand','Status')],['feat',t('Funktionen','Features')],['prof',t('Personen und Geräte','People and devices')],['fern',t('Fernzugang','Remote access')],['cfg',t('Einstellungen','Settings')]]
     .filter(([s])=>can(s)).map(([s,l])=>row(`data-sec="${s}"`,esc(l),'')).join('')+
     (can('mon')?row('data-go="logs"',esc(t('Logs','Logs'))):'')+
     (can('cfg')?row('data-cfg="upd"',esc(t('Update','Update')),esc(ver))+row('data-cfg="bak"',esc(t('Sicherung','Backup')),''):'');

@@ -77,6 +77,8 @@ def reset():
     fernzugang.ANKER.clear()
     fernzugang.SITZUNG.clear()
     with contextlib.suppress(OSError):
+        os.remove(fernzugang.VERLAUF)
+    with contextlib.suppress(OSError):
         os.remove(fernzugang.FILE)
     for k in [k for k in guard._rate if str(k[0]).startswith("fernzugang")]:
         guard._rate.pop(k, None)
@@ -163,6 +165,25 @@ class Pairing(Base):
         with unittest.mock.patch.object(coadmin, "session", lambda r: {"id": "u", "name": "A", "role": "admin", "via": "d1"}), \
                 unittest.mock.patch.object(fernzugang.core, "_admin_cookie_age", lambda r: None):
             self.assertFalse(fernzugang.is_admin_browser(types.SimpleNamespace(headers={}, cookies={})))   # the iPhone app: stage 2
+
+    def test_menu_entry_only_for_the_admin_while_on(self):
+        """Fernzugang is an own menu entry (Dominik 2026-10-28): whoami tells the panel to show it only to the admin in
+        the own browser and only while the switch is on; never a guest, a profile or the Verwalter."""
+        self.assertIs(ADMIN.get("/api/whoami").json()["fernzugang"], True)
+        self.assertIs(TestClient(panel.app).get("/api/whoami").json()["fernzugang"], False)
+        helpers.set_config(fernzugang=False)
+        self.assertIs(ADMIN.get("/api/whoami").json()["fernzugang"], False)
+        with open(os.path.join(helpers.APP, "panel", "static", "index.html"), encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('<button data-s="fern" hidden>', html)              # hidden until whoami says so
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "base.js"), encoding="utf-8") as f:
+            base = f.read()
+        self.assertIn("fern:[['fern','']]", base)
+        self.assertNotIn("['fern',t('Fernzugang','Remote access')]", base)   # no longer a tab under Funktionen
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernzugang.js"), encoding="utf-8") as f:
+            self.assertIn("window.fzStart=who=>{const on=!!(who&&who.fernzugang)", f.read())
+        import wege
+        self.assertEqual(wege.find("Die Shell öffnen unter Fernzugang → Fern-Server."), "Fernzugang → Fern-Server")
 
     def test_fresh_code_and_a_second_step(self):
         r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "vps", "origin": OUT})
@@ -419,6 +440,92 @@ class Anchor(Base):
         self.assertEqual(dienstwacht.SVC["fernzugang"][4], "fernzugang")
 
 
+class AppAdmin(Base):
+    """Stage 2 (Dominik 2026-10-28 „2-4“): the own iPhone app of an admin profile (its key, role Admin, second step)
+    sees the cards, lets a server connect or not, disconnects and removes; pairing and the shell (and later files and
+    screen) stay with a login in a browser, the app opens them as the panel page Fernzugang → Fern-Server."""
+
+    def setUp(self):
+        super().setUp()
+        import coadmin
+        import iphone
+        from tests.test_iphone import pair
+        self.coadmin = coadmin
+        self.mfa_on = {mfa.ADMIN}
+        self.real_mark = mfa.mark
+        mfa.enabled = lambda who: who in self.mfa_on
+        mfa.verify = lambda who, code: who in self.mfa_on and code == "123456"
+        mfa.mark = lambda who: f"m-{who}" if who in self.mfa_on else ""
+        helpers.set_config(fernzugang=True, iphone=True, public=False, deny={})
+        iphone._pending.clear()
+        r = ADMIN.post("/api/admin/profiles", json={"name": "FernAppAda", "pin": "1234"})
+        self.assertIn(r.status_code, (200, 409), r.text)
+        self.uid = next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == "FernAppAda")
+        self.mfa_on.add(self.uid)
+        coadmin.set_role(self.uid, "admin")
+        c = TestClient(panel.app)
+        self.assertEqual(c.post("/api/profile/login", json={"name": "FernAppAda", "pin": "1234", "code": "123456"}).status_code, 200)
+        for k in [k for k in guard._rate if k[0] == "pair"]:
+            guard._rate.pop(k, None)
+        self.app = TestClient(panel.app)
+        self.app.headers[profiles.DEVICE_HEADER] = pair(c, "FernApp iPhone").json()["token"]
+
+    def tearDown(self):
+        mfa.mark = self.real_mark
+        with contextlib.suppress(OSError):
+            os.remove(self.coadmin.FILE)
+        helpers.set_config(iphone=False)
+        super().tearDown()
+
+    def test_the_app_sees_cuts_and_removes_but_opens_no_shell(self):
+        d = self.pair("vps-app")
+        r = self.app.get("/api/admin/fernzugang")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([g["name"] for g in r.json()["geraete"]], ["vps-app"])
+        self.assertFalse(r.json()["browser"])           # the app knows: shell and pairing open in the panel page
+        self.assertEqual(self.app.put(f"/api/admin/fernzugang/geraete/{d['id']}", json={"erlaubt": False}).json(), {"erlaubt": False})
+        self.assertEqual(self.app.put(f"/api/admin/fernzugang/geraete/{d['id']}", json={"erlaubt": True}).json(), {"erlaubt": True})
+        with journal() as j:
+            self.assertEqual(self.app.post(f"/api/admin/fernzugang/geraete/{d['id']}/trennen").json(), {"n": 0})
+            self.assertEqual(self.app.post("/api/admin/fernzugang/alle-trennen").json(), {"n": 0})
+        self.assertRegex(j.getvalue(), r"fernzugang: trennen \| (FernAppAda|Profil \w+) \| 0")
+        # pairing and the shell never with the app's key, also with a right code
+        for path, body in (("/api/admin/fernzugang/koppeln", {"name": "x", "origin": OUT}),
+                           ("/api/admin/fernzugang/sitzung", {"geraet": d["id"]})):
+            self.assertEqual(self.app.post(path, json=body, headers=CODE).status_code, 403, path)
+        # removing: the same level as in the panel (Bestätigen; an admin is never asked there)
+        r = self.app.delete(f"/api/admin/fernzugang/geraete/{d['id']}")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["stand"], "abbau")
+
+    def test_the_verwalter_and_other_keys_never(self):
+        d = self.pair("vps-app2")
+        self.coadmin.set_role(self.uid, "manager")
+        self.assertIn(self.app.get("/api/admin/fernzugang").status_code, (401, 403))
+        self.assertIn(self.app.post(f"/api/admin/fernzugang/geraete/{d['id']}/trennen").status_code, (401, 403))
+        self.coadmin.set_role(self.uid, "admin")
+        self.mfa_on.discard(self.uid)                     # the second step off: no admin in the app
+        self.assertIn(self.app.get("/api/admin/fernzugang").status_code, (401, 403))
+        self.mfa_on.add(self.uid)
+        self.assertEqual(self.app.get("/api/admin/fernzugang").status_code, 200)
+        # a key that is no app key (a speaker, a box) is never an admin app
+        req = types.SimpleNamespace(headers={profiles.DEVICE_HEADER: "x" * 40}, cookies={}, scope={})
+        with unittest.mock.patch.object(self.coadmin, "session", lambda r: None):
+            self.assertFalse(fernzugang.is_admin_app(req))
+
+    def test_the_apps_show_the_cards(self):
+        swift = os.path.join(helpers.APP, "..", "ios", "Spark", "AdminViews.swift")
+        if os.path.exists(swift):      # a copy with only app/ has no app sources
+            with open(swift, encoding="utf-8") as f:
+                src = f.read()
+            for want in ("struct FernzugangView", "api/admin/fernzugang/alle-trennen", "/trennen", '"DELETE", "api/admin/fernzugang/geraete/',
+                         'SparkAPI.panelLink("go=fern")', 'NavigationLink("Fernzugang") { FernzugangView() }'):
+                self.assertIn(want, src)
+            self.assertNotIn("api/admin/fernzugang/sitzung", src)      # the shell only in the panel page
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "appview.js"), encoding="utf-8") as f:
+            self.assertIn("['fern',t('Fernzugang','Remote access')]", f.read())   # Android: Verwalten → Fernzugang
+
+
 class Program(unittest.TestCase):
     """The anchor program itself (no root needed)."""
 
@@ -494,6 +601,27 @@ class Pieces(Base):
         self.assertIn("/static/xterm/xterm.js", js)
         self.assertNotRegex(js, r"https?://")                # nothing from a CDN
 
+    def test_follow_up_rules_are_fixed_and_well_formed(self):
+        """The chips after the own last command: a fixed table (one source, served with the chips), 2 to 4 follow-ups,
+        one line each, only {1} as a placeholder, the default chips stay; fernzugang.js keeps the line in the page
+        only, quotes the argument and sends it nowhere (the browser test below types and watches the network)."""
+        self.assertTrue(fernzugang.FOLGE)
+        for words, nxt in fernzugang.FOLGE:
+            self.assertTrue(words and all(re.fullmatch(r"[a-z][a-z0-9\-]*|-[a-z]", w) for w in words), words)
+            self.assertTrue(2 <= len(nxt) <= 4, words)
+            for c in nxt:
+                self.assertTrue(0 < len(c) <= 200 and not re.search(r"[\x00-\x1f\x7f]", c), c)
+                self.assertEqual(re.findall(r"\{[^}]*\}", c), ["{1}"] * c.count("{1}"), c)
+        self.assertEqual(len({w for w, _ in fernzugang.FOLGE}), len(fernzugang.FOLGE))
+        self.pair()
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertEqual(d["folge"], [[list(w), list(f)] for w, f in fernzugang.FOLGE])
+        self.assertEqual(d["chips"], list(fernzugang.CHIPS))
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernzugang.js"), encoding="utf-8") as f:
+            js = f.read()
+        body = js[js.index("function fzZeile("):js.index("function fzChips(")]
+        self.assertNotRegex(body, r"api\(|fetch\(|localStorage|sessionStorage|\.send\(")   # memory only, never sent
+
     def test_chips_never_press_enter_and_no_model_sees_the_shell(self):
         for c in fernzugang.CHIPS:
             self.assertNotRegex(c, r"[\r\n]")
@@ -521,8 +649,10 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey"})
-        self.assertTrue(all(isinstance(v, (bool, int)) for v in d.values()))
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme"})
+        self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
+        self.assertEqual(d["offen"], [])
+        self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
         sub = fernzugang.live_sub(d)
         self.assertEqual(sub, "1 gekoppelt · 0 online · 0 Sitzungen")
         self.assertIn("fernzugang", live.TARGETS)
@@ -537,7 +667,8 @@ class Pieces(Base):
         numbers, never a name (standing rule: a change to Live and Monitoring reaches all of them in one commit)."""
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
-        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0})
+        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0,
+                              "offen": [], "systeme": [{"name": "System 1", "online": False}]})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()
@@ -556,6 +687,138 @@ class Pieces(Base):
 
 
 # ---------------------------------------------------------------- end to end: anchor program, panel, SSH server
+def fake_session(gid, **kw):
+    """An open session as terminal_ws leaves it, without SSH (Live, the page and the history only read its facts)."""
+    import secrets
+    s = types.SimpleNamespace(id=secrets.token_hex(4), gid=gid, uid=None, art="shell", admin_name="Anna", herkunft="internet",
+                              ip_kurz="84.150.x.x", client="browser", seit=time.time() - 120, offen=True, login="L", fenster=False,
+                              ende=types.SimpleNamespace(is_set=lambda: False))
+
+    async def end(why):
+        fernzugang.SITZUNG.pop(s.id, None)
+        s.grund = why
+    s.end = end
+    s.__dict__.update(kw)
+    fernzugang.SITZUNG[s.id] = s
+    return s
+
+
+class WhoIsOn(Base):
+    """Who is connected (Dominik 2026-10-28): Live and the apps show kind, Zuhause or Internet and minutes, names only
+    with logs.live_names, never an address; the page adds admin, client and the shortened address; a history of
+    chat.fernzugang_verlauf_tage days without content; the server's journal and a push to the admins say it."""
+
+    def test_live_kind_origin_minutes_names_only_with_live_names_never_an_ip(self):
+        d = self.pair("vps-geheim")
+        fake_session(d["id"])
+        with unittest.mock.patch.object(live, "cfg", lambda: {"live_names": False}):
+            f = fernzugang.for_live()
+        self.assertEqual(f["offen"], [{"art": "Shell", "system": "System 1", "admin": "Admin", "herkunft": "Internet", "min": 2}])
+        self.assertEqual(f["systeme"], [{"name": "System 1", "online": False}])
+        text = json.dumps(f) + fernzugang.live_sub(f)
+        for no in ("84.150", "vps-geheim", "Anna"):
+            self.assertNotIn(no, text)
+        self.assertIn("Shell System 1, Admin, Internet, 2 min", fernzugang.live_sub(f))
+        with unittest.mock.patch.object(live, "cfg", lambda: {"live_names": True}):
+            f = fernzugang.for_live()
+        self.assertEqual(f["offen"][0]["system"], "vps-geheim")
+        self.assertEqual(f["offen"][0]["admin"], "Anna")
+        self.assertNotIn("84.150", json.dumps(f))
+        page = ADMIN.get("/api/admin/fernzugang").json()["offen"][0]   # the admin's own page: who, with what, from where
+        self.assertEqual((page["admin"], page["client"], page["herkunft"], page["ip"]), ("Anna", "browser", "internet", "84.150.x.x"))
+
+    def test_origin_from_the_connection(self):
+        s = types.SimpleNamespace(fenster=False)
+        conn = types.SimpleNamespace(headers={"user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)"}, client=types.SimpleNamespace(host="84.150.3.4"))
+        with unittest.mock.patch.object(live, "sender", lambda c: "84.150.3.4"), unittest.mock.patch.object(live, "shown_outside", lambda c: True):
+            fernzugang._wo(s, conn)
+        self.assertEqual((s.herkunft, s.ip_kurz, s.client), ("internet", "84.150.x.x", "iphone"))
+        s.fenster = True
+        with unittest.mock.patch.object(live, "sender", lambda c: "192.168.1.5"), unittest.mock.patch.object(live, "shown_outside", lambda c: False):
+            fernzugang._wo(s, conn)
+        self.assertEqual((s.herkunft, s.client), ("zuhause", "fenster"))
+
+    def test_history_without_content_kept_its_days_and_deleted_with_a_code(self):
+        d = self.pair("vps-1")
+        s = fake_session(d["id"])
+        with journal() as j:
+            fernzugang.verlauf_add(s)
+        self.assertIn("fernzugang: verlauf | neu | 1", j.getvalue())
+        row = fernzugang.verlauf_read()[0]
+        self.assertEqual({k: row[k] for k in ("system", "admin", "art", "min", "herkunft")},
+                         {"system": "vps-1", "admin": "Anna", "art": "shell", "min": 2, "herkunft": "internet"})
+        self.assertNotIn("84.150", json.dumps(fernzugang.read_json(fernzugang.VERLAUF, {})))
+        old = fake_session(d["id"], seit=time.time() - 3 * 86400)
+        fernzugang.verlauf_add(old)
+        self.assertEqual(len(fernzugang.verlauf_read()), 2)
+        helpers.set_config(fernzugang=True, fernzugang_verlauf_tage=1)
+        self.assertEqual(len(fernzugang.verlauf_read()), 1)                 # older than its days: gone
+        helpers.set_config(fernzugang=True, fernzugang_verlauf_tage=30)
+        import dateien
+        self.assertIn("fernzugang-verlauf.json", {x.name for x in dateien.FILES} if hasattr(dateien, "FILES") else
+                      json.dumps([list(x) for x in dateien.ALL]) if hasattr(dateien, "ALL") else open(dateien.__file__).read())
+        import stufen
+        self.assertEqual(stufen.LIST[("DELETE", "/api/admin/fernzugang/verlauf")][0], stufen.CONFIRM)   # Bestätigen
+        self.assertEqual(ADMIN.delete("/api/admin/fernzugang/verlauf", headers=CODE).status_code, 200)
+        self.assertEqual(fernzugang.verlauf_read(), [])
+        self.assertIsNone(fernzugang.check({"fernzugang_verlauf_tage": 30}))
+        self.assertIn("fernzugang_verlauf_tage", fernzugang.check({"fernzugang_verlauf_tage": 0}))
+
+    def test_one_session_disconnected_from_the_page(self):
+        d = self.pair()
+        s = fake_session(d["id"])
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/sitzung/{s.id}/trennen").status_code, 200)
+        self.assertNotIn(s.id, fernzugang.SITZUNG)
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/sitzung/{s.id}/trennen").status_code, 404)
+        self.assertIn(TestClient(panel.app).post(f"/api/admin/fernzugang/sitzung/{s.id}/trennen").status_code, (401, 403))
+
+    def test_push_fixed_words_from_the_internet_or_a_new_place(self):
+        import push
+        sent = []
+
+        async def fake(uid, title, body, **kw):
+            sent.append((uid, title, body))
+            return 1
+        d = self.pair("vps-1")
+        g = fernzugang._read()["geraete"][d["id"]]
+        with unittest.mock.patch.object(push, "send", fake), unittest.mock.patch.object(fernzugang, "_admins", lambda: ["u1"]):
+            s = fake_session(d["id"])
+            asyncio.run(fernzugang._melden(s, g))
+            self.assertEqual(sent, [("u1", "Fernsitzung geöffnet", "Anna hat die Shell von vps-1 geöffnet, über das Internet.")])
+            fernzugang.verlauf_add(fake_session(d["id"], herkunft="zuhause", ip_kurz="192.168.x.x"))
+            sent.clear()
+            asyncio.run(fernzugang._melden(fake_session(d["id"], herkunft="zuhause", ip_kurz="192.168.x.x"), g))
+            self.assertEqual(sent, [])                                        # home and a known place: quiet
+            asyncio.run(fernzugang._melden(fake_session(d["id"], herkunft="zuhause", ip_kurz="10.0.x.x"), g))
+            self.assertEqual(sent[0][2], "Anna hat die Shell von vps-1 geöffnet, von einem neuen Ort.")
+            sent.clear()
+            helpers.set_config(fernzugang=True, fernzugang_meldung=False)
+            asyncio.run(fernzugang._melden(fake_session(d["id"]), g))
+            self.assertEqual(sent, [])
+            helpers.set_config(fernzugang=True, fernzugang_meldung=True)
+        import features
+        self.assertIn("chat.fernzugang_meldung", features.DEFAULT_ON)          # on under the switch, with its reason
+        self.assertEqual(features.BY_KEY["fernzugangmeldung"].parent, "fernzugang")
+
+    def test_the_server_sees_who_is_on(self):
+        ran = []
+
+        class Chan:
+            status_event = threading.Event()
+
+            def exec_command(self, cmd):
+                ran.append(cmd)
+
+            def close(self):
+                pass
+        s = types.SimpleNamespace(admin_name="A;n$(na) `x`")
+        with journal() as j:
+            fernzugang.Sitzung._remote_note(s, types.SimpleNamespace(open_session=lambda timeout=5: Chan()))
+        self.assertEqual(ran, ["logger -t spark-fernzugang -- 'Spark-Fernzugang: Anna x verbunden'"])
+        self.assertIn("fernzugang: meldung | server | 1", j.getvalue())
+        self.assertNotRegex(open(fernzugang.__file__, encoding="utf-8").read(), r"\bwall\b")
+
+
 class _Server:
     """A small SSH server with one fixed host key: lets in the user spark with the Pi's key, gives a shell that
     greets, echoes what comes and tells the terminal size."""
@@ -756,6 +1019,62 @@ class EndToEnd(Base):
         self.assertEqual(fernzugang.SITZUNG, {})
         ws.sock.shutdown(socket.SHUT_RDWR)   # the anchor's loop ends by itself (one thread owns its TLS socket)
 
+    def test_herausloesen_moves_the_session_into_its_own_window(self):
+        """„Herauslösen“: the open shell gets a new one-time ticket for the same login only; the window that opens the
+        terminal with it takes the session over (the SSH session stays, still one session), the window before hears
+        „weg“; closing the own window ends the session with the fixed word „fenster“."""
+        import core
+        app = self.server.config.app
+        app.dependency_overrides[core.auth] = lambda: None     # the login itself is tested above; here the way through
+        import httpx
+        http = httpx.Client(base_url=self.base, verify=False, timeout=30)
+        d = self.pair(hostkey=HOST_PUB)
+        sshd = _Server(d["pi_key"].split()[1])
+        ws, _ = self.anchor(d["key"], sshd.port)
+        with journal() as j:
+            tab = self.browser(d["id"])
+            got, states = self.read_until(tab, b"hallo vom server")
+            sid = next(x["id"] for x in states if x.get("stand") == "offen")
+            with unittest.mock.patch.object(fernzugang, "_login", lambda c: "M"):   # another login gets nothing
+                self.assertEqual(http.post(f"/api/admin/fernzugang/sitzung/{sid}/fenster", json={"fenster": True}).status_code, 404)
+            r = http.post(f"/api/admin/fernzugang/sitzung/{sid}/fenster", json={"fenster": True})
+            self.assertEqual(r.status_code, 200, r.text)
+            t = r.json()["ticket"]
+            import websockets.sync.client as wsc
+            ctx = ssl.create_default_context()
+            ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
+            win = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
+                              additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=40)
+            tab_states = []
+            with contextlib.suppress(Exception):                          # the tab hears „weg“, then it is closed
+                for _ in range(50):
+                    m = tab.recv(timeout=30)
+                    if isinstance(m, str):
+                        tab_states.append(json.loads(m))
+            self.assertIn({"typ": "weg", "fenster": True}, tab_states)
+            first = json.loads(win.recv(timeout=30))
+            self.assertEqual((first["stand"], first["id"]), ("offen", sid))
+            win.send(b"uptime")
+            got, _ = self.read_until(win, b"echo:uptime")
+            self.assertIn(b"echo:uptime", got)
+            self.assertEqual(len(fernzugang.SITZUNG), 1)                  # still one session
+            with self.assertRaises(Exception):                            # the ticket works once
+                wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
+                            additional_headers={"Origin": self.base}, open_timeout=10).recv(timeout=10)
+            win.close()
+            for _ in range(200):
+                if "sitzung_zu" in j.getvalue():
+                    break
+                time.sleep(0.05)
+        out = j.getvalue()
+        self.assertEqual(fernzugang.SITZUNG, {})
+        self.assertIn("fernzugang: ticket | fenster | 1", out)
+        self.assertIn("fernzugang: sitzung_auf | fenster | 1", out)
+        self.assertIn("fernzugang: sitzung_zu | fenster | 0", out)
+        self.assertNotIn(t, out)
+        http.close()
+        ws.sock.shutdown(socket.SHUT_RDWR)
+
     def test_a_changed_host_key_is_no_connection(self):
         _, other = host_key()
         d = self.pair(hostkey=other)               # pinned at pairing: another key than the server shows now
@@ -775,6 +1094,95 @@ class EndToEnd(Base):
         p = program()
         with self.assertRaises(p.Fehler):
             p.tls_connect(self.base, "00" * 32)
+
+
+# ---------------------------------------------------------------- in the browser: own window and the keys
+FAKE = """
+window.__ws=[];window.__locked=0;
+window.WebSocket=class{constructor(u){this.url=u;this.readyState=0;window.__ws.push(u)}send(){}close(){this.readyState=3}};
+Element.prototype.requestFullscreen=function(){return Promise.resolve()};
+Object.defineProperty(Navigator.prototype,'keyboard',{configurable:true,get(){return window.__nokb?undefined:
+  {lock(){window.__locked++;return Promise.resolve()},unlock(){}}}});
+"""
+TICKET = "T" * 43
+
+
+class InBrowser(unittest.TestCase):
+    """„Herauslösen“ in a real browser: the own window gets its own ticket over postMessage (never in its address),
+    the browser's shortcuts are held back for the shell, „Alle Tasten“ calls the Keyboard Lock API where there is one."""
+
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import browser_ok
+        if not browser_ok():
+            raise unittest.SkipTest("no Playwright/Chromium here")
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    def test_own_window_own_ticket_and_the_keys(self):
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                await ctx.add_init_script(FAKE)
+                asked = []
+
+                async def ticket(route):
+                    asked.append(route.request.post_data)
+                    await route.fulfill(status=200, content_type="application/json",
+                                        body=json.dumps({"ticket": TICKET, "gilt_s": 30}))
+                await ctx.route("**/api/admin/fernzugang/sitzung/*/fenster", ticket)
+                seen = []
+                ctx.on("request", lambda rq: seen.append((rq.url, rq.post_data or "")))
+                pg = await ctx.new_page()
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                r = await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                self.assertEqual(r.status, 200)
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                async with ctx.expect_page() as pop_info:
+                    await pg.evaluate("""FZ.ws={readyState:1,send(){},close(){}};FZ.sid='abcd1234';
+                        FZ.sitz={name:'vps-1',gid:'g_0123456789ab',seit:Date.now()/1000,max:2,leer:15};
+                        FZ.d={chips:['uptime'],folge:""" + json.dumps([[list(w), list(f)] for w, f in fernzugang.FOLGE]) + """};fzHeraus()""")
+                pop = await pop_info.value
+                await pop.wait_for_function("window.__ws&&window.__ws.length>0", timeout=30000)
+                self.assertTrue(pop.url.endswith("/#fernfenster"), pop.url)
+                self.assertNotIn(TICKET, pop.url)                                    # never in the window's address
+                urls = await pop.evaluate("window.__ws")
+                self.assertIn("/api/fernzugang/terminal?t=" + TICKET, urls[0])
+                self.assertEqual(len(asked), 1)
+                self.assertEqual(json.loads(asked[0]), {"fenster": True})            # its own ticket, asked by the opener
+                self.assertTrue(await pop.evaluate("document.body.classList.contains('fzfenster')&&!$('fzview').hidden"))
+                held = await pop.evaluate("""[['F5',{}],['f',{ctrlKey:true}],['l',{ctrlKey:true}],['Tab',{}],['x',{altKey:true}],
+                    ['I',{ctrlKey:true,shiftKey:true}],['F12',{}],['v',{ctrlKey:true}],['V',{ctrlKey:true,shiftKey:true}],['a',{}]].map(([k,o])=>{
+                    const e=new KeyboardEvent('keydown',Object.assign({key:k,cancelable:true},o));fzFang(e);return e.defaultPrevented})""")
+                self.assertEqual(held, [True, True, True, True, True, True, True, False, False, False])
+                # the chips follow the own last command by fixed rules; nothing of it leaves the page
+                chips = lambda: pop.evaluate("[...document.querySelectorAll('#fzchips code')].map(x=>x.textContent)")
+                await pop.wait_for_function("document.querySelectorAll('#fzchips code').length>0", timeout=10000)
+                self.assertEqual(await chips(), ["uptime"])
+                await pop.evaluate("for(const c of 'systemctl status ngin')fzZeile(c);fzZeile('x');fzZeile('\\x7f');fzZeile('x');fzZeile('\\r')")
+                self.assertEqual((await chips())[:2], ["journalctl -u nginx -n 50 --no-pager", "systemctl restart nginx"])
+                self.assertFalse(await pop.evaluate("$('fzchipwas').hidden"))
+                await pop.evaluate("fzZeile('sudo systemctl status a;b$(x)\\r')")
+                self.assertEqual((await chips())[0], "journalctl -u 'a;b$(x)' -n 50 --no-pager")      # quoted
+                await pop.evaluate("fzZeile(\"systemctl status it's\\r\")")
+                self.assertEqual((await chips())[1], "systemctl restart 'it'\\''s'")
+                await pop.evaluate("fzZeile('echo hallo\\r')")
+                self.assertEqual(await chips(), ["uptime"])                                # no rule: the fixed chips
+                for url, body in seen:
+                    for word in ("nginx", "a;b", "echo hallo"):
+                        self.assertNotIn(word, url + body)
+                await pop.evaluate("fzAlleTasten()")
+                await pop.wait_for_function("window.__locked===1", timeout=10000)
+                await pop.evaluate("window.__nokb=1;fzAlleTasten()")
+                self.assertIn("Chrome", await pop.evaluate("$('fzmsg').textContent"))
+                await br.close()
+        asyncio.run(go())
 
 
 def secrets_ticket(gid, cols, rows):

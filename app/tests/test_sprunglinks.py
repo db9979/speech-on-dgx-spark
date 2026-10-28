@@ -21,8 +21,9 @@ import features  # noqa: E402  (panel/ is on the path through helpers)
 
 # the menu names, and the pages of their own outside Ich (features.OWN_PAGES: Kalender, V01.0.805); „AI Dungeon Master →“
 # is the feature inside a way (Features → AI Dungeon Master → …), not the page Dungeon Master
-DE_ROOTS = ("Personen und Geräte", "Einstellungen", "Funktionen", "Zustand", "Ich") + tuple(x[2] for x in features.OWN_PAGES)
-EN_ROOTS = ("People and devices", "Settings", "Features", "Status", "Me") + tuple(x[3] for x in features.OWN_PAGES)
+# and the admin's own menu entry Fernzugang (V01.1.213)
+DE_ROOTS = ("Personen und Geräte", "Einstellungen", "Funktionen", "Zustand", "Ich", "Fernzugang") + tuple(x[2] for x in features.OWN_PAGES)
+EN_ROOTS = ("People and devices", "Settings", "Features", "Status", "Me", "Remote access") + tuple(x[3] for x in features.OWN_PAGES)
 HINT = re.compile(r"(?<![\w-])(?<!Mein )(?<!My )(?<!AI )(?<!→ )(" + "|".join(DE_ROOTS + EN_ROOTS) + r")\s*→")
 # a way that starts like ours but means another program (the iPhone's or Open WebUI's settings, …): text that
 # names it right before the way. Everything else that starts with one of the names above must be found.

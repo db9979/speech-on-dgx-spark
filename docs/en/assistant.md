@@ -1762,5 +1762,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Remote access to servers** (Features → Access → "Remote access to servers"): The shell of a server elsewhere (a VPS, a NAS at friends', a Raspberry Pi) right in the browser, like Raspberry Pi Connect, only the relay is your own Pi.
 
+- **Note on a remote session** (Features → Access → "Note on a remote session"; builds on "Remote access to servers"): When an admin opens the shell of a server from the internet or from a place they never opened it from, all admins get a note on their phone with a fixed text: who, which server, home or internet, never an address.
+
 - **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

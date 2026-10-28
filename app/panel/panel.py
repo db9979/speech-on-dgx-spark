@@ -755,7 +755,7 @@ def script_file(name: str, request: Request):
 
 @app.get("/static/xterm/{name}")
 def xterm_file(name: str, request: Request):
-    """xterm.js for Funktionen → Fernzugang (MIT, pinned in fernzugang.XTERM, served only from here: script-src 'self')."""
+    """xterm.js for Fernzugang → Fern-Server (MIT, pinned in fernzugang.XTERM, served only from here: script-src 'self')."""
     path, media = fernzugang.xterm_file(name)
     return _asset(request, path, media)
 
