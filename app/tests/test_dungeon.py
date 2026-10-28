@@ -1738,8 +1738,8 @@ class Permadeath(Turns):
         a = self.state(self.rid)["offen"][self.host]
         self.assertNotIn("wirkt", a)
         self.assertIn("Schildwall", a["nicht"])
-        # Kampfschrei: +1 on the group's checks of the turn
-        a = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich nutze meinen Kampfschrei!", "zug": z})
+        # Anfeuern (id kampfschrei, a spell shares the old name „Kampfschrei“): +1 on the group's checks of the turn
+        a = self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich nutze mein Anfeuern!", "zug": z})
         self.assertEqual(self.state(self.rid)["offen"][self.host]["wirkt"], {"gruppe_probe": "kampfschrei"})
         rd = self.state(self.rid)
         mit = dungeon.roll(r, rd, [{"pid": self.gp, "wert": "staerke", "schwer": 10}], random.Random(4))[0]
@@ -6272,6 +6272,34 @@ class Powers(Base):
         self.assertEqual(rd["offen"][self.gp].get("kraft"), "lichtzauber")
         self.assertIn("zauber", {e["art"] for e in self.state(self.rid)["log"]})
 
+    def test_a_spell_name_counts_without_a_verb_an_everyday_word_only_when_cast(self):
+        """Dominik 2026-10-28 („Feuerball“ became a staff blow): a spell's own name needs no verb, a name marked
+        alltagswort („Licht“, „Tarnung“) only with a verb of casting, and an everyday word of an ability the hero
+        lacks gives no „Das kann … noch nicht“."""
+        rd = self.direct(self.gp, "Ich werfe einen Feuerball auf die Goblins!")
+        self.assertEqual(rd["offen"][self.gp].get("nicht"), ["Feuerball"])        # grade 3: not yet, though no verb
+        rd = self.direct(self.host, "Ich nutze die Tarnung der Büsche und schleiche mich an.")
+        self.assertNotIn("nicht", rd["offen"][self.host])                          # the ranger's ability, here a word
+        rd = self.direct(self.host, "Ich nutze meine Hast und renne los. Ich bin standhaft.")
+        self.assertNotIn("nicht", rd["offen"][self.host])
+        rd = self.direct(self.gp, "Ich halte die Fackel ins Licht und nutze den Schein.")
+        self.assertNotIn("kraft", rd["offen"][self.gp])                            # „Licht“ only with a verb of casting
+        rd = self.direct(self.gp, "Ich zaubere Licht.")
+        self.assertEqual(rd["offen"][self.gp].get("kraft"), "lichtzauber")
+        rd = self.direct(self.host, "Ich wirke Hast auf mich.")
+        self.assertEqual(rd["offen"][self.host].get("nicht"), ["Hast"])           # cast, but not his
+        for n in ("hast", "lichtzauber"):
+            self.assertTrue(dungeon._by(self.r, "gegenstaende")[n].get("alltagswort"))
+        bad = copy.deepcopy(self.r)
+        dungeon._by(bad, "gegenstaende")["feuerball"]["alltagswort"] = False
+        dungeon._by(bad, "gegenstaende")["heiltrank"]["alltagswort"] = True
+        self.assertEqual(len([e for e in dungeon.check_rules(bad) if "alltagswort" in e]), 2)
+        self.assertFalse([e for e in dungeon.check_rules(self.r) if "zwei arten" in e])
+        dungeon._by(bad, "klassen")["magier"]["faehigkeiten"][0]["name"] = ["Feuerball", "Fireball"]   # the old fault
+        dungeon._by(bad, "gegenstaende")["heiltrank"]["name"] = ["Heiltrank", "Innkeeper"]        # a role word
+        self.assertIn("namen in zwei arten: feuerball (faehigkeit, zauber); fireball (faehigkeit, zauber); innkeeper (ding, rollenwort)",
+                      dungeon.check_rules(bad))
+
 
 class GuestMail(Base):
     """Gäste mit E-Mail (dungeon_gast): a 6-digit code from the admin's mailbox, a guest account with up to 8 heroes,
@@ -8103,43 +8131,6 @@ class Fight(Turns):
         return rd, foe
 
     # ---------------------------------------------------------------- Kampf-Audit (Dominik 2026-10-26 „Empfehlung umsetzen“)
-    def test_kampf_angriffswoerter_tabelle(self):
-        """Kampf-Audit 1: the fixed word lists decide what an action does in a fight; new words only through this table."""
-        angriff = ["hau die Wache", "Ich haue der Wache eins über", "Ich kämpfe gegen die Wache", "Ich bekämpfe die Wache",
-                   "Ich ersteche ihn", "Ich erdolche ihn", "Ich ramme ihn", "Ich trete zu", "Ich prügle auf ihn ein", "Ich toete ihn",
-                   "Ich spieße ihn auf", "Ich schlitze ihn auf", "Ich greife an", "Angriff!", "Ich schlage zu", "Ich steche zu",
-                   "Ich greife die Wache an", "Ich greife Meervolk-Späher 2 an", "Ich töte den Ork", "Ich trete die Wache",
-                   "Ich trete zu", "Ich schlage die Wache", "Ich schlage auf den Ork ein", "Ich schieße einen Pfeil auf den Ork",
-                   "I fight", "I punch him", "I kick", "I swing at it", "I attack", "I stab the guard",
-                   # Nachprüfung V01.1.130
-                   "Ich schlage dich nieder", "Ich schlage euch nieder, Banditen", "Ich trete ein paar Mal nach der Wache",
-                   # Review 27.10. T19: the children's table's „besiegen“ (dungeon_rueckfrage.milder)
-                   "Ich besiege den Goblin.", "Wir besiegen die Ratten."]
-        bezug = ["Ich ziele auf die Wache", "Ich werfe meinen Dolch auf die Wache", "boxe die Wache", "feuere auf die Wache",
-                 "stürme auf die Wache los", "gehe auf die Wache los", "schneide der Wache die Kehle durch",
-                 "I charge the guard", "I throw my dagger at the guard", "I aim at the guard", "Gebt Feuer auf die Wache",
-                 "Gebt Feuer!"]
-        nichts = ["Ich greife nach dem Seil neben der Wache", "Ich stoße die Tür auf und rufe die Wache", "Ich treffe mich mit der Wache",
-                  "Ich rede mit der Wache", "Ich betrete die Halle", "Ich mache ein Lagerfeuer", "Ich trinke einen Trank",
-                  "Ich halte mich bereit", "Ich verstecke mich", "Ich helfe Bela auf", "Ich gehe zur Tür", "I reach for the rope",
-                  # Nachprüfung Welle 1: stepping, proposing, fleeing, a look, a light
-                  "Ich trete zur Seite, weg von der Wache", "Ich trete zurück und trinke einen Heiltrank",
-                  "Ich schlage vor, wir reden", "Ich schlage mich in die Büsche", "Ich trete ein", "Ich werfe der Wache einen Blick zu",
-                  "Ich gebe der Wache Feuer für ihre Pfeife", "I step back", "I throw the guard a glance",
-                  # Nachprüfung V01.1.130
-                  "Ich schlage Alarm", "Ich trete die Tür ein", "Ich werfe der Wache Gold zu",
-                  "Ich trete ein und schaue mich um", "I hit the road", "I strike a deal with the guard"]
-        nichts += ["Ich verfluche die Wache", "Ich bete um Zuflucht"]      # Kampf-Audit M6: no flight
-        nichts += ["Ich breche das Siegel der Truhe", "Ich lese die Siegesinschrift"]   # Review T19: „besieg“ only
-        frieden = ["Ergebt euch!", "Ich verhandle mit den Orks", "Lasst uns reden", "Ich biete Frieden an", "We surrender", "I parley"]
-        # Kampf-Audit M6: running away (the attack words still win: „Ich schlage den verfluchten Ork“ attacks)
-        flucht = ["Ich trete den Rückzug an", "I retreat", "Ich haue ab", "Wir fliehen durch die Tür!", "Ich flüchte in den Gang",
-                  "Ich renne so schnell ich kann weg", "Wir ziehen uns zurück", "I run away", "We flee", "I try to escape"]
-        angriff += ["Ich schlage den verfluchten Ork", "Ich greife an und fliehe dann"]
-        for want, texts in (("angriff", angriff), ("bezug", bezug), ("", nichts), ("frieden", frieden), ("flucht", flucht)):
-            for t in texts:
-                self.assertEqual(kampf.intent(t), want, t)
-
     def test_kampf_angriffswoerter_jeder_gegnername(self):
         """Nachprüfung V01.1.130: the words that are no attack end at a word („greife nach“ never takes „Nachtmahr“,
         „schlage sich“ never „Sicherheitsdroide“): every foe of the bestiary, attacked without an article, is an attack

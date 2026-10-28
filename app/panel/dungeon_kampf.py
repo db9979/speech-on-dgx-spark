@@ -103,7 +103,7 @@ ZIEL_MAX = 40
 # model's check. ANGRIFF_WORTE attack on their own (with no foe named: the first one standing), BEZUG_WORTE only with a
 # foe named in the action; a stem may carry a prefix (er-, be-, zu-, nieder-, ab-, ver-), NICHT_ANGRIFF is taken out
 # first („greife nach dem Seil“, „treffe mich mit“, „stoße die Tür auf“, „betrete“). New words only with
-# test_kampf_angriffswoerter_tabelle.
+# the Satz-Prüfstand's sentences (tests/dungeon_saetze.py, test_dungeon_saetze).
 _VOR = r"(?<!\w)(?:er|be|zu|nieder|ab|ver|drauf|los)?"
 ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|verpass\w*\s+(?:[\w'-]+\s+){0,4}eins(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
                            r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|besieg|"
@@ -119,6 +119,16 @@ NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|di
                            # Nachprüfung Welle 1 (2026-10-26): stepping, proposing, fleeing, a look, a light are no attack;
                            # Nachprüfung V01.1.130: each ends at a word, so a foe's name („Nachtmahr“, „Sicherheitsdroide“) stays whole
                            r"(?:tret|tritt|trat)\w*\s+in\s+(?:[\w-]+\s+){0,3}(?:ein|hinein)(?!\w)|"   # „trete in die Halle ein“ (2026-10-28)
+                           # Satz-Prüfstand 2026-10-28 (tests/dungeon_saetze.py): a staff, a book, a camp, a headline, an idiom
+                           r"(?:mein|meine[nmrs]?|dein\w*|sein\w*|ihr\w*|unser\w*|de[nmrs]|die|das|ein\w*|am|im|vom|zum|mit)\s+(?:[\w-]+\s+){0,2}"
+                           r"stab(?:es|s|e)?(?!\w)|stichw\w*|stichflamm\w*|schlag(?:zeile|wort|loch|baum|sahne|ader)\w*|"
+                           r"(?:schlag|schläg|schlug)\w*\s+(?:das|den|die|ein\w*|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*)\s+(?:[\w-]+\s+)?"
+                           r"(?:buch|tagebuch|folianten?|karte|heft|seite|lager|zelt|nachtlager)\w*|pack\w*\s+(?:[\w-]+\s+){0,3}aus(?!\w)|"
+                           r"ramm\w*\s+(?:[\w-]+\s+){1,2}(?:pfahl|pflock|pfosten|stock|speer|spaten)\w*\s+in(?!\w)|"
+                           r"besieg\w*\s+(?:meine|seine|ihre|deine|unsere|eure|die|den)\s+(?:angst|furcht|zweifel|müdigkeit|muedigkeit|schwäche|schwaeche|scham|wut)|"
+                           r"(?:kämpf|kaempf)\w*\s+(?:mich|uns|dich|euch|sich)\s+durch\s+(?:das|den|die)\s+(?:gestrüpp|gestruepp|dickicht|unterholz|"
+                           r"menge|schnee|sturm|wind|dornen|büsche|buesche|sumpf|matsch)|st(?:e|i)ch\w*\s+in\s+see|t(?:ö|oe)?te\w*\s+die\s+zeit|"
+                           r"(?:an|ans|am|zum|ins|vom)\s+(?:das\s+)?(?:lager)?feuer(?!\w)|battle\s*(?:map|plan|field|cry|standard|axe)|kick\w*\s+off|swing\w*\s+(?:[\w-]+\s+){0,2}open|"
                            r"(?:tret|tritt|trat)\w*\s+(?:den\s+(?:rückzug|rueckzug)|zur\s+seite|zurück|zurueck|beiseite|ein(?=\s*(?:[.,;:!?]|$|und(?!\w)))|vor(?!\w)|"
                            r"näher|naeher|(?:die|eine|das)\s+(?:tür|tuer|tor|fenster|kiste|truhe)\w*\s+ein(?!\w))|"
                            r"(?:schlag|schläg|schlug)\w*\s+(?:vor(?!\w)|(?:mich|uns|dich|euch|sich)(?!\w)(?!\s+nieder)|alarm)|hau\w*\s+ab(?!\w)|"
@@ -126,7 +136,7 @@ NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|di
                            r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){1,5}zu(?!\w)(?!\s+(?:dem|der|den|boden)(?!\w))|"
                            r"step\s+(?:back|aside|in|forward)|retreat|fall\s+back|(?:throw|cast)\w*\s+(?:[\w-]+\s+){0,3}(?:glance|look)|"
                            r"suggest|propose|hits?\s+the\s+road|strik\w*\s+(?:a\s+)?(?:deal|bargain|match|light)")
-FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
+FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|ergeben\s+uns|ergebe\s+mich|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
                            r"überred|ueberred|ruhig\s+bleiben|surrender|give\s+up|parley|negotiat|truce|peace|stand\s+down")
 # Kampf-Audit 5: spells that work on foes but have no damage kind; those with a saving throw and a state work by it
 # (bann, Kampf-Audit H4), the others cost no charge in a fight (dungeon.cast_powers) and say so to the seat

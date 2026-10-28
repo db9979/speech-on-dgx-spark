@@ -4426,6 +4426,13 @@
 "titel": "Dungeon-Master: Bibliothek-Fehler behoben",
 "text": "Eine Runde spielen. A: Bei einer Probe mit Ziel 13 sagen Karte und Würfelleiste beide „mittel“. B: Im Kampf Feuerpfeil wirken: die Zauberzeile sagt nur „wirkt Feuerpfeil“, Treffer oder daneben steht in der Angriffszeile. C: „Ich betrete die Halle“: keine Probe. D: „Ich frage X danach“ ohne Probe: Hinweis „Wer nur fragt …“. E: In der Erzählung steht nie „Das Panel …“. F: Ein Händler erscheint nur, wenn die Erzählung ihn zeigt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P657",
+"v": 1239,
+"titel": "Dungeon-Master: Satz-Prüfstand und Fähigkeitsnamen",
+"text": "Im Kampf: A: „Ich hebe meinen Stab und sehe mich um“ ist kein Angriff. B: „Ich schlage mit meinem Stab nach dem Goblin“ greift an. C: Ein Magier mit der Fähigkeit Flammenkunde tippt „Ich wirke Feuerball“, ohne den Zauber zu kennen: „Das kann … noch nicht: Feuerball.“ D: Der Heldenbogen zeigt Flammenkunde, Verblassen, Leuchtende Hand, Lügen spüren oder Anfeuern statt der alten Namen. E: „Ich werfe einen Feuerball“ ohne den Zauber: dieselbe Zeile. F: „Ich nutze die Tarnung der Büsche“ ohne die Fähigkeit Tarnung: keine Zeile.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

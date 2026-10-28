@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.239** · 2026-10-29 · KI-Dungeon-Master: Satz-Prüfstand: rund 300 feste Spielersätze, die jede Wortliste richtig einordnen muss; „Ich schlage das Buch auf“, „Stab“ oder „Ich steche in See“ sind kein Angriff mehr, Fähigkeiten heißen nicht mehr wie Zauber
 - **V01.1.238** · 2026-10-28 · KI-Dungeon-Master: kein Zauber heißt mehr wie eine Fähigkeit oder ein Ding (Schildzauber, Tierflüstern, Mocking song), Zauber mit Alltagswort-Namen markiert, damit „Das kann … noch nicht“ stimmt
 - **V01.1.237** · 2026-10-29 · Schnelltest: `tools/vorpush.py` installiert fehlende Systempakete von GitHub „Tests“ (guacd, x11vnc, Xvfb für test_fernbild) selbst oder hält vor dem ersten Test mit dem genauen Befehl an; ein Cloud-Container ohne x11vnc wurde mitten im Lauf rot
 - **V01.1.236** · 2026-10-29 · KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt

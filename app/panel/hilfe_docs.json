@@ -6061,6 +6061,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Satz-Prüfstand (V01.1.239, Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschlag 1 und Teil von 2, „ok“): Ohne neuen Schalter, es sind Korrekturen und ein Selbsttest. 1. Feste Sätze: tests/dungeon_saetze.py hält rund 300 Spielersätze auf Deutsch und Englisch mit ihrer Art (Angriff, Angriff auf einen genannten Gegner, Frieden, Flucht, Gehen, Frage, Kauf, Verkauf, Rast, Alltag, sonst nichts). test_dungeon_saetze lässt jede Wortliste (kampf.intent, dungeon.typed, erz.asks, dungeon.everyday) über jeden Satz laufen; die alte Tabelle der Angriffswörter steckt darin. Ein Satz, den eine Liste am Tisch falsch einordnet, kommt mit seiner Korrektur dazu. 2. Fehltreffer behoben: ein Stab mit Artikel („meinen Stab“), Stichwort, Schlagzeile, ein Buch, eine Karte oder ein Lager aufschlagen, etwas auspacken, einen Pfahl in den Boden rammen, die eigene Angst besiegen, sich durch Gestrüpp kämpfen, in See stechen, die Zeit totschlagen, „ans Feuer“, battle map, kick off, swing open sind kein Angriff mehr; „Wir ergeben uns“ bittet um Frieden; „Ich trete ein“ ist Gehen. 3. Fähigkeiten nicht wie Zauber: die Fähigkeiten Feuerball, Unsichtbarkeit, Licht"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ", Gedanken lesen und Kampfschrei heißen jetzt Flammenkunde, Verblassen, Leuchtende Hand, Lügen spüren und Anfeuern (ids bleiben), denn ein Held mit der Fähigkeit „Feuerball“ bekam beim Zauber „Feuerball“ nur den Bonus statt „Das kann … noch nicht“. check_rules lehnt jetzt jeden Namen ab, der für zwei Arten steht (Zauber, Fähigkeit, Ding, Gegner; ein Rollenwort wie „Wache“ nur als Gegner); deshalb heißt die Fähigkeit Zäh auf Englisch Hardy statt Tough (ein Gegner heißt so). 4. Zaubernamen ohne Verb: der eigene Name eines Zaubers zählt auch ohne „wirke“ („Ich werfe einen Feuerball“, „Feuerball!“). Namen, die auch Alltagswörter sind, tragen in den Regeln \"alltagswort\": true (Zauber Licht, Hast, Schlaf, Dunkelheit …; Fähigkeiten Tarnung, Ausweichen, Segen, Standhaft, Reinigen): ein solcher Zauber zählt nur mit einem Zauberverb („wirke“, „zaubere“, „beschwöre“, cast), und eine solche Fähigkeit, die der Held nicht hat, bringt kein „Das kann … noch nicht“ („Ich nutze die Tarnung der Büsche“)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek (V01.1.236, Dominik 2026-10-28 „passt das alles?“ mit dem Protokoll einer Runde, „1-9“): Ohne neuen Schalter, es sind Korrekturen der festen Regeln. 1. Schwierigkeit: die Würfelleiste nennt das Wort des Panels (sg, 13 ist „mittel“) wie die Karte; nur eine Zahl ohne Stufe geht nach der SRD-Tabelle, auch beim eigenen Würfel. 2. Schadenszauber: die Zeile „wirkt Feuerpfeil“ steht ohne den Wirkungssatz, ob er trifft, sagt allein die Angriffszeile. 3. Feuerball: die Fähigkeit des Magiers heißt wie der Zauber; die Umbenennung und eine feste Prüfung folgen mit dem DnDAppFiles-Thread. 4. Panel in der Erzählung: ein Satz, in dem das Panel spricht („Das Panel würfelt …“), fällt aus der Erzählung (dungeon.panel_says, auf Englisch nur mit einem Wort des Würfelns oder Prüfens, eine Holzvertäfelung bleibt). 5. Grund ohne Probe: wer nur fragt, hört „Wer nur fragt oder redet …“ statt „Gehen braucht keine“. 6. Betreten: „betrete“, „trete in … ein“ und „enter“ sind Gehen ohne Probe, gleich was das Modell dazu schreibt, und nie ein Angriff (kampf.intent mit NICHT_ANGRIFF auch beim Tippen). 7. Ziel erreicht: eine Gruppe am Ziel steht als „"
 },
 {
@@ -22253,6 +22269,22 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "AI Dungeon Master: sentence bench (V01.1.239, Dominik 2026-10-28 \"es kommen zu viele fehler aktuell … mache mir vorschläge\", proposal 1 and part of 2, \"ok\"): No new switch, these are corrections and a self-test. 1. Fixed sentences: tests/dungeon_saetze.py holds about 300 player sentences in German and English with their kind (attack, attack on a named foe, peace, flight, going, question, buying, selling, rest, everyday, nothing of these). test_dungeon_saetze runs every word list (kampf.intent, dungeon.typed, erz.asks, dungeon.everyday) over every sentence; the old table of attack words is part of it. A sentence a list sorts wrong at the table comes in with its fix. 2. Misses fixed: a staff with an article (\"meinen Stab\"), Stichwort, Schlagzeile, opening a book, a map or setting up a camp (\"aufschlagen\"), unpacking, ramming a stake into the ground, beating one's own fear, fighting through undergrowth, setting sail, killing time, \"ans Feuer\", battle map, kick off, swing open are no attack any more; \"Wir ergeben uns\" asks for peace; \"Ich trete ein\" is going. 3. Abilities not named like spells: the abilities Feuerball, Unsichtbarkeit, Licht, Gedanken lesen and Kampfschrei are now calle"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "d Flammenkunde (Flame lore), Verblassen (Fade), Leuchtende Hand (Glowing hand), Lügen spüren (Sense lies) and Anfeuern (Rally), ids unchanged, because a hero with the ability \"Fireball\" only got its bonus for the spell instead of \"cannot do that yet\". check_rules now refuses any name that stands for two kinds (spell, ability, thing, foe; a role word like \"guard\" only as a foe); so the ability Zäh is called Hardy instead of Tough in English (a foe has that name). 4. Spell names without a verb: a spell's own name counts without \"cast\" too (\"Ich werfe einen Feuerball\", \"Fireball!\"). Names that are also everyday words carry \"alltagswort\": true in the rules (spells Light, Haste, Sleep, Darkness …; abilities Camouflage, Evasion, Blessing, Steadfast, Cleanse): such a spell counts only with a verb of casting (\"wirke\", \"zaubere\", \"beschwöre\", cast), and such an ability the hero lacks gives no \"cannot do that yet\" (\"Ich nutze die Tarnung der Büsche\")."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "AI Dungeon Master: faults of the round in the Old Library (V01.1.236, Dominik 2026-10-28 \"passt das alles?\" with the log of a round, \"1-9\"): No new switch, these are corrections of the fixed rules. 1. Difficulty: the dice bar names the panel's word (sg, 13 is \"medium\") like the card; only a number without a level goes by the SRD table, also for own dice. 2. Damage spells: the line \"casts Fire bolt\" stands without its effect sentence, whether it hits is told by the attack line alone. 3. Fireball: the wizard's ability is named like the spell; the renaming and a fixed check follow with the DnDAppFiles thread. 4. Panel in the story: a sentence in which the panel speaks (\"Das Panel würfelt …\") leaves the story (dungeon.panel_says, in English only with a word of rolling or checking, a door panel stays). 5. Reason without a check: who only asks hears \"who only asks or talks …\" instead of \"walking needs none\". 6. Entering: \"betrete\", \"trete in … ein\" and \"enter\" are walking without a check, whatever the model adds, and never an attack (kampf.intent with NICHT_ANGRIFF for typed actions too). 7. Goal reached: a group at its goal reads \"Goal reached: name\", without inflection. 8. Merchants: a"
 },
 {
@@ -22549,7 +22581,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: abilities when used, only the strongest bonus, bench like at the table (V01.1.188, review 27.10. package 11, points B6, B7, B11 and B13, Dominik 2026-10-27 „ok“, on B13 „je Wert nur das stärkste“): No new switch. 1. An ability's bonus counts only when it always works (immer) or is used in this turn's action (\"I use Sweeping blow\", the *Use* button; h[\"einsatz\"] from check_powers, empty again after the turn); its tile says \"when used\". 2. Per value only the strongest bonus of jewel, worn gear and ability counts, never the sum, like the blessing (dungeon.worn_bonus, ability_bonus, total); a worn piece that does not count for it says in the hero sheet \"Does not count for Strength: something else gives more there, only the strongest counts.\" (outdone, worn_view). 3. New fixed effects (KRAFT): *Weapon master* 1 more damage on every weapon hit, *Tough* 3 more life per level (at once when picked, relife), *Laying on hands* once a scene 1d6+2 life for the friend named or oneself, *Revive* once a scene a friend who is down back with 3 life (use_abilities, never on the dead, a fixed line without a target). 4. The sentences of the other abilities of the panel's own five cla"
+"text": "AI Dungeon Master: abilities when used, only the strongest bonus, bench like at the table (V01.1.188, review 27.10. package 11, points B6, B7, B11 and B13, Dominik 2026-10-27 „ok“, on B13 „je Wert nur das stärkste“): No new switch. 1. An ability's bonus counts only when it always works (immer) or is used in this turn's action (\"I use Sweeping blow\", the *Use* button; h[\"einsatz\"] from check_powers, empty again after the turn); its tile says \"when used\". 2. Per value only the strongest bonus of jewel, worn gear and ability counts, never the sum, like the blessing (dungeon.worn_bonus, ability_bonus, total); a worn piece that does not count for it says in the hero sheet \"Does not count for Strength: something else gives more there, only the strongest counts.\" (outdone, worn_view). 3. New fixed effects (KRAFT): *Weapon master* 1 more damage on every weapon hit, *Hardy* 3 more life per level (at once when picked, relife), *Laying on hands* once a scene 1d6+2 life for the friend named or oneself, *Revive* once a scene a friend who is down back with 3 life (use_abilities, never on the dead, a fixed line without a target). 4. The sentences of the other abilities of the panel's own five cla"
 },
 {
 "lang": "en",

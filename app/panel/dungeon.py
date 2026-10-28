@@ -677,10 +677,14 @@ def check_rules(r):
                  f"klassen {k.get('id')}: faehigkeit {fa.get('id') if isinstance(fa, dict) else '?'} braucht id, name, satz, wert und bonus 0 bis 3")
             need(not isinstance(fa, dict) or fa.get("wirkung", "") in ("",) + tuple(KRAFT) and fa.get("immer", False) in (True, False),
                  f"klassen {k.get('id')}: faehigkeit {fa.get('id') if isinstance(fa, dict) else '?'}: wirkung eine von {', '.join(KRAFT)}, immer true oder false")
+            need(not isinstance(fa, dict) or fa.get("alltagswort", True) is True,
+                 f"klassen {k.get('id')}: faehigkeit {fa.get('id') if isinstance(fa, dict) else '?'}: alltagswort nur true")
     items, welten = {}, {str(w.get("id")) for w in r.get("welten") or [] if isinstance(w, dict)}
     for x in r.get("gegenstaende") or []:
         items[x.get("id")] = x
         need(x.get("art") in ARTEN, f"gegenstaende {x.get('id')}: art eine von {', '.join(ARTEN)}")
+        need("alltagswort" not in x or x.get("art") == "zauber" and x["alltagswort"] is True,
+             f"gegenstaende {x.get('id')}: alltagswort nur bei zauber, nur true")
         if x.get("art") == "waffe":
             need(_int(x.get("schaden"), 2, 12) and x.get("wert") in werte, f"gegenstaende {x.get('id')}: waffe braucht schaden 2 bis 12 und wert")
         if x.get("art") == "ruestung":
@@ -818,6 +822,18 @@ def check_rules(r):
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler, npc und npc_w, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
+    arten = {}                                   # a name → the kinds it stands for: none twice (Dominik 2026-10-28, „Feuerball“
+    for kind, xs in (("zauber", [x for x in items.values() if x.get("art") == "zauber"]),     # the ability hid the spell)
+                     ("ding", [x for x in items.values() if x.get("art") != "zauber"]), ("gegner", r.get("gegner") or []),
+                     ("faehigkeit", [fa for k in r.get("klassen") or [] for fa in k.get("faehigkeiten") or []])):
+        for x in xs:
+            for n in (x.get("name") or []) if isinstance(x, dict) and isinstance(x.get("name"), list) else []:
+                arten.setdefault(str(n).split(": ", 1)[-1].lower(), set()).add(kind)
+    for n in nsc.ROLLENWORTE:                    # a role word is no spell, ability or thing; a foe may be one („Wache“)
+        if arten.get(n, {"gegner"}) - {"gegner"}:
+            arten[n].add("rollenwort")
+    doppelt = sorted(f"{n} ({', '.join(sorted(k))})" for n, k in arten.items() if len(k) > 1)
+    need(not doppelt, f"namen in zwei arten: {'; '.join(doppelt[:5])}")
     erz.check_style(r, need)
     anleiten.check_rules(r, need)                # the fixed stall events (Spieler anleiten, step 4)
     return err + dungeon_karte.check_rules(r) + tabellen.check_rules(r) + kampf.check_rules(r) + ideen.check_rules(r) + runen.check_rules(r) + bestiarium.check_rules(r)
@@ -1161,6 +1177,7 @@ def power_kind(c):
 
 
 _KANN_VERB = re.compile(r"(?i)\b(wirk|zauber|sprech|sprich|beschw|ruf|setz|nutz|benutz|einsetz|cast|spell|use|invoke|channel)")
+_ZAUBER_VERB = re.compile(r"(?i)\b(wirk|zauber|beschw|cast|spell|invoke|channel)")   # casting, never „nutze“ or „setze“
 
 
 def _named(text, names):
@@ -1225,20 +1242,28 @@ def check_powers(r, rd, pid, count=True):
     a.pop("wirkt", None)
     a.pop("kraft_ziel", None)
     h.pop("einsatz", None)                      # an ability's bonus counts only in the turn it is used (Review 27.10. B7)
-    ways = {}                                   # a name as typed (without „Schriftrolle: “) → [("z"|"f", id)]
+    ways, alltag = {}, set()                    # a name as typed (without „Schriftrolle: “) → [("z"|"f", id)]; names also of the everyday
     for c in r["gegenstaende"]:
         if c["art"] == "zauber":
             for n in c["name"]:
                 n = n.split(": ", 1)[-1].lower()
                 if len(n) >= 4:
                     ways.setdefault(n, []).append(("z", c["id"]))
+                    if c.get("alltagswort"):
+                        alltag.add(n)
     for k in r["klassen"]:
         for fa in k["faehigkeiten"]:
             for n in fa["name"]:
                 if len(n) >= 5:
                     ways.setdefault(n.lower(), []).append(("f", fa["id"]))
-    verb = bool(_KANN_VERB.search(a["text"]))
-    hits = _named(a["text"], list(ways)) if verb else []    # only with a word of using it („wirke“, „setze ein“, „cast“)
+                    if fa.get("alltagswort"):
+                        alltag.add(n.lower())
+    verb, zauber = bool(_KANN_VERB.search(a["text"])), bool(_ZAUBER_VERB.search(a["text"]))
+    # Dominik 2026-10-28 („Feuerball“ became a staff blow): a spell's own name counts without a verb („wirft einen
+    # Feuerball“, „Feuerball!“); a name also of the everyday (alltagswort: „Dunkelheit“, „Tarnung“) only with a verb of
+    # casting (_ZAUBER_VERB); an ability's name with a word of using it (_KANN_VERB) as before
+    hits = [n for n in _named(a["text"], list(ways)) if (
+        (zauber if any(w == "z" for w, _ in ways[n]) else verb) if n in alltag else verb or all(w == "z" for w, _ in ways[n]))]
     if not hits:
         heal_named(r, rd, pid, h, a)
         return
@@ -1269,6 +1294,8 @@ def check_powers(r, rd, pid, count=True):
             leer.append(z["name"])
         elif z:
             a.setdefault("kraft", z["id"])
+        elif n in alltag and all(w == "f" for w, _ in ws):
+            continue                             # „Ich nutze die Tarnung der Büsche“: an everyday word, no ability (DnDAppFiles 28.10.)
         else:
             nicht.append(n[:1].upper() + n[1:])
     nicht = list(dict.fromkeys(nicht))[:3]
@@ -3825,7 +3852,7 @@ def _name_map(rd):
 # going somewhere needs no check (Dominik 2026-10-25, „gehe nach wolfshafen“ got „Sich durch die Gassen von Wolfshafen
 # bewegen“ on Geschick): a check whose wofuer has a word of GEHEN and none of RISIKO is dropped; the map moves the group
 GEHEN = re.compile(r"(?i)\b(geh(e|en|t|st)?|lauf(e|en|t)?|läufs?t|reis(e|en|t)|beweg\w*|wander\w*|marschier\w*|"
-                   r"betr(e|i)t\w*|eintret\w*|tr(e|i)tt?(e|st|en|et)?\s+in\s+(\w+\s+){0,3}?ein|"   # „betrete die Bibliothek“ (Dominik 2026-10-28)
+                   r"betr(e|i)t\w*|eintret\w*|tr(e|i)tt?(e|st|en|et)?\s+(in\s+(\w+\s+){0,3}?)?ein(?=\s*(?:[.,;:!?]|$|und(?!\w)))|"   # „betrete die Bibliothek“ (Dominik 2026-10-28)
                    r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?|enter(s|ing|ed)?)\b")
 RISIKO = ("unbemerkt", "unauffällig", "ablenk", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
           "verfolg", "balancier", "sneak", "quiet", "unseen", "hidden", "climb", "jump", "swim", "flee", "past", "chase", "balanc")
@@ -4097,7 +4124,7 @@ def roll(r, rd, proben, rng=None, hand=None):
         if dark:                                 # a dark vault (dungeon_alarm, D&D round 2 idea 6) or night without light (LlamaTale 1)
             vt = "" if vt == "vorteil" else "nachteil"
         tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
-        bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Kampfschrei: +1 on the group's checks of the turn
+        bonus = total(r, h, p["wert"]) + (tool_plus(r, tool) if tool else 0) + schrei   # Anfeuern (id kampfschrei): +1 on the group's checks of the turn
         extra = ({"belastet": True} if last else {}) | ({"dunkel": True} if dark else {})
         for _ in range(2):
             ws = [hand.d20(p["pid"], rng) if hand else rng.randint(1, 20) for _ in range(2 if vt else 1)]
