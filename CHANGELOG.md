@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.189** · 2026-10-28 · KI-Dungeon-Master: Porträts zeigen Haar, Augen, Bart und Statur von der Karte der Person
 - **V01.1.188** · 2026-10-27 · KI-Dungeon-Master: eine Fähigkeit zählt nur, wenn sie immer wirkt oder eingesetzt wird, je Wert zählt nur der stärkste Bonus von Schmuck, Ausrüstung und Fähigkeit, Waffenmeister, Zäh, Handauflegen und Zurückholen rechnet das Panel, „rar“ ab Stufe 3 und „episch“ ab 5, der Prüfstand spielt mit Helden wie am Tisch und alle 12 Klassen, Budget neu gemessen, friedliche Wesen nie als Gegner, drei kleine Nachtgegner für Science-Fiction (Review 27.10. Paket 11)
 - **V01.1.187** · 2026-10-27 · KI-Dungeon-Master: ein neuer Held braucht sein Geschlecht, die Stimmenliste ist nach Geschlecht geordnet, ein neues Geschlecht nimmt eine passende Stimme, Personen bekommen dieselbe Fürwort-Prüfung wie Helden (Review 27.10. Paket 10)
 - **V01.1.186** · 2026-10-27 · KI-Dungeon-Master: jede Person hat ein festes Alter und feste Haare, Augen, Bart und Statur vom Panel, Alter und Geschlecht nie vom Modell, kein Kind mit Erwachsenenberuf und nie als Gegner, die Rolle setzt den Beruf (Review 27.10. Paket 10)

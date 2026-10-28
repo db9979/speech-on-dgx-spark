@@ -8125,6 +8125,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Haar, Augen, Bart und Statur im Porträt (V01.1.189, Dungeon-Review 2026-10-27 Paket 10, Z1): Das Porträt einer Person hängt die festen Merkmale ihrer Karte an (dungeon_nsc.MERKMALE: Haar, Augen, Bart, Statur, seit V01.1.186 einmal vom Panel gewürfelt), in der englischen Spalte der Tabellen, etwa „grey hair, blue eyes, slender build“. So passt das Bild zu dem, was der Tisch auf der Karte liest; das Modell rät nichts davon. Neue Porträts und Katalogbilder nehmen es sofort, ein schon gemaltes Porträt bleibt, bis der Spielleiter es neu malen lässt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -23510,6 +23518,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: portrait by the gender on the card (V01.1.182, Dungeon review 2026-10-27 package 10, Z1 and Z6, Dominik \"ok\"): A person's portrait takes the gender written on its card (rd[\"nsc\"][k][\"geschlecht\"], set once when the card is made since V01.1.167), through the same place as its voice (dungeon_stimmen._of); so does the age once the card has a field \"alter\", else from the fixed voice traits as before. A person with \"divers\" is painted as an androgynous person (\"an old androgynous person\", the word from dungeon.GESCHLECHT), no longer as a \"person\" without a word. None of it is guessed by the model; no new switch, no new endpoint."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: hair, eyes, beard and build in the portrait (V01.1.189, Dungeon review 2026-10-27 package 10, Z1): A person's portrait adds the fixed looks of its card (dungeon_nsc.MERKMALE: hair, eyes, beard, build, rolled once by the panel since V01.1.186), in the tables' English column, such as \"grey hair, blue eyes, slender build\". So the picture fits what the table reads on the card; the model guesses none of it. New portraits and catalog pictures take it at once, a portrait already painted stays until the host has it painted again."
 },
 {
 "lang": "en",

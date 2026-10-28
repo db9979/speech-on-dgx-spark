@@ -154,6 +154,9 @@ def _karte(x, out):
         out += f" who {k['aussehen'][1]}"
     if k.get("art"):
         out += f", {k['art'][1]} in manner"
+    looks = [k[f][1] for f in nsc.MERKMALE if isinstance(k.get(f), list) and len(k[f]) == 2]   # hair, eyes, beard, build
+    if looks:
+        out += ", " + ", ".join(looks)
     return out
 
 

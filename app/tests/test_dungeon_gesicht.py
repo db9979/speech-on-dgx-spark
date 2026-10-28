@@ -233,6 +233,9 @@ class Faces(Base):
         for g, w in (("maennlich", "an old man"), ("divers", "an old androgynous person")):   # the card's gender wins (review Z1/Z6)
             rd["nsc"]["mara"]["geschlecht"] = g
             self.assertTrue(gesicht.text(rd, rd["nsc"]["mara"]).startswith(w), g)
+        rd["nsc"]["mara"]["karte"].update(haar=["graues Haar", "grey hair"], augen=["blaue Augen", "blue eyes"])
+        rd["nsc"]["mara"]["karte"].pop("bart", None)
+        self.assertIn(", grey hair, blue eyes", gesicht.text(rd, rd["nsc"]["mara"]))   # the card's fixed looks (review Z1)
         kid = self.new_round(titel="Kinder", ton=min(t["id"] for t in dungeon.rules()["toene"]), held=dict(HERO, name="Ole"))
         self.meet(kid, "Mara")
         rk = dungeon._read()["runden"][kid]

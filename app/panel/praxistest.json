@@ -4160,6 +4160,13 @@
 "titel": "Dungeon-Master: Fähigkeiten einsetzen",
 "text": "Als Heiler „Ich setze Handauflegen bei <Freund> ein“ schreiben: der Freund bekommt 4 bis 8 Leben, ein zweites Mal in derselben Szene sagt der Spark „schon eingesetzt“. Zwei Ringe auf denselben Wert anlegen: im Heldenbogen sagt der schwächere „Zählt nicht“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P619",
+"v": 1189,
+"titel": "Dungeon-Master: Merkmale der Karte im Porträt",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → NSC-Gedächtnis und Chronik sowie Gesichter für NSCs an. A: In einer neuen Runde eine Person treffen; ihre Karte unter Personen (NSC) nennt Haar, Augen und Statur. B: Das Porträt zeigt dieselben Merkmale (etwa graues Haar bei einer alten Person, Bart nur bei einem Mann).",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
