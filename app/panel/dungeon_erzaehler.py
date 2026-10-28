@@ -758,6 +758,36 @@ def _name_in(name, satz):
     return len(n) >= 3 and re.search(r"(?<!\w)" + re.escape(n[:max(4, len(n) - 2)]), satz.lower()) is not None
 
 
+FUELLWORT = ("of", "the", "a", "an", "der", "die", "das", "des", "dem", "den", "im", "in", "von")   # words of a foe's name that never count
+
+
+def _staemme(w):
+    """A word's stems as a foe's name is bent (Erzähler-Prüfstand 28.10.): its stem (the word less two letters, at
+    least four), f to v (wolf, wolves; elf, elves), man to men, the last a, o, u, au with its umlaut (Wolf, Wölfe)."""
+    s = w[:max(4, len(w) - 2)]
+    out = {s}
+    if s.endswith("f"):
+        out.add(s[:-1] + "v")
+    if s.endswith("man"):
+        out.add(s[:-3] + "men")
+    i = s.rfind("au")
+    j = i if i >= 0 else max(s.rfind(v) for v in "aou")
+    if j >= 0:
+        out.add(s[:j] + "äöü"["aou".index(s[j])] + s[j + 1:])
+    return out
+
+
+def foe_named(name, text):
+    """True when the narration names the foe: its whole name as before (the name less two letters), or every word of
+    it (FUELLWORT aside) by its stems (_staemme) in one sentence, in any order and bent („giant, red-eyed rats“,
+    „warrior kobolds“, „jungen roten Drachen“, „wolves“). A foe's number at the end of its name never counts."""
+    n = re.sub(r"\s+\d+$", "", str(name)).lower()
+    if n[:max(4, len(n) - 2)] in str(text).lower():
+        return True
+    ws = [_staemme(w) for w in re.split(r"[\s\-]+", n) if w and w not in FUELLWORT]
+    return bool(ws) and any(all(any(st in x for st in sts) for sts in ws) for x in map(str.lower, _saetze(text)))
+
+
 def fight_off(rd, text, hits=()):
     """Foes the narration lets act although they fell before this turn, or lets die although no receipt says so
     (Regel 1): only names that all foes of that name share, a fallen one with a word of AKTIV and none of TOT, a
@@ -1214,7 +1244,7 @@ def faults(dm, rd, story, wuerfe=(), hits=(), zuege=(), count=True):
             bump("regel_" + why)
             out.append((why, x))
     foes = [g["name"][1 if rd.get("lang") == "en" else 0] for g, _ in story.get("begegnung") or []]
-    gone = [n for n in foes if n.lower()[:max(4, len(n) - 2)] not in low]
+    gone = [n for n in foes if not foe_named(n, text)]
     if gone:
         out.append(("gegner", gone))
     off = numbers_off(text, wuerfe, hits, zuege)

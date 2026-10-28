@@ -4244,6 +4244,13 @@
 "titel": "Dungeon-Master: Bild je Haus der Siedlung",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Gold mit Zweck an. A: Alle Bilder malen lassen. B: In einer Runde eine Siedlung betreten: Gasthaus, Schmiede, Heiler und Lehrmeister zeigen je ein Bild von der Straße aus, in Science-Fiction und bei Piraten im Stil der Welt.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P631",
+"v": 1211,
+"titel": "Dungeon-Master: Prüfstand Englisch mit Gegnern",
+"text": "Admin: Funktionen → KI-Dungeon-Master → Erzähler-Prüfstand an. Im Dungeon-Master-Reiter „Regeln“ „Erzähler-Prüfstand“ öffnen und „Jetzt prüfen“ tippen. A: „Englische Runde auf Englisch“ hat 2 Punkte oder zeigt hinter „gegner“ in Klammern den fehlenden Gegner. B: Die anderen Szenen wie vorher.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

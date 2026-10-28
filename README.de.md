@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.211** KI-Dungeon-Master: die Prüfung erkennt Gegner auch gebeugt und in anderer Wortfolge („giant, red-eyed rats“, „Wölfe“, „jungen roten Drachen“), der Erzähler-Prüfstand zeigt, welcher Gegner fehlt
 - **V01.1.210** KI-Dungeon-Master: jedes Haus der Siedlung (Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild
 - **V01.1.209** KI-Dungeon-Master: die Siedlung ist übersichtlich: links die Häuser Gasthaus, Schmiede, Heiler und Lehrmeister, rechts das gewählte Haus mit einer Zeile je Angebot, am Handy erst die Häuser, dann das Haus
 - **V01.1.208** Fernzugang zu Servern (Stufe 1): ein Server anderswo ruft das Panel über seinen Anker, Admins öffnen seine Shell unter Funktionen → Fernzugang im Browser, mit Einmal-Code beim Koppeln, frischem Code je Sitzung und SSH Ende zu Ende
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.204** KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen
 - **V01.1.203** KI-Dungeon-Master: die Regeln zeigen auch Runen und Runenwörter mit Sockeln, Obergrenzen und Schalter, Effekte, die Tabellen der Karte, die Stillstand-Ereignisse und alle festen Zahlen; wer eine Fackel anzündet oder eine Waffe zückt, die er nicht hat, hört das vor der Erzählung, der Dungeon-Master bleibt in der Live-Übersicht sichtbar, solange gespielt wird
 - **V01.1.202** KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge, die Probe mit eigenem kurzem Prompt, Alltägliches ohne Probe, englische Runden mit englischem Stil, der Erzähler-Prüfstand zeigt Prozent bis 100 (Review 27.10. Paket 12, Prüfstand 28.10.)
-- **V01.1.201** KI-Dungeon-Master: Budget und Belohnung zählen jeden Gegner nach seinem gemessenen Kampf-EP, Budget neu gemessen (Review 27.10. Paket 11.6)
 
 
 

@@ -296,7 +296,8 @@ async def play(r, sid, own=None):
     if punkte and sid == "englisch" and len(DEUTSCH.findall(text)) > ENGLISCH_MAX:
         punkte, grund = 0, "deutsch"
     out = {"punkte": punkte, "grund": grund, "versuche": len(tries), "laenge": len(text), "sekunden": round(time.monotonic() - t0, 1),
-           **({"erst": tries[0] or "abgelehnt"} if punkte == 1 else {})}   # a rewrite's first fault (a fixed word)
+           **({"erst": tries[0] or "abgelehnt"} if punkte == 1 else {}),   # a rewrite's first fault (a fixed word)
+           **({"fehlt": [str(x)[:40] for x in rd.get("_fehlt") or []][:3]} if grund == "gegner" else {})}   # catalog names only
     e = await _einordnung(rd, text) if text else None
     if e:
         out["einordnung"] = e

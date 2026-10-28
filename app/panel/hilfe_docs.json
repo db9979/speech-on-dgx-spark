@@ -5901,6 +5901,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegnernamen gebeugt erkennen (V01.1.211, Erzähler-Prüfstand vom 28.10. mit 18 von 20 Punkten, „Englische Runde auf Englisch“ 0 Punkte mit Grund „gegner“): Ohne neuen Schalter, es ist eine Korrektur der festen Prüfung. 1. Gebeugt und in anderer Folge: Ein Gegner der Begegnung gilt als genannt, wenn sein ganzer Name wie bisher vorkommt oder jedes Wort seines Namens mit seinem Stamm in einem Satz steht, in beliebiger Folge (dungeon_erzaehler.foe_named): „giant, red-eyed rats“ für „Giant rat“, „warrior kobolds“ für „Kobold warrior“, „jungen roten Drachen“ für „Junger Roter Drache“, dazu feste Pluralformen (f wird v wie wolf, wolves; man wird men; der letzte Vokal mit Umlaut wie Wolf, Wölfe). Füllwörter wie „of“, „the“, „der“ zählen nicht; die Wörter in zwei Sätzen oder ein anderer Gegner zählen nie. 2. Prüfstand zeigt den Gegner: scheitert eine Szene an „gegner“, steht hinter dem Grund, welche Gegner aus dem Katalog fehlten (nur Katalognamen, nie Text des Modells). Selbsttest in test_dungeon_erzaehlstand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Siedlung neu ordnen (V01.1.209, Dominik 2026-10-28 „können wir die anzeige der siedlung verbessern.. ist sehr unübersichtlich“, Vorschlag mit Bildern, „1a 2a 3a 4a 5a 6a“): Ohne neuen Schalter (*Funktionen → KI-Dungeon-Master → Gold mit Zweck*). Das Fenster „🏘 Siedlung“ ersetzt die bis zu zehn gleich großen Karten aus V01.1.055: 1. Häuser (1a): Die Dienste gehören zu einem Haus (dungeon_gold.HAEUSER, eine Quelle): Gasthaus (Übernachten, Gerücht, Gefährte anheuern), Schmiede (Flicken, Verbessern, Sockel bohren, Runen lösen, Runen verschmelzen), Heiler, Lehrmeister; die Sicht liefert haeuser mit den Diensten, die es hier gibt. 2. Liste und Haus (2a): links die Häuser mit kleinem Bild und dem, was dort gerade geht („2 Angebote“, „gerade nichts“, „🌙 zu bis zum Morgen“), rechts das gewählte Haus; am Handy erst die Liste, ein Tippen öffnet das Haus mit „‹ Häuser“. 3. Zeilen (3a): je Angebot eine Zeile mit Name, kurzem Satz und Knopf mit Verb und Preis; zu teuer ist der Knopf grau mit „Es fehlen N Gold“; die Preisrechnung steht nur noch einmal klein unten im Haus. 4. Leeres (4a): was gerade nicht geht, ist eine dünne gestrichelte Zeile mit dem Grund (heute schon übernac"
 },
 {
@@ -21742,6 +21750,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: foe names known when bent (V01.1.211, narrator bench of 28.10. with 18 of 20 points, \"English round in English\" 0 points with the reason \"gegner\"): No new switch, it is a correction of the fixed check. 1. Bent and in another order: a foe of the encounter counts as named when its whole name is there as before, or every word of its name is in one sentence by its stem, in any order (dungeon_erzaehler.foe_named): \"giant, red-eyed rats\" for \"Giant rat\", \"warrior kobolds\" for \"Kobold warrior\", \"jungen roten Drachen\" for \"Junger Roter Drache\", and fixed plural forms (f becomes v as in wolf, wolves; man becomes men; the last vowel with its umlaut as in Wolf, Wölfe). Filler words such as \"of\", \"the\", \"der\" do not count; the words in two sentences or another foe never count. 2. The bench shows the foe: when a scene fails on \"gegner\", the reason is followed by the catalog foes that were missing (catalog names only, never the model's text). Self-test in test_dungeon_erzaehlstand."
 },
 {
 "lang": "en",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.211** · 2026-10-28 · KI-Dungeon-Master: die Prüfung erkennt Gegner auch gebeugt und in anderer Wortfolge („giant, red-eyed rats“, „Wölfe“, „jungen roten Drachen“), der Erzähler-Prüfstand zeigt, welcher Gegner fehlt
 - **V01.1.210** · 2026-10-28 · KI-Dungeon-Master: jedes Haus der Siedlung (Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild
 - **V01.1.209** · 2026-10-28 · KI-Dungeon-Master: die Siedlung ist übersichtlich: links die Häuser Gasthaus, Schmiede, Heiler und Lehrmeister, rechts das gewählte Haus mit einer Zeile je Angebot, am Handy erst die Häuser, dann das Haus
 - **V01.1.208** · 2026-10-28 · Fernzugang zu Servern (Stufe 1): ein Server anderswo ruft das Panel über seinen Anker, Admins öffnen seine Shell unter Funktionen → Fernzugang im Browser, mit Einmal-Code beim Koppeln, frischem Code je Sitzung und SSH Ende zu Ende

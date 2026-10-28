@@ -4720,6 +4720,7 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
             fs = [("richter", [])]                # the Dungeon-Richter: one rewrite, else this try (it passed every fixed check)
         fault = next((w for w, _ in fs if w not in erz.NUR_HINWEIS), "")   # a hint-only fault never fails a try alone
         tries.append(fault)
+        rd["_fehlt"] = [x for w, ns in fs if w == fault for x in ns]   # only on this copy: the names of the try's fault (the bench)
         if not fault:
             story = s
             break

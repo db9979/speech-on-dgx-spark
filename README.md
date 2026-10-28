@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.211** AI Dungeon Master: the check knows foes also bent and in another word order ("giant, red-eyed rats", "wolves", "jungen roten Drachen"), the narrator bench shows which foe is missing
 - **V01.1.210** AI Dungeon Master: every house of the settlement (inn, smithy, healer, teacher) has a picture of its own per world
 - **V01.1.209** AI Dungeon Master: the settlement is clear: the houses inn, smithy, healer and teacher on the left, the chosen house with one row per offer on the right, on the phone first the houses, then the house
 - **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Features → Remote access, with a one-time code for pairing, a fresh code per session and SSH end to end
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.204** AI Dungeon Master: runes have their picture on the rules page, per world as rune, chip, pearl or seal, with paint and paint again
 - **V01.1.203** AI Dungeon Master: the rules also show runes and runewords with sockets, caps and switch, effects, the map's tables, the stall events and every fixed number; whoever lights a torch or draws a weapon they do not have hears so before the narration, the Dungeon Master stays visible in the live overview while people play
 - **V01.1.202** AI Dungeon Master: shorter instructions in a fixed order, the check with its own short prompt, everyday acts without a check, English rounds with an English style, the narrator bench shows per cent up to 100 (review 27.10. package 12, bench 28.10.)
-- **V01.1.201** AI Dungeon Master: budget and reward count every foe by its measured fight experience, budget measured anew (review 27.10. package 11.6)
 
 
 

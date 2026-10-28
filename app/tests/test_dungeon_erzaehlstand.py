@@ -22,6 +22,7 @@ from unittest import mock
 from tests.test_dungeon_dingbild import ADMIN, Base
 import dungeon  # noqa: E402
 import dungeon_erzaehlstand as es  # noqa: E402
+import dungeon_kampf as kampf  # noqa: E402
 import live  # noqa: E402
 from tests import helpers  # noqa: E402
 
@@ -182,6 +183,42 @@ class Bench(Base):
             x = asyncio.run(es.play(r, "kinder"))
         self.assertEqual((x["punkte"], x["erst"]), (1, "abgelehnt"))
         self.assertNotIn("erst", self._play(True)["kinder"])
+
+    def test_a_foe_is_named_bent_and_the_bench_shows_who_is_missing(self):
+        """Erzähler-Prüfstand 28.10. („Englische Runde auf Englisch“ 0 gegner): a foe of the encounter counts as named
+        when every word of its name is in one sentence by its stem, in any order and bent (plural, wolves, Wölfe,
+        jungen roten Drachen); another foe or the words in two sentences never; the bench shows the catalog names
+        missing."""
+        E = dungeon.erz
+        for n, t in (("Giant rat", "A giant, red-eyed rat hisses from the barrels."), ("Giant rat", "Three giant rats scurry out."),
+                     ("Kobold warrior", "Two warrior kobolds step out of the dark."), ("Wolf", "Three wolves howl."),
+                     ("Wolf", "Drei Wölfe heulen."), ("Junger Roter Drache", "Zwei jungen roten Drachen fauchen."),
+                     ("Elf", "Two elves wait."), ("Swarm of quippers", "A swarm of quippers boils."), ("Riesenratte 2", "Riesenratten!")):
+            self.assertTrue(E.foe_named(n, t), (n, t))
+        for n, t in (("Giant rat", "A giant spider waits. A rat squeaks."), ("Giant mosquito", "Stirges buzz in the dark."),
+                     ("Kobold warrior", "A kobold waits."), ("Wolf", "A bear growls."), ("Giant rat", "")):
+            self.assertFalse(E.foe_named(n, t), (n, t))
+        r = dungeon.rules()
+        rd, _ = es.scene(r, "englisch")
+        held = [p["held"] for p in rd["plaetze"].values()]
+        with contextlib.redirect_stdout(io.StringIO()):
+            foe = next(g for g in kampf.offer(dungeon, r, rd, held) if g["id"] == "riesenratte")
+        base = model(self.foe)
+
+        def told(text):
+            async def ask(system, user, schema, name, tokens):
+                if name == "erzaehlen":
+                    return json.dumps({"erzaehlung": text, "begegnung": [{"id": foe["id"], "anzahl": 1}], "frage_an": ""})
+                return await base(system, user, schema, name, tokens)
+            with mock.patch("dungeon.ask_model", ask), contextlib.redirect_stdout(io.StringIO()):
+                return asyncio.run(es.play(r, "englisch"))
+        x = told("Arvid reaches for a torch, but has none. In the grey light from above, giant, red-eyed rats scurry out "
+                 "from behind the old barrels and hiss at him.")
+        self.assertEqual((x["punkte"], x["grund"]), (2, "ok"), x)
+        self.assertNotIn("fehlt", x)
+        x = told("Arvid reaches for a torch, but has none. In the grey light from above, something with too many legs "
+                 "scurries out from behind the old barrels and hisses at him.")
+        self.assertEqual((x["punkte"], x["grund"], x["fehlt"]), (0, "gegner", [foe["name"][1]]), x)
 
     def test_the_system_text_in_its_fixed_order(self):
         """Review 27.10. E8/T20 (Dominik 2026-10-27 „ok“): the role, the numbered fixed rules, the task, the examples,
