@@ -907,5 +907,55 @@ class Settlement(Base):
         out = db.add(r, rd, {"siedlung": sv})["siedlung"]
         self.assertEqual((out["kopf"], out["dienste"][0]["bild"]), ("", ""))
 
+
+class Runes(Base):
+    """Runen und Sockel (plan dungeon-runen 11a, Dominik „empfehlung“ 2026-10-27): every rune gets a catalog picture per
+    style and world word (rune, chip, pearl, seal), glowing in its fixed colour by rank, painted only while the admin's
+    switch is on; the view gives the rune bag and the trader's runes their picture and colour, and an item's sockets the
+    colours of its set runes (dungeonsockel.js draws the dots over the item's picture, no new picture)."""
+    def test_rune_pictures_per_world_word_and_colours(self):
+        import dungeon_runen
+        helpers.keep_chat(self, "dungeon_runen")
+        r = dungeon.rules()
+        self.assertEqual(set(db.RUNE_EN), {dungeon_runen.word(w, 1) for w in dungeon_runen.ART_WELT})
+        self.assertGreaterEqual(len(db.RUNE_FARBE), dungeon_runen.RAENGE)
+        self.assertEqual(len({f for _, f in db.RUNE_FARBE}), len(db.RUNE_FARBE))      # each rank its own colour
+        helpers.set_config(dungeon_runen=False)                                      # off: no rune is painted
+        self.assertFalse([p for _, p in db.wanted(r) if any(w.format("") in p for w in db.RUNE_EN.values())])
+        helpers.set_config(dungeon_runen=True)
+        want = dict(db.wanted(r))
+        uruz = dungeon_runen.by(r)["uruz"]
+        for welt in ("fantasy", "scifi", "piraten", "horror"):
+            rd = {"welt": welt, "ton": 12}
+            p = db.rune_text(dungeon.style(r, rd), uruz, dungeon_runen.word(welt, 1))
+            self.assertIn(p, want.values())
+            self.assertIn(f"glowing {db.rune_farbe(uruz)[0]}", p)
+            self.assertTrue(db._ok_text(p, r), p)
+        self.assertEqual(len({p for p in want.values() if "Uruz" in p}), len(set(db.styles(r))))   # one per style, its worlds' word
+
+    def test_view_gives_bag_trader_and_sockets_their_picture_and_colour(self):
+        import dungeon_runen
+        r = dungeon.rules()
+        rs = dungeon_runen.by(r)
+        rd = {"welt": "scifi", "ton": 12, "lang": "de"}
+        it = dict(dungeon.item_view(r, dungeon.item(r, "schwert", "gewoehnlich"), "de"), so=3, ru=[rs["uruz"]["name"][0]])
+        v = {"ich": {"tasche": [it], "runen": {"runen": [{"id": "uruz", "n": 2}]}}, "markt": {"runen": {"ware": [{"id": "ehwaz", "n": 1}]}}}
+        out = db.add(r, rd, v)
+        self.assertEqual(out["ich"]["tasche"][0]["ru_farbe"], [db.rune_farbe(rs["uruz"])[1]])
+        self.assertEqual(out["ich"]["runen"]["runen"][0]["farbe"], db.rune_farbe(rs["uruz"])[1])
+        self.assertEqual((out["ich"]["runen"]["runen"][0]["bild"], out["markt"]["runen"]["ware"][0]["bild"]), ("", ""))
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        n = db.name_of(db.rune_text(dungeon.style(r, rd), rs["uruz"], "chip"))
+        with open(dungeon.bild_file(n), "wb") as f:
+            f.write(PNG)
+        db._files["m"] = None
+        self.assertEqual(db.add(r, rd, v)["ich"]["runen"]["runen"][0]["bild"], n)    # the world's word: a chip
+        self.assertNotIn("ru_farbe", db.add(r, rd, {"ich": {"tasche": [dict(it, so=0, ru=[])]}})["ich"]["tasche"][0])
+        helpers.set_config(dungeon_bilder=False)                                    # off: no picture named
+        self.assertEqual(db.add(r, rd, v)["ich"]["runen"]["runen"][0]["bild"], "")
+        with open(os.path.join(os.path.dirname(__file__), "..", "panel", "static", "js", "dungeon.js")) as f:
+            self.assertIn("${dmSockel(it)}", f.read())                               # the dots over the item's picture
+
+
 if __name__ == "__main__":
     unittest.main()

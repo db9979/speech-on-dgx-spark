@@ -8189,6 +8189,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Bilder für Runen und leuchtende Sockel (V01.1.194, Plan „Runen und Sockel“ Punkt 11a, Dominik „empfehlung“ 2026-10-27): Ist „Runen und Sockel“ an, bekommt jede der 13 Runen ein Katalogbild je Stil, im Wort ihrer Welt (Rune, Chip, Perle, Siegel; dungeon_runen.word) und mit ihrer festen Farbe nach dem Rang (dungeon_dingbild.RUNE_FARBE, rune_text); gemalt wird nachts oder mit „Alle Bilder malen“ wie jedes Katalogbild, bei ausgeschaltetem Schalter keines. Der Runenbeutel im Heldenbogen und die Runen des Krämers zeigen das Bild statt „ᚱ“, sobald es da ist. Die Sockel eines Dings sind kein neues Bild: dungeonsockel.js (dmSockel) legt sie als Punkte über das vorhandene Bild oder Zeichen, ein freier Sockel dunkel, eine eingesetzte Rune leuchtend in ihrer Farbe (ru_farbe aus dungeon_dingbild.add). Das Bild zu einem fertigen Runenwort kommt mit Stufe 2. Nichts davon entscheidet das Modell; kein neuer Schalter, kein neuer Endpunkt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -23646,6 +23654,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: hair, eyes, beard and build in the portrait (V01.1.189, Dungeon review 2026-10-27 package 10, Z1): A person's portrait adds the fixed looks of its card (dungeon_nsc.MERKMALE: hair, eyes, beard, build, rolled once by the panel since V01.1.186), in the tables' English column, such as \"grey hair, blue eyes, slender build\". So the picture fits what the table reads on the card; the model guesses none of it. New portraits and catalog pictures take it at once, a portrait already painted stays until the host has it painted again."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: pictures for runes and glowing sockets (V01.1.194, plan \"Runes and sockets\" point 11a, Dominik \"empfehlung\" 2026-10-27): With \"Runes and sockets\" on, each of the 13 runes gets a catalog picture per style, as its world's word (rune, chip, pearl, seal; dungeon_runen.word) and in its fixed colour by rank (dungeon_dingbild.RUNE_FARBE, rune_text); it is painted at night or with \"Paint all pictures\" like every catalog picture, none while the switch is off. The rune bag in the hero sheet and the trader's runes show the picture instead of \"ᚱ\" once it is there. A thing's sockets are no new picture: dungeonsockel.js (dmSockel) lays them as dots over the picture or sign there is, a free socket dark, a set rune glowing in its colour (ru_farbe from dungeon_dingbild.add). The picture of a finished runeword comes with stage 2. The model decides none of it; no new switch, no new endpoint."
 },
 {
 "lang": "en",

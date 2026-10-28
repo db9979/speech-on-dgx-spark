@@ -4174,6 +4174,13 @@
 "titel": "Dungeon-Master: Runen und Sockel",
 "text": "Admin: Funktionen → KI-Dungeon-Master → Runen und Sockel an. Ein paar Kämpfe spielen, bis eine Rune im Runenbeutel liegt (Heldenbogen → Tasche) und ein Fund mit Sockeln kommt (Zeile „Sockel“). Rune wählen, Ding wählen: die Vorschau nennt die Wirkung und die Stärke; „Einsetzen“ setzt sie fest. Im Kampf geht es nicht. Beim Krämer Runen kaufen und verkaufen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P621",
+"v": 1194,
+"titel": "Dungeon-Master: Runenbilder und leuchtende Sockel",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Runen und Sockel an. A: Ein Ding mit Sockeln im Heldenbogen: Über seinem Bild stehen dunkle Punkte, je Sockel einer. B: Eine Rune einsetzen: Ihr Punkt leuchtet in ihrer Farbe, der Tooltip nennt die Rune. C: Nach „Alle Bilder malen“ zeigt der Runenbeutel Bilder statt ᚱ, in Science-Fiction als Chips.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

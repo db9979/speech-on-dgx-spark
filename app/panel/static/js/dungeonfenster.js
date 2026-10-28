@@ -121,7 +121,7 @@ function dmShop(v){const h=v.ich,m=v.markt;
     ${mine?`<h5>${esc(t('Aus deiner Tasche','From your bag'))}</h5><div class="dm-bag dm-bag-k">${mine}</div>`:''}`}
 // the trader's runes (dungeon_runen: ranks 1 to 4) and what the own runes fetch (half their price)
 function dmShopRunen(v){const h=v.ich,R=v.markt.runen;if(!R)return '';const own=(h.runen&&h.runen.runen)||[];
-  const buy=R.ware.map(x=>`<div class="dm-line dm-rune"><span>ᚱ <b>${esc(x.name)}</b> <small class="mut">${esc(x.sinn)} · ×${x.n}</small></span><button type="button" class="b" data-dmrunkauf="${esc(x.id)}"${h.gold<x.preis?' disabled':''}>${esc(t('Kaufen','Buy'))} · ${x.preis} ${esc(t('Gold','gold'))}</button></div>`).join('');
+  const buy=R.ware.map(x=>`<div class="dm-line dm-rune"><span>${x.bild?dmDing(x):'ᚱ'} <b>${esc(x.name)}</b> <small class="mut">${esc(x.sinn)} · ×${x.n}</small></span><button type="button" class="b" data-dmrunkauf="${esc(x.id)}"${h.gold<x.preis?' disabled':''}>${esc(t('Kaufen','Buy'))} · ${x.preis} ${esc(t('Gold','gold'))}</button></div>`).join('');
   const sell=own.filter(x=>R.verkauf[x.id]).map(x=>`<div class="dm-line dm-rune"><span>ᚱ <b>${esc(x.name)}</b>${x.n>1?` <small class="mut">×${x.n}</small>`:''}</span><button type="button" class="b" data-dmrunverk="${esc(x.id)}"${R.verkauf[x.id]>v.markt.kasse?' disabled':''}>${esc(t('Verkaufen','Sell'))} · ${R.verkauf[x.id]} ${esc(t('Gold','gold'))}</button></div>`).join('');
   return (buy?`<h5>ᚱ ${esc(R.wort)}</h5>${buy}`:'')+(sell?`<h5>ᚱ ${esc(t('Deine','Your'))} ${esc(R.wort)}</h5>${sell}`:'')}
 // one item by its key: bag, equipment slot („an:<slot>“), merchant or ground; a power of „Das kann ich“ („k:kf:<id>“, „k:kz:<id>“)

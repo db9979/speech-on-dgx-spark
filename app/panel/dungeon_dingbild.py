@@ -144,6 +144,13 @@ DIENST_EN = {"gasthaus": "the common room of an inn of this world with a firepla
              "verbessern": "a workbench of this world where gear is improved, fine tools and parts",
              "heiler": "a calm healer's room of this world with drying herbs, clean bandages, a cot and small potion bottles",
              "gefaehrte": "a hiring corner by the door of an inn of this world, a notice board with offers, a travelling pack and a shield against the wall"}
+# Runen und Sockel (dungeon_runen, plan dungeon-runen 11a): a rune's catalog picture in the world's word (dungeon_runen.ART_WELT,
+# English), glowing in its fixed colour; the colour by the rune's rank (1 to dungeon_runen.RAENGE) is also the socket's dot
+RUNE_EN = {"rune": "a small rune stone with one carved sign glowing {}", "chip": "a small data chip with one etched sign glowing {}",
+           "pearl": "a lustrous pearl with one fine sign glowing {} inside", "seal": "an old wax seal with one pressed sign glowing {}"}
+RUNE_FARBE = (("red", "#e5484d"), ("orange", "#f76b15"), ("amber", "#ffb224"), ("yellow", "#f5d90a"), ("green", "#30a46c"),
+              ("teal", "#12a594"), ("cyan", "#05a2c2"), ("blue", "#3e63dd"), ("violet", "#8e4ec6"), ("purple", "#ab4aba"),
+              ("pink", "#d6409f"), ("white", "#f0f0f0"), ("gold", "#e2b93b"))
 SIEDLUNG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_siedlung.json")
 HELD_TEILE = {"voelker": "volk", "klassen": "klasse", "hintergruende": "hintergrund"}   # rules page part -> art
 NEU = re.compile(r"neu-[0-9a-f]{16}")   # a picture painted again on the admin's „Nochmal malen“, next to the one in use
@@ -468,6 +475,40 @@ def hero_pics(r, art, c, have=None):
     return out
 
 
+def rune_farbe(c):
+    """(English word, CSS colour) of a rune by its rank."""
+    return RUNE_FARBE[(int(c.get("rang") or 1) - 1) % len(RUNE_FARBE)]
+
+
+def rune_text(style, c, wort):
+    """The fixed prompt of a rune (r["runen"]) in a style, as the world's word wort (rune, chip, pearl, seal)."""
+    where = _wahl(ORT_EN["schatz"], style, "rune", c.get("id"), "ort")
+    return (f"{style}, {ITEM_EN}: {c['name'][1]}, {RUNE_EN[wort].format(rune_farbe(c)[0])}, {where} of this world, "
+            f"the place softly blurred behind it, {flair(style, c, 'rune')}, {dungeon.BILD_ENDE}")
+
+
+def runes(r, s, welten):
+    """(name, prompt, key) of every rune in style s, once per word of the worlds painted in it; none while the admin's
+    switch „Runen und Sockel“ is off (dungeon_runen.wirkt)."""
+    import dungeon_runen
+    if not dungeon_runen.wirkt():
+        return []
+    out = []
+    for wort in sorted({dungeon_runen.word(w, 1) for w in welten}):
+        for c in r.get("runen") or []:
+            p = rune_text(s, c, wort)
+            out.append((name_of(p), p, key_of(s, c, "rune-" + wort)))
+    return out
+
+
+def rune_pic(r, rd, c, have):
+    """The picture name of a rune in the round's style and world word once it is painted, else ""."""
+    import dungeon_runen
+    s, wort = dungeon.style(r, rd), dungeon_runen.word(rd.get("welt", ""), 1)
+    n = _pick(name_of(rune_text(s, c, wort)), key_of(s, c, "rune-" + wort), have)
+    return n if n in have else ""
+
+
 def name_of(p):
     return "ding-" + hashlib.sha256(p.encode()).hexdigest()[:16]
 
@@ -476,7 +517,7 @@ def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
     then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner), then
     the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book); the
-    services and the faces of the people catalog (people) before the foes."""
+    services, the faces of the people catalog (people) and the runes (runes) before the foes."""
     return [(n, p) for n, p, _ in _want(r)]
 
 
@@ -487,7 +528,7 @@ def _want(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + \
+                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + runes(r, s, welten) + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
@@ -790,9 +831,12 @@ def add(r, rd, out):
     """dungeon.view's last step: every item of the view (bags, slots, ground, merchant, offers, log) gets "zeichen"
     (the sign of its kind) and "bild" (the name of its picture, "" while there is none): a find's own once known,
     else the catalog's in the round's style. Items are copied, nothing of the round changes."""
+    import dungeon_runen
     have = files() if on() else frozenset()
     style = dungeon.style(r, rd)
     cat = dungeon._by(r, "gegenstaende")
+    rs = dungeon_runen.by(r)
+    farbe = {nm: rune_farbe(c)[1] for c in rs.values() for nm in c["name"]}   # the view names the set runes (item_view "ru")
 
     def item(x):
         c = cat.get(x["id"])
@@ -801,7 +845,8 @@ def add(r, rd, out):
             f = "fund-" + str(x.get("i"))
             bild = f if not x.get("u") and f in have else _pick(name_of(prompt(style, c)), key_of(style, c), have)
             bild = bild if bild in have else ""
-        return dict(x, zeichen=ZEICHEN.get(x.get("art"), dungeon.ZEICHEN), bild=bild)
+        sockel = {"ru_farbe": [farbe.get(n, "") for n in x.get("ru") or []]} if x.get("so") else {}   # dungeonsockel.js
+        return dict(x, zeichen=ZEICHEN.get(x.get("art"), dungeon.ZEICHEN), bild=bild, **sockel)
 
     def walk(v):
         if isinstance(v, list):
@@ -812,6 +857,12 @@ def add(r, rd, out):
         return v
     for k in list(out):
         out[k] = walk(out[k])
+    ich = out.get("ich") if isinstance(out.get("ich"), dict) else {}
+    markt = out.get("markt") if isinstance(out.get("markt"), dict) else {}
+    for rows in ((ich.get("runen") or {}).get("runen"), (markt.get("runen") or {}).get("ware")):   # the rune bag, the trader's runes
+        for x in rows or []:
+            if isinstance(x, dict) and x.get("id") in rs:
+                x.update(bild=rune_pic(r, rd, rs[x["id"]], have) if have else "", farbe=rune_farbe(rs[x["id"]])[1])
     out["buehne"] = {"ersatz": stage_pic(r, rd, have)}   # the stage's stand-in until the scene has its own picture
     if isinstance(out.get("siedlung"), dict):              # the settlement's head and service pictures, lines of life
         out["siedlung"] = settle_view(r, rd, out["siedlung"], have)
