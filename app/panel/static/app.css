@@ -2887,8 +2887,10 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzcmd{white-space:pre-wrap;overflow-wrap:anywhere;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg2,var(--bg));border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0}
 .fzsha{display:block;overflow-wrap:anywhere;font-size:12px}
 .fzdanger{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;border:1px dashed color-mix(in srgb,var(--bad) 55%,transparent)}
-.fzbanner{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;background:#dc2626;color:#fff;border-radius:12px;padding:9px 12px;margin:0 0 10px;font-weight:600}
-.fzbanner[hidden]{display:none}.fzbanner span:nth-child(2){flex:1;min-width:0}.fzbanner .b{background:#fff;color:#dc2626;border-color:#fff}
+/* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page */
+.fzbanner{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0 0 12px;background:#dc2626;color:#fff;border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
+.fzbanner[hidden]{display:none}.fzbanner .fzbtext{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.fzbanner .fzrec{flex:none;width:8px;height:8px;border-radius:50%;background:#fff}
+.fzbanner .fzbtn{flex:none;font:inherit;font-size:12px;line-height:20px;padding:0 8px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}.fzbanner .fzbtn:hover{background:#fff;color:#dc2626}
 .fzrec{width:10px;height:10px;border-radius:50%;background:#fff;flex:none}
 .fzview{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px;margin-top:8px}
 .fzterm{background:#0b1020;border-radius:12px;padding:8px;min-height:62vh;height:62vh;overflow:hidden}
@@ -2907,7 +2909,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 /* „Herauslösen“ (#fernfenster): the panel page in its own window shows only the terminal, over the whole page */
 .fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:#dc2626}.fzweg[hidden]{display:none}
 .fzfenrow{margin-top:6px}
-body.fzfenster .fzbanner{position:fixed;left:8px;right:8px;top:8px;z-index:9001;margin:0}
+body.fzfenster .fzbanner{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0;border-radius:0}
 body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;background:var(--bg);padding:62px 8px 8px;margin:0;overflow:hidden}
 body.fzfenster .fzterm{height:calc(100vh - 150px);min-height:200px}body.fzfenster #fzheraus{display:none}
 /* Siedlung neu ordnen (dungeonfenster.js dmSiedlung, Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): a slim head, the houses as a list beside the chosen one, one row per offer */

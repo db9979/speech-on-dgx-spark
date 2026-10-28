@@ -134,8 +134,16 @@ const FZ_GRUND={leerlauf:['Leerlauf: die Sitzung ist zu.','Idle: the session is 
   anker:['Der Anker hat nicht geantwortet.','The anchor did not answer.'],server:['Der Server hat die Sitzung beendet.','The server ended the session.'],getrennt:['Getrennt.','Disconnected.'],alle:['Alle getrennt.','All disconnected.']};
 function fzGrund(g){return g&&FZ_GRUND[g]?t(...FZ_GRUND[g]):t('Sitzung beendet.','Session ended.')}
 function fzResize(){if(!FZ.term||!FZ.ws||FZ.ws.readyState!==1)return;const [c,r]=fzGroesse();if(c===FZ.term.cols&&r===FZ.term.rows)return;FZ.term.resize(c,r);FZ.ws.send(JSON.stringify({typ:'groesse',cols:c,rows:r}))}
+function fzTopBar(){let top=0;for(const h of [document.querySelector('header'),$('apbar')]){if(!h)continue;const cs=getComputedStyle(h);
+    if((cs.position==='sticky'||cs.position==='fixed')&&cs.display!=='none'&&h.offsetWidth>=document.documentElement.clientWidth-4)top=Math.max(top,h.offsetHeight)}return top}
+addEventListener('resize',()=>{if(FZ.sitz)fzBanner()});
+// the bars change with the page (the app view's bar comes and goes): the line follows them
+if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fzbanner');if(b&&!b.hidden)b.style.setProperty('--fzbtop',fzTopBar()+'px')});
+  for(const h of [document.querySelector('header'),$('apbar')])if(h)ro.observe(h)}
 function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');return}b.hidden=false;document.body.classList.add('fzaktiv');
-  $('fzbtext').textContent=t('Fernsitzung aktiv · ','Remote session active · ')+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit)+t(' · Notaus trennt sofort',' · emergency stop ends it at once');
+  // a slim line at the top of the content: below the bar that stays on top (the header, or the app view's bar on a phone)
+  b.style.setProperty('--fzbtop',fzTopBar()+'px');
+  $('fzbtext').textContent=t('Fernsitzung aktiv · ','Remote session active · ')+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
 function fzInfo(fp){const dl=$('fzinfo');dl.textContent='';const s=FZ.sitz||{};
   for(const [k,v] of [[t('System','System'),s.name||''],[t('Host-Schlüssel','Host key'),fp||'…'],[t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],

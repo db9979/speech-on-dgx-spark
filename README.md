@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.215** Remote access: the running session shows as one slim red line at the top of the content on every page (dot, "Remote session active · server · minutes", "Disconnect"; "the emergency stop ends it at once" as a hint), below the header and on a phone below the top bar, also in the own window; the anchor stops on macOS and Windows with a fixed sentence and sets up nothing halfway, a missing host key on Linux names `sudo ssh-keygen -A`
 - **V01.1.214** Remote access stage 2b: assistant in the terminal (its own switch, off): "Ask the assistant" beside the shell and next commands after every Enter, from the own language model only, without a tool; it never types, every command becomes a suggestion to insert, dangerous commands show in red and need two taps; the screen goes along only with "Send the screen along", as a data block; the log holds only words and numbers
 - **V01.1.213** Remote access stage 2: its own menu entry Remote access (admins only, while the switch is on); the shell can be detached into a window of its own (its own one-time ticket, never in the address) and brought back; browser shortcuts go to the shell, "All keys" in full screen also Ctrl+W and Esc; suggestions adapt to the last command by fixed rules, nothing leaves the browser; "Connected now" and Live show who, from where (home/internet) and how long, a 30-day history without content, a notification to the admins for a session from the internet; the iPhone app shows the remote servers under Manage the Spark → Remote access with Disconnect, May connect and Remove, Android under Manage; the server's first bytes are no longer lost while a session opens
 - **V01.1.212** AI Dungeon Master: English foe names as in the SRD
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Remote access → Remote servers, with a one-time code for pairing, a fresh code per session and SSH end to end
 - **V01.1.207** AI Dungeon Master: game master gives things: the host as admin gives a hero an item up to "epic", gold, runes or experience in the game master console, within the game's limits, and the narration makes it a find or a gift
 - **V01.1.206** AI Dungeon Master: a thing whose runeword wakes gets a picture of its own with glowing runes, the smith's rune services have pictures
-- **V01.1.205** AI Dungeon Master: runes and sockets to the end: runewords wake in the right order from their level, the smith drills sockets, takes runes out and fuses them, runes go to other heroes, a rune can be dragged onto the thing, and the car knows runes
 
 
 

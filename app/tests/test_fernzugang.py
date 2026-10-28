@@ -6,6 +6,7 @@ Notaus closes everything and lets nothing in; a changed host key is no connectio
 removed system's key gets nothing but „abbauen“; `entfernen` removes every path it made; logs in fixed words only;
 no tool and no model ever sees the shell. A real run end to end: the anchor program over TLS, the panel's SSH client
 (paramiko) and a small SSH server. No test depends on the time of day."""
+import argparse
 import asyncio
 import contextlib
 import hashlib
@@ -584,6 +585,41 @@ class Program(unittest.TestCase):
             p.cmd_remove(None, root=root, run=lambda c: ran.append(c) or 0, tell=False, home=home)
         self.assertNotIn(["userdel", "--remove", "spark"], ran)
         self.assertFalse(os.path.exists(ak))
+
+
+    def test_the_anchor_stops_with_a_fixed_sentence_on_macos_and_windows(self):
+        """Dominik ran the Linux one-liner on his Mac: on Darwin and Windows the anchor says so and sets up nothing."""
+        p = program()
+        ran = []
+        p.cmd_setup = lambda *a, **k: ran.append("setup")
+        p.cmd_remove = lambda *a, **k: ran.append("remove")
+        for system, want in (("Darwin", "macOS wird ab der nächsten Version unterstützt (Stufe 6); bitte Panel aktualisieren"),
+                             ("Windows", "Windows wird ab einer späteren Version unterstützt (Stufe 5)")):
+            for argv in (["einrichten", "https://spark.example.org"], ["entfernen"], ["lauf"], ["zustand"]):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(p.main(argv, system=system), 1)
+                self.assertIn(want, out.getvalue())
+                self.assertIn("nichts eingerichtet", out.getvalue())
+        self.assertEqual(ran, [])
+        self.assertIsNone(p.not_yet("Linux"))
+
+    def test_a_missing_host_key_or_sshd_says_how_to_fix_it(self):
+        p = program()
+        p.load = lambda root="/": None
+        p.HOSTKEY = os.path.join(tempfile.mkdtemp(prefix="anker-"), "nope.pub")
+        args = argparse.Namespace(adresse="https://spark.example.org", fp="")
+        with unittest.mock.patch.object(p.os, "geteuid", lambda: 0):
+            with self.assertRaises(p.Fehler) as e:
+                p.cmd_setup(args)
+            self.assertIn("sudo ssh-keygen -A", str(e.exception))
+            self.assertIn("openssh-server", str(e.exception))
+            with open(p.HOSTKEY, "w") as f:
+                f.write("ssh-ed25519 AAAAx root@h\n")
+            p.SSHD = ("127.0.0.1", 9)                      # nothing listens there
+            with self.assertRaises(p.Fehler) as e:
+                p.cmd_setup(args)
+            self.assertIn("systemctl enable --now ssh", str(e.exception))
 
 
 class Pieces(Base):
@@ -1314,6 +1350,55 @@ class InBrowser(unittest.TestCase):
             raise unittest.SkipTest("no Playwright/Chromium here")
         cls.port = helpers._port()
         helpers.serve_panel(cls, cls.port)
+
+    def test_the_session_bar_is_a_slim_line_on_top_of_every_page(self):
+        """Dominik 2026-10-28 18:54: while a session runs, one slim red line (at most 40 px) at the top of the content,
+        on every page, also after scrolling, on a wide screen and on a phone; „Notaus trennt sofort“ only as a hint."""
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                for width, height in ((1280, 900), (390, 800)):
+                    ctx = await br.new_context(viewport={"width": width, "height": height}, locale="de-DE", bypass_csp=True)
+                    pg = await ctx.new_page()
+                    await pg.goto(base + "/")
+                    await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                    await pg.goto(base + "/")
+                    await pg.wait_for_function(PAGE_READY, timeout=30000)
+                    await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.remove())")   # the first-start wizard of a new Spark
+                    await pg.evaluate("FZ.sitz={name:'vps-1',gid:'g_0123456789ab',seit:Date.now()/1000-1500,max:2,leer:15};fzBanner()")
+                    for sec in ("feat", "mon", "prof", "cfg"):
+                        await pg.evaluate(f"goSec('{sec}')")
+                        await pg.wait_for_timeout(150)
+                        for scroll in (0, 1500):
+                            await pg.evaluate(f"window.scrollTo(0,{scroll})")
+                            await pg.wait_for_timeout(100)
+                            measure = lambda: pg.evaluate("""(()=>{const b=$('fzbanner').getBoundingClientRect();let hb=0;
+                                for(const h of [document.querySelector('header'),$('apbar')]){const r=h&&h.getBoundingClientRect();
+                                  if(r&&r.width>=document.documentElement.clientWidth-4&&getComputedStyle(h).display!=='none')hb=Math.max(hb,r.bottom)}
+                                const e=document.elementFromPoint(b.left+12,b.top+b.height/2);
+                                return {top:b.top,h:b.height,w:b.width,hb,free:!!e&&$('fzbanner').contains(e),text:$('fzbtext').textContent,tip:$('fzbanner').title,
+                                  vis:!$('fzbanner').hidden&&getComputedStyle($('fzbanner')).display!=='none'}})()""")
+                            for _ in range(30):         # the page settles its bars after a switch: measure the settled state
+                                box = await measure()
+                                if box["free"] and box["top"] <= 100:
+                                    break
+                                await pg.wait_for_timeout(100)
+                            msg = f"{width} {sec} {scroll}: {box}"
+                            self.assertTrue(box["vis"], msg)
+                            self.assertLessEqual(box["h"], 40, msg)
+                            self.assertGreater(box["w"], 200, msg)
+                            self.assertTrue(box["free"], msg)                                  # nothing covers it, it covers no bar
+                            self.assertGreaterEqual(box["top"], box["hb"] - 1, msg)
+                            self.assertLessEqual(box["top"], 100, msg)                         # at the top of the content
+                            self.assertEqual(box["text"], "Fernsitzung aktiv · vps-1 · 25 min", msg)
+                            self.assertIn("Notaus", box["tip"])
+                    await ctx.close()
+                await br.close()
+        asyncio.run(go())
 
     def test_own_window_own_ticket_and_the_keys(self):
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium

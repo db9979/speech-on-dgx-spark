@@ -509,11 +509,14 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd):
         with open(HOSTKEY) as f:
             hostkey = " ".join(f.read().split()[:2])
     except OSError:
-        raise Fehler(f"{HOSTKEY} fehlt: sshd mit einem ed25519-Schlüssel ist nötig")
+        raise Fehler(f"{HOSTKEY} fehlt: sshd mit einem ed25519-Schlüssel ist nötig. Abhilfe: `sudo ssh-keygen -A` "
+                     "legt die fehlenden Schlüssel an; ist sshd gar nicht da, erst `sudo apt install openssh-server` "
+                     "(Fedora: `sudo dnf install openssh-server`), dann den Befehl aus dem Panel noch einmal")
     try:
         socket.create_connection(SSHD, timeout=3).close()
     except OSError:
-        raise Fehler("sshd hört nicht auf 127.0.0.1:22")
+        raise Fehler("sshd hört nicht auf 127.0.0.1:22. Abhilfe: `sudo systemctl enable --now ssh` "
+                     "(Fedora: `sshd`), dann den Befehl aus dem Panel noch einmal")
     s, got = tls_connect(base, fp)
     s.close()
     say(f"Panel {base}, Zertifikat SHA-256 {got[:16]}…{got[-8:]}" + (" (festgelegt)" if fp else " (geprüft gegen die Zertifizierungsstellen)"))
@@ -627,7 +630,23 @@ def cmd_state(args):
     return 0
 
 
-def main(argv=None):
+# Systems the anchor does not set up (yet): a fixed sentence and nothing done, never half a setup.
+NOT_YET = {
+    "Darwin": "macOS wird ab der nächsten Version unterstützt (Stufe 6); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
+    "Windows": "Windows wird ab einer späteren Version unterstützt (Stufe 5); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
+}
+
+
+def not_yet(system=None):
+    """The fixed sentence for a system the anchor cannot set up, else None (Linux and the like)."""
+    return NOT_YET.get(system or platform.system())
+
+
+def main(argv=None, system=None):
+    stop = not_yet(system)
+    if stop:
+        say(stop)
+        return 1
     p = argparse.ArgumentParser(prog="spark-anker", description="Fernzugang des Spark-Panels zu diesem sshd")
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("einrichten", help="einmal einrichten (fragt den Code im Terminal)")
