@@ -88,6 +88,9 @@ def take(dm, r, rd, turn, text, x):
             return False, "keine wahrheit"
         if name.lower() in {p["name"].lower() for p in w["personen"]} | {p["held"]["name"].lower() for _, p in dm.seated(rd)}:
             return False, "schon"
+        import dungeon_nsc
+        if dungeon_nsc.no_person(r, rd, name, "schreiber"):
+            return False, "keine person"           # „Wache“, a foe's name or a word for no name („keine“) never
         import dungeon_erzaehler as erz
         if len(w["personen"]) >= erz.PERSONEN_MAX:
             return False, "voll"

@@ -6061,6 +6061,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: „keine“ ist kein Name (V01.1.235, Dominik 2026-10-28 „ist das ein fehler“, eine Personenkarte „keine“, Stadtwache mit Speer): Ohne neuen Schalter, es ist eine Korrektur der festen Regeln für Personen. Das Modell hatte für eine Wache ohne Namen das Wort „keine“ als Namen geschrieben. 1. Nie eine Person: ein Wort für „kein Name“ (dungeon_nsc.LEERWORTE: keine, niemand, unbekannt, namenlos, none, nobody, unknown …) oder ein Name ohne Buchstaben wird nie eine Person, weder in der festen Wahrheit noch aus der Erzählung gelernt noch über den Schreiber-Abgleich (Grund leer im Log, nie der Name); eine Zeile der Erzählung mit so einem Sprecher fällt weg. 2. Alte Karten: eine solche Karte oder Person aus einer laufenden Runde verschwindet beim nächsten Zug samt ihrem Platz auf der Karte (dungeon: nsc | leer | N weg). Selbsttest in test_dungeon (ReviewPersonen)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Gegnernamen gebeugt erkennen (V01.1.211, Erzähler-Prüfstand vom 28.10. mit 18 von 20 Punkten, „Englische Runde auf Englisch“ 0 Punkte mit Grund „gegner“): Ohne neuen Schalter, es ist eine Korrektur der festen Prüfung. 1. Gebeugt und in anderer Folge: Ein Gegner der Begegnung gilt als genannt, wenn sein ganzer Name wie bisher vorkommt oder jedes Wort seines Namens mit seinem Stamm in einem Satz steht, in beliebiger Folge (dungeon_erzaehler.foe_named): „giant, red-eyed rats“ für „Giant rat“, „warrior kobolds“ für „Kobold warrior“, „jungen roten Drachen“ für „Junger Roter Drache“, dazu feste Pluralformen (f wird v wie wolf, wolves; man wird men; der letzte Vokal mit Umlaut wie Wolf, Wölfe). Füllwörter wie „of“, „the“, „der“ zählen nicht; die Wörter in zwei Sätzen oder ein anderer Gegner zählen nie. 2. Prüfstand zeigt den Gegner: scheitert eine Szene an „gegner“, steht hinter dem Grund, welche Gegner aus dem Katalog fehlten (nur Katalognamen, nie Text des Modells). Selbsttest in test_dungeon_erzaehlstand."
 },
 {
@@ -22206,6 +22214,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: \"keine\" is no name (V01.1.235, Dominik 2026-10-28 \"ist das ein fehler\", a person card \"keine\", town guard with a spear): No new switch, it is a correction of the fixed rules for people. The model had written the word \"keine\" (none) as the name of a guard without a name. 1. Never a person: a word for \"no name\" (dungeon_nsc.LEERWORTE: keine, niemand, unbekannt, namenlos, none, nobody, unknown …) or a name without a letter never becomes a person, not in the fixed truth, not learnt from the narration, not through the scribe check (reason leer in the log, never the name); a line of the narration with such a speaker is dropped. 2. Old cards: such a card or person of a running round goes away at the next turn with its place on the map (dungeon: nsc | leer | N weg). Self-test in test_dungeon (ReviewPersonen)."
 },
 {
 "lang": "en",

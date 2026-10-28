@@ -2211,6 +2211,39 @@ class ReviewPersonen(Base):
         self.assertNotIn("Schattenwächter", out.getvalue())                          # the log names no name
         self.assertGreaterEqual(nsc.for_live([rd])["keine_person"], 3)
 
+    def test_a_word_for_no_name_is_never_a_person(self):
+        """Dominik 2026-10-28 („ist das ein fehler“, a card „keine“, Stadtwache mit Speer): a word for no name (nsc.LEERWORTE)
+        or a name without a letter is never a person, in the truth, learnt, from the scribe or speaking in the narration;
+        a card or person of the truth made before the rule leaves at the next sync, with its place on the map."""
+        import dungeon_nsc as nsc
+        import dungeon_schreiber
+        r, rd = dungeon.rules(), self.state(self.rid)
+        for n in ("keine", "Keine", "niemand", "Unbekannt", "none", "No one", "???", "42"):
+            self.assertEqual(nsc.ist_person(r, rd, n), "leer", n)
+        for n in ("Keiner von Hall", "Mira", "Nobodo"):
+            self.assertEqual(nsc.ist_person(r, rd, n), "", n)
+        rd["wahrheit"] = {"personen": [{"name": "Mira", "rolle": "", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            t = dungeon.erz.check_truth(dungeon, r, rd, {"personen": [{"name": "keine", "rolle": "Stadtwache mit Speer"}, {"name": "Odo"}],
+                                                           "gruppen": [], "geheimnisse": []})
+            n = dungeon.erz.learn_people(rd, {"npc": [{"name": "keine", "sagt": "Halt!"}]})
+            ok, why = dungeon_schreiber.take(dungeon, r, rd, 1, "keine steht am Tor.", {"art": "person", "name": "keine"})
+        self.assertEqual(([p["name"] for p in t["personen"]], n, ok, why), (["Odo"], 0, False, "keine person"))
+        self.assertIn("dungeon: wahrheit | person | abgelehnt | leer | wahrheit", out.getvalue())
+        s, _ = dungeon.check_story(r, rd, {"erzaehlung": "Die Wache am Tor gähnt und lehnt sich auf ihren Speer, der Regen tropft "
+                                                       "von ihrem Helm, und hinter ihr liegt die stille Gasse.",
+                                           "npc": [{"name": "keine", "sagt": "Weiter."}, {"name": "Mira", "sagt": "Hallo."}], "frage_an": ""})
+        self.assertEqual([x["name"] for x in s["npc"]], ["Mira"])
+        rd["wahrheit"]["personen"].append({"name": "keine", "rolle": "", "ziel": "", "sprache": ""})
+        rd["nsc"] = {"keine": {"name": "keine", "karte": {}, "kanten": [], "haltung": {}, "gesehen": 1}}
+        rd["karte"] = {"leute": {"keine": {"ort": 0, "mit": False}}}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            nsc.sync(r, rd, random.Random(1))
+        self.assertNotIn("keine", rd["nsc"])
+        self.assertEqual([p["name"] for p in rd["wahrheit"]["personen"]], ["Mira"])
+        self.assertEqual(rd["karte"]["leute"], {})
+        self.assertIn("dungeon: nsc | leer | 1 weg", out.getvalue())
+
     def test_a_merchant_sells_by_its_name_and_is_a_person(self):
         """Z4/B15: the kind from the words of the name („Alchemistin Mira“ sells potions), a name that is no person gives the
         default name (either form), a named merchant gets a card while the person memory is on, a treasure is never

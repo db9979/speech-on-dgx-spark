@@ -4412,6 +4412,13 @@
 "titel": "Dungeon-Master: Hausbild ganz",
 "text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Gold mit Zweck an, Hausbilder gemalt. A: In einer Siedlung das Fenster öffnen: Das Bild des Hauses steht ganz als Quadrat links neben dem Namen, nichts abgeschnitten. B: Am Handy dasselbe, kleiner.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P655",
+"v": 1235,
+"titel": "Dungeon-Master: keine Person namens keine",
+"text": "Eine Runde in einer Siedlung mit Wachen spielen. A: Im Reiter Personen und auf der Karte steht keine Person „keine“, „niemand“ oder „unbekannt“. B: Eine Runde, die schon so eine Karte hatte: nach dem nächsten Zug ist sie weg. C: Benannte Personen wie vorher.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -4197,8 +4197,8 @@ def check_story(r, rd, obj):
     out["wunsch"] = wunsch.check(_me, rd, obj.get("wunsch_erfuellt"), out.get("text", ""))   # a heart's wish come true (round 2, idea 7)
     for n in obj.get("npc") or []:
         name, sagt = plain(n.get("name") if isinstance(n, dict) else "", 40), plain(n.get("sagt") if isinstance(n, dict) else "", NPC_SAGT)
-        if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
-            drop += 1
+        if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX or name.lower() in nsc.LEERWORTE:
+            drop += 1                             # „keine“ is no speaker (Dominik 2026-10-28)
             continue
         out["npc"].append({"name": name, "sagt": sagt, **({"im_text": True} if vortrag.in_text(sagt, out.get("text", "")) else {})})
         if isinstance(n.get("stimme"), dict):

@@ -105,14 +105,19 @@ ROLLENWORTE = ("wache", "wachen", "händler", "haendler", "händlerin", "wirt", 
 ROLLEN_ENDE = ("wächter", "waechter", "wächterin", "hüter", "hueter", "hüterin", "wache", "krieger", "kriegerin", "soldat",
                "guard", "warden", "keeper", "soldier", "warrior")
 ARTIKEL = ("der", "die", "das", "den", "dem", "ein", "eine", "einer", "the", "a", "an")
+LEERWORTE = ("kein", "keine", "keiner", "keins", "niemand", "nichts", "unbekannt", "unbekannte", "unbekannter", "namenlos",
+             "namenlose", "namenloser", "unbenannt", "anonym", "leer", "name", "none", "nobody", "no one", "nothing", "unknown",
+             "nameless", "unnamed", "anonymous", "empty", "null", "n/a", "tbd")   # the model's word for „no name“ (Dominik 2026-10-28: a card „keine“)
 
 
 def ist_person(r, rd, name):
-    """"" when name may be a person of the round, else why not: "held", "gefaehrte", "gegner", "bestiarium", "gruppe" or
-    "rolle" (dungeon_erzaehler.check_truth and learn_people, dungeon.open_market, dungeon_personen.collect)."""
+    """"" when name may be a person of the round, else why not: "leer" (a word for no name, LEERWORTE, or no letter),
+    "held", "gefaehrte", "gegner", "bestiarium", "gruppe" or "rolle" (dungeon_erzaehler.check_truth and learn_people, dungeon.open_market, dungeon_personen.collect)."""
     n = re.sub(r"\s+\d+$", "", str(name or "").strip()).lower()
     if len(n) < 2:
         return "rolle"
+    if n in LEERWORTE or not re.search(r"[^\W\d_]", n):
+        return "leer"
     if n in {str(p["held"]["name"]).lower() for p in (rd.get("plaetze") or {}).values() if p.get("held")}:
         return "held"
     if n in {str(c.get("name") or "").lower() for c in rd.get("gefaehrten") or []}:
@@ -338,9 +343,18 @@ def merchant(r, rd, name, paar, rng=None):
 
 
 def sync(r, rd, rng=None):
-    """Every person of the truth gets a card; returns how many are new."""
+    """Every person of the truth gets a card (a card or person named with a word for no name leaves); returns how many
+    are new."""
     w = rd.get("wahrheit") or {}
     ns = rd.setdefault("nsc", {})
+    weg = [k for k in ns if ist_person(r, rd, ns[k].get("name")) == "leer"]
+    if weg or any(ist_person(r, rd, p.get("name")) == "leer" for p in w.get("personen") or []):
+        for k in weg:                             # a card made before the rule (Dominik 2026-10-28: „keine“) leaves
+            x = ns.pop(k)
+            for n in {k, x.get("name")}:
+                ((rd.get("karte") or {}).get("leute") or {}).pop(n, None)
+        w["personen"] = [p for p in w["personen"] if ist_person(r, rd, p.get("name")) != "leer"]
+        print(f"dungeon: nsc | leer | {len(weg)} weg", flush=True)
     n = 0
     for p in w.get("personen") or []:
         k = p["name"].lower()
