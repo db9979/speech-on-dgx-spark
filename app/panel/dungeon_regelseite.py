@@ -58,8 +58,10 @@ TAB_ZEICHEN = {"nsc": "👤", "orakel": "🔮", "eigen": "✎",      # a table's
                "nsc_aussehen": "👁️", "nsc_art": "🎭", "nsc_wunsch": "💭", "nsc_geheimnis": "🤫", "nsc_beruf": "🛠️",
                "orakel_aktion": "⚡", "orakel_thema": "📜", "orakel_ort": "🗺️", "orakel_merkmal": "🔍", "orakel_wendung": "🔀",
                "orakel_komplikation": "⚠️", "orakel_hinweis": "💡", "orakel_gefahr": "☠️", "orakel_chance": "🍀", "orakel_aerger": "🏘️"}
-MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten")   # welten, peoples, classes,
-# backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above
+MIT_BILD = ("gegenstaende", "gegner", "klassen", "voelker", "hintergruende", "welten", "runen")   # welten, peoples, classes,
+# backgrounds since Dominik 2026-10-24 „1a 2 und 3“: a people, class or background in the style of the world chosen above;
+# runes since Dominik 2026-10-28 „in den regeln sehe ich diese nicht.“, as that world's word (Rune, Chip, Perle, Siegel)
+WELT_WAHL = tuple(dingbild.HELD_TEILE) + ("runen",)   # the parts whose pictures follow the world chosen above the list
 BODY = 16000              # one entry as JSON
 NEU_FUER = 30             # a foe of the bestiary is „neu“ for this many versions after its „seit“ (Bestiarium-Punkt 9)
 HELDEN = (2, 3, 4, 5)     # the group sizes the detail shares a foe's EP among
@@ -501,7 +503,7 @@ def view(teil, lang="de", welt=""):
     k = kasten(teil, r, li)
     if k:
         out["kasten"] = k
-    if teil in dingbild.HELD_TEILE:     # the world the pictures are in, and the worlds to choose from (dungeon.js)
+    if teil in WELT_WAHL:              # the world the pictures are in, and the worlds to choose from (dungeon.js)
         out.update(welt=welt, welten=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]])
     if teil == "gegner":             # the filters (worlds) and the symbols of the damage kinds (dungeon.js dmRArt)
         out.update(weltfilter=[{"id": w["id"], "name": _name(w, li)} for w in r["welten"]],

@@ -487,11 +487,11 @@ def rune_text(style, c, wort):
             f"the place softly blurred behind it, {flair(style, c, 'rune')}, {dungeon.BILD_ENDE}")
 
 
-def runes(r, s, welten):
+def runes(r, s, welten, alle=False):
     """(name, prompt, key) of every rune in style s, once per word of the worlds painted in it; none while the admin's
-    switch „Runen und Sockel“ is off (dungeon_runen.wirkt)."""
+    switch „Runen und Sockel“ is off (dungeon_runen.wirkt), unless alle (the sweep keeps them while it is off)."""
     import dungeon_runen
-    if not dungeon_runen.wirkt():
+    if not alle and not dungeon_runen.wirkt():
         return []
     out = []
     for wort in sorted({dungeon_runen.word(w, 1) for w in welten}):
@@ -521,14 +521,15 @@ def wanted(r):
     return [(n, p) for n, p, _ in _want(r)]
 
 
-def _want(r):
-    """wanted with the entry's key (key_of; None for the map's kinds, dungeon_karte names them itself)."""
+def _want(r, alle=False):
+    """wanted with the entry's key (key_of; None for the map's kinds, dungeon_karte names them itself); alle: also
+    what a switch that is off leaves unpainted (the sweep's keep)."""
     out, seen = [], set()
     for s in styles(r):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + runes(r, s, welten) + \
+                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + runes(r, s, welten, alle) + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]
@@ -780,7 +781,7 @@ def sweep(now=None, force=False):
     if not _complete(r):                     # the rules fell back (no SRD): never take pictures of the missing entries
         print("dungeon: dingbild | aufraeumen ausgelassen | regeln unvollstaendig", flush=True)
         return 0
-    want = _want(r)
+    want = _want(r, alle=True)
     st = _state()
     ks = {k for _, _, k in want if k}
     keep = {n for n, _, _ in want} | {st[t][k] for t in ("zuletzt", "fest") for k in ks if st[t].get(k)}
@@ -901,8 +902,8 @@ def picture_of(r, c, welt=""):
 
 def _current(r, c, teil="", welt=""):
     """(name of the current prompt's picture, prompt, key) of an entry of the rules page: an item or foe in its
-    world's style, a people, class or background in the style of welt (else the first world), a world in its own, a
-    person of the people catalog in its world's."""
+    world's style, a people, class, background or rune in the style of welt (else the first world), a world in its own,
+    a person of the people catalog in its world's."""
     if teil == "personen":
         s, p = person_text(r, c)
         return name_of(p), p, key_of(s, c, "person")
@@ -910,6 +911,12 @@ def _current(r, c, teil="", welt=""):
         s = dungeon.style(r, {"welt": welt or r["welten"][0]["id"], "ton": None})
         p = _hero_text(s, HELD_TEILE[teil], c)
         return name_of(p), p, key_of(s, c, HELD_TEILE[teil])
+    if teil == "runen":                  # a rune as the world's word (Rune, Chip, Perle, Siegel) in that world's style
+        import dungeon_runen
+        w = welt or r["welten"][0]["id"]
+        s, wort = dungeon.style(r, {"welt": w, "ton": None}), dungeon_runen.word(w, 1)
+        p = rune_text(s, c, wort)
+        return name_of(p), p, key_of(s, c, "rune-" + wort)
     if teil == "welten":
         p = world_text(r, c)
         return name_of(p), p, key_of(dungeon.style(r, {"welt": c["id"], "ton": None}), c, "welt")

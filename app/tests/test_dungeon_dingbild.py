@@ -933,6 +933,32 @@ class Runes(Base):
             self.assertTrue(db._ok_text(p, r), p)
         self.assertEqual(len({p for p in want.values() if "Uruz" in p}), len(set(db.styles(r))))   # one per style, its worlds' word
 
+    def test_runes_on_the_rules_tab_per_world(self):
+        """Dominik 2026-10-28 „in den regeln sehe ich diese nicht.“: the part „Runen“ of the rules tab shows each
+        rune's picture in the world chosen above the list (its word there), with Malen, Nochmal malen and keeping; the
+        sweep keeps rune pictures while the switch is off."""
+        import dungeon_runen
+        helpers.keep_chat(self, "dungeon_runen")
+        helpers.set_config(dungeon_runen=False)
+        K = RulesPage.K
+        r = dungeon.rules()
+        scifi = next(w["id"] for w in r["welten"] if "science fiction" in w["bildstil"])
+        uruz = dungeon_runen.by(r)["uruz"]
+        d = ADMIN.get(K + "runen?welt=" + scifi).json()
+        self.assertEqual((d["welt"], [w["id"] for w in d["welten"]]), (scifi, [w["id"] for w in r["welten"]]))
+        self.assertTrue(all("bild" in x and x["bild"] == "" for x in d["zeilen"]))   # nothing painted yet
+        res = ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "malen", "welt": scifi})
+        self.assertEqual(res.status_code, 200, res.text)
+        n = db.name_of(db.rune_text(dungeon.style(r, {"welt": scifi, "ton": None}), uruz, "chip"))   # a chip there
+        self.assertEqual(res.json()["bild"], n)
+        row = next(x for x in ADMIN.get(K + "runen?welt=" + scifi).json()["zeilen"] if x["id"] == "uruz")
+        self.assertEqual(row["bild"], n)
+        self.assertFalse(db.entry_pic(r, "runen", uruz, r["welten"][0]["id"])[1])   # the first world: a rune, not yet
+        self.assertEqual(ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "malen", "welt": scifi}).json()["neu"], "neu-" + n[5:])
+        self.assertEqual(ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "neu", "welt": scifi}).status_code, 200)
+        db.sweep(force=True)                                                    # off: not painted, but kept
+        self.assertIn(n, db.files())
+
     def test_view_gives_bag_trader_and_sockets_their_picture_and_colour(self):
         import dungeon_runen
         r = dungeon.rules()
