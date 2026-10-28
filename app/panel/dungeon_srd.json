@@ -644,8 +644,8 @@
             "Rage"
           ],
           "satz": [
-            "1× je Szene Wut: härtere Hiebe, weniger Schmerz.",
-            "Once per scene rage: harder blows, less pain."
+            "Packt dich die Wut, legst du deine ganze Kraft in den Kampf.",
+            "When rage grips you, you put all your strength into the fight."
           ],
           "wert": "staerke",
           "bonus": 2
@@ -670,8 +670,8 @@
             "Reckless attack"
           ],
           "satz": [
-            "Greift mit voller Kraft an, ohne Deckung.",
-            "Attacks with full force, without cover."
+            "Geht mit voller Kraft nach vorn, ohne Deckung.",
+            "Goes all in with full force, without cover."
           ],
           "wert": "staerke",
           "bonus": 1
@@ -709,8 +709,8 @@
             "Brutal critical"
           ],
           "satz": [
-            "Ein Glückstreffer reißt große Wunden.",
-            "A lucky hit tears great wounds."
+            "Deine Hiebe sind wuchtig und gefürchtet.",
+            "Your blows are mighty and feared."
           ],
           "wert": "staerke",
           "bonus": 2
@@ -761,8 +761,8 @@
             "Inspiration"
           ],
           "satz": [
-            "Ein Lied gibt einem Freund Mut für die nächste Probe.",
-            "A song gives a friend courage for the next check."
+            "Ein Lied macht einem Freund Mut.",
+            "A song gives a friend courage."
           ],
           "wert": "charisma",
           "bonus": 2
@@ -800,8 +800,8 @@
             "Song of rest"
           ],
           "satz": [
-            "Bei der Rast heilt die Gruppe etwas mehr.",
-            "At rest the group heals a little more."
+            "Bei der Rast hebt ein Lied die Stimmung der Gruppe.",
+            "At rest a song cheers up the group."
           ],
           "wert": "charisma",
           "bonus": 1
@@ -935,8 +935,8 @@
             "Wild shape"
           ],
           "satz": [
-            "1× je Szene die Gestalt eines Tieres annehmen.",
-            "Once per scene take the shape of an animal."
+            "Nimmt die Gestalt eines Tieres an.",
+            "Takes the shape of an animal."
           ],
           "wert": "weisheit",
           "bonus": 2
@@ -1000,8 +1000,8 @@
             "Nature's healing"
           ],
           "satz": [
-            "Kräuter und Moos heilen kleine Wunden.",
-            "Herbs and moss heal small wounds."
+            "Kennt die Kräuter und Moose, die bei Wunden helfen.",
+            "Knows the herbs and mosses that help with wounds."
           ],
           "wert": "weisheit",
           "bonus": 2
@@ -1122,8 +1122,8 @@
             "Patient defence"
           ],
           "satz": [
-            "Weicht jedem Hieb aus, solange er ruhig bleibt.",
-            "Dodges every blow as long as they stay calm."
+            "Bleibt ruhig und ist schwer zu fassen.",
+            "Stays calm and is hard to catch."
           ],
           "wert": "geschick",
           "bonus": 1
@@ -1148,8 +1148,8 @@
             "Stunning strike"
           ],
           "satz": [
-            "Ein Treffer an der richtigen Stelle betäubt.",
-            "A hit in the right spot stuns."
+            "Kennt die empfindlichen Stellen des Körpers.",
+            "Knows the body's weak spots."
           ],
           "wert": "weisheit",
           "bonus": 2
@@ -1228,8 +1228,8 @@
             "Divine smite"
           ],
           "satz": [
-            "Legt heilige Kraft in einen Treffer.",
-            "Puts holy power into a hit."
+            "Legt göttliche Kraft in seine Schläge.",
+            "Puts divine power into their strikes."
           ],
           "wert": "staerke",
           "bonus": 2
@@ -1241,11 +1241,12 @@
             "Lay on hands"
           ],
           "satz": [
-            "Heilt mit einer Berührung.",
-            "Heals with a touch."
+            "1× je Szene einen Freund oder dich selbst um 1W6+2 heilen.",
+            "Once a scene heal a friend or yourself by 1d6+2."
           ],
           "wert": "charisma",
-          "bonus": 1
+          "bonus": 1,
+          "wirkung": "heilen"
         },
         {
           "id": "goettlicher_sinn",
@@ -1405,8 +1406,8 @@
             "Twinned spell"
           ],
           "satz": [
-            "Ein Zauber trifft zwei Ziele.",
-            "One spell hits two targets."
+            "Formt Zauber geschickt um.",
+            "Shapes spells with skill."
           ],
           "wert": "charisma",
           "bonus": 1

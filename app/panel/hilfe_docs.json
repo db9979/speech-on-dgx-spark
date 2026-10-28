@@ -5973,6 +5973,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: ehrliche Sätze für die Fähigkeiten der SRD-Klassen (V01.1.191, Daten, Review 27.10. Paket 11 B7, Dominik „ok“, Thread „DnDAppFiles für den Dungeon-Master“): Die 7 Klassen aus dem SRD (Barbar, Barde, Druide, Mönch, Paladin, Zauberer, Hexenmeister in app/panel/dungeon_srd.json) versprechen in einer Fähigkeit ohne feste Wirkung nichts mehr, was das Panel nicht rechnet (dungeon.VERSPRECHEN: Zahlen, Schaden, Leben, Heilen, Ziele, Treffer, Ausweichen, Proben). 12 Sätze sind neu, etwa Kampfrausch „Packt dich die Wut, legst du deine ganze Kraft in den Kampf.“ statt „härtere Hiebe, weniger Schmerz“, Ausweichen „Bleibt ruhig und ist schwer zu fassen.“ statt „Weicht jedem Hieb aus“, Doppelzauber „Formt Zauber geschickt um.“ statt „trifft zwei Ziele“; der Bonus auf ihren Wert bleibt, er zählt beim Einsetzen. Das Handauflegen des Paladins heilt jetzt wirklich wie das des Heilers (wirkung heilen: 1× je Szene einen Freund oder dich selbst um 1W6+2). Der Selbsttest test_an_ability_promises_only_what_the_panel_computes prüft jetzt alle 12 Klassen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -21478,6 +21486,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ets clearly easier fights. Every cell of the bench lies at 74 to 86 % wins. Self-tests test_an_ability_counts_when_used_and_only_the_strongest, test_abilities_the_panel_computes, test_an_ability_promises_only_what_the_panel_computes, test_peaceful_foes_are_never_offered and test_the_find_table_keeps_its_promises in test_dungeon, test_heroes_like_at_the_table in test_dungeon_pruefstand."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: honest sentences for the abilities of the SRD classes (V01.1.191, data, review 27.10. Paket 11 B7, Dominik \"ok\", thread \"DnDAppFiles für den Dungeon-Master\"): The 7 classes from the SRD (barbarian, bard, druid, monk, paladin, sorcerer, warlock in app/panel/dungeon_srd.json) no longer promise, in an ability without a fixed effect, anything the panel does not compute (dungeon.VERSPRECHEN: numbers, damage, life, healing, targets, hits, dodging, checks). 12 sentences are new, such as Rage \"When rage grips you, you put all your strength into the fight.\" instead of \"harder blows, less pain\", Dodge \"Stays calm and is hard to catch.\" instead of \"Dodges every blow\", Twin spell \"Shapes spells with skill.\" instead of \"hits two targets\"; the bonus on their value stays, it counts when used. The paladin's Lay on hands now really heals like the healer's (wirkung heilen: once a scene a friend or yourself by 1d6+2). The self-test test_an_ability_promises_only_what_the_panel_computes now checks all 12 classes."
 },
 {
 "lang": "en",

@@ -1734,12 +1734,17 @@ class Permadeath(Turns):
     def test_an_ability_promises_only_what_the_panel_computes(self):
         """Review 27.10. B7: the sentence of an ability of the panel's own classes that the panel computes nothing more
         for than its bonus promises nothing of the fight, of life or of a check's number (dungeon.VERSPRECHEN); every
-        effect is one of KRAFT; the tile says „beim Einsetzen“ for one to use."""
-        own = json.load(open(os.path.join(os.path.dirname(dungeon.__file__), "dungeon_regeln.json"), encoding="utf-8"))
-        bad = [(x["id"], t) for k in own["klassen"] for x in k["faehigkeiten"] if not x.get("wirkung") for t in x["satz"]
+        effect is one of KRAFT; the tile says „beim Einsetzen“ for one to use. All 12 classes: the panel's own and the 7 of
+        the SRD data (dungeon_srd.json, thread „DnDAppFiles für den Dungeon-Master“); the paladin's Handauflegen heals
+        like the healer's."""
+        klassen = dungeon._base_rules()["klassen"]
+        self.assertEqual(len(klassen), 12)
+        bad = [(x["id"], t) for k in klassen for x in k["faehigkeiten"] if not x.get("wirkung") for t in x["satz"]
                if dungeon.VERSPRECHEN.search(t)]
         self.assertEqual(bad, [])
-        self.assertTrue(all(x.get("wirkung", "") in ("",) + tuple(dungeon.KRAFT) for k in own["klassen"] for x in k["faehigkeiten"]))
+        self.assertTrue(all(x.get("wirkung", "") in ("",) + tuple(dungeon.KRAFT) for k in klassen for x in k["faehigkeiten"]))
+        fa = {x["id"]: x for k in klassen for x in k["faehigkeiten"]}
+        self.assertEqual((fa["handauflegen_p"]["wirkung"], fa["handauflegen_p"]["satz"]), ("heilen", fa["handauflegen"]["satz"]))
         self.assertTrue(dungeon.VERSPRECHEN.search("Trifft alle Gegner direkt neben dir.") and dungeon.VERSPRECHEN.search("Schlösser und Fallen: Probe +3."))
         js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
         self.assertIn("t('beim Einsetzen','when used')", js)
