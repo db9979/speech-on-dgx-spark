@@ -148,6 +148,12 @@ DIENST_EN = {"gasthaus": "the common room of an inn of this world with a firepla
              "sockel": "a smith's workbench of this world with a steady vice and fine drills, a shield with a freshly bored socket",
              "loesen": "a smith's table of this world with fine tongs and small tools beside an item with an empty socket",
              "verschmelzen": "a small crucible of this world over a blue flame where small glowing stones melt into one"}
+# Siedlung neu ordnen 6a (Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): one picture a house of dungeon_gold.HAEUSER per world, seen
+# from the street (a service's picture is its room inside, it stays for the services)
+HAUS_EN = {"gasthaus": "the front of an inn of this world, a hanging sign, warm lit windows and a door half open",
+           "schmiede": "a smithy of this world seen from the street, an open workshop with a glowing forge, an anvil and racks of gear",
+           "heiler": "a healer's house of this world, herbs drying by the door, a small sign with a healing symbol",
+           "lehre": "a teacher's house of this world with a small practice yard, books and a lectern seen through the open door"}
 # Runen und Sockel (dungeon_runen, plan dungeon-runen 11a): a rune's catalog picture in the world's word (dungeon_runen.ART_WELT,
 # English), glowing in its fixed colour; the colour by the rune's rank (1 to dungeon_runen.RAENGE) is also the socket's dot
 RUNE_EN = {"rune": "a small rune stone with one carved sign glowing {}", "chip": "a small data chip with one etched sign glowing {}",
@@ -411,6 +417,20 @@ def service_key(style, d):
     return key_of(style, {"id": d}, "dienst")
 
 
+def house_text(style, h):
+    """The fixed prompt of a settlement's house (HAUS_EN) in a style."""
+    return f"{style}, scene art, {HAUS_EN[h]}, no people in the foreground, {flair(style, {'id': h}, 'haus', True)}, {dungeon.BILD_ENDE}"
+
+
+def house_key(style, h):
+    return key_of(style, {"id": h}, "haus")
+
+
+def houses(style):
+    """[(name, prompt, key)] of the settlement's house pictures in one style."""
+    return [(name_of(p), p, house_key(style, h)) for h in HAUS_EN for p in [house_text(style, h)]]
+
+
 def services(style):
     """[(name, prompt, key)] of the settlement's service pictures in one style."""
     return [(name_of(p), p, service_key(style, d)) for d in DIENST_EN for p in [service_text(style, d)]]
@@ -438,8 +458,8 @@ def line(rd, d):
 
 
 def settle_view(r, rd, sv, have):
-    """dungeon_gold.view's settlement for the own seat: "kopf" the place's stage picture (by day or at night), and
-    per service "bild" (its picture in the round's style once painted) and "zeile" (a line of life)."""
+    """dungeon_gold.view's settlement for the own seat: "kopf" the place's stage picture (by day or at night), per
+    service "bild" (its picture in the round's style once painted) and "zeile" (a line of life), per house the same."""
     s = dungeon.style(r, rd)
     sv = dict(sv, kopf=stage_pic(r, rd, have))
     out = []
@@ -448,6 +468,13 @@ def settle_view(r, rd, sv, have):
         n = _pick(name_of(service_text(s, d)), service_key(s, d), have) if d in DIENST_EN else ""
         out.append(dict(x, bild=n if n in have else "", zeile=line(rd, d)))
     sv["dienste"] = out
+    hs = []
+    for x in sv.get("haeuser") or []:            # a house: its own picture once painted, a line of its first service with one
+        h = x.get("id")
+        n = _pick(name_of(house_text(s, h)), house_key(s, h), have) if h in HAUS_EN else ""
+        hs.append(dict(x, bild=n if n in have else "", zeile=next((z for z in (line(rd, d) for d in x.get("dienste") or []) if z), "")))
+    if "haeuser" in sv:
+        sv["haeuser"] = hs
     return sv
 
 
@@ -521,7 +548,7 @@ def wanted(r):
     """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
     then the map's kinds of places and rooms (dungeon_karte.bilder), then the foes of that world (dungeon.gegner), then
     the peoples, classes and abilities of the hero form in that world's style (hero_prompt; not in the picture book); the
-    services, the faces of the people catalog (people) and the runes (runes) before the foes."""
+    houses and services, the faces of the people catalog (people) and the runes (runes) before the foes."""
     return [(n, p) for n, p, _ in _want(r)]
 
 
@@ -533,7 +560,7 @@ def _want(r, alle=False):
         welten = {w["id"] for w in r["welten"] if dungeon.style(r, {"welt": w["id"], "ton": None}) == s} or {w["id"] for w in r["welten"]}
         foes = [c for c in r.get("gegner") or [] if "alle" in c.get("welten", ["alle"]) or welten & set(c.get("welten") or [])]
         for n, p, k in [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in r["gegenstaende"]] + \
-                dungeon_karte.bilder(r, s) + stages(r, s) + services(s) + people(r, s) + runes(r, s, welten, alle) + \
+                dungeon_karte.bilder(r, s) + stages(r, s) + houses(s) + services(s) + people(r, s) + runes(r, s, welten, alle) + \
                 [(name_of(prompt(s, c)), prompt(s, c), key_of(s, c)) for c in foes] + \
                 ([(name_of(_hero_text(s, a, c)), _hero_text(s, a, c), key_of(s, c, a)) for a, c in heroes(r)] +
                  [(name_of(world_text(r, w)), world_text(r, w), key_of(s, w, "welt")) for w in r["welten"] if w["id"] in welten]

@@ -865,6 +865,36 @@ class Settlement(Base):
                 self.assertIn(d, db.DIENST_EN)
                 self.assertTrue(pool and all(len(x) == 2 and all(0 < len(t) <= 120 for t in x) for x in pool), (welt, d))
 
+    def test_one_picture_a_house_per_style(self):
+        """Siedlung neu ordnen 6a (Dominik 2026-10-28): every house of dungeon_gold.HAEUSER has a picture per style
+        (painted at night and with „Alle Bilder malen“, seen from the street, no person in front); the view gives each
+        house its picture once painted and a line of its services; the services' pictures stay."""
+        import dungeon_gold
+        r = dungeon.rules()
+        self.assertEqual(set(db.HAUS_EN), {k for k, _, _ in dungeon_gold.HAEUSER})
+        want = dict(db.wanted(r))
+        for st in db.styles(r):
+            for n, p, k in db.houses(st):
+                self.assertIn(n, want)
+                self.assertTrue(db._ok_text(p, r), p)
+                self.assertIn("no people in the foreground", p)
+            self.assertTrue(all(n in want for n, _, _ in db.services(st)))
+        k = {"orte": [{"art": "dorf", "name": "Erlenbrück"}], "hier": 0, "drin": None, "gw": {}}
+        rd = {"welt": "fantasy", "ton": 12, "lang": "de", "zug": 1, "karte": k}
+        sv = {"name": "Erlenbrück", "dienste": [{"id": "schmied", "satz": "x"}],
+              "haeuser": [{"id": "schmiede", "name": "Schmiede", "dienste": ["schmied", "verbessern"]}, {"id": "neu", "name": "?", "dienste": []}]}
+        out = db.add(r, rd, {"siedlung": sv})["siedlung"]["haeuser"]
+        self.assertEqual([x["bild"] for x in out], ["", ""])
+        self.assertIn(out[0]["zeile"], [x[0] for x in db.lines()["alle"]["schmied"]])
+        self.assertEqual(out[1]["zeile"], "")
+        os.makedirs(dungeon.BILD_DIR, exist_ok=True)
+        n = db.name_of(db.house_text(dungeon.style(r, rd), "schmiede"))
+        with open(dungeon.bild_file(n), "wb") as f:
+            f.write(PNG)
+        db._files["m"] = None
+        self.assertEqual(db.add(r, rd, {"siedlung": sv})["siedlung"]["haeuser"][0]["bild"], n)
+        self.assertNotIn("haeuser", db.add(r, rd, {"siedlung": {"name": "x", "dienste": []}})["siedlung"])
+
     def test_one_innkeeper_per_world(self):
         """Review 2026-10-27 Z13: the lines a world shows at once never name the innkeeper as „Wirt“ and „Wirtin“."""
         import re
