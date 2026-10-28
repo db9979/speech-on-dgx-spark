@@ -46,6 +46,8 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   Bart und Statur nennen ihre Farbe als festes Wort, und der Text der Zeile zeigt dieselbe Farbe (dungeon_erzaehler).
 - Kampf-EP (Prüfbericht B4 Option a, Paket 11.6): die gemessenen Werte des Hauptthreads stehen als „ep_kampf“ an den
   Gegnern, ganzzahlig im 0,25- bis 4-Fachen von „ep“; ohne Messung zählt ep (dungeon_bestiarium.ep_kampf).
+- Englische Gegnernamen wie im SRD (Hauptthread 2026-10-28: ein englisch erzählendes Modell schrieb „stirges“ zur
+  „Giant mosquito“): Stirge, Animated armor, Swarm of piranhas, Warg (wie die id).
 """
 import json
 import os
@@ -443,6 +445,11 @@ class Srd(unittest.TestCase):
         for bad in (g0["ep"] * 5, g0["ep"] // 5, "64", True, 64.5):
             self.assertTrue(best.check_rules(dict(r, gegner=[dict(g0, ep_kampf=bad)])), bad)
         self.assertEqual(best.check_rules(dict(r, gegner=[{k: v for k, v in g0.items() if k != "ep_kampf"}])), [])
+
+    def test_englische_namen_wie_im_srd(self):
+        by = {g["id"]: g["name"][1] for g in srd()["gegner"]}
+        self.assertEqual((by["stirge"], by["belebte_ruestung"], by["piranhaschwarm"], by["warg"]), ("Stirge", "Animated armor", "Swarm of piranhas", "Warg"))
+        self.assertEqual([i for i, n in by.items() if re.search(r"(?i)armour|giant mosquito|quipper", n)], [])
 
 
 if __name__ == "__main__":

@@ -6221,6 +6221,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: englische Gegnernamen wie im SRD (V01.1.212, Daten, Wunsch des Hauptthreads, Thread „DnDAppFiles für den Dungeon-Master“): Ein englisch erzählendes Modell schrieb zur „Giant mosquito“ (id stirge) „stirges“, und die Gegner-Prüfung schlug an. Vier englische Namen in app/panel/dungeon_srd.json heißen jetzt wie im SRD: Stirge (statt Giant mosquito), Animated armor (statt der britischen Schreibung Animated armour) und Swarm of piranhas (statt Swarm of quippers, passend zur id piranhaschwarm) und Warg (statt Worg, wie im neuen Monsterbuch und passend zur id warg, damit Karte und Erzählung denselben Namen zeigen). Die deutschen Namen bleiben. Alle übrigen englischen Namen der SRD-Gegner sind die Namen aus SRD 5.1 oder 5.2.1. Selbsttest test_dungeon_srd (test_englische_namen_wie_im_srd)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -22062,6 +22070,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: measured combat XP per foe (V01.1.195, data and check rule, review 27.10. Paket 11.6, B4 option a, Dominik \"ok\", thread \"DnDAppFiles für den Dungeon-Master\"): 247 foes in app/panel/dungeon_srd.json now carry ep_kampf, the XP they are really worth in a fight. The main thread measured it with the bench as at the table (a group of four against 1 to 4 of them, 60 fights each, ep_kampf = ep ÷ the ratio with 80 % wins, at most a quarter to four times). Examples: the shambling mound 6300 instead of 1800, the archmage 2800 instead of 8400, the orc warrior stays at 100. ep stays for the display and the D&D reference; 24 foes without a measurement (peaceful, very small and very big ones) still count with their ep. dungeon_bestiarium.ep_kampf(g) reads the value (else ep), dungeon_bestiarium.check_rules requires a whole number within a quarter to four times ep. The main thread switches budget and reward over in a version of its own. Self-test test_dungeon_srd (test_kampf_ep)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: English foe names as in the SRD (V01.1.212, data, asked by the main thread, thread \"DnDAppFiles für den Dungeon-Master\"): An English narrating model wrote \"stirges\" for the \"Giant mosquito\" (id stirge) and the foe check fired. Four English names in app/panel/dungeon_srd.json are now as in the SRD: Stirge (instead of Giant mosquito), Animated armor (instead of the British spelling Animated armour) and Swarm of piranhas (instead of Swarm of quippers, fitting the id piranhaschwarm) and Warg (instead of Worg, as in the new Monster Manual and fitting the id warg, so card and narration show the same name). The German names stay. All other names of the SRD foes are the names of SRD 5.1 or 5.2.1. Self-test test_dungeon_srd (test_englische_namen_wie_im_srd)."
 },
 {
 "lang": "en",
