@@ -10045,6 +10045,7 @@
         "charisma": 8
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "klein",
       "wesen": "humanoid",
       "schaden_art": "hieb",
@@ -10125,6 +10126,7 @@
         "charisma": 10
       },
       "ep": 100,
+      "ep_kampf": 100,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "hieb",
@@ -10164,6 +10166,7 @@
         "charisma": 9
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -10203,6 +10206,7 @@
         "charisma": 9
       },
       "ep": 200,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -10242,6 +10246,7 @@
         "charisma": 7
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -10321,6 +10326,7 @@
         "charisma": 14
       },
       "ep": 450,
+      "ep_kampf": 620,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -10361,6 +10367,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 180,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "wucht",
@@ -10444,6 +10451,7 @@
         "charisma": 14
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "mensch",
       "zustaende": [
@@ -10527,6 +10535,7 @@
         "charisma": 10
       },
       "ep": 700,
+      "ep_kampf": 780,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -10567,6 +10576,7 @@
         "charisma": 15
       },
       "ep": 700,
+      "ep_kampf": 800,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -10608,6 +10618,7 @@
         "charisma": 9
       },
       "ep": 450,
+      "ep_kampf": 350,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -10647,6 +10658,7 @@
         "charisma": 16
       },
       "ep": 200,
+      "ep_kampf": 170,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -10688,6 +10700,7 @@
         "charisma": 10
       },
       "ep": 3900,
+      "ep_kampf": 1600,
       "groesse": "mittel",
       "wesen": "mensch",
       "zustaende": [
@@ -10736,6 +10749,7 @@
         "charisma": 11
       },
       "ep": 2300,
+      "ep_kampf": 1200,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -10776,6 +10790,7 @@
         "charisma": 13
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "wucht",
@@ -10815,6 +10830,7 @@
         "charisma": 15
       },
       "ep": 1800,
+      "ep_kampf": 2500,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "wucht",
@@ -10855,6 +10871,7 @@
         "charisma": 12
       },
       "ep": 50,
+      "ep_kampf": 82,
       "groesse": "mittel",
       "wesen": "humanoid",
       "zustaende": [
@@ -10898,6 +10915,7 @@
         "charisma": 9
       },
       "ep": 200,
+      "ep_kampf": 130,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -10941,6 +10959,7 @@
         "charisma": 7
       },
       "ep": 100,
+      "ep_kampf": 150,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -10981,6 +11000,7 @@
         "charisma": 9
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -11021,6 +11041,7 @@
         "charisma": 9
       },
       "ep": 450,
+      "ep_kampf": 470,
       "groesse": "gross",
       "wesen": "riese",
       "zustaende": [
@@ -11065,6 +11086,7 @@
         "charisma": 13
       },
       "ep": 450,
+      "ep_kampf": 320,
       "groesse": "mittel",
       "wesen": "fee",
       "zustaende": [
@@ -11108,6 +11130,7 @@
         "charisma": 14
       },
       "ep": 700,
+      "ep_kampf": 860,
       "groesse": "mittel",
       "wesen": "fee",
       "schaden_art": "hieb",
@@ -11147,6 +11170,7 @@
         "charisma": 16
       },
       "ep": 1800,
+      "ep_kampf": 1700,
       "groesse": "mittel",
       "wesen": "unhold",
       "zustaende": [
@@ -11199,6 +11223,7 @@
         "charisma": 5
       },
       "ep": 50,
+      "ep_kampf": 65,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "stich",
@@ -11246,6 +11271,7 @@
         "charisma": 5
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "wucht",
@@ -11289,6 +11315,7 @@
         "charisma": 5
       },
       "ep": 450,
+      "ep_kampf": 610,
       "groesse": "gross",
       "wesen": "untot",
       "schaden_art": "wucht",
@@ -11333,6 +11360,7 @@
         "charisma": 6
       },
       "ep": 200,
+      "ep_kampf": 180,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11379,6 +11407,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 360,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11429,6 +11458,7 @@
         "charisma": 8
       },
       "ep": 100,
+      "ep_kampf": 160,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11489,6 +11519,7 @@
         "charisma": 11
       },
       "ep": 200,
+      "ep_kampf": 260,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "nekrotisch",
@@ -11544,6 +11575,7 @@
         "charisma": 17
       },
       "ep": 1100,
+      "ep_kampf": 840,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11602,6 +11634,7 @@
         "charisma": 15
       },
       "ep": 700,
+      "ep_kampf": 400,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "stich",
@@ -11652,6 +11685,7 @@
         "charisma": 15
       },
       "ep": 1800,
+      "ep_kampf": 1200,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "nekrotisch",
@@ -11707,6 +11741,7 @@
         "charisma": 12
       },
       "ep": 700,
+      "ep_kampf": 400,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11761,6 +11796,7 @@
         "charisma": 12
       },
       "ep": 1800,
+      "ep_kampf": 1300,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -11812,6 +11848,7 @@
         "charisma": 11
       },
       "ep": 450,
+      "ep_kampf": 360,
       "groesse": "winzig",
       "wesen": "untot",
       "schaden_art": "blitz",
@@ -11867,6 +11904,7 @@
         "charisma": 10
       },
       "ep": 700,
+      "ep_kampf": 550,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "hieb",
@@ -11913,6 +11951,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 350,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -11960,6 +11999,7 @@
         "charisma": 14
       },
       "ep": 700,
+      "ep_kampf": 550,
       "groesse": "mittel",
       "wesen": "monstrum",
       "schaden_art": "wucht",
@@ -12001,6 +12041,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "monstrum",
       "zustaende": [
@@ -12046,6 +12087,7 @@
         "charisma": 1
       },
       "ep": 450,
+      "ep_kampf": 440,
       "groesse": "gross",
       "wesen": "schleim",
       "zustaende": [
@@ -12089,6 +12131,7 @@
         "charisma": 2
       },
       "ep": 100,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "schleim",
       "schaden_art": "wucht",
@@ -12134,6 +12177,7 @@
         "charisma": 1
       },
       "ep": 1100,
+      "ep_kampf": 650,
       "groesse": "gross",
       "wesen": "schleim",
       "schaden_art": "wucht",
@@ -12179,6 +12223,7 @@
         "charisma": 1
       },
       "ep": 450,
+      "ep_kampf": 350,
       "groesse": "gross",
       "wesen": "schleim",
       "schaden_art": "wucht",
@@ -12225,6 +12270,7 @@
         "charisma": 6
       },
       "ep": 450,
+      "ep_kampf": 500,
       "groesse": "mittel",
       "wesen": "aberration",
       "zustaende": [
@@ -12267,6 +12313,7 @@
         "charisma": 6
       },
       "ep": 1800,
+      "ep_kampf": 1600,
       "groesse": "gross",
       "wesen": "aberration",
       "zustaende": [
@@ -12311,6 +12358,7 @@
         "charisma": 5
       },
       "ep": 1100,
+      "ep_kampf": 1800,
       "groesse": "gross",
       "wesen": "aberration",
       "zustaende": [
@@ -12357,6 +12405,7 @@
         "charisma": 14
       },
       "ep": 3900,
+      "ep_kampf": 1600,
       "groesse": "gross",
       "wesen": "aberration",
       "zustaende": [
@@ -12402,6 +12451,7 @@
         "charisma": 18
       },
       "ep": 5900,
+      "ep_kampf": 3500,
       "groesse": "gross",
       "wesen": "aberration",
       "zustaende": [
@@ -12447,6 +12497,7 @@
         "charisma": 1
       },
       "ep": 200,
+      "ep_kampf": 310,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -12491,6 +12542,7 @@
         "charisma": 1
       },
       "ep": 50,
+      "ep_kampf": 78,
       "groesse": "klein",
       "wesen": "konstrukt",
       "schaden_art": "hieb",
@@ -12535,6 +12587,7 @@
         "charisma": 1
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "gross",
       "wesen": "konstrukt",
       "zustaende": [
@@ -12581,6 +12634,7 @@
         "charisma": 5
       },
       "ep": 1800,
+      "ep_kampf": 1900,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -12630,6 +12684,7 @@
         "charisma": 1
       },
       "ep": 5900,
+      "ep_kampf": 6200,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -12681,6 +12736,7 @@
         "charisma": 7
       },
       "ep": 450,
+      "ep_kampf": 570,
       "groesse": "mittel",
       "wesen": "elementar",
       "schaden_art": "stich",
@@ -12731,6 +12787,7 @@
         "charisma": 14
       },
       "ep": 200,
+      "ep_kampf": 180,
       "groesse": "winzig",
       "wesen": "unhold",
       "zustaende": [
@@ -12784,6 +12841,7 @@
         "charisma": 10
       },
       "ep": 200,
+      "ep_kampf": 93,
       "groesse": "winzig",
       "wesen": "unhold",
       "zustaende": [
@@ -12838,6 +12896,7 @@
         "charisma": 6
       },
       "ep": 700,
+      "ep_kampf": 410,
       "groesse": "mittel",
       "wesen": "unhold",
       "zustaende": [
@@ -12883,6 +12942,7 @@
         "charisma": 15
       },
       "ep": 700,
+      "ep_kampf": 730,
       "groesse": "gross",
       "wesen": "unhold",
       "zustaende": [
@@ -12929,6 +12989,7 @@
         "charisma": 20
       },
       "ep": 1100,
+      "ep_kampf": 650,
       "groesse": "mittel",
       "wesen": "unhold",
       "zustaende": [
@@ -12982,6 +13043,7 @@
         "charisma": 11
       },
       "ep": 700,
+      "ep_kampf": 810,
       "groesse": "mittel",
       "wesen": "unhold",
       "zustaende": [
@@ -13035,6 +13097,7 @@
         "charisma": 14
       },
       "ep": 1800,
+      "ep_kampf": 2500,
       "groesse": "mittel",
       "wesen": "unhold",
       "zustaende": [
@@ -13139,6 +13202,7 @@
         "charisma": 8
       },
       "ep": 2300,
+      "ep_kampf": 2800,
       "groesse": "gross",
       "wesen": "unhold",
       "zustaende": [
@@ -13193,6 +13257,7 @@
         "charisma": 7
       },
       "ep": 450,
+      "ep_kampf": 450,
       "groesse": "gross",
       "wesen": "riese",
       "schaden_art": "wucht",
@@ -13232,6 +13297,7 @@
         "charisma": 7
       },
       "ep": 1800,
+      "ep_kampf": 1500,
       "groesse": "gross",
       "wesen": "riese",
       "schaden_art": "hieb",
@@ -13272,6 +13338,7 @@
         "charisma": 6
       },
       "ep": 1800,
+      "ep_kampf": 2600,
       "groesse": "riesig",
       "wesen": "riese",
       "zustaende": [
@@ -13315,6 +13382,7 @@
         "charisma": 8
       },
       "ep": 1100,
+      "ep_kampf": 1300,
       "groesse": "gross",
       "wesen": "riese",
       "schaden_art": "hieb",
@@ -13355,6 +13423,7 @@
         "charisma": 9
       },
       "ep": 700,
+      "ep_kampf": 940,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13397,6 +13466,7 @@
         "charisma": 7
       },
       "ep": 700,
+      "ep_kampf": 990,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13442,6 +13512,7 @@
         "charisma": 13
       },
       "ep": 200,
+      "ep_kampf": 170,
       "groesse": "mittel",
       "wesen": "monstrum",
       "zustaende": [
@@ -13485,6 +13556,7 @@
         "charisma": 7
       },
       "ep": 700,
+      "ep_kampf": 550,
       "groesse": "mittel",
       "wesen": "monstrum",
       "zustaende": [
@@ -13528,6 +13600,7 @@
         "charisma": 15
       },
       "ep": 2300,
+      "ep_kampf": 2400,
       "groesse": "mittel",
       "wesen": "monstrum",
       "zustaende": [
@@ -13571,6 +13644,7 @@
         "charisma": 8
       },
       "ep": 700,
+      "ep_kampf": 740,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "stich",
@@ -13611,6 +13685,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 610,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "hieb",
@@ -13652,6 +13727,7 @@
         "charisma": 7
       },
       "ep": 3900,
+      "ep_kampf": 6000,
       "groesse": "riesig",
       "wesen": "monstrum",
       "schaden_art": "stich",
@@ -13692,6 +13768,7 @@
         "charisma": 10
       },
       "ep": 2300,
+      "ep_kampf": 2500,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13735,6 +13812,7 @@
         "charisma": 5
       },
       "ep": 1800,
+      "ep_kampf": 2500,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13777,6 +13855,7 @@
         "charisma": 6
       },
       "ep": 450,
+      "ep_kampf": 350,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13820,6 +13899,7 @@
         "charisma": 6
       },
       "ep": 700,
+      "ep_kampf": 410,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13864,6 +13944,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 270,
       "groesse": "mittel",
       "wesen": "monstrum",
       "zustaende": [
@@ -13909,6 +13990,7 @@
         "charisma": 12
       },
       "ep": 2300,
+      "ep_kampf": 2600,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -13953,6 +14035,7 @@
         "charisma": 6
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "mittel",
       "wesen": "monstrum",
       "schaden_art": "stich",
@@ -13993,6 +14076,7 @@
         "charisma": 5
       },
       "ep": 100,
+      "ep_kampf": 92,
       "groesse": "klein",
       "wesen": "monstrum",
       "zustaende": [
@@ -14037,6 +14121,7 @@
         "charisma": 5
       },
       "ep": 450,
+      "ep_kampf": 300,
       "groesse": "mittel",
       "wesen": "monstrum",
       "schaden_art": "hieb",
@@ -14082,6 +14167,7 @@
         "charisma": 6
       },
       "ep": 1800,
+      "ep_kampf": 2100,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -14124,6 +14210,7 @@
         "charisma": 8
       },
       "ep": 700,
+      "ep_kampf": 380,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "stich",
@@ -14166,6 +14253,7 @@
         "charisma": 8
       },
       "ep": 100,
+      "ep_kampf": 190,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -14210,6 +14298,7 @@
         "charisma": 6
       },
       "ep": 200,
+      "ep_kampf": 240,
       "groesse": "mittel",
       "wesen": "monstrum",
       "schaden_art": "stich",
@@ -14252,6 +14341,7 @@
         "charisma": 6
       },
       "ep": 50,
+      "ep_kampf": 82,
       "groesse": "mittel",
       "wesen": "tier",
       "zustaende": [
@@ -14295,6 +14385,7 @@
         "charisma": 7
       },
       "ep": 200,
+      "ep_kampf": 280,
       "groesse": "gross",
       "wesen": "tier",
       "zustaende": [
@@ -14338,6 +14429,7 @@
         "charisma": 7
       },
       "ep": 200,
+      "ep_kampf": 240,
       "groesse": "gross",
       "wesen": "tier",
       "schaden_art": "hieb",
@@ -14378,6 +14470,7 @@
         "charisma": 4
       },
       "ep": 200,
+      "ep_kampf": 200,
       "groesse": "gross",
       "wesen": "tier",
       "zustaende": [
@@ -14464,6 +14557,7 @@
         "charisma": 3
       },
       "ep": 50,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14510,6 +14604,7 @@
         "charisma": 4
       },
       "ep": 50,
+      "ep_kampf": 95,
       "groesse": "mittel",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14599,6 +14694,7 @@
         "charisma": 3
       },
       "ep": 700,
+      "ep_kampf": 650,
       "groesse": "gross",
       "wesen": "tier",
       "zustaende": [
@@ -14686,6 +14782,7 @@
         "charisma": 4
       },
       "ep": 200,
+      "ep_kampf": 290,
       "groesse": "gross",
       "wesen": "tier",
       "zustaende": [
@@ -14728,6 +14825,7 @@
         "charisma": 4
       },
       "ep": 450,
+      "ep_kampf": 340,
       "groesse": "gross",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14767,6 +14865,7 @@
         "charisma": 5
       },
       "ep": 1800,
+      "ep_kampf": 2100,
       "groesse": "riesig",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14806,6 +14905,7 @@
         "charisma": 2
       },
       "ep": 200,
+      "ep_kampf": 390,
       "groesse": "mittel",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14850,6 +14950,7 @@
         "charisma": 5
       },
       "ep": 450,
+      "ep_kampf": 630,
       "groesse": "gross",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14889,6 +14990,7 @@
         "charisma": 7
       },
       "ep": 700,
+      "ep_kampf": 1600,
       "groesse": "riesig",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -14968,6 +15070,7 @@
         "charisma": 8
       },
       "ep": 1800,
+      "ep_kampf": 2400,
       "groesse": "gross",
       "wesen": "elementar",
       "zustaende": [
@@ -15020,6 +15123,7 @@
         "charisma": 7
       },
       "ep": 1800,
+      "ep_kampf": 2100,
       "groesse": "gross",
       "wesen": "elementar",
       "zustaende": [
@@ -15072,6 +15176,7 @@
         "charisma": 5
       },
       "ep": 1800,
+      "ep_kampf": 3500,
       "groesse": "gross",
       "wesen": "elementar",
       "schaden_art": "wucht",
@@ -15124,6 +15229,7 @@
         "charisma": 6
       },
       "ep": 1800,
+      "ep_kampf": 2600,
       "groesse": "gross",
       "wesen": "elementar",
       "zustaende": [
@@ -15177,6 +15283,7 @@
         "charisma": 10
       },
       "ep": 450,
+      "ep_kampf": 360,
       "groesse": "mittel",
       "wesen": "elementar",
       "zustaende": [
@@ -15223,6 +15330,7 @@
         "charisma": 12
       },
       "ep": 1800,
+      "ep_kampf": 2200,
       "groesse": "gross",
       "wesen": "elementar",
       "zustaende": [
@@ -15277,6 +15385,7 @@
         "charisma": 11
       },
       "ep": 1800,
+      "ep_kampf": 2200,
       "groesse": "mittel",
       "wesen": "elementar",
       "schaden_art": "stich",
@@ -15321,6 +15430,7 @@
         "charisma": 18
       },
       "ep": 200,
+      "ep_kampf": 93,
       "groesse": "mittel",
       "wesen": "fee",
       "zustaende": [
@@ -15363,6 +15473,7 @@
         "charisma": 14
       },
       "ep": 100,
+      "ep_kampf": 140,
       "groesse": "mittel",
       "wesen": "fee",
       "zustaende": [
@@ -15405,6 +15516,7 @@
         "charisma": 7
       },
       "ep": 450,
+      "ep_kampf": 550,
       "groesse": "riesig",
       "wesen": "pflanze",
       "schaden_art": "wucht",
@@ -15452,6 +15564,7 @@
         "charisma": 5
       },
       "ep": 1800,
+      "ep_kampf": 6300,
       "groesse": "gross",
       "wesen": "pflanze",
       "zustaende": [
@@ -15503,6 +15616,7 @@
         "charisma": 1
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "pflanze",
       "schaden_art": "nekrotisch",
@@ -15543,6 +15657,7 @@
         "charisma": 12
       },
       "ep": 5000,
+      "ep_kampf": 4200,
       "groesse": "riesig",
       "wesen": "pflanze",
       "schaden_art": "wucht",
@@ -15590,6 +15705,7 @@
         "charisma": 10
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "winzig",
       "wesen": "drache",
       "zustaende": [
@@ -15632,6 +15748,7 @@
         "charisma": 15
       },
       "ep": 1100,
+      "ep_kampf": 840,
       "groesse": "mittel",
       "wesen": "drache",
       "zustaende": [
@@ -15678,6 +15795,7 @@
         "charisma": 13
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "drache",
       "schaden_art": "stich",
@@ -15720,6 +15838,7 @@
         "charisma": 11
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "drache",
       "schaden_art": "stich",
@@ -15763,6 +15882,7 @@
         "charisma": 6
       },
       "ep": 2300,
+      "ep_kampf": 1900,
       "groesse": "gross",
       "wesen": "drache",
       "zustaende": [
@@ -15806,6 +15926,7 @@
         "charisma": 15
       },
       "ep": 3900,
+      "ep_kampf": 4900,
       "groesse": "gross",
       "wesen": "drache",
       "zustaende": [
@@ -15852,6 +15973,7 @@
         "charisma": 19
       },
       "ep": 5900,
+      "ep_kampf": 11000,
       "groesse": "gross",
       "wesen": "drache",
       "zustaende": [
@@ -15900,6 +16022,7 @@
         "charisma": 15
       },
       "ep": 2900,
+      "ep_kampf": 3600,
       "groesse": "gross",
       "wesen": "drache",
       "schaden_art": "stich",
@@ -15943,6 +16066,7 @@
         "charisma": 8
       },
       "ep": 200,
+      "ep_kampf": 220,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "hieb",
@@ -16028,6 +16152,7 @@
         "charisma": 11
       },
       "ep": 450,
+      "ep_kampf": 530,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "wucht",
@@ -16069,6 +16194,7 @@
         "charisma": 16
       },
       "ep": 1100,
+      "ep_kampf": 1000,
       "groesse": "gross",
       "wesen": "monstrum",
       "zustaende": [
@@ -16112,6 +16238,7 @@
         "charisma": 5
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "klein",
       "wesen": "monstrum",
       "zustaende": [
@@ -16155,6 +16282,7 @@
         "charisma": 7
       },
       "ep": 2900,
+      "ep_kampf": 4300,
       "groesse": "riesig",
       "wesen": "tier",
       "schaden_art": "wucht",
@@ -16196,6 +16324,7 @@
         "charisma": 9
       },
       "ep": 3900,
+      "ep_kampf": 5300,
       "groesse": "riesig",
       "wesen": "tier",
       "zustaende": [
@@ -16239,6 +16368,7 @@
         "charisma": 6
       },
       "ep": 2300,
+      "ep_kampf": 3000,
       "groesse": "riesig",
       "wesen": "tier",
       "zustaende": [
@@ -16282,6 +16412,7 @@
         "charisma": 15
       },
       "ep": 2900,
+      "ep_kampf": 2500,
       "groesse": "gross",
       "wesen": "riese",
       "schaden_art": "hieb",
@@ -16323,6 +16454,7 @@
         "charisma": 16
       },
       "ep": 8400,
+      "ep_kampf": 2800,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -16368,6 +16500,7 @@
         "charisma": 1
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "klein",
       "wesen": "konstrukt",
       "schaden_art": "energie",
@@ -16415,6 +16548,7 @@
         "charisma": 1
       },
       "ep": 700,
+      "ep_kampf": 730,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -16466,6 +16600,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "energie",
@@ -16505,6 +16640,7 @@
         "charisma": 8
       },
       "ep": 450,
+      "ep_kampf": 370,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "energie",
@@ -16552,6 +16688,7 @@
         "charisma": 4
       },
       "ep": 200,
+      "ep_kampf": 220,
       "groesse": "mittel",
       "wesen": "aberration",
       "zustaende": [
@@ -16599,6 +16736,7 @@
         "charisma": 10
       },
       "ep": 3900,
+      "ep_kampf": 2600,
       "groesse": "riesig",
       "wesen": "aberration",
       "zustaende": [
@@ -16655,6 +16793,7 @@
         "charisma": 1
       },
       "ep": 450,
+      "ep_kampf": 260,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "hieb",
@@ -16706,6 +16845,7 @@
         "charisma": 14
       },
       "ep": 2300,
+      "ep_kampf": 2100,
       "groesse": "gross",
       "wesen": "konstrukt",
       "zustaende": [
@@ -16757,6 +16897,7 @@
         "charisma": 6
       },
       "ep": 200,
+      "ep_kampf": 180,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "wucht",
@@ -16800,6 +16941,7 @@
         "charisma": 4
       },
       "ep": 1800,
+      "ep_kampf": 1300,
       "groesse": "riesig",
       "wesen": "aberration",
       "schaden_art": "stich",
@@ -16842,6 +16984,7 @@
         "charisma": 1
       },
       "ep": 200,
+      "ep_kampf": 210,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "energie",
@@ -16892,6 +17035,7 @@
         "charisma": 14
       },
       "ep": 700,
+      "ep_kampf": 530,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -16947,6 +17091,7 @@
         "charisma": 12
       },
       "ep": 100,
+      "ep_kampf": 64,
       "groesse": "winzig",
       "wesen": "fee",
       "schaden_art": "wucht",
@@ -16987,6 +17132,7 @@
         "charisma": 6
       },
       "ep": 2300,
+      "ep_kampf": 1200,
       "groesse": "riesig",
       "wesen": "monstrum",
       "zustaende": [
@@ -17036,6 +17182,7 @@
         "charisma": 10
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -17075,6 +17222,7 @@
         "charisma": 16
       },
       "ep": 1100,
+      "ep_kampf": 520,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -17116,6 +17264,7 @@
         "charisma": 18
       },
       "ep": 1800,
+      "ep_kampf": 1200,
       "groesse": "mittel",
       "wesen": "mensch",
       "zustaende": [
@@ -17162,6 +17311,7 @@
         "charisma": 16
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "klein",
       "wesen": "untot",
       "zustaende": [
@@ -17213,6 +17363,7 @@
         "charisma": 13
       },
       "ep": 200,
+      "ep_kampf": 160,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "zustaende": [
@@ -17263,6 +17414,7 @@
         "charisma": 8
       },
       "ep": 700,
+      "ep_kampf": 420,
       "groesse": "gross",
       "wesen": "untot",
       "zustaende": [
@@ -17312,6 +17464,7 @@
         "charisma": 1
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "klein",
       "wesen": "konstrukt",
       "schaden_art": "feuer",
@@ -17359,6 +17512,7 @@
         "charisma": 1
       },
       "ep": 200,
+      "ep_kampf": 150,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "energie",
@@ -17406,6 +17560,7 @@
         "charisma": 4
       },
       "ep": 200,
+      "ep_kampf": 180,
       "groesse": "klein",
       "wesen": "aberration",
       "schaden_art": "saeure",
@@ -17456,6 +17611,7 @@
         "charisma": 10
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "energie",
@@ -17496,6 +17652,7 @@
         "charisma": 4
       },
       "ep": 450,
+      "ep_kampf": 280,
       "groesse": "klein",
       "wesen": "monstrum",
       "schaden_art": "feuer",
@@ -17545,6 +17702,7 @@
         "charisma": 16
       },
       "ep": 700,
+      "ep_kampf": 430,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "psychisch",
@@ -17591,6 +17749,7 @@
         "charisma": 10
       },
       "ep": 1100,
+      "ep_kampf": 900,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -17638,6 +17797,7 @@
         "charisma": 2
       },
       "ep": 1800,
+      "ep_kampf": 1400,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -17692,6 +17852,7 @@
         "charisma": 10
       },
       "ep": 2300,
+      "ep_kampf": 1900,
       "groesse": "gross",
       "wesen": "aberration",
       "schaden_art": "saeure",
@@ -17742,6 +17903,7 @@
         "charisma": 12
       },
       "ep": 2900,
+      "ep_kampf": 2500,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "hieb",
@@ -17792,6 +17954,7 @@
         "charisma": 18
       },
       "ep": 3900,
+      "ep_kampf": 3900,
       "groesse": "mittel",
       "wesen": "aberration",
       "schaden_art": "energie",
@@ -17845,6 +18008,7 @@
         "charisma": 11
       },
       "ep": 5000,
+      "ep_kampf": 5700,
       "groesse": "riesig",
       "wesen": "aberration",
       "schaden_art": "stich",
@@ -17896,6 +18060,7 @@
         "charisma": 4
       },
       "ep": 5900,
+      "ep_kampf": 6800,
       "groesse": "riesig",
       "wesen": "konstrukt",
       "schaden_art": "feuer",
@@ -17952,6 +18117,7 @@
         "charisma": 20
       },
       "ep": 8400,
+      "ep_kampf": 11000,
       "groesse": "riesig",
       "wesen": "konstrukt",
       "schaden_art": "blitz",
@@ -18117,6 +18283,7 @@
         "charisma": 4
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "winzig",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -18158,6 +18325,7 @@
         "charisma": 10
       },
       "ep": 200,
+      "ep_kampf": 180,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -18198,6 +18366,7 @@
         "charisma": 16
       },
       "ep": 1100,
+      "ep_kampf": 680,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "kaelte",
@@ -18247,6 +18416,7 @@
         "charisma": 8
       },
       "ep": 700,
+      "ep_kampf": 540,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "wucht",
@@ -18298,6 +18468,7 @@
         "charisma": 11
       },
       "ep": 1800,
+      "ep_kampf": 1400,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "nekrotisch",
@@ -18355,6 +18526,7 @@
         "charisma": 12
       },
       "ep": 2300,
+      "ep_kampf": 1900,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -18396,6 +18568,7 @@
         "charisma": 3
       },
       "ep": 3900,
+      "ep_kampf": 4400,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -18451,6 +18624,7 @@
         "charisma": 11
       },
       "ep": 5000,
+      "ep_kampf": 3100,
       "groesse": "riesig",
       "wesen": "monstrum",
       "schaden_art": "wucht",
@@ -18501,6 +18675,7 @@
         "charisma": 14
       },
       "ep": 8400,
+      "ep_kampf": 9200,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "nekrotisch",
@@ -18612,6 +18787,7 @@
         "charisma": 16
       },
       "ep": 700,
+      "ep_kampf": 540,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -18662,6 +18838,7 @@
         "charisma": 10
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "mittel",
       "wesen": "untot",
       "schaden_art": "stich",
@@ -18713,6 +18890,7 @@
         "charisma": 17
       },
       "ep": 1800,
+      "ep_kampf": 1400,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "gift",
@@ -18762,6 +18940,7 @@
         "charisma": 12
       },
       "ep": 2900,
+      "ep_kampf": 2300,
       "groesse": "gross",
       "wesen": "aberration",
       "schaden_art": "nekrotisch",
@@ -18817,6 +18996,7 @@
         "charisma": 4
       },
       "ep": 5000,
+      "ep_kampf": 6200,
       "groesse": "gross",
       "wesen": "elementar",
       "schaden_art": "wucht",
@@ -18872,6 +19052,7 @@
         "charisma": 13
       },
       "ep": 5900,
+      "ep_kampf": 5900,
       "groesse": "gross",
       "wesen": "unhold",
       "schaden_art": "feuer",
@@ -19040,6 +19221,7 @@
         "charisma": 4
       },
       "ep": 5000,
+      "ep_kampf": 6000,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "energie",
@@ -19095,6 +19277,7 @@
         "charisma": 11
       },
       "ep": 5900,
+      "ep_kampf": 5900,
       "groesse": "riesig",
       "wesen": "riese",
       "schaden_art": "kaelte",
@@ -19145,6 +19328,7 @@
         "charisma": 13
       },
       "ep": 7200,
+      "ep_kampf": 6500,
       "groesse": "riesig",
       "wesen": "monstrum",
       "schaden_art": "hieb",
@@ -19305,6 +19489,7 @@
         "charisma": 10
       },
       "ep": 1100,
+      "ep_kampf": 830,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "gift",
@@ -19353,6 +19538,7 @@
         "charisma": 10
       },
       "ep": 3900,
+      "ep_kampf": 3800,
       "groesse": "riesig",
       "wesen": "pflanze",
       "schaden_art": "wucht",
@@ -19404,6 +19590,7 @@
         "charisma": 18
       },
       "ep": 2300,
+      "ep_kampf": 1900,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "nekrotisch",
@@ -19450,6 +19637,7 @@
         "charisma": 10
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -19491,6 +19679,7 @@
         "charisma": 10
       },
       "ep": 200,
+      "ep_kampf": 190,
       "groesse": "mittel",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -19535,6 +19724,7 @@
         "charisma": 8
       },
       "ep": 700,
+      "ep_kampf": 430,
       "groesse": "gross",
       "wesen": "tier",
       "schaden_art": "hieb",
@@ -19579,6 +19769,7 @@
         "charisma": 17
       },
       "ep": 1800,
+      "ep_kampf": 1300,
       "groesse": "mittel",
       "wesen": "monstrum",
       "schaden_art": "energie",
@@ -19626,6 +19817,7 @@
         "charisma": 3
       },
       "ep": 2900,
+      "ep_kampf": 3100,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -19681,6 +19873,7 @@
         "charisma": 11
       },
       "ep": 5000,
+      "ep_kampf": 5000,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "feuer",
@@ -19783,6 +19976,7 @@
         "charisma": 19
       },
       "ep": 7200,
+      "ep_kampf": 7200,
       "groesse": "mittel",
       "wesen": "fee",
       "schaden_art": "psychisch",
@@ -19835,6 +20029,7 @@
         "charisma": 12
       },
       "ep": 2900,
+      "ep_kampf": 2800,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "energie",
@@ -19880,6 +20075,7 @@
         "charisma": 11
       },
       "ep": 5900,
+      "ep_kampf": 6300,
       "groesse": "gross",
       "wesen": "monstrum",
       "schaden_art": "feuer",
@@ -19933,6 +20129,7 @@
         "charisma": 1
       },
       "ep": 1100,
+      "ep_kampf": 910,
       "groesse": "klein",
       "wesen": "konstrukt",
       "schaden_art": "donner",
@@ -19983,6 +20180,7 @@
         "charisma": 1
       },
       "ep": 1100,
+      "ep_kampf": 750,
       "groesse": "mittel",
       "wesen": "konstrukt",
       "schaden_art": "hieb",
@@ -20034,6 +20232,7 @@
         "charisma": 18
       },
       "ep": 2300,
+      "ep_kampf": 1900,
       "groesse": "gross",
       "wesen": "aberration",
       "schaden_art": "kaelte",
@@ -20083,6 +20282,7 @@
         "charisma": 19
       },
       "ep": 5000,
+      "ep_kampf": 5400,
       "groesse": "gross",
       "wesen": "elementar",
       "schaden_art": "blitz",
@@ -20133,6 +20333,7 @@
         "charisma": 4
       },
       "ep": 5900,
+      "ep_kampf": 4700,
       "groesse": "riesig",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -20189,6 +20390,7 @@
         "charisma": 19
       },
       "ep": 7200,
+      "ep_kampf": 9900,
       "groesse": "gross",
       "wesen": "fee",
       "schaden_art": "psychisch",
@@ -20244,6 +20446,7 @@
         "charisma": 11
       },
       "ep": 7200,
+      "ep_kampf": 9400,
       "groesse": "riesig",
       "wesen": "monstrum",
       "schaden_art": "feuer",
@@ -20298,6 +20501,7 @@
         "charisma": 20
       },
       "ep": 8400,
+      "ep_kampf": 9700,
       "groesse": "mittel",
       "wesen": "fee",
       "schaden_art": "strahlend",
@@ -20352,6 +20556,7 @@
         "charisma": 12
       },
       "ep": 8400,
+      "ep_kampf": 11000,
       "groesse": "riesig",
       "wesen": "monstrum",
       "schaden_art": "donner",
@@ -20406,6 +20611,7 @@
         "charisma": 5
       },
       "ep": 8400,
+      "ep_kampf": 10000,
       "groesse": "riesig",
       "wesen": "konstrukt",
       "schaden_art": "feuer",
@@ -20462,6 +20668,7 @@
         "charisma": 8
       },
       "ep": 50,
+      "ep_kampf": 81,
       "groesse": "klein",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -20502,6 +20709,7 @@
         "charisma": 10
       },
       "ep": 200,
+      "ep_kampf": 210,
       "groesse": "klein",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -20542,6 +20750,7 @@
         "charisma": 13
       },
       "ep": 700,
+      "ep_kampf": 540,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "hieb",
@@ -20582,6 +20791,7 @@
         "charisma": 8
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "klein",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -20622,6 +20832,7 @@
         "charisma": 7
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -20661,6 +20872,7 @@
         "charisma": 13
       },
       "ep": 450,
+      "ep_kampf": 250,
       "groesse": "gross",
       "wesen": "himmlisch",
       "schaden_art": "wucht",
@@ -20700,6 +20912,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "winzig",
       "wesen": "fee",
       "zustaende": [
@@ -20742,6 +20955,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "fee",
       "schaden_art": "stich",
@@ -20834,6 +21048,7 @@
         "charisma": 12
       },
       "ep": 2900,
+      "ep_kampf": 2800,
       "groesse": "gross",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -20876,6 +21091,7 @@
         "charisma": 11
       },
       "ep": 1800,
+      "ep_kampf": 1300,
       "groesse": "gross",
       "wesen": "humanoid",
       "zustaende": [
@@ -20921,6 +21137,7 @@
         "charisma": 1
       },
       "ep": 5000,
+      "ep_kampf": 3700,
       "groesse": "gross",
       "wesen": "konstrukt",
       "schaden_art": "wucht",
@@ -20971,6 +21188,7 @@
         "charisma": 7
       },
       "ep": 2300,
+      "ep_kampf": 3200,
       "groesse": "gross",
       "wesen": "konstrukt",
       "zustaende": [
@@ -21013,6 +21231,7 @@
         "charisma": 15
       },
       "ep": 5000,
+      "ep_kampf": 6700,
       "groesse": "gross",
       "wesen": "drache",
       "zustaende": [
@@ -21106,6 +21325,7 @@
         "charisma": 12
       },
       "ep": 2900,
+      "ep_kampf": 2500,
       "groesse": "gross",
       "wesen": "drache",
       "schaden_art": "hieb",
@@ -21149,6 +21369,7 @@
         "charisma": 9
       },
       "ep": 3900,
+      "ep_kampf": 5000,
       "groesse": "riesig",
       "wesen": "riese",
       "zustaende": [
@@ -21192,6 +21413,7 @@
         "charisma": 12
       },
       "ep": 5000,
+      "ep_kampf": 5200,
       "groesse": "riesig",
       "wesen": "riese",
       "schaden_art": "hieb",
@@ -21235,6 +21457,7 @@
         "charisma": 13
       },
       "ep": 5900,
+      "ep_kampf": 9100,
       "groesse": "riesig",
       "wesen": "riese",
       "schaden_art": "wucht",
@@ -21278,6 +21501,7 @@
         "charisma": 5
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "gross",
       "wesen": "tier",
       "schaden_art": "hieb",
@@ -21317,6 +21541,7 @@
         "charisma": 11
       },
       "ep": 200,
+      "ep_kampf": 98,
       "groesse": "winzig",
       "wesen": "himmlisch",
       "schaden_art": "hieb",
@@ -21362,6 +21587,7 @@
         "charisma": 3
       },
       "ep": 2900,
+      "ep_kampf": 2700,
       "groesse": "gross",
       "wesen": "konstrukt",
       "zustaende": [
@@ -21409,6 +21635,7 @@
         "charisma": 9
       },
       "ep": 7200,
+      "ep_kampf": 11000,
       "groesse": "riesig",
       "wesen": "monstrum",
       "zustaende": [
@@ -21453,6 +21680,7 @@
         "charisma": 5
       },
       "ep": 7200,
+      "ep_kampf": 11000,
       "groesse": "riesig",
       "wesen": "monstrum",
       "zustaende": [
@@ -21501,6 +21729,7 @@
         "charisma": 14
       },
       "ep": 200,
+      "ep_kampf": 220,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -21541,6 +21770,7 @@
         "charisma": 17
       },
       "ep": 2900,
+      "ep_kampf": 2900,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -21582,6 +21812,7 @@
         "charisma": 12
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "stich",
@@ -21621,6 +21852,7 @@
         "charisma": 9
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "hieb",
@@ -21665,6 +21897,7 @@
         "charisma": 4
       },
       "ep": 100,
+      "ep_kampf": 83,
       "groesse": "mittel",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -21745,6 +21978,7 @@
         "charisma": 6
       },
       "ep": 1800,
+      "ep_kampf": 2000,
       "groesse": "riesig",
       "wesen": "tier",
       "schaden_art": "stich",
@@ -21785,6 +22019,7 @@
         "charisma": 14
       },
       "ep": 700,
+      "ep_kampf": 410,
       "groesse": "mittel",
       "wesen": "mensch",
       "zustaende": [
@@ -21832,6 +22067,7 @@
         "charisma": 4
       },
       "ep": 700,
+      "ep_kampf": 770,
       "groesse": "mittel",
       "wesen": "untot",
       "zustaende": [
@@ -21885,6 +22121,7 @@
         "charisma": 5
       },
       "ep": 450,
+      "ep_kampf": 480,
       "groesse": "gross",
       "wesen": "untot",
       "zustaende": [
@@ -21934,6 +22171,7 @@
         "charisma": 6
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "humanoid",
       "schaden_art": "wucht",
@@ -21975,6 +22213,7 @@
         "charisma": 11
       },
       "ep": 2300,
+      "ep_kampf": 2800,
       "groesse": "gross",
       "wesen": "elementar",
       "schaden_art": "energie",
@@ -22065,6 +22304,7 @@
         "charisma": 16
       },
       "ep": 50,
+      "ep_kampf": 64,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -22104,6 +22344,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 120,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -22144,6 +22385,7 @@
         "charisma": 13
       },
       "ep": 1800,
+      "ep_kampf": 1800,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "hieb",
@@ -22184,6 +22426,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 110,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -22223,6 +22466,7 @@
         "charisma": 10
       },
       "ep": 1100,
+      "ep_kampf": 820,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "stich",
@@ -22263,6 +22507,7 @@
         "charisma": 11
       },
       "ep": 700,
+      "ep_kampf": 540,
       "groesse": "mittel",
       "wesen": "mensch",
       "zustaende": [
@@ -22307,6 +22552,7 @@
         "charisma": 11
       },
       "ep": 100,
+      "ep_kampf": 67,
       "groesse": "mittel",
       "wesen": "mensch",
       "schaden_art": "strahlend",
@@ -22435,6 +22681,7 @@
         "charisma": 4
       },
       "ep": 50,
+      "ep_kampf": 65,
       "groesse": "klein",
       "wesen": "tier",
       "schaden_art": "stich",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.195** · 2026-10-28 · KI-Dungeon-Master: 247 Gegner tragen ihr gemessenes Kampf-EP (ep_kampf), mit fester Prüfregel
 - **V01.1.194** · 2026-10-28 · KI-Dungeon-Master: jede Rune bekommt ihr Bild je Welt, Sockel leuchten als Punkte über dem Bild des Dings in der Farbe der Rune
 - **V01.1.193** · 2026-10-28 · KI-Dungeon-Master: der Prüfstand spielt jede Gruppe auch mit den Runen, die sie bis zu ihrer Stufe findet, und hält sie bei höchstens 8 Punkten mehr Siegen (Review 27.10. Paket 11.5)
 - **V01.1.192** · 2026-10-28 · KI-Dungeon-Master: eine Rune, die erst die Erzählung vergibt, ist ein erfundener Fund, der Satz wird gestrichen (Review 27.10. Paket 7, Runen)

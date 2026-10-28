@@ -44,6 +44,8 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   dungeon_bestiarium.WESEN (auch die Lücken der alten Handlisten: Seeräuber, Dorfbewohner, Goblinkrieger, Werbär),
   „friedlich“ nur true; jeder Gefährte trägt geschlecht, alter (nie Kind) und art; die Aussehen-Tabellen Haar, Augen,
   Bart und Statur nennen ihre Farbe als festes Wort, und der Text der Zeile zeigt dieselbe Farbe (dungeon_erzaehler).
+- Kampf-EP (Prüfbericht B4 Option a, Paket 11.6): die gemessenen Werte des Hauptthreads stehen als „ep_kampf“ an den
+  Gegnern, ganzzahlig im 0,25- bis 4-Fachen von „ep“; ohne Messung zählt ep (dungeon_bestiarium.ep_kampf).
 """
 import json
 import os
@@ -426,6 +428,21 @@ class Srd(unittest.TestCase):
         self.assertTrue(tabellen.check_rules(dict(r, tabellen=[statur])))
         haar = dict(t["nsc_haar"], zeilen=[{"t": ["rotes Haar", "red hair"], "farbe": "Rot!"}] * 3)
         self.assertTrue(tabellen.check_rules(dict(r, tabellen=[haar])))
+
+    def test_kampf_ep(self):
+        import dungeon_bestiarium as best
+        s, r = srd(), dungeon._base_rules()
+        by = {g["id"]: g for g in s["gegner"]}
+        mit = [g for g in s["gegner"] if "ep_kampf" in g]
+        self.assertGreaterEqual(len(mit), 240)
+        self.assertEqual([g["id"] for g in mit if g.get("friedlich")], [])
+        self.assertEqual((by["schlurfhaufen"]["ep_kampf"], by["erzmagier"]["ep_kampf"], by["ork_krieger"]["ep_kampf"]), (6300, 2800, 100))
+        self.assertEqual((best.ep_kampf(by["schlurfhaufen"]), best.ep_kampf(by["dorfbewohner"])), (6300, by["dorfbewohner"]["ep"]))
+        self.assertEqual(best.check_rules(r), [])
+        g0 = dict(by["goblin"])
+        for bad in (g0["ep"] * 5, g0["ep"] // 5, "64", True, 64.5):
+            self.assertTrue(best.check_rules(dict(r, gegner=[dict(g0, ep_kampf=bad)])), bad)
+        self.assertEqual(best.check_rules(dict(r, gegner=[{k: v for k, v in g0.items() if k != "ep_kampf"}])), [])
 
 
 if __name__ == "__main__":

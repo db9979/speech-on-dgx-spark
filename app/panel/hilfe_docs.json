@@ -6005,6 +6005,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: gemessenes Kampf-EP je Gegner (V01.1.195, Daten und Prüfregel, Review 27.10. Paket 11.6, B4 Option a, Dominik „ok“, Thread „DnDAppFiles für den Dungeon-Master“): 247 Gegner in app/panel/dungeon_srd.json tragen jetzt ep_kampf, das EP, das sie im Kampf wirklich wert sind. Gemessen hat der Hauptthread mit dem Prüfstand wie am Tisch (eine Vierergruppe gegen 1 bis 4 Stück, je 60 Kämpfe, ep_kampf = ep ÷ dem Verhältnis mit 80 % Siegen, höchstens das 0,25- bis 4-Fache). Beispiele: der Schlurfende Haufen 6300 statt 1800, der Erzmagier 2800 statt 8400, der Ork-Krieger bleibt bei 100. ep bleibt für Anzeige und D&D-Bezug; 24 Gegner ohne Messung (friedliche, sehr kleine und sehr große) zählen weiter mit ihrem ep. dungeon_bestiarium.ep_kampf(g) liest den Wert (sonst ep), dungeon_bestiarium.check_rules verlangt eine ganze Zahl im 0,25- bis 4-Fachen von ep. Budget und Belohnung stellt der Hauptthread in einer eigenen Version um. Selbsttest test_dungeon_srd (test_kampf_ep)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -21550,6 +21558,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: honest sentences for the abilities of the SRD classes (V01.1.191, data, review 27.10. Paket 11 B7, Dominik \"ok\", thread \"DnDAppFiles für den Dungeon-Master\"): The 7 classes from the SRD (barbarian, bard, druid, monk, paladin, sorcerer, warlock in app/panel/dungeon_srd.json) no longer promise, in an ability without a fixed effect, anything the panel does not compute (dungeon.VERSPRECHEN: numbers, damage, life, healing, targets, hits, dodging, checks). 12 sentences are new, such as Rage \"When rage grips you, you put all your strength into the fight.\" instead of \"harder blows, less pain\", Dodge \"Stays calm and is hard to catch.\" instead of \"Dodges every blow\", Twin spell \"Shapes spells with skill.\" instead of \"hits two targets\"; the bonus on their value stays, it counts when used. The paladin's Lay on hands now really heals like the healer's (wirkung heilen: once a scene a friend or yourself by 1d6+2). The self-test test_an_ability_promises_only_what_the_panel_computes now checks all 12 classes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: measured combat XP per foe (V01.1.195, data and check rule, review 27.10. Paket 11.6, B4 option a, Dominik \"ok\", thread \"DnDAppFiles für den Dungeon-Master\"): 247 foes in app/panel/dungeon_srd.json now carry ep_kampf, the XP they are really worth in a fight. The main thread measured it with the bench as at the table (a group of four against 1 to 4 of them, 60 fights each, ep_kampf = ep ÷ the ratio with 80 % wins, at most a quarter to four times). Examples: the shambling mound 6300 instead of 1800, the archmage 2800 instead of 8400, the orc warrior stays at 100. ep stays for the display and the D&D reference; 24 foes without a measurement (peaceful, very small and very big ones) still count with their ep. dungeon_bestiarium.ep_kampf(g) reads the value (else ep), dungeon_bestiarium.check_rules requires a whole number within a quarter to four times ep. The main thread switches budget and reward over in a version of its own. Self-test test_dungeon_srd (test_kampf_ep)."
 },
 {
 "lang": "en",

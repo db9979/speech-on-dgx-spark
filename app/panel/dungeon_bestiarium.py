@@ -11,9 +11,15 @@ every other creature of the myths. The panel reads the field, never the model.
 
 „friedlich“: true (review T24a) marks people and beasts that do not want a fight (the commoner, the unicorn): the
 encounter offer never draws them as foes.
+
+„ep_kampf“ (review B4 option a, Paket 11.6): the experience a foe is worth in a fight as the main thread's bench measured
+it (ep / x80, the ratio with 80 % wins for a group of four, at most a quarter to four times ep); „ep“ stays for the
+display and the D&D reference. A foe the bench could not measure has none and counts with its ep.
 """
 WESEN = ("mensch", "humanoid", "riese", "tier", "untot", "konstrukt", "drache", "unhold", "elementar", "fee", "himmlisch",
          "pflanze", "schleim", "aberration", "monstrum")
+
+EP_KAMPF = (0.25, 4)       # ep_kampf lies between these times ep
 
 
 def wesen(g):
@@ -27,9 +33,24 @@ def friedlich(g):
     return isinstance(g, dict) and g.get("friedlich") is True
 
 
+def ep_kampf(g):
+    """The experience a foe is worth in a fight: the measured ep_kampf, else its ep."""
+    return int(g.get("ep_kampf") or g.get("ep") or 0)
+
+
+def _ep_ok(x):
+    if "ep_kampf" not in x:
+        return True
+    v, ep = x["ep_kampf"], x.get("ep")
+    return isinstance(v, int) and not isinstance(v, bool) and isinstance(ep, int) and ep > 0 \
+        and EP_KAMPF[0] * ep - 1 <= v <= EP_KAMPF[1] * ep + 1
+
+
 def check_rules(r):
-    """„wesen“ and „friedlich“ of the foes by fixed rules: German sentences of what is wrong (dungeon.check_rules adds
-    them). Every shipped foe has „wesen“ (test_dungeon_srd); an admin's own foe may leave it out, what stands there is
-    one of WESEN."""
-    return [f"gegner {x.get('id')}: wesen eines von {', '.join(WESEN)}, friedlich true oder false" for x in r.get("gegner") or []
-            if isinstance(x, dict) and ("wesen" in x and x["wesen"] not in WESEN or x.get("friedlich", False) not in (True, False))]
+    """„wesen“, „friedlich“ and „ep_kampf“ of the foes by fixed rules: German sentences of what is wrong
+    (dungeon.check_rules adds them). Every shipped foe has „wesen“ (test_dungeon_srd); an admin's own foe may leave it
+    out, what stands there is one of WESEN."""
+    return [f"gegner {x.get('id')}: wesen eines von {', '.join(WESEN)}, friedlich true oder false, ep_kampf eine ganze Zahl "
+            f"vom {EP_KAMPF[0]:g}- bis {EP_KAMPF[1]:g}-Fachen von ep" for x in r.get("gegner") or []
+            if isinstance(x, dict) and ("wesen" in x and x["wesen"] not in WESEN or x.get("friedlich", False) not in (True, False)
+                                        or not _ep_ok(x))]
