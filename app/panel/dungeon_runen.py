@@ -9,11 +9,15 @@ ORTE_RW, "sockel": len(runen), "ab": level, "zusatz": W}]. A W is an object of W
 everything (which rune falls, sockets, effect, cap, price); the model only tells the fixed line. The world's word for a
 rune (Rune, Chip, Perle, Siegel) and the sockets per base item are code rules, not catalog fields.
 
-Stufe 1 at the table (sockets and runes; runewords, the smith's services and fusing come in Stufe 2 and 3): the admin's
-switch dungeonrunen (features.py, chat.dungeon_runen, off) for the round's host. Off later, runes and sockets stay with
-the heroes but do nothing and fall no more (13a, wirkt). Fixed rules of the panel, never the model:
-    it["so"]   sockets of a weapon or armour of a rarity up to „rar“ (2b), by its base (3a, sockel_max), from a find
-    it["ru"]   the rune ids in the sockets, in order; a rune sits for good (5a, removing is the smith's in Stufe 2)
+At the table (Stufe 1: sockets and runes; Stufe 2 and 3, Dominik 2026-10-28 „mit runen weiter machen bis zum
+schluss“: runewords, the smith's services, fusing, giving runes): the admin's switch dungeonrunen (features.py,
+chat.dungeon_runen, off) for the round's host. Off later, runes and sockets stay with the heroes but do nothing and fall
+no more (13a, wirkt). Fixed rules of the panel, never the model:
+    it["so"]   sockets of a weapon or armour of a rarity up to „rar“ (2b), by its base (3a, sockel_max), from a find or
+               one drilled by the smith (it["gebohrt"], at most one a thing, 7a)
+    it["ru"]   the rune ids in the sockets, in order; a rune sits for good (5a), only the smith takes them out (6a)
+    it["rw"]   the runeword awake in it (match: its runes in this order, exactly as many sockets, a plain base at the
+               runeword's place, the hero at its level „ab“; wake) with its extra effect under the runeword's cap
     h["runen"] {rune id: count}: the hero's rune bag beside the bag (it takes no bag place, BEUTEL_MAX runes)
     rd["runen_pech"] fights' finds without a rune in a row (4a: after PECH the next fight's find brings one)
     rd["runen_fund"] {hid: runes found this round}: a find's rune goes to the hero with the fewest
@@ -139,13 +143,25 @@ EFFEKT_STAERKE = {"schaden": 3.5, "lebensraub": 2.5}  # a rune's effect for the 
 EFFEKT_WAFFE = 3.5         # a weapon's own effect (from „rar“ on) counts as +1W6 whatever it is (the plan's scale)
 RK_DING, RK_HELD = 2, 3    # armour class from runes per thing and per hero (9a)
 LEBEN_HELD = 8             # life from runes per hero (9a)
-WIDERSTAND_DING = 1        # damage kinds from runes per thing (9a; a runeword two, Stufe 2)
+WIDERSTAND_DING = 1        # damage kinds from runes per thing (9a)
+WIDERSTAND_RW = 2          # a thing with a runeword: two
+DECKEL_RW = {"waffe": 10.0, "koerper": 8.0, "rest": 4.0}   # 9a: a runeword at most as strong as „legendär“
+RW_WERT = 8                # a runeword's worth: the runes' prices and its base's price RW_WERT times more (plan)
+# the smith's services for runes (6a, 7a, 8a; dungeon_gold.serve, only with „Gold mit Zweck“ and while on)
+DIENSTE = ("sockel", "loesen", "verschmelzen")
+BOHREN = 25                # drilling a socket: gold × the group's level × the new socket count, never fails
+ZERSTOEREN = 5             # taking the runes out and breaking them: gold × the group's level
+RETTEN = 2                 # taking them out whole: the runes' prices / RETTEN (half), they go back into the bag
+VERSCHMELZEN = 3           # the same runes fused into one of the next rank
+VERSCHMELZEN_BIS = 9       # the highest rank fusing makes (10 to 13 only from finds)
+VERSCHMELZEN_TEIL = 4      # its price: the new rune's price / VERSCHMELZEN_TEIL
 TREFFER_MAX = 3            # to hit from the rarity and the runes of a weapon together (dungeon.BONUS_MAX, 9a)
 # 10a: the same rules in every world, only the word changes (like dungeon_karte.SCHLUESSEL): [one, many] in [de, en]
 ART_WELT = {"fantasy": (("Rune", "rune"), ("Runen", "runes")), "scifi": (("Chip", "chip"), ("Chips", "chips")),
             "piraten": (("Perle", "pearl"), ("Perlen", "pearls")), "horror": (("Siegel", "seal"), ("Siegel", "seals"))}
 GRUENDE = ("ok", "voll", "deckel", "kampf", "aus", "sockel")   # why an insert goes or not (journal, preview)
-_day = DayCounter(gefunden=0, eingesetzt=0, abgelehnt=0, gekauft=0, verkauft=0, sockel=0)
+_day = DayCounter(gefunden=0, eingesetzt=0, abgelehnt=0, gekauft=0, verkauft=0, sockel=0, runenwoerter=0, gebohrt=0,
+                  geloest=0, verschmolzen=0, geschenkt=0)
 _wirkt = {"k": None, "v": False}
 
 
@@ -178,6 +194,10 @@ def by(r):
     return {x["id"]: x for x in r.get("runen") or [] if isinstance(x, dict)}
 
 
+def words(r):
+    return {x["id"]: x for x in r.get("runenwoerter") or [] if isinstance(x, dict)}
+
+
 def word(welt, li, many=False):
     """The world's word for a rune (10a)."""
     return ART_WELT.get(welt, ART_WELT["fantasy"])[1 if many else 0][li]
@@ -197,6 +217,27 @@ def place(dm, r, it):
 def body_part(dm, r, it):
     c = dm._c(r, it)
     return dm.places(r, c)[0] if dm.places(r, c) else ""
+
+
+def rw_place(dm, r, it):
+    """Where a thing takes a runeword (ORTE_RW): a weapon "waffe", a shield "nebenhand", armour by its body part, else ""."""
+    o = place(dm, r, it)
+    return "waffe" if o == "waffe" else "nebenhand" if o == "schild" else body_part(dm, r, it) if o else ""
+
+
+def match(dm, r, it, ru=None):
+    """The runeword the runes ru (else the thing's) make in this thing, or None: the runeword's runes in its order,
+    exactly as many sockets, a plain base („gewöhnlich“, known), at the runeword's place."""
+    ru = list(it.get("ru") or []) if ru is None else list(ru)
+    if not ru or it.get("so") != len(ru) or it.get("u") or it.get("s") != r["seltenheit"][0]["id"]:
+        return None
+    o = rw_place(dm, r, it)
+    return next((x for x in words(r).values() if x.get("runen") == ru and x.get("ort") == o), None)
+
+
+def word_of(r, it):
+    """The runeword awake in a thing (it["rw"], set by the panel only), or None."""
+    return words(r).get(it["rw"]) if it.get("rw") else None
 
 
 def sockel_max(dm, r, it):
@@ -229,27 +270,29 @@ def sockets(dm, r, it, rng=None):
     return n
 
 
-def _w(r, it, ort, ru=None):
-    """The Ws of the runes in a thing at its place (ru: another list for the preview)."""
+def _w(r, it, ort, ru=None, rw=None):
+    """The Ws of the runes in a thing at its place and its runeword's extra (ru and rw: another list and runeword for
+    the preview; without ru the thing's own and its awake runeword)."""
     rs = by(r)
-    return [rs[x][ort] for x in (it.get("ru") or [] if ru is None else ru) if x in rs and rs[x].get(ort)]
+    rw = word_of(r, it) if ru is None else rw
+    return [rs[x][ort] for x in (it.get("ru") or [] if ru is None else ru) if x in rs and rs[x].get(ort)] + ([rw["zusatz"]] if rw else [])
 
 
-def wirkungen(dm, r, it, ru=None):
-    """The Ws of the runes in a thing, [] while the switch is off (13a) or for a thing without runes."""
+def wirkungen(dm, r, it, ru=None, rw=None):
+    """The Ws of the runes in a thing and of its runeword, [] while the switch is off (13a) or without runes."""
     if not (it.get("ru") if ru is None else ru) or not wirkt():
         return []
     o = place(dm, r, it)
-    return _w(r, it, o, ru) if o else []
+    return _w(r, it, o, ru, rw) if o else []
 
 
-def effects(dm, r, it, ru=None):
-    """The catalog effects (r["effekte"]) the runes of a thing give, each once and none the thing has already (the
-    same element counts once a thing, 9a): for dungeon.item_effects."""
+def effects(dm, r, it, ru=None, rw=None):
+    """The catalog effects (r["effekte"]) the runes of a thing and its runeword give, each once and none the thing has
+    already (the same element counts once a thing, 9a): for dungeon.item_effects."""
     eff = dm._by(r, "effekte")
     own = {it.get("eff"), it.get("eff2")}
     out = []
-    for w in wirkungen(dm, r, it, ru):
+    for w in wirkungen(dm, r, it, ru, rw):
         e = eff.get(w.get("effekt"))
         if e and e["id"] not in own and e not in out:
             out.append(e)
@@ -312,7 +355,7 @@ def potion(dm, r, h):
     return min(WIRKUNG["heiltrank"][1], sum(w.get("heiltrank", 0) for it in dm.worn(h) for w in wirkungen(dm, r, it)))
 
 
-def strength(dm, r, it, ru=None):
+def strength(dm, r, it, ru=None, rw=None):
     """A thing's magic strength for the cap (9a), in the units of dungeon.strength: its rarity's bonus (twice on the
     body), its own effect (a weapon's EFFEKT_WAFFE, armour's by EFFEKT_STAERKE), every effect of its runes once
     (EFFEKT_STAERKE, a value's effect its bonus, else 1), the runes' hit and damage half a point each, a value +1 one,
@@ -321,7 +364,7 @@ def strength(dm, r, it, ru=None):
     n = (0 if it.get("u") else it.get("bonus", 0)) * k
     eff = dm._by(r, "effekte")
     own = [eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff and not it.get("u")]
-    ws = _w(r, it, place(dm, r, it), ru) if place(dm, r, it) else []
+    ws = _w(r, it, place(dm, r, it), ru, rw) if place(dm, r, it) else []
     n += sum(EFFEKT_WAFFE if place(dm, r, it) == "waffe" else _eff(e) for e in own)
     n += sum(_eff(e) for e in (eff.get(w.get("effekt")) for w in ws) if e) - sum(_eff(e) for e in _twice(own, ws, eff))
     for w in ws:
@@ -352,16 +395,18 @@ def extra(dm, r, it):
                for w in wirkungen(dm, r, it))
 
 
-def worth(r, it):
-    """What the runes in a thing add to its worth: their prices (dungeon.price)."""
+def worth(r, it, base=0):
+    """What the runes in a thing add to its worth (dungeon.price): their prices, with a runeword awake its base's
+    price base RW_WERT times more."""
     rs = by(r)
-    return sum(rs[x]["preis"] for x in it.get("ru") or [] if x in rs)
+    return sum(rs[x]["preis"] for x in it.get("ru") or [] if x in rs) + (base * RW_WERT if word_of(r, it) else 0)
 
 
-def cap(dm, r, it):
-    """The strength a thing with runes may have at most (9a)."""
+def cap(dm, r, it, rw=False):
+    """The strength a thing with runes may have at most (9a), with a runeword (rw) the runeword's."""
+    d = DECKEL_RW if rw else DECKEL
     o = place(dm, r, it)
-    return DECKEL["waffe"] if o == "waffe" else DECKEL["koerper"] if body_part(dm, r, it) == "koerper" else DECKEL["rest"]
+    return d["waffe"] if o == "waffe" else d["koerper"] if body_part(dm, r, it) == "koerper" else d["rest"]
 
 
 def check(dm, r, rd, h, it, rid):
@@ -378,7 +423,8 @@ def check(dm, r, rd, h, it, rid):
 
 def fits(dm, r, h, it, rid):
     """The rules part of check (the balance bench sets its runes by it): "sockel", "voll", "deckel" or "ok", with
-    the numbers."""
+    the numbers; "wort" names the runeword the rune completes, "wach" whether it wakes now (the hero at its level),
+    then under the runeword's cap."""
     o, rs = place(dm, r, it), by(r)
     if rid not in rs or not it.get("so") or not o or not rs[rid].get(o) or not (h.get("runen") or {}).get(rid):
         return "sockel", {}
@@ -386,15 +432,22 @@ def fits(dm, r, h, it, rid):
     if len(ru) >= it["so"]:
         return "voll", {}
     neu = ru + [rid]
-    vorher, nachher, deckel = strength(dm, r, it, ru), strength(dm, r, it, neu), cap(dm, r, it)
-    ws = _w(r, it, o, neu)
+    m = match(dm, r, it, neu)
+    wach = m if m and h.get("stufe", 1) >= m["ab"] else None
+    vorher, nachher, deckel = strength(dm, r, it, ru), strength(dm, r, it, neu, wach), cap(dm, r, it, bool(wach))
+    zahlen = {"vorher": vorher, "nachher": nachher, "deckel": deckel, "wort": m["id"] if m else "", "wach": bool(wach)}
+    return ("deckel" if over(dm, r, it, neu, wach) else "ok"), zahlen
+
+
+def over(dm, r, it, ru, rw=None):
+    """Whether the runes ru (and the runeword rw) in a thing break a cap (9a): stronger than its cap, the same element
+    twice, to hit above TREFFER_MAX, armour class above RK_DING, more damage kinds than WIDERSTAND_DING (a runeword
+    WIDERSTAND_RW)."""
+    ws = _w(r, it, place(dm, r, it), ru, rw)
     eff = dm._by(r, "effekte")
-    zahlen = {"vorher": vorher, "nachher": nachher, "deckel": deckel}
-    if nachher > deckel or _twice([eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff], ws, eff) \
-            or sum(w.get("treffer", 0) for w in ws) + it.get("bonus", 0) > TREFFER_MAX or _ac(dm, r, it, ws) > RK_DING \
-            or len({w["widerstand"] for w in ws if w.get("widerstand")}) > WIDERSTAND_DING:
-        return "deckel", zahlen
-    return "ok", zahlen
+    return strength(dm, r, it, ru, rw) > cap(dm, r, it, bool(rw)) or bool(_twice([eff[x] for x in (it.get("eff"), it.get("eff2")) if x in eff], ws, eff)) \
+        or sum(w.get("treffer", 0) for w in ws) + it.get("bonus", 0) > TREFFER_MAX or _ac(dm, r, it, ws) > RK_DING \
+        or len({w["widerstand"] for w in ws if w.get("widerstand")}) > (WIDERSTAND_RW if rw else WIDERSTAND_DING)
 
 
 def line(r, w, li):
@@ -439,6 +492,11 @@ def item_lines(dm, r, it, li):
     frei = it["so"] - len(it.get("ru") or [])
     teile += [("frei" if not li else "free")] * max(0, frei)
     out = [("Sockel {}: " if not li else "Sockets {}: ").format(it["so"]) + " · ".join(teile)]
+    rw, m = word_of(r, it), match(dm, r, it)
+    if rw:
+        out.append(("Runenwort {}: {}" if not li else "Runeword {}: {}").format(rw["name"][li], line(r, rw["zusatz"], li)))
+    elif m:
+        out.append(("Runenwort {} erwacht ab Stufe {}." if not li else "Runeword {} wakes from level {}.").format(m["name"][li], m["ab"]))
     if it.get("ru") and not wirkt():
         out.append("Runen ruhen: auf diesem Spark gerade aus." if not li else "Runes rest: switched off on this Spark right now.")
     return out
@@ -465,6 +523,11 @@ def fix(dm, r, h):
         o = place(dm, r, it)
         ru = it.get("ru") if isinstance(it.get("ru"), list) else []
         it["ru"] = [x for x in ru if isinstance(x, str) and x in rs and rs[x].get(o)][:it["so"]]
+        if it.get("gebohrt") is not True:
+            it.pop("gebohrt", None)
+        m = match(dm, r, it)
+        if not m or it.get("rw") != m["id"]:
+            it.pop("rw", None)                   # a runeword only where its runes sit as the panel set it
 
 
 def bag(dm, r, h, lang, welt=""):
@@ -482,7 +545,33 @@ def bag(dm, r, h, lang, welt=""):
                     "wirkung": {o: line(r, x[o], li) if x.get(o) else "" for o in ORTE},
                     "ziele": [it["i"] for it in frei if x.get(place(dm, r, it) or "")]})
     return {"wort": word(welt, li), "woerter": word(welt, li, True), "runen": out, "max": BEUTEL_MAX,
-            "an": wirkt(), "frei": len(frei)}
+            "an": wirkt(), "frei": len(frei), "runenwoerter": goals(dm, r, h, li)}
+
+
+ORT_NAME = {"waffe": ("Waffe", "weapon"), "koerper": ("Körper", "body"), "nebenhand": ("Schild", "shield"), "kopf": ("Kopf", "head")}
+
+
+def goals(dm, r, h, li):
+    """Every runeword as a goal to gather (plan, open question 3: known from the start): its runes in order and which
+    of them the hero has (in the bag or set already), the place, sockets, level and extra, and the own things that
+    take it now (a plain base at its place, exactly its sockets, the runes so far its start)."""
+    rs, own = by(r), h.get("runen") or {}
+    out = []
+    for x in words(r).values():
+        dinge = [it for it in dm.worn(h) + h["tasche"] if rw_place(dm, r, it) == x["ort"] and it.get("so") == x["sockel"]
+                 and not it.get("u") and it.get("s") == r["seltenheit"][0]["id"] and (it.get("ru") or []) == x["runen"][:len(it.get("ru") or [])]]
+        done = next((it for it in dinge if it.get("rw") == x["id"]), None)
+        gesetzt = max((len(it.get("ru") or []) for it in dinge), default=0)
+        out.append({"id": x["id"], "name": x["name"][li], "ort": ORT_NAME[x["ort"]][li], "sockel": x["sockel"], "ab": x["ab"],
+                    "zusatz": line(r, x["zusatz"], li), "fertig": bool(done),
+                    "runen": [{"id": k, "name": rs[k]["name"][li], "hat": j < gesetzt or bool(own.get(k))} for j, k in enumerate(x["runen"]) if k in rs],
+                    "dinge": [dm.item_view(r, it, "en" if li else "de")["name"] for it in dinge if it is not done]})
+    return out
+
+
+def missing(r, g):
+    """The names of a goal's runes the hero has not (the car's „Was fehlt für Sturmlied?“)."""
+    return [x["name"] for x in g["runen"] if not x["hat"]]
 
 
 def _rank(r, stufe, rng):
@@ -594,13 +683,44 @@ def act(dm, r, rd, pid, h, b):
     h["runen"][rid] -= 1
     h["runen"] = {k: v for k, v in h["runen"].items() if v > 0}
     it["ru"] = list(it.get("ru") or []) + [rid]
-    if dm.life(r, h) != h["leben_max"]:
-        dm.relife(r, h)                          # Uruz or Berkano in a thing worn: the life counts at once
     dm._log(rd, "rune", was="eingesetzt", name=h["name"], rune=by(r)[rid]["name"][li], ding=dm.item_view(r, it, rd["lang"])["name"],
             wort=word(rd.get("welt", ""), li))
     _day.bump("eingesetzt")
     print("dungeon: rune | einsetzen | ok", flush=True)
+    wake(dm, r, rd, h)
+    if dm.life(r, h) != h["leben_max"]:
+        dm.relife(r, h)                          # Uruz or Berkano in a thing worn: the life counts at once
     return None
+
+
+def wake(dm, r, rd, h):
+    """Every runeword of the hero's things whose runes are complete wakes once the hero has its level (after an
+    insert and a new level), only under the runeword's caps; a fixed line at the table, then its picture (picture
+    thread, dungeon_dingbild.runenwort). Returns how many woke."""
+    n = 0
+    for it in dm.worn(h) + h["tasche"]:
+        m = match(dm, r, it)
+        if not m or it.get("rw") or h.get("stufe", 1) < m["ab"]:
+            continue
+        if over(dm, r, it, list(it["ru"]), m):
+            print("dungeon: rune | runenwort | deckel", flush=True)
+            continue
+        it["rw"] = m["id"]
+        li = 1 if rd.get("lang") == "en" else 0
+        dm._log(rd, "rune", was="runenwort", name=h["name"], runenwort=m["name"][li], ding=dm.item_view(r, it, rd["lang"])["name"],
+                wirkung=line(r, m["zusatz"], li))
+        _day.bump("runenwoerter")
+        print("dungeon: rune | runenwort | ok", flush=True)
+        n += 1
+        try:
+            import dungeon_dingbild
+            if hasattr(dungeon_dingbild, "runenwort"):
+                dungeon_dingbild.runenwort(r, rd, it)      # its own find picture (picture thread)
+        except Exception:  # noqa: BLE001 - a picture never stops the game
+            print("dungeon: rune | runenwort | bild fehler", flush=True)
+    if n and dm.life(r, h) != h["leben_max"]:
+        dm.relife(r, h)
+    return n
 
 
 def preview(dm, r, rd, h, it, rid, grund, z, li):
@@ -620,11 +740,16 @@ def preview(dm, r, rd, h, it, rid, grund, z, li):
     if grund != "ok":
         t = warum[grund][li]
         return {"ok": False, "grund": grund, "text": t.format(deckel=_num(z.get("deckel"), li), nachher=_num(z.get("nachher"), li)) if z else t}
-    t = (f"{x['name'][li]} in Sockel {n} von {name}: {line(r, x[o], li)}. Stärke {_num(z['vorher'], li)} → {_num(z['nachher'], li)} "
+    m = words(r).get(z.get("wort") or "")
+    wort = "" if not m else (f" Dann erwacht das Runenwort {m['name'][0]}: {line(r, m['zusatz'], 0)}." if z.get("wach") and not li else
+                             f" Then the runeword {m['name'][1]} wakes: {line(r, m['zusatz'], 1)}." if z.get("wach") else
+                             f" Das Runenwort {m['name'][0]} erwacht erst ab Stufe {m['ab']}, bis dahin wirken nur die Runen." if not li else
+                             f" The runeword {m['name'][1]} wakes only from level {m['ab']}, until then only the runes work.")
+    t = (f"{x['name'][li]} in Sockel {n} von {name}: {line(r, x[o], li)}.{wort} Stärke {_num(z['vorher'], li)} → {_num(z['nachher'], li)} "
          f"(höchstens {_num(z['deckel'], li)}). Die Rune sitzt danach fest." if not li else
-         f"{x['name'][li]} into socket {n} of {name}: {line(r, x[o], li)}. Strength {_num(z['vorher'], li)} → {_num(z['nachher'], li)} "
+         f"{x['name'][li]} into socket {n} of {name}: {line(r, x[o], li)}.{wort} Strength {_num(z['vorher'], li)} → {_num(z['nachher'], li)} "
          f"(at most {_num(z['deckel'], li)}). The rune stays in for good.")
-    return {"ok": True, "grund": "ok", "text": t, "rune": rid, "i": it["i"]}
+    return {"ok": True, "grund": "ok", "text": t, "rune": rid, "i": it["i"], **({"runenwort": m["name"][li], "wach": bool(z.get("wach"))} if m else {})}
 
 
 def _num(x, li):
@@ -674,6 +799,161 @@ def _trade(dm, r, rd, pid, h, tun, rid, li):
     print(f"dungeon: rune | {'kauf' if tun == 'kaufen' else 'verkauf'} | rang {x['rang']}", flush=True)
 
 
+# ---------------------------------------------------------------- Stufe 2 and 3: the smith's services, giving runes
+def drillable(dm, r, it):
+    """The socket count after the smith drills one (7a), 0 for none: at most one drilled socket a thing, never above
+    its base's sockets (sockel_max), never into a thing with a runeword awake."""
+    n = it.get("so", 0)
+    if it.get("gebohrt") or it.get("rw") or n >= sockel_max(dm, r, it):
+        return 0
+    return n + 1
+
+
+def rescue_price(r, it):
+    """Taking the runes out whole (6a): half their prices."""
+    rs = by(r)
+    return max(1, sum(rs[x]["preis"] for x in it.get("ru") or [] if x in rs) // RETTEN)
+
+
+def fused(r, rid):
+    """The rune VERSCHMELZEN of rid make (8a): the next rank, at most VERSCHMELZEN_BIS; None else."""
+    x = by(r).get(rid)
+    if not x or x["rang"] >= VERSCHMELZEN_BIS:
+        return None
+    return next((y for y in by(r).values() if y["rang"] == x["rang"] + 1), None)
+
+
+def fuse_price(r, rid):
+    return max(1, fused(r, rid)["preis"] // VERSCHMELZEN_TEIL)
+
+
+def service_price(dm, r, rd, h, b):
+    """(price, target) of one of the smith's rune services (dungeon_gold.serve): {id: "sockel", i} drills a socket,
+    {id: "loesen", i, wert: "zerstoeren"|"retten"} takes the runes out, {id: "verschmelzen", wert: rune id} fuses
+    VERSCHMELZEN runes into one. Refusals: ValueError with a fixed word."""
+    was = b.get("id")
+    if not on(rd) or not wirkt():
+        raise ValueError("rune aus")
+    if was == "verschmelzen":
+        rid = b.get("wert")
+        if not isinstance(rid, str) or not fused(r, rid) or (h.get("runen") or {}).get(rid, 0) < VERSCHMELZEN:
+            print("dungeon: dienst | verschmelzen | nein", flush=True)
+            raise ValueError("verschmelzen")
+        return fuse_price(r, rid), rid
+    it = next((x for x in dm.worn(h) + h["tasche"] if x["i"] == b.get("i")), None)
+    level = dm.group_level(dm._living(rd))
+    if was == "sockel":
+        n = drillable(dm, r, it) if it else 0
+        if not n:
+            print("dungeon: dienst | sockel | nein", flush=True)
+            raise ValueError("bohren")
+        return BOHREN * level * n, it
+    if not it or not it.get("ru") or b.get("wert") not in ("zerstoeren", "retten"):
+        print("dungeon: dienst | loesen | nein", flush=True)
+        raise ValueError("loesen")
+    if b["wert"] == "retten" and sum((h.get("runen") or {}).values()) + len(it["ru"]) > BEUTEL_MAX:
+        print("dungeon: dienst | loesen | beutel voll", flush=True)
+        raise ValueError("loesen voll")
+    return (rescue_price(r, it) if b["wert"] == "retten" else ZERSTOEREN * level), it
+
+
+def service(dm, r, rd, h, b, ziel):
+    """Does the smith's rune service on its target (after service_price and the payment check): the fixed line
+    (de, en) for the table."""
+    li = 1 if rd.get("lang") == "en" else 0
+    w = word(rd.get("welt", ""), 0, True), word(rd.get("welt", ""), 1, True)
+    if b["id"] == "verschmelzen":
+        x, y = by(r)[ziel], fused(r, ziel)
+        rb = h["runen"]
+        rb[ziel] -= VERSCHMELZEN
+        rb[y["id"]] = rb.get(y["id"], 0) + 1
+        h["runen"] = {k: v for k, v in rb.items() if v > 0}
+        _day.bump("verschmolzen")
+        print(f"dungeon: dienst | verschmelzen | rang {y['rang']}", flush=True)
+        return (f"Der Schmied verschmilzt für {h['name']} {VERSCHMELZEN} {w[0]} {x['name'][0]} zu {y['name'][0]}.",
+                f"The smith fuses {VERSCHMELZEN} {w[1]} {x['name'][1]} into {y['name'][1]} for {h['name']}.")
+    name = dm.item_view(r, ziel, rd["lang"])["name"]
+    if b["id"] == "sockel":
+        ziel["so"] = drillable(dm, r, ziel)
+        ziel.setdefault("ru", [])
+        ziel["gebohrt"] = True
+        _day.bump("gebohrt")
+        print(f"dungeon: dienst | sockel | {ziel['so']}", flush=True)
+        return (f"Der Schmied bohrt {name} von {h['name']} einen Sockel: jetzt {ziel['so']}.",
+                f"The smith drills a socket into {h['name']}'s {name}: now {ziel['so']}.")
+    ru, rw = list(ziel["ru"]), word_of(r, ziel)
+    ziel["ru"] = []
+    ziel.pop("rw", None)                         # a runeword always goes out (6a)
+    if b["wert"] == "retten":
+        rb = h.setdefault("runen", {})
+        for x in ru:
+            rb[x] = rb.get(x, 0) + 1
+    if dm.life(r, h) != h["leben_max"]:
+        dm.relife(r, h)
+    _day.bump("geloest")
+    print(f"dungeon: dienst | loesen | {b['wert']}", flush=True)
+    erlischt = (f" Das Runenwort {rw['name'][0]} erlischt." if rw else "", f" The runeword {rw['name'][1]} goes out." if rw else "")
+    if b["wert"] == "retten":
+        return (f"Der Schmied löst {len(ru)} {w[0]} aus {name} von {h['name']}, sie sind wieder im Beutel.{erlischt[0]}",
+                f"The smith takes {len(ru)} {w[1]} out of {h['name']}'s {name}, they are back in the bag.{erlischt[1]}")
+    return (f"Der Schmied bricht {len(ru)} {w[0]} aus {name} von {h['name']}, die Sockel sind frei.{erlischt[0]}",
+            f"The smith breaks {len(ru)} {w[1]} out of {h['name']}'s {name}, the sockets are free.{erlischt[1]}")
+
+
+def smith_view(dm, r, rd, h, li):
+    """What the smith can do with runes for the hero (the settlement window): things to drill with the price and the
+    new socket count, things with runes with both prices for taking them out, runes to fuse."""
+    if not on(rd) or not wirkt():
+        return {}
+    level = dm.group_level(dm._living(rd))
+    lang = "en" if li else "de"
+    pieces = dm.worn(h) + h["tasche"]
+    rs = by(r)
+    return {"wort": word(rd.get("welt", ""), li, True),
+            "sockel": [dict(dm.item_view(r, it, lang), preis=BOHREN * level * n, neu=n) for it in pieces if (n := drillable(dm, r, it))],
+            "loesen": [dict(dm.item_view(r, it, lang), zerstoeren=ZERSTOEREN * level, retten=rescue_price(r, it),
+                            runenwort=(word_of(r, it) or {}).get("name", ["", ""])[li],
+                            platz=sum((h.get("runen") or {}).values()) + len(it["ru"]) <= BEUTEL_MAX) for it in pieces if it.get("ru")],
+            "verschmelzen": [{"id": k, "name": rs[k]["name"][li], "n": n, "neu": fused(r, k)["name"][li], "preis": fuse_price(r, k)}
+                             for k, n in sorted((h.get("runen") or {}).items(), key=lambda x: rs[x[0]]["rang"] if x[0] in rs else 99)
+                             if k in rs and n >= VERSCHMELZEN and fused(r, k)]}
+
+
+def give(dm, r, rd, h, an, rid):
+    """One rune from the hero's bag to another hero at the table (plan: giving goes like the bag's „schenken“);
+    never in a fight, never into a full bag. Refusals: ValueError("rune schenken")."""
+    if not on(rd) or rd.get("kampf") or not isinstance(rid, str) or not (h.get("runen") or {}).get(rid) \
+            or sum((an.get("runen") or {}).values()) >= BEUTEL_MAX:
+        print("dungeon: rune | schenken | nein", flush=True)
+        raise ValueError("rune schenken")
+    h["runen"][rid] -= 1
+    h["runen"] = {k: v for k, v in h["runen"].items() if v > 0}
+    rb = an.setdefault("runen", {})
+    rb[rid] = rb.get(rid, 0) + 1
+    li = 1 if rd.get("lang") == "en" else 0
+    dm._log(rd, "rune", was="geschenkt", name=h["name"], an=an["name"], rune=by(r)[rid]["name"][li], wort=word(rd.get("welt", ""), li))
+    _day.bump("geschenkt")
+    print("dungeon: rune | schenken | ok", flush=True)
+
+
+def word_mark(dm, r, w, lang="de"):
+    """The balance mark of a runeword for the rules page (plan point 4, dungeon_balance's format): its strength in a
+    plain base of its place with its sockets against the runeword's cap; above it „zu stark“, from 80 of 100 „stark“,
+    under 30 „schwach“."""
+    import dungeon_balance as balance
+    en = lang == "en"
+    base = r["seltenheit"][0]["id"]
+    it = next((x for x in ({"i": "", "id": c["id"], "s": base, "bonus": 0, "so": w.get("sockel"), "ru": list(w.get("runen") or [])}
+                           for c in r["gegenstaende"] if not c.get("seltenheit"))
+               if rw_place(dm, r, x) == w.get("ort") and sockel_max(dm, r, x) >= (w.get("sockel") or 0)), None)
+    if not it:
+        return {"marke": "zu_stark", "name": balance.NAMEN["zu_stark"][en], "grund": "Kein Grundteil dafür." if not en else "No base for it.", "wert": 0}
+    n, d = strength(dm, r, it, it["ru"], w), cap(dm, r, it, True)
+    m = "zu_stark" if n > d or over(dm, r, it, it["ru"], w) else "stark" if n >= 0.8 * d else "schwach" if n < 0.3 * d else "ok"
+    return {"marke": m, "name": balance.NAMEN[m][en], "wert": round(n / d, 2),
+            "grund": f"Stärke {_num(n, 0)} von höchstens {_num(d, 0)}." if not en else f"Strength {_num(n, 1)} of at most {_num(d, 1)}."}
+
+
 def fight_gold(dm, r, rd, held, besiegt):
     """Fehu in a weapon: GOLD per defeated foe for its hero, once a hero (after the fight's find)."""
     if not besiegt:
@@ -686,6 +966,8 @@ def fight_gold(dm, r, rd, held, besiegt):
 
 
 def for_live():
-    """Numbers only: runes found, set, refused, bought and sold, things found with sockets today."""
+    """Numbers only: runes found, set, refused, bought and sold, things found with sockets, runewords woken, sockets
+    drilled, things emptied, runes fused and given today."""
     t = _day.counts()
-    return {k: t[k] for k in ("gefunden", "eingesetzt", "abgelehnt", "gekauft", "verkauft", "sockel")}
+    return {k: t[k] for k in ("gefunden", "eingesetzt", "abgelehnt", "gekauft", "verkauft", "sockel", "runenwoerter", "gebohrt",
+                              "geloest", "verschmolzen", "geschenkt")}

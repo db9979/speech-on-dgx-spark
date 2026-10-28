@@ -86,11 +86,11 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
     body=k==='weg'?{name,weg:true}:k==='w'?{name,will:row.querySelector('[data-dmfrakw]').value.trim()}:{name,schritt:+k}}
   const d=await dmSend(`/api/profile/dungeon/${DM.rid}/fraktion`,body,DM);if(d){DM.v=d;DM.at=Date.now();if(k==='neu')DMA.frak=null}dmDraw()});
 // Gold mit Zweck (Idee 9): the settlement's fixed offers, priced by the panel; every button is the hero's own move (data-dmhero)
-const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿',gefaehrte:'🤝'};
+const DMDIENST={gasthaus:'🛏',schmied:'🔨',lehre:'📖',geruecht:'🗣',verbessern:'⚒',heiler:'🌿',gefaehrte:'🤝',sockel:'◎',loesen:'⛏',verschmelzen:'🔥'};
 // Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 2a 3a 4a 5b): a head with the place's picture, time of day and
 // purse; a card per service with its picture on top and a line of life; the price's calculation small above a verb
 // button; what the hero cannot pay is grey with how much is missing; the lesson as six values before → after
-const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed'],gefaehrte:['Anheuern','Hire']};
+const DMVERB={gasthaus:['Übernachten','Stay the night'],schmied:['Flicken','Mend'],lehre:['Lernen','Learn'],geruecht:['Zuhören','Listen'],verbessern:['Verbessern','Improve'],heiler:['Heilen lassen','Be healed'],gefaehrte:['Anheuern','Hire'],sockel:['Bohren','Drill'],loesen:['Lösen','Take out'],verschmelzen:['Verschmelzen','Fuse']};
 const DMZEIT={morgen:['🌅','Morgen','Morning'],tag:['☀️','Tag','Day'],abend:['🌇','Abend','Evening'],nacht:['🌙','Nacht','Night']};
 const dmPlus=n=>(n>=0?'+':'')+n;
 function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0,p-s.gold),
@@ -103,12 +103,21 @@ function dmSiedlung(v){const s=v.siedlung,G=t('Gold','gold'),fehlt=p=>Math.max(0
     card=d=>`<div class="dm-ware dm-dienstk${d.frei?'':' dm-zu'}" data-dmdienst="${d.id}">${d.bild?`<span class="dm-dienst-bild">${dmDing({bild:d.bild},1)}</span>`:`<span class="dm-dienst-bild dm-dz" aria-hidden="true">${DMDIENST[d.id]}</span>`}<b>${esc(d.name)}</b>${d.zeile?`<small class="dm-isatz">„${esc(d.zeile)}“</small>`:''}<small>${esc(d.satz)}</small>${d.zu?`<small class="dm-fehlt">🌙 ${esc(t('Nachts zu, ab dem Morgen wieder offen.','Shut at night, open again from the morning.'))}</small>`:''}${
     d.id==='schmied'?(s.kaputt.length?rech(d)+s.kaputt.map(it=>knopf(d,` data-i="${esc(it.i)}"`,t('Flicken: ','Mend: ')+it.name)).join(''):`<small class="mut">${esc(t('Nichts zerbrochen.','Nothing broken.'))}</small>`)
     :d.id==='verbessern'?(s.verbessern.length?s.verbessern.map(it=>knopf(Object.assign({},d,{frei:true}),` data-i="${esc(it.i)}"`,it.name+' → '+it.neu,it.preis)).join(''):`<small class="mut">${esc(t('Nichts, was der Schmied besser machen kann.','Nothing the smith can make better.'))}</small>`)
+    :d.id==='sockel'||d.id==='loesen'||d.id==='verschmelzen'?dmSiedRunen(s,d,knopf)
     :d.id==='lehre'?lehre(d)
     :d.id==='gefaehrte'?(s.gefaehrten&&s.gefaehrten.length?s.gefaehrten.map(g=>`<small class="dm-isatz"><b>${esc(g.name)}</b>: ${esc(g.satz)}</small>`+knopf(d,` data-i="${esc(g.id)}"`,t('Anheuern: ','Hire: ')+g.name)).join(''):`<small class="mut">${esc(t('Die Gruppe ist voll, kein Gefährte mehr frei.','The group is full, no companion free.'))}</small>`)
     :rech(d)+knopf(d)}</div>`,
     z=DMZEIT[s.tageszeit]||DMZEIT.tag;
   return `<div class="dm-sied-kopf${s.kopf?'':' leer'}">${s.kopf?dmDing({bild:s.kopf},1):''}<div class="dm-sied-titel"><b>${esc(s.name)}</b><span>${z[0]} ${esc(t(z[1],z[2]))}</span><span>💰 ${esc(t('Dein Gold','Your gold'))}: <b>${s.gold}</b> · ${esc(t('Gruppe','Group'))}: ${s.gold_gruppe}</span></div></div>
     ${s.spruch?`<p class="dm-isatz dm-narbsp">🩸 ${esc(s.spruch.text)} <small class="mut">· ${esc(s.spruch.name)}</small></p>`:''}<small class="mut">${esc(t('Preise legt das Panel nach der Stufe der Gruppe fest. Jeder zahlt aus seinem eigenen Gold.','The panel sets the prices by the group\'s level. Everyone pays from their own gold.'))}</small><div class="dm-waren">${s.dienste.map(card).join('')}</div>`}
+// the smith's rune services (dungeon_runen.smith_view): drill a socket, take the runes out broken or whole (a
+// runeword goes out), fuse three of a rune into the next rank; every price by the panel
+function dmSiedRunen(s,d,knopf){const R=s.runen||{},f=Object.assign({},d,{frei:true}),leer=x=>`<small class="mut">${esc(x)}</small>`;
+  if(d.id==='sockel')return (R.sockel||[]).length?R.sockel.map(it=>knopf(f,` data-i="${esc(it.i)}"`,t(`${it.name}: ${it.neu} Sockel`,`${it.name}: ${it.neu} sockets`),it.preis)).join(''):leer(t('Nichts, was noch einen Sockel bekommt: Waffen und Rüstung bis „rar“, einer je Ding.','Nothing that takes another socket: weapons and armour up to "rare", one a thing.'));
+  if(d.id==='loesen')return (R.loesen||[]).length?R.loesen.map(it=>`<small class="dm-isatz"><b>${esc(it.name)}</b>: ${esc((it.ru||[]).join(' · '))}${it.runenwort?' · '+esc(t('Runenwort ','Runeword ')+it.runenwort+t(' erlischt',' goes out')):''}</small>`
+    +knopf(Object.assign({},d,{frei:it.platz}),` data-i="${esc(it.i)}" data-wert="retten"`,t('Retten','Save'),it.retten)+(it.platz?'':`<small class="dm-fehlt">${esc(t('Der Runenbeutel ist zu voll dafür.','The rune bag is too full for that.'))}</small>`)
+    +knopf(f,` data-i="${esc(it.i)}" data-wert="zerstoeren"`,t('Zerbrechen','Break'),it.zerstoeren)).join(''):leer(t('Kein Ding mit '+(R.wort||'Runen')+'.','No thing with '+(R.wort||'runes')+'.'));
+  return (R.verschmelzen||[]).length?R.verschmelzen.map(x=>knopf(f,` data-wert="${esc(x.id)}"`,`3 × ${x.name} → ${x.neu}`,x.preis)).join(''):leer(t('Dafür braucht es drei gleiche, höchstens bis Rang 9.','That takes three of the same, up to rank 9.'))}
 // the merchant as big cards: picture in the rarity's frame, lines, price; below what the own bag can sell or have named
 function dmShop(v){const h=v.ich,m=v.markt;
   if(m.zu)return `<p class="dm-isatz">🌙 ${esc(t(`${m.name} hat nachts zu. Ab dem Morgen könnt ihr wieder handeln.`,`${m.name} is shut at night. From the morning you can trade again.`))}</p>`;   // LlamaTale idea 1

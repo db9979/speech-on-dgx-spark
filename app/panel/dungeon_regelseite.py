@@ -275,7 +275,8 @@ def werte(teil, x, r, li):
                 [L("In", "In"), ORT_RW.get(x.get("ort"), (x.get("ort", ""),) * 2)[li] + L(f" mit {x.get('sockel', 0)} Sockeln", f" with {x.get('sockel', 0)} sockets")],
                 [L("Ab Stufe", "From level"), str(x.get("ab", 1))],
                 [L("Dazu", "Adds"), runen.line(r, x["zusatz"], li) if isinstance(x.get("zusatz"), dict) else ""],
-                [L("Am Tisch", "At the table"), L("noch nicht: Runenwörter kommen mit Stufe 2 der Runen", "not yet: runewords come with stage 2 of the runes")]]
+                [L("Stärke", "Strength"), runen.word_mark(dungeon, r, x, "en" if li else "de")["grund"]],
+                [L("Wert", "Worth"), L(f"Grundpreis × {runen.RW_WERT + 1} und die Preise der Runen", f"base price × {runen.RW_WERT + 1} and the runes' prices")]]
     elif teil == "effekte":
         out += [[L("Wirkung", "Effect"), WIRKUNG_ART.get(x.get("wirkung"), ("", ""))[li]],
                 [L("Schadensart", "Damage kind"), f"{kampf.ART_ZEICHEN.get(x.get('art'), '')} {kampf.ART_NAME[x['art']][li]}".strip() if x.get("art") in kampf.ART_NAME else ""],
@@ -367,9 +368,22 @@ def kasten(teil, r, li):
                    [L("Einsetzen", "Setting"), L("im Heldenbogen unter Tasche, mit Vorschau, nie im Kampf; danach sitzt die Rune fest",
                                                   "in the hero sheet under bag, with a preview, never in a fight; then the rune stays in for good")],
                    [L("Welten", "Worlds"), ", ".join(f"{_name(w, li)}: {runen.word(w['id'], li)}" for w in r["welten"])]]
+        dr = runen.DECKEL_RW
+        zeilen += [[L("Schmied", "Smith"), L(f"mit Gold mit Zweck: Sockel bohren {runen.BOHREN} × Gruppenstufe × neue Sockelzahl (einer je Ding), Runen zerbrechen "
+                                              f"{runen.ZERSTOEREN} × Gruppenstufe oder retten für die Hälfte ihrer Preise, {runen.VERSCHMELZEN} gleiche verschmelzen "
+                                              f"zu einer des nächsten Rangs für ein Viertel ihres Preises, bis Rang {runen.VERSCHMELZEN_BIS}; nachts zu",
+                                              f"with Gold with a purpose: drill a socket {runen.BOHREN} × group level × new socket count (one a thing), break runes "
+                                              f"{runen.ZERSTOEREN} × group level or save them for half their prices, fuse {runen.VERSCHMELZEN} of the same into one of "
+                                              f"the next rank for a quarter of its price, up to rank {runen.VERSCHMELZEN_BIS}; shut at night")]]
         if teil == "runenwoerter":
-            zeilen.insert(0, [L("Am Tisch", "At the table"), L("noch nicht: Runenwörter, Sockel bohren und Herauslösen kommen mit Stufe 2 der Runen",
-                                                               "not yet: runewords, drilling sockets and taking runes out come with stage 2 of the runes")])
+            zeilen.insert(0, [L("Erwachen", "Waking"), L("die Runen in dieser Reihenfolge in einem gewöhnlichen Ding mit genau so vielen Sockeln an seinem Ort, "
+                                                       "ab seiner Stufe (beim Einsetzen oder beim Aufstieg); löst der Schmied die Runen, erlischt es",
+                                                       "the runes in this order in a plain thing with exactly as many sockets at its place, from its level "
+                                                       "(on setting or on a new level); when the smith takes the runes out, it goes out")])
+            zeilen.insert(1, [L("Deckel", "Cap"), L(f"höchstens wie „{sel[4]}“ (Waffe {_num(dr['waffe'], li)}, Körper {_num(dr['koerper'], li)}, die übrigen "
+                                                    f"{_num(dr['rest'], li)}), {runen.WIDERSTAND_RW} Widerstandsarten je Ding, Treffer weiter höchstens +{runen.TREFFER_MAX}",
+                                                    f"at most like \"{sel[4]}\" (weapon {_num(dr['waffe'], li)}, body {_num(dr['koerper'], li)}, the rest "
+                                                    f"{_num(dr['rest'], li)}), {runen.WIDERSTAND_RW} kinds of resistance a thing, to hit still at most +{runen.TREFFER_MAX}")])
         return {"schalter": dict(sw, an=an), "zeilen": zeilen}
     if teil == "stillstand":
         return {"schalter": {"name": L("Spieler anleiten", "Guide the players"), "an": _an("dungeonanleiten"),
@@ -486,6 +500,8 @@ def view(teil, lang="de", welt=""):
             row.update(welten=[w["id"] for w in r["welten"] if kampf.plays_in(r, x, w["id"])], boss=bool(x.get("boss")), frisch=frisch(x), arten=arten(x))
         elif teil == "tabellen":
             row["tafel"] = tafel(x, r, li)
+        elif teil == "runenwoerter":
+            row["marke"] = runen.word_mark(dungeon, r, x, lang)       # plan point 4: weak, balanced, strong, too strong
         elif teil == "gegenstaende":
             row["marke"] = balance.item(x, lang)
             row["selten"] = x.get("seltenheit") or ""      # the frame's colour (dungeon.js DMSEL); "" = rolled

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.205** · 2026-10-28 · KI-Dungeon-Master: Runen und Sockel bis zum Schluss: Runenwörter erwachen in der richtigen Reihenfolge ab ihrer Stufe, der Schmied bohrt Sockel, löst und verschmilzt Runen, Runen gehen an andere Helden, eine Rune lässt sich auf das Ding ziehen, und das Auto kennt Runen
 - **V01.1.204** · 2026-10-28 · KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen
 - **V01.1.203** · 2026-10-28 · KI-Dungeon-Master: die Regeln zeigen auch Runen und Runenwörter mit Sockeln, Obergrenzen und Schalter, Effekte, die Tabellen der Karte, die Stillstand-Ereignisse und alle festen Zahlen; wer eine Fackel anzündet oder eine Waffe zückt, die er nicht hat, hört das vor der Erzählung, der Dungeon-Master bleibt in der Live-Übersicht sichtbar, solange gespielt wird
 - **V01.1.202** · 2026-10-28 · KI-Dungeon-Master: kürzere Anweisungen in fester Reihenfolge, die Probe mit eigenem kurzem Prompt, Alltägliches ohne Probe, englische Runden mit englischem Stil, der Erzähler-Prüfstand zeigt Prozent bis 100 (Review 27.10. Paket 12, Prüfstand 28.10.)

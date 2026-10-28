@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.205** AI Dungeon Master: runes and sockets to the end: runewords wake in the right order from their level, the smith drills sockets, takes runes out and fuses them, runes go to other heroes, a rune can be dragged onto the thing, and the car knows runes
 - **V01.1.204** AI Dungeon Master: runes have their picture on the rules page, per world as rune, chip, pearl or seal, with paint and paint again
 - **V01.1.203** AI Dungeon Master: the rules also show runes and runewords with sockets, caps and switch, effects, the map's tables, the stall events and every fixed number; whoever lights a torch or draws a weapon they do not have hears so before the narration, the Dungeon Master stays visible in the live overview while people play
 - **V01.1.202** AI Dungeon Master: shorter instructions in a fixed order, the check with its own short prompt, everyday acts without a check, English rounds with an English style, the narrator bench shows per cent up to 100 (review 27.10. package 12, bench 28.10.)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.198** AI Dungeon Master: the bench measures master and boss, every group size wins at least 60 % on average (review 27.10. B1, B3)
 - **V01.1.197** AI Dungeon Master: every hero gets experience by its level, however many fight along, finds and gold per hero instead of divided (review 27.10. package 11.8)
 - **V01.1.196** AI Dungeon Master: the model picks only the kinds, the panel sets how many foes come, people fight with their guards, the bench measures as at the table (review 27.10. package 11.7)
-- **V01.1.195** AI Dungeon Master: measured combat XP per foe
 
 
 

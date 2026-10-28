@@ -5901,6 +5901,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Runen und Sockel, Stufe 2 und 3 (V01.1.205, Plan „Runen und Sockel“, Dominik 2026-10-28 „mit runen weiter machen bis zum schluss“): Unter dem Schalter *Funktionen → KI-Dungeon-Master → Runen und Sockel* (chat.dungeon_runen, aus), kein neuer Schalter. 1. Runenwörter: Sitzen die Runen eines Runenworts in seiner Reihenfolge in einem gewöhnlichen, erkannten Ding mit genau so vielen Sockeln an seinem Ort (Waffe, Schild, Kopf oder Körper; dungeon_runen.match), erwacht es, sobald der Held seine Stufe hat: gleich beim Einsetzen oder später beim Stufenaufstieg (wake). Das Panel setzt it[\"rw\"], die Zusatzwirkung kommt über dieselben Regeln wie jede Rune (Effekt, Wert, Treffer und Schaden nur beim Angriff, Rüstungsklasse, Heiltränke) und hat ihren eigenen Deckel (9a): höchstens wie „legendär“ (Waffe 10, Körper 8, die übrigen 4), zwei Widerstandsarten je Ding, Treffer weiter höchstens +3. Der Wert ist Grundpreis + Runenpreise + Grundpreis × 8. Die Vorschau sagt vorher „Dann erwacht das Runenwort Sturmlied: …“ oder „erwacht erst ab Stufe 5“; am Tisch steht „Runenwort Sturmlied erwacht in Langschwert von Arvid: …“, am Ding „Runenwort Sturmlied: …“. Alle sieben Runenwörter steh"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "en im Runenbeutel unter „Runenwörter“ als Ziel: Runen in Reihenfolge (die vorhandenen hervorgehoben), Ort, Sockel, ab Stufe, Zusatz und die eigenen Dinge, in die es jetzt passt. Liest das Panel einen Helden ein, bleibt ein Runenwort nur, wo seine Runen sitzen. 2. Schmied (mit *Gold mit Zweck*, in einer Siedlung oder beim Händler, nachts zu, nie im Kampf; dungeon_gold.serve mit dungeon_runen.DIENSTE): *Sockel bohren* 25 × Gruppenstufe × neue Sockelzahl, gelingt immer, höchstens ein gebohrter Sockel je Ding, nie über die Sockel des Grundteils und nie in ein Runenwort (7a); *Runen lösen* zerbrechen für 5 × Gruppenstufe oder retten für die Hälfte der Runenpreise zurück in den Beutel, ein Runenwort erlischt immer (6a); *Runen verschmelzen* drei gleiche zu einer des nächsten Rangs für ein Viertel ihres Preises, höchstens bis Rang 9 (8a). Jeder Dienst hat eine Karte im Siedlungsfenster mit Preis und dem, was fehlt. 3. Schenken: Im Runenbeutel geht jede Rune über „Geben …“ an einen anderen Helden am Tisch, nie im Kampf, nie in einen vollen Beutel. 4. Ziehen und Ablegen (12a): Eine Rune lässt sich auf ein eigenes Ding mit freiem Sockel ziehen, passende Dinge leuchten; danach kommt dieselbe "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Vorschau wie aus der Liste, erst *Einsetzen* setzt sie. 5. Auto (12a): „Welche Runen habe ich?“, „Was fehlt für Sturmlied?“ werden sofort beantwortet, „Setze Uruz ins Langschwert“ sagt die Vorschau mit „Passt das?“ zurück, erst „ja“ setzt sie, eine Ablehnung kommt mit ihrem Grund. 6. Prüfstand: Der Balance-Prüfstand setzt in jede Waffe und Körperrüstung zuerst das stärkste Runenwort, dessen Runen alle im Beutel sind und zu dem Ding und Stufe passen (with_runes), dann wie bisher die stärksten Runen; der Selbsttest hält weiter höchstens +8 Punkte Siege. 7. Regeln-Seite: Bei Runen und Runenwörtern nennt „Feste Regeln dazu“ jetzt Erwachen, den Runenwort-Deckel und die Preise des Schmieds; jedes Runenwort trägt seine Stärke gegen den Deckel als Marke schwach, ausgewogen oder stark (dungeon_runen.word_mark). Das Bild eines fertigen Runenworts kommt aus dem Bilder-Thread (dungeon_dingbild.runenwort), sobald es dort steht. Live: dazu Runenwörter erwacht, Sockel gebohrt, gelöst, verschmolzen und geschenkt heute (nur Zahlen). Log dungeon: rune | runenwort | ok|deckel, dungeon: dienst | sockel|loesen|verschmelzen | …, dungeon: rune | schenken | ok|nein, dungeon: auto | rune_setzen | …. Selbst"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "tests in test_dungeon_runen (Runewords, Smith, test_runes_in_the_car), darunter jedes Runenwort des Katalogs Rune für Rune unter seinen Deckeln."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Regeln-Seite vollständig (V01.1.203, Dominik 2026-10-28 „die runen sehe ich die auch unter den regeln wie alles andere?“, „fehlt sonst noch etwas unter den regeln?“): Ohne neuen Schalter. Der Dungeon-Master-Reiter „Regeln“ (nur Admin) hat neue Teile, je mit Liste, Detail und Werten in festen Wörtern: 1. Runen (Rang, Bedeutung, Preis, was sie in Waffe, Rüstung und Schild tut, ab welcher Gruppenstufe sie fällt, ob der Krämer sie hat, was Händler zahlen) und Runenwörter (Runen in ihrer Reihenfolge, Ort, Sockel, ab Stufe, Zusatz; am Tisch erst mit Stufe 2 der Runen). Oben steht aufklappbar „Feste Regeln dazu“: der Schalter *Runen und Sockel* mit an oder aus und Sprung-Link (Funktionen → KI-Dungeon-Master → Runen und Sockel), Sockel je Grundteil, Funde, Krämer, Runenbeutel, die Obergrenzen (Waffe 6,5, Körper 6, die übrigen 3, Treffer +3, Rüstungsklasse +2 je Ding und +3 je Held, Leben +8 je Held, eine Widerstandsart je Ding), Einsetzen und das Wort je Welt, alles aus den Zahlen in dungeon_runen. 2. Effekte (benannt nach dem Anfang ihres Satzes, mit Wirkung, Schadensart, gehobenem Wert und erlaubten Arten). 3. Ortsarten der Karte, Räume der Gewölbe, Fallen (Rettungswur"
 },
 {
@@ -21598,6 +21630,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: runes and sockets, stage 2 and 3 (V01.1.205, plan \"Runes and sockets\", Dominik 2026-10-28 \"go on with the runes to the end\"): Under the switch *Features → AI Dungeon Master → Runes and sockets* (chat.dungeon_runen, off), no new switch. 1. Runewords: when the runes of a runeword sit in its order in a plain, known thing with exactly as many sockets at its place (weapon, shield, head or body; dungeon_runen.match), it wakes as soon as the hero has its level: right at the insert or later on a new level (wake). The panel sets it[\"rw\"], the extra effect comes through the same rules as every rune (effect, value, to hit and damage only in attacks, armour class, healing potions) and has its own cap (9a): at most like \"legendary\" (weapon 10, body 8, the rest 4), two kinds of resistance a thing, to hit still at most +3. The worth is base price + rune prices + base price × 8. The preview says beforehand \"Then the runeword Stormsong wakes: …\" or \"wakes only from level 5\"; the table shows \"Runeword Stormsong wakes in Arvid's Longsword: …\", the thing \"Runeword Stormsong: …\". All seven runewords stand in the rune bag under \"Runewords\" as goals: runes in order (the ones there high"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lighted), place, sockets, from level, extra and the own things it fits now. When the panel reads a hero, a runeword stays only where its runes sit. 2. Smith (with *Gold with a purpose*, in a settlement or at a merchant, shut at night, never in a fight; dungeon_gold.serve with dungeon_runen.DIENSTE): *Drill a socket* 25 × group level × new socket count, never fails, at most one drilled socket a thing, never above the base's sockets and never into a runeword (7a); *Take runes out* broken for 5 × group level or saved for half the rune prices back into the bag, a runeword always goes out (6a); *Fuse runes* three of the same into one of the next rank for a quarter of its price, up to rank 9 (8a). Each service has a card in the settlement window with its price and what is missing. 3. Giving: in the rune bag every rune goes to another hero at the table with \"Give …\", never in a fight, never into a full bag. 4. Drag and drop (12a): a rune can be dragged onto an own thing with a free socket, fitting things light up; then the same preview as from the list follows, only *Set* puts it in. 5. Car (12a): \"Which runes do I have?\", \"What is missing for Stormsong?\" are answered at once, \"Put Uruz i"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nto the longsword\" says the preview back with \"Is that right?\", only \"yes\" sets it, a refusal comes with its reason. 6. Bench: the balance bench first sets into every weapon and body armour the strongest runeword whose runes are all in the bag and that thing and level take (with_runes), then the strongest runes as before; the self-test still keeps it at most +8 points of wins. 7. Rules page: for runes and runewords \"Fixed rules\" now names waking, the runeword cap and the smith's prices; every runeword carries its strength against the cap as a mark weak, balanced or strong (dungeon_runen.word_mark). The picture of a finished runeword comes from the picture thread (dungeon_dingbild.runenwort) once it is there. Live: also runewords woken, sockets drilled, taken out, fused and given today (numbers only). Log dungeon: rune | runenwort | ok|deckel, dungeon: dienst | sockel|loesen|verschmelzen | …, dungeon: rune | schenken | ok|nein, dungeon: auto | rune_setzen | …. Self-tests in test_dungeon_runen (Runewords, Smith, test_runes_in_the_car), among them every runeword of the catalog rune by rune under its caps."
 },
 {
 "lang": "en",

@@ -6,7 +6,8 @@ half days of the world's calendar (dungeon_kalender, rd["kalender"]["halbe"]; an
 night) and ZUEGE told turns per section (morgen, then tag; abend, then nacht). After 2 × ZUEGE turns of one half the
 calendar runs half a day on by itself (kalender.weiter „zeit“); a way, a journey, a long rest or the inn move it as
 before, a long rest and the inn always until the next morning (kalender.weiter). The fixed effects:
-  - at night a settlement's shops are shut (LADEN_ZU: smith, lesson, improving gear, healer, and a merchant's goods);
+  - at night a settlement's shops are shut (LADEN_ZU: smith with its rune services, lesson, improving gear, healer, and a
+    merchant's goods);
     the inn, the rumour of the taproom and hiring a companion stay open (dungeon_gold.serve, dungeon.shop);
   - at night outside a vault and a settlement, a hero without darkvision (dungeon_alarm.DUNKELSICHT) and without a
     light in the group (a light of dungeon_alarm: the light spell, a lasting thing, a torch in a bag) rolls checks at a
@@ -27,7 +28,7 @@ from common import DayCounter
 
 KEY = "dungeontageszeit"
 ZUEGE = 6                  # told turns per section: a half day is 2 × ZUEGE turns
-LADEN_ZU = ("schmied", "lehre", "verbessern", "heiler")   # shut at night; "markt" is a merchant's goods
+LADEN_ZU = ("schmied", "lehre", "verbessern", "heiler", "sockel", "loesen", "verschmelzen")   # shut at night; "markt" a merchant's goods
 NAMEN = {"morgen": (("Morgen", "Morning"), "🌅"), "tag": (("Tag", "Day"), "☀️"),
          "abend": (("Abend", "Evening"), "🌇"), "nacht": (("Nacht", "Night"), "🌙")}
 

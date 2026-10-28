@@ -10,7 +10,9 @@ hero may pay for fixed offers of the panel, never of the model, priced by the gr
   better, up to „episch“, for its full price at the new rarity; known from then on;
 - Heiler (Narben, D&D idea 8, only while dungeon_narben is on): takes every wound's consequence, the scars stay;
 - Gefährte anheuern (D&D round 2, idea 9, only while dungeon_gefaehrte is on): a companion goes with the group, its
-  pay for the first chapter now (dungeon_gefaehrte.hire, the price by the companions' table).
+  pay for the first chapter now (dungeon_gefaehrte.hire, the price by the companions' table);
+- Runen (plan dungeon-runen 6a, 7a, 8a, only while „Runen und Sockel“ is on, dungeon_runen.DIENSTE): the smith drills
+  a socket, takes the runes out (broken or whole, a runeword goes out) and fuses three runes into the next rank.
 At night (dungeon_tageszeit, LlamaTale idea 1) the shops of tageszeit.LADEN_ZU are shut; the inn, the rumour and
 hiring a companion stay open.
 The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
@@ -22,6 +24,7 @@ import time
 
 import dungeon_gefaehrte as gefaehrte
 import dungeon_narben as narben
+import dungeon_runen as runen
 import dungeon_tageszeit as tageszeit
 
 SIEDLUNG = ("dorf", "stadt", "taverne", "station", "basar", "hafen")
@@ -38,7 +41,10 @@ NAMEN = {"gasthaus": (("Gasthaus", "Inn"), ("Eine Nacht für alle: volles Leben 
          "geruecht": (("Gerücht", "Rumour"), ("Ein Hinweis auf den nächsten Ort.", "A hint at the next place.")),
          "verbessern": (("Ausrüstung verbessern", "Improve gear"), ("Eine Waffe oder Rüstung wird eine Seltenheit besser, bis episch.", "A weapon or armour gets one rarity better, up to epic.")),
          "heiler": (("Heiler", "Healer"), ("Nimmt die Folgen deiner Wunden; die Narben bleiben als Erinnerung.", "Takes your wounds' consequences; the scars stay as a memory.")),
-         "gefaehrte": (("Gefährte anheuern", "Hire a companion"), ("Geht mit der Gruppe und kämpft mit; der Lohn ist je Kapitel fällig.", "Goes with the group and fights along; the pay is due each chapter."))}
+         "gefaehrte": (("Gefährte anheuern", "Hire a companion"), ("Geht mit der Gruppe und kämpft mit; der Lohn ist je Kapitel fällig.", "Goes with the group and fights along; the pay is due each chapter.")),
+         "sockel": (("Sockel bohren", "Drill a socket"), ("Ein Sockel mehr in einer Waffe oder Rüstung, höchstens einer je Ding.", "One more socket in a weapon or armour, at most one a thing.")),
+         "loesen": (("Runen lösen", "Take runes out"), ("Bricht die Runen heraus oder rettet sie in den Beutel; ein Runenwort erlischt.", "Breaks the runes out or saves them into the bag; a runeword goes out.")),
+         "verschmelzen": (("Runen verschmelzen", "Fuse runes"), ("Drei gleiche Runen werden eine des nächsten Rangs.", "Three of the same rune become one of the next rank."))}
 RICHTUNG = (("im Osten", "to the east"), ("im Südosten", "to the south-east"), ("im Süden", "to the south"), ("im Südwesten", "to the south-west"),
             ("im Westen", "to the west"), ("im Nordwesten", "to the north-west"), ("im Norden", "to the north"), ("im Nordosten", "to the north-east"))
 clock = time.time
@@ -64,11 +70,13 @@ def here(rd):
 def offers(rd, h):
     """The settlement's services for this hero: the healer while the host's wounds are on (dungeon_narben) or the hero
     still has a consequence to heal (from a round with the switch on); the companions while the host's are on."""
-    return DIENSTE + ((HEILER,) if narben.on(rd) or narben.to_heal(h) else ()) + ((GEFAEHRTE,) if gefaehrte.on(rd) else ())
+    return DIENSTE + ((HEILER,) if narben.on(rd) or narben.to_heal(h) else ()) + ((GEFAEHRTE,) if gefaehrte.on(rd) else ()) \
+        + (runen.DIENSTE if runen.on(rd) and runen.wirkt() else ())
 
 
 def per_level(was):
-    """A service's gold per level of the group: PREIS, the healer's from dungeon_narben, 0 for „verbessern“."""
+    """A service's gold per level of the group: PREIS, the healer's from dungeon_narben, 0 for „verbessern“ and the
+    runes' (by the piece)."""
     return narben.HEILER if was == HEILER else PREIS.get(was, 0)
 
 
@@ -76,7 +84,7 @@ def price(dm, rd, was):
     """A service's price by the group's level (the inn per hero), on a festival of the world's calendar more
     (dungeon_kalender.aufschlag); „verbessern“ goes by the piece (better_price)."""
     import dungeon_kalender
-    if was == "verbessern":
+    if was == "verbessern" or was in runen.DIENSTE:
         return 0
     if was == GEFAEHRTE:
         return gefaehrte.sold(dm, dm.rules(), rd)
@@ -161,7 +169,8 @@ def serve(dm, r, rd, pid, h, b):
     if was == "verbessern" and (not teil or not better(dm, r, teil)):
         print("dungeon: dienst | verbessern | nein", flush=True)
         raise ValueError("verbessern")
-    preis = better_price(dm, r, teil) if teil else price(dm, rd, was)
+    ziel = runen.service_price(dm, r, rd, h, b) if was in runen.DIENSTE else None   # (price, thing or rune)
+    preis = ziel[0] if ziel else better_price(dm, r, teil) if teil else price(dm, rd, was)
     if h["gold"] < preis:
         print(f"dungeon: dienst | {was} | zu wenig gold", flush=True)
         raise ValueError("gold")
@@ -208,6 +217,8 @@ def serve(dm, r, rd, pid, h, b):
         text = (f"Ein Heiler versorgt {h['name']}: {n} Wunden heilen aus, die Narben bleiben.", f"A healer tends to {h['name']}: {n} wounds heal, the scars stay.")
     elif was == GEFAEHRTE:
         text = gefaehrte.hire(dm, r, rd, pid, h, str(b.get("i") or "")[:40])
+    elif ziel:
+        text = runen.service(dm, r, rd, h, b, ziel[1])
     elif was == "verbessern":
         alt = dm.item_view(r, teil, rd["lang"])["name"]
         teil["s"] = better(dm, r, teil)
@@ -247,6 +258,8 @@ def view(dm, r, rd, pid):
     frei = {"gasthaus": rd.get("gasthaus") != evening(), "schmied": bool(h.get("kaputt")),
             "lehre": True, "geruecht": bool(k) and k.get("geruecht") != k.get("hier") and _next_place(rd) >= 0, "verbessern": bool(besser),
             "heiler": bool(narben.to_heal(h)), "gefaehrte": bool(gefaehrte.candidates(dm, r, rd))}
+    rn = runen.smith_view(dm, r, rd, h, li)
+    frei.update({x: bool(rn.get(x)) for x in runen.DIENSTE})
     held = dm._living(rd)
     zu = set(tageszeit.LADEN_ZU) if tageszeit.nachts(rd) else set()   # shut at night (LlamaTale idea 1), not counted
     # Siedlung mit Leben (Dominik 2026-10-25 „so umsetzten“, 1a 3a 5b): the time of day for the head, the group's gold only
@@ -260,4 +273,5 @@ def view(dm, r, rd, pid):
             "gefaehrten": gefaehrte.candidates(dm, r, rd),         # the companions to hire (D&D round 2, idea 9)
             "kaputt": [dm.item_view(r, x, rd["lang"]) for x in h.get("kaputt") or []],
             "verbessern": [dict(dm.item_view(r, x, rd["lang"]), preis=better_price(dm, r, x),
-                                neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser]}
+                                neu=dm._by(r, "seltenheit")[better(dm, r, x)]["name"][li]) for x in besser],
+            **({"runen": rn} if rn else {})}           # the smith's rune services (dungeon_runen.smith_view)

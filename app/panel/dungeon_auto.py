@@ -13,6 +13,9 @@ model's words are only the narration itself. The model decides nothing here.
   point, an ability, the host's „jetzt weiter“, and every action of the turn) is said back first: „Uma greift Goblin 1
   an. Passt das?“ (frage). Only the same request again with ok goes through, by the same rules as the buttons at the
   table (hero_act, act, maybe_close). A long sentence is always the action, never a command.
+- Runen und Sockel (plan dungeon-runen 12a, Stufe 3): „Welche Runen habe ich?“ and „Was fehlt für Sturmlied?“ are
+  answered at once; „Setze Uruz ins Langschwert“ says the panel's preview back („… Dann erwacht das Runenwort
+  Sturmlied … Passt das?“), only „ja“ sets it (dungeon_runen.act), a refusal is said with its reason.
 - rid picks one of the own running rounds (CarPlay lists them); without it the newest. neu offers three stories and
   starts the chosen one with the hero played last (Punkt 11); the app sends back only what it got under weiter.
 """
@@ -36,6 +39,11 @@ FRAGEN = (
                          r"how is the fight|how are the foes|fight status)\b")),
     ("haendler", re.compile(r"(?i)\b(was (verkauft|hat|bietet) (der )?h[äa]ndler|was gibt es zu kaufen|h[äa]ndler\W*$|"
                             r"what does the merchant (sell|have)|what is for sale|merchant\W*$)")),
+    ("runen", re.compile(r"(?i)\b(welche (runen|chips|perlen|siegel) habe ich|meine (runen|chips|perlen|siegel)|runenbeutel|"
+                         r"which (runes|chips|pearls|seals) do i have|my (runes|chips|pearls|seals)|rune bag)\b")),
+    ("fehlt", re.compile(r"(?i)\bwas fehlt( mir| noch)* (für|zu) (?P<was>[\wäöüß' ]+?)\W*$|\bwhat (is missing|do i need|am i missing) for (?P<was2>[\w' ]+?)\W*$")),
+    ("rune_setzen", re.compile(r"(?i)^\W*(setze?|steck\w*) (die |den |das )?(rune |chip |perle |siegel )?(?P<rune>\w+) (in|ins|in die|in den|in das|auf) (?P<was>.+?)( ein)?\W*$"
+                               r"|^\W*(set|put|socket) (the )?(rune |chip |pearl |seal )?(?P<rune2>\w+) (in|into|on) (?P<was2>.+?)\W*$")),
     ("trank_an", re.compile(r"(?i)^\W*(gib|give) (?P<wer>\w+) (einen |den |deinen |meinen |a |my |the )?(\w*trank|potion)\W*$")),
     ("trinken", re.compile(r"(?i)\b(trink\w*|drink\w*)\b.*\b(\w*trank|potion)\b")),
     ("anlegen", re.compile(r"(?i)^\W*(leg|zieh|nimm|rüste) (?P<was>.+?) (an|in die hand|aus)\W*$|^\W*(equip|put on|wear|wield) (?P<was2>.+?)\W*$")),
@@ -52,7 +60,7 @@ FRAGEN = (
                         r"what can (i|we) do( here| now)?)\b")),
     ("wohin", re.compile(r"(?i)\b(wohin (können|koennen|kann) (wir|ich)( gehen)?|welche wege|wo geht es (hin|weiter)|"
                          r"where can (we|i) go|which ways)\b")))
-TUN = ("trank_an", "trinken", "anlegen", "wirken", "aufheben", "verkaufen", "kaufen", "punkt", "faehigkeit", "weiter", "aktion")
+TUN = ("rune_setzen", "trank_an", "trinken", "anlegen", "wirken", "aufheben", "verkaufen", "kaufen", "punkt", "faehigkeit", "weiter", "aktion")
 _ZAHL = {"erste": 0, "eins": 0, "first": 0, "1": 0, "zweite": 1, "zwei": 1, "second": 1, "2": 1, "dritte": 2, "drei": 2, "third": 2, "3": 2}
 _FUELL = re.compile(r"(?i)\b(den|die|das|dem|der|des|einen|eine|ein|meinen|meine|mein|deinen|deine|dein|the|a|an|my)\b")
 
@@ -123,10 +131,12 @@ SAGEN = {
     "am_boden": ("{name} liegt am Boden und kann das gerade nicht.", "{name} is down and cannot do that right now."),
     "hilfe": ("Du kannst sagen: wie viel Leben habe ich, was ist in meiner Tasche, wie steht der Kampf, wohin können wir, was kann ich tun, was verkauft der Händler, "
               "trink einen Heiltrank, gib Bela einen Trank, leg den Dolch an, wirke Feuerpfeil, heb den Schlüssel auf, kauf, verkauf, "
-              "Punkt auf Stärke, die erste, wer fehlt, nochmal, als Gastgeber jetzt weiter, und Stopp zum Aufhören. Alles andere ist deine Aktion.",
+              "Punkt auf Stärke, die erste, wer fehlt, nochmal, als Gastgeber jetzt weiter, und Stopp zum Aufhören. Mit Runen auch: welche Runen habe ich, "
+              "was fehlt für Sturmlied, setze Uruz ins Langschwert. Alles andere ist deine Aktion.",
               "You can say: how much life do I have, what is in my bag, how is the fight, where can we go, what can I do, what does the merchant sell, drink a healing "
               "potion, give Bela a potion, put on the dagger, cast fire bolt, pick up the key, buy, sell, point on strength, the first, "
-              "who is missing, again, as host go on now, and stop to quit. Anything else is your action."),
+              "who is missing, again, as host go on now, and stop to quit. With runes also: which runes do I have, what is missing for Stormsong, "
+              "put Uruz into the longsword. Anything else is your action."),
     # a new round in the car (Punkt 11)
     "geschichten": ("Drei Geschichten: {liste}. Welche nimmst du?", "Three stories: {liste}. Which one do you take?"),
     "geschichte": ("{nr}: {titel}", "{nr}: {titel}"),
@@ -160,7 +170,20 @@ SAGEN = {
     "zauber": ("{name} wirkt {zauber}.", "{name} casts {zauber}."),
     "sieg": ("Der Kampf ist gewonnen.", "The fight is won."),
     "kampf_ende": ("Der Kampf ist vorbei.", "The fight is over."),
-    "mehr": ("Und mehr, am Tisch zu sehen.", "And more, to see at the table.")}
+    "mehr": ("Und mehr, am Tisch zu sehen.", "And more, to see at the table."),
+    # Runen und Sockel (dungeon_runen): the bag, what a runeword still needs, a rune set
+    "runen": ("{woerter} im Beutel: {runen}.", "{woerter} in the bag: {runen}."),
+    "keine_runen": ("Du hast keine {woerter}.", "You have no {woerter}."),
+    "runen_aus": ("Runen und Sockel sind auf diesem Spark gerade aus.", "Runes and sockets are switched off on this Spark right now."),
+    "kein_wort": ("Ich kenne kein Runenwort namens {was}.", "I know no runeword called {was}."),
+    "wort_wach": ("{wort} ist schon erwacht.", "{wort} is awake already."),
+    "fehlt": ("Für {wort} fehlen noch: {runen}.", "For {wort} you still need: {runen}."),
+    "fehlt_nichts": ("Für {wort} hast du alles beisammen.", "For {wort} you have everything together."),
+    "wort_ding": (" Es passt in {dinge}.", " It fits into {dinge}."),
+    "wort_kein_ding": (" Dazu braucht es ein gewöhnliches Ding, {ort}, mit genau {sockel} Sockeln, ab Stufe {ab}.",
+                       " It takes a plain thing, {ort}, with exactly {sockel} sockets, from level {ab}."),
+    "rune_gesetzt": ("{rune} sitzt jetzt in {ding}.", "{rune} now sits in {ding}."),
+    "rune_wach": (" Das Runenwort {wort} erwacht.", " The runeword {wort} wakes.")}
 EREIGNIS_ARTEN = ("wurf", "angriff", "folge", "beute", "stufe", "zustand", "todeswurf", "zauber", "kampf")
 
 
@@ -396,6 +419,8 @@ def car(uid, text="", nach=0, lang="de", rid="", ok=False, neu=False, wahl=None,
             return out("kein_haendler")
         dinge = [f"{x['name']} für {x['preis']}" if not li else f"{x['name']} for {x['preis']}" for x in m["ware"][:DINGE_MAX]]
         return out("ware", haendler=m["name"], dinge=", ".join(dinge))
+    if kind in ("runen", "fehlt"):
+        return _runes(dm, r, rd, h, kind, text, li, out)
     if kind == "faehigkeit" and not h.get("wahl"):
         return out("keine_wahl")
     return do(dm, r, rd, rid, pid, h, kind, text, ok, li, n, names, out, uid)
@@ -446,6 +471,23 @@ def do(dm, r, rd, rid, pid, h, kind, text, ok, li, n, names, out, uid):
         b, ding = {"was": kind, "i": x["i"]}, x["name"]
         gold = x.get("preis", 0) if kind == "kaufen" else mv["verkauf"].get(x["i"], 0) if kind == "verkaufen" else 0
         back = _say(kind, li, name=h["name"], ding=ding, gold=gold)
+    elif kind == "rune_setzen":       # the panel's preview said back, only „ja“ sets it (dungeon_runen.act)
+        import dungeon_runen as runen
+        rs = runen.by(r)
+        said = (m.groupdict().get("rune") or m.groupdict().get("rune2") or "").lower()
+        rune = next((k for k, x in rs.items() if any(nm.lower().startswith(said[:4]) for nm in x["name"])), None) if len(said) > 2 else None
+        alle = dm.worn(h) + h["tasche"]
+        frei = [y for y in alle if y.get("so") and len(y.get("ru") or []) < y["so"]]   # a thing with a free socket first
+        x = find([view(y) for y in frei], _what(m)) or find([view(y) for y in alle], _what(m))
+        if not rune or not x:
+            return out("nicht_da", was=said if not rune else _what(m))
+        it = next(y for y in dm.worn(h) + h["tasche"] if y["i"] == x["i"])
+        grund, z = runen.check(dm, r, rd, h, it, rune)
+        pv = runen.preview(dm, r, rd, h, it, rune, grund, z, li)
+        if not pv["ok"]:
+            print(f"dungeon: auto | rune_setzen | {grund}", flush=True)
+            return {"sagen": pv["text"], "n": n, "warten": False, "aus": False, "rid": rid}
+        b, ding, back = {"was": "rune", "tun": "einsetzen", "rune": rune, "i": it["i"]}, x["name"], pv["text"]
     elif kind == "punkt":
         if h.get("punkte", 0) < 1:
             return out("keine_punkte")
@@ -488,11 +530,41 @@ def do(dm, r, rd, rid, pid, h, kind, text, ok, li, n, names, out, uid):
         return out(NEIN.get(why, "gold" if "gold" in why else "geht_nicht"))
     rd = dm._read()["runden"][rid]
     h = rd["plaetze"][pid]["held"]
+    if b["was"] == "rune":
+        import dungeon_runen as runen
+        it = next((y for y in dm.worn(h) + h["tasche"] if y["i"] == b["i"]), {})
+        rw = runen.word_of(r, it)
+        return {"sagen": _say("rune_gesetzt", li, rune=runen.by(r)[b["rune"]]["name"][li], ding=ding)
+                + (_say("rune_wach", li, wort=rw["name"][li]) if rw else ""), "n": n, "warten": False, "aus": False, "rid": rid}
     z = rd["plaetze"][zid]["held"] if zid else h
     k = {"trinken": "getrunken", "anlegen": "angelegt", "wirken": "gewirkt", "aufheben": "aufgehoben", "kaufen": "gekauft",
          "verkaufen": "verkauft", "punkt": "gesetzt", "faehigkeit": "gelernt"}[b["was"]]
     return out(k, name=h["name"], wer=z["name"], ding=ding, trank=ding, gold=h["gold"], leben=z["leben"], max=z["leben_max"],
                wert=ding, zahl=h["werte"].get(b.get("wert"), 0))
+
+
+def _runes(dm, r, rd, h, kind, text, li, out):
+    """The rune bag said, or what a runeword still needs (dungeon_runen.goals): fixed words and the catalog's names."""
+    import dungeon_runen as runen
+    welt = rd.get("welt", "")
+    if not runen.on(rd) or not runen.wirkt():
+        return out("runen_aus")
+    rs, rb = runen.by(r), h.get("runen") or {}
+    if kind == "runen":
+        teile = [(f"{n} " if n > 1 else "") + rs[k]["name"][li] for k, n in sorted(rb.items(), key=lambda x: rs[x[0]]["rang"] if x[0] in rs else 99) if k in rs]
+        w = runen.word(welt, li, True)
+        return out("runen", woerter=w, runen=", ".join(teile[:DINGE_MAX])) if teile else out("keine_runen", woerter=w)
+    m = next(rx.search(text) for k, rx in FRAGEN if k == "fehlt")
+    said = _what(m)
+    g = next((x for x in runen.goals(dm, r, h, li) if x["name"].lower() == said.lower() or _words(said) and all(w in x["name"].lower() for w in _words(said))), None)
+    if not g:
+        return out("kein_wort", was=said)
+    if g["fertig"]:
+        return out("wort_wach", wort=g["name"])
+    fehlt = runen.missing(r, g)
+    s = _say("fehlt", li, wort=g["name"], runen=", ".join(fehlt)) if fehlt else _say("fehlt_nichts", li, wort=g["name"])
+    s += _say("wort_ding", li, dinge=", ".join(g["dinge"][:DINGE_MAX])) if g["dinge"] else _say("wort_kein_ding", li, ort=g["ort"], sockel=g["sockel"], ab=g["ab"])
+    return dict(out("hilfe"), sagen=s)
 
 
 def _act_car(dm, r, rid, pid, text, li, n, chosen):

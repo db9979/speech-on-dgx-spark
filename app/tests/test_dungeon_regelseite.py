@@ -297,7 +297,12 @@ class Page(Base):
         words, d = self.rows("runenwoerter")
         self.assertEqual(len(words), 7)
         self.assertIn("Kenaz + Uruz", words["glut"]["zeile"])
-        self.assertIn("noch nicht", dict(d["kasten"]["zeilen"])["Am Tisch"])
+        kz = dict(d["kasten"]["zeilen"])                                    # Stufe 2: runewords at the table
+        self.assertIn("genau so vielen Sockeln", kz["Erwachen"])
+        self.assertIn("Waffe 10", kz["Deckel"])
+        self.assertIn(f"Sockel bohren {rs.runen.BOHREN}", kz["Schmied"])
+        self.assertEqual({x["marke"]["marke"] for x in words.values()} - {"schwach", "ok", "stark"}, set())   # none too strong
+        self.assertIn("Stärke", dict(words["sturmlied"]["werte"]))
         en = ADMIN.get(K + "runen?lang=en").json()
         self.assertEqual(en["kasten"]["schalter"]["weg"], "Features → AI Dungeon Master → Runes and sockets")
         # a rune changed by its id (merged like every list), taken back; hiding one leaves a gap in the ranks: refused

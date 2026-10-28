@@ -160,8 +160,9 @@ def with_runes(r, held, stufe, rng):
     body armour by dungeon_runen.sockets, the runes of every level's finds (occasions) by dungeon_runen.draw at that
     level's rank, and from the trader every rune of the ranks it sells (KRAEMER, the gold assumed); then each hero
     fills every socket with the rune that makes the thing strongest within the caps (dungeon_runen.fits), a rune not
-    yet in the thing first (per value only the strongest bonus counts), the weapon first. More than a player gets: the
-    bench's runes are the upper bound."""
+    yet in the thing first (per value only the strongest bonus counts), the weapon first; a runeword whose runes are all
+    in the bag goes in first when the thing and the level take it (plan point 1: from level 9 a runeword like
+    Sturmlied), the strongest of them. More than a player gets: the bench's runes are the upper bound."""
     for h in held:
         for it in (h["an"].get("haupthand"), h["an"].get("koerper")):
             if it:
@@ -177,6 +178,14 @@ def with_runes(r, held, stufe, rng):
             if x["rang"] <= runen.KRAEMER:
                 rb[x["id"]] = rb.get(x["id"], 0) + sum(it["so"] for it in frei)
         for it in frei:
+            wahl = [(runen.strength(dungeon, r, it, w["runen"], w), w["id"]) for w in runen.words(r).values()
+                    if h["stufe"] >= w["ab"] and runen.match(dungeon, r, it, w["runen"]) is w
+                    and all(h["runen"].get(x, 0) >= w["runen"].count(x) for x in w["runen"]) and not runen.over(dungeon, r, it, w["runen"], w)]
+            if wahl:
+                w = runen.words(r)[max(wahl)[1]]
+                it["ru"], it["rw"] = list(w["runen"]), w["id"]
+                for x in w["runen"]:
+                    h["runen"][x] -= 1
             while len(it["ru"]) < it["so"]:
                 z = [(rid not in it["ru"], c[1]["nachher"], rid) for rid in sorted(h["runen"]) if h["runen"][rid]
                      for c in [runen.fits(dungeon, r, h, it, rid)] if c[0] == "ok"]

@@ -2095,7 +2095,9 @@ def snapshot(view="admin", now=None):
                            f" ({dgn['echt'].get('kurz', 0)} mit kurzer Wartezeit), {dgn['echt']['abgelehnt']} abgelehnt"
                            if (dgn.get("echt") or {}).get("gefragt") or (dgn.get("echt") or {}).get("abgelehnt") else "")
                         + (f" · heute {dgn['runen']['gefunden']} Runen gefunden, {dgn['runen']['eingesetzt']} eingesetzt, {dgn['runen']['abgelehnt']} abgelehnt, "
-                           f"{dgn['runen']['gekauft']} gekauft, {dgn['runen']['verkauft']} verkauft, {dgn['runen']['sockel']} Funde mit Sockeln"
+                           f"{dgn['runen']['gekauft']} gekauft, {dgn['runen']['verkauft']} verkauft, {dgn['runen']['sockel']} Funde mit Sockeln, "
+                           f"{dgn['runen'].get('runenwoerter', 0)} Runenwörter erwacht, {dgn['runen'].get('gebohrt', 0)} Sockel gebohrt, "
+                           f"{dgn['runen'].get('geloest', 0)}× gelöst, {dgn['runen'].get('verschmolzen', 0)}× verschmolzen, {dgn['runen'].get('geschenkt', 0)} geschenkt"
                            if any((dgn.get("runen") or {}).values()) else "")
                         + (f" · heute knapp daneben {dgn['knapp']['gefragt']}× gefragt, {dgn['knapp']['gezahlt']}× mit Preis, {dgn['knapp']['aufgegeben']}× aufgegeben, "
                            f"{dgn['knapp']['ohne_antwort']}× ohne Antwort, {dgn['knapp']['abgelehnt']} abgelehnt"

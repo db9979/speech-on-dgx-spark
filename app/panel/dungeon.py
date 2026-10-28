@@ -1804,6 +1804,8 @@ def pay_ep(r, rd, rid):
             _log(rd, "stufe", pid=pid, name=h["name"], stufe=neu)
             _day.bump("stufen")
             print(f"dungeon: stufe | {neu}", flush=True)
+            if runen.on(rd):
+                runen.wake(_me, r, rd, h)         # a runeword that waited for this level (dungeon_runen)
     print(f"dungeon: ep | ende | {n_helden} helden", flush=True)
 
 
@@ -1824,7 +1826,8 @@ def price(r, it):
     if c.get("seltenheit") and "preis" in c:
         return c["preis"]
     f = s.get("preis", 1)
-    return max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f)) + runen.worth(r, it)
+    n = max(1, c.get("preis", r["preise"][c["art"]]) * (max(1, f // 2) if c["art"] in GUENSTIG else f))
+    return n + runen.worth(r, it, n)                # the runes and a runeword (dungeon_runen)
 
 
 def strength(r, it):
@@ -1927,6 +1930,7 @@ def item_view(r, it, lang):
             "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")), "oel": bool(c.get("oel")),
             "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li],
             "so": it.get("so", 0), "ru": [runen.by(r)[x]["name"][li] for x in it.get("ru") or [] if x in runen.by(r)],
+            "rw": (runen.word_of(r, it) or {}).get("name", ["", ""])[li],
             "heilt": c["heilung"] + it.get("bonus", 0) if c["art"] == "trank" and c.get("heilung") else 0}
 
 
@@ -6346,6 +6350,12 @@ def hero_act(rid, pid, b):
             if c.get("schaden_art"):              # Kampf-Audit M4: a scroll of an attack spell makes the next attack it
                 h["rolle"] = {"id": it["id"], "bis": rd.get("zug", 0) + 1}
                 print("dungeon: rolle | bereit", flush=True)
+        elif was == "schenken" and "rune" in b:      # a rune from the rune bag (dungeon_runen)
+            an = rd["plaetze"].get(b.get("an"))
+            if not an or not an.get("held") or an["held"].get("tot") or b.get("an") == pid:
+                raise ValueError("an")
+            runen.give(_me, r, rd, h, an["held"], b["rune"])
+            keep_seat(an)
         elif was == "schenken":
             an = rd["plaetze"].get(b.get("an"))
             if not it or not an or not an.get("held") or an["held"].get("tot") or b.get("an") == pid or not room(r, an["held"], [it]):
