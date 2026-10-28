@@ -3877,6 +3877,22 @@ def typed_apply(rd, events):
         print(f"dungeon: getippt | {art} | hinweis", flush=True)
 
 
+OHNE_PROBE = {"gehen": ("Keine Probe: Gehen braucht keine.", "No check: walking needs none."),
+              "zustand": ("Keine Probe: Wer am Boden liegt, würfelt nicht.", "No check: a hero who is down rolls nothing."),
+              "absicht": ("Keine Probe: Wer nur fragt oder redet, würfelt höchstens Charisma.",
+                          "No check: who only asks or talks rolls Charisma at most.")}
+
+
+def tell_no_check(rd, ohne, seats):
+    """Review 27.10. Paket 12 (E14): a fixed line only at the seat whose check the panel dropped (check_proben), once
+    a seat a turn."""
+    li = 1 if rd["lang"] == "en" else 0
+    for pid, kind in dict(ohne or ()).items():
+        if pid in seats and kind in OHNE_PROBE:
+            _log(rd, "ooc", pid=pid, panel=True, text=OHNE_PROBE[kind][li])
+            print(f"dungeon: probe | ohne | {kind}", flush=True)
+
+
 def check_proben(r, rd, obj):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
     of the list, the difficulty clamped, none for plain going, buying or resting by the player's own words (typed),
@@ -3884,6 +3900,7 @@ def check_proben(r, rd, obj):
     neighbouring place without a word of RISIKO, dungeon_karte.asked_ways) or for a hero down (zustand), for an action that only asks or
     talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
+    rd["_ohne"] = []                             # Review 27.10. Paket 12 (E14): the seats told why no check came (OHNE_PROBE)
     werte = {w["id"] for w in r["werte"]}
     walk = dungeon_karte.asked_ways(rd)        # a plain way to a neighbouring place needs no check (no word of RISIKO)
     for p in (obj or {}).get("proben") or []:
@@ -3896,15 +3913,19 @@ def check_proben(r, rd, obj):
         if kind or just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
             drop += 1
             print(f"dungeon: probe | verworfen | {kind or 'gehen'}", flush=True)
+            if kind in ("", "gehen"):            # buying, selling and resting have their own line (TIPP)
+                rd["_ohne"].append((pid, "gehen"))
             continue
         if zustand((rd["plaetze"].get(pid) or {}).get("held") or {}):
             drop += 1                            # a hero down, unconscious or dead rolls nothing, so earns no check's experience
             print("dungeon: probe | verworfen | zustand", flush=True)
+            rd["_ohne"].append((pid, "zustand"))
             continue
         wert = fitting_value(rd, pid, p["wert"])
         if erz.asks((rd["offen"][pid] or {}).get("text")) and (wert != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
             drop += 1                            # an action that only asks: Charisma or no check, never sneaking
             print("dungeon: probe | verworfen | absicht", flush=True)
+            rd["_ohne"].append((pid, "absicht"))
             continue
         seen.add(pid)
         out.append({"pid": pid, "wert": wert, "schwer": PROBE_SG[stufe], "sg": stufe,
@@ -4322,7 +4343,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None, kampfwuerfe=([], [])):
         if f and hf in held:                      # the find drawn before the narration (Paket 9, E5)
             i = held.index(hf)
             found(held, i, f["selten"], f["gold"])
-            put_find(r, rd, held, i, f["it"], f["gold"], "truhe")
+            put_find(r, rd, held, i, f["it"], f["gold"], "truhe", grund="finder")
             more_finds(r, rd, held, "truhe", stufe, rng)
         if story["beute"] and held and fund_ort(rd) not in (rd.get("fundorte") or []):
             b = story["beute"]
@@ -4436,6 +4457,9 @@ def consequences(r, rd, folgen, names):
         was = h["leben"]
         if f["art"] == "heilung":
             n = heal(h, f["zahl"])
+            if not n:                            # Review 27.10. T18: a hero at full life shows no healing of 0
+                print("dungeon: folgen | heilung | voll", flush=True)
+                continue
             _log(rd, "folge", pid=pid, name=h["name"], was="heilung", zahl=n, leben=h["leben"])
             stood_up(rd, pid, h, was)
             continue
@@ -4476,7 +4500,7 @@ def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz="", wer=None)
         print(f"dungeon: beute | {anlass} | nur gold", flush=True)
         return
     i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""), rd, wer)
-    put_find(r, rd, held, i, it, gold, anlass, rng)
+    put_find(r, rd, held, i, it, gold, anlass, rng, "finder" if wer is not None and 0 <= wer < len(held) else "lange")
     more_finds(r, rd, held, anlass, stufe, rng, n)
 
 
@@ -4485,7 +4509,7 @@ def more_finds(r, rd, held, anlass, stufe, rng=None, n=None):
     longest without one."""
     for _ in range((funde(len(held), anlass, rng) if n is None else n) - 1):
         i, it, _ = loot(r, held, anlass, stufe, rng, welt=rd.get("welt", ""), rd=rd, gold=False)
-        put_find(r, rd, held, i, it, 0, anlass, rng)
+        put_find(r, rd, held, i, it, 0, anlass, rng, "lange")
 
 
 def first_find(r, rd, wuerfe, rng=None):
@@ -4519,10 +4543,11 @@ def fund_ort(rd):
     return str(k.get("drin") or k.get("hier") or (rd.get("szene") or {}).get("ort") or "")
 
 
-def put_find(r, rd, held, i, it, gold, anlass, rng=None):
+def put_find(r, rd, held, i, it, gold, anlass, rng=None, grund=""):
     """A drawn find into the bag of held[i] or on the ground; a legend counted once a campaign; log, day count and
     the place it was made at (rd["fundorte"], one find a place by the model or a passed search); sockets and a rune
-    by the rules of dungeon_runen (only while on)."""
+    by the rules of dungeon_runen (only while on). grund (Review 27.10. Paket 12, E14): why this hero got it, „finder“
+    or „lange“ (who went longest without one), shown only when more than one hero is at the table."""
     runen.give_sockets(_me, r, rd, it, rng)
     rd["fundorte"] = [o for o in rd.get("fundorte") or [] if o != fund_ort(rd)][-FUNDORTE_MAX + 1:] + [fund_ort(rd)]
     if it.get("leg"):
@@ -4534,7 +4559,8 @@ def put_find(r, rd, held, i, it, gold, anlass, rng=None):
         rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
     else:
         bag_add(r, held[i], it)
-    _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden)
+    _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden,
+         **({"grund": grund} if grund in ("finder", "lange") and len(held) > 1 else {}))
     _day.bump("beute")
     print(f"dungeon: beute | {anlass} | {it['s']}", flush=True)
     runen.find(_me, r, rd, held, anlass, rng)
@@ -4694,6 +4720,8 @@ async def run_turn(rid, turn):
                 take = quest.pickups(_me, cur) if story else []   # before apply clears the actions (Punkt 15)
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid,
                       kampfwuerfe=([x for x in hits if x["pid"] in mit], [x for x in zuege if x["pid"] in mit]) if story else ([], []))
+                if story:
+                    tell_no_check(cur, rd.get("_ohne"), seats)   # Review 27.10. Paket 12: why a seat had no check
                 if story:                         # the host's random rules (Tabletop-Punkt 9), their hints for the next narration
                     cur["zufall_hinweise"] = (zufall.roll(_me, r, cur, "zug") + (zufall.roll(_me, r, cur, "ort") if cur["szene"].get("ort") != ort0 else [])
                                               + (zufall.roll(_me, r, cur, "kampf") if cur.get("kampf") and not kampf0 else []))
@@ -6632,6 +6660,7 @@ def _http(e):
     # with what to do (dungeon.js DMGRUND); anything else only the coarse word
     why = e.args[0] if type(e) in _NEIN and e.args and isinstance(e.args[0], str) and _GRUND.fullmatch(e.args[0]) else word
     _day.bump("abgelehnt")
+    word = "zustand" if why in ("boden", "ohnmacht", "tot") else word     # Review 27.10. T17: a hero down, not a hero code
     print(f"dungeon: abgelehnt | {word}", flush=True)
     return HTTPException(code, why)
 

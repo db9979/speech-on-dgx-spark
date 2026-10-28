@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: der Tisch sagt, warum (V01.1.199, Review 27.10. Paket 12, Punkte E14, T17 und T18, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, nur feste Wörter. 1. Würfelkarte: Neben der Zahl steht die Stufe, die das Panel gesetzt hat: „gegen Schwierigkeit 16 · schwer“ (dungeon.PROBE_SG). 2. Keine Probe: Verwirft das Panel eine Probe des Modells, steht nur am eigenen Platz eine Zeile (dungeon.OHNE_PROBE): „Keine Probe: Gehen braucht keine.“, „Keine Probe: Wer am Boden liegt, würfelt nicht.“ oder „Keine Probe: Wer nur fragt oder redet, würfelt höchstens Charisma.“, einmal je Platz und Zug (Log dungeon: probe | ohne | gehen, zustand oder absicht); Kaufen, Verkaufen und Rasten behalten ihre eigene Zeile. 3. Beute: Spielen mehrere Helden, sagt die Beute-Zeile, warum dieser Held sie bekommt: „(hat es gefunden)“ oder „(am längsten ohne Fund)“ (Feld grund im Log der Runde). 4. Keine Heilung um 0: Ist ein Held schon voll, zeigt der Tisch keine Heilung (Log dungeon: folgen | heilung | voll). 5. Richtige Journalwörter: Eine Aktion eines Helden am Boden wird mit dungeon: abgelehnt | zustand abgelehnt statt mit „figur-code“, ein Dienst der Siedlung im Kampf schreibt dungeon: dienst | … |"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " kampf statt „keine siedlung“. Die Zeile „kein Angriff“ gibt es seit Paket 2. Selbsttests in ReviewAnzeige (test_dungeon)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Herr und Boss im Prüfstand (V01.1.198, Review 27.10. Punkte B1 und B3, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, Teil des Balance-Prüfstands. Neben „mittel“ spielt der Prüfstand zwei Tabellen gegen Bosse (dungeon_pruefstand.bosses): Herr ist der Herrenraum eines Gewölbes genau so, wie die Karte ihn baut (dungeon_karte._room_foes, das 1,1- bis 1,25-Fache des Budgets), Boss allein ein Boss der Welt allein, der mit seinem Lebensfaktor das 0,8- bis 1,2-Fache des Budgets wert ist (BOSS_BAND); die Welten kommen der Reihe nach. Ziel: jede Gruppengröße gewinnt im Mittel über die Stufen mindestens 60 % (BOSS_ZIEL). Gemessen: gegen den Herrn 1 Held 80 %, 2 Helden 70 %, 3 Helden 74 %, 4 Helden 92 %, 5 Helden 86 %; einen Boss allein im Band gibt es erst ab Stufe 5 bis 8, die Gruppen gewinnen dort 75 bis 100 %. Die Tabelle des Prüfstands zeigt je Stufe die Spalten „Herr“ und „Boss allein“ und darunter das Mittel der Gruppe; die Live-Übersicht nennt, wie viele Gruppengrößen unter dem Ziel liegen (Log dungeon: pruefstand | boss | N gruppen unter dem ziel). Selbsttest test_the_master_and_a_lone_boss_are_won_often_enough (test_dungeon_pruefstand)."
 },
 {
@@ -21518,6 +21534,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: the table says why (V01.1.199, review 27.10. package 12, points E14, T17 and T18, Dominik 2026-10-27 \"ok\"): No new switch, fixed words only. 1. Dice card: next to the number stands the level the panel set: \"vs difficulty 16 · hard\" (dungeon.PROBE_SG). 2. No check: when the panel drops a check of the model, a line shows only at that seat (dungeon.OHNE_PROBE): \"No check: walking needs none.\", \"No check: a hero who is down rolls nothing.\" or \"No check: who only asks or talks rolls Charisma at most.\", once a seat and turn (log dungeon: probe | ohne | gehen, zustand or absicht); buying, selling and resting keep their own line. 3. Loot: with more than one hero the loot line says why this hero gets it: \"(found it)\" or \"(longest without a find)\" (field grund in the round's log). 4. No healing of 0: a hero already at full life shows no healing (log dungeon: folgen | heilung | voll). 5. True journal words: an action of a hero who is down is refused with dungeon: abgelehnt | zustand instead of \"figur-code\", a settlement's service in a fight writes dungeon: dienst | … | kampf instead of \"keine siedlung\". The \"no attack\" line exists since package 2. Self-tests in ReviewAnzeig"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e (test_dungeon)."
 },
 {
 "lang": "en",

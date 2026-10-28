@@ -151,8 +151,8 @@ def serve(dm, r, rd, pid, h, b):
     if was not in offers(rd, h):
         print("dungeon: dienst | unbekannt", flush=True)
         raise ValueError("dienst")
-    if not here(rd) or rd.get("kampf"):
-        print(f"dungeon: dienst | {was} | keine siedlung", flush=True)
+    if not here(rd) or rd.get("kampf"):          # Review 27.10. T17: the journal says which of the two
+        print(f"dungeon: dienst | {was} | {'kampf' if rd.get('kampf') else 'keine siedlung'}", flush=True)
         raise LookupError("siedlung")
     if tageszeit.zu(rd, was):                   # LlamaTale idea 1: at night the shops are shut, the inn is open
         raise LookupError("nacht")

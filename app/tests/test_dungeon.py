@@ -1027,6 +1027,86 @@ class ReviewEingabe(Turns):
             self.assertIn("dungeon: ding | fehlt" if fehlt else "dungeon: ding | dabei", out.getvalue(), text)
 
 
+class ReviewAnzeige(Turns):
+    """Review 27.10. Paket 12 (E14, T17, T18; Dominik 2026-10-27 „ok“): the table says why, with fixed words."""
+
+    def test_a_dropped_check_tells_its_seat_why(self):
+        """A check the panel drops for walking, a hero down or an action that only asks gives a fixed line only at that
+        seat (OHNE_PROBE), once a turn; buying, selling and resting keep their own line (TIPP)."""
+        self.act_all("Ich gehe in den Keller.")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rd = self.play([{"proben": [{"wer": "Arvid", "wert": "weisheit", "stufe": "mittel", "wofuer": "Den Keller erkunden"}]},
+                            {"erzaehlung": "Arvid und Bela steigen die Stufen in den Keller hinab.", "frage_an": ""}])
+        lines = [(e["pid"], e["text"]) for e in rd["log"] if e["art"] == "ooc" and e.get("panel")]
+        self.assertIn((self.host, dungeon.OHNE_PROBE["gehen"][0]), lines)
+        self.assertNotIn(dungeon.OHNE_PROBE["gehen"][0], [x for pid, x in lines if pid != self.host])
+        self.assertIn("dungeon: probe | ohne | gehen", out.getvalue())
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        for text, kind in (("Ich kaufe einen Heiltrank.", None), ("Ich frage den Wirt nach dem Weg.", "absicht")):
+            rd["offen"] = {self.host: {"text": text, "t": 0}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                dungeon.check_proben(r, rd, {"proben": [{"wer": "Arvid", "wert": "geschick", "stufe": "mittel", "wofuer": "Leise sein"}]})
+            self.assertEqual(rd["_ohne"], [(self.host, kind)] if kind else [], text)
+        rd["plaetze"][self.host]["held"]["leben"] = 0
+        rd["offen"] = {self.host: {"text": "Ich öffne die Truhe.", "t": 0}}
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.check_proben(r, rd, {"proben": [{"wer": "Arvid", "wert": "staerke", "stufe": "mittel", "wofuer": "Truhe"}]})
+        self.assertEqual(rd["_ohne"], [(self.host, "zustand")])
+        n = len(rd["log"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.tell_no_check(rd, rd["_ohne"] * 2, {self.gp})              # a seat gone: nothing
+            dungeon.tell_no_check(rd, rd["_ohne"] * 2, {self.host})            # once a seat a turn
+        self.assertEqual([e["text"] for e in rd["log"][n:]], [dungeon.OHNE_PROBE["zustand"][0]])
+        rd["lang"] = "en"
+        dungeon.tell_no_check(rd, [(self.gp, "gehen")], {self.gp})
+        self.assertEqual(rd["log"][-1]["text"], dungeon.OHNE_PROBE["gehen"][1])
+
+    def test_the_dice_card_names_the_level_and_the_loot_its_reason(self):
+        """The dice card says the difficulty's word (the JS words cover exactly dungeon.PROBE_SG); a find says why this
+        hero got it when more than one plays (grund: finder, lange), alone it needs no reason."""
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        m = re.search(r"const DMSG=\{(.*?)\};", js)
+        self.assertEqual(re.findall(r"(\w+):\[", m.group(1)), list(dungeon.PROBE_SG))
+        self.assertIn("DMSG[x.sg]", js)
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        held = [p["held"] for _, p in dungeon.seated(rd)]
+        rng = random.Random(4)
+        with contextlib.redirect_stdout(io.StringIO()):
+            dungeon.give_loot(r, rd, held, "truhe", 1, rng, wer=1)
+            self.assertEqual((rd["log"][-1]["name"], rd["log"][-1].get("grund")), (held[1]["name"], "finder"))
+            dungeon.give_loot(r, rd, held, "truhe", 1, rng)
+            self.assertEqual([e.get("grund") for e in rd["log"] if e["art"] == "beute"][-1], "lange")
+            dungeon.give_loot(r, rd, held[:1], "truhe", 1, rng, wer=0)
+        self.assertNotIn("grund", [e for e in rd["log"] if e["art"] == "beute"][-1])
+        self.assertIn("e.grund==='finder'", js)
+
+    def test_no_healing_of_nothing_and_true_journal_words(self):
+        """T18: a heal on a hero at full life shows no line of 0; T17: an action of a hero down is refused with the
+        journal word „zustand“ (not „figur-code“), a settlement's service in a fight says „kampf“."""
+        r = dungeon.rules()
+        rd = self.state(self.rid)
+        h = rd["plaetze"][self.host]["held"]
+        h["leben"] = h["leben_max"]
+        n = len(rd["log"])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            dungeon.consequences(r, rd, [{"pid": self.host, "art": "heilung", "zahl": 3}], {})
+        self.assertEqual([e for e in rd["log"][n:] if e["art"] == "folge"], [])
+        self.assertIn("dungeon: folgen | heilung | voll", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            e = dungeon._http(PermissionError("boden"))
+        self.assertEqual((e.status_code, e.detail), (400, "boden"))
+        self.assertIn("dungeon: abgelehnt | zustand", out.getvalue())
+        import dungeon_gold
+        rd["kampf"] = {"gegner": []}
+        with contextlib.redirect_stdout(io.StringIO()) as out, mock.patch.object(dungeon_gold, "on", return_value=True), \
+                mock.patch.object(dungeon_gold, "offers", return_value=["gasthaus"]), mock.patch.object(dungeon_gold, "here", return_value=True):
+            with self.assertRaises(LookupError):
+                dungeon_gold.serve(dungeon, r, rd, self.host, h, {"id": "gasthaus"})
+        self.assertIn("dungeon: dienst | gasthaus | kampf", out.getvalue())
+
+
 class ReviewPruefung(Turns):
     """Review 27.10. Paket 7 (Dominik 2026-10-27 „ok“): the checks catch every fault, the repair is checked again."""
 

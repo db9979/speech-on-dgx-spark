@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.199** AI Dungeon Master: the dice card names the level, the table says why no check came and who gets the loot (review 27.10. package 12)
 - **V01.1.198** AI Dungeon Master: the bench measures master and boss, every group size wins at least 60 % on average (review 27.10. B1, B3)
 - **V01.1.197** AI Dungeon Master: every hero gets experience by its level, however many fight along, finds and gold per hero instead of divided (review 27.10. package 11.8)
 - **V01.1.196** AI Dungeon Master: the model picks only the kinds, the panel sets how many foes come, people fight with their guards, the bench measures as at the table (review 27.10. package 11.7)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.192** AI Dungeon Master: a rune only the narration hands out is an invented find, its sentence is struck (review 27.10. package 7, runes)
 - **V01.1.191** AI Dungeon Master: honest abilities of the SRD classes, the paladin's Lay on hands heals
 - **V01.1.190** AI Dungeon Master: runes and sockets, stage 1: finds bring sockets and runes, the trader sells the first four, set with a preview and never in a fight, the panel works out effect and cap (plan "runes and sockets")
-- **V01.1.189** AI Dungeon Master: portraits show hair, eyes, beard and build from the person's card
 
 
 
