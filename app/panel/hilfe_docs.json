@@ -5925,6 +5925,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Herr und Boss im Prüfstand (V01.1.198, Review 27.10. Punkte B1 und B3, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, Teil des Balance-Prüfstands. Neben „mittel“ spielt der Prüfstand zwei Tabellen gegen Bosse (dungeon_pruefstand.bosses): Herr ist der Herrenraum eines Gewölbes genau so, wie die Karte ihn baut (dungeon_karte._room_foes, das 1,1- bis 1,25-Fache des Budgets), Boss allein ein Boss der Welt allein, der mit seinem Lebensfaktor das 0,8- bis 1,2-Fache des Budgets wert ist (BOSS_BAND); die Welten kommen der Reihe nach. Ziel: jede Gruppengröße gewinnt im Mittel über die Stufen mindestens 60 % (BOSS_ZIEL). Gemessen: gegen den Herrn 1 Held 80 %, 2 Helden 70 %, 3 Helden 74 %, 4 Helden 92 %, 5 Helden 86 %; einen Boss allein im Band gibt es erst ab Stufe 5 bis 8, die Gruppen gewinnen dort 75 bis 100 %. Die Tabelle des Prüfstands zeigt je Stufe die Spalten „Herr“ und „Boss allein“ und darunter das Mittel der Gruppe; die Live-Übersicht nennt, wie viele Gruppengrößen unter dem Ziel liegen (Log dungeon: pruefstand | boss | N gruppen unter dem ziel). Selbsttest test_the_master_and_a_lone_boss_are_won_often_enough (test_dungeon_pruefstand)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Belohnung je Held (V01.1.197, Review 27.10. Paket 11.8, Punkte B9 und B10, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Kampf- und Fundregeln. 1. Erfahrung (B9): Die Erfahrung eines gewonnenen Kampfs wird nicht mehr durch die Helden geteilt. Jeder Held, mit dem der Kampf begann, bekommt das Budget seiner Stufe (dungeon_kampf.BUDGET) mal das angepasste EP der Begegnung geteilt durch das Bezugsbudget der Gruppe (reference: Budget je Held mal Gruppenfaktor samt Gefährten, ohne Lebensanteil, Regler, Kampfstufe und Kindertisch), mal dem Anteil, der gewonnen wurde (Geflohene und Frieden halb, ein einzelner Gegner allein halb). So gibt ein schwererer Kampf mehr, und ein Held allein braucht etwa so viele Kämpfe für die nächste Stufe wie einer von fünf. Ein Kampf, der vor dieser Regel begann, wird wie bisher geteilt. 2. Funde (B10): Je zwei Helden gibt es einen Fund (dungeon.funde): nach einem Kampf bringt ein ungerader Held in der Hälfte der Fälle einen mehr (1, 3, 5 Helden: 0 oder 1, 1 oder 2, 2 oder 3), bei Truhe, Belohnung und Boss wird aufgerundet (mindestens einer). Ohne Fund kommen nur die Münzen, die Kampfzeile zeigt „+N Gold für jeden“ (Log dungeon: beu"
 },
 {
@@ -21510,6 +21518,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: master and boss in the bench (V01.1.198, review 27.10. points B1 and B3, Dominik 2026-10-27 \"ok\"): No new switch, part of the balance bench. Besides \"mittel\" the bench plays two tables against bosses (dungeon_pruefstand.bosses): Master is a vault's master's room exactly as the map builds it (dungeon_karte._room_foes, 1.1 to 1.25 times the budget), Lone boss one boss of the world alone, worth 0.8 to 1.2 times the budget with its life factor (BOSS_BAND); the worlds come in turn. Aim: every group size wins at least 60 % on average over the levels (BOSS_ZIEL). Measured: against the master 1 hero 80 %, 2 heroes 70 %, 3 heroes 74 %, 4 heroes 92 %, 5 heroes 86 %; a lone boss in the band exists only from level 5 to 8, the groups win 75 to 100 % there. The bench's table shows the columns \"Master\" and \"Lone boss\" per level and below it the group's mean; the live overview names how many group sizes lie below the aim (log dungeon: pruefstand | boss | N gruppen unter dem ziel). Self-test test_the_master_and_a_lone_boss_are_won_often_enough (test_dungeon_pruefstand)."
 },
 {
 "lang": "en",

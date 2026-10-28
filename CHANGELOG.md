@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.198** · 2026-10-28 · KI-Dungeon-Master: der Prüfstand misst Herr und Boss, jede Gruppengröße gewinnt im Mittel mindestens 60 % (Review 27.10. B1, B3)
 - **V01.1.197** · 2026-10-28 · KI-Dungeon-Master: jeder Held bekommt Erfahrung nach seiner Stufe, gleich wie viele mitkämpfen, Funde und Gold je Held statt geteilt (Review 27.10. Paket 11.8)
 - **V01.1.196** · 2026-10-28 · KI-Dungeon-Master: das Modell wählt nur die Arten, wie viele Gegner kommen setzt das Panel, Personen kämpfen mit ihren Wachen, der Prüfstand misst wie am Tisch (Review 27.10. Paket 11.7)
 - **V01.1.195** · 2026-10-28 · KI-Dungeon-Master: 247 Gegner tragen ihr gemessenes Kampf-EP (ep_kampf), mit fester Prüfregel

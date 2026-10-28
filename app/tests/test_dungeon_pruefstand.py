@@ -166,6 +166,20 @@ class Bench(unittest.TestCase):
             w = ps.economy(r, mit_runen=True)       # the same runs as without (LAEUFE): the runes only add
         self.assertEqual({k: c["verhaeltnis"] for k, c in w.items() if not ps.WIRTSCHAFT[0] <= c["verhaeltnis"] <= ps.WIRTSCHAFT[1]}, {})
 
+    def test_the_master_and_a_lone_boss_are_won_often_enough(self):
+        """Review 27.10. B1 and B3 (Dominik 2026-10-27 „ok“): the master's room of a vault as the map makes it
+        (dungeon_karte._room_foes) and one boss of the world alone worth BOSS_BAND times the budget: every group size
+        wins at least BOSS_ZIEL per cent on average over the levels; the master has a room at every level and size."""
+        r = dungeon.rules()
+        b = ps.bosses(r, kaempfe=40, seed="selbsttest")
+        self.assertEqual(len(b["herr"]), r["grenzen"]["stufe_max"] * ps.GRUPPE_MAX)
+        self.assertTrue(b["boss"])
+        for art, z in b.items():
+            self.assertEqual({g: m for g, m in ps.per_group(z).items() if m < ps.BOSS_ZIEL}, {}, art)
+        self.assertEqual(ps.boss_below(b), 0)
+        self.assertEqual(ps.boss_below({"herr": {"1/1": {"siege": ps.BOSS_ZIEL - 1}}}), 1)
+        self.assertEqual(b["herr"]["3/2"], ps.boss_cell(r, 3, 2, "herr", 40, "selbsttest"))   # the seed decides, never the clock
+
     def test_the_economy_keeps_its_aim(self):
         """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
         costs (median), and no find sells for more than ten times a level's income; the inn grows with the level. Review
@@ -225,7 +239,9 @@ class Page(Base):
         d = ADMIN.get(P).json()
         n = dungeon.rules()["grenzen"]["stufe_max"] * ps.GRUPPE_MAX
         self.assertEqual((len(d["zellen"]), d["kaempfe"], d["laeuft"]), (n, 2, False))
-        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel$")
+        self.assertEqual(len(d["herr"]), n)                                       # Review 27.10. B1: the master's room at every cell
+        self.assertEqual(d["boss_ziel"], ps.BOSS_ZIEL)
+        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel · gegen Bosse \d+ Gruppengrößen unter dem Ziel$")
         self.assertEqual(ps.last()["nacht"], "")                                  # the button is not the night's run
         asyncio.run(ps.due())                                                      # noon: no night run
         self.assertEqual(ps.last()["nacht"], "")

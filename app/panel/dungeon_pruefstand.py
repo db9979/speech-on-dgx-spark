@@ -23,6 +23,10 @@ fight, a healing potion for a third of its life every second fight, two rumours 
 lesson and „Ausrüstung verbessern“ are what the surplus is for. The self-test keeps income to expenses (median) within
 WIRTSCHAFT and no find worth more than JACKPOT times a level's income.
 
+Against a boss (Review 27.10. B1 and B3, bosses): the master's room of a vault as the map makes it and one boss of the
+world alone worth BOSS_BAND times the budget, every world in turn; the self-test keeps the wins of every group size
+(the mean over the levels) at BOSS_ZIEL or more.
+
 With runes (Review 27.10., bericht „Abstimmung mit den Runen“ 4; only while „Runen und Sockel“ works,
 dungeon_runen.wirkt): the same groups with the runes a group has found up to its level by the real find and trader
 rates (with_runes), set as strong as the caps allow; the self-test keeps their wins at most RUNEN_PLUS points above
@@ -30,8 +34,8 @@ those without (the mean of all cells), and the economy sells every rune found.
 
 The night's run (NACHT, once a night) and the admin's „Jetzt durchspielen“ write the table into STATE/dungeon-pruefstand.json
 (dateien.py): {"zeit", "kaempfe", "gefahr", "zellen": {"stufe/gruppe": {"siege", "leben", "runden"}},
-"runen": the same with runes ({} while they are off), "wirtschaft": {"stufe": {"kaempfe", "einnahmen", "zehntel",
-"ausgaben", "verhaeltnis", "fund_max"}}}. Only while „Balance-Prüfstand“ is on (features.py, below the Dungeon-Master).
+"runen": the same with runes ({} while they are off), "herr" and "boss": the same against a boss, "wirtschaft":
+{"stufe": {"kaempfe", "einnahmen", "zehntel", "ausgaben", "verhaeltnis", "fund_max"}}}. Only while „Balance-Prüfstand“ is on (features.py, below the Dungeon-Master).
 
     GET  /api/admin/dungeon/pruefstand         the last table, the aim, whether it is on and running
     POST /api/admin/dungeon/pruefstand         „Jetzt durchspielen“ (rate-limited, one run at a time)
@@ -73,6 +77,8 @@ LAEUFE = 200                   # runs per level of the economy
 GRUPPE_W = 4                   # heroes of the economy's group
 RAETSEL = 0.25                 # the part of the experience from riddles, places and acts (no fight, no find)
 RUNEN_PLUS = 8                 # per cent points a group may win more often with its runes than without (Review 27.10.)
+BOSS_ZIEL = 60                 # per cent wins at least against a vault's master and a lone boss, per group size (B1, B3)
+BOSS_BAND = (0.8, 1.2)         # a lone boss of the world worth these times the budget (B3, dungeon_kampf.wert)
 KNOPF_S = 60                   # „Jetzt durchspielen“ at most once a minute
 clock = time.time              # the tests set it (no wall clock in a test)
 _lock = threading.Lock()
@@ -311,6 +317,64 @@ def cell(r, stufe, gruppe, gefahr, kaempfe, seed, personen=False, mit_runen=Fals
     return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
 
 
+def boss_cell(r, stufe, gruppe, art, kaempfe, seed):
+    """The bench against a boss for one level and group size (Review 27.10. B1, B3), like cell: art „herr“ the master's
+    room of a vault as the map makes it (dungeon_karte._room_foes), „boss“ one boss of the world alone worth BOSS_BAND
+    times the budget; the worlds in turn. None when no boss fits."""
+    import dungeon_karte
+    rng = random.Random(f"{seed}|{stufe}|{gruppe}|{art}")
+    by = {g["id"]: g for g in r.get("gegner") or []}
+    welten = [w["id"] for w in r["welten"]]
+    won, lost, runden, n = 0, [], 0, 0
+    for i in range(kaempfe):
+        held = party(r, gruppe, stufe, rng)
+        rd = {"lang": "de", "welt": welten[i % len(welten)], "plaetze": {f"p{j}": {"held": h, "made": j} for j, h in enumerate(held)}}
+        if art == "herr":
+            ids, anz = dungeon_karte._room_foes(r, rd, True, rng)
+            wahl = [(by[x], anz[x]) for x in ids]
+        else:
+            b = kampf.budget(dungeon, r, rd, held)
+            fit = [g for g in by.values() if g.get("boss") and kampf.plays_in(r, g, rd["welt"])
+                   and BOSS_BAND[0] * b <= kampf.wert(g, gruppe) <= BOSS_BAND[1] * b]
+            wahl = [(rng.choice(fit), 1)] if fit else []
+        if not wahl:
+            continue
+        x = fight(r, held, wahl, rng)
+        n += 1
+        runden += x["runden"]
+        if x["sieg"]:
+            won += 1
+            lost.append(x["leben"])
+    if not n:
+        return None
+    return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
+
+
+def bosses(r, kaempfe=KAEMPFE, seed="boss", stufen=None, gruppen=None):
+    """Both boss tables {"herr": {"stufe/gruppe": cell}, "boss": {…}}; a cell without a fitting boss is left out."""
+    out = {"herr": {}, "boss": {}}
+    for art in out:
+        for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
+            for g in gruppen or range(1, GRUPPE_MAX + 1):
+                c = boss_cell(r, s, g, art, kaempfe, seed)
+                if c:
+                    out[art][f"{s}/{g}"] = c
+    return out
+
+
+def per_group(z):
+    """{group size: mean wins of its cells} of a table (the boss aim counts per group size)."""
+    g = {}
+    for k, c in z.items():
+        g.setdefault(int(k.split("/")[1]), []).append(c["siege"])
+    return {n: round(sum(v) / len(v)) for n, v in sorted(g.items())}
+
+
+def boss_below(b):
+    """How many group sizes of both boss tables win less than BOSS_ZIEL on average."""
+    return sum(1 for z in (b or {}).values() for m in per_group(z).values() if m < BOSS_ZIEL)
+
+
 def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, personen=False, mit_runen=False):
     """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. personen: only people (people);
     mit_runen: the groups with their runes (with_runes; the runes do something only while dungeon_runen.wirkt)."""
@@ -383,10 +447,12 @@ def _go(grund):
         z = bench(r)
         zr = bench(r, mit_runen=True) if runen.wirkt() else {}
         w = economy(r, mit_runen=bool(zr))
+        bo = bosses(r, KAEMPFE)
         write_json(FILE, {"zeit": int(clock()), "kaempfe": KAEMPFE, "gefahr": "mittel", "zellen": z, "wirtschaft": w,
-                          "runen": zr, "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
+                          "runen": zr, **bo, "nacht": _date() if grund == "nacht" else last().get("nacht", "")})
         if zr:
             print(f"dungeon: pruefstand | runen | {runes_plus(z, zr)} punkte", flush=True)
+        print(f"dungeon: pruefstand | boss | {boss_below(bo)} gruppen unter dem ziel", flush=True)
         unter = sum(1 for c in z.values() if c["siege"] < AIM[0])
         aussen = sum(1 for c in w.values() if not WIRTSCHAFT[0] <= c["verhaeltnis"] <= WIRTSCHAFT[1])
         print(f"dungeon: pruefstand | fertig | {len(z)} zellen | {unter} unter dem ziel | {aussen} stufen wirtschaft ausserhalb | {int(time.monotonic() - t0)} s", flush=True)
@@ -425,7 +491,8 @@ def view():
     return {"an": on(), "laeuft": _run["laeuft"], "ziel": list(AIM), "gruppe_max": GRUPPE_MAX, "zeit": d.get("zeit", 0),
             "kaempfe": d.get("kaempfe", 0), "gefahr": d.get("gefahr", "mittel"), "zellen": d.get("zellen", {}),
             "wirtschaft": d.get("wirtschaft", {}), "wirtschaft_ziel": list(WIRTSCHAFT), "runen": d.get("runen", {}),
-            "runen_plus": runes_plus(d.get("zellen", {}), d.get("runen", {})) if d.get("runen") else None, "runen_ziel": RUNEN_PLUS}
+            "runen_plus": runes_plus(d.get("zellen", {}), d.get("runen", {})) if d.get("runen") else None, "runen_ziel": RUNEN_PLUS,
+            "herr": d.get("herr", {}), "boss": d.get("boss", {}), "boss_ziel": BOSS_ZIEL}
 
 
 @router.get("/api/admin/dungeon/pruefstand", dependencies=[Depends(auth)])
@@ -458,4 +525,5 @@ def counts():
     z = d.get("zellen") or {}
     return {"zellen": len(z), "unter": sum(1 for c in z.values() if c["siege"] < AIM[0]),
             "ueber": sum(1 for c in z.values() if c["siege"] > AIM[1]), "laeuft": _run["laeuft"],
-            "runen_plus": runes_plus(z, d["runen"]) if d.get("runen") else None}
+            "runen_plus": runes_plus(z, d["runen"]) if d.get("runen") else None,
+            "boss_unter": boss_below({k: d[k] for k in ("herr", "boss") if d.get(k)}) if d.get("herr") else None}

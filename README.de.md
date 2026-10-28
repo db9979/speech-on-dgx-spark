@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.198** KI-Dungeon-Master: der Prüfstand misst Herr und Boss, jede Gruppengröße gewinnt im Mittel mindestens 60 % (Review 27.10. B1, B3)
 - **V01.1.197** KI-Dungeon-Master: jeder Held bekommt Erfahrung nach seiner Stufe, gleich wie viele mitkämpfen, Funde und Gold je Held statt geteilt (Review 27.10. Paket 11.8)
 - **V01.1.196** KI-Dungeon-Master: das Modell wählt nur die Arten, wie viele Gegner kommen setzt das Panel, Personen kämpfen mit ihren Wachen, der Prüfstand misst wie am Tisch (Review 27.10. Paket 11.7)
 - **V01.1.195** KI-Dungeon-Master: gemessenes Kampf-EP je Gegner
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.191** KI-Dungeon-Master: ehrliche Fähigkeiten der SRD-Klassen, Paladin-Handauflegen heilt
 - **V01.1.190** KI-Dungeon-Master: Runen und Sockel, Stufe 1: Funde bringen Sockel und Runen, der Krämer verkauft die ersten vier, einsetzen mit Vorschau und nie im Kampf, Wirkung und Deckel rechnet das Panel (Plan „Runen und Sockel“)
 - **V01.1.189** KI-Dungeon-Master: Porträts zeigen Haar, Augen, Bart und Statur von der Karte der Person
-- **V01.1.188** KI-Dungeon-Master: eine Fähigkeit zählt nur, wenn sie immer wirkt oder eingesetzt wird, je Wert zählt nur der stärkste Bonus von Schmuck, Ausrüstung und Fähigkeit, Waffenmeister, Zäh, Handauflegen und Zurückholen rechnet das Panel, „rar“ ab Stufe 3 und „episch“ ab 5, der Prüfstand spielt mit Helden wie am Tisch und alle 12 Klassen, Budget neu gemessen, friedliche Wesen nie als Gegner, drei kleine Nachtgegner für Science-Fiction (Review 27.10. Paket 11)
 
 
 
