@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.214** Fernzugang Stufe 2b: Assistent im Terminal (eigener Schalter, aus): „Frag den Assistenten“ neben der Shell und Folgebefehle nach jedem Enter, nur vom eigenen Sprachmodell, ohne Werkzeug; er tippt nie, jeder Befehl wird ein Vorschlag zum Einfügen, gefährliche Befehle stehen rot und brauchen zwei Tipps; der Bildschirm geht nur mit „Bildschirm mitschicken“ mit, als Datenblock; im Protokoll nur Wörter und Zahlen
 - **V01.1.213** Fernzugang Stufe 2: eigener Menüpunkt Fernzugang (nur Admins, solange der Schalter an ist); die Shell lässt sich in ein eigenes Fenster herauslösen (eigenes Einmal-Ticket, nie in der Adresse) und zurückholen; Tastenkürzel des Browsers gehen an die Shell, „Alle Tasten“ im Vollbild auch Strg+W und Esc; Vorschläge passen sich nach festen Regeln an den letzten Befehl an, nichts verlässt den Browser; „Gerade verbunden“ und Live zeigen wer, von wo (Zuhause/Internet) und wie lange, Verlauf 30 Tage ohne Inhalt, Mitteilung an die Admins bei einer Sitzung aus dem Internet; die iPhone-App zeigt unter Spark verwalten → Fernzugang die Fern-Server mit Trennen, Darf sich verbinden und Entfernen, Android unter Verwalten; die ersten Bytes des Servers gehen beim Öffnen nicht mehr verloren
 - **V01.1.212** KI-Dungeon-Master: englische Gegnernamen wie im SRD
 - **V01.1.211** KI-Dungeon-Master: die Prüfung erkennt Gegner auch gebeugt und in anderer Wortfolge („giant, red-eyed rats“, „Wölfe“, „jungen roten Drachen“), der Erzähler-Prüfstand zeigt, welcher Gegner fehlt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.207** KI-Dungeon-Master: Spielleiter gibt Dinge: der Gastgeber gibt als Admin im Spielleiter-Pult einem Helden einen Gegenstand bis „episch“, Gold, Runen oder Erfahrung, nach den Grenzen des Spiels, und die Erzählung macht daraus einen Fund oder ein Geschenk
 - **V01.1.206** KI-Dungeon-Master: ein Ding mit erwachtem Runenwort bekommt ein eigenes Bild mit leuchtenden Runen, die Runen-Dienste des Schmieds haben Bilder
 - **V01.1.205** KI-Dungeon-Master: Runen und Sockel bis zum Schluss: Runenwörter erwachen in der richtigen Reihenfolge ab ihrer Stufe, der Schmied bohrt Sockel, löst und verschmilzt Runen, Runen gehen an andere Helden, eine Rune lässt sich auf das Ding ziehen, und das Auto kennt Runen
-- **V01.1.204** KI-Dungeon-Master: Runen haben auf der Regeln-Seite ihr Bild, je Welt als Rune, Chip, Perle oder Siegel, mit Malen und Nochmal malen
 
 
 

@@ -13813,6 +13813,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Assistent im Fernzugang (Funktionen → Zugang → „Assistent im Fernzugang“; baut auf „Fernzugang zu Servern“): Neben dem Terminal unter Fernzugang → Fern-Server steht „Frag den Assistenten“: du fragst etwa „Warum startet nginx nicht?“ und das eigene Sprachmodell antwortet mit Text und Befehlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Angriffsprobe (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home). <!-- /funktionen:liste -->"
 },
 {
@@ -29462,6 +29470,14 @@
 "head": "Access",
 "title": "Access",
 "text": "- Note on a remote session (Features → Access → \"Note on a remote session\"; builds on \"Remote access to servers\"): When an admin opens the shell of a server from the internet or from a place they never opened it from, all admins get a note on their phone with a fixed text: who, which server, home or internet, never an address."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Assistant in remote access (Features → Access → \"Assistant in remote access\"; builds on \"Remote access to servers\"): Beside the terminal under Remote access → Remote servers there is \"Ask the assistant\": you ask e.g."
 },
 {
 "lang": "en",

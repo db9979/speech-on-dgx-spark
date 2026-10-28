@@ -378,6 +378,7 @@
     "werkstatt": false,
     "werkstatt_nacht": false,
     "fernzugang": false,
+    "fernzugang_hilfe": false,
     "fernzugang_leerlauf_min": 15,
     "fernzugang_sitzungen": 2,
     "fernzugang_offline_min": 30,

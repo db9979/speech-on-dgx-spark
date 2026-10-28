@@ -79,7 +79,7 @@ TOOLS = {
     "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
     "Docling": "docling",
-    "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
+    "Web Push": "webpush", "Apple Push": "push", "Fernzugang-Assistent": "modell", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem", "Nachsortieren": "mem",
     # Probleme melden (meldung.py): a draft stays on the Spark, sending goes to GitHub
@@ -199,7 +199,8 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
            "musik": "Lied (Länge und Sekunden)",
-           "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton"}
+           "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton",
+           "modell": "Antwort (nur Anzahl der Befehle)"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "android": "Android-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "tui": "Terminal", "other": "Gerät"}

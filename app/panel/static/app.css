@@ -2897,6 +2897,9 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzchip code{overflow-wrap:anywhere}.fzchip small{color:var(--acc);flex:none}
 .fzjrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}.fzjrow:first-child{border-top:0}.fzjrow .fh{margin:0}
 .fzverlauf summary{font-weight:600;cursor:pointer}.fzvrow{display:grid;grid-template-columns:8em 1fr auto;gap:8px;padding:3px 0;border-top:1px solid var(--line);font-size:.92em}
+.fzhilfe summary{font-weight:600;cursor:pointer}.fzhilfe textarea{width:100%;margin-top:6px}.fzchk{display:flex;gap:6px;align-items:center;margin:6px 0}
+.fzantwort{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}.fzantwort pre{margin:6px 0 2px;padding:6px 8px;border-radius:6px;background:#0b1020;color:#e6e9f2;white-space:pre-wrap}
+.fzvorsicht{color:#fff;background:var(--bad);border-radius:4px;padding:0 5px;font-size:.8em;font-weight:600;margin-right:6px}.fzchip.fzgefahr{border-color:var(--bad)}.fzchip.scharf{outline:2px solid var(--bad)}
 .fzkeys{display:none;gap:6px;grid-column:1/-1}.fzkeys .b.on{background:var(--acc);color:#fff}
 @media (max-width:760px){.fztiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fzcols,.fzview{grid-template-columns:1fr}
   .fzterm{height:55vh;min-height:55vh}.fzkeys{display:flex;flex-wrap:wrap}.fzside{order:3}.fzdanger{flex-direction:column;align-items:stretch}}

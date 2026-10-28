@@ -115,6 +115,8 @@ AUFGABEN = {
     "Dokument erstellen": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente", "Musik machen": "dokumente",
     # the game (dungeon.py): narration, reading aloud and speaking instead of typing
     "Dungeon-Master": "sonstige",
+    # Fernzugang: „Frag den Assistenten“ beside the terminal (fernzugang.HILFE_JOB)
+    "Fernzugang-Assistent": "sonstige",
 }
 
 WHO = contextvars.ContextVar("verbrauch_who", default=SPARK)

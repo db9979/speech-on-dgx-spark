@@ -268,6 +268,7 @@
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, angerufen über seinen Anker. Nur Admins mit zweitem Anmeldeschritt, jede Sitzung mit neuem Code.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
       <div data-show="chat.fernzugang" style="margin-left:36px">
+        <div class="setrow"><div class="lbl"><b>Assistent im Fernzugang</b><span>„Frag den Assistenten“ und Vorschläge, nur vom eigenen Sprachmodell. Er tippt nie; den Bildschirm sieht er nur, wenn du ihn mitschickst.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_hilfe"><i></i></label></div>
         <label for="chat.fernzugang_leerlauf_min">Leerlauf trennt nach (Minuten)</label><input class="num" id="chat.fernzugang_leerlauf_min" type="number" min="1" max="120"><div class="fh">1 bis 120, Standard 15.</div>
         <label for="chat.fernzugang_sitzungen">Sitzungen gleichzeitig</label><input class="num" id="chat.fernzugang_sitzungen" type="number" min="1" max="4"><div class="fh">1 bis 4, Standard 2.</div>
         <div class="setrow"><div class="lbl"><b>Meldung bei Fernsitzung</b><span>Die Admins bekommen eine Mitteilung, wenn eine Shell über das Internet oder von einem neuen Ort geöffnet wird.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_meldung"><i></i></label></div>
@@ -1109,6 +1110,13 @@
     <div class="fzterm" id="fzterm"></div>
     <div class="fzside">
       <div class="card"><h3>Vorschläge</h3><div class="fh">Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. Der Assistent sieht die Ausgabe nicht. Die Vorschläge passen sich nach festen Regeln an deinen letzten Befehl an, nichts verlässt den Browser.</div><div class="fh" id="fzchipwas" hidden>Passend zu deinem letzten Befehl:</div><div class="fzchips" id="fzchips"></div></div>
+      <details class="card fzhilfe" id="fzhilfe" hidden><summary>Assistent</summary>
+        <div class="fh">Fragt nur das eigene Sprachmodell. Er tippt nie und drückt nie Enter: ein Befehl landet erst mit „Einfügen“ in der Zeile. Mit gehen deine Frage, Name und System des Servers und deine letzten Befehle; der Bildschirm nur, wenn du ihn mitschickst. Nichts davon wird gespeichert.</div>
+        <textarea id="fzfrage" rows="2" maxlength="500" placeholder="Frag den Assistenten" aria-label="Frag den Assistenten"></textarea>
+        <label class="fzchk"><input type="checkbox" id="fzschirm"> Bildschirm mitschicken</label>
+        <div class="row"><button class="b p" type="button" id="fzfragen">Fragen</button></div>
+        <div class="fzantwort" id="fzantwort" role="status"></div>
+      </details>
       <div class="card"><h3>Diese Sitzung</h3><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzstop">Trennen</button><button class="b" type="button" id="fzalle2">Alle trennen</button></div>
         <div class="row fzfenrow"><button class="b" type="button" id="fzheraus">Herauslösen</button><button class="b" type="button" id="fzalletasten">Alle Tasten</button></div>
         <div class="fh">„Herauslösen“ öffnet die Shell in einem eigenen Fenster. „Alle Tasten“ schickt auch Strg+W, Strg+T oder Esc an die Shell (Chrome, Edge); Esc 2 Sekunden halten zum Verlassen.</div></div>

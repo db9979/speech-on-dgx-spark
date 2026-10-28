@@ -3,11 +3,16 @@
 // textContent; xterm.js (MIT, pinned in fernzugang.XTERM) loads from the panel only when a shell opens. „Shell“ and
 // „Koppeln (Code)“ ask for a fresh code or passkey (stufen „Schutz ändern“). The chips beside the terminal are fixed
 // commands: a tap puts one into the line, Enter is always the person's own. The shell's output never leaves the page.
+// „Frag den Assistenten“ (stage 2b, switch chat.fernzugang_hilfe): the own language model answers as text; a command in
+// it is inserted only with „Einfügen“, a dangerous one (fernzugang.GEFAHR, fixed rules) only on a second tap; Enter is
+// always the person's. With the panel open, the page asks for suggestions after Enter (one in vorschlag_s seconds).
 // „Herauslösen“ moves the open shell into its own window (the panel page with #fernfenster): that window asks this one
 // for its own one-time ticket over postMessage (same origin only), never in its address; „Zurückholen“ takes it back.
 // In the terminal the browser's own shortcuts are held back (fzFang); „Alle Tasten“ adds full screen and the Keyboard
 // Lock API (Chrome, Edge), so even Strg+W or Esc go to the shell; Esc held for 2 s leaves.
-const FZ={d:null,sel:'',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null};
+const FZ={d:null,sel:'',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null,hist:[],ki:null,vt:0,vlast:0};
+// what the own window takes over from its opener (admin_get): the rules and the assistant's limits
+const FZ_MIT=['chips','folge','hilfe','gefahr','hilfe_zeilen','hilfe_schirm','hilfe_befehle','vorschlag_s'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
 function fzEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function fzBtn(txt,cls,fn){const b=fzEl('button','b'+(cls?' '+cls:''),txt);b.type='button';b.onclick=fn;return b}
@@ -107,12 +112,12 @@ async function fzOpen(g){if(FZ.ws||FZ.weg){fzMsg(t('Erst die offene Sitzung tren
   $('fzview').hidden=false;$('fzmain').hidden=true;const [cols,rows]=fzGroesse();let tk;
   try{const r=await api('/api/admin/fernzugang/sitzung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,cols,rows})});tk=(await r.json()).ticket}
   catch(e){fzZu(e.message);return}
-  fzTerm(tk,{name:g.name,gid:g.id,seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
+  fzTerm(tk,{name:g.name,gid:g.id,art:g.art||'linux',seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
 // the terminal for one ticket: a new session, or one this window takes over (its own window, or back into the tab)
 function fzTerm(tk,sitz,cols,rows){
   const term=new window.Terminal({cursorBlink:true,fontSize:14,cols,rows,scrollback:2000,theme:{background:'#0b1020'}});
   $('fzterm').textContent='';term.open($('fzterm'));term.attachCustomKeyEventHandler(fzFang);term.focus();FZ.term=term;
-  FZ.sitz=sitz;fzBanner();fzInfo('');
+  FZ.sitz=sitz;fzBanner();fzInfo('');fzHilfeNeu();
   const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
   ws.binaryType='arraybuffer';FZ.ws=ws;const enc=new TextEncoder();
   term.write(t('Verbinde mit ','Connecting to ')+sitz.name+' …\r\n');
@@ -143,13 +148,47 @@ function fzFolge(line){const w=String(line||'').trim().split(/\s+/).filter(Boole
     const arg=w[words.length];const out=next.filter(c=>typeof c==='string'&&(!c.includes('{1}')||arg)).map(c=>c.split('{1}').join(arg?fzQuote(arg):''));
     if(out.length)return out.slice(0,4)}
   return null}
-function fzZeile(x){if(x==='\r'){FZ.zeile=FZ.buf||'';FZ.buf='';fzChips();return}
+function fzZeile(x){if(x==='\r'){FZ.zeile=FZ.buf||'';FZ.buf='';FZ.ki=null;fzMerke(FZ.zeile);fzChips();fzVorschlagPlan();return}
   if(x==='\x7f'){FZ.buf=(FZ.buf||'').slice(0,-1);return}
   if(/[\x00-\x1f]/.test(x)){if(x.endsWith('\r')&&!/[\x00-\x0c\x0e-\x1f]/.test(x)){FZ.buf=(FZ.buf||'')+x.slice(0,-1);fzZeile('\r')}else FZ.buf='';return}
   FZ.buf=((FZ.buf||'')+x).slice(-500)}
-function fzChips(){const w=$('fzchips');w.textContent='';const f=fzFolge(FZ.zeile);$('fzchipwas').hidden=!f;
-  for(const c of f||(FZ.d&&FZ.d.chips)||[]){const b=fzEl('button','fzchip');b.type='button';b.append(fzEl('code','',c),fzEl('small','',t('Einfügen','Insert')));
-  b.onclick=()=>{if(FZ.term){FZ.term.paste(c);FZ.term.focus()}};w.appendChild(b)}}
+function fzChips(){const w=$('fzchips');w.textContent='';const ki=Array.isArray(FZ.ki)&&FZ.ki.length?FZ.ki:null,f=ki||fzFolge(FZ.zeile),was=$('fzchipwas');
+  was.hidden=!f;was.textContent=ki?t('Vorschläge des Assistenten:','The assistant\'s suggestions:'):t('Passend zu deinem letzten Befehl:','Fitting your last command:');
+  for(const c of f||(FZ.d&&FZ.d.chips)||[])w.appendChild(fzChip(c))}
+// the fixed rules of this kind of system (fernzugang.GEFAHR): the first one a command matches, else null
+function fzGefahr(c){const g=(FZ.d&&FZ.d.gefahr)||{},rules=g[(FZ.sitz&&FZ.sitz.art)||'linux']||g.linux||[];
+  for(const [rx,de,en] of rules){try{if(new RegExp(rx,'i').test(c))return t(de,en)}catch{}}return null}
+// one command to insert: only into the line, never with Enter (one line only); a dangerous one needs a second tap
+function fzChip(c){c=String(c).replace(/[\r\n]+/g,' ').trim();const b=fzEl('button','fzchip');b.type='button';const g=fzGefahr(c),sm=fzEl('small','',t('Einfügen','Insert'));
+  const code=fzEl('code','',c);if(g){b.classList.add('fzgefahr');const v=fzEl('span','fzvorsicht',t('Vorsicht','Caution'));v.title=g;b.append(v)}b.append(code,sm);
+  b.onclick=()=>{if(g&&!b.classList.contains('scharf')){b.classList.add('scharf');sm.textContent=t('Wirklich einfügen?','Really insert?');
+      clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('scharf');sm.textContent=t('Einfügen','Insert')},4000);return}
+    b.classList.remove('scharf');sm.textContent=t('Einfügen','Insert');if(FZ.term){FZ.term.paste(c);FZ.term.focus()}};return b}
+// the assistant: only while the switch is on; the commands only kept for it (the last hilfe_befehle, in this page)
+function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);const h=$('fzhilfe');if(!h)return;h.hidden=!(FZ.d&&FZ.d.hilfe);
+  $('fzschirm').checked=false;$('fzantwort').textContent='';$('fzfrage').value=''}
+function fzMerke(line){if(!(FZ.d&&FZ.d.hilfe)||!line.trim())return;FZ.hist.push(line.slice(0,300));FZ.hist=FZ.hist.slice(-((FZ.d&&FZ.d.hilfe_befehle)||10))}
+// the visible screen, only with „Bildschirm mitschicken“: the last hilfe_zeilen lines, at most hilfe_schirm bytes
+function fzSchirm(){if(!$('fzschirm').checked||!FZ.term)return '';const b=FZ.term.buffer.active,n=(FZ.d&&FZ.d.hilfe_zeilen)||60,out=[];
+  for(let i=Math.max(0,b.length-n);i<b.length;i++){const l=b.getLine(i);out.push(l?l.translateToString(true):'')}
+  let s=out.join('\n').replace(/\s+$/,'');const max=(FZ.d&&FZ.d.hilfe_schirm)||8192,enc=new TextEncoder();while(enc.encode(s).length>max)s=s.slice(Math.ceil(s.length/20));return s}
+async function fzHilfe(art,body){const r=await api('/api/admin/fernzugang/hilfe'+(art==='vorschlag'?'?art=vorschlag':''),{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({sitzung:FZ.sid,befehle:FZ.hist,bildschirm:fzSchirm(),...body})});return r.json()}
+async function fzFragen(){const q=$('fzfrage').value.trim(),a=$('fzantwort');if(!q||!FZ.sid)return;a.textContent=t('Der Assistent denkt …','The assistant is thinking …');
+  try{const d=await fzHilfe('frage',{frage:q});fzAntwort(String(d.antwort||''))}catch(e){a.textContent=e.message}}
+// the answer as text, each line of a code block with its own „Einfügen“ (never Enter, never sent by itself)
+function fzAntwort(text){const a=$('fzantwort');a.textContent='';const rx=/```[A-Za-z0-9_-]*\n?([\s\S]*?)```/g;let last=0,m;
+  const add=s=>{if(s.trim())a.appendChild(fzEl('div','',s.trim()))};
+  while((m=rx.exec(text))){add(text.slice(last,m.index));a.appendChild(fzEl('pre','',m[1].replace(/\s+$/,'')));
+    for(const l of m[1].split('\n'))if(l.trim())a.appendChild(fzChip(l));last=rx.lastIndex}
+  add(text.slice(last))}
+// suggestions after Enter: only with the panel open, at most one request in vorschlag_s seconds; anything but a clean
+// list keeps the fixed-rule chips
+function fzVorschlagPlan(){clearTimeout(FZ.vt);const h=$('fzhilfe');if(!(FZ.d&&FZ.d.hilfe)||!h||h.hidden||!h.open||!FZ.sid||!FZ.hist.length)return;
+  const gap=((FZ.d.vorschlag_s||5)*1000)-(Date.now()-FZ.vlast);FZ.vt=setTimeout(fzVorschlag,Math.max(1200,gap))}
+async function fzVorschlag(){const h=$('fzhilfe');if(!h||h.hidden||!h.open||!FZ.ws)return;FZ.vlast=Date.now();
+  try{const d=await fzHilfe('vorschlag',{});const v=d.vorschlaege;
+    if(Array.isArray(v)&&v.length>=2&&v.length<=4&&v.every(x=>typeof x==='string'&&x.length<=200&&!/[\x00-\x1f]/.test(x))){FZ.ki=v;fzChips()}}catch{}}
 const FZ_KEYS=[['Esc','\x1b'],['Tab','\t'],['Strg',''],['Alt',''],['↑','\x1b[A'],['↓','\x1b[B'],['←','\x1b[D'],['→','\x1b[C'],['⏎','\r'],
   ['F1','\x1bOP'],['F2','\x1bOQ'],['F3','\x1bOR'],['F4','\x1bOS'],['F5','\x1b[15~'],['F6','\x1b[17~'],['F7','\x1b[18~'],['F8','\x1b[19~'],
   ['F9','\x1b[20~'],['F10','\x1b[21~'],['F11','\x1b[23~'],['F12','\x1b[24~']];
@@ -175,13 +214,14 @@ function fzHeraus(){if(!FZ.ws||!FZ.sid||!FZ.sitz)return;const w=window.open('/#f
 async function fzFensterTicket(sid,fenster){const r=await api(`/api/admin/fernzugang/sitzung/${sid}/fenster`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fenster})});return (await r.json()).ticket}
 addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typeof e.data!=='object')return;
   if(e.data.typ==='fz-bereit'&&FZ.pop&&e.source===FZ.pop.w){const p=FZ.pop;let tk;try{tk=await fzFensterTicket(p.sid,true)}catch(x){fzMsg(x.message,true);return}
-    p.w.postMessage({typ:'fz-ticket',ticket:tk,sitz:p.sitz,chips:(FZ.d&&FZ.d.chips)||[],folge:(FZ.d&&FZ.d.folge)||[]},location.origin)}
+    const mit={};for(const k of FZ_MIT)mit[k]=FZ.d?FZ.d[k]:undefined;p.w.postMessage({typ:'fz-ticket',ticket:tk,sitz:p.sitz,mit},location.origin)}
   else if(e.data.typ==='fz-ticket'&&FZ_FENSTER&&e.source===window.opener&&!FZ.ws&&typeof e.data.ticket==='string'){
-    FZ.d={chips:Array.isArray(e.data.chips)?e.data.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(e.data.folge)?e.data.folge:[]};const sitz=e.data.sitz||{};
+    const mit=e.data.mit||{};FZ.d={chips:Array.isArray(mit.chips)?mit.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(mit.folge)?mit.folge:[],hilfe:mit.hilfe===true,
+      gefahr:mit.gefahr&&typeof mit.gefahr==='object'?mit.gefahr:{},hilfe_zeilen:Number(mit.hilfe_zeilen)||60,hilfe_schirm:Number(mit.hilfe_schirm)||8192,hilfe_befehle:Number(mit.hilfe_befehle)||10,vorschlag_s:Number(mit.vorschlag_s)||5};const sitz=e.data.sitz||{};
     try{await fzLaden()}catch(x){fzMsg(x.message,true);return}
     document.title=String(sitz.name||'')+' · '+t('Fernzugang','Remote access');fzChips();const [c,r]=fzGroesse();
-    fzTerm(e.data.ticket,{name:String(sitz.name||''),gid:String(sitz.gid||''),seit:Number(sitz.seit)||Date.now()/1000,max:Number(sitz.max)||1,leer:Number(sitz.leer)||15},c,r)}});
-function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);
+    fzTerm(e.data.ticket,{name:String(sitz.name||''),gid:String(sitz.gid||''),art:['windows','macos'].includes(sitz.art)?sitz.art:'linux',seit:Number(sitz.seit)||Date.now()/1000,max:Number(sitz.max)||1,leer:Number(sitz.leer)||15},c,r)}});
+function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);
   if(FZ_FENSTER){window.close();return}
   FZ.weg={sid:FZ.sid,sitz};FZ.sitz=sitz;fzBanner();$('fzview').hidden=true;fzWegZeigen();if(ws&&ws.readyState<2)ws.close()}
 function fzWegZeigen(){const b=$('fzweg');if(!b)return;b.hidden=!FZ.weg;if(FZ.weg)$('fzwegname').textContent=FZ.weg.sitz?FZ.weg.sitz.name:'';if(!FZ.weg&&FZ.d)fzShow()}
@@ -190,11 +230,12 @@ async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden(
 async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
   if(w&&w.sitz&&w.sitz.gid){try{await api(`/api/admin/fernzugang/geraete/${w.sitz.gid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
 function fzTrennen(){if(FZ.ws)FZ.ws.close();else if(FZ.weg)fzWegTrennen()}
-function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';if(ws&&ws.readyState<2)ws.close();if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
+function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(ws&&ws.readyState<2)ws.close();if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
   window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
   try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);if(FZ.ws)fzTrennen();fzLoad()}catch(e){fzMsg(e.message,true)}}
-{const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzalletasten').onclick=fzAlleTasten;$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
+{const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;
+  $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
   if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;codeLock(k,'protect');$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzstop').onclick=fzTrennen;$('fzalle2').onclick=fzAlle;
   $('fzname').onkeydown=e=>{if(e.key==='Enter')fzKoppeln()};fzKeys();new MutationObserver(()=>{if(FZ.d)fzChips()}).observe($('fzview'),{attributes:true,attributeFilter:['hidden']})}}
 window.fzLoad=fzLoad;
