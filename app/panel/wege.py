@@ -12,7 +12,7 @@ ROOTS = ("Einstellungen", "Funktionen", "Zustand", "Personen und Geräte", "Ich"
          "Settings", "Features", "Status", "People and devices", "Me",
          # the pages of their own (way.js WAY_ROOTS, OWN_PAGES): "E-Mail → Für dich", "Kalender → Einstellungen"
          "Kalender", "Calendar", "E-Mail", "E-mail", "Kontakte", "Contacts", "Wissensbuch", "Knowledge book",
-         # the admin's menu entry Fernzugang (fernzugang.js): "Fernzugang → Fern-Server"
+         # the admin's menu entry Fernzugang (fernzugang.js): "Fernzugang → Systeme"
          "Fernzugang", "Remote access")
 # a root followed by an arrow; not "Mein Notaus", not a way inside another program's way ("Open WebUI → Einstellungen")
 WAY = re.compile(r"(?<![\w-])(?<!Mein )(?<!My )(?<!→ )(?:" + "|".join(map(re.escape, ROOTS)) + r")\s*→[^\n.;:()!?]{1,160}")

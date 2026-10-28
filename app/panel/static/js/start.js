@@ -69,6 +69,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH();if(typeof grundLoad==='function')grundLoad()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   placeBack();   // a reload the page did itself: back to the same place (base.js placeNow)
+  startBusy=false;if(startGo){const s=startGo;startGo=null;goSec(s)}   // a jump asked for during the start (base.js goSec)
   // "Im Panel öffnen" in the iPhone app: #go=<page>, #cfg=<settings page> or #me=<Ich area>, only known names
   try{const h=/^#(go|cfg|me)=([a-z]{2,12})$/.exec(location.hash);if(h){history.replaceState(null,'',location.pathname+location.search);
     if(h[1]==='go'&&ADMIN&&h[2]!=='chat'&&$(h[2])&&$(h[2]).tagName==='SECTION')goSec(h[2]);

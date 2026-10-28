@@ -389,7 +389,7 @@ MODULE = {
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
     "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
-    "fernzugang": ("zugang", "Fernzugang (eigener Menüpunkt): Anker, Kopplung per Einmal-Code, Web-Terminal mit Ticket, SSH mit festem Host-Schlüssel"),
+    "fernzugang": ("zugang", "Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel"),
     "wachposten": ("zugang", "Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz"),
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),
     "steuerzentrale": ("teilen", "Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan"),

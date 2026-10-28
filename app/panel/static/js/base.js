@@ -209,8 +209,11 @@ document.querySelectorAll('nav button[data-s]').forEach(b=>b.onclick=()=>{const 
   const direct=goDirect;goDirect=false;
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s);mbarMark(g);
   document.querySelector('main').classList.toggle('sublist',!direct&&NARROW()&&GROUPS[g].length>1)});
+// a jump before the start (start.js startPage) has opened its start page: kept and done again after it, so the start
+// page never wins over it (Dominik 2026-10-28: goSec('fern') right after loading stayed on the assistant)
+let startBusy=true,startGo=null;
 window.goSec=s=>{if(s==='sys'){goCfg('upd');return}   // update and backups moved to Einstellungen (V01.0.207)
-  goDirect=true;const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
+  if(startBusy)startGo=s;goDirect=true;const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
 // One row for every setting (plan „Vereinheitlichen“ Phase 4, V01.0.270): label, one sentence, the control on the
 // right. l, h and ctl are HTML (callers escape). A locked row stays visible with its reason (o.why, from the panel's
 // rules in features.py, never from the model) and a disabled control; o.extra goes below the sentence.

@@ -60,6 +60,8 @@ FENSTER = {
     ".choice .chrows": "a choice card inside the conversation",
     ".cx-list": "Chats: the list of chats beside the messages",
     ".fzantwort": "Fernzugang: the assistant's answers in its column beside the terminal; the newest stays in view",
+    ".fzlist": "Fernzugang: the list of systems beside the chosen one (like Mail and Kontakte); the page itself fits the window",
+    ".fzdetail": "Fernzugang: the chosen system beside the list; the page itself fits the window, a phone shows it in full",
     ".cx-log": "Chats: the messages",
     ".cx-pane": "Chats: the side pane",
     ".dkvpic": "the companion's screen picture",

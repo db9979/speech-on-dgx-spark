@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Fern-Server). Linux and macOS.
+"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Systeme). Linux and macOS.
 
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - einrichten https://<panel>   set up once (asks the code)
     sudo spark-anker entfernen                                                              removes everything again

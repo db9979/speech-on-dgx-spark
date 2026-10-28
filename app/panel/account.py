@@ -274,9 +274,19 @@ async def login(request: Request):
     return r
 
 
+def _fern_sperren(request=None):
+    """Logging out locks an unlocked Fernzugang page (fernzugang.ENTSPERRT, rule „Bereich entsperren“)."""
+    try:
+        import fernzugang
+        fernzugang.sperren(request, "abmelden") if request is not None else fernzugang.sperren_alle("abmelden")
+    except Exception as e:
+        print("fernzugang: gesperrt | fehler " + type(e).__name__[:20] + " | 0", flush=True)
+
+
 @router.post("/api/logout")
 def logout(request: Request):
     end_window(request)
+    _fern_sperren(request)
     raw = request.cookies.get(COOKIE, "")
     guard.revoke(raw, ADMIN_IDLE)
     if admin_family(raw):  # also every older or newer copy of this login
@@ -292,6 +302,7 @@ async def logout_everywhere(request: Request):
     """Ends the admin login in every browser (this one too)."""
     await admin_code(request)
     end_admin_sessions()
+    _fern_sperren()
     guard.log("admin_logout_everywhere", ip=guard.client_ip(request))
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(COOKIE)
@@ -421,6 +432,7 @@ async def profile_login(request: Request):
 @router.post("/api/profile/logout")
 def profile_logout(request: Request):
     end_window(request)
+    _fern_sperren(request)
     raw = request.cookies.get(profiles.COOKIE, "")
     guard.revoke(raw, profiles.session_secs())
     u, _ = profiles._cookie_user(profiles._load(), raw)

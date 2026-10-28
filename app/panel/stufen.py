@@ -39,7 +39,8 @@ LIST = {
     ("PUT", "/api/profile/telefon/pin"): (PROTECT, "Schutz", "Telefon-PIN", "Phone PIN"),
     ("POST", "/api/admin/notaus/off"): (PROTECT, "Schutz", "Notaus aufheben", "Lift the emergency stop"),
     ("POST", "/api/admin/fernzugang/koppeln"): (PROTECT, "Schutz", "Fern-Server koppeln (Code für den Anker)", "Pair a remote server (code for the anchor)"),
-    ("POST", "/api/admin/fernzugang/sitzung"): (PROTECT, "Schutz", "Shell eines Fern-Servers öffnen", "Open a remote server's shell"),
+    ("DELETE", "/api/admin/fernzugang/geraete/{gid}"): (PROTECT, "Schutz", "Fern-Server entfernen (Anker baut sich ab)", "Remove a remote server (the anchor removes itself)"),
+    ("POST", "/api/admin/fernzugang/entsperren"): (PROTECT, "Schutz", "Fernzugang entsperren (die Seite für eine Weile, nur diese Anmeldung)", "Unlock remote access (the page for a while, this login only)"),
     ("POST", "/api/notaus/mine/off"): (PROTECT, "Schutz", "Eigenen Notaus aufheben", "Lift my own emergency stop"),
     ("POST", "/api/admin/notaus/mine/off"): (PROTECT, "Schutz", "Notaus einer Person aufheben", "Lift a person's emergency stop"),
     ("POST", "/api/admin/notaus/keys"): (PROTECT, "Schutz", "Notaus-Schlüssel für Home Assistant", "Emergency stop key for Home Assistant"),
@@ -131,7 +132,7 @@ LIST = {
     ("POST", "/api/admin/modelle/wechseln"): (CONFIRM, "Spark", "Ein Modell wechseln", "Switch a model"),
     ("POST", "/api/admin/modelle/platz"): (CONFIRM, "Spark", "Lange Gespräche einstellen", "Set long conversations"),
     ("POST", "/api/admin/modelle/zurueck"): (CONFIRM, "Spark", "Das vorige Modell zurückholen", "Bring back the previous model"),
-    ("DELETE", "/api/admin/fernzugang/geraete/{gid}"): (CONFIRM, "Spark", "Fern-Server entfernen (Anker baut sich ab)", "Remove a remote server (the anchor removes itself)"),
+
     ("DELETE", "/api/admin/fernzugang/verlauf"): (CONFIRM, "Spark", "Verlauf des Fernzugangs löschen", "Delete the remote access history"),
     ("POST", "/api/admin/werkstatt/auftrag"): (CONFIRM, "Spark", "Werkstatt: Diagnose, Reparatur oder Code-Messung", "Workshop: diagnosis, repair or code measurement"),
     ("POST", "/api/admin/modelle/messen"): (CONFIRM, "Spark", "Ein Modell messen", "Measure a model"),

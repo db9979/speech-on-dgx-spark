@@ -284,7 +284,7 @@ function zFern(F){const box=$('zfern'),h=$('zfernh');if(!box)return;box.hidden=h
   for(const [k,de,en] of [['gekoppelt','gekoppelt','paired'],['online','online','online'],['sitzungen','offene Sitzungen','open sessions'],['abbau','warten auf Abbau','waiting for removal']]){
     const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
     kk.textContent=t(de,en);b.textContent=String(F[k]||0);tx.append(kk,b);r.appendChild(tx);card.appendChild(r)}
-  card.appendChild(wayEl(t('Fernzugang → Fern-Server','Remote access → Remote servers'),t('Fernzugang → Fern-Server','Remote access → Remote servers')));box.appendChild(card)}
+  card.appendChild(wayEl(t('Fernzugang → Systeme','Remote access → Systems'),t('Fernzugang → Systeme','Remote access → Systems')));box.appendChild(card)}
 function zRund(R){const box=$('zrund'),h=$('zrundh');if(!box)return;box.hidden=h.hidden=!R.an;box.textContent='';if(!R.an)return;
   const la=R.letzt,st=R.stoerung,card=document.createElement('div');card.className='card zrcard';
   card.dataset.lvl=st?'bad':!la?'':la.ok?(R.langsam||[]).length?'warn':'ok':'warn';

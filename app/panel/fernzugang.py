@@ -40,6 +40,12 @@ Rules (fixed, Sicherheits-Checkliste):
   line, Enter is the person's. Shell output never goes to the model. After the person's own command the page picks
   other chips by fixed rules (FOLGE); it keeps only that last line in the browser, never the output, and sends it
   nowhere.
+- Unlocking the page (Dominik 2026-10-28 20:11, rule „Bereich entsperren“ of the guideline): a fresh code or passkey
+  unlocks the page for chat.fernzugang_entsperrt_min minutes (5 to 120, default 60) for this login (both login cookies)
+  from this kind of place (Zuhause or Internet) in the browser. Unlocked: the systems are shown, sessions open, Trennen.
+  Still a fresh code each time: pairing, Entfernen. It locks at „Sperren“, at the end of its minutes, on a change of
+  place, on logout and at the Notaus; a running shell goes on until Trennen or idle. Locked, GET shows nothing of the
+  systems. The own iPhone app (its key made after the second step) keeps its view as before.
 - Stage 2b, „Frag den Assistenten“ (chat.fernzugang_hilfe under the Fernzugang switch, off): the own language model
   only (llm.own_tor), no tool. It gets the question, the system's name and OS, the last HILFE_BEFEHLE own commands and,
   only with „Bildschirm mitschicken“ (per session, off), the last HILFE_ZEILEN lines of the screen; all but the
@@ -50,16 +56,19 @@ Rules (fixed, Sicherheits-Checkliste):
 
     admin (core.auth; „browser or app“: is_admin_browser or is_admin_app, else the browser only):
     GET    /api/admin/fernzugang                         systems, counts, sessions, the anchor file, chips (browser or app)
-    POST   /api/admin/fernzugang/koppeln {name}          one-time code (admin_code_fresh)
-    POST   /api/admin/fernzugang/sitzung {geraet, cols, rows}  ticket for the terminal (admin_code_fresh)
+    POST   /api/admin/fernzugang/entsperren              unlocks the page for this login and client (admin_code_fresh)
+    DELETE /api/admin/fernzugang/entsperren              locks it again at once
+    POST   /api/admin/fernzugang/koppeln {name}          one-time code (unlocked, and admin_code_fresh every time)
+    POST   /api/admin/fernzugang/sitzung {geraet, cols, rows}  ticket for the terminal (unlocked)
     POST   /api/admin/fernzugang/sitzung/{sid}/fenster {fenster}  ticket that moves the open shell of this login into
                                                          its own window or back („Herauslösen“, „Zurückholen“)
     POST   /api/admin/fernzugang/hilfe[?art=vorschlag] {sitzung, frage, befehle, bildschirm}  the assistant (stage 2b)
     PUT    /api/admin/fernzugang/geraete/{gid} {erlaubt} may connect or not (browser or app)
     POST   /api/admin/fernzugang/geraete/{gid}/trennen   ends its sessions and its anchor connection (browser or app)
-    DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code; browser or app)
+    DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code_fresh; browser or app)
     POST   /api/admin/fernzugang/sitzung/{sid}/trennen   ends that one session („Gerade verbunden“; browser or app)
     DELETE /api/admin/fernzugang/verlauf                 empties the history (admin_code; browser or app)
+    (in the browser every door but GET, entsperren and alle-trennen only while the page is unlocked: _frei)
     POST   /api/admin/fernzugang/alle-trennen            ends every session and anchor connection (browser or app)
     WS     /api/fernzugang/terminal?t=<ticket>           the terminal (binary: keys in, output out; text: size, state)
     anchor (no cookies):
@@ -125,6 +134,7 @@ LEERLAUF = (1, 120)     # chat.fernzugang_leerlauf_min, minutes
 SITZUNGEN = (1, 4)      # chat.fernzugang_sitzungen
 OFFLINE = (5, 1440)     # chat.fernzugang_offline_min: the Dienst-Wächter warns after this long offline
 VERLAUF_TAGE = (1, 365)  # chat.fernzugang_verlauf_tage: how long the history keeps a session (default 30)
+ENTSPERRT_MIN = (5, 120)  # chat.fernzugang_entsperrt_min: how long one code unlocks the page (default 60)
 VERLAUF_MAX = 2000       # entries at most
 ARTEN = {"shell": ("Shell", "Shell")}   # what a session is (Dateien and Bildschirm follow in stages 3 and 4)
 CLIENTS = {"browser": ("Browser", "Browser"), "iphone": ("iPhone", "iPhone"), "android": ("Android", "Android"),
@@ -172,7 +182,7 @@ HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft we
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
-         "hilfe_frage", "hilfe_vorschlag")
+         "hilfe_frage", "hilfe_vorschlag", "entsperrt", "verlaengert", "gesperrt")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -270,6 +280,10 @@ def meldung_on(c=None):
     return features.admin_on("fernzugangmeldung", c)
 
 
+def entsperrt_s(c=None):
+    return 60 * (_num("fernzugang_entsperrt_min", ENTSPERRT_MIN, c) or 60)
+
+
 def offline_s(c=None):
     return 60 * (_num("fernzugang_offline_min", OFFLINE, c) or OFFLINE[1])
 
@@ -277,7 +291,8 @@ def offline_s(c=None):
 def check(c):
     """None when the settings in chat are fine, else the reason (admin.validate)."""
     for key, (lo, hi) in (("fernzugang_leerlauf_min", LEERLAUF), ("fernzugang_sitzungen", SITZUNGEN),
-                          ("fernzugang_offline_min", OFFLINE), ("fernzugang_verlauf_tage", VERLAUF_TAGE)):
+                          ("fernzugang_offline_min", OFFLINE), ("fernzugang_verlauf_tage", VERLAUF_TAGE),
+                          ("fernzugang_entsperrt_min", ENTSPERRT_MIN)):
         if key in c and _num(key, (lo, hi), c) is None:
             return f"{key}: {lo} bis {hi}"
     return None
@@ -421,7 +436,7 @@ def is_admin_app(conn):
     """The iPhone app of an admin profile (role Admin, its own app key made after the second step; coadmin.session
     checks both with every request), never the Verwalter. It may look at the systems, let them connect or not,
     disconnect and remove them (stage 2, Dominik 2026-10-28 „2-4“); the shell, pairing and later files and screen
-    stay with a login in a browser, which the app opens as a panel page (Fernzugang → Fern-Server)."""
+    stay with a login in a browser, which the app opens as a panel page (Fernzugang → Systeme)."""
     if not conn.headers.get(profiles.DEVICE_HEADER):
         return False
     import coadmin
@@ -465,7 +480,7 @@ def for_live(now=None):
     offen = [{"art": ARTEN.get(x.art, ARTEN["shell"])[0], "system": sysname(x.gid),
               "admin": (x.admin_name if named else "Admin"), "herkunft": "Internet" if x.herkunft == "internet" else "Zuhause",
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
-    return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen,
+    return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
             "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
 
 
@@ -482,7 +497,8 @@ def live_sub(d):
     return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen" + offen
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
-            + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else ""))
+            + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
+            + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else ""))
 
 
 # ---------------------------------------------------------------- Dienst-Wächter
@@ -533,7 +549,8 @@ async def close_all(why="alle"):
 
 
 async def notaus_close():
-    """notaus.after_change: any stage closes everything; new ones are refused while it is on."""
+    """notaus.after_change: any stage closes everything and locks every unlocked page; new ones are refused while it is on."""
+    sperren_alle("notaus")
     n = await close_all("notaus")
     log("alle_trennen", "notaus", n)
 
@@ -1174,6 +1191,69 @@ def _on(request: Request):
         raise HTTPException(503, "Notaus: Fernzugang gesperrt")
 
 
+# ---------------------------------------------------------------- unlocking the page (Bereich entsperren)
+ENTSPERRT = {}   # _login hash -> {"bis": end, "herkunft": "zuhause" | "internet"}; only in memory: a restart locks
+
+
+def _herkunft(conn):
+    try:
+        import live
+        return "internet" if live.shown_outside(conn) else "zuhause"
+    except Exception:
+        return "internet"
+
+
+def sperren_alle(why):
+    """Every unlocked page locked at once (Notaus, logout everywhere)."""
+    n = len(ENTSPERRT)
+    ENTSPERRT.clear()
+    if n:
+        log("gesperrt", why, n)
+
+
+def sperren(conn, why):
+    """This login's page locked (Sperren, logout)."""
+    if ENTSPERRT.pop(_login(conn), None) is not None:
+        log("gesperrt", why, 1)
+        return True
+    return False
+
+
+def entsperrt_bis(conn, now=None):
+    """The end of this login's unlock, or None: never during the Notaus, never after its minutes, never from another
+    kind of place (Zuhause ↔ Internet); an unlock that ends here is logged with why."""
+    now = time.time() if now is None else now
+    if _notaus():
+        sperren_alle("notaus")
+        return None
+    k = _login(conn)
+    e = ENTSPERRT.get(k)
+    if e is None:
+        return None
+    why = "abgelaufen" if now >= e["bis"] else "ort" if e["herkunft"] != _herkunft(conn) else ""
+    if why:
+        ENTSPERRT.pop(k, None)
+        log("gesperrt", why, 1)
+        return None
+    return e["bis"]
+
+
+def entsperrt_n(now=None):
+    """How many pages are unlocked right now (Live: a number only)."""
+    now = time.time() if now is None else now
+    return sum(1 for e in ENTSPERRT.values() if e["bis"] > now)
+
+
+def _frei(request):
+    """A door of the page: in the browser only while this login's page is unlocked (the own iPhone app keeps its own
+    door, is_admin_app)."""
+    if is_admin_app(request):
+        return
+    if entsperrt_bis(request) is None:
+        log("gesperrt", "zugriff", 0)
+        raise HTTPException(423, "Fernzugang gesperrt: erst entsperren (Code oder Passkey).")
+
+
 def _spki_pin():
     """sha256//… of the panel certificate's public key, for curl --pinnedpubkey (the panel's own certificate)."""
     try:
@@ -1235,7 +1315,12 @@ def admin_get(request: Request):
     _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     c = features.chat_cfg()
-    out = {"on": admin_on(c), "leerlauf": leerlauf_s(c) // 60, "max": max_sitzungen(c), "max_anker": MAX_ANKER,
+    bis = entsperrt_bis(request) if admin_on(c) and not is_admin_app(request) else None
+    if admin_on(c) and bis is None and not is_admin_app(request):
+        # locked: nothing about the systems, only what the page needs to offer „Entsperren“
+        return {"on": True, "gesperrt": True, "notaus": _notaus(), "browser": is_admin_browser(request),
+                "entsperrt_min": entsperrt_s(c) // 60}
+    out = {"on": admin_on(c), "gesperrt": False, "entsperrt_bis": int(bis) if bis else None, "entsperrt_min": entsperrt_s(c) // 60, "leerlauf": leerlauf_s(c) // 60, "max": max_sitzungen(c), "max_anker": MAX_ANKER,
            "chips": list(CHIPS), "folge": [[list(w), list(f)] for w, f in FOLGE],
            "hinweis": [[list(w), list(x)] for w, x in HINWEIS], "anker": _program(), "code_s": CODE_S, "counts": counts(),
            "notaus": _notaus(), "browser": is_admin_browser(request),
@@ -1259,11 +1344,39 @@ def admin_get(request: Request):
     return out
 
 
-@router.post("/api/admin/fernzugang/koppeln", dependencies=[Depends(auth), Depends(admin_code_fresh)])
-async def admin_pair(request: Request):
-    """„Koppeln (Code)“: a one-time code for one new system (fresh code or passkey first: a new way in)."""
+@router.post("/api/admin/fernzugang/entsperren", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def admin_unlock(request: Request):
+    """„Entsperren“ and „Verlängern“: after a fresh code or passkey the page is open for chat.fernzugang_entsperrt_min
+    minutes, for this login from this kind of place only."""
     _on(request)
     _second_step(request)
+    guard.limit(request, "fernzugang_code", admin=True)
+    k, now = _login(request), time.time()
+    dauer = entsperrt_s()
+    word = "verlaengert" if entsperrt_bis(request, now) is not None else "entsperrt"
+    ENTSPERRT[k] = {"bis": now + dauer, "herkunft": _herkunft(request)}
+    for x in [x for x, e in ENTSPERRT.items() if e["bis"] <= now]:
+        ENTSPERRT.pop(x, None)
+    log(word, _who(request), dauer // 60)
+    return {"bis": int(now + dauer), "min": dauer // 60}
+
+
+@router.delete("/api/admin/fernzugang/entsperren", dependencies=[Depends(auth)])
+def admin_lock(request: Request):
+    """„Sperren“: locked at once (no code)."""
+    _browser(request)
+    if not sperren(request, "sperren"):
+        log("gesperrt", "nicht_entsperrt", 0)
+    return {"ok": True}
+
+
+@router.post("/api/admin/fernzugang/koppeln", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def admin_pair(request: Request):
+    """„Koppeln (Code)“: a one-time code for one new system (fresh code or passkey first: a new way in, also on an
+    unlocked page)."""
+    _on(request)
+    _second_step(request)
+    _frei(request)
     guard.limit(request, "fernzugang_code", admin=True)
     body = await json_body(request, MAX_BODY)
     name = str(body.get("name") or "").strip()
@@ -1283,11 +1396,12 @@ async def admin_pair(request: Request):
     return {"code": code, "gilt_s": CODE_S, "anker": _program(), "user": USER, **cmd}
 
 
-@router.post("/api/admin/fernzugang/sitzung", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+@router.post("/api/admin/fernzugang/sitzung", dependencies=[Depends(auth)])
 async def admin_session(request: Request):
-    """„Shell“: after a fresh code or passkey a ticket that opens the terminal once, within TICKET_S seconds."""
+    """„Shell“: on the unlocked page a ticket that opens the terminal once, within TICKET_S seconds."""
     _on(request)
     _second_step(request)
+    _frei(request)
     guard.limit(request, "fernzugang_sitzung", admin=True)
     body = await json_body(request, MAX_BODY)
     gid = str(body.get("geraet") or "")
@@ -1342,10 +1456,13 @@ async def admin_window(sid: str, request: Request):
 
 @router.post("/api/admin/fernzugang/sitzung/{sid}/trennen", dependencies=[Depends(auth)])
 async def admin_cut_session(sid: str, request: Request):
-    """„Gerade verbunden“ → „Trennen“: ends this one session (browser or app)."""
+    """„Gerade verbunden“ → „Trennen“: ends this one session (browser or app). On a locked page only the own one (the
+    shell in its own window): ending never opens anything."""
     _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     s = SITZUNG.get(str(sid))
+    if s is None or not s.login or not hmac.compare_digest(s.login, _login(request)):
+        _frei(request)
     if s is None:
         log("trennen", "keine sitzung", 0)
         raise HTTPException(404, "no such session")
@@ -1358,6 +1475,7 @@ async def admin_cut_session(sid: str, request: Request):
 async def admin_clear_history(request: Request):
     """„Verlauf löschen“ (Bestätigen): the history of the sessions is gone."""
     _admin_here(request)
+    _frei(request)
     guard.limit(request, "fernzugang", admin=True)
     with _vlock:
         with contextlib.suppress(OSError):
@@ -1371,6 +1489,7 @@ async def admin_allow(gid: str, request: Request):
     if not admin_on():
         raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
     _admin_here(request)
+    _frei(request)
     if _notaus(count=True):
         raise HTTPException(503, "Notaus: Fernzugang gesperrt")
     guard.limit(request, "fernzugang", admin=True)
@@ -1395,6 +1514,7 @@ async def admin_cut(gid: str, request: Request):
     """Ends the system's sessions and its anchor connection now (it comes back after its pause; to keep it out, switch
     „Darf sich verbinden“ off)."""
     _admin_here(request)
+    _frei(request)
     guard.limit(request, "fernzugang", admin=True)
     n = 0
     for s in [s for s in SITZUNG.values() if s.gid == gid]:
@@ -1409,6 +1529,7 @@ async def admin_cut(gid: str, request: Request):
 
 @router.post("/api/admin/fernzugang/alle-trennen", dependencies=[Depends(auth)])
 async def admin_cut_all(request: Request):
+    """Ends every session and anchor connection, also on a locked page (it only takes away, like the Notaus)."""
     _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     n = await close_all("alle")
@@ -1417,11 +1538,13 @@ async def admin_cut_all(request: Request):
     return {"n": n}
 
 
-@router.delete("/api/admin/fernzugang/geraete/{gid}", dependencies=[Depends(auth), Depends(admin_code)])
+@router.delete("/api/admin/fernzugang/geraete/{gid}", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_remove(gid: str, request: Request):
     """„Entfernen“: the key stops at once, the Pi's key and the pinned host key are deleted here; the anchor hears
-    „abbauen“ now or at its next contact and removes everything it set up on the server."""
+    „abbauen“ now or at its next contact and removes everything it set up on the server. A fresh code every time,
+    also on an unlocked page."""
     _admin_here(request)
+    _frei(request)
     guard.limit(request, "fernzugang", admin=True)
     with _lock:
         d = _read()

@@ -101,7 +101,7 @@ struct AdminView: View {
                 Section {
                     // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)
                     if s.role != "manager" { NavigationLink("Funktionen") { FeaturesView() } }
-                    // Fernzugang → Fern-Server (fernzugang.py): the cards, disconnect and remove here; the shell in the panel
+                    // Fernzugang → Systeme (fernzugang.py): the cards, disconnect and remove here; the shell in the panel
                     if s.role != "manager" { NavigationLink("Fernzugang") { FernzugangView() } }
                     NavigationLink("Personen und Geräte") { AdminProfilesView() }
                     if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
@@ -1959,7 +1959,7 @@ struct BackupsView: View {
     }
 }
 
-// ---------------------------------------------------------------- Fernzugang → Fern-Server (fernzugang.py, stage 2)
+// ---------------------------------------------------------------- Fernzugang → Systeme (fernzugang.py, stage 2)
 
 /// One remote server as the Spark lists it (GET /api/admin/fernzugang): numbers, times and fixed words only.
 struct FernServer: Identifiable {
@@ -1978,7 +1978,7 @@ struct FernServer: Identifiable {
     let sitzungen: Int
 }
 
-/// The cards of Fernzugang → Fern-Server in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
+/// The cards of Fernzugang → Systeme in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
 /// and „Entfernen“ (the same levels as in the panel, stufen.py). The shell and pairing need a login in a browser:
 /// they open the panel page inside the app (SFSafariViewController), never the app's own key.
 struct FernzugangView: View {
@@ -2050,7 +2050,7 @@ struct FernzugangView: View {
                     Button("Neues System koppeln (im Panel)") { panel() }
                     Button("Alle trennen", role: .destructive) { askAll = true }
                 } footer: {
-                    Text(SparkAPI.way(String(localized: "Shell und Koppeln fragen im Panel jedes Mal frisch nach Code oder Passkey; beim ersten Mal meldest du dich dort an wie im Browser. Die Seite: Fernzugang → Fern-Server.")))
+                    Text(SparkAPI.way(String(localized: "Shell und Koppeln gibt es im Panel: ein Code oder Passkey entsperrt die Seite dort für eine Weile, Koppeln und Entfernen fragen jedes Mal; beim ersten Mal meldest du dich dort an wie im Browser. Die Seite: Fernzugang → Systeme.")))
                 }
             }
         }

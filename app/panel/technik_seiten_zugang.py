@@ -667,12 +667,19 @@ SEITEN = {
               ("guard.limit, Größe, Herkunft", "guard.limit, size, origin"),
               ("Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl "
                "gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen "
-               "brauchen dazu einen frischen Code oder Passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} Minuten). Zu "
+               "brauchen dazu einen frischen Code oder Passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} Minuten). Ein "
+               "ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, "
+               "zuerst der Fernzugang: {fernzugang.ENTSPERRT_MIN.0} bis {fernzugang.ENTSPERRT_MIN.1} Minuten, "
+               "fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und "
+               "Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu "
                "den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: "
                "Unterschrift, Zeit, Einmal-Nummer, einer von {tarswart.COMMANDS|anzahl} festen Befehlen).",
                "Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel "
                "requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh "
-               "code or passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} minutes). The models on tars are reached only "
+               "code or passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} minutes). A whole area can be unlocked for a "
+               "while with a second step (rule \"unlocking an area\", first remote access: {fernzugang.ENTSPERRT_MIN.0} to "
+               "{fernzugang.ENTSPERRT_MIN.1} minutes, fernzugang.entsperrt_bis): this login only, from the same place only, "
+               "locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only "
                "through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time "
                "number, one of {tarswart.COMMANDS|anzahl} fixed commands)."),
               ("stop", "nein", ("Abgewiesen", "Refused"))),

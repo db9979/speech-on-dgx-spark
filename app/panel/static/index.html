@@ -268,15 +268,16 @@
         <div class="fh">Testen, untersuchen und reparieren unter Zustand → Werkstatt.</div>
       </div>
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
-      <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, angerufen über seinen Anker. Nur Admins mit zweitem Anmeldeschritt, jede Sitzung mit neuem Code.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, über seinen Anker. Nur Admins mit zweitem Schritt; ein Code entsperrt die Seite für eine Weile.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
       <div data-show="chat.fernzugang" style="margin-left:36px">
         <div class="setrow"><div class="lbl"><b>Assistent im Fernzugang</b><span>„Frag den Assistenten“ und Vorschläge, nur vom eigenen Sprachmodell. Er tippt nie; den Bildschirm sieht er nur, wenn du ihn mitschickst.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_hilfe"><i></i></label></div>
         <label for="chat.fernzugang_leerlauf_min">Leerlauf trennt nach (Minuten)</label><input class="num" id="chat.fernzugang_leerlauf_min" type="number" min="1" max="120"><div class="fh">1 bis 120, Standard 15.</div>
         <label for="chat.fernzugang_sitzungen">Sitzungen gleichzeitig</label><input class="num" id="chat.fernzugang_sitzungen" type="number" min="1" max="4"><div class="fh">1 bis 4, Standard 2.</div>
         <div class="setrow"><div class="lbl"><b>Meldung bei Fernsitzung</b><span>Die Admins bekommen eine Mitteilung, wenn eine Shell über das Internet oder von einem neuen Ort geöffnet wird.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_meldung"><i></i></label></div>
         <label for="chat.fernzugang_verlauf_tage">Verlauf der Sitzungen behalten (Tage)</label><input class="num" id="chat.fernzugang_verlauf_tage" type="number" min="1" max="365"><div class="fh">1 bis 365, Standard 30. Nur Zeit, System, Admin, Art, Dauer und Zuhause oder Internet.</div>
+        <label for="chat.fernzugang_entsperrt_min">Ein Code entsperrt die Seite für (Minuten)</label><input class="num" id="chat.fernzugang_entsperrt_min" type="number" min="5" max="120"><div class="fh">5 bis 120, Standard 60. Nur diese Anmeldung in diesem Browser; Koppeln und Entfernen fragen trotzdem jedes Mal.</div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
-        <div class="fh">Koppeln und die Shell öffnen unter Fernzugang → Fern-Server.</div>
+        <div class="fh">Koppeln und die Shell öffnen unter Fernzugang → Systeme.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
@@ -1088,23 +1089,33 @@
   </div>
 </section>
 <section id="fern"><div class="card ld-box" id="fzbox">
-  <div class="ld-head"><h2>Fernzugang</h2></div>
-  <div class="pintro">Fern-Server rufen von sich aus an. Du öffnest ihre Shell hier im Browser. Nur Admins, nie Gäste. Kein neuer Port.</div>
+  <div class="ld-head fzkopf"><h2>Fernzugang</h2>
+    <div class="segc fztabs" id="fztabs" role="tablist" aria-label="Fernzugang" hidden><button type="button" class="on" id="fztabsys" role="tab" aria-selected="true" data-tab="systeme">Systeme</button></div>
+    <span class="fzfill"></span>
+    <div class="fzlock" id="fzlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg><span id="fzlockbis"></span><button class="fzpill" type="button" id="fzverl">Verlängern</button><button class="fzpill" type="button" id="fzsperren">Sperren</button></div>
+    <a class="wayl fzgear" href="#" data-way="Funktionen → Fernzugang zu Servern" title="Einstellungen: Funktionen → Fernzugang zu Servern" aria-label="Einstellungen des Fernzugangs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+    <button class="b p fzneubtn" type="button" id="fzneu" hidden>+ System koppeln</button>
+  </div>
   <div class="note" id="fzoff" hidden>Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern.</div>
   <div class="note err" id="fznotaus" hidden>Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.</div>
+  <div class="fzstatus" id="fzstatus" hidden></div>
+  <div class="fzgesperrt" id="fzgesperrt" hidden>
+    <div class="fzplatz" aria-hidden="true"><div><i></i><i></i><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div></div>
+    <div class="card fzsperrkarte"><span class="fzschloss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+      <b>Fernzugang gesperrt</b>
+      <div class="fh">Code oder Passkey entsperrt die Seite für <span id="fzsperrmin">60</span> Minuten, nur in diesem Browser. Gesperrt zeigt sie nichts über die Systeme; eine offene Shell läuft weiter bis Trennen oder Leerlauf.</div>
+      <button class="b p" type="button" id="fzentsperren">Entsperren (Code/Passkey)</button></div>
+  </div>
   <div id="fzmain" hidden>
-    <h3>Fern-Server</h3>
-    <div class="fztiles" id="fztiles"></div>
-    <div class="row fzneu"><input id="fzname" maxlength="40" autocomplete="off" placeholder="Name des Servers, z. B. vps-hetzner" aria-label="Name des Servers"><button class="b p" type="button" id="fzgo">Koppeln (Code)</button></div>
-    <div class="ld-split"><div class="ld-list fzlist" id="fzlist"></div><div class="ld-detail fzdetail" id="fzdetail" hidden></div></div>
-    <div class="card" id="fzjetzt" hidden><h3>Gerade verbunden</h3><div class="fh">Wer gerade eine Sitzung offen hat, von wo und womit. Die Adresse steht nur gekürzt da.</div><div id="fzjetztlist"></div></div>
-    <div class="fzcols">
-      <div class="card"><h3>Neues System koppeln</h3><div id="fzcode"></div></div>
-      <div class="card"><h3>Was das Panel aufschreibt</h3><div class="fh">Nur feste Wörter und Zahlen, nie Tasten oder Ausgaben. Beispiel:</div><pre class="fzcmd" id="fzlog"></pre></div>
+    <div class="fzsplit" id="fzsplit">
+      <div class="fzliste">
+        <input id="fzsuche" type="search" placeholder="Systeme suchen" autocomplete="off" aria-label="Systeme suchen">
+        <div class="fzjetzt" id="fzjetzt" hidden><div class="fzgrp">Gerade verbunden</div><div id="fzjetztlist"></div></div>
+        <div class="fzlist" id="fzlist"></div>
+        <div class="fzfuss"><button class="fzlink" type="button" id="fzneu2">+ Neues System koppeln</button><button class="fzlink" type="button" id="fzallev">Verlauf aller Systeme <span class="mut" id="fzallevt"></span></button><button class="fzlink danger" type="button" id="fzalle">Alle trennen</button></div>
+      </div>
+      <div class="fzdetail" id="fzdetail" hidden></div>
     </div>
-    <details class="card fzverlauf" id="fzverlauf"><summary>Verlauf</summary><div class="fh" id="fzverlaufh"></div><div id="fzverlauflist"></div>
-      <div class="row"><button class="b" type="button" id="fzverlaufweg">Verlauf löschen</button></div></details>
-    <div class="card fzdanger"><div><b>Alle trennen</b><div class="fh">Schließt jede Sitzung und jeden Anker sofort. Der Notaus tut dasselbe.</div></div><button class="b danger" type="button" id="fzalle">Alle trennen</button></div>
   </div>
   <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
   <div class="fzview" id="fzview" hidden>
@@ -1295,6 +1306,22 @@
   <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen">✕</button></div>
   <div id="wizbody" class="wizbody"></div>
   <div class="row mefoot"><button class="b" id="wizback" type="button">Zurück</button><span id="wizmsg" class="mut" style="flex:1"></span><button class="b" id="wizskip" type="button">Überspringen</button><button class="b p" id="wiznext" type="button">Weiter</button></div>
+</div></div>
+<div id="fzkoppelnmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="fzkhead"><div class="card modalcard fzblattkarte">
+  <div class="rowin"><h2 id="fzkhead">Neues System koppeln</h2><button class="b" type="button" id="fzkzu">Schließen</button></div>
+  <div class="fh">Namen eingeben und das System wählen. Dann zeigt das Blatt einen Einmal-Code und die eine Zeile für das neue System; der Code gilt 10 Minuten und nur einmal und steht nie im Befehl. Koppeln fragt jedes Mal frisch nach Code oder Passkey.</div>
+  <div class="fzkrow"><input id="fzname" maxlength="40" autocomplete="off" placeholder="Name, z. B. werkstatt-pi" aria-label="Name des Systems">
+    <div class="segc" id="fzos" role="radiogroup" aria-label="Betriebssystem"><button type="button" class="on" data-os="linux" role="radio" aria-checked="true">Linux</button><button type="button" data-os="windows" role="radio" aria-checked="false">Windows</button><button type="button" data-os="mac" role="radio" aria-checked="false">macOS</button></div></div>
+  <div class="note" id="fzwin" hidden>Windows kommt mit einer späteren Stufe des Fernzugangs. Bis dahin: Linux oder macOS.</div>
+  <div class="row"><button class="b p" type="button" id="fzgo">Koppeln (Code)</button></div>
+  <div id="fzcode"></div>
+  <details class="fzpruef"><summary>Was das Panel aufschreibt</summary><div class="fh">Nur feste Wörter und Zahlen, nie Tasten oder Ausgaben. Beispiel:</div><pre class="fzcmd" id="fzlog"></pre></details>
+</div></div>
+<div id="fzverlaufmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="fzvhead"><div class="card modalcard fzblattkarte">
+  <div class="rowin"><h2 id="fzvhead">Verlauf</h2><button class="b" type="button" id="fzvzu">Schließen</button></div>
+  <div class="fh" id="fzverlaufh"></div>
+  <div class="fzvtab" id="fzverlauflist"></div>
+  <div class="row"><button class="b danger" type="button" id="fzverlaufweg">Verlauf löschen</button></div>
 </div></div>
 <div id="findmodal" class="modal" style="display:none"><div class="card modalcard findcard">
   <h2>Frühere Gespräche durchsuchen</h2>

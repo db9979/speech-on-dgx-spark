@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.220** Fernzugang: ein Code oder Passkey entsperrt die Seite für 60 Minuten (nur dieser Browser, sperrt bei Sperren, Abmelden, Ortswechsel und Notaus; Koppeln und Entfernen fragen weiter jedes Mal), neue Seite im Layout A (Liste und gewähltes System, Statuszeile, Koppeln als Blatt, passt ohne Scrollen, Handy wie die iPhone-Einstellungen); ein Sprung gleich nach dem Laden bleibt auf seiner Seite
 - **V01.1.219** ROT-FIX: Tests auf GitHub fest auf ubuntu-24.04 (ubuntu-latest ist jetzt 26.04, dort installiert Playwright kein Chromium; der Lauf zu V01.1.218 war rot, bevor ein Test lief)
 - **V01.1.218** Fernzugang: Terminal im Layout A (Assistent als Spalte rechts, ziehbar und zuklappbar, Vorschläge als eine Zeile, Sitzungsangaben im ⓘ der roten Zeile, Symbolleiste, Menü klappt weg, Seite scrollt nie; Handy mit Blatt von unten); eine endende Sitzung ließ eine spätere Verbindung hängen
 - **V01.1.217** Fernzugang: „Herauslösen“ zeigt im eigenen Fenster wieder das Terminal (statt der Startseite); „Alle Tasten“ füllt den Bildschirm nur mit dem Terminal, Vorschläge und Assistent in einer Schublade (Strg+Umschalt+Leertaste); Vorschläge für screen und tmux statt uptime und df -h; der Anker auf dem Mac: Zertifizierungsstellen des Systems, wenn Python keine mitbringt, Code direkt vom Terminal (auch unter curl | sudo), eigene Zeile mit /usr/bin/python3
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.213** Fernzugang Stufe 2: eigener Menüpunkt Fernzugang (nur Admins, solange der Schalter an ist); die Shell lässt sich in ein eigenes Fenster herauslösen (eigenes Einmal-Ticket, nie in der Adresse) und zurückholen; Tastenkürzel des Browsers gehen an die Shell, „Alle Tasten“ im Vollbild auch Strg+W und Esc; Vorschläge passen sich nach festen Regeln an den letzten Befehl an, nichts verlässt den Browser; „Gerade verbunden“ und Live zeigen wer, von wo (Zuhause/Internet) und wie lange, Verlauf 30 Tage ohne Inhalt, Mitteilung an die Admins bei einer Sitzung aus dem Internet; die iPhone-App zeigt unter Spark verwalten → Fernzugang die Fern-Server mit Trennen, Darf sich verbinden und Entfernen, Android unter Verwalten; die ersten Bytes des Servers gehen beim Öffnen nicht mehr verloren
 - **V01.1.212** KI-Dungeon-Master: englische Gegnernamen wie im SRD
 - **V01.1.211** KI-Dungeon-Master: die Prüfung erkennt Gegner auch gebeugt und in anderer Wortfolge („giant, red-eyed rats“, „Wölfe“, „jungen roten Drachen“), der Erzähler-Prüfstand zeigt, welcher Gegner fehlt
-- **V01.1.210** KI-Dungeon-Master: jedes Haus der Siedlung (Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild
 
 
 
