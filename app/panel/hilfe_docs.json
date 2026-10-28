@@ -5925,6 +5925,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegnerzahl vom Panel, Personen mit Wachen (V01.1.196, Review 27.10. Paket 11.7, Punkte B8, B14 und B16, Dominik 2026-10-27 „ok“): Ohne neuen Schalter, es sind Kampfregeln. 1. Wie viele kommen (B8): Das Modell nennt in begegnung höchstens zwei Arten aus dem Angebot, nur mit id (dungeon_kampf.ARTEN, die Zahl anzahl gibt es nicht mehr). Das Panel setzt die Zahl nach fester Regel (fill): jede Art einmal, dann immer eine mehr von der Art, die das angepasste EP am nächsten ans Budget bringt, solange es höchstens das 1,1-Fache bleibt, bis es mindestens das 0,9-Fache ist (BAND), höchstens 6 Gegner und 4 einer Art; liegt es noch über dem 1,1-Fachen, geht der Stärkste, ein Boss und eine Person zuletzt. Das Budget ist das der Kampfstufe des Gastgebers. 2. Allein: Verlangt die Szene einen einzelnen Gegner (ein Duell, ein einsamer Wächter), setzt das Modell bei seiner einzigen Art allein: true; dann kommt genau einer, für die halbe Belohnung (ALLEIN, Log dungeon: begegnung | allein). 3. Personen (B14): Eine Person kämpft mit der Vorlage ihrer Berufsreihe, deren EP am nächsten an der Hälfte des Budgets liegt (dungeon_personen.nearest, HALB), nicht mehr mit der stärksten, und b"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ringt ihre Wachen mit: die schwächste Vorlage ihrer Reihe als gewöhnliche Gegner (guards), deren Zahl fill setzt. Eine Person kommt immer genau einmal. 4. Prüfstand wie am Tisch: „mittel“ zählt der Prüfstand mit derselben Regel fill, „schwer“ nur bis zum 1,5-Fachen des Budgets wie am Tisch (B16); der Personen-Prüfstand bringt Personen so wie der Tisch (eine oder zwei aus einer gezogenen Berufsreihe mit ihren Wachen, people) und misst nur Felder, in denen Personen „mittel“ erreichen (große Gruppen hoch oben nicht: die Reihen enden bei Ritter und Veteran). Neu gemessen: BUDGET Stufe 2 = 152 (statt 145) und GRUPPE für fünf Helden = 2,08 (statt 2,02); jedes Feld liegt bei 74 bis 90 % Siegen, im Mittel 83 %, die Personen in 40 Feldern bei 54 bis 98 %, im Mittel 83 %. Selbsttests Fight.test_the_panel_counts_the_foes_into_the_band (jede Wahl aus dem Angebot landet im Band oder hat keinen Platz für einen mehr, die Zahl des Modells zählt nie, allein halbe Belohnung) und die Personen in test_a_person_who_fights_takes_a_fixed_template in test_dungeon, „mittel“ und „schwer“ wie am Tisch in test_a_group_an_encounter_and_a_fight_by_the_real_rules (test_dungeon_pruefstand)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Runen im Prüfstand (V01.1.193, Review 27.10. Paket 11.5, bericht „Abstimmung mit den Runen“ 4, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. Ist *Runen und Sockel* an, spielt der Balance-Prüfstand jede Zelle ein zweites Mal mit denselben Gruppen und ihren Runen (dungeon_pruefstand.with_runes, eigene Würfel): Sockel an Waffe und Körperrüstung wie bei einem Fund (dungeon_runen.sockets), die Runen aller Funde jeder Stufe bis zur eigenen (occasions: jeder Kampf, den die Stufe braucht, jede dritte eine Truhe, eine Belohnung, jede zweite Stufe ein Boss) nach der echten Fundregel und dem Rang dieser Stufe (dungeon_runen.draw, dieselbe Regel wie am Tisch), dazu jede Rune des Krämers (Rang 1 bis 4, das Gold vorausgesetzt). Jeder Held füllt jeden Sockel mit der Rune, die das Ding innerhalb der Deckel am stärksten macht (dungeon_runen.fits), eine neue Rune vor einer zweiten gleichen, die Waffe zuerst; das ist mehr, als ein Spieler bekommt, also die Obergrenze. Gemessen (200 Kämpfe je Zelle): mit Runen im Mittel +2,1 Punkte Siege, die einzelnen Zellen zwischen −5 und +13. Der Selbsttest test_runes_win_at_most_eight_points_more hält den Mittelwert bei höchstens +8 (RUNEN_PLU"
 },
 {
@@ -21478,6 +21494,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ys, the narrator gets karte.bleibt with the names of those not going, and the way to a neighbouring place (asked_ways) is not forced. Logs dungeon: karte | verworfen | kampf, verworfen | ungefragt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: foe count by the panel, people with guards (V01.1.196, review 27.10. package 11.7, points B8, B14 and B16, Dominik 2026-10-27 \"ok\"): No new switch, these are fight rules. 1. How many come (B8): the model names at most two kinds of the offer in begegnung, by id only (dungeon_kampf.ARTEN; there is no anzahl any more). The panel sets the count by a fixed rule (fill): every kind once, then always one more of the kind that brings the adjusted experience nearest to the budget while it stays at most 1.1 times it, until it is at least 0.9 times (BAND), 6 foes at most and 4 of a kind; still above 1.1 times, the strongest goes, a boss and a person last. The budget is the one of the host's fight stage. 2. Alone: when the scene wants a single foe (a duel, a lone guard), the model sets allein: true at its only kind; then exactly one comes, for half the reward (ALLEIN, log dungeon: begegnung | allein). 3. People (B14): a person fights with the template of its occupation's row whose experience is nearest to half the budget (dungeon_personen.nearest, HALB), no longer the strongest, and brings its guards: the weakest template of its row as plain foes (guards), counted by fill. A "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "person always comes exactly once. 4. Bench as at the table: the bench counts „mittel“ by the same rule fill, \"schwer\" only up to 1.5 times the budget as at the table (B16); the people bench brings people as the table does (one or two of a drawn occupation's row with their guards, people) and measures only cells where people reach \"mittel\" (big groups high up do not: the rows end at knight and veteran). Measured anew: BUDGET level 2 = 152 (was 145) and GRUPPE for five heroes = 2.08 (was 2.02); every cell lies at 74 to 90 % wins, 83 % on average, the people in 40 cells at 54 to 98 %, 83 % on average. Self-tests Fight.test_the_panel_counts_the_foes_into_the_band (every choice of the offer ends in the band or has no room for one more, the model's number never counts, alone half the reward) and the people in test_a_person_who_fights_takes_a_fixed_template in test_dungeon, \"mittel\" and \"schwer\" as at the table in test_a_group_an_encounter_and_a_fight_by_the_real_rules (test_dungeon_pruefstand)."
 },
 {
 "lang": "en",

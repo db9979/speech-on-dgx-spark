@@ -294,6 +294,7 @@ NICHT_KAEMPFER = ("artisan", "bard", "bell ringer", "butler", "cabin boy", "cart
 GEWICHT = {"adliger": 0.66, "akolyth": 0.55, "bandit": 1.43, "kultist": 0.88, "ritter": 1.15, "schlaeger": 1.65, "spaeher": 1.1,
            "spion": 0.77, "veteran": 1.15, "wache": 1.54}
 SPANNE = (50, 98)
+HALB = 0.5                 # a person's template nearest to this share of the budget (Review 27.10. B14)
 FREUND = 2                 # a person at least this friendly to a hero at the table never comes as a foe
 AUS = {"besiegt": ("{} wurde im Kampf besiegt.", "{} was beaten in the fight."), "geflohen": ("{} ist aus dem Kampf geflohen.", "{} fled the fight.")}
 
@@ -308,23 +309,46 @@ def weighted(g):
     return dict(g, ep=max(1, round(g["ep"] * GEWICHT.get(g["id"], 1.0))))
 
 
-def pool(r):
-    """The weighted templates for the balance bench (dungeon_pruefstand.bench pool=)."""
-    return [weighted(g) for g in r.get("gegner") or [] if g["id"] in templates()]
-
-
-def template(dm, r, rd, x, b):
-    """The bestiary entry a person fights with: by its occupation, the strongest of its row that plays in the world and
-    fits the encounter's budget b (it counts in it like any foe); None when none fits or the occupation has no row and
-    is one of NICHT_KAEMPFER. The model never gives values."""
-    import dungeon_kampf as kampf
+def _row(x):
+    """The templates of a person's occupation (VORLAGE, else SONST); None for one of NICHT_KAEMPFER."""
     beruf = ((x.get("karte") or {}).get("beruf") or ["", ""])[1].lower()
     row = next((ids for words, ids in VORLAGE if any(w in beruf for w in words)), SONST)
     if row is SONST and any(re.search(r"(?<!\w)" + re.escape(w) + r"(?!\w)", beruf) for w in NICHT_KAEMPFER):
         return None                              # a farmer, a bard, a ship's AI never fights as a guard
+    return row
+
+
+def template(dm, r, rd, x, b):
+    """The bestiary entry a person fights with: by its occupation's row (nearest); None when none fits or the occupation is
+    one of NICHT_KAEMPFER. The model never gives values."""
+    row = _row(x)
+    return nearest(dm, r, rd.get("welt", ""), row, b) if row else None
+
+
+def nearest(dm, r, welt, row, b):
+    """Of a row the template that plays in the world, fits the encounter's budget b (it counts in it like any foe) and
+    is nearest to HALB of it (Review 27.10. B14, never simply the strongest); weighted. Also the balance bench's."""
+    import dungeon_kampf as kampf
     by = dm._by(r, "gegner")
-    return next((weighted(by[i]) for i in row + SONST if i in by and kampf.plays_in(r, by[i], rd.get("welt", ""))
-                 and weighted(by[i])["ep"] <= b * kampf.SCHWER), None)
+    fit = [weighted(by[i]) for i in dict.fromkeys(tuple(row) + SONST) if i in by and kampf.plays_in(r, by[i], welt)
+           and weighted(by[i])["ep"] <= b * kampf.SCHWER]
+    return min(fit, key=lambda g: (abs(g["ep"] - HALB * b), -g["ep"]), default=None)
+
+
+def escort(dm, r, rd, g):
+    """A fighting person's guards (Review 27.10. B14, guards); None for a person without a row."""
+    x = (rd.get("nsc") or {}).get(g.get("person") or "")
+    row = _row(x) if x else None
+    return guards(dm, r, rd.get("welt", ""), row) if row else None
+
+
+def guards(dm, r, welt, row):
+    """The weakest template of a row that plays in the world, as plain foes (dungeon_kampf.fill counts them up to the
+    band); weighted. Also the balance bench's."""
+    import dungeon_kampf as kampf
+    by = dm._by(r, "gegner")
+    fit = [weighted(by[i]) for i in dict.fromkeys(tuple(row) + SONST) if i in by and kampf.plays_in(r, by[i], welt)]
+    return min(fit, key=lambda w: (w["ep"], w["id"]), default=None)
 
 
 def fighters(dm, r, rd, held, b):

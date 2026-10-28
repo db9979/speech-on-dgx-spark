@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.196** AI Dungeon Master: the model picks only the kinds, the panel sets how many foes come, people fight with their guards, the bench measures as at the table (review 27.10. package 11.7)
 - **V01.1.195** AI Dungeon Master: measured combat XP per foe
 - **V01.1.194** AI Dungeon Master: every rune gets its picture per world, sockets glow as dots over the thing's picture in the rune's colour
 - **V01.1.193** AI Dungeon Master: the bench plays every group with the runes it finds up to its level too and keeps them at 8 points more wins at most (review 27.10. package 11.5)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.189** AI Dungeon Master: portraits show hair, eyes, beard and build from the person's card
 - **V01.1.188** AI Dungeon Master: an ability counts only when it always works or is used, per value only the strongest bonus of jewel, gear and ability counts, the panel computes Weapon master, Tough, Laying on hands and Revive, „rare“ from level 3 and „epic“ from 5, the bench plays with heroes like at the table and all 12 classes, budget measured anew, peaceful creatures never as foes, three small night foes for science fiction (review 27.10. package 11)
 - **V01.1.187** AI Dungeon Master: a new hero needs its gender, the voice list is grouped by gender, a new gender takes a fitting voice, people get the same pronoun check as heroes (review 27.10. package 10)
-- **V01.1.186** AI Dungeon Master: every person has a fixed age and fixed hair, eyes, beard and build from the panel, age and gender never from the model, no child with an adult occupation and never as a foe, the role sets the occupation (review 27.10. package 10)
 
 
 

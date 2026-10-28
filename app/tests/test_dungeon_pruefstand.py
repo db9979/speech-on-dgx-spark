@@ -48,6 +48,10 @@ class Bench(unittest.TestCase):
             flat = [g for g, n in wahl for _ in range(n)]
             self.assertLessEqual(len(flat), kampf.GEGNER_MAX)
             self.assertEqual(kampf.danger(kampf.adjusted(flat), kampf.budget(dungeon, r, {}, held)), gefahr)
+            self.assertLessEqual(kampf.adjusted(flat, len(held)), kampf.budget(dungeon, r, {}, held) * kampf.SCHWER)   # B16: as at the table
+        for _ in range(20):                                                       # B8: „mittel“ counted by the table's rule
+            wahl = ps.encounter(r, held, "mittel", rng)
+            self.assertEqual(wahl, kampf.fill([(g, 1) for g, _ in wahl], len(held), kampf.budget(dungeon, r, {}, held)))
         x = ps.fight(r, held, ps.encounter(r, held, "mittel", rng), rng)
         self.assertEqual(set(x), {"sieg", "leben", "runden"})
         self.assertTrue(0 <= x["leben"] <= 1 and 1 <= x["runden"] <= ps.RUNDEN)
@@ -100,7 +104,7 @@ class Bench(unittest.TestCase):
         self.assertEqual(set(P.GEWICHT), set(P.templates()))
         by = dungeon._by(r, "gegner")
         self.assertEqual(P.weighted(by["schlaeger"])["ep"], round(by["schlaeger"]["ep"] * P.GEWICHT["schlaeger"]))
-        z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", pool=P.pool(r))
+        z = ps.bench(r, kaempfe=ps.KAEMPFE, seed="selbsttest", personen=True)
         self.assertGreaterEqual(len(z), 40)
         mean = sum(c["siege"] for c in z.values()) / len(z)
         self.assertTrue(ps.AIM[0] <= mean <= ps.AIM[1], mean)

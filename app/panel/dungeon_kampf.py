@@ -6,8 +6,8 @@ what the dice say.
     budget     the D&D table of a medium encounter per hero (BUDGET by level) times the heroes, half at the children's table
     offer      up to ANGEBOT foes of the bestiary (dungeon_srd.json „gegner“) of the round's world that fit the budget;
                the same turn always offers the same (a seed of round, turn and group), so check and facts agree
-    start      the model's begegnung [{id, anzahl}] from the offer only; the panel takes foes away until the adjusted
-               experience (D&D multiplier by count) is at most SCHWER times the budget, GEGNER_MAX at most
+    start      the model's begegnung [{id, allein}] from the offer only, ARTEN kinds at most; the panel sets the counts
+               (fill) until the adjusted experience (D&D multiplier by count) is BAND times the budget, GEGNER_MAX at most
     attack     the panel makes the attack from the action (Kampf-Audit 1, Dominik 2026-10-26): ANGRIFF_WORTE, a spell
                with a damage kind, BEZUG_WORTE or magic with a foe named; d20 + the value's bonus + proficiency against
                the foe's armour class (ruestung); a hit costs the weapon's die + the value's bonus + its rarity (a spell
@@ -61,21 +61,27 @@ import dungeon_narben as narben
 # the experience of a medium encounter per hero and level: levels 1 to 10 measured with the balance bench (dungeon_pruefstand,
 # Dominik 2026-10-24 Idee 5) so a group wins 70 to 90 per cent at „mittel“, measured anew with heroes raised like at the
 # table, every class, gear of the find table (Review 27.10. B6, B11) and abilities only when used, only the strongest
-# bonus (B7, B13); beyond the heroes' top level the D&D table
-BUDGET = (99, 145, 242, 314, 440, 547, 635, 1003, 1138, 1350, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
+# bonus (B7, B13), and with the counts set into BAND (B8: level 2 and five heroes a little more); beyond the heroes' top
+# level the D&D table
+BUDGET = (99, 152, 242, 314, 440, 547, 635, 1003, 1138, 1350, 1600, 2000, 2200, 2500, 2800, 3200, 3900, 4200, 4900, 5700)
 REGLER = 25                # the game master's dial (Idee 6): the next encounters at most this many per cent easier or harder
 REGLER_HOCH = 10           # after a fight won with less than REGLER_LEICHT of the group's life lost: this much harder
 REGLER_LEICHT = 0.25
 REGLER_RUNTER = 15         # after a fight with a hero down, lost or fled from: this much easier
 # the budget times this for 1 to 5 heroes (more heroes hit more often), 0.33 more for each further one; measured with
 # the balance bench (Review 27.10. B6: every class, alone too, heroes raised like at the table)
-GRUPPE = (0.42, 0.92, 1.36, 1.69, 2.02)
+GRUPPE = (0.42, 0.92, 1.36, 1.69, 2.08)
 GRUPPE_PLUS = 0.33
 MAL = ((11, 3.0), (7, 2.5), (3, 2.0), (2, 1.5), (1, 1.0))   # the multiplier of the experience by the number of foes
 GEGNER_MAX = 6             # foes of one encounter
 ANZAHL_MAX = 4             # of one kind
 ANGEBOT = 5                # foes the panel offers the model
 SCHWER = 1.5               # the adjusted experience at most this many times the budget
+# Review 27.10. B8 (Dominik 2026-10-27 „ok“): the model picks at most ARTEN kinds, the panel sets how many come until
+# the adjusted experience is BAND times the budget; a foe the scene wants alone (allein) comes once for ALLEIN of the reward
+ARTEN = 2
+BAND = (0.9, 1.1)
+ALLEIN = 0.5
 KIND = 0.5                 # the children's table: half the budget
 FLUCHT = 4                 # a foe at a quarter of its life or less …
 FLUCHT_W = 9               # … flees on a d20 of this or less
@@ -186,18 +192,19 @@ BOSS_LEBEN = 0.5           # a boss: its life times 1 + this per hero beyond the
 ANTEIL_MIN = 0.4           # the budget times the group's share of its life, at least this (Review 27.10. B5)
 BOSS_PHASE = 2             # a boss at half life: this much more to hit, once
 
-SCHEMA_BEGEGNUNG = {"type": "array", "maxItems": 3, "items": {"type": "object", "additionalProperties": False, "required": ["id"],
-                    "properties": {"id": {"type": "string", "maxLength": 40}, "anzahl": {"type": "integer"}}}}
+SCHEMA_BEGEGNUNG = {"type": "array", "maxItems": ARTEN, "items": {"type": "object", "additionalProperties": False, "required": ["id"],
+                    "properties": {"id": {"type": "string", "maxLength": 40}, "allein": {"type": "boolean"}}}}
 SCHEMA_ENDE = {"type": "string", "enum": ["", *ENDE]}
 
 AUFGABE_ANGEBOT = {
-    "de": "Liegt ein Kampf in der Luft (ein Hinterhalt, Wachen, ein Ungeheuer), wähle in begegnung höchstens drei Gegner "
-          "mit id und anzahl nur aus der Liste angebot der Fakten und erzähle, wie sie auftauchen, jeden mit seinem Namen "
-          "aus angebot; nenne keine anderen Gegner. Das Panel bestimmt, wie viele kommen und wie stark sie sind; erfinde "
-          "keine anderen Gegner mit Werten.",
-    "en": "When a fight is in the air (an ambush, guards, a monster), choose at most three foes in begegnung with id and "
-          "anzahl only from the list angebot of the facts and tell how they appear, each by its name from angebot; name "
-          "no other foes. The panel decides how many come and how strong they are; never invent other foes with numbers."}
+    "de": "Liegt ein Kampf in der Luft (ein Hinterhalt, Wachen, ein Ungeheuer), wähle in begegnung höchstens zwei Arten "
+          "von Gegnern mit id nur aus der Liste angebot der Fakten und erzähle, wie sie auftauchen, jede mit ihrem Namen "
+          "aus angebot, ohne Zahl; nenne keine anderen Gegner. Das Panel bestimmt, wie viele kommen und wie stark sie sind. "
+          "Nur wenn die Szene einen einzelnen Gegner verlangt (ein Duell, ein einsamer Wächter), setze bei ihm allein: true.",
+    "en": "When a fight is in the air (an ambush, guards, a monster), choose at most two kinds of foes in begegnung with "
+          "id only from the list angebot of the facts and tell how they appear, each by its name from angebot, without a "
+          "number; name no other foes. The panel decides how many come and how strong they are. Only when the scene "
+          "wants a single foe (a duel, a lone guard), set allein: true for it."}
 AUFGABE_KAMPF = {
     "de": "Es wird gekämpft (Fakten kampf). Das Panel würfelt jeden Angriff: Greift eine Figur in ihrer Aktion einen "
           "Gegner an, gib ihr eine Probe mit ziel = dem Namen des Gegners genau wie in kampf und dem Wert, mit dem sie "
@@ -430,22 +437,21 @@ def adjusted(foes, n_held=1):
 
 
 def check_encounter(dm, r, rd, held, obj):
-    """The model's begegnung by fixed rules: only offered ids, one entry per id, anzahl 1..ANZAHL_MAX, then the
-    strongest taken away until the adjusted experience fits SCHWER times the budget (one foe always stays); in a
-    room of the map each of its foes once. Returns [(catalog entry, count)] or []."""
+    """The model's begegnung by fixed rules: only offered ids, one entry per id, ARTEN kinds at most, the counts by
+    fill (Review 27.10. B8; a person comes with its escort, dungeon_personen.escort, B14); one kind with allein: true
+    comes once and alone (a copy marked "allein", half the reward in end); in a room of the map each of its foes as
+    the map wants it. Returns [(catalog entry, count)] or []."""
     if not isinstance(obj, list) or rd.get("kampf"):
         return []
     have = {g.get("oid", g["id"]): g for g in offer(dm, r, rd, held)}
     out, seen = [], set()
-    for x in obj[:3]:
+    for x in obj[:ARTEN]:
         if not isinstance(x, dict) or x.get("id") not in have or x["id"] in seen:
             continue
         if have[x["id"]].get("boss") and any(g.get("boss") for g, _ in out):
             continue                             # Review 27.10. Paket 4a: at most one boss an encounter
         seen.add(x["id"])
-        n = x.get("anzahl") if isinstance(x.get("anzahl"), int) and not isinstance(x.get("anzahl"), bool) and not have[x["id"]].get("person") else 1
-        out.append([have[x["id"]], 1 if have[x["id"]].get("boss") else max(1, min(ANZAHL_MAX, n))])
-    b = budget(dm, r, rd, held) * SCHWER
+        out.append([have[x["id"]], 1])
     if room(r, rd):                              # a room's guardian or boss as the map wants it, its count by "anzahl" (Paket 4 B1)
         anz, out_ = (rd.get("raum_gegner") or {}).get("anzahl") or {}, []
         for g, _ in out:
@@ -454,11 +460,35 @@ def check_encounter(dm, r, rd, held, obj):
             if sum(m for _, m in out_) < GEGNER_MAX:
                 out_.append((g, n))
         return out_
-    while out:
-        flat = [g for g, n in out for _ in range(n)]
-        if len(flat) <= GEGNER_MAX and (adjusted(flat, len(held)) <= b or len(flat) == 1):
+    allein = [x for x in obj[:ARTEN] if isinstance(x, dict) and x.get("allein") is True]
+    if len(out) == 1 and allein and allein[0].get("id") == out[0][0].get("oid", out[0][0]["id"]):
+        print("dungeon: begegnung | allein", flush=True)
+        return [(dict(out[0][0], allein=True), 1)]
+    import dungeon_personen
+    for g, _ in list(out):
+        w = dungeon_personen.escort(dm, r, rd, g) if g.get("person") and len(out) < ARTEN + 1 else None
+        if w and all(x["id"] != w["id"] for x, _ in out):
+            out.append([w, 1])                   # B14: the person's guards from its row, counted by fill
+    return fill(out, len(held), budget(dm, r, rd, held))
+
+
+def fill(wahl, n_held, b):
+    """The counts by fixed rules (Review 27.10. B8): every kind once (a boss and a person always once); then one more
+    of the kind that brings the adjusted experience nearest to b while it stays at most BAND[1] times b, GEGNER_MAX
+    foes and ANZAHL_MAX of a kind, until it is BAND[0] times b; then, still above BAND[1] times b, the strongest taken
+    away, a boss or a person last (one foe always stays). The model's numbers never count. [(entry, count)]."""
+    out = [[g, n] for g, n in wahl]
+    flat = lambda: [g for g, n in out for _ in range(n)]    # noqa: E731
+    while out and adjusted(flat(), n_held) < BAND[0] * b:
+        f = flat()
+        neu = [(abs(adjusted(f + [g], n_held) - b), i) for i, (g, n) in enumerate(out)
+               if not (g.get("boss") or g.get("person")) and n < ANZAHL_MAX and len(f) < GEGNER_MAX
+               and adjusted(f + [g], n_held) <= BAND[1] * b]
+        if not neu:
             break
-        i = max(range(len(out)), key=lambda j: (out[j][0]["ep"], out[j][1]))
+        out[min(neu)[1]][1] += 1
+    while out and len(flat()) > 1 and adjusted(flat(), n_held) > BAND[1] * b:
+        i = max(range(len(out)), key=lambda j: (not (out[j][0].get("boss") or out[j][0].get("person")), wert(out[j][0], n_held), out[j][1]))
         out[i][1] -= 1
         if not out[i][1]:
             out.pop(i)
@@ -496,7 +526,8 @@ def start(dm, r, rd, held, wahl, li):
     b = budget(dm, r, rd, held)
     rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner, len(held)), budget(dm, r, rd, held, False)),
                    "leben0": sum(max(0, h["leben"]) for h in held),
-                   "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")]}   # the group the fight was made for
+                   "helden": [pid for pid, p in dm.seated(rd) if not p["held"].get("tot")],   # the group the fight was made for
+                   **({"allein": True} if any(g.get("allein") for g, _ in wahl) else {})}
     if room(r, rd) and {g["id"] for g, _ in wahl} <= set(rd["raum_gegner"]["ids"]):
         rd["kampf"]["raum"] = rd["raum_gegner"]["raum"]
     dm._log(rd, "begegnung", gegner=[dict(card(dm, r, rd, g["id"], "en" if li else "de"), anzahl=n,
@@ -1199,6 +1230,7 @@ def end(dm, r, rd, ep, why=""):
     flohen = [g for g in k["gegner"] if g["aus"] == "geflohen"]
     frieden = [g for g in k["gegner"] if not g["aus"]] if why == "frieden" and k.get("geschafft") else []   # Idee 7
     alle = sum(g["ep"] for g in besiegt) + sum(g["ep"] // 2 for g in flohen + frieden)   # Kampf-Audit 3: peace gives half
+    alle = int(alle * ALLEIN) if k.get("allein") else alle      # a lone foe the scene asked for (Review 27.10. B8)
     # divided by the group the fight was made for (Dominik 2026-10-25, Punkt 3): a hero who left has fled and its share
     # stays out, one who arrived later (dungeon.arrive) gets none; one who died in it is no longer in ep: its share goes
     # to the living (Kampf-Audit N4)

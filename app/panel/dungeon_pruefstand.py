@@ -191,21 +191,53 @@ def _spell(r, h):
 
 
 # ---------------------------------------------------------------- an encounter
-def encounter(r, held, gefahr, rng, tries=200, pool=None):
-    """[(catalog foe, count)] of the danger asked, one or two kinds, [] when none fits; pool: only these foes (the
-    templates people fight with, weighted: dungeon_personen.pool); never a peaceful foe, as at the table."""
+def encounter(r, held, gefahr, rng, tries=200, personen=False):
+    """[(catalog foe, count)] of the danger asked, one or two kinds, [] when none fits; never a peaceful foe, as at the
+    table. „mittel“ as the table makes it (Review 27.10. B8): the kinds drawn, their counts by dungeon_kampf.fill; the
+    other dangers by drawn counts, „schwer“ only up to SCHWER times the budget as at the table (B16). personen: people
+    as the table brings them (people), of the danger asked; where people cannot reach it (a big group high up: the
+    rows end at knight and veteran), none."""
     b = kampf.budget(dungeon, r, {}, held)
-    fit = [g for g in (r.get("gegner") or [] if pool is None else pool) if 0 < g["ep"] <= b * kampf.SCHWER
+    if personen:
+        for _ in range(tries // 10):
+            wahl = people(r, held, b, rng)
+            flat = [g for g, n in wahl for _ in range(n)]
+            if wahl and kampf.danger(kampf.adjusted(flat, len(held)), b) == gefahr:
+                return wahl
+        return []
+    fit = [g for g in r.get("gegner") or [] if 0 < g["ep"] <= b * kampf.SCHWER
            and not dungeon_bestiarium.friedlich(g)]          # like the table (dungeon_kampf._foes): never a peaceful one
     if not fit:
         return []
     for _ in range(tries):
-        kinds = rng.sample(fit, min(len(fit), rng.choice((1, 2))))
-        wahl = [(g, rng.randint(1, kampf.ANZAHL_MAX)) for g in kinds]
+        kinds = rng.sample(fit, min(len(fit), rng.choice((1, kampf.ARTEN))))
+        if gefahr == "mittel":
+            wahl = kampf.fill([(g, 1) for g in kinds], len(held), b)
+        else:
+            wahl = [(g, rng.randint(1, kampf.ANZAHL_MAX)) for g in kinds]
         flat = [g for g, n in wahl for _ in range(n)]
-        if len(flat) <= kampf.GEGNER_MAX and kampf.danger(kampf.adjusted(flat, len(held)), b) == gefahr:
+        adj = kampf.adjusted(flat, len(held))
+        if len(flat) <= kampf.GEGNER_MAX and kampf.danger(adj, b) == gefahr and adj <= b * kampf.SCHWER:
             return wahl
     return []
+
+
+def people(r, held, b, rng):
+    """People who fight as the table brings them (Review 27.10. B14, dungeon_kampf.check_encounter): one or two people,
+    each of a drawn occupation's row (dungeon_personen.VORLAGE, else SONST) with the template nearest half the budget
+    (dungeon_personen.nearest), each once, their guards (dungeon_personen.guards), the counts by dungeon_kampf.fill."""
+    import dungeon_personen as P
+    rows = [ids for _, ids in P.VORLAGE] + [P.SONST]
+    out = []
+    for i in range(rng.choice((1, kampf.ARTEN))):
+        row = rng.choice(rows)
+        t = P.nearest(dungeon, r, "", row, b)
+        if t:
+            out.append((dict(t, person=f"p{i}"), 1))
+            w = P.guards(dungeon, r, "", row)
+            if w and all(g["id"] != w["id"] or g.get("person") for g, _ in out):
+                out.append((w, 1))
+    return kampf.fill(out, len(held), b) if out else []
 
 
 # ---------------------------------------------------------------- a fight
@@ -257,7 +289,7 @@ def fight(r, held, wahl, rng):
     return {"sieg": sieg, "leben": 1 - sum(max(0, h["leben"]) for h in held) / max(1, voll), "runden": n}
 
 
-def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None, mit_runen=False):
+def cell(r, stufe, gruppe, gefahr, kaempfe, seed, personen=False, mit_runen=False):
     """The bench for one level and group size: {"siege": per cent, "leben": per cent lost in the won fights,
     "runden": mean turns}; None when no encounter of the danger fits. mit_runen: the same groups with their runes."""
     rng = random.Random(f"{seed}|{stufe}|{gruppe}|{gefahr}")
@@ -265,7 +297,7 @@ def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None, mit_runen=False):
     won, lost, runden, n = 0, [], 0, 0
     for _ in range(kaempfe):
         held = party(r, gruppe, stufe, rng, rrng)
-        wahl = encounter(r, held, gefahr, rng, pool=pool)
+        wahl = encounter(r, held, gefahr, rng, personen=personen)
         if not wahl:
             continue
         x = fight(r, held, wahl, rng)
@@ -279,13 +311,13 @@ def cell(r, stufe, gruppe, gefahr, kaempfe, seed, pool=None, mit_runen=False):
     return {"siege": round(100 * won / n), "leben": round(100 * sum(lost) / max(1, len(lost))), "runden": round(runden / n, 1)}
 
 
-def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, pool=None, mit_runen=False):
-    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. pool: only these foes;
+def bench(r, kaempfe=KAEMPFE, gefahr="mittel", seed="pruefstand", stufen=None, gruppen=None, personen=False, mit_runen=False):
+    """The whole table {"stufe/gruppe": cell}; a cell without a fitting encounter is left out. personen: only people (people);
     mit_runen: the groups with their runes (with_runes; the runes do something only while dungeon_runen.wirkt)."""
     out = {}
     for s in stufen or range(1, r["grenzen"]["stufe_max"] + 1):
         for g in gruppen or range(1, GRUPPE_MAX + 1):
-            c = cell(r, s, g, gefahr, kaempfe, seed, pool, mit_runen)
+            c = cell(r, s, g, gefahr, kaempfe, seed, personen, mit_runen)
             if c:
                 out[f"{s}/{g}"] = c
     return out
