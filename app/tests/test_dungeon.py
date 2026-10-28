@@ -10651,9 +10651,9 @@ class Fight(Turns):
         # Siedlung neu ordnen (6a): every service lives in exactly one house; the view names only houses with a service
         alle = [x for _, _, ds in gold.HAEUSER for x in ds]
         self.assertEqual(sorted(alle), sorted(gold.NAMEN))
-        self.assertEqual(v["haeuser"], [{"id": "gasthaus", "name": "Gasthaus", "dienste": ["gasthaus", "geruecht"]},
+        self.assertEqual([{k: x[k] for k in ("id", "name", "dienste")} for x in v["haeuser"]], [{"id": "gasthaus", "name": "Gasthaus", "dienste": ["gasthaus", "geruecht"]},
                                         {"id": "schmiede", "name": "Schmiede", "dienste": ["schmied", "verbessern"]},
-                                        {"id": "lehre", "name": "Lehrmeister", "dienste": ["lehre"]}])
+                                        {"id": "lehre", "name": "Lehrmeister", "dienste": ["lehre"]}])   # the picture thread adds bild and zeile
         # Siedlung mit Leben (1a 3a 5b): the head's time of day and the group's gold, the calculation of each price
         self.assertEqual((v["tageszeit"], v["gold_gruppe"], v["stufe"], v["helden"]), ("tag", 1000, stufe, 2))
         self.assertEqual({x["id"]: x["je"] for x in v["dienste"]}, dict(gold.PREIS, verbessern=0))

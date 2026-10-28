@@ -8421,6 +8421,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: ein Bild je Haus der Siedlung (V01.1.210, Siedlung neu ordnen Punkt 6a, Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): Jedes Haus der neuen Siedlungsansicht (dungeon_gold.HAEUSER: Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild, von der Straße aus gesehen, ohne Personen im Vordergrund (dungeon_dingbild.HAUS_EN, house_text). Gemalt wird nachts oder mit „Alle Bilder malen“; die Ansicht zeigt das Bild des Hauses, sobald es da ist, bis dahin das erste Bild seiner Dienste oder das Ortsbild. Dazu bekommt jedes Haus eine Zeile voller Leben aus seinen Diensten. Die Bilder der einzelnen Dienste (der Raum innen) bleiben. Kein neuer Schalter, kein neuer Endpunkt; das Modell entscheidet nichts davon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: „Alle Bilder malen · N“ zählt nur, was ein Lauf malt; Bild für den Heiler (V01.1.113, Dominik 2026-10-26: Seite 3984/3990 und „Alle Bilder malen · 6“, jeder Lauf endete sofort mit 0 gemalt): Ein Eintrag, für den der Admin unter „Regeln anpassen“ ein Bild mit „Neues behalten“ festgelegt hat (fest), malt kein Lauf neu, auch wenn sich sein Auftrag später ändert; die Seite zählte ihn aber als fehlend. Jetzt gibt es eine Regel für beides (dungeon_dingbild._stand: da, fest, abgelehnt, offen): fest gilt als fertig, „Alle Bilder malen · N“ und „noch N“ nennen nur die offenen Bilder (status()[\"offen\"], gleich missing()), abgelehnte stehen wie bisher als eigene Zahl daneben; ohne offene Bilder sind beide Knöpfe aus. Außerdem hat der neue Dienst „Heiler“ der Siedlung (dungeon_gold.HEILER, Narben-Idee 8) sein Bild je Stil (DIENST_EN[\"heiler\"], ruhiger Raum mit Kräutern, Verbänden und Fläschchen, ohne Blut) und drei Sätze Leben in dungeon_siedlung.json; bis zum ersten Lauf zeigt das Fenster 🌿. Selbsttests test_the_count_names_only_what_a_run_paints, test_every_service_painted_and_lined."
 },
 {
@@ -24166,6 +24174,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: a picture of its own for an awakened runeword, pictures of the smith's rune services (V01.1.206, plan \"Runes and sockets\" point 11a, stage 2): When a runeword wakes in a thing (it[\"rw\"]), the panel calls dungeon_dingbild.runenwort once: like a named find the thing gets a picture of its own (fund-<i>) with the runes in their colours and the runeword's name, painted within a minute through the queue and counted to the day limit of the game's pictures. The picture of an earlier runeword of the same thing goes first; once the runeword is freed again the thing shows the catalog picture. The smith's new services, boring a socket, freeing a rune and fusing runes, have a picture per world without people and lines of life in the settlement (DIENST_EN, dungeon_siedlung.json). No new switch, no new endpoint; the model decides none of it."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: one picture a house of the settlement (V01.1.210, settlement reordered point 6a, Dominik 2026-10-28 \"1a 2a 3a 4a 5a 6a\"): Every house of the new settlement view (dungeon_gold.HAEUSER: inn, smithy, healer, teacher) has a picture of its own per world, seen from the street, no people in the foreground (dungeon_dingbild.HAUS_EN, house_text). It is painted at night or with \"Paint all pictures\"; the view shows the house's picture once it is there, until then the first picture of its services or the place's. Each house also gets a line of life from its services. The pictures of the single services (the room inside) stay. No new switch, no new endpoint; the model decides none of it."
 },
 {
 "lang": "en",

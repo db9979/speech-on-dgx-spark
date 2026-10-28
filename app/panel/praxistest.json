@@ -4237,6 +4237,13 @@
 "titel": "Dungeon-Master: Siedlung mit Häusern",
 "text": "Admin: Gold mit Zweck an. Am Tisch in einer Siedlung „🏘 Siedlung“ öffnen. A: Oben eine schmale Zeile mit Ort, Tageszeit und Gold. B: Links Gasthaus, Schmiede, Lehrmeister (mit Runen und Wunden auch die Runen-Dienste und der Heiler), je mit „N Angebote“; rechts das gewählte Haus mit einer Zeile je Angebot. C: Ein Haus antippen wechselt rechts. D: Am Handy erst die Häuser, dann das Haus mit „‹ Häuser“. E: Zu teuer: grauer Knopf mit „Es fehlen N Gold“; nichts zerbrochen: gestrichelte Zeile. F: Übernachten und Lernen funktionieren wie vorher.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P630",
+"v": 1210,
+"titel": "Dungeon-Master: Bild je Haus der Siedlung",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Gold mit Zweck an. A: Alle Bilder malen lassen. B: In einer Runde eine Siedlung betreten: Gasthaus, Schmiede, Heiler und Lehrmeister zeigen je ein Bild von der Straße aus, in Science-Fiction und bei Piraten im Stil der Welt.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }
