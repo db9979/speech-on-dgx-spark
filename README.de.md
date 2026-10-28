@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.217** Fernzugang: „Herauslösen“ zeigt im eigenen Fenster wieder das Terminal (statt der Startseite); „Alle Tasten“ füllt den Bildschirm nur mit dem Terminal, Vorschläge und Assistent in einer Schublade (Strg+Umschalt+Leertaste); Vorschläge für screen und tmux statt uptime und df -h; der Anker auf dem Mac: Zertifizierungsstellen des Systems, wenn Python keine mitbringt, Code direkt vom Terminal (auch unter curl | sudo), eigene Zeile mit /usr/bin/python3
 - **V01.1.216** Fernzugang Stufe 6: der Anker richtet sich auch auf dem Mac ein (dieselbe Zeile, ab macOS 13): versteckter Benutzer spark, launchd-Dienst, Entfernte Anmeldung nur für den Anker eingeschaltet und beim Entfernen wieder so wie vorher
 - **V01.1.215** Fernzugang: die laufende Sitzung zeigt sich als schmale rote Zeile oben im Inhalt auf jeder Seite (Punkt, „Fernsitzung aktiv · Server · Minuten“, „Trennen“; „Notaus trennt sofort“ als Hinweis), unter der Kopfleiste und am Handy unter der oberen Leiste, auch im eigenen Fenster; der Anker hört auf macOS und Windows mit einem festen Satz auf und richtet nichts halb ein, fehlt auf Linux der Host-Schlüssel, nennt er `sudo ssh-keygen -A`
 - **V01.1.214** Fernzugang Stufe 2b: Assistent im Terminal (eigener Schalter, aus): „Frag den Assistenten“ neben der Shell und Folgebefehle nach jedem Enter, nur vom eigenen Sprachmodell, ohne Werkzeug; er tippt nie, jeder Befehl wird ein Vorschlag zum Einfügen, gefährliche Befehle stehen rot und brauchen zwei Tipps; der Bildschirm geht nur mit „Bildschirm mitschicken“ mit, als Datenblock; im Protokoll nur Wörter und Zahlen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.210** KI-Dungeon-Master: jedes Haus der Siedlung (Gasthaus, Schmiede, Heiler, Lehrmeister) hat je Welt ein eigenes Bild
 - **V01.1.209** KI-Dungeon-Master: die Siedlung ist übersichtlich: links die Häuser Gasthaus, Schmiede, Heiler und Lehrmeister, rechts das gewählte Haus mit einer Zeile je Angebot, am Handy erst die Häuser, dann das Haus
 - **V01.1.208** Fernzugang zu Servern (Stufe 1): ein Server anderswo ruft das Panel über seinen Anker, Admins öffnen seine Shell unter Fernzugang → Fern-Server im Browser, mit Einmal-Code beim Koppeln, frischem Code je Sitzung und SSH Ende zu Ende
-- **V01.1.207** KI-Dungeon-Master: Spielleiter gibt Dinge: der Gastgeber gibt als Admin im Spielleiter-Pult einem Helden einen Gegenstand bis „episch“, Gold, Runen oder Erfahrung, nach den Grenzen des Spiels, und die Erzählung macht daraus einen Fund oder ein Geschenk
 
 
 

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.217** Remote access: "Detach" shows the terminal in its own window again (instead of the start page); "All keys" fills the screen with the terminal only, suggestions and assistant in a drawer (Ctrl+Shift+Space); suggestions for screen and tmux instead of uptime and df -h; the anchor on a Mac: the system's authorities when Python brings none, the code straight from the terminal (also under curl | sudo), its own line with /usr/bin/python3
 - **V01.1.216** Remote access stage 6: the anchor also sets itself up on a Mac (the same line, from macOS 13): hidden user spark, launchd service, Remote Login switched on only for the anchor and back as it was on removal
 - **V01.1.215** Remote access: the running session shows as one slim red line at the top of the content on every page (dot, "Remote session active · server · minutes", "Disconnect"; "the emergency stop ends it at once" as a hint), below the header and on a phone below the top bar, also in the own window; the anchor stops on macOS and Windows with a fixed sentence and sets up nothing halfway, a missing host key on Linux names `sudo ssh-keygen -A`
 - **V01.1.214** Remote access stage 2b: assistant in the terminal (its own switch, off): "Ask the assistant" beside the shell and next commands after every Enter, from the own language model only, without a tool; it never types, every command becomes a suggestion to insert, dangerous commands show in red and need two taps; the screen goes along only with "Send the screen along", as a data block; the log holds only words and numbers
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.210** AI Dungeon Master: every house of the settlement (inn, smithy, healer, teacher) has a picture of its own per world
 - **V01.1.209** AI Dungeon Master: the settlement is clear: the houses inn, smithy, healer and teacher on the left, the chosen house with one row per offer on the right, on the phone first the houses, then the house
 - **V01.1.208** Remote access to servers (stage 1): a server elsewhere calls the panel through its anchor, admins open its shell in the browser under Remote access → Remote servers, with a one-time code for pairing, a fresh code per session and SSH end to end
-- **V01.1.207** AI Dungeon Master: game master gives things: the host as admin gives a hero an item up to "epic", gold, runes or experience in the game master console, within the game's limits, and the narration makes it a find or a gift
 
 
 

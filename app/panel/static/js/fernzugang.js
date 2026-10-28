@@ -12,7 +12,7 @@
 // Lock API (Chrome, Edge), so even Strg+W or Esc go to the shell; Esc held for 2 s leaves.
 const FZ={d:null,sel:'',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null,hist:[],ki:null,vt:0,vlast:0};
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
-const FZ_MIT=['chips','folge','hilfe','gefahr','hilfe_zeilen','hilfe_schirm','hilfe_befehle','vorschlag_s'];
+const FZ_MIT=['chips','folge','hinweis','hilfe','gefahr','hilfe_zeilen','hilfe_schirm','hilfe_befehle','vorschlag_s'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
 function fzEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function fzBtn(txt,cls,fn){const b=fzEl('button','b'+(cls?' '+cls:''),txt);b.type='button';b.onclick=fn;return b}
@@ -80,6 +80,8 @@ function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent=
   box.appendChild(fzEl('div','fh',t('Auf dem Server (Debian, Ubuntu, Raspberry Pi OS mit laufendem sshd, oder ein Mac ab macOS 13) diese eine Zeile im Terminal einfügen. Sie fragt dann nach dem Code; er steht nie im Befehl. Auf dem Mac schaltet sie die Entfernte Anmeldung nur für den Anker ein, wenn sie aus war.','On the server (Debian, Ubuntu, Raspberry Pi OS with sshd running, or a Mac from macOS 13) paste this one line in the terminal. It then asks for the code; it is never in the command. On a Mac it switches Remote Login on only for the anchor when it was off.')));
   const pre=fzEl('pre','fzcmd',k.befehl);box.appendChild(pre);
   const row=fzEl('div','row');row.appendChild(fzBtn(t('Kopieren','Copy'),'',e=>copyString(k.befehl,e.target)));box.appendChild(row);
+  if(k.befehl_mac){box.appendChild(fzEl('div','fh',t('Auf dem Mac (Apples eigenes Python):','On a Mac (Apple\'s own Python):')));box.appendChild(fzEl('pre','fzcmd',k.befehl_mac));
+    const rm=fzEl('div','row');rm.appendChild(fzBtn(t('Kopieren','Copy'),'',e=>copyString(k.befehl_mac,e.target)));box.appendChild(rm)}
   const pr=fzEl('details','fzpruef');pr.appendChild(fzEl('summary','',t('Prüfen (freiwillig)','Check (optional)')));
   pr.appendChild(fzEl('div','fh',t('SHA-256 des Programms, wie es das Panel ausliefert; auf dem Server mit curl -fsSL …/fernzugang/anker | sha256sum vergleichen (Mac: shasum -a 256):','SHA-256 of the program as the panel hands it out; compare on the server with curl -fsSL …/fernzugang/anker | sha256sum (Mac: shasum -a 256):')));
   pr.appendChild(fzEl('code','fzsha',(k.anker||{}).sha256||''));if(k.fp)pr.appendChild(fzEl('div','fh',t('Zertifikat des Panels (festgelegt): ','Panel certificate (pinned): ')+k.fp));
@@ -143,11 +145,12 @@ if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fzbanner')
 function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');return}b.hidden=false;document.body.classList.add('fzaktiv');
   // a slim line at the top of the content: below the bar that stays on top (the header, or the app view's bar on a phone)
   b.style.setProperty('--fzbtop',fzTopBar()+'px');
-  $('fzbtext').textContent=t('Fernsitzung aktiv · ','Remote session active · ')+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
+  $('fzbtext').textContent=$('fzvolltext').textContent=t('Fernsitzung aktiv · ','Remote session active · ')+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
 function fzInfo(fp){const dl=$('fzinfo');dl.textContent='';const s=FZ.sitz||{};
   for(const [k,v] of [[t('System','System'),s.name||''],[t('Host-Schlüssel','Host key'),fp||'…'],[t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],
-    [t('Sitzungen','Sessions'),t('höchstens ','at most ')+s.max],[t('Anmeldung','Sign-in'),t('frischer Code oder Passkey','fresh code or passkey')],[t('Aufgezeichnet','Recorded'),t('nichts','nothing')]])dl.append(fzEl('dt','',k),fzEl('dd','',v))}
+    [t('Sitzungen','Sessions'),t('höchstens ','at most ')+s.max],[t('Anmeldung','Sign-in'),t('frischer Code oder Passkey','fresh code or passkey')],[t('Aufgezeichnet','Recorded'),t('nichts','nothing')]]){
+    const dd=fzEl('dd','',v);if(v===fp&&fp&&fp.length>17){dd.textContent=fp.slice(0,16)+'…';dd.title=fp;dd.dataset.voll=fp}dl.append(fzEl('dt','',k),dd)}}
 // the chips after the person's own last command line (FZ.zeile: only that line, only in this page, never the output,
 // never sent anywhere): fernzugang.FOLGE's fixed rules, {1} = the own first argument, shell-quoted; else the fixed CHIPS
 function fzQuote(a){return /^[A-Za-z0-9@%_+=:,.\/-]+$/.test(a)?a:"'"+a.replace(/'/g,"'\\''")+"'"}
@@ -160,7 +163,11 @@ function fzZeile(x){if(x==='\r'){FZ.zeile=FZ.buf||'';FZ.buf='';FZ.ki=null;fzMerk
   if(x==='\x7f'){FZ.buf=(FZ.buf||'').slice(0,-1);return}
   if(/[\x00-\x1f]/.test(x)){if(x.endsWith('\r')&&!/[\x00-\x0c\x0e-\x1f]/.test(x)){FZ.buf=(FZ.buf||'')+x.slice(0,-1);fzZeile('\r')}else FZ.buf='';return}
   FZ.buf=((FZ.buf||'')+x).slice(-500)}
+// a fixed line after the own command (fernzugang.HINWEIS: how to leave screen or tmux without ending it there)
+function fzHinweis(line){const w=String(line||'').trim().split(/\s+/).filter(Boolean);if(w[0]==='sudo')w.shift();
+  for(const [words,x] of (FZ.d&&FZ.d.hinweis)||[]){if(Array.isArray(words)&&Array.isArray(x)&&words.length<=w.length&&words.every((y,i)=>y===w[i]))return t(String(x[0]),String(x[1]))}return ''}
 function fzChips(){const w=$('fzchips');w.textContent='';const ki=Array.isArray(FZ.ki)&&FZ.ki.length?FZ.ki:null,f=ki||fzFolge(FZ.zeile),was=$('fzchipwas');
+  const hw=$('fzchiphint');if(hw){const h=fzHinweis(FZ.zeile);hw.hidden=!h;hw.textContent=h}
   was.hidden=!f;was.textContent=ki?t('Vorschläge des Assistenten:','The assistant\'s suggestions:'):t('Passend zu deinem letzten Befehl:','Fitting your last command:');
   for(const c of f||(FZ.d&&FZ.d.chips)||[])w.appendChild(fzChip(c))}
 // the fixed rules of this kind of system (fernzugang.GEFAHR): the first one a command matches, else null
@@ -168,10 +175,15 @@ function fzGefahr(c){const g=(FZ.d&&FZ.d.gefahr)||{},rules=g[(FZ.sitz&&FZ.sitz.a
   for(const [rx,de,en] of rules){try{if(new RegExp(rx,'i').test(c))return t(de,en)}catch{}}return null}
 // one command to insert: only into the line, never with Enter (one line only); a dangerous one needs a second tap
 function fzChip(c){c=String(c).replace(/[\r\n]+/g,' ').trim();const b=fzEl('button','fzchip');b.type='button';const g=fzGefahr(c),sm=fzEl('small','',t('Einfügen','Insert'));
-  const code=fzEl('code','',c);if(g){b.classList.add('fzgefahr');const v=fzEl('span','fzvorsicht',t('Vorsicht','Caution'));v.title=g;b.append(v)}b.append(code,sm);
+  const code=fzEl('code','',c);if(g){b.classList.add('fzgefahr');const v=fzEl('span','fzvorsicht',t('Vorsicht','Caution'));v.title=g;b.append(v)}
+  else if(/^sudo\s/.test(c)){const v=fzEl('span','fzinfo',t('braucht sudo','needs sudo'));v.title=t('Der Benutzer spark hat kein sudo, außer du trägst es auf dem Server ein.','The user spark has no sudo unless you add it on the server.');b.append(v)}
+  if(/<[^<>]+>/.test(c))b.title=t('<…> trägst du selbst ein: der Cursor wartet dort.','You fill in <…>: the cursor waits there.');b.append(code,sm);
   b.onclick=()=>{if(g&&!b.classList.contains('scharf')){b.classList.add('scharf');sm.textContent=t('Wirklich einfügen?','Really insert?');
       clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('scharf');sm.textContent=t('Einfügen','Insert')},4000);return}
-    b.classList.remove('scharf');sm.textContent=t('Einfügen','Insert');if(FZ.term){FZ.term.paste(c);FZ.term.focus()}};return b}
+    b.classList.remove('scharf');sm.textContent=t('Einfügen','Insert');fzEinfuegen(c)};return b}
+// into the line only, never Enter; a gap <…> is left out and the cursor goes back to the first one (arrow keys)
+function fzEinfuegen(c){if(!FZ.term)return;const i=c.search(/<[^<>]+>/),s=c.replace(/<[^<>]+>/g,'');FZ.term.paste(s);
+  if(i>=0&&FZ.ws&&FZ.ws.readyState===1){const back=s.length-i;if(back>0)FZ.ws.send(new TextEncoder().encode('\x1b[D'.repeat(back)))}FZ.term.focus()}
 // the assistant: only while the switch is on; the commands only kept for it (the last hilfe_befehle, in this page)
 function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);const h=$('fzhilfe');if(!h)return;h.hidden=!(FZ.d&&FZ.d.hilfe);
   $('fzschirm').checked=false;$('fzantwort').textContent='';$('fzfrage').value=''}
@@ -206,14 +218,24 @@ function fzKeys(){const w=$('fzkeys');w.textContent='';for(const [l,seq] of FZ_K
 // the browser's own shortcuts the page may take stay in the shell: F1–F12, Tab, Alt and Strg combinations (not Strg+C
 // with a selection, Strg+V and Strg+Shift+C/V: copy and paste); xterm then sends the key on as usual
 function fzFang(e){if(e.type!=='keydown')return true;const k=(e.key||'').toLowerCase();
+  if(fzLadeTaste(e))return false;   // the page's own: the drawer (document listener below), never to the shell
   const copy=(e.ctrlKey&&e.shiftKey&&(k==='c'||k==='v'))||(e.ctrlKey&&!e.shiftKey&&k==='v')||(e.ctrlKey&&k==='c'&&FZ.term&&FZ.term.hasSelection());
   if(!copy&&(/^f([1-9]|1[0-2])$/.test(k)||k==='tab'||e.altKey||e.ctrlKey))e.preventDefault();return true}
 // „Alle Tasten“: full screen plus the Keyboard Lock API (Chromium); elsewhere a hint, the normal capture stays
 async function fzAlleTasten(){const kb=navigator.keyboard;
   if(!kb||typeof kb.lock!=='function'){fzMsg(t('Alle Tasten nur in Chrome oder Edge; sonst das Panel als App installieren. Die üblichen Tastenkürzel gehen auch so an die Shell.','All keys only in Chrome or Edge; otherwise install the panel as an app. The usual shortcuts go to the shell anyway.'),true);return}
-  try{if(!document.fullscreenElement)await $('fzview').requestFullscreen();await kb.lock();
-    fzMsg(t('Alle Tasten gehen an die Shell. Zum Verlassen Esc 2 Sekunden halten.','All keys go to the shell. To leave, hold Esc for 2 seconds.'));FZ.term&&FZ.term.focus()}catch(e){fzMsg(e.message,true)}}
-document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&navigator.keyboard&&typeof navigator.keyboard.unlock==='function')navigator.keyboard.unlock()});
+  try{if(!document.fullscreenElement){document.documentElement.classList.add('fzvoll');await $('fzview').requestFullscreen()}await kb.lock();
+    fzMsg(t('Alle Tasten gehen an die Shell. Zum Verlassen Esc 2 Sekunden halten.','All keys go to the shell. To leave, hold Esc for 2 seconds.'));
+    const h=$('fzvollhint');h.hidden=false;clearTimeout(FZ.ht);FZ.ht=setTimeout(()=>{h.hidden=true},3000);FZ.term&&FZ.term.focus()}catch(e){if(!document.fullscreenElement)document.documentElement.classList.remove('fzvoll');fzMsg(e.message,true)}}
+// full screen holds the terminal (all of it) and a drawer from the right with the chips and the assistant, closed at
+// first: the edge tab or Strg+Umschalt+Leertaste (the page's own, even under Keyboard Lock); the terminal refits
+function fzLadeTaste(e){return e.type==='keydown'&&e.ctrlKey&&e.shiftKey&&!e.altKey&&(e.code==='Space'||e.key===' ')}
+function fzLade(open){const v=$('fzview');open=open===undefined?!v.classList.contains('fzlade'):!!open;v.classList.toggle('fzlade',open);
+  $('fzdrawertab').setAttribute('aria-expanded',open?'true':'false');requestAnimationFrame(()=>{fzResize();if(!open&&FZ.term)FZ.term.focus()})}
+document.addEventListener('keydown',e=>{if(!fzLadeTaste(e)||$('fzview').hidden)return;e.preventDefault();e.stopPropagation();fzLade()},true);
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){if(navigator.keyboard&&typeof navigator.keyboard.unlock==='function')navigator.keyboard.unlock();
+    $('fzview').classList.remove('fzlade');$('fzvollhint').hidden=true;document.documentElement.classList.remove('fzvoll')}
+  requestAnimationFrame(()=>fzResize())});
 // „Herauslösen“: the panel page in its own window; it asks here for its own ticket (fz-bereit), this tab shows „läuft im
 // eigenen Fenster“ once the server moved the session (weg)
 function fzHeraus(){if(!FZ.ws||!FZ.sid||!FZ.sitz)return;const w=window.open('/#fernfenster','fz'+FZ.sid,'popup,width=1100,height=720');
@@ -224,7 +246,7 @@ addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typ
   if(e.data.typ==='fz-bereit'&&FZ.pop&&e.source===FZ.pop.w){const p=FZ.pop;let tk;try{tk=await fzFensterTicket(p.sid,true)}catch(x){fzMsg(x.message,true);return}
     const mit={};for(const k of FZ_MIT)mit[k]=FZ.d?FZ.d[k]:undefined;p.w.postMessage({typ:'fz-ticket',ticket:tk,sitz:p.sitz,mit},location.origin)}
   else if(e.data.typ==='fz-ticket'&&FZ_FENSTER&&e.source===window.opener&&!FZ.ws&&typeof e.data.ticket==='string'){
-    const mit=e.data.mit||{};FZ.d={chips:Array.isArray(mit.chips)?mit.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(mit.folge)?mit.folge:[],hilfe:mit.hilfe===true,
+    const mit=e.data.mit||{};FZ.d={chips:Array.isArray(mit.chips)?mit.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(mit.folge)?mit.folge:[],hinweis:Array.isArray(mit.hinweis)?mit.hinweis:[],hilfe:mit.hilfe===true,
       gefahr:mit.gefahr&&typeof mit.gefahr==='object'?mit.gefahr:{},hilfe_zeilen:Number(mit.hilfe_zeilen)||60,hilfe_schirm:Number(mit.hilfe_schirm)||8192,hilfe_befehle:Number(mit.hilfe_befehle)||10,vorschlag_s:Number(mit.vorschlag_s)||5};const sitz=e.data.sitz||{};
     try{await fzLaden()}catch(x){fzMsg(x.message,true);return}
     document.title=String(sitz.name||'')+' · '+t('Fernzugang','Remote access');fzChips();const [c,r]=fzGroesse();
@@ -243,7 +265,7 @@ function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
   try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);if(FZ.ws)fzTrennen();fzLoad()}catch(e){fzMsg(e.message,true)}}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;
-  $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
+  $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
   if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;codeLock(k,'protect');$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzstop').onclick=fzTrennen;$('fzalle2').onclick=fzAlle;
   $('fzname').onkeydown=e=>{if(e.key==='Enter')fzKoppeln()};fzKeys();new MutationObserver(()=>{if(FZ.d)fzChips()}).observe($('fzview'),{attributes:true,attributeFilter:['hidden']})}}
 window.fzLoad=fzLoad;

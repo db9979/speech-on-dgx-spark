@@ -15,6 +15,7 @@ import io
 import json
 import os
 import re
+import select
 import socket
 import ssl
 import tempfile
@@ -205,6 +206,7 @@ class Pairing(Base):
             d = r.json()
             code = d["code"]
             self.assertEqual(d["befehl"], f"curl -fsSL {OUT}/fernzugang/anker | sudo python3 - einrichten {OUT}")
+            self.assertEqual(d["befehl_mac"], f"curl -fsSL {OUT}/fernzugang/anker | sudo /usr/bin/python3 - einrichten {OUT}")
             self.assertNotIn(code, d["befehl"])
             self.assertNotIn(code.replace("-", ""), d["befehl"])
             anchor = TestClient(panel.app)
@@ -537,7 +539,8 @@ class Program(unittest.TestCase):
             p.main(["einrichten", "https://spark.example.org", "ABCD-EFGH-JKLM"])   # no place for a code
         with open(fernzugang.PROGRAM) as f:
             src = f.read()
-        self.assertIn("getpass.getpass(", src)
+        self.assertIn('os.open(tty, os.O_RDWR', src)          # the code from the terminal itself, echo off there
+        self.assertIn("&= ~termios.ECHO", src)
         self.assertNotIn("environ", src)
         self.assertEqual(p.SSHD, ("127.0.0.1", 22))
         self.assertEqual(p.key_line("ssh-ed25519 AAAA c"), 'from="127.0.0.1,::1",restrict,pty ssh-ed25519 AAAA c')
@@ -623,6 +626,101 @@ class Program(unittest.TestCase):
         with self.assertRaises(p.Fehler) as e:
             p.cmd_setup(args, ctx=ctx)
         self.assertIn("systemctl enable --now ssh", str(e.exception))
+
+
+class AnchorOneLiner(unittest.TestCase):
+    """Dominik's Mac 2026-10-28 20:29: python.org's Python without authorities, and the code prompt under
+    `curl | sudo` (EINTR, not the terminal's foreground group): the system's bundle, /dev/tty itself, fixed sentences."""
+
+    def test_an_empty_default_store_takes_the_systems_bundle(self):
+        p = program()
+        root = tempfile.mkdtemp(prefix="anker-ca-")
+        os.makedirs(os.path.join(root, "etc", "ssl"))
+        cf, _, _ = _tls_files(root)                       # one certificate as the „system's bundle“ (no CA itself)
+        os.replace(cf, os.path.join(root, "etc", "ssl", "cert.pem"))
+        real = ssl.create_default_context
+
+        def empty(*a, **k):
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)  # verifying, but without a single authority
+            return ctx
+        with unittest.mock.patch.object(p.ssl, "create_default_context", empty):
+            ctx = p.authorities("Darwin", root)
+            self.assertEqual(ctx.cert_store_stats()["x509"], 1)        # the bundle file was loaded
+            self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)        # never switched off
+            self.assertTrue(ctx.check_hostname)
+            self.assertEqual(p.authorities("Darwin", tempfile.mkdtemp()).cert_store_stats()["x509"], 0)
+        self.assertIs(ssl.create_default_context, real)
+        self.assertIn("/etc/ssl/certs/ca-certificates.crt", p.CA_FILES["Linux"])
+
+    def test_tls_and_connection_errors_end_with_a_fixed_sentence(self):
+        p = program()
+        for exc, want in ((ssl.SSLCertVerificationError(1, "x"), "Zertifikat des Panels ließ sich nicht prüfen"),
+                          (ConnectionRefusedError(111, "x"), "das Panel war nicht zu erreichen (ConnectionRefusedError)"),
+                          (KeyboardInterrupt(), "abgebrochen. Es wurde nichts eingerichtet.")):
+            def boom(*a, **k):
+                raise exc
+            p.cmd_setup = boom
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(p.main(["einrichten", "https://spark.example.org"], system="Linux"), 1)
+            self.assertIn(want, out.getvalue())
+            self.assertNotIn("Traceback", out.getvalue())
+
+    def ask(self, p, typed, fail=None):
+        import pty
+        import termios
+        master, slave = pty.openpty()
+        path = os.ttyname(slave)
+        got, seen = {}, []
+        calls = {"n": 0}
+        real = termios.tcsetattr
+
+        def flaky(fd, when, attrs):                        # the first try interrupted, as under `curl | sudo`
+            calls["n"] += 1
+            if fail and calls["n"] == 1:
+                raise termios.error(4, "Interrupted system call")
+            return real(fd, when, attrs)
+
+        def run():
+            try:
+                with unittest.mock.patch.object(termios, "tcsetattr", flaky):
+                    got["code"] = p.read_code(path)
+            except p.Fehler as e:
+                got["fehler"] = str(e)
+        th = threading.Thread(target=run)
+        th.start()
+        buf = b""
+        for _ in range(100):                               # the prompt first, then the person types
+            r, _, _ = select.select([master], [], [], 0.05)
+            if r:
+                buf += os.read(master, 1024)
+            if b"Code" in buf:
+                break
+        os.write(master, typed)
+        th.join(10)
+        for _ in range(5):
+            r, _, _ = select.select([master], [], [], 0.05)
+            if r:
+                buf += os.read(master, 1024)
+        attrs = termios.tcgetattr(slave)
+        os.close(master)
+        os.close(slave)
+        return got, buf, attrs, calls["n"]
+
+    def test_the_code_is_read_from_the_terminal_without_echo_even_when_interrupted(self):
+        import termios
+        p = program()
+        got, buf, attrs, n = self.ask(p, b"ABC-123\n", fail=True)
+        self.assertEqual(got.get("code"), "ABC-123", got)
+        self.assertIn(b"Kopplungs-Code aus dem Panel: ", buf)
+        self.assertNotIn(b"ABC-123", buf)                  # echo was off
+        self.assertTrue(attrs[3] & termios.ECHO)           # and is on again afterwards
+        self.assertGreaterEqual(n, 3)                       # interrupted once, tried again, restored
+        got, _, _, _ = self.ask(p, b"\x04")                 # Ctrl+D: a fixed sentence, never a traceback
+        self.assertIn("abgebrochen", got.get("fehler", ""))
+        with self.assertRaises(p.Fehler) as e:              # no terminal: never stdin (the program itself)
+            p.read_code("/nonexistent/tty")
+        self.assertIn("Terminal", str(e.exception))
 
 
 class MacAnchor(unittest.TestCase):
@@ -788,7 +886,7 @@ class Pieces(Base):
         only, quotes the argument and sends it nowhere (the browser test below types and watches the network)."""
         self.assertTrue(fernzugang.FOLGE)
         for words, nxt in fernzugang.FOLGE:
-            self.assertTrue(words and all(re.fullmatch(r"[a-z][a-z0-9\-]*|-[a-z]", w) for w in words), words)
+            self.assertTrue(words and all(re.fullmatch(r"[a-z][a-z0-9\-]*|-[a-z]+", w) for w in words), words)   # screen -ls
             self.assertTrue(2 <= len(nxt) <= 4, words)
             for c in nxt:
                 self.assertTrue(0 < len(c) <= 200 and not re.search(r"[\x00-\x1f\x7f]", c), c)
@@ -806,7 +904,9 @@ class Pieces(Base):
     def test_chips_never_press_enter_and_no_model_sees_the_shell(self):
         for c in fernzugang.CHIPS:
             self.assertNotRegex(c, r"[\r\n]")
-            self.assertNotRegex(c, r"\b(rm|sudo|reboot|shutdown|dd|mkfs|kill)\b")   # they only read
+            self.assertNotRegex(c, r"\b(rm|reboot|shutdown|dd|mkfs|kill)\b")   # they only read or attach
+            if re.search(r"\bsudo\b", c):        # Dominik 2026-10-28 20:04: only these two, to look at others' screen
+                self.assertIn(c, ("sudo ls -la /run/screen/", "sudo -u <benutzer> screen -x <name>"))
         import werkzeuge
         self.assertFalse([n for n in getattr(werkzeuge, "NAMES", {}) if "fern" in n])
         panel_dir = os.path.join(helpers.APP, "panel")
@@ -1544,6 +1644,50 @@ class InBrowser(unittest.TestCase):
                 await br.close()
         asyncio.run(go())
 
+    def test_screen_and_tmux_chips_gaps_and_the_detach_hint(self):
+        """Dominik 2026-10-28 20:04: screen and tmux chips instead of uptime and df -h; a gap <…> is left out and the
+        cursor goes back to it; sudo chips say „braucht sudo“; after attaching the line „Strg+A D = abkoppeln“."""
+        self.assertNotIn("uptime", fernzugang.CHIPS)
+        self.assertNotIn("df -h", fernzugang.CHIPS)
+        for c in ("screen -ls", "screen -x", "screen -r <name>", "tmux ls", "tmux attach -t <name>",
+                  "sudo ls -la /run/screen/", "sudo -u <benutzer> screen -x <name>"):
+            self.assertIn(c, fernzugang.CHIPS)
+            self.assertEqual(fernzugang.gefahr(c), [], c)
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                pg = await ctx.new_page()
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                d = {"chips": list(fernzugang.CHIPS), "folge": [[list(w), list(f)] for w, f in fernzugang.FOLGE],
+                     "hinweis": [[list(w), list(x)] for w, x in fernzugang.HINWEIS]}
+                out = await pg.evaluate("""d=>{FZ.d=d;FZ.term={paste(x){window.__p=x},focus(){}};
+                    FZ.ws={readyState:1,send(b){window.__s=new TextDecoder().decode(b)}};
+                    fzEinfuegen('sudo -u <benutzer> screen -x <name>');const r={p:__p,s:__s};
+                    window.__s='';fzEinfuegen('screen -ls');r.plain=[__p,__s];
+                    FZ.zeile='screen -ls';fzChips();r.after=[...document.querySelectorAll('#fzchips code')].map(x=>x.textContent);
+                    r.hint1=$('fzchiphint').hidden;FZ.zeile='screen -x 1234.pts-0';fzChips();r.hint=[$('fzchiphint').hidden,$('fzchiphint').textContent];
+                    FZ.zeile='tmux attach -t work';fzChips();r.tmux=$('fzchiphint').textContent;
+                    FZ.zeile='';fzChips();r.sudo=[...document.querySelectorAll('#fzchips .fzchip')].filter(b=>b.querySelector('.fzinfo')).map(b=>b.querySelector('code').textContent);
+                    return r}""", d)
+                self.assertEqual(out["p"], "sudo -u  screen -x ")                    # the gaps left out
+                self.assertEqual(out["s"], "\x1b[D" * 11)                          # the cursor back at the first gap
+                self.assertEqual(out["plain"], ["screen -ls", ""])                  # no gap: nothing else sent
+                self.assertEqual(out["after"], ["screen -x", "screen -x <name>", "screen -r <name>"])
+                self.assertTrue(out["hint1"])
+                self.assertEqual(out["hint"], [False, "Strg+A D = abkoppeln (die Sitzung dort läuft weiter)"])
+                self.assertTrue(out["tmux"].startswith("Strg+B D"))
+                self.assertEqual(out["sudo"], ["sudo ls -la /run/screen/", "sudo -u <benutzer> screen -x <name>"])
+                await br.close()
+        asyncio.run(go())
+
     def test_own_window_own_ticket_and_the_keys(self):
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
 
@@ -1677,6 +1821,161 @@ class InBrowser(unittest.TestCase):
                 self.assertFalse(any("\r" in x or "\n" in x for x in pasted))
                 await br.close()
         asyncio.run(go())
+
+
+class ShellForReal(Base):
+    """The whole way in a real browser: the real page as the admin, a real anchor (plain socket to the test panel) and
+    the SSH test server; the buttons themselves are clicked."""
+
+    TEXT = ("(()=>{const b=FZ.term&&FZ.term.buffer.active;if(!b)return '';let s='';"
+            "for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true)+'\\n';return s})()")
+
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import browser_ok
+        if not browser_ok():
+            raise unittest.SkipTest("no Playwright/Chromium here")
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    def setUp(self):
+        super().setUp()
+        d = self.pair(hostkey=HOST_PUB)
+        self.sshd = _Server(d["pi_key"].split()[1])
+        p = program()
+        p.SSHD = ("127.0.0.1", self.sshd.port)
+        port = self.port
+
+        class Plain(socket.socket):      # the test panel speaks plain http; the anchor asks its TLS socket for pending()
+            def pending(self):
+                return 0
+
+        def plain(base, fp, timeout=20):
+            s = Plain(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(timeout)
+            s.connect(("127.0.0.1", port))
+            return s, ""
+        p.tls_connect = plain
+        self.ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
+        threading.Thread(target=p.Lauf(self.ws).run, daemon=True).start()
+        for _ in range(200):
+            if d["id"] in fernzugang.ANKER:
+                break
+            time.sleep(0.05)
+        self.assertIn(d["id"], fernzugang.ANKER)
+
+    def tearDown(self):
+        with contextlib.suppress(OSError):
+            self.ws.sock.shutdown(socket.SHUT_RDWR)
+        super().tearDown()
+
+    def run_page(self, body, init=""):
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as pw:
+                exe = chromium()
+                br = await pw.chromium.launch(**({"executable_path": exe} if exe else {}))
+                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                if init:
+                    await ctx.add_init_script(init)
+
+                async def with_code(route):     # the fresh code the page would ask for in its dialog
+                    await route.continue_(headers={**route.request.headers, **CODE})
+                await ctx.route("**/api/admin/fernzugang/sitzung**", with_code)
+                pg = await ctx.new_page()
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                r = await pg.request.post(base + "/api/login", data={"password": "secret-admin", "code": "123456"})
+                self.assertEqual(r.status, 200)
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                await pg.add_style_tag(content="#wizmodal{display:none!important}")   # the first-start wizard of a new Spark
+                await pg.evaluate("goSec('fern')")
+                await pg.wait_for_function("FZ.d&&(FZ.d.geraete||[]).length===1", timeout=15000)
+                await pg.locator("#fzlist button", has_text="Shell").first.click()
+                await pg.wait_for_function(self.TEXT + ".includes('hallo vom server')", timeout=30000)
+                try:
+                    await body(ctx, pg)
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):
+        """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
+        The new window must show the terminal over the whole window and get output; the tab before says where it is."""
+        async def body(ctx, pg):
+            async with ctx.expect_page() as pop_info:
+                await pg.click("#fzheraus")
+            pop = await pop_info.value
+            await pop.wait_for_load_state()
+            await pop.wait_for_function("typeof FZ!=='undefined'&&FZ.ws&&FZ.ws.readyState===1&&FZ.sid", timeout=30000)
+            look = await pop.evaluate("""(()=>{const v=$('fzview'),t=$('fzterm').getBoundingClientRect();
+                const e=document.elementFromPoint(t.left+t.width/2,t.top+t.height/2);
+                return {tw:t.width,th:t.height,inside:!!e&&$('fzterm').contains(e),title:document.title}})()""")
+            self.assertGreater(look["tw"], 600, look)                    # the terminal fills the window
+            self.assertGreater(look["th"], 300, look)
+            self.assertTrue(look["inside"], look)                        # nothing of the assistant page over it
+            self.assertIn("vps-1", look["title"])
+            await pop.click("#fzterm")
+            await pop.keyboard.type("u")                                 # typed in the own window, echoed by the server
+            await pop.wait_for_function(self.TEXT + ".includes('echo:u')", timeout=30000)
+            # the tab before: „läuft im eigenen Fenster“ with the system's name, the session still one
+            await pg.wait_for_function("!$('fzweg').hidden", timeout=15000)
+            self.assertEqual(await pg.evaluate("$('fzwegname').textContent"), "vps-1")
+            self.assertTrue(await pg.evaluate("$('fzview').hidden"))
+            self.assertEqual(len(fernzugang.SITZUNG), 1)
+        self.run_page(body)
+
+    def test_alle_tasten_fills_the_screen_with_the_terminal_and_a_drawer(self):
+        """Dominik 2026-10-28 19:58: full screen only the terminal (no cards beside it, no empty space, the size sent
+        to the shell), chips and assistant in a drawer from the right on Strg+Umschalt+Leertaste or the edge tab
+        (never sent to the shell); leaving restores the page."""
+        lock = """Object.defineProperty(Navigator.prototype,'keyboard',{configurable:true,get(){return {lock(){window.__locked=(window.__locked||0)+1;return Promise.resolve()},unlock(){}}}});"""
+
+        async def body(ctx, pg):
+            before = await pg.evaluate("[FZ.term.cols,FZ.term.rows]")
+            await pg.click("#fzalletasten")
+            await pg.wait_for_function("document.fullscreenElement===$('fzview')", timeout=10000)
+            await pg.wait_for_function("FZ.term.cols>" + str(before[0]), timeout=10000)
+            await pg.wait_for_function("Math.round($('fzterm').getBoundingClientRect().width)===innerWidth", timeout=10000)   # settled
+            look = lambda: pg.evaluate("""(()=>{const t=$('fzterm').getBoundingClientRect(),W=innerWidth,H=innerHeight,bad=[];
+                for(const [x,y] of [[.1,.1],[.5,.5],[.9,.9],[.9,.2],[.2,.9],[.98,.7]]){const e=document.elementFromPoint(x*W,y*H);
+                  if(!e||!(e.closest('#fzterm')||e.closest('#fzdrawertab')||e.closest('#fzvollhint')))bad.push([x,y,e&&(e.id||e.className)])}
+                const vis=id=>{const r=$(id).getBoundingClientRect();return r.width>0&&getComputedStyle($(id)).visibility!=='hidden'&&r.left<W};
+                return {t:[t.left,t.top,t.width,t.height],W,H,bad,side:vis('fzside'),cols:FZ.term.cols,rows:FZ.term.rows,
+                        bar:$('fzvolltext').textContent,hint:!$('fzvollhint').hidden}})()""")
+            a = await look()
+            self.assertEqual([round(x) for x in a["t"]], [0, 0, a["W"], a["H"]], a)   # the terminal is the screen
+            self.assertEqual(a["bad"], [], a)                                        # no card, no page around it
+            self.assertFalse(a["side"], a)
+            self.assertTrue(a["bar"].startswith("Fernsitzung aktiv · vps-1"), a)
+            self.assertTrue(a["hint"], a)
+            for _ in range(50):                                                      # the new size reached the pty
+                if (a["cols"], a["rows"]) in self.sshd.sizes:
+                    break
+                await pg.wait_for_timeout(100)
+            self.assertIn((a["cols"], a["rows"]), self.sshd.sizes)
+            await pg.click("#fzterm")
+            await pg.keyboard.press("Control+Shift+Space")
+            await pg.wait_for_function("FZ.term.cols<" + str(a["cols"]), timeout=10000)
+            await pg.wait_for_function("$('fzside').getBoundingClientRect().left<=innerWidth-339", timeout=10000)   # slid in
+            b = await look()
+            self.assertTrue(b["side"], b)
+            self.assertEqual(round(b["t"][2]), a["W"] - 340, b)
+            await pg.wait_for_timeout(300)
+            self.assertNotIn("echo: ", await pg.evaluate(self.TEXT))               # the shortcut never reached the shell
+            await pg.click("#fzdrawertab")
+            await pg.wait_for_function("FZ.term.cols===" + str(a["cols"]), timeout=10000)
+            self.assertFalse((await look())["side"])
+            await pg.evaluate("document.exitFullscreen()")
+            await pg.wait_for_function("!document.fullscreenElement", timeout=10000)
+            await pg.wait_for_function("FZ.term.cols<" + str(a["cols"]), timeout=10000)
+            c = await pg.evaluate("[$('fzside').getBoundingClientRect().width,getComputedStyle($('fzside')).visibility]")
+            self.assertGreater(c[0], 200, c)                                       # the page as before
+            self.assertEqual(c[1], "visible")
+            self.assertEqual(await pg.evaluate("window.__locked"), 1)
+        self.run_page(body, lock)
 
 
 def secrets_ticket(gid, cols, rows):

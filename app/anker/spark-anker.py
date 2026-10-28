@@ -38,7 +38,7 @@ the anchor made it; then it tells the panel (best effort) so it forgets this ser
 """
 import argparse
 import base64
-import getpass
+import contextlib
 import hashlib
 import hmac
 import http.client
@@ -50,6 +50,7 @@ import re
 import secrets
 import select
 import shutil
+import signal
 import socket
 import ssl
 import struct
@@ -159,6 +160,30 @@ def base_url(url):
     return f"https://{m.group(1)}" + (f":{m.group(2)}" if m.group(2) and m.group(2) != "443" else "")
 
 
+# where the system keeps its authorities when Python brings none of its own (python.org's Python on a Mac without
+# „Install Certificates“; some Linux builds): only files of the system, verification is never switched off
+CA_FILES = {"Darwin": ("/etc/ssl/cert.pem", "/private/etc/ssl/cert.pem"),
+            "Linux": ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/ca-bundle.pem",
+                      "/etc/ssl/cert.pem")}
+
+
+def authorities(system=None, root="/"):
+    """The default context; when it holds no authority, the system's bundle file is added."""
+    ctx = ssl.create_default_context()
+    if ctx.cert_store_stats().get("x509_ca", 0):
+        return ctx
+    for p in CA_FILES.get(system or platform.system(), CA_FILES["Linux"]):
+        path = here(root, p)
+        if os.path.isfile(path):
+            try:
+                ctx.load_verify_locations(cafile=path)
+            except (OSError, ssl.SSLError):
+                continue
+            if ctx.cert_store_stats().get("x509_ca", 0):
+                break
+    return ctx
+
+
 def tls_connect(base, fp, timeout=20):
     """A TLS socket to the panel: with fp exactly that certificate (SHA-256 of the DER), else checked against the
     system's authorities and the name. Nothing is sent before the check."""
@@ -169,7 +194,7 @@ def tls_connect(base, fp, timeout=20):
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
     else:
-        ctx = ssl.create_default_context()
+        ctx = authorities()
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     raw = socket.create_connection((host, u.port or 443), timeout=timeout)
     s = ctx.wrap_socket(raw, server_hostname=host)
@@ -477,9 +502,68 @@ def tty_line(prompt):
         return t.readline().strip()
 
 
-def read_code():
-    """The pairing code, typed on this terminal and shown nowhere (getpass reads /dev/tty)."""
-    return getpass.getpass("Kopplungs-Code aus dem Panel: ").strip()
+def _again(fn, *a):
+    """fn(*a), again when a signal interrupted it (EINTR; macOS under `curl | sudo`)."""
+    for n in range(5):
+        try:
+            return fn(*a)
+        except Exception as e:     # termios.error is no OSError; both carry errno 4 for EINTR
+            code = getattr(e, "errno", None) or (e.args[0] if e.args and isinstance(e.args[0], int) else None)
+            if code != 4 or n == 4:
+                raise
+
+
+def read_code(tty="/dev/tty"):
+    """The pairing code, typed on this terminal (never stdin: that is the program itself when it comes through curl),
+    echo off on that terminal; SIGTTOU ignored meanwhile (not the foreground group under `curl | sudo`), the
+    terminal always as it was afterwards. Without echo control the code is read visibly, with a hint."""
+    try:
+        fd = os.open(tty, os.O_RDWR | getattr(os, "O_NOCTTY", 0))
+    except OSError:
+        raise Fehler("kein Terminal für den Code: den Befehl aus dem Panel in einem Terminal-Fenster ausführen. "
+                     "Es wurde nichts eingerichtet.")
+    try:
+        import termios
+    except ImportError:
+        termios = None
+    old = handler = None
+    try:
+        if termios is not None:
+            with contextlib.suppress(ValueError, OSError, AttributeError):
+                handler = signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+            try:
+                old = _again(termios.tcgetattr, fd)
+                quiet = list(old)
+                quiet[3] &= ~termios.ECHO
+                _again(termios.tcsetattr, fd, termios.TCSANOW, quiet)
+            except (termios.error, OSError):
+                old = None
+        prompt = "Kopplungs-Code aus dem Panel: " if old else "Kopplungs-Code aus dem Panel (wird angezeigt): "
+        _again(os.write, fd, prompt.encode())
+        line = b""
+        while True:
+            ch = _again(os.read, fd, 1)
+            if not ch:
+                break
+            if ch in (b"\n", b"\r"):
+                line += b"\n"
+                break
+            line += ch
+            if len(line) > 200:
+                break
+        if old:
+            _again(os.write, fd, b"\n")
+    finally:
+        if old is not None:
+            with contextlib.suppress(Exception):
+                _again(termios.tcsetattr, fd, termios.TCSADRAIN, old)
+        if handler is not None:
+            with contextlib.suppress(Exception):
+                signal.signal(signal.SIGTTOU, handler)
+        os.close(fd)
+    if not line.endswith(b"\n") and not line.strip():
+        raise Fehler("abgebrochen: kein Code eingegeben. Es wurde nichts eingerichtet.")
+    return line.decode("utf-8", "replace").strip()
 
 
 def run_cmd(cmd):
@@ -944,6 +1028,21 @@ def main(argv=None, system=None):
     except Fehler as e:
         say(str(e))
         return 1
+    except (KeyboardInterrupt, EOFError):
+        say("abgebrochen. " + ("Es wurde nichts eingerichtet." if args.cmd == "einrichten" else ""))
+        return 1
+    except ssl.SSLCertVerificationError:
+        say(CERT_FEHLER)
+        return 1
+    except (ssl.SSLError, ConnectionError, socket.timeout, socket.gaierror) as e:
+        say(f"das Panel war nicht zu erreichen ({type(e).__name__}): Adresse und Netz prüfen, dann den Befehl noch einmal.")
+        return 1
+
+
+# the one sentence when the panel's certificate cannot be checked (never a traceback, never without the check)
+CERT_FEHLER = ("das Zertifikat des Panels ließ sich nicht prüfen (keine oder keine passende Zertifizierungsstelle). "
+               "Abhilfe auf dem Mac: den Befehl mit /usr/bin/python3 statt python3; sonst den Befehl aus dem Panel "
+               "über die Heim-Adresse nehmen (mit --fp). Es wurde nichts eingerichtet.")
 
 
 if __name__ == "__main__":

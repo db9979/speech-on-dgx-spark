@@ -1107,9 +1107,12 @@
   </div>
   <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
   <div class="fzview" id="fzview" hidden>
+    <div class="fzvollbar" id="fzvollbar" role="status"><span class="fzrec"></span><span id="fzvolltext"></span></div>
+    <div class="fzvollhint" id="fzvollhint" role="status" hidden>Alle Tasten aktiv · Esc 2 s halten zum Verlassen</div>
+    <button class="fzdrawertab" type="button" id="fzdrawertab" aria-expanded="false" aria-controls="fzside" title="Vorschläge und Assistent (Strg+Umschalt+Leertaste)" aria-label="Vorschläge und Assistent">‹</button>
     <div class="fzterm" id="fzterm"></div>
-    <div class="fzside">
-      <div class="card"><h3>Vorschläge</h3><div class="fh">Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. Der Assistent sieht die Ausgabe nicht. Die Vorschläge passen sich nach festen Regeln an deinen letzten Befehl an, nichts verlässt den Browser.</div><div class="fh" id="fzchipwas" hidden>Passend zu deinem letzten Befehl:</div><div class="fzchips" id="fzchips"></div></div>
+    <div class="fzside" id="fzside">
+      <div class="card"><h3>Vorschläge <span class="fzq" tabindex="0" title="Zum Einfügen tippen, nie automatisch: der Befehl landet in der Zeile, Enter drückst du selbst. Der Assistent sieht die Ausgabe nicht. Die Vorschläge passen sich nach festen Regeln an deinen letzten Befehl an, nichts verlässt den Browser.">?</span></h3><div class="fh fzchiphint" id="fzchiphint" hidden></div><div class="fh" id="fzchipwas" hidden>Passend zu deinem letzten Befehl:</div><div class="fzchips" id="fzchips"></div></div>
       <details class="card fzhilfe" id="fzhilfe" hidden><summary>Assistent</summary>
         <div class="fh">Fragt nur das eigene Sprachmodell. Er tippt nie und drückt nie Enter: ein Befehl landet erst mit „Einfügen“ in der Zeile. Mit gehen deine Frage, Name und System des Servers und deine letzten Befehle; der Bildschirm nur, wenn du ihn mitschickst. Nichts davon wird gespeichert.</div>
         <textarea id="fzfrage" rows="2" maxlength="500" placeholder="Frag den Assistenten" aria-label="Frag den Assistenten"></textarea>
@@ -1117,7 +1120,7 @@
         <div class="row"><button class="b p" type="button" id="fzfragen">Fragen</button></div>
         <div class="fzantwort" id="fzantwort" role="status"></div>
       </details>
-      <div class="card"><h3>Diese Sitzung</h3><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzstop">Trennen</button><button class="b" type="button" id="fzalle2">Alle trennen</button></div>
+      <div class="card fzinfocard"><h3>Diese Sitzung</h3><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzstop">Trennen</button><button class="b" type="button" id="fzalle2">Alle trennen</button></div>
         <div class="row fzfenrow"><button class="b" type="button" id="fzheraus">Herauslösen</button><button class="b" type="button" id="fzalletasten">Alle Tasten</button></div>
         <div class="fh">„Herauslösen“ öffnet die Shell in einem eigenen Fenster. „Alle Tasten“ schickt auch Strg+W, Strg+T oder Esc an die Shell (Chrome, Edge); Esc 2 Sekunden halten zum Verlassen.</div></div>
     </div>

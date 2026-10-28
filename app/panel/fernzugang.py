@@ -139,7 +139,10 @@ HOSTKEY = re.compile(r"ssh-ed25519 [A-Za-z0-9+/]{60,100}={0,2}")
 WORD = re.compile(r"[A-Za-z0-9._\- ()/+]{0,40}")
 ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"   # no 0/O, 1/I: typed from the screen
 # the assistant's chips beside the terminal: fixed commands that only read, never chosen by a model, never with Enter
-CHIPS = ("uptime", "df -h", "free -h", "systemctl --failed", "journalctl -p err -n 20 --no-pager",
+# (Dominik 2026-10-28 20:04: no uptime and df -h; screen and tmux to take over sessions that run there already).
+# <…> is a gap the person fills: inserted without it, the cursor waits there. sudo works only when spark got it.
+CHIPS = ("screen -ls", "screen -x", "screen -r <name>", "tmux ls", "tmux attach -t <name>", "sudo ls -la /run/screen/",
+         "sudo -u <benutzer> screen -x <name>", "free -h", "systemctl --failed", "journalctl -p err -n 20 --no-pager",
          "ip -br address", "ss -tlnp", "top -bn1 | head -15")
 # the chips after the person's own last command (fernzugang.js keeps only that line, in the browser): fixed rules, never a
 # model. (command words, follow-ups); {1} is the person's own first argument after the words, shell-quoted in the
@@ -155,7 +158,17 @@ FOLGE = ((("systemctl", "status"), ("journalctl -u {1} -n 50 --no-pager", "syste
          (("git", "status"), ("git diff --stat", "git log --oneline -5")),
          (("top",), ("free -h", "uptime")),
          (("htop",), ("free -h", "uptime")),
-         (("free", "-h"), ("top -bn1 | head -15", "uptime")))
+         (("free", "-h"), ("top -bn1 | head -15", "uptime")),
+         # screen and tmux: the follow-ups have gaps (<name>), filled by the person, never from the screen's output
+         (("screen", "-ls"), ("screen -x", "screen -x <name>", "screen -r <name>")),
+         (("screen", "-list"), ("screen -x", "screen -x <name>", "screen -r <name>")),
+         (("tmux", "ls"), ("tmux attach -t <name>", "tmux attach")),
+         (("tmux", "list-sessions"), ("tmux attach -t <name>", "tmux attach")))
+# a fixed line above the chips after the person's own command (how to leave without ending it there)
+HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+A D = detach (the session there keeps running)")),
+           (("screen", "-r"), ("Strg+A D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+A D = detach (the session there keeps running)")),
+           (("tmux", "attach"), ("Strg+B D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+B D = detach (the session there keeps running)")),
+           (("tmux", "a"), ("Strg+B D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+B D = detach (the session there keeps running)")))
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
@@ -1180,12 +1193,14 @@ def command(origin):
         return None
     url, fp = base
     if not fp:
-        return {"befehl": f"curl -fsSL {url}/fernzugang/anker | sudo python3 - einrichten {url}", "fp": ""}
-    pin = _spki_pin()
-    if not pin:
-        return None
-    return {"befehl": f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | sudo python3 - einrichten {url} --fp {fp}",
-            "fp": fp}
+        cmd = f"curl -fsSL {url}/fernzugang/anker | sudo python3 - einrichten {url}"
+    else:
+        pin = _spki_pin()
+        if not pin:
+            return None
+        cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | sudo python3 - einrichten {url} --fp {fp}"
+    # on a Mac Apple's own Python (its authorities, the one launchd starts), never the first python3 in PATH
+    return {"befehl": cmd, "befehl_mac": cmd.replace("| sudo python3 -", "| sudo /usr/bin/python3 -"), "fp": fp}
 
 
 def _second_step(request):
@@ -1213,7 +1228,8 @@ def admin_get(request: Request):
     guard.limit(request, "fernzugang", admin=True)
     c = features.chat_cfg()
     out = {"on": admin_on(c), "leerlauf": leerlauf_s(c) // 60, "max": max_sitzungen(c), "max_anker": MAX_ANKER,
-           "chips": list(CHIPS), "folge": [[list(w), list(f)] for w, f in FOLGE], "anker": _program(), "code_s": CODE_S, "counts": counts(),
+           "chips": list(CHIPS), "folge": [[list(w), list(f)] for w, f in FOLGE],
+           "hinweis": [[list(w), list(x)] for w, x in HINWEIS], "anker": _program(), "code_s": CODE_S, "counts": counts(),
            "notaus": _notaus(), "browser": is_admin_browser(request),
            "hilfe": hilfe_on(c), "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "hilfe_zeilen": HILFE_ZEILEN, "hilfe_schirm": HILFE_SCHIRM,
            "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S}
