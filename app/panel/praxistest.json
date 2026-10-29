@@ -4517,6 +4517,13 @@
 "titel": "Auch das Gelernte versiegelt",
 "text": "Nach dem Update (Zustand → Logs, Bereich Profile): einmal „profiles: versiegelt | …“ mit fehler=0 und unter Einstellungen → Sicherung eine neue Sicherung „vor-siegel“. Unter Ich → Was ich über dich weiß stehen die Interessen wie vorher, das Spark-Tagebuch zeigt die alten Einträge. Im Gespräch einen Fernseher per Rückfrage wählen (gemerkte Zuordnung): beim nächsten Mal fragt der Spark nicht noch einmal. Zustand → Live, Kasten Gedächtnis: „🔒 n von n Dateien versiegelt“.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P670",
+"v": 1253,
+"titel": "Alle meine Daten herunterladen",
+"text": "Unter Ich → Sicherheit → Meine Daten auf „Auswählen …“: die Bereiche stehen mit Anzahl und Größe da, aufgeklappt „Was draußen bleibt und warum“ (Stimmabdruck, Anmeldung, Vorräte …). Einen Bereich abwählen, „Packen und herunterladen“: der Spark fragt den Code (ohne zweiten Schritt die PIN), dann lädt der Browser „spark-meine-daten-….zip“. In der ZIP: LIESMICH.txt (Deutsch und Englisch), uebersicht.json, das Gedächtnis lesbar, der abgewählte Bereich fehlt, keine voice.json, kein Passwort. Den Link aus dem Netzwerk-Tab ein zweites Mal öffnen: „Dieser Abhol-Code gilt nicht mehr“. Viermal in einer Stunde: beim vierten Mal „Höchstens 3 Mal je Stunde“. Zustand → Logs ohne Filter: die Zeile „GET /api/profile/export/…“ zeigt den Code nicht. Zustand → Logs, Bereich Speicher: „meinedaten: export … dateien=… mb=…“ ohne Namen; Zustand → Live, Kasten Gedächtnis: „Meine Daten: heute 1 gepackt · 1 abgeholt“. iPhone: Ich → Sicherheit → Meine Daten → Herunterladen, dann „Teilen oder sichern“. Android: im Panel derselbe Knopf, die ZIP liegt unter Downloads.",
+"thread": "Nutzerwissen sicherer und sichtbarer"
 }
 ]
 }

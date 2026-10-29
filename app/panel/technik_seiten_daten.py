@@ -156,7 +156,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "11f06abc8c",
+        "stand": "f5ea8f2b28",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "profiles.write_own": ["s3", "s4b"],
             "profiles.read_own": ["s4b"], "dateien.SIEGEL": ["s3"], "siegel.migrate": ["s3"], "speakers._store": ["s3", "s4"],
@@ -226,11 +226,15 @@ SEITEN = {
               ("Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich "
                "(dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem "
                "Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide "
-               "Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.",
+               "Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, "
+               "was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt "
+               "({dateien.EXPORT|anzahl} Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt.",
                "Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, "
                "may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, "
                "settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every "
-               "name the code writes.")),
+               "name the code writes. The same register says with export= what „Download all my data“ "
+               "(meinedaten.build, Me → Security → My data) puts into the ZIP ({dateien.EXPORT|anzahl} entries, sealed "
+               "ones opened through read_own) and why the rest stays out.")),
             S("s6", "frage", ("Eigener Speicher eingerichtet?", "Own storage set up?"),
               ("Admin-Schalter, Profil, Ziel mit Bereichen", "admin switch, profile, target with areas"),
               ("Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem "
@@ -321,6 +325,8 @@ SEITEN = {
         "einstellen": [
             ("Ich → Speicher: eigene Ziele (NAS, WebDAV, SFTP, SMB) und welche Bereiche dorthin gehen.",
              "Me → Storage: own targets (NAS, WebDAV, SFTP, SMB) and which areas go there."),
+            ("Ich → Sicherheit → Meine Daten: alles Eigene als eine ZIP herunterladen, mit frischem Code.",
+             "Me → Security → My data: download everything of one's own as one ZIP, with a fresh code."),
         ],
         "sehen": [
             ("Ich → Speicher: die eigenen Ziele mit Zustand und den letzten Läufen.",
@@ -348,8 +354,11 @@ SEITEN = {
             ("speicher.seal_file", ("AES-256-GCM in Stücken", "AES-256-GCM in pieces")),
             ("speicher.copy_once", ("ein Lauf der Kopie", "one run of the copy")),
             ("backup._add_dir", ("users/ in die Sicherung", "users/ into the backup")),
+            ("dateien.EXPORT", ("was in „Alle meine Daten herunterladen“ geht (aus dem Datei-Register)",
+                                "what goes into „Download all my data“ (from the file register)")),
+            ("meinedaten.build", ("die ZIP der eigenen Daten, ohne Geheimnisse", "the ZIP of the own data, without secrets")),
         ],
-        "tests": ["test_speicher", "test_technik", "test_stimmabdruck", "test_hardening", "test_siegel"],
+        "tests": ["test_speicher", "test_technik", "test_stimmabdruck", "test_hardening", "test_siegel", "test_meinedaten"],
         "heute": [],
     },
 

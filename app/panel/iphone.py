@@ -89,7 +89,9 @@ AREAS = {
     # (each with a current code). Setting the second step up stays in the browser: there the PIN proves
     # the person, here only the key would.
     "app_security": ((("GET",), r"/api/profile/(?:security|mfa)"), (("POST",), r"/api/profile/logout-all"),
-                     (("POST",), r"/api/profile/mfa/(?:disable|recovery)"), (("DELETE",), rf"/api/profile/devices/{_DEV}")),
+                     (("POST",), r"/api/profile/mfa/(?:disable|recovery)"), (("DELETE",), rf"/api/profile/devices/{_DEV}"),
+                     # Meine Daten (meinedaten.py): what goes in, the ZIP after a fresh code, its one pickup
+                     (("GET", "POST"), r"/api/profile/export"), (("GET",), r"/api/profile/export/[A-Za-z0-9_-]{22}")),
     # Konten verbinden: mailboxes, calendars, address books, Home Assistant, Telegram. Adding hands the
     # Spark a password or token: secret_profile, from the app only with the profile's second step and a
     # fresh code. Passwords go straight to the Spark's vault and are never sent back.

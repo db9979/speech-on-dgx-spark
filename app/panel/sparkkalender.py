@@ -109,6 +109,14 @@ def forget(uid, cids):
         print(f"calendar: spark calendar deleted | {len(gone)} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
 
 
+def export(uid):
+    """„Alle meine Daten herunterladen“ (meinedaten.py): the profile's Spark calendars opened, a copy (never sent but
+    to the own profile)."""
+    d = _load(uid)        # takes _lock itself (not reentrant)
+    with _lock:
+        return json.loads(json.dumps(d, ensure_ascii=False))
+
+
 def drop_profile(uid):
     """The profile folder is gone: nothing of it stays in memory."""
     with _lock:

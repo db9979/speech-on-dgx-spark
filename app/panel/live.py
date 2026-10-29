@@ -75,7 +75,7 @@ TOOLS = {
     "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete",
-    "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Wissensordner-Abgleich": "nasquelle",
+    "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Meine Daten packen": "mem", "Wissensordner-Abgleich": "nasquelle",
     "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
     "Docling": "docling",
@@ -1363,7 +1363,12 @@ def snapshot(view="admin", now=None):
         sg = siegel.for_live(now)
     except Exception:
         sg = {"on": False}
-    if ged.get("on") or gm.get("on") or sg.get("aside") or sg.get("plain"):
+    try:   # Alle meine Daten herunterladen (meinedaten.py): today's ZIPs, pickups, refusals (numbers only)
+        import meinedaten
+        md = meinedaten.for_live(now)
+    except Exception:
+        md = {}
+    if ged.get("on") or gm.get("on") or sg.get("aside") or sg.get("plain") or any(md.values()):
         used.add("ged")
     try:
         import klaeren
@@ -1989,6 +1994,11 @@ def snapshot(view="admin", now=None):
                 x["sub"] += ((" · " if x["sub"] else "") + f"🔒 {sg.get('sealed', 0)} von {sg.get('files', 0)} Dateien versiegelt"
                              + (f" · {sg['aside']} unlesbar beiseite" if sg.get("aside") else "")
                              + ("" if sg.get("crypto") else " · ohne cryptography"))
+            if any(md.values()):   # Meine Daten herunterladen: ZIPs today, picked up, refused, one being packed
+                x["sub"] += ((" · " if x["sub"] else "") + f"Meine Daten: heute {md.get('gebaut', 0)} gepackt · {md.get('abgeholt', 0)} abgeholt"
+                             + (f" · {md['abgelehnt']} abgelehnt" if md.get("abgelehnt") else "")
+                             + (f" · {md['abgelaufen']} verfallen" if md.get("abgelaufen") else "")
+                             + (" · packt gerade" if md.get("baut") else ""))
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")

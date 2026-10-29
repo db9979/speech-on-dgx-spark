@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.253** Alle meine Daten herunterladen: unter Ich → Sicherheit → Meine Daten eine ZIP mit allem vom eigenen Profil (versiegelte Dateien geöffnet, Einstellungen ohne Geheimnisse, aus Chats nur die eigenen Nachrichten, LIESMICH de+en mit dem, was draußen bleibt und warum), jedes Mal nach frischem Code oder Passkey, 3 je Stunde, höchstens 2 GB, Abhol-Link 10 Minuten und einmal; kein Schalter (Auskunftsrecht), auch in der iPhone- und Android-App
 - **V01.1.252** Auch das Gelernte versiegelt: Lesemarken des Lernens, gemerkte Zuordnungen, offene Gedächtnis-Frage, Interessen („Was ich über dich weiß“) und Spark-Tagebuch liegen jetzt ebenso versiegelt, einmal nach einer Sicherung „vor-siegel“; jede Datei aus Gedächtnis und Gesprächen muss versiegelt sein (Plan nutzerwissen, Stufe 4c; test_siegel)
 - **V01.1.251** Gedächtnis und Gespräche versiegelt: memory.json, convos.json, toollog.json und room-history.json liegen ganz versiegelt im Profil (AES-256-GCM, Schlüssel je Zweck aus secret.key, Profil und Dateiname als Zusatzdaten), einmalig nach einer Sicherung „vor-siegel“ und mit Probe je Datei; mit fremdem Schlüssel beiseite statt überschrieben, Hinweis an den Admin, „Wieder einlesen“ unter Ich → Gedächtnis (Plan nutzerwissen, Stufe 4b; test_siegel)
 - **V01.1.250** Ein Weg zu den eigenen Daten: Gedächtnis, Gespräche, Werkzeug-Log, Raummodus-Verlauf, Lesemarken, Zuordnungen, Interessen, Spark-Tagebuch und die offene Gedächtnis-Frage liest und schreibt das Panel nur noch über profiles.read_own/write_own/drop_own (Vorbereitung zum Versiegeln, für die Person ändert sich nichts)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.246** Redesign Stufe 1: Design-Tokens als eine Quelle (`tokens.css`), Aussehen unverändert; Wächter `test_design_tokens`
 - **V01.1.245** Finden in allen Daten Stufe A: ein Suchindex über eigene Dokumente, NAS, reMarkable und Wissensbuch (Felder und Kategorien nach festen Regeln, eigene Schlagworte gehen vor, Marken je Profil), eigene Seite Finden, das Werkzeug fund_suche im Assistenten mit der Karte „In Finden ansehen“, Strg K
 - **V01.1.244** ROT-FIX: der Test der Spontanhilfe-Seite stellt beim Ablauf erst die Uhr des Panels, dann die der Seite (sonst holte das Nachladen alle 3 s die Nummer zurück)
-- **V01.1.243** https ohne TLS-Session-Tickets (`panel.tls_context`): etwa jede hundertste https-Verbindung zur asyncio-Schleife von Python 3.11 hing nach dem Handshake (Terminal im Fernzugang ging nie auf); Test-Server mit dem TLS des Panels samt Wächter, Fernzugang-Tests mit 60 s Handshake und Fristen statt Schleifen
 
 
 

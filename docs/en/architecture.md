@@ -254,6 +254,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
+| `app/panel/meinedaten.py` | Alle meine Daten herunterladen: one ZIP with everything a profile keeps on the Spark, for the person herself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: a cross-encoder reads the question and each of the mixed search's candidates together and gives a score; the best come first, the ones … |
@@ -748,6 +749,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-runden.json` | AI Dungeon Master: shared values of all rounds (pictures of the day, thumbs per world) | – | yes |
 | `state/dungeon-ton` | AI Dungeon Master: the last turns of a round read aloud (WAV and MP3, at most 3 per round) | – | no |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
+| `state/export-tmp` | Download all my data: the ZIP until it is picked up (once, 10 minutes at most) | – | no |
 | `state/faelle.json` | Cases | – | yes |
 | `state/features-seen.json` | When functions were released | – | yes |
 | `state/fernanker.json` | Remote access: the panel's signing key for updating the anchors (Ed25519; the private half only sealed in the vault) | private half sealed | no |
@@ -1634,7 +1636,7 @@ flowchart TD
   s8 -->|yes| s8x
 ```
 
-1. <a id="kn-sicherheit-s1"></a>**A question or order comes in**: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page) stands with its protection in the security docs under "Ways in".
+1. <a id="kn-sicherheit-s1"></a>**A question or order comes in**: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of "Download all my data") stands with its protection in the security docs under "Ways in".
 2. <a id="kn-sicherheit-s2"></a>**Does the kill switch allow it?**: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it.
 3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
@@ -1679,6 +1681,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 
 - Memory and conversations of every profile lie sealed whole (AES-256-GCM, a key per purpose from secret.key through HKDF, vorrat.key; the profile and the file name as associated data, a fresh nonce on every write). A copy of the disk, a look into the folder or a backup on a foreign computer shows only noise; a file copied into another profile does not open there.
 - If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the admins see a hint, and after the move backup „Read in again“ brings it back.
+- „Download all my data“ (meinedaten.py, no switch: right of access) packs only what the file register lets in with export=, sealed files opened through profiles.read_own, without secrets, voiceprint and supplies of foreign servers, from chats only the own messages. Before it every time a fresh code or passkey (without a second step the PIN), at most 3 per hour, at most 2048 MB; it is picked up once with a code of which only the hash is kept (10 minutes).
 
 #### Standards
 
@@ -1715,11 +1718,13 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `write_own`: memory and conversations sealed whole ([step 10](#kn-sicherheit-s10))
 - `app/panel/vorrat.py` `key`: a key per purpose from secret.key ([step 10](#kn-sicherheit-s10))
+- `app/panel/meinedaten.py` `api_export`: own data only after a fresh code, passkey or PIN ([step 3](#kn-sicherheit-s3))
+- `app/panel/meinedaten.py` `build`: the ZIP only from the file register, without secrets ([step 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
 
 ### Login, profile
 
@@ -2037,7 +2042,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (180) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (184) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
@@ -2051,7 +2056,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **180** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **184** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -3488,7 +3493,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 99). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 100). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3499,7 +3504,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **99** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **100** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3577,7 +3582,7 @@ flowchart TD
 3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (9 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
 5. <a id="kn-users-s4b"></a>**Does the sealed file open?**: Only profiles.read_own and write_own read and write these files. If one does not open (another key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back.
-6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes.
+6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (33 entries, sealed ones opened through read_own) and why the rest stays out.
 7. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
 8. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
 9. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
@@ -3614,6 +3619,7 @@ Applies at: [step 6](#kn-users-s5), [step 8](#kn-users-s7)
 #### Settings
 
 - Me → Storage: own targets (NAS, WebDAV, SFTP, SMB) and which areas go there.
+- Me → Security → My data: download everything of one's own as one ZIP, with a fresh code.
 
 #### What you see
 
@@ -3638,8 +3644,10 @@ Applies at: [step 6](#kn-users-s5), [step 8](#kn-users-s7)
 - `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces ([step 9](#kn-users-s8))
 - `app/panel/speicher.py` `copy_once`: one run of the copy ([step 8](#kn-users-s7), [step 9](#kn-users-s8))
 - `app/panel/backup.py` `_add_dir`: users/ into the backup ([step 11](#kn-users-s10))
+- `app/panel/dateien.py` `EXPORT`: what goes into „Download all my data“ (from the file register) ([step 6](#kn-users-s5))
+- `app/panel/meinedaten.py` `build`: the ZIP of the own data, without secrets ([step 6](#kn-users-s5))
 
-Self-tests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`
+Self-tests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`, `test_meinedaten`
 
 ### voices/, backups/
 

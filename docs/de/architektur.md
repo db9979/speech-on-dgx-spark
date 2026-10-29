@@ -254,6 +254,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
+| `app/panel/meinedaten.py` | Alle meine Daten herunterladen: eine ZIP nach frischem Code, einmal abholen |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten |
@@ -748,6 +749,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dungeon-runden.json` | KI-Dungeon-Master: gemeinsame Werte aller Runden (Bilder des Tages, Daumen je Welt) | – | ja |
 | `state/dungeon-ton` | KI-Dungeon-Master: die vorgelesenen letzten Züge einer Runde (WAV und MP3, höchstens 3 je Runde) | – | nein |
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
+| `state/export-tmp` | Alle meine Daten herunterladen: die ZIP bis zum Abholen (einmal, höchstens 10 Minuten) | – | nein |
 | `state/faelle.json` | Fälle | – | ja |
 | `state/features-seen.json` | Wann Funktionen frei wurden | – | ja |
 | `state/fernanker.json` | Fernzugang: der Signaturschlüssel des Panels für das Aktualisieren der Anker (Ed25519; der private Teil nur versiegelt im Tresor) | privater Teil versiegelt | nein |
@@ -1634,7 +1636,7 @@ flowchart TD
   s8 -->|ja| s8x
 ```
 
-1. <a id="kn-sicherheit-s1"></a>**Frage oder Auftrag kommt herein**: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“.
+1. <a id="kn-sicherheit-s1"></a>**Frage oder Auftrag kommt herein**: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“.
 2. <a id="kn-sicherheit-s2"></a>**Lässt der Notaus es zu?**: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben.
 3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen).
 4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
@@ -1679,6 +1681,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 
 - Gedächtnis und Gespräche jedes Profils liegen ganz versiegelt (AES-256-GCM, Schlüssel je Zweck aus secret.key über HKDF, vorrat.key; Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben). Eine Kopie der Platte, ein Blick in den Ordner oder eine Sicherung auf einem fremden Rechner zeigt nur Rauschen; eine Datei, die in ein anderes Profil kopiert wird, öffnet sich dort nicht.
 - Öffnet eine Datei nicht, wird sie nie leer überschrieben: profiles.read_own legt sie beiseite, die Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück.
+- „Alle meine Daten herunterladen“ (meinedaten.py, kein Schalter: Auskunftsrecht) packt nur, was das Datei-Register mit export= hineinlässt, Versiegeltes geöffnet über profiles.read_own, ohne Geheimnisse, Stimmabdruck und Vorräte fremder Server, aus Chats nur die eigenen Nachrichten. Vorher jedes Mal ein frischer Code oder Passkey (ohne zweiten Schritt die PIN), höchstens 3 je Stunde, höchstens 2048 MB; abgeholt wird einmal mit einem Code, von dem nur der Hash liegt (10 Minuten).
 
 #### Maßstäbe
 
@@ -1715,11 +1718,13 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/vault.py` `seal`: Geheimnisse versiegelt ablegen ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `write_own`: Gedächtnis und Gespräche ganz versiegelt ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/vorrat.py` `key`: ein Schlüssel je Zweck aus secret.key ([Schritt 10](#kn-sicherheit-s10))
+- `app/panel/meinedaten.py` `api_export`: eigene Daten nur nach frischem Code, Passkey oder PIN ([Schritt 3](#kn-sicherheit-s3))
+- `app/panel/meinedaten.py` `build`: die ZIP nur aus dem Datei-Register, ohne Geheimnisse ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
 
 ### Anmeldung, Profil
 
@@ -2037,7 +2042,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (180) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (184) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
@@ -2051,7 +2056,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **180** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **184** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -3488,7 +3493,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 99). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 100). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3499,7 +3504,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **99** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **100** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3577,7 +3582,7 @@ flowchart TD
 3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (9 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Schreiben nur für den Dienst**: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.
 5. <a id="kn-users-s4b"></a>**Öffnet die versiegelte Datei?**: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück.
-6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.
+6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (33 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt.
 7. <a id="kn-users-s6"></a>**Eigener Speicher eingerichtet?**: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele).
 8. <a id="kn-users-s7"></a>**Nur Geändertes der gewählten Bereiche**: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter.
 9. <a id="kn-users-s8"></a>**Verschlüsselt, Namen zufällig**: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen.
@@ -3614,6 +3619,7 @@ Gilt bei: [Schritt 6](#kn-users-s5), [Schritt 8](#kn-users-s7)
 #### Einstellen
 
 - Ich → Speicher: eigene Ziele (NAS, WebDAV, SFTP, SMB) und welche Bereiche dorthin gehen.
+- Ich → Sicherheit → Meine Daten: alles Eigene als eine ZIP herunterladen, mit frischem Code.
 
 #### Was du siehst
 
@@ -3638,8 +3644,10 @@ Gilt bei: [Schritt 6](#kn-users-s5), [Schritt 8](#kn-users-s7)
 - `app/panel/speicher.py` `seal_file`: AES-256-GCM in Stücken ([Schritt 9](#kn-users-s8))
 - `app/panel/speicher.py` `copy_once`: ein Lauf der Kopie ([Schritt 8](#kn-users-s7), [Schritt 9](#kn-users-s8))
 - `app/panel/backup.py` `_add_dir`: users/ in die Sicherung ([Schritt 11](#kn-users-s10))
+- `app/panel/dateien.py` `EXPORT`: was in „Alle meine Daten herunterladen“ geht (aus dem Datei-Register) ([Schritt 6](#kn-users-s5))
+- `app/panel/meinedaten.py` `build`: die ZIP der eigenen Daten, ohne Geheimnisse ([Schritt 6](#kn-users-s5))
 
-Selbsttests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`
+Selbsttests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`, `test_meinedaten`
 
 ### voices/, backups/
 

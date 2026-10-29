@@ -18460,6 +18460,86 @@
           }
         }
       }
+    },
+    "Der Spark hat keinen Abhol-Code geschickt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark sent no pickup code."
+          }
+        }
+      }
+    },
+    "Herunterladen hat nicht geklappt. Bitte noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading did not work. Please try again."
+          }
+        }
+      }
+    },
+    "Fertig: über „Teilen oder sichern“ in Dateien ablegen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done: put it into Files with “Share or save”."
+          }
+        }
+      }
+    },
+    "Alle meine Daten herunterladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download all my data"
+          }
+        }
+      }
+    },
+    "Teilen oder sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share or save"
+          }
+        }
+      }
+    },
+    "Im Panel herunterladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download in the panel"
+          }
+        }
+      }
+    },
+    "Meine Daten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My data"
+          }
+        }
+      }
+    },
+    "Eine ZIP mit allem, was der Spark von dir hat. Passwörter, Schlüssel und Stimmabdruck bleiben draußen. Fragt jedes Mal nach deinem Code, höchstens 3 Mal je Stunde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One ZIP with everything the Spark has of you. Passwords, keys and the voiceprint stay out. Asks for your code every time, at most 3 times an hour."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

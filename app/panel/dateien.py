@@ -17,25 +17,45 @@ from collections import namedtuple
 # on the Spark; helfer: written through its own helper, not profiles._path; schutz: sealed or hashed (German,
 # English); sonst: written by the shell scripts or under another name (the scan in test_technik does not see it);
 # siegel: a profile file sealed whole at rest, read and written only through profiles.read_own / write_own (plan
-# nutzerwissen, Stufe 4: AES-256-GCM, its own key, the profile and the name as associated data)
-Datei = namedtuple("Datei", "name ort de en sicherung lokal bereich art helfer schutz sonst siegel")
+# nutzerwissen, Stufe 4: AES-256-GCM, its own key, the profile and the name as associated data);
+# export: „Alle meine Daten herunterladen“ (meinedaten.py, plan nutzerwissen Punkt 5): "ja" when the file goes into the
+# ZIP (sealed ones opened through profiles.read_own), else the reason it stays out (German, English); a profile file
+# left without one takes the reason of its kind (DRAUSSEN). Everything with bereich= or siegel= goes in.
+Datei = namedtuple("Datei", "name ort de en sicherung lokal bereich art helfer schutz sonst siegel export")
 SIEGEL_SCHUTZ = ("ganz versiegelt (AES-256-GCM)", "sealed whole (AES-256-GCM)")
+JA = "ja"
+# why a profile file of this kind stays out of „Alle meine Daten herunterladen“ (Dominik 2026-10-29 „a“ zu Frage 4:
+# no voiceprint, no secret, no copy of a foreign server's data)
+DRAUSSEN = {
+    "Login": ("Zugang zu einem anderen Dienst: Passwort oder Token verlassen den Spark nie", "Access to another service: password or token never leave the Spark"),
+    "Schlüssel": ("Schlüssel, Codewort oder zweiter Schritt: verlassen den Spark nie", "Key, code word or second step: never leave the Spark"),
+    "Stimmabdruck": ("Stimmabdruck: biometrisch, bleibt auf dem Spark", "Voiceprint: biometric, stays on the Spark"),
+    "Warteschlange": ("Warteschlange: wartet nur kurz auf dein Ja oder auf einen Dienst", "Queue: only waits shortly for your yes or a service"),
+    "Mails": ("Kopie von deinem Mail-Server: dort holst du sie selbst", "Copy from your mail server: you get it there yourself"),
+    "Zustand": ("Zustand des Spark (Marken, Zähler, Stand): nichts, was du gesagt oder angelegt hast", "The Spark's state (marks, counters, progress): nothing you said or made"),
+    "Gerät": ("Push-Abo eines Browsers: gehört zum Gerät", "A browser's push subscription: belongs to the device"),
+    "Einstellungen": ("Einrichtung dieses Spark mit Zugangsdaten oder nur Prüfsummen", "Setup of this Spark with access data or only checksums"),
+    "noch nicht angeboten": ("Zugang zu einem anderen Dienst: Passwort verlässt den Spark nie", "Access to another service: the password never leaves the Spark"),
+    "alte Sprachnachrichten (bis zur Übernahme in die Chats)": ("Alte Sprachnachrichten: kommen mit der Übernahme in die Chats", "Old voice messages: come with the move into the chats"),
+}
+VORRAT = ("Kopie von einem fremden Server (Mail, Wetter, Pakete): holst du dort selbst", "Copy from a foreign server (mail, weather, parcels): you get it there yourself")
 
 
-def profil(name, de, en, bereich="", art="", helfer=False, schutz=None, siegel=False):
-    return Datei(name, "profil", de, en, "", "", bereich, art, helfer, SIEGEL_SCHUTZ if siegel else schutz, False, siegel)
+def profil(name, de, en, bereich="", art="", helfer=False, schutz=None, siegel=False, export=None):
+    export = JA if bereich or siegel else export or DRAUSSEN.get(art)
+    return Datei(name, "profil", de, en, "", "", bereich, art, helfer, SIEGEL_SCHUTZ if siegel else schutz, False, siegel, export)
 
 
-def users(name, de, en, sicherung, schutz=None):
-    return Datei(name, "users", de, en, sicherung, "", "", "", False, schutz, False, False)
+def users(name, de, en, sicherung, schutz=None, export=None):
+    return Datei(name, "users", de, en, sicherung, "", "", "", False, schutz, False, False, export)
 
 
 def state(name, de, en, sicherung="", lokal="", schutz=None, sonst=False):
-    return Datei(name, "state", de, en, sicherung, lokal, "", "", False, schutz, sonst, False)
+    return Datei(name, "state", de, en, sicherung, lokal, "", "", False, schutz, sonst, False, None)
 
 
 def anderswo(name, de, en):
-    return Datei(name, "anderswo", de, en, "", "", "", "", False, None, False, False)
+    return Datei(name, "anderswo", de, en, "", "", "", "", False, None, False, False, None)
 
 
 # the areas a profile may copy to its own storage: id -> (German, English). A fixed allowlist: keys, logins,
@@ -60,7 +80,7 @@ DATEIEN = [
     profil("zuordnungen.json", "Gemerkte Zuordnungen", "Remembered matches", bereich="gedaechtnis", siegel=True),
     profil("tasks.json", "Aufgaben", "Tasks", bereich="alltag"),
     profil("geteilt.json", "Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war",
-           "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen"),
+           "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen", export=JA),
     profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
     profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)", bereich="dokumente"),
     profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),
@@ -75,19 +95,20 @@ DATEIEN = [
     # profiles.read_own instead of being overwritten, until „Wieder einlesen“ (siegel.py) takes it back
     profil("*.unlesbar", "Beiseitegelegt: eine versiegelte Datei, die sich mit dem Schlüssel dieses Spark nicht öffnet (Umzugs-Sicherung einspielen, dann „Wieder einlesen“)",
            "Set aside: a sealed file that does not open with this Spark's key (restore the move backup, then \"Read in again\")",
-           art="Zustand", schutz=SIEGEL_SCHUTZ),
+           art="Zustand", schutz=SIEGEL_SCHUTZ,
+           export=("Beiseitegelegt: öffnet sich mit dem Schlüssel dieses Spark nicht", "Set aside: does not open with this Spark's key")),
     # users/<id>/: everything else stays on the Spark (speicher.LOCAL), with its kind: keys, logins, settings,
     # voiceprint, queues and marks (Richtlinie Teil 1, "Kopie meiner Daten")
-    profil("settings.json", "Einstellungen", "Settings", art="Einstellungen"),
+    profil("settings.json", "Einstellungen", "Settings", art="Einstellungen", export=JA),
     profil("setup.json", "Einrichtung", "Setup", art="Einstellungen"),
     profil("speicher.json", "Ziele des eigenen Speichers", "Own storage targets", art="Einstellungen", schutz=("Schlüssel versiegelt", "key sealed")),
     profil("speicher-stand.json", "Stand des Abgleichs", "Sync state", art="Zustand"),
-    profil("transit.json", "Haltestelle", "Stop", art="Einstellungen"),
+    profil("transit.json", "Haltestelle", "Stop", art="Einstellungen", export=JA),
     profil("feeds.json", "Reddit und Feeds: Quellen, Stichwörter, zuletzt gekommene Titel", "Reddit and feeds: sources, keywords, latest titles", art="Login", schutz=("Feed-Adressen versiegelt", "feed addresses sealed")),
-    profil("weather.json", "Wetter-Ort", "Weather place", art="Einstellungen"),
-    profil("proactive.json", "Von selbst melden", "Speak up by itself", art="Einstellungen"),
-    profil("proactive-rules.json", "Eigene Melde-Regeln", "Own notice rules", art="Einstellungen"),
-    profil("hintergrund.json", "Mein Zustand", "My status", art="Einstellungen"),
+    profil("weather.json", "Wetter-Ort", "Weather place", art="Einstellungen", export=JA),
+    profil("proactive.json", "Von selbst melden", "Speak up by itself", art="Einstellungen", export=JA),
+    profil("proactive-rules.json", "Eigene Melde-Regeln", "Own notice rules", art="Einstellungen", export=JA),
+    profil("hintergrund.json", "Mein Zustand", "My status", art="Einstellungen", export=JA),
     profil("mail.json", "Mail-Zugang", "Mail account", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("nas.json", "Speicherorte des Profils (NAS, Cloud)", "Storage places of the profile (NAS, cloud)", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("nasquelle.json", "Wissensordner des Profils", "Knowledge folders of the profile", art="Einstellungen"),
@@ -97,32 +118,32 @@ DATEIEN = [
     profil("speicher.vor-nas.json", "Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places", art="Login"),
     profil("mail-vorrat.bin", "Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge",
            "Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments", art="Mails",
-           schutz=("versiegelt", "sealed")),  # mailvorrat.py
+           schutz=("versiegelt", "sealed"), export=VORRAT),  # mailvorrat.py
     profil("wetter-vorrat.bin", "Wetter-Vorrat: die letzte Vorhersage für den eigenen Ort", "Weather supply: the last forecast for the own place",
-           art="Zustand", schutz=("versiegelt", "sealed")),  # weather.SUPPLY
+           art="Zustand", schutz=("versiegelt", "sealed"), export=VORRAT),  # weather.SUPPLY
     profil("pakete-vorrat.bin", "Paket-Vorrat: die zuletzt aus den Mails gelesenen Sendungen", "Parcel supply: the parcels last read from the mails",
-           art="Mails", schutz=("versiegelt", "sealed")),  # parcels.SUPPLY
+           art="Mails", schutz=("versiegelt", "sealed"), export=VORRAT),  # parcels.SUPPLY
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
     profil("fuerdich-vorrat.bin", "Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext)",
            "For you: the last reading per mailbox (found entries with sender, subject and time, no mail text)", art="Mails",
-           schutz=("versiegelt", "sealed")),  # fuerdich.py
+           schutz=("versiegelt", "sealed"), export=VORRAT),  # fuerdich.py
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("vorgaenge.json", "Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort",
            "Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered", art="Warteschlange"),
     profil("dungeon-helden.json", "KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten)",
-           "AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only)", art="Zustand"),  # dungeon.py
+           "AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only)", art="Zustand", export=JA),  # dungeon.py
     profil("dungeon-kampagnen.json", "KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste",
-           "AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters", art="Zustand"),  # dungeon.py
+           "AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters", art="Zustand", export=JA),  # dungeon.py
     profil("dungeon-buch.json", "KI-Dungeon-Master: Heldenbuch aufs reMarkable, je Held die letzte Ausgabe (Nummer, Zeit, Prüfsumme, Zahlen für „Neu seit“) und was noch wartet",
            "AI Dungeon Master: hero book to the reMarkable, per hero the last edition (number, time, checksum, counts for „new since“) and what still waits", art="Zustand"),  # dungeon_buch.py
     profil("dungeon-wappen.json", "KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast",
            "AI Dungeon Master: colour and charge you chose as host for your group's arms", art="Zustand"),  # dungeon_wappen.py
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
            "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen", siegel=True),
-    profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
+    profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen", export=JA),
     profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail)",
-           "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail)", art="Einstellungen"),  # mailregeln.py
+           "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail)", art="Einstellungen", export=JA),  # mailregeln.py
     profil("mail-spaeter.bin", "Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text",
            "Send later: planned mails until they go out, after that for a day the line without text", art="Warteschlange",
            schutz=("versiegelt", "sealed")),  # senden.py
@@ -130,7 +151,7 @@ DATEIEN = [
            "Sort every mail here: the last run for \"Undo\" (folders and Message-IDs, never a mail), 30 days", art="Zustand",
            schutz=("versiegelt", "sealed")),  # einordnen.py
     profil("spark-kalender.json", "Spark-Kalender: Termine der Kalender ohne Konto (nur hier)", "Spark calendar: appointments of the calendars without an account (only here)",
-           art="Termine", schutz=("versiegelt", "sealed")),  # sparkkalender.py
+           art="Termine", schutz=("versiegelt", "sealed"), export=JA),  # sparkkalender.py
     profil("kalender-server.json", "Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps", "Calendar server: check value of the app password for calendar apps",
            art="Login", schutz=("nur der Hash", "hash only")),  # kalenderserver.py
     profil("calendar.json", "Kalender-Zugang und Freigaben an andere Profile", "Calendar account and shares with other profiles", art="Login", schutz=("Passwort versiegelt", "password sealed")),
@@ -141,11 +162,11 @@ DATEIEN = [
     profil("remarkable-lib.json", "reMarkable-Bibliothek", "reMarkable library", art="Zustand"),
     profil("mcp-dienste.json", "Eigene MCP-Dienste", "Own MCP services", art="Login", schutz=("Tokens versiegelt", "tokens sealed")),
     profil("mcp-actions.json", "MCP-Aktionen", "MCP actions", art="Zustand"),
-    profil("agent.json", "Aufträge und Routinen", "Jobs and routines", art="Einstellungen"),
+    profil("agent.json", "Aufträge und Routinen", "Jobs and routines", art="Einstellungen", export=JA),
     profil("voice.json", "Stimmabdruck", "Voiceprint", art="Stimmabdruck", schutz=("versiegelt", "sealed")),
     profil("speaker-code.json", "Codewort am Lautsprecher", "Speaker code word", art="Schlüssel", schutz=("versiegelt", "sealed")),
     profil("telefon.json", "Rufnummern, Telefon-PIN und Telefonate", "Phone numbers, phone PIN and calls", art="Einstellungen",
-           schutz=("Nummern und PIN versiegelt", "numbers and PIN sealed")),
+           schutz=("Nummern und PIN versiegelt", "numbers and PIN sealed"), export=DRAUSSEN["Schlüssel"]),
     profil("chatkeys.json", "Öffentliche Schlüssel der Geräte", "Devices' public keys", art="Schlüssel"),
     profil("contacts.json", "Kontakte-Zugang", "Contacts account", art="noch nicht angeboten", schutz=("Passwort versiegelt", "password sealed")),
     profil("ha-events.json", "Home-Assistant-Ereignisse", "Home Assistant events", art="Zustand"),
@@ -166,7 +187,7 @@ DATEIEN = [
     profil("rueckfrage-pending.json", "Letzte Rückfrage des Assistenten (10 Minuten, nur ihre Knöpfe)", "The assistant's last question back (10 minutes, only its buttons)", art="Warteschlange"),
     profil("tagebuch.json", "Spark-Tagebuch", "Spark diary", art="Zustand", siegel=True),
     profil("gesundheit.json", "Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage)", "Steps, pulse and sleep from the Pebble watch (30 days)",
-           art="Gesundheit", schutz=("versiegelt", "sealed")),
+           art="Gesundheit", schutz=("versiegelt", "sealed"), export=JA),
     profil("docling-wait", "Dateien, bis Docling sie gelesen hat", "Files until Docling has read them", art="Warteschlange"),
     # users/<id>/: written through their own helper, not through profiles._path (never copied)
     profil("mfa.json", "Zweiter Schritt des Profils", "Profile's second step", art="Schlüssel", helfer=True, schutz=("versiegelt", "sealed")),
@@ -177,7 +198,8 @@ DATEIEN = [
     users("sessions.json", "Anmeldungen", "Logins", sicherung="ja"),
     users("seen.json", "Zuletzt gesehen", "Last seen", sicherung="ja"),
     users("secret", "Schlüssel der Profil-Anmeldung", "Profile login key", sicherung="nein", schutz=("ist ein Schlüssel", "is a key")),
-    users("_chats/", "Chats zwischen Profilen", "Chats between profiles", sicherung="ja", schutz=("AES-256-GCM", "AES-256-GCM")),
+    users("_chats/", "Chats zwischen Profilen", "Chats between profiles", sicherung="ja", schutz=("AES-256-GCM", "AES-256-GCM"),
+          export=JA),   # only the profile's own messages (chats.own_messages)
     users("_verbund/", "Spark-Verbund: andere Sparks, Kontakte, Warteschlange", "Spark network: other Sparks, contacts, queue", sicherung="ja"),
     users("begleiter.json", "Begleiter-Geräte", "Companion devices", sicherung="ja"),
     # state/: shared state of this Spark that goes into every backup (not the logs, counters, lockouts or
@@ -329,6 +351,8 @@ DATEIEN = [
     state("begleiter", "Begleiter-Updates", "Companion updates", lokal="Download-Cache"),
     state("begleiter-inbox", "Vom Handy auf den PC, 24 h", "Phone to PC, 24 h", lokal="Dateien vom Handy, 24 h"),
     state("speicher-tmp", "Zwischenablage des eigenen Speichers", "Own storage staging", lokal="Zwischenablage", schutz=("AES-256-GCM", "AES-256-GCM")),
+    state("export-tmp", "Alle meine Daten herunterladen: die ZIP bis zum Abholen (einmal, höchstens 10 Minuten)", "Download all my data: the ZIP until it is picked up (once, 10 minutes at most)",
+          lokal="Zwischenablage, 10 Minuten; geht beim Abholen, nach der Frist oder beim Neustart"),  # meinedaten.py
     state("speech-active", "Zeitpunkt der letzten Sprache", "Time of last speech", lokal="Zeitmarke"),
     state("speech-spark-llm.json", "Zustand der Engine des eigenen Sprachmodells", "Own language model engine state", lokal="Zustand der Engine"),
     state("speech-spark-asr-engine.json", "Zustand der ASR-Engine", "ASR engine state", lokal="Zustand der Engine"),
@@ -366,3 +390,6 @@ USERS_GLOBAL = {d.name: d.sicherung for d in DATEIEN if d.ort == "users"}
 STATE_SONST = {d.name for d in DATEIEN if d.sonst}
 # profiles.read_own / write_own: the profile files sealed whole at rest (plan nutzerwissen, Stufe 4)
 SIEGEL = frozenset(d.name for d in DATEIEN if d.siegel)
+# meinedaten.py: what goes into „Alle meine Daten herunterladen“ (name -> its entry) and what stays out with its reason
+EXPORT = {d.name: d for d in DATEIEN if d.export == JA}
+DRAUSSEN_DATEIEN = {d.name: d.export for d in DATEIEN if d.ort == "profil" and d.export != JA}

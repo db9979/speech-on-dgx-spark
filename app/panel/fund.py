@@ -764,6 +764,26 @@ def eintrag(uid, iid):
             "weg": BY_NAME[item["quelle"]].oeffnen(uid, item["ext"])}
 
 
+def export(uid):
+    """„Alle meine Daten herunterladen“ (meinedaten.LESER): the index readable, never its marks (fund_blind, the HMAC
+    of each tag): per item title, time, excerpt, fields and the shown tags; and the own tags (fund_hand), which a
+    rebuild never makes again; both empty without an index."""
+    if not _exists(uid):
+        return {"eintraege": [], "eigene_schlagworte": []}
+    with _Db(uid) as con:
+        items = []
+        for r in con.execute("SELECT * FROM fund_item ORDER BY quelle, wann DESC"):
+            item = dict(r)
+            f = json.loads(item["felder"] or "{}")
+            f.pop("tags", None)
+            items.append({"quelle": item["quelle"], "titel": item["titel"], "wann": item["wann"],
+                          "auszug": item["auszug"], "felder": f,
+                          "tags": [{"typ": x["typ"], "wert": x["wert"], "herkunft": x["herkunft"]} for x in tags_of(con, uid, item)]})
+        eigen = [{"quelle": r["quelle"], "ext": r["ext"], "plus": _load_list(r["plus"]), "minus": _load_list(r["minus"])}
+                 for r in con.execute("SELECT quelle, ext, plus, minus FROM fund_hand ORDER BY quelle, ext")]
+    return {"eintraege": items, "eigene_schlagworte": eigen}
+
+
 def stand(uid, now=None):
     """The page's tab Einstellungen and Schlagworte: per source the count and the last round, the categories with their
     counts, the own tags. Numbers and the profile's own words only."""
