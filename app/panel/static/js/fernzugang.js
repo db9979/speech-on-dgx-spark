@@ -53,7 +53,7 @@ async function fzLoad(){clearTimeout(FZ.timer);const box=$('fzbox');if(!box||doc
 function fzFehler(e){fzMsg(e.message,true);if(e.status===423)fzLoad()}   // locked meanwhile: the page shows „Entsperren“
 // locked: nothing of the systems stays in the page, not even hidden
 function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus','fzverlauflist','fzcode','fzflist','fzcrumbs'])$(id).textContent='';
-  $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;
+  $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;FZ.ordner='';FZ.neuOrdner=false;FZ.ordnerEdit=false;fzMenuZu();
   for(const id of ['fzkoppelnmodal','fzverlaufmodal'])$(id).style.display='none'}
 // the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
 function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=!!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb;
@@ -77,22 +77,26 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
     const s=fzEl('span','fzst');s.append(fzEl('span','fzdot '+cls),fzEl('b','',String(n||0)),document.createTextNode(t(de,en)));st.appendChild(s)}
   $('fzallevt').textContent=t(`${d.verlauf_tage||30} Tage ›`,`${d.verlauf_tage||30} days ›`);
   const gs=d.geraete||[];if(FZ.sel&&!gs.some(g=>g.id===FZ.sel)){FZ.sel='';FZ.auf=false}
-  if(!FZ.sel&&gs[0]&&!NARROW())FZ.sel=gs[0].id;
+  const ord=d.ordner_an?(d.ordner||[]):null;if(FZ.ordner&&!(ord||[]).some(o=>o.id===FZ.ordner))FZ.ordner='';
+  if(!FZ.sel&&!FZ.ordner&&gs[0]&&!NARROW())FZ.sel=gs[0].id;
   const q=$('fzsuche').value.trim().toLowerCase(),list=$('fzlist');list.textContent='';
   if(!gs.length)list.appendChild(fzEl('div','mut fzleer',t('Noch kein System gekoppelt. „+ System koppeln“ zeigt den Befehl für das neue System.','No system paired yet. "+ Pair a system" shows the command for the new system.')));
   const tr=FZ.treffer&&FZ.treffer.q.toLowerCase()===q?FZ.treffer.t:{};
   const passt=gs.filter(g=>!q||(g.name+' '+(g.os||'')).toLowerCase().includes(q)||!!tr[g.id]),bereit=g=>g.online&&g.erlaubt&&!g.hostkey_falsch&&g.stand!=='abbau';
-  for(const [de,en,teil] of [['Online','Online',passt.filter(bereit)],['Offline oder gesperrt','Offline or blocked',passt.filter(g=>!bereit(g))]]){
+  if(ord)fzOrdnerListe(list,ord,passt,tr,!!q);
+  else for(const [de,en,teil] of [['Online','Online',passt.filter(bereit)],['Offline oder gesperrt','Offline or blocked',passt.filter(g=>!bereit(g))]]){
     if(!teil.length)continue;list.appendChild(fzEl('div','fzgrp',t(de,en)+' · '+teil.length));
-    for(const g of teil){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
-      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark','📝');n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
-      tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
-      const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
-      row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.auf=true;fzShow()};list.appendChild(row)}}
+    for(const g of teil)list.appendChild(fzSysZeile(g,tr))}
   if(q&&!passt.length)list.appendChild(fzEl('div','mut fzleer',t('Kein System passt.','No system matches.')));
   const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
   const o=d.offen||[],jl=$('fzjetztlist');$('fzjetzt').hidden=!o.length;jl.textContent='';for(const x of o)jl.appendChild(fzJetztZeile(x,true));
   fzDetail();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
+// one system in the list on the left: icon, name (📝 with a note, a tag with a session), the second line, a hit in its note
+function fzSysZeile(g,tr){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
+      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark','📝');n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
+      tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
+      const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
+      row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.ordner='';FZ.auf=true;fzShow()};return row}
 // online since, offline since, or why it may not connect: the second line of a system
 function fzWie(g){return g.stand==='abbau'?t('wird abgebaut','being removed'):g.hostkey_falsch?t('Host-Schlüssel falsch','host key wrong')
   :!g.erlaubt?t('darf sich nicht verbinden','may not connect'):g.online?t('online seit ','online since ')+fzZeit(g.online_seit)
@@ -107,6 +111,8 @@ function fzJetztZeile(x,mitSystem){const d=FZ.d,name=((d.geraete||[]).find(g=>g.
     fzEl('small','',(mitSystem?[x.admin,wo,seit]:[t(...(FZ_CLIENT[x.client]||FZ_CLIENT.browser)),wo,seit]).join(' · ')));
   r.append(fzEl('span','fzdot bad'),tx,fzBtn(t('Trennen','Disconnect'),'danger',async()=>{try{await api(`/api/admin/fernzugang/sitzung/${x.id}/trennen`,{method:'POST'});fzLoad()}catch(e){fzFehler(e)}}));return r}
 function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.id===FZ.sel);box.textContent='';box.hidden=!g;
+  const fo=!g&&FZ.ordner&&d.ordner_an?(d.ordner||[]).find(o=>o.id===FZ.ordner):null;
+  if(fo){box.hidden=false;$('fzsplit').classList.toggle('fzauf',!!FZ.auf);fzOrdnerDetail(box,fo);return}
   $('fzsplit').classList.toggle('fzauf',!!g&&!!FZ.auf);if(!g)return;const [lvl,word]=fzStand(g),c=d.counts||{};
   const bk=fzEl('button','fzback','‹ '+t('Alle Systeme','All systems'));bk.type='button';bk.onclick=()=>{FZ.auf=false;fzShow()};box.appendChild(bk);
   const hd=fzEl('div','fzdkopf'),ht=fzEl('div','fzdtext'),nm=fzEl('div','fzdname');nm.append(fzEl('b','',g.name),fzEl('span','pill '+lvl,word));
@@ -177,11 +183,11 @@ async function fzRemove(g){if(g.notiz&&confirm(t(`„${g.name}“ hat eine Notiz
 async function fzEntsperren(){try{await api('/api/admin/fernzugang/entsperren',{method:'POST'});fzMsg('');fzLoad()}catch(e){fzMsg(e.message,true)}}
 async function fzSperren(){try{await api('/api/admin/fernzugang/entsperren',{method:'DELETE'})}catch(e){fzMsg(e.message,true)}fzLeeren();fzLoad()}
 // „System koppeln“: a sheet with the name and the kind of system, then a fresh code; the code is shown once, never in the command
-function fzKoppelnAuf(){$('fzkoppelnmodal').style.display='grid';fzKoppelnZeigen();fzProtokoll();setTimeout(()=>$('fzname').focus(),50)}
+function fzKoppelnAuf(){$('fzkoppelnmodal').style.display='grid';fzKoppelnOrdner();fzKoppelnZeigen();fzProtokoll();setTimeout(()=>$('fzname').focus(),50)}
 function fzOsWahl(os){FZ.os=os;for(const b of $('fzos').querySelectorAll('button')){const on=b.dataset.os===os;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false')}
   $('fzwin').hidden=os!=='windows';$('fzgo').disabled=os==='windows';fzKoppelnZeigen()}
 async function fzKoppeln(){const name=$('fzname').value.trim();if(!name){$('fzname').focus();return}if(FZ.os==='windows')return;
-  try{const r=await api('/api/admin/fernzugang/koppeln',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,origin:location.origin})});
+  try{const r=await api('/api/admin/fernzugang/koppeln',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,origin:location.origin,ordner:$('fzkordner').value||''})});
     FZ.code=Object.assign(await r.json(),{name,bis:Date.now()/1000+0});FZ.code.bis+=FZ.code.gilt_s;$('fzname').value='';fzKoppelnZeigen();fzLoad()}catch(e){fzFehler(e)}}
 function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent='';const k=FZ.code,mac=FZ.os==='mac';
   if(FZ.os==='windows')return;
@@ -645,3 +651,92 @@ window.fzLoad=fzLoad;
 window.fzStart=who=>{const on=!!(who&&who.fernzugang);document.querySelectorAll('nav button[data-s=fern]').forEach(b=>b.hidden=!on)};
 // the own window: only the terminal, over the whole page; it tells its opener it is ready and waits for the ticket
 if(FZ_FENSTER&&$('fzview')){document.body.classList.add('fzfenster');$('fzview').hidden=false;window.opener.postMessage({typ:'fz-bereit'},location.origin)}
+// ---------------------------------------------------------------- Ordner (fernordner.py, Dominik 2026-10-29 „A“)
+// one level of folders like in Mail: collapsible (kept in this browser), „● online / gesamt“, „Ohne Ordner“, „+ Neuer
+// Ordner“; dragging orders folders and systems, „⋯ → Verschieben nach …“ (right click, long press on the phone) moves one
+// system; a click on a folder shows its overview on the right. Folders are only order: every door stays per system.
+function fzZuListe(){try{return JSON.parse(localStorage.getItem('fzordnerzu')||'[]')}catch{return []}}
+function fzZuKlappen(oid){const z=new Set(fzZuListe());z.has(oid)?z.delete(oid):z.add(oid);try{localStorage.setItem('fzordnerzu',JSON.stringify([...z]))}catch{}fzShow()}
+function fzOrdnerVon(g){return g.ordner||''}
+function fzOrdnerListe(list,ord,passt,tr,suche){const zu=new Set(fzZuListe()),gs=FZ.d.geraete||[];
+  if(ord.length)list.appendChild(fzEl('div','fzgrp',t('Ordner','Folders')));
+  for(const o of ord.concat([{id:'',name:t('Ohne Ordner','No folder'),symbol:''}])){
+    const alle=gs.filter(g=>fzOrdnerVon(g)===o.id),teil=passt.filter(g=>fzOrdnerVon(g)===o.id);
+    if(suche&&!teil.length)continue;if(!o.id&&!alle.length&&!ord.length)continue;
+    const auf=suche||!o.id||!zu.has(o.id),kopf=fzEl('div','fzordner'+(o.id&&o.id===FZ.ordner?' on':'')+(o.id?'':' ohne'));kopf.dataset.ordner=o.id;
+    if(o.id){const pf=fzEl('button','fzopf',auf?'▾':'▸');pf.type='button';pf.setAttribute('aria-expanded',auf?'true':'false');
+      pf.setAttribute('aria-label',(auf?t('Zuklappen: ','Collapse: '):t('Aufklappen: ','Expand: '))+o.name);pf.onclick=e=>{e.stopPropagation();fzZuKlappen(o.id)};kopf.appendChild(pf)}
+    const nm=fzEl('button','fzoname');nm.type='button';if(o.symbol)nm.appendChild(fzEl('span','fzosym',o.symbol));nm.appendChild(fzEl('span','',o.name));
+    if(o.id)nm.onclick=()=>{FZ.ordner=o.id;FZ.sel='';FZ.auf=true;fzShow()};else nm.disabled=true;
+    const on=alle.filter(g=>g.online).length,z=fzEl('span','fzozahl');z.append(fzEl('span','fzdot'+(on?' ok':'')),document.createTextNode(` ${on} / ${alle.length}`));
+    z.title=t(`${on} online von ${alle.length}`,`${on} online of ${alle.length}`);kopf.append(nm,z);fzZiehZiel(kopf,o.id,null);
+    if(o.id){kopf.draggable=true;kopf.ondragstart=e=>{FZ.zieh={art:'ordner',id:o.id};e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','')}catch{}}}
+    list.appendChild(kopf);if(!auf)continue;
+    const box=fzEl('div','fzoinhalt');for(const g of teil)box.appendChild(fzSysOrdnerZeile(g,tr));
+    if(!teil.length&&o.id)box.appendChild(fzEl('div','mut fzoleer',t('Leer: ein System hierher ziehen oder „⋯ → Verschieben nach …“.','Empty: drag a system here or "⋯ → Move to …".')));
+    list.appendChild(box)}
+  if(!suche){if(FZ.neuOrdner)list.appendChild(fzOrdnerForm(null));
+    else if(ord.length<(FZ.d.ordner_max||30)){const n=fzEl('button','fzlink fzneuordner',t('+ Neuer Ordner','+ New folder'));n.type='button';n.id='fzneuordner';n.onclick=()=>{FZ.neuOrdner=true;fzShow();setTimeout(()=>{const i=$('fzoname');if(i)i.focus()},30)};list.appendChild(n)}}}
+// a system inside a folder: draggable, with „⋯“ (and right click, long press) for „Verschieben nach …“
+function fzSysOrdnerZeile(g,tr){const w=fzEl('div','fzrowwrap'),row=fzSysZeile(g,tr),m=fzEl('button','fzmehr','⋯');m.type='button';
+  m.setAttribute('aria-label',t('Mehr zu ','More for ')+g.name);m.setAttribute('aria-haspopup','menu');m.onclick=e=>{e.stopPropagation();fzOrdnerMenu(g,m)};
+  w.append(row,m);w.draggable=true;w.ondragstart=e=>{FZ.zieh={art:'sys',id:g.id};w.classList.add('zieht');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','')}catch{}};
+  w.ondragend=()=>{w.classList.remove('zieht');fzZiehEnde()};fzZiehZiel(w,fzOrdnerVon(g),g.id);
+  row.oncontextmenu=e=>{e.preventDefault();fzOrdnerMenu(g,m)};
+  let lang=0;row.addEventListener('touchstart',()=>{clearTimeout(lang);lang=setTimeout(()=>{lang=-1;fzOrdnerMenu(g,m)},550)},{passive:true});
+  row.addEventListener('touchend',e=>{if(lang===-1)e.preventDefault();clearTimeout(lang);lang=0});row.addEventListener('touchmove',()=>{clearTimeout(lang);lang=0},{passive:true});
+  return w}
+// where something dragged may land: on a folder (a system goes to its end, a folder before it) or before a system
+function fzZiehZiel(el,oid,vor){el.ondragover=e=>{const z=FZ.zieh;if(!z||(z.art==='ordner'&&(!oid||vor)))return;e.preventDefault();el.classList.add('ziel')};
+  el.ondragleave=()=>el.classList.remove('ziel');
+  el.ondrop=e=>{const z=FZ.zieh;el.classList.remove('ziel');if(!z)return;e.preventDefault();e.stopPropagation();FZ.zieh=null;
+    if(z.art==='ordner'){if(oid&&!vor&&z.id!==oid)fzOrdnung(z.id,oid,null,null)}else if(z.id!==vor)fzOrdnung(null,null,z.id,{oid,vor})}}
+function fzZiehEnde(){FZ.zieh=null;for(const e of document.querySelectorAll('#fzlist .ziel'))e.classList.remove('ziel')}
+// the whole order after a drop: folders (one moved before another) and systems (one moved into a folder, maybe before another)
+async function fzOrdnung(ordner,vorOrdner,gid,ziel){const d=FZ.d,ord=(d.ordner||[]).map(o=>o.id);let gs=(d.geraete||[]).map(g=>[g.id,fzOrdnerVon(g)]);
+  if(ordner){ord.splice(ord.indexOf(ordner),1);ord.splice(ord.indexOf(vorOrdner),0,ordner)}
+  if(gid){gs=gs.filter(p=>p[0]!==gid);const i=ziel.vor?gs.findIndex(p=>p[0]===ziel.vor):-1;
+    if(i>=0)gs.splice(i,0,[gid,ziel.oid]);else{let j=-1;gs.forEach((p,k)=>{if(p[1]===ziel.oid)j=k});gs.splice(j>=0?j+1:gs.length,0,[gid,ziel.oid])}}
+  try{await api('/api/admin/fernzugang/ordnung',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ordner:ord,systeme:gs})});fzLoad()}catch(e){fzFehler(e)}}
+// „⋯ → Verschieben nach …“: a small menu with the folders and „Ohne Ordner“
+function fzOrdnerMenu(g,an){fzMenuZu();const m=fzEl('div','fzomenu');m.id='fzomenu';m.setAttribute('role','menu');m.appendChild(fzEl('div','fzomkopf',t('Verschieben nach …','Move to …')));
+  for(const o of (FZ.d.ordner||[]).concat([{id:'',name:t('Ohne Ordner','No folder'),symbol:''}])){const b=fzEl('button','',(o.symbol?o.symbol+' ':'')+o.name);b.type='button';b.setAttribute('role','menuitem');
+    b.disabled=fzOrdnerVon(g)===o.id;b.onclick=()=>{fzMenuZu();fzVerschieben(g.id,o.id)};m.appendChild(b)}
+  document.body.appendChild(m);const r=an.getBoundingClientRect();m.style.top=Math.min(innerHeight-m.offsetHeight-8,r.bottom+4)+'px';m.style.left=Math.max(8,Math.min(innerWidth-m.offsetWidth-8,r.right-m.offsetWidth))+'px';
+  const f=m.querySelector('button:not([disabled])');if(f)f.focus();
+  setTimeout(()=>{document.addEventListener('pointerdown',fzMenuAussen,true);document.addEventListener('keydown',fzMenuTaste,true)},0)}
+function fzMenuAussen(e){const m=$('fzomenu');if(m&&!m.contains(e.target))fzMenuZu()}
+function fzMenuTaste(e){if(e.key==='Escape'){e.preventDefault();fzMenuZu()}}
+function fzMenuZu(){const m=$('fzomenu');if(m)m.remove();document.removeEventListener('pointerdown',fzMenuAussen,true);document.removeEventListener('keydown',fzMenuTaste,true)}
+async function fzVerschieben(gid,oid){try{await api(`/api/admin/fernzugang/geraete/${gid}/ordner`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ordner:oid})});fzLoad()}catch(e){fzFehler(e)}}
+// a new folder (o null) or „Umbenennen“ / „Symbol“ of one: symbol and name in one row
+function fzOrdnerForm(o){const f=fzEl('form','fzoform'),sy=document.createElement('input'),nm=document.createElement('input');
+  sy.id='fzosymbol';sy.maxLength=8;sy.value=o?o.symbol:'📁';sy.setAttribute('aria-label',t('Symbol','Symbol'));sy.className='fzosyminp';
+  nm.id='fzoname';nm.maxLength=40;nm.value=o?o.name:'';nm.placeholder=t('Name des Ordners','Folder name');nm.setAttribute('aria-label',t('Name des Ordners','Folder name'));nm.autocomplete='off';
+  const ok=fzEl('button','b p',o?t('Sichern','Save'):t('Anlegen','Create'));ok.type='submit';const ab=fzBtn(t('Abbrechen','Cancel'),'',()=>{FZ.neuOrdner=false;FZ.ordnerEdit=false;fzShow()});
+  f.append(sy,nm,ok,ab);f.onsubmit=async e=>{e.preventDefault();const body={name:nm.value.trim(),symbol:sy.value.trim()};if(!body.name){nm.focus();return}
+    try{const r=await api(o?`/api/admin/fernzugang/ordner/${o.id}`:'/api/admin/fernzugang/ordner',{method:o?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();FZ.neuOrdner=false;FZ.ordnerEdit=false;if(!o&&d.id){FZ.ordner=d.id;FZ.sel=''}fzLoad()}catch(e){fzFehler(e)}};
+  nm.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();ab.click()}};return f}
+// the folder's overview on the right: its numbers, „Umbenennen“, „Symbol“, „Alle aktualisieren“, „Löschen“ and its systems
+function fzOrdnerDetail(box,o){const gs=(FZ.d.geraete||[]).filter(g=>fzOrdnerVon(g)===o.id),on=gs.filter(g=>g.online).length,nz=gs.filter(g=>g.notiz).length;
+  const bk=fzEl('button','fzback','‹ '+t('Alle Systeme','All systems'));bk.type='button';bk.onclick=()=>{FZ.auf=false;FZ.ordner='';fzShow()};box.appendChild(bk);
+  const hd=fzEl('div','fzdkopf fzokopf'),ht=fzEl('div','fzdtext');hd.appendChild(fzEl('span','fzosymgross',o.symbol||'📁'));
+  ht.append(fzEl('div','fzdname',''),fzEl('div','mut',[t(`${gs.length} Systeme`,`${gs.length} systems`),t(`${on} online`,`${on} online`),nz?t(`${nz} mit Notiz`,`${nz} with a note`):''].filter(Boolean).join(' · ')));
+  ht.firstChild.appendChild(fzEl('b','',o.name));hd.appendChild(ht);box.appendChild(hd);
+  if(FZ.ordnerEdit){box.appendChild(fzOrdnerForm(o));setTimeout(()=>{const i=$('fzoname');if(i&&document.activeElement!==i&&document.activeElement!==$('fzosymbol'))i.focus()},30)}
+  const kn=fzEl('div','fzknoepfe');const um=fzBtn(t('Umbenennen','Rename'),'fzk',()=>{FZ.ordnerEdit=true;fzShow()});um.id='fzoumbenennen';
+  const sy=fzBtn(t('Symbol','Symbol'),'fzk',()=>{FZ.ordnerEdit=true;fzShow();setTimeout(()=>{const i=$('fzosymbol');if(i){i.focus();i.select()}},40)});
+  const akt=fzAktBereit(gs),ak=fzBtn(t('Alle aktualisieren','Update all')+(akt.length?' ('+akt.length+')':''),'fzk',()=>fzAktualisieren(akt.map(g=>g.id)));ak.disabled=!akt.length;ak.id='fzoakt';
+  const del=fzBtn(t('Löschen …','Delete …'),'danger',async()=>{if(!confirm(t(`Ordner „${o.name}“ löschen? Seine ${gs.length} Systeme kommen nach „Ohne Ordner“; kein System wird gelöscht.`,`Delete the folder "${o.name}"? Its ${gs.length} systems go to "No folder"; no system is deleted.`)))return;
+    try{await api(`/api/admin/fernzugang/ordner/${o.id}`,{method:'DELETE'});FZ.ordner='';FZ.auf=false;fzLoad()}catch(e){fzFehler(e)}});del.id='fzoloeschen';
+  kn.append(um,sy,ak,fzEl('span','fzfill'),del);box.appendChild(kn);
+  const grid=fzEl('div','fzokarten');for(const g of gs){const [lvl,word]=fzStand(g),k=fzEl('button','fzokarte');k.type='button';
+    const tx=fzEl('span','fzrtext');tx.append(fzEl('b','',g.name),fzEl('small','',[word,g.anker?t('Anker ','anchor ')+g.anker:''].filter(Boolean).join(' · ')));
+    k.append(fzIcon(g),tx,fzEl('span','fzdot '+lvl));k.onclick=()=>{FZ.sel=g.id;FZ.ordner='';FZ.auf=true;fzShow()};grid.appendChild(k)}
+  if(!gs.length)grid.appendChild(fzEl('div','mut',t('Noch kein System in diesem Ordner.','No system in this folder yet.')));box.appendChild(grid)}
+// „Koppeln“: the folder the new system lands in (only while folders are on and there is one)
+function fzKoppelnOrdner(){const s=$('fzkordner');if(!s)return;const ord=FZ.d&&FZ.d.ordner_an?FZ.d.ordner||[]:[];$('fzkordnerrow').hidden=!ord.length;
+  const was=s.value||FZ.ordner||'';s.textContent='';const leer=document.createElement('option');leer.value='';leer.textContent=t('Ohne Ordner','No folder');s.appendChild(leer);
+  for(const o of ord){const x=document.createElement('option');x.value=o.id;x.textContent=(o.symbol?o.symbol+' ':'')+o.name;s.appendChild(x)}
+  s.value=ord.some(o=>o.id===was)?was:''}

@@ -1774,5 +1774,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Notizen im Fernzugang** (Funktionen → Zugang → „Notizen im Fernzugang“; baut auf „Fernzugang zu Servern“): Zu jedem System eine eigene Notiz: im Kasten „Notizen“ unter „Angaben“ und im Reiter „Notizen“ neben dem Assistenten am Terminal, auch im Vollbild.
 
+- **Ordner im Fernzugang** (Funktionen → Zugang → „Ordner im Fernzugang“; baut auf „Fernzugang zu Servern“): Die Systeme links in Ordnern wie in Mail: eine Ebene, Name und Symbol frei wählbar, auf- und zuklappbar; zugeklappt zeigt der Ordner „● online / gesamt“.
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

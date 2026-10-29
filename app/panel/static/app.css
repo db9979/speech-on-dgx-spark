@@ -2992,6 +2992,35 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fznzins{flex:none;border:0;border-radius:6px;padding:3px 8px;background:var(--acc);color:#fff;font:600 12px var(--font,system-ui);cursor:pointer}
 .fznzw{margin:6px 0;font-size:13px}.fznzlesen{margin-top:8px}.fznzfass{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
 .fznzfrow{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px}.fznzmark{margin-left:4px;font-size:12px}
+/* Ordner im Fernzugang (fernordner.py): folders like in Mail, drag & drop, „⋯ → Verschieben nach …“, the folder's overview */
+.fzordner{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:10px;margin-top:2px}
+.fzordner.on{background:color-mix(in srgb,var(--acc) 12%,transparent);outline:1.5px solid color-mix(in srgb,var(--acc) 55%,transparent)}
+.fzordner.ziel,.fzrowwrap.ziel{outline:2px dashed var(--acc);outline-offset:-2px}
+.fzordner.ohne .fzoname{color:var(--mut);font-weight:500}
+.fzopf{border:0;background:none;color:var(--mut);font:inherit;width:22px;cursor:pointer;padding:2px}
+.fzoname{flex:1;display:flex;align-items:center;gap:6px;border:0;background:none;color:inherit;font:inherit;font-weight:600;text-align:left;cursor:pointer;padding:4px 2px;min-width:0}
+.fzoname:disabled{cursor:default}.fzosym{font-size:15px}
+.fzozahl{display:flex;align-items:center;gap:4px;color:var(--mut);font-size:12.5px;white-space:nowrap}
+.fzoinhalt{margin-left:14px;padding-left:6px;border-left:1px solid var(--line)}
+.fzoleer{font-size:12.5px;padding:6px 8px}
+.fzrowwrap{position:relative;border-radius:10px}.fzrowwrap.zieht{opacity:.45}
+.fzrowwrap .fzrow{padding-right:34px}
+.fzmehr{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mut);font:inherit;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;opacity:0}
+.fzrowwrap:hover .fzmehr,.fzmehr:focus-visible{opacity:1}
+@media (hover:none){.fzmehr{opacity:1}}
+.fzomenu{position:fixed;z-index:1000;min-width:200px;max-width:calc(100vw - 16px);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column}
+.fzomenu button{border:0;background:none;color:inherit;font:inherit;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer}
+.fzomenu button:hover:not(:disabled),.fzomenu button:focus-visible{background:color-mix(in srgb,var(--line) 45%,transparent)}
+.fzomenu button:disabled{color:var(--mut);cursor:default}
+.fzomkopf{font-size:12.5px;color:var(--mut);padding:6px 10px 4px}
+.fzneuordner{margin:10px 6px}
+.fzoform{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 4px}
+.fzoform input{min-width:0}.fzoform #fzoname{flex:1 1 140px}.fzosyminp{width:3.2em;text-align:center}
+.fzokopf{align-items:center}.fzosymgross{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;background:color-mix(in srgb,var(--acc) 14%,transparent);font-size:24px}
+.fzokarten{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:12px}
+.fzokarte{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;padding:10px;border:1px solid var(--line);border-radius:12px;background:none;color:inherit;font:inherit;cursor:pointer}
+.fzokarte:hover{background:color-mix(in srgb,var(--line) 30%,transparent)}
+.fzkordner{display:flex;align-items:center;gap:8px}
 .fznzsnip{display:block;color:var(--mut)}.fznzsnip mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}
 .fzshead{flex:none;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line)}.fzshead b{flex:1}
 .fzfrageform{flex:none;display:flex;gap:6px;align-items:flex-end;padding:8px 10px 0;border-top:1px solid var(--line)}.fzfrageform textarea{flex:1;min-width:0;resize:none}

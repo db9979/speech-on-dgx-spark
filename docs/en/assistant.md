@@ -1774,5 +1774,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Notes in remote access** (Features → Access → "Notes in remote access"; builds on "Remote access to servers"): A note of its own for each system: in the box "Notes" below "Details" and in the tab "Notes" beside the assistant at the terminal, also in full screen.
 
+- **Folders in remote access** (Features → Access → "Folders in remote access"; builds on "Remote access to servers"): The systems on the left in folders like in Mail: one level, name and symbol of your choice, collapsible; collapsed, a folder shows "● online / total".
+
 - **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

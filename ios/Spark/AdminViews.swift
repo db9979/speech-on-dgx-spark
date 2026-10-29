@@ -1979,6 +1979,14 @@ struct FernServer: Identifiable {
     let fp: String
     let sitzungen: Int
     let notiz: Bool
+    let ordner: String
+}
+
+/// A folder of Fernzugang → Systeme (fernordner.py): only an order; every door stays per system.
+struct FernOrdner: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let symbol: String
 }
 
 /// The cards of Fernzugang → Systeme in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
@@ -1993,6 +2001,7 @@ struct FernzugangView: View {
     @State private var open: PanelPlace?
     @State private var askAll = false
     @State private var askRemove: FernServer?
+    @State private var folders: [FernOrdner] = []
 
     var body: some View {
         List {
@@ -2017,6 +2026,18 @@ struct FernzugangView: View {
                 }
                 ForEach(servers) { g in
                     Section {
+                        if foldersOn, g.stand != "abbau" {
+                            Menu {
+                                Section("Verschieben nach …") {
+                                    ForEach(folders) { o in
+                                        Button { Task { await move(g, o.id) } } label: { Text(verbatim: "\(o.symbol) \(o.name)") }.disabled(g.ordner == o.id)
+                                    }
+                                    Button("Ohne Ordner") { Task { await move(g, "") } }.disabled(g.ordner.isEmpty)
+                                }
+                            } label: {
+                                LabeledContent("Ordner") { Text(verbatim: folderName(g.ordner)) }
+                            }
+                        }
                         LabeledContent {
                             Text(Self.word(g)).foregroundStyle(Self.color(g))
                         } label: {
@@ -2049,8 +2070,21 @@ struct FernzugangView: View {
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
                             Button("Entfernen", role: .destructive) { askRemove = g }
                         }
+                    } header: {
+                        if foldersOn, g.id == firstIn(g.ordner) { Text(verbatim: folderHead(g.ordner)) }
                     } footer: {
                         if g.stand == "abbau" { Text("Wird beim nächsten Kontakt abgebaut. Von Hand auf dem Server: sudo spark-anker entfernen") }
+                    }
+                }
+                if foldersOn {
+                    Section {
+                        NavigationLink {
+                            FernOrdnerView(folders: folders, servers: servers, reload: { await load() })
+                        } label: {
+                            LabeledContent("Ordner verwalten") { Text(verbatim: "\(folders.count)") }
+                        }
+                    } footer: {
+                        Text("Ordner ordnen nur die Liste; Rechte und Entsperren gelten weiter je System. „Ordner“ bei einem System verschiebt es.")
                     }
                 }
                 Section {
@@ -2081,7 +2115,29 @@ struct FernzugangView: View {
         if let url = SparkAPI.panelLink("go=fern") { open = PanelPlace(url: url) }
     }
 
+    private var foldersOn: Bool { d["ordner_an"] as? Bool == true }
+    private func folderName(_ id: String) -> String {
+        guard let o = folders.first(where: { $0.id == id }) else { return String(localized: "Ohne Ordner") }
+        return "\(o.symbol) \(o.name)"
+    }
+    /// the first system of a folder carries its header: symbol, name and „● online / gesamt“
+    private func firstIn(_ id: String) -> String? { servers.first(where: { $0.ordner == id })?.id }
+    private func folderHead(_ id: String) -> String {
+        let all = servers.filter { $0.ordner == id }
+        return "\(folderName(id)) · ● \(all.filter { $0.online }.count) / \(all.count)"
+    }
+
+    private func move(_ g: FernServer, _ to: String) async {
+        do { _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/geraete/\(g.id)/ordner", body: ["ordner": to]); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load()
+    }
+
     static func num(_ v: Any?) -> Int { (v as? NSNumber)?.intValue ?? 0 }
+    static func folderId(_ v: Any?) -> String {
+        let s = v as? String ?? ""
+        return s.range(of: #"^o_[0-9a-f]{8}$"#, options: .regularExpression) != nil ? s : ""
+    }
     private static func date(_ v: Any?) -> Date? {
         let s = (v as? NSNumber)?.doubleValue ?? 0
         return s > 0 ? Date(timeIntervalSince1970: s) : nil
@@ -2104,7 +2160,20 @@ struct FernzugangView: View {
                                   onlineSeit: Self.date(x["online_seit"]), weg: Self.date(x["weg"]), zuletzt: Self.date(x["zuletzt"]),
                                   stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true,
                                   hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
-                                  sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false)
+                                  sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false,
+                                  ordner: Self.folderId(x["ordner"]))
+            }
+            folders = (d["ordner"] as? [[String: Any]] ?? []).prefix(30).compactMap { o in
+                let id = Self.folderId(o["id"])
+                guard !id.isEmpty else { return nil }
+                return FernOrdner(id: id, name: String((o["name"] as? String ?? "").prefix(40)), symbol: String((o["symbol"] as? String ?? "📁").prefix(8)))
+            }
+            if foldersOn {          // the panel's order: folder by folder, „Ohne Ordner“ last
+                let rank = Dictionary(uniqueKeysWithValues: folders.enumerated().map { ($1.id, $0) })
+                servers = servers.enumerated().sorted { a, b in
+                    let ra = rank[a.element.ordner] ?? folders.count, rb = rank[b.element.ordner] ?? folders.count
+                    return ra != rb ? ra < rb : a.offset < b.offset
+                }.map { $0.element }
             }
             error = nil
         } catch { self.error = error.localizedDescription }
@@ -2141,6 +2210,95 @@ struct FernzugangView: View {
             error = nil
         } catch { self.error = error.localizedDescription }
         await load()
+    }
+}
+
+
+/// „Ordner verwalten“ in the app (fernordner.py): the same folders as on the panel's page: new, rename, symbol,
+/// order (drag), delete (its systems go to „Ohne Ordner“; no system is deleted).
+struct FernOrdnerView: View {
+    @State var folders: [FernOrdner]
+    let servers: [FernServer]
+    let reload: () async -> Void
+    @State private var edit: FernOrdner?
+    @State private var adding = false
+    @State private var name = ""
+    @State private var symbol = "📁"
+    @State private var askDelete: FernOrdner?
+    @State private var error: String?
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            Section {
+                ForEach(folders) { o in
+                    Button {
+                        name = o.name; symbol = o.symbol; edit = o
+                    } label: {
+                        LabeledContent {
+                            let all = servers.filter { $0.ordner == o.id }
+                            Text(verbatim: "● \(all.filter { $0.online }.count) / \(all.count)")
+                        } label: { Text(verbatim: "\(o.symbol) \(o.name)") }
+                    }
+                    .swipeActions { Button("Löschen", role: .destructive) { askDelete = o } }
+                }
+                .onMove { from, to in
+                    folders.move(fromOffsets: from, toOffset: to)
+                    Task { await saveOrder() }
+                }
+                if folders.isEmpty { Text("Noch kein Ordner.").foregroundStyle(.secondary) }
+            } footer: {
+                Text("Antippen: Umbenennen und Symbol. Ziehen ordnet, Wischen löscht; die Systeme kommen nach „Ohne Ordner“.")
+            }
+            Section { Button("Neuer Ordner") { name = ""; symbol = "📁"; adding = true } }
+        }
+        .navigationTitle("Ordner")
+        .toolbar { EditButton() }
+        .alert("Ordner", isPresented: Binding(get: { edit != nil || adding }, set: { if !$0 { edit = nil; adding = false } })) {
+            TextField("Name des Ordners", text: $name)
+            TextField("Symbol", text: $symbol)
+            Button("Sichern") { Task { await save() } }
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .confirmationDialog("Diesen Ordner löschen? Seine Systeme kommen nach „Ohne Ordner“; kein System wird gelöscht.",
+                            isPresented: Binding(get: { askDelete != nil }, set: { if !$0 { askDelete = nil } }), titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) { if let o = askDelete { Task { await delete(o) } } }
+        }
+    }
+
+    private func save() async {
+        let body: [String: Any] = ["name": String(name.trimmingCharacters(in: .whitespaces).prefix(40)), "symbol": String(symbol.trimmingCharacters(in: .whitespaces).prefix(8))]
+        do {
+            if let o = edit { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/ordner/\(o.id)", body: body) }
+            else { _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/ordner", body: body) }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        edit = nil; adding = false
+        await refresh()
+    }
+
+    private func delete(_ o: FernOrdner) async {
+        do { _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/ordner/\(o.id)"); error = nil }
+        catch { self.error = error.localizedDescription }
+        await refresh()
+    }
+
+    private func saveOrder() async {
+        let pairs: [[String]] = servers.map { [$0.id, $0.ordner] }
+        do { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/ordnung", body: ["ordner": folders.map { $0.id }, "systeme": pairs]); error = nil }
+        catch { self.error = error.localizedDescription }
+        await reload()
+    }
+
+    private func refresh() async {
+        await reload()
+        if let d = try? await AdminSession.shared.object("GET", "api/admin/fernzugang") {
+            folders = (d["ordner"] as? [[String: Any]] ?? []).prefix(30).compactMap { o in
+                let id = FernzugangView.folderId(o["id"])
+                guard !id.isEmpty else { return nil }
+                return FernOrdner(id: id, name: String((o["name"] as? String ?? "").prefix(40)), symbol: String((o["symbol"] as? String ?? "📁").prefix(8)))
+            }
+        }
     }
 }
 

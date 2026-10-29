@@ -18220,6 +18220,86 @@
           }
         }
       }
+    },
+    "Ohne Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No folder"
+          }
+        }
+      }
+    },
+    "Ordner ordnen nur die Liste; Rechte und Entsperren gelten weiter je System. „Ordner“ bei einem System verschiebt es.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders only order the list; rights and unlock still apply per system. “Folder” on a system moves it."
+          }
+        }
+      }
+    },
+    "Noch kein Ordner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No folder yet."
+          }
+        }
+      }
+    },
+    "Antippen: Umbenennen und Symbol. Ziehen ordnet, Wischen löscht; die Systeme kommen nach „Ohne Ordner“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap: rename and symbol. Drag to order, swipe to delete; the systems go to “No folder”."
+          }
+        }
+      }
+    },
+    "Ordner verwalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage folders"
+          }
+        }
+      }
+    },
+    "Name des Ordners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder name"
+          }
+        }
+      }
+    },
+    "Symbol": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
+          }
+        }
+      }
+    },
+    "Diesen Ordner löschen? Seine Systeme kommen nach „Ohne Ordner“; kein System wird gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this folder? Its systems go to “No folder”; no system is deleted."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

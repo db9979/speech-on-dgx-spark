@@ -4377,6 +4377,13 @@
 "titel": "Fernzugang: Notizen je System",
 "text": "Funktionen → Fernzugang zu Servern → Notizen im Fernzugang an. Seite entsperren, ein System öffnen: unter Angaben erscheint der Kasten Notizen. Eine Überschrift, eine Liste und einen Code-Block mit uptime schreiben; nach einer Sekunde steht ✓ gespeichert. Shell öffnen, rechts den Reiter 📝 Notizen wählen und bei uptime auf Ins Terminal: der Befehl steht in der Zeile, ohne Enter. Eine Zeile passwort: geheim123 tippen: die Warnung gehört in den Tresor erscheint mit Zeile entfernen. Links nach einem Wort aus der Notiz suchen: das System zeigt 📝 mit Ausschnitt. Assistent fragen, was in der Notiz steht (Haken an), dann Haken aus und erneut fragen: er kennt sie nicht mehr. Fassungen: eine ältere wiederherstellen. iPhone: Spark verwalten → Fernzugang → System → Notiz zeigt dieselbe Notiz. Entfernen des Systems bietet zuerst den Download an.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P650",
+"v": 1232,
+"titel": "Fernzugang: Ordner",
+"text": "Funktionen → Fernzugang zu Servern → Ordner im Fernzugang an. Seite entsperren, links „+ Neuer Ordner“: zwei Ordner anlegen (z. B. 🏠 Zuhause, 🏢 Kunde). Ein System per Ziehen in einen Ordner legen, ein anderes über ⋯ → Verschieben nach …; am Handy lange auf ein System drücken. Einen Ordner zuklappen, Seite neu laden: er bleibt zu und zeigt ● online / gesamt. Nach einem System suchen: es erscheint auch im zugeklappten Ordner. Ordner anklicken: rechts Umbenennen, Symbol, Alle aktualisieren, Löschen; Löschen lässt die Systeme unter Ohne Ordner. Koppeln mit gewähltem Ordner: das neue System landet dort. iPhone: Spark verwalten → Fernzugang zeigt dieselben Ordner, Ordner verwalten ordnet und benennt um.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

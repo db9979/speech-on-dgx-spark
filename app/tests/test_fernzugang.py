@@ -1396,7 +1396,7 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen"})
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner"})
         self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
@@ -1416,7 +1416,7 @@ class Pieces(Base):
         st = ADMIN.get("/api/status").json()["fernzugang"]
         self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
                               "gehalten": 0, "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1,
-                              "notizen": 0})
+                              "notizen": 0, "ordner": 0})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()
@@ -2425,6 +2425,135 @@ class InBrowser(unittest.TestCase):
                 self.assertEqual(out["hint"], [False, "Strg+A D = abkoppeln (die Sitzung dort läuft weiter)"])
                 self.assertTrue(out["tmux"].startswith("Strg+B D"))
                 self.assertEqual(out["sudo"], ["sudo ls -la /run/screen/", "sudo -u <benutzer> screen -x <name>"])
+                await br.close()
+        asyncio.run(go())
+
+    def test_folders_collapse_search_move_drag_and_overview(self):
+        """Ordner (Dominik 2026-10-29 09:18 „A“): folders like in Mail with „● online / gesamt“, collapsed per browser,
+        the search across folders, „⋯ → Verschieben nach …“ (long press on the phone), drag & drop sends the whole order,
+        a click on a folder shows its overview, „Koppeln“ offers the folder."""
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+        now = int(time.time())
+
+        def sys(gid, name, ordner, online):
+            return {"id": gid, "name": name, "os": "Debian 13", "anker": "1.3.0", "seit": now - 9000, "online": online,
+                    "online_seit": now - 600 if online else None, "weg": None if online else now - 60, "stand": "ok",
+                    "erlaubt": True, "hostkey_falsch": False, "fp": "SHA256:x", "art": "linux", "bild": "", "bild_anker": True,
+                    "sitzungen": 0, "anker_neu": "", "anker_fern": True, "update_stand": "", "notiz": False, "ordner": ordner}
+        state = {"on": True, "gesperrt": False, "notaus": False, "entsperrt_bis": now + 3000, "entsperrt_min": 60, "max": 2,
+                 "leerlauf": 15, "verlauf_tage": 30, "counts": {"online": 3, "gekoppelt": 4, "sitzungen": 0},
+                 "ordner_an": True, "ordner_max": 30, "offen": [], "verlauf": [], "notizen": False,
+                 "ordner": [{"id": "o_00000001", "name": "Zuhause", "symbol": "🏠"}, {"id": "o_00000002", "name": "Kleiberit", "symbol": "🏢"}],
+                 "geraete": [sys("g_000000000001", "speech", "o_00000001", True), sys("g_000000000002", "tars", "o_00000001", True),
+                             sys("g_000000000003", "kleiberit-test", "o_00000002", True), sys("g_000000000004", "mac", "", False)]}
+        sent = []
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                for width, touch in ((1280, False), (390, True)):
+                    ctx = await br.new_context(viewport={"width": width, "height": 900}, locale="de-DE", bypass_csp=True, has_touch=touch)
+
+                    async def page(route):
+                        await route.fulfill(status=200, content_type="application/json", body=json.dumps(state))
+
+                    async def change(route):
+                        sent.append((route.request.method, route.request.url.split("/api/admin/fernzugang")[1],
+                                     json.loads(route.request.post_data or "null")))
+                        await route.fulfill(status=200, content_type="application/json", body='{"ok":true,"id":"o_00000003"}')
+                    await ctx.route("**/api/admin/fernzugang", page)
+                    await ctx.route("**/api/admin/fernzugang/ord*", change)
+                    await ctx.route("**/api/admin/fernzugang/ord*/*", change)
+                    await ctx.route("**/api/admin/fernzugang/geraete/*/ordner", change)
+                    pg = await ctx.new_page()
+                    await pg.goto(base + "/")
+                    await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                    await pg.goto(base + "/")
+                    await pg.wait_for_function(PAGE_READY, timeout=30000)
+                    await pg.add_style_tag(content="#wizmodal{display:none!important}")
+                    await pg.evaluate("try{localStorage.removeItem('fzordnerzu')}catch{}")
+                    await pg.evaluate("goSec('fern')")
+                    await pg.wait_for_function("document.querySelectorAll('#fzlist .fzordner').length===3", timeout=15000)
+                    heads = await pg.evaluate("[...document.querySelectorAll('#fzlist .fzordner')].map(o=>[o.querySelector('.fzoname').textContent,o.querySelector('.fzozahl').textContent.trim()])")
+                    self.assertEqual(heads, [["🏠Zuhause", "2 / 2"], ["🏢Kleiberit", "1 / 1"], ["Ohne Ordner", "0 / 1"]])
+                    names = "[...document.querySelectorAll('#fzlist .fzrow .fzrname b')].map(b=>b.textContent)"
+                    self.assertEqual(await pg.evaluate(names), ["speech", "tars", "kleiberit-test", "mac"])
+                    # collapsed: kept in this browser, the systems hidden, the numbers stay
+                    await pg.locator("#fzlist .fzordner .fzopf").first.click()
+                    self.assertEqual(await pg.evaluate(names), ["kleiberit-test", "mac"])
+                    self.assertEqual(await pg.evaluate("JSON.parse(localStorage.getItem('fzordnerzu'))"), ["o_00000001"])
+                    await pg.evaluate("fzShow()")
+                    self.assertEqual(await pg.evaluate(names), ["kleiberit-test", "mac"])
+                    # the search finds across folders, a collapsed one too, and leaves out folders without a hit
+                    await pg.fill("#fzsuche", "tars")
+                    await pg.wait_for_function(names + ".join()==='tars'", timeout=5000)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#fzlist .fzordner').length"), 1)
+                    await pg.fill("#fzsuche", "")
+                    await pg.wait_for_function(names + ".length===2", timeout=5000)
+                    await pg.locator("#fzlist .fzordner .fzopf").first.click()
+                    # „⋯ → Verschieben nach …“ (the phone: a long press on the row)
+                    sent.clear()
+                    if touch:
+                        await pg.evaluate("""(()=>{const r=document.querySelectorAll('#fzlist .fzrow')[1];
+                            r.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[new Touch({identifier:1,target:r,clientX:5,clientY:5})]}))})()""")
+                    else:
+                        await pg.locator("#fzlist .fzrowwrap").nth(1).hover()
+                        await pg.locator("#fzlist .fzmehr").nth(1).click()
+                    await pg.wait_for_function("!!$('fzomenu')", timeout=5000)
+                    menu = await pg.evaluate("[...$('fzomenu').querySelectorAll('button')].map(b=>[b.textContent,b.disabled])")
+                    self.assertEqual(menu, [["🏠 Zuhause", True], ["🏢 Kleiberit", False], ["Ohne Ordner", False]])
+                    await pg.locator("#fzomenu button", has_text="Kleiberit").click()
+                    await pg.wait_for_function("!$('fzomenu')", timeout=5000)
+                    for _ in range(50):
+                        if sent:
+                            break
+                        await pg.wait_for_timeout(100)
+                    self.assertEqual(sent[0], ("POST", "/geraete/g_000000000002/ordner", {"ordner": "o_00000002"}))
+                    if not touch:
+                        # drag & drop: „mac“ onto the folder Zuhause, then the folder Kleiberit before Zuhause
+                        sent.clear()
+                        await pg.drag_and_drop("#fzlist .fzrowwrap:has(.fzrow[data-id=g_000000000004])", "#fzlist .fzordner[data-ordner=o_00000001]")
+                        for _ in range(50):
+                            if sent:
+                                break
+                            await pg.wait_for_timeout(100)
+                        m, path, body = sent[0]
+                        self.assertEqual((m, path), ("PUT", "/ordnung"))
+                        self.assertEqual(body["ordner"], ["o_00000001", "o_00000002"])
+                        self.assertEqual(body["systeme"], [["g_000000000001", "o_00000001"], ["g_000000000002", "o_00000001"],
+                                                           ["g_000000000004", "o_00000001"], ["g_000000000003", "o_00000002"]])
+                        sent.clear()
+                        await pg.drag_and_drop("#fzlist .fzordner[data-ordner=o_00000002]", "#fzlist .fzordner[data-ordner=o_00000001]")
+                        for _ in range(50):
+                            if sent:
+                                break
+                            await pg.wait_for_timeout(100)
+                        self.assertEqual(sent[0][2]["ordner"], ["o_00000002", "o_00000001"])
+                    # a click on a folder: its overview on the right
+                    await pg.locator("#fzlist .fzordner[data-ordner=o_00000001] .fzoname").click()
+                    await pg.wait_for_function("!!$('fzoumbenennen')", timeout=5000)
+                    over = await pg.evaluate("[$('fzdetail').querySelector('.fzdname').textContent,$('fzdetail').querySelector('.fzdkopf .mut').textContent,document.querySelectorAll('#fzdetail .fzokarte').length,!!$('fzoloeschen'),$('fzoakt').disabled]")
+                    self.assertEqual(over, ["Zuhause", "2 Systeme · 2 online", 2, True, True])
+                    sent.clear()
+                    await pg.click("#fzoumbenennen")
+                    await pg.fill("#fzoname", "Daheim")
+                    await pg.press("#fzoname", "Enter")
+                    for _ in range(50):
+                        if sent:
+                            break
+                        await pg.wait_for_timeout(100)
+                    self.assertEqual(sent[0], ("PUT", "/ordner/o_00000001", {"name": "Daheim", "symbol": "🏠"}))
+                    # „Koppeln“ offers the folders, the one in view first
+                    await pg.evaluate("fzKoppelnAuf()")
+                    self.assertEqual(await pg.evaluate("[$('fzkordnerrow').hidden,[...$('fzkordner').options].map(o=>o.textContent),$('fzkordner').value]"),
+                                     [False, ["Ohne Ordner", "🏠 Zuhause", "🏢 Kleiberit"], "o_00000001"])
+                    await pg.evaluate("$('fzkoppelnmodal').style.display='none'")
+                    # nothing of a folder in the page's text without folders on
+                    await pg.evaluate("FZ.d.ordner_an=false;fzShow()")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#fzlist .fzordner').length"), 0)
+                    await ctx.close()
                 await br.close()
         asyncio.run(go())
 
@@ -3726,6 +3855,153 @@ class Notes(Base):
         self.assertIn("replace(/[\\r\\n]+/g,' ')", body)                # a line, never with Enter
         self.assertIn("fzEinfuegen(line)", body)
         self.assertNotIn("innerHTML", js[js.index("// ---------------------------------------------------------------- Notizen je System"):])
+
+
+class Folders(Base):
+    """Ordner (Dominik 2026-10-29 09:18 „A“): a switch of its own under Fernzugang, off; admins only behind the page's
+    unlock; one level, name and symbol; only an order (every door stays per system); a deleted folder deletes no
+    system; „Koppeln“ can name the folder; logs and Live only counts, never a folder name."""
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(fernzugang=True, fernzugang_ordner=True)
+        import fernordner
+        self.fo = fernordner
+        fernordner._KOPPELN.clear()
+        with contextlib.suppress(OSError):
+            os.remove(fernordner.FILE)
+        for k in [k for k in guard._rate if str(k[0]).startswith("fernzugang_ordner")]:
+            guard._rate.pop(k, None)
+
+    def tearDown(self):
+        helpers.set_config(fernzugang_ordner=False)
+        with contextlib.suppress(OSError):
+            os.remove(self.fo.FILE)
+        super().tearDown()
+
+    def new(self, name="Kleiberit", symbol="🏢", client=ADMIN):
+        return client.post("/api/admin/fernzugang/ordner", json={"name": name, "symbol": symbol})
+
+    def test_off_by_default_its_own_switch_under_fernzugang(self):
+        with open(helpers.APP + "/config.default.json") as f:
+            self.assertIs(json.load(f)["chat"]["fernzugang_ordner"], False)
+        import features
+        self.assertEqual(features.BY_KEY["fernordner"].parent, "fernzugang")
+        self.assertIn("fernordner", features.SPARK_ONLY)
+        self.assertNotIn("chat.fernzugang_ordner", features.DEFAULT_ON)
+        helpers.set_config(fernzugang_ordner=False)
+        with journal() as j:
+            self.assertEqual(self.new().status_code, 404)
+        self.assertIn("fernzugang: ordner | aus | 0", j.getvalue())
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertIs(d["ordner_an"], False)
+        self.assertNotIn("ordner", d)
+        helpers.set_config(fernzugang_ordner=True, fernzugang=False)
+        self.assertFalse(self.fo.on())                                   # never without its parent
+
+    def test_admin_only_behind_the_unlock(self):
+        self.assertIn(self.new(client=TestClient(panel.app)).status_code, (401, 403))
+        r = ADMIN.post("/api/admin/profiles", json={"name": "FernOda", "pin": "1234"})
+        self.assertIn(r.status_code, (200, 409))
+        oda = TestClient(panel.app)
+        self.assertEqual(oda.post("/api/profile/login", json={"name": "FernOda", "pin": "1234"}).status_code, 200)
+        self.assertIn(self.new(client=oda).status_code, (401, 403))
+        fernzugang.ENTSPERRT.clear()                                     # locked: nothing
+        self.assertEqual(self.new().status_code, 423)
+        self.assertEqual(ADMIN.put("/api/admin/fernzugang/ordnung", json={"ordner": [], "systeme": []}).status_code, 423)
+        self.unlock()
+        with journal() as j:
+            self.assertEqual(ADMIN.put("/api/admin/fernzugang/ordner/o_00000000", json={"name": "x"}).status_code, 404)
+            self.assertEqual(ADMIN.delete("/api/admin/fernzugang/ordner/..%2Fx").status_code, 404)
+        self.assertIn("fernzugang: ordner | unbekannt | 0", j.getvalue())
+        notaus.trigger(1, "test", "", "panel")
+        self.assertEqual(self.new().status_code, 503)
+
+    def test_names_symbols_and_the_limit(self):
+        with journal() as j:
+            for name, symbol in (("", "🏢"), ("x" * 41, "🏢"), ("a\nb", "🏢"), ("<b>", "🏢"), ("Gut", "AB"), ("Gut", "1"),
+                                 ("Gut", "🏢" * 9), ("Gut", 5), (5, "🏢")):
+                self.assertEqual(self.new(name, symbol).status_code, 400, (name, symbol))
+        self.assertIn("fernzugang: ordner | ungueltig | 0", j.getvalue())
+        oid = self.new("Zuhause", "").json()["id"]                     # no symbol: the folder sign
+        self.assertRegex(oid, r"^o_[0-9a-f]{8}$")
+        self.assertEqual(ADMIN.get("/api/admin/fernzugang").json()["ordner"], [{"id": oid, "name": "Zuhause", "symbol": "📁"}])
+        self.assertEqual(self.new("Familie", "👨‍👩‍👧").status_code, 200)   # an emoji with joiners
+        for i in range(self.fo.MAX_ORDNER - 2):
+            self.assertEqual(self.new(f"O{i}").status_code, 200)
+        self.assertEqual(self.new("Zu viel").status_code, 409)
+        self.assertEqual(os.stat(self.fo.FILE).st_mode & 0o777, 0o600)
+
+    def test_order_move_rename_delete_and_the_page(self):
+        a, b, c = self.pair("speech")["id"], self.pair("tars")["id"], self.pair("kleiberit-test")["id"]
+        zu, kl = self.new("Zuhause", "🏠").json()["id"], self.new("Kleiberit", "🏢").json()["id"]
+        with journal() as j:
+            r = ADMIN.put("/api/admin/fernzugang/ordnung", json={"ordner": [kl, zu], "systeme": [[c, kl], [b, zu], [a, zu]]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("fernzugang: ordner | reihenfolge | 3", j.getvalue())
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertEqual([o["id"] for o in d["ordner"]], [kl, zu])
+        self.assertEqual([(g["id"], g["ordner"]) for g in d["geraete"]], [(c, kl), (b, zu), (a, zu)])
+        for bad in ({"ordner": [kl], "systeme": []}, {"ordner": [kl, zu, zu], "systeme": []},          # every folder once
+                    {"ordner": [kl, zu], "systeme": [[a, zu], [a, kl]]},                                # every system once
+                    {"ordner": [kl, zu], "systeme": [["g_000000000000", zu]]},                          # only paired ones
+                    {"ordner": [kl, zu], "systeme": [[a, "o_00000000"]]}, {"ordner": "x", "systeme": []}):
+            self.assertEqual(ADMIN.put("/api/admin/fernzugang/ordnung", json=bad).status_code, 400, bad)
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/geraete/{a}/ordner", json={"ordner": ""}).status_code, 200)
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/geraete/{b}/ordner", json={"ordner": kl}).status_code, 200)
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/geraete/{b}/ordner", json={"ordner": "o_00000000"}).status_code, 404)
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/geraete/g_000000000000/ordner", json={"ordner": ""}).status_code, 404)
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertEqual({g["id"]: g["ordner"] for g in d["geraete"]}, {a: "", b: kl, c: kl})
+        self.assertEqual(ADMIN.put(f"/api/admin/fernzugang/ordner/{kl}", json={"name": "Kunde K", "symbol": "🧪"}).status_code, 200)
+        self.assertEqual(ADMIN.get("/api/admin/fernzugang").json()["ordner"][0], {"id": kl, "name": "Kunde K", "symbol": "🧪"})
+        with journal() as j:
+            r = ADMIN.delete(f"/api/admin/fernzugang/ordner/{kl}")
+        self.assertEqual(r.json(), {"ok": True, "systeme": 2})
+        self.assertIn("fernzugang: ordner | ohne ordner | 2", j.getvalue())
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertEqual(len(d["geraete"]), 3)                           # a deleted folder deletes no system
+        self.assertEqual({g["ordner"] for g in d["geraete"]}, {""})
+        # only order: the folder changes no door of a system
+        self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/geraete/{a}/ordner", json={"ordner": zu}).status_code, 200)
+        helpers.set_config(fernzugang_ordner=False)
+        self.assertNotIn("ordner", ADMIN.get("/api/admin/fernzugang").json()["geraete"][0])
+        helpers.set_config(fernzugang_ordner=True)                      # switched on again: the folders are back
+        self.assertEqual([o["id"] for o in ADMIN.get("/api/admin/fernzugang").json()["ordner"]], [zu])
+
+    def test_pairing_into_a_folder_and_removing_the_system(self):
+        oid = self.new("Kleiberit").json()["id"]
+        r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "neu-1", "origin": OUT, "ordner": oid}, headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        with journal() as j:
+            g = TestClient(panel.app).post("/api/fernzugang/anker/koppeln", json={"code": r.json()["code"], "hostkey": HOST_PUB,
+                                                                                   "os": "Debian 13", "version": "1.0.0"}).json()
+        self.assertIn("fernzugang: ordner | koppeln | 1", j.getvalue())
+        self.assertEqual(self.fo._read()["systeme"], {g["id"]: oid})
+        other = self.pair("ohne")["id"]                                  # without a folder: „Ohne Ordner“
+        self.assertNotIn(other, self.fo._read()["systeme"])
+        r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "neu-2", "origin": OUT, "ordner": "o_00000000"}, headers=CODE)
+        self.assertEqual(r.status_code, 200)                             # an unknown folder: pairing still works
+        self.assertEqual(self.fo._KOPPELN, {})
+        self.assertEqual(ADMIN.delete(f"/api/admin/fernzugang/geraete/{g['id']}", headers=CODE).status_code, 200)
+        self.assertNotIn(g["id"], self.fo._read()["systeme"])            # the system leaves its folder
+
+    def test_logs_and_live_never_a_folder_name(self):
+        gid = self.pair()["id"]
+        with journal() as j:
+            oid = self.new("GeheimerKunde", "🏢").json()["id"]
+            ADMIN.put(f"/api/admin/fernzugang/ordner/{oid}", json={"name": "NochGeheimer"})
+            ADMIN.post(f"/api/admin/fernzugang/geraete/{gid}/ordner", json={"ordner": oid})
+            ADMIN.delete(f"/api/admin/fernzugang/ordner/{oid}")
+        out = j.getvalue()
+        self.assertNotIn("Geheim", out)
+        for w in ("neu | 1", "geaendert | 1", "verschoben | 1", "geloescht | 1"):
+            self.assertIn("fernzugang: ordner | " + w, out)
+        self.new("Kunde")
+        d = fernzugang.for_live()
+        self.assertEqual(d["ordner"], 1)
+        self.assertIn("1 Ordner", fernzugang.live_sub(d))
+        self.assertNotIn("Kunde", json.dumps(d))
 
 
 class NotesAssistant(_HelperBase):

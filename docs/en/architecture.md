@@ -544,6 +544,7 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
 | `app/panel/fernnotiz.py` | Notizen je System im Fernzugang: one note per paired system, written by the admin, for the admin. |
+| `app/panel/fernordner.py` | Ordner im Fernzugang: the paired systems in folders. |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
 
@@ -743,6 +744,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/features-seen.json` | When functions were released | – | yes |
 | `state/fernanker.json` | Remote access: the panel's signing key for updating the anchors (Ed25519; the private half only sealed in the vault) | private half sealed | no |
 | `state/fernnotizen.json` | Remote access: the note per system (text sealed, "Assistant may read", time, the last 10 versions sealed); delete under Remote access → Systems (box Notes) or with the system | text sealed | no |
+| `state/fernordner.json` | Remote access: the folders (name, symbol, order) and which system lies in which folder; delete under Remote access → Systems (click a folder → Delete), the systems stay | – | no |
 | `state/fernzugang-verlauf.json` | Remote access: history of the sessions of the last days (time, system, admin, kind, duration, home or internet), never an address or content; delete under Remote access → Systems → History | – | no |
 | `state/fernzugang.json` | Remote access: paired remote servers (name, system, host key, times), per server an own SSH key of the panel, the anchor's device key only as SHA-256 | SSH key sealed, device key only as a hash | no |
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
@@ -3445,7 +3447,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 98). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 99). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3456,7 +3458,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **98** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **99** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3907,7 +3909,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes. At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
 4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
-6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell).
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
 7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
 8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
 
@@ -3921,11 +3923,12 @@ flowchart TD
 - **10** paired systems at most ([step 3](#kn-fernzugang-s3))
 - **15** pictures a second at most ([step 6](#kn-fernzugang-s6))
 - **10** versions of a note stay ([step 6](#kn-fernzugang-s6))
+- **30** folders at most ([step 6](#kn-fernzugang-s6))
 - **10 min** a number of spontaneous help is valid ([step 7](#kn-fernzugang-s7))
 
 #### Settings
 
-- Features → Remote access to servers: switch on, pair systems, screen, spontaneous help and notes.
+- Features → Remote access to servers: switch on, pair systems, screen, spontaneous help, notes and folders.
 
 #### What you see
 
@@ -3942,6 +3945,7 @@ flowchart TD
 - `app/panel/spontanhilfe.py` `admin_new`: a new spontaneous help ([step 7](#kn-fernzugang-s7))
 - `app/panel/fernzugang.py` `notaus_close`: kill switch closes every line ([step 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: the note for the model only when ticked ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernordner.py` `view`: folders: only the order of the list ([step 6](#kn-fernzugang-s6))
 
 Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`
 

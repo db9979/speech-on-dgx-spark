@@ -238,7 +238,7 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
-         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz")
+         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -566,8 +566,10 @@ def for_live(now=None):
               "admin": (x.admin_name if named else "Admin"), "herkunft": "Internet" if x.herkunft == "internet" else "Zuhause",
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
     import fernnotiz
+    import fernordner
     return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
             "notizen": fernnotiz.anzahl() if fernnotiz.on() else 0,
+            "ordner": fernordner.anzahl() if fernordner.on() else 0,
             "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
 
 
@@ -590,7 +592,8 @@ def live_sub(d):
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
             + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
-            + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else ""))
+            + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else "")
+            + (f" · {d['ordner']} Ordner" if d.get("ordner") else ""))
 
 
 # ---------------------------------------------------------------- Dienst-Wächter
@@ -1325,7 +1328,9 @@ def _forget(gid, why):
             return
         _write(d)
     import fernnotiz
+    import fernordner
     fernnotiz.forget(gid)
+    fernordner.forget(gid)
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")
     _live("Fern-Server abgebaut")
@@ -1374,6 +1379,8 @@ async def anker_pair(request: Request):
                              "seit": int(time.time()), "zuletzt": 0, "stand": "ok", "erlaubt": True}
         _write(d)
     guard.succeeded(request, "fernzugang-koppeln")
+    import fernordner
+    fernordner.nach_koppeln(peek, gid)
     log("koppeln", "ok", 1)
     guard.log("fernzugang_paired", detail="Fern-Server gekoppelt")
     _live("Fern-Server gekoppelt")
@@ -1586,6 +1593,8 @@ def admin_get(request: Request):
     import fernnotiz
     out["notizen"] = notizen = fernnotiz.on(c)
     out["notiz_max"] = fernnotiz.MAX_BYTES
+    import fernordner
+    out["ordner_an"] = ordner_an = fernordner.on(c)
     rows = []
     now = time.time()
     import fernanker
@@ -1600,6 +1609,14 @@ def admin_get(request: Request):
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
                      "notiz": notizen and fernnotiz.has(gid)})
+    if ordner_an:                            # folders on: the systems in their order, each with its folder
+        v = fernordner.view([r["id"] for r in rows])
+        pos = {g: i for i, g in enumerate(v["reihe"])}
+        rows.sort(key=lambda r: pos.get(r["id"], 0))
+        for r in rows:
+            r["ordner"] = v["systeme"].get(r["id"], "")
+        out["ordner"] = v["ordner"]
+        out["ordner_max"] = fernordner.MAX_ORDNER
     out["geraete"] = rows
     out["offen"] = [{"id": s.id, "geraet": s.gid, "seit": int(s.seit), "art": s.art, "admin": s.admin_name,
                      "client": s.client, "herkunft": s.herkunft, "ip": s.ip_kurz} for s in SITZUNG.values()]
@@ -1655,6 +1672,9 @@ async def admin_pair(request: Request):
         log("koppeln_code", "kein https", 0)
         raise HTTPException(409, "Über diese Adresse geht es nur mit https. Den Server erreicht der Anker nur verschlüsselt.")
     code = CODES.new(name)
+    import fernordner
+    if body.get("ordner") and fernordner.on() and fernordner.vormerken(_code_form(code), str(body.get("ordner"))):
+        log("ordner", "vorgemerkt", 1)       # the new system lands in that folder
     log("koppeln_code", _who(request), 1)
     guard.log("fernzugang_code", detail="Kopplungs-Code für einen Fern-Server erstellt")
     return {"code": code, "gilt_s": CODE_S, "anker": _program(), "user": USER, **cmd}
@@ -1843,7 +1863,9 @@ async def admin_remove(gid: str, request: Request):
         x.update(stand="abbau", abbau_seit=int(time.time()), erlaubt=False)
         _write(d)
     import fernnotiz
+    import fernordner
     fernnotiz.forget(gid)                    # the page offered to download it first
+    fernordner.forget(gid)
     guard.log("fernzugang_revoked", detail="Fern-Server entfernt")
     a = ANKER.get(gid)
     if a is None:
