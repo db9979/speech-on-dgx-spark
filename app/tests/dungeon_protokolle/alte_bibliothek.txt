@@ -1,0 +1,197 @@
+# befunde: stufe 4, haendler 4, stufe 5, stufe 6, panel_satz 6, haendler 7, frage_gehen 7, stufe 9, panel_satz 9, platzhalter 10, platzhalter 11, zauber_trifft 11, platzhalter 12, stufe 13, platzhalter 13, zauber_probe 13
+# Prüffall: Runde in der Alten Bibliothek, von Dominik am 2026-10-28 kopiert („passt das alles?“, Stand V01.1.212); behoben in V01.1.234 bis V01.1.236
+andalf tritt den Weg nach Osten an, das Pflaster der Schattengasse gibt nach, als würde die Stadt selbst ihn wegschieben. Der Nebel dichtet sich vor der Alten Bibliothek zu einer undurchdringlichen Wand, die das spärliche Morgenlicht verschluckt. Die Luft hier ist schwerer, gesättigt von altem Pergament, feuchtem Stein und dem metallischen Beigeschmack alter Magie, die längst in Vergessenheit geriet. Das Gebäude erhebt sich monolithisch aus dem Grau, seine Ziegelmauern sind von Efeu überwuchert, der wie Adern unter der Haut der Steine pulsiert. Gandalfs Stab summt leise in seinen Händen, ein fernes Vibrieren, das mit dem rhythmischen Ticken des Tauwind-Morgens konkurriert. Vor dem massiven Eichenportal stehen keine Wachen, nur ein einzelnes, verwittertes Schild aus Metall, das in der Feuchtigkeit rostet und kaum noch lesbar ist. Die Schwelle wirkt kälter als die Umgebungstemperatur; Gandalf spürt eine leichte Kribbeln in den Fingerspitzen, als hätte die Schwelle selbst einen Atemzug getan und ihn geprüft. Keine Schritte hallen wider, keine Stimmen dringen aus dem Inneren heraus – nur das tiefe, gähnende Schweigen eines Ortes, der seit Langem nicht mehr betreten wurde oder dessen Bewohner sich verborgen halten. Der Geruch nach faulendem Fisch hat hier einem süßlichen Verwesungsduft Platz gemacht, wie altes Papier und trockenes Blut.
+Schwelle · Elfisch
+„Siliion lae laeiel galdil faeeendra?“
+du verstehst: „Willst du den Geist wachhalten?“
+(OOC: Du stehst nun vor der geschlossenen Alten Bibliothek. Was tust du als nächstes?)
+Gandalf +10 EP (neuer Ort) · noch am Tisch, zählt am Ende der Runde
+
+🖼 Alte Bibliothek
+
+Gandalf
+betrete die biblithek
+⊘
+16
+GANDALF WÜRFELT GESCHICK
+Leise und unauffällig die Bibliothek betreten
+16 +2 = 18 gegen Schwierigkeit 13 · mittel
+geschafft
+
+🎲 16 · Bonus +2 = 18 · Ziel 13 (leicht)
+⚖ Alchemist bietet hier Waren an.
+ZUG 4👍
+👎
+Die Schwelle aus verwittertem Granit, bedeckt mit dünnem Frostbelag und feinen Kratzspuren, gibt nach einem gedämpften Knarzen unter Gandalfs Schritt. Die massive Eiche dahinter, dunkles Holz mit silbrigem Schimmer in den Adern, öffnet sich ohne Geräusch. Der Geruch alter Pergamente wird stärker, durchzogen von dem trockenen Staub der Zeit und einem metallischen Hauch, der an altes Blut erinnert. Das spärliche Morgenlicht fällt schräg durch ein hohes, schmutziges Fenster und beleuchtet tanzende Staubmoleküle. Die Luft ist schwer und still, nur das leise Rascheln eines großen, ledergebundenen Buches unter einer hohen Regalreihe bricht die Stille. Es ist ein leises, fast ängstliches Geräusch. In der Ecke des Raumes, abseits des Lichtkegels, sitzt eine schmale Gestalt auf einem hölzernen Hocker. Sie starrt auf ein offenes Foliant, die Finger zitternd über den Seiten. Es ist Silas, der geflohene Gelehrte. Er wirkt zerstreut, seine Augen sind weit aufgerissen und haben einen glasigen Blick wie bei jemandem, der gerade eine Vision oder einen Fluch verspürt hat. Er trägt einfache Kleider, die an den Rändern abgenutzt sind. Neben ihm auf dem Boden liegt eine kleine Ledertasche mit einer unversiegelten Schriftrolle. Die Stille in der Bibliothek ist nicht leer; sie ist erfüllt von der Präsenz von Magie, die hier seit Jahren stagniert.
+Gandalf +13 EP (Probe) · noch am Tisch, zählt am Ende der Runde
+📜 Nachgetragen: Neue Person: Silas
+⚖ Alchemist zieht weiter.
+
+Gandalf
+frage Silas was er gerade macht.
+⊘
+16
+GANDALF WÜRFELT CHARISMA
+Silas&#39; Aufmerksamkeit und Kooperationsbereitschaft prüfen
+16 +0 = 16 gegen Schwierigkeit 13 · mittel
+geschafft
+
+🎲 16 · Bonus +0 = 16 · Ziel 13 (leicht)
+ZUG 5👍
+👎
+Die Probe auf Charisma fällt glücklicher als erwartet aus. Die schwere, betäubende Stille um Silas’ Figur bricht nicht, aber sein glasiger Blick löst sich von den Seiten des Folianten. Seine Pupellen weiten sich kaum merklich, als würde er aus einem tiefen Traum gerissen. Der metallische Geruch nach altem Blut in der Luft scheint intensiver zu werden, wenn er die Schultern leicht anspannt. Vor ihm liegt die unversiegelte Schriftrolle, ihr Rand leicht gekräuselt, als hätte sie jemand mit zitternden Händen berührt. Das massive Eichenportal steht offen, der Mondlichtschein fällt schief auf das staubige Pflaster und beleuchtet die Staubflocken, die in der Luft tanzen. Silas atmet schwer, ein trockenes Rascheln in der Kehle. Er spricht nicht sofort, sondern fixiert Gandalf mit einer Mischung aus Erschöpfung und wachsender Furcht. In seiner Handfläche krallt sich ein verkrusteter Lappen fest, der einst Teil eines Pergaments war. Die Stille im Raum ist nur von einem leisen Tropfen unterbrochen, das aus einer unsichtbaren Ritze im Stein fällt und auf den Boden plätschert. Es riecht nach Feuchtigkeit und vergessener Zeit. Draußen bleibt der Nebel starr, ein stiller Zeuge des Beginns dieser beklagenswerten Begegnung.
+Gesicht von SilasSilas
+„Es brennt... innen.“
+💬 Gandalf
+„Ein erster Hauch von Widerstand in seinem glasigen Blick.“
+Gandalf +13 EP (Probe) · noch am Tisch, zählt am Ende der Runde
+
+Gandalf
+Die Schriftrolle neben ihm prüfen
+⊘
+4
+GANDALF WÜRFELT INTELLIGENZ
+Schriftrolle auf Inhalt und Magie untersuchen
+4 +3 = 7 gegen Schwierigkeit 13 · mittel
+nicht geschafft
+
+🎲 4 · Bonus +3 = 7 · Ziel 13 (leicht)
+ZUG 6👍
+👎
+Gandalf tritt näher an Silas heran, dessen glasiger Blick noch immer auf den Seiten des Folianten ruht. Die Luft in der Alten Bibliothek ist schwer und still, nur das leise Raschen von alter Tinte und das Knistern von Pergament sind zu hören. Der Geruch von altem Blut und trockenem Staub liegt dicht im Raum. Gandalf streckt die Hand aus, um die unversiegelte Schriftrolne neben dem Gelehrten zu greifen. Das Panel würfelt für die Untersuchung der Schriftrolle auf Inhalt und Magie. Gandalfs Probe auf Intelligenz fällt misslungen aus; er versteht die Runen nicht, die Magie darin ist verborgen oder zu schwach, um im ersten Moment offenzulegen, was sie trägt. Er erkennt nichts Neues, keine Warnung und keinen Hinweis. Silas regt sich kaum, sein Atem geht gleichmäßig weiter. Die massive Eiche hinter ihnen steht offen, der Weg zurück in die Schattengasse ist frei. Links im Gang sieht man eine weitere Tür mit einem vergilbten Siegel, rechts führt ein schmaler Gang tiefer in die Bücherei hinein. Das Licht der Fackel wirft lange Schatten an die Wände.
+
+Gandalf
+Ich frage Silas danach.
+⊘
+⚖ Alchemist bietet hier Waren an.
+ZUG 7👍
+👎
+Das schwere, betäubende Schweigen der Alten Bibliothek zerrinnt wie Asche, als Gandalf die Worte des Gelehrten auffängt. Die Luft ist dick von dem Geruch verwitterten Pergaments und einem metallischen Nachgeschmack, der nach altem Kupferblut schmeckt. Silas’ glasige Augen fixieren ein unsichtbares Ziel in der Ferne; sein Mund bewegt sich kaum sichtbar, während er die Worte formt, die von den Schattenwächtern in ihn gepflanzt wurden. Er wirkt zerbrechlich, aber seine Stimme trägt eine harte, fremde Kante, als würde er gegen etwas ankämpfen, das tief in seinen Knochen sitzt. Vor ihm liegt die unversiegelte Schriftrolle flach auf dem marmornen Pult, ihr Rand leicht geknickt, als hätte er sie hastig aufgerollt und wieder entrollt. Das massive Eichenportal hinter den Helden steht geschlossen und wirft einen langen Schatten über die Verwitterte Schwelle aus grauem Granit. Der Nebel vor dem Portal zieht langsamer an den Rändern vorbei, als würde er lauschen. Draußen verstummt das ferne Geläute der Stadtglocken für einen Moment, nur das leise Rascheln alter Tinte bleibt.
+Gesicht von SilasSilas
+„Die Schattenwächter halten mich sicher. Sie wollen nicht, dass ihr mich findet.“
+(OOC: Du kannst Silas näher untersuchen oder nach den Schattenwächtern fragen.)
+(OOC: Keine Probe: Gehen braucht keine.)
+
+Gandalf
+wieso wollen sie das ich Silas nicht finde?
+⊘
+ZUG 8👍
+👎
+Der Schattenwächter, dessen Akzent die Luft schwer macht, nickt knapp. Er ist klein gewachsen, mit lockigem roten Haar und einem rotem Bart, der sein aufmüpfiges Gesicht umrahmt. Seine dunklen Augen fixieren Gandalf, während er den Finger gegen die Brust hält. Der Wächter murmelt leise: »Geh ihm nicht zu nahe.« Die Worte sind kurz, fast flüsternd, aber sie hängen schwer im staubigen Raum der Alten Bibliothek. Das Licht des Morgens fällt durch das Massive Eichenportal und wirft lange Schatten über die Verwitterte Schwelle. Silas sitzt reglos da, sein Glasauge starrt auf die Seite des Folianten, als würde er in eine andere Welt blicken. Die Luft riecht nach alter Tinte und Kupferblut. Der Wächter weicht einen Schritt zurück, seine Haltung ist wachsam. Er beobachtet, wie Gandalf sich nähert. In der Ferne klingt das leise Raschen von Pergament. Die Schattenwächter wollen Silas isolieren, doch niemand weiß genau warum. Ein Fremder hat die Gruppe beobachtet und ist verschwunden, sobald man ihn bemerkt hat. Jetzt steht nur noch Silas da, der geflohene Gelehrte, und der mysteriöse Wächter an seiner Seite. Tipp: Ihr könnt mit Silas sprechen oder Verwitterte Schwelle untersuchen.
+❖ Akt 2 beginnt.
+Gandalf +100 EP (Akt) · noch am Tisch, zählt am Ende der Runde
+📜 Nachgetragen: Neue Person: Schattenwächter
+
+Gandalf
+Ich untersuche Verwitterte Schwelle.
+⊘
+12
+GANDALF WÜRFELT INTELLIGENZ
+Verwitterte Schwelle untersuchen
+12 +3 = 15 gegen Schwierigkeit 13 · mittel
+geschafft
+
+🎲 12 · Bonus +3 = 15 · Ziel 13 (leicht)
+ZUG 9👍
+👎
+Das Panel bestätigt: Die Probe auf Intelligenz ist gelungen. Die Verwitterte Schwelle aus grauem Granit zeigt keine verborgenen Runen mehr, nur die Spuren von Frost, die langsam schmelzen. Der metallische Nachgeschmack im Raum wird intensiver, fast bitter. Gandalf spürt, wie die Magie in den Wänden der Alten Bibliothek pulsiert, nicht wild und chaotisch, sondern kalt und berechnend. Er ist hier nicht willkommen, aber er ist nicht unsichtbar. Die Stille ist zu perfekt, um natürlich zu sein. Es ist die Stille vor dem Angriff. Silas steht noch immer da, seine Augen sind weit aufgerissen, als blickte er durch das Pergament hindurch auf etwas Ungeheuerliches. Neben ihm liegt die unversiegelte Schriftrolle, ihr Rand leicht versengt, als hätte jemand versucht, sie zu öffnen und es mit Gewalt getan. Ein Schattenwächter hat ihn beobachtet, nun weiß er es auch. Der Rote Wanderer Neumond scheint besonders scharf auf Silas’ Geist gerichtet zu sein. Die Luft dünn sich an, die Temperatur sinkt spürbar. Gandalf hat keine Zeit für lange Betrachtungen; die Schwelle war nur der Anfang.
+💬 Gandalf
+„Die Kälte in den Knochen steigt.“
+Gandalf +13 EP (Probe) · noch am Tisch, zählt am Ende der Runde
+⏳ Die Bibliotheksgilde hat erreicht, was sie wollten. Die Welt ist nicht mehr dieselbe.
+
+🖼 Alte Bibliothek
+
+Gandalf
+Silas ansprechen und fragen
+⊘
+20
+GANDALF WÜRFELT CHARISMA
+Silas ansprechen und fragen
+20 +0 = 20 gegen Schwierigkeit 10 · leicht
+geschafft
+
+🎲 20 · Bonus +0 = 20 · Ziel 10 (leicht) · natürliche 20: immer geschafft
+ZUG 10👍
+👎
+Die Luft in der Alten Bibliothek ist schwer von Staub und altem Pergament, doch Gandalfs Stimme schneidet durch die Stille wie ein kaltes Messer. »Silas«, ruft er, und sein Klang ist nicht bloß eine Frage, sondern ein Befehl, der die Wände zum Beben bringt. Die Probe auf Charisma ist perfekt; eine Zwanziger trifft das Mark der Dinge. Silas blickt auf, seine glasigen Augen weiten sich, als würde er zum ersten Mal die Welt wirklich sehen. Er legt den Folianten langsam zur Seite, die Finger zittern leicht um den Einband, als fürchte er, dieser könnte jeden Moment zerfallen. »Du... du hörst es auch?« fragt Silas leise, seine Stimme rau vom vielen Schweigen. »Der Fluch summt in den Adern der Steine.« Er steht auf, sein kleiner Körper wirkt plötzlich zerbrechlich, doch sein Blick ist fest. Neben ihm liegt die unversiegelte Schriftrolle flach auf dem Tisch. Schattenwächter bleibt in der Ecke stehen, ihre dunklen Augen folgen jedem Atemzug Gandalfs. Sie sagt nichts, aber ihre Hand ruht schwer am Griff ihres Dolches. Die Schwelle hinter Gandalfs Rücken hat sich geöffnet; kein Frost mehr nur kalte Luft. Gandalf tritt näher an Silas heran. Der Gelehrte riecht nach trockenen Tinten und altem Papier. Er deutet auf die Schriftrolle. »Das hier...«, beginnt er dann zu sprechen, »...ist keine Karte im eigentlichen Sinne.« Seine Stimme füllt den Raum mit einer gewissen Würde, die das staubige Ambiente bricht. Die Schattenwächter tritt einen Schritt vor, ihre Haltung ist gespannt: bereit zugreifen oder ziehen. Das Licht der Fackeln flackert unregelmäßig; es scheint von einer inneren Unruhe in den Wänden selbst getrieben.
+⚔ Begegnung leicht
+
+keine
+Gandalf +13 EP (Probe) · noch am Tisch, zählt am Ende der Runde
+
+Gandalf
+Ich wirke Feuerpfeil auf keine.
+⊘
+ZUG 11👍
+👎
+Gandalfs Finger gleiten über das Holz seines Stabes, die Adern pulsieren leicht, während er die magische Essenz bündelt. Ein Funke springt über, klein und flüchtig, der in Richtung der leeren Raummitte geschossen wird. Doch die Luft ist schwer von altem Staub und stiller Resignation; kein Ziel, das den Pfeil aufhalten könnte, keine Struktur, die getroffen werden müsste. Der Feuerpfeil trifft auf nichts. Er verpufft zu einer kleinen Wolke aus trockener Asche und schwefeligem Rauch, der sich langsam im dichten Nebel der Bibliothek auflöst. Keine Wucht, kein Krachen, nur ein kurzes Aufblitzen und dann Stille. Es ist ein verpasster Moment, ein leerer Wurf in eine Welt voller wartender Schatten.
+(OOC: Feuerpfeil traf auf nichts. Du stehst noch immer vor Silas oder kannst dich bewegen.)
+5
+Gandalf → keine · Feuerpfeil ·
++6
+=
+11
+gegen RK 16 ·
+daneben
+14
+keine → Gandalf ·
++3
+=
+17
+gegen RK 12 ·
+Treffer
+−5 Leben
+⚠ keine zielt auf Gandalf.
+✦ Gandalf wirkt Feuerpfeil: Ein Funken fliegt und entzündet das Ziel.
+Gandalf: −5 Leben (jetzt 11) · von keine
+
+Gandalf
+Ich setze auf keine an Feuerball ein.
+⊘
+ZUG 12👍
+👎
+Der Feuerpfeil trifft auf nichts und verpufft zu einer kleinen Wolke aus Asche und Rauch, die sich langsam im schwachen Licht des Tages zerstreut. Silas hebt den Kopf von seinem Folianten, seine glasigen Augen weiten sich einen Moment, bevor er wieder in seine Lektüre sinkt. Die Schattenwächter stehen still an den Wänden, ihre blassen Gesichter reglos, als würden sie nur warten. Das Massive Eichenportal steht geschlossen vor ihnen, das dunkle Holz mit den tiefen Rissen und dem silbrigen Silberschimmer in den Adern strahlt eine alte, ruhige Kraft aus. Neben Silas liegt die unversiegelte Schriftrolle auf dem Boden. Gandalf wartet ab, was als Nächstes geschieht.
+8
+Gandalf → keine · Stab ·
++7
+=
+15
+gegen RK 16 ·
+daneben
+5
+keine → Gandalf ·
++5
+=
+10
+gegen RK 12 ·
+daneben
+⚠ keine lauert auf eine Lücke bei Gandalf.
+
+Gandalf
+Ich setze Feuerball ein.
+⊘
+12
+GANDALF WÜRFELT INTELLIGENZ
+Ich setze Feuerball ein
+12 +5 = 17 gegen Schwierigkeit 13 · mittel
+geschafft
+
+🎲 12 · Bonus +5 = 17 · Ziel 13 (leicht)
+ZUG 13👍
+👎
+Das Licht in der Alten Bibliothek flackert und wird von einer satten, warmen Glut verdrängt, als Gandalfs Feuerball die schwere Luft durchschneidet. Die Helligkeit wirft lange, tanzende Schatten an die hohen Regale, und der Geruch von verbranntem Pergament mischt sich mit dem stechenden Duft von altem Staub. Die Wärme kitzelt Gandalfs Haut, ein fast menschliches Gefühl in dieser kalten, steinernen Welt. Doch der Kampf ist nicht allein gegen die Dunkelheit gerichtet; die Schattenwächter sind bereits in Bewegung. Ein weiblicher Schattenwächter, ihre Augen wie schwarze Teiche, springt aus der Stille und trifft Gandalf mit einer schnellen, präzisen Geste. Drei Punkte Leben schwinden, als würde ein Stück seiner Essenz ausgeblasen. Silas hebt den Kopf von seinem Folianten, seine glasigen Augen weiten sich einen Moment lang vor Überraschung, bevor er wieder in seine Lektüre sinkt, als wäre ihm der Angriff nur eine kleine Störung. Der massive Geruch von Kupferblut liegt schwer in der Luft. Vor den Füßen von Gandalf liegt nun eine unversiegelte Schriftrolle, leicht verkohlt am Rand, aber noch lesbar. Die Schattenwächter stehen bereit, ihre blassen Gesichter reglos.
+18
+keine → Gandalf ·
++3
+=
+21
+gegen RK 12 ·
+Treffer
+−3 Leben
+⚠ keine lauert auf eine Lücke bei Gandalf.
+Gandalf: −3 Leben (jetzt 8) · von keine
+Gandalf +13 EP (Probe) · noch am Tisch, zählt am Ende der Runde
+Alte Bibliothek
+
+passt das alles?

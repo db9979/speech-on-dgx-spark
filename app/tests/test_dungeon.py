@@ -1210,7 +1210,8 @@ class ReviewPruefung(Turns):
         self.assertEqual(erz.not_carried(rd, f"{a} sieht, wie {b} eine {F} zieht."), [])            # another hero's
         rd["offen"][self.host]["text"] = f"Ich nehme die {F} von der Wand."
         self.assertEqual(erz.not_carried(rd, f"{a} packt die {F} an der Wand."), [])                 # the action names it
-        self.assertEqual(erz.check_things(dungeon, r, rd, [{"name": F, "merkmale": "rostig"}, {"name": "Torbogen", "merkmale": "Stein"}]),
+        self.assertEqual(erz.check_things(dungeon, r, rd, [{"name": F, "merkmale": "rostig"}, {"name": "Torbogen", "merkmale": "Stein"}],
+                                          f"An der Wand hängt eine {F}, dahinter ein Torbogen aus Stein."),
                          [{"name": "Torbogen", "merkmale": "Stein"}])
         ring = f"{a} findet einen Ring im Staub zwischen den Steinen."
         if not any(w.endswith("ring") for w in have):
@@ -5509,8 +5510,15 @@ class ThingMemory(BetterStories):
             {"name": "Arvid", "merkmale": "ein Held"}, {"name": "eisenkästchen", "merkmale": "doppelt"},
             {"name": "Holzkästchen", "merkmale": "morsch"}, {"name": "Silberne Glocke", "merkmale": "gesprungen, mit Inschrift"},
             "kein Ding", {"name": "Brief", "merkmale": "versiegelt"}, {"name": "Alte Laterne", "merkmale": "verbeult"},
-            {"name": "Rabenfeder", "merkmale": "schwarz"}])
+            {"name": "Rabenfeder", "merkmale": "schwarz"}], "Arvid sieht ein Kästchen, eine silberne Glocke, einen Brief, "
+            "eine alte Laterne und eine Rabenfeder.")
         self.assertEqual([x["name"] for x in out], ["Silberne Glocke", "Brief", "Alte Laterne"])   # no hero, no twice, none against a kept one, at most DINGE_NEU
+        with contextlib.redirect_stdout(io.StringIO()) as log:
+            out = dungeon.erz.check_things(dungeon, dungeon.rules(), rd, [{"name": "Alte Laterne", "merkmale": "verbeult"},
+                                                                          {"name": "Silberne Glocken", "merkmale": "drei"}],
+                                           "Im Turm hängen drei silberne Glocken.")
+        self.assertEqual([x["name"] for x in out], ["Silberne Glocken"])     # the lantern the story never shows (Anker-Tabelle)
+        self.assertIn("dungeon: dinge | nicht erzaehlt", log.getvalue())
         dungeon.erz.learn_things(rd, [{"name": f"Ding Nummer {i}", "merkmale": ""} for i in range(dungeon.erz.DINGE_MAX + 2)])
         self.assertEqual(len(rd["dinge"]), dungeon.erz.DINGE_MAX)
         self.assertEqual(rd["dinge"][-1]["zug"], rd["zug"])
@@ -5518,10 +5526,11 @@ class ThingMemory(BetterStories):
     def test_a_narration_against_a_kept_thing_is_written_once_more(self):
         self.keep()
         self.act_all()
-        before = dungeon.for_live()["widerspruch"]
+        before, geprueft = dungeon.for_live()["widerspruch"], dungeon.for_live()["protokoll_geprueft"]
         rd = self.play([{"proben": []},
                         {"erzaehlung": "Arvid und Bela beugen sich über das morsche Holzkästchen, der Deckel zerfällt fast unter ihren Fingern.", "frage_an": "Arvid"},
-                        {"erzaehlung": "Arvid und Bela beugen sich über das verrostete Eisenkästchen, der schwere Deckel knirscht in den Angeln.",
+                        {"erzaehlung": "Arvid und Bela beugen sich über das verrostete Eisenkästchen, der schwere Deckel knirscht in den Angeln, "
+                                       "darauf ein rotes Wachssiegel.",
                          "frage_an": "Arvid", "dinge": [{"name": "Wachssiegel", "merkmale": "rot, mit einem Raben"}]}])
         self.assertIn("Eisenkästchen", [x for x in rd["log"] if x["art"] == "dm"][-1]["text"])
         erz = [(s, u) for n, s, u in self.systems if n == "erzaehlen"]
@@ -5532,6 +5541,7 @@ class ThingMemory(BetterStories):
         self.assertEqual([x["name"] for x in rd["dinge"]], ["Eisenkästchen", "Wachssiegel"])
         self.assertEqual(dungeon.for_live()["widerspruch"], before + 1)
         self.assertEqual(dungeon.for_live()["dinge"], 2)
+        self.assertEqual(dungeon.for_live()["protokoll_geprueft"], geprueft + 1)   # the Protokoll-Prüfer ran over the kept one
 
     def test_the_host_fixes_or_forgets_a_thing_players_never_see_them(self):
         self.keep()
@@ -11667,16 +11677,21 @@ class Fight(Turns):
         r = dungeon.rules()
         rd = self.state(self.rid)
         brief = {"titel": "Ein Brief mit Siegel", "text": "Kommt nicht in den Keller. Der Wächter schläft nie. — E.", "art": "brief", "von": "Elsbeth"}
+        E = "Auf dem Tisch liegt ein Brief mit einem Siegel."
         with contextlib.redirect_stdout(io.StringIO()):
-            self.assertIsNone(schrift.check(dungeon, r, rd, brief))               # switch off
+            self.assertIsNone(schrift.check(dungeon, r, rd, brief, E))            # switch off
         helpers.keep_chat(self, "dungeon_schrift")
         helpers.set_config(dungeon_schrift=True)
         with contextlib.redirect_stdout(io.StringIO()) as out:
-            self.assertEqual(schrift.check(dungeon, r, rd, brief), brief)
-            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, text="Kurz.")))
-            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, art="buch")))
-            self.assertEqual(len(schrift.check(dungeon, r, rd, dict(brief, text="x " * 400))["text"]) <= schrift.TEXT_MAX, True)
+            self.assertEqual(schrift.check(dungeon, r, rd, brief, E), brief)
+            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, text="Kurz."), E))
+            self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, art="buch"), E))
+            self.assertEqual(len(schrift.check(dungeon, r, rd, dict(brief, text="x " * 400), E)["text"]) <= schrift.TEXT_MAX, True)
+            self.assertIsNone(schrift.check(dungeon, r, rd, brief, "Im Keller ist es still und kalt."))   # the story shows none
+            self.assertEqual(schrift.check(dungeon, r, rd, brief, "Unter dem Stein klebt ein Pergament."), brief)
+            self.assertEqual(schrift.check(dungeon, r, rd, brief, "Bela hält a sealed letter in her hand."), brief)
         self.assertIn("dungeon: schrift | verworfen", out.getvalue())
+        self.assertIn("dungeon: schrift | nicht erzaehlt", out.getvalue())
         self.assertIn("schriftstueck", dungeon.system_text(r, rd, "erzaehlen"))
         with dungeon._lock:
             d = dungeon._read()

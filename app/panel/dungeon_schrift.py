@@ -26,6 +26,11 @@ VON_MAX = 40
 SCHRIFT_MAX = 40           # writings a round keeps
 SCHRIFT_FAKTEN = 3         # the newest ones the model reads in its facts
 SICHT = ("alle", "niemand")   # or a seat's pid
+# a writing counts only when the narration shows one (Anker-Tabelle, Dominik 2026-10-28 „es kommen zu viele fehler“):
+# a word of these (parts of words count: „Briefumschlag“, „Pergamentrolle“) or the writing's title in the narration
+WORTE = ("brief", "vers", "gedicht", "tagebuch", "notiz", "inschrift", "schrift", "zettel", "pergament", "rolle", "seite",
+         "buch", "geschrieben", "letter", "poster", "verse", "poem", "diary", "journal", "note", "inscription", "writ",
+         "scroll", "parchment", "page", "book")
 
 SCHEMA = {"type": "object", "additionalProperties": False, "required": ["titel", "text", "art"], "properties": {
     "titel": {"type": "string", "maxLength": TITEL_MAX + 20}, "text": {"type": "string", "maxLength": TEXT_MAX + 100},
@@ -52,14 +57,20 @@ def task(rd, lang):
     return AUFGABE[lang] + (GEFUNDEN[lang] if facts(rd) else "") if on(rd) else ""
 
 
-def check(dm, r, rd, obj):
-    """The narration's writing by fixed rules: None when there is none, it is off, too short or refused."""
+def check(dm, r, rd, obj, erzaehlung):
+    """The narration's writing by fixed rules: None when there is none, it is off, too short, refused or the narration
+    shows no writing (WORTE, its title)."""
     if not isinstance(obj, dict) or not on(rd):
         return None
     titel, text, von = dm.plain(obj.get("titel"), TITEL_MAX), dm.plain(obj.get("text"), TEXT_MAX - 2), dm.plain(obj.get("von"), VON_MAX)
     if obj.get("art") not in ARTEN or not titel or len(text) < TEXT_MIN or dm.bad_words(r, rd, " ".join((titel, text, von))):
         _day.bump("verworfen")
         print("dungeon: schrift | verworfen", flush=True)
+        return None
+    low = str(erzaehlung or "").lower()
+    if not any(w in low for w in WORTE) and not dm.erz.foe_named(titel, erzaehlung):
+        _day.bump("verworfen")
+        print("dungeon: schrift | nicht erzaehlt", flush=True)
         return None
     return {"titel": titel, "text": text, "art": obj["art"], "von": von}
 

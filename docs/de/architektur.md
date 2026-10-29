@@ -319,6 +319,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_nsc.py` | Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf |
 | `app/panel/dungeon_orakel.py` | Dungeon-Master-Orakel: Ja oder Nein mit Chaosgrad und Würfe auf die Tabellen, das Panel würfelt |
 | `app/panel/dungeon_personen.py` | Dungeon-Master: Personen-Katalog, getroffene Personen bleiben und begegnen den Helden wieder |
+| `app/panel/dungeon_protokoll.py` | Dungeon-Master-Protokoll-Prüfer: jede Erzählung noch einmal durch alle festen Prüfungen, Runden als Prüffälle |
 | `app/panel/dungeon_pruefstand.py` | Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell |
 | `app/panel/dungeon_quest.py` | Dungeon-Master-Quest-Gegenstände: benannte Dinge der Geschichte, das Panel prüft jeden Fund |
 | `app/panel/dungeon_rast.py` | Dungeon-Master: Lagerfeuer und Rast, kurze und lange Rast mit drei Nachtwachen je Landschaft und Fragekarten |

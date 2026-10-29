@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.240** AI Dungeon Master: every value the model gives hangs on a fixed rule (anchor table), the game page knows every value of the panel, a protocol checker checks every narration once more and turns copied rounds into test cases, the narrator bench plays 15 turns in a row; a thing or a writing counts only when the narration shows it
 - **V01.1.239** AI Dungeon Master: sentence bench: about 300 fixed player sentences every word list must sort right; "I open the book", "staff" or "I set sail" are no attack any more, abilities are no longer named like spells
 - **V01.1.238** AI Dungeon Master: unique spell names, everyday words marked
 - **V01.1.237** Quick test: `tools/vorpush.py` installs missing system packages of GitHub "Tests" (guacd, x11vnc, Xvfb for test_fernbild) itself or stops before the first test with the exact command; a cloud container without x11vnc went red mid-run
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.233** Remote access stage 3b: big files in pieces with SHA-256, pause and resume, by link (curl on the server) or from the NAS; at home the anchor (1.4.0) goes straight to the Spark
 - **V01.1.232** Remote access: folders for the systems (one level, name and symbol, collapsible, drag, move to, folder overview, folder at pairing, iPhone)
 - **V01.1.231** Remote access: notes per system (sealed, 10 versions, into the terminal, vault hint, search, iPhone)
-- **V01.1.230** Remote access: update anchors from the panel, „Update“ per system and „Update all“; the panel signs the anchor with a key of its own (Ed25519, in the vault), the anchor checks SHA-256 and signature, swaps atomically as root and goes back to the old version after 60 s without the panel, never a step back; anchors before 1.3.0 get a line to paste
 
 
 

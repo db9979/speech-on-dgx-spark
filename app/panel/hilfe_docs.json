@@ -6061,6 +6061,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Anker-Tabelle, Seiten-Tabellen und Protokoll-Prüfer (V01.1.240, Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschläge 3 bis 6, „ok“): Ohne neuen Schalter: feste Regeln, eine Messung und Selbsttests. 1. Anker-Tabelle: tests/dungeon_anker.py nennt für jedes Feld jeder JSON-Antwort des Modells (Erzählung, Proben, Geschichte, Wahrheit, Zusammenfassungen, Flüstern, X-Karte, Schreiber; rund 110 Felder) seine Art (nur Worte, feste Liste, Angebot des Panels, Name der Gruppe, von der Erzählung genannt, das Panel entscheidet) und die feste Prüfung, die es hält. test_dungeon_anker vergleicht sie mit den Schemas: ein neues Feld ohne Anker oder eine verschwundene Prüfung macht ihn rot. Zwei Lücken sind geschlossen: ein Ding fürs Gedächtnis (dinge) und ein Schriftstück zählen nur, wenn die Erzählung sie zeigt (erz.check_things mit foe_named, schrift.check mit schrift.WORTE oder dem Titel). 2. Seiten-Tabellen: test_dungeon_tabellen vergleicht die Tabellen der Spielseite (Stufe einer Probe, Seltenheit, Art einer Kraft, Waffeneigenschaften, Resistenz, Nachtwache, Zustand eines Gefährten, EP-Grund, Prüfstand-Marke, Tageszeit, Häuser und Dienste "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "der Siedlung, Schadensarten, Raumarten der Karte) mit den Listen des Panels, und jeder Ablehnungsgrund des Panels braucht seinen Satz auf der Seite (DMGRUND oder ein anderes Spielskript; allgemeine Gründe mit Begründung in ALLGEMEIN). 3. Protokoll-Prüfer (dungeon_protokoll.py): nach jedem erzählten Zug laufen alle festen Prüfungen noch einmal über die Erzählung, die bleibt, auch über die nachgebesserte (rest); was noch gefunden wird, nennt das Log („dungeon: protokoll | rest | …“, sonst „dungeon: protokoll | ok“). Dazu prüft er die Namen der Runde (runde): ein Wort für „kein Name“ als Gegner, Personenkarte oder Person der Wahrheit und eine Personenkarte, die zugleich Gegner ist. Die Live-Übersicht zählt geprüfte Erzählungen, solche mit Restfehlern und falsche Namen. Eine von der Spielseite kopierte Runde liest er in ihre Züge zurück (read) und findet nach festen Regeln, was sie falsch zeigt (text_faults: zwei Stufen für eine Zahl, ein Platzhalter als Gegner, ein verfehlter Zauber mit Wirkungssatz, ein Händler, den die Erzählung nicht zeigt, ein Satz über das Panel, eine Frage als „Gehen braucht keine“, eine Probe statt „Das kann … noch nicht“). cd app && python3 -m tests.test_dunge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "on_protokoll kopie.txt --fall name legt sie mit ihren Fundstellen als Kopfzeile in tests/dungeon_protokolle/ ab, test_dungeon_protokoll prüft jeden Fall gegen seine Kopfzeile. Erster Fall ist die Runde in der Alten Bibliothek mit 16 Fundstellen. 4. Rundlauf: der Erzähler-Prüfstand hat die Szene „15 Züge ohne Restfehler“ (dungeon_erzaehlstand.RUNDLAUF): eine Runde mit 15 festen Zügen (eine Schenke betreten, Oskar fragen, ein unbekannter Zauber, ein Buch aufschlagen, den Stab heben, ohne Händler kaufen, ein Lager aufschlagen …) läuft durch das echte Modell, jede Erzählung wird der Verlauf des nächsten Zugs. Jede behaltene Erzählung geht durch den Protokoll-Prüfer, und kein Sprecher darf „keine“ heißen; 2 Punkte, wenn jeder Zug beim ersten Versuch passt, 1, wenn keiner einen Fehler behält. Der Prüfstand zählt dabei nichts in die Zahlen des Tages (auch ask_checks mit count=False)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Satz-Prüfstand (V01.1.239, Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschlag 1 und Teil von 2, „ok“): Ohne neuen Schalter, es sind Korrekturen und ein Selbsttest. 1. Feste Sätze: tests/dungeon_saetze.py hält rund 300 Spielersätze auf Deutsch und Englisch mit ihrer Art (Angriff, Angriff auf einen genannten Gegner, Frieden, Flucht, Gehen, Frage, Kauf, Verkauf, Rast, Alltag, sonst nichts). test_dungeon_saetze lässt jede Wortliste (kampf.intent, dungeon.typed, erz.asks, dungeon.everyday) über jeden Satz laufen; die alte Tabelle der Angriffswörter steckt darin. Ein Satz, den eine Liste am Tisch falsch einordnet, kommt mit seiner Korrektur dazu. 2. Fehltreffer behoben: ein Stab mit Artikel („meinen Stab“), Stichwort, Schlagzeile, ein Buch, eine Karte oder ein Lager aufschlagen, etwas auspacken, einen Pfahl in den Boden rammen, die eigene Angst besiegen, sich durch Gestrüpp kämpfen, in See stechen, die Zeit totschlagen, „ans Feuer“, battle map, kick off, swing open sind kein Angriff mehr; „Wir ergeben uns“ bittet um Frieden; „Ich trete ein“ ist Gehen. 3. Fähigkeiten nicht wie Zauber: die Fähigkeiten Feuerball, Unsichtbarkeit, Licht"
 },
 {
@@ -22262,6 +22286,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: anchor table, page tables and protocol checker (V01.1.240, Dominik 2026-10-28 \"es kommen zu viele fehler aktuell … mache mir vorschläge\", proposals 3 to 6, \"ok\"): No new switch: fixed rules, a measurement and self-tests. 1. Anchor table: tests/dungeon_anker.py names for every field of every JSON answer of the model (narration, checks, story, truth, summaries, whisper, X card, scribe; about 110 fields) its kind (words only, fixed list, offered by the panel, a name of the group, named by the narration, the panel decides) and the fixed check that holds it. test_dungeon_anker compares it with the schemas: a new field without an anchor or a check that is gone turns it red. Two gaps are closed: a thing for the memory (dinge) and a writing count only when the narration shows them (erz.check_things with foe_named, schrift.check with schrift.WORTE or the title). 2. Page tables: test_dungeon_tabellen compares the tables of the game page (a check's level, rarity, a power's kind, weapon properties, resistance, night watch, a companion's state, experience reason, bench mark, time of day, the settlement's houses and services, damage kinds, the map's room kinds) with the panel'"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "s lists, and every reason the panel refuses with needs its sentence on the page (DMGRUND or another game script; general reasons with their why in ALLGEMEIN). 3. Protocol checker (dungeon_protokoll.py): after every told turn all fixed checks run once more over the narration that stays, the repaired one too (rest); what is still found the journal names (\"dungeon: protokoll | rest | …\", else \"dungeon: protokoll | ok\"). It also checks the round's names (runde): a word for no name as a foe, a person card or a person of the truth, and a person card that is a foe too. The Live overview counts checked narrations, those with faults left and wrong names. A round copied from the game page it reads back into its turns (read) and finds by fixed rules what it shows wrong (text_faults: two levels for one number, a placeholder as a foe, a missed spell with its effect sentence, a merchant the narration does not show, a sentence about the panel, a question as \"going needs none\", a check instead of \"cannot do that yet\"). cd app && python3 -m tests.test_dungeon_protokoll copy.txt --fall name keeps it in tests/dungeon_protokolle/ with its findings as header, test_dungeon_protokoll checks every case ag"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ainst its header. The first case is the round in the Old Library with 16 findings. 4. Round run: the narrator bench has the scene \"15 turns without faults left\" (dungeon_erzaehlstand.RUNDLAUF): a round of 15 fixed turns (entering an inn, asking Oskar, a spell not known, opening a book, raising the staff, buying without a merchant, setting up camp …) runs through the real model, each narration the next turn's history. Every kept narration goes through the protocol checker and no speaker may be called \"keine\"; 2 points when every turn passes at the first try, 1 when none keeps a fault. The bench counts nothing into the day's numbers (ask_checks with count=False too)."
 },
 {
 "lang": "en",

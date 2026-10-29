@@ -4433,6 +4433,13 @@
 "titel": "Dungeon-Master: Satz-Prüfstand und Fähigkeitsnamen",
 "text": "Im Kampf: A: „Ich hebe meinen Stab und sehe mich um“ ist kein Angriff. B: „Ich schlage mit meinem Stab nach dem Goblin“ greift an. C: Ein Magier mit der Fähigkeit Flammenkunde tippt „Ich wirke Feuerball“, ohne den Zauber zu kennen: „Das kann … noch nicht: Feuerball.“ D: Der Heldenbogen zeigt Flammenkunde, Verblassen, Leuchtende Hand, Lügen spüren oder Anfeuern statt der alten Namen. E: „Ich werfe einen Feuerball“ ohne den Zauber: dieselbe Zeile. F: „Ich nutze die Tarnung der Büsche“ ohne die Fähigkeit Tarnung: keine Zeile.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P658",
+"v": 1240,
+"titel": "Dungeon-Master: Protokoll-Prüfer, Rundlauf, Dinge und Schriftstücke nur aus der Erzählung",
+"text": "Eine Runde einige Züge spielen. A: Zustand → Überblick zeigt beim Dungeon-Master „Protokoll-Prüfer heute N Erzählungen geprüft“. B: Zustand → Logs, Bereich Dungeon: nach jedem Zug „dungeon: protokoll | ok“ oder „… | rest | …“ mit den Arten der Fehler. C: Gemerkte Dinge und Schriftstücke der Runde kommen nur vor, wenn die Erzählung sie zeigt. D: Eine kopierte Runde mit „passt das alles?“ schicken: sie wird ein Prüffall.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

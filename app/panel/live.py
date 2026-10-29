@@ -2058,6 +2058,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['widerspruch']} Widersprüche nachgebessert" if dgn.get("widerspruch") else "")
                         + (f" · heute {dgn['erz_regeln']} Erzählungen nach Kampf, Gold, Tasche, fremden Helden, Aussehen, Richtung, Frage oder neuem Ort nachgebessert" if dgn.get("erz_regeln") else "")
                         + (f" · heute {dgn['neu_erzaehlt']} Szenen nach einer Fehler-Meldung neu erzählt" if dgn.get("neu_erzaehlt") else "")
+                        + (f" · Protokoll-Prüfer heute {dgn['protokoll_geprueft']} Erzählungen geprüft, {dgn.get('protokoll_rest', 0)} mit Restfehlern, "
+                           f"{dgn.get('protokoll_namen', 0)} falsche Namen" if dgn.get("protokoll_geprueft") else "")
                         + (f" · heute {dgn.get('krit_gewuerfelt', 0)} Krit- und {dgn.get('patzer_gewuerfelt', 0)} Patzer-Tabellen gewürfelt"
                            if dgn.get("krit_gewuerfelt") or dgn.get("patzer_gewuerfelt") else "")
                         + (f" · heute {dgn['ehrungen']} Ehrungen vergeben" if dgn.get("ehrungen") else "")

@@ -156,6 +156,7 @@ import dungeon_zufall as zufall
 import dungeon_fraktionen as fraktionen
 import dungeon_quest as quest
 import dungeon_nsc as nsc
+import dungeon_protokoll as protokoll
 import dungeon_orakel as orakel
 import dungeon_tabellen as tabellen
 import dungeon_bestiarium as bestiarium
@@ -3999,7 +4000,7 @@ def tell_no_check(rd, ohne, seats):
             print(f"dungeon: probe | ohne | {kind}", flush=True)
 
 
-def check_proben(r, rd, obj):
+def check_proben(r, rd, obj, count=True):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
     of the list, the difficulty clamped, none for plain going, buying or resting by the player's own words (typed),
     only for going somewhere (just_going, or the seat's action goes to a
@@ -4032,7 +4033,7 @@ def check_proben(r, rd, obj):
             print("dungeon: probe | verworfen | zustand", flush=True)
             rd["_ohne"].append((pid, "zustand"))
             continue
-        wert = fitting_value(rd, pid, p["wert"])
+        wert = fitting_value(rd, pid, p["wert"], count)
         if erz.asks((rd["offen"][pid] or {}).get("text")) and (wert != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
             drop += 1                            # an action that only asks: Charisma or no check, never sneaking
             print("dungeon: probe | verworfen | absicht", flush=True)
@@ -4056,7 +4057,7 @@ def probe_stufe(p):
     return ""
 
 
-def fitting_value(rd, pid, wert):
+def fitting_value(rd, pid, wert, count=True):
     """The value of a check by the fixed table of activities (dungeon_anleiten.WURF_WORTE) for the player's own words:
     the model's when it is one the action names or the action names none, else the table's first (Review 27.10.
     Paket 9, G23: „ich klettere“ is never a check on Charisma)."""
@@ -4064,7 +4065,8 @@ def fitting_value(rd, pid, wert):
     fits = [w for w, rx in anleiten.WURF_WORTE if re.search(r"(?<!\w)(?:" + rx + r")", low)]
     if not fits or wert in fits:
         return wert
-    _day.bump("probe_wert_fest")
+    if count:                                    # the Erzähler-Prüfstand counts nothing of the table's day
+        _day.bump("probe_wert_fest")
     print("dungeon: probe | wert | tabelle", flush=True)
     return fits[0]
 
@@ -4293,11 +4295,11 @@ def check_story(r, rd, obj):
     fr = str(obj.get("frage_an") or "").strip().lower()
     out["frage"] = names.get(fr, "")
     out["faeden"] = erz.check_threads(_me, r, rd, obj.get("faeden"))
-    out["dinge"] = erz.check_things(_me, r, rd, obj.get("dinge"))
+    out["dinge"] = erz.check_things(_me, r, rd, obj.get("dinge"), text)
     out["nsc"] = nsc.check(_me, r, rd, obj.get("nsc"), text)      # NSC-Gedächtnis (Tabletop-Punkt 5): by fixed rules
     out["fraktionen"] = fraktionen.check(rd, obj.get("fraktionen"), text)   # Fraktionen mit Uhren (Tabletop-Punkt 7)
     out["quest_fund"] = quest.check(_me, r, rd, obj.get("quest_fund"), text)   # a quest thing found (Punkt 15): fixed rules
-    out["schrift"] = schrift.check(_me, r, rd, obj.get("schriftstueck"))   # a writing found (D&D idea 3): fixed rules
+    out["schrift"] = schrift.check(_me, r, rd, obj.get("schriftstueck"), text)   # a writing found (D&D idea 3): fixed rules
     out["anleitwege"] = anleiten.check_ways(_me, r, rd, obj.get("wege"), text)   # Spieler anleiten: the narrator's ways
     out["begegnung"] = kampf.check_encounter(_me, r, rd, _living(rd), obj.get("begegnung"))
     out["kampf_ende"] = obj.get("kampf_ende") if rd.get("kampf") and obj.get("kampf_ende") in kampf.ENDE else ""
@@ -4714,10 +4716,11 @@ async def _ask_json(system, user, schema, name, tokens):
         return None
 
 
-async def ask_checks(r, rd):
-    """The checks the model asks for this turn, by fixed rules (check_proben). Returns (checks, dropped)."""
+async def ask_checks(r, rd, count=True):
+    """The checks the model asks for this turn, by fixed rules (check_proben). Returns (checks, dropped); count=False
+    for the Erzähler-Prüfstand (no day counters)."""
     obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd, proben=True), schema_proben(r), "proben", 300)
-    return check_proben(r, rd, obj)
+    return check_proben(r, rd, obj, count)
 
 
 def roll_facts(r, rd, wuerfe, hits, zuege):
@@ -4783,6 +4786,8 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
             _day.bump("nachgebessert")
         print(f"dungeon: nachbessern | {fault}", flush=True)
     story = story or (erz.repair_all(rd, *best, wuerfe) if best else None)
+    if story and count:
+        protokoll.rest(_me, rd, story, wuerfe, hits, zuege)   # Protokoll-Prüfer: every fixed check once more on what stays
     if story and rd["_zeugen"]:
         story["zeugen"] = rd["_zeugen"]                  # the attitudes change in keep (zeugen.apply)
     if story and rd["_auftraege"]:
@@ -4855,6 +4860,7 @@ async def run_turn(rid, turn):
                       kampfwuerfe=([x for x in hits if x["pid"] in mit], [x for x in zuege if x["pid"] in mit]) if story else ([], []))
                 if story:
                     tell_no_check(cur, rd.get("_ohne"), seats)   # Review 27.10. Paket 12: why a seat had no check
+                    protokoll.runde(_me, cur)                    # Protokoll-Prüfer: the round's names
                 if story:                         # the host's random rules (Tabletop-Punkt 9), their hints for the next narration
                     cur["zufall_hinweise"] = (zufall.roll(_me, r, cur, "zug") + (zufall.roll(_me, r, cur, "ort") if cur["szene"].get("ort") != ort0 else [])
                                               + (zufall.roll(_me, r, cur, "kampf") if cur.get("kampf") and not kampf0 else []))
@@ -6689,7 +6695,7 @@ def for_live():
             "dinge": sum(len(v.get("dinge") or []) for v in rs), "widerspruch": t["widerspruch"],
             **kampf.for_live(rs), **{k: t[k] for k in ("begegnungen", "kaempfe", "treffer", "daneben", "besiegt", "geflohen")},
             "regler_hoch": t.get("regler_hoch", 0), "regler_runter": t.get("regler_runter", 0), **mut.for_live(rs), "dienste": t["dienste"], "legenden": t["legenden"], "geschuetzt": t["geschuetzt"],
-            **dungeon_karte.for_live(rs),
+            **dungeon_karte.for_live(rs), **protokoll.for_live(),
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),

@@ -1653,9 +1653,10 @@ def head(name):
     return ""
 
 
-def check_things(dm, r, rd, obj):
+def check_things(dm, r, rd, obj, text):
     """dinge of a narration by fixed rules: short, no refused word, no hero's name, none kept already, none that
-    contradicts a kept thing of the same kind. [{name, merkmale}]."""
+    contradicts a kept thing of the same kind, only one the narration names (foe_named: bent words count; Anker-Tabelle
+    2026-10-28). [{name, merkmale}]."""
     heroes = {p["held"]["name"].lower() for _, p in dm.seated(rd)}
     known = {x["name"].lower() for x in rd.get("dinge") or []}
     gear = _gear(r, 1 if rd.get("lang") == "en" else 0)
@@ -1668,6 +1669,9 @@ def check_things(dm, r, rd, obj):
             continue
         if head(name) in gear or any(w in gear for w in _WORT.findall(name.lower())):
             continue                             # a hero's gear is never a thing of the scene (Review 27.10. Paket 7, G18)
+        if not foe_named(name, text):
+            print("dungeon: dinge | nicht erzaehlt", flush=True)
+            continue                             # a thing the story never shows stays out of the memory
         known.add(name.lower())
         out.append({"name": name, "merkmale": mm})
     return out

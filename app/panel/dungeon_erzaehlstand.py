@@ -17,6 +17,9 @@ in memory: nothing is saved, no seat, no profile, no day counter of the table. E
     ruhe      a harmless action: no check
     sackgasse a hall with a person, ways of the map and a chest: the narration names two of them and ends with a
               concrete choice (dungeon_anleiten.vague, the check of „Spieler anleiten“ on for the bench's round)
+    rundlauf  RUNDLAUF, 15 turns on one round (entering, asking, a spell not known, a book, a camp, buying without a
+              merchant): every kept narration through the Protokoll-Prüfer (dungeon_protokoll.rest, runde) and no word
+              for no name as a speaker; 2 when every turn passes at once, 1 when none leaves a fault (rundlauf)
 
 Points per scene: 2 when the first try passes, 1 after a rewrite, 0 when refused or only the panel's repair is left;
 the checks scenes 2 or 0. The model's own Einordnung (systemone use "erzaehler", Einordnung mit Wahrscheinlichkeit:
@@ -79,7 +82,20 @@ SZENEN = {
     "ruhe": ("Harmlose Aktion ohne Probe", "A harmless action without a check"),
     "kampfzug": ("Kämpfen wird ein Angriff gegen die Rüstung", "Fighting becomes an attack against the armour"),   # Kampfzug-Prüfung 5
     "sackgasse": ("Erzählung nennt, was man tun kann", "The narration names what one can do"),   # Spieler anleiten, step 3
+    "rundlauf": ("15 Züge ohne Restfehler", "15 turns without faults left"),   # Vorschlag 6 of 2026-10-28
 }
+# the Rundlauf (Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschlag 6, „ok“): one
+# round of these turns, each through the real steps, the narration kept as the next turn's history; every turn's kept
+# narration through the Protokoll-Prüfer (dungeon_protokoll.rest and runde) and no word for no name as a speaker. The
+# actions are the kinds that went wrong at the table (entering, asking, a spell not known, a book, a camp, buying
+# without a merchant).
+RUNDLAUF = ("Ich betrete die Schenke und sehe mich um.", "Ich frage Oskar, was es Neues gibt.",
+            "Ich setze mich ans Feuer und wärme mir die Hände.", "Ich wirke Feuerball auf den leeren Tisch.",
+            "Ich frage Oskar nach dem Weg zum alten Turm.", "Ich verlasse die Schenke und gehe zum alten Turm.",
+            "Ich untersuche die Tür des Turms nach Fallen.", "Ich öffne die Tür und trete ein.",
+            "Ich schlage das Buch auf dem Pult auf und lese.", "Ich hebe meinen Stab und sehe mich im Raum um.",
+            "Ich kaufe einen Heiltrank.", "Ich rufe laut, ob hier jemand ist.", "Wir schlagen hier unser Lager auf und rasten.",
+            "Ich frage mich, wer hier einmal gewohnt hat.", "Ich gehe zurück zur Schenke und erzähle Oskar davon.")
 LEVELS = ["gar nicht", "teilweise", "ganz"]
 _run = {"laeuft": False, "seit": 0.0, "task": None}
 FALL_FILE = os.path.join(STATE, "dungeon-erzaehlfehler.json")
@@ -258,9 +274,45 @@ def _aktionen(r, rd):
     return rd
 
 
+async def rundlauf(r):
+    """The Rundlauf: RUNDLAUF turn by turn on one round; 2 points when every turn passes at the first try and leaves no
+    fault, 1 when none leaves a fault after its rewrites, else 0 with the first fault left (a fixed word)."""
+    import dungeon_nsc as nsc
+    import dungeon_protokoll as protokoll
+    t0 = time.monotonic()
+    rd = _round(r)
+    rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt der Schenke", "ziel": "", "sprache": "brummig"}], "gruppen": [], "geheimnisse": []}
+    rest, erst, versuche = [], 0, 0
+    for tat in RUNDLAUF:
+        rd["offen"] = {"p0": {"text": tat, "t": 0}}
+        _aktionen(r, rd)
+        got, _ = await dungeon.ask_checks(r, rd, count=False)
+        proben, hits = kampf.attacks(dungeon, r, rd, got, _Fest())
+        wuerfe = dungeon.roll(r, rd, proben, _Fest())
+        erz.receipts(rd, wuerfe, hits, [])
+        story, _, tries = await dungeon.tell(r, rd, wuerfe, hits, [], count=False)
+        versuche += len(tries)
+        if not story:
+            rest.append("abgelehnt")
+        else:
+            fs = protokoll.rest(dungeon, rd, story, wuerfe, hits, [], count=False) + [k for k, _ in protokoll.runde(dungeon, rd, count=False)] \
+                + (["platzhalter"] if any(x["name"].lower() in nsc.LEERWORTE for x in story["npc"]) else [])
+            rest += fs
+            erst += not fs and tries[:1] == [""]
+            dungeon._log(rd, "dm", text=story["text"], npc=story["npc"], frage="")
+            if story.get("szene"):
+                rd["szene"].update(story["szene"])
+        rd["zug"] += 1
+    punkte = 2 if erst == len(RUNDLAUF) else 1 if not rest else 0
+    return {"punkte": punkte, "grund": rest[0] if rest else "ok", "zuege": len(RUNDLAUF), "versuche": versuche,
+            "rest": len(rest), "sekunden": round(time.monotonic() - t0, 1)}
+
+
 async def play(r, sid, own=None):
     """One scene through the real steps of a turn (own: a scene taken over from a case); returns its result."""
     t0 = time.monotonic()
+    if sid == "rundlauf" and not own:
+        return await rundlauf(r)
     if own:
         rd, proben, oks = own_scene(r, own)
         _aktionen(r, rd)
@@ -274,12 +326,12 @@ async def play(r, sid, own=None):
     rd, proben = scene(r, sid)
     _aktionen(r, rd)
     if proben is None and sid == "kampfzug":              # whatever the model asks: fighting a foe is an attack
-        got, _ = await dungeon.ask_checks(r, rd)
+        got, _ = await dungeon.ask_checks(r, rd, count=False)
         rest, hits = kampf.attacks(dungeon, r, rd, got, _Fest())
         ok = any(x["pid"] == "p0" and not x.get("kann_nicht") for x in hits) and not any(x["pid"] == "p0" for x in rest)
         return {"punkte": 2 if ok else 0, "grund": "ok" if ok else "kein angriff", "proben": len(got), "sekunden": round(time.monotonic() - t0, 1)}
     if proben is None:                                    # the checks scenes: does the model ask for one
-        got, _ = await dungeon.ask_checks(r, rd)
+        got, _ = await dungeon.ask_checks(r, rd, count=False)
         ok = bool(got) if sid == "probe" else not got
         return {"punkte": 2 if ok else 0, "grund": "ok" if ok else ("keine probe" if sid == "probe" else "probe"),
                 "proben": len(got), "sekunden": round(time.monotonic() - t0, 1)}

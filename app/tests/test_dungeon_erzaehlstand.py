@@ -37,6 +37,9 @@ def model(foe, good=True):
             if "Felswand" in user or not good:
                 return json.dumps({"proben": [{"wer": "Arvid", "wert": "geschick", "schwer": 14, "wofuer": "die Felswand hinaufklettern"}]})
             return json.dumps({"proben": []})
+        tat = next((x for x in es.RUNDLAUF if x in user), "")
+        if tat:                               # the Rundlauf: a fitting narration for each of its turns, or a refused one
+            return json.dumps({"erzaehlung": RUND.get(tat, "") if good else "Ja.", "frage_an": ""})
         if "Holztür" in user:
             t = ("Arvid wirft sich mit aller Kraft gegen die alte Holztür, doch sie hält stand und rührt sich keinen Fingerbreit. "
                  "Staub rieselt von der Decke." if good else
@@ -62,6 +65,24 @@ def model(foe, good=True):
                  "von der Seite heran.")
         return json.dumps({"erzaehlung": t, "frage_an": ""})
     return ask
+
+
+RUND = dict(zip(es.RUNDLAUF, (
+    "Arvid tritt in die Schenke. Rauch hängt unter den Balken, Oskar steht hinter dem Tresen und poliert einen Krug. Was tust du, Arvid?",
+    "Oskar stellt den Krug ab und brummt: „Neues? Im alten Turm brennt nachts ein Licht.“ Arvid hört ihm aufmerksam zu.",
+    "Arvid setzt sich ans Feuer und hält die Hände in die Wärme. Das Holz knackt leise, draußen pfeift der Wind.",
+    "Arvid hebt die Hand gegen den leeren Tisch, doch nichts geschieht. Oskar zieht nur eine Augenbraue hoch.",
+    "Oskar zeigt mit dem Daumen zur Tür und brummt: „Zum alten Turm? Am Moor vorbei, dann nach Norden.“ Arvid nickt.",
+    "Arvid verlässt die Schenke und folgt dem Pfad am Moor entlang, bis der alte Turm vor ihm aufragt.",
+    "Arvid tastet die Tür des Turms ab, findet aber keine Falle, nur altes Holz und rostige Beschläge.",
+    "Arvid drückt die Tür auf und tritt ein. Drinnen ist es kühl, Staub liegt auf einem Pult in der Mitte.",
+    "Arvid schlägt das Buch auf dem Pult auf. Die Seiten sind vergilbt, die Schrift ist kaum noch zu lesen.",
+    "Arvid hat keinen Stab dabei und sieht sich nur um. Spinnweben hängen in den Ecken, eine Treppe führt nach oben.",
+    "Arvid sieht sich nach einem Händler um, doch im Turm ist niemand, der etwas verkauft.",
+    "Arvid ruft laut in den Turm hinein. Nur das eigene Echo antwortet ihm aus der Höhe.",
+    "Arvid lehnt sich an die kühle Wand und rastet eine Weile, während draußen der Wind um den Turm streicht.",
+    "Arvid denkt darüber nach, wer hier einmal gewohnt hat. Die Spuren im Staub sind alt.",
+    "Arvid geht zurück zur Schenke und erzählt Oskar von dem Turm. Oskar hört zu und brummt nachdenklich.")))
 
 
 class Bench(Base):
@@ -107,9 +128,38 @@ class Bench(Base):
         self.assertEqual((bad["ruhe"]["punkte"], bad["ruhe"]["grund"]), (2, "ok"))   # a check for a good morning: the panel drops it (ALLTAG)
         self.assertEqual(bad["probe"]["punkte"], 2)
         self.assertEqual((bad["sackgasse"]["punkte"], bad["sackgasse"]["grund"], bad["sackgasse"]["versuche"]), (0, "vage", 2))
+        self.assertEqual((good["rundlauf"]["zuege"], good["rundlauf"]["versuche"], good["rundlauf"]["rest"]), (15, 15, 0))
+        self.assertEqual((bad["rundlauf"]["punkte"], bad["rundlauf"]["grund"], bad["rundlauf"]["rest"]), (0, "abgelehnt", 15))
         self.assertEqual(dict(dungeon._day), before)                    # nothing of the bench counts
         self.assertEqual(self._rounds(), runden)                         # no round written
         self.assertNotIn("einordnung", good["zwei"])                    # Einordnung off: none
+
+    def test_the_rundlauf_counts_every_fault_left(self):
+        """Vorschlag 6 of 2026-10-28: a turn of the Rundlauf whose kept narration still has a fault (the Protokoll-Prüfer)
+        or a word for no name as a speaker costs the points; one rewrite on a turn leaves 1."""
+        import dungeon_protokoll as protokoll
+        r = dungeon.rules()
+        story = {"text": "Arvid sieht sich um.", "npc": [], "szene": None}
+        tries = iter([["gegner", ""]] + [[""]] * 14)
+
+        async def tell(r, rd, *a, **kw):
+            return dict(story), 0, next(tries)
+
+        async def checks(r, rd, count=True):
+            return [], 0
+        with mock.patch("dungeon.tell", tell), mock.patch("dungeon.ask_checks", checks), \
+                mock.patch.object(protokoll, "rest", lambda *a, **kw: []), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(asyncio.run(es.rundlauf(r))["punkte"], 1)      # every turn clean, one after a rewrite
+            tries = iter([[""]] * 15)
+            story["npc"] = [{"name": "Keine", "sagt": "Hier ist nichts."}]
+            got = asyncio.run(es.rundlauf(r))
+        self.assertEqual((got["punkte"], got["grund"], got["rest"]), (0, "platzhalter", 15))
+        with mock.patch("dungeon.tell", tell), mock.patch("dungeon.ask_checks", checks), \
+                mock.patch.object(protokoll, "rest", lambda *a, **kw: ["gegner"]), contextlib.redirect_stdout(io.StringIO()):
+            tries = iter([[""]] * 15)
+            story["npc"] = []
+            got = asyncio.run(es.rundlauf(r))
+        self.assertEqual((got["punkte"], got["grund"]), (0, "gegner"))
 
     def test_a_thing_lit_or_drawn_must_be_carried(self):
         """Prüfstand 28.10. („I light a torch“ without a torch: both tries told his torch, 0 points): lighting a thing
