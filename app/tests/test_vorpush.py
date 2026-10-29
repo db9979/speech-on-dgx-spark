@@ -6,8 +6,12 @@ tools/ is not in a copy with only app/ (install selftest): then these tests are 
 import importlib.util
 import os
 import re
+import contextlib
+import inspect
+import io
 import tempfile
 import unittest
+import unittest.mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -99,6 +103,62 @@ class Vorpush(unittest.TestCase):
 
     def test_playwright_pin_comes_from_the_workflow(self):
         self.assertRegex(self.v.playwright_pin() or "", r"^\d+\.\d+\.\d+$")
+
+    def test_system_packages_come_from_the_workflow(self):
+        """1b.: the apt packages are GitHub's (one list); the ones test_fernbild names are among them."""
+        pkgs = self.v.apt_packages()
+        self.assertIn("ffmpeg", pkgs)
+        named = re.search(r"apt install ([a-z0-9. -]+)\)", read("app", "tests", "test_fernbild.py")).group(1).split()
+        self.assertEqual([p for p in named if p not in pkgs], [], "test_fernbild names a package GitHub does not install")
+        src = inspect.getsource(self.v.main)
+        self.assertLess(src.index("if only_list"), src.index("system_packages()"))     # --liste changes nothing
+        self.assertLess(src.index("system_packages()"), src.index("pool.map"))         # before the first test
+
+    def run_check(self, missing_seq, root=True, have=("apt-get", "sudo")):
+        """system_packages() with dpkg and apt-get faked: (calls, output, exit code or None)."""
+        calls, seq = [], list(missing_seq)
+
+        def run(cmd, **kw):
+            calls.append(cmd)
+            ok = not (cmd[0] == "which" and cmd[1] not in have)
+            return unittest.mock.Mock(returncode=0 if ok else 1, stdout="", stderr="")
+        out, code = io.StringIO(), None
+        with tempfile.TemporaryDirectory() as d, \
+                unittest.mock.patch.object(self.v, "APT_MARK", os.path.join(d, "apt-ok")), \
+                unittest.mock.patch.object(self.v, "apt_packages", lambda: ["guacd", "x11vnc"]), \
+                unittest.mock.patch.object(self.v, "apt_missing", lambda pkgs: seq.pop(0) if seq else []), \
+                unittest.mock.patch.object(self.v.subprocess, "run", run), \
+                unittest.mock.patch.object(self.v.os, "geteuid", lambda: 0 if root else 1000), \
+                contextlib.redirect_stdout(out):
+            try:
+                self.v.system_packages()
+            except SystemExit as e:
+                code = e.code
+            mark = os.path.exists(os.path.join(d, "apt-ok"))
+            if code is None:      # remembered: the next run asks dpkg nothing
+                seq[:] = [["guacd"]]
+                self.v.system_packages()
+                self.assertEqual(seq, [["guacd"]])
+        return calls, out.getvalue(), code, mark
+
+    def test_missing_system_packages_are_installed_or_stop_before_any_test(self):
+        calls, _, code, mark = self.run_check([[]])                          # all there: nothing installed
+        self.assertIsNone(code)
+        self.assertTrue(mark)
+        self.assertFalse([c for c in calls if "install" in c])
+        calls, _, code, mark = self.run_check([["x11vnc"], []])              # missing: installed, as root
+        self.assertIsNone(code)
+        self.assertIn(["apt-get", "install", "-y", "-q", "--no-install-recommends", "x11vnc"], calls)
+        calls, _, code, _ = self.run_check([["x11vnc"], []], root=False)     # not root: with sudo -n
+        self.assertIn(["sudo", "-n", "apt-get", "install", "-y", "-q", "--no-install-recommends", "x11vnc"], calls)
+        for seq, root, have in (([["x11vnc"], ["x11vnc"]], True, ("apt-get",)),   # install fails
+                                ([["x11vnc"]], False, ("apt-get",)),              # not root, no sudo
+                                ([["x11vnc"]], True, ())):                        # no apt-get
+            calls, out, code, mark = self.run_check(seq, root, have)
+            self.assertEqual(code, 1, out)
+            self.assertFalse(mark)
+            self.assertIn("STOPP", out)
+            self.assertIn("apt-get install -y -q --no-install-recommends x11vnc", out)   # the exact command
 
 
 if __name__ == "__main__":

@@ -12,6 +12,10 @@ What it does, in this order, and it stops loudly at the first problem:
    red 10 h over night and nine pushes landed on it). Only a fix for it passes, with --rotfix. When GitHub cannot
    be asked, it says so and goes on (the full run on GitHub still decides).
 1. app/VERSION is higher than on origin/main and is the top line of CHANGELOG.md (bump forgotten or stale).
+1b. The system packages GitHub "Tests" installs with apt (the `apt-get install` lines in .github/workflows/tests.yml,
+   the one list): a missing one is installed here (apt-get as root, else with `sudo -n`); when that is not possible
+   it stops at once with the exact command, never a red test_fernbild in the middle of the run (a cloud container
+   without x11vnc, 2026-10-29). A list found complete is remembered (APT_MARK) until the workflow's list changes.
 2. A Python 3.11 venv with the panel's pinned packages (app/requirements-panel.lock, like GitHub "Tests") in
    ~/.cache/speech-spark-vorpush; it is rebuilt when the lock file changes. Without fastapi it stops: with the
    system Python `hilfe.py --docs` fails and hilfe_docs.json stays stale (red V01.0.677).
@@ -20,7 +24,7 @@ What it does, in this order, and it stops loudly at the first problem:
    test_hilfe_quality, which import the changed module, and main went red for .808-.817). A module in SLOW runs
    when a changed file is one of its own (test_<name>.py, a file it names, or a file under SLOW_WHEN).
    Each module runs as `selftest.py discover -s tests -p test_NAME.py` (a red test gets its second try there).
-Exit code 0 only when everything is green. It changes nothing but the generated docs and its own venv.
+Exit code 0 only when everything is green. It changes nothing but the generated docs, its own venv and the missing system packages (1b.).
 """
 import hashlib
 import json
@@ -39,6 +43,7 @@ VENV = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.c
 PY = "python3.11"   # the version GitHub "Tests" runs (.github/workflows/tests.yml)
 JOBS = 4            # modules at the same time; each runs its own panel in its own state folder
 REPO = "db9979/speech-on-dgx-spark"
+APT_MARK = os.path.join(os.path.dirname(VENV), "apt-ok")   # sha256 of the package list last found complete
 RUNS = "https://api.github.com/repos/%s/actions/workflows/tests.yml/runs?branch=main&event=push&per_page=30"
 
 # the browser test of every page takes more than half of the whole run (tests/dauer.json, ~450 of ~870 s); it runs
@@ -163,6 +168,66 @@ def playwright_pin():
     return m.group(1) if m else None
 
 
+def apt_packages():
+    """The packages GitHub "Tests" installs with apt (every `apt-get install` line of the workflow, in order)."""
+    with open(os.path.join(ROOT, ".github", "workflows", "tests.yml"), encoding="utf-8") as f:
+        text = f.read()
+    out = []
+    for line in re.findall(r"^\s*(?:sudo )?apt-get install ([^\n#]+)", text, re.M):
+        out += [w for w in line.split() if not w.startswith("-") and w not in out]
+    return out
+
+
+def apt_missing(pkgs):
+    """The packages of pkgs that no installed package is or provides (Ubuntu 24.04 installs libguac-client-vnc0 as
+    libguac-client-vnc0t64, which provides the old name); all of them without dpkg."""
+    try:
+        r = subprocess.run(["dpkg-query", "-W", "-f=${Status}\t${Package}\t${Provides}\n"], capture_output=True, text=True)
+    except OSError:
+        return list(pkgs)
+    have = set()
+    for line in r.stdout.splitlines():
+        status, _, rest = line.partition("\t")
+        if status.endswith(" installed"):
+            name, _, provides = rest.partition("\t")
+            have.add(name.split(":")[0])
+            have.update(re.sub(r"\(.*?\)", "", x).strip() for x in provides.split(","))
+    return [p for p in pkgs if p not in have]
+
+
+def system_packages():
+    """1b.: GitHub's apt packages here too, installed when missing, or a stop with the command before any test."""
+    pkgs = apt_packages()
+    want = hashlib.sha256(" ".join(pkgs).encode()).hexdigest()
+    try:
+        with open(APT_MARK) as f:
+            if f.read().strip() == want:
+                return
+    except OSError:
+        pass
+    missing = apt_missing(pkgs)
+    if missing:
+        cmd = ["apt-get", "install", "-y", "-q", "--no-install-recommends", *missing]
+        hand = "sudo apt-get update && sudo " + " ".join(cmd)
+        if subprocess.run(["which", "apt-get"], capture_output=True).returncode:
+            stop("system packages missing (" + " ".join(missing) + ") and no apt-get here: install them, on Debian/Ubuntu: " + hand)
+        pre = [] if os.geteuid() == 0 else ["sudo", "-n"]
+        if pre and subprocess.run(["which", "sudo"], capture_output=True).returncode:
+            stop("system packages missing (" + " ".join(missing) + "), not root and no sudo: " + hand)
+        print("vorpush: installing system packages like GitHub \"Tests\": " + " ".join(missing), flush=True)
+        env = dict(os.environ, DEBIAN_FRONTEND="noninteractive")
+        if subprocess.run(pre + cmd, env=env).returncode:      # an old package index: update once, then again
+            subprocess.run(pre + ["apt-get", "update", "-q"], env=env)
+            subprocess.run(pre + cmd, env=env)
+        missing = apt_missing(missing)
+        if missing:
+            stop("system packages could not be installed (" + " ".join(missing) + "): " + hand)
+        subprocess.run(pre + ["systemctl", "disable", "--now", "guacd.service"], capture_output=True)   # like GitHub
+    os.makedirs(os.path.dirname(APT_MARK), exist_ok=True)
+    with open(APT_MARK, "w") as f:
+        f.write(want + "\n")
+
+
 def venv_python(need_browser):
     py = os.path.join(VENV, "bin", "python")
     mark = os.path.join(VENV, ".lock-sha256")
@@ -235,6 +300,7 @@ def main(argv):
     if only_list:
         return 0
     check_version(base)
+    system_packages()
     py = venv_python(True)   # many modules besides test_ui_browser open pages in Chromium
     regen_docs(py)
     red = []
