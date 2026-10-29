@@ -4349,6 +4349,13 @@
 "titel": "Fernsitzung übersteht kurzen Abbruch",
 "text": "Auf dem Laptop eine Shell öffnen, etwas mit Ausgabe tippen (z. B. ls -la), dann WLAN 30 Sekunden aus oder den Deckel zu. Erwartet: oben „Verbindung wird wiederhergestellt …“, nach dem Zurückkommen dieselbe Shell mit dem letzten Bildschirm, ohne neuen Code. Dasselbe länger als 2 Minuten: „Verbindung verloren“ mit „Neu verbinden“. Leerlauf auf 3 Minuten stellen und warten: „Sitzung endet in m:ss“, eine Taste lässt ihn verschwinden. Hinter dem Synology-Proxy eine Stunde offen lassen ohne Tippen (mit langem Leerlauf): bleibt verbunden. Logs: nur „verbindung | verloren“ und „wieder verbunden“, nie Inhalte.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P646",
+"v": 1227,
+"titel": "Spontanhilfe-Seite aufgeräumt",
+"text": "Fernzugang → Spontanhilfe am Laptop: ohne Hilfe nur „Keine Hilfe offen“ und der Verlauf links, kein Zeigen/Vollbild/Beenden. „+ Neue Hilfe“: vier Punkte (erstellt → einladen), Nummer groß mit Ring, „0 von 5 Fehlversuchen“, Reiter Link/E-Mail/Shell; im Reiter Shell Linux/macOS umschalten, immer nur eine Zeile. Link kopieren: kurze Einblendung unten statt Textzeile. 10 Minuten warten (oder Nummer verfallen lassen): Nummer verschwindet, „Abgelaufen – Neue Nummer“, Eintrag im Verlauf. Mit einer zweiten Person teilen lassen: erst dann Zeigepfeil und Vollbild, das Bild füllt die rechte Seite. Am iPhone: Liste und rechte Seite untereinander, nichts seitlich verschoben.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

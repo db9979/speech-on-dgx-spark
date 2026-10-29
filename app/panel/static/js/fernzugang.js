@@ -27,7 +27,8 @@ function fzZeit(s){if(!s)return'–';const d=new Date(s*1000),h=new Date();
   const uhr=d.toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
   return d.toDateString()===h.toDateString()?uhr:d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'numeric'})+' '+uhr}
 function fzMin(s){const m=Math.max(0,Math.round((Date.now()/1000-s)/60));return m<60?m+' min':Math.floor(m/60)+' h '+(m%60)+' min'}
-function fzMsg(text,bad){const m=$('fzmsg');if(m){m.textContent=text||'';m.classList.toggle('err',!!bad)}}
+// messages of the page as a short toast (sayToast), never as a line under it; an empty one changes nothing
+function fzMsg(text,bad){if(text)sayToast(text,bad?8000:4000,{bad:!!bad})}
 function fzUhr(s){return new Date(s*1000).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'})}
 function fzStand(g){return g.stand==='abbau'?['warn',t('wird beim nächsten Kontakt abgebaut','removed at next contact')]
   :g.hostkey_falsch?['bad',t('Host-Schlüssel falsch','host key wrong')]:!g.erlaubt?['warn',t('gesperrt','blocked')]
@@ -392,9 +393,9 @@ async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.
   if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
 function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
 function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
-  window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text){fzMsg(text,true);fzNeuKnopf()}fzLoad()}
+  window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzNeuKnopf(text);fzLoad()}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
-function fzNeuKnopf(){const g=FZ.letzt,m=$('fzmsg');if(!g||!m)return;const b=fzBtn(t('Neu verbinden','Connect again'),'p',()=>{m.textContent='';fzOpen(g)});b.id='fzwiederneu';m.append(' ',b)}
+function fzNeuKnopf(text){const g=FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
   try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);if(FZ.ws||FZ.fb)fzTrennen();if(FZ.fs)fzFZu('');fzLoad()}catch(e){fzMsg(e.message,true)}}
 // ---------------------------------------------------------------- the files (SFTP)

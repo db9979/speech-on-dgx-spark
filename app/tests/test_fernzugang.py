@@ -2068,12 +2068,13 @@ class InBrowser(unittest.TestCase):
                 await pg.evaluate("FZ.letzt={id:'g_0123456789ab',name:'vps-1'};fzZu(fzGrund('verloren'))")
                 self.assertFalse(await pg.evaluate("!!$('fzwieder')&&!$('fzwieder').hidden"))
                 for _ in range(20):
-                    msg = await pg.evaluate("[$('fzmsg').textContent,!!$('fzwiederneu')]")
+                    msg = await pg.evaluate("[$('updtoast').textContent,!!$('fzwiederneu'),$('updtoast').style.display]")
                     if msg[1]:
                         break
                     await pg.wait_for_timeout(100)
                 self.assertIn("Verbindung verloren", msg[0])
                 self.assertTrue(msg[1], msg)
+                self.assertEqual(msg[2], "block")                                  # a toast, not a line under the page
                 self.assertEqual(await pg.evaluate("$('fzwiederneu').textContent"), "Neu verbinden")
                 await br.close()
         asyncio.run(go())
@@ -2139,7 +2140,7 @@ class InBrowser(unittest.TestCase):
                 await pop.evaluate("fzAlleTasten()")
                 await pop.wait_for_function("window.__locked===1", timeout=10000)
                 await pop.evaluate("window.__nokb=1;fzAlleTasten()")
-                self.assertIn("Chrome", await pop.evaluate("$('fzmsg').textContent"))
+                self.assertIn("Chrome", await pop.evaluate("$('updtoast').textContent"))
                 await br.close()
         asyncio.run(go())
 
@@ -2611,6 +2612,108 @@ class ShellForReal(Base):
             await pg.wait_for_function("$('fztabs').hidden&&$('shmain').hidden&&!$('fzmain').hidden", timeout=15000)
         try:
             self.run_seite(body)
+        finally:
+            helpers.set_config(spontanhilfe=False)
+            sh.HILFE.clear()
+
+    def test_page_spontanhilfe_tidy_one_step_at_a_time(self):
+        """Dominik 2026-10-29 10:04 „A“ (spontanhilfe/seite/A-aufgeraeumt.png): list left like „Systeme“ (Läuft, Verlauf
+        without a name), right only the next step: four steps, the number with its ring, „Neue Nummer“ and „Verwerfen“,
+        the ways as tabs with one line at a time; Zeigepfeil and Vollbild only while she shares; at 0:00 the number goes
+        and „Abgelaufen – Neue Nummer“ comes; messages as a toast, never a line under the page."""
+        import spontanhilfe as sh
+        helpers.set_config(spontanhilfe=True)
+        sh.HILFE.clear()
+        sh.verlauf_note("nummer_gesperrt", 5)
+        shown = "id=>{const e=$(id);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'&&e.getClientRects().length>0}"
+
+        async def body(ctx, pg):
+            await pg.click("#fzentsperren")
+            await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&SH.d&&!SH.d.gesperrt&&!$('fztabs').hidden", timeout=15000)
+            await pg.click("#fztabsh")
+            await pg.wait_for_function(f"({shown})('shleer')", timeout=15000)
+            st = await pg.evaluate(f"""(()=>{{const v=({shown});return {{zeig:v('shzeig'),voll:v('shvoll'),ende:v('shende'),schritte:v('shschritte'),
+                neu:v('shgo'),msg:!!$('shmsg')||!!$('fzmsg'),laeuft:$('shlaeufth').textContent,verlauf:$('shverlauflist').textContent}}}})()""")
+            self.assertEqual([st["zeig"], st["voll"], st["ende"], st["schritte"], st["msg"]], [False] * 5, st)   # nothing without a help
+            self.assertTrue(st["neu"])
+            self.assertEqual(st["laeuft"], "Läuft · 0")
+            self.assertIn("Nummer gesperrt", st["verlauf"])
+            self.assertIn("gesperrt", st["verlauf"])
+            await pg.click("#shgo")
+            await pg.wait_for_function("$('shnummer').textContent.length===7", timeout=15000)
+            nummer = await pg.evaluate("$('shnummer').textContent")
+            st = await pg.evaluate("""[[...$('shschritte').children].map(li=>li.className),$('shringtext').textContent,$('shlaeuft').textContent,
+                $('shnummerinfo').textContent,$('shfehl').textContent]""")
+            self.assertEqual(st[0], ["fertig", "jetzt", "", ""])
+            self.assertRegex(st[1], r"^(10:00|9:5\d)$")
+            self.assertIn("Hilfe " + nummer, st[2])
+            self.assertIn("wartet auf Person", st[2])
+            self.assertIn("Nummer gilt noch", st[3])
+            self.assertEqual(st[4], "0 von 5 Fehlversuchen")
+            # the ways as tabs: one line at a time, Linux or macOS
+            await pg.evaluate("SH.link='https://spark.example.org/hilfe#abc';SH.befehl='curl -fsSL https://spark.example.org/fernzugang/anker | python3 - hilfe https://spark.example.org';"
+                              "SH.befehlMac=SH.befehl.replace('| python3','| /usr/bin/python3');shWege()")
+            self.assertEqual(await pg.evaluate(f"['shplink','shpmail','shpshell'].map({shown})"), [True, False, False])
+            await pg.click("#shwshell")
+            self.assertEqual(await pg.evaluate(f"['shplink','shpmail','shpshell'].map({shown})"), [False, False, True])
+            self.assertEqual(await pg.evaluate("document.querySelectorAll('#shmain code.shinp').length"), 2)        # link and one line
+            self.assertIn("| python3 - hilfe", await pg.evaluate("$('shbefehl').textContent"))
+            await pg.click("#shosmac")
+            self.assertIn("/usr/bin/python3", await pg.evaluate("$('shbefehl').textContent"))
+            await pg.click("#shwmail")
+            self.assertTrue(await pg.evaluate(f"({shown})('shpmail')&&$('shmailde').classList.contains('on')"))
+            await pg.click("#shmailen")
+            self.assertTrue(await pg.evaluate("SH.mailEn&&$('shmailen').classList.contains('on')"))
+            await pg.click("#shwlink")
+            await pg.click("#shkopie")
+            await pg.wait_for_function("$('updtoast').style.display==='block'", timeout=5000)   # copied or not: a toast
+            # 0:00: the number goes, „Abgelaufen – Neue Nummer“ comes; the panel moves it to the history
+            await pg.evaluate("SH.nbis=SH.lbis=Date.now()/1000-1")
+            await pg.wait_for_function(f"({shown})('shabgelaufen')&&!({shown})('shnummer')&&!({shown})('shwtabsbox')", timeout=5000)
+            h = sh.current()
+            h.nummer_bis = h.link_bis = time.time() - 1
+            await pg.evaluate("shLoad()")
+            await pg.wait_for_function("$('shverlauflist').textContent.includes('Nummer verfallen')&&$('shlaeufth').textContent==='Läuft · 0'", timeout=15000)
+            self.assertTrue(await pg.evaluate(f"({shown})('shabgelaufen')"))
+            self.assertNotIn(nummer, await pg.evaluate("$('shmain').innerText"))
+            await pg.click("#shneunr2")
+            await pg.wait_for_function(f"$('shnummer').textContent.length===7&&!({shown})('shabgelaufen')", timeout=15000)
+            await pg.click("#shweg")
+            await pg.wait_for_function(f"({shown})('shleer')&&!({shown})('shabgelaufen')", timeout=15000)
+            # she shares: the picture fills the right side, the viewer's buttons only now
+            st = await pg.evaluate(f"""(()=>{{clearTimeout(SH.timer);clearTimeout(FZ.timer);const v=({shown}),now=Date.now()/1000;
+                SH.d.hilfe={{id:'x',stand:'offen',art:'ansehen',name:'Anna',herkunft:'internet',ip:'',seit:now-240,bis:now+3600,kann_verlaengern:true,teilt:false,admin:'Admin'}};shShow();
+                const vor=['shzeig','shvoll','shende','shviewinfo','shschritte','shnummerbox'].map(v);shIn({{typ:'teilt',an:true}});
+                const nach=['shzeig','shvoll','shende','shviewinfo'].map(v),r=$('shrechts').getBoundingClientRect(),w=$('shview').getBoundingClientRect();
+                const out={{vor,nach,stand:$('shvstand').textContent,liste:$('shlaeuft').textContent,breit:w.width/r.width}};shZu();SH.d.hilfe=null;shShow();return out}})()""")
+            self.assertEqual(st["vor"], [False, False, True, True, False, False], st)
+            self.assertEqual(st["nach"], [True, True, True, False], st)
+            self.assertTrue(st["stand"].startswith("● Anna teilt · 4 min · noch"), st)
+            self.assertIn("teilt Bildschirm", st["liste"])
+            self.assertGreater(st["breit"], 0.9)
+        try:
+            self.run_seite(body)
+        finally:
+            helpers.set_config(spontanhilfe=False)
+            sh.HILFE.clear()
+
+    def test_page_spontanhilfe_on_the_phone_one_column(self):
+        import spontanhilfe as sh
+        helpers.set_config(spontanhilfe=True)
+        sh.HILFE.clear()
+
+        async def body(ctx, pg):
+            await pg.click("#fzentsperren")
+            await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&SH.d&&!SH.d.gesperrt&&!$('fztabs').hidden", timeout=15000)
+            await pg.click("#fztabsh")
+            await pg.click("#shgo")
+            await pg.wait_for_function("$('shnummer').textContent.length===7", timeout=15000)
+            a = await pg.evaluate("""(()=>{const l=document.querySelector('.shliste').getBoundingClientRect(),r=$('shrechts').getBoundingClientRect();
+                return {gestapelt:r.top>=l.bottom-1,breite:document.documentElement.scrollWidth-innerWidth}})()""")
+            self.assertTrue(a["gestapelt"], a)
+            self.assertLessEqual(a["breite"], 0, a)
+        try:
+            self.run_seite(body, size=(390, 844))
         finally:
             helpers.set_config(spontanhilfe=False)
             sh.HILFE.clear()

@@ -1099,7 +1099,7 @@
     <span class="fzfill"></span>
     <div class="fzlock" id="fzlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg><span id="fzlockbis"></span><button class="fzpill" type="button" id="fzverl">Verlängern</button><button class="fzpill" type="button" id="fzsperren">Sperren</button></div>
     <a class="wayl fzgear" href="#" data-way="Funktionen → Fernzugang zu Servern" title="Einstellungen: Funktionen → Fernzugang zu Servern" aria-label="Einstellungen des Fernzugangs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
-    <button class="b p fzneubtn" type="button" id="fzneu" hidden>+ System koppeln</button>
+    <button class="b p fzneubtn" type="button" id="fzneu" hidden>+ System koppeln</button><button class="b p fzneubtn" type="button" id="shgo" hidden>+ Neue Hilfe</button>
   </div>
   <div class="note" id="fzoff" hidden>Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern.</div>
   <div class="note err" id="fznotaus" hidden>Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.</div>
@@ -1123,44 +1123,44 @@
     </div>
   </div>
   <div id="shmain" hidden>
-    <h3>Spontanhilfe</h3>
-    <div class="fh">Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe, gibt die Nummer und ihren Vornamen ein und teilt ihren Bildschirm. Bei ihr wird nichts installiert, nichts wird aufgezeichnet, nichts geht an ein Modell.</div>
     <div class="note" id="shturn" hidden>Von unterwegs braucht das Bild den Vermittler: Funktionen → Anrufe von unterwegs. Ohne ihn geht es nur im Heimnetz.</div>
     <div class="shcols">
-      <div class="shleft">
-        <div class="row shtools" id="shtools" hidden><button class="b" type="button" id="shzeig">Zeigen</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b danger" type="button" id="shende">Beenden</button></div>
-        <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><div class="shzeigdot" id="shzeigdot" hidden></div></div>
-        <div class="shview shterm" id="shterm" hidden></div>
-        <div class="fh" id="shviewinfo"></div>
+      <div class="shliste">
+        <div class="fzgrp" id="shlaeufth">Läuft · 0</div><div id="shlaeuft"></div>
+        <div class="fzgrp" id="shverlaufh">Verlauf · 30 Tage</div><div id="shverlauflist"></div>
+        <div class="fzfuss"><button class="fzlink" type="button" id="shalle" hidden>Alle anzeigen ›</button><button class="fzlink danger" type="button" id="shverlaufweg" hidden>Verlauf löschen</button></div>
+        <div class="fh" id="shverlaufinfo">Ohne Namen und ohne Inhalt: Zeit, Admin, Art, Dauer, Zuhause oder Internet.</div>
       </div>
-      <div class="shside">
-        <div class="card"><h3>Neue Hilfe</h3>
-          <div class="row"><button class="b p" type="button" id="shgo">Neue Hilfe</button></div>
-          <div id="shnummerbox" hidden>
-            <div class="shnummer" id="shnummer"></div><div class="fh" id="shnummerinfo"></div>
-            <div id="shlinkrow" hidden><div class="fh">Link für die Person (30 Minuten, einmal):</div><code class="fzcmd" id="shlink"></code>
-              <div class="row"><button class="b" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div><div id="shqrbild"></div>
-              <div class="row" id="shmailrow"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><label class="fzchk"><input type="checkbox" id="shmailen"> Englisch</label><button class="b" type="button" id="shmailgo">Per E-Mail</button></div>
-              <div class="fh" id="shmailno" hidden>Per E-Mail geht es aus einem Admin-Profil mit E-Mail-Konto und „Mails senden“.</div></div>
-            <div id="shbefehlrow" hidden><div class="fh">Für einen Server ohne Bildschirm (Shell, Linux und macOS): die Person fügt diese Zeile in ihr Terminal ein, ohne sudo, und tippt dort die Nummer.</div><code class="fzcmd" id="shbefehl"></code>
-              <div class="fh">Auf dem Mac:</div><code class="fzcmd" id="shbefehlmac"></code>
-              <div class="row"><button class="b" type="button" id="shbefehlkopie">Zeile kopieren</button><button class="b" type="button" id="shbefehlmackopie">Mac-Zeile kopieren</button></div></div>
-            <div class="row"><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
-          </div>
+      <div class="shrechts" id="shrechts">
+        <div class="shleer" id="shleer"><b>Keine Hilfe offen.</b><div class="fh">Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe, gibt Nummer und Vornamen ein und teilt ihren Bildschirm. Bei ihr wird nichts installiert, nichts aufgezeichnet, nichts geht an ein Modell.</div><button class="b p" type="button" id="shgo2">+ Neue Hilfe</button></div>
+        <ol class="shschritte" id="shschritte" hidden><li data-s="1">Hilfe erstellt</li><li data-s="2">Person einladen</li><li data-s="3">Person verbunden</li><li data-s="4">Bildschirm geteilt</li></ol>
+        <div id="shnummerbox" hidden>
+          <div class="shnumrow"><div class="shring" id="shring" role="img" aria-label="Restzeit der Nummer"><span id="shringtext"></span></div><div class="shnummer" id="shnummer"></div>
+            <div class="shmeta"><div id="shnummerinfo"></div><div><span id="shfehl"></span> · <button class="fzlink shinline" type="button" id="shneunr">Neue Nummer</button></div></div>
+            <span class="fzfill"></span><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
+          <div class="shabgelaufen" id="shabgelaufen" hidden><b>Abgelaufen</b><span class="fh" id="shabgelaufeninfo"></span><button class="b p" type="button" id="shneunr2">Neue Nummer</button></div>
+          <div id="shwtabsbox"><div class="shwtabs" id="shwtabs" role="tablist" aria-label="Wie die Person kommt"><button type="button" role="tab" class="on" data-w="link" id="shwlink">🔗 Link</button><button type="button" role="tab" data-w="mail" id="shwmail">✉️ E-Mail</button><button type="button" role="tab" data-w="shell" id="shwshell">⌨️ Shell (ohne Bildschirm)</button></div>
+          <div class="shweg" id="shplink"><div class="row shnowrap"><code class="shinp" id="shlink"></code><button class="b p" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div>
+            <div class="fh">Gilt 30 Minuten und einmal. Die Person öffnet den Link, gibt ihren Vornamen ein und klickt „Bildschirm teilen“.</div><div id="shqrbild"></div></div>
+          <div class="shweg" id="shpmail" hidden><div id="shmailrow"><div class="row shnowrap"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><button class="b p" type="button" id="shmailgo">Senden</button></div>
+              <div class="row"><span class="segc shseg" role="group" aria-label="Sprache der Einladung"><button type="button" class="on" id="shmailde">Deutsch</button><button type="button" id="shmailen">English</button></span><span class="fh">aus deinem Mail-Konto, Design „Karte“</span></div></div>
+            <div class="fh" id="shmailno" hidden>Per E-Mail geht es aus einem Admin-Profil mit E-Mail-Konto und „Mails senden“.</div></div>
+          <div class="shweg" id="shpshell" hidden><div class="row"><span class="segc shseg" role="group" aria-label="System der Person"><button type="button" class="on" id="shoslinux">Linux</button><button type="button" id="shosmac">macOS</button></span></div>
+            <div class="row shnowrap"><code class="shinp" id="shbefehl"></code><button class="b p" type="button" id="shbefehlkopie">Kopieren</button></div>
+            <div class="fh">Für einen Server ohne Bildschirm: die Person fügt die Zeile in ihr Terminal ein, ohne sudo, und tippt dort die Nummer.</div></div></div>
         </div>
-        <div class="card" id="shwartet" hidden><h3>Jemand wartet</h3><div id="shwartetname"></div><div class="fh" id="shwartethin">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
+        <div class="shwartet" id="shwartet" hidden><b id="shwartetname"></b><div class="fh" id="shwartethin">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
           <div class="row"><button class="b p" type="button" id="shannehmen">Annehmen</button><button class="b" type="button" id="shablehnen">Ablehnen</button></div></div>
-        <div class="card" id="shuhr" hidden><h3>Sitzungsuhr</h3><div id="shuhrtext"></div><div class="fh" id="shhinweis" hidden>Bald ist Schluss. „Verlängern“ gibt 60 Minuten mehr, nie über die Höchstdauer.</div>
-          <div class="row"><button class="b" type="button" id="shplus">Verlängern (Code)</button></div></div>
-        <div class="card" id="shchat" hidden><h3>Chat</h3><div class="shchatlist" id="shchatlist" role="log"></div>
-          <div class="row"><input id="shchatin" maxlength="500" autocomplete="off" placeholder="Nachricht" aria-label="Nachricht"><button class="b" type="button" id="shchatgo">Senden</button></div>
-          <div class="fh">Der Chat geht nur zwischen euch beiden, nie ans Modell, nie ins Log.</div></div>
+        <div class="shoffen" id="shoffen" hidden>
+          <div class="shvbar"><span class="shpill ok" id="shvstand"></span><span class="fzfill"></span><button class="b" type="button" id="shzeig">Zeigepfeil</button><button class="b" type="button" id="shchatbtn" aria-expanded="false" aria-controls="shchat">Chat</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b" type="button" id="shplus" hidden>Verlängern (Code)</button><button class="b danger" type="button" id="shende">Beenden</button></div>
+          <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><div class="shzeigdot" id="shzeigdot" hidden></div><div class="shwarte" id="shviewinfo"></div></div>
+          <div class="shview shterm" id="shterm" hidden></div>
+          <div class="shchat" id="shchat" hidden><div class="shchatlist" id="shchatlist" role="log"></div>
+            <div class="row"><input id="shchatin" maxlength="500" autocomplete="off" placeholder="Nachricht" aria-label="Nachricht"><button class="b" type="button" id="shchatgo">Senden</button></div>
+            <div class="fh">Der Chat geht nur zwischen euch beiden, nie ans Modell, nie ins Log.</div></div>
+        </div>
       </div>
     </div>
-    <div class="card" id="shjetzt" hidden><h3>Gerade verbunden</h3><div class="fh">Der Vorname steht nur hier auf der Admin-Seite, die Adresse nur gekürzt.</div><div id="shjetztlist"></div></div>
-    <details class="card fzverlauf" id="shverlauf"><summary>Verlauf der Spontanhilfe</summary><div class="fh" id="shverlaufh"></div><div id="shverlauflist"></div>
-      <div class="row"><button class="b" type="button" id="shverlaufweg">Verlauf löschen</button></div></details>
-    <div class="mut" id="shmsg" role="status"></div>
   </div>
   <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
   <div class="fzview" id="fzview" hidden><div class="fztip" id="fztip" role="tooltip" hidden></div>
@@ -1210,7 +1210,6 @@
     <div class="note" id="fblangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; „Sparsam“ beim Öffnen hilft, von unterwegs ist der direkte https-Zugang deutlich schneller.</div>
     <div class="fbschirm" id="fbschirm" tabindex="0" aria-label="Bildschirm des Systems"></div>
   </div>
-  <div class="mut" id="fzmsg" role="status"></div>
 </div></section>
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>

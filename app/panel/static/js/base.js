@@ -167,7 +167,10 @@ const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
 // „dauert länger als sonst …“ or its error in the page itself. The settings form keeps its fields (no placeholders).
 // a short line at the bottom of the page (update finished, saved, reloaded); a newer one replaces it
-function sayToast(text,ms){const e=$('updtoast');if(!e)return;e.textContent=text;e.style.display='block';clearTimeout(sayToast.t);sayToast.t=setTimeout(()=>e.style.display='none',ms||4000)}
+// o.bad: an error (red edge, role alert); o.knopf [label, fn]: one button in it (o.id its id), the toast goes on a tap
+function sayToast(text,ms,o){const e=$('updtoast');if(!e)return;o=o||{};e.textContent=text;e.classList.toggle('bad',!!o.bad);e.setAttribute('role',o.bad?'alert':'status');
+  if(o.knopf){const b=document.createElement('button');b.type='button';b.className='b p';b.textContent=o.knopf[0];if(o.id)b.id=o.id;b.onclick=()=>{e.style.display='none';o.knopf[1]()};e.append(' ',b)}
+  e.style.display='block';clearTimeout(sayToast.t);sayToast.t=setTimeout(()=>e.style.display='none',ms||4000)}
 // writes HTML only when it differs from what this place shows (polled tables: marking, focus and hover stay)
 function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
