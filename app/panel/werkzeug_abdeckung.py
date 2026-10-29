@@ -88,6 +88,7 @@ RULES = {
     "bildaendern": "bilder.py: Foto im Chat mit Änderungswunsch, das Panel startet die Änderung nach fester Regel",
     "gedpruefen": "gedaechtnis.py: „Stimmt das noch?“ und die Antwort darauf",
     "gedfragen": "gedaechtnis.py: Nachfrage zum Gedächtnis",
+    "gedhinweis": "aendern.py: „Mach das rückgängig“ nach memory_save nimmt den Fakt zurück (gemerkt.take_back)",
     "havoice": "hamelden.py: „Sag mir Bescheid, wenn die Haustür aufgeht“, erst nach Ja",
     "mcp": "agent.py: die Werkzeuge der Dienste (mcp_…), bleiben, wenn der Dienst genannt wird",
     "mymcp": "meinmcp.py: die Werkzeuge der eigenen Dienste (mcpu_…), bleiben, wenn der Dienst genannt wird",

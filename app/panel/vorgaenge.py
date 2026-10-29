@@ -133,8 +133,9 @@ ERLEDIGT_TAGE = 7               # done and gone ones stay this long under „Erl
 ALT_TAGE = 30                   # an open one without a deadline goes after this ("weg")
 MAX_ITEMS = 300
 # what a button that opens a page needs (Für dich: the calendar line, the mail's number, folder, sender, subject);
-# a sender and a subject are outside text, shown and handed on as text only
-DATEN = ("event", "ref", "folder", "fd", "addr", "subject", "chat", "weg")
+# a sender and a subject are outside text, shown and handed on as text only; "fakten" the ids and revs of the facts
+# on a card „Gemerkt von selbst“ (gemerkt.py, numbers only)
+DATEN = ("event", "ref", "folder", "fd", "addr", "subject", "chat", "weg", "fakten")
 MAX_TEXT = 160
 FELD_MAX = 600                  # a line of a card: the text of a mail to send is read before „Senden“
 ID = re.compile(r"v[0-9a-f]{10}")

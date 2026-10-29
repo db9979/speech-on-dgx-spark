@@ -348,6 +348,7 @@ struct ChatView: View {
                             }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
+                            if m.role != "user", let mem = m.mem, !mem.isEmpty { GemerktChips(message: m, items: mem) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
                                 MoreRow(kind: m.moreKind ?? "", items: more)
                             }
@@ -926,6 +927,39 @@ struct AnswersCard: View {
             }
         }
         .disabled(sent)
+    }
+}
+
+/// Gemerkt-Hinweis (gemerkt.py): „✓ Gemerkt: …“ under the answer with „Rückgängig“ (only while the fact is unchanged,
+/// the Spark checks) and „Ansehen“ (Ich → Gedächtnis in the panel); a conversation drawn again fetches the text.
+struct GemerktChips: View {
+    let message: Conversation.Message
+    let items: [Conversation.Gemerkt]
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(items, id: \.id) { g in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(g.text.isEmpty ? String(localized: "Gemerkt") : String(localized: "Gemerkt: \(g.text)"))
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 14) {
+                        if !g.done.isEmpty {
+                            Text(g.done).foregroundStyle(.secondary)
+                        } else if g.undo {
+                            Button("Rückgängig") { Task { await Conversation.shared.undoMemory(message.id, g.id) } }
+                        }
+                        if let u = SparkAPI.wayLink("Ich → Gedächtnis") { Button("Ansehen") { openURL(u) } }
+                    }
+                }
+                .padding(.vertical, 4).padding(.horizontal, 10)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.3), lineWidth: 1))
+            }
+        }
+        .buttonStyle(.borderless)
+        .font(.footnote)
+        .padding(.leading, 6)
+        .task { await Conversation.shared.memoryText(message.id) }
     }
 }
 

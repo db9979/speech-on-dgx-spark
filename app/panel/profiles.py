@@ -1183,6 +1183,11 @@ def _clean_msg(m, uid=None):
     # a card of Offen (vorgaenge.py): only its number; every device draws the card with today's state
     if m["role"] == "assistant" and isinstance(m.get("vg"), str) and re.fullmatch(r"v[0-9a-f]{10}", m["vg"]):
         d["vg"] = m["vg"]
+    if m["role"] == "assistant" and m.get("mem"):   # Gemerkt-Hinweis: the facts this answer kept, numbers only
+        import gemerkt
+        mem = gemerkt.clean(m["mem"])
+        if mem:
+            d["mem"] = mem
     att = _att(m.get("att")) if m["role"] == "assistant" and not screen else []
     if att:
         d["att"] = att
@@ -1338,8 +1343,9 @@ def _keep_prev(item, why, now):
     """The fact's wording so far becomes its newest earlier version (why: fix, hand, nachfrage, zurueck)."""
     old = {"text": item["text"], "until": now, "why": why,
            "src": item.get("src") or ("auto" if item.get("auto") else "said")}
-    if item.get("confirmed"):
-        old["confirmed"] = item["confirmed"]
+    for k in ("confirmed", "changed"):   # kept so „Rückgängig“ (undo_fact) brings the wording back as it was
+        if item.get(k):
+            old[k] = item[k]
     item["prev"] = ([old] + [p for p in item.get("prev") or [] if isinstance(p, dict)])[:MAX_PREV]
 
 
@@ -1524,6 +1530,49 @@ def restore_fact(uid, fact_id, i):
         item.pop("auto", None)
         _write(_path(uid, "memory.json"), facts)
     return item
+
+
+def undo_fact(uid, fact_id, ok):
+    """Gemerkt-Hinweis „Rückgängig“ (gemerkt.py): takes back what remember just did to one fact. A new fact goes; a
+    fixed place it gave a new wording gets its earlier version 0 back as it was (source, confirmation, change time),
+    and the undone wording is not kept as a version. ok(item) is the caller's check under the lock (the fact is
+    unchanged since it was saved). Returns "geloescht" or "zurueckgeholt", or why not: "fehlt", "geaendert" or
+    "gleich" (the same wording said again: nothing to take back)."""
+    import gedaechtnis
+    with _lock:
+        facts = memory(uid)
+        item = next((x for x in facts if x["id"] == fact_id), None)
+        if item is None:
+            return "fehlt"
+        if not ok(item):
+            return "geaendert"
+        prev = [p for p in item.get("prev") or [] if isinstance(p, dict) and p.get("text")]
+        if not item.get("changed"):
+            was_full = memory_full(uid, facts)
+            facts = [x for x in facts if x is not item]
+            _write(_path(uid, "memory.json"), facts)
+            how = "geloescht"
+        elif prev and prev[0].get("until") == item["changed"]:
+            back = prev.pop(0)
+            was_full = False
+            item["prev"], item["text"] = prev, str(back["text"])[:MAX_FACT_LEN]
+            item["src"] = back.get("src") if back.get("src") in gedaechtnis.SRC else "said"
+            for k in ("confirmed", "changed"):
+                if back.get(k):
+                    item[k] = back[k]
+                else:
+                    item.pop(k, None)
+            if item["src"] == "auto":
+                item["auto"] = True
+            else:
+                item.pop("auto", None)
+            _write(_path(uid, "memory.json"), facts)
+            how = "zurueckgeholt"
+        else:
+            return "gleich"
+    if was_full:   # room again: the card „Gedächtnis voll“ closes (as in forget)
+        gedaechtnis.full_card(uid, False)
+    return how
 
 
 def forget(uid, fact_id=None, text=None):

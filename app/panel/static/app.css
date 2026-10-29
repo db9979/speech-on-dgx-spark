@@ -301,6 +301,11 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .facts{list-style:none;padding:0;margin:10px 0 0}.facts li{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}.facts li span{flex:1}.facts em.auto{font-style:normal;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:4px}
 .tidy{margin:10px 0 0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px}.tidy ul{margin:6px 0 8px;padding-left:18px}.tidy li{margin:4px 0}
 .bubble .mem{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+/* Gemerkt-Hinweis (gemerkt.js): the chip under an answer, „✓ Gemerkt: … · Rückgängig · Ansehen“ */
+.bubble .gmbox{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.bubble .gm{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:4px 10px;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--mut);max-width:100%}
+.bubble .gm .gm-t{overflow-wrap:anywhere}
+.bubble .gm.gm-weg{border-style:dashed}
 /* Verlauf auf allen Geräten (verlauf.js): the channel a message came through, and another device answering right now */
 .bubble .via{display:inline-block;margin:0 6px 2px 0;padding:0 6px;border-radius:8px;font-size:11px;line-height:17px;color:var(--mut);border:1px solid var(--line);vertical-align:1px}
 .msg.user .bubble .via{color:var(--on-acc);border-color:rgba(255,255,255,.65);background:rgba(255,255,255,.16)}

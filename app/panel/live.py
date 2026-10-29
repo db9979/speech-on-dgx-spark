@@ -1353,7 +1353,12 @@ def snapshot(view="admin", now=None):
         ged = gedaechtnis.for_live(now)
     except Exception:
         ged = {"on": False}
-    if ged.get("on"):
+    try:   # Gemerkt-Hinweis (gemerkt.py): today's chips, cards and take-backs, numbers only
+        import gemerkt
+        gm = gemerkt.for_live(now)
+    except Exception:
+        gm = {"on": False}
+    if ged.get("on") or gm.get("on"):
         used.add("ged")
     try:
         import klaeren
@@ -1969,7 +1974,12 @@ def snapshot(view="admin", now=None):
                         + (f" · {ged['ask']} Nachfrage offen" if ged.get("ask") else "")
                         + (f" · {ged['untagged']} ohne Thema" if ged.get("untagged") else "")
                         + (f" · {ged['full']} {'Profil' if ged['full'] == 1 else 'Profile'} voll" if ged.get("full") else "")
-                        + (f" · {ged['offer']} gelernt, wartet auf Übernehmen" if ged.get("offer") else ""))
+                        + (f" · {ged['offer']} gelernt, wartet auf Übernehmen" if ged.get("offer") else "")
+                        if ged.get("on") else "")
+            if gm.get("on"):   # Gemerkt-Hinweis: what was shown and taken back today (never a fact)
+                x["sub"] += ((" · " if x["sub"] else "") + f"heute {gm.get('chip', 0)} gemerkt · {gm.get('karte', 0)} Karten"
+                             f" · {gm.get('rueckgaengig', 0)} rückgängig · {gm.get('stimmt', 0)} bestätigt"
+                             + (f" · {gm['abgelehnt']} abgelehnt" if gm.get("abgelehnt") else ""))
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")

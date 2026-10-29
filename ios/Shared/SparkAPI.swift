@@ -27,6 +27,7 @@ enum ChatEvent {
                                         // words, and its card „Wartet auf dein Ja“ (vorgaenge.py, Stufe 2) when there is one
     case answers([String])  // Rückfrage-Karte (ablauf.asks, klaeren.py): the answers to the question this answer asks
     case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
+    case memory(id: String, rev: String, text: String, undo: Bool)   // Gemerkt-Hinweis (gemerkt.py): what memory_save kept
 }
 
 /// One tool of an answer (ablauf.py): only its readable name, whether it worked and its time, never what it found.
@@ -666,6 +667,8 @@ struct SparkAPI {
 
     // ---------------------------------------------------------------- pictures painted for an answer (bilder.py)
     static func isJob(_ s: String) -> Bool { s.count == 12 && s.allSatisfy { $0.isHexDigit && !$0.isUppercase } }
+    /// lower-case hex of exactly n digits (a fact's number and state, gemerkt.py)
+    static func isHex(_ s: String, _ n: Int) -> Bool { s.count == n && s.allSatisfy { $0.isHexDigit && !$0.isUppercase } }
 
     /// A painted picture's job: "wait", "run", "done" (then the picture's id) or "error" (then the reason).
     func pictureJob(_ job: String) async throws -> (state: String, pic: String?, error: String) {
@@ -925,7 +928,13 @@ struct SparkAPI {
                         case "calendar", "briefing": cont.yield(.face("calendar"))
                         case "home": cont.yield(.face("home"))
                         case "home_done": cont.yield(.face(ev["ok"] as? Bool == true ? "happy" : "error"))
-                        case "memory" where ev["action"] as? String == "saved": cont.yield(.face("memory"))
+                        case "memory" where ev["action"] as? String == "saved":
+                            cont.yield(.face("memory"))
+                            // Gemerkt-Hinweis: only a fact number (8 hex) and its state (12 hex) go back to the Spark
+                            if let id = ev["id"] as? String, let rev = ev["rev"] as? String, SparkAPI.isHex(id, 8), SparkAPI.isHex(rev, 12) {
+                                cont.yield(.memory(id: id, rev: rev, text: String((ev["text"] as? String ?? "").prefix(300)),
+                                                   undo: ev["undo"] as? Bool ?? false))
+                            }
                         case "outside": cont.yield(.mark("outside"))
                         // a described screen (bedienen.look): sent back as "screen", the Spark keeps only a note
                         case "screen": cont.yield(.mark("screen"))

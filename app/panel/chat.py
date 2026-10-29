@@ -49,6 +49,7 @@ import systemone  # noqa: E402  (Einordnung mit Wahrscheinlichkeit: Antworten im
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules for facts)
+import gemerkt  # noqa: E402  (Gemerkt-Hinweis: what was learned by itself becomes a card)
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import vorrat  # noqa: E402  (Vorrat je Profil: answers from what the services keep in memory)
 import ack  # noqa: E402  (the instant ready-made sentence)
@@ -81,6 +82,7 @@ async def learn_once():
                 continue   # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
             prof = profiles.by_id(uid)
             for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
+                kept = []
                 if vorrang.speaking():
                     return saved  # someone is talking: try again later
                 answer = await llm.complete(None, None, "Lernen aus Gesprächen", 400, temperature=0.2, ccfg=ccfg, c=c,
@@ -88,8 +90,12 @@ async def learn_once():
                 known = {x["text"].lower() for x in profiles.memory(uid)}
                 for fact in recall.parse_facts(answer):
                     if fact.lower() not in known:
-                        saved += bool(profiles.remember(uid, fact, auto=True, convo=convo.get("id")))
+                        text = profiles.remember(uid, fact, auto=True, convo=convo.get("id"))
+                        saved += bool(text)
+                        if text:
+                            kept.append(text)
                 recall.mark(uid, convo)
+                gemerkt.learned(uid, convo, kept)   # Gemerkt-Hinweis: the card „Gemerkt von selbst“ for the next time
     return saved
 
 
@@ -2575,7 +2581,7 @@ async def text_ask(request, prof, body, who="siri"):
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat(Request(request.scope, receive))
     answer, error, from_mail, from_outside = "", "", False, False
-    steps, cards = [], []   # the Begleiter's Frag Spark: tools used and the cards under the answer (desk_cards)
+    steps, cards, mems = [], [], []   # the Begleiter's Frag Spark: tools used and the cards under the answer (desk_cards)
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
             if not line.startswith("data:"):
@@ -2598,6 +2604,8 @@ async def text_ask(request, prof, body, who="siri"):
                 steps.append(ev)
             elif ev.get("type") in ("confirm", "choice", "goto") and len(cards) < 6:
                 cards.append(ev)
+            elif ev.get("type") == "memory" and ev.get("action") == "saved" and ev.get("id") and len(mems) < 3:
+                mems.append(ev)   # Gemerkt-Hinweis (gemerkt.py): the Begleiter's card „Gemerkt: …“
     answer = answer.strip() or error or "Dazu habe ich keine Antwort."
     # kept like the browser keeps it: the code word blacked out, an answer from mail marked (so the
     # background learner never reads it)
@@ -2626,21 +2634,24 @@ async def text_ask(request, prof, body, who="siri"):
     def hidden(x):
         return sum(x.count(h) for h in SECRET_HINT.values())
     return dict({"answer": plain}, **({"md": md[:MD_ANSWER_MAX]} if hidden(md) >= hidden(plain) else {}),
-                **desk_cards(steps, cards))
+                **desk_cards(steps, cards, mems, features.allowed("rueckgaengig", prof["id"])))
 
 
 # the pages a card under an answer opens in the panel (#me=, start.js): the Begleiter only opens these
 DESK_GOTO = {"cal": ("Im Kalender ansehen", "#me=calbox"), "post": ("Mail öffnen", "#me=mailbox"),
-             "fund": ("In Finden ansehen", "#me=fundbox")}
+             "fund": ("In Finden ansehen", "#me=fundbox"),
+             "mem": ("Gedächtnis ansehen", "#me=factbox")}
 
 
-def desk_cards(steps, cards):
+def desk_cards(steps, cards, mems=(), undo=False):
     """Frag Spark im Begleiter (Begleiter nachziehen 5a, Dominik 2026-10-20): the same events the page shows under an
     answer, in fixed words for a program without a page: "steps" one line (the readable tool names, ok or not, the
     time), "cards" [{"title", "buttons": [{"label", "send" | "open" | "focus", "main"?}]}]. A "send" button sends its
     word like a typed answer, so the module that asked decides with its own rules; "open" is only a page of DESK_GOTO;
     "focus" puts the cursor in the field. Nothing on a card comes from the model but the parts of „A oder B?“
-    (ablauf.asks: the answer's own words, never after mail or outside text)."""
+    (ablauf.asks: the answer's own words, never after mail or outside text). mems: what memory_save kept in this answer
+    (Gemerkt-Hinweis, gemerkt.note): a card „Gemerkt: …“ with „Rückgängig“ (sends „Mach das rückgängig“, so the
+    undo asks for its yes like a typed one; only with undo on) and „Gedächtnis ansehen“."""
     out = {}
     if steps:
         names = []
@@ -2668,6 +2679,11 @@ def desk_cards(steps, cards):
             goto.append(ev["to"])
     if goto:
         shown.append({"title": "", "buttons": [{"label": DESK_GOTO[k][0], "open": DESK_GOTO[k][1]} for k in goto]})
+    if mems:   # the facts are the person's own words (memory_save), shown on the own computer only
+        text = "; ".join(str(m.get("text") or "") for m in mems)
+        shown.append({"title": ("Gemerkt: " + text)[:60], "buttons": (
+            [{"label": "Rückgängig", "send": "Mach das rückgängig"}] if undo and any(m.get("undo") for m in mems) else [])
+            + [{"label": DESK_GOTO["mem"][0], "open": DESK_GOTO["mem"][1]}]})
     if shown:
         out["cards"] = shown[:3]
     return out

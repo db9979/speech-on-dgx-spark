@@ -160,7 +160,8 @@ func vorgangState(_ x: Vorgang) -> String {
                                    "beantwortet": String(localized: "Im Gespräch beantwortet"), "ersetzt": String(localized: "Neuer Vorschlag"),
                                    "fehler": String(localized: "Nicht ausgeführt"), "cx_gelesen": String(localized: "Gelesen"),
                                    "geantwortet": String(localized: "Beantwortet"), "bestaetigt": String(localized: "Bestätigt"),
-                                   "abgelehnt": String(localized: "Abgelehnt"), "wieder_da": String(localized: "Läuft wieder")]
+                                   "abgelehnt": String(localized: "Abgelehnt"), "wieder_da": String(localized: "Läuft wieder"),
+                                   "rueckgaengig": String(localized: "Rückgängig gemacht")]
     let how = x.how == "abgelaufen" ? String(localized: "Abgelaufen") : x.how == "vs_ja" && !x.fertig.isEmpty ? x.fertig
         : ended[x.how] ?? (x.state == "weg" ? String(localized: "Nicht wichtig")
         : x.how == "fd_remind" ? String(localized: "Erinnerung gesetzt") : String(localized: "Erledigt"))

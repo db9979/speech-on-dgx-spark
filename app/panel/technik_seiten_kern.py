@@ -249,7 +249,7 @@ SEITEN = {
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"],
             "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
-            "gedaechtnis.slot_of": ["s13"],
+            "gedaechtnis.slot_of": ["s13"], "gemerkt.take_back": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
@@ -647,6 +647,18 @@ SEITEN = {
                  "earlier version (at most {profiles.MAX_PREV}, reason „platz“). A value learned by itself never replaces "
                  "a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per "
                  "place only the value that holds it, never earlier versions or an offer."),
+                ("Gemerkt-Hinweis (gemerkt.py): memory_save schickt Nummer und Stand des Fakts (gemerkt.rev_of) mit, "
+                 "unter der Antwort steht „Gemerkt: …“ mit „Rückgängig“; das Gespräch behält nur die Nummern. "
+                 "Rückgängig (gemerkt.take_back) geht nur, solange der Fakt seitdem unverändert ist: ein neuer Fakt geht, "
+                 "ein fester Platz bekommt seine frühere Fassung zurück. Von selbst Gelerntes wird eine Karte „Gemerkt von "
+                 "selbst“ (bis zu {gemerkt.CARD_MAX} Fakten, {gemerkt.OFFEN_TAGE} Tage) mit „Stimmt“ und „Rückgängig“; "
+                 "ihr Titel nennt nur eine Zahl, nie den Fakt.",
+                 "Remembered note (gemerkt.py): memory_save sends the fact's number and state along (gemerkt.rev_of), "
+                 "under the answer stands „Remembered: …“ with „Undo“; the conversation keeps only the numbers. Undo "
+                 "(gemerkt.take_back) works only while the fact is unchanged since: a new fact goes, a fixed place gets "
+                 "its earlier version back. What was learned by itself becomes a card „Remembered by itself“ (up to "
+                 "{gemerkt.CARD_MAX} facts, {gemerkt.OFFEN_TAGE} days) with „That's right“ and „Undo“; its title names "
+                 "only a number, never the fact."),
             ]),
         ],
         "code": [
@@ -676,9 +688,10 @@ SEITEN = {
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
             ("gedaechtnis.slot_of", ("fester Themen-Platz eines Fakts nach festen Mustern", "a fact's fixed topic place by fixed patterns")),
+            ("gemerkt.take_back", ("Rückgängig nur bei unverändertem Fakt", "undo only while the fact is unchanged")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
-                  "test_gedaechtnis_grenze",
+                  "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte"],
         "heute": [],
     },

@@ -137,6 +137,7 @@
     <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow" data-show="chat.memory" style="margin-left:18px"><div class="lbl"><b>Gedächtnis prüfen</b><span>Jeder Eintrag behält, woher er kommt; feste Regeln markieren, was veraltet sein könnte. Das Modell nennt es nie als Tatsache.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_check"><i></i></label></div>
+      <div class="setrow" data-show="chat.memory" style="margin-left:18px"><div class="lbl"><b>Gemerkt-Hinweis</b><span>„Gemerkt: …“ mit „Rückgängig“ unter der Antwort; von selbst Gelerntes als Karte unter Offen. Push nie mit Text.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_note"><i></i></label></div>
       <div data-show="chat.memory_check" style="margin-left:36px"><label>Gelernt gilt als alt nach (Monaten)</label><input class="num" id="chat.memory_stale_months" type="number" min="1" max="60"><div class="fh">1 bis 60, Standard 6. Nur automatisch gelernte Einträge, die nie bestätigt wurden.</div></div>
       <div class="setrow" data-show="chat.memory_check" style="margin-left:36px"><div class="lbl"><b>Im Gespräch nachfragen</b><span>Passt ein vielleicht veralteter Eintrag zur Frage, fragt der Spark nach der Antwort: „Stimmt das noch?“ Einmal pro Gespräch, 3× am Tag.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_ask"><i></i></label></div>
       <div class="setrow" data-show="chat.memory_check" style="margin-left:36px"><div class="lbl"><b>Themen im Gedächtnis</b><span>Das Sprachmodell im Heimnetz ordnet neue Einträge Themen zu (Person, Zuhause, Arbeit …). Nur zur Anzeige, entscheidet nichts.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_topics"><i></i></label></div>
@@ -1616,6 +1617,7 @@
 <script src="/static/js/einladung.js"></script>
 <script src="/static/js/mitschreib.js"></script>
 <script src="/static/js/offen.js"></script>
+<script src="/static/js/gemerkt.js"></script>
 <script src="/static/js/mitteilung.js"></script>
 <script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>

@@ -20,6 +20,7 @@ import kiwix  # noqa: E402
 import mail  # noqa: E402
 import notaus  # noqa: E402
 import profiles  # noqa: E402
+import gemerkt  # noqa: E402  (Gemerkt-Hinweis: the chip under an answer that remembered something)
 import recall  # noqa: E402
 import senden  # noqa: E402
 import tidy  # noqa: E402
@@ -345,8 +346,8 @@ async def run(t, name, args, st):
         return await briefing_text(t, st)
     if name == "memory_save" and t.prof:
         fact = profiles.remember(t.prof["id"], args.get("fact", ""), src="said", convo=t.body.get("convo"))
-        if fact:
-            await t.out.put({"type": "memory", "action": "saved", "text": fact})
+        if fact:   # Gemerkt-Hinweis (gemerkt.py): the chip's number, rev and whether there is something to take back
+            await t.out.put(dict({"type": "memory", "action": "saved", "text": fact}, **gemerkt.note(t.prof["id"], fact)))
         if fact is profiles.FULL:   # only protected facts left (profiles._cap): nothing thrown away, this one refused
             return profiles.FULL_TEXT
         return "Saved." if fact else "Nothing to save."

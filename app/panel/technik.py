@@ -140,6 +140,7 @@ MODULE = {
     "docembed": ("wissen", "Bedeutungsvektoren für die Dokumentsuche"),
     "embed_worker": ("wissen", "Das Vektormodell im eigenen Prozess"),
     "gedaechtnis": ("wissen", "Gedächtnis mit Beleg und Prüfung"),
+    "gemerkt": ("wissen", "Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes"),
     "recall": ("wissen", "Suche in früheren Gesprächen, gelernte Fakten"),
     "memtidy": ("wissen", "Wöchentliches Aufräumen des Gedächtnisses"),
     "lokal": ("wissen", "Erst lokal suchen, bevor etwas nach außen geht"),

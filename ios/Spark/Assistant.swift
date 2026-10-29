@@ -36,6 +36,17 @@ final class Conversation: ObservableObject {
         var filed: Bool?
         /// Alles Offene im Assistenten (vorgaenge.py): the number of the card this message is (VorgangImGespraech)
         var vg: String?
+        /// Gemerkt-Hinweis (gemerkt.py): what memory_save kept in this answer; kept with the message as numbers only
+        var mem: [Gemerkt]?
+    }
+
+    /// one chip „Gemerkt: …“ under an answer: the fact's number and state, its text while known, how it ended
+    struct Gemerkt: Hashable {
+        let id: String
+        let rev: String
+        var text = ""
+        var undo = true
+        var done = ""   // "" | the Spark's sentence after „Rückgängig“
     }
 
     /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
@@ -52,6 +63,13 @@ final class Conversation: ObservableObject {
         var m = Message(role: role, text: text, mark: mark)
         if role == "assistant", let p = picture(d) { m.picJob = p.job; m.picPrompt = p.prompt }
         if role == "assistant", let v = d["vg"] as? String, v.range(of: #"^v[0-9a-f]{10}$"#, options: .regularExpression) != nil { m.vg = v }
+        if role == "assistant", let mem = d["mem"] as? [[String: Any]] {
+            let g = mem.compactMap { x -> Gemerkt? in
+                guard let id = x["id"] as? String, let rev = x["rev"] as? String, SparkAPI.isHex(id, 8), SparkAPI.isHex(rev, 12) else { return nil }
+                return Gemerkt(id: id, rev: rev)
+            }
+            if !g.isEmpty { m.mem = Array(g.prefix(3)) }
+        }
         return m
     }
 
@@ -103,6 +121,35 @@ final class Conversation: ObservableObject {
             notice = n > 0 ? String(localized: "Im Wissensbuch abgelegt.") : String(localized: "Kein Satz hatte eine Stelle in den Quellen.")
         } catch {
             self.error = error.localizedDescription
+        }
+    }
+
+    /// Gemerkt-Hinweis „Rückgängig“ (POST /api/profile/memory/{id}/undo): the Spark takes back only its own fact and
+    /// only while it is unchanged since rev; otherwise it says why (409 „Inzwischen geändert“).
+    func undoMemory(_ message: UUID, _ fact: String) async {
+        guard let api = SparkAPI.current, let i = messages.firstIndex(where: { $0.id == message }),
+              let k = messages[i].mem?.firstIndex(where: { $0.id == fact }), let g = messages[i].mem?[k] else { return }
+        var said = ""
+        do {
+            let r = try await api.post("api/profile/memory/\(g.id)/undo", ["rev": g.rev, "wo": "app"])
+            said = r["how"] as? String == "zurueckgeholt" ? String(localized: "Frühere Fassung wieder da") : String(localized: "Eintrag vergessen")
+        } catch {
+            said = error.localizedDescription
+        }
+        if let j = messages.firstIndex(where: { $0.id == message }), let n = messages[j].mem?.firstIndex(where: { $0.id == fact }) {
+            messages[j].mem?[n].done = said
+        }
+    }
+
+    /// the text of a chip drawn again (a conversation from the Spark keeps only the number): from Ich → Gedächtnis
+    func memoryText(_ message: UUID) async {
+        guard let api = SparkAPI.current, let i = messages.firstIndex(where: { $0.id == message }),
+              let mem = messages[i].mem, mem.contains(where: { $0.text.isEmpty }),
+              let facts = try? await api.memory().facts else { return }
+        let by = Dictionary(facts.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
+        guard let j = messages.firstIndex(where: { $0.id == message }) else { return }
+        for (n, g) in (messages[j].mem ?? []).enumerated() where g.text.isEmpty {
+            if let t = by[g.id] { messages[j].mem?[n].text = t } else { messages[j].mem?[n].undo = false; messages[j].mem?[n].done = String(localized: "Nicht mehr im Gedächtnis") }
         }
     }
 
@@ -973,6 +1020,8 @@ final class Conversation: ObservableObject {
                 case .confirm(let kind, let vg): edit { $0.confirm = kind; $0.confirmVg = vg }
                 case .answers(let x): edit { $0.answers = x }
                 case .wbuch(let id): edit { $0.wbId = id }
+                case .memory(let id, let rev, let text, let undo):
+                    edit { $0.mem = Array((($0.mem ?? []) + [Gemerkt(id: id, rev: rev, text: text, undo: undo)]).prefix(3)) }
                 }
             }
             streamDone = true
@@ -1017,6 +1066,8 @@ final class Conversation: ObservableObject {
             if let mark = m.mark { d[mark] = true }
             // the picture stays with the answer, so the panel and every device show it again
             if let j = m.picJob, let p = m.picPrompt, !p.isEmpty { d["att"] = [["k": "bild", "p": p, "j": j]] }
+            // Gemerkt-Hinweis: only the numbers, the text comes from the memory when it is drawn again
+            if let mem = m.mem, !mem.isEmpty { d["mem"] = mem.map { ["id": $0.id, "rev": $0.rev] } }
             return d
         }
         guard !msgs.isEmpty, let first = messages.first(where: { $0.role == "user" }) else { return }

@@ -54,7 +54,10 @@ struct TodayView: View {
                         w > 0 ? String(localized: "\(w) Seiten warten aufs Lesen") : "")
                 }
                 if let m = cards["memory"] as? [String: Any] {
-                    row("brain", String(localized: "Gedächtnis"), "\(m["facts"] as? Int ?? 0)", String(localized: "gemerkte Fakten"))
+                    // Gemerkt-Hinweis: how many learned by itself wait on a card under Offen (a number, never a fact)
+                    let neu = m["neu"] as? Int ?? 0
+                    row("brain", String(localized: "Gedächtnis"), "\(m["facts"] as? Int ?? 0)",
+                        neu > 0 ? String(localized: "\(neu) von selbst gemerkt, stimmt das?") : String(localized: "gemerkte Fakten"))
                 }
             }
             .navigationTitle("Heute")

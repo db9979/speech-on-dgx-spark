@@ -74,6 +74,7 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
     if may("tasks"):   # the lists on the Spark (tasks.card): numbers and the newest entries of Einkauf
         import tasks
         out["cards"]["tasks"] = tasks.card(uid)
-    if may("memory"):
-        out["cards"]["memory"] = {"facts": len(profiles.memory(uid))}
+    if may("memory"):   # with the Gemerkt-Hinweis: how many learned by itself wait on a card (gemerkt.py, a number)
+        import gemerkt
+        out["cards"]["memory"] = {"facts": len(profiles.memory(uid)), "neu": gemerkt.open_count(uid)}
     return out

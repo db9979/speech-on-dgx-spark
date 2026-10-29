@@ -250,6 +250,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
+| `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
@@ -1670,6 +1671,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 
 - A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result.
 - What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version.
+- What the Spark remembers the person sees at once and can take back (gemerkt.take_back): only the own fact, only while it is unchanged since (state gemerkt.rev_of), otherwise 409. What a notification or Telegram can reach names only a number, never the text of the fact.
 
 #### Standards
 
@@ -1706,8 +1708,9 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
+- `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`
 
 ### Login, profile
 
@@ -2226,7 +2229,7 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer; when the memory is full (only things said or confirmed, profiles._cap), memory_save answers „Not done“ with the way to tidy up.
+1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer; when the memory is full (only things said or confirmed, profiles._cap), memory_save answers „Not done“ with the way to tidy up. What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note).
 2. <a id="kn-werkzeuge-s2"></a>**Offered in this round?**: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock.
 3. <a id="kn-werkzeuge-s3"></a>**Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
 4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail.
@@ -2403,6 +2406,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt.
 - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day.
 - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer.
+- Remembered note (gemerkt.py): memory_save sends the fact's number and state along (gemerkt.rev_of), under the answer stands „Remembered: …“ with „Undo“; the conversation keeps only the numbers. Undo (gemerkt.take_back) works only while the fact is unchanged since: a new fact goes, a fixed place gets its earlier version back. What was learned by itself becomes a card „Remembered by itself“ (up to 3 facts, 7 days) with „That's right“ and „Undo“; its title names only a number, never the fact.
 
 #### Numbers (from the code)
 
@@ -2469,8 +2473,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: a fact's fixed topic place by fixed patterns ([step 13](#kn-wissen-s13))
+- `app/panel/gemerkt.py` `take_back`: undo only while the fact is unchanged ([step 13](#kn-wissen-s13))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
+Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
 
 ### Guard
 

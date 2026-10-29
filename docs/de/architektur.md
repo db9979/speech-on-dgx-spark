@@ -250,6 +250,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/fund.py` | Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
+| `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
@@ -1670,6 +1671,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 
 - Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt.
 - Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte „Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung.
+- Was der Spark sich merkt, sieht die Person sofort und kann es zurücknehmen (gemerkt.take_back): nur den eigenen Fakt, nur solange er seit dem Merken unverändert ist (Stand gemerkt.rev_of), sonst 409. Was eine Mitteilung oder Telegram erreichen kann, nennt nur eine Zahl, nie den Text des Fakts.
 
 #### Maßstäbe
 
@@ -1706,8 +1708,9 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/vault.py` `seal`: Geheimnisse versiegelt ablegen ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot ([Schritt 8](#kn-sicherheit-s8))
+- `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`
 
 ### Anmeldung, Profil
 
@@ -2226,7 +2229,7 @@ flowchart TD
   s12 -->|ja| s12x
 ```
 
-1. <a id="kn-werkzeuge-s1"></a>**Modell ruft ein Werkzeug**: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt; ist das Gedächtnis voll (nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen.
+1. <a id="kn-werkzeuge-s1"></a>**Modell ruft ein Werkzeug**: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt; ist das Gedächtnis voll (nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis).
 2. <a id="kn-werkzeuge-s2"></a>**In dieser Runde angeboten?**: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre.
 3. <a id="kn-werkzeuge-s3"></a>**Notaus hält es an?**: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert.
 4. <a id="kn-werkzeuge-s4"></a>**Fremder Text gelesen?**: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.
@@ -2403,6 +2406,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt.
 - Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag.
 - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot.
+- Gemerkt-Hinweis (gemerkt.py): memory_save schickt Nummer und Stand des Fakts (gemerkt.rev_of) mit, unter der Antwort steht „Gemerkt: …“ mit „Rückgängig“; das Gespräch behält nur die Nummern. Rückgängig (gemerkt.take_back) geht nur, solange der Fakt seitdem unverändert ist: ein neuer Fakt geht, ein fester Platz bekommt seine frühere Fassung zurück. Von selbst Gelerntes wird eine Karte „Gemerkt von selbst“ (bis zu 3 Fakten, 7 Tage) mit „Stimmt“ und „Rückgängig“; ihr Titel nennt nur eine Zahl, nie den Fakt.
 
 #### Zahlen (aus dem Code)
 
@@ -2469,8 +2473,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: fester Themen-Platz eines Fakts nach festen Mustern ([Schritt 13](#kn-wissen-s13))
+- `app/panel/gemerkt.py` `take_back`: Rückgängig nur bei unverändertem Fakt ([Schritt 13](#kn-wissen-s13))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
+Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
 
 ### Wächter
 

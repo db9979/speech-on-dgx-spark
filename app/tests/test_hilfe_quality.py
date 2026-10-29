@@ -27,6 +27,7 @@ CASES = (
     ("Wie stelle ich die Stimme um?", None, "Stimme", "spark"),
     ("Was ist der Notaus?", None, "Notaus", "spark"),
     ("Was bedeutet Feste Themen bei Gedächtnis prüfen?", None, "Gedächtnis prüfen", "spark"),
+    ("Wie nehme ich zurück, was sich der Spark gemerkt hat?", None, "Gemerkt-Hinweis", "spark"),
     ("Was ist Mein Notaus?", None, "Mein Notaus", "spark"),
     ("Wie bekomme ich Mails vorgelesen?", None, "E-Mail", "spark"),
     ("Wie mache ich ein Backup?", None, "Sicherung", "spark"),

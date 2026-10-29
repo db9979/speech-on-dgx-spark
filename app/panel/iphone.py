@@ -116,8 +116,9 @@ THINGS = {
     # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen
     "memory": ((("GET",), r"/api/profile/memory"), (("DELETE", "PUT"), rf"/api/profile/memory/{_ID}"),
                (("POST",), r"/api/profile/memory/(?:tidy|forget)"),
-               # Feste Themen (gedaechtnis.SLOTS): bring an earlier version back, take or drop a learned value
-               (("POST",), rf"/api/profile/memory/{_ID}/(?:restore|offer)")),
+               # Feste Themen (gedaechtnis.SLOTS): bring an earlier version back, take or drop a learned value; the
+               # chip „Gemerkt“ under an answer: take back what memory_save just did (gemerkt.py)
+               (("POST",), rf"/api/profile/memory/{_ID}/(?:restore|offer|undo)")),
     # Bilder (bilder.py): look, paint from a wish, delete one or all; change an own picture (FLUX or a quick
     # button) and upload an own photo to change only with Bilder ändern (bilder.EDIT_KEY, checked there)
     "bilder": ((("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),

@@ -45,7 +45,7 @@ internal static class AskCards
     public const int MaxLabel = 30;
 
     /// <summary>Die Panel-Seiten, die ein Sprung-Knopf öffnen darf (chat.DESK_GOTO).</summary>
-    public static readonly string[] Pages = { "#me=calbox", "#me=mailbox", "#me=fundbox" };
+    public static readonly string[] Pages = { "#me=calbox", "#me=mailbox", "#me=fundbox", "#me=factbox" };
 
     public static IReadOnlyList<AskCard> Parse(JsonNode? node)
     {

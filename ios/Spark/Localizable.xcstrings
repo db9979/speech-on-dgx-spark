@@ -18340,6 +18340,76 @@
           }
         }
       }
+    },
+    "Gemerkt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembered: %@"
+          }
+        }
+      }
+    },
+    "Ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        }
+      }
+    },
+    "Frühere Fassung wieder da": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier version is back"
+          }
+        }
+      }
+    },
+    "Eintrag vergessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entry forgotten"
+          }
+        }
+      }
+    },
+    "Nicht mehr im Gedächtnis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer in the memory"
+          }
+        }
+      }
+    },
+    "Rückgängig gemacht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undone"
+          }
+        }
+      }
+    },
+    "%lld von selbst gemerkt, stimmt das?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld remembered by itself, right?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

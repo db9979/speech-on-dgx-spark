@@ -193,6 +193,9 @@ FEATURES = (
       parent="gedpruefen", me="setbox", guide="gedfragen"),
     F("gedthemen", "Themen im Gedächtnis", "Memory topics", "data", ("memory_topics",),
       parent="gedpruefen", me="factbox", guide="gedthemen"),
+    # gemerkt.py (plan nutzerwissen, Punkt 1): „Gemerkt: …“ under the answer with „Rückgängig“, learned ones as a card
+    F("gedhinweis", "Gemerkt-Hinweis", "Remembered note", "data", ("memory_note",), parent="memory",
+      me="factbox", guide="gedhinweis"),
     F("history", "Frühere Gespräche", "Past conversations", "data", ("history",), me="setbox", guide="history"),
     F("documents", "Eigene Dokumente", "Own documents", "data", ("documents",), me="docbox", guide="documents"),
     F("docpics", "Bilder und Scans lesen", "Read pictures and scans", "data", ("doc_pictures",),
@@ -861,6 +864,8 @@ DEFAULT_ON = {
     "chat.history": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.memory_check": ("Schutz (Plan nutzerwissen, Frage 1): vielleicht Veraltetes wird nie als Tatsache gesagt; "
                           "feste Regeln des Panels, kein Modell, nichts verlässt das Haus, nie Gäste"),
+    "chat.memory_note": ("Schutz und Transparenz (Plan nutzerwissen, Frage 5): was der Spark sich merkt, sieht die Person "
+                         "sofort und kann es zurücknehmen; feste Regeln des Panels, nichts verlässt das Haus, nie Gäste"),
     "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",

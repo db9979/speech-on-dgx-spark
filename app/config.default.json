@@ -402,6 +402,7 @@
     "memory_check": true,
     "memory_ask": false,
     "memory_topics": false,
+    "memory_note": true,
     "memory_stale_months": 6,
     "history_live": true,
     "chats": false,

@@ -621,13 +621,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "dff5dc96b8",
+        "stand": "66b6409de6",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
-            "gedaechtnis.offer": ["s8"],
+            "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -834,6 +834,12 @@ SEITEN = {
                  "What the Spark learned by itself never replaces what the person said or confirmed: a learned value for "
                  "a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only "
                  "their button changes the entry, the old one stays as an earlier version."),
+                ("Was der Spark sich merkt, sieht die Person sofort und kann es zurücknehmen (gemerkt.take_back): nur "
+                 "den eigenen Fakt, nur solange er seit dem Merken unverändert ist (Stand gemerkt.rev_of), sonst 409. Was "
+                 "eine Mitteilung oder Telegram erreichen kann, nennt nur eine Zahl, nie den Text des Fakts.",
+                 "What the Spark remembers the person sees at once and can take back (gemerkt.take_back): only the own "
+                 "fact, only while it is unchanged since (state gemerkt.rev_of), otherwise 409. What a notification or "
+                 "Telegram can reach names only a number, never the text of the fact."),
             ]),
             (("Maßstäbe", "Standards"), [
                 ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
@@ -864,9 +870,10 @@ SEITEN = {
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
+            ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
-                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze"],
+                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt"],
         "heute": [],
     },
 

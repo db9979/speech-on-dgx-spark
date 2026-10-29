@@ -1589,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Obergrenzen ohne Datenverlust",
 "title": "Obergrenzen ohne Datenverlust",
-"text": "- Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt. - Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte „Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung."
+"text": "- Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt. - Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte „Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung. - Was der Spark sich merkt, sieht die Person sofort und kann es zurücknehmen (gemerkt.take_back): nur den eigenen Fakt, nur solange er seit dem Merken unverändert ist (Stand gemerkt.rev_of), sonst 409. Was eine Mitteilung oder Telegram erreichen kann, nennt nur eine Zahl, nie den Text des Fakts."
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1629,7 +1629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze"
+"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt"
 },
 {
 "lang": "de",
@@ -2093,7 +2093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Modell ruft ein Werkzeug: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt; ist das Gedächtnis voll (nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. 2. In dieser Runde angeboten?: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert. 4. Fremder Text gelesen?: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied"
+"text": "1. Modell ruft ein Werkzeug: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt; ist das Gedächtnis voll (nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis). 2. In dieser Runde angeboten?: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert. 4. Fremder Text gelesen?: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die We"
 },
 {
 "lang": "de",
@@ -2101,7 +2101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht. 5. Dienst gerade weg?: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. Eine Stelle ohne die gefragten Wörter fällt weg (lokal.cover); bleibt keine, kommt der feste Satz chat_tools.NOTHING_FITS statt fremder Stellen. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange s"
+"text": "bsuche ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht. 5. Dienst gerade weg?: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. Eine Stelle ohne die gefragten Wörter fällt weg (lokal.cover); bleibt keine, kommt der feste Satz chat_tools.NOTHING_FITS statt fremder Stellen. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über de"
 },
 {
 "lang": "de",
@@ -2109,7 +2109,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft (textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst"
+"text": "n Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft (textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht no"
 },
 {
 "lang": "de",
@@ -2117,7 +2117,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
+"text": "ch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
 },
 {
 "lang": "de",
@@ -2277,7 +2277,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Gedächtnis",
 "title": "Gedächtnis",
-"text": "- Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt. - Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag. - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot."
+"text": "- Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt. - Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag. - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot. - Gemerkt-Hinweis (gem"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Gedächtnis",
+"title": "Gedächtnis",
+"text": "erkt.py): memory_save schickt Nummer und Stand des Fakts (gemerkt.rev_of) mit, unter der Antwort steht „Gemerkt: …“ mit „Rückgängig“; das Gespräch behält nur die Nummern. Rückgängig (gemerkt.take_back) geht nur, solange der Fakt seitdem unverändert ist: ein neuer Fakt geht, ein fester Platz bekommt seine frühere Fassung zurück. Von selbst Gelerntes wird eine Karte „Gemerkt von selbst“ (bis zu 3 Fakten, 7 Tage) mit „Stimmt“ und „Rückgängig“; ihr Titel nennt nur eine Zahl, nie den Fakt."
 },
 {
 "lang": "de",
@@ -2325,7 +2333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13)"
+"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2333,7 +2341,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_suchpruefung, test_wissensbuch, test_wissenskarte"
+"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte"
 },
 {
 "lang": "de",
@@ -10628,6 +10636,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Gemerkt-Hinweis (V01.1.249, Plan *nutzerwissen*, Stufe 3, Dominik 2026-10-29 „a“): Merkt sich der Assistent im Gespräch etwas (memory_save), steht unter der Antwort „✓ Gemerkt: …“ mit „Rückgängig“ und „Ansehen“ (öffnet Ich → Gedächtnis). Das Ereignis memory trägt die Nummer des Eintrags, seinen Stand (rev, ein kurzer Fingerabdruck aus Wortlaut, Herkunft, Bestätigung und Zeit, gemerkt.rev_of) und ob es etwas zurückzunehmen gibt; das Gespräch behält nur Nummer und Stand (mem, profiles._clean_msg), den Text holt die Seite beim Neuzeichnen aus dem Gedächtnis, so steht der Hinweis auch nach Neuladen und auf den anderen Geräten. „Rückgängig“ (POST /api/profile/memory/{id}/undo mit {\"rev\"}, gemerkt.py; Anmeldung, Profilbindung, CSRF, 256 Bytes, Rate-Limit „memory“; auch die iPhone-App) nimmt genau das zurück, was eben geschah: ein neuer Eintrag geht, ein fester Platz bekommt seine frühere Fassung so zurück, wie sie war (Herkunft, Bestätigung; der zurückgenommene Wortlaut bleibt nicht als Fassung). Das geht nur, solange der Eintrag seitdem unverändert ist, sonst 409 „Inzwischen geändert“; nur eigene Einträge, Gäste nie. „Mach das rückgängig“ gleich danach (aendern.undo) nimmt denselben Weg"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Von selbst Gelerntes (Lernen aus ruhigen Gesprächen) kommt nicht ins alte Gespräch, sondern als Karte „Gemerkt von selbst“ (vorgaenge, Art gemerkt, Schlüssel gemerkt:<Gespräch>, bis zu 3 Einträge, nicht dringend, nie ins Gespräch gesagt): beim nächsten Mal oben unter „Noch offen“, unter Offen und als Zahl auf der Karte Gedächtnis von Ich → Überblick, mit „Stimmt“ (bestätigt), „Rückgängig“ und „Ansehen …“; nach 7 Tagen geht die Karte, der Eintrag bleibt als gelernt, nicht bestätigt. Ihr Titel („Spark hat sich 2 Dinge gemerkt“) ist alles, was eine Mitteilung nach „Später“ oder Telegram erreicht, nie der Text eines Eintrags. Begleiter: Frag Spark zeigt die Karte „Gemerkt: …“ mit „Rückgängig“ (schickt „Mach das rückgängig“, das wie getippt um ein Ja bittet) und „Gedächtnis ansehen“. iPhone: Chip unter der Antwort im Gespräch, die Karte wie jede unter Offen; Android zeigt das Panel. Schalter Funktionen → Gemerkt-Hinweis (chat.memory_note, ab Werk an, Grund in features.DEFAULT_ON: Schutz und Transparenz). Journal (Bereich Gedächtnis): gedaechtnis: rueckgaengig geloescht|zurueckgeholt | weg=chip|karte|sprache, gedaechtnis: rueckgaengig abgelehnt grund=geaendert|fehlt|gleich, gedaechtnis"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ": gemerkt-karte neu|ergaenzt fakten=N, gedaechtnis: gemerkt-karte stimmt fakten=N; nie ein Wert. Live: Knoten „Gedächtnis“ mit „heute N gemerkt · N Karten · N rückgängig · N bestätigt“. Selbsttest test_gemerkt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einstellungen für das Sprachmodell (V01.0.121)",
 "text": "Einstellungen für das Sprachmodell (V01.0.121): Unter Einstellungen → Sprachmodell → Erweitert stellt der Admin ein: Verlaufslänge (4000–64000 Zeichen, Standard 24000), Websuchen pro Antwort (1–3, Standard 2), Zeitlimit einer Antwort (60–600 s), top_p und presence_penalty (0 = Standard des Servers) sowie eigene Stichwörter für die Werkzeugpflicht (eine Zeile pro Werkzeug, z. B. web_search: elfmeter, aufstellung; nur ganze Wörter, höchstens 20 pro Werkzeug, die eingebauten Wörter bleiben immer). „Standard wiederherstellen“ setzt die mitgelieferte Systemanweisung ein, „Ganzen Prompt ansehen“ zeigt alle Teile in ihrer Reihenfolge und markiert, welche fest sind. Mit dem Schalter Funktionen → „Eigener Gesprächsstil“ (aus) kann jedes Profil unter Ich → Gespräch → Antwort in höchstens 500 Zeichen sagen, wie der Assistent mit ihm reden soll; der Text steht unter der Systemanweisung und über den festen Regeln, gilt nie für Gäste oder eine fremde Stimme und lässt sich nicht über einen Geräteschlüssel ändern. Fest bleiben: Werkzeugregeln, der Umgang mit Text von außen, Codewort, Sperren und die Werte der Hintergrundaufgaben (Lernen, Briefing, Mail-Einordnen, Raum)."
 },
@@ -12278,6 +12310,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Themen im Gedächtnis (Funktionen → Meine Daten → „Themen im Gedächtnis“; baut auf „Gedächtnis prüfen“; Ich → Gedächtnis): Unter Ich → Gedächtnis stehen die Einträge in Gruppen: Person, Zuhause, Unterwegs, Arbeit, Gesundheit, Gerade dran, Sonstiges."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Gemerkt-Hinweis (Funktionen → Meine Daten → „Gemerkt-Hinweis“; baut auf „Gedächtnis“; Ich → Gedächtnis): Merkt sich der Assistent im Gespräch etwas, steht unter der Antwort „✓ Gemerkt: …“ mit „Rückgängig“ und „Ansehen“."
 },
 {
 "lang": "de",
@@ -15261,7 +15301,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "able (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn."
+"text": "able (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn. - Gemerkt-Hinweis (seit V01.1.249, Schalter Funktionen → Gemerkt-Hinweis, ab Werk an): Ein Gespräch behält zu einer Antwort nur Nummer und Stand der gemerkten Einträge (mem), nie ihren Text; die Karte „Gemerkt von selbst“ liegt mit dem Text der Einträge in vorgaenge.json des Profils (7 Tage). Der neue Schreibweg POST /api/profile/memory/{id}/undo nimmt nur einen eigenen Eintrag zurück und nur, solange er seit dem Merken unverändert ist; Mitteilungen und Telegram bekommen nur die Zahl."
 },
 {
 "lang": "de",
@@ -18117,7 +18157,7 @@
 "file": "Architecture and data flow",
 "head": "Caps without data loss",
 "title": "Caps without data loss",
-"text": "- A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result. - What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version."
+"text": "- A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result. - What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version. - What the Spark remembers the person sees at once and can take back (gemerkt.take_back): only the own fact, only while it is unchanged since (state gemerkt.rev_of), otherwise 409. What a notification or Telegram can reach names only a number, never the text of the fact."
 },
 {
 "lang": "en",
@@ -18149,7 +18189,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8)"
 },
 {
 "lang": "en",
@@ -18157,7 +18197,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze"
+"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt"
 },
 {
 "lang": "en",
@@ -18621,7 +18661,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. The model calls a tool: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer; when the memory is full (only things said or confirmed, profiles._cap), memory_save answers „Not done“ with the way to tidy up. 2. Offered in this round?: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock. 3. Kill switch holds it?: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something. 4. Outside text read?: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after m"
+"text": "1. The model calls a tool: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer; when the memory is full (only things said or confirmed, profiles._cap), memory_save answers „Not done“ with the way to tidy up. What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note). 2. Offered in this round?: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock. 3. Kill switch holds it?: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something. 4. Outside text read?: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the q"
 },
 {
 "lang": "en",
@@ -18629,7 +18669,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ail. 5. Service gone right now?: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. A passage without the words asked for drops out (lokal.cover); if none is left, the fixed sentence chat_tools.NOTHING_FITS comes instead of unrelated passages. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.z"
+"text": "uestion's own words). A song the person asks for stays open after outside text (own), not after mail. 5. Service gone right now?: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. A passage without the words asked for drops out (lokal.cover); if none is left, the fixed sentence chat_tools.NOTHING_FITS comes instead of unrelated passages. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else ov"
 },
 {
 "lang": "en",
@@ -18637,7 +18677,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "eitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly "
+"text": "er HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the sam"
 },
 {
 "lang": "en",
@@ -18645,7 +18685,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
+"text": "e details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
 },
 {
 "lang": "en",
@@ -18805,7 +18845,15 @@
 "file": "Architecture and data flow",
 "head": "Memory",
 "title": "Memory",
-"text": "- The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt. - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day. - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer."
+"text": "- The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt. - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day. - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer. - Remembered note (gemerkt.py): memory_save sends the "
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Memory",
+"title": "Memory",
+"text": "fact's number and state along (gemerkt.rev_of), under the answer stands „Remembered: …“ with „Undo“; the conversation keeps only the numbers. Undo (gemerkt.take_back) works only while the fact is unchanged since: a new fact goes, a fixed place gets its earlier version back. What was learned by itself becomes a card „Remembered by itself“ (up to 3 facts, 7 days) with „That's right“ and „Undo“; its title names only a number, never the fact."
 },
 {
 "lang": "en",
@@ -18845,7 +18893,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13)"
+"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
 },
 {
 "lang": "en",
@@ -18853,7 +18901,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_suchpruefung, test_wissensbuch, test_wissenskarte"
+"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte"
 },
 {
 "lang": "en",
@@ -26828,6 +26876,30 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Remembered note (V01.1.249, plan *nutzerwissen*, stage 3, Dominik 2026-10-29 \"a\"): when the assistant remembers something in a conversation (memory_save), \"✓ Remembered: …\" stands under the answer with \"Undo\" and \"Show\" (opens Me → Memory). The event memory carries the entry's number, its state (rev, a short fingerprint of wording, source, confirmation and time, gemerkt.rev_of) and whether there is something to take back; the conversation keeps only number and state (mem, profiles._clean_msg), the page takes the text from the memory when it draws it again, so the note stays after reloading and on the other devices. \"Undo\" (POST /api/profile/memory/{id}/undo with {\"rev\"}, gemerkt.py; login, profile binding, CSRF, 256 bytes, rate limit \"memory\"; also the iPhone app) takes back exactly what just happened: a new entry goes, a fixed place gets its earlier version back as it was (source, confirmation; the wording taken back is not kept as a version). This works only while the entry is unchanged since, otherwise 409 \"Changed since\"; only own entries, never guests. \"Undo that\" right after (aendern.undo) takes the same way. What was learned by itself (learning from quiet conversations) does"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " not go into the old conversation but comes as a card \"Remembered by itself\" (vorgaenge, kind gemerkt, key gemerkt:<conversation>, up to 3 entries, not urgent, never said into the conversation): next time on top under \"Still open\", under Open and as a number on the card Memory of Me → Overview, with \"That's right\" (confirms), \"Undo\" and \"Show …\"; after 7 days the card goes, the entry stays as learned, not confirmed. Its title (\"Spark hat sich 2 Dinge gemerkt\") is all a notification after \"Later\" or Telegram gets, never the text of an entry. Begleiter: Frag Spark shows the card \"Gemerkt: …\" with \"Rückgängig\" (sends \"Mach das rückgängig\", which asks for a yes like a typed one) and \"Gedächtnis ansehen\". iPhone: chip under the answer in the conversation, the card like every one under Open; Android shows the panel. Switch Features → Remembered note (chat.memory_note, on by default, reason in features.DEFAULT_ON: protection and transparency). Journal (area Memory): gedaechtnis: rueckgaengig geloescht|zurueckgeholt | weg=chip|karte|sprache, gedaechtnis: rueckgaengig abgelehnt grund=geaendert|fehlt|gleich, gedaechtnis: gemerkt-karte neu|ergaenzt fakten=N, gedaechtnis: gemerkt-karte stimmt "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "fakten=N; never a value. Live: the node \"Memory\" with \"heute N gemerkt · N Karten · N rückgängig · N bestätigt\". Self-test test_gemerkt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Language model settings (V01.0.121)",
 "text": "Language model settings (V01.0.121): Under Settings → Language model → Advanced the admin sets the history length (4000–64000 characters, default 24000), web searches per answer (1–3, default 2), the time limit for an answer (60–600 s), top_p and presence_penalty (0 = the server's default) and own keywords that require a tool (one line per tool, e.g. web_search: elfmeter, aufstellung; whole words only, at most 20 per tool, the built-in words always stay). \"Restore default\" fills in the shipped system prompt, \"Show the whole prompt\" lists all parts in order and marks the fixed ones. With Features → \"Own conversation style\" (off) each profile can say under Me → Conversation → Answer, in at most 500 characters, how the assistant should talk to it; the text sits below the system prompt and above the fixed rules, never applies to guests or another voice and cannot be changed with a device key. Fixed: tool rules, handling of outside text, code word, locks and the values of background jobs (learning, briefing, mail sorting, room)."
 },
@@ -28438,6 +28510,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Memory topics (Features → My data → \"Memory topics\"; builds on \"Memory check\"; Me → Memory): Under Me → Memory the entries are in groups: person, home, on the move, work, health, right now, other."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Remembered note (Features → My data → \"Remembered note\"; builds on \"Memory\"; Me → Memory): When the assistant remembers something in a conversation, \"✓ Remembered: …\" stands under the answer with \"Undo\" and \"Show\"."
 },
 {
 "lang": "en",
@@ -31349,7 +31429,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it."
+"text": "of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it. - Remembered note (since V01.1.249, switch Features → Remembered note, on by default): a conversation keeps per answer only the number and state of the entries remembered (mem), never their text; the card \"Remembered by itself\" lies with the entries' text in the profile's vorgaenge.json (7 days). The new way to write POST /api/profile/memory/{id}/undo takes back only an own entry and only while it is unchanged since it was remembered; notifications and Telegram get only the number."
 },
 {
 "lang": "en",

@@ -31,7 +31,7 @@ const WO_EN={Rechner:'computer',Handy:'phone',iPhone:'iPhone',Begleiter:'compani
 // how a proposal's card („Wartet auf dein Ja“, Stufe 2) ended when not by its yes
 const VG_WIE={vs_nein:['Abgebrochen','Cancelled'],vs_aendern:['Weiter auf der Seite','Continued on the page'],beantwortet:['Im Gespräch beantwortet','Answered in the conversation'],
   ersetzt:['Neuer Vorschlag','New proposal'],fehler:['Nicht ausgeführt','Not done'],cx_gelesen:['Gelesen','Read'],
-  geantwortet:['Beantwortet','Answered'],bestaetigt:['Bestätigt','Confirmed'],abgelehnt:['Abgelehnt','Declined'],wieder_da:['Läuft wieder','Running again']};
+  geantwortet:['Beantwortet','Answered'],bestaetigt:['Bestätigt','Confirmed'],abgelehnt:['Abgelehnt','Declined'],wieder_da:['Läuft wieder','Running again'],rueckgaengig:['Rückgängig gemacht','Undone']};
 const VG_SYMS=new Set(['bell','check','mail','chat','share','warn','spark']),vgSym=x=>VG_SYMS.has(x.sym)?x.sym:'mail';
 // the line under a card: what happened, where and when
 function vgState(x){if(x.zustand==='spaeter')return x.spaeter_bis?t('Später: wieder da ','Later: back ')+vgWhen(x.spaeter_bis):t('Später, ohne Zeit','Later, no time');

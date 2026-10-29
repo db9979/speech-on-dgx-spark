@@ -86,10 +86,14 @@ def note_tool(uid, name, args, result):
         if hit:
             note(uid, "reminder", {"id": hit["id"]}, f"die Erinnerung „{hit['text']}“ löschen")
     elif name == "memory_save":
+        import gemerkt
         text = re.sub(r"\s+", " ", str(args.get("fact", ""))).strip().lower()
         hit = next((x for x in profiles.memory(uid) if text and x["text"].lower() == text[:profiles.MAX_FACT_LEN]), None)
-        if hit:
-            note(uid, "memory", {"id": hit["id"]}, f"die Notiz „{hit['text'][:60]}“ vergessen")
+        kind = gemerkt.what(hit) if hit else ""   # the same wording said again: nothing to take back
+        if kind:   # the same take-back as the chip „Rückgängig“ (gemerkt.take_back): a fixed place gets its old wording
+            note(uid, "memory", {"id": hit["id"], "rev": gemerkt.rev_of(hit)},
+                 f"die Notiz „{hit['text'][:60]}“ vergessen" if kind == "neu"
+                 else f"bei „{hit['text'][:60]}“ die frühere Fassung zurückholen")
     elif name == "tasks_add" and isinstance(result, str) and result.startswith("Auf die Liste"):
         import tasks
         lst = tasks.resolve(uid, args.get("list")) or "einkauf"
@@ -217,8 +221,10 @@ async def undo(uid, entry, ctx):
         n = profiles.remove_reminders(uid, {d["id"]})
         return "Erinnerung gelöscht." if n else "Die Erinnerung war schon weg."
     if k == "memory":
-        n = profiles.forget(uid, fact_id=d["id"])
-        return "Notiz vergessen." if n else "Die Notiz war schon weg."
+        import gemerkt
+        how = gemerkt.take_back(uid, d["id"], d.get("rev", ""), "sprache")
+        return {"geloescht": "Notiz vergessen.", "zurueckgeholt": "Die frühere Fassung gilt wieder.",
+                "fehlt": "Die Notiz war schon weg."}.get(how, "Die Notiz wurde inzwischen geändert; nichts zurückgenommen.")
     if k == "tasks":
         import tasks
         picked = tasks.match(await tasks.items(uid, d["list"]), d["items"])

@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.249** Gemerkt-Hinweis: unter der Antwort „✓ Gemerkt: …“ mit „Rückgängig“; von selbst Gelerntes kommt als Karte mit „Stimmt“ und „Rückgängig“, Mitteilung und Telegram nennen nur die Zahl
 - **V01.1.248** Gedächtnis mit festen Themen (Wohnort, Arbeitgeber, Auto …): je Thema gilt der neueste gesagte Wert, der alte bleibt zum Zurückholen; von selbst Gelerntes ersetzt nie Bestätigtes, es kommt als Karte „Übernehmen / Verwerfen“; dazu „N von 200“
 - **V01.1.247** Gedächtnis ohne stilles Wegwerfen: über 200 Einträgen machen nur die ältesten von selbst gelernten, nie bestätigten Platz; Gesagtes, Korrigiertes und Bestätigtes fällt nie, sonst lehnt der Spark den neuen Eintrag mit Hinweis auf Ich → Gedächtnis ab (auch beim Aufräumen); „Gedächtnis prüfen“ ab Werk an
 - **V01.1.246** Redesign Stufe 1: Design-Tokens als eine Quelle (`tokens.css`), Aussehen unverändert; Wächter `test_design_tokens`
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.242** Wissensspeicher schneller (Stufe 1 von 4, keine neue Funktion): Vektoren der Dokumentsuche als float16 im Speicher (halb so groß, gleiche Rangfolge), Wissensbuch sucht Seiten über einen FTS5-Index (Trigger pflegen ihn, einmaliger Aufbau, ohne FTS5 wie bisher), Wissenskarte wählt ihren Ausschnitt mit WITH RECURSIVE in SQLite, dazu feste Abfragen rund_um und weg und die Lesefunktion wissensbuch.liste (Seiten-Ids mit Rang)
 - **V01.1.241** KI-Dungeon-Master: eine Einordnung für jede getippte Aktion: alle Wortlisten in einem Modul, jede Aktion bekommt nach fester Reihenfolge genau eine Art; „Dann gehe ich los“, „Wir schlagen hier unser Lager auf“ und „We rest by the fire“ sind kein Angriff mehr
 - **V01.1.240** KI-Dungeon-Master: jede Angabe des Modells hängt an einer festen Regel (Anker-Tabelle), die Spielseite kennt jeden Wert des Panels, ein Protokoll-Prüfer prüft jede Erzählung noch einmal und macht kopierte Runden zu Prüffällen, der Erzähler-Prüfstand spielt 15 Züge am Stück; ein Ding oder Schriftstück zählt nur, wenn die Erzählung es zeigt
-- **V01.1.239** KI-Dungeon-Master: Satz-Prüfstand: rund 300 feste Spielersätze, die jede Wortliste richtig einordnen muss; „Ich schlage das Buch auf“, „Stab“ oder „Ich steche in See“ sind kein Angriff mehr, Fähigkeiten heißen nicht mehr wie Zauber
 
 
 

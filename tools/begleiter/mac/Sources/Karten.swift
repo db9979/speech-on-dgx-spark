@@ -9,7 +9,7 @@ enum AskCards {
     static let maxButtons = 5
     static let maxLabel = 30
     /// the panel pages a way button may open (chat.DESK_GOTO)
-    static let pages = ["#me=calbox", "#me=mailbox", "#me=fundbox"]
+    static let pages = ["#me=calbox", "#me=mailbox", "#me=fundbox", "#me=factbox"]
 
     struct Button: Identifiable {
         let id = UUID()

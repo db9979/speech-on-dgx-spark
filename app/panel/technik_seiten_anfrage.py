@@ -795,7 +795,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "6f9e6efe2d",
+        "stand": "87b91c9922",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -819,10 +819,12 @@ SEITEN = {
               ("aus der Runde in chat_modell.model_turn", "from the round in chat_modell.model_turn"),
               ("Höchstens {chat.MAX_CALLS} Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft "
                "nicht mehr. Gedächtnis-Notizen sind auf {chat.MAX_SAVES} pro Antwort begrenzt; ist das Gedächtnis voll "
-               "(nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen.",
+               "(nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. "
+               "Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis).",
                "At most {chat.MAX_CALLS} calls per round run, and a tool stopped after errors does not run again. Memory "
                "notes are limited to {chat.MAX_SAVES} per answer; when the memory is full (only things said or confirmed, "
-               "profiles._cap), memory_save answers „Not done“ with the way to tidy up.")),
+               "profiles._cap), memory_save answers „Not done“ with the way to tidy up. "
+               "What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note).")),
             S("s2", "frage", ("In dieser Runde angeboten?", "Offered in this round?"),
               ("nur die Liste der Runde", "only the round's list"),
               ("Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere "
