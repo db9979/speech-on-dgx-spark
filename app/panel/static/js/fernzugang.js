@@ -85,9 +85,10 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
     if(!teil.length)continue;list.appendChild(fzEl('div','fzgrp',t(de,en)+' · '+teil.length));
     for(const g of teil){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
       const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
-      tx.append(nm,fzEl('small','',[g.os,fzWie(g)].filter(Boolean).join(' · ')));
+      tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
       row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.auf=true;fzShow()};list.appendChild(row)}}
   if(q&&!passt.length)list.appendChild(fzEl('div','mut fzleer',t('Kein System passt.','No system matches.')));
+  const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
   const o=d.offen||[],jl=$('fzjetztlist');$('fzjetzt').hidden=!o.length;jl.textContent='';for(const x of o)jl.appendChild(fzJetztZeile(x,true));
   fzDetail();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
 // online since, offline since, or why it may not connect: the second line of a system
@@ -117,6 +118,7 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   cut.disabled=!g.online;kn.append(sh,da,bs,fzEl('span','fzfill'),cut);box.appendChild(kn);
   if(d.bildschirm&&!(g.bild&&g.bild_anker))box.appendChild(fzEl('div','fh',g.bild?t('Für den Bildschirm ist der Anker zu alt: dort noch einmal „sudo spark-anker bildschirm“ mit dem Programm aus dem Panel.','The anchor is too old for the screen: run "sudo spark-anker bildschirm" there again with the program from the panel.'):t('Bildschirm: auf dem System einmal „sudo spark-anker bildschirm“.','Screen: run "sudo spark-anker bildschirm" once on the system.')));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
+  if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));
   const grid=fzEl('div','fzdgrid'),li=fzEl('div','fzdcol'),re=fzEl('div','fzdcol');grid.append(li,re);box.appendChild(grid);
   const o=(d.offen||[]).filter(x=>x.geraet===g.id);
   if(o.length){li.appendChild(fzEl('div','fzgrp',t('Gerade verbunden','Connected now')));const w=fzEl('div','fzjetztbox');for(const x of o)w.appendChild(fzJetztZeile(x,false));li.appendChild(w)}
@@ -137,6 +139,33 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   re.appendChild(tab);if(v.length){const a=fzEl('button','fzlink',t('Alle anzeigen ›','Show all ›'));a.type='button';a.onclick=()=>fzVerlaufZeigen(g.name);re.appendChild(a)}
   const ft=fzEl('div','fzdfuss'),rm=fzBtn(t('Entfernen …','Remove …'),'danger',()=>fzRemove(g));
   ft.append(fzEl('span','fh',t('Entfernen baut alles ab, was der Anker auf dem System eingerichtet hat.','Remove takes down everything the anchor set up on the system.')),rm);box.appendChild(ft)}
+// Anker aktualisieren (fernanker.py): the panel's own signed program over the anchor's channel; an anchor before 1.3.0
+// gets the one line `… | sudo python3 - aktualisieren` (Kopieren, or „In die Shell einfügen“: a shell opens, the line
+// is typed in, never Enter)
+const FZ_UPD={gesendet:['gesendet, der Anker lädt und prüft …','sent, the anchor fetches and checks …'],laeuft:['geprüft, wird eingespielt …','checked, being installed …'],
+  ok:['aktualisiert','updated'],zurueck:['zurück auf der Version davor: die neue kam nicht zum Panel','back on the version before: the new one did not reach the panel'],
+  kein_schluessel:['ohne Signaturschlüssel: einmal die Zeile unten','no signing key: run the line below once'],nicht_neuer:['nichts Neueres','nothing newer'],
+  laden:['Laden vom Panel ging nicht','fetching from the panel failed'],gross:['Programm zu groß','program too big'],pruefsumme:['Prüfsumme passt nicht','checksum does not match'],
+  version:['Version passt nicht','version does not match'],signatur:['Signatur passt nicht: nichts geändert','signature does not match: nothing changed'],
+  schreiben:['Schreiben ging nicht','writing failed'],unlesbar:['unlesbar','unreadable']};
+function fzAktBereit(gs){return (gs||[]).filter(g=>g.anker_neu&&g.anker_fern&&g.online&&!g.sitzungen&&g.stand!=='abbau')}
+function fzAktBlock(g){const b=fzEl('div','fzakt');const kopf=fzEl('div','fzaktkopf');
+  kopf.appendChild(fzEl('span','',t('Anker ','Anchor ')+(g.anker||'?')+(g.anker_neu?t(' · neu: ',' · new: ')+g.anker_neu:'')));
+  if(g.anker_neu&&g.anker_fern){const k=fzBtn(t('Aktualisieren','Update'),'p',()=>fzAktualisieren([g.id]));k.id='fzakt1';k.disabled=!g.online||!!g.sitzungen||g.stand==='abbau';
+    k.title=!g.online?t('Erst wenn das System online ist.','Only while the system is online.'):g.sitzungen?t('Erst die Sitzung trennen: der Anker startet neu.','Disconnect the session first: the anchor restarts.'):'';kopf.appendChild(k)}
+  else if(g.anker_neu){const k=fzBtn(t('Zeile zeigen','Show the line'),'',()=>fzAktZeile(g,b,k));k.id='fzaktzeile';kopf.appendChild(k)}
+  b.appendChild(kopf);
+  if(g.update_stand&&FZ_UPD[g.update_stand])b.appendChild(fzEl('div','fh',t('Zuletzt: ','Last: ')+t(...FZ_UPD[g.update_stand])));
+  if(g.anker_neu&&!g.anker_fern)b.appendChild(fzEl('div','fh',t('Dieser Anker kann das Aktualisieren aus dem Panel noch nicht: einmal diese Zeile auf dem System (mit sudo, ohne Code); Kopplung und Schlüssel bleiben.','This anchor cannot take updates from the panel yet: run this line on the system once (with sudo, no code); pairing and keys stay.')));
+  return b}
+async function fzAktZeile(g,box,knopf){let d;try{const r=await api('/api/admin/fernzugang/aktualisieren/befehl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin:location.origin})});d=await r.json()}catch(e){fzFehler(e);return}
+  knopf.remove();const z=g.art==='macos'&&d.befehl_mac?d.befehl_mac:d.befehl;const pre=fzEl('pre','fzcmd',z);pre.id='fzaktbefehl';box.appendChild(pre);
+  const row=fzEl('div','row');row.append(fzBtn(t('Kopieren','Copy'),'',e=>copyString(z,e.target)));
+  const ein=fzBtn(t('In die Shell einfügen','Paste into the shell'),'',()=>{FZ.nachher=z;fzOpen(g)});ein.id='fzakteinf';ein.disabled=!g.online||g.hostkey_falsch||!g.erlaubt;
+  ein.title=t('Öffnet eine Shell und schreibt die Zeile hinein; Enter drückst du selbst.','Opens a shell and types the line in; you press Enter yourself.');row.appendChild(ein);box.appendChild(row)}
+async function fzAktualisieren(ids){try{const r=await api('/api/admin/fernzugang/aktualisieren',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraete:ids})});const d=await r.json();
+    const teile=[[d.gesendet,'gesendet','sent'],[d.aktuell,'schon aktuell','up to date'],[d.alt,'brauchen einmal die Zeile','need the line once'],[d.offline,'offline','offline'],[d.belegt,'mit offener Sitzung','with a session open']]
+      .filter(x=>x[0]).map(x=>x[0]+' '+t(x[1],x[2]));fzMsg(t('Aktualisieren auf ','Update to ')+d.version+': '+teile.join(' · '),!d.gesendet);fzLoad()}catch(e){fzFehler(e)}}
 async function fzRemove(g){if(!confirm(t(`„${g.name}“ entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem System alles ab, was er eingerichtet hat (jetzt oder beim nächsten Kontakt). Danach fragt der Spark nach Code oder Passkey.`,`Remove "${g.name}"? The key stops at once; the anchor removes everything it set up on the system (now or at its next contact). Then the Spark asks for a code or passkey.`)))return;
   try{const r=await api(`/api/admin/fernzugang/geraete/${g.id}`,{method:'DELETE'});const d=await r.json();
     fzMsg(d.stand==='abbau'?t('Entfernt. Der Anker baut sich ab; ist er offline, beim nächsten Kontakt. Von Hand auf dem System: sudo spark-anker entfernen','Removed. The anchor removes itself; when offline, at its next contact. By hand on the system: sudo spark-anker entfernen'):'');FZ.sel='';FZ.auf=false;fzLoad()}catch(e){fzFehler(e)}}
@@ -204,7 +233,7 @@ function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:
   ws.binaryType='arraybuffer';FZ.ws=ws;FZ.grund='';FZ.zuletzt=Date.now();clearInterval(FZ.pt);
   FZ.pt=setInterval(()=>{if(FZ.ws===ws&&ws.readyState===1&&Date.now()-FZ.zuletzt>50000)ws.close(4000)},5000);
   ws.onmessage=ev=>{FZ.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data),()=>{if(FZ.ziel)fzZielTick(false)});return}let m;try{m=JSON.parse(ev.data)}catch{return}
-    if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(m.wieder)term.reset();fzResize();
+    if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(FZ.nachher){const l=FZ.nachher;FZ.nachher='';setTimeout(()=>fzEinfuegen(l),400)}if(m.wieder)term.reset();fzResize();
       term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
     if(m.typ==='bald')fzBald(Number(m.s)||0);
     if(m.typ==='fehler'||m.typ==='zu')FZ.grund=m.grund;if(m.typ==='weg')FZ.grund='weg'};
@@ -419,7 +448,7 @@ async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden(
 async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
   if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
 function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
-function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
+function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.nachher='';FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
   window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzNeuKnopf(text);fzLoad()}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
 function fzNeuKnopf(text){const g=FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
@@ -465,7 +494,7 @@ async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/
 function fzFZu(text){FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
-  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
+  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
   $('fzbinfo').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzinfobtn').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzkeycopy').onclick=e=>{if(FZ.fp)copyString(FZ.fp,e.currentTarget)};
   $('fzmenu').onclick=()=>fzMenu(!FZ.menuAus);$('fzspalte').onclick=()=>fzSpalte($('fzview').classList.contains('fzzu'));$('fztasten').onclick=fzTastenreihe;
   $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();

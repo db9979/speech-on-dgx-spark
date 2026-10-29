@@ -540,6 +540,7 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 
 | Module | Task |
 |---|---|
+| `app/panel/fernanker.py` | Anker-Update: the panel brings its paired anchors to the program it hands out. |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
@@ -739,6 +740,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/faelle.json` | Cases | – | yes |
 | `state/features-seen.json` | When functions were released | – | yes |
+| `state/fernanker.json` | Remote access: the panel's signing key for updating the anchors (Ed25519; the private half only sealed in the vault) | private half sealed | no |
 | `state/fernzugang-verlauf.json` | Remote access: history of the sessions of the last days (time, system, admin, kind, duration, home or internet), never an address or content; delete under Remote access → Systems → History | – | no |
 | `state/fernzugang.json` | Remote access: paired remote servers (name, system, host key, times), per server an own SSH key of the panel, the anchor's device key only as SHA-256 | SSH key sealed, device key only as a hash | no |
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
@@ -3441,7 +3443,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 96). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 97). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3452,7 +3454,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **96** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **97** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3954,12 +3956,14 @@ flowchart TD
   s3{{"3. Key known?"}}
   s4["4. Line going out"]
   s5["5. Channel to its own SSH"]
-  s6(["6. Remove"])
+  s7["6. Update"]
+  s6(["7. Remove"])
   s1 --> s2
   s2 --> s3
   s3 -->|yes| s4
   s4 --> s5
-  s5 --> s6
+  s5 --> s7
+  s7 --> s6
   s3x(["Refused"])
   s3 -->|no| s3x
 ```
@@ -3969,7 +3973,8 @@ flowchart TD
 3. <a id="kn-fernserver-s3"></a>**Key known?**: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit.
 4. <a id="kn-fernserver-s4"></a>**Line going out**: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes.
 5. <a id="kn-fernserver-s5"></a>**Channel to its own SSH**: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there.
-6. <a id="kn-fernserver-s6"></a>**Remove**: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days.
+6. <a id="kn-fernserver-s7"></a>**Update**: „Update“ sends an anchor from 1.3.0 that is online and has no open session the new version over its channel (fernanker.admin_update), never a step back. The anchor loads the program from its own panel only and checks SHA-256 and the signature with the key pinned at pairing (fernanker.stand); if the new version does not reach the panel, it goes back to the old one. Older anchors get a line to paste.
+7. <a id="kn-fernserver-s6"></a>**Remove**: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days.
 
 **Examples:** Set up a server: Paired and online. · Old key after removal: Refused.
 
@@ -3977,7 +3982,7 @@ flowchart TD
 
 - **20 s** heartbeat on the line ([step 4](#kn-fernserver-s4))
 - **65536 Bytes** one message at most ([step 4](#kn-fernserver-s4))
-- **90** days until a removed one is forgotten ([step 6](#kn-fernserver-s6))
+- **90** days until a removed one is forgotten ([step 7](#kn-fernserver-s6))
 
 #### Settings
 
@@ -3993,7 +3998,9 @@ flowchart TD
 - `app/panel/fernzugang.py` `anker_pair`: pairing of the anchor ([step 2](#kn-fernserver-s2))
 - `app/panel/fernzugang.py` `anker_ws`: the anchor's line ([step 3](#kn-fernserver-s3))
 - `app/panel/fernzugang.py` `by_key`: know an anchor by its key ([step 3](#kn-fernserver-s3))
-- `app/panel/fernzugang.py` `anker_removed`: removal reported ([step 6](#kn-fernserver-s6))
+- `app/panel/fernzugang.py` `anker_removed`: removal reported ([step 7](#kn-fernserver-s6))
+- `app/panel/fernanker.py` `admin_update`: update over the channel ([step 6](#kn-fernserver-s7))
+- `app/panel/fernanker.py` `stand`: signed state of the program ([step 6](#kn-fernserver-s7))
 
 Self-tests: `test_fernzugang`
 

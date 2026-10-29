@@ -8,6 +8,7 @@
     curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel>           Spontanhilfe (S3): once
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - bildschirm                 the screen too (stage 4)
     sudo spark-anker bildschirm aus                                                         the screen off again
+    curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - aktualisieren              this program anew (no code)
 
 It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here) and passes
 bytes only between the panel and this server's own sshd on 127.0.0.1:22. SSH runs end to end between the panel and
@@ -53,6 +54,16 @@ more („j“); only then her own shell runs in a PTY with her rights, its outpu
 the admin's keys (and hers) into it. Strg+C, „Beenden“ in the panel, the session clock or the Notaus end it: the shell
 gets SIGHUP, the terminal is as it was, and nothing is left behind (no file, no user, no service).
 
+Updating (since 1.3.0): „Aktualisieren“ in the panel sends the new version, its SHA-256 and an Ed25519 signature of
+both over the channel. The anchor fetches the program only from its own panel (the same checked or pinned TLS), checks
+the SHA-256 and the signature against the panel's signing key pinned at pairing (or by `aktualisieren`), takes only a
+newer version, and leaves it in its folder with the flag „aktualisieren“. A root unit (spark-anker-update.path, on a
+Mac the launchd job …anker-update) checks it all again, keeps the program before, swaps it atomically, writes the
+units of the new one and restarts the anchor; when the new one has not come back to the panel within 60 seconds, the
+one before is back. The pairing (device key, the panel's SSH key, host key) stays as it is. An anchor before 1.3.0
+gets the same with the one line `aktualisieren` (as root, no code): it replaces program and units in place, keeps keys
+and pairing and pins the signing key.
+
 Removing (`entfernen`, or „Entfernen“ in the panel): stops and deletes both units, the program, the configuration,
 the anchor's folder, the user spark-anker, the panel's line in authorized_keys and the user spark with its home when
 the anchor made it; then it tells the panel (best effort) so it forgets this server too.
@@ -74,6 +85,7 @@ import shutil
 import signal
 import socket
 import ssl
+import stat
 import struct
 import subprocess
 import sys
@@ -81,7 +93,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -90,7 +102,8 @@ CONF = ETC + "/anker.json"
 VAR = "/var/lib/spark-anker"
 FLAG = VAR + "/abbauen"
 UNITS = ("/etc/systemd/system/spark-anker.service", "/etc/systemd/system/spark-anker-abbau.path",
-         "/etc/systemd/system/spark-anker-abbau.service")
+         "/etc/systemd/system/spark-anker-abbau.service", "/etc/systemd/system/spark-anker-update.path",
+         "/etc/systemd/system/spark-anker-update.service")
 USER = "spark"            # the login the panel uses (its key only, only from 127.0.0.1)
 RUNNER = "spark-anker"    # the system user the anchor runs as
 SSHD = ("127.0.0.1", 22)
@@ -110,6 +123,10 @@ WAYVNC_CONF = ETC + "/wayvnc.conf"
 RDP_USER = "spark-bild"
 RDP_FILES = (ETC + "/rdp.key", ETC + "/rdp.crt")
 WORD = re.compile(r"[^A-Za-z0-9._\- ()/+]")
+VER = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}")
+PROG_MAX = 1024 * 1024    # the program is far smaller; nothing bigger is read
+UPDATE_S = 60             # a new version that has not reached the panel by then: the one before is back
+SIGN_TEXT = "spark-anker {version} {sha256}"   # what the panel's signing key signs (Ed25519)
 
 UNIT_RUN = """[Unit]
 Description=Spark-Anker (Fernzugang des Spark-Panels zu diesem sshd)
@@ -202,6 +219,22 @@ Description=Spark-Anker abbauen (alles entfernen, was er eingerichtet hat)
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/python3 -I /usr/local/lib/spark-anker/spark-anker.py entfernen --vom-panel
+"""
+UNIT_UPDATE_PATH = """[Unit]
+Description=Spark-Anker: neue Version einspielen, wenn der Anker eine geprüfte geladen hat
+
+[Path]
+PathExists=/var/lib/spark-anker/aktualisieren
+
+[Install]
+WantedBy=multi-user.target
+"""
+UNIT_UPDATE = """[Unit]
+Description=Spark-Anker aktualisieren (prüfen, tauschen, neu starten, sonst zurück)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/lib/spark-anker/spark-anker.py aktualisieren --vom-anker
 """
 
 
@@ -422,6 +455,143 @@ def _mask(data, mask):
     return (int.from_bytes(data, "big") ^ m).to_bytes(len(data), "big") if data else b""
 
 
+# ---------------------------------------------------------------- updating: Ed25519 and the checks
+# Ed25519 verification after RFC 8032 (5.1.7, its reference code): Python's standard library has none, and the anchor
+# brings nothing else along. Only public data goes in (the panel's public key, the program, the signature).
+_EP = 2 ** 255 - 19
+_EL = 2 ** 252 + 27742317777372353535851937790883648493
+_ED = -121665 * pow(121666, _EP - 2, _EP) % _EP
+_EI = pow(2, (_EP - 1) // 4, _EP)
+
+
+def _ed_add(a, b):
+    x1, y1, z1, t1 = a
+    x2, y2, z2, t2 = b
+    pa, pb = (y1 - x1) * (y2 - x2) % _EP, (y1 + x1) * (y2 + x2) % _EP
+    pc, pd = t1 * 2 * _ED * t2 % _EP, z1 * 2 * z2 % _EP
+    e, f, g, h = pb - pa, pd - pc, pd + pc, pb + pa
+    return e * f % _EP, g * h % _EP, f * g % _EP, e * h % _EP
+
+
+def _ed_mul(k, pt):
+    q = (0, 1, 1, 0)
+    while k > 0:
+        if k & 1:
+            q = _ed_add(q, pt)
+        pt = _ed_add(pt, pt)
+        k >>= 1
+    return q
+
+
+def _ed_same(a, b):
+    return (a[0] * b[2] - b[0] * a[2]) % _EP == 0 and (a[1] * b[2] - b[1] * a[2]) % _EP == 0
+
+
+def _ed_x(y, sign):
+    if y >= _EP:
+        return None
+    x2 = (y * y - 1) * pow(_ED * y * y + 1, _EP - 2, _EP)
+    if x2 % _EP == 0:
+        return None if sign else 0
+    x = pow(x2, (_EP + 3) // 8, _EP)
+    if (x * x - x2) % _EP:
+        x = x * _EI % _EP
+    if (x * x - x2) % _EP:
+        return None
+    return _EP - x if (x & 1) != sign else x
+
+
+def _ed_point(b):
+    y = int.from_bytes(b, "little")
+    sign, y = y >> 255, y & ((1 << 255) - 1)
+    x = _ed_x(y, sign)
+    return None if x is None else (x, y, 1, x * y % _EP)
+
+
+_EGY = 4 * pow(5, _EP - 2, _EP) % _EP
+_EG = (_ed_x(_EGY, 0), _EGY, 1, _ed_x(_EGY, 0) * _EGY % _EP)
+
+
+def ed25519_ok(pub, msg, sig):
+    """True only for a valid Ed25519 signature of msg by the 32-byte public key pub."""
+    if not (isinstance(pub, bytes) and isinstance(sig, bytes)) or len(pub) != 32 or len(sig) != 64:
+        return False
+    a, r = _ed_point(pub), _ed_point(sig[:32])
+    k = int.from_bytes(sig[32:], "little")
+    if a is None or r is None or k >= _EL:
+        return False
+    h = int.from_bytes(hashlib.sha512(sig[:32] + pub + msg).digest(), "little") % _EL
+    return _ed_same(_ed_mul(k, _EG), _ed_add(r, _ed_mul(h, a)))
+
+
+def _ver(v):
+    return tuple(int(x) for x in v.split(".")) if isinstance(v, str) and VER.fullmatch(v) else None
+
+
+def newer(a, b):
+    """Version a is newer than b (never a step back)."""
+    va, vb = _ver(a), _ver(b)
+    return bool(va) and (vb is None or va > vb)
+
+
+def prog_version(data):
+    m = re.search(rb'^VERSION = "(\d{1,3}\.\d{1,3}\.\d{1,3})"$', data or b"", re.M)
+    return m.group(1).decode() if m else ""
+
+
+def _b64(text, n):
+    try:
+        raw = base64.b64decode(str(text or ""), validate=True)
+    except ValueError:
+        return None
+    return raw if len(raw) == n else None
+
+
+def pruefen(prog, version, sha, sig, pub):
+    """The checks of a new program, before anything changes: "" when all hold, else the fixed word of the first that
+    fails (size, SHA-256, the version in it, the signature of the panel's key)."""
+    if not isinstance(prog, bytes) or not prog or len(prog) > PROG_MAX:
+        return "gross"
+    got = hashlib.sha256(prog).hexdigest()
+    if not hmac.compare_digest(got, str(sha or "")):
+        return "pruefsumme"
+    if prog_version(prog) != version:
+        return "version"
+    key, s = _b64(pub, 32), _b64(sig, 64)
+    if key is None or s is None or not ed25519_ok(key, SIGN_TEXT.format(version=version, sha256=got).encode(), s):
+        return "signatur"
+    return ""
+
+
+def read_plain(path, cap):
+    """A regular file, never through a symlink, at most cap bytes (root reads what the anchor's user left)."""
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > cap:
+            raise OSError("not a plain file")
+        with os.fdopen(fd, "rb") as f:
+            fd = None
+            data = f.read(cap + 1)
+    finally:
+        if fd is not None:
+            os.close(fd)
+    if len(data) > cap:
+        raise OSError("too big")
+    return data
+
+
+def write_atomic(path, data, mode):
+    """Written beside it and moved over it in one step: the program is never half there."""
+    tmp = f"{path}.neu{os.getpid()}"
+    with open(tmp, "wb") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+
+
 # ---------------------------------------------------------------- running (systemd unit or launchd job spark-anker)
 def load(root="/", s=None):
     try:
@@ -448,10 +618,46 @@ class Lauf:
     """One connection to the panel: channels to the own sshd, nothing else. One thread for everything (a TLS socket
     is never read and written from two threads at once)."""
 
-    def __init__(self, ws, bild=""):
+    def __init__(self, ws, bild="", conf=None, ctx=None):
         self.ws = ws
         self.bild = bild if bild in BILD else ""   # the screen's kind (`bildschirm`), its one port in BILD
         self.kanaele = {}      # n -> socket to the own sshd (or the screen's port)
+        self.conf = conf or {}
+        self.ctx = ctx or Ctx()
+
+    def _update(self, m):
+        """„Aktualisieren“ from the panel: fetch the program from the own panel only (the same checked TLS), check it
+        (pruefen) and leave it with the flag for the root unit; a fixed word back to the panel either way."""
+        v, conf, s = str(m.get("version") or ""), self.conf, self.ctx.s
+        if not conf.get("sign_pub"):
+            return "kein_schluessel"
+        if not newer(v, VERSION):
+            return "nicht_neuer"
+        try:
+            status, prog = http_call(conf["url"], conf.get("fp") or "", "GET", "/fernzugang/anker", timeout=30)
+        except (OSError, Fehler, ssl.SSLError, http.client.HTTPException):
+            return "laden"
+        if status != 200:
+            return "laden"
+        why = pruefen(prog, v, m.get("sha256"), m.get("sig"), conf["sign_pub"])
+        if why:
+            return why
+        try:
+            write_atomic(self.ctx.path(s.var + "/neu.py"), prog, 0o600)
+            write_atomic(self.ctx.path(s.var + "/neu.json"), json.dumps(
+                {"version": v, "sha256": m.get("sha256"), "sig": m.get("sig")}).encode(), 0o600)
+            write_atomic(self.ctx.path(s.var + "/aktualisieren"), b"1\n", 0o600)   # the root unit takes it from here
+        except OSError:
+            return "schreiben"
+        return "laeuft"
+
+    def _stand(self):
+        """What the root unit wrote after the last update (ok, zurueck or why not), for the panel's „hallo“."""
+        try:
+            d = json.loads(read_plain(self.ctx.path(self.ctx.s.lib + "/update.json"), 4096))
+        except (OSError, ValueError):
+            return {}
+        return {k: d[k] for k in ("stand", "version", "t") if isinstance(d, dict) and isinstance(d.get(k), (str, int))}
 
     def _close(self, n, tell):
         s = self.kanaele.pop(n, None)
@@ -468,6 +674,9 @@ class Lauf:
         n = m.get("kanal")
         if m.get("typ") == "abbauen":
             return "abbauen"
+        if m.get("typ") == "update":
+            self.ws.send_json({"typ": "update_stand", "stand": self._update(m)})
+            return None
         if m.get("typ") == "auf" and isinstance(n, int) and 1 <= n < 64 and n not in self.kanaele:
             target = SSHD
             if m.get("ziel") == "bild":          # the screen: only its one port on 127.0.0.1, only when set up
@@ -488,7 +697,8 @@ class Lauf:
         return None
 
     def run(self):
-        self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION, "bild": self.bild})
+        self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION, "bild": self.bild,
+                           "update": self._stand()})
         last = time.monotonic()
         try:
             while True:
@@ -550,7 +760,9 @@ def cmd_run(args):
             ws = WS.open(conf["url"], conf.get("fp") or "", "/api/fernzugang/anker", conf["key"])
             say("mit dem Panel verbunden")
             pause = 5
-            if Lauf(ws, str(conf.get("bild") or "")).run() == "abbauen":
+            with contextlib.suppress(OSError):       # an update waits for this: the new version reached the panel
+                write_atomic(Ctx().path(Ctx().s.var + "/ok"), VERSION.encode(), 0o600)
+            if Lauf(ws, str(conf.get("bild") or ""), conf).run() == "abbauen":
                 say("das Panel verlangt den Abbau")
                 try:
                     with open(Ctx().s.flag, "w") as f:   # spark-anker-abbau.path or the launchd job (root) runs `entfernen`
@@ -726,16 +938,22 @@ def linux_users(ctx, conf):
     return ctx.ids(USER), ctx.ids(RUNNER)
 
 
-def linux_start(ctx, runner):
-    for path, text in zip(UNITS, (UNIT_RUN, UNIT_PATH, UNIT_ABBAU)):
+def linux_units(ctx):
+    """The units of this version (setting up, `einheiten` after an update, `aktualisieren`); none is started here."""
+    for path, text in zip(UNITS, (UNIT_RUN, UNIT_PATH, UNIT_ABBAU, UNIT_UPDATE_PATH, UNIT_UPDATE)):
         write(ctx.path(path), text)
     ctx.run(["systemctl", "daemon-reload"])
+    return ctx.run(["systemctl", "enable", "--now", "spark-anker-update.path"])
+
+
+def linux_start(ctx, runner):
+    linux_units(ctx)
     if ctx.run(["systemctl", "enable", "--now", "spark-anker.service", "spark-anker-abbau.path"]):
         raise Fehler("systemd ließ den Dienst nicht starten (journalctl -u spark-anker)")
 
 
 def linux_stop(ctx, conf):
-    ctx.run(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path"])
+    ctx.run(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path", "spark-anker-update.path"])
     bild_off(ctx, conf)
 
 
@@ -757,7 +975,9 @@ MAC_ETC = "/Library/Preferences/SparkAnker"
 MAC_VAR = "/var/db/spark-anker"
 MAC_JOB = "de.speech-spark.anker"
 MAC_JOB_ABBAU = "de.speech-spark.anker-abbau"
-MAC_PLISTS = ("/Library/LaunchDaemons/" + MAC_JOB + ".plist", "/Library/LaunchDaemons/" + MAC_JOB_ABBAU + ".plist")
+MAC_JOB_UPDATE = "de.speech-spark.anker-update"
+MAC_PLISTS = ("/Library/LaunchDaemons/" + MAC_JOB + ".plist", "/Library/LaunchDaemons/" + MAC_JOB_ABBAU + ".plist",
+              "/Library/LaunchDaemons/" + MAC_JOB_UPDATE + ".plist")
 MAC_SSHD_CONF = "/etc/ssh/sshd_config.d/000-spark-anker.conf"
 MAC_SSHD_MAIN = "/etc/ssh/sshd_config"
 MAC_SSH_GROUP = "com.apple.access_ssh"   # „Zugriff erlauben: nur diese Benutzer“ of Entfernte Anmeldung
@@ -797,6 +1017,8 @@ MAC_RUN_EXTRA = f"""	<key>UserName</key><string>{MAC_RUNNER}</string>
 	<key>StandardErrorPath</key><string>{MAC_VAR}/anker.log</string>
 """
 MAC_ABBAU_EXTRA = f"""	<key>WatchPaths</key><array><string>{MAC_VAR}/abbauen</string></array>
+"""
+MAC_UPDATE_EXTRA = f"""	<key>WatchPaths</key><array><string>{MAC_VAR}/aktualisieren</string></array>
 """
 
 
@@ -896,20 +1118,38 @@ def mac_login(ctx, on):
         ctx.run(["/bin/launchctl", "disable", "system/com.openssh.sshd"])
 
 
+MAC_JOBS = ((MAC_PLISTS[0], MAC_JOB, "<string>lauf</string>", MAC_RUN_EXTRA),
+            (MAC_PLISTS[1], MAC_JOB_ABBAU, "<string>entfernen</string><string>--vom-panel</string>", MAC_ABBAU_EXTRA),
+            (MAC_PLISTS[2], MAC_JOB_UPDATE, "<string>aktualisieren</string><string>--vom-anker</string>", MAC_UPDATE_EXTRA))
+
+
+def mac_plist(ctx, path, label, args, extra):
+    write(ctx.path(path), MAC_PLIST.format(label=label, prog=MAC.prog, args=args, extra=extra), 0o644)
+    ctx.chown(ctx.path(path), 0, 0)
+
+
+def mac_units(ctx):
+    """The jobs of this version written again (`einheiten`, `aktualisieren`); only the update job is loaded when it is
+    not yet (launchd keeps a loaded job as it is; the update job may be the very one running this)."""
+    for job in MAC_JOBS:
+        mac_plist(ctx, *job)
+    ctx.run(["/bin/launchctl", "bootstrap", "system", MAC_PLISTS[2]])   # already loaded: launchd says so, nothing changes
+    return 0
+
+
 def mac_start(ctx, runner):
     var = ctx.path(MAC_VAR)
     os.makedirs(var, mode=0o700, exist_ok=True)
     ctx.chown(var, runner[0], runner[1])
-    for path, label, args, extra in ((MAC_PLISTS[0], MAC_JOB, "<string>lauf</string>", MAC_RUN_EXTRA),
-                                     (MAC_PLISTS[1], MAC_JOB_ABBAU, "<string>entfernen</string><string>--vom-panel</string>", MAC_ABBAU_EXTRA)):
-        write(ctx.path(path), MAC_PLIST.format(label=label, prog=MAC.prog, args=args, extra=extra), 0o644)
-        ctx.chown(ctx.path(path), 0, 0)
+    for path, label, args, extra in MAC_JOBS:
+        mac_plist(ctx, path, label, args, extra)
         if ctx.run(["/bin/launchctl", "bootstrap", "system", path]):
             raise Fehler(f"launchd ließ den Dienst nicht starten (sudo launchctl print system/{label})")
 
 
 def mac_stop(ctx, conf):
     ctx.run(["/bin/launchctl", "bootout", "system/" + MAC_JOB])
+    ctx.run(["/bin/launchctl", "bootout", "system/" + MAC_JOB_UPDATE])
 
 
 def mac_after(ctx, conf, home_gone):
@@ -942,11 +1182,12 @@ class System:
 
 
 LINUX = System(name="Linux", lib=LIB, prog=PROG, bin=BIN, etc=ETC, conf=CONF, var=VAR, flag=FLAG, services=UNITS,
+               python="/usr/bin/python3", units=linux_units,
                runner=RUNNER, check=linux_check, users=linux_users, start=linux_start, stop=linux_stop,
                after=linux_after, last=linux_last, started="der Dienst spark-anker läuft")
 MAC = System(name="Darwin", lib=MAC_LIB, prog=MAC_LIB + "/spark-anker.py", bin=BIN,
              etc=MAC_ETC, conf=MAC_ETC + "/anker.json", var=MAC_VAR, flag=MAC_VAR + "/abbauen", services=MAC_PLISTS,
-             runner=MAC_RUNNER, check=mac_check, users=mac_users, start=mac_start, stop=mac_stop,
+             python=MAC_PY, units=mac_units, runner=MAC_RUNNER, check=mac_check, users=mac_users, start=mac_start, stop=mac_stop,
              after=mac_after, last=mac_last, started="der Dienst de.speech-spark.anker läuft (launchd)")
 
 
@@ -957,7 +1198,8 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
         say("bitte mit sudo")
         return 1
     if load(ctx.root, s):
-        say("schon eingerichtet; erst `sudo spark-anker entfernen`")
+        say("schon eingerichtet. Neue Version: `curl -fsSL <Panel>/fernzugang/anker | sudo python3 - aktualisieren` "
+            "(die Zeile steht im Panel beim System; Kopplung und Schlüssel bleiben). Neu koppeln: erst `sudo spark-anker entfernen`")
         return 1
     base = base_url(args.adresse)
     fp = (args.fp or "").lower()
@@ -982,6 +1224,8 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
         raise Fehler("das Programm vom Panel passt nicht zu seiner Prüfsumme")
     conf = {"url": base, "fp": fp, "id": d["id"], "key": d["key"], "user_neu": not ctx.ids(USER), "seit": int(time.time()),
             **state}
+    if _b64(d.get("sign_pub"), 32):            # the panel's signing key for updates, pinned with the pairing
+        conf["sign_pub"] = d["sign_pub"]
     user, runner = s.users(ctx, conf)
     ssh = ctx.path(os.path.join(user[2], ".ssh"))
     os.makedirs(ssh, mode=0o700, exist_ok=True)
@@ -1202,7 +1446,137 @@ def cmd_state(args):
     if not conf:
         say("nicht eingerichtet")
         return 1
-    say(f"eingerichtet für {conf['url']}" + (" (Zertifikat festgelegt)" if conf.get("fp") else "") + f", Version {VERSION}")
+    say(f"eingerichtet für {conf['url']}" + (" (Zertifikat festgelegt)" if conf.get("fp") else "") + f", Version {VERSION}"
+        + ("" if conf.get("sign_pub") else "; Aktualisieren aus dem Panel erst nach einmal `aktualisieren`"))
+    return 0
+
+
+# ---------------------------------------------------------------- updating: the root side
+def cmd_units(args, ctx=None):
+    """`einheiten` (root, from the update): the units or launchd jobs of this version; the update starts the anchor."""
+    ctx = ctx or Ctx()
+    if ctx.euid() != 0:
+        say("bitte mit sudo")
+        return 1
+    return 1 if ctx.s.units(ctx) else 0
+
+
+def _wait_ok(ctx, path, version, t0, seconds):
+    """The new anchor reached its panel: it wrote its version into „ok“ after t0 (lstat: never through a link)."""
+    end = time.monotonic() + seconds
+    while True:
+        try:
+            st = os.lstat(path)
+            if stat.S_ISREG(st.st_mode) and st.st_mtime >= t0 - 1 and read_plain(path, 64).strip() == version.encode():
+                return True
+        except OSError:
+            pass
+        if time.monotonic() >= end:
+            return False
+        ctx.wait(1)
+
+
+def cmd_apply(args, ctx=None, wait=UPDATE_S):
+    """`aktualisieren --vom-anker` (root, spark-anker-update.path or the launchd job): checks again what the anchor
+    left (pruefen against the pinned key, only newer), keeps the program before, swaps, writes the new units and
+    restarts the anchor; when the new one has not reached the panel within `wait` seconds, the one before is back.
+    The result (fixed word, version, time) goes to update.json beside the program for the panel."""
+    ctx = ctx or Ctx()
+    s = ctx.s
+    if ctx.euid() != 0:
+        say("bitte mit sudo")
+        return 1
+    var = lambda n: ctx.path(s.var + "/" + n)
+    with contextlib.suppress(OSError):
+        os.unlink(var("aktualisieren"))
+
+    def done(stand, version=""):
+        with contextlib.suppress(OSError):
+            write_atomic(ctx.path(s.lib + "/update.json"), json.dumps(
+                {"stand": stand, "version": version, "t": int(time.time())}).encode(), 0o644)
+        for n in ("neu.py", "neu.json"):
+            with contextlib.suppress(OSError):
+                os.unlink(var(n))
+        say(f"aktualisieren: {stand}" + (f" ({version})" if version else ""))
+        return 0 if stand == "ok" else 1
+    conf = load(ctx.root, s)
+    if not conf or not conf.get("sign_pub"):
+        return done("kein_schluessel")
+    try:
+        meta = json.loads(read_plain(var("neu.json"), 4096))
+        prog = read_plain(var("neu.py"), PROG_MAX)
+    except (OSError, ValueError):
+        return done("unlesbar")
+    v = str(meta.get("version") or "") if isinstance(meta, dict) else ""
+    if not newer(v, VERSION):
+        return done("nicht_neuer", v if VER.fullmatch(v) else "")
+    why = pruefen(prog, v, meta.get("sha256"), meta.get("sig"), conf["sign_pub"])
+    if why:
+        return done(why, v)
+    path = ctx.path(s.prog)
+    with open(path, "rb") as f:
+        before = f.read()
+    write_atomic(path + ".alt", before, 0o644)
+    write_atomic(path, prog, 0o755)
+    with contextlib.suppress(OSError):
+        os.unlink(var("ok"))
+    t0 = time.time()
+    if ctx.run([s.python, "-I", s.prog, "einheiten"]) == 0:
+        _restart_anchor(ctx)
+        if _wait_ok(ctx, var("ok"), v, t0, wait):
+            os.unlink(path + ".alt")
+            return done("ok", v)
+    write_atomic(path, before, 0o755)        # back to the one before, its own units, and started again
+    os.unlink(path + ".alt")
+    ctx.run([s.python, "-I", s.prog, "einheiten"])
+    _restart_anchor(ctx)
+    return done("zurueck", v)
+
+
+def cmd_upgrade(args, ctx=None):
+    """`curl … | sudo python3 - aktualisieren` (root, for an anchor before 1.3.0 too): this very program in place of the
+    one set up, with the units of this version and the panel's signing key pinned; the device key, the panel's SSH key
+    and the pairing stay as they are, no code. Only from the own panel (the stored address and its checked TLS), the
+    program it hands out checked by SHA-256 and signature, never a step back."""
+    if getattr(args, "vom_anker", False):
+        return cmd_apply(args, ctx)
+    ctx = ctx or Ctx()
+    s = ctx.s
+    if ctx.euid() != 0:
+        say("bitte mit sudo")
+        return 1
+    conf = load(ctx.root, s)
+    if not conf:
+        say("nicht eingerichtet: erst `einrichten` mit der Zeile aus dem Panel (+ System koppeln)")
+        return 1
+    status, raw = http_call(conf["url"], conf.get("fp") or "", "GET", "/api/fernzugang/anker/stand", None, conf["key"])
+    if status != 200:
+        raise Fehler({403: "das Panel kennt diesen Server nicht mehr: neu koppeln", 404: "Fernzugang im Panel ist aus"}
+                     .get(status, f"Panel antwortet {status}"))
+    d = json.loads(raw)
+    if d.get("version") != VERSION:
+        raise Fehler("das Panel hat inzwischen ein anderes Programm: die Zeile aus dem Panel noch einmal")
+    status, prog = http_call(conf["url"], conf.get("fp") or "", "GET", "/fernzugang/anker")
+    why = "laden" if status != 200 else pruefen(prog, VERSION, d.get("sha256"), d.get("sig"), d.get("sign_pub"))
+    if why:
+        raise Fehler(f"das Programm vom Panel ließ sich nicht prüfen ({why}); es wurde nichts geändert")
+    path = ctx.path(s.prog)
+    try:
+        with open(path, "rb") as f:
+            installed = prog_version(f.read(PROG_MAX))
+    except OSError:
+        installed = ""
+    if installed and newer(installed, VERSION):
+        raise Fehler(f"hier läuft schon {installed}, neuer als {VERSION}: es wurde nichts geändert")
+    write_atomic(path, prog, 0o755)
+    conf["sign_pub"] = d["sign_pub"]
+    write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+    runner = ctx.ids(s.runner)
+    if runner:
+        ctx.chown(ctx.path(s.conf), 0, runner[1])
+    s.units(ctx)
+    _restart_anchor(ctx)
+    say(f"aktualisiert: {installed or 'vorher'} → {VERSION}; Kopplung und Schlüssel bleiben, {s.started}")
     return 0
 
 
@@ -1500,6 +1874,9 @@ def main(argv=None, system=None):
     r.add_argument("--vom-panel", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("lauf", help="der Dienst (startet systemd bzw. launchd)")
     sub.add_parser("zustand", help="eingerichtet? welches Panel?")
+    u = sub.add_parser("aktualisieren", help="dieses Programm anstelle des eingerichteten (ohne Code, Kopplung bleibt)")
+    u.add_argument("--vom-anker", action="store_true", help=argparse.SUPPRESS)
+    sub.add_parser("einheiten", help=argparse.SUPPRESS)
     b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
     b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
@@ -1508,7 +1885,7 @@ def main(argv=None, system=None):
     args = p.parse_args(argv)
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "bildschirm": cmd_screen}[args.cmd](args)
+                "hilfe": cmd_help, "bildschirm": cmd_screen, "aktualisieren": cmd_upgrade, "einheiten": cmd_units}[args.cmd](args)
     except Fehler as e:
         say(str(e))
         return 1

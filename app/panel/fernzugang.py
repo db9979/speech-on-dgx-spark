@@ -238,7 +238,7 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
-         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung")
+         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -1291,6 +1291,12 @@ async def _on_anker_text(a, m):
         fields = {k: v for k, v in (("os", os_), ("anker", ver)) if v and WORD.fullmatch(v)}
         if fields:
             await asyncio.to_thread(_update, a.gid, **fields)
+        if m.get("update"):
+            import fernanker
+            await fernanker.on_hello(a.gid, m.get("update"))
+    elif typ == "update_stand":
+        import fernanker
+        await fernanker.on_answer(a.gid, m)
     elif typ == "abbau_laeuft":
         log("abbauen", "laeuft")
 
@@ -1343,6 +1349,8 @@ async def anker_pair(request: Request):
     if not HOSTKEY.fullmatch(hostkey) or not fingerprint(hostkey):
         log("koppeln", "hostkey ungueltig", 0)
         raise HTTPException(400, "hostkey: ssh-ed25519 only")
+    import fernanker
+    sign_pub = await asyncio.to_thread(fernanker.sign_pub)   # pinned by the anchor for its updates
     with _lock:
         d = _read()
         if sum(1 for x in d["geraete"].values() if x.get("stand") != "abbau") >= MAX_ANKER:
@@ -1365,7 +1373,7 @@ async def anker_pair(request: Request):
     guard.log("fernzugang_paired", detail="Fern-Server gekoppelt")
     _live("Fern-Server gekoppelt")
     return {"id": gid, "key": key, "pi_key": f"{pub} spark-fernzugang-{gid}", "user": USER,
-            "anker_sha256": _sum(PROGRAM)}
+            "anker_sha256": _sum(PROGRAM), "sign_pub": sign_pub}
 
 
 @router.post("/api/fernzugang/anker/abgebaut")
@@ -1517,14 +1525,16 @@ def command(origin, art="einrichten"):
     if not base:
         return None
     url, fp = base
-    py = "sudo python3" if art == "einrichten" else "python3"
+    py = "python3" if art == "hilfe" else "sudo python3"
+    # „aktualisieren“: the anchor takes the panel's address and certificate from its own pairing, never from the line
+    tail = "aktualisieren" if art == "aktualisieren" else f"{art} {url}" + (f" --fp {fp}" if fp else "")
     if not fp:
-        cmd = f"curl -fsSL {url}/fernzugang/anker | {py} - {art} {url}"
+        cmd = f"curl -fsSL {url}/fernzugang/anker | {py} - {tail}"
     else:
         pin = _spki_pin()
         if not pin:
             return None
-        cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | {py} - {art} {url} --fp {fp}"
+        cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | {py} - {tail}"
     # on a Mac Apple's own Python (its authorities, the one launchd starts), never the first python3 in PATH
     return {"befehl": cmd, "befehl_mac": cmd.replace(f"| {py} -", f"| {py.replace('python3', '/usr/bin/python3')} -"), "fp": fp}
 
@@ -1570,6 +1580,8 @@ def admin_get(request: Request):
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
     rows = []
     now = time.time()
+    import fernanker
+    out["anker_version"] = pv = fernanker.version()
     for gid, x in sorted(_read(now)["geraete"].items(), key=lambda kv: str(kv[1].get("name", "")).lower()):
         a = ANKER.get(gid)
         rows.append({"id": gid, "name": x.get("name", ""), "os": x.get("os", ""), "anker": x.get("anker", ""),
@@ -1578,7 +1590,7 @@ def admin_get(request: Request):
                      "erlaubt": x.get("erlaubt", True), "hostkey_falsch": bool(x.get("hostkey_falsch")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
-                     "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid)})
+                     "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv)})
     out["geraete"] = rows
     out["offen"] = [{"id": s.id, "geraet": s.gid, "seit": int(s.seit), "art": s.art, "admin": s.admin_name,
                      "client": s.client, "herkunft": s.herkunft, "ip": s.ip_kurz} for s in SITZUNG.values()]

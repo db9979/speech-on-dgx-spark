@@ -922,9 +922,9 @@ SEITEN = {
         "heute": [],
     },
     "fernserver": {
-        "stand": "a492d6ff65",
+        "stand": "e689d7da06",
         "bezug": {
-            "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"],
+            "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },
         "kurz": ("Ein Fern-Server ist ein eigener Rechner (Linux oder Mac) im Heimnetz oder im Internet, auf dem der Anker "
                  "läuft: ein kleines Programm, das sich selbst zum Panel verbindet und dort den Weg zu seinem SSH öffnet.",
@@ -968,6 +968,18 @@ SEITEN = {
                "Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within "
                "{fernzugang.OPEN_S} seconds); the login is user {fernzugang.USER} with the panel's key only, sudo only "
                "when the admin adds it there.")),
+            S("s7", "schritt", ("Aktualisieren", "Update"),
+              ("signiert, nie zurück", "signed, never back"),
+              ("„Aktualisieren“ schickt einem Anker ab {fernanker.UPDATE_MIN.0}.{fernanker.UPDATE_MIN.1}.{fernanker.UPDATE_MIN.2}, "
+               "der online und ohne offene Sitzung ist, die neue Version über seinen Kanal (fernanker.admin_update), nie "
+               "einen Schritt zurück. Der Anker lädt das Programm nur vom eigenen Panel und prüft SHA-256 und die "
+               "Unterschrift mit dem beim Koppeln angehefteten Schlüssel (fernanker.stand); erreicht die neue Version das "
+               "Panel nicht, geht er zur alten zurück. Ältere Anker bekommen eine Zeile zum Einfügen.",
+               "„Update“ sends an anchor from {fernanker.UPDATE_MIN.0}.{fernanker.UPDATE_MIN.1}.{fernanker.UPDATE_MIN.2} "
+               "that is online and has no open session the new version over its channel (fernanker.admin_update), never a "
+               "step back. The anchor loads the program from its own panel only and checks SHA-256 and the signature with "
+               "the key pinned at pairing (fernanker.stand); if the new version does not reach the panel, it goes back to "
+               "the old one. Older anchors get a line to paste.")),
             S("s6", "ende", ("Entfernen", "Remove"),
               ("fernzugang.anker_removed", "fernzugang.anker_removed"),
               ("„Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, "
@@ -1000,6 +1012,8 @@ SEITEN = {
             ("fernzugang.anker_ws", ("die Leitung des Ankers", "the anchor's line")),
             ("fernzugang.by_key", ("Anker am Schlüssel erkennen", "know an anchor by its key")),
             ("fernzugang.anker_removed", ("Abbau gemeldet", "removal reported")),
+            ("fernanker.admin_update", ("Aktualisieren über den Kanal", "update over the channel")),
+            ("fernanker.stand", ("signierter Stand des Programms", "signed state of the program")),
         ],
         "tests": ["test_fernzugang"],
         "heute": [],

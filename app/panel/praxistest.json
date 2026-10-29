@@ -4363,6 +4363,13 @@
 "titel": "Ziel-Modus im Assistenten",
 "text": "Fernzugang → Systeme → Shell eines Linux-Systems, Assistent offen, „Bildschirm mitschicken“ an. In das Fragefeld „Freien Platz auf / schaffen“ und „Als Ziel verfolgen“. Erwartet: das Feld leert sich, oben steht das Ziel, nach kurzer Zeit ein Vorschlag mit einem Satz Grund. Einfügen, selbst Enter drücken; nach dem Ende des Befehls kommt der nächste Vorschlag. Ein Vorschlag mit rm -rf steht rot und braucht zwei Tipps. Nichts wird von selbst ausgeführt. Am Ende „Fertig: …“ oder „Ziel beenden“. Mit „Zeilen“ 1000 und einem langen Log (journalctl -n 2000) erscheint „gekürzt“, wenn mehr als 60 000 Zeichen dastehen. Im Protokoll nur hilfe_ziel mit Wort, Zeilenzahl und ms.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P648",
+"v": 1230,
+"titel": "Fernzugang: Anker aktualisieren",
+"text": "Auf einem gekoppelten System mit Anker vor 1.3.0: in der Zeile „Aktualisieren“, die Zeile mit „In die Shell einfügen“ in eine offene Shell setzen, Enter selbst drücken; danach zeigt das System die neue Version und bleibt gekoppelt. Später mit einem Anker ab 1.3.0: „Aktualisieren“ ohne offene Sitzung, nach etwa einer Minute steht die neue Version da; mit offener Sitzung sagt die Seite, dass erst getrennt werden muss. In den Logs „fernzugang: aktualisieren | ok“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

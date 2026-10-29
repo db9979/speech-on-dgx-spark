@@ -684,7 +684,7 @@ class Program(unittest.TestCase):
         self.assertEqual([x for x in p.remove_paths(root) if os.path.lexists(x)], [])
         with open(ak) as f:
             self.assertEqual(f.read(), "ssh-ed25519 AAAAown me@laptop\n")   # someone else's line stays
-        self.assertIn(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path"], ran)
+        self.assertIn(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path", "spark-anker-update.path"], ran)
         self.assertIn(["userdel", "--remove", "spark"], ran)                # made by the anchor: gone with its home
         self.assertIn(["userdel", "spark-anker"], ran)
         # a user spark that was there before stays; only the panel's line goes (the file with it when empty)
@@ -972,6 +972,328 @@ class MacAnchor(unittest.TestCase):
                 self.assertEqual(sorted(self.files(root)), before, kw)      # not a single file written
                 self.assertFalse(any(c[1:3] == [".", "-create"] for c in ran), kw)
             self.assertFalse(os.path.exists(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))))
+
+
+def _signed(prog, version, key=None):
+    """(sha256, sig) of a program as the panel signs it (or with another key)."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    import base64
+    sha = hashlib.sha256(prog).hexdigest()
+    k = key or Ed25519PrivateKey.generate()
+    return sha, base64.b64encode(k.sign(f"spark-anker {version} {sha}".encode())).decode(), k
+
+
+def _pub(k):
+    import base64
+    from cryptography.hazmat.primitives import serialization
+    return base64.b64encode(k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
+
+
+class AnchorUpdateProgram(unittest.TestCase):
+    """Anker-Update (Dominik 2026-10-29 „1 und 2“) on the anchor's side, with a temporary root and recorded commands:
+    the signature (Ed25519 without a library), the root unit's swap with its way back, never a step back, and
+    `aktualisieren` for an anchor before 1.3.0."""
+
+    def test_ed25519_against_rfc_8032_and_the_library(self):
+        p = program()
+        pk = bytes.fromhex("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a")
+        sig = bytes.fromhex("e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e3970"
+                            "1cf9b46bd25bf5f0595bbe24655141438e7a100b")
+        self.assertTrue(p.ed25519_ok(pk, b"", sig))                         # RFC 8032 7.1, test 1
+        self.assertFalse(p.ed25519_ok(pk, b"x", sig))
+        _, s64, k = _signed(b"x", "9.9.9")
+        import base64
+        key, raw = base64.b64decode(_pub(k)), base64.b64decode(s64)
+        msg = f"spark-anker 9.9.9 {hashlib.sha256(b'x').hexdigest()}".encode()
+        self.assertTrue(p.ed25519_ok(key, msg, raw))
+        for bad in (raw[:-1] + bytes([raw[-1] ^ 1]), bytes([raw[0] ^ 1]) + raw[1:], raw[:63], b"\0" * 64):
+            self.assertFalse(p.ed25519_ok(key, msg, bad))
+        self.assertFalse(p.ed25519_ok(key, msg + b"!", raw))
+        _, _, other = _signed(b"x", "9.9.9")
+        self.assertFalse(p.ed25519_ok(base64.b64decode(_pub(other)), msg, raw))   # another key
+
+    def test_the_checks_and_never_a_step_back(self):
+        p = program()
+        prog = b'#!/usr/bin/env python3\nVERSION = "9.0.0"\n'
+        sha, sig, k = _signed(prog, "9.0.0")
+        self.assertEqual(p.pruefen(prog, "9.0.0", sha, sig, _pub(k)), "")
+        self.assertEqual(p.pruefen(prog + b"#", "9.0.0", sha, sig, _pub(k)), "pruefsumme")
+        self.assertEqual(p.pruefen(prog, "9.0.1", sha, sig, _pub(k)), "version")
+        self.assertEqual(p.pruefen(prog, "9.0.0", sha, sig, _pub(_signed(b"", "1.0.0")[2])), "signatur")
+        self.assertEqual(p.pruefen(prog, "9.0.0", sha, "AAAA", _pub(k)), "signatur")
+        self.assertEqual(p.pruefen(b"x" * (p.PROG_MAX + 1), "9.0.0", sha, sig, _pub(k)), "gross")
+        self.assertTrue(p.newer("1.10.0", "1.9.9"))
+        self.assertFalse(p.newer("1.2.0", "1.3.0"))
+        self.assertFalse(p.newer("1.3.0", "1.3.0"))
+
+    def root(self, have="1.3.0", sign=True):
+        """A temporary root with an anchor set up at version `have`; (program, root, ctx, ran, key)."""
+        p = program()
+        root = tempfile.mkdtemp(prefix="anker-upd-")
+        _, _, k = _signed(b"", "0.0.0")
+        for d in (p.LIB, p.ETC, p.VAR):
+            os.makedirs(p.here(root, d), exist_ok=True)
+        with open(p.here(root, p.PROG), "wb") as f:
+            f.write(f'#!/usr/bin/env python3\nVERSION = "{have}"\n'.encode())
+        conf = {"url": "https://spark.example.org", "fp": "", "id": "g_1", "key": "fz_k", "user_neu": True}
+        if sign:
+            conf["sign_pub"] = _pub(k)
+        with open(p.here(root, p.CONF), "w") as f:
+            json.dump(conf, f)
+        ran = []
+        ctx = p.Ctx(system="Linux", root=root, run=lambda c: ran.append(c) or 0)
+        ctx.euid = lambda: 0
+        ctx.wait = lambda s: None
+        ctx.chown = lambda *a: None
+        ctx.ids = lambda name: (999, 999, "/home/" + name)
+        return p, root, ctx, ran, k
+
+    def leave(self, p, root, prog, version, k, sig=None, sha=None):
+        """What the anchor's own user leaves for the root unit."""
+        good_sha, good, _ = _signed(prog, version, k)
+        sha = sha or good_sha
+        with open(p.here(root, p.VAR + "/neu.py"), "wb") as f:
+            f.write(prog)
+        with open(p.here(root, p.VAR + "/neu.json"), "w") as f:
+            json.dump({"version": version, "sha256": sha, "sig": sig or good}, f)
+        open(p.here(root, p.VAR + "/aktualisieren"), "w").close()
+
+    def apply(self, p, ctx):
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = p.cmd_apply(argparse.Namespace(), ctx, wait=0)
+        with open(p.here(ctx.root, p.LIB + "/update.json")) as f:
+            return rc, json.load(f)
+
+    def installed(self, p, root):
+        with open(p.here(root, p.PROG), "rb") as f:
+            return f.read()
+
+    def test_swap_restart_and_kept_when_it_came_back(self):
+        p, root, ctx, ran, k = self.root()
+        new = b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n'
+        self.leave(p, root, new, "1.4.0", k)
+        real_run = ctx.run
+
+        def run(c):                       # the new anchor reaches its panel after the restart: it writes „ok“
+            if c[:2] == ["systemctl", "restart"]:
+                with open(p.here(root, p.VAR + "/ok"), "w") as f:
+                    f.write("1.4.0")
+            return real_run(c)
+        ctx.run = run
+        rc, st = self.apply(p, ctx)
+        self.assertEqual((rc, st["stand"], st["version"]), (0, "ok", "1.4.0"))
+        self.assertEqual(self.installed(p, root), new)
+        self.assertFalse(os.path.exists(p.here(root, p.PROG) + ".alt"))
+        for n in ("neu.py", "neu.json", "aktualisieren"):
+            self.assertFalse(os.path.exists(p.here(root, p.VAR + "/" + n)), n)
+        self.assertEqual(ran, [["/usr/bin/python3", "-I", p.PROG, "einheiten"], ["systemctl", "restart", "spark-anker.service"]])
+
+    def test_back_to_the_one_before_when_it_does_not_come_back(self):
+        p, root, ctx, ran, k = self.root()
+        before = self.installed(p, root)
+        self.leave(p, root, b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n', "1.4.0", k)
+        rc, st = self.apply(p, ctx)
+        self.assertEqual((rc, st["stand"]), (1, "zurueck"))
+        self.assertEqual(self.installed(p, root), before)
+        self.assertFalse(os.path.exists(p.here(root, p.PROG) + ".alt"))
+        self.assertEqual(ran.count(["systemctl", "restart", "spark-anker.service"]), 2)     # the new one, then the old one
+        self.assertEqual(ran[-2:], [["/usr/bin/python3", "-I", p.PROG, "einheiten"], ["systemctl", "restart", "spark-anker.service"]])
+
+    def test_tampered_older_or_unsigned_changes_nothing(self):
+        cases = []
+        p, root, ctx, ran, k = self.root()
+        _, _, other = _signed(b"", "0.0.0")
+        self.leave(p, root, b'VERSION = "1.4.0"\n', "1.4.0", other)                     # signed by another key
+        cases.append((p, root, ctx, ran, "signatur"))
+        p, root, ctx, ran, k = self.root()
+        sha, sig, _ = _signed(b'VERSION = "1.4.0"\n', "1.4.0", k)
+        self.leave(p, root, b'VERSION = "1.4.0"\nimport os\n', "1.4.0", k, sig=sig, sha=sha)      # changed after signing
+        cases.append((p, root, ctx, ran, "pruefsumme"))
+        p, root, ctx, ran, k = self.root(have="1.3.0")
+        self.leave(p, root, b'VERSION = "1.2.0"\n', "1.2.0", k)                         # a step back
+        cases.append((p, root, ctx, ran, "nicht_neuer"))
+        p, root, ctx, ran, k = self.root(sign=False)
+        self.leave(p, root, b'VERSION = "1.4.0"\n', "1.4.0", k)                         # no pinned key
+        cases.append((p, root, ctx, ran, "kein_schluessel"))
+        p, root, ctx, ran, k = self.root()
+        os.symlink("/etc/hostname", p.here(root, p.VAR + "/neu.py"))                    # never through a link
+        with open(p.here(root, p.VAR + "/neu.json"), "w") as f:
+            json.dump({"version": "1.4.0", "sha256": "", "sig": ""}, f)
+        cases.append((p, root, ctx, ran, "unlesbar"))
+        for p, root, ctx, ran, want in cases:
+            before = self.installed(p, root)
+            rc, st = self.apply(p, ctx)
+            self.assertEqual((rc, st["stand"]), (1, want))
+            self.assertEqual(self.installed(p, root), before, want)
+            self.assertEqual(ran, [], want)                                             # nothing run, nothing restarted
+
+    def test_the_running_anchor_fetches_only_from_its_panel_and_checks_first(self):
+        p, root, ctx, ran, k = self.root()
+        new = b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n'
+        sha, sig, _ = _signed(new, "1.4.0", k)
+        sent, calls = [], []
+
+        class W:
+            def send_json(self, d):
+                sent.append(d)
+        with open(p.here(root, p.CONF)) as f:
+            conf = json.load(f)
+        lauf = p.Lauf(W(), "", conf, ctx)
+        p.http_call = lambda base, fp, method, path, body=None, key=None, timeout=20: calls.append((base, method, path)) or (200, new)
+        self.assertIsNone(lauf._control({"typ": "update", "version": "1.4.0", "sha256": sha, "sig": sig}))
+        self.assertEqual(sent[-1], {"typ": "update_stand", "stand": "laeuft"})
+        self.assertEqual(calls, [("https://spark.example.org", "GET", "/fernzugang/anker")])   # its own panel only
+        with open(p.here(root, p.VAR + "/neu.py"), "rb") as f:
+            self.assertEqual(f.read(), new)
+        self.assertTrue(os.path.exists(p.here(root, p.VAR + "/aktualisieren")))
+        os.remove(p.here(root, p.VAR + "/aktualisieren"))
+        lauf._control({"typ": "update", "version": "1.4.0", "sha256": sha, "sig": sig[:-4] + "AAA="})
+        self.assertEqual(sent[-1]["stand"], "signatur")
+        lauf._control({"typ": "update", "version": "1.3.0", "sha256": sha, "sig": sig})
+        self.assertEqual(sent[-1]["stand"], "nicht_neuer")
+        self.assertFalse(os.path.exists(p.here(root, p.VAR + "/aktualisieren")))
+
+    def test_aktualisieren_in_place_keeps_the_pairing_and_pins_the_key(self):
+        """An anchor before 1.3.0: the one line replaces program and units, keeps device key and pairing, asks no code."""
+        p, root, ctx, ran, k = self.root(have="1.2.0", sign=False)
+        with open(fernzugang.PROGRAM, "rb") as f:
+            prog = f.read()
+        sha, sig, _ = _signed(prog, p.VERSION, k)
+        seen = []
+
+        def call(base, fp, method, path, body=None, key=None, timeout=20):
+            seen.append((method, path, key))
+            if path == "/api/fernzugang/anker/stand":
+                return 200, json.dumps({"version": p.VERSION, "sha256": sha, "sig": sig, "sign_pub": _pub(k)}).encode()
+            return 200, prog
+        p.http_call = call
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(p.cmd_upgrade(argparse.Namespace(vom_anker=False), ctx), 0)
+        self.assertEqual(seen, [("GET", "/api/fernzugang/anker/stand", "fz_k"), ("GET", "/fernzugang/anker", None)])
+        self.assertEqual(self.installed(p, root), prog)
+        with open(p.here(root, p.CONF)) as f:
+            conf = json.load(f)
+        self.assertEqual((conf["id"], conf["key"], conf["sign_pub"]), ("g_1", "fz_k", _pub(k)))
+        for path in p.UNITS:
+            self.assertTrue(os.path.isfile(p.here(root, path)), path)
+        with open(p.here(root, p.UNITS[3])) as f:
+            self.assertIn("PathExists=/var/lib/spark-anker/aktualisieren", f.read())
+        self.assertIn(["systemctl", "enable", "--now", "spark-anker-update.path"], ran)
+        self.assertEqual(ran[-1], ["systemctl", "restart", "spark-anker.service"])
+        self.assertIn("1.2.0 → " + p.VERSION, out.getvalue())
+        # a newer one already there: nothing changes
+        with open(p.here(root, p.PROG), "wb") as f:
+            f.write(b'VERSION = "99.0.0"\n')
+        with self.assertRaises(p.Fehler):
+            p.cmd_upgrade(argparse.Namespace(vom_anker=False), ctx)
+        with open(p.here(root, p.PROG), "rb") as f:
+            self.assertEqual(f.read(), b'VERSION = "99.0.0"\n')
+        # a tampered program from the panel: nothing changes
+        with open(p.here(root, p.PROG), "wb") as f:
+            f.write(b'VERSION = "1.2.0"\n')
+        p.http_call = lambda *a, **kw: call(*a, **kw) if a[3] != "/fernzugang/anker" else (200, prog + b"#")
+        with self.assertRaises(p.Fehler):
+            p.cmd_upgrade(argparse.Namespace(vom_anker=False), ctx)
+        with open(p.here(root, p.PROG), "rb") as f:
+            self.assertEqual(f.read(), b'VERSION = "1.2.0"\n')
+
+    def test_setup_pins_the_key_and_says_how_to_update(self):
+        p = program()
+        with open(fernzugang.PROGRAM) as f:
+            src = f.read()
+        self.assertIn('"sign_pub"', src[src.index("def cmd_setup"):src.index("def remove_paths")])
+        self.assertIn("aktualisieren", src[src.index('say("schon eingerichtet'):][:200])
+        self.assertEqual(len(p.MAC_PLISTS), 3)
+        self.assertIn("<string>aktualisieren</string><string>--vom-anker</string>", str(p.MAC_JOBS[2]))
+
+
+class AnchorUpdate(Base):
+    """Anker-Update on the panel's side: the signing key sealed, the signed state for a paired key only, „Aktualisieren“
+    only on the unlocked page and only to an anchor that is online, can take it, is older and has no session."""
+
+    def setUp(self):
+        super().setUp()
+        import fernanker
+        self.fa = fernanker
+        fernanker._CACHE.clear()
+        with contextlib.suppress(OSError):
+            os.remove(fernanker.FILE)
+
+    def test_signing_key_sealed_pinned_at_pairing_and_the_state_for_a_paired_key_only(self):
+        d = self.pair()
+        with open(self.fa.FILE) as f:
+            raw = json.load(f)
+        self.assertTrue(raw["priv"].startswith(vault.PREFIX))                   # never in plain text
+        self.assertEqual(d["sign_pub"], raw["pub"])
+        self.assertEqual(TestClient(panel.app).get("/api/fernzugang/anker/stand").status_code, 403)
+        with journal() as j:
+            r = TestClient(panel.app).get("/api/fernzugang/anker/stand", headers={"authorization": "Bearer " + d["key"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        st = r.json()
+        p = program()
+        with open(fernzugang.PROGRAM, "rb") as f:
+            prog = f.read()
+        self.assertEqual((st["version"], st["sha256"], st["sign_pub"]), (p.VERSION, hashlib.sha256(prog).hexdigest(), d["sign_pub"]))
+        self.assertEqual(p.pruefen(prog, st["version"], st["sha256"], st["sig"], d["sign_pub"]), "")   # the anchor's own check
+        self.assertIn("fernzugang: aktualisieren | stand " + p.VERSION.replace(".", "_") + " | 1", j.getvalue())
+        self.assertNotIn(d["key"], j.getvalue())
+
+    def test_update_only_where_it_can_and_never_a_step_back(self):
+        import types as _t
+        gids = {v: self.pair("vps-" + v.replace(".", ""))["id"] for v in ("1.2.0", "1.3.0", "1.3.1", "1.4.0", "1.3.2")}
+        for v, gid in gids.items():
+            fernzugang._update(gid, anker=v)
+        sent = {}
+
+        class A:
+            def __init__(self, gid):
+                self.gid, self.seit = gid, time.time()
+
+            async def send_json(self, d):
+                sent[self.gid] = d
+        for v in ("1.2.0", "1.3.0", "1.4.0", "1.3.2"):                       # 1.3.1 stays offline
+            fernzugang.ANKER[gids[v]] = A(gids[v])
+        fernzugang.SITZUNG["s"] = _t.SimpleNamespace(gid=gids["1.3.2"], art="shell", browser=None, verloren=0)   # a session open
+        real = self.fa.stand()
+        newer = dict(real, version="1.4.0")
+        with unittest.mock.patch.object(self.fa, "stand", lambda: newer), journal() as j:
+            r = ADMIN.post("/api/admin/fernzugang/aktualisieren", json={"geraete": list(gids.values()) + ["g_000000000000"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"version": "1.4.0", "gesendet": 1, "aktuell": 1, "alt": 1, "offline": 1, "belegt": 1, "unbekannt": 1})
+        self.assertEqual(list(sent), [gids["1.3.0"]])
+        self.assertEqual(sent[gids["1.3.0"]], {"typ": "update", "version": "1.4.0", "sha256": real["sha256"], "sig": real["sig"]})
+        out = j.getvalue()
+        self.assertIn("fernzugang: aktualisieren | gesendet 1_4_0 | 1", out)
+        for w in ("aktuell", "alt", "offline", "belegt", "unbekannt"):
+            self.assertIn(f"fernzugang: aktualisieren | {w} | 1", out)
+        fernzugang.SITZUNG.clear()                                              # the stand-in session is only for „belegt“
+        rows = {g["id"]: g for g in ADMIN.get("/api/admin/fernzugang").json()["geraete"]}
+        self.assertEqual((rows[gids["1.2.0"]]["anker_fern"], rows[gids["1.3.0"]]["anker_fern"]), (False, True))
+        self.assertEqual(rows[gids["1.3.0"]]["update_stand"], "gesendet")
+        frei = dict(fernzugang.ENTSPERRT)
+        fernzugang.ENTSPERRT.clear()                                            # a locked page sends nothing
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/aktualisieren", json={"geraete": [gids["1.3.0"]]}).status_code, 423)
+        fernzugang.ENTSPERRT.update(frei)
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/aktualisieren", json={"geraete": "alle"}).status_code, 400)
+
+    def test_what_the_anchor_reports_is_logged_once(self):
+        gid = self.pair()["id"]
+        with journal() as j:
+            asyncio.run(self.fa.on_answer(gid, {"stand": "signatur"}))
+            asyncio.run(self.fa.on_answer(gid, {"stand": "rm -rf /"}))        # only fixed words
+            for _ in range(2):
+                asyncio.run(self.fa.on_hello(gid, {"stand": "zurueck", "version": "1.4.0", "t": 1700000000}))
+        out = j.getvalue()
+        self.assertIn("fernzugang: aktualisieren | signatur | 1", out)
+        self.assertEqual(out.count("fernzugang: aktualisieren | zurueck 1_4_0 | 1"), 1)
+        self.assertNotIn("rm", out)
+        self.assertEqual(fernzugang._read()["geraete"][gid]["update_stand"], "zurueck")
+
+    def test_the_line_for_an_old_anchor(self):
+        r = ADMIN.post("/api/admin/fernzugang/aktualisieren/befehl", json={"origin": OUT})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["befehl"], f"curl -fsSL {OUT}/fernzugang/anker | sudo python3 - aktualisieren")
+        self.assertEqual(r.json()["befehl_mac"], f"curl -fsSL {OUT}/fernzugang/anker | sudo /usr/bin/python3 - aktualisieren")
 
 
 class Pieces(Base):
@@ -2122,7 +2444,7 @@ class InBrowser(unittest.TestCase):
                 await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
                 await pg.goto(base + "/")
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
-                await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.remove())")
+                await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.style.display='none')")   # kept: the page fills its own
                 shown = "id=>{const e=$(id);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle($('fztop')).display!=='none'}"
                 # the idle end: what the panel sends ({typ:'bald', s}) counts down; „Weiterarbeiten“ tells the panel
                 await pg.evaluate("window._sent=[];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
@@ -2160,15 +2482,13 @@ class InBrowser(unittest.TestCase):
                 self.assertEqual(await pg.evaluate("$('fzwieder').textContent"), "Verbindung wird wiederhergestellt …")
                 await pg.evaluate("FZ.letzt={id:'g_0123456789ab',name:'vps-1'};fzZu(fzGrund('verloren'))")
                 self.assertFalse(await pg.evaluate("!!$('fzwieder')&&!$('fzwieder').hidden"))
-                for _ in range(20):
-                    msg = await pg.evaluate("[$('updtoast').textContent,!!$('fzwiederneu'),$('updtoast').style.display]")
-                    if msg[1]:
-                        break
-                    await pg.wait_for_timeout(100)
+                await pg.wait_for_function("!!$('fzwiederneu')", timeout=30000)
+                # read in one go: a later toast (the page's own reload) may replace this one afterwards
+                msg = await pg.evaluate("[$('updtoast').textContent,!!$('fzwiederneu'),$('updtoast').style.display,($('fzwiederneu')||{}).textContent]")
                 self.assertIn("Verbindung verloren", msg[0])
                 self.assertTrue(msg[1], msg)
                 self.assertEqual(msg[2], "block")                                  # a toast, not a line under the page
-                self.assertEqual(await pg.evaluate("$('fzwiederneu').textContent"), "Neu verbinden")
+                self.assertEqual(msg[3], "Neu verbinden")
                 await br.close()
         asyncio.run(go())
 
@@ -2793,6 +3113,9 @@ class ShellForReal(Base):
             await pg.click("#shosmac")
             self.assertIn("/usr/bin/python3", await pg.evaluate("$('shbefehl').textContent"))
             await pg.click("#shwmail")
+            # no mail account here: the tab says how it would work; with one, the address and the language
+            self.assertTrue(await pg.evaluate(f"({shown})('shpmail')&&({shown})('shmailno')&&!({shown})('shmailrow')"))
+            await pg.evaluate("$('shmailrow').hidden=false;$('shmailno').hidden=true")
             self.assertTrue(await pg.evaluate(f"({shown})('shpmail')&&$('shmailde').classList.contains('on')"))
             await pg.click("#shmailen")
             self.assertTrue(await pg.evaluate("SH.mailEn&&$('shmailen').classList.contains('on')"))

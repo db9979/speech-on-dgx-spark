@@ -74,7 +74,7 @@ function shUhr(bis,kann){SH.bis=bis;SH.kann=kann;clearInterval(SH.clock);const t
       :SH.teilt?t(`${name} teilt · ${min} min · noch ${shRest(rest)}`,`${name} shares · ${min} min · ${shRest(rest)} left`)
       :t(`${name} · wartet aufs Teilen · noch ${shRest(rest)}`,`${name} · waiting for the share · ${shRest(rest)} left`));
     $('shvstand').classList.toggle('warn',warn);
-    $('shbtext').textContent=bald?t(`Spontanhilfe endet in ${shRest(rest)}`,`Spontaneous help ends in ${shRest(rest)}`):t(`Spontanhilfe aktiv · ${name} · noch ${shRest(rest)}`,`Spontaneous help active · ${name} · ${shRest(rest)} left`)}; tick();SH.clock=setInterval(tick,1000)}
+    $('shbtext').textContent=bald?t(`Spontanhilfe endet in ${shRest(rest)}`,`Spontaneous help ends in ${shRest(rest)}`):t(`Spontanhilfe aktiv · ${name} · noch ${shRest(rest)}`,`Spontaneous help active · ${name} · ${shRest(rest)} left`)}; SH.tick=tick;tick();SH.clock=setInterval(tick,1000)}
 // left: „Läuft“ (the one help) like „Systeme“, then the history of the last days
 function shZeile(ic,farbe,titel,pill,pillCls,rest,on){const r=fzEl('div','fzrow shrow'+(on?' on':'')),i=fzEl('span','fzos shic',ic);i.style.background=farbe;
   const tx=fzEl('span','fzrtext'),sm=fzEl('small');sm.append(fzEl('span','shpill '+pillCls,pill),document.createTextNode(rest?' · '+rest:''));
@@ -130,7 +130,7 @@ async function shIn(m){
   else if(m.typ==='sdp'&&SH.pc){await SH.pc.setRemoteDescription({type:'offer',sdp:m.sdp});const a=await SH.pc.createAnswer();await SH.pc.setLocalDescription(a);shSend({typ:'sdp',art:'answer',sdp:a.sdp})}
   else if(m.typ==='ice'&&SH.pc){try{await SH.pc.addIceCandidate(m.c||null)}catch(e){}}
   else if(m.typ==='chat'){shChat(m.text,false);if($('shchat').hidden){$('shchat').hidden=false;$('shchatbtn').setAttribute('aria-expanded','true')}}
-  else if(m.typ==='teilt'){SH.teilt=!!m.an;shTeiltZeigen();shListe()}
+  else if(m.typ==='teilt'){SH.teilt=!!m.an;shTeiltZeigen();shListe();if(SH.tick)SH.tick()}   // the status line at once, not a second later
   else if(m.typ==='erlaubt'&&SH.term){SH.term.write('\x1b[2m'+t('Erlaubt. Die Shell der Person, mit ihren Rechten; sie sieht alles mit.','Allowed. The person\'s shell, with her rights; she sees everything.')+'\x1b[0m\r\n');shTermGroesse(true);SH.term.focus()}
   else if(m.typ==='zeit'){shUhr(m.bis,true);shLoad()}
   else if(m.typ==='hinweis'){SH.kann=m.kann_verlaengern;shMsg(t('Die Hilfe endet in 10 Minuten. „Verlängern“ gibt 60 Minuten mehr.','The help ends in 10 minutes. "Extend" gives 60 more minutes.'))}}

@@ -540,6 +540,7 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/fernanker.py` | Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
@@ -739,6 +740,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
 | `state/faelle.json` | Fälle | – | ja |
 | `state/features-seen.json` | Wann Funktionen frei wurden | – | ja |
+| `state/fernanker.json` | Fernzugang: der Signaturschlüssel des Panels für das Aktualisieren der Anker (Ed25519; der private Teil nur versiegelt im Tresor) | privater Teil versiegelt | nein |
 | `state/fernzugang-verlauf.json` | Fernzugang: Verlauf der Sitzungen der letzten Tage (Zeit, System, Admin, Art, Dauer, Zuhause oder Internet), nie eine Adresse oder ein Inhalt; löschen unter Fernzugang → Systeme → Verlauf | – | nein |
 | `state/fernzugang.json` | Fernzugang: gekoppelte Fern-Server (Name, System, Host-Schlüssel, Zeiten), je Server ein eigener SSH-Schlüssel des Panels, der Geräteschlüssel des Ankers nur als SHA-256 | SSH-Schlüssel versiegelt, Geräteschlüssel nur als Hash | nein |
 | `state/gehaeuse-wunsch.json` | Wunsch des Panels für das Gehäuse (einrichten, entfernen, neu starten), Sekunden | – | nein |
@@ -3441,7 +3443,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 96). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 97). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3452,7 +3454,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **96** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **97** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3954,12 +3956,14 @@ flowchart TD
   s3{{"3. Schlüssel bekannt?"}}
   s4["4. Leitung nach draußen"]
   s5["5. Kanal zum eigenen SSH"]
-  s6(["6. Entfernen"])
+  s7["6. Aktualisieren"]
+  s6(["7. Entfernen"])
   s1 --> s2
   s2 --> s3
   s3 -->|ja| s4
   s4 --> s5
-  s5 --> s6
+  s5 --> s7
+  s7 --> s6
   s3x(["Abgewiesen"])
   s3 -->|nein| s3x
 ```
@@ -3969,7 +3973,8 @@ flowchart TD
 3. <a id="kn-fernserver-s3"></a>**Schlüssel bekannt?**: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit.
 4. <a id="kn-fernserver-s4"></a>**Leitung nach draußen**: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes.
 5. <a id="kn-fernserver-s5"></a>**Kanal zum eigenen SSH**: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel des Panels, sudo nur, wenn der Admin es dort einträgt.
-6. <a id="kn-fernserver-s6"></a>**Entfernen**: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen.
+6. <a id="kn-fernserver-s7"></a>**Aktualisieren**: „Aktualisieren“ schickt einem Anker ab 1.3.0, der online und ohne offene Sitzung ist, die neue Version über seinen Kanal (fernanker.admin_update), nie einen Schritt zurück. Der Anker lädt das Programm nur vom eigenen Panel und prüft SHA-256 und die Unterschrift mit dem beim Koppeln angehefteten Schlüssel (fernanker.stand); erreicht die neue Version das Panel nicht, geht er zur alten zurück. Ältere Anker bekommen eine Zeile zum Einfügen.
+7. <a id="kn-fernserver-s6"></a>**Entfernen**: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen.
 
 **Beispiele:** Server einrichten: Gekoppelt und online. · Alter Schlüssel nach dem Entfernen: Abgewiesen.
 
@@ -3977,7 +3982,7 @@ flowchart TD
 
 - **20 s** Lebenszeichen auf der Leitung ([Schritt 4](#kn-fernserver-s4))
 - **65536 Bytes** eine Nachricht höchstens ([Schritt 4](#kn-fernserver-s4))
-- **90** Tage, bis ein entfernter vergessen ist ([Schritt 6](#kn-fernserver-s6))
+- **90** Tage, bis ein entfernter vergessen ist ([Schritt 7](#kn-fernserver-s6))
 
 #### Einstellen
 
@@ -3993,7 +3998,9 @@ flowchart TD
 - `app/panel/fernzugang.py` `anker_pair`: Koppeln des Ankers ([Schritt 2](#kn-fernserver-s2))
 - `app/panel/fernzugang.py` `anker_ws`: die Leitung des Ankers ([Schritt 3](#kn-fernserver-s3))
 - `app/panel/fernzugang.py` `by_key`: Anker am Schlüssel erkennen ([Schritt 3](#kn-fernserver-s3))
-- `app/panel/fernzugang.py` `anker_removed`: Abbau gemeldet ([Schritt 6](#kn-fernserver-s6))
+- `app/panel/fernzugang.py` `anker_removed`: Abbau gemeldet ([Schritt 7](#kn-fernserver-s6))
+- `app/panel/fernanker.py` `admin_update`: Aktualisieren über den Kanal ([Schritt 6](#kn-fernserver-s7))
+- `app/panel/fernanker.py` `stand`: signierter Stand des Programms ([Schritt 6](#kn-fernserver-s7))
 
 Selbsttests: `test_fernzugang`
 
