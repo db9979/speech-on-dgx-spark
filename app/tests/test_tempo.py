@@ -578,17 +578,31 @@ class DocsCheap(unittest.TestCase):
             done.set()
             th.join()
 
-    def test_vectors_stay_float32_and_counters_keep_them(self):
+    def test_vectors_stay_float16_and_counters_keep_them(self):
         import numpy as np
         with self.d._Db(self.uid) as con:
             ids = [r[0] for r in con.execute("SELECT id FROM chunks")]
         self.d.set_vectors(self.uid, [(i, np.ones(4, dtype=np.float16).tobytes()) for i in ids])
         got, mat = self.d._vectors(self.uid, now=1000)
-        self.assertEqual(mat.dtype, np.float32)
+        self.assertEqual(mat.dtype, np.float16)          # half the memory of float32 (Stufe 1, V01.1.242)
         self.d.count_today(self.uid, "2026-10-19", add=1)
         self.assertIs(self.d._vectors(self.uid, now=1001)[1], mat)
         self.d.set_use(self.uid, self.a, False)
         self.assertIsNot(self.d._vectors(self.uid, now=1002)[1], mat)
+
+    def test_the_float16_matrix_ranks_like_float32_block_by_block(self):
+        import numpy as np
+        rng = np.random.default_rng(7)                   # fixed seed: the same matrix in every run
+        mat = rng.standard_normal((3 * 1000 + 17, 64)).astype(np.float16)
+        mat /= np.linalg.norm(mat.astype(np.float32), axis=1, keepdims=True).astype(np.float16)
+        q = rng.standard_normal(64).astype(np.float32)
+        q /= np.linalg.norm(q)
+        want = mat.astype(np.float32) @ q
+        with mock.patch.object(self.d, "VEC_BLOCK", 1000):     # several blocks and a short last one
+            got = self.d._similar(mat, q.tolist())
+        self.assertEqual(got.dtype, np.float32)
+        np.testing.assert_allclose(got, want, rtol=0, atol=1e-5)
+        self.assertEqual(list(np.argsort(-got, kind="stable")[:50]), list(np.argsort(-want, kind="stable")[:50]))
 
     def test_catch_up_builds_at_most_every_few_seconds(self):
         import numpy as np

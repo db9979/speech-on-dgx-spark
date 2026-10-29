@@ -9,6 +9,7 @@ import contextlib
 import datetime
 import io
 import json
+import sqlite3
 import unittest
 from unittest import mock
 
@@ -273,6 +274,136 @@ class Asking(Base):
         helpers.set_config(knowledge_book=False)
         res, s = suchpruefung._measure(uid, qs, None, False, 0)
         self.assertNotIn("wissensbuch", s["sammel"]["modes"])
+
+
+class Suchindex(Base):
+    """Stufe 1 (V01.1.242): search_pages asks the word index wb_fts; plain SQL triggers mark every changed page and
+    the commit writes its row again; an old book gets the index once; without FTS5 the word counting as before."""
+    TEXTS = ("Die Versicherung für den Golf kostet 684,20 Euro im Jahr.", "Der Golf hat das Kennzeichen HB-DB 482.",
+             "Die Inspektion des Golf kostete 642,30 Euro.")
+    ASK = ("Was kostet das Auto im Jahr?", "Kennzeichen vom Golf", "Inspektion Werkstatt", "Rezept Kürbissuppe",
+           "Versicherung Golf Auto")
+
+    def book(self, name):
+        c, uid, a, b = self.fresh(name)
+        self.work(uid, proposal(("Auto", "Ding", [(self.TEXTS[0], 1), (self.TEXTS[1], 1)]),
+                                ("Versicherung", "Thema", [(self.TEXTS[0], 1)])))
+        self.work(uid, proposal(("Werkstatt Weserblick", "Firma", [(self.TEXTS[2], 1)])))
+        return c, uid
+
+    def counted(self, uid, query):
+        """The word counting without the index (FTS5 missing), as the fallback runs it."""
+        with mock.patch.object(wissensbuch, "_fts", [False]):
+            return [(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, query)]
+
+    def test_the_index_finds_what_the_word_counting_found(self):
+        c, uid = self.book("Wbindex")
+        with wissensbuch._Db(uid) as con:
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM wb_fts").fetchone()[0], 3)
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM wb_ftsdirty").fetchone()[0], 0)
+        self.assertTrue(wissensbuch._fts[0])
+        for q in self.ASK:
+            self.assertEqual([(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, q)], self.counted(uid, q), q)
+        self.assertEqual(wissensbuch.search_pages(uid, "Rezept Kürbissuppe"), [])
+        self.assertEqual(wissensbuch.search_pages(uid, '" OR golf* NEAR'), wissensbuch.search_pages(uid, "golf near"))
+
+    def test_the_index_follows_new_changed_and_deleted_pages(self):
+        c, uid = self.book("Wbpflege")
+        ids = {p["title"]: p["id"] for p in wissensbuch.index(uid)}
+        self.assertEqual(wissensbuch.search_pages(uid, "Ölwechsel Bremsen"), [])
+        with wissensbuch._Db(uid) as con:                   # a new sentence: found at once
+            con.execute("INSERT INTO wb_sent (page, text, norm, doc, made) VALUES (?, ?, '', 'x', 1)",
+                        (ids["Werkstatt Weserblick"], "Der Ölwechsel und die Bremsen kosteten 80 Euro."))
+        self.assertEqual([p["title"] for _, p in wissensbuch.search_pages(uid, "Ölwechsel Bremsen")], ["Werkstatt Weserblick"])
+        with wissensbuch._Db(uid) as con:
+            self.assertIn("lwechsel", con.execute("SELECT body FROM wb_fts WHERE page=?",
+                                                  (ids["Werkstatt Weserblick"],)).fetchone()[0])
+            con.execute("UPDATE wb_pages SET title='Kfz Steuer' WHERE id=?", (ids["Versicherung"],))     # renamed
+        with wissensbuch._Db(uid) as con:
+            self.assertIn("steu", con.execute("SELECT title FROM wb_fts WHERE page=?", (ids["Versicherung"],)).fetchone()[0])
+        self.assertEqual(c.delete(f"/api/profile/wissensbuch/{ids['Auto']}").status_code, 200)       # deleted
+        with wissensbuch._Db(uid) as con:
+            self.assertIsNone(con.execute("SELECT 1 FROM wb_fts WHERE page=?", (ids["Auto"],)).fetchone())
+        self.assertNotIn(ids["Auto"], [p["id"] for _, p in wissensbuch.search_pages(uid, "Kennzeichen Golf")])
+        for q in self.ASK:
+            self.assertEqual([(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, q)], self.counted(uid, q), q)
+
+    def test_an_old_book_gets_its_index_once(self):
+        c, uid = self.book("Wbumzug")
+        want = [(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, "Kennzeichen vom Golf")]
+        self.assertTrue(want)
+        with wissensbuch._Db(uid) as con:                   # as before Stufe 1: no index, no marks
+            con.execute("DROP TABLE wb_fts")
+            con.execute("DELETE FROM wb_ftsdirty")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            got = [(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, "Kennzeichen vom Golf")]
+        self.assertEqual(got, want)
+        self.assertIn("wissen: wissensbuch suchindex aufgebaut | 3 seiten", out.getvalue())
+        self.assertNotIn("Golf", out.getvalue())             # fixed words and numbers only
+        with contextlib.redirect_stdout(out):
+            wissensbuch.search_pages(uid, "Golf")
+        self.assertEqual(out.getvalue().count("suchindex aufgebaut"), 1)
+
+    def test_without_fts5_the_book_counts_words_as_before(self):
+        c, uid = self.book("Wbohne")
+        want = {q: [(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, q)] for q in self.ASK}
+
+        class NoFts:                                         # a SQLite without the FTS5 module
+            def __init__(self, con):
+                self.con = con
+
+            def execute(self, sql, *a):
+                if "USING fts5" in sql:
+                    raise sqlite3.OperationalError("no such module: fts5")
+                return self.con.execute(sql, *a)
+
+            def __getattr__(self, name):
+                return getattr(self.con, name)
+
+        with wissensbuch._Db(uid) as con:
+            con.execute("DROP TABLE wb_fts")
+        out = io.StringIO()
+        with mock.patch.object(wissensbuch, "_fts", [None]), contextlib.redirect_stdout(out), \
+                mock.patch.object(documents, "_open", lambda u, _o=documents._open: NoFts(_o(u))):
+            got = {q: [(sc, p["id"]) for sc, p in wissensbuch.search_pages(uid, q)] for q in self.ASK}
+            self.assertIs(wissensbuch._fts[0], False)
+            with wissensbuch._Db(uid) as con:               # writing still works
+                con.execute("INSERT INTO wb_pages (id, title, art, made, changed) VALUES ('abcdefabcdef', 'Garten', 'Thema', 1, 1)")
+                con.execute("INSERT INTO wb_sent (page, text, norm, doc, made) SELECT 'abcdefabcdef', 'Der Golf steht im Garten.', "
+                            "'', doc, 1 FROM wb_sent LIMIT 1")
+            with wissensbuch._Db(uid) as con:
+                self.assertEqual(con.execute("SELECT COUNT(*) FROM wb_ftsdirty").fetchone()[0], 0)   # marks do not pile up
+        self.assertEqual(got, want)
+        self.assertIn("wissen: wissensbuch suchindex fehlt | wortzaehlung", out.getvalue())
+        with contextlib.redirect_stdout(io.StringIO()):     # FTS5 back: the index is built again from the pages
+            self.assertIn("Garten", [p["title"] for _, p in wissensbuch.search_pages(uid, "Garten Golf", k=5)])
+
+    def test_liste_hands_ids_and_ranks_only_for_its_own_profile(self):
+        c, uid = self.book("Wbliste")
+        ids = {p["title"]: p["id"] for p in wissensbuch.index(uid)}
+        got = wissensbuch.liste(uid, "Versicherung Golf Auto", 10)
+        self.assertEqual([r for _, r in got], list(range(1, len(got) + 1)))      # ranks from 1
+        self.assertEqual(set(dict(got)), {ids["Auto"], ids["Versicherung"], ids["Werkstatt Weserblick"]})
+        self.assertEqual([pid for pid, _ in got][:2], [p["id"] for _, p in wissensbuch.search_pages(uid, "Versicherung Golf Auto")])
+        self.assertEqual(wissensbuch.liste(uid, ["Versicherung", "Golf", "Auto"], 10), got)     # a list of words
+        self.assertEqual(len(wissensbuch.liste(uid, "Golf", 1)), 1)
+        self.assertEqual(len(wissensbuch.liste(uid, "Golf", 999)), 3)                       # k is bounded
+        self.assertEqual(wissensbuch.liste(uid, "Rezept Kürbissuppe"), [])
+        self.assertEqual(wissensbuch.liste(uid, ""), [])
+        for _, (pid, rank) in enumerate(got):                                              # ids only, never text
+            self.assertRegex(pid, r"^[0-9a-f]{12}$")
+            self.assertIsInstance(rank, int)
+        with wissensbuch._Db(uid) as con:
+            before = [con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("wb_pages", "wb_sent", "wb_fts")]
+        wissensbuch.liste(uid, "Golf")
+        with wissensbuch._Db(uid) as con:                                                  # read only
+            self.assertEqual([con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("wb_pages", "wb_sent", "wb_fts")], before)
+        profile("Wbliste2")
+        self.assertEqual(wissensbuch.liste(uid_of("Wbliste2"), "Golf"), [])                 # another profile: not these pages
+        self.assertEqual(wissensbuch.liste("", "Golf"), [])                                # no profile (guest)
+        helpers.set_config(knowledge_book=False)                                           # off: nothing
+        self.assertEqual(wissensbuch.liste(uid, "Golf"), [])
 
 
 if __name__ == "__main__":

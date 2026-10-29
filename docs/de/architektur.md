@@ -245,7 +245,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/doclingdienst.py` | Docling-Server im Heimnetz: Dokumente und Scans besser lesen |
 | `app/panel/docmake.py` | Dokumente erstellen: Aufträge, Vorlagen, Ablage |
 | `app/panel/docrender.py` | Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code |
-| `app/panel/documents.py` | Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche |
+| `app/panel/documents.py` | Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche, Vektoren als float16 |
 | `app/panel/embed_worker.py` | Das Vektormodell im eigenen Prozess |
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
@@ -262,8 +262,8 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/tagebuch.py` | Spark-Tagebuch: was der Spark selbst getan hat |
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
-| `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus den eigenen Dokumenten, jeder Satz mit Quelle |
-| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle |
+| `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
+| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle, Ausschnitt per WITH RECURSIVE |
 
 ### Anbindungen
 
@@ -2336,7 +2336,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Bedeutungsvektor der Frage**: Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der Frage. Es startet nur bei mindestens 8.5 GiB freiem Speicher (auf einem Panel-Rechner 1.5 GiB) und endet nach 10 Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, ohne Fehler.
 4. <a id="kn-wissen-s4"></a>**Eingegrenzt?**: Mit Tags oder Art sucht match_docs zuerst die Dokumente, die alle Tags und die Art tragen. Nur deren Stellen kommen weiter in Frage; passt keines, gibt es keine Treffer.
 5. <a id="kn-wissen-s5"></a>**Volltext: Wörter und Kontextzeile**: Die Frage wird in Suchwörter zerlegt (Füllwörter weg, Endungen grob gekürzt). Gesucht wird in den Wörtern jeder Stelle und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang.
-6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden.
+6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden.
 7. <a id="kn-wissen-s7"></a>**Neueste zuerst?**: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum.
 8. <a id="kn-wissen-s8"></a>**Geteilte Dokumente der anderen**: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert.
 9. <a id="kn-wissen-s9"></a>**Treffer nachsortieren an?**: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter.
@@ -2366,6 +2366,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - In ruhigen Minuten bekommt das Sprachmodell ein eigenes Dokument in nummerierten Stellen und höchstens 5 bestehende Seiten, die das Panel nach gemeinsamen Wörtern mit Titel, Absender und Tags auswählt. Das Modell schlägt Sätze als JSON vor, jeden mit der Nummer seiner Stelle.
 - Das Panel behält einen Satz nur, wenn seine Stelle existiert, jede Zahl und jedes Datum darin in der Stelle steht, er höchstens 400 Zeichen hat und weder Link noch Befehl enthält. Sagt er dasselbe wie ein Satz der Seite mit anderer Zahl, bleiben beide als Widerspruch stehen. Ein Dokument ändert höchstens 5 Seiten.
 - Bei einer Frage legt document_search die passendsten Seiten vor die Stellen, jeder Satz mit Quelle. Die Seiten sind Text von außen wie die Dokumente.
+- Die passenden Seiten findet ein eigener Suchindex (SQLite FTS5, Tabelle wb_fts: Titel und Sätze jeder Seite als Suchwörter). Feste SQL-Trigger merken sich jede Seite, deren Titel oder Sätze sich ändern, und vor jedem Speichern schreibt das Panel ihre Zeile neu (wissensbuch._fts_sync); ein Buch von vorher bekommt den Index einmal. Gezählt wird wie bisher: gemeinsame Wörter, der Titel dreifach. Fehlt FTS5, zählt das Panel die Wörter aller Seiten wie früher. Andere Teile des Panels lesen über wissensbuch.liste nur Seiten-Ids mit Rang (höchstens 50, nur das eigene Profil, nur wenn das Wissensbuch für es frei ist).
 - Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für bis zu 50 Sätze nur „steht das so in der Stelle?“; ein Nein entfernt den Satz. Gelöschte oder ausgelassene Dokumente nehmen ihre Sätze sofort mit (documents.on_gone).
 - Stützt sich eine Antwort auf mindestens 2 Quellen (Dokumente oder Kiwix-Artikel), merkt sich das Panel sie eine Stunde im Speicher; erst der Klick „Ins Wissensbuch“ legt sie als Seite „Antwort“ ab. Jeder Satz braucht eine Stelle aus diesen Quellen mit allen seinen Zahlen und genug gemeinsamen Wörtern. Export als Obsidian-Ordner (ZIP); nachts eine Kopie in den Ablage-Ordner, wenn das Profil automatisch ablegt und sich das Buch geändert hat.
 
@@ -2374,6 +2375,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle.
 - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder.
 - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen.
+- Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und höchstens 400 Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens 4 Schritte).
 
 #### Erst lokal suchen
 
@@ -2409,6 +2411,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **30** Verbindungen, die ein Dokument in die Wissenskarte bringen darf ([Schritt 13](#kn-wissen-s13))
 - **3000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **150** Punkte, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
+- **400** Verbindungen, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
+- **4** Schritte, die wissenskarte.weg höchstens sucht ([Schritt 13](#kn-wissen-s13))
+- **4096** Stellen je Block beim Vergleich der Vektoren ([Schritt 6](#kn-wissen-s6))
 - **200** Dokumente am Tag für die Wissenskarte (Standard) ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
@@ -2444,6 +2449,12 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: passende Seiten des Wissensbuchs mit Quellen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: feste Regeln für jede vorgeschlagene Verbindung ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: der sichtbare Teil der Karte ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: Seiten um eine Seite, WITH RECURSIVE ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: kürzester Weg zwischen zwei Seiten ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
+- `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 
 Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`

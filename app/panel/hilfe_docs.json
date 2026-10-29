@@ -2189,7 +2189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des B"
+"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für"
 },
 {
 "lang": "de",
@@ -2197,7 +2197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "esitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Eine Stelle geht nur weiter, wenn sie mindestens 0.6 der Suchwörter enthält (Füllwörter wie „Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur Frauenkirche. Fällt so alles weg, sagt ein fester Satz: nichts Passendes, sag das und such im Archiv oder im Web, wenn angeboten. Findet die Suche nichts, waren a"
+"text": " das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Eine Stelle geht nur weiter, wenn sie mindestens 0.6 der Suchwörter enthält (Füllwörter wie „Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur Frauenkirche. Fällt so alles weg, sagt ein fester S"
 },
 {
 "lang": "de",
@@ -2205,7 +2205,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
+"text": "atz: nichts Passendes, sag das und such im Archiv oder im Web, wenn angeboten. Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
 },
 {
 "lang": "de",
@@ -2221,7 +2221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissensbuch",
 "title": "Wissensbuch",
-"text": "- In ruhigen Minuten bekommt das Sprachmodell ein eigenes Dokument in nummerierten Stellen und höchstens 5 bestehende Seiten, die das Panel nach gemeinsamen Wörtern mit Titel, Absender und Tags auswählt. Das Modell schlägt Sätze als JSON vor, jeden mit der Nummer seiner Stelle. - Das Panel behält einen Satz nur, wenn seine Stelle existiert, jede Zahl und jedes Datum darin in der Stelle steht, er höchstens 400 Zeichen hat und weder Link noch Befehl enthält. Sagt er dasselbe wie ein Satz der Seite mit anderer Zahl, bleiben beide als Widerspruch stehen. Ein Dokument ändert höchstens 5 Seiten. - Bei einer Frage legt document_search die passendsten Seiten vor die Stellen, jeder Satz mit Quelle. Die Seiten sind Text von außen wie die Dokumente. - Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für bis zu 50 Sätze nur „steht das so in der Stelle?“; ein Nein entfernt den Satz. Gelöschte oder ausgelassene Dokumente nehmen ihre Sätze sofort mit (docu"
+"text": "- In ruhigen Minuten bekommt das Sprachmodell ein eigenes Dokument in nummerierten Stellen und höchstens 5 bestehende Seiten, die das Panel nach gemeinsamen Wörtern mit Titel, Absender und Tags auswählt. Das Modell schlägt Sätze als JSON vor, jeden mit der Nummer seiner Stelle. - Das Panel behält einen Satz nur, wenn seine Stelle existiert, jede Zahl und jedes Datum darin in der Stelle steht, er höchstens 400 Zeichen hat und weder Link noch Befehl enthält. Sagt er dasselbe wie ein Satz der Seite mit anderer Zahl, bleiben beide als Widerspruch stehen. Ein Dokument ändert höchstens 5 Seiten. - Bei einer Frage legt document_search die passendsten Seiten vor die Stellen, jeder Satz mit Quelle. Die Seiten sind Text von außen wie die Dokumente. - Die passenden Seiten findet ein eigener Suchindex (SQLite FTS5, Tabelle wb_fts: Titel und Sätze jeder Seite als Suchwörter). Feste SQL-Trigger merken sich jede Seite, deren Titel oder Sätze sich ändern, und vor jedem Speichern schreibt das Panel ihre Zeile neu (wissensbuch._fts_sync); ein Buch von vorher bekommt den Index einmal. Gezählt wird wie bisher: gemeinsame Wörter, der Titel dreifach. Fehlt FTS5, zählt das Panel die Wörter aller Seiten w"
 },
 {
 "lang": "de",
@@ -2229,7 +2229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissensbuch",
 "title": "Wissensbuch",
-"text": "ments.on_gone). - Stützt sich eine Antwort auf mindestens 2 Quellen (Dokumente oder Kiwix-Artikel), merkt sich das Panel sie eine Stunde im Speicher; erst der Klick „Ins Wissensbuch“ legt sie als Seite „Antwort“ ab. Jeder Satz braucht eine Stelle aus diesen Quellen mit allen seinen Zahlen und genug gemeinsamen Wörtern. Export als Obsidian-Ordner (ZIP); nachts eine Kopie in den Ablage-Ordner, wenn das Profil automatisch ablegt und sich das Buch geändert hat."
+"text": "ie früher. Andere Teile des Panels lesen über wissensbuch.liste nur Seiten-Ids mit Rang (höchstens 50, nur das eigene Profil, nur wenn das Wissensbuch für es frei ist). - Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für bis zu 50 Sätze nur „steht das so in der Stelle?“; ein Nein entfernt den Satz. Gelöschte oder ausgelassene Dokumente nehmen ihre Sätze sofort mit (documents.on_gone). - Stützt sich eine Antwort auf mindestens 2 Quellen (Dokumente oder Kiwix-Artikel), merkt sich das Panel sie eine Stunde im Speicher; erst der Klick „Ins Wissensbuch“ legt sie als Seite „Antwort“ ab. Jeder Satz braucht eine Stelle aus diesen Quellen mit allen seinen Zahlen und genug gemeinsamen Wörtern. Export als Obsidian-Ordner (ZIP); nachts eine Kopie in den Ablage-Ordner, wenn das Profil automatisch ablegt und sich das Buch geändert hat."
 },
 {
 "lang": "de",
@@ -2237,7 +2237,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissenskarte",
 "title": "Wissenskarte",
-"text": "- Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle. - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder. - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen."
+"text": "- Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle. - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder. - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen. - Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt jede Seite je Schritt nur einmal, ein Ring"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Wissenskarte",
+"title": "Wissenskarte",
+"text": " läuft also nie weiter. Nur die gewählten Punkte und höchstens 400 Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens 4 Schritte)."
 },
 {
 "lang": "de",
@@ -2269,7 +2277,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 500 Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter (Schritt 5) - 2400 Zeichen, bis zu denen eine Tabelle eine Stelle bleibt (Schritt 5) - 20 s längste Zeit je PDF für das Lesen der Tabellen (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
+"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 500 Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter (Schritt 5) - 2400 Zeichen, bis zu denen eine Tabelle eine Stelle bleibt (Schritt 5) - 20 s längste Zeit je PDF für das Lesen der Tabellen (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 400 Verbindungen, die die Karte auf einmal zeigt (Schritt 13) - 4 Schritte, die wissenskarte.weg höchstens sucht (Schritt 13) - 4096 Stellen je Block beim Vergleich der Vektore"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Zahlen (aus dem Code)",
+"title": "Zahlen (aus dem Code)",
+"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2301,7 +2317,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
+"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
 },
 {
 "lang": "de",
@@ -4974,6 +4990,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": ", nach einem Messtest mit 5000 Dokumenten), Stufe 3 (Werkzeuge wissen_weg und schaubild nach Messung), Stufe 4 (Code-Dateien mit festem Leser)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Wissensspeicher schneller (V01.1.242, Plan *wissensgraph* Stufe 2, Schritt 1 von 4, Dominik 2026-10-29 „Empfehlung umsetzen“): keine neue Funktion, kein neuer Schalter. Die Vektoren der Bedeutungssuche liegen als float16 im Speicher (halb so viel wie vorher mit float32); documents._similar rechnet blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Das Wissensbuch sucht seine Seiten über einen eigenen Suchindex (SQLite FTS5, Tabelle wb_fts mit Titel und Sätzen jeder Seite als Suchwörter); feste SQL-Trigger merken jede geänderte, neue oder gelöschte Seite in wb_ftsdirty, und vor jedem Speichern schreibt das Panel ihre Zeile neu. Ein Buch von vorher bekommt den Index beim ersten Öffnen einmal (wissen: wissensbuch suchindex aufgebaut | n seiten). Gezählt wird wie bisher (gemeinsame Wörter, Titel dreifach); fehlt FTS5 in SQLite, zählt das Panel die Wörter aller Seiten wie früher (wissen: wissensbuch suchindex fehlt | wortzaehlung). Die Wissenskarte wählt ihren sichtbaren Teil in SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen, und UNION nimmt jede Seite je Schritt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nur einmal, ein Ring läuft also nie weiter; es bleiben 150 Punkte und 400 Verbindungen. Dazu zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite mit ihrem Abstand) und wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens 4 Schritte, bei gleich langen Wegen immer derselbe). Für andere Teile des Panels gibt es die Lesefunktion wissensbuch.liste(uid, worte, k): nur lesend, an das Profil gebunden (leer, wenn das Wissensbuch für das Profil nicht frei ist, nie für Gäste), liefert [(Seiten-Id, Rang ab 1)] aus derselben FTS5-Suche, höchstens 50, nie Titel oder Sätze. Tabellen wb_fts und wb_ftsdirty in users/<profil>/wissen.db."
 },
 {
 "lang": "de",
@@ -18573,7 +18605,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float32 and read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cr"
+"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9."
 },
 {
 "lang": "en",
@@ -18581,7 +18613,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "oss-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: A passage only goes on when it holds at least 0.6 of the search words (filler words like „information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about the Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switch"
+"text": " Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: A passage only goes on when it holds at least 0.6 of the search words (filler words like „information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about the Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each p"
 },
 {
 "lang": "en",
@@ -18589,7 +18621,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ing, saving to memory and reminders are locked in it. The device shows the sources."
+"text": "assage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
 },
 {
 "lang": "en",
@@ -18605,7 +18637,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge book",
 "title": "Knowledge book",
-"text": "- In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage. - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages. - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents. - At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone). - When an answer rests on at least 2 sources (documen"
+"text": "- In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage. - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages. - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents. - The fitting pages are found by an own search index (SQLite FTS5, table wb_fts: title and sentences of each page as search words). Fixed SQL triggers note every page whose title or sentences change, and before each save the panel writes its row again (wissensbuch._fts_sync); a book from before gets the index once. The count is as before: shared words, the title three times. Without FTS5 the panel counts the words of all pages as it used to. Other parts of the panel read only page"
 },
 {
 "lang": "en",
@@ -18613,7 +18645,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge book",
 "title": "Knowledge book",
-"text": "ts or Kiwix articles), the panel keeps it in memory for an hour; only the click „To the knowledge book“ files it as a page „Answer“. Every sentence needs a passage from these sources with all its numbers and enough shared words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files automatically and the book changed."
+"text": " ids with their rank through wissensbuch.liste (at most 50, only the own profile, only when the knowledge book is allowed for it). - At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone). - When an answer rests on at least 2 sources (documents or Kiwix articles), the panel keeps it in memory for an hour; only the click „To the knowledge book“ files it as a page „Answer“. Every sentence needs a passage from these sources with all its numbers and enough shared words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files automatically and the book changed."
 },
 {
 "lang": "en",
@@ -18621,7 +18653,15 @@
 "file": "Architecture and data flow",
 "head": "Knowledge map",
 "title": "Knowledge map",
-"text": "- When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage. - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document. - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."
+"text": "- When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage. - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document. - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names. - SQLite picks the visible part: a fixed query counts the connections per page and document, and around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page only once per step, so a ring never runs on. Only the chosen points and at most 400 connections reach the pane"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Knowledge map",
+"title": "Knowledge map",
+"text": "l. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and wissenskarte.weg (shortest way between two pages, at most 4 steps)."
 },
 {
 "lang": "en",
@@ -18653,7 +18693,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 200 documents a day for the knowledge map (default) (step 13)"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 400 connections the map shows at once (step 13) - 4 steps wissenskarte.weg looks for at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13)"
 },
 {
 "lang": "en",
@@ -18685,7 +18725,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
+"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
 },
 {
 "lang": "en",
@@ -21278,6 +21318,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "measuring), stage 4 (code files with a fixed reader)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Knowledge store faster (V01.1.242, plan *wissensgraph* stage 2, step 1 of 4, Dominik 2026-10-29 \"do as recommended\"): no new feature, no new switch. The vectors of the meaning search are kept in memory as float16 (half of the float32 before); documents._similar reckons in float32 block by block, 4096 passages at a time, so the ranking stays the same. The knowledge book finds its pages through an own search index (SQLite FTS5, table wb_fts with title and sentences of each page as search words); fixed SQL triggers note every changed, new or deleted page in wb_ftsdirty, and before each save the panel writes its row again. A book from before gets the index once on first opening (wissen: wissensbuch suchindex aufgebaut | n seiten). The count is as before (shared words, title three times); without FTS5 in SQLite the panel counts the words of all pages as it used to (wissen: wissensbuch suchindex fehlt | wortzaehlung). The knowledge map picks its visible part in SQLite: a fixed query counts the connections per page and document, around a page WITH RECURSIVE walks at most two steps over the connections, and UNION takes each page only once per step, so a ring never runs on; the limits of 15"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "0 points and 400 connections stay. Besides, two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (pages around a page with their distance) and wissenskarte.weg (shortest way between two pages, at most 4 steps, always the same one among equally short ways). For other parts of the panel there is the read function wissensbuch.liste(uid, worte, k): read only, bound to the profile (empty when the knowledge book is not allowed for the profile, never for guests), it returns [(page id, rank from 1)] from the same FTS5 search, at most 50, never titles or sentences. Tables wb_fts and wb_ftsdirty in users/<profile>/wissen.db."
 },
 {
 "lang": "en",

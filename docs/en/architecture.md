@@ -2336,7 +2336,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory (on a panel computer 1.5 GiB) and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
 4. <a id="kn-wissen-s4"></a>**Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
 5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
-6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float32 and read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds.
+6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds.
 7. <a id="kn-wissen-s7"></a>**Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
 8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank.
 9. <a id="kn-wissen-s9"></a>**Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
@@ -2366,6 +2366,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage.
 - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages.
 - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents.
+- The fitting pages are found by an own search index (SQLite FTS5, table wb_fts: title and sentences of each page as search words). Fixed SQL triggers note every page whose title or sentences change, and before each save the panel writes its row again (wissensbuch._fts_sync); a book from before gets the index once. The count is as before: shared words, the title three times. Without FTS5 the panel counts the words of all pages as it used to. Other parts of the panel read only page ids with their rank through wissensbuch.liste (at most 50, only the own profile, only when the knowledge book is allowed for it).
 - At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone).
 - When an answer rests on at least 2 sources (documents or Kiwix articles), the panel keeps it in memory for an hour; only the click „To the knowledge book“ files it as a page „Answer“. Every sentence needs a passage from these sources with all its numbers and enough shared words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files automatically and the book changed.
 
@@ -2374,6 +2375,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage.
 - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document.
 - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names.
+- SQLite picks the visible part: a fixed query counts the connections per page and document, and around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page only once per step, so a ring never runs on. Only the chosen points and at most 400 connections reach the panel. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and wissenskarte.weg (shortest way between two pages, at most 4 steps).
 
 #### Look locally first
 
@@ -2409,6 +2411,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **30** connections one document may bring into the knowledge map ([step 13](#kn-wissen-s13))
 - **3000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
 - **150** points the map shows at once ([step 13](#kn-wissen-s13))
+- **400** connections the map shows at once ([step 13](#kn-wissen-s13))
+- **4** steps wissenskarte.weg looks for at most ([step 13](#kn-wissen-s13))
+- **4096** passages per block when comparing vectors ([step 6](#kn-wissen-s6))
 - **200** documents a day for the knowledge map (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
@@ -2444,6 +2449,12 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: fitting pages of the knowledge book with sources ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: fixed rules for every proposed connection ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: the visible part of the map ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: pages around a page, WITH RECURSIVE ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: shortest way between two pages ([step 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
+- `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 
 Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`

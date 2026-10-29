@@ -10,8 +10,8 @@ Older versions kept one JSON file per document (docs/<id>.json); they are moved 
 first time the profile's documents are opened (also after restoring an old backup).
 
 Search: full text (SQLite FTS5 over the same rough German/English word stems as before, ranked with
-BM25) and, with "Bedeutungssuche" (docembed.py), vectors of a small embedding model; both lists are
-merged by rank. Text from documents is outside text for the assistant (chat.READS_OUTSIDE): it can come
+BM25) and, with "Bedeutungssuche" (docembed.py), vectors of a small embedding model (kept in memory as
+float16, compared block by block in float32); both lists are merged by rank. Text from documents is outside text for the assistant (chat.READS_OUTSIDE): it can come
 from anyone (a scanned letter, a forwarded PDF), so it is data, never an instruction.
 
 Pictures and scans (V01.0.223, "Bilder und Scans lesen"): a photo or a PDF page without a text layer is
@@ -58,11 +58,12 @@ CTYPE = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
          ".webp": "image/webp"}
 _locks = {}                    # uid -> RLock: one profile's work never waits for another's (code check 19.10. B2)
 _locks_guard = threading.Lock()
-_vcache = {}                   # uid -> (stamp, built at, ids, float32 matrix)
+_vcache = {}                   # uid -> (stamp, built at, ids, float16 matrix: half the memory of float32)
 _vgen = {}                     # uid -> how often set_vectors wrote (part of the stamp)
 _gen = {}                      # uid -> how often a _Db changed something (list_docs keeps its list until it moves)
 _lcache = {}                   # (uid, used_only) -> (stamp, list)
 VEC_CATCHUP_S = 30             # while vectors are still missing the matrix is built again at most this often
+VEC_BLOCK = 4096               # rows of the float16 matrix turned into float32 at a time for the meaning search
 
 # added later; old databases get them on first open (V01.0.236 shared, V01.0.244 the profile "Steckbrief")
 NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("art", "TEXT DEFAULT ''"),
@@ -1601,7 +1602,8 @@ def vector_state(uid):
 
 
 def _vectors(uid, now=None):
-    """(chunk ids, float32 matrix) of the used documents' vectors. Kept until the pieces, the vectors or the used
+    """(chunk ids, float16 matrix) of the used documents' vectors, kept as stored (half the memory of float32;
+    _similar reckons in float32 block by block, so the ranking stays the same). Kept until the pieces, the vectors or the used
     documents change; no longer the file's time, which every counter write moved (code check 19.10. B3: 178 ms to
     rebuild and a 70 MB copy per search). While vectors are still missing it is built again at most every
     VEC_CATCHUP_S seconds: a piece just read waits that long for the meaning search, its words are found at once."""
@@ -1621,12 +1623,22 @@ def _vectors(uid, now=None):
         rows = con.execute("SELECT c.id, c.vec FROM chunks c JOIN docs d ON d.id=c.doc "
                            "WHERE c.vec IS NOT NULL AND d.use=1").fetchall()
     ids = [r[0] for r in rows]
-    mat = np.frombuffer(b"".join(r[1] for r in rows), dtype=np.float16).reshape(len(rows), -1).astype(np.float32) \
-        if rows else None
+    mat = np.frombuffer(b"".join(r[1] for r in rows), dtype=np.float16).reshape(len(rows), -1) if rows else None
     if len(_vcache) > 50:
         _vcache.clear()
     _vcache[uid] = (stamp, now, ids, mat)
     return ids, mat
+
+
+def _similar(mat, qvec):
+    """mat @ qvec in float32, VEC_BLOCK rows at a time: float16 to float32 is exact, so the values are those of a
+    float32 matrix, but only one block is ever held twice."""
+    import numpy as np
+    q = np.asarray(qvec, dtype=np.float32)
+    out = np.empty(mat.shape[0], dtype=np.float32)
+    for at in range(0, mat.shape[0], VEC_BLOCK):
+        out[at:at + VEC_BLOCK] = mat[at:at + VEC_BLOCK].astype(np.float32) @ q
+    return out
 
 
 # ---------------------------------------------------------------- search
@@ -1684,7 +1696,7 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
         import numpy as np
         ids, mat = _vectors(uid)
         if mat is not None and mat.shape[1] == len(qvec):
-            sims = mat @ np.asarray(qvec, dtype=np.float32)
+            sims = _similar(mat, qvec)
             i = 0
             for j in np.argsort(-sims):
                 if sims[j] < 0.75 or i >= 30:     # e5 vectors: below 0.75 nothing is really related

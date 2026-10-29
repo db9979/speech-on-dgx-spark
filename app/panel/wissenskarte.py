@@ -16,7 +16,8 @@ Connections are outside text like the pages: they are shown as text only and nev
 
 The map is drawn by the browser and the apps from the JSON of /api/profile/wissenskarte with their own code (never
 SVG, Mermaid or DOT from the model); the panel only answers the visible part: at most VIEW_NODES points and VIEW_EDGES
-connections, chosen by fixed rules (around a page, of a document, or the best connected ones). The export as Mermaid
+connections, chosen by fixed rules (around a page, of a document, or the best connected ones) in SQLite, around a
+page with WITH RECURSIVE; rund_um and weg are fixed queries with parameters only. The export as Mermaid
 or Graphviz text is written by fixed code here: labels in quotes, only letters, digits and a few signs, no click,
 link or style lines; the panel never runs it.
 
@@ -380,57 +381,108 @@ def drop_edge(uid, eid):
 
 
 # ---------------------------------------------------------------- the visible part
+# Fixed queries in SQLite (Stufe 1 of plan wissensgraph Stufe 2), never built from a model's text: every value is a
+# parameter. _COUNTS names the connections that count (both pages there, the document own, ready and in use); _WALK
+# goes from one page step by step over them in both directions with WITH RECURSIVE (over the indexes on a and b): at
+# most `tiefe` steps, and UNION keeps each (page, step) only once, so a ring of connections never runs on (Zyklusschutz).
+_COUNTS = ("e.a IN (SELECT id FROM wb_pages) AND e.b IN (SELECT id FROM wb_pages) "
+           "AND e.doc IN (SELECT id FROM docs WHERE use=1 AND state='ready')")
+_OK = "ok AS (SELECT e.* FROM wk_edges e WHERE " + _COUNTS + ")"
+_WALK = ("WITH RECURSIVE walk(node, d) AS (SELECT ?, 0 UNION SELECT CASE WHEN e.a = walk.node THEN e.b ELSE e.a END, "
+         "walk.d + 1 FROM walk JOIN wk_edges e ON e.a = walk.node OR e.b = walk.node WHERE walk.d < ? AND " + _COUNTS +
+         ") SELECT node, MIN(d) FROM walk GROUP BY node")
+WEG_MOST = 4             # steps weg() looks for at most
+_ID = re.compile(r"[0-9a-f]{12}")
+
+
+def _rund_um(con, knoten, tiefe):
+    """{page: fewest steps} of every page at most tiefe steps from knoten (knoten itself with 0)."""
+    return {r[0]: r[1] for r in con.execute(_WALK, (knoten, int(tiefe)))}
+
+
+def rund_um(uid, knoten, tiefe=1):
+    """The pages around one page: {page id: fewest steps}, at most tiefe (1 to WEG_MOST) steps; {} for a page that
+    is not there. A fixed query with the page as parameter, never text of a model."""
+    tiefe = max(1, min(WEG_MOST, int(tiefe)))
+    if not isinstance(knoten, str) or not _ID.fullmatch(knoten) or not os.path.exists(documents.db_path(uid)):
+        return {}
+    with _Db(uid) as con:
+        if not con.execute("SELECT 1 FROM wb_pages WHERE id=?", (knoten,)).fetchone():
+            return {}
+        return _rund_um(con, knoten, tiefe)
+
+
+def weg(uid, a, b, tiefe=WEG_MOST):
+    """The shortest way between two pages over connections that count: {"pages": [a, …, b], "edges": [connection
+    ids]} with at most tiefe (1 to WEG_MOST) steps, or None. On several equally short ways the smaller ids win, so
+    the answer is always the same. Fixed queries with parameters only."""
+    tiefe = max(1, min(WEG_MOST, int(tiefe)))
+    if not all(isinstance(x, str) and _ID.fullmatch(x) for x in (a, b)) or not os.path.exists(documents.db_path(uid)):
+        return None
+    with _Db(uid) as con:
+        if con.execute("SELECT COUNT(*) FROM wb_pages WHERE id IN (?, ?)", (a, b)).fetchone()[0] < len({a, b}):
+            return None
+        if a == b:
+            return {"pages": [a], "edges": []}
+        dist = _rund_um(con, a, tiefe)
+        if b not in dist:
+            return None
+        pages, edges, here = [b], [], b
+        while here != a:                                  # back from b, one step nearer to a each time
+            r = con.execute("SELECT e.id, CASE WHEN e.a=? THEN e.b ELSE e.a END AS o FROM wk_edges e "
+                            "WHERE (e.a=? OR e.b=?) AND " + _COUNTS + " ORDER BY e.id", (here, here, here)).fetchall()
+            step = min(((x["o"], x["id"]) for x in r if dist.get(x["o"]) == dist[here] - 1))
+            edges.append(step[1])
+            pages.append(step[0])
+            here = step[0]
+    return {"pages": pages[::-1], "edges": edges[::-1]}
+
+
 def view(uid, um="", tiefe=2, doc=""):
     """The part of the map one answer shows, chosen by fixed rules: around the page um (up to tiefe steps), the
     connections of the document doc, or else the best connected pages. At most VIEW_NODES points and VIEW_EDGES
-    connections; cut says whether more is there. Sources only of documents that are still there."""
+    connections; cut says whether more is there. Sources only of documents that are still there. SQLite counts and
+    walks (_COUNTS, _OK, _WALK); only the chosen points and at most VIEW_EDGES + 1 connections come to Python."""
     tiefe = 1 if tiefe == 1 else 2
     with _Db(uid) as con:
         docs = wissensbuch._own_ready(con)
         pages = {r["id"]: dict(r) for r in con.execute("SELECT id, title, art FROM wb_pages")}
         sents = {r["page"]: r["n"] for r in con.execute("SELECT page, COUNT(*) AS n FROM wb_sent GROUP BY page")}
-        rows = [dict(r) for r in con.execute("SELECT * FROM wk_edges ORDER BY id")]
+        # connections per page, in the order a page first appears (as the walk over all rows by id counted them)
+        deg = {r[0]: r[1] for r in con.execute(
+            "WITH " + _OK + " SELECT x, COUNT(*) FROM (SELECT a AS x, id FROM ok UNION ALL SELECT b, id FROM ok) "
+            "GROUP BY x ORDER BY MIN(id)")}
+        per_doc = con.execute("WITH " + _OK + " SELECT doc, COUNT(*) AS n FROM ok GROUP BY doc "
+                              "ORDER BY n DESC, MIN(id) LIMIT 40").fetchall()
+        if um and um in pages:
+            dist = _rund_um(con, um, tiefe)
+            pick = [um] + [p for d in range(1, tiefe + 1)
+                           for p in sorted((x for x, n in dist.items() if n == d), key=lambda x: (-deg.get(x, 0), pages[x]["title"]))]
+        elif doc and doc in docs:
+            mine = {x for r in con.execute("SELECT e.a, e.b FROM wk_edges e WHERE e.doc=? AND " + _COUNTS, (doc,)) for x in r}
+            pick = sorted(mine, key=lambda x: (-deg.get(x, 0), pages[x]["title"]))
+        else:
+            pick = sorted(deg, key=lambda x: (-deg[x], pages[x]["title"]))
+        cut = len(pick) > VIEW_NODES
+        keep = pick[:VIEW_NODES]
+        only_doc = bool(doc) and not um
+        ks = json.dumps(keep)                          # the chosen ids as one parameter (json_each), never in the SQL
+        edges = [dict(r) for r in con.execute(
+            "SELECT e.* FROM wk_edges e WHERE e.a IN (SELECT value FROM json_each(?)) AND e.b IN (SELECT value FROM "
+            "json_each(?)) AND " + _COUNTS + " AND (? = 0 OR e.doc = ?) ORDER BY e.id LIMIT ?",
+            (ks, ks, int(only_doc), doc, VIEW_EDGES + 1))]
         done = {r[0] for r in con.execute("SELECT doc FROM wk_docs")}
         booked = {r[0] for r in con.execute("SELECT doc FROM wb_docs WHERE state='ok'")}
-    rows = [e for e in rows if e["a"] in pages and e["b"] in pages and e["doc"] in docs]
-    deg = {}
-    for e in rows:
-        deg[e["a"]] = deg.get(e["a"], 0) + 1
-        deg[e["b"]] = deg.get(e["b"], 0) + 1
-    if um and um in pages:
-        pick, ring = [um], {um}
-        for _ in range(tiefe):
-            nxt = set()
-            for e in rows:
-                if e["a"] in ring and e["b"] not in pick:
-                    nxt.add(e["b"])
-                if e["b"] in ring and e["a"] not in pick:
-                    nxt.add(e["a"])
-            for p in sorted(nxt, key=lambda x: (-deg.get(x, 0), pages[x]["title"])):
-                pick.append(p)
-            ring = nxt
-    elif doc and doc in docs:
-        mine = [e for e in rows if e["doc"] == doc]
-        pick = sorted({x for e in mine for x in (e["a"], e["b"])}, key=lambda x: (-deg.get(x, 0), pages[x]["title"]))
-    else:
-        pick = sorted(deg, key=lambda x: (-deg[x], pages[x]["title"]))
-    cut = len(pick) > VIEW_NODES
-    keep = set(pick[:VIEW_NODES])
-    edges = [e for e in rows if e["a"] in keep and e["b"] in keep and (not doc or um or e["doc"] == doc)]
     cut = cut or len(edges) > VIEW_EDGES
     edges = edges[:VIEW_EDGES]
-    per_doc = {}
-    for e in rows:
-        per_doc[e["doc"]] = per_doc.get(e["doc"], 0) + 1
     return {"nodes": [{"id": p, "title": pages[p]["title"], "art": pages[p]["art"], "deg": deg.get(p, 0),
-                       "n": sents.get(p, 0)} for p in pick[:VIEW_NODES]],
+                       "n": sents.get(p, 0)} for p in keep],
             "edges": [{"id": e["id"], "a": e["a"], "b": e["b"], "art": e["art"], "cause": ARTEN[e["art"]][2],
                        "detail": e["detail"] or "", "doc": e["doc"], "page": e["dpage"] or 0,
                        "name": docs[e["doc"]]["title"] or docs[e["doc"]]["name"]} for e in edges if e["art"] in ARTEN],
             "cut": cut, "um": um if um in pages else "", "doc": doc if doc in docs else "",
-            "total": {"nodes": len(deg), "edges": len(rows)},
-            "docs": [{"id": d, "name": docs[d]["title"] or docs[d]["name"], "n": n}
-                     for d, n in sorted(per_doc.items(), key=lambda x: -x[1])[:40]],
+            "total": {"nodes": len(deg), "edges": sum(deg.values()) // 2},     # each connection counts at both ends
+            "docs": [{"id": r["doc"], "name": docs[r["doc"]]["title"] or docs[r["doc"]]["name"], "n": r["n"]} for r in per_doc],
             "wait": len((booked & set(docs)) - done)}
 
 

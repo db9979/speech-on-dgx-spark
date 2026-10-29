@@ -4447,6 +4447,13 @@
 "titel": "Dungeon-Master: eine Einordnung für jede Aktion",
 "text": "A: Im Kampf ist „Ich frage den Wirt nach dem Weg. Dann gehe ich los.“ kein Angriff. B: „Wir schlagen hier unser Lager auf und rasten.“ bekommt die Zeile zur Rast (Spielleiter-Pult) statt eines Angriffs. C: „Ich sage Hallo“ bekommt keine Probe. D: „Ich greife den Ork an“ greift weiter an, „Lasst uns verhandeln“ bittet im Kampf weiter um Frieden.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P660",
+"v": 1242,
+"titel": "Wissensspeicher schneller: Vektoren, Suchindex, Karte",
+"text": "Mit Funktionen → Eigene Dokumente → Wissensbuch und Wissenskarte an: eine Frage zu einem eigenen Dokument stellen, die Antwort nennt wie bisher die passende Seite des Wissensbuchs mit Quelle. In Zustand → Logs → Diagnose, Bereich Wissen, steht nach dem ersten Öffnen einmal „wissen: wissensbuch suchindex aufgebaut | n seiten“ und keine Zeile „suchindex fehlt“. Auf der Seite Wissensbuch im Reiter Karte eine Seite in die Mitte nehmen: dieselben Nachbarn wie vorher, höchstens 150 Punkte. Mit Bedeutungssuche: eine Frage dauert nicht spürbar länger als vorher, und das Panel braucht bei vielen Dokumenten weniger Speicher.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

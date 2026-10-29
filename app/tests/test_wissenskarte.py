@@ -299,5 +299,131 @@ class View(Base):
         self.assertEqual(count(uid), 0)
 
 
+def bfs_view(con, docs, um, tiefe, doc):
+    """The map's part as view() chose it before V01.1.242 (all connections in Python, a walk ring by ring): the yardstick
+    the queries in SQLite must meet (Stufe 1)."""
+    pages = {r["id"]: dict(r) for r in con.execute("SELECT id, title, art FROM wb_pages")}
+    rows = [dict(r) for r in con.execute("SELECT * FROM wk_edges ORDER BY id")]
+    rows = [e for e in rows if e["a"] in pages and e["b"] in pages and e["doc"] in docs]
+    deg = {}
+    for e in rows:
+        deg[e["a"]] = deg.get(e["a"], 0) + 1
+        deg[e["b"]] = deg.get(e["b"], 0) + 1
+    if um and um in pages:
+        pick, ring = [um], {um}
+        for _ in range(tiefe):
+            nxt = set()
+            for e in rows:
+                if e["a"] in ring and e["b"] not in pick:
+                    nxt.add(e["b"])
+                if e["b"] in ring and e["a"] not in pick:
+                    nxt.add(e["a"])
+            pick += sorted(nxt, key=lambda x: (-deg.get(x, 0), pages[x]["title"]))
+            ring = nxt
+    elif doc and doc in docs:
+        pick = sorted({x for e in rows if e["doc"] == doc for x in (e["a"], e["b"])}, key=lambda x: (-deg.get(x, 0), pages[x]["title"]))
+    else:
+        pick = sorted(deg, key=lambda x: (-deg[x], pages[x]["title"]))
+    keep = set(pick[:wissenskarte.VIEW_NODES])
+    edges = [e["id"] for e in rows if e["a"] in keep and e["b"] in keep and (not doc or um or e["doc"] == doc)]
+    per_doc = {}
+    for e in rows:
+        per_doc[e["doc"]] = per_doc.get(e["doc"], 0) + 1
+    return (pick[:wissenskarte.VIEW_NODES], [deg.get(p, 0) for p in pick[:wissenskarte.VIEW_NODES]],
+            edges[:wissenskarte.VIEW_EDGES], len(pick) > wissenskarte.VIEW_NODES or len(edges) > wissenskarte.VIEW_EDGES,
+            (len(deg), len(rows)), sorted(per_doc.items(), key=lambda x: -x[1])[:40])
+
+
+class Rekursiv(Base):
+    """Stufe 1 (V01.1.242): view() walks in SQLite (WITH RECURSIVE, at most two steps, UNION against rings) and
+    answers as before; weg() and rund_um() are fixed queries with parameters only."""
+    def graph(self, name):
+        """A ring of 6 pages, a star of 220 pages around one hub, a chain, and connections that do not count (a
+        document of nobody, a page that is gone): more than VIEW_NODES points and VIEW_EDGES connections."""
+        c, uid, a = self.fresh(name)
+        other = documents.add(uid, "Miete.txt", HOUSE.encode(), text=HOUSE)["id"]
+        pid = lambda i: "%012x" % (0xabc000000000 + i)
+        with wissenskarte._Db(uid) as con:
+            con.executemany("INSERT INTO wb_pages (id, title, art, made, changed) VALUES (?, ?, 'Thema', 1, 1)",
+                            [(pid(i), "Seite %03d" % ((i * 37) % 240)) for i in range(240)])
+            e = [(pid(i), pid((i + 1) % 6), a) for i in range(6)]                            # ring 0-5
+            e += [(pid(10), pid(i), a if i % 3 else other) for i in range(11, 231)]          # star around 10
+            e += [(pid(i), pid(i + 1), a) for i in range(231, 239)]                         # chain 231-239
+            e += [(pid(i), pid(10), other) for i in range(11, 200, 2)]                      # second edges into the hub
+            e += [(pid(i), pid(10), a) for i in range(11, 231)] * 2                         # and two more for each
+            e += [(pid(5), pid(10), a), (pid(3), pid(231), other), (pid(0), pid(0), a)]     # bridges and a loop
+            e += [(pid(1), pid(2), "ffffffffffff"), (pid(1), "%012x" % 0xdead, a)]          # do not count
+            con.executemany("INSERT INTO wk_edges (a, b, art, detail, doc, made) VALUES (?, ?, 'betrifft', '', ?, 1)", e)
+        return c, uid, a, other, pid
+
+    def same(self, uid, um="", tiefe=2, doc=""):
+        v = wissenskarte.view(uid, um, tiefe, doc)
+        with wissenskarte._Db(uid) as con:
+            want = bfs_view(con, wissensbuch._own_ready(con), um, tiefe, doc)
+        got = ([n["id"] for n in v["nodes"]], [n["deg"] for n in v["nodes"]], [e["id"] for e in v["edges"]], v["cut"],
+               (v["total"]["nodes"], v["total"]["edges"]), [(d["id"], d["n"]) for d in v["docs"]])
+        self.assertEqual(got, want, (um, tiefe, doc))
+        return v
+
+    def test_the_view_in_sqlite_answers_as_the_walk_in_python(self):
+        c, uid, a, other, pid = self.graph("Wkrekursiv")
+        v = self.same(uid)
+        self.assertTrue(v["cut"])
+        self.assertEqual(len(v["nodes"]), wissenskarte.VIEW_NODES)
+        self.assertEqual(len(v["edges"]), wissenskarte.VIEW_EDGES)          # more were there: cut at the limit
+        for um in (pid(0), pid(3), pid(10), pid(231), pid(235), pid(150)):
+            for tiefe in (1, 2):
+                self.same(uid, um, tiefe)
+        self.same(uid, doc=a)
+        self.same(uid, doc=other)
+        self.same(uid, pid(0), 2, a)
+        self.same(uid, "%012x" % 0xdead)                    # a page that is gone: the best connected ones
+        self.assertTrue(self.same(uid, pid(10), 1)["cut"])
+        self.assertEqual(c.get(f"/api/profile/wissenskarte?um={pid(235)}&tiefe=1").json()["nodes"][0]["id"], pid(235))
+
+    def test_rings_end_and_depth_holds(self):
+        c, uid, a, other, pid = self.graph("Wkzyklus")
+        got = wissenskarte.rund_um(uid, pid(0), 4)
+        for i in range(6):
+            self.assertEqual(got[pid(i)], min(i, 6 - i))     # around the ring both ways, each page once
+        self.assertEqual(got[pid(10)], 2)                    # 0 → 5 → 10
+        self.assertEqual(wissenskarte.rund_um(uid, pid(0)), {pid(0): 0, pid(1): 1, pid(5): 1})
+        self.assertEqual(max(wissenskarte.rund_um(uid, pid(231), 99).values()), wissenskarte.WEG_MOST)
+        self.assertNotIn(pid(239), wissenskarte.rund_um(uid, pid(231), 99))   # five steps away: past the limit
+        self.assertNotIn("%012x" % 0xdead, wissenskarte.rund_um(uid, pid(1), 4))
+
+    def test_the_shortest_way_is_found_and_always_the_same(self):
+        c, uid, a, other, pid = self.graph("Wkweg")
+        w = wissenskarte.weg(uid, pid(0), pid(3))
+        self.assertEqual(len(w["pages"]), 4)                 # three steps, either way round the ring
+        self.assertEqual(w["pages"], [pid(0), pid(1), pid(2), pid(3)])
+        self.assertEqual(w, wissenskarte.weg(uid, pid(0), pid(3)))
+        with wissenskarte._Db(uid) as con:
+            for (x, y), eid in zip(zip(w["pages"], w["pages"][1:]), w["edges"]):
+                r = con.execute("SELECT a, b FROM wk_edges WHERE id=?", (eid,)).fetchone()
+                self.assertEqual({r[0], r[1]}, {x, y})
+        self.assertEqual(wissenskarte.weg(uid, pid(0), pid(231))["pages"], [pid(0), pid(1), pid(2), pid(3), pid(231)])
+        self.assertEqual(len(wissenskarte.weg(uid, pid(1), pid(12))["pages"]), 5)      # 1 → 0 → 5 → 10 → 12
+        self.assertIsNone(wissenskarte.weg(uid, pid(0), pid(3), tiefe=2))
+        self.assertIsNone(wissenskarte.weg(uid, pid(231), pid(239)))                   # eight steps: past WEG_MOST
+        self.assertEqual(wissenskarte.weg(uid, pid(4), pid(4)), {"pages": [pid(4)], "edges": []})
+        self.assertIsNone(wissenskarte.weg(uid, pid(1), "%012x" % 0xdead))             # a page that is gone
+
+    def test_only_ids_go_in_as_parameters(self):
+        c, uid, a, other, pid = self.graph("Wkfest")
+        for bad in ("x' OR 1=1 --", pid(0) + "'", "", None, 7, "ABCDEF000000", pid(0) + "; DROP TABLE wk_edges"):
+            self.assertEqual(wissenskarte.rund_um(uid, bad), {}, bad)
+            self.assertIsNone(wissenskarte.weg(uid, bad, pid(1)), bad)
+            self.assertIsNone(wissenskarte.weg(uid, pid(1), bad), bad)
+        with wissenskarte._Db(uid) as con:
+            self.assertGreater(con.execute("SELECT COUNT(*) FROM wk_edges").fetchone()[0], 400)
+        for sql in (wissenskarte._COUNTS, wissenskarte._OK, wissenskarte._WALK):
+            self.assertNotIn("{", sql)
+            self.assertNotIn("%", sql)
+        self.assertIn("UNION SELECT", wissenskarte._WALK)                              # UNION, not UNION ALL: no ring runs on
+        self.assertNotIn("UNION ALL", wissenskarte._WALK)
+        self.assertIn("walk.d < ?", wissenskarte._WALK)
+
+
 if __name__ == "__main__":
     unittest.main()

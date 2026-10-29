@@ -15,6 +15,9 @@ tables in the same database; the rules ("schema") are fixed here in the panel, n
   into own pages. Pages are outside text like the documents: they reach the model wrapped as data through
   document_search (chat.READS_OUTSIDE) and never go into the memory.
 
+The pages are found through an own word index (SQLite FTS5, table wb_fts, kept up to date by plain SQL triggers
+and _fts_sync); without FTS5 the panel counts the words of all pages as before.
+
 Off until the admin allows it (Funktionen → Eigene Dokumente → Wissensbuch); then for every profile the admin did
 not block; guests never. Works in quiet minutes (wissen.due_once), at most chat.knowledge_book_day documents per
 profile and day. The journal gets fixed words and numbers only, never a title or a sentence.
@@ -49,6 +52,7 @@ import json
 import os
 import re
 import secrets
+import sqlite3
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -97,7 +101,25 @@ CREATE TABLE IF NOT EXISTS wb_log (id INTEGER PRIMARY KEY, at INTEGER, word TEXT
 CREATE TABLE IF NOT EXISTS wb_check (sid INTEGER PRIMARY KEY, flag TEXT DEFAULT '', at INTEGER, ok INTEGER, probed INTEGER);
 CREATE TABLE IF NOT EXISTS wb_state (key TEXT PRIMARY KEY, val INTEGER);
 CREATE TABLE IF NOT EXISTS wb_kiwix (id TEXT PRIMARY KEY, book TEXT, path TEXT, title TEXT);
+CREATE TABLE IF NOT EXISTS wb_ftsdirty (page TEXT PRIMARY KEY);
+CREATE TRIGGER IF NOT EXISTS wb_fts_pi AFTER INSERT ON wb_pages BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (new.id); END;
+CREATE TRIGGER IF NOT EXISTS wb_fts_pu AFTER UPDATE OF id, title ON wb_pages BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (old.id); INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (new.id); END;
+CREATE TRIGGER IF NOT EXISTS wb_fts_pd AFTER DELETE ON wb_pages BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (old.id); END;
+CREATE TRIGGER IF NOT EXISTS wb_fts_si AFTER INSERT ON wb_sent BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (new.page); END;
+CREATE TRIGGER IF NOT EXISTS wb_fts_su AFTER UPDATE OF page, text ON wb_sent BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (old.page); INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (new.page); END;
+CREATE TRIGGER IF NOT EXISTS wb_fts_sd AFTER DELETE ON wb_sent BEGIN
+    INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (old.page); END;
 """
+# the word index of the pages (Stufe 1 of plan wissensgraph Stufe 2): title and sentences as the rough word stems of
+# documents._terms, one row per page; plain SQL triggers above mark every page whose title or sentences change, and
+# _fts_sync writes those rows again before each commit. Without FTS5 in SQLite search_pages counts words as before.
+FTS = "CREATE VIRTUAL TABLE wb_fts USING fts5(page UNINDEXED, title, body)"
+FTS_MOST = MAX_PAGES     # pages the word index hands to the fixed score of search_pages (all that share a word)
 WORDS = {"eingearbeitet": ("eingearbeitet", "worked in"), "nichts": ("nichts Neues", "nothing new"),
          "fehler": ("nicht eingearbeitet", "not worked in"), "geloescht": ("Seite gelöscht", "page deleted"),
          "neu": ("Seite neu geschrieben", "page written again"), "falsch": ("Satz entfernt", "sentence removed"),
@@ -121,6 +143,7 @@ _COMMAND = re.compile(r"\b(ignorier|vergiss|anweisung|instruction|system ?prompt
                       r"ignore|forget|pretend|you are|you must)\w*", re.I)
 _NUM = re.compile(r"\d+(?:[.,:/-]\d+)*")
 _running = set()
+_fts = [None]            # FTS5 in this SQLite: None not tried yet, True, False (then the word counting as before)
 _offers = {}             # rid → the answer that may be filed (memory only; the click names only rid)
 _seen = {}               # profile → the sources the running turn read
 
@@ -156,10 +179,76 @@ class _Db(documents._Db):
             con.executescript(SCHEMA)
             if "sig" not in {r[1] for r in con.execute("PRAGMA table_info(wb_docs)")}:
                 con.execute("ALTER TABLE wb_docs ADD COLUMN sig TEXT")    # Stufe B made wb_docs without it
+            _fts_table(con)
         except BaseException:
             self.__exit__(Exception)
             raise
         return con
+
+    def __exit__(self, kind, *rest):
+        if kind is None:
+            try:
+                _fts_sync(self.con)
+            except BaseException:
+                super().__exit__(Exception)
+                raise
+        return super().__exit__(kind, *rest)
+
+
+def _fts_table(con):
+    """True when the word index of the pages is there; made once per database, then filled from the pages there
+    (migration: every page is marked and written at once)."""
+    if _fts[0] is False:
+        return False
+    if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wb_fts'").fetchone():
+        _fts[0] = True
+        return True
+    try:
+        con.execute(FTS)
+    except sqlite3.OperationalError as e:
+        if "fts5" not in str(e).lower():                  # busy or locked: not a missing module, try again next time
+            raise
+        _fts[0] = False
+        print("wissen: wissensbuch suchindex fehlt | wortzaehlung", flush=True)
+        return False
+    _fts[0] = True
+    n = con.execute("INSERT OR IGNORE INTO wb_ftsdirty (page) SELECT id FROM wb_pages").rowcount
+    _fts_sync(con)
+    print(f"wissen: wissensbuch suchindex aufgebaut | {max(0, n)} seiten", flush=True)
+    return True
+
+
+def _fts_sync(con):
+    """Writes the index rows of the marked pages again (a deleted page loses its row). Fails quietly: the marks stay
+    and the next commit tries again; the pages themselves are never touched."""
+    try:
+        marked = [r[0] for r in con.execute("SELECT page FROM wb_ftsdirty")]
+        if not marked:
+            return
+        if not _fts[0]:
+            con.execute("DELETE FROM wb_ftsdirty")
+            return
+        con.execute("SAVEPOINT wb_fts")
+        try:
+            for at in range(0, len(marked), 200):
+                part = marked[at:at + 200]
+                q = ",".join("?" * len(part))
+                con.execute(f"DELETE FROM wb_fts WHERE page IN ({q})", part)
+                titles = {r[0]: r[1] for r in con.execute(f"SELECT id, title FROM wb_pages WHERE id IN ({q})", part)}
+                texts = {}
+                for r in con.execute(f"SELECT page, text FROM wb_sent WHERE page IN ({q}) ORDER BY id", part):
+                    texts.setdefault(r[0], []).append(r[1])
+                con.executemany("INSERT INTO wb_fts (page, title, body) VALUES (?, ?, ?)",
+                                [(p, " ".join(documents._terms(t)), " ".join(documents._terms(" ".join(texts.get(p, [])))))
+                                 for p, t in titles.items()])
+                con.execute(f"DELETE FROM wb_ftsdirty WHERE page IN ({q})", part)
+            con.execute("RELEASE wb_fts")
+        except sqlite3.Error:
+            con.execute("ROLLBACK TO wb_fts")
+            con.execute("RELEASE wb_fts")
+            print("wissen: wissensbuch suchindex fehler | spaeter", flush=True)
+    except sqlite3.Error:
+        pass
 
 
 def _log(con, word, n=0, m=0, now=None):
@@ -268,24 +357,58 @@ def _score(words, title, texts):
     return 3 * len(words & tw) + len(words & body)
 
 
+def _ranked(uid, words):
+    """[(score, page id)] of every page sharing a word, best first (shared words, the title counting three times; on a
+    tie the larger id). The word index (wb_fts) finds the pages and the score is counted on their index row instead
+    of reading every sentence; without FTS5 every page and sentence is read as before. Read only."""
+    with _Db(uid) as con:
+        if _fts[0]:
+            match = " OR ".join(f'"{t}"' for t in sorted(words) if re.fullmatch(r"\w+", t))
+            _fts_sync(con)                                  # marks a writer left (a failed sync) first
+            rows = con.execute("SELECT page, title, body FROM wb_fts WHERE wb_fts MATCH ? LIMIT ?",
+                               (match, FTS_MOST)).fetchall() if match else []
+            # the same fixed score and order as _score below, counted on the index row
+            got = [(3 * len(words & set(r["title"].split())) + len(words & set(r["body"].split())), r["page"]) for r in rows]
+        else:
+            rows = con.execute("SELECT id, title FROM wb_pages").fetchall()
+            texts = {}
+            for s in con.execute("SELECT page, text FROM wb_sent"):
+                texts.setdefault(s["page"], []).append(s["text"])
+            got = [(_score(words, r["title"], texts.get(r["id"], [])), r["id"]) for r in rows]
+    return sorted((x for x in got if x[0] > 0), reverse=True)
+
+
 def search_pages(uid, query, k=2):
-    """The pages that fit a question best (shared words, the title counting three times): [(score, page)]."""
+    """The pages that fit a question best (shared words, the title counting three times): [(score, page)], at least
+    two points and a sentence of a document still there."""
     words = set(documents._terms(query))
     if not words:
         return []
-    with _Db(uid) as con:
-        rows = con.execute("SELECT id, title FROM wb_pages").fetchall()
-        texts = {}
-        for s in con.execute("SELECT page, text FROM wb_sent"):
-            texts.setdefault(s["page"], []).append(s["text"])
-    got = sorted(((_score(words, r["title"], texts.get(r["id"], [])), r["id"]) for r in rows), reverse=True)
     out = []
-    for sc, pid in got[:k]:
+    for sc, pid in _ranked(uid, words)[:k]:
         if sc >= 2:
             p = page(uid, pid)
             if p and p["saetze"]:
                 out.append((sc, p))
     return out
+
+
+LISTE_MOST = 50          # pages liste() hands out at most
+
+
+def liste(uid, worte, k=10):
+    """For other parts of the panel (thread „Alles schnell finden über einen Index“): the pages of this profile's
+    Wissensbuch that share a search word, as [(page id, rank from 1)], best first, at most k (1 to LISTE_MOST).
+    worte: a text or a list of words. Read only, bound to uid; [] while the Wissensbuch is not allowed for it
+    (guests never) or the profile has no documents yet. Never a title or a sentence, only ids."""
+    if not uid or not allowed(uid) or not os.path.exists(documents.db_path(uid)):
+        return []
+    text = worte if isinstance(worte, str) else " ".join(w for w in (worte or ()) if isinstance(w, str))
+    words = set(documents._terms(text[:2000]))
+    if not words:
+        return []
+    k = max(1, min(LISTE_MOST, int(k)))
+    return [(pid, i + 1) for i, (_, pid) in enumerate(_ranked(uid, words)[:k])]
 
 
 def answer_block(uid, query):

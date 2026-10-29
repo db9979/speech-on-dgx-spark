@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "40a4247b3a",
+        "stand": "83740622d3",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -253,7 +253,10 @@ SEITEN = {
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
             "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
-            "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
+            "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.VIEW_EDGES": ["s13"],
+            "wissenskarte.WEG_MOST": ["s13"], "wissenskarte.rund_um": ["s13"], "wissenskarte.weg": ["s13"],
+            "wissensbuch.search_pages": ["s13"], "wissensbuch._fts_sync": ["s13"], "wissensbuch.liste": ["s13"], "documents._similar": ["s6"],
+            "documents.VEC_BLOCK": ["s6"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
         },
@@ -321,13 +324,15 @@ SEITEN = {
               ("Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt "
                "nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden "
                "addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als "
-               "float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; "
-               "solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden.",
+               "float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je {documents.VEC_BLOCK} "
+               "Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder "
+               "genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden.",
                "If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity "
                "nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage "
-               "high in both lists rises. The vectors are kept in memory as float32 and read again only when "
-               "passages or used documents change; while vectors are still missing, at most every "
-               "{documents.VEC_CATCHUP_S} seconds.")),
+               "high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are "
+               "reckoned in float32 block by block, {documents.VEC_BLOCK} passages at a time, so the ranking stays "
+               "the same. They are read again only when passages or used documents change; while vectors are still "
+               "missing, at most every {documents.VEC_CATCHUP_S} seconds.")),
             S("s7", "frage", ("Neueste zuerst?", "Newest first?"),
               ("bei reMarkable-Notizen", "with reMarkable notes"),
               ("Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, "
@@ -433,6 +438,9 @@ SEITEN = {
             ("{wissenskarte.EDGES_PER_DOC}", ("Verbindungen, die ein Dokument in die Wissenskarte bringen darf", "connections one document may bring into the knowledge map"), "wissenskarte.EDGES_PER_DOC"),
             ("{wissenskarte.MAX_EDGES}", ("Verbindungen in der Wissenskarte pro Profil", "connections in the knowledge map per profile"), "wissenskarte.MAX_EDGES"),
             ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
+            ("{wissenskarte.VIEW_EDGES}", ("Verbindungen, die die Karte auf einmal zeigt", "connections the map shows at once"), "wissenskarte.VIEW_EDGES"),
+            ("{wissenskarte.WEG_MOST}", ("Schritte, die wissenskarte.weg höchstens sucht", "steps wissenskarte.weg looks for at most"), "wissenskarte.WEG_MOST"),
+            ("{documents.VEC_BLOCK}", ("Stellen je Block beim Vergleich der Vektoren", "passages per block when comparing vectors"), "documents.VEC_BLOCK"),
             ("{wissenskarte.DAY}", ("Dokumente am Tag für die Wissenskarte (Standard)", "documents a day for the knowledge map (default)"), "wissenskarte.DAY"),
         ],
         "einstellen": [
@@ -485,6 +493,20 @@ SEITEN = {
                  "Die Seiten sind Text von außen wie die Dokumente.",
                  "On a question document_search puts the best fitting pages before the passages, each sentence with "
                  "its source. The pages are outside text like the documents."),
+                ("Die passenden Seiten findet ein eigener Suchindex (SQLite FTS5, Tabelle wb_fts: Titel und Sätze "
+                 "jeder Seite als Suchwörter). Feste SQL-Trigger merken sich jede Seite, deren Titel oder Sätze sich "
+                 "ändern, und vor jedem Speichern schreibt das Panel ihre Zeile neu (wissensbuch._fts_sync); ein "
+                 "Buch von vorher bekommt den Index einmal. Gezählt wird wie bisher: gemeinsame Wörter, der Titel "
+                 "dreifach. Fehlt FTS5, zählt das Panel die Wörter aller Seiten wie früher. Andere Teile des Panels "
+                 "lesen über wissensbuch.liste nur Seiten-Ids mit Rang (höchstens {wissensbuch.LISTE_MOST}, nur das "
+                 "eigene Profil, nur wenn das Wissensbuch für es frei ist).",
+                 "The fitting pages are found by an own search index (SQLite FTS5, table wb_fts: title and sentences "
+                 "of each page as search words). Fixed SQL triggers note every page whose title or sentences change, "
+                 "and before each save the panel writes its row again (wissensbuch._fts_sync); a book from before gets "
+                 "the index once. The count is as before: shared words, the title three times. Without FTS5 the panel "
+                 "counts the words of all pages as it used to. Other parts of the panel read only page ids with their "
+                 "rank through wissensbuch.liste (at most {wissensbuch.LISTE_MOST}, only the own profile, only when "
+                 "the knowledge book is allowed for it)."),
                 ("Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu "
                  "gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check "
                  "markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für "
@@ -529,6 +551,18 @@ SEITEN = {
                  "Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or "
                  "DOT of the model. The panel only answers the visible part with at most {wissenskarte.VIEW_NODES} "
                  "points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."),
+                ("Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und "
+                 "rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt "
+                 "jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und "
+                 "höchstens {wissenskarte.VIEW_EDGES} Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten "
+                 "nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und "
+                 "wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens {wissenskarte.WEG_MOST} Schritte).",
+                 "SQLite picks the visible part: a fixed query counts the connections per page and document, and "
+                 "around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page "
+                 "only once per step, so a ring never runs on. Only the chosen points and at most "
+                 "{wissenskarte.VIEW_EDGES} connections reach the panel. Two fixed queries with values only as "
+                 "parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and "
+                 "wissenskarte.weg (shortest way between two pages, at most {wissenskarte.WEG_MOST} steps)."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
@@ -608,6 +642,12 @@ SEITEN = {
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
+            ("wissenskarte.rund_um", ("Seiten um eine Seite, WITH RECURSIVE", "pages around a page, WITH RECURSIVE")),
+            ("wissenskarte.weg", ("kürzester Weg zwischen zwei Seiten", "shortest way between two pages")),
+            ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
+            ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
+            ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
+            ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",

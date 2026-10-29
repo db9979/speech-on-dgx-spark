@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.242** · 2026-10-29 · Wissensspeicher schneller (Stufe 1 von 4, keine neue Funktion): Vektoren der Dokumentsuche als float16 im Speicher (halb so groß, gleiche Rangfolge), Wissensbuch sucht Seiten über einen FTS5-Index (Trigger pflegen ihn, einmaliger Aufbau, ohne FTS5 wie bisher), Wissenskarte wählt ihren Ausschnitt mit WITH RECURSIVE in SQLite, dazu feste Abfragen rund_um und weg und die Lesefunktion wissensbuch.liste (Seiten-Ids mit Rang)
 - **V01.1.241** · 2026-10-29 · KI-Dungeon-Master: eine Einordnung für jede getippte Aktion: alle Wortlisten in einem Modul, jede Aktion bekommt nach fester Reihenfolge genau eine Art; „Dann gehe ich los“, „Wir schlagen hier unser Lager auf“ und „We rest by the fire“ sind kein Angriff mehr
 - **V01.1.240** · 2026-10-29 · KI-Dungeon-Master: jede Angabe des Modells hängt an einer festen Regel (Anker-Tabelle), die Spielseite kennt jeden Wert des Panels, ein Protokoll-Prüfer prüft jede Erzählung noch einmal und macht kopierte Runden zu Prüffällen, der Erzähler-Prüfstand spielt 15 Züge am Stück; ein Ding oder Schriftstück zählt nur, wenn die Erzählung es zeigt
 - **V01.1.239** · 2026-10-29 · KI-Dungeon-Master: Satz-Prüfstand: rund 300 feste Spielersätze, die jede Wortliste richtig einordnen muss; „Ich schlage das Buch auf“, „Stab“ oder „Ich steche in See“ sind kein Angriff mehr, Fähigkeiten heißen nicht mehr wie Zauber
