@@ -1666,6 +1666,10 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1.
 - E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.
 
+#### Obergrenzen ohne Datenverlust
+
+- Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt.
+
 #### Maßstäbe
 
 - OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt.
@@ -1699,8 +1703,9 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/textnorm.py` `hide_secrets`: Geheimnisse werden nie gesprochen ([Schritt 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: Änderungsprotokoll mit Prüfkette ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: Geheimnisse versiegelt ablegen ([Schritt 10](#kn-sicherheit-s10))
+- `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`
 
 ### Anmeldung, Profil
 
@@ -2219,7 +2224,7 @@ flowchart TD
   s12 -->|ja| s12x
 ```
 
-1. <a id="kn-werkzeuge-s1"></a>**Modell ruft ein Werkzeug**: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt.
+1. <a id="kn-werkzeuge-s1"></a>**Modell ruft ein Werkzeug**: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt; ist das Gedächtnis voll (nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen.
 2. <a id="kn-werkzeuge-s2"></a>**In dieser Runde angeboten?**: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre.
 3. <a id="kn-werkzeuge-s3"></a>**Notaus hält es an?**: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert.
 4. <a id="kn-werkzeuge-s4"></a>**Fremder Text gelesen?**: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.
@@ -2394,6 +2399,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 #### Gedächtnis
 
 - Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt.
+- Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag.
 
 #### Zahlen (aus dem Code)
 
@@ -2458,8 +2464,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
+- `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
+Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
 
 ### Wächter
 

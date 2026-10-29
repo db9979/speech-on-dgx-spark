@@ -1967,7 +1967,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{ged.get('facts', 0)} Einträge · {ged.get('ok', 0)} bestätigt · {ged.get('learned', 0)} gelernt · "
                         f"{ged.get('stale', 0)} veraltet?" + (f" · {ged['contra']} Widerspruch" if ged.get("contra") else "")
                         + (f" · {ged['ask']} Nachfrage offen" if ged.get("ask") else "")
-                        + (f" · {ged['untagged']} ohne Thema" if ged.get("untagged") else ""))
+                        + (f" · {ged['untagged']} ohne Thema" if ged.get("untagged") else "")
+                        + (f" · {ged['full']} {'Profil' if ged['full'] == 1 else 'Profile'} voll" if ged.get("full") else ""))
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")

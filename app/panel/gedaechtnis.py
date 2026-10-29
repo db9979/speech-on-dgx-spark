@@ -290,7 +290,7 @@ def for_live(now=None):
     now = time.time() if now is None else now
     if _live[1] is not None and now - _live[0] < LIVE_S:
         return dict(_live[1])
-    total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0}
+    total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0, "full": 0}
     for uid in profiles.user_ids():
         if not features.allowed("gedpruefen", uid, c):
             continue
@@ -300,6 +300,7 @@ def for_live(now=None):
         for k in n:
             total[k] += n[k]
         total["ask"] += bool(pending(uid))
+        total["full"] += profiles.memory_full(uid)   # profiles that refuse new facts (profiles._cap)
         total["untagged"] += len(untagged(uid)) if topics_on(uid, c) else 0
     _live[:] = [now, dict(total, on=True)]
     return dict(_live[1])

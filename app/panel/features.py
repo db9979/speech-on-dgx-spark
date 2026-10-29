@@ -859,6 +859,8 @@ DEFAULT_ON = {
     "chat.datetime": "Grundfunktion: das Modell kennt Datum und Uhrzeit, keine persönlichen Daten",
     "chat.memory": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.history": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
+    "chat.memory_check": ("Schutz (Plan nutzerwissen, Frage 1): vielleicht Veraltetes wird nie als Tatsache gesagt; "
+                          "feste Regeln des Panels, kein Modell, nichts verlässt das Haus, nie Gäste"),
     "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",

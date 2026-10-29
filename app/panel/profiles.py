@@ -1342,12 +1342,71 @@ def _keep_prev(item, why, now):
     item["prev"] = ([old] + [p for p in item.get("prev") or [] if isinstance(p, dict)])[:MAX_PREV]
 
 
+class _Full:
+    """remember's answer when the memory holds MAX_FACTS facts and none of them may go (_cap): falsy like None, so
+    every caller that only asks „saved?“ stays right; memory_save and „Aus Korrekturen lernen“ say why."""
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return "profiles.FULL"
+
+
+FULL = _Full()
+# what the model hears when memory_save meets a full memory (starts with a word of taten.FAILED, with the way to tidy up)
+FULL_TEXT = (f"Not done: the memory is full ({MAX_FACTS} entries the user said or confirmed, and the Spark never throws "
+             "one of those away). Tell the user in one short sentence that nothing new can be remembered until they "
+             "tidy up under Ich → Gedächtnis („Aufräumen vorschlagen“) or delete entries there.")
+FULL_LOG_S = 86400   # „gedaechtnis: voll“ once a day per profile, with when the next line may come (no log flood)
+_full_said = {}      # uid -> when the last „voll“ line was written
+
+
+def _droppable(f):
+    """A fact the cap may take: learned by the Spark itself (src auto) and never confirmed by the person."""
+    import gedaechtnis
+    return gedaechtnis.source(f) == "auto" and not gedaechtnis.confirmed(f)
+
+
+def _cap(facts, keep=None):
+    """At most MAX_FACTS facts without losing what the person said (plan nutzerwissen, Punkt 4): over the cap the oldest
+    learned, never confirmed facts go first; said, corrected, changed by hand, tidied or confirmed facts never go, nor
+    keep (the fact just added). Earlier versions (prev) do not count. Returns (facts, how many went); the list stays
+    over MAX_FACTS when only protected facts are left, and then nothing at all goes (the caller decides)."""
+    over = len(facts) - MAX_FACTS
+    if over <= 0:
+        return facts, 0
+    old = sorted((x for x in facts if x is not keep and _droppable(x)), key=lambda x: int(x.get("created") or 0))
+    if len(old) < over:
+        return facts, 0
+    gone = {id(x) for x in old[:over]}
+    return [x for x in facts if id(x) not in gone], over
+
+
+def memory_full(uid, facts=None):
+    """True when a new fact would be refused: MAX_FACTS facts or more and none of them learned and unconfirmed."""
+    facts = memory(uid) if facts is None else facts
+    return len(facts) >= MAX_FACTS and not any(_droppable(x) for x in facts)
+
+
+def _log_full(who, src):
+    """The line when the memory is full; who is profiles.log_name (remember writes it once a day per profile)."""
+    print(f"gedaechtnis: voll {who} | abgelehnt={'auto' if src == 'auto' else 'said'} "
+          f"max={MAX_FACTS} | next log in {FULL_LOG_S // 3600} h", flush=True)
+
+
+def log_freed(uid, gone):
+    """The line when the cap took old learned facts (remember, memtidy.apply)."""
+    if gone:
+        print(f"gedaechtnis: platz frei {log_name(by_id(uid))} | entfernt={gone} grund=alt-gelernt", flush=True)
+
+
 def remember(uid, text, auto=False, src=None, convo=None, version=None):
     """Keeps a fact with its evidence (gedaechtnis.py): src said (memory_save in a conversation), fix (a confirmed
     correction), auto (learned from a quiet conversation), the conversation it came from and, when the person said
     it, the time it counts as confirmed. version (fix, nachfrage): with „Gedächtnis prüfen“ on, a fact about the same
     thing (the same fixed key, e.g. „wohnt in“) gets the new wording and keeps the old one as an earlier version,
-    instead of a second fact beside it."""
+    instead of a second fact beside it. Returns the text kept, None (nothing to keep) or FULL (only protected facts
+    left at MAX_FACTS: nothing is thrown away, the new fact is refused, _cap)."""
     import features
     import gedaechtnis
     text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
@@ -1377,7 +1436,14 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
         if gedaechtnis.clean_convo(convo):
             item["convo"] = convo
         facts.append(item)
-        _write(_path(uid, "memory.json"), facts[-MAX_FACTS:])
+        facts, gone = _cap(facts, keep=item)
+        if len(facts) > MAX_FACTS:   # only protected facts left: refuse the new one rather than lose an old one
+            if now - _full_said.get(uid, 0) >= FULL_LOG_S:   # once a day per profile (Richtlinie Teil 4: no log flood)
+                _full_said[uid] = now
+                _log_full(log_name(by_id(uid)), src)
+            return FULL
+        _write(_path(uid, "memory.json"), facts)
+    log_freed(uid, gone)
     print(f"gedaechtnis: fact saved | {src} | {log_name(by_id(uid))}", flush=True)   # never the fact itself
     return text
 

@@ -621,12 +621,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "c581ac8d23",
+        "stand": "01e465d025",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
-            "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"],
+            "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -820,6 +820,14 @@ SEITEN = {
                 ("E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.",
                  "E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number."),
             ]),
+            (("Obergrenzen ohne Datenverlust", "Caps without data loss"), [
+                ("Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über "
+                 "{profiles.MAX_FACTS} Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); "
+                 "sonst wird der neue Fakt mit festem Ergebnis abgelehnt.",
+                 "A cap never takes what the person said or confirmed: in the memory, above {profiles.MAX_FACTS} facts "
+                 "only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new "
+                 "fact is refused with a fixed result."),
+            ]),
             (("Maßstäbe", "Standards"), [
                 ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
                  "die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt.",
@@ -847,9 +855,10 @@ SEITEN = {
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
+            ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
-                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown"],
+                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze"],
         "heute": [],
     },
 

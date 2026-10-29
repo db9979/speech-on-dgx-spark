@@ -1666,6 +1666,10 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only.
 - E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number.
 
+#### Caps without data loss
+
+- A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result.
+
 #### Standards
 
 - OWASP ASVS 5.0 level 2 (sign-in and admin level 3), OWASP Top 10 for LLM applications 2025, BSI TR-02102; the security checklist with its part „State of the art“ names what is still missing.
@@ -1699,8 +1703,9 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
+- `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`
 
 ### Login, profile
 
@@ -2219,7 +2224,7 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer.
+1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer; when the memory is full (only things said or confirmed, profiles._cap), memory_save answers „Not done“ with the way to tidy up.
 2. <a id="kn-werkzeuge-s2"></a>**Offered in this round?**: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock.
 3. <a id="kn-werkzeuge-s3"></a>**Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
 4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail.
@@ -2394,6 +2399,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 #### Memory
 
 - The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt.
+- At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day.
 
 #### Numbers (from the code)
 
@@ -2458,8 +2464,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
+- `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
+Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
 
 ### Guard
 

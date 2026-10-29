@@ -347,6 +347,8 @@ async def run(t, name, args, st):
         fact = profiles.remember(t.prof["id"], args.get("fact", ""), src="said", convo=t.body.get("convo"))
         if fact:
             await t.out.put({"type": "memory", "action": "saved", "text": fact})
+        if fact is profiles.FULL:   # only protected facts left (profiles._cap): nothing thrown away, this one refused
+            return profiles.FULL_TEXT
         return "Saved." if fact else "Nothing to save."
     if name == "memory_forget" and t.prof:
         text = str(args.get("text", "")).strip()

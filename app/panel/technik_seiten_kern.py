@@ -248,7 +248,7 @@ SEITEN = {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"],
-            "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"],
+            "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
@@ -624,6 +624,15 @@ SEITEN = {
                  "(sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt.",
                  "The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, "
                  "learned, maybe out of date) and gives them to the model in the system prompt."),
+                ("Höchstens {profiles.MAX_FACTS} Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim "
+                 "Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, "
+                 "Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird "
+                 "der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile "
+                 "„gedaechtnis: voll“ je Tag.",
+                 "At most {profiles.MAX_FACTS} facts per profile, without silent throwing away (profiles._cap, also when "
+                 "tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, "
+                 "corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new "
+                 "fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day."),
             ]),
         ],
         "code": [
@@ -651,8 +660,10 @@ SEITEN = {
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
+            ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+                  "test_gedaechtnis_grenze",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte"],
         "heute": [],
     },

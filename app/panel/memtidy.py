@@ -133,7 +133,9 @@ def apply(uid):
             else:
                 item["confirmed"] = item["created"]
             keep.append(item)
-        profiles._write(profiles._path(uid, "memory.json"), keep[-profiles.MAX_FACTS:])
+        keep, gone = profiles._cap(keep)   # over the cap only old learned facts go, never one the person said
+        profiles._write(profiles._path(uid, "memory.json"), keep)
+    profiles.log_freed(uid, gone)
     drop(uid)
     return len(facts) - len(keep)
 

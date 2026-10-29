@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.247** Memory without silent throwing away: above 200 entries only the oldest ones learned by itself and never confirmed make room; what was said, corrected or confirmed never goes, otherwise the Spark refuses the new entry and points to Me → Memory (also when tidying up); "Memory check" on by default
 - **V01.1.246** Redesign stage 1: design tokens as one source (`tokens.css`), look unchanged; guard `test_design_tokens`
 - **V01.1.245** Find in all data stage A: one search index over the own documents, NAS, reMarkable and knowledge book (fields and categories by fixed rules, own tags first, marks per profile), a page Find of its own, the tool fund_suche in the assistant with the card "Show in Find", Ctrl K
 - **V01.1.244** RED FIX: the Spontanhilfe page test sets the panel's clock first at expiry, then the page's (otherwise the reload every 3 s brought the number back)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.240** AI Dungeon Master: every value the model gives hangs on a fixed rule (anchor table), the game page knows every value of the panel, a protocol checker checks every narration once more and turns copied rounds into test cases, the narrator bench plays 15 turns in a row; a thing or a writing counts only when the narration shows it
 - **V01.1.239** AI Dungeon Master: sentence bench: about 300 fixed player sentences every word list must sort right; "I open the book", "staff" or "I set sail" are no attack any more, abilities are no longer named like spells
 - **V01.1.238** AI Dungeon Master: unique spell names, everyday words marked
-- **V01.1.237** Quick test: `tools/vorpush.py` installs missing system packages of GitHub "Tests" (guacd, x11vnc, Xvfb for test_fernbild) itself or stops before the first test with the exact command; a cloud container without x11vnc went red mid-run
 
 
 

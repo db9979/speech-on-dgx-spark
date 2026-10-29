@@ -717,8 +717,12 @@ async def prepare(request):
             if fixes.confirms(messages[-1]["content"]):
                 saved = profiles.remember(who["id"], fp["text"], src="fix", convo=body.get("convo"),
                                            version="fix")
-                cal_note.append({"name": "Korrektur gemerkt", "args": "", "result": saved or "nicht gespeichert"})
-                system = per_turn(system, "Gedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
+                full = saved is profiles.FULL   # only protected facts left (profiles._cap): refused, nothing lost
+                cal_note.append({"name": "Korrektur gemerkt", "args": "",
+                                 "result": "Gedächtnis voll" if full else saved or "nicht gespeichert"})
+                system = per_turn(system, "Gedächtnis: NICHT gemerkt, das Gedächtnis ist voll. Sag dem Nutzer in einem "
+                                  "kurzen Satz, dass er unter Ich → Gedächtnis aufräumen kann." if full else
+                                  "Gedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
                                   "in einem kurzen Satz.")
             else:
                 system = per_turn(system, "Gedächtnis: Der Vorschlag „" + fp["text"] + "“ wurde NICHT gemerkt, weil der "

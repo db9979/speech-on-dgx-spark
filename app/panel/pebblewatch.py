@@ -546,7 +546,8 @@ async def watch_note(request: Request):
         except (TypeError, ValueError):
             pass
     kept = profiles.remember(uid, text + place, src="said")
-    print(f"watch: merken | {'ok' if kept else 'nothing to do'}{' · mit Ort' if place else ''} | "
+    print(f"watch: merken | {'ok' if kept else 'voll' if kept is profiles.FULL else 'nothing to do'}"
+          f"{' · mit Ort' if place else ''} | "
           f"{profiles.log_name(prof)}", flush=True)
     if kept:
         _live_mark("Eingang", "Uhr: etwas gemerkt")

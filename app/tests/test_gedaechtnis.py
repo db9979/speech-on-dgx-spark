@@ -1,5 +1,6 @@
 """Gedächtnis mit Beleg und Prüfung (gedaechtnis.py): every fact keeps where it came from, fixed rules (never a
-model) mark what may be out of date, nothing is deleted, the model gets the facts in three blocks, off by default."""
+model) mark what may be out of date, nothing is deleted, the model gets the facts in three blocks, shipped on
+(features.DEFAULT_ON, plan nutzerwissen Frage 1)."""
 import time
 import unittest
 
@@ -121,12 +122,17 @@ class Prompt(unittest.TestCase):
 
 
 class Panel(unittest.TestCase):
-    def tearDown(self):
-        helpers.set_config(memory_check=False, deny={})
+    def setUp(self):
+        helpers.keep_chat(self, "memory_check", "deny")
 
-    def test_off_by_default_and_never_for_guests(self):
-        self.assertFalse(features.admin_on("gedpruefen"))
+    def test_on_by_default_and_never_for_guests(self):
+        import json
+        import os
+        with open(os.path.join(helpers.APP, "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["memory_check"], True)   # shipped on: fixed rules, nothing leaves the house
+        self.assertIn("chat.memory_check", features.DEFAULT_ON)
         c, uid = profile("Gedi")
+        helpers.set_config(memory_check=False)                        # the admin can still switch it off
         self.assertFalse(c.get("/api/profile/settings").json()["allow"]["mem_check"])
         d = c.get("/api/profile/memory").json()
         self.assertFalse(d["check"])
@@ -214,11 +220,12 @@ class Panel(unittest.TestCase):
 class Versions(unittest.TestCase):
     """Fassungen: a correction about the same thing replaces the wording and keeps the old one (at most 5), the
     person can bring an earlier one back; with the switch off a correction is a new fact as before."""
-    def tearDown(self):
-        helpers.set_config(memory_check=False, deny={})
+    def setUp(self):
+        helpers.keep_chat(self, "memory_check", "deny")
 
     def test_correction_becomes_a_version(self):
         c, uid = profile("Gedv")
+        helpers.set_config(memory_check=False)
         profiles.remember(uid, "Wohnt in Pforzheim.", src="said")
         profiles.remember(uid, "Wohnt in Karlsruhe.", src="fix", version="fix")       # switch off: a second fact
         self.assertEqual(len(profiles.memory(uid)), 2)
@@ -273,8 +280,8 @@ class Versions(unittest.TestCase):
 class Ask(unittest.TestCase):
     """Nachfrage im Gespräch: the panel asks after the answer about a maybe outdated fact that fits the question,
     by fixed rules; once per conversation, three times a day, a yes confirms, „vergiss das“ forgets."""
-    def tearDown(self):
-        helpers.set_config(memory_check=False, memory_ask=False, deny={})
+    def setUp(self):
+        helpers.keep_chat(self, "memory_check", "memory_ask", "deny")
 
     def setup_profile(self, name):
         c, uid = profile(name)
@@ -354,8 +361,8 @@ class Ask(unittest.TestCase):
 
 class Topics(unittest.TestCase):
     """Themen: only from the fixed list, anything else is "sonstiges", the person's own pick stays."""
-    def tearDown(self):
-        helpers.set_config(memory_check=False, memory_topics=False, deny={})
+    def setUp(self):
+        helpers.keep_chat(self, "memory_check", "memory_topics", "deny")
 
     def test_only_fixed_topics(self):
         got = g.parse_topics('<think>x</think> {"a": "arbeit", "b": "Hacker", "c": 3, "z": "person"}', ["a", "b", "c", "d"])

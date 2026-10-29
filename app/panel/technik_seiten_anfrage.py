@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "d7762fb0ce",
+        "stand": "c961402289",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -795,7 +795,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "c92b2f74b2",
+        "stand": "6f9e6efe2d",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -818,9 +818,11 @@ SEITEN = {
             S("s1", "start", ("Modell ruft ein Werkzeug", "The model calls a tool"),
               ("aus der Runde in chat_modell.model_turn", "from the round in chat_modell.model_turn"),
               ("Höchstens {chat.MAX_CALLS} Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft "
-               "nicht mehr. Gedächtnis-Notizen sind auf {chat.MAX_SAVES} pro Antwort begrenzt.",
+               "nicht mehr. Gedächtnis-Notizen sind auf {chat.MAX_SAVES} pro Antwort begrenzt; ist das Gedächtnis voll "
+               "(nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen.",
                "At most {chat.MAX_CALLS} calls per round run, and a tool stopped after errors does not run again. Memory "
-               "notes are limited to {chat.MAX_SAVES} per answer.")),
+               "notes are limited to {chat.MAX_SAVES} per answer; when the memory is full (only things said or confirmed, "
+               "profiles._cap), memory_save answers „Not done“ with the way to tidy up.")),
             S("s2", "frage", ("In dieser Runde angeboten?", "Offered in this round?"),
               ("nur die Liste der Runde", "only the round's list"),
               ("Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere "
