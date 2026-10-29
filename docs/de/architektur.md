@@ -174,7 +174,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/passkey.py` | Passkeys statt Code (Face ID, Touch ID, Windows Hello) |
 | `app/panel/profiles.py` | Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil |
 | `app/panel/signatur.py` | Prüft signierte Update-Manifeste (Ed25519) |
-| `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, nur entsperrt |
+| `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
 | `app/panel/stufen.py` | Liste, welche Änderung den Code verlangt |
 | `app/panel/vault.py` | Versiegelt Passwörter und Tokens mit state/secret.key |
 | `app/panel/wachposten.py` | Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz |

@@ -5,6 +5,7 @@
     sudo spark-anker entfernen                                                              removes everything again
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - entfernen                  the same without the program
     spark-anker zustand                                                                     set up? which panel?
+    curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel>           Spontanhilfe (S3): once
 
 It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here) and passes
 bytes only between the panel and this server's own sshd on 127.0.0.1:22. SSH runs end to end between the panel and
@@ -31,6 +32,12 @@ launchd and dscl: the hidden user `spark` (number below 500, home /var/spark) an
 (AllowUsers spark@127.0.0.1, no passwords) and the list „nur diese Benutzer“ with spark alone; removing switches it
 off again. When it was on, spark joins an existing list and nothing else of sshd changes. Missing host keys are made
 with `ssh-keygen -A`.
+
+Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
+terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
+more („j“); only then her own shell runs in a PTY with her rights, its output goes to the panel and to this terminal,
+the admin's keys (and hers) into it. Strg+C, „Beenden“ in the panel, the session clock or the Notaus end it: the shell
+gets SIGHUP, the terminal is as it was, and nothing is left behind (no file, no user, no service).
 
 Removing (`entfernen`, or „Entfernen“ in the panel): stops and deletes both units, the program, the configuration,
 the anchor's folder, the user spark-anker, the panel's line in authorized_keys and the user spark with its home when
@@ -60,7 +67,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -241,8 +248,9 @@ class WS:
         u = urllib.parse.urlsplit(base)
         nonce = base64.b64encode(secrets.token_bytes(16)).decode()
         host = u.hostname + (f":{u.port}" if u.port else "")
+        auth = f"Authorization: Bearer {key}\r\n" if key else ""     # the Spontanhilfe has no key (S3)
         req = (f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
-               f"Sec-WebSocket-Key: {nonce}\r\nSec-WebSocket-Version: 13\r\nAuthorization: Bearer {key}\r\n"
+               f"Sec-WebSocket-Key: {nonce}\r\nSec-WebSocket-Version: 13\r\n{auth}"
                f"User-Agent: spark-anker/{VERSION}\r\n\r\n")
         s.sendall(req.encode())
         head = b""
@@ -997,6 +1005,275 @@ def cmd_state(args):
     return 0
 
 
+# ---------------------------------------------------------------- Spontanhilfe S3: once, in the person's terminal
+HILFE_PFAD = "/api/hilfe/shell"
+NUMMER = re.compile(r"\d{6}")
+HILFE_START = ("Spark-Hilfe: Hier geben Sie die Nummer ein, die Ihnen genannt wurde, und Ihren Vornamen. Erst wenn Sie "
+               "danach „j“ tippen, arbeitet die helfende Person in dieser Shell, mit Ihren Rechten; Sie sehen alles mit. "
+               "Strg+C beendet jederzeit, danach bleibt nichts zurück.\n")
+HILFE_FEHLER = {"nummer": "Nummer nicht gültig. Bitte die Nummer noch einmal erfragen; es wurde nichts verbunden.",
+                "name": "Bitte nur den Vornamen eingeben (Buchstaben, bis 30). Es wurde nichts verbunden."}
+
+
+class Tty:
+    """The person's terminal (/dev/tty: stdin is the program itself under curl): lines typed, the shell's output shown.
+    While the helper works: no echo and no line mode (Strg+C stays a signal); afterwards always as it was."""
+
+    def __init__(self, rfd, wfd):
+        self.rfd, self.wfd, self.buf, self.saved = rfd, wfd, b"", None
+
+    @classmethod
+    def open(cls):
+        fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+        return cls(fd, fd)
+
+    def write(self, data):
+        data = data.encode() if isinstance(data, str) else data
+        while data:
+            data = data[os.write(self.wfd, data):]
+
+    def feed(self):
+        part = os.read(self.rfd, 1024)
+        if not part:
+            raise EOFError
+        self.buf += part
+
+    def line(self):
+        if b"\n" not in self.buf:
+            return None
+        ln, _, self.buf = self.buf.partition(b"\n")
+        return ln.decode(errors="replace").strip()
+
+    def ask(self, prompt):
+        self.write(prompt)
+        while True:
+            ln = self.line()
+            if ln is not None:
+                return ln
+            self.feed()
+
+    def take(self):
+        data, self.buf = self.buf, b""
+        return data
+
+    def quiet(self):
+        try:
+            import termios
+            self.saved = termios.tcgetattr(self.rfd)
+            new = termios.tcgetattr(self.rfd)
+            new[3] &= ~(termios.ECHO | termios.ICANON)
+            termios.tcsetattr(self.rfd, termios.TCSANOW, new)
+        except Exception:       # no terminal (a pipe in the tests): nothing to switch
+            self.saved = None
+
+    def restore(self):
+        if self.saved is not None:
+            import termios
+            with contextlib.suppress(Exception):
+                termios.tcsetattr(self.rfd, termios.TCSANOW, self.saved)
+            self.saved = None
+
+    def close(self):
+        self.restore()
+        with contextlib.suppress(OSError):
+            os.close(self.rfd)
+
+
+class Hilfe:
+    """One Spontanhilfe: the panel's socket, the person's terminal and (after her „j“) her shell in a PTY. One thread
+    for everything, like Lauf."""
+
+    def __init__(self, ws, tty, shell=None):
+        self.ws, self.tty = ws, tty
+        self.shell = shell or pwd.getpwuid(os.getuid()).pw_shell or "/bin/sh"
+        self.pid = self.fd = None
+        self.size = (80, 24)
+        self.admin, self.stand = "Admin", "hallo"
+
+    def _say(self, text):
+        self.tty.write(f"\r\nSpark-Hilfe: {text}\r\n")
+
+    def _winsize(self):
+        if self.fd is not None:
+            import fcntl
+            import termios
+            with contextlib.suppress(OSError):
+                fcntl.ioctl(self.fd, termios.TIOCSWINSZ, struct.pack("HHHH", self.size[1], self.size[0], 0, 0))
+
+    def _start(self):
+        import pty
+        pid, fd = pty.fork()
+        if pid == 0:            # the child: her own shell, her rights, her home
+            try:
+                with contextlib.suppress(OSError):
+                    os.chdir(os.path.expanduser("~"))
+                os.putenv("TERM", "xterm-256color")     # otherwise her own variables, as in her terminal
+                os.execv(self.shell, ["-" + os.path.basename(self.shell)])
+            finally:
+                os._exit(127)
+        self.pid, self.fd = pid, fd
+        self._winsize()
+        self.tty.quiet()
+
+    def _stop(self):
+        fd, pid, self.fd, self.pid = self.fd, self.pid, None, None
+        if fd is not None:
+            with contextlib.suppress(OSError):
+                os.close(fd)
+        if pid:
+            with contextlib.suppress(OSError):
+                os.kill(pid, signal.SIGHUP)
+            for n in range(40):
+                with contextlib.suppress(ChildProcessError):
+                    if os.waitpid(pid, os.WNOHANG)[0]:
+                        break
+                if n == 20:
+                    with contextlib.suppress(OSError):
+                        os.kill(pid, signal.SIGKILL)
+                time.sleep(0.05)
+        self.tty.restore()
+
+    def _control(self, m):
+        """A message of the panel; a number when the help is over."""
+        t = m.get("typ")
+        if t == "fehler":
+            raise Fehler(HILFE_FEHLER.get(m.get("grund"), "Das Panel hat abgelehnt. Es wurde nichts verbunden."))
+        if t == "stand" and m.get("stand") == "wartet":
+            self.stand, self.admin = "wartet", WORD.sub("", str(m.get("admin") or "Admin"))[:40] or "Admin"
+            self._say(f"verbunden. {self.admin} nimmt gleich an. Strg+C bricht ab.")
+        elif t == "stand" and m.get("stand") == "frage" and self.stand == "wartet":
+            self.stand = "frage"
+            self.tty.buf = b""
+            self.tty.write(f"\r\nSpark-Hilfe: {self.admin} möchte jetzt in dieser Shell arbeiten, mit Ihren Rechten. "
+                           "Erlauben? [j/n] ")
+        elif t == "stand" and m.get("stand") == "zu":
+            self._say("die Hilfe ist beendet. Es bleibt nichts zurück.")
+            return 0
+        elif t == "groesse":
+            c, r = m.get("cols"), m.get("rows")
+            if isinstance(c, int) and isinstance(r, int) and 2 <= c <= 500 and 1 <= r <= 300:
+                self.size = (c, r)
+                self._winsize()
+        elif t == "zeit" and isinstance(m.get("rest"), int):
+            self._say(f"verlängert, noch {m['rest'] // 60} Minuten.")
+        return None
+
+    def _answer(self, ln):
+        if ln.lower() in ("j", "ja", "y", "yes"):
+            self.ws.send_json({"typ": "erlaubt", "an": True})
+            self.stand = "offen"
+            self._say(f"{self.admin} arbeitet jetzt in Ihrer Shell, mit Ihren Rechten. Sie sehen alles mit und können "
+                      "mittippen. Strg+C beendet sofort.")
+            self._start()
+            return None
+        self.ws.send_json({"typ": "erlaubt", "an": False})
+        self._say("abgelehnt. Es bleibt nichts zurück.")
+        return 0
+
+    def run(self, nummer, name):
+        self.ws.send_json({"typ": "hallo", "nummer": nummer, "name": name, "os": os_name()})
+        last = time.monotonic()
+        try:
+            while True:
+                while True:     # whole messages already read
+                    got = self.ws.frame()
+                    if got is None:
+                        break
+                    op, data = got
+                    if op == 2:
+                        if self.fd is not None:
+                            while data:
+                                data = data[os.write(self.fd, data):]
+                        continue
+                    try:
+                        m = json.loads(data.decode())
+                    except ValueError:
+                        continue
+                    if isinstance(m, dict) and self._control(m) is not None:
+                        return 0
+                if time.monotonic() - last > PING_S:
+                    self.ws.send(b"", 9)
+                    last = time.monotonic()
+                watch = [self.ws.sock, self.tty.rfd] + ([self.fd] if self.fd is not None else [])
+                ready, _, _ = select.select(watch, [], [], 0 if self.ws.sock.pending() else 1)
+                if self.ws.sock.pending() and self.ws.sock not in ready:
+                    ready.append(self.ws.sock)
+                for r in ready:
+                    if r is self.ws.sock:
+                        if not self.ws.feed():
+                            raise EOFError
+                    elif self.fd is not None and r == self.fd:
+                        try:
+                            data = os.read(self.fd, 8192)
+                        except OSError:
+                            data = b""
+                        if not data:
+                            self.ws.send_json({"typ": "ende"})
+                            self._say("die Shell ist beendet. Es bleibt nichts zurück.")
+                            return 0
+                        self.ws.send(data, 2)
+                        self.tty.write(data)
+                    elif r == self.tty.rfd:
+                        self.tty.feed()
+                        if self.stand == "frage":
+                            ln = self.tty.line()
+                            if ln is not None and self._answer(ln) is not None:
+                                return 0
+                        elif self.fd is not None:
+                            data = self.tty.take()
+                            while data:
+                                data = data[os.write(self.fd, data):]
+                        else:
+                            self.tty.take()     # typed while waiting: goes nowhere
+        except KeyboardInterrupt:
+            with contextlib.suppress(OSError):
+                self.ws.send_json({"typ": "ende"})
+            self._say("beendet mit Strg+C. Es bleibt nichts zurück.")
+            return 0
+        except EOFError:
+            if self.stand == "hallo":
+                raise Fehler("Das Panel hat abgelehnt (Spontanhilfe aus, Nummer nicht gültig oder zu viele Versuche). "
+                             "Es wurde nichts verbunden.")
+            self._say("die Verbindung ist zu. Es bleibt nichts zurück.")
+            return 0
+        finally:
+            self._stop()
+            self.ws.close()
+
+
+def as_root():
+    return os.geteuid() == 0
+
+
+def cmd_help(args, tty=None, shell=None):
+    """`hilfe adresse [--fp]`: one Spontanhilfe in this terminal, never as root, nothing set up."""
+    if as_root():
+        raise Fehler("Spontanhilfe nie als root: den Befehl ohne sudo nehmen. Es wurde nichts verbunden.")
+    base = base_url(args.adresse)
+    fp = (args.fp or "").lower()
+    if fp and not FP.fullmatch(fp):
+        raise Fehler("--fp: der SHA-256 aus dem Befehl des Panels (64 Zeichen 0-9 a-f)")
+    t = tty or Tty.open()
+    try:
+        t.write(HILFE_START)
+        nummer = t.ask("Nummer (6 Ziffern): ").replace(" ", "")
+        if not NUMMER.fullmatch(nummer):
+            raise Fehler("Die Nummer hat 6 Ziffern. Es wurde nichts verbunden.")
+        name = t.ask("Ihr Vorname: ")
+        try:
+            ws = WS.open(base, fp, HILFE_PFAD, "")
+        except Fehler as e:
+            if str(e).startswith("Panel antwortet"):
+                raise Fehler("Das Panel hat abgelehnt (Spontanhilfe aus oder gerade gesperrt). Es wurde nichts verbunden.")
+            raise
+        return Hilfe(ws, t, shell).run(nummer, name)
+    finally:
+        if tty is None:
+            t.close()
+        else:
+            t.restore()
+
+
 # Systems the anchor does not set up (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
     "Windows": "Windows wird ab einer späteren Version unterstützt (Stufe 5); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
@@ -1022,14 +1299,19 @@ def main(argv=None, system=None):
     r.add_argument("--vom-panel", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("lauf", help="der Dienst (startet systemd bzw. launchd)")
     sub.add_parser("zustand", help="eingerichtet? welches Panel?")
+    h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
+    h.add_argument("adresse", help="https-Adresse des Panels")
+    h.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
     args = p.parse_args(argv)
     try:
-        return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state}[args.cmd](args)
+        return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
+                "hilfe": cmd_help}[args.cmd](args)
     except Fehler as e:
         say(str(e))
         return 1
     except (KeyboardInterrupt, EOFError):
-        say("abgebrochen. " + ("Es wurde nichts eingerichtet." if args.cmd == "einrichten" else ""))
+        say("abgebrochen. " + ("Es wurde nichts eingerichtet." if args.cmd == "einrichten" else
+                               "Es wurde nichts verbunden." if args.cmd == "hilfe" else ""))
         return 1
     except ssl.SSLCertVerificationError:
         say(CERT_FEHLER)

@@ -5,12 +5,18 @@ answer; the link key works once and never reaches a log; the page's own strict C
 both sockets check Origin themselves, the person's key only in its first message, the admin's ticket once and bound
 to the login; only fixed message kinds pass, checked for form and size; the clock warns and ends, „Verlängern“ never
 past the setting; the Notaus ends it; Live without an address and names only with live_names; the history without a
-name; a fixed invitation and a fixed push; logs in fixed words only. No test depends on the time of day."""
+name; a fixed invitation and a fixed push; logs in fixed words only. S3 Shell: one line without sudo and never a
+number in it; the program's socket refuses any Origin, checks number and name like the page; no byte passes before her
+„j“ (her „n“ ends it); the real anchor program runs her shell in a PTY, never as root, and leaves nothing behind. No
+test depends on the time of day."""
 import asyncio
 import contextlib
+import importlib.util
 import io
 import json
 import os
+import ssl
+import tempfile
 import threading
 import time
 import types
@@ -36,6 +42,22 @@ OTHER.post("/api/login", json={"password": "secret-admin"})
 OUT = "https://spark.example.org"
 CODE = {"x-speech-code": "123456"}
 PERSON = TestClient(panel.app)       # no login at all
+
+
+def program():
+    """The anchor program (app/anker/spark-anker.py) as a module, like `curl … | python3 -` runs it."""
+    spec = importlib.util.spec_from_file_location("spark_anker", fernzugang.PROGRAM)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def until(test, s=10):
+    for _ in range(int(s * 20)):
+        if test():
+            return True
+        time.sleep(0.05)
+    return False
 
 
 @contextlib.contextmanager
@@ -221,6 +243,49 @@ class Number(Base):
         self.assertIsNone(sh.current())
 
 
+class ShellLine(Base):
+    def test_one_line_without_sudo_and_never_the_number(self):
+        d = self.new()
+        self.assertEqual(d["befehl"], "curl -fsSL https://spark.example.org/fernzugang/anker | python3 - hilfe https://spark.example.org")
+        self.assertEqual(d["befehl_mac"], "curl -fsSL https://spark.example.org/fernzugang/anker | /usr/bin/python3 - hilfe https://spark.example.org")
+        for line in (d["befehl"], d["befehl_mac"]):
+            self.assertNotIn("sudo", line)
+            self.assertNotIn(d["nummer"], line)
+            self.assertNotIn(d["link"].split("#")[1], line)
+        import terminal
+        with unittest.mock.patch.object(terminal, "cert_sha256", lambda: "ab" * 32), \
+                unittest.mock.patch.object(fernzugang, "_spki_pin", lambda: "sha256//QUJD"), \
+                unittest.mock.patch.object(fernzugang, "load_config", lambda part: {"port": 31080, "https_port": 31443}):
+            self.assertEqual(fernzugang.command("https://tars:31443", art="hilfe")["befehl"],
+                             "curl -fsSLk --pinnedpubkey 'sha256//QUJD' https://tars:31443/fernzugang/anker | python3 - hilfe "
+                             "https://tars:31443 --fp " + "ab" * 32)
+
+    def test_the_program_never_as_root_and_without_a_key(self):
+        p = program()
+        args = types.SimpleNamespace(adresse="https://spark.example.org", fp="")
+        with unittest.mock.patch.object(p, "as_root", lambda: True), unittest.mock.patch.object(p, "Tty") as tty:
+            with self.assertRaises(p.Fehler):
+                p.cmd_help(args)
+            tty.open.assert_not_called()                                      # nothing asked, nothing connected
+        sent = []
+
+        class Sock:
+            def sendall(self, b):
+                sent.append(b)
+
+            def recv(self, n):
+                return b""
+
+            def close(self):
+                pass
+        for key in ("", "k" * 40):
+            with unittest.mock.patch.object(p, "tls_connect", lambda *a, **k: (Sock(), "")):
+                with self.assertRaises(p.Fehler):
+                    p.WS.open("https://spark.example.org", "", "/x", key)
+        self.assertNotIn(b"Authorization", sent[0])                           # the Spontanhilfe has no key
+        self.assertIn(b"Authorization: Bearer " + b"k" * 40, sent[1])
+
+
 class Messages(unittest.TestCase):
     def test_only_fixed_kinds_in_their_form(self):
         sdp = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\n"
@@ -385,6 +450,178 @@ class Sockets(Base):
             self.assertEqual(self.recv(a)["stand"], "zu")
             self.assertIsNone(sh.current())
             self.assertEqual(self.start(nummer="123456").status_code, 503)
+
+
+    # ------------------------------------------------------------ S3 Shell: the anchor program's socket
+    def shell(self, nummer, name="Helga"):
+        """The program's socket: no Origin header (a program, no page)."""
+        import websockets.sync.client as wsc
+        c = wsc.connect(f"ws://127.0.0.1:{self.port}/api/hilfe/shell", open_timeout=10)
+        c.send(json.dumps({"typ": "hallo", "nummer": nummer, "name": name, "os": "Debian 13"}))
+        return c
+
+    def test_shell_bytes_pass_only_after_her_yes(self):
+        with journal() as j:
+            d = self.new()
+            p = self.shell(d["nummer"])
+            self.assertEqual(self.recv(p), {"typ": "stand", "stand": "wartet", "admin": "Admin"})
+            self.assertEqual((sh.current().art, sh.current().os, sh.current().nummer), ("shell", "Debian 13", ""))
+            a = self.accept()
+            mine = self.recv(a)
+            self.assertEqual((mine["stand"], mine["art"], mine["name"]), ("offen", "shell", "Helga"))
+            self.assertNotIn("ice", mine)                                       # no picture, no TURN
+            self.assertEqual(self.recv(p)["stand"], "frage")
+            self.assertEqual(sh.for_live()["offen"]["art"], "Shell")
+            a.send(b"rm -rf ~\n")                                               # before her „j“ nothing passes
+            p.send(b"before")
+            a.send(json.dumps({"typ": "groesse", "cols": 120, "rows": 40}))
+            self.assertEqual(self.recv(p), {"typ": "groesse", "cols": 120, "rows": 40})
+            a.send(json.dumps({"typ": "groesse", "cols": 9999, "rows": 40}))    # out of form: dropped
+            a.send(json.dumps({"typ": "chat", "text": "x"}))                     # no chat in a shell
+            p.send(json.dumps({"typ": "erlaubt", "an": True}))
+            self.assertEqual(self.recv(a), {"typ": "erlaubt", "an": True})
+            a.send(b"ls\n")
+            self.assertEqual(p.recv(timeout=10), b"ls\n")                        # the first bytes she gets
+            p.send(b"notes.txt\r\n")
+            self.assertEqual(a.recv(timeout=10), b"notes.txt\r\n")
+            p.send(b"x" * (sh.MAX_MSG + 1))                                     # too big: the help ends
+            self.assertEqual(self.recv(a)["stand"], "zu")
+            self.assertTrue(until(lambda: sh.verlauf_read()))
+        out = j.getvalue()
+        for line in ("spontanhilfe: wartet | shell | 1", "spontanhilfe: sitzung_auf | shell | 1",
+                     "spontanhilfe: erlaubt | ja | 1", "spontanhilfe: abgewiesen | zu gross | 0"):
+            self.assertIn(line, out)
+        for secret in ("Helga", d["nummer"], "notes", "rm -rf", "Debian"):
+            self.assertNotIn(secret, out)
+        self.assertEqual(sh.verlauf_read()[0]["art"], "shell")
+        self.assertNotIn("Helga", json.dumps(sh.verlauf_read()))
+
+    def test_shell_her_no_ends_the_help(self):
+        d = self.new()
+        p = self.shell(d["nummer"])
+        self.recv(p)
+        a = self.accept()
+        self.recv(a)
+        self.recv(p)
+        with journal() as j:
+            p.send(json.dumps({"typ": "erlaubt", "an": False}))
+            self.assertEqual(self.recv(a)["stand"], "zu")
+            self.assertTrue(until(lambda: sh.verlauf_read()))
+        self.assertIn("spontanhilfe: erlaubt | nein | 0", j.getvalue())
+        self.assertEqual(sh.verlauf_read()[0]["ende"], "abgelehnt")
+        self.assertIsNone(sh.current())
+
+    def test_shell_socket_refuses_any_origin_a_wrong_number_and_a_wrong_name(self):
+        d = self.new()
+        hallo = json.dumps({"typ": "hallo", "nummer": d["nummer"], "name": "Helga"})
+        self.refused("/api/hilfe/shell", origin=self.origin, first=hallo)     # even the panel's own page: no
+        self.assertEqual(sh.current().stand, "neu")
+        c = self.shell(d["nummer"], name="<b>Helga</b>")
+        self.assertEqual(self.recv(c), {"typ": "fehler", "grund": "name"})
+        self.assertEqual(sh.current().stand, "neu")
+        wrong = str((int(d["nummer"]) + 1) % 10**6).zfill(6)
+        for n in range(sh.FEHL):
+            c = self.shell(wrong)
+            self.assertEqual(self.recv(c), {"typ": "fehler", "grund": "nummer"})   # the same answer every time
+            with self.assertRaises(Exception):
+                c.recv(timeout=10)
+        self.assertIsNone(sh.current())                                         # dead after FEHL, like the page
+        self.assertEqual(sh.verlauf_read()[0]["art"], "nummer_gesperrt")
+
+
+class ShellEndToEnd(Base):
+    """S3 for real: the anchor program (its own WebSocket client, TLS pinned) in a terminal (two pipes), the panel's
+    sockets on one uvicorn with TLS, the admin's side with the websockets library like the page."""
+
+    def setUp(self):
+        super().setUp()
+        import uvicorn
+        from fastapi import FastAPI
+        from tests.test_fernzugang import _tls_files
+        only = FastAPI()
+        only.include_router(sh.router)
+        self.tmp = tempfile.mkdtemp(prefix="sh-tls-")
+        cf, kf, self.fp = _tls_files(self.tmp)
+        self.port = helpers._port()
+        server = uvicorn.Server(uvicorn.Config(only, host="127.0.0.1", port=self.port, log_level="error",
+                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2))
+        server.install_signal_handlers = lambda: None
+        sock = helpers.take_port(self.port)
+        self.th = threading.Thread(target=lambda: asyncio.run(server.serve(sockets=[sock])), daemon=True)
+        self.th.start()
+        self.server = server
+        until(lambda: server.started, 20)
+        self.base = f"https://localhost:{self.port}"
+        self.patches = [unittest.mock.patch.object(fernzugang, "is_admin_browser", lambda c: True),
+                        unittest.mock.patch.object(fernzugang, "_login", lambda c: "L")]
+        for p in self.patches:
+            p.start()
+        self.unlock()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.server.should_exit = True
+        self.th.join(10)
+        super().tearDown()
+
+    def test_the_program_runs_her_shell_only_after_her_yes_and_leaves_nothing(self):
+        import websockets.sync.client as wsc
+        p = program()
+        p.as_root = lambda: False            # the test container may run as root; the rule itself is tested above
+        d = self.new()
+        r_in, w_in = os.pipe()
+        r_out, w_out = os.pipe()
+        shown = bytearray()
+
+        def show():
+            while True:
+                b = os.read(r_out, 4096)
+                if not b:
+                    return
+                shown.extend(b)
+        threading.Thread(target=show, daemon=True).start()
+        os.write(w_in, (d["nummer"][:3] + " " + d["nummer"][3:] + "\nHelga\n").encode())
+        got = {}
+        args = types.SimpleNamespace(adresse=self.base, fp=self.fp)
+        anchor = threading.Thread(target=lambda: got.setdefault("rc", p.cmd_help(args, tty=p.Tty(r_in, w_out), shell="/bin/sh")),
+                                  daemon=True)
+        anchor.start()
+        self.assertTrue(until(lambda: sh.current() is not None and sh.current().stand == "wartet"))
+        r = ADMIN.post("/api/admin/spontanhilfe/annehmen", headers=CODE)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
+        a = wsc.connect(f"wss://localhost:{self.port}/api/spontanhilfe/admin?t=" + r.json()["ticket"], ssl=ctx,
+                        additional_headers={"Origin": self.base}, open_timeout=10)
+        self.assertEqual(json.loads(a.recv(timeout=10))["art"], "shell")
+        self.assertTrue(until(lambda: b"Erlauben? [j/n]" in shown))
+        a.send(b"echo too-early\n")                                             # before her „j“: never in a shell
+        os.write(w_in, b"j\n")
+        self.assertEqual(json.loads(a.recv(timeout=10)), {"typ": "erlaubt", "an": True})
+        a.send(json.dumps({"typ": "groesse", "cols": 100, "rows": 30}))
+        a.send(b"echo spark$((40+2)) pid=$$ cols=$(stty size)\n")
+        out = b""
+        for _ in range(100):
+            m = a.recv(timeout=10)
+            if isinstance(m, bytes):
+                out += m
+            if b"spark42" in out and b"\n" in out.split(b"spark42", 1)[1]:
+                break
+        self.assertIn(b"spark42", out)
+        self.assertIn(b"30 100", out)                                            # the admin's size
+        self.assertNotIn(b"too-early", out)
+        self.assertTrue(until(lambda: b"spark42" in shown))                     # she sees it all on her terminal
+        pid = int(out.split(b"pid=")[-1].split()[0])
+        a.send(json.dumps({"typ": "ende"}))
+        anchor.join(15)
+        self.assertEqual(got.get("rc"), 0)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)                                                     # her shell is gone
+        self.assertIn("die Hilfe ist beendet".encode(), bytes(shown))
+        self.assertIsNone(sh.current())
+        for fd in (w_in, w_out, r_in):
+            with contextlib.suppress(OSError):
+                os.close(fd)
 
 
 class Clock(Base):

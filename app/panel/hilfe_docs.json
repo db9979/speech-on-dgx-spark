@@ -15301,7 +15301,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spontanhilfe",
 "title": "Spontanhilfe",
-"text": "verworfen), nie Nummer, Schlüssel, Name, Adresse oder Chat. - Später: Steuern mit dem kleinen Programm SparkHilfe (S2) und eine Shell einmalig (S3)."
+"text": "verworfen, erlaubt), nie Nummer, Schlüssel, Name, Adresse oder Chat. - Shell einmalig (S3, V01.1.223): für einen Server ohne Bildschirm (Linux, macOS; Windows folgt mit Stufe 5). *Neue Hilfe* zeigt unter der Nummer eine Zeile für das Terminal, ohne sudo und nie mit der Nummer darin: curl -fsSL https://<Panel>/fernzugang/anker | python3 - hilfe https://<Panel> (im Heimnetz mit festgelegtem Zertifikat wie beim Koppeln, auf dem Mac /usr/bin/python3). Das Programm (derselbe Anker) läuft nie als root, fragt Nummer und Vornamen im Terminal und verbindet sich über wss://<Panel>/api/hilfe/shell (ohne Schlüssel; jeder Origin-Kopf wird abgewiesen, so kann keine Webseite diesen Weg nutzen; Nummer und Vorname werden geprüft wie auf /hilfe, dieselbe Lastgrenze, dieselben 5 Fehlversuche). Nach *Annehmen* fragt das Terminal der Person noch einmal „Erlauben? [j/n]“; erst nach „j“ startet ihre eigene Shell in einem PTY mit ihren Rechten und die Bytes gehen in beide Richtungen (je Nachricht höchstens 16 KB), vorher keines; „n“ beendet die Hilfe. Die Person sieht alles mit und kann mittippen. Strg+C bei ihr, *Beenden*, die Sitzungsuhr oder der Notaus beenden sie; die Shell bekommt SIGHUP, das Termina"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Spontanhilfe",
+"title": "Spontanhilfe",
+"text": "l ist wie vorher, es bleibt nichts zurück (keine Datei, kein Benutzer, kein Dienst). Der Admin sieht die Shell als Terminal im Reiter Spontanhilfe; *Gerade verbunden*, Live und Verlauf zeigen die Art „Shell“, das Protokoll spontanhilfe: erlaubt | ja | 1 oder … | nein | 0. - Später: Steuern mit dem kleinen Programm SparkHilfe (S2)."
 },
 {
 "lang": "de",
@@ -30917,7 +30925,23 @@
 "file": "Security and operation",
 "head": "Spontaneous help",
 "title": "Spontaneous help",
-"text": "et with a shortened address, since when, *Disconnect*) only on the admin page; *Status → Live* only kind, count and minutes, names only with logs.live_names, never an address. The admins get a fixed notification when a person waits. *History of spontaneous help* (state/spontanhilfe-verlauf.json, the days of chat.fernzugang_verlauf_tage): time, admin, kind, duration, home or internet, expired and locked numbers, never a name, an address, a picture or the chat; *Delete history* (Confirm). - Invitation by e-mail: only from an admin profile with a mail account and *Send mail*, through the existing way of sending (senden.send_now: day limit, emergency stop, log); a fixed template (German or English, not editable) with the admin's name, the link, the number to compare on the phone and how long it works, text only. - Logs: spontanhilfe: <word> | <reason> | <number> with fixed words (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen), never number, key, name, address or chat. - Later: control with the small program SparkHilfe (S2) and a one-time shell (S3)."
+"text": "et with a shortened address, since when, *Disconnect*) only on the admin page; *Status → Live* only kind, count and minutes, names only with logs.live_names, never an address. The admins get a fixed notification when a person waits. *History of spontaneous help* (state/spontanhilfe-verlauf.json, the days of chat.fernzugang_verlauf_tage): time, admin, kind, duration, home or internet, expired and locked numbers, never a name, an address, a picture or the chat; *Delete history* (Confirm). - Invitation by e-mail: only from an admin profile with a mail account and *Send mail*, through the existing way of sending (senden.send_now: day limit, emergency stop, log); a fixed template (German or English, not editable) with the admin's name, the link, the number to compare on the phone and how long it works, text only. - Logs: spontanhilfe: <word> | <reason> | <number> with fixed words (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen, erlaubt), never number, key, name, address or chat. - One-time shell (S3, V01.1.223): for a server without a screen (Linux, macOS; Windows follows with stage 5). *New"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spontaneous help",
+"title": "Spontaneous help",
+"text": " help* shows below the number one line for the terminal, without sudo and never with the number in it: curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel> (at home with the pinned certificate as for pairing, on a Mac /usr/bin/python3). The program (the same anchor) never runs as root, asks the number and the first name in the terminal and connects through wss://<panel>/api/hilfe/shell (without a key; any Origin header is refused, so no web page can use this way; number and first name are checked as on /hilfe, the same rate limit, the same 5 wrong tries). After *Accept* the person's terminal asks once more \"Erlauben? [j/n]\"; only after \"j\" her own shell starts in a PTY with her rights and the bytes pass both ways (at most 16 KB per message), none before; \"n\" ends the help. The person sees everything and can type along. Ctrl+C at hers, *End*, the session clock or the emergency stop end it; the shell gets SIGHUP, the terminal is as before, nothing is left behind (no file, no user, no service). The admin sees the shell as a terminal in the Spontaneous help tab; *Connected now*, Live and the history show the kind \"Shell\", the log spontanhilfe: erlaubt | ja | 1 "
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spontaneous help",
+"title": "Spontaneous help",
+"text": "or … | nein | 0. - Later: control with the small program SparkHilfe (S2)."
 },
 {
 "lang": "en",

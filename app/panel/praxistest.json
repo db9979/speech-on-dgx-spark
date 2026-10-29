@@ -4314,6 +4314,13 @@
 "titel": "Fernzugang: Dateien",
 "text": "Voraussetzung: P628 (ein gekoppelter Server mit sshd und SFTP, auf Debian/Ubuntu Standard). A: Fernzugang → Systeme entsperren, den Server wählen, „Dateien“ (ohne neuen Code); oben rot „Fern-Dateien offen“, die Liste zeigt /home/spark mit Ordnern zuerst. B: Einen Ordner öffnen, über die Pfad-Knöpfe und „Ordner höher“ zurück. C: Eine Datei „Laden“: der Browser lädt sie; dieselbe Adresse noch einmal öffnen: „Der Link gilt nicht mehr“. D: Eine kleine Datei hochladen: sie steht in der Liste; dieselbe noch einmal ohne „Ersetzen“: „Die Datei gibt es dort schon“; mit „Ersetzen“: geht. E: Unter Funktionen → Fernzugang zu Servern „Größte Datei“ auf 1 MB, eine größere Datei hochladen: abgewiesen, auf dem Server liegt nichts davon (auch keine .spark-teil-Datei). F: /root öffnen: „Das darf der Benutzer spark auf dem Server nicht“. G: Zustand → Live: Kasten Fernzugang mit „davon 1 Dateien“; Zustand → Logs → Fernzugang: liste, link, laden, hoch ohne Datei-Namen. H: „Sperren“ oben: die Dateien sind sofort zu, nichts vom Server bleibt zu sehen. I: Notaus Stufe 1: die Dateien-Sitzung ist zu; aufheben. J: Android-App: Verwalten → Fernzugang → entsperren → Dateien → Laden: der Download startet.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P641",
+"v": 1223,
+"titel": "Spontanhilfe: Shell einmalig auf einem Linux-Server oder Mac",
+"text": "Voraussetzung: Fernzugang zu Servern und Spontanhilfe an, Seite Fernzugang entsperrt. 1) Fernzugang → Spontanhilfe → „Neue Hilfe“: unter der Nummer steht eine Zeile für das Terminal (ohne sudo, ohne Nummer) und eine Mac-Zeile. 2) Auf einem Linux-Server ohne Bildschirm als normaler Benutzer die Zeile einfügen: das Terminal fragt Nummer und Vornamen; mit sudo davor lehnt das Programm ab. 3) Im Panel „Jemand wartet“ mit „(… · Shell, <System>)“; „Annehmen“: im Reiter erscheint ein Terminal mit „Warte auf das j der Person“. 4) Im Terminal der Person „Erlauben? [j/n]“ mit „j“ beantworten: im Panel kommt ihre Shell (whoami zeigt ihren Benutzer, nicht root); sie sieht alles mit und kann mittippen. 5) Eine falsche Nummer: „Nummer nicht gültig“, nach 5 Fehlversuchen ist die Nummer tot. 6) Ein zweiter Versuch mit „n“: die Hilfe endet, Verlauf „Shell“, Ende „abgelehnt“. 7) Strg+C bei der Person beendet sofort; danach kein Prozess, keine Datei, kein Benutzer übrig (ps, ls ~). 8) Dasselbe auf einem Mac mit der Mac-Zeile. 9) Zustand → Live: „Spontanhilfe · 1 Sitzung · Shell …“; Zustand → Logs (Spontanhilfe): „spontanhilfe: erlaubt | ja | 1“, nie Nummer oder Name.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

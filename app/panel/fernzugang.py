@@ -1326,10 +1326,11 @@ def _spki_pin():
     return "sha256//" + base64.b64encode(hashlib.sha256(der).digest()).decode()
 
 
-def command(origin):
+def command(origin, art="einrichten"):
     """The one line to paste on the server, from the address the admin's browser is on (terminal.setup_base, one
     rule for both): an outside address with a certificate of an authority as it is; the panel at home with its own
-    certificate pinned (curl by the public key, the anchor by the certificate's SHA-256). The code is never in it."""
+    certificate pinned (curl by the public key, the anchor by the certificate's SHA-256). The code is never in it.
+    art „hilfe“ (Spontanhilfe S3): the same program once in the person's terminal, without sudo, never a number in it."""
     import terminal
     try:
         base = terminal.setup_base(origin, load_config("panel"))
@@ -1338,15 +1339,16 @@ def command(origin):
     if not base:
         return None
     url, fp = base
+    py = "sudo python3" if art == "einrichten" else "python3"
     if not fp:
-        cmd = f"curl -fsSL {url}/fernzugang/anker | sudo python3 - einrichten {url}"
+        cmd = f"curl -fsSL {url}/fernzugang/anker | {py} - {art} {url}"
     else:
         pin = _spki_pin()
         if not pin:
             return None
-        cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | sudo python3 - einrichten {url} --fp {fp}"
+        cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | {py} - {art} {url} --fp {fp}"
     # on a Mac Apple's own Python (its authorities, the one launchd starts), never the first python3 in PATH
-    return {"befehl": cmd, "befehl_mac": cmd.replace("| sudo python3 -", "| sudo /usr/bin/python3 -"), "fp": fp}
+    return {"befehl": cmd, "befehl_mac": cmd.replace(f"| {py} -", f"| {py.replace('python3', '/usr/bin/python3')} -"), "fp": fp}
 
 
 def _second_step(request):

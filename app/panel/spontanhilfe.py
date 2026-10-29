@@ -1,6 +1,7 @@
 """Spontanhilfe (plan spontanhilfe, Dominik 2026-10-28 „ok“ to empfehlungen 10, 11, 14; Stufe S1: Ansehen und
-Einladung): an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. Nothing
-is installed at the person's: the browser shares the screen, and when either side ends, nothing is left.
+Einladung; Stufe S3: Shell einmalig): an admin helps a person (family, friends) once at their computer, like TeamViewer
+QuickSupport. Nothing is installed at the person's: the browser shares the screen, or (S3, a server without a screen)
+one pasted line runs the anchor program once in her terminal; when either side ends, nothing is left.
 
     person (no profile, no guest)              panel (this module)                    admin's browser
     /hilfe  number + first name  ──POST /api/hilfe/start──►  one help, waiting
@@ -20,6 +21,13 @@ Rules (fixed, Sicherheits-Checkliste):
   person's socket takes its key only in its first message (never in an address), the admin's a one-time ticket
   (TICKET_S, bound to the login). Only the message kinds in KINDS pass, each checked for form and size (MAX_MSG,
   CHAT_MAX); nothing of it is kept or logged. The picture never passes the panel: WebRTC between the two browsers.
+- S3 Shell: „Neue Hilfe“ also shows one line for a terminal (fernzugang.command, art „hilfe“: the anchor program
+  from /fernzugang/anker, the panel's certificate checked or pinned, no sudo, never a number in it). The program asks
+  the number and the first name on the terminal and opens WS /api/hilfe/shell (a program: any Origin header is
+  refused, so no web page can use it; the number in the first message, checked like /api/hilfe/start, the same
+  rate limit). After „Annehmen“ the person is asked once more on her terminal („j“): only then the program starts her
+  own shell in a PTY with her rights (never as root) and the bytes pass, binary, both ways (MAX_MSG each); before
+  that nothing does. Strg+C, „Beenden“, the clock or the Notaus end it, and the program leaves nothing behind.
 - A help lasts START_MIN minutes, „Verlängern“ (fresh code) adds PLUS_MIN, never past chat.spontanhilfe_max_min
   (default 180, 15 to 720); the admin's page warns HINWEIS_S before the end. Notaus ends it at once and kills
   number and link.
@@ -44,6 +52,8 @@ Rules (fixed, Sicherheits-Checkliste):
     GET    /hilfe                                      the page (own strict CSP, display-capture only here)
     POST   /api/hilfe/start {nummer | link, name}      -> {tok, admin}
     WS     /api/hilfe/ws                               first message {"typ": "hallo", "tok"}; signalling, chat
+    WS     /api/hilfe/shell                            (the anchor program, S3) first message {"typ": "hallo", "nummer",
+                                                       "name", "os"}; „erlaubt“, then the terminal's bytes
 """
 import asyncio
 import contextlib
@@ -92,7 +102,10 @@ NUMMER = re.compile(r"\d{6}")
 LINK = re.compile(r"[A-Za-z0-9_\-]{20,30}")
 SDP = re.compile(r"v=0\r?\n[\x20-\x7e\r\n]*")
 # what each side may send; the panel passes only these, checked for form and size
-KINDS = {"person": {"sdp", "ice", "chat", "teilt", "ende"}, "admin": {"sdp", "ice", "chat", "zeig", "ende"}}
+KINDS = {"person": {"sdp", "ice", "chat", "teilt", "ende"}, "admin": {"sdp", "ice", "chat", "zeig", "ende"},
+         "shell_person": {"erlaubt", "ende"}, "shell_admin": {"groesse", "ende"}}   # S3: the terminal's bytes besides
+ARTEN = {"ansehen": ("Ansehen", "View"), "shell": ("Shell", "Shell")}
+OS = re.compile(r"[A-Za-z0-9 ._()\-]{1,40}")
 CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; "
        "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
 PERMISSIONS = "display-capture=(self), microphone=(), camera=(), geolocation=(), payment=(), usb=(), serial=()"
@@ -110,7 +123,7 @@ EINLADUNG = {
            "time.\n"),
 }
 WORDS = ("nummer_neu", "nummer_falsch", "nummer_tot", "verworfen", "einladung", "wartet", "ticket", "sitzung_auf",
-         "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung")
+         "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt")
 
 HILFE = {}          # "h" -> the one Hilfe (or nothing)
 TICKETS = {}        # sha256(ticket) -> {"login", "until"}
@@ -167,7 +180,9 @@ class Hilfe:
         self.name = ""                # the first name as the person typed it (admin page only)
         self.tok_h = ""
         self.herkunft, self.ip_kurz = "zuhause", ""
-        self.art = "ansehen"
+        self.art = "ansehen"          # „shell“ when the person came through the anchor program (S3)
+        self.os = ""                  # S3: the system the program named (admin page only)
+        self.erlaubt = False          # S3: the person said „j“ on her terminal; only then bytes pass
         self.teilt = False
         self.erstellt = now
         self.seit = self.bis = 0.0
@@ -217,7 +232,7 @@ def for_live(now=None):
         elif h.stand == "offen":
             named = _live_names()
             out["sitzung"] = 1
-            out["offen"] = {"art": "Ansehen", "admin": h.admin_name if named else "Admin",
+            out["offen"] = {"art": ARTEN.get(h.art, ARTEN["ansehen"])[0], "admin": h.admin_name if named else "Admin",
                             "person": h.name if named else "Person",
                             "herkunft": "Internet" if h.herkunft == "internet" else "Zuhause",
                             "min": int((now - h.seit) // 60), "teilt": h.teilt}
@@ -359,7 +374,8 @@ def _mine(request, h):
 def _view(h, now):
     if h is None:
         return None
-    out = {"id": h.id, "stand": h.stand, "admin": h.admin_name, "art": h.art, "teilt": h.teilt}
+    out = {"id": h.id, "stand": h.stand, "admin": h.admin_name, "art": h.art, "teilt": h.teilt, "os": h.os,
+           "erlaubt": h.erlaubt}
     if h.stand == "neu":
         out.update(nummer=h.nummer, nummer_rest=max(0, int(h.nummer_bis - now)), link_rest=max(0, int(h.link_bis - now)),
                    fehl=h.fehl, fehl_max=FEHL)
@@ -418,7 +434,10 @@ async def admin_new(request: Request):
     _live("Spontanhilfe: neue Nummer")
     url = f"{base[0]}/hilfe#{link}" if base else ""
     import mfa
-    return {"nummer": nummer, "link": url, "qr": mfa._qr_svg(url) if url else "", "nummer_s": NUMMER_S, "link_s": LINK_S, "hilfe": _view(HILFE["h"], now)}
+    shell = fernzugang.command(body.get("origin"), art="hilfe") if base else None   # S3: one line for a terminal
+    return {"nummer": nummer, "link": url, "qr": mfa._qr_svg(url) if url else "", "nummer_s": NUMMER_S, "link_s": LINK_S,
+            "befehl": (shell or {}).get("befehl", ""), "befehl_mac": (shell or {}).get("befehl_mac", ""),
+            "hilfe": _view(HILFE["h"], now)}
 
 
 @router.delete("/api/admin/spontanhilfe", dependencies=[Depends(auth)])
@@ -573,6 +592,32 @@ def _refused():
     return HTTPException(403, "Nummer nicht gültig")
 
 
+def _pruefen(nummer, link, now=None):
+    """The one waiting help when the number (or the link's key) is right, else None: compared in constant time, every
+    wrong try counted, the number dead after FEHL (one rule for the page and the anchor program)."""
+    _expire(now)
+    now = time.time() if now is None else now
+    h = current()
+    ok = False
+    if h is not None and h.stand == "neu":
+        if link and LINK.fullmatch(link) and now < h.link_bis:
+            ok = hmac.compare_digest(_h(link), h.link_h)
+        elif nummer and NUMMER.fullmatch(nummer) and now < h.nummer_bis:
+            ok = hmac.compare_digest(_h(nummer), h.nummer_h)
+    if ok:
+        return h
+    STATS["falsch"] += 1
+    if h is not None and h.stand == "neu":
+        h.fehl += 1
+        if h.fehl >= FEHL:
+            _drop(h)
+            log("nummer_tot", "fehlversuche", h.fehl)
+            verlauf_note("nummer_gesperrt", h.fehl, now)
+            _live("Spontanhilfe: Nummer gesperrt")
+    log("nummer_falsch", "link" if link else "nummer", 1)
+    return None
+
+
 @router.post("/api/hilfe/start")
 async def person_start(request: Request):
     """The number (or the link's key) and a first name: the same answer for every wrong try, whatever the reason."""
@@ -586,26 +631,9 @@ async def person_start(request: Request):
     name = re.sub(r"\s+", " ", str(body.get("name") or "")).strip()
     if not NAME.fullmatch(name):
         raise HTTPException(400, "Bitte den Vornamen eingeben (Buchstaben, bis 30).")
-    _expire()
-    now = time.time()
-    h = current()
     nummer, link = str(body.get("nummer") or "").replace(" ", ""), str(body.get("link") or "")
-    ok = False
-    if h is not None and h.stand == "neu":
-        if link and LINK.fullmatch(link) and now < h.link_bis:
-            ok = hmac.compare_digest(_h(link), h.link_h)
-        elif nummer and NUMMER.fullmatch(nummer) and now < h.nummer_bis:
-            ok = hmac.compare_digest(_h(nummer), h.nummer_h)
-    if not ok:
-        STATS["falsch"] += 1
-        if h is not None and h.stand == "neu":
-            h.fehl += 1
-            if h.fehl >= FEHL:
-                _drop(h)
-                log("nummer_tot", "fehlversuche", h.fehl)
-                verlauf_note("nummer_gesperrt", h.fehl, now)
-                _live("Spontanhilfe: Nummer gesperrt")
-        log("nummer_falsch", "link" if link else "nummer", 1)
+    h = _pruefen(nummer, link)
+    if h is None:
         raise _refused()
     tok = secrets.token_urlsafe(32)
     h.tok_h, h.name, h.stand = _h(tok), name, "wartet"
@@ -686,8 +714,13 @@ def clean(side, m):
         if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1 for v in (x, y)):
             return None
         return {"typ": "zeig", "x": round(float(x), 4), "y": round(float(y), 4)}
-    if t == "teilt":
-        return {"typ": "teilt", "an": bool(m.get("an"))}
+    if t in ("teilt", "erlaubt"):
+        return {"typ": t, "an": m.get("an") is True}
+    if t == "groesse":
+        c, r = m.get("cols"), m.get("rows")
+        if not all(isinstance(v, int) and not isinstance(v, bool) for v in (c, r)) or not (2 <= c <= 500 and 1 <= r <= 300):
+            return None
+        return {"typ": "groesse", "cols": c, "rows": r}
     return {"typ": "ende"}
 
 
@@ -713,17 +746,29 @@ def _ice(h):
 
 
 async def _relay(h, side, ws):
-    """Reads one side's socket until it closes; passes checked messages to the other side."""
+    """Reads one side's socket until it closes; passes checked messages to the other side. S3 (art „shell“): the
+    terminal's bytes too, binary, but only once the person allowed it on her terminal."""
+    shell = h.art == "shell"
+    kinds = ("shell_" if shell else "") + side
     while True:
         try:
-            raw = await ws.receive_text()
+            got = await ws.receive()
         except (WebSocketDisconnect, RuntimeError, KeyError):
             break
-        if len(raw) > MAX_MSG:
+        if got.get("type") == "websocket.disconnect":
+            break
+        data, raw = got.get("bytes"), got.get("text")
+        if len(data or raw or "") > MAX_MSG:
             log("abgewiesen", "zu gross", 0)
             break
+        other = h.admin if side == "person" else h.person
+        if data is not None:
+            if shell and h.erlaubt and h.stand == "offen" and other is not None:
+                with contextlib.suppress(Exception):
+                    await other.send_bytes(data)
+            continue
         try:
-            m = clean(side, json.loads(raw))
+            m = clean(kinds, json.loads(raw or ""))
         except ValueError:
             m = None
         if m is None:
@@ -733,7 +778,14 @@ async def _relay(h, side, ws):
             return
         if m["typ"] == "teilt":
             h.teilt = m["an"]
-        other = h.admin if side == "person" else h.person
+        if m["typ"] == "erlaubt":
+            if h.stand != "offen" or h.erlaubt:
+                continue
+            log("erlaubt", "ja" if m["an"] else "nein", 1 if m["an"] else 0)
+            if not m["an"]:
+                await end(h, "abgelehnt")
+                return
+            h.erlaubt = True
         await _send(other, m)
     await end(h, side)
 
@@ -787,6 +839,54 @@ async def person_ws(ws: WebSocket):
     await _relay(h, "person", ws)
 
 
+@router.websocket("/api/hilfe/shell")
+async def person_shell(ws: WebSocket):
+    """S3: the anchor program in the person's terminal. A program, no page: any Origin header is refused (no web page
+    can open it). The number and the first name in the first message, checked like /api/hilfe/start."""
+    if not admin_on():
+        return await _refuse(ws, "aus", 4404)
+    if ws.headers.get("origin") is not None:
+        guard.log("foreign_page_refused", path="/api/hilfe/shell")
+        return await _refuse(ws, "fremde seite")
+    if _notaus(count=True):
+        return await _refuse(ws, "notaus", 4503)
+    try:
+        guard.limit(ws, "spontanhilfe_start")
+    except HTTPException:
+        return await _refuse(ws, "gesperrt", 4429)
+    await ws.accept()
+    try:
+        raw = await asyncio.wait_for(ws.receive_text(), HALLO_S)
+        m = json.loads(raw) if len(raw) < 512 else {}
+    except Exception:
+        m = {}
+    if not isinstance(m, dict) or m.get("typ") != "hallo":
+        return await _refuse(ws, "schluessel")
+    name = re.sub(r"\s+", " ", str(m.get("name") or "")).strip()
+    nummer = str(m.get("nummer") or "").replace(" ", "")
+    if not NAME.fullmatch(name):
+        await _send(ws, {"typ": "fehler", "grund": "name"})
+        return await _refuse(ws, "name")
+    h = _pruefen(nummer, "")
+    if h is None:
+        await _send(ws, {"typ": "fehler", "grund": "nummer"})
+        return await _refuse(ws, "schluessel")
+    os_ = str(m.get("os") or "")
+    h.name, h.stand, h.art, h.nummer = name, "wartet", "shell", ""
+    h.os = os_ if OS.fullmatch(os_) else ""
+    if h.ende is None:
+        h.ende = asyncio.Event()
+    h.person = ws
+    _wo(h, ws)
+    log("wartet", "shell", 1)
+    _live("Spontanhilfe: eine Person wartet")
+    t = asyncio.create_task(_melden(h))
+    _TASKS.add(t)
+    t.add_done_callback(_TASKS.discard)
+    await _send(ws, {"typ": "stand", "stand": "wartet", "admin": h.admin_name})
+    await _relay(h, "person", ws)
+
+
 @router.websocket("/api/spontanhilfe/admin")
 async def admin_ws(ws: WebSocket):
     """The admin's socket: switch, Origin, admin login, Notaus, ticket of this login, then the help opens."""
@@ -816,10 +916,15 @@ async def admin_ws(ws: WebSocket):
     STATS["heute"] = time.strftime("%Y-%m-%d")
     log("sitzung_auf", h.art, 1)
     _live("Spontanhilfe geöffnet")
-    ice = _ice(h)
-    await _send(h.person, {"typ": "stand", "stand": "offen", "admin": h.admin_name, "bis": int(h.bis), "ice": ice})
-    await _send(ws, {"typ": "stand", "stand": "offen", "name": h.name, "bis": int(h.bis), "ice": ice,
-                     "kann_verlaengern": h.bis - h.seit + 1 < max_min() * 60})
+    if h.art == "shell":     # S3: her terminal asks once more; no bytes pass before her „j“ (no picture: no ICE)
+        await _send(h.person, {"typ": "stand", "stand": "frage", "admin": h.admin_name, "bis": int(h.bis)})
+        await _send(ws, {"typ": "stand", "stand": "offen", "art": "shell", "name": h.name, "bis": int(h.bis),
+                         "kann_verlaengern": h.bis - h.seit + 1 < max_min() * 60})
+    else:
+        ice = _ice(h)
+        await _send(h.person, {"typ": "stand", "stand": "offen", "admin": h.admin_name, "bis": int(h.bis), "ice": ice})
+        await _send(ws, {"typ": "stand", "stand": "offen", "art": "ansehen", "name": h.name, "bis": int(h.bis), "ice": ice,
+                         "kann_verlaengern": h.bis - h.seit + 1 < max_min() * 60})
     clock = asyncio.create_task(_clock(h))
     try:
         await _relay(h, "admin", ws)

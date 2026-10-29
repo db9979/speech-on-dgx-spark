@@ -1128,6 +1128,7 @@
       <div class="shleft">
         <div class="row shtools" id="shtools" hidden><button class="b" type="button" id="shzeig">Zeigen</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b danger" type="button" id="shende">Beenden</button></div>
         <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><div class="shzeigdot" id="shzeigdot" hidden></div></div>
+        <div class="shview shterm" id="shterm" hidden></div>
         <div class="fh" id="shviewinfo"></div>
       </div>
       <div class="shside">
@@ -1139,10 +1140,13 @@
               <div class="row"><button class="b" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div><div id="shqrbild"></div>
               <div class="row" id="shmailrow"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><label class="fzchk"><input type="checkbox" id="shmailen"> Englisch</label><button class="b" type="button" id="shmailgo">Per E-Mail</button></div>
               <div class="fh" id="shmailno" hidden>Per E-Mail geht es aus einem Admin-Profil mit E-Mail-Konto und „Mails senden“.</div></div>
+            <div id="shbefehlrow" hidden><div class="fh">Für einen Server ohne Bildschirm (Shell, Linux und macOS): die Person fügt diese Zeile in ihr Terminal ein, ohne sudo, und tippt dort die Nummer.</div><code class="fzcmd" id="shbefehl"></code>
+              <div class="fh">Auf dem Mac:</div><code class="fzcmd" id="shbefehlmac"></code>
+              <div class="row"><button class="b" type="button" id="shbefehlkopie">Zeile kopieren</button><button class="b" type="button" id="shbefehlmackopie">Mac-Zeile kopieren</button></div></div>
             <div class="row"><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
           </div>
         </div>
-        <div class="card" id="shwartet" hidden><h3>Jemand wartet</h3><div id="shwartetname"></div><div class="fh">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
+        <div class="card" id="shwartet" hidden><h3>Jemand wartet</h3><div id="shwartetname"></div><div class="fh" id="shwartethin">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
           <div class="row"><button class="b p" type="button" id="shannehmen">Annehmen</button><button class="b" type="button" id="shablehnen">Ablehnen</button></div></div>
         <div class="card" id="shuhr" hidden><h3>Sitzungsuhr</h3><div id="shuhrtext"></div><div class="fh" id="shhinweis" hidden>Bald ist Schluss. „Verlängern“ gibt 60 Minuten mehr, nie über die Höchstdauer.</div>
           <div class="row"><button class="b" type="button" id="shplus">Verlängern (Code)</button></div></div>
