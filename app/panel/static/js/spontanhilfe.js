@@ -4,7 +4,7 @@
 // screen comes by WebRTC straight from her browser (TURN on tars when „Anrufe von unterwegs“ is on). Chat only as
 // text (textContent), „Zeigen“ sends a point 0..1, nothing is recorded or sent to a model. S3 (art „shell“): the person
 // ran one line in her terminal; after her „j“ her shell comes into an xterm here (bytes, binary), nothing else.
-const SH={d:null,ws:null,pc:null,term:null,timer:0,clock:0,zeig:false,link:'',qr:'',befehl:'',befehlMac:''};
+const SH={d:null,ws:null,pc:null,term:null,timer:0,clock:0,zeig:false,link:'',qr:'',befehl:'',befehlMac:'',gesendet:{}};
 const SH_ART={ansehen:['Ansehen','View'],shell:['Shell','Shell'],nummer_verfallen:['Nummer verfallen','Number expired'],nummer_gesperrt:['Nummer gesperrt','Number locked']};
 function shArt(a){return SH_ART[a]?t(...SH_ART[a]):a}
 function shMsg(text,bad){const m=$('shmsg');if(m){m.textContent=text||'';m.classList.toggle('err',!!bad)}}
@@ -50,15 +50,23 @@ function shVerlauf(){const d=SH.d,list=$('shverlauflist');if(!d||!list)return;li
   for(const x of v){const r=fzEl('div','fzvrow'),sitz=x.art==='ansehen'||x.art==='shell';r.append(fzEl('span','',fzZeit(x.t)),fzEl('span','',[shArt(x.art),x.admin].filter(Boolean).join(' · ')),
     fzEl('span','mut',sitz?x.min+' min · '+fzWoher(x.herkunft):x.n+' '+t('Fehlversuche','wrong tries')));list.appendChild(r)}}
 async function shNeu(){try{const r=await api('/api/admin/spontanhilfe/neu',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin:location.origin})});
-    const d=await r.json();SH.link=d.link||'';SH.qr=d.qr||'';SH.befehl=d.befehl||'';SH.befehlMac=d.befehl_mac||'';$('shlink').textContent=SH.link||t('Ein Link braucht die https-Adresse des Panels.','A link needs the panel\'s https address.');shLoad()}catch(e){shMsg(e.message,true)}}
+    const d=await r.json();SH.gesendet={};shMailFrei();SH.link=d.link||'';SH.qr=d.qr||'';SH.befehl=d.befehl||'';SH.befehlMac=d.befehl_mac||'';$('shlink').textContent=SH.link||t('Ein Link braucht die https-Adresse des Panels.','A link needs the panel\'s https address.');shLoad()}catch(e){shMsg(e.message,true)}}
 async function shKopie(){try{await navigator.clipboard.writeText(SH.link);shMsg(t('Link kopiert.','Link copied.'))}catch(e){shMsg(t('Kopieren ging nicht.','Copy failed.'),true)}}
 async function shBefehlKopie(x){try{await navigator.clipboard.writeText(x);shMsg(t('Zeile kopiert.','Line copied.'))}catch(e){shMsg(t('Kopieren ging nicht.','Copy failed.'),true)}}
 async function shTeilen(){if(!navigator.share){shKopie();return}try{await navigator.share({title:t('Hilfe am Bildschirm','Screen help'),url:SH.link})}catch(e){}}
 function shQr(){const b=$('shqrbild');if(b.childElementCount){b.textContent='';return}if(!SH.qr)return;
   const img=document.createElement('img');img.alt=t('QR-Code des Links','QR code of the link');img.src='data:image/svg+xml;base64,'+btoa(SH.qr);b.appendChild(img)}
-async function shMail(){const an=$('shan').value.trim();if(!an)return;
-  try{await api('/api/admin/spontanhilfe/einladung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({an,link:SH.link,en:$('shmailen').checked})});
-    shMsg(t('Einladung gesendet.','Invitation sent.'));$('shan').value=''}catch(e){shMsg(e.message,true)}}
+// one invitation per address and help: the button stays off while sending and after it (a new address frees it);
+// the same address again only after 60 s and a confirm (the panel checks both, 409 „Einladung schon gesendet“)
+function shMailFrei(){const b=$('shmailgo');if(b){b.disabled=false;b.classList.remove('senden');b.removeAttribute('aria-busy')}}
+async function shMail(){const an=$('shan').value.trim(),b=$('shmailgo');if(!an||b.disabled)return;
+  const k=an.toLowerCase(),vor=SH.gesendet[k];let nochmal=false;
+  if(vor){if(Date.now()-vor<60000){shMsg(t('Einladung schon gesendet.','Invitation already sent.'),true);return}
+    if(!confirm(t('Einladung schon gesendet. Nochmal senden?','Invitation already sent. Send again?')))return;nochmal=true}
+  b.disabled=true;b.classList.add('senden');b.setAttribute('aria-busy','true');shMsg(t('Einladung wird gesendet …','Sending invitation …'));
+  try{await api('/api/admin/spontanhilfe/einladung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({an,link:SH.link,en:$('shmailen').checked,nochmal})});
+    SH.gesendet[k]=Date.now();b.classList.remove('senden');b.removeAttribute('aria-busy');
+    shMsg(t('Einladung gesendet.','Invitation sent.'));$('shan').value=''}catch(e){shMailFrei();shMsg(e.message,true)}}
 async function shEnde(){try{await api('/api/admin/spontanhilfe',{method:'DELETE'})}catch(e){}shZu();shLoad()}
 async function shPlus(){try{await api('/api/admin/spontanhilfe/verlaengern',{method:'POST'});shLoad()}catch(e){shMsg(e.message,true)}}
 // ---------------------------------------------------------------- the open help
@@ -101,7 +109,7 @@ function shZeigen(e){if(!SH.zeig)return;const v=$('shvideo'),r=v.getBoundingClie
   const s=Math.min(r.width/v.videoWidth,r.height/v.videoHeight),w=v.videoWidth*s,h=v.videoHeight*s,x0=r.left+(r.width-w)/2,y0=r.top+(r.height-h)/2;
   const x=(e.clientX-x0)/w,y=(e.clientY-y0)/h;if(x<0||x>1||y<0||y>1)return;shSend({typ:'zeig',x,y});
   const dot=$('shzeigdot');dot.style.left=(e.clientX-r.left)+'px';dot.style.top=(e.clientY-r.top)+'px';dot.hidden=false;clearTimeout(SH.dot);SH.dot=setTimeout(()=>dot.hidden=true,2500)}
-{const g=$('shgo');if(g){g.onclick=shNeu;$('shweg').onclick=shEnde;$('shkopie').onclick=shKopie;$('shbefehlkopie').onclick=()=>shBefehlKopie(SH.befehl);$('shbefehlmackopie').onclick=()=>shBefehlKopie(SH.befehlMac);$('shteilen').onclick=shTeilen;$('shqr').onclick=shQr;$('shmailgo').onclick=shMail;
+{const g=$('shgo');if(g){g.onclick=shNeu;$('shweg').onclick=shEnde;$('shkopie').onclick=shKopie;$('shbefehlkopie').onclick=()=>shBefehlKopie(SH.befehl);$('shbefehlmackopie').onclick=()=>shBefehlKopie(SH.befehlMac);$('shteilen').onclick=shTeilen;$('shqr').onclick=shQr;$('shmailgo').onclick=shMail;$('shan').oninput=shMailFrei;
   $('shannehmen').onclick=shAnnehmen;$('shablehnen').onclick=shEnde;$('shende').onclick=shEnde;$('shbende').onclick=shEnde;$('shplus').onclick=shPlus;
   $('shzeig').onclick=()=>{SH.zeig=!SH.zeig;$('shzeig').classList.toggle('on',SH.zeig)};$('shvideo').onclick=shZeigen;
   $('shvoll').onclick=()=>{const v=$('shview');if(v.requestFullscreen)v.requestFullscreen().catch(()=>{})};

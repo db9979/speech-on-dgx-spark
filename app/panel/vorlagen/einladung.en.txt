@@ -1,0 +1,28 @@
+{name} would like to help you with your computer
+
+Hello!
+
+{name} sent you this link to take a quick look at your screen.
+You don't need to install anything, and {name} sees nothing until you allow it yourself.
+
+Start help:
+{link}
+
+(The link goes to {domain}, {name_s} own server.)
+
+Your number to compare on the phone:   {nummer}
+Works for {min} minutes (until {gueltig}) and only once.
+
+How it works:
+  1. Open the link
+  2. Check the number: the same as on the phone?
+  3. Click “Share screen”. Only then does {name} see anything.
+
+You stay in control:
+  - You decide what {name} sees.
+  - Press “End” at any time and it is all over.
+  - Nothing is installed and nothing is recorded.
+
+--
+Sent from {name_s} Spark · {domain}
+If you did not expect this, ignore this mail. Nothing happens without your click.

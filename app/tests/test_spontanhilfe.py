@@ -15,6 +15,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import ssl
 import tempfile
 import threading
@@ -737,16 +738,59 @@ class Seen(Base):
 
 
 class Invitation(Base):
-    def test_fixed_text_from_the_own_mailbox_only(self):
+    LINK = OUT + "/hilfe#" + "k" * 22
+    BIS = 1_800_000_000.0
+
+    def parts(self, msg):
+        return {p.get_content_type(): p.get_content() for p in msg.iter_parts()}
+
+    def test_text_and_html_from_the_fixed_templates(self):
         acct = {"user": "dominik@example.org"}
-        msg = sh.invitation(acct, {"name": "Dominik"}, "helga@example.org", OUT + "/hilfe#" + "k" * 22, "482913", "de")
-        body = msg.get_content()
-        self.assertEqual(msg["Subject"], "Hilfe am Bildschirm von Dominik")
-        self.assertIn(OUT + "/hilfe#" + "k" * 22, body)
-        self.assertIn("482 913", body)
-        self.assertIn("30 Minuten", body)
-        self.assertEqual(msg.get_content_type(), "text/plain")                  # no HTML
-        self.assertEqual(sh.invitation(acct, {"name": "D"}, "h@example.org", "x", "123456", "en")["Subject"], "Screen help from D")
+        msg = sh.invitation(acct, {"name": "Dominik"}, "helga@example.org", self.LINK, "482913", "de", self.BIS)
+        self.assertEqual(msg["Subject"], "Dominik möchte dir am Computer helfen")
+        self.assertEqual(msg.get_content_type(), "multipart/alternative")
+        p = self.parts(msg)
+        self.assertEqual(sorted(p), ["text/html", "text/plain"])
+        uhr = time.strftime("%H:%M", time.localtime(self.BIS))
+        for body in p.values():
+            self.assertIn(self.LINK, body)
+            self.assertIn("482 913", body)
+            self.assertIn("30", body)
+            self.assertIn(uhr + " Uhr", body)
+            self.assertIn("Dominiks Spark", body)
+            self.assertNotRegex(body, r"\{(name|name_s|link|nummer|gueltig|domain|min)\}")   # every placeholder filled
+        en = sh.invitation(acct, {"name": "Klaus"}, "h@example.org", self.LINK, "123456", "en", self.BIS)
+        self.assertEqual(en["Subject"], "Klaus would like to help you with your computer")
+        self.assertIn("Klaus’s Spark", self.parts(en)["text/plain"])
+        self.assertIn('lang="en"', self.parts(en)["text/html"])
+        de = sh.invitation(acct, {"name": "Klaus"}, "h@example.org", self.LINK, "123456", "de", self.BIS)
+        self.assertIn("Klaus’ Spark", self.parts(de)["text/plain"])
+
+    def test_the_name_is_escaped_and_no_header_injection(self):
+        acct = {"user": "dominik@example.org"}
+        msg = sh.invitation(acct, {"name": "<b>Do</b>\r\nBcc: x@y"}, "h@example.org", self.LINK, "482913", "de", self.BIS)
+        page = self.parts(msg)["text/html"]
+        self.assertNotIn("<b>Do</b>", page)
+        self.assertIn("&lt;b&gt;Do&lt;/b&gt;", page)
+        self.assertIsNone(msg["Bcc"])
+        self.assertNotIn("\n", msg["Subject"])
+        # a name that looks like a placeholder stays a name (one pass)
+        p = self.parts(sh.invitation(acct, {"name": "{link}"}, "h@example.org", self.LINK, "482913", "de", self.BIS))
+        self.assertIn("{link} möchte dir", p["text/plain"])
+
+    def test_no_external_resources_and_the_panel_domain(self):
+        import urllib.parse
+        acct = {"user": "dominik@example.org"}
+        host = urllib.parse.urlsplit(OUT).hostname
+        for lang in ("de", "en"):
+            page = self.parts(sh.invitation(acct, {"name": "D"}, "h@example.org", self.LINK, "482913", lang, self.BIS))["text/html"]
+            self.assertNotRegex(page.lower(), r"(src|background)\s*=\s*[\"']?\s*(https?:)?//")
+            self.assertNotRegex(page.lower(), r"url\(\s*[\"']?\s*(https?:)?//|<link\b|<img\b|<script\b|@import")
+            hrefs = set(re.findall(r'href="([^"]+)"', page))
+            self.assertEqual(hrefs, {self.LINK})                                     # only the help link, to the panel
+            self.assertIn(f">{host}<", page)
+        with open(os.path.join(sh.VORLAGEN, "einladung.de.html"), encoding="utf-8") as f:
+            self.assertEqual(set(sh.FELD.findall(f.read())), {"name", "name_s", "link", "nummer", "gueltig", "domain", "min"})
 
     def test_the_panel_password_has_no_mailbox(self):
         d = self.new()
@@ -755,6 +799,93 @@ class Invitation(Base):
         self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json={"an": "x", "link": d["link"]}).status_code, 400)
         self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung",
                                     json={"an": "helga@example.org", "link": OUT + "/hilfe#" + "z" * 22}).status_code, 400)
+
+    def _mailbox(self):
+        """An admin profile with a mailbox; senden.send_now counted, never sent."""
+        import senden
+        sent = []
+        acct = {"user": "dominik@example.org"}
+        stack = contextlib.ExitStack()
+        stack.enter_context(unittest.mock.patch.object(sh, "_mail_acct", lambda request: ({"id": "p1", "name": "Dominik"}, acct)))
+        stack.enter_context(unittest.mock.patch.object(senden, "send_now", lambda pid, a, msg: sent.append(msg)))
+        self.addCleanup(stack.close)
+        return sent
+
+    def test_double_click_sends_exactly_one_mail(self):
+        sent = self._mailbox()
+        d = self.new()
+        body = {"an": "Helga@example.org", "link": d["link"]}
+        with journal() as j:
+            self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=body).status_code, 200)
+            r = ADMIN.post("/api/admin/spontanhilfe/einladung", json=dict(body, an="helga@EXAMPLE.org"))
+            self.assertEqual(r.status_code, 409)
+            self.assertEqual(r.json()["detail"], "Einladung schon gesendet")
+            # „Nochmal senden“ within 60 s, even confirmed: still one mail
+            self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=dict(body, nochmal=True)).status_code, 409)
+        self.assertEqual(len(sent), 1)
+        self.assertIn(d["link"], sent[0].get_body(("plain",)).get_content())
+        self.assertIn("spontanhilfe: einladung | mail | 1", j.getvalue())
+        self.assertIn("spontanhilfe: einladung | doppelt | 0", j.getvalue())
+        # another address is its own invitation
+        self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=dict(body, an="karl@example.org")).status_code, 200)
+        self.assertEqual(len(sent), 2)
+
+    def test_a_click_while_sending_sends_nothing(self):
+        sent = self._mailbox()
+        d = self.new()
+        sh.current().eingeladen["helga@example.org"] = {"t": 0.0, "laeuft": True}     # the first click still sends
+        r = ADMIN.post("/api/admin/spontanhilfe/einladung", json={"an": "helga@example.org", "link": d["link"], "nochmal": True})
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual(sent, [])
+
+    def test_send_again_only_confirmed_and_after_a_minute(self):
+        sent = self._mailbox()
+        d = self.new()
+        body = {"an": "helga@example.org", "link": d["link"]}
+        self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=body).status_code, 200)
+        sh.current().eingeladen["helga@example.org"]["t"] -= sh.NOCHMAL_S + 1
+        self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=body).status_code, 409)          # not confirmed
+        with journal() as j:
+            self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=dict(body, nochmal=True)).status_code, 200)
+        self.assertEqual(len(sent), 2)
+        self.assertIn("spontanhilfe: einladung | nochmal | 1", j.getvalue())
+
+    def test_a_failed_send_may_be_tried_again(self):
+        import senden
+        self._mailbox()
+        d = self.new()
+        body = {"an": "helga@example.org", "link": d["link"]}
+
+        def kaputt(pid, a, msg):
+            raise OSError("smtp")
+        with unittest.mock.patch.object(senden, "send_now", kaputt):
+            self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=body).status_code, 502)
+        self.assertEqual(sh.current().eingeladen, {})
+        self.assertEqual(ADMIN.post("/api/admin/spontanhilfe/einladung", json=body).status_code, 200)
+
+    def test_empty_fields_send_nothing(self):
+        sent = self._mailbox()
+        d = self.new()
+        self.assertIsNone(sh.invitation_text("Dominik", "", "482913", "de", 1.0))
+        self.assertIsNone(sh.invitation_text("Dominik", "https://x/hilfe#" + "k" * 22, "", "de", 1.0))
+        self.assertIsNone(sh.invitation_text("", "https://x/hilfe#" + "k" * 22, "482913", "en", 1.0))
+        self.assertIsNone(sh.invitation_text("Dominik", "https://x/hilfe#" + "k" * 22, "482913", "en", 0))
+        self.assertIsNone(sh.invitation({"user": "d@example.org"}, {"name": "D"}, "h@example.org", "", "482913", "de", 1.0))
+        sh.current().nummer = ""                       # what if the number were gone: refused, not an empty mail
+        with journal() as j:
+            r = ADMIN.post("/api/admin/spontanhilfe/einladung", json={"an": "helga@example.org", "link": d["link"]})
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual(sent, [])
+        self.assertIn("spontanhilfe: einladung | leer | 1", j.getvalue())
+
+    def test_the_button_stays_off_while_sending(self):
+        with open(os.path.join(os.path.dirname(sh.__file__), "static", "js", "spontanhilfe.js"), encoding="utf-8") as f:
+            js = f.read()
+        mail = js[js.index("async function shMail()"):js.index("async function shEnde()")]
+        self.assertIn("b.disabled=true", mail)
+        self.assertIn("if(!an||b.disabled)return", mail)
+        self.assertIn("catch(e){shMailFrei()", mail)          # freed again only on an error (or a new address)
+        self.assertEqual(mail.count("shMailFrei()"), 1)
 
     def test_mail_module_untouched(self):
         with open(sh.__file__, encoding="utf-8") as f:

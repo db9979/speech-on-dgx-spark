@@ -3061,3 +3061,4 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .shchatlist{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:6px 0}.shmsg{padding:6px 9px;border-radius:10px;background:var(--line);align-self:flex-start;max-width:85%;overflow-wrap:anywhere;white-space:pre-wrap}
 .shmsg.mine{align-self:flex-end;background:var(--acc);color:#fff}#shuhr.warn{border-color:var(--bad)}
 @media (max-width:760px){.shcols{grid-template-columns:1fr}}
+#shmailgo.senden::before{content:'';display:inline-block;width:.8em;height:.8em;margin-right:6px;vertical-align:-1px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:shdreh .8s linear infinite}@keyframes shdreh{to{transform:rotate(360deg)}}

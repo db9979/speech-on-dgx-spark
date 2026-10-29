@@ -4321,6 +4321,13 @@
 "titel": "Spontanhilfe: Shell einmalig auf einem Linux-Server oder Mac",
 "text": "Voraussetzung: Fernzugang zu Servern und Spontanhilfe an, Seite Fernzugang entsperrt. 1) Fernzugang → Spontanhilfe → „Neue Hilfe“: unter der Nummer steht eine Zeile für das Terminal (ohne sudo, ohne Nummer) und eine Mac-Zeile. 2) Auf einem Linux-Server ohne Bildschirm als normaler Benutzer die Zeile einfügen: das Terminal fragt Nummer und Vornamen; mit sudo davor lehnt das Programm ab. 3) Im Panel „Jemand wartet“ mit „(… · Shell, <System>)“; „Annehmen“: im Reiter erscheint ein Terminal mit „Warte auf das j der Person“. 4) Im Terminal der Person „Erlauben? [j/n]“ mit „j“ beantworten: im Panel kommt ihre Shell (whoami zeigt ihren Benutzer, nicht root); sie sieht alles mit und kann mittippen. 5) Eine falsche Nummer: „Nummer nicht gültig“, nach 5 Fehlversuchen ist die Nummer tot. 6) Ein zweiter Versuch mit „n“: die Hilfe endet, Verlauf „Shell“, Ende „abgelehnt“. 7) Strg+C bei der Person beendet sofort; danach kein Prozess, keine Datei, kein Benutzer übrig (ps, ls ~). 8) Dasselbe auf einem Mac mit der Mac-Zeile. 9) Zustand → Live: „Spontanhilfe · 1 Sitzung · Shell …“; Zustand → Logs (Spontanhilfe): „spontanhilfe: erlaubt | ja | 1“, nie Nummer oder Name.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P642",
+"v": 1224,
+"titel": "Spontanhilfe: Einladung als Karte, nur einmal",
+"text": "Fernzugang → Spontanhilfe → Neue Hilfe, eine eigene Adresse eintragen und „Per E-Mail“ schnell zwei- bis dreimal klicken: genau eine Mail kommt an, der Knopf zeigt beim Senden einen Kreisel und bleibt danach aus. Dieselbe Adresse noch einmal: „Einladung schon gesendet.“; nach einer Minute fragt das Panel „Nochmal senden?“ und schickt erst nach Ja eine zweite Mail. Die Mail selbst: eine Karte mit „Hilfe starten“, der Nummer, gültig bis zur genannten Uhrzeit, den drei Schritten und dem Server-Namen des Panels; am Handy einspaltig, im Dunkelmodus dunkel, keine nachgeladenen Bilder; mit „Englisch“ dasselbe auf Englisch.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

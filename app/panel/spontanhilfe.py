@@ -40,7 +40,8 @@ Rules (fixed, Sicherheits-Checkliste):
     admin (core.auth, the browser only):
     GET    /api/admin/spontanhilfe                     state, settings, history
     POST   /api/admin/spontanhilfe/neu {origin}        number and link (on the unlocked Fernzugang page)
-    POST   /api/admin/spontanhilfe/einladung {an, en}  the link by mail from the admin profile's own mailbox
+    POST   /api/admin/spontanhilfe/einladung {an, en, nochmal}  the link by mail from the admin profile's own mailbox,
+                                       once per help and address (409 „Einladung schon gesendet“)
     POST   /api/admin/spontanhilfe/annehmen            ticket for the admin's socket (on the unlocked page)
     POST   /api/admin/spontanhilfe/verlaengern         PLUS_MIN more (unlocked, and admin_code_fresh every time)
     DELETE /api/admin/spontanhilfe                     discard the number or end the help
@@ -62,6 +63,7 @@ import email.policy
 import email.utils
 import hashlib
 import hmac
+import html
 import json
 import os
 import re
@@ -86,6 +88,7 @@ VERLAUF = os.path.join(STATE, "spontanhilfe-verlauf.json")   # when, who helped,
 PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "spontanhilfe.html")
 NUMMER_S = 600          # the number works this long, once
 LINK_S = 1800           # the link of an invitation (a mail can be slow), once
+NOCHMAL_S = 60          # one invitation per help and address; „Nochmal senden“ (confirmed) only after this
 FEHL = 5                # wrong numbers before the number is dead
 TICKET_S = 30           # the admin's socket ticket
 HALLO_S = 10            # the person's socket must say who it is this fast
@@ -110,18 +113,9 @@ CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' 
        "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
 PERMISSIONS = "display-capture=(self), microphone=(), camera=(), geolocation=(), payment=(), usb=(), serial=()"
 MELDUNG_PUSH = ("Spontanhilfe wartet", "Eine Person hat die Nummer eingegeben und wartet. Annehmen unter Fernzugang → Spontanhilfe.")
-EINLADUNG = {
-    "de": ("Hilfe am Bildschirm von {admin}",
-           "Hallo,\n\n{admin} möchte Ihnen am Bildschirm helfen. Öffnen Sie dazu diesen Link:\n\n{link}\n\n"
-           "Zum Vergleichen am Telefon: Ihre Nummer ist {nummer}. Der Link gilt {min} Minuten und nur einmal.\n"
-           "Es wird nichts installiert. {admin} sieht erst etwas, wenn Sie „Bildschirm teilen“ wählen, und Sie können "
-           "jederzeit beenden.\n"),
-    "en": ("Screen help from {admin}",
-           "Hello,\n\n{admin} would like to help you at your screen. Open this link:\n\n{link}\n\n"
-           "To compare on the phone: your number is {nummer}. The link works for {min} minutes and only once.\n"
-           "Nothing is installed. {admin} sees nothing until you choose \"Share screen\", and you can end at any "
-           "time.\n"),
-}
+VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vorlagen")   # einladung.{de,en}.{txt,html}
+BETREFF = {"de": "{name} möchte dir am Computer helfen", "en": "{name} would like to help you with your computer"}
+FELD = re.compile(r"\{(name|name_s|link|nummer|gueltig|domain|min)\}")
 WORDS = ("nummer_neu", "nummer_falsch", "nummer_tot", "verworfen", "einladung", "wartet", "ticket", "sitzung_auf",
          "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt")
 
@@ -190,6 +184,7 @@ class Hilfe:
         self.person = self.admin = None   # the two sockets
         self.ende = None              # asyncio.Event, made by the first socket in the panel's loop
         self.grund = ""
+        self.eingeladen = {}          # address (lower case) -> {"t": when, "laeuft": sending right now}
 
     def offen_fuer_nummer(self, now):
         return self.stand == "neu" and (now < self.nummer_bis or now < self.link_bis)
@@ -526,17 +521,46 @@ def _mail_ready(request):
         return False
 
 
-def invitation(acct, prof, to, link, nummer, lang):
-    """The fixed invitation (de/en, never edited): the admin's name, the link, the number to compare, how long."""
-    subj, text = EINLADUNG["en" if lang == "en" else "de"]
-    name = str(prof.get("name") or "Admin")[:40]
+def _vorlage(name):
+    with open(os.path.join(VORLAGEN, name), encoding="utf-8") as f:
+        return f.read()
+
+
+def invitation_text(admin, link, nummer, lang, bis):
+    """The one place that fills the invitation: (subject, text, html, name), or None when a field would be empty.
+    The templates are fixed files of the panel (vorlagen/, never edited by anyone); one pass of FELD, so a value
+    is never read as a placeholder, and every value is HTML-escaped in the html part."""
+    lang = "en" if lang == "en" else "de"
+    admin = re.sub(r"[\x00-\x1f\x7f]", " ", str(admin or "")).strip()[:40]
+    m = re.fullmatch(r"https://([A-Za-z0-9.\-]+)(?::\d{1,5})?/hilfe#[A-Za-z0-9_\-]{20,30}", link or "")
+    if not admin or not m or not NUMMER.fullmatch(nummer or "") or not bis:
+        return None
+    if lang == "en":
+        name_s = admin + "’s"
+    else:
+        name_s = admin + ("’" if admin[-1:].lower() in "sßxz" else "s")
+    uhr = time.strftime("%H:%M", time.localtime(bis))
+    werte = {"name": admin, "name_s": name_s, "link": link, "nummer": f"{nummer[:3]} {nummer[3:]}",
+             "gueltig": uhr if lang == "en" else uhr + " Uhr", "domain": m.group(1), "min": str(LINK_S // 60)}
+    text = FELD.sub(lambda x: werte[x.group(1)], _vorlage(f"einladung.{lang}.txt"))
+    page = FELD.sub(lambda x: html.escape(werte[x.group(1)], quote=True), _vorlage(f"einladung.{lang}.html"))
+    return BETREFF[lang].replace("{name}", admin), text, page, admin
+
+
+def invitation(acct, prof, to, link, nummer, lang, bis):
+    """The fixed invitation (de/en): text and the same as HTML (design „Karte“), from the admin's own mailbox."""
+    filled = invitation_text(prof.get("name") or "Admin", link, nummer, lang, bis)
+    if filled is None:
+        return None
+    subj, text, page, name = filled
     msg = email.message.EmailMessage(policy=email.policy.SMTP)
     msg["From"] = email.utils.formataddr((name, acct["user"]))
     msg["To"] = to
-    msg["Subject"] = subj.format(admin=name)
+    msg["Subject"] = subj
     msg["Date"] = email.utils.formatdate(localtime=True)
     msg["Message-ID"] = email.utils.make_msgid(domain=acct["user"].rsplit("@", 1)[1])
-    msg.set_content(text.format(admin=name, link=link, nummer=f"{nummer[:3]} {nummer[3:]}", min=LINK_S // 60))
+    msg.set_content(text)
+    msg.add_alternative(page, subtype="html")
     return msg
 
 
@@ -566,14 +590,30 @@ async def admin_invite(request: Request):
     if acct is None:
         log("einladung", "kein konto", 0)
         raise HTTPException(409, "Einladen per E-Mail braucht ein Admin-Profil mit E-Mail-Konto und „Mails senden“.")
-    msg = invitation(acct, prof, to, link, h.nummer, "en" if body.get("en") else "de")
+    msg = invitation(acct, prof, to, link, h.nummer, "en" if body.get("en") else "de", h.link_bis)
+    if msg is None:
+        log("einladung", "leer", 1)
+        raise HTTPException(409, "Die Einladung wäre unvollständig; nichts gesendet.")
+    # one mail per help and address: marked before the first await, so a second click finds it (no lock needed,
+    # the check and the mark run in one step of the panel's loop); „Nochmal senden“ only confirmed and after 60 s
+    key, now = to.lower(), time.time()
+    vorher = h.eingeladen.get(key)
+    if vorher and (vorher["laeuft"] or body.get("nochmal") is not True or now - vorher["t"] < NOCHMAL_S):
+        log("einladung", "doppelt", 0)
+        raise HTTPException(409, "Einladung schon gesendet")
+    h.eingeladen[key] = {"t": now, "laeuft": True}
     try:
         await asyncio.to_thread(senden.send_now, prof["id"], acct, msg)
     except Exception as e:
+        if vorher:
+            h.eingeladen[key] = vorher
+        else:
+            h.eingeladen.pop(key, None)
         log("einladung", "fehler", 0)
         raise HTTPException(502, f"Die Mail ging nicht hinaus ({type(e).__name__}).")
-    log("einladung", "mail", 1)
-    return {"ok": True}
+    h.eingeladen[key] = {"t": time.time(), "laeuft": False}
+    log("einladung", "nochmal" if vorher else "mail", 1)
+    return {"ok": True, "nochmal_ab": int(NOCHMAL_S)}
 
 
 # ---------------------------------------------------------------- the person's side

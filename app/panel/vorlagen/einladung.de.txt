@@ -1,0 +1,28 @@
+{name} möchte dir am Computer helfen
+
+Hallo!
+
+{name} hat dir diesen Link geschickt, um kurz auf deinen Bildschirm zu schauen.
+Du musst nichts installieren, und {name} sieht erst etwas, wenn du es selbst erlaubst.
+
+Hilfe starten:
+{link}
+
+(Der Link führt zu {domain}, {name_s} eigenem Server.)
+
+Deine Nummer zum Vergleich am Telefon:   {nummer}
+Gilt {min} Minuten (bis {gueltig}) und nur einmal.
+
+So geht es:
+  1. Link öffnen
+  2. Nummer prüfen: dieselbe wie am Telefon?
+  3. „Bildschirm teilen“ klicken. Erst dann sieht {name} etwas.
+
+Du behältst die Kontrolle:
+  - Du entscheidest, was {name} sieht.
+  - Jederzeit „Beenden“ drücken, dann ist alles vorbei.
+  - Es wird nichts installiert und nichts aufgezeichnet.
+
+--
+Gesendet von {name_s} Spark · {domain}
+Wenn du das nicht erwartet hast, ignoriere diese Mail. Ohne deinen Klick passiert nichts.
