@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Hilfe am Bildschirm</title>
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/spontanhilfe.css">
+</head>
+<body>
+<main id="sh">
+  <img class="logo" src="/static/icon.svg" alt="">
+  <section id="s-start">
+    <h1 data-t="titel">Hilfe am Bildschirm</h1>
+    <p data-t="intro">Geben Sie die Nummer ein, die man Ihnen am Telefon gesagt hat.</p>
+    <form id="f-start" autocomplete="off">
+      <input id="nummer" inputmode="numeric" maxlength="7" pattern="[0-9 ]*" aria-label="Nummer" placeholder="123 456">
+      <p id="linkda" hidden data-t="link">Ihr Link ist erkannt.</p>
+      <input id="name" maxlength="30" aria-label="Vorname" placeholder="Ihr Vorname">
+      <button type="submit" class="go" data-t="weiter">Weiter</button>
+    </form>
+    <p class="err" id="fehler" role="alert"></p>
+    <p class="small" data-t="nichts">Nichts wird installiert. Man sieht erst etwas, wenn Sie „Bildschirm teilen“ wählen.</p>
+  </section>
+  <section id="s-warten" hidden>
+    <h1 data-t="warten">Einen Moment bitte</h1>
+    <p id="wartentext"></p>
+  </section>
+  <section id="s-offen" hidden>
+    <div class="bar" id="bar"><b id="bartext"></b><span id="baruhr"></span></div>
+    <div class="cols">
+      <div class="left">
+        <button type="button" class="go" id="teilen" data-t="teilen">Bildschirm teilen</button>
+        <div class="prev" id="prev" hidden><video id="eigen" autoplay playsinline muted></video><div class="dot" id="dot" hidden></div></div>
+        <p class="small" id="prevtext" hidden data-t="prev">So sieht man Ihren Bildschirm. Der gelbe Kreis zeigt, wohin man Sie bittet zu schauen.</p>
+        <div class="chat" id="chat" role="log"></div>
+        <form id="f-chat" autocomplete="off"><input id="chatin" maxlength="500" aria-label="Nachricht" placeholder="Nachricht schreiben …"><button type="submit" data-t="senden">Senden</button></form>
+      </div>
+      <div class="right">
+        <button type="button" class="ende" id="ende" data-t="beenden">Beenden</button>
+        <p class="small" data-t="schliessen">Oder einfach dieses Fenster schließen.</p>
+      </div>
+    </div>
+  </section>
+  <section id="s-zu" hidden>
+    <h1 data-t="zu">Die Hilfe ist beendet</h1>
+    <p data-t="zutext">Es bleibt nichts zurück. Sie können dieses Fenster schließen.</p>
+  </section>
+</main>
+<script src="/static/js/spontanhilfe-seite.js"></script>
+</body>
+</html>

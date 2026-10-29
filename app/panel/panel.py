@@ -180,10 +180,11 @@ import mitteilungen  # noqa: E402
 import kontaktserver  # noqa: E402
 import einladung  # noqa: E402
 import fernzugang  # noqa: E402
+import spontanhilfe  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -203,7 +204,7 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/desk/meeting/chunk", begleiter.MEET_CHUNK), ("/api/desk/view/frame", fernsicht.MAX_FRAME + 4096), ("/api/profile/desk/send", begleiter.INBOX_FILE + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024), ("/api/musik/hochladen", musik.MAX_UPLOAD + 64 * 1024),
-    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/verbund/blob", lambda: chats.MAX_FILE + 1024), ("/api/verbund", verbund.MAX_BODY + 1024), ("/api/anrufe", anrufe.MAX_SIGNAL + 4096), ("/api/admin/verbund", 16 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
+    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/verbund/blob", lambda: chats.MAX_FILE + 1024), ("/api/verbund", verbund.MAX_BODY + 1024), ("/api/anrufe", anrufe.MAX_SIGNAL + 4096), ("/api/hilfe", spontanhilfe.MAX_BODY), ("/api/admin/spontanhilfe", spontanhilfe.MAX_BODY), ("/api/admin/verbund", 16 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/desk/meeting/chunk", "/api/profile/desk/send", "/api/profile/voice", "/api/profile/docs",
            "/api/chat/image", "/api/musik/hochladen", "/api/chats/media", "/api/verbund/blob", "/mcp"))
@@ -738,7 +739,7 @@ def _asset(request: Request, path, media):
 
 @app.get("/static/{name}")
 def static_file(name: str, request: Request):
-    if name in ("app.css", "appview.css", "live.css", "weiche.css", "technik.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("app.css", "appview.css", "live.css", "weiche.css", "technik.css", "spontanhilfe.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")
@@ -765,6 +766,13 @@ def fernzugang_anker(request: Request):
     """The spark-anker program for `curl … | sudo python3 - einrichten` (public: no secret in it; 404 while
     Funktionen → Fernzugang zu Servern is off)."""
     return fernzugang.download(request)
+
+
+@app.get("/hilfe")
+def spontanhilfe_page(request: Request):
+    """Spontanhilfe: the person's page (public, its own strict CSP, screen sharing only here; 404 while
+    Funktionen → Fernzugang zu Servern → Spontanhilfe is off)."""
+    return spontanhilfe.page(request)
 
 
 @app.get("/manifest.webmanifest")

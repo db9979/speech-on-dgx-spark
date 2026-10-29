@@ -146,6 +146,8 @@ TARGETS = {
     "werkstatt": ("Werkstatt", "Sandbox · auf dem Modell-Rechner", "spark", False),
     # Fernzugang (fernzugang.py): servers elsewhere whose anchor calls the panel; counts and status only, never what runs
     "fernzugang": ("Fernzugang", "Fern-Server · über ihren Anker", "net", False),
+    # Spontanhilfe (spontanhilfe.py): a person shares her screen once by WebRTC; kind, count and minutes, never a picture
+    "spontanhilfe": ("Spontanhilfe", "Browser der Person · WebRTC", "net", False),
     # Rundlauf-Wächter (rundlauf.py): speaks, hears and asks the model every few minutes; times and fixed words only
     "rundlauf": ("Rundlauf", "Sprechen → Hören → Sprachmodell", "spark", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
@@ -1767,6 +1769,13 @@ def snapshot(view="admin", now=None):
         fzg = {"on": False}
     if fzg.get("on"):
         used.add("fernzugang")
+    try:
+        import spontanhilfe
+        shg = spontanhilfe.for_live(now)
+    except Exception:
+        shg = {"on": False}
+    if shg.get("on"):
+        used.add("spontanhilfe")
     if rdl.get("on"):
         used.add("rundlauf")
     cc = load_config().get("chat", {})
@@ -1927,6 +1936,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = werkstattseite.live_sub(wks)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)
             x["sub"] = fernzugang.live_sub(fzg)
+        if x["id"] == "spontanhilfe" and shg.get("on"):   # Spontanhilfe: a number, a person waiting, the open help (no name without live_names)
+            x["sub"] = spontanhilfe.live_sub(shg)
         if x["id"] == "rundlauf" and rdl.get("on"):   # Rundlauf: pace, the last run's times, what it waits for
             x["sub"] = rdl["sub"]
         if x["id"] == "schirm" and szr.get("on"):   # Steuerzentrale: shows or not, on or dark by the times (no content)
@@ -2254,7 +2265,7 @@ def snapshot(view="admin", now=None):
     except Exception:
         pause = {"on": False}
     work = {"telefon": tel.get("calls"), "docling": dlg.get("busy") or dlg.get("wait") or dlg.get("down"),
-            "fernzugang": fzg.get("sitzungen"),
+            "fernzugang": fzg.get("sitzungen"), "spontanhilfe": shg.get("sitzung") or shg.get("wartet"),
             "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait"),
             # Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“: its box stays out of „+ N bereit“
             # while someone sits at a table, the model narrates, reads aloud or sums up a chapter

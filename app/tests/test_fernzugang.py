@@ -1751,6 +1751,34 @@ class InBrowser(unittest.TestCase):
                             self.assertLessEqual(box["top"], 100, msg)                         # at the top of the content
                             self.assertEqual(box["text"], "Fernsitzung aktiv · vps-1 · 25 min", msg)
                             self.assertIn("Notaus", box["tip"])
+                    # a Spontanhilfe at the same time: its own slim line right under the first, on every page too
+                    await pg.evaluate("""SH.d={on:true,notaus:false,max_min:180,hinweis_s:600,verlauf:[],
+                        hilfe:{stand:'offen',name:'Anna',admin:'Dominik',herkunft:'internet',ip:'',seit:Date.now()/1000-60,
+                               bis:Date.now()/1000+2400,kann_verlaengern:true}};shShow()""")
+                    two = """(()=>{const a=$('fzbanner').getBoundingClientRect(),b=$('shbanner').getBoundingClientRect();
+                        const e=document.elementFromPoint(b.left+12,b.top+b.height/2);
+                        return {a:[a.top,a.bottom,a.height],b:[b.top,b.bottom,b.height],free:!!e&&$('shbanner').contains(e),
+                                text:$('shbtext').textContent,vis:!$('shbanner').hidden&&getComputedStyle($('shbanner')).display!=='none'}})()"""
+                    for sec in ("mon", "feat"):
+                        await pg.evaluate(f"goSec('{sec}')")
+                        await pg.evaluate("window.scrollTo(0,1500)")
+                        for _ in range(30):
+                            box = await pg.evaluate(two)
+                            if box["free"] and box["a"][0] <= 100:
+                                break
+                            await pg.wait_for_timeout(100)
+                        msg = f"{width} {sec} both: {box}"
+                        self.assertTrue(box["vis"] and box["free"], msg)
+                        self.assertLessEqual(box["b"][2], 40, msg)
+                        self.assertGreaterEqual(box["b"][0], box["a"][1], msg)              # under the first, not over it
+                        self.assertLessEqual(box["b"][0] - box["a"][1], 8, msg)
+                        self.assertTrue(box["text"].startswith("Spontanhilfe aktiv · Anna · noch 3"), msg)
+                    await pg.evaluate("FZ.sitz=null;fzBanner()")
+                    box = await pg.evaluate(two)
+                    self.assertTrue(box["vis"], box)
+                    self.assertLessEqual(box["b"][0], 100, box)                              # alone it moves up to the top
+                    await pg.evaluate("SH.d.hilfe=null;shShow()")
+                    self.assertTrue(await pg.evaluate("$('fztop').hidden&&getComputedStyle($('fztop')).display==='none'"))
                     await ctx.close()
                 await br.close()
         asyncio.run(go())
@@ -2256,6 +2284,7 @@ class ShellForReal(Base):
         without scrolling; „Sperren“ empties it again."""
         async def body(ctx, pg):
             a = await pg.evaluate(self.SEITE)
+            self.assertTrue(await pg.evaluate("$('fztabs').hidden"))   # Spontanhilfe off: no tabs
             self.assertIsNotNone(a["gesperrt"], a)
             self.assertIsNone(a["main"])
             self.assertNotIn("vps-1", a["html"])                     # nothing of the systems, not even hidden
@@ -2296,6 +2325,43 @@ class ShellForReal(Base):
             self.assertNotIn("vps-1", c["html"])
             self.assertEqual(fernzugang.entsperrt_n(), 1)            # the one of setUp (another login), not this browser's
         self.run_seite(body)
+
+    def test_page_tab_spontanhilfe_only_while_on_and_unlocked(self):
+        """Dominik 2026-10-28 20:24: the tabs „Systeme | Spontanhilfe“ in the head; Spontanhilfe is a tab of the unlocked
+        page (rule „Bereich entsperren“): no tab while it is off or the page is locked, „Neue Hilfe“ asks no new code,
+        „Sperren“ leaves nothing of the help in the page."""
+        import spontanhilfe as sh
+        helpers.set_config(spontanhilfe=True)
+
+        async def body(ctx, pg):
+            self.assertTrue(await pg.evaluate("$('fztabs').hidden&&$('shmain').hidden"))      # locked: no tab
+            await pg.click("#fzentsperren")
+            await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&SH.d&&!SH.d.gesperrt&&!$('fztabs').hidden", timeout=15000)
+            self.assertEqual(await pg.evaluate("[...$('fztabs').querySelectorAll('button')].map(b=>b.textContent+':'+b.getAttribute('aria-selected'))"),
+                             ["Systeme:true", "Spontanhilfe:false"])
+            self.assertTrue(await pg.evaluate("$('shmain').hidden&&!$('fzmain').hidden"))
+            await pg.click("#fztabsh")
+            self.assertTrue(await pg.evaluate("!$('shmain').hidden&&$('fzmain').hidden&&$('fzstatus').hidden&&$('fzneu').hidden"))
+            await pg.click("#shgo")                                    # no code: the unlock was it
+            await pg.wait_for_function("$('shnummer').textContent.length===7", timeout=15000)
+            nummer = (await pg.evaluate("$('shnummer').textContent")).replace(" ", "")
+            await pg.click("#fzsperren")
+            await pg.wait_for_function("FZ.d&&FZ.d.gesperrt&&SH.d&&SH.d.gesperrt", timeout=15000)
+            left = await pg.evaluate("[$('fztabs').hidden,$('shmain').hidden,$('fern').innerHTML]")
+            self.assertTrue(left[0] and left[1], left[:2])
+            self.assertNotIn(nummer, left[2])                          # nothing of the help stays, not even hidden
+            await pg.click("#fzentsperren")
+            await pg.wait_for_function("!$('fztabs').hidden", timeout=15000)
+            self.assertEqual(await pg.evaluate("$('fztabsys').getAttribute('aria-selected')"), "true")   # anew on the systems
+            await pg.click("#fztabsh")
+            helpers.set_config(spontanhilfe=False)                     # switched off meanwhile: back to the systems
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("$('fztabs').hidden&&$('shmain').hidden&&!$('fzmain').hidden", timeout=15000)
+        try:
+            self.run_seite(body)
+        finally:
+            helpers.set_config(spontanhilfe=False)
+            sh.HILFE.clear()
 
     def test_page_on_the_phone_list_then_the_system_with_three_tiles(self):
         """seite/4-handy.png: a list like the iPhone settings; a tap opens the system with three big tiles in one row."""

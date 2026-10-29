@@ -197,6 +197,7 @@ ACTION_OK = {
     ("dungeon_gast.py", "_send"): "ein Helfer: ask_code und send_turns schreiben „dungeon: gastmail | code/dran gesendet“ oder „nicht gesendet“",
     ("begleiter.py", "_send_tool"): "ein Werkzeug: chat.run_tool schreibt „chat: tool pc_send …“",
     ("berater.py", "feedback"): "proactive.deliver schreibt die Zeile",
+    ("spontanhilfe.py", "_notaus"): "liest nur den Notaus-Stand; die Türen dahinter schreiben „spontanhilfe: abgewiesen | notaus“, eine Hilfe ihr Ende mit Grund notaus",
     ("fernzugang.py", "_notaus"): "liest nur den Notaus-Stand; die Türen dahinter schreiben „fernzugang: sitzung_abgewiesen | notaus“ bzw. „anker_abgewiesen | notaus“, eine Sitzung ihr Ende mit Grund notaus",
     ("berater.py", "_notify"): "proactive.deliver schreibt die Zeile",
     ("berater.py", "_tell_admins"): "proactive.deliver schreibt die Zeile",

@@ -383,6 +383,7 @@ ADMIN_ON_OK = {
     "rundlauf.py:an": "admin only: the round trip through the models with fixed words, no profile part",
     "fernzugang.py:admin_on": "admin only: the shell of a remote server, admin-only endpoints and the anchor's own door, no profile part",
     "fernzugang.py:meldung_on": "admin only: a fixed note to the admins about a remote session of an admin, no profile part",
+    "spontanhilfe.py:admin_on": "Spark-wide: the person's page and the admin's help, admin-only doors, no profile part",
     "fernzugang.py:hilfe_on": "admin only: the assistant beside the terminal of an admin's own remote session, no profile part",
     "wachposten.py:an": "admin only: notes to the admins in fixed words, no profile part",
     "schirm.py:admin_on": "admin only: the control centre on the panel computer's screen, no profile part",

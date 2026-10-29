@@ -1764,6 +1764,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Meldung bei Fernsitzung** (Funktionen → Zugang → „Meldung bei Fernsitzung“; baut auf „Fernzugang zu Servern“): Öffnet ein Admin die Shell eines Servers aus dem Internet oder von einem Ort, von dem er sie noch nie geöffnet hat, bekommen alle Admins eine Mitteilung aufs Handy mit festem Text: wer, welcher Server, Zuhause oder Internet, nie eine Adr …
 
+- **Spontanhilfe** (Funktionen → Zugang → „Spontanhilfe“; baut auf „Fernzugang zu Servern“): Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe deines Panels, gibt die 6-stellige Nummer und ihren Vornamen ein und teilt nach deinem Annehmen ihren Bildschirm.
+
 - **Assistent im Fernzugang** (Funktionen → Zugang → „Assistent im Fernzugang“; baut auf „Fernzugang zu Servern“): Neben dem Terminal unter Fernzugang → Systeme steht „Frag den Assistenten“: du fragst etwa „Warum startet nginx nicht?“ und das eigene Sprachmodell antwortet mit Text und Befehlen.
 
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).

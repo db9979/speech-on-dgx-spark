@@ -72,6 +72,8 @@ OPEN = {
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
     "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Systeme, pinned in fernzugang.XTERM)",
     "/api/fernzugang/anker/koppeln": "an anchor's first contact; only with a one-time code the admin made (fresh code first), lockout, 404 while off",
+    "/hilfe": "the Spontanhilfe page for a person without a login (own strict CSP, no data in it), 404 while off",
+    "/api/hilfe/start": "a person's number or link key for the one open Spontanhilfe; same answer for every wrong try, dead after 5, rate limit, 404 while off",
     "/api/fernzugang/anker/abgebaut": "the anchor says it removed itself; only with its own device key (Bearer), 404 while off",
     "/tui/spark-tui.py": "the terminal client program; no data, its SHA-256 is shown under Ich → Terminal",
     "/android/spark.apk": "the Android app file; only with a download link (one-time token, 30 minutes) from a profile's own login",

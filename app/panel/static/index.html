@@ -61,7 +61,7 @@
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button data-s="dungeon" hidden><i class="ni" data-ni="dungeon"></i>Dungeon-Master</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="fern" hidden><i class="ni" data-ni="fern"></i>Fernzugang</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
-<div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><span class="fzbleer" id="fzbleer"></span><button class="fzbi" type="button" id="fzbinfo" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung" hidden>i</button><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div>
+<div class="fztop" id="fztop" hidden><div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><span class="fzbleer" id="fzbleer"></span><button class="fzbi" type="button" id="fzbinfo" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung" hidden>i</button><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div><div class="fzbanner" id="shbanner" role="status" hidden><span class="fzrec"></span><span class="fzbtext" id="shbtext"></span><button class="fzbtn" type="button" id="shbende">Beenden</button></div></div>
 <div class="fzinfopop" id="fzinfopop" role="dialog" aria-label="Diese Sitzung" hidden><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzalle2">Alle trennen</button><button class="b" type="button" id="fzkeycopy">Ganzen Schlüssel kopieren</button></div></div>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -277,7 +277,9 @@
         <label for="chat.fernzugang_verlauf_tage">Verlauf der Sitzungen behalten (Tage)</label><input class="num" id="chat.fernzugang_verlauf_tage" type="number" min="1" max="365"><div class="fh">1 bis 365, Standard 30. Nur Zeit, System, Admin, Art, Dauer und Zuhause oder Internet.</div>
         <label for="chat.fernzugang_entsperrt_min">Ein Code entsperrt die Seite für (Minuten)</label><input class="num" id="chat.fernzugang_entsperrt_min" type="number" min="5" max="120"><div class="fh">5 bis 120, Standard 60. Nur diese Anmeldung in diesem Browser; Koppeln und Entfernen fragen trotzdem jedes Mal.</div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
-        <div class="fh">Koppeln und die Shell öffnen unter Fernzugang → Systeme.</div>
+        <div class="setrow"><div class="lbl"><b>Spontanhilfe</b><span>Einmal helfen: die Person teilt auf /hilfe ihren Bildschirm, ohne Installation. Nur Admins, im Reiter Spontanhilfe der entsperrten Seite.</span></div><label class="tgl"><input type="checkbox" id="chat.spontanhilfe"><i></i></label></div>
+        <div data-show="chat.spontanhilfe"><label for="chat.spontanhilfe_max_min">Höchstdauer einer Hilfe (Minuten)</label><input class="num" id="chat.spontanhilfe_max_min" type="number" min="15" max="720"><div class="fh">15 bis 720, Standard 180. Eine Hilfe beginnt mit 60 Minuten, „Verlängern“ gibt je 60 mehr bis hierher.</div></div>
+        <div class="fh">Koppeln und die Shell öffnen unter Fernzugang → Systeme, helfen unter Fernzugang → Spontanhilfe.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
@@ -1090,7 +1092,7 @@
 </section>
 <section id="fern"><div class="card ld-box" id="fzbox">
   <div class="ld-head fzkopf"><h2>Fernzugang</h2>
-    <div class="segc fztabs" id="fztabs" role="tablist" aria-label="Fernzugang" hidden><button type="button" class="on" id="fztabsys" role="tab" aria-selected="true" data-tab="systeme">Systeme</button></div>
+    <div class="segc fztabs" id="fztabs" role="tablist" aria-label="Fernzugang" hidden><button type="button" class="on" id="fztabsys" role="tab" aria-selected="true" data-tab="systeme">Systeme</button><button type="button" id="fztabsh" role="tab" aria-selected="false" data-tab="spontanhilfe">Spontanhilfe</button></div>
     <span class="fzfill"></span>
     <div class="fzlock" id="fzlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg><span id="fzlockbis"></span><button class="fzpill" type="button" id="fzverl">Verlängern</button><button class="fzpill" type="button" id="fzsperren">Sperren</button></div>
     <a class="wayl fzgear" href="#" data-way="Funktionen → Fernzugang zu Servern" title="Einstellungen: Funktionen → Fernzugang zu Servern" aria-label="Einstellungen des Fernzugangs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
@@ -1116,6 +1118,42 @@
       </div>
       <div class="fzdetail" id="fzdetail" hidden></div>
     </div>
+  </div>
+  <div id="shmain" hidden>
+    <h3>Spontanhilfe</h3>
+    <div class="fh">Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe, gibt die Nummer und ihren Vornamen ein und teilt ihren Bildschirm. Bei ihr wird nichts installiert, nichts wird aufgezeichnet, nichts geht an ein Modell.</div>
+    <div class="note" id="shturn" hidden>Von unterwegs braucht das Bild den Vermittler: Funktionen → Anrufe von unterwegs. Ohne ihn geht es nur im Heimnetz.</div>
+    <div class="shcols">
+      <div class="shleft">
+        <div class="row shtools" id="shtools" hidden><button class="b" type="button" id="shzeig">Zeigen</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b danger" type="button" id="shende">Beenden</button></div>
+        <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><div class="shzeigdot" id="shzeigdot" hidden></div></div>
+        <div class="fh" id="shviewinfo"></div>
+      </div>
+      <div class="shside">
+        <div class="card"><h3>Neue Hilfe</h3>
+          <div class="row"><button class="b p" type="button" id="shgo">Neue Hilfe</button></div>
+          <div id="shnummerbox" hidden>
+            <div class="shnummer" id="shnummer"></div><div class="fh" id="shnummerinfo"></div>
+            <div id="shlinkrow" hidden><div class="fh">Link für die Person (30 Minuten, einmal):</div><code class="fzcmd" id="shlink"></code>
+              <div class="row"><button class="b" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div><div id="shqrbild"></div>
+              <div class="row" id="shmailrow"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><label class="fzchk"><input type="checkbox" id="shmailen"> Englisch</label><button class="b" type="button" id="shmailgo">Per E-Mail</button></div>
+              <div class="fh" id="shmailno" hidden>Per E-Mail geht es aus einem Admin-Profil mit E-Mail-Konto und „Mails senden“.</div></div>
+            <div class="row"><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
+          </div>
+        </div>
+        <div class="card" id="shwartet" hidden><h3>Jemand wartet</h3><div id="shwartetname"></div><div class="fh">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
+          <div class="row"><button class="b p" type="button" id="shannehmen">Annehmen</button><button class="b" type="button" id="shablehnen">Ablehnen</button></div></div>
+        <div class="card" id="shuhr" hidden><h3>Sitzungsuhr</h3><div id="shuhrtext"></div><div class="fh" id="shhinweis" hidden>Bald ist Schluss. „Verlängern“ gibt 60 Minuten mehr, nie über die Höchstdauer.</div>
+          <div class="row"><button class="b" type="button" id="shplus">Verlängern (Code)</button></div></div>
+        <div class="card" id="shchat" hidden><h3>Chat</h3><div class="shchatlist" id="shchatlist" role="log"></div>
+          <div class="row"><input id="shchatin" maxlength="500" autocomplete="off" placeholder="Nachricht" aria-label="Nachricht"><button class="b" type="button" id="shchatgo">Senden</button></div>
+          <div class="fh">Der Chat geht nur zwischen euch beiden, nie ans Modell, nie ins Log.</div></div>
+      </div>
+    </div>
+    <div class="card" id="shjetzt" hidden><h3>Gerade verbunden</h3><div class="fh">Der Vorname steht nur hier auf der Admin-Seite, die Adresse nur gekürzt.</div><div id="shjetztlist"></div></div>
+    <details class="card fzverlauf" id="shverlauf"><summary>Verlauf der Spontanhilfe</summary><div class="fh" id="shverlaufh"></div><div id="shverlauflist"></div>
+      <div class="row"><button class="b" type="button" id="shverlaufweg">Verlauf löschen</button></div></details>
+    <div class="mut" id="shmsg" role="status"></div>
   </div>
   <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
   <div class="fzview" id="fzview" hidden>
@@ -1553,6 +1591,7 @@
 <script src="/static/js/modelle.js"></script>
 <script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/fernzugang.js"></script>
+<script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>

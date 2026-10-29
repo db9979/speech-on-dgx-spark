@@ -2936,7 +2936,8 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
   .fzlock{order:5;width:100%;box-sizing:border-box}.fzdfuss{flex-direction:column;align-items:stretch}}
 /* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page;
    system, time and the idle limit there, everything else behind its ⓘ (Dominik 2026-10-28 20:07, layout A) */
-.fzbanner{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0 0 8px;background:#dc2626;color:#fff;border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
+.fztop{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;flex-direction:column;gap:4px;margin:0 0 8px}.fztop[hidden]{display:none}   /* the remote session and a Spontanhilfe, one under the other */
+.fzbanner{display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0;background:#dc2626;color:#fff;border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
 .fzbanner[hidden]{display:none}.fzbanner .fzbtext{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.fzbanner .fzrec{flex:none;width:8px;height:8px;border-radius:50%;background:#fff}
 .fzbanner .fzbleer{flex:0 2 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:400;opacity:.92}.fzbanner .fzbfill{flex:1}
 .fzbanner .fzbi{flex:none;width:18px;height:18px;padding:0;border-radius:50%;border:1.5px solid #fff;background:transparent;color:#fff;font:700 11px/1 Georgia,serif;cursor:pointer}.fzbanner .fzbi[hidden]{display:none}
@@ -3015,7 +3016,7 @@ html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fztermina
 .fzview:fullscreen .fzvollhint:not([hidden]){display:block;position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:5;padding:6px 12px;border-radius:8px;background:rgba(15,23,42,.8);color:#fff;font-size:13px;pointer-events:none}
 /* „Herauslösen“ (#fernfenster): the panel page in its own window: the same order (line, terminal, chips, column), no menu */
 .fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:#dc2626}.fzweg[hidden]{display:none}
-body.fzfenster .fzbanner{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0;border-radius:0}
+body.fzfenster .fztop{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0}body.fzfenster .fzbanner{border-radius:0}
 /* the own window opens on the panel's start page: only the Fernzugang page counts there, whatever page the router picks */
 body.fzfenster main>section{display:none!important}body.fzfenster main>section#fern{display:block!important;animation:none}
 body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;height:auto;background:var(--bg);padding:38px 8px 8px;margin:0;overflow:hidden}
@@ -3041,3 +3042,12 @@ body.fzfenster #fzheraus,body.fzfenster #fzmenu{display:none}
 .dm-sied-zur{align-self:flex-start;background:none;border:0;color:inherit;font:inherit;font-weight:600;padding:2px 0;cursor:pointer}
 @media (max-width:760px){.dm-srow{grid-template-columns:minmax(0,1fr)}.dm-srow-k{justify-content:flex-start}.dm-haus-bild{height:110px}}
 
+/* Spontanhilfe (spontanhilfe.js): the person's screen with a red frame, the number, chat */
+.shcols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;align-items:start}.shside .card{margin:0 0 10px}
+.shview{position:relative;border:3px solid var(--bad);border-radius:10px;background:#000;overflow:hidden}.shview video{display:block;width:100%;max-height:70vh;object-fit:contain;cursor:crosshair}
+.shzeigdot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:4px solid #f59e0b;border-radius:50%;pointer-events:none}
+#shzeig.on{background:var(--acc);color:#fff}.shnummer{font-size:2.2em;font-weight:700;letter-spacing:.12em;color:var(--acc);text-align:center}
+#shqrbild img{width:180px;height:180px;display:block;margin:6px auto;background:#fff}
+.shchatlist{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:6px 0}.shmsg{padding:6px 9px;border-radius:10px;background:var(--line);align-self:flex-start;max-width:85%;overflow-wrap:anywhere;white-space:pre-wrap}
+.shmsg.mine{align-self:flex-end;background:var(--acc);color:#fff}#shuhr.warn{border-color:var(--bad)}
+@media (max-width:760px){.shcols{grid-template-columns:1fr}}

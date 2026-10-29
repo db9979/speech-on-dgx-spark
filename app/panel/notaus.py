@@ -467,6 +467,11 @@ async def after_change(old, new, by, channel):
             await fernzugang.notaus_close()   # every remote shell and anchor; none comes in while it is on
         except Exception as e:
             print("notaus: fernzugang", type(e).__name__, flush=True)
+        try:
+            import spontanhilfe
+            await spontanhilfe.notaus_close()   # the help ends, number and link stop
+        except Exception as e:
+            print("notaus: spontanhilfe", type(e).__name__, flush=True)
     if new >= 2 > old:
         try:
             import agent

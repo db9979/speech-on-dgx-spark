@@ -14,7 +14,7 @@
 // on the right (width dragged and kept in this browser, folds away); the session's facts behind the ⓘ of the red line;
 // the page never scrolls (fzLayout); the panel's menu folds away while a terminal is open (fzMenu). Phone: the
 // assistant is a sheet from below.
-const FZ={d:null,sel:'',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null,hist:[],ki:null,vt:0,vlast:0};
+const FZ={d:null,sel:'',tab:'systeme',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null,hist:[],ki:null,vt:0,vlast:0};
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
 const FZ_MIT=['chips','folge','hinweis','hilfe','gefahr','hilfe_zeilen','hilfe_schirm','hilfe_befehle','vorschlag_s'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
@@ -42,13 +42,20 @@ async function fzLoad(){clearTimeout(FZ.timer);const box=$('fzbox');if(!box||doc
     if(d.gesperrt&&FZ.d&&(FZ.ws||FZ.weg))for(const k of FZ_BLEIBT)if(FZ.d[k]!==undefined)d[k]=FZ.d[k];
     FZ.d=d;
     if(FZ.weg&&!d.gesperrt&&!(d.offen||[]).some(x=>x.id===FZ.weg.sid)){FZ.weg=null;FZ.pop=null;FZ.sitz=null;fzBanner();fzWegZeigen()}
-    fzShow()}catch(e){fzMsg(e.message,true)}
+    fzShow();if(window.shLoad)shLoad()}catch(e){fzMsg(e.message,true)}
   if(document.querySelector('section#fern.on'))FZ.timer=setTimeout(fzLoad,FZ.ws?15000:10000)}
 function fzFehler(e){fzMsg(e.message,true);if(e.status===423)fzLoad()}   // locked meanwhile: the page shows „Entsperren“
 // locked: nothing of the systems stays in the page, not even hidden
 function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus','fzverlauflist','fzcode'])$(id).textContent='';
   $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;
   for(const id of ['fzkoppelnmodal','fzverlaufmodal'])$(id).style.display='none'}
+// the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
+function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=!!FZ.ws||!!FZ.weg;
+  const zeig=!!(d&&d.on&&!d.gesperrt&&!d.notaus&&!busy&&h&&h.on&&!h.gesperrt&&!h.notaus);
+  if(!zeig)FZ.tab='systeme';$('fztabs').hidden=!zeig;
+  for(const b of $('fztabs').querySelectorAll('button')){const on=b.dataset.tab===FZ.tab;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
+  return FZ.tab!=='systeme'}
+function fzTab(tab){FZ.tab=tab;fzShow();if(window.shShow)shShow();fzSeite()}
 function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.on&&d.gesperrt),busy=!!FZ.ws||!!FZ.weg;
   $('fzoff').hidden=!!d.on;$('fznotaus').hidden=!d.notaus;$('fzsperrmin').textContent=d.entsperrt_min||60;
   $('fzgesperrt').hidden=!zu||busy||!!d.notaus;$('fzneu').hidden=!d.on||zu||!!d.notaus;
@@ -56,7 +63,7 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   if(d.entsperrt_bis){$('fzlockbis').textContent=t('Entsperrt bis ','Unlocked until ')+fzUhr(d.entsperrt_bis);
     FZ.st=setTimeout(fzLoad,Math.max(1000,d.entsperrt_bis*1000-Date.now()+1500))}   // its minutes are over: locked at once
   if(zu||!d.on)fzLeeren();
-  box.hidden=!d.on||zu||busy;$('fzstatus').hidden=box.hidden;if(box.hidden)return;
+  if(fzTabs())$('fzneu').hidden=true;box.hidden=!d.on||zu||busy||FZ.tab!=='systeme';$('fzstatus').hidden=box.hidden;if(box.hidden)return;
   const c=d.counts||{},st=$('fzstatus');st.textContent='';
   for(const [n,de,en,cls] of [[c.online,' online',' online','ok'],[c.gekoppelt,' gekoppelt',' paired',''],
     [c.sitzungen,c.sitzungen===1?' Sitzung offen':' Sitzungen offen',c.sitzungen===1?' session open':' sessions open',c.sitzungen?'bad':'']]){
@@ -199,11 +206,12 @@ function fzTopBar(){let top=0;for(const h of [document.querySelector('header'),$
     if((cs.position==='sticky'||cs.position==='fixed')&&cs.display!=='none'&&h.offsetWidth>=document.documentElement.clientWidth-4)top=Math.max(top,h.offsetHeight)}return top}
 addEventListener('resize',()=>{if(FZ.sitz)fzBanner()});
 // the bars change with the page (the app view's bar comes and goes): the line follows them
-if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fzbanner');if(b&&!b.hidden)b.style.setProperty('--fzbtop',fzTopBar()+'px')});
+if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fztop');if(b&&!b.hidden)b.style.setProperty('--fzbtop',fzTopBar()+'px')});
   for(const h of [document.querySelector('header'),$('apbar')])if(h)ro.observe(h)}
-function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');fzInfoPop(false);return}b.hidden=false;document.body.classList.add('fzaktiv');
-  // a slim line at the top of the content: below the bar that stays on top (the header, or the app view's bar on a phone)
-  b.style.setProperty('--fzbtop',fzTopBar()+'px');
+// the slim lines at the top of the content (a remote session, a Spontanhilfe): below the bar that stays on top (the
+// header, or the app view's bar on a phone); one place for both, the second line under the first
+function fzTopLine(){const top=$('fztop');top.hidden=$('fzbanner').hidden&&$('shbanner').hidden;if(!top.hidden)top.style.setProperty('--fzbtop',fzTopBar()+'px')}
+function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');fzInfoPop(false);fzTopLine();return}b.hidden=false;document.body.classList.add('fzaktiv');fzTopLine();
   $('fzbtext').textContent=$('fzvolltext').textContent=t('Fernsitzung aktiv · ','Remote session active · ')+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   $('fzbleer').textContent=FZ.sitz.leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+FZ.sitz.leer+' min':'';$('fzbinfo').hidden=!FZ.ws;
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
@@ -345,7 +353,7 @@ async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trenne
   new MutationObserver(()=>{fzMenu();fzLayout();fzSeite()}).observe($('fern'),{attributes:true,attributeFilter:['class']});addEventListener('resize',()=>{fzLayout();fzSeite()});
   $('fzname').onkeydown=e=>{if(e.key==='Enter')fzKoppeln()};fzKeys();
   // page layout A: unlock pill, the sheet „System koppeln“, the history of all systems, the search over the list
-  $('fzentsperren').onclick=fzEntsperren;$('fzverl').onclick=fzEntsperren;$('fzsperren').onclick=fzSperren;
+  for(const b of $('fztabs').querySelectorAll('button'))b.onclick=()=>fzTab(b.dataset.tab);$('fzentsperren').onclick=fzEntsperren;$('fzverl').onclick=fzEntsperren;$('fzsperren').onclick=fzSperren;
   $('fzneu').onclick=fzKoppelnAuf;$('fzneu2').onclick=fzKoppelnAuf;$('fzkzu').onclick=()=>{$('fzkoppelnmodal').style.display='none'};$('fzvzu').onclick=()=>{$('fzverlaufmodal').style.display='none'};
   $('fzallev').onclick=()=>fzVerlaufZeigen('');$('fzsuche').oninput=()=>fzShow();FZ.os='linux';for(const b of $('fzos').querySelectorAll('button'))b.onclick=()=>fzOsWahl(b.dataset.os);
   for(const id of ['fzkoppelnmodal','fzverlaufmodal']){const m=$(id);m.addEventListener('click',e=>{if(e.target===m)m.style.display='none'});m.addEventListener('keydown',e=>{if(e.key==='Escape')m.style.display='none'})}new MutationObserver(()=>{if(FZ.d)fzChips()}).observe($('fzview'),{attributes:true,attributeFilter:['hidden']})}}

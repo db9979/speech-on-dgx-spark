@@ -62,6 +62,7 @@ FENSTER = {
     ".fzantwort": "Fernzugang: the assistant's answers in its column beside the terminal; the newest stays in view",
     ".fzlist": "Fernzugang: the list of systems beside the chosen one (like Mail and Kontakte); the page itself fits the window",
     ".fzdetail": "Fernzugang: the chosen system beside the list; the page itself fits the window, a phone shows it in full",
+    ".shchatlist": "Spontanhilfe: the chat with the person in its card beside the screen; the newest message stays in view",
     ".cx-log": "Chats: the messages",
     ".cx-pane": "Chats: the side pane",
     ".dkvpic": "the companion's screen picture",
