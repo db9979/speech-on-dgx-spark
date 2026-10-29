@@ -4524,6 +4524,20 @@
 "titel": "Personen, Firmen und Fristen als Punkte der Wissenskarte",
 "text": "A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen an (ab Werk aus). B: Ein Dokument mit Name, Firma, Ort, IBAN und Kündigungsfrist hochladen; nach ruhigen Minuten zeigt Wissensbuch → Karte über der Karte Knöpfe wie „Personen 1“, „Firmen 1“, „Fristen 1“, die Punkte haben die Farbe ihrer Art. C: Einen Punkt antippen: „Umbenennen“, „Zusammenführen mit …“ (nur gleiche Art) und „Löschen“ gehen, mit zweitem Schritt erst nach dem Code. D: Das Dokument löschen: seine Punkte verschwinden, wenn kein anderes Dokument sie nennt. E: Zustand → Live, Wissenskarte: nur Anzahlen je Art, kein Name. F: iPhone: Wissensbuch → Karte zeigt die Punkte farbig, „Nach Art“ filtert, „Löschen“ geht.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P671",
+"v": 1254,
+"titel": "iPhone-App: Fernzugang erst nach Entsperren",
+"text": "Voraussetzung: ein gekoppelter Server, Admin-Profil mit zweitem Anmeldeschritt in der iPhone-App. A: Spark verwalten → Fernzugang öffnen: „Fernzugang gesperrt“ mit „Entsperren (Code/Passkey)“, kein Servername zu sehen. B: Entsperren mit Code oder Passkey: die Karten erscheinen, oben „Entsperrt bis …“ mit „Verlängern“ und „Sperren“. C: Im Browser ist die Seite davon nicht entsperrt. D: „Sperren“ in der App: wieder gesperrt. E: Zustand → Logs, Bereich Fernzugang: „fernzugang: entsperrt | <Profil> | 60“ und „gesperrt | sperren | 1“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P672",
+"v": 1254,
+"titel": "Koppeln mit Einmal-Link und QR-Code",
+"text": "Fernzugang → Systeme entsperren, „+ System koppeln“, Name und Linux wählen, „Koppeln (Code)“. A: Unter dem Code stehen ein Einmal-Link mit „Kopieren“, „Teilen“ (wo der Browser es kann), „Per E-Mail“ und ein QR-Code. B: Den Link (oder den QR-Code mit dem Handy) auf dem neuen System öffnen: die Seite „System koppeln“ zeigt nur die eine Zeile mit „Kopieren“, nie den Code; die Adresszeile verliert den Teil hinter „#“. C: Die Zeile im Terminal einfügen, den Code aus dem Panel tippen: das System erscheint. D: Den Link danach noch einmal öffnen: „Dieser Link gilt nicht mehr“. E: Mit macOS gewählt zeigt der Link die Zeile mit /usr/bin/python3.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

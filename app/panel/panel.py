@@ -790,6 +790,13 @@ def fernzugang_anker(request: Request):
     return fernzugang.download(request)
 
 
+@app.get("/koppeln")
+def fernzugang_link_page(request: Request):
+    """Fernzugang: the page a pairing's „Einmal-Link“ opens on the new system (public, its own strict CSP, no data in
+    it, the key behind „#“; 404 while Funktionen → Fernzugang zu Servern is off)."""
+    return fernzugang.link_page(request)
+
+
 @app.get("/hilfe")
 def spontanhilfe_page(request: Request):
     """Spontanhilfe: the person's page (public, its own strict CSP, screen sharing only here; 404 while

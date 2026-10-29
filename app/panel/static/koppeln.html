@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>System koppeln</title>
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/spontanhilfe.css">
+</head>
+<body>
+<main id="kp">
+  <img class="logo" src="/static/icon.svg" alt="">
+  <h1 data-t="titel">System koppeln</h1>
+  <section id="k-ok" hidden>
+    <p id="ktext"></p>
+    <pre class="cmd" id="kbefehl"></pre>
+    <button type="button" class="go" id="kkopie" data-t="kopieren">Kopieren</button>
+    <p class="small" data-t="code">Die Zeile fragt dann nach dem Einmal-Code, den das Panel zeigt. Er steht nie im Link und nie im Befehl.</p>
+    <p class="small" id="kbis"></p>
+  </section>
+  <section id="k-nein" hidden>
+    <p data-t="nein">Dieser Link gilt nicht mehr. Einen neuen gibt es im Panel beim Fernzugang über „System koppeln“.</p>
+  </section>
+</main>
+<script src="/static/js/koppeln-seite.js"></script>
+</body>
+</html>

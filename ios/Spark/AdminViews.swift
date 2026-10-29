@@ -1990,8 +1990,10 @@ struct FernOrdner: Identifiable, Hashable {
 }
 
 /// The cards of Fernzugang → Systeme in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
-/// and „Entfernen“ (the same levels as in the panel, stufen.py). The shell and pairing need a login in a browser:
-/// they open the panel page inside the app (SFSafariViewController), never the app's own key.
+/// and „Entfernen“ (the same levels as in the panel, stufen.py). Like the panel page the view is locked first: a code
+/// or passkey („Entsperren“) opens it for this app for a while (fernzugang._tor); locked, the Spark sends nothing
+/// about the systems. The shell and pairing need a login in a browser: they open the panel page inside the app
+/// (SFSafariViewController), never the app's own key.
 struct FernzugangView: View {
     @State private var d: [String: Any] = [:]
     @State private var servers: [FernServer] = []
@@ -2002,6 +2004,7 @@ struct FernzugangView: View {
     @State private var askAll = false
     @State private var askRemove: FernServer?
     @State private var folders: [FernOrdner] = []
+    @State private var ask: CodeRequest?
 
     var body: some View {
         List {
@@ -2010,7 +2013,28 @@ struct FernzugangView: View {
             if !loaded { LadeZeilen(rows: 3) }
             if loaded && d["on"] as? Bool == false {
                 Text(SparkAPI.way(String(localized: "Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern."))).foregroundStyle(.secondary)
+            } else if loaded && d["gesperrt"] as? Bool == true {
+                // locked: nothing about the systems, only „Entsperren“ (and „Alle trennen“, which only takes away)
+                if d["notaus"] as? Bool == true {
+                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(.red)
+                }
+                Section {
+                    Label("Fernzugang gesperrt", systemImage: "lock.fill")
+                    Button("Entsperren (Code/Passkey)") { ask = CodeRequest { c in await unlock(code: c) } }
+                } footer: {
+                    Text("Ein Code oder Passkey entsperrt die Ansicht für \(Self.num(d["entsperrt_min"])) Minuten, nur in dieser App. Gesperrt zeigt der Spark nichts über die Systeme.")
+                }
+                Section {
+                    Button("Alle trennen", role: .destructive) { askAll = true }
+                }
             } else if loaded {
+                if let bis = Self.date(d["entsperrt_bis"]) {
+                    Section {
+                        LabeledContent("Entsperrt bis") { Text(bis, format: .dateTime.hour().minute()) }
+                        Button("Verlängern") { ask = CodeRequest { c in await unlock(code: c) } }
+                        Button("Sperren") { Task { await lock() } }
+                    }
+                }
                 if d["notaus"] as? Bool == true {
                     Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(.red)
                 }
@@ -2100,12 +2124,13 @@ struct FernzugangView: View {
         .refreshable { await load() }
         .task { await load() }
         .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
+        .codeAlert($ask)
         .confirmationDialog("Jede Sitzung und jeden Anker jetzt trennen?", isPresented: $askAll, titleVisibility: .visible) {
             Button("Alle trennen", role: .destructive) { Task { await cutAll() } }
         }
         .confirmationDialog("Diesen Server entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem Server alles ab, was er eingerichtet hat.",
                             isPresented: Binding(get: { askRemove != nil }, set: { if !$0 { askRemove = nil } }), titleVisibility: .visible) {
-            Button("Entfernen", role: .destructive) { if let g = askRemove { Task { await remove(g) } } }
+            Button("Entfernen", role: .destructive) { if let g = askRemove { ask = CodeRequest { c in await remove(g, code: c) } } }
         } message: {
             if askRemove?.notiz == true { Text("Die Notiz dieses Servers wird mit gelöscht. Vorher ansehen oder kopieren unter „Notiz“.") }
         }
@@ -2203,9 +2228,26 @@ struct FernzugangView: View {
         await load()
     }
 
-    private func remove(_ g: FernServer) async {
+    /// „Entsperren“ and „Verlängern“: a fresh code or passkey every time (the same door as the panel page)
+    private func unlock(code: String) async {
         do {
-            _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/geraete/\(g.id)")
+            _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/entsperren", body: [:], code: code)
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func lock() async {
+        do { _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/entsperren"); error = nil }
+        catch { self.error = error.localizedDescription }
+        servers = []
+        folders = []
+        await load()
+    }
+
+    private func remove(_ g: FernServer, code: String) async {
+        do {
+            _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/geraete/\(g.id)", code: code)
             note = String(localized: "Entfernt. Der Anker baut sich ab; ist er offline, beim nächsten Kontakt.")
             error = nil
         } catch { self.error = error.localizedDescription }

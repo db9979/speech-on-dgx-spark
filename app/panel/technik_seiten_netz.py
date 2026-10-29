@@ -800,7 +800,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "cd5794104d",
+        "stand": "1e03e35cae",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
         },
@@ -830,19 +830,21 @@ SEITEN = {
             S("s2", "frage", ("Seite entsperrt?", "Page unlocked?"),
               ("{fernzugang.ENTSPERRT_MIN.0} bis {fernzugang.ENTSPERRT_MIN.1} Minuten", "{fernzugang.ENTSPERRT_MIN.0} to {fernzugang.ENTSPERRT_MIN.1} minutes"),
               ("Ein Code oder Passkey entsperrt die Seite für {fernzugang.ENTSPERRT_MIN.0} bis {fernzugang.ENTSPERRT_MIN.1} "
-               "Minuten, nur für diese Anmeldung und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und "
-               "Notaus sperren sofort, ein Neustart auch.",
+               "Minuten, nur für diese Anmeldung (in der eigenen iPhone-App für deren Schlüssel, fernzugang._tor) und vom "
+               "selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und Notaus sperren sofort, ein Neustart auch.",
                "A code or passkey unlocks the page for {fernzugang.ENTSPERRT_MIN.0} to {fernzugang.ENTSPERRT_MIN.1} "
-               "minutes, only for this login and from the same place (fernzugang.entsperrt_bis); locking, logging out "
-               "and the kill switch lock at once, a restart too."),
+               "minutes, only for this login (in the own iPhone app for its key, fernzugang._tor) and from the same place "
+               "(fernzugang.entsperrt_bis); locking, logging out and the kill switch lock at once, a restart too."),
               ("stop", "nein", ("Gesperrt, nichts zu sehen", "Locked, nothing to see"))),
             S("s3", "schritt", ("Koppeln", "Pairing"),
               ("Einmal-Code {fernzugang.CODE_S|min} min", "one-time code {fernzugang.CODE_S|min} min"),
               ("„Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit "
-               "einem Einmal-Code, {fernzugang.CODE_S|min} Minuten gültig. Höchstens {fernzugang.MAX_ANKER} Systeme; "
+               "einem Einmal-Code, {fernzugang.CODE_S|min} Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem "
+               "neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Höchstens {fernzugang.MAX_ANKER} Systeme; "
                "jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.",
                "„Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a "
-               "one-time code, valid {fernzugang.CODE_S|min} minutes. At most {fernzugang.MAX_ANKER} systems; each gets "
+               "one-time code, valid {fernzugang.CODE_S|min} minutes, plus a one-time link with a QR code that shows only "
+               "this line on the new system, never the code (fernzugang.link_check). At most {fernzugang.MAX_ANKER} systems; each gets "
                "an SSH key of the panel of its own, its host key is pinned.")),
             S("s4", "schritt", ("Ticket für das Fenster", "Ticket for the window"),
               ("{fernzugang.TICKET_S} s, einmal", "{fernzugang.TICKET_S} s, once"),
@@ -934,7 +936,7 @@ SEITEN = {
         "heute": [],
     },
     "fernserver": {
-        "stand": "409535f02c",
+        "stand": "620f6561dd",
         "bezug": {
             "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },

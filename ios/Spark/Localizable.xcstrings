@@ -18500,6 +18500,56 @@
           }
         }
       }
+    },
+    "Entsperren (Code/Passkey)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock (code/passkey)"
+          }
+        }
+      }
+    },
+    "Fernzugang gesperrt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote access locked"
+          }
+        }
+      }
+    },
+    "Entsperrt bis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked until"
+          }
+        }
+      }
+    },
+    "Sperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock"
+          }
+        }
+      }
+    },
+    "Ein Code oder Passkey entsperrt die Ansicht für %lld Minuten, nur in dieser App. Gesperrt zeigt der Spark nichts über die Systeme.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A code or passkey unlocks the view for %lld minutes, in this app only. Locked, the Spark shows nothing about the systems."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

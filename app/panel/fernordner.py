@@ -7,7 +7,7 @@
   symbol, delete (its systems go to „Ohne Ordner“), „Alle aktualisieren“. „Koppeln“ can name the folder the new
   system lands in (held with the one-time code's hash until the anchor pairs, at most CODE_S).
 - Stored in STATE/fernordner.json (mode 0600): {ordner: [{id, name, symbol}], systeme: {gid: oid}, reihe: [gid …]}.
-- Admins only, behind the page's unlock (fernzugang._frei); the own iPhone app of an admin keeps its own door.
+- Admins only, behind the page's unlock (fernzugang._frei), in the own iPhone app of an admin too.
 - Logs: „fernzugang: ordner | <word> | <number>“; Live: how many folders; never a folder name.
 
     POST   /api/admin/fernzugang/ordner {name, symbol}               -> {id}

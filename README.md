@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.254** Remote access: the iPhone app is locked first like the page and unlocks with a code or passkey (extend, lock); the pairing sheet shows a one-time link with copy, share, e-mail and QR code that shows only the one line on the new system, never the code
 - **V01.1.253** People, companies and deadlines as points of the knowledge map (step 2 of 4, own switch below the knowledge map, off): the language model only proposes names per passage, the panel checks them by fixed rules (kind from a fixed list, name stands in the passage, deadline only with a date, account only as IBAN or number, limits per document, profile and day); colours and a filter by kind on the map, renaming, merging and deleting only by click with code, event GEAENDERT and read functions finde_knoten/knoten_liste for other parts; the iPhone shows and deletes
 - **V01.1.252** What was learned sealed too: the read marks of learning, remembered matches, the open memory question, interests ("What I know about you") and the Spark diary now lie sealed as well, once after a backup "vor-siegel"; every file of memory and conversations must be sealed (plan nutzerwissen, stage 4c; test_siegel)
 - **V01.1.251** Memory and conversations sealed: memory.json, convos.json, toollog.json and room-history.json lie sealed whole in the profile (AES-256-GCM, a key per purpose from secret.key, the profile and the file name as associated data), once after a backup "vor-siegel" with a check per file; with another key set aside instead of overwritten, a hint to the admin, "Read in again" under Me → Memory (plan nutzerwissen, stage 4b; test_siegel)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.247** Memory without silent throwing away: above 200 entries only the oldest ones learned by itself and never confirmed make room; what was said, corrected or confirmed never goes, otherwise the Spark refuses the new entry and points to Me → Memory (also when tidying up); "Memory check" on by default
 - **V01.1.246** Redesign stage 1: design tokens as one source (`tokens.css`), look unchanged; guard `test_design_tokens`
 - **V01.1.245** Find in all data stage A: one search index over the own documents, NAS, reMarkable and knowledge book (fields and categories by fixed rules, own tags first, marks per profile), a page Find of its own, the tool fund_suche in the assistant with the card "Show in Find", Ctrl K
-- **V01.1.244** RED FIX: the Spontanhilfe page test sets the panel's clock first at expiry, then the page's (otherwise the reload every 3 s brought the number back)
 
 
 

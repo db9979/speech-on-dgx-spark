@@ -187,13 +187,14 @@ function fzKoppelnAuf(){$('fzkoppelnmodal').style.display='grid';fzKoppelnOrdner
 function fzOsWahl(os){FZ.os=os;for(const b of $('fzos').querySelectorAll('button')){const on=b.dataset.os===os;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false')}
   $('fzwin').hidden=os!=='windows';$('fzgo').disabled=os==='windows';fzKoppelnZeigen()}
 async function fzKoppeln(){const name=$('fzname').value.trim();if(!name){$('fzname').focus();return}if(FZ.os==='windows')return;
-  try{const r=await api('/api/admin/fernzugang/koppeln',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,origin:location.origin,ordner:$('fzkordner').value||''})});
+  try{const r=await api('/api/admin/fernzugang/koppeln',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,os:FZ.os,origin:location.origin,ordner:$('fzkordner').value||''})});
     FZ.code=Object.assign(await r.json(),{name,bis:Date.now()/1000+0});FZ.code.bis+=FZ.code.gilt_s;$('fzname').value='';fzKoppelnZeigen();fzLoad()}catch(e){fzFehler(e)}}
 function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent='';const k=FZ.code,mac=FZ.os==='mac';
   if(FZ.os==='windows')return;
   if(!k||Date.now()/1000>k.bis){FZ.code=null;return}
   box.appendChild(fzEl('div','',t(`Einmal-Code für „${k.name}“. Er wird nur jetzt gezeigt und gilt bis `,`One-time code for "${k.name}". It is shown only now and counts until `)+fzZeit(k.bis)+'.'));
   box.appendChild(fzEl('div','fzbig',k.code));
+  if(k.link)fzKoppelnLink(box,k);
   box.appendChild(fzEl('div','fh',mac?t('Auf dem Mac (ab macOS 13) diese eine Zeile im Terminal einfügen. Sie fragt dann nach dem Code; er steht nie im Befehl. Sie schaltet die Entfernte Anmeldung nur für den Anker ein, wenn sie aus war.','On the Mac (from macOS 13) paste this one line in the terminal. It then asks for the code; it is never in the command. It switches Remote Login on only for the anchor when it was off.')
     :t('Auf dem System (Debian, Ubuntu, Raspberry Pi OS mit laufendem sshd) diese eine Zeile im Terminal einfügen. Sie fragt dann nach dem Code; er steht nie im Befehl.','On the system (Debian, Ubuntu, Raspberry Pi OS with sshd running) paste this one line in the terminal. It then asks for the code; it is never in the command.')));
   box.appendChild(fzEl('pre','fzcmd',k.befehl));
@@ -204,6 +205,16 @@ function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent=
   pr.appendChild(fzEl('div','fh',t('SHA-256 des Programms, wie es das Panel ausliefert; auf dem System mit curl -fsSL …/fernzugang/anker | sha256sum vergleichen (Mac: shasum -a 256):','SHA-256 of the program as the panel hands it out; compare on the system with curl -fsSL …/fernzugang/anker | sha256sum (Mac: shasum -a 256):')));
   pr.appendChild(fzEl('code','fzsha',(k.anker||{}).sha256||''));if(k.fp)pr.appendChild(fzEl('div','fh',t('Zertifikat des Panels (festgelegt): ','Panel certificate (pinned): ')+k.fp));
   box.appendChild(pr)}
+// the „Einmal-Link“ beside the code: opened on the new system it shows the one line; the code is never in it
+function fzKoppelnLink(box,k){const w=fzEl('div','fzklink');
+  w.appendChild(fzEl('div','fh',t('Einmal-Link für das neue System (gilt so lange wie der Code, nur bis zum Koppeln). Auf dem System öffnen: er zeigt die eine Zeile, der Code steht nie darin.','One-time link for the new system (counts as long as the code, only until pairing). Open it on the system: it shows the one line, the code is never in it.')));
+  w.appendChild(fzEl('code','fzlinktext',k.link));
+  const row=fzEl('div','row');row.appendChild(fzBtn(t('Kopieren','Copy'),'',e=>copyString(k.link,e.target)));
+  if(navigator.share)row.appendChild(fzBtn(t('Teilen','Share'),'',()=>navigator.share({title:t('System koppeln','Pair a system'),url:k.link}).catch(()=>{})));
+  row.appendChild(fzBtn(t('Per E-Mail','By e-mail'),'',()=>{location.href='mailto:?subject='+encodeURIComponent(t('System koppeln','Pair a system'))+'&body='+encodeURIComponent(k.link)}));
+  w.appendChild(row);
+  if(k.qr){const img=document.createElement('img');img.className='fzqr';img.alt=t('QR-Code des Links','QR code of the link');img.src='data:image/svg+xml;base64,'+btoa(k.qr);w.appendChild(img)}
+  box.appendChild(w)}
 // „Verlauf“: the sessions of the last days, of one system or of all, no content
 function fzVerlaufZeile(x,mitSystem){const r=fzEl('div','fzvrow');
   r.append(fzEl('span','',fzZeit(x.t)),fzEl('span','',[mitSystem?x.system:'',x.admin,fzArt(x.art)].filter(Boolean).join(' · ')),fzEl('span','mut',x.min+' min · '+fzWoher(x.herkunft)));return r}

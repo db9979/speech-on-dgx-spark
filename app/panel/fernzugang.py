@@ -48,7 +48,8 @@ Rules (fixed, Sicherheits-Checkliste):
   from this kind of place (Zuhause or Internet) in the browser. Unlocked: the systems are shown, sessions open, Trennen.
   Still a fresh code each time: pairing, Entfernen. It locks at „Sperren“, at the end of its minutes, on a change of
   place, on logout and at the Notaus; a running shell goes on until Trennen or idle. Locked, GET shows nothing of the
-  systems. The own iPhone app (its key made after the second step) keeps its view as before.
+  systems. The own iPhone app (its key made after the second step) is unlocked the same way, with its own code or
+  passkey in the app, for that app's key only (_tor; V01.1.254: before, it kept its view without unlocking).
 - Stage 2b, „Frag den Assistenten“ (chat.fernzugang_hilfe under the Fernzugang switch, off): the own language model
   only (llm.own_tor), no tool. It gets the question, the system's name and OS, the last HILFE_BEFEHLE own commands and,
   only with „Bildschirm mitschicken“ (per session, off), the last lines of the screen (chat.fernzugang_ki_zeilen, the
@@ -60,9 +61,11 @@ Rules (fixed, Sicherheits-Checkliste):
 
     admin (core.auth; „browser or app“: is_admin_browser or is_admin_app, else the browser only):
     GET    /api/admin/fernzugang                         systems, counts, sessions, the anchor file, chips (browser or app)
-    POST   /api/admin/fernzugang/entsperren              unlocks the page for this login and client (admin_code_fresh)
+    POST   /api/admin/fernzugang/entsperren              unlocks the page for this login and client (admin_code_fresh;
+                                                         browser or app)
     DELETE /api/admin/fernzugang/entsperren              locks it again at once
-    POST   /api/admin/fernzugang/koppeln {name}          one-time code (unlocked, and admin_code_fresh every time)
+    POST   /api/admin/fernzugang/koppeln {name, os}      one-time code, its link and QR (unlocked, and admin_code_fresh
+                                                         every time)
     POST   /api/admin/fernzugang/sitzung {geraet, cols, rows}  ticket for the terminal (unlocked)
     POST   /api/admin/fernzugang/sitzung/{sid}/fenster {fenster}  ticket that moves the open shell of this login into
                                                          its own window or back („Herauslösen“, „Zurückholen“)
@@ -72,13 +75,16 @@ Rules (fixed, Sicherheits-Checkliste):
     DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code_fresh; browser or app)
     POST   /api/admin/fernzugang/sitzung/{sid}/trennen   ends that one session („Gerade verbunden“; browser or app)
     DELETE /api/admin/fernzugang/verlauf                 empties the history (admin_code; browser or app)
-    (in the browser every door but GET, entsperren and alle-trennen only while the page is unlocked: _frei)
+    (every door but GET, entsperren and alle-trennen only while the page is unlocked, in the app too: _frei)
     POST   /api/admin/fernzugang/alle-trennen            ends every session and anchor connection (browser or app)
     WS     /api/fernzugang/terminal?t=<ticket>           the terminal (binary: keys in, output out; text: size, state)
     (the screen, stage 4: POST /api/admin/fernzugang/bildschirm and WS /api/fernzugang/bildschirm in fernbild.py)
     anchor (no cookies):
     GET    /fernzugang/anker                             the program (public, no secrets; 404 while off)
     POST   /api/fernzugang/anker/koppeln {code, hostkey, os, version}  -> {id, key, pi_key, user, anker_sha256, intern?}
+    link (no login: the pairing's „Einmal-Link“, its key behind „#“):
+    GET    /koppeln                                      the page (own strict CSP, no data in it; 404 while off)
+    POST   /api/fernzugang/koppeln/link {link}           -> {os, befehl, gilt_s}: the one line, never the code
     POST   /api/fernzugang/anker/abgebaut                (Bearer key) the anchor removed itself
     WS     /api/fernzugang/anker                         (Bearer key) the pipe; text: control, binary: channel byte + data
 
@@ -160,6 +166,11 @@ GID = re.compile(r"g_[0-9a-f]{12}")
 HOSTKEY = re.compile(r"ssh-ed25519 [A-Za-z0-9+/]{60,100}={0,2}")
 WORD = re.compile(r"[A-Za-z0-9._\- ()/+]{0,40}")
 ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"   # no 0/O, 1/I: typed from the screen
+LINK = re.compile(r"[A-Za-z0-9_\-]{20,30}")     # the key of a pairing's „Einmal-Link“ (behind „#“)
+LINK_OS = ("linux", "mac")                     # the systems a link shows a line for (Windows: a later stage)
+LINK_CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; "
+            "frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+LINK_PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "koppeln.html")
 # the assistant's chips beside the terminal: fixed commands that only read, never chosen by a model, never with Enter
 # (Dominik 2026-10-28 20:04: no uptime and df -h; screen and tmux to take over sessions that run there already).
 # <…> is a gap the person fills: inserted without it, the cursor waits there. sudo works only when spark got it.
@@ -241,7 +252,7 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
          "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner",
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
-         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab")
+         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -495,6 +506,7 @@ class Anker:
 ANKER = {}       # gid -> Anker
 SITZUNG = {}     # sid -> Sitzung
 TICKETS = {}     # sha256(ticket) -> {"gid", "login", "until", "cols", "rows", "who"}
+LINKS = {}       # sha256(link key) -> {"bis", "code_h", "os", "befehl"}: a pairing's „Einmal-Link“, only in memory
 STATS = {"heute": "", "sitzungen": 0, "abgewiesen": 0, "hilfe": 0, "uebertragungen": 0}   # uebertragungen: files moving now
 
 
@@ -662,6 +674,7 @@ async def close_all(why="alle"):
 async def notaus_close():
     """notaus.after_change: any stage closes everything and locks every unlocked page; new ones are refused while it is on."""
     sperren_alle("notaus")
+    LINKS.clear()
     n = await close_all("notaus")
     log("alle_trennen", "notaus", n)
 
@@ -1395,6 +1408,7 @@ async def anker_pair(request: Request):
                              "seit": int(time.time()), "zuletzt": 0, "stand": "ok", "erlaubt": True}
         _write(d)
     guard.succeeded(request, "fernzugang-koppeln")
+    link_weg(peek)
     import fernordner
     fernordner.nach_koppeln(peek, gid)
     log("koppeln", "ok", 1)
@@ -1462,6 +1476,61 @@ async def anker_removed(request: Request):
     return {"ok": True}
 
 
+# ---------------------------------------------------------------- „Einmal-Link“ of a pairing (Koppeln sheet, layout A)
+def link_neu(code, os_, cmd, now=None):
+    """The link the Koppeln sheet shows beside the code (Kopieren, Teilen, E-Mail, QR): <panel>/koppeln#<key>. Opened
+    on the new system it shows the one line for its kind of system; the code is never in it (the program asks for it).
+    The key (128 bits, behind „#“ so it never reaches a proxy log, only its hash kept) lasts as long as the code
+    (CODE_S) and dies with the pairing, a new code's pairing or the Notaus."""
+    now = time.time() if now is None else now
+    for k in [k for k, v in LINKS.items() if v["bis"] <= now]:
+        LINKS.pop(k, None)
+    key = secrets.token_urlsafe(16)
+    LINKS[hashlib.sha256(key.encode()).hexdigest()] = {
+        "bis": now + CODE_S, "code_h": hashlib.sha256(_code_form(code).encode()).hexdigest(), "os": os_,
+        "befehl": cmd["befehl_mac"] if os_ == "mac" else cmd["befehl"]}
+    return f"{cmd['url']}/koppeln#{key}"
+
+
+def link_weg(code_form):
+    """The code was used: its link shows nothing any more."""
+    h = hashlib.sha256(str(code_form).encode()).hexdigest()
+    for k in [k for k, v in LINKS.items() if hmac.compare_digest(v["code_h"], h)]:
+        LINKS.pop(k, None)
+
+
+def link_page(request: Request):
+    """GET /koppeln (panel.py): the page a pairing's link opens, own strict CSP, no data in it; 404 while off."""
+    if not admin_on():
+        raise HTTPException(404, "Not Found")
+    guard.limit(request, "fernzugang_link")
+    from fastapi.responses import HTMLResponse
+    with open(LINK_PAGE, encoding="utf-8") as f:
+        page = f.read()
+    return HTMLResponse(page, headers={"Content-Security-Policy": LINK_CSP, "Referrer-Policy": "no-referrer",
+                                       "X-Frame-Options": "DENY", "Cache-Control": "no-store"})
+
+
+@router.post("/api/fernzugang/koppeln/link")
+async def link_check(request: Request):
+    """The link's page asks with its key: the one line for that system and how long it counts; the same answer for
+    every wrong or old key. Never the code."""
+    if not admin_on():
+        raise HTTPException(404, "Not Found")
+    guard.limit(request, "fernzugang_link")
+    if _notaus(count=True):
+        log("koppeln_link", "notaus", 0)
+        raise HTTPException(503, "Gerade nicht möglich.")
+    body = await json_body(request, MAX_BODY)
+    key, now = str(body.get("link") or ""), time.time()
+    v = LINKS.get(hashlib.sha256(key.encode()).hexdigest()) if LINK.fullmatch(key) else None
+    if v is None or v["bis"] <= now:
+        log("koppeln_link", "falsch", 0)
+        raise HTTPException(404, "Link nicht gültig")
+    log("koppeln_link", "ok", 1)
+    return {"os": v["os"], "befehl": v["befehl"], "gilt_s": int(v["bis"] - now)}
+
+
 def download(request: Request):
     """GET /fernzugang/anker (panel.py): the program, without any secret; 404 while the switch is off."""
     if not admin_on() or not os.path.isfile(PROGRAM):
@@ -1484,16 +1553,28 @@ def _admin_here(request: Request):
         raise HTTPException(403, "only an admin in the browser or the own app")
 
 
-def _on(request: Request):
+def _on(request: Request, app=False):
+    """The switch on, an admin in the browser (with app=True also the own iPhone app), no Notaus."""
     if not admin_on():
         raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
-    _browser(request)
+    if app:
+        _admin_here(request)
+    else:
+        _browser(request)
     if _notaus(count=True):
         raise HTTPException(503, "Notaus: Fernzugang gesperrt")
 
 
 # ---------------------------------------------------------------- unlocking the page (Bereich entsperren)
-ENTSPERRT = {}   # _login hash -> {"bis": end, "herkunft": "zuhause" | "internet"}; only in memory: a restart locks
+ENTSPERRT = {}   # _tor hash -> {"bis": end, "herkunft": "zuhause" | "internet"}; only in memory: a restart locks
+
+
+def _tor(conn):
+    """Whose unlock this is: the login in the browser (both login cookies), the app's own key in the own iPhone app
+    (it carries no cookies). Never the same for two apps or an app and a browser."""
+    if conn is not None and is_admin_app(conn):
+        return hashlib.sha256(b"app|" + conn.headers.get(profiles.DEVICE_HEADER, "").encode()).hexdigest()
+    return _login(conn)
 
 
 def _herkunft(conn):
@@ -1526,7 +1607,7 @@ def sperren(conn, why):
     """This login's page locked (Sperren, logout); logging out also ends this login's sessions (a held one too)."""
     if why == "abmelden":
         _ende_login(_login(conn), why)
-    if ENTSPERRT.pop(_login(conn), None) is not None:
+    if ENTSPERRT.pop(_tor(conn), None) is not None:
         log("gesperrt", why, 1)
         return True
     return False
@@ -1539,7 +1620,7 @@ def entsperrt_bis(conn, now=None):
     if _notaus():
         sperren_alle("notaus")
         return None
-    k = _login(conn)
+    k = _tor(conn)
     e = ENTSPERRT.get(k)
     if e is None:
         return None
@@ -1558,10 +1639,7 @@ def entsperrt_n(now=None):
 
 
 def _frei(request):
-    """A door of the page: in the browser only while this login's page is unlocked (the own iPhone app keeps its own
-    door, is_admin_app)."""
-    if is_admin_app(request):
-        return
+    """A door of the page: only while this login's page (or the own iPhone app, with its own unlock) is unlocked."""
     if entsperrt_bis(request) is None:
         log("gesperrt", "zugriff", 0)
         raise HTTPException(423, "Fernzugang gesperrt: erst entsperren (Code oder Passkey).")
@@ -1605,7 +1683,8 @@ def command(origin, art="einrichten"):
             return None
         cmd = f"curl -fsSLk --pinnedpubkey '{pin}' {url}/fernzugang/anker | {py} - {tail}"
     # on a Mac Apple's own Python (its authorities, the one launchd starts), never the first python3 in PATH
-    return {"befehl": cmd, "befehl_mac": cmd.replace(f"| {py} -", f"| {py.replace('python3', '/usr/bin/python3')} -"), "fp": fp}
+    return {"befehl": cmd, "befehl_mac": cmd.replace(f"| {py} -", f"| {py.replace('python3', '/usr/bin/python3')} -"), "fp": fp,
+            "url": url}
 
 
 def _second_step(request):
@@ -1633,8 +1712,8 @@ def admin_get(request: Request):
     _admin_here(request)
     guard.limit(request, "fernzugang", admin=True)
     c = features.chat_cfg()
-    bis = entsperrt_bis(request) if admin_on(c) and not is_admin_app(request) else None
-    if admin_on(c) and bis is None and not is_admin_app(request):
+    bis = entsperrt_bis(request) if admin_on(c) else None
+    if admin_on(c) and bis is None:
         # locked: nothing about the systems, only what the page needs to offer „Entsperren“
         return {"on": True, "gesperrt": True, "notaus": _notaus(), "browser": is_admin_browser(request),
                 "entsperrt_min": entsperrt_s(c) // 60}
@@ -1685,11 +1764,11 @@ def admin_get(request: Request):
 @router.post("/api/admin/fernzugang/entsperren", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_unlock(request: Request):
     """„Entsperren“ and „Verlängern“: after a fresh code or passkey the page is open for chat.fernzugang_entsperrt_min
-    minutes, for this login from this kind of place only."""
-    _on(request)
+    minutes, for this login (or this own iPhone app) from this kind of place only."""
+    _on(request, app=True)
     _second_step(request)
     guard.limit(request, "fernzugang_code", admin=True)
-    k, now = _login(request), time.time()
+    k, now = _tor(request), time.time()
     dauer = entsperrt_s()
     word = "verlaengert" if entsperrt_bis(request, now) is not None else "entsperrt"
     ENTSPERRT[k] = {"bis": now + dauer, "herkunft": _herkunft(request)}
@@ -1701,8 +1780,8 @@ async def admin_unlock(request: Request):
 
 @router.delete("/api/admin/fernzugang/entsperren", dependencies=[Depends(auth)])
 def admin_lock(request: Request):
-    """„Sperren“: locked at once (no code)."""
-    _browser(request)
+    """„Sperren“: locked at once (no code), in the browser or the own iPhone app."""
+    _admin_here(request)
     if not sperren(request, "sperren"):
         log("gesperrt", "nicht_entsperrt", 0)
     return {"ok": True}
@@ -1729,12 +1808,15 @@ async def admin_pair(request: Request):
         log("koppeln_code", "kein https", 0)
         raise HTTPException(409, "Über diese Adresse geht es nur mit https. Den Server erreicht der Anker nur verschlüsselt.")
     code = CODES.new(name)
+    os_ = body.get("os") if body.get("os") in LINK_OS else "linux"
+    link = link_neu(code, os_, cmd)
     import fernordner
     if body.get("ordner") and fernordner.on() and fernordner.vormerken(_code_form(code), str(body.get("ordner"))):
         log("ordner", "vorgemerkt", 1)       # the new system lands in that folder
     log("koppeln_code", _who(request), 1)
     guard.log("fernzugang_code", detail="Kopplungs-Code für einen Fern-Server erstellt")
-    return {"code": code, "gilt_s": CODE_S, "anker": _program(), "user": USER, **cmd}
+    import mfa
+    return {"code": code, "gilt_s": CODE_S, "anker": _program(), "user": USER, **cmd, "link": link, "qr": mfa._qr_svg(link)}
 
 
 @router.post("/api/admin/fernzugang/sitzung", dependencies=[Depends(auth)])

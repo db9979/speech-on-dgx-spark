@@ -6,8 +6,8 @@ one note per paired system, written by the admin, for the admin.
   block has „Ins Terminal“: the page opens the shell when it is closed and puts the command in the line, Enter stays
   with the person. The page saves while typing („✓ gespeichert“).
 - Stored sealed (vault.seal) in STATE/fernnotizen.json, admins only, behind the page's unlock (fernzugang._frei); the
-  own iPhone app of an admin may read and write it like the rest of its doors (fernzugang.is_admin_app). At most
-  MAX_BYTES per note. The last FASSUNGEN versions are kept: a new version starts when the last save is FASSUNG_S old
+  own iPhone app of an admin may read and write it like the rest of its doors (fernzugang.is_admin_app), also only
+  unlocked. At most MAX_BYTES per note. The last FASSUNGEN versions are kept: a new version starts when the last save is FASSUNG_S old
   (one typed run is one version), „Wiederherstellen“ puts an old one back and keeps the current one as a version.
 - „Assistent darf lesen“ (per note, on by default): the note goes to the own language model as data inside the
   material block of the assistant beside the terminal (fernzugang._material, at most MODELL_ZEICHEN characters), never

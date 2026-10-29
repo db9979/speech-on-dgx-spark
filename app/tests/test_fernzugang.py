@@ -79,6 +79,7 @@ def reset():
     fernzugang.ANKER.clear()
     fernzugang.SITZUNG.clear()
     fernzugang.ENTSPERRT.clear()
+    fernzugang.LINKS.clear()
     fernzugang.STATS["hilfe"] = 0
     fernzugang.STATS["uebertragungen"] = 0
     with contextlib.suppress(OSError):
@@ -591,8 +592,51 @@ class AppAdmin(Base):
         helpers.set_config(iphone=False)
         super().tearDown()
 
+    def test_the_app_is_locked_first_and_unlocks_with_its_own_code(self):
+        """V01.1.254 (the coordinator, 2026-10-29): the app shows „Entsperren“ like the page; before, it kept its view."""
+        d = self.pair("vps-app")
+        r = self.app.get("/api/admin/fernzugang")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(r.json()["gesperrt"])
+        self.assertNotIn("geraete", r.json())           # locked: nothing about the systems
+        self.assertNotIn("vps-app", r.text)
+        with journal() as j:
+            for call in (lambda: self.app.put(f"/api/admin/fernzugang/geraete/{d['id']}", json={"erlaubt": False}),
+                         lambda: self.app.post(f"/api/admin/fernzugang/geraete/{d['id']}/trennen"),
+                         lambda: self.app.delete(f"/api/admin/fernzugang/geraete/{d['id']}", headers=CODE)):
+                self.assertEqual(call().status_code, 423)
+        self.assertIn("fernzugang: gesperrt | zugriff | 0", j.getvalue())
+        self.assertEqual(self.app.post("/api/admin/fernzugang/alle-trennen").json(), {"n": 0})   # only takes away
+        # „Entsperren“: a fresh code every time, then the cards
+        self.assertEqual(self.app.post("/api/admin/fernzugang/entsperren").status_code, 428)
+        with journal() as j:
+            r = self.app.post("/api/admin/fernzugang/entsperren", headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertRegex(j.getvalue(), r"fernzugang: entsperrt \| (FernAppAda|Profil \w+) \| 60")
+        r = self.app.get("/api/admin/fernzugang").json()
+        self.assertFalse(r["gesperrt"])
+        self.assertEqual([g["name"] for g in r["geraete"]], ["vps-app"])
+        self.assertGreater(r["entsperrt_bis"], time.time())
+        # the app's unlock is the app's only: a browser without its own unlock stays locked, and the other way round
+        self.assertTrue(OTHER.get("/api/admin/fernzugang").json()["gesperrt"])
+        fernzugang.ENTSPERRT.clear()
+        self.unlock(ADMIN)
+        self.assertTrue(self.app.get("/api/admin/fernzugang").json()["gesperrt"])
+        self.unlock(self.app)
+        # „Sperren“ in the app: locked at once
+        self.assertEqual(self.app.delete("/api/admin/fernzugang/entsperren").json(), {"ok": True})
+        self.assertTrue(self.app.get("/api/admin/fernzugang").json()["gesperrt"])
+        self.assertFalse(ADMIN.get("/api/admin/fernzugang").json()["gesperrt"])
+        # the Notaus locks the app too
+        self.unlock(self.app)
+        old, _ = notaus.trigger(1, "test", "", "panel")
+        asyncio.run(notaus.after_change(old, 1, "test", "panel"))
+        self.assertNotIn("vps-app", self.app.get("/api/admin/fernzugang").text)   # the Notaus holds the app or locks it
+        self.assertEqual(fernzugang.ENTSPERRT, {})
+
     def test_the_app_sees_cuts_and_removes_but_opens_no_shell(self):
         d = self.pair("vps-app")
+        self.unlock(self.app)
         r = self.app.get("/api/admin/fernzugang")
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual([g["name"] for g in r.json()["geraete"]], ["vps-app"])
@@ -639,6 +683,85 @@ class AppAdmin(Base):
             self.assertNotIn("api/admin/fernzugang/sitzung", src)      # the shell only in the panel page
         with open(os.path.join(helpers.APP, "panel", "static", "js", "appview.js"), encoding="utf-8") as f:
             self.assertIn("['fern',t('Fernzugang','Remote access')]", f.read())   # Android: Verwalten → Fernzugang
+
+
+class PairingLink(Base):
+    """The Koppeln sheet's „Einmal-Link“ (layout A, V01.1.254): copy, share, mail or scan it on the new system; the
+    page shows the one line for that system, never the code; the key lives behind „#“ and dies with the pairing."""
+
+    def new(self, os_="linux", origin=OUT):
+        r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "link-pi", "os": os_, "origin": origin}, headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        m = re.fullmatch(re.escape(OUT) + r"/koppeln#([A-Za-z0-9_\-]{20,30})", d["link"])
+        self.assertTrue(m, d["link"])
+        return d, m.group(1)
+
+    def ask(self, key):
+        return TestClient(panel.app).post("/api/fernzugang/koppeln/link", json={"link": key})
+
+    def test_the_link_shows_the_line_never_the_code_and_dies_with_the_pairing(self):
+        d, key = self.new()
+        self.assertTrue(d["qr"].startswith("<svg") or d["qr"] == "")       # segno may be missing in a copy
+        self.assertNotIn(d["code"].replace("-", ""), d["link"].replace("-", ""))
+        self.assertNotIn(key, json.dumps(fernzugang.LINKS))                  # only its hash is kept
+        with journal() as j:
+            r = self.ask(key)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["os"], "linux")
+        self.assertEqual(r.json()["befehl"], d["befehl"])
+        self.assertNotIn(d["code"], r.text)
+        self.assertTrue(0 < r.json()["gilt_s"] <= fernzugang.CODE_S)
+        self.assertIn("fernzugang: koppeln_link | ok | 1", j.getvalue())
+        self.assertNotIn(key, j.getvalue())
+        # the Mac gets Apple's own Python
+        _, mac = self.new("mac")
+        self.assertIn("/usr/bin/python3", self.ask(mac).json()["befehl"])
+        # a wrong key, a key of the wrong form: the same answer
+        with journal() as j:
+            for bad in ("x" * 22, "kurz", key[:-1] + ("A" if key[-1] != "A" else "B")):
+                r = self.ask(bad)
+                self.assertEqual((r.status_code, r.json()["detail"]), (404, "Link nicht gültig"))
+        self.assertIn("fernzugang: koppeln_link | falsch | 0", j.getvalue())
+        # paired with that code: the link shows nothing any more
+        r = TestClient(panel.app).post("/api/fernzugang/anker/koppeln", json={"code": d["code"], "hostkey": HOST_PUB})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.ask(key).status_code, 404)
+        self.assertEqual(self.ask(mac).status_code, 200)                      # another code's link lives on
+
+    def test_the_link_ends_with_its_code_and_at_the_notaus(self):
+        d, key = self.new()
+        with unittest.mock.patch.object(fernzugang.time, "time", return_value=time.time() + fernzugang.CODE_S + 1):
+            self.assertEqual(self.ask(key).status_code, 404)
+        self.assertEqual(self.ask(key).status_code, 200)
+        old, _ = notaus.trigger(1, "test", "", "panel")
+        asyncio.run(notaus.after_change(old, 1, "test", "panel"))
+        self.assertEqual(fernzugang.LINKS, {})
+        notaus.lift(0, "test")
+        self.assertEqual(self.ask(key).status_code, 404)
+
+    def test_the_page_is_public_strict_and_off_with_the_switch(self):
+        r = TestClient(panel.app).get("/koppeln")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("script-src 'self'", r.headers["content-security-policy"])
+        self.assertEqual(r.headers["x-frame-options"], "DENY")
+        self.assertEqual(r.headers["referrer-policy"], "no-referrer")
+        self.assertIn("/static/js/koppeln-seite.js", r.text)
+        self.assertNotIn("<script>", r.text)
+        js = TestClient(panel.app).get("/static/js/koppeln-seite.js").text
+        self.assertIn("location.hash", js)
+        self.assertIn("history.replaceState", js)                            # the key leaves the address bar
+        self.assertNotIn("innerHTML", js)
+        helpers.set_config(fernzugang=False)
+        self.assertEqual(TestClient(panel.app).get("/koppeln").status_code, 404)
+        self.assertEqual(self.ask("x" * 22).status_code, 404)
+
+    def test_the_sheet_shows_link_qr_share_and_mail(self):
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernzugang.js"), encoding="utf-8") as f:
+            js = f.read()
+        for want in ("function fzKoppelnLink", "navigator.share", "mailto:?subject=", "data:image/svg+xml;base64,",
+                     "os:FZ.os"):
+            self.assertIn(want, js)
 
 
 class Program(unittest.TestCase):

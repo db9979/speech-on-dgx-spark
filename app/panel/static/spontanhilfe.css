@@ -16,3 +16,4 @@ button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--lin
 .msg{padding:7px 10px;border-radius:10px;background:var(--line);align-self:flex-start;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}.msg.mine{align-self:flex-end;background:var(--acc);color:#fff}
 .who{font-size:.75em;color:var(--mut)}#f-chat{display:flex;gap:6px}#f-chat input{margin:0;max-width:none}
 @media (max-width:700px){.cols{grid-template-columns:1fr}}
+.cmd{text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;user-select:all}
