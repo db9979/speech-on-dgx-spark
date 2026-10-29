@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.238** KI-Dungeon-Master: Zaubernamen eindeutig, Alltagswörter markiert
 - **V01.1.237** Schnelltest: `tools/vorpush.py` installiert fehlende Systempakete von GitHub „Tests“ (guacd, x11vnc, Xvfb für test_fernbild) selbst oder hält vor dem ersten Test mit dem genauen Befehl an; ein Cloud-Container ohne x11vnc wurde mitten im Lauf rot
 - **V01.1.236** KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt
 - **V01.1.235** KI-Dungeon-Master: ein Wort für „kein Name“ wie „keine“, „niemand“ oder „unknown“ wird nie eine Person, eine solche Karte aus einer laufenden Runde verschwindet
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.231** Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
 - **V01.1.230** Fernzugang: Anker aktualisieren aus dem Panel, „Aktualisieren“ je System und „Alle aktualisieren“; das Panel unterschreibt den Anker mit einem eigenen Schlüssel (Ed25519, im Tresor), der Anker prüft SHA-256 und Unterschrift, tauscht als root atomar und geht nach 60 s ohne Panel zur alten Version zurück, nie ein Schritt zurück; Anker vor 1.3.0 bekommen eine Zeile zum Einfügen
 - **V01.1.229** Zustand → Technik, Überblick zeigt den Fernzugang: eigener Kasten „Fernzugang“ (Shell, Dateien, Bildschirm, Spontanhilfe) und „Fern-Server“ mit dem Anker, beide mit Knoten-Seite; dazu wartet der Test zum Herauslösen ohne feste Zeiten
-- **V01.1.228** Fernzugang Ziel-Modus: „Als Ziel verfolgen“ heftet die Frage an den Assistenten an; nach jedem eigenen Befehl schlägt das eigene Sprachmodell genau einen nächsten Befehl mit Grund vor, bis „Fertig“ oder „Ziel beenden“ (nur mit „Bildschirm mitschicken“, nie Enter, höchstens 6 je Minute, derselbe Bildschirm nicht zweimal); dazu wählt „Zeilen“ 80, 300 oder 1000 Zeilen (chat.fernzugang_ki_zeilen, höchstens 60 000 Zeichen, sonst „gekürzt“)
 
 
 

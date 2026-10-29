@@ -48,6 +48,10 @@ System Reference Document 5.1 (CC-BY-4.0), dazu eigene Einträge für Horror, Sc
   Gegnern, ganzzahlig im 0,25- bis 4-Fachen von „ep“; ohne Messung zählt ep (dungeon_bestiarium.ep_kampf).
 - Englische Gegnernamen wie im SRD (Hauptthread 2026-10-28: ein englisch erzählendes Modell schrieb „stirges“ zur
   „Giant mosquito“): Stirge, Animated armor, Swarm of piranhas, Warg (wie die id).
+- Zaubernamen eindeutig (Dominik 2026-10-28, Feuerball-Befund: „Ich setze Feuerball ein“ galt als die gleichnamige
+  Fähigkeit, keine Sperre): kein Name eines Zaubers ist zugleich der Name einer Fähigkeit oder eines anderen Dings,
+  sobald eine Seite aus der SRD-Datei kommt; „alltagswort“ nur true und nur an Zaubern und Fähigkeiten; ein
+  Satz-Prüfstand: ein fremder Zauber mit Verb bekommt „Das kann … noch nicht“, der eigene Schild nie.
 """
 import json
 import os
@@ -451,6 +455,38 @@ class Srd(unittest.TestCase):
         self.assertEqual((by["stirge"], by["belebte_ruestung"], by["piranhaschwarm"], by["warg"]), ("Stirge", "Animated armor", "Swarm of piranhas", "Warg"))
         self.assertEqual([i for i, n in by.items() if re.search(r"(?i)armour|giant mosquito|quipper", n)], [])
 
+
+    def test_zaubernamen_eindeutig_und_alltagswort(self):
+        s, r = srd(), dungeon._base_rules()
+        mine = {c["id"] for c in s["gegenstaende"] if "name" in c} | {fa["id"] for k in s["klassen"] for fa in k.get("faehigkeiten", [])}
+        wer = {}
+        for c in r["gegenstaende"]:
+            for n in c["name"]:
+                wer.setdefault(n.split(": ", 1)[-1].lower(), set()).add((c["art"] == "zauber", c["id"]))
+        for k in r["klassen"]:
+            for fa in k["faehigkeiten"]:
+                for n in fa["name"]:
+                    wer.setdefault(n.lower(), set()).add((False, fa["id"]))
+        self.assertEqual(sorted(n for n, w in wer.items() if len(w) > 1 and any(z for z, _ in w) and any(i in mine for _, i in w)), [])
+        marken = [(c.get("art"), c["alltagswort"]) for c in s["gegenstaende"] if "alltagswort" in c] + \
+            [("faehigkeit", fa["alltagswort"]) for k in s["klassen"] for fa in k.get("faehigkeiten", []) if "alltagswort" in fa]
+        self.assertEqual({m for m in marken}, {("zauber", True), ("faehigkeit", True)})
+        self.assertTrue(all(c.get("alltagswort") for c in s["gegenstaende"] if c["id"] in ("dunkelheit", "stille", "schlaf", "befehl")))
+
+    def test_satz_pruefstand_zauber(self):
+        r = dungeon._base_rules()
+        h = dungeon.new_hero(r, {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "maennlich"})
+
+        def nicht(t, lang="de"):
+            rd = {"lang": lang, "zug": 1, "offen": {"p0": {"text": t}}, "log": [], "plaetze": {"p0": {"held": h}}, "szene": {}}
+            dungeon.check_powers(r, rd, "p0", count=False)
+            return rd["offen"]["p0"].get("nicht") or []
+        for t in ("Ich setze Feuerball ein.", "Ich wirke Kältekegel auf den Troll.", "Ich zaubere Mondstrahl.", "Ich wirke den Schildzauber."):
+            self.assertTrue(nicht(t), t)
+        self.assertTrue(nicht("I cast Magic missile at the orc.", "en"))
+        for t in ("Ich nutze meinen Schild.", "Ich setze mein Schild ein, um den Pfeil abzuwehren."):
+            self.assertEqual(nicht(t), [], t)
+        self.assertEqual(nicht("I use my shield to block.", "en"), [])
 
 if __name__ == "__main__":
     unittest.main()

@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.238** AI Dungeon Master: unique spell names, everyday words marked
 - **V01.1.237** Quick test: `tools/vorpush.py` installs missing system packages of GitHub "Tests" (guacd, x11vnc, Xvfb for test_fernbild) itself or stops before the first test with the exact command; a cloud container without x11vnc went red mid-run
 - **V01.1.236** AI Dungeon Master: faults of the round in the Old Library: the dice bar names the same difficulty as the card, a damage spell claims no hit, sentences about the panel leave the story, "enter" is walking, a merchant only when the story shows one
 - **V01.1.235** AI Dungeon Master: a word for "no name" such as "keine", "nobody" or "unknown" never becomes a person, such a card of a running round goes away
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.231** Remote access: notes per system (sealed, 10 versions, into the terminal, vault hint, search, iPhone)
 - **V01.1.230** Remote access: update anchors from the panel, „Update“ per system and „Update all“; the panel signs the anchor with a key of its own (Ed25519, in the vault), the anchor checks SHA-256 and signature, swaps atomically as root and goes back to the old version after 60 s without the panel, never a step back; anchors before 1.3.0 get a line to paste
 - **V01.1.229** Status → Architecture, Overview shows remote access: a box „Remote access“ (shell, files, screen, spontaneous help) and „Remote servers“ with the anchor, both with a node page; plus the pop-out test waits without fixed times
-- **V01.1.228** Remote access goal mode: "Pursue as goal" pins the question to the assistant; after each own command the own language model suggests exactly one next command with a reason, until "Done" or "End goal" (only with "Send the screen along", never Enter, at most 6 a minute, the same screen not twice); and "Lines" picks 80, 300 or 1000 lines (chat.fernzugang_ki_zeilen, at most 60 000 characters, else "shortened")
 
 
 

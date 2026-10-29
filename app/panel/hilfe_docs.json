@@ -6413,6 +6413,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Zaubernamen eindeutig, Alltagswörter markiert (V01.1.238, Daten, Dominik 2026-10-28 „überprüfe auch nochmal den rest“, Thread „DnDAppFiles für den Dungeon-Master“): „Ich setze Feuerball ein“ brachte kein „Das kann … noch nicht“, weil eine Fähigkeit genauso hieß wie der Zauber: Die Prüfung hielt den Satz für die eigene Fähigkeit. In app/panel/dungeon_srd.json heißt deshalb kein Zauber mehr wie eine Fähigkeit oder ein anderer Gegenstand. Der Zauber schildzauber heißt „Schildzauber“ (Shield spell), nicht mehr „Schild“ wie die Rüstung, so ergibt „Ich nutze meinen Schild“ keine Sperre mehr. Die Druiden-Fähigkeit tiersprache_d heißt „Tierflüstern“ (Animal whisper), die englische Bardenfähigkeit spottlied „Mocking song“; die ids bleiben, alte Helden behalten alles. 26 Zauber und 4 Fähigkeiten, deren Name ein Alltagswort ist (etwa Dunkelheit, Stille, Furcht, Schlaf, Befehl, Klopfen, Fliegen, Tageslicht, Führung, Dunkelsicht, Inspiration, Naturkunde), tragen \"alltagswort\": true. Der Hauptthread liest das Feld: so ergibt „Ich nutze die Dunkelheit, um mich anzuschleichen“ kein falsches „Das kann … noch nicht“. Selbsttest test_dungeon_srd (test_zaubernamen_eindeutig_und_allt"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "agswort, test_satz_pruefstand_zauber mit getippten Sätzen in beide Richtungen)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Geschlecht wählen, Stimme und Fürwort folgen (V01.1.187, Review 27.10. Paket 10, Punkt Z12, Dominik 2026-10-27 „ok“): Ohne neuen Schalter. 1. Wer einen Helden anlegt (neue Runde, Platz-Link), muss männlich, weiblich oder divers wählen (dungeon.made_hero, sonst Fehler „Bitte männlich, weiblich oder divers wählen.“); Helden des Panels (Prüfstand, Testtisch) brauchen keins, alte Helden bleiben ohne. 2. Im Heldenbogen steht die Stimmenliste in zwei Gruppen, „Weibliche Stimmen“ und „Männliche Stimmen“, die des eigenen Geschlechts zuerst (stimmen_w, dmVoiceGroups). 3. Wechselt das Geschlecht und gehört die Stimme zum anderen (dungeon.voice_fits) und ist nicht selbst beschrieben, nimmt der Held eine passende neue (voice_for, Log dungeon: held | stimme | nach geschlecht). 4. Personen mit Karte (dungeon_nsc) bekommen dieselbe Fürwort-Prüfung wie Helden (dungeon_erzaehler._figures): „Grimma hebt seine Hand“ wird „ihre“, „Er“ nach einem Satz nur über Grimma wird ihr Name. Selbsttest test_gender_is_chosen_and_the_voice_follows in test_dungeon."
 },
 {
@@ -22574,6 +22590,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: English foe names as in the SRD (V01.1.212, data, asked by the main thread, thread \"DnDAppFiles für den Dungeon-Master\"): An English narrating model wrote \"stirges\" for the \"Giant mosquito\" (id stirge) and the foe check fired. Four English names in app/panel/dungeon_srd.json are now as in the SRD: Stirge (instead of Giant mosquito), Animated armor (instead of the British spelling Animated armour) and Swarm of piranhas (instead of Swarm of quippers, fitting the id piranhaschwarm) and Warg (instead of Worg, as in the new Monster Manual and fitting the id warg, so card and narration show the same name). The German names stay. All other names of the SRD foes are the names of SRD 5.1 or 5.2.1. Self-test test_dungeon_srd (test_englische_namen_wie_im_srd)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: unique spell names, everyday words marked (V01.1.238, data, Dominik 2026-10-28 \"check the rest too\", thread \"DnDAppFiles für den Dungeon-Master\"): \"Ich setze Feuerball ein\" gave no \"cannot do that yet\", because an ability had the same name as the spell: the check took the sentence for the own ability. So in app/panel/dungeon_srd.json no spell is named like an ability or another item any more. The spell schildzauber is \"Shield spell\" (Schildzauber), no longer \"Shield\" like the armour, so \"I use my shield\" is no longer refused. The druid ability tiersprache_d is \"Animal whisper\" (Tierflüstern), the bard ability spottlied \"Mocking song\" in English; the ids stay, old heroes keep everything. 26 spells and 4 abilities named by an everyday word (such as Darkness, Silence, Fear, Sleep, Command, Knock, Fly, Daylight, Guidance, Darkvision, Inspiration, Nature lore) carry \"alltagswort\": true. The main thread reads the field: so \"I use the darkness to sneak in\" gives no wrong \"cannot do that yet\". Self-test test_dungeon_srd (test_zaubernamen_eindeutig_und_alltagswort, test_satz_pruefstand_zauber with typed sentences both ways)."
 },
 {
 "lang": "en",

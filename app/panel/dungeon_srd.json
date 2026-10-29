@@ -765,13 +765,14 @@
             "A song gives a friend courage."
           ],
           "wert": "charisma",
-          "bonus": 2
+          "bonus": 2,
+          "alltagswort": true
         },
         {
           "id": "spottlied",
           "name": [
             "Spottlied",
-            "Vicious mockery"
+            "Mocking song"
           ],
           "satz": [
             "Ein beißender Spott lässt den Feind wanken.",
@@ -830,7 +831,8 @@
             "Knows spells from every school."
           ],
           "wert": "intelligenz",
-          "bonus": 2
+          "bonus": 2,
+          "alltagswort": true
         }
       ],
       "start_faehigkeiten": [
@@ -952,13 +954,14 @@
             "Knows every plant and animal."
           ],
           "wert": "intelligenz",
-          "bonus": 1
+          "bonus": 1,
+          "alltagswort": true
         },
         {
           "id": "tiersprache_d",
           "name": [
-            "Tiersprache",
-            "Speak with animals"
+            "Tierflüstern",
+            "Animal whisper"
           ],
           "satz": [
             "Spricht mit Tieren.",
@@ -1178,7 +1181,8 @@
             "Shakes off fear and charm."
           ],
           "wert": "weisheit",
-          "bonus": 1
+          "bonus": 1,
+          "alltagswort": true
         }
       ],
       "start_faehigkeiten": [
@@ -4333,8 +4337,8 @@
       "id": "schildzauber",
       "art": "zauber",
       "name": [
-        "Zauber: Schild",
-        "Spell: Shield"
+        "Zauber: Schildzauber",
+        "Spell: Shield spell"
       ],
       "ziel": "selbst",
       "satz": [
@@ -4390,7 +4394,8 @@
       "rettung": {
         "wert": "weisheit"
       },
-      "zustand": "bewusstlos"
+      "zustand": "bewusstlos",
+      "alltagswort": true
     },
     {
       "id": "donnerwelle",
@@ -4481,7 +4486,8 @@
         "wert": "staerke",
         "bonus": 1,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "unheil",
@@ -4513,7 +4519,8 @@
       },
       "rettung": {
         "wert": "charisma"
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "schutz_boese",
@@ -4607,7 +4614,8 @@
       "rettung": {
         "wert": "staerke"
       },
-      "zustand": "festgesetzt"
+      "zustand": "festgesetzt",
+      "alltagswort": true
     },
     {
       "id": "jaegermal",
@@ -4729,7 +4737,8 @@
         "wert": "geschick",
         "bonus": 1,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "magie_entdecken",
@@ -4824,7 +4833,8 @@
         "wert": "konstitution",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "goettliche_gunst",
@@ -4941,7 +4951,8 @@
       "kg": 0.1,
       "seltenheit": "gewoehnlich",
       "grad": 1,
-      "heilung": 2
+      "heilung": 2,
+      "alltagswort": true
     },
     {
       "id": "selbstverkleidung",
@@ -5038,7 +5049,8 @@
       "rettung": {
         "wert": "weisheit"
       },
-      "zustand": "liegend"
+      "zustand": "liegend",
+      "alltagswort": true
     },
     {
       "id": "nebelschritt",
@@ -5195,7 +5207,8 @@
         "wert": "geschick",
         "bonus": 2,
         "zuege": 2
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "dunkelheit",
@@ -5225,7 +5238,8 @@
         "wert": "geschick",
         "bonus": 2,
         "zuege": 2
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "dunkelsicht",
@@ -5256,7 +5270,8 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "spinnenklettern",
@@ -5316,7 +5331,8 @@
         "wert": "intelligenz",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "heilgebet",
@@ -5487,7 +5503,8 @@
         "wert": "geschick",
         "bonus": 2,
         "zuege": 2
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "magische_waffe",
@@ -5551,7 +5568,8 @@
       "rettung": {
         "wert": "weisheit"
       },
-      "zustand": "bezaubert"
+      "zustand": "bezaubert",
+      "alltagswort": true
     },
     {
       "id": "blitzstrahl",
@@ -5647,7 +5665,8 @@
       },
       "rettung": {
         "wert": "weisheit"
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "fliegen",
@@ -5677,7 +5696,8 @@
         "wert": "geschick",
         "bonus": 3,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "wiederbeleben",
@@ -5761,7 +5781,8 @@
       "rettung": {
         "wert": "weisheit"
       },
-      "zustand": "veraengstigt"
+      "zustand": "veraengstigt",
+      "alltagswort": true
     },
     {
       "id": "hypnosemuster",
@@ -6049,7 +6070,8 @@
         "wert": "weisheit",
         "bonus": 2,
         "zuege": 3
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "stinkwolke",
@@ -6119,7 +6141,8 @@
       "rettung": {
         "wert": "charisma"
       },
-      "zustand": "kampfunfaehig"
+      "zustand": "kampfunfaehig",
+      "alltagswort": true
     },
     {
       "id": "dimensionstuer",
@@ -6278,7 +6301,8 @@
       },
       "rettung": {
         "wert": "weisheit"
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "verwandlung",
@@ -6312,7 +6336,8 @@
       },
       "rettung": {
         "wert": "weisheit"
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "todesschutz",
@@ -6598,7 +6623,8 @@
         "wert": "weisheit",
         "bonus": 3,
         "zuege": 1
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "tote_erwecken",
@@ -9205,7 +9231,8 @@
         "wert": "weisheit",
         "bonus": 1,
         "zuege": 1
-      }
+      },
+      "alltagswort": true
     },
     {
       "id": "wunden_heilen",
@@ -9505,7 +9532,8 @@
       "kg": 0.1,
       "seltenheit": "selten",
       "grad": 2,
-      "heilung": 5
+      "heilung": 5,
+      "alltagswort": true
     },
     {
       "id": "saeurepfeil",
@@ -9604,7 +9632,8 @@
       "rettung": {
         "wert": "konstitution"
       },
-      "halb": true
+      "halb": true,
+      "alltagswort": true
     },
     {
       "id": "mondstrahl",
@@ -9895,7 +9924,8 @@
       "rettung": {
         "wert": "konstitution"
       },
-      "halb": true
+      "halb": true,
+      "alltagswort": true
     },
     {
       "id": "grosse_genesung",
