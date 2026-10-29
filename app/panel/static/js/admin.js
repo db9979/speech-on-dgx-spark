@@ -281,7 +281,7 @@ function zFern(F){const box=$('zfern'),h=$('zfernh');if(!box)return;box.hidden=h
   const hd=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=t('Fern-Server','Remote servers');
   pl.className='pill '+card.dataset.lvl;pl.textContent=F.hostkey?t('Host-Schlüssel falsch','Host key wrong'):F.sitzungen?t('Sitzung offen','Session open'):t('ruhig','quiet');
   hd.append(nm,pl);card.appendChild(hd);
-  for(const [k,de,en] of [['gekoppelt','gekoppelt','paired'],['online','online','online'],['sitzungen','offene Sitzungen','open sessions'],['abbau','warten auf Abbau','waiting for removal']]){
+  for(const [k,de,en] of [['gekoppelt','gekoppelt','paired'],['online','online','online'],['sitzungen','offene Sitzungen','open sessions'],['dateien','davon Dateien','of them files'],['uebertragungen','Übertragungen','transfers'],['abbau','warten auf Abbau','waiting for removal']]){
     const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
     kk.textContent=t(de,en);b.textContent=String(F[k]||0);tx.append(kk,b);r.appendChild(tx);card.appendChild(r)}
   card.appendChild(wayEl(t('Fernzugang → Systeme','Remote access → Systems'),t('Fernzugang → Systeme','Remote access → Systems')));box.appendChild(card)}

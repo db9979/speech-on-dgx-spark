@@ -17871,16 +17871,6 @@
         }
       }
     },
-    "Shell im Panel öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open the shell in the panel"
-          }
-        }
-      }
-    },
     "Wird beim nächsten Kontakt abgebaut. Von Hand auf dem Server: sudo spark-anker entfernen": {
       "localizations": {
         "en": {
@@ -18027,6 +18017,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Removed. The anchor removes itself; when offline, at its next contact."
+          }
+        }
+      }
+    },
+    "Shell oder Dateien im Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shell or files in the panel"
+          }
+        }
+      }
+    },
+    "Shell, Dateien und Koppeln fragen im Panel jedes Mal frisch nach Code oder Passkey; beim ersten Mal meldest du dich dort an wie im Browser. Die Seite: Funktionen → Fernzugang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shell, files and pairing ask for a fresh code or passkey in the panel every time; the first time you sign in there as in the browser. The page: Features → Remote access."
+          }
+        }
+      }
+    },
+    "Davon Dateien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Of them files"
+          }
+        }
+      }
+    },
+    "Übertragungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfers"
           }
         }
       }

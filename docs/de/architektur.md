@@ -162,6 +162,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/coadmin.py` | Profile als Admins: Admin und Verwalter, ohne zweite Stufe |
 | `app/panel/core.py` | Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer |
 | `app/panel/features.py` | Alle Funktionen mit Namen und Freigaben an einer Stelle |
+| `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
 | `app/panel/fernzugang.py` | Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel |
 | `app/panel/guard.py` | Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log mit Prüfkette |
 | `app/panel/join.py` | Neue Personen per Einladung |

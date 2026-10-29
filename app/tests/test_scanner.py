@@ -75,6 +75,7 @@ OPEN = {
     "/hilfe": "the Spontanhilfe page for a person without a login (own strict CSP, no data in it), 404 while off",
     "/api/hilfe/start": "a person's number or link key for the one open Spontanhilfe; same answer for every wrong try, dead after 5, rate limit, 404 while off",
     "/api/fernzugang/anker/abgebaut": "the anchor says it removed itself; only with its own device key (Bearer), 404 while off",
+    "/api/fernzugang/datei": "one file of a remote server for whoever holds its one-time link (random token, only its hash kept, 60 s, once, only while the admin's file session lives, made after a fresh code); 404 while off, rate limit",
     "/tui/spark-tui.py": "the terminal client program; no data, its SHA-256 is shown under Ich → Terminal",
     "/android/spark.apk": "the Android app file; only with a download link (one-time token, 30 minutes) from a profile's own login",
     "/sw.js": "the page's service worker",

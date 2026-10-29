@@ -1040,7 +1040,7 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt"})
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "uebertragungen"})
         self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
@@ -1058,7 +1058,7 @@ class Pieces(Base):
         numbers, never a name (standing rule: a change to Live and Monitoring reaches all of them in one commit)."""
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
-        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0,
+        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "uebertragungen": 0,
                               "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
@@ -1409,9 +1409,9 @@ class _Server:
     """A small SSH server with one fixed host key: lets in the user spark with the Pi's key, gives a shell that
     greets, echoes what comes and tells the terminal size."""
 
-    def __init__(self, allowed):
+    def __init__(self, allowed, sftp=None):
         import paramiko
-        self.paramiko, self.allowed = paramiko, allowed
+        self.paramiko, self.allowed, self.sftp = paramiko, allowed, sftp
         self.sock = socket.socket()
         self.sock.bind(("127.0.0.1", 0))
         self.sock.listen(4)
@@ -1451,12 +1451,14 @@ class _Server:
                 return
             t = paramiko.Transport(conn)
             t.add_server_key(HOST)
+            if self.sftp:          # files: the SFTP subsystem in the same connection, no shell
+                t.set_subsystem_handler("sftp", paramiko.SFTPServer, self.sftp)
             try:
                 t.start_server(server=Iface())
             except Exception:
                 continue
             ch = t.accept(60)   # generous: a busy test machine is slow, the test waits for the shell anyway
-            if ch is None:
+            if ch is None or self.sftp:
                 continue
 
             def shell(ch=ch):
@@ -2298,8 +2300,8 @@ class ShellForReal(Base):
             self.assertIn("vps-1", await pg.evaluate("$('fzlist').textContent"))
             self.assertIn("Online · 1", await pg.evaluate("$('fzlist').textContent"))
             names = [k[0] for k in b["knoepfe"]]
-            self.assertEqual(names[:3], ["Shell", "Dateienspäter", "Bildschirmspäter"], b)
-            self.assertEqual([k[1] for k in b["knoepfe"][:3]], [False, True, True])
+            self.assertEqual(names[:3], ["Shell", "Dateien", "Bildschirmspäter"], b)   # files since stage 3
+            self.assertEqual([k[1] for k in b["knoepfe"][:3]], [False, False, True])
             self.assertIn("Anker trennen", names)
             self.assertIn("✓", await pg.evaluate("$('fzdetail').querySelector('.fzkey').textContent"))
             self.assertGreater(b["list"]["x"] + b["list"]["w"], 0)
@@ -2382,6 +2384,290 @@ class ShellForReal(Base):
             await pg.click("#fzdetail .fzback")
             await pg.wait_for_function("!$('fzsplit').classList.contains('fzauf')", timeout=5000)
         self.run_seite(body, size=(390, 844))
+
+# ---------------------------------------------------------------- stage 3: files (ferndateien.py)
+class Files(Base):
+    """The doors of „Dateien“ without a server: off, admins in the browser, the unlocked page, paths and names, the
+    link."""
+
+    def test_off_admin_in_the_browser_and_only_on_the_unlocked_page(self):
+        helpers.set_config(fernzugang=False)
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/dateien", json={"geraet": "g_000000000000"},
+                                    headers=CODE).status_code, 404)
+        self.assertEqual(TestClient(panel.app).get("/api/fernzugang/datei?t=" + "A" * 43).status_code, 404)
+        helpers.set_config(fernzugang=True)
+        self.assertEqual(TestClient(panel.app).post("/api/admin/fernzugang/dateien", json={"geraet": "g_000000000000"}).status_code, 401)
+        fernzugang.ENTSPERRT.clear()                            # locked: no files, also with a code
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/dateien", json={"geraet": "g_000000000000"},
+                                    headers=CODE).status_code, 423)
+        for sid_door in ("liste", "link"):
+            self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/dateien/abcd1234/{sid_door}", json={"pfad": "/"}).status_code, 423)
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/dateien/abcd1234/hoch", content=b"x").status_code, 423)
+        self.assertEqual(ADMIN.delete("/api/admin/fernzugang/dateien/abcd1234").status_code, 404)   # closing: also locked
+        self.unlock()
+        with journal() as j:
+            r = ADMIN.post("/api/admin/fernzugang/dateien", json={"geraet": "g_000000000000"})
+        self.assertEqual(r.status_code, 409, r.text)            # unlocked, no new code: only not connected
+        self.assertIn("fernzugang: dateien_abgewiesen | offline | 0", j.getvalue())
+        with unittest.mock.patch.object(fernzugang, "is_admin_browser", lambda c: False):
+            self.assertEqual(ADMIN.post("/api/admin/fernzugang/dateien", json={"geraet": "g_000000000000"},
+                                        headers=CODE).status_code, 403)
+        import stufen
+        self.assertNotIn(("POST", "/api/admin/fernzugang/dateien"), stufen.LIST)   # the unlock was its code
+        for sid_door in ("liste", "link"):
+            self.assertEqual(ADMIN.post(f"/api/admin/fernzugang/dateien/abcd1234/{sid_door}", json={"pfad": "/"}).status_code, 404)
+        self.assertEqual(ADMIN.post("/api/admin/fernzugang/dateien/abcd1234/hoch", content=b"x").status_code, 404)
+
+    def test_paths_and_names_stay_paths_and_names(self):
+        import ferndateien as fd
+        self.assertEqual(fd.pfad("", "/home/spark"), "/home/spark")
+        self.assertEqual(fd.pfad("~", "/home/spark"), "/home/spark")
+        self.assertEqual(fd.pfad("/home/spark/../../etc", "/h"), "/etc")      # a plain path; the server decides
+        self.assertEqual(fd.pfad("//x//y/", "/h"), "/x/y")
+        for bad in ("relativ", "/a\x00b", "/a\nb", "/" + "a" * fd.PATH_MAX):
+            self.assertIsNone(fd.pfad(bad, "/h"), repr(bad[:20]))
+        for bad in ("", ".", "..", "a/b", "a\x1bb", "x" * 256):
+            self.assertFalse(fd.name_ok(bad), repr(bad[:20]))
+        self.assertTrue(fd.name_ok("Bericht 2026.pdf"))
+        self.assertEqual(fd._shown("a\x1b[31mb"), "a?[31mb")
+        d = fd._disposition('böse"\r\nX-A: 1.txt')
+        self.assertNotIn("\r", d)
+        self.assertNotIn("\n", d)
+        self.assertTrue(d.startswith('attachment; filename="b'))
+
+    def test_the_size_limit_is_a_setting_with_a_range(self):
+        import berater_katalog
+        self.assertEqual(fernzugang.datei_mb({"fernzugang_datei_mb": 100}), 100)
+        self.assertIsNone(fernzugang.check({"fernzugang_datei_mb": 4096}))
+        self.assertIsNotNone(fernzugang.check({"fernzugang_datei_mb": 0}))
+        self.assertIsNotNone(fernzugang.check({"fernzugang_datei_mb": 4097}))
+        self.assertIsNotNone(fernzugang.check({"fernzugang_datei_mb": True}))
+        self.assertIn("fernzugang_datei_mb", fernzugang.load_config()["chat"])
+        self.assertIn("fernzugang_datei_mb", str(berater_katalog.__dict__))
+
+    def test_a_link_is_once_short_and_only_while_its_session_lives(self):
+        import ferndateien as fd
+        c = TestClient(panel.app)
+        self.assertEqual(c.get("/api/fernzugang/datei?t=../x").status_code, 404)
+        tok = "B" * 43
+        fd.LINKS[hashlib.sha256(tok.encode()).hexdigest()] = {"sid": "weg", "pfad": "/x", "name": "x", "groesse": 1,
+                                                               "until": time.time() + 60}
+        with journal() as j:
+            self.assertEqual(c.get("/api/fernzugang/datei?t=" + tok).status_code, 404)   # its session is gone
+        self.assertIn("fernzugang: laden | link | 0", j.getvalue())
+        self.assertEqual(fd.LINKS, {})                                                    # and the link with it
+
+
+    def test_the_servers_first_bytes_right_behind_offen_arrive(self):
+        """The anchor's „offen“ and the server's first bytes can come in one go: the channel is known to the pipe
+        before „auf“ goes out, so the SSH banner is never dropped (it was under load)."""
+        d = self.pair()
+
+        class A:
+            def __init__(self):
+                self.gid, self.kanaele, self.wait, self.vnc = d["id"], {}, {}, False
+
+            async def send_json(self, m):
+                if m.get("typ") == "auf":
+                    await fernzugang._on_anker_text(self, {"typ": "offen", "kanal": m["kanal"]})
+                    s = self.kanaele.get(m["kanal"])
+                    if s is not None:
+                        await s.from_anker(b"SSH-2.0-test\r\n")
+
+            async def send_bytes(self, b):
+                pass
+
+        def ssh(s, *args):
+            s.theirs.settimeout(5)
+            try:
+                return "" if s.theirs.recv(64) == b"SSH-2.0-test\r\n" else "ssh_falsch"
+            except OSError:
+                return "ssh_nichts"
+
+        async def go():
+            fernzugang.ANKER[d["id"]] = A()
+            with unittest.mock.patch.object(fernzugang.Sitzung, "_ssh", ssh):
+                s, _g, why = await fernzugang.aufbauen(d["id"], "shell")
+            if s is not None:
+                await s.end("test")
+            return why
+        with journal():
+            self.assertEqual(asyncio.run(go()), "")
+
+
+class _Files:
+    """Own code for the test's SFTP side (the paramiko interface; no code copied): one folder plays the server's
+    root; /geschuetzt answers „permission denied“ like a folder the user spark may not read."""
+
+    def __init__(self, root):
+        import paramiko
+        root_ = root
+
+        class Iface(paramiko.SFTPServerInterface):
+            def _real(self, path):
+                return os.path.join(root_, os.path.normpath("/" + path).lstrip("/"))
+
+            @staticmethod
+            def _denied(path):
+                return os.path.normpath("/" + path.lstrip("/")).startswith("/geschuetzt")
+
+            def canonicalize(self, path):
+                return "/home/spark" if path in (".", "") else os.path.normpath("/" + path.lstrip("/"))
+
+            def list_folder(self, path):
+                if self._denied(path):
+                    return paramiko.SFTP_PERMISSION_DENIED
+                real = self._real(path)
+                try:
+                    out = []
+                    for n in os.listdir(real):
+                        a = paramiko.SFTPAttributes.from_stat(os.lstat(os.path.join(real, n)))
+                        a.filename = n
+                        out.append(a)
+                    return out
+                except OSError as e:
+                    return paramiko.SFTPServer.convert_errno(e.errno)
+
+            def stat(self, path):
+                if self._denied(path):
+                    return paramiko.SFTP_PERMISSION_DENIED
+                try:
+                    return paramiko.SFTPAttributes.from_stat(os.stat(self._real(path)))
+                except OSError as e:
+                    return paramiko.SFTPServer.convert_errno(e.errno)
+
+            lstat = stat
+
+            def open(self, path, flags, attr):
+                if self._denied(path):
+                    return paramiko.SFTP_PERMISSION_DENIED
+                try:
+                    fd = os.open(self._real(path), flags | getattr(os, "O_BINARY", 0), 0o644)
+                except OSError as e:
+                    return paramiko.SFTPServer.convert_errno(e.errno)
+                mode = "wb" if flags & os.O_WRONLY else "r+b" if flags & os.O_RDWR else "rb"
+                f = os.fdopen(fd, mode)
+                h = paramiko.SFTPHandle(flags)
+                h.filename = self._real(path)
+                h.readfile = f
+                h.writefile = f
+                return h
+
+            def remove(self, path):
+                try:
+                    os.remove(self._real(path))
+                except OSError as e:
+                    return paramiko.SFTPServer.convert_errno(e.errno)
+                return paramiko.SFTP_OK
+
+            def rename(self, old, new):
+                if os.path.exists(self._real(new)):
+                    return paramiko.SFTP_FAILURE
+                os.rename(self._real(old), self._real(new))
+                return paramiko.SFTP_OK
+
+            def posix_rename(self, old, new):
+                os.replace(self._real(old), self._real(new))
+                return paramiko.SFTP_OK
+        self.iface = Iface
+
+
+class FilesEndToEnd(EndToEnd):
+    """„Dateien“ the whole way: the anchor program, the panel's SSH client with SFTP in the same connection and a small
+    SFTP server; list, a one-time download, uploads (new, refused, replaced, too big), a folder the user may not read,
+    the counts, the journal without a name, and the Notaus ends it."""
+
+    def setUp(self):
+        super().setUp()
+        import ferndateien
+        import core
+        app = self.server.config.app
+        app.include_router(ferndateien.router)
+        app.dependency_overrides[core.auth] = lambda: None    # the login is tested in Files; unlocked for "L" in setUp
+        self.root = tempfile.mkdtemp(prefix="fz-sftp-")
+        os.makedirs(os.path.join(self.root, "home", "spark", "unter"))
+        os.makedirs(os.path.join(self.root, "geschuetzt"))
+        with open(os.path.join(self.root, "home", "spark", "notiz.txt"), "wb") as f:
+            f.write(b"Geheimer Inhalt 42")
+        import httpx
+        self.http = httpx.Client(base_url=self.base, verify=False, timeout=30)
+
+    def tearDown(self):
+        self.http.close()
+        import ferndateien
+        ferndateien.LINKS.clear()
+        super().tearDown()
+
+    def sftp_server(self, allowed):
+        sshd = _Server(allowed, sftp=_Files(self.root).iface)
+        return sshd
+
+    def test_files_through_the_anchor(self):
+        helpers.set_config(fernzugang_datei_mb=1)
+        d = self.pair(hostkey=HOST_PUB)
+        sshd = self.sftp_server(d["pi_key"].split()[1])
+        ws, _ = self.anchor(d["key"], sshd.port)
+        home = os.path.join(self.root, "home", "spark")
+        with journal() as j:
+            r = self.http.post("/api/admin/fernzugang/dateien", json={"geraet": d["id"]})
+            self.assertEqual(r.status_code, 200, r.text)
+            sid = r.json()["id"]
+            self.assertEqual(r.json()["pfad"], "/home/spark")
+            self.assertEqual(r.json()["max_mb"], 1)
+            c = fernzugang.counts()
+            self.assertEqual((c["sitzungen"], c["dateien"]), (1, 1))
+            self.assertIn("davon 1 Dateien", fernzugang.live_sub(c))
+            r = self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": ""})
+            self.assertEqual(r.status_code, 200, r.text)
+            rows = r.json()["eintraege"]
+            self.assertEqual([(x["name"], x["art"]) for x in rows], [("unter", "dir"), ("notiz.txt", "file")])
+            self.assertEqual(rows[1]["groesse"], 18)
+            self.assertEqual(r.json()["oben"], "/home")
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/geschuetzt"}).status_code, 403)
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/gibtsnicht"}).status_code, 404)
+            # the one-time link: the file once, then never again
+            r = self.http.post(f"/api/admin/fernzugang/dateien/{sid}/link", json={"pfad": "/home/spark/notiz.txt"})
+            self.assertEqual(r.status_code, 200, r.text)
+            url = r.json()["url"]
+            self.assertNotIn("notiz", url)
+            got = self.http.get(url)
+            self.assertEqual((got.status_code, got.content), (200, b"Geheimer Inhalt 42"))
+            self.assertIn("attachment", got.headers["content-disposition"])
+            self.assertEqual(self.http.get(url).status_code, 404)
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/link", json={"pfad": "/home/spark/unter"}).status_code, 400)
+            # uploads: new, the same name refused, replaced, a bad name, too big; never a part file left behind
+            up = lambda body, name, rep="0": self.http.post(f"/api/admin/fernzugang/dateien/{sid}/hoch", content=body, headers={
+                "content-type": "application/octet-stream", "x-fz-pfad": "/home/spark/unter", "x-fz-name": name, "x-fz-ersetzen": rep})
+            self.assertEqual(up(b"eins", "neu%20datei.bin").status_code, 200)
+            self.assertEqual(up(b"zwei", "neu%20datei.bin").status_code, 409)
+            with open(os.path.join(home, "unter", "neu datei.bin"), "rb") as f:
+                self.assertEqual(f.read(), b"eins")
+            self.assertEqual(up(b"drei", "neu%20datei.bin", "1").status_code, 200)
+            with open(os.path.join(home, "unter", "neu datei.bin"), "rb") as f:
+                self.assertEqual(f.read(), b"drei")
+            self.assertEqual(up(b"x", "..%2Fboese").status_code, 400)
+            self.assertEqual(up(b"x" * (1024 * 1024 + 1), "gross.bin").status_code, 413)
+            self.assertEqual(sorted(os.listdir(os.path.join(home, "unter"))), ["neu datei.bin"])
+            # another login gets nothing of this session
+            with unittest.mock.patch.object(fernzugang, "_login", lambda c: "M"):
+                self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": ""}).status_code, 423)
+                self.unlock()                                    # unlocked there too: still not its session
+                self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": ""}).status_code, 404)
+            # the Notaus ends the session; nothing comes in while it is on
+            loop = next(iter(fernzugang.SITZUNG.values())).loop
+            asyncio.run_coroutine_threadsafe(fernzugang.notaus_close(), loop).result(10)
+            self.assertEqual(fernzugang.SITZUNG, {})
+            self.assertEqual(fernzugang.ENTSPERRT, {})          # the Notaus locked every page too
+            self.assertIn(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": ""}).status_code, (423, 503))
+        out = j.getvalue()
+        for line in ("fernzugang: dateien_auf | admin | 1", "fernzugang: liste | ok | 2", "fernzugang: liste | verboten | 0",
+                     "fernzugang: liste | fehlt | 0", "fernzugang: link | ok | 1", "fernzugang: laden | ok | 0",
+                     "fernzugang: laden | link | 0", "fernzugang: hoch | ok | 0", "fernzugang: hoch | gibt es schon | 0",
+                     "fernzugang: hoch | name ungueltig | 0", "fernzugang: hoch | zu gross | 1024", "fernzugang: dateien_zu | notaus | 0"):
+            self.assertIn(line, out)
+        for secret in ("notiz", "Geheimer", "neu datei", "gross.bin", "/home/spark"):
+            self.assertNotIn(secret, out)
+        ws.sock.shutdown(socket.SHUT_RDWR)
 
 
 def secrets_ticket(gid, cols, rows):

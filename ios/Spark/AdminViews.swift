@@ -243,6 +243,8 @@ struct StatusView: View {
                     LabeledContent("Offene Sitzungen") {
                         Text(verbatim: Self.num(fz["sitzungen"] ?? 0)).foregroundStyle((fz["sitzungen"] as? Int ?? 0) > 0 ? .red : .primary)
                     }
+                    if (fz["dateien"] as? Int ?? 0) > 0 { LabeledContent("Davon Dateien") { Text(verbatim: Self.num(fz["dateien"] ?? 0)) } }
+                    if (fz["uebertragungen"] as? Int ?? 0) > 0 { LabeledContent("Übertragungen") { Text(verbatim: Self.num(fz["uebertragungen"] ?? 0)) } }
                     if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
                     if (fz["hostkey"] as? Int ?? 0) > 0 {
                         LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(.red) }
@@ -2037,7 +2039,7 @@ struct FernzugangView: View {
                         }
                         if g.stand != "abbau" {
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } }))
-                            Button("Shell im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt)
+                            Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt)
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
                             Button("Entfernen", role: .destructive) { askRemove = g }
                         }

@@ -162,6 +162,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/coadmin.py` | Profiles as admins. |
 | `app/panel/core.py` | Shared panel helpers: paths, logins (admin password, profiles) and small system calls. |
 | `app/panel/features.py` | One description per function. |
+| `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/guard.py` | Protection of the logins: lockout after wrong passwords or PINs, requests from foreign pages, and the change log (who changed what, from where). |
 | `app/panel/join.py` | New people by invitation. |

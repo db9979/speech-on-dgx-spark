@@ -21,8 +21,11 @@ Rules (fixed, Sicherheits-Checkliste):
 - Pairing: „Koppeln (Code)“ asks for a fresh code or passkey (stufen „Schutz ändern“) and shows a one-time code
   (CODE_S, kopplung.Codes, only its hash kept); the anchor trades it once for its own device key (only the SHA-256
   kept, compared with hmac.compare_digest). At most MAX_ANKER systems.
-- A session: „Shell“ asks for a fresh code or passkey (Schutz ändern) every time, then a ticket (TICKET_S, once, bound
-  to the login's cookies) opens the terminal WebSocket. Starlette's http middleware does not see WebSockets, so the
+- A session: „Shell“ on the unlocked page (rule „Bereich entsperren“: a fresh code or passkey unlocks it for
+  chat.fernzugang_entsperrt_min minutes, this login and place only) gives a ticket (TICKET_S, once, bound to the
+  login's cookies) that opens the terminal WebSocket. Stage 3 (files, ferndateien.py): SFTP in the same kind of SSH
+  connection, a Sitzung with art "dateien" (aufbauen), also on the unlocked page, counted with the shell sessions;
+  the remote user's own permissions decide. Starlette's http middleware does not see WebSockets, so the
   terminal checks the Origin itself (same_origin), the admin login, the ticket, the switch and the Notaus. At most
   chat.fernzugang_sitzungen sessions, idle for chat.fernzugang_leerlauf_min minutes ends one, MAX_MSG bytes per
   message on both sockets, rate limits on every door.
@@ -135,8 +138,9 @@ SITZUNGEN = (1, 4)      # chat.fernzugang_sitzungen
 OFFLINE = (5, 1440)     # chat.fernzugang_offline_min: the Dienst-Wächter warns after this long offline
 VERLAUF_TAGE = (1, 365)  # chat.fernzugang_verlauf_tage: how long the history keeps a session (default 30)
 ENTSPERRT_MIN = (5, 120)  # chat.fernzugang_entsperrt_min: how long one code unlocks the page (default 60)
+DATEI_MB = (1, 4096)    # chat.fernzugang_datei_mb: one upload or download at most (ferndateien.py)
 VERLAUF_MAX = 2000       # entries at most
-ARTEN = {"shell": ("Shell", "Shell")}   # what a session is (Dateien and Bildschirm follow in stages 3 and 4)
+ARTEN = {"shell": ("Shell", "Shell"), "dateien": ("Dateien", "Files")}   # what a session is (Bildschirm: stage 4)
 CLIENTS = {"browser": ("Browser", "Browser"), "iphone": ("iPhone", "iPhone"), "android": ("Android", "Android"),
            "fenster": ("Fenster", "Window")}
 # what the remote server's journal gets when a session opens (logger -t spark-fernzugang), with the admin's name
@@ -182,7 +186,8 @@ HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft we
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
-         "hilfe_frage", "hilfe_vorschlag", "entsperrt", "verlaengert", "gesperrt")
+         "hilfe_frage", "hilfe_vorschlag", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
+         "dateien_abgewiesen", "liste", "link", "laden", "hoch")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -284,6 +289,11 @@ def entsperrt_s(c=None):
     return 60 * (_num("fernzugang_entsperrt_min", ENTSPERRT_MIN, c) or 60)
 
 
+def datei_mb(c=None):
+    """chat.fernzugang_datei_mb: one upload or download at most, in MB (ferndateien.py)."""
+    return _num("fernzugang_datei_mb", DATEI_MB, c) or DATEI_MB[0]
+
+
 def offline_s(c=None):
     return 60 * (_num("fernzugang_offline_min", OFFLINE, c) or OFFLINE[1])
 
@@ -292,7 +302,7 @@ def check(c):
     """None when the settings in chat are fine, else the reason (admin.validate)."""
     for key, (lo, hi) in (("fernzugang_leerlauf_min", LEERLAUF), ("fernzugang_sitzungen", SITZUNGEN),
                           ("fernzugang_offline_min", OFFLINE), ("fernzugang_verlauf_tage", VERLAUF_TAGE),
-                          ("fernzugang_entsperrt_min", ENTSPERRT_MIN)):
+                          ("fernzugang_entsperrt_min", ENTSPERRT_MIN), ("fernzugang_datei_mb", DATEI_MB)):
         if key in c and _num(key, (lo, hi), c) is None:
             return f"{key}: {lo} bis {hi}"
     return None
@@ -409,7 +419,7 @@ class Anker:
 ANKER = {}       # gid -> Anker
 SITZUNG = {}     # sid -> Sitzung
 TICKETS = {}     # sha256(ticket) -> {"gid", "login", "until", "cols", "rows", "who"}
-STATS = {"heute": "", "sitzungen": 0, "abgewiesen": 0, "hilfe": 0}
+STATS = {"heute": "", "sitzungen": 0, "abgewiesen": 0, "hilfe": 0, "uebertragungen": 0}   # uebertragungen: files moving now
 
 
 def _login(conn):
@@ -458,11 +468,14 @@ def same_origin(conn):
 
 
 def counts(now=None):
-    """Numbers only (Live, Zustand, the app, the Steuerzentrale): paired, online, sessions, waiting for removal."""
+    """Numbers only (Live, Zustand, the app, the Steuerzentrale): paired, online, sessions (of them file sessions),
+    waiting for removal, wrong host keys, transfers running."""
     g = _read(now)["geraete"]
     ok = [k for k, x in g.items() if x.get("stand") != "abbau"]
     return {"gekoppelt": len(ok), "online": sum(1 for k in ok if k in ANKER), "sitzungen": len(SITZUNG),
-            "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch"))}
+            "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch")),
+            "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
+            "uebertragungen": max(0, STATS["uebertragungen"])}
 
 
 def for_live(now=None):
@@ -494,7 +507,9 @@ def _live_names():
 
 def live_sub(d):
     offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
-    return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen" + offen
+    return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
+            + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "") + offen
+            + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
@@ -557,13 +572,17 @@ async def notaus_close():
 
 # ---------------------------------------------------------------- one terminal session
 class Sitzung:
-    def __init__(self, gid, anker, n, browser, who, uid):
+    def __init__(self, gid, anker, n, browser, who, uid, art="shell"):
         self.id = secrets.token_hex(4)
         self.gid, self.anker, self.n, self.browser = gid, anker, n, browser
         self.who, self.uid = who, uid
         self.login = ""        # the hash of the login that opened it: only that login takes it into another window
+                               # (files: every request must carry the same)
+        self.home = "/"        # files: the remote user's home, where the list starts
+        self.sftp = None
+        self.sftp_lock = threading.Lock()   # one SFTP call at a time per session (ferndateien._sftp)
         self.fenster = False   # the terminal runs in its own window („Herauslösen“)
-        self.art = "shell"      # ARTEN
+        self.art = art if art in ARTEN else "shell"   # ARTEN
         self.admin_name = "Admin"   # the admin profile's name (the panel password: „Admin“), shown per live_names
         self.herkunft, self.ip_kurz, self.client = "zuhause", "", "browser"   # where from (never the whole address)
         self.vorschlag_t = 0.0  # the last suggestions asked of the assistant (VORSCHLAG_S)
@@ -599,7 +618,8 @@ class Sitzung:
             await self.end("anker")
 
     def _ssh(self, pin, priv, cols, rows):
-        """In a thread: SSH over the pipe, host key against the pin, login with the vault's key, a shell with a pty."""
+        """In a thread: SSH over the pipe, host key against the pin, login with the vault's key, then a shell with a
+        pty, or the SFTP subsystem (files) in the same connection."""
         import paramiko
         t = paramiko.Transport(self.theirs)
         t.banner_timeout = t.handshake_timeout = t.auth_timeout = SSH_S
@@ -610,6 +630,9 @@ class Sitzung:
             self.transport = t   # end() closes it, after the browser got the reason
             return "hostkey"
         t.auth_publickey(USER, paramiko.Ed25519Key.from_private_key(io.StringIO(priv)))
+        if self.art == "dateien":
+            self.transport, self.sftp = t, paramiko.SFTPClient.from_transport(t)
+            return ""
         chan = t.open_session(timeout=SSH_S)
         chan.get_pty(term="xterm-256color", width=cols, height=rows)
         chan.invoke_shell()
@@ -689,7 +712,7 @@ class Sitzung:
             self.ours.close()
 
         def _shut():
-            for x in (self.chan, self.transport, self.theirs):
+            for x in (self.sftp, self.chan, self.transport, self.theirs):
                 with contextlib.suppress(Exception):
                     if x is not None:
                         x.close()
@@ -698,10 +721,10 @@ class Sitzung:
         with contextlib.suppress(Exception):
             await self.browser.close(1000)
         mins = int((time.time() - self.seit) // 60)
-        log("sitzung_zu", why, mins)
+        log("dateien_zu" if self.art == "dateien" else "sitzung_zu", why, mins)
         if self.offen:
             await asyncio.to_thread(verlauf_add, self)
-        _live(f"Fernsitzung beendet ({why})")
+        _live(("Fern-Dateien beendet" if self.art == "dateien" else "Fernsitzung beendet") + f" ({why})")
         await asyncio.to_thread(_update, self.gid, zuletzt=int(time.time()))
 
 
@@ -793,6 +816,83 @@ async def _refuse(ws, why, code=4403):
         await ws.close(code)
 
 
+def _platz(gid):
+    """(stored system, anchor, free channel, "") when one more session fits, else (None, None, None, why)."""
+    if len(SITZUNG) >= max_sitzungen():
+        return None, None, None, "voll"
+    g = _read()["geraete"].get(gid)
+    a = ANKER.get(gid)
+    if not g or not a or g.get("stand") == "abbau" or not g.get("erlaubt", True) or g.get("hostkey_falsch"):
+        return None, None, None, "offline"
+    n = _free_channel(a)
+    if n is None:
+        return None, None, None, "voll"
+    return g, a, n, ""
+
+
+# what aufbauen's reasons mean for an HTTP door (ferndateien): status and the fixed sentence
+REFUSED = {"voll": (429, "Zu viele Sitzungen offen (Funktionen → Fernzugang zu Servern)."),
+           "offline": (409, "Der Server ist nicht verbunden."),
+           "sshd": (502, "Auf dem Server hört kein sshd auf 127.0.0.1:22."),
+           "anker": (502, "Der Anker hat nicht geantwortet."),
+           "hostkey": (409, "Der Host-Schlüssel passt nicht zur Kopplung: keine Verbindung."),
+           "ssh": (502, "SSH-Anmeldung ging nicht (Benutzer spark, Schlüssel des Panels).")}
+
+
+async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=24, login="", conn=None):
+    """One SSH connection over the anchor's pipe (the channel, then SSH with the pinned host key and the vault's key):
+    (Sitzung, stored system, "") once it stands, registered and counted, else (None, None, reason) with the reason
+    as a fixed word („voll“, „offline“, „sshd“, „anker“, „hostkey“ or „ssh_<error>“; REFUSED). A browser (the
+    terminal's WebSocket) hears the steps and the reason; a file session has none."""
+    g, a, n, why = _platz(gid)
+    if why:
+        return None, None, why
+    s = Sitzung(gid, a, n, browser, who, uid, art)
+    s.login = login
+    if conn is not None:
+        _wo(s, conn)
+    s.admin_name = _admin_name(uid)
+    word = "dateien_abgewiesen" if s.art == "dateien" else "sitzung_abgewiesen"
+    fut = asyncio.get_running_loop().create_future()
+    a.wait[n] = fut
+    a.kanaele[n] = s      # before „auf“: the server's first bytes may come right behind the anchor's „offen“
+    ok = ""
+    try:
+        await a.send_json({"typ": "auf", "kanal": n})
+        ok = "offen" if await asyncio.wait_for(fut, OPEN_S) else "sshd"
+    except (asyncio.TimeoutError, Exception):
+        ok = "anker"
+    finally:
+        a.wait.pop(n, None)
+    if ok != "offen":
+        a.kanaele.pop(n, None)
+        for x in (s.ours, s.theirs):
+            with contextlib.suppress(OSError):
+                x.close()
+        await s._say({"typ": "fehler", "grund": ok})
+        log(word, ok)
+        return None, None, ok
+    SITZUNG[s.id] = s
+    s.tasks.append(asyncio.create_task(s._to_anker()))
+    await s._say({"typ": "stand", "stand": "ssh"})
+    try:
+        why = await asyncio.wait_for(asyncio.to_thread(s._ssh, g["hostkey"], vault.open_(g.get("pi_key", "")),
+                                                       cols, rows), SSH_S + 5)
+    except Exception as e:
+        why = "ssh_" + type(e).__name__.lower()[:20]
+    if why:
+        if why == "hostkey":
+            await asyncio.to_thread(hostkey_wrong, gid)
+        await s._say({"typ": "fehler", "grund": "hostkey" if why == "hostkey" else "ssh"})
+        await s.end(why[:30])
+        return None, None, why[:30]
+    s.offen = True
+    if s.pipe_zu:          # the anchor's pipe closed while SSH was set up
+        await s.end("anker")
+        return None, None, "anker"
+    return s, g, ""
+
+
 @router.websocket("/api/fernzugang/terminal")
 async def terminal_ws(ws: WebSocket):
     """The browser's terminal. Its own checks, in this order: switch, Origin, admin login, Notaus, ticket, room."""
@@ -812,15 +912,9 @@ async def terminal_ws(ws: WebSocket):
         return await _refuse(ws, "ticket")
     if tk.get("sid"):              # „Herauslösen“ or „Zurückholen“: the open session moves to this window
         return await _take_over(ws, tk)
-    if len(SITZUNG) >= max_sitzungen():
-        return await _refuse(ws, "voll", 4429)
-    g = _read()["geraete"].get(tk["gid"])
-    a = ANKER.get(tk["gid"])
-    if not g or not a or g.get("stand") == "abbau" or not g.get("erlaubt", True) or g.get("hostkey_falsch"):
-        return await _refuse(ws, "offline", 4409)
-    n = _free_channel(a)
-    if n is None:
-        return await _refuse(ws, "voll", 4429)
+    _g, _a, _n, why = _platz(tk["gid"])
+    if why:
+        return await _refuse(ws, why, 4429 if why == "voll" else 4409)
     await ws.accept()
     import live
     t0 = time.time()
@@ -829,57 +923,21 @@ async def terminal_ws(ws: WebSocket):
         rec.kind = "admin"     # the panel password's login (no profile)
     if rec is not None:
         rec.step("in", "Fernsitzung", t0)
-    s = Sitzung(tk["gid"], a, n, ws, tk["who"], tk.get("uid"))
-    s.login = tk["login"]
-    _wo(s, ws)
-    s.admin_name = _admin_name(tk.get("uid"))
-    fut = asyncio.get_running_loop().create_future()
-    a.wait[n] = fut
-    a.kanaele[n] = s      # before „auf“: the server's first bytes may come right behind the anchor's „offen“
-    ok = ""
-    try:
-        await a.send_json({"typ": "auf", "kanal": n})
-        ok = "offen" if await asyncio.wait_for(fut, OPEN_S) else "sshd"
-    except (asyncio.TimeoutError, Exception):
-        ok = "anker"
-    finally:
-        a.wait.pop(n, None)
-    if ok != "offen":
-        a.kanaele.pop(n, None)
-        for x in (s.ours, s.theirs):
-            with contextlib.suppress(OSError):
-                x.close()
-        await s._say({"typ": "fehler", "grund": ok})
-        live_end = (rec, False, ok)
-        await asyncio.to_thread(live.end, *live_end)
-        log("sitzung_abgewiesen", ok)
-        with contextlib.suppress(Exception):
-            await ws.close(4502)
-        return
-    SITZUNG[s.id] = s
-    s.tasks.append(asyncio.create_task(s._to_anker()))
-    await s._say({"typ": "stand", "stand": "ssh"})
-    try:
-        why = await asyncio.wait_for(asyncio.to_thread(s._ssh, g["hostkey"], vault.open_(g.get("pi_key", "")),
-                                                       tk["cols"], tk["rows"]), SSH_S + 5)
-    except Exception as e:
-        why = "ssh_" + type(e).__name__.lower()[:20]
-    if why:
-        if why == "hostkey":
-            await asyncio.to_thread(hostkey_wrong, tk["gid"])
-        await s._say({"typ": "fehler", "grund": "hostkey" if why == "hostkey" else "ssh"})
-        if rec is not None:
+    s, g, why = await aufbauen(tk["gid"], "shell", ws, tk["who"], tk.get("uid"), tk["cols"], tk["rows"], tk["login"], ws)
+    if s is None:
+        if why in ("voll", "offline"):     # changed between the check above and now
+            await asyncio.to_thread(live.end, rec, False, why)
+            return await _refuse(ws, why, 4429 if why == "voll" else 4409)
+        if rec is not None and why not in ("sshd", "anker"):
             rec.step("err", why[:30], time.time())
         await asyncio.to_thread(live.end, rec, False, re.sub(r"[^a-z0-9_]", "", why)[:30])
-        await s.end(why[:30])
+        if why in ("sshd", "anker"):       # no SSH yet: this socket closes here
+            with contextlib.suppress(Exception):
+                await ws.close(4502)
         return
     if rec is not None:
         rec.step("prep", "SSH", t0, time.time())
     await asyncio.to_thread(live.end, rec, True)
-    s.offen = True
-    if s.pipe_zu:          # the anchor's pipe closed while SSH was set up
-        await s.end("anker")
-        return
     STATS["sitzungen"] += 1
     log("sitzung_auf", s.who, len(SITZUNG))
     _live("Fernsitzung geöffnet")

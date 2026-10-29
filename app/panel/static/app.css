@@ -2990,7 +2990,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
   .fzview.fzki .fzfragbtn{display:block;flex:none;margin-top:6px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font:inherit;text-align:left;cursor:pointer}
   .fzview.fzki .fzside,.fzview.fzki.fzzu .fzside{display:flex;position:fixed;left:0;right:0;bottom:0;height:min(70vh,560px);z-index:9500;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.3);transform:translateY(105%);visibility:hidden;transition:transform .2s}
   #fzbox.fzoffen{padding:6px}  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer{display:none}}
-.fzview[hidden],.fzdetail[hidden]{display:none}
+.fzview[hidden],.fzdetail[hidden],.fzfiles[hidden]{display:none}
 .fzq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mut);cursor:help;vertical-align:middle}
 .fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
 /* xterm's own scroll bar dark and thin, no light strip at the terminal's edge */
@@ -3021,6 +3021,15 @@ body.fzfenster .fztop{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0}
 body.fzfenster main>section{display:none!important}body.fzfenster main>section#fern{display:block!important;animation:none}
 body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;height:auto;background:var(--bg);padding:38px 8px 8px;margin:0;overflow:hidden}
 body.fzfenster #fzheraus,body.fzfenster #fzmenu{display:none}
+/* Fernzugang, Dateien (ferndateien.py): breadcrumbs, one row per entry, names as text only */
+.fzfiles{margin-top:8px}.fzfbar{align-items:center;flex-wrap:wrap}.fzcrumbs{display:flex;flex-wrap:wrap;gap:2px;min-width:0}
+.fzcrumb{padding:4px 8px;min-height:32px;font:12.5px ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.fzfcols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px;margin-top:8px}
+.fzflist{margin:0;padding:6px 10px;max-height:65vh;overflow:auto}
+.fzfrow{display:grid;grid-template-columns:18px minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.fzfrow:last-child{border-bottom:0}.fzfname{overflow-wrap:anywhere;text-align:left;font:13px ui-monospace,Menlo,Consolas,monospace}
+button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);cursor:pointer;min-height:32px}.fzfart{color:var(--mut,inherit);text-align:center}
+@media (max-width:760px){.fzfcols{grid-template-columns:1fr}.fzfrow{grid-template-columns:18px minmax(0,1fr) auto}.fzfrow>span.small{display:none}}
 /* Siedlung neu ordnen (dungeonfenster.js dmSiedlung, Dominik 2026-10-28 „1a 2a 3a 4a 5a 6a“): a slim head, the houses as a list beside the chosen one, one row per offer */
 .dm-sied-kopf{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:4px 2px 10px;border-bottom:1px solid var(--t-linie,var(--line))}.dm-sied-kopf>b{font-size:19px}.dm-sied-gold{margin-left:auto}.dm-sied-gold b{font-size:19px;font-variant-numeric:tabular-nums}
 .dm-sied{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0 16px;margin-top:10px;align-items:start}.dm-sied.handy{grid-template-columns:minmax(0,1fr)}
