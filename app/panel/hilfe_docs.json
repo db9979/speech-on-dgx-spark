@@ -6061,6 +6061,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: eine Einordnung für jede getippte Aktion (V01.1.241, Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschlag 7, „ok“): Ohne neuen Schalter, ein Umbau mit Korrekturen. 1. Ein Modul: Alle festen Wortlisten, die eine getippte Aktion einordnen (Angriff, Angriff auf einen genannten Gegner, Flucht, Frieden, Alltag, Frage, Verkauf, Kauf, Rast, Gehen, dazu die sanften Wörter, Magie, Werfen und die Tabelle der Probenwerte), stehen jetzt in dungeon_einordnung.py statt verteilt auf Kampf, Panel, Erzähler und Anleitung. 2. Genau eine Art: einordnung.kind gibt jeder Aktion genau eine Art in fester Reihenfolge: Angriff, Angriff auf einen Genannten, Flucht, Frieden, Alltag, Frage, Verkauf, Kauf, Rast, Gehen. Kampf, Proben, Erzähler-Prüfung, Karte, Zeugen-Regel, Rückfrage und Protokoll-Prüfer fragen dasselbe Modul, so sagt keine Liste einem Satz etwas anderes als eine andere. Eine Bitte um Frieden mit einem Wort des Redens („Lasst uns verhandeln“) zählt auch als Reden. 3. Gefundene Widersprüche behoben: „Ich frage den Wirt nach dem Weg. Dann gehe ich los.“ war ein Angriff auf einen Genannten (jetzt Frage; „gehe … los“ greift nur mit „auf“ an), „W"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ir schlagen hier unser Lager auf und rasten.“ Angriff und Rast zugleich (jetzt Rast), „We rest by the fire.“ ein Angriff (jetzt Rast), „Ich laufe davon“ Flucht und zugleich Gehen ohne Probe (jetzt nur Flucht), „Ich sage Hallo“ Alltag und Frage (jetzt Alltag, keine Probe), „Ich schlage vor, wir reden“ ist Reden. 4. Prüfstand: test_dungeon_saetze prüft die eine Art jedes der rund 300 Sätze und dass jede Hilfsfunktion (fight, asks, typed, everyday) dasselbe sagt; die Tabelle der Probenwerte (einordnung.values) gilt für die Proben und für die Hinweise der Anleitung."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Anker-Tabelle, Seiten-Tabellen und Protokoll-Prüfer (V01.1.240, Dominik 2026-10-28 „es kommen zu viele fehler aktuell … mache mir vorschläge“, Vorschläge 3 bis 6, „ok“): Ohne neuen Schalter: feste Regeln, eine Messung und Selbsttests. 1. Anker-Tabelle: tests/dungeon_anker.py nennt für jedes Feld jeder JSON-Antwort des Modells (Erzählung, Proben, Geschichte, Wahrheit, Zusammenfassungen, Flüstern, X-Karte, Schreiber; rund 110 Felder) seine Art (nur Worte, feste Liste, Angebot des Panels, Name der Gruppe, von der Erzählung genannt, das Panel entscheidet) und die feste Prüfung, die es hält. test_dungeon_anker vergleicht sie mit den Schemas: ein neues Feld ohne Anker oder eine verschwundene Prüfung macht ihn rot. Zwei Lücken sind geschlossen: ein Ding fürs Gedächtnis (dinge) und ein Schriftstück zählen nur, wenn die Erzählung sie zeigt (erz.check_things mit foe_named, schrift.check mit schrift.WORTE oder dem Titel). 2. Seiten-Tabellen: test_dungeon_tabellen vergleicht die Tabellen der Spielseite (Stufe einer Probe, Seltenheit, Art einer Kraft, Waffeneigenschaften, Resistenz, Nachtwache, Zustand eines Gefährten, EP-Grund, Prüfstand-Marke, Tageszeit, Häuser und Dienste "
 },
 {
@@ -22286,6 +22302,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "mulation test_kampf_invarianten_simulation (300 fights with a fixed seed through the real steps of a turn: hits only by the rule, life within its bounds, the fallen do not act, one end of the fight, experience only then, a charge only with a spell, death only after three failed saves and never at the children's table, every attacker gets its attack)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: one sorting for every typed action (V01.1.241, Dominik 2026-10-28 \"es kommen zu viele fehler aktuell … mache mir vorschläge\", proposal 7, \"ok\"): No new switch, a rebuild with fixes. 1. One module: every fixed word list that sorts a typed action (attack, attack on a named foe, flight, peace, everyday, question, selling, buying, rest, going, and the gentle words, magic, throwing and the table of the values of a check) now stands in dungeon_einordnung.py instead of being spread over the fight, the panel, the narrator and the guide. 2. Exactly one kind: einordnung.kind gives every action exactly one kind by a fixed order: attack, attack on a named foe, flight, peace, everyday, question, selling, buying, rest, going. Fight, checks, the narrator's check, the map, the witness rule, the follow-up question and the protocol checker all ask the same module, so no list tells a sentence something another does not. Asking for peace with a word of talking (\"Lasst uns verhandeln\") counts as talking too. 3. Contradictions found and fixed: \"Ich frage den Wirt nach dem Weg. Dann gehe ich los.\" was an attack on a named foe (now a question; \"gehe … los\" attacks only with \"auf\"), \"Wir"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " schlagen hier unser Lager auf und rasten.\" an attack and a rest at once (now a rest), \"We rest by the fire.\" an attack (now a rest), \"Ich laufe davon\" flight and plain going without a check at once (now only flight), \"Ich sage Hallo\" everyday and a question (now everyday, no check), \"Ich schlage vor, wir reden\" is talking. 4. Bench: test_dungeon_saetze checks the one kind of each of the about 300 sentences and that every helper (fight, asks, typed, everyday) says the same; the table of the values of a check (einordnung.values) serves the checks and the guide's hints."
 },
 {
 "lang": "en",

@@ -707,7 +707,7 @@ class Turns(Base):
         self.assertIn("wofuer", json.dumps(dungeon.schema_proben(dungeon.rules())))
 
     def test_advantage_ooc_and_length(self):
-        self.act_all("Ich stemme mich gegen das Tor. Wie spät ist es eigentlich?")   # no action that only asks (erz.asks)
+        self.act_all("Ich stemme mich gegen das Tor. Wie spät ist es eigentlich?")   # no action that only asks (einordnung.asks)
         rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 10, "vorteil": "vorteil"},
                                     {"wer": "Bela", "wert": "staerke", "schwer": 10, "vorteil": "gottmodus"}]},
                         {"erzaehlung": "Arvid stemmt das Tor auf, kalte Luft riecht nach Moos und Eisen.", "frage_an": "",
@@ -971,14 +971,14 @@ class ReviewEingabe(Turns):
 
     def test_typed_going_buying_resting_need_no_check(self):
         """E2/G4: plain going, buying and resting by the player's own words need no check, whatever the model writes."""
-        self.assertEqual([dungeon.typed(t) for t in ("wir gehen in den keller", "Ich gehe zur alten Bibliothek.", "Ich kaufe einen Heiltrank.",
+        self.assertEqual([dungeon.einordnung.typed(t) for t in ("wir gehen in den keller", "Ich gehe zur alten Bibliothek.", "Ich kaufe einen Heiltrank.",
                                                        "Ich verkaufe meinen alten Dolch.", "wir rasten", "Ich ruhe mich aus.",
                                                        "Wir schlagen ein Lager auf.", "I buy a rope.", "We rest.")],
                          ["gehen", "gehen", "kauf", "verkauf", "rast", "rast", "rast", "kauf", "rast"])
         for t in ("Ich gehe leise an der Wache vorbei.", "Ich gehe zur Truhe und öffne sie.", "Ich frage den Wirt nach dem Weg.",
                   "Ich frage, ob er Brot verkauft.", "Ich bleibe ruhig.", "Ich durchsuche die Truhe.", "Ich frage den Kaufmann nach Neuigkeiten.",
                   "Ich schleiche an der schlafenden Wache vorbei.", "Ich gehe auf den Ork los und greife ihn an."):
-            self.assertEqual(dungeon.typed(t), "", t)
+            self.assertEqual(dungeon.einordnung.typed(t), "", t)
         r = dungeon.rules()
         rd = self.state(self.rid)
         names = {pid: p["held"]["name"] for pid, p in dungeon.seated(rd)}
@@ -2118,7 +2118,7 @@ class ReviewPanel(Turns):
 
     def test_the_model_names_a_level_the_panel_the_number_and_the_value(self):
         """G23: the model names only leicht … sehr_schwer, the number is the panel's (PROBE_SG); the value fits the fixed
-        table of activities for the player's words (dungeon_anleiten.WURF_WORTE), else the table's; the experience of a
+        table of activities for the player's words (dungeon_einordnung.WERTE), else the table's; the experience of a
         check never depends on the level."""
         r, rd = dungeon.rules(), self.state(self.rid)
         name = rd["plaetze"][self.host]["held"]["name"]
@@ -2214,10 +2214,10 @@ class Bibliothek(Base):
         self.assertTrue(dungeon.panel_says({"lang": "en"}, "The panel rolls for the search."))
         self.assertFalse(dungeon.panel_says({"lang": "en"}, "A carved oak panel hides the door."))
         # 5 and 6: entering goes without a check whatever the model adds; who only asks hears so, not „Gehen“
-        self.assertEqual(dungeon.typed("betrete die biblithek"), "gehen")
-        self.assertEqual(dungeon.typed("Ich trete in die Halle ein"), "gehen")
+        self.assertEqual(dungeon.einordnung.typed("betrete die biblithek"), "gehen")
+        self.assertEqual(dungeon.einordnung.typed("Ich trete in die Halle ein"), "gehen")
         for text, art in (("Ich betrete die Bibliothek", ""), ("Ich trete in die Halle ein", ""), ("Ich trete den Goblin", "angriff")):
-            self.assertEqual(dungeon.kampf.intent(text), art, text)
+            self.assertEqual(dungeon.einordnung.fight(text), art, text)
         for text, warum in (("betrete die biblithek", "gehen"), ("Ich frage Silas danach.", "absicht")):
             rd["offen"] = {self.host: {"text": text, "t": 0}}
             with contextlib.redirect_stdout(io.StringIO()):
@@ -8157,7 +8157,7 @@ class Fight(Turns):
         for n, ts in sorted(names):
             for t in ts:
                 s = t.format(n)
-                if kampf.intent(s) not in ("angriff", "bezug") or n not in kampf.NICHT_ANGRIFF.sub(" ", s):
+                if dungeon.einordnung.fight(s) not in ("angriff", "bezug") or n not in dungeon.einordnung.NICHT_ANGRIFF.sub(" ", s):
                     bad.append(s)
         self.assertEqual(bad, [])
 
@@ -8993,11 +8993,11 @@ class Fight(Turns):
         """Dominik 2026-10-25 („so ging es weiter“): „gehe nach wolfshafen“ got a Geschick check „Sich durch die Gassen
         von Wolfshafen bewegen“, and turn 2 told turn 1 almost word for word. A check only for going (GEHEN without
         RISIKO) is dropped with a line; a narration still repeating after the last try loses its told sentences."""
-        self.assertTrue(dungeon.just_going("Sich durch die Gassen von Wolfshafen bewegen"))
-        self.assertTrue(dungeon.just_going("Travel to the mill"))
+        self.assertTrue(dungeon.einordnung.just_going("Sich durch die Gassen von Wolfshafen bewegen"))
+        self.assertTrue(dungeon.einordnung.just_going("Travel to the mill"))
         for real in ("Holztür aufbrechen", "Unbemerkt an der Wache vorbei gehen", "Über die Schlucht klettern",
                      "Geheimes Fach finden", "Den Läufer einholen", "Brief im Schlamm untersuchen"):
-            self.assertFalse(dungeon.just_going(real), real)
+            self.assertFalse(dungeon.einordnung.just_going(real), real)
         r = dungeon.rules()
         rd = {"offen": {"p1": {"text": "gehe nach wolfshafen"}}, "plaetze": {"p1": {"held": {"name": "Morpheus"}}}, "lang": "de"}
         with mock.patch.object(dungeon, "_name_map", lambda rd: {"morpheus": "p1"}), \
@@ -9028,10 +9028,10 @@ class Fight(Turns):
         none with sneaking; a narration turning down into up, or leaving out the question, is a fault with its rescue."""
         E = dungeon.erz
         tat = "frage den kellner ob du in den keller gehen kannst und dich dort umschauen."
-        self.assertTrue(E.asks(tat))
+        self.assertTrue(dungeon.einordnung.asks(tat))
         for other in ("Ich schleiche unbemerkt in den Keller.", "Ich frage mich, ob die Tür offen ist, und öffne sie.",
                       "Ich klettere die Mauer hinauf.", "Ich greife den Kellner an."):
-            self.assertFalse(E.asks(other), other)
+            self.assertFalse(dungeon.einordnung.asks(other), other)
         r = dungeon.rules()
         rd = {"offen": {"p1": {"text": tat}}, "plaetze": {"p1": {"held": {"name": "Morpheus"}}}, "lang": "de",
               "ton": r["toene"][-1]["id"], "welt": r["welten"][0]["id"]}
@@ -9777,7 +9777,7 @@ class Fight(Turns):
 
     def test_deeds_in_front_of_witnesses(self):
         """LlamaTale idea 3 (Dominik 2026-10-27 „1-7“, switch dungeonzeugen): what a hero does to a person of the scene
-        (an attack by kampf.intent, a theft, a gift, help by fixed words, the person by name) changes the attitudes by
+        (an attack by einordnung.fight, a theft, a gift, help by fixed words, the person by name) changes the attitudes by
         the fixed table FOLGE before the model may: target −2 and every other person present −1 for an attack or a
         theft, +1 for the target of a gift or help; a theft whose Geschick check passed stays unseen, an attack on a foe
         of the running fight is no deed; the narration gets the deeds as data and the model's own step for the same

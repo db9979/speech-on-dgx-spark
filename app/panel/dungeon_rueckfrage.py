@@ -24,6 +24,7 @@ Journal: „dungeon: rueckfrage | regel | kurz“ (salat, fuerwort, kein tun), �
 """
 import re
 
+import dungeon_einordnung as einordnung
 import features
 from common import DayCounter
 
@@ -45,7 +46,7 @@ MUSTER = {"angriff": ("Ich greife {x} an.", "I attack {x}."), "zauber": ("Ich wi
           "weg": ("Ich gehe {x}.", "I go {x}."), "umsehen": ("Ich sehe mich genau um.", "I look around carefully."),
           "abwarten": ("Ich halte mich bereit und beobachte die Gegner.", "I stay ready and watch the foes.")}
 
-# what a character does: the fixed verbs (beside the fight's own lists in dungeon_kampf)
+# what a character does: the fixed verbs (beside the lists of dungeon_einordnung)
 TUN_WORTE = re.compile(
     r"(?i)(?<!\w)(?:geh|lauf|renn|spring|kletter|schleich|versteck|flieh|folg|komm|tret|wart|bleib|setz|leg|steh|"
     r"sprech|sprich|sag|frag|ruf|antwort|rede|red|erzähl|erzaehl|bitt|biet|droh|überred|ueberred|lüg|lueg|"
@@ -113,7 +114,6 @@ def _named(names, low):
 
 def unclear(dm, r, rd, pid, text):
     """The reason (GRUENDE) an action is unclear by the fixed rules, "" when it is clear."""
-    import dungeon_kampf
     t = str(text or "").strip()
     low = t.lower()
     words = re.findall(r"[^\W\d_]+", low)
@@ -125,8 +125,8 @@ def unclear(dm, r, rd, pid, text):
         return ""
     names = _names(dm, r, rd, pid)
     named = _named(names, low)
-    doing = bool(TUN_WORTE.search(low) or dungeon_kampf.ANGRIFF_WORTE.search(low) or dungeon_kampf.BEZUG_WORTE.search(low)
-                 or dungeon_kampf.MAGIE_WORTE.search(low) or dungeon_kampf.FRIEDEN_WORTE.search(low))
+    doing = bool(TUN_WORTE.search(low) or einordnung.ANGRIFF_WORTE.search(low) or einordnung.BEZUG_WORTE.search(low)
+                 or einordnung.MAGIE_WORTE.search(low) or einordnung.FRIEDEN_WORTE.search(low))
     if doing and not named and FUERWORT.search(low) and len(words) <= 6 and _choices(r, rd) > 1:
         return "fuerwort"                        # „nimm es“, „greif ihn an“ while more than one fits
     if not doing and not named and not subject_verb(dm, rd, words):

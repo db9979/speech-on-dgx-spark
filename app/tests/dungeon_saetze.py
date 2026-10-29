@@ -1,19 +1,19 @@
 """KI-Dungeon-Master: the Satz-Prüfstand's sentences (Dominik 2026-10-28 „es kommen zu viele fehler“, Vorschlag 1).
 
-Fixed player actions with what they do. Every word list that sorts a typed action (dungeon_kampf.intent, dungeon.typed,
-dungeon_erzaehler.asks, dungeon.everyday) must sort every one of them as written here (test_dungeon_saetze); a sentence
-a list got wrong at the table comes in here with the fix. Data only, read by the tests.
+Fixed player actions with what they do. The one sorting of a typed action (dungeon_einordnung.kind, Vorschlag 7) gives
+every one of them exactly its kind here (test_dungeon_saetze), and the helpers of the callers (fight, asks, typed,
+everyday) follow from it; a sentence sorted wrong at the table comes in here with the fix. Data only, read by the tests.
 
-What each kind asks of the lists (ERWARTET in test_dungeon_saetze):
-  angriff  attacks on its own (intent „angriff“), never going, buying or everyday
-  bezug    attacks the foe it names (intent „bezug“)
-  frieden  asks for peace (intent „frieden“)
-  flucht   runs away (intent „flucht“)
-  gehen    plain going (typed „gehen“), no attack
-  frage    only asks or talks (asks), no attack, nothing typed
-  kauf, verkauf, rast   typed as that, no attack
-  alltag   everyday acts (everyday), no attack, nothing typed
-  sonst    none of these: no attack, nothing typed (also not everyday)
+The kinds (dungeon_einordnung.ARTEN, in their fixed order):
+  angriff  attacks on its own
+  bezug    attacks the foe it names
+  flucht   runs away
+  frieden  asks for peace
+  alltag   everyday acts only (no check)
+  frage    only asks or talks
+  verkauf, kauf, rast   typed as that (the panel's own buttons)
+  gehen    plain going
+  sonst    none of these (kind "")
 """
 
 SAETZE = {
@@ -87,6 +87,8 @@ SAETZE = {
         "Ich rede mit Silas über den Fluch", "Ich frage Grimma, was in der Truhe ist",
         "I ask the guard who lives here", "I talk to Silas about the curse", "I ask about the tower",
         "Ich sage dem Wirt, dass wir bleiben",
+        # Einordnung 2026-10-29: „gehe ich los“ was an attack on a foe named
+        "Ich frage den Wirt nach dem Weg. Dann gehe ich los.", "Ich schlage vor, wir reden",
     ],
     "kauf": [
         "Ich kaufe einen Heiltrank", "Ich kaufe Proviant beim Händler", "I buy a rope",
@@ -105,6 +107,8 @@ SAETZE = {
         # Satz-Prüfstand 2026-10-28
         "Ich ruhe mich aus", "Wir übernachten im Gasthaus", "Wir machen Rast", "I sleep", "We rest here",
         "Ich lege eine kurze Rast ein",
+        # Einordnung 2026-10-29: „schlagen hier“ was an attack, „by the fire“ an attack on a foe named
+        "Wir schlagen hier unser Lager auf und rasten.", "We rest by the fire.",
     ],
     "alltag": [
         "Ich wünsche den anderen einen guten Morgen und packe mein Brot aus.", "Ich grüße den Wirt.",
@@ -114,13 +118,15 @@ SAETZE = {
         "Ich trinke ein Bier", "Ich esse mein Brot", "Ich bedanke mich beim Wirt", "Ich winke den anderen zu",
         "Ich gähne und strecke mich", "I thank the innkeeper", "I eat my bread", "I drink my ale",
         "I wave at the others", "Ich lache", "Hallo zusammen!", "Ich packe meine Sachen aus",
+        # Einordnung 2026-10-29: everyday acts come before talking („sage“), so no check
+        "Ich sage Hallo", "Ich sage dem Wirt guten Morgen",
     ],
     "sonst": [
         # Kampf-Audit, Nachprüfung Welle 1 and V01.1.130: stepping, proposing, a look, a light, a door
         "Ich greife nach dem Seil neben der Wache", "Ich stoße die Tür auf und rufe die Wache",
         "Ich mache ein Lagerfeuer",
         "Ich halte mich bereit", "Ich verstecke mich", "Ich helfe Bela auf", "I reach for the rope",
-        "Ich trete zur Seite, weg von der Wache", "Ich schlage vor, wir reden", "Ich schlage mich in die Büsche",
+        "Ich trete zur Seite, weg von der Wache", "Ich schlage mich in die Büsche",
         "Ich werfe der Wache einen Blick zu", "Ich gebe der Wache Feuer für ihre Pfeife", "I step back",
         "I throw the guard a glance", "Ich schlage Alarm", "Ich trete die Tür ein", "Ich werfe der Wache Gold zu",
         "I strike a deal with the guard", "Ich verfluche die Wache", "Ich bete um Zuflucht",

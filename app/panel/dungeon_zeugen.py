@@ -3,7 +3,7 @@ idea only, own code).
 
 What a hero does in front of people changes how they stand towards the hero, by fixed rules and never by the model:
 - seen(dm, r, rd, wuerfe): before the narration the panel reads each seat's open action with fixed word lists (an attack
-  by dungeon_kampf.intent, TATEN for theft, a gift, help) and the person of the scene it names (dungeon_nsc.scene); a
+  by dungeon_einordnung.fight, TATEN for theft, a gift, help) and the person of the scene it names (dungeon_nsc.scene); a
   theft whose Geschick check passed this turn stays unseen; an attack on a foe of the running fight is no deed. Every
   other person of the scene is a witness. The steps come from the fixed table FOLGE (target, witnesses). The narration
   gets the deeds and the new attitudes as data (facts „zeugen“) and only tells the reaction.
@@ -14,12 +14,13 @@ und Chronik“. Journal: fixed words and numbers („dungeon: zeugen | …“), 
 """
 import re
 
+import dungeon_einordnung as einordnung
 import dungeon_nsc as nsc
 import features
 from common import DayCounter
 
 KEY = "dungeonzeugen"
-TATEN = {                  # deeds besides an attack (dungeon_kampf.intent), by fixed word lists
+TATEN = {                  # deeds besides an attack (dungeon_einordnung.fight), by fixed word lists
     "diebstahl": re.compile(r"(?i)(?<!\w)(?:stiehl|stehl|stahl|klau|entwend|stibitz|mops|bestehl|steal|stole|pickpocket|pilfer|swipe|snatch)"),
     "geschenk": re.compile(r"(?i)(?<!\w)(?:schenk|beschenk|überreich|ueberreich|spendier|gift|present|(?:gebe?|gib|gab)\s+(?:[\w'-]+\s+){0,4}"
                            r"(?:ihm|ihr|ihnen|dir)(?!\w)|give\s+(?:him|her|them)(?!\w)|hand\s+(?:him|her|them)(?!\w))"),
@@ -45,10 +46,9 @@ def on(rd):
 
 def deed(text):
     """The deed of an action by the fixed word lists: angriff, diebstahl, geschenk, hilfe or ""."""
-    import dungeon_kampf
-    if dungeon_kampf.intent(text) in ("angriff", "bezug"):
+    if einordnung.fight(text) in ("angriff", "bezug"):
         return "angriff"
-    t = dungeon_kampf.NICHT_ANGRIFF.sub(" ", str(text or ""))
+    t = einordnung.NICHT_ANGRIFF.sub(" ", str(text or ""))
     return next((k for k, w in TATEN.items() if w.search(t)), "")
 
 

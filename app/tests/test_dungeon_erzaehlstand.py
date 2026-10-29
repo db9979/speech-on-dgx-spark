@@ -193,14 +193,14 @@ class Bench(Base):
 
     def test_everyday_acts_need_no_check(self):
         """Erzähler-Prüfstand 28.10. („Harmlose Aktion ohne Probe“ 0 points): greeting, eating, unpacking are never a
-        check by the panel's fixed rule (dungeon.ALLTAG, every part of the action), whatever the model asks; a word of
+        check by the panel's fixed rule (dungeon_einordnung.ALLTAG, every part of the action), whatever the model asks; a word of
         RISIKO, a risky food or drink (ALLTAG_NICHT) or any other part keeps the model's check."""
         for t in ("Ich wünsche den anderen einen guten Morgen und packe mein Brot aus.", "Ich grüße den Wirt.", "Ich lächle und nicke.",
                   "Ich esse und trinke.", "I greet the others and unpack my bread."):
-            self.assertTrue(dungeon.everyday(t), t)
+            self.assertTrue(dungeon.einordnung.everyday(t), t)
         for t in ("Ich klettere die Wand hinauf.", "Ich packe mein Brot aus und schleiche mich vorbei.", "Ich trinke den Trank aus der Truhe.",
                   "Ich esse den Pilz und untersuche die Tür.", "Ich trinke aus dem Brunnen.", "Ich greife an.", ""):
-            self.assertFalse(dungeon.everyday(t), t)
+            self.assertFalse(dungeon.einordnung.everyday(t), t)
         r = dungeon.rules()
         rd, _ = es.scene(r, "ruhe")
         with contextlib.redirect_stdout(io.StringIO()) as out:

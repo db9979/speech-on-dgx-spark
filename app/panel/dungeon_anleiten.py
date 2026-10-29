@@ -59,6 +59,7 @@ Journal: fixed words and numbers („dungeon: anleitung | …“), Live only cou
 import random
 import re
 
+import dungeon_einordnung as einordnung
 import features
 from common import DayCounter
 
@@ -82,13 +83,8 @@ WEG_MAX = 80
 WORT_MIN = 5               # letters of a word that names something (check_ways)
 MUSTER = {"ding": ("Ich untersuche {x}.", "I examine {x}."), "heilen": ("Ich wirke {z} auf {x}.", "I cast {z} on {x}."),
           "trank": ("Ich trinke {x}.", "I drink {x}."), "faden": ("Ich gehe dem nach: {x}", "I follow this up: {x}")}
-# the value that likely counts for a kind of button (einsteiger), and for a way of the narrator by its doing word
+# the value that likely counts for a kind of button (einsteiger); for a way of the narrator by its doing word (einordnung.WERTE)
 WURF = {"person": "charisma", "ding": "intelligenz", "umsehen": "weisheit", "requisit": "geschick"}
-WURF_WORTE = (("charisma", r"sprech|sprich|frag|überred|ueberred|bitt|verhandel|talk|ask|persuade|bargain|beg"),
-              ("geschick", r"schleich|kletter|versteck|knack|spring|sneak|climb|hide|pick|jump"),
-              ("intelligenz", r"untersuch|such|prüf|pruef|lies|les|entziffer|examine|search|inspect|read|study"),
-              ("weisheit", r"lausch|beobacht|späh|spaeh|spür|spuer|listen|watch|track|spot"),
-              ("staerke", r"brech|heb|stemm|drück|drueck|zieh|break|lift|force|push|pull"))
 SO_LASSEN = ("so lassen", "keep it")
 SPUREN_MAX = 3            # clues of an act at most
 SPUR_LEN = 100             # characters of a clue
@@ -302,8 +298,7 @@ def _wurf(art, text):
     if art in WURF:
         return WURF[art]
     if art == "modell":
-        low = text.lower()
-        return next((w for w, rx in WURF_WORTE if re.search(r"(?<!\w)(?:" + rx + r")", low)), "")
+        return (einordnung.values(text) or [""])[0]
     return ""
 
 

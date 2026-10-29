@@ -289,6 +289,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber. |
 | `app/panel/dungeon_echt.py` | KI-Dungeon-Master: echte Würfel am Tisch. |
 | `app/panel/dungeon_ehre.py` | KI-Dungeon-Master: Ehrungen des Abends. |
+| `app/panel/dungeon_einordnung.py` | KI-Dungeon-Master: die Einordnung: the one module of every fixed word list that sorts what a player typed, and one answer for each action. |
 | `app/panel/dungeon_erzaehler.py` | Better stories for the KI-Dungeon-Master: the chapter's fixed truth (people, groups, secrets), the running summary and the open threads, the world's style ex … |
 | `app/panel/dungeon_erzaehlstand.py` | KI-Dungeon-Master: the narrator bench „Erzähler-Prüfstand“. |
 | `app/panel/dungeon_fluestern.py` | KI-Dungeon-Master: Flüstern mit einer Figur. |

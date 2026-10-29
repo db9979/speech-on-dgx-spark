@@ -289,6 +289,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_dingbild.py` | KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke |
 | `app/panel/dungeon_echt.py` | Dungeon-Master: echte Würfel am Tisch, ein Platz gibt seine Zahl, das Panel prüft und würfelt weiter |
 | `app/panel/dungeon_ehre.py` | Dungeon-Master: Ehrungen des Abends, Titel und Urkunden aus den eigenen Würfeln des Panels |
+| `app/panel/dungeon_einordnung.py` | Dungeon-Master-Einordnung: jede getippte Aktion bekommt nach fester Reihenfolge genau eine Art |
 | `app/panel/dungeon_erzaehler.py` | Dungeon-Master-Erzähler: Welt-Wahrheit, offene Fäden, Zusammenfassung, Nachbessern nach festen Regeln, Daumen |
 | `app/panel/dungeon_erzaehlstand.py` | Dungeon-Master-Erzähler-Prüfstand: feste Szenen durch das laufende Modell, feste Regeln geben Punkte |
 | `app/panel/dungeon_fluestern.py` | Dungeon-Master: Flüstern mit einer Figur, die Antwort nur für den eigenen Platz, Verrat würfelt das Panel |

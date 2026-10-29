@@ -215,6 +215,7 @@ MODULE = {
     "dungeon_import": ("dienste", "Dungeon-Master-Abenteuer-Import: ein geschriebenes Abenteuer wird ein Entwurf im Geschichten-Planer, feste Regeln prüfen"),
     "dungeon_erzaehlstand": ("dienste", "Dungeon-Master-Erzähler-Prüfstand: feste Szenen durch das laufende Modell, feste Regeln geben Punkte"),
     "dungeon_protokoll": ("dienste", "Dungeon-Master-Protokoll-Prüfer: jede Erzählung noch einmal durch alle festen Prüfungen, Runden als Prüffälle"),
+    "dungeon_einordnung": ("dienste", "Dungeon-Master-Einordnung: jede getippte Aktion bekommt nach fester Reihenfolge genau eine Art"),
     "dungeon_pruefstand": ("dienste", "Dungeon-Master-Balance-Prüfstand: spielt Kämpfe mit den echten Regeln allein durch, nachts oder auf Knopf, ohne Modell"),
     "dungeon_gast": ("dienste", "Dungeon-Master-Gast-Konten: Code per Mail, Helden aufbewahren, Zug-Mail, nur Hash der Adresse"),
     "dungeon_stimmen": ("dienste", "Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen"),

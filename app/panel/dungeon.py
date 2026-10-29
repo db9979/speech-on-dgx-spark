@@ -127,6 +127,7 @@ import dungeon_kommentar as kommentar
 import dungeon_erzaehler as erz
 import dungeon_ideen as ideen
 import dungeon_kampf as kampf
+import dungeon_einordnung as einordnung
 import dungeon_mut as mut
 import dungeon_narben as narben
 import dungeon_rast as rast
@@ -1332,7 +1333,7 @@ def heal_named(r, rd, pid, h, a):
     for a friend or the group, the lowest grade first, then the most life; with no charge left the seat gets a fixed
     line. Never the model."""
     t = a["text"]
-    if not HEIL_VERB.search(t) or kampf.intent(t) == "angriff":
+    if not HEIL_VERB.search(t) or einordnung.fight(t) == "angriff":
         return
     ziel = friend(rd, pid, t) or (pid if re.search(r"(?<!\w)" + re.escape(h["name"].lower()) + r"(?!\w)", t.lower()) else None)
     if not ziel:
@@ -3850,53 +3851,12 @@ def _name_map(rd):
     return {p["held"]["name"].lower(): pid for pid, p in seated(rd)}
 
 
-# going somewhere needs no check (Dominik 2026-10-25, „gehe nach wolfshafen“ got „Sich durch die Gassen von Wolfshafen
-# bewegen“ on Geschick): a check whose wofuer has a word of GEHEN and none of RISIKO is dropped; the map moves the group
-GEHEN = re.compile(r"(?i)\b(geh(e|en|t|st)?|lauf(e|en|t)?|läufs?t|reis(e|en|t)|beweg\w*|wander\w*|marschier\w*|"
-                   r"betr(e|i)t\w*|eintret\w*|tr(e|i)tt?(e|st|en|et)?\s+(in\s+(\w+\s+){0,3}?)?ein(?=\s*(?:[.,;:!?]|$|und(?!\w)))|"   # „betrete die Bibliothek“ (Dominik 2026-10-28)
-                   r"walk\w*|go(es|ing)?|travel\w*|mov(e|es|ing)|head(s|ing)?|enter(s|ing|ed)?)\b")
-RISIKO = ("unbemerkt", "unauffällig", "ablenk", "leise", "heimlich", "schleich", "versteck", "kletter", "spring", "schwimm", "flieh", "flucht", "vorbei",
-          "verfolg", "balancier", "sneak", "quiet", "unseen", "hidden", "climb", "jump", "swim", "flee", "past", "chase", "balanc")
-
-
-FRAGE_WERT = "charisma"     # the one value of a check for an action that only asks or talks (erz.asks)
-# Erzähler-Prüfstand 28.10. („Harmlose Aktion ohne Probe“ 0 points): everyday acts need no check by a fixed rule, never
-# the model's: an action whose every part (split at „und“, „dann“, commas and sentence ends) is one of these
-ALLTAG = re.compile(r"(?i)(?<!\w)(?:(?:be)?grü(?:ß|ss)\w*|gr(?:ue|ü)sse?n?|wünsch\w*|wuensch\w*|bedank\w*|danke\w*|lächel\w*|laechel\w*|lächl\w*|laechl\w*|"
-                    r"lach\w*|nick\w*|wink\w*|umarm\w*|ess(?:e|en)|iss|isst|trink\w*|frühstück\w*|fruehstueck\w*|"
-                    r"pack\w*\s+(?:\w+\s+){0,3}aus|setz\w*\s+(?:\w+\s+){0,2}(?:hin|nieder|ans|an\s+den|auf\s+die)|streck\w*|gähn\w*|"
-                    r"gaehn\w*|hallo|guten\s+(?:morgen|tag|abend)|gute\s+nacht|greet\w*|good\s+(?:morning|evening|night)|hello|"
-                    r"wish\w*|thank\w*|smil\w*|laugh\w*|nod\w*|wav(?:e|es|ing)|hug\w*|eat\w*|drink\w*|breakfast\w*|unpack\w*|"
-                    r"sit\s+down|sits\s+down|stretch\w*|yawn\w*)(?!\w)")
-ALLTAG_NICHT = ("trank", "pilz", "beere", "brunnen", "quelle", "flasche", "phiole", "gift", "fremd", "unbekannt", "seltsam",
-                "potion", "mushroom", "berr", "well", "vial", "flask", "poison", "strange", "unknown")   # what one eats or drinks at a risk
-TEILE = re.compile(r"(?i)\s*(?:,|;|\.|!|\?|\bund\b|\bdann\b|\band\b|\bthen\b)\s*")
-
-
-def everyday(text):
-    """Whether an action is only everyday acts (ALLTAG, every part of it) without a word of RISIKO: no check."""
-    low = str(text or "").lower()
-    teile = [x for x in TEILE.split(low) if x.strip()]
-    return bool(teile) and all(ALLTAG.search(x) for x in teile) and not any(x in low for x in RISIKO + ALLTAG_NICHT)
-
-
-def just_going(wofuer):
-    """A check only for going somewhere (GEHEN without RISIKO): no roll."""
-    low = (wofuer or "").lower()
-    return bool(GEHEN.search(low)) and not any(x in low for x in RISIKO)
-
+FRAGE_WERT = "charisma"     # the one value of a check for an action that only asks or talks (einordnung.asks)
 
 # Review 27.10. Paket 6 (E2, E13): what the player typed, by fixed word lists, never the model's words. Buying, selling
 # and resting go only over the panel's buttons: a fixed line to the seat and the fact nicht_erfolgt for the narrator;
 # gold typed to a person of the scene goes over for real (typed_seen, typed_apply); plain going, buying and resting
-# need no check. The one module for every such word list waits for the big tidy action (Richtlinie Teil 17).
-KAUF = re.compile(r"(?i)(?<!\w)(?:(?:ein|ab)?kauf(?:e|en|st|t|te|ten)?|erwerb(?:e|en)?|bezahl(?:e|en|st|t)?|buy|buys|buying|bought|purchas\w*|pay|pays|paying|paid)(?!\w)")
-VERKAUF = re.compile(r"(?i)(?<!\w)(?:verkauf(?:e|en|st|t|te|ten)?|sell|sells|selling|sold)(?!\w)")
-RAST = re.compile(r"(?i)(?<!\w)(?:rast(?:e|en|et|est)?|ruh(?:e|en|t)\s+(?:\w+\s+){0,2}aus|ausruh\w*|schlaf(?:e|en|t)?|übernacht\w*|uebernacht\w*|"
-                  r"schlag(?:e|en|t)?\s+(?:\w+\s+){0,2}lager|rest|rests|resting|sleep|sleeps|make\s+camp|camp)(?!\w)")
-MEHR_ALS_GEHEN = re.compile(r"(?i)(?<!\w)(?:such|durchsuch|untersuch|öffn|oeffn|nimm|nehm|greif|pack|heb|lies|les|prüf|pruef|knack|brech|"
-                            r"stiehl|stehl|klau|schlag|hau|kämpf|kaempf|wirk|zauber|frag|sprech|sprich|red|beobacht|lausch|horch|spür|spuer|"
-                            r"search|open|take|grab|read|examine|steal|attack|fight|cast|ask|talk|listen|watch|track)")
+# need no check (the word lists: dungeon_einordnung).
 GOLD_ZAHL = re.compile(r"(?i)(?<!\w)(\d{1,5})\s*(?:gold\w*|münz\w*|muenz\w*|coins?|gp|gm)(?!\w)")
 ZAHL_WORTE = re.compile(r"(?i)(?<!\w)(?:bezahl|zahl|pay|paid)")
 TIPP = {"kauf": (("Kaufen geht über „⚖ Händler“, wenn ein Händler da ist.", "Buying works over \"⚖ Merchant\" when a merchant is here."), "haendler"),
@@ -3914,19 +3874,6 @@ AUFGABE_GETIPPT = {
 }
 
 
-def typed(text):
-    """What a typed action does by the fixed lists: "verkauf", "kauf", "rast", "gehen" (a word of GEHEN, none of RISIKO,
-    of MEHR_ALS_GEHEN or of an attack) or "" (also for an action that only asks, erz.asks)."""
-    low = str(text or "").lower()
-    if not low or erz.asks(low):
-        return ""
-    for kind, rx in (("verkauf", VERKAUF), ("kauf", KAUF), ("rast", RAST)):
-        if rx.search(low):
-            return kind
-    if GEHEN.search(low) and not any(x in low for x in RISIKO) and not MEHR_ALS_GEHEN.search(low) and kampf.intent(low) != "angriff":
-        return "gehen"
-    return ""
-
 
 def typed_seen(r, rd):
     """Before the narration (on run_turn's copy): gold typed to a person of the scene ({was: geben, pid, an, gold}), or
@@ -3940,11 +3887,11 @@ def typed_seen(r, rd):
         low = t.lower()
         to = next((ns[k]["name"] for k in here if nsc.named(ns[k], low)), "")
         g = GOLD_ZAHL.search(low)
-        if to and g and int(g.group(1)) > 0 and (auftraege.GEBEN.search(low) or ZAHL_WORTE.search(low)) and not erz.asks(low):
+        if to and g and int(g.group(1)) > 0 and (auftraege.GEBEN.search(low) or ZAHL_WORTE.search(low)) and not einordnung.asks(low):
             n = int(g.group(1))
             out.append({"was": "geben", "pid": pid, "an": to, "gold": n} if n <= h.get("gold", 0) else {"was": "nicht", "pid": pid, "art": "gold"})
             continue
-        kind = typed(t)
+        kind = einordnung.typed(t)
         if kind in TIPP:
             out.append({"was": "nicht", "pid": pid, "art": kind})
     return out
@@ -4002,10 +3949,10 @@ def tell_no_check(rd, ohne, seats):
 
 def check_proben(r, rd, obj, count=True):
     """The checks the model asked for, by fixed rules: only players who acted this turn, one per player, a value
-    of the list, the difficulty clamped, none for plain going, buying or resting by the player's own words (typed),
-    only for going somewhere (just_going, or the seat's action goes to a
+    of the list, the difficulty clamped, none for plain going, buying or resting by the player's own words (einordnung.typed),
+    only for going somewhere (einordnung.just_going, or the seat's action goes to a
     neighbouring place without a word of RISIKO, dungeon_karte.asked_ways) or for a hero down (zustand), for an action that only asks or
-    talks only FRAGE_WERT and never a word of RISIKO (erz.asks). Returns (checks, dropped)."""
+    talks only FRAGE_WERT and never a word of RISIKO (einordnung.asks). Returns (checks, dropped)."""
     names, out, drop, seen = _name_map(rd), [], 0, set()
     rd["_ohne"] = []                             # Review 27.10. Paket 12 (E14): the seats told why no check came (OHNE_PROBE)
     werte = {w["id"] for w in r["werte"]}
@@ -4016,15 +3963,15 @@ def check_proben(r, rd, obj, count=True):
         if not pid or pid in seen or pid not in rd["offen"] or p.get("wert") not in werte or not stufe:
             drop += 1
             continue
-        kind = typed(rd["offen"][pid].get("text"))
-        if kind or just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in RISIKO):
+        kind = einordnung.typed(rd["offen"][pid].get("text"))
+        if kind or einordnung.just_going(p.get("wofuer")) or pid in walk and not any(x in str(rd["offen"][pid].get("text", "")).lower() for x in einordnung.RISIKO):
             drop += 1
             print(f"dungeon: probe | verworfen | {kind or 'gehen'}", flush=True)
             if kind in ("", "gehen"):            # buying, selling and resting have their own line (TIPP); who only asks hears
-                rd["_ohne"].append((pid, "absicht" if erz.asks(rd["offen"][pid].get("text")) else "gehen"))   # that (2026-10-28)
+                rd["_ohne"].append((pid, "absicht" if einordnung.asks(rd["offen"][pid].get("text")) else "gehen"))   # that (2026-10-28)
             continue
-        if everyday(rd["offen"][pid].get("text")):
-            drop += 1                            # greeting, eating, unpacking: never a check (ALLTAG)
+        if einordnung.everyday(rd["offen"][pid].get("text")):
+            drop += 1                            # greeting, eating, unpacking: never a check (einordnung.ALLTAG)
             print("dungeon: probe | verworfen | alltag", flush=True)
             rd["_ohne"].append((pid, "alltag"))
             continue
@@ -4034,7 +3981,7 @@ def check_proben(r, rd, obj, count=True):
             rd["_ohne"].append((pid, "zustand"))
             continue
         wert = fitting_value(rd, pid, p["wert"], count)
-        if erz.asks((rd["offen"][pid] or {}).get("text")) and (wert != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in RISIKO)):
+        if einordnung.asks((rd["offen"][pid] or {}).get("text")) and (wert != FRAGE_WERT or any(x in str(p.get("wofuer", "")).lower() for x in einordnung.RISIKO)):
             drop += 1                            # an action that only asks: Charisma or no check, never sneaking
             print("dungeon: probe | verworfen | absicht", flush=True)
             rd["_ohne"].append((pid, "absicht"))
@@ -4058,11 +4005,11 @@ def probe_stufe(p):
 
 
 def fitting_value(rd, pid, wert, count=True):
-    """The value of a check by the fixed table of activities (dungeon_anleiten.WURF_WORTE) for the player's own words:
+    """The value of a check by the fixed table of activities (dungeon_einordnung.WERTE) for the player's own words:
     the model's when it is one the action names or the action names none, else the table's first (Review 27.10.
     Paket 9, G23: „ich klettere“ is never a check on Charisma)."""
     low = str((rd["offen"].get(pid) or {}).get("text") or "").lower()
-    fits = [w for w, rx in anleiten.WURF_WORTE if re.search(r"(?<!\w)(?:" + rx + r")", low)]
+    fits = einordnung.values(low)
     if not fits or wert in fits:
         return wert
     if count:                                    # the Erzähler-Prüfstand counts nothing of the table's day

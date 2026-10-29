@@ -8,7 +8,7 @@ what the dice say.
                the same turn always offers the same (a seed of round, turn and group), so check and facts agree
     start      the model's begegnung [{id, allein}] from the offer only, ARTEN kinds at most; the panel sets the counts
                (fill) until the adjusted experience (D&D multiplier by count) is BAND times the budget, GEGNER_MAX at most
-    attack     the panel makes the attack from the action (Kampf-Audit 1, Dominik 2026-10-26): ANGRIFF_WORTE, a spell
+    attack     the panel makes the attack from the action (Kampf-Audit 1, Dominik 2026-10-26): einordnung.ANGRIFF_WORTE, a spell
                with a damage kind, BEZUG_WORTE or magic with a foe named; d20 + the value's bonus + proficiency against
                the foe's armour class (ruestung); a hit costs the weapon's die + the value's bonus + its rarity (a spell
                cast this turn: its die by grade); a natural 20 doubles the dice, a natural 1 misses. The target is the
@@ -54,6 +54,7 @@ import re
 import dungeon_album as album
 import dungeon_bestiarium as best
 import dungeon_ehre as ehre
+import dungeon_einordnung as einordnung
 import dungeon_gefaehrte as gefaehrte
 import dungeon_haltung as haltung
 import dungeon_umgebung as umgebung
@@ -99,45 +100,6 @@ ZAUBER_W = (6, 8, 8, 10, 10, 12)   # the die of an attack spell by its grade 0..
 ENDE = ("frieden", "flucht")       # the model may end a fight without a winner
 AUS = ("besiegt", "geflohen")
 ZIEL_MAX = 40
-# Kampf-Audit 1 (Dominik 2026-10-26 „Empfehlung umsetzen“): the panel makes the attack from the action, never from the
-# model's check. ANGRIFF_WORTE attack on their own (with no foe named: the first one standing), BEZUG_WORTE only with a
-# foe named in the action; a stem may carry a prefix (er-, be-, zu-, nieder-, ab-, ver-), NICHT_ANGRIFF is taken out
-# first („greife nach dem Seil“, „treffe mich mit“, „stoße die Tür auf“, „betrete“). New words only with
-# the Satz-Prüfstand's sentences (tests/dungeon_saetze.py, test_dungeon_saetze).
-_VOR = r"(?<!\w)(?:er|be|zu|nieder|ab|ver|drauf|los)?"
-ANGRIFF_WORTE = re.compile(r"(?i)" + _VOR + r"(?:greif\w*\s+(?:[\w'-]+\s+){0,4}an(?!\w)|verpass\w*\s+(?:[\w'-]+\s+){0,4}eins(?!\w)|angriff|angreif|attackier|attack|schlag|schläg|schlug|"
-                           r"stech|stich|stach|stoß|stoss|schieß|schiess|schoss|schuss|tö?te[nt]?(?!\w)|toete|tötet|erschlag|besieg|"
-                           r"zerschmetter|erdolch|kämpf|kaempf|hau(?:e|t|en)?(?!\w)|hieb|prügel|prügl|pruegel|pruegl|dresch|"
-                           r"schlitz|ramm|tret|tritt|spieß|spiess|kill|hits?(?!\w)|strike|shoot|stab|slash|smite|blast|fight|battle|"
-                           r"punch|kick|swing|bash|cleave)")
-BEZUG_WORTE = re.compile(r"(?i)" + _VOR + r"(?:triff|treff|traf|ziel|wirf|werf|wurf|schleuder|feuer|stürm|stuerm|schneid|box|"
-                         r"(?:gehe?|geht|renne?|rennt|springe?|springt)\s+(?:[\w'-]+\s+){0,8}los|stürz\w*\s+(?:[\w'-]+\s+){0,8}auf(?!\w)|"
-                         r"stuerz\w*\s+(?:[\w'-]+\s+){0,8}auf(?!\w)|lass\w*\s+(?:[\w'-]+\s+){0,8}fliegen|pack|greif\w*\s+[^.!?;]*?(?<!\w)an(?!\w)|aim|throw|hurl|toss|fire|charge|cut|shove)")
-NICHT_ANGRIFF = re.compile(r"(?i)greif\w*\s+nach(?!\w)|treff\w*\s+(?:mich|uns|dich|euch|sich)(?!\w)|(?:stoß|stoss)\w*\s+(?:die|eine|das)\s+"
-                           r"(?:tür|tuer|tor|fenster|kiste|truhe)|betret|(?<!\w)(?:tür|tuer)\w*\s+auf|(?:greif|attack)\w*\s+(?:ab|aus)(?!\w)|"
-                           r"lagerfeuer|feuer\s+(?:machen|entzünd|an)|reach\s+for|meet\s+with|"
-                           # Nachprüfung Welle 1 (2026-10-26): stepping, proposing, fleeing, a look, a light are no attack;
-                           # Nachprüfung V01.1.130: each ends at a word, so a foe's name („Nachtmahr“, „Sicherheitsdroide“) stays whole
-                           r"(?:tret|tritt|trat)\w*\s+in\s+(?:[\w-]+\s+){0,3}(?:ein|hinein)(?!\w)|"   # „trete in die Halle ein“ (2026-10-28)
-                           # Satz-Prüfstand 2026-10-28 (tests/dungeon_saetze.py): a staff, a book, a camp, a headline, an idiom
-                           r"(?:mein|meine[nmrs]?|dein\w*|sein\w*|ihr\w*|unser\w*|de[nmrs]|die|das|ein\w*|am|im|vom|zum|mit)\s+(?:[\w-]+\s+){0,2}"
-                           r"stab(?:es|s|e)?(?!\w)|stichw\w*|stichflamm\w*|schlag(?:zeile|wort|loch|baum|sahne|ader)\w*|"
-                           r"(?:schlag|schläg|schlug)\w*\s+(?:das|den|die|ein\w*|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*)\s+(?:[\w-]+\s+)?"
-                           r"(?:buch|tagebuch|folianten?|karte|heft|seite|lager|zelt|nachtlager)\w*|pack\w*\s+(?:[\w-]+\s+){0,3}aus(?!\w)|"
-                           r"ramm\w*\s+(?:[\w-]+\s+){1,2}(?:pfahl|pflock|pfosten|stock|speer|spaten)\w*\s+in(?!\w)|"
-                           r"besieg\w*\s+(?:meine|seine|ihre|deine|unsere|eure|die|den)\s+(?:angst|furcht|zweifel|müdigkeit|muedigkeit|schwäche|schwaeche|scham|wut)|"
-                           r"(?:kämpf|kaempf)\w*\s+(?:mich|uns|dich|euch|sich)\s+durch\s+(?:das|den|die)\s+(?:gestrüpp|gestruepp|dickicht|unterholz|"
-                           r"menge|schnee|sturm|wind|dornen|büsche|buesche|sumpf|matsch)|st(?:e|i)ch\w*\s+in\s+see|t(?:ö|oe)?te\w*\s+die\s+zeit|"
-                           r"(?:an|ans|am|zum|ins|vom)\s+(?:das\s+)?(?:lager)?feuer(?!\w)|battle\s*(?:map|plan|field|cry|standard|axe)|kick\w*\s+off|swing\w*\s+(?:[\w-]+\s+){0,2}open|"
-                           r"(?:tret|tritt|trat)\w*\s+(?:den\s+(?:rückzug|rueckzug)|zur\s+seite|zurück|zurueck|beiseite|ein(?=\s*(?:[.,;:!?]|$|und(?!\w)))|vor(?!\w)|"
-                           r"näher|naeher|(?:die|eine|das)\s+(?:tür|tuer|tor|fenster|kiste|truhe)\w*\s+ein(?!\w))|"
-                           r"(?:schlag|schläg|schlug)\w*\s+(?:vor(?!\w)|(?:mich|uns|dich|euch|sich)(?!\w)(?!\s+nieder)|alarm)|hau\w*\s+ab(?!\w)|"
-                           r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){0,4}blick|(?:gebe?|gib|reich)\w*\s+(?:[\w-]+\s+){0,4}feuer(?!\s*(?:auf|!|$))|"
-                           r"(?:werf|wirf|warf)\w*\s+(?:[\w-]+\s+){1,5}zu(?!\w)(?!\s+(?:dem|der|den|boden)(?!\w))|"
-                           r"step\s+(?:back|aside|in|forward)|retreat|fall\s+back|(?:throw|cast)\w*\s+(?:[\w-]+\s+){0,3}(?:glance|look)|"
-                           r"suggest|propose|hits?\s+the\s+road|strik\w*\s+(?:a\s+)?(?:deal|bargain|match|light)")
-FRIEDEN_WORTE = re.compile(r"(?i)ergebt|ergib|ergeben\s+uns|ergebe\s+mich|aufgeben|gebt\s+auf|kapitulier|verhandel|verhandl|frieden|waffenstillstand|lasst\s+uns\s+reden|"
-                           r"überred|ueberred|ruhig\s+bleiben|surrender|give\s+up|parley|negotiat|truce|peace|stand\s+down")
 # Kampf-Audit 5: spells that work on foes but have no damage kind; those with a saving throw and a state work by it
 # (bann, Kampf-Audit H4), the others cost no charge in a fight (dungeon.cast_powers) and say so to the seat
 KONTROLLE = ("befehl", "farbspray", "furcht", "gegenzauber", "hypnosemuster", "person_beherrschen", "person_festhalten", "schlaf",
@@ -152,27 +114,9 @@ def bann(c):
 
 
 FRIEDEN_SG = (12, 10)      # the panel's peace check: Charisma against the higher of 12 and 10 + the strongest foe's level
-# Kampf-Audit M6: the group flees only when most heroes who can act say so, then by the panel's Geschick check
-FLUCHT_WORTE = re.compile(r"(?i)flieh|flücht|fluecht|(?<!ver)(?<!zu)flucht|(?:rückzug|rueckzug)|(?:renn|lauf|spring)\w*\s+(?:[\w'-]+\s+){0,5}(?:weg|davon|fort)(?!\w)|"
-                          r"hau\w*\s+ab(?!\w)|(?:zieh|ziehen)\w*\s+(?:uns|mich|euch)\s+zurück|(?<!\w)flee|run\s+away|retreat|fall\s+back|escape|get\s+away")
 FLUCHT_SG = (10, 8)        # the flight check: Geschick against the higher of 10 and 8 + the strongest foe's level
 
 
-def intent(text):
-    """What an action does in a fight by the fixed word lists: "angriff" (attacks on its own), "bezug" (attacks a foe
-    it names), "flucht" (runs away, Kampf-Audit M6), "frieden" (asks for peace) or ""."""
-    t = NICHT_ANGRIFF.sub(" ", str(text or ""))
-    return ("angriff" if ANGRIFF_WORTE.search(t) else "bezug" if BEZUG_WORTE.search(t) else "flucht" if FLUCHT_WORTE.search(str(text or ""))
-            else "frieden" if FRIEDEN_WORTE.search(t) else "")
-
-
-# Review 27.10. Paket 2 (E1): an action that names a foe standing is an attack, unless it heals, protects, talks,
-# looks, hides, gives or waits (these words), flees or asks for peace
-SANFT_WORTE = re.compile(r"(?i)(?<!\w)(?:heil|versorg|verbind|schütz|schuetz|beschütz|beschuetz|deck|abschirm|rede|red|sprech|sprich|sag|"
-                         r"frag|ruf|antwort|überred|ueberred|droh|beobacht|schau|seh|sieh|beäug|lausch|versteck|duck|gib|geb|reich|zeig|"
-                         r"wart|bleib|halt\w*\s+(?:mich|uns)|heal|protect|guard|shield|cover|talk|speak|say|ask|call|threaten|watch|look|"
-                         r"observe|hide|give|hand|show|wait|stay)\w*")
-MAGIE_WORTE = re.compile(r"(?i)zauber|magie|magisch|spell|magic|(?<!\w)cast")   # an action that casts
 ZAUBERWERTE = ("intelligenz", "weisheit", "charisma")   # a cantrip's value: the better of these
 _FUELL = {"der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "beide", "beiden", "alle", "allen",
           "the", "a", "an", "all", "both", "and", "und", "auf", "mit", "on", "at", "with"}
@@ -196,7 +140,6 @@ KOERPER = ("hieb", "stich", "wucht")
 KENNT_MAX = 300            # foes whose weak spots a round remembers   # the weapons' kinds; a resistance against them does not hold against magic
 SCHWER_STAERKE = 13        # a heavy weapon wants this Stärke, else its attack is at a disadvantage
 LEICHT_KRIT = 19           # a light weapon is critical from this natural roll
-WURF_WORTE = ("wirf", "werf", "wurf", "schleuder", "throw", "hurl", "toss")   # an action that throws (eigenschaft wurf)
 RETTUNG = 10               # a state's save: this + a quarter of the foe's level
 GEIST = ("bezaubert", "veraengstigt")   # states of the mind: saved with Weisheit, the rest with Konstitution
 BRENNT = 4                 # schaden_pro_zug: 1W4 at each of the foes' turns
@@ -641,13 +584,13 @@ def attackers(dm, r, rd, proben, skip=()):
         if pid in skip or not h or dm.zustand(h) or (rd["plaetze"][pid].get("wartet")):   # down or dead: no attack
             continue
         spell = cat.get(a.get("kraft") or "")
-        was = intent(a.get("text"))
-        named = _named(rd, NICHT_ANGRIFF.sub(" ", str(a.get("text") or "")), life, text=True)
+        was = einordnung.fight(a.get("text"))
+        named = _named(rd, einordnung.NICHT_ANGRIFF.sub(" ", str(a.get("text") or "")), life, text=True)
         m = model.get(pid) or {}
         by_model = _named(rd, m.get("ziel"), life) if m.get("ziel") else None
         dmg = bool(spell and spell.get("art") == "zauber" and spell.get("schaden_art")) or bann(spell)   # H4: a spell on a foe too
-        magie = not spell and bool(MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
-        sanft = was in ("flucht", "frieden") or bool(spell) or bool(SANFT_WORTE.search(str(a.get("text") or "")) or NICHT_ANGRIFF.search(str(a.get("text") or "")))
+        magie = not spell and bool(einordnung.MAGIE_WORTE.search(str(a.get("text") or "")))   # magic at a foe: a cantrip (below)
+        sanft = was in ("flucht", "frieden") or bool(spell) or bool(einordnung.SANFT_WORTE.search(str(a.get("text") or "")) or einordnung.NICHT_ANGRIFF.search(str(a.get("text") or "")))
         if not (was == "angriff" or dmg or (was == "bezug" or magie) and named or named and not sanft):   # the model's ziel only picks the target
             continue                             # Review 27.10. Paket 2: a foe standing named and no gentle word is an attack
         out.append((dict(m or {"pid": pid, "wert": "staerke", "schwer": 10, "wofuer": ""}, pid=pid), named or by_model, bool(m)))
@@ -656,7 +599,7 @@ def attackers(dm, r, rd, proben, skip=()):
 
 def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
     """The attacks of a fight turn, made by the panel from the actions (Kampf-Audit 1, Dominik 2026-10-26): a hero whose
-    action attacks (intent), or who casts a spell with a damage kind (Kampf-Audit 2), attacks whether the model asked a
+    action attacks (einordnung.fight), or who casts a spell with a damage kind (Kampf-Audit 2), attacks whether the model asked a
     check for it or not; the model's checks for that hero are dropped. The target: the foe the action names, else the
     one the model's ziel names, else the first still standing (a target fallen this turn: the next one); with none
     standing the attack lapses, no check, no experience. The model's ziel alone never makes an attack (Nachprüfung
@@ -709,7 +652,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
         wp = _weapon(dm, r, h)
         eig = ()
         geist = [x for x in ZAUBERWERTE if x in h["werte"]]
-        trick = not spell and bool(geist) and bool(MAGIE_WORTE.search(str(a.get("text", "")))) and \
+        trick = not spell and bool(geist) and bool(einordnung.MAGIE_WORTE.search(str(a.get("text", "")))) and \
             bool(dm._by(r, "klassen").get(h["klasse"], {}).get("zauber"))
         if spell and spell.get("segen"):
             wert, wuerfel, plus, mit = spell["segen"]["wert"], ZAUBER_W[min(5, spell.get("grad", 0))], spell["segen"]["bonus"], spell["name"][li].split(": ", 1)[-1]
@@ -724,7 +667,7 @@ def attacks(dm, r, rd, proben, rng=None, hand=None, skip=()):
             art, eig = c.get("schaden_art", ""), tuple(c.get("eigenschaften") or ())
         else:
             wert, wuerfel, plus, mit, art = "staerke", FAUST, 0, ("Fäuste" if not li else "fists"), "wucht"
-        wirft = "wurf" in eig and any(x in str(a.get("text", "")).lower() for x in WURF_WORTE)
+        wirft = "wurf" in eig and any(x in str(a.get("text", "")).lower() for x in einordnung.WERFEN)
         if "finesse" in eig or wirft:            # the better of Stärke and Geschick
             wert = max(("staerke", "geschick"), key=lambda x: (dm.total(r, h, x), x == wert))
         if "vielseitig" in eig and not (h.get("an") or {}).get("nebenhand"):
@@ -1152,7 +1095,7 @@ def apply(dm, r, rd, hits, zuege, ende, ep, rng=None):
 
 
 def peace(dm, r, rd, proben, hits):
-    """Kampf-Audit 3: a hero whose action asks for peace (FRIEDEN_WORTE, intent) and who does not attack rolls the
+    """Kampf-Audit 3: a hero whose action asks for peace (einordnung.FRIEDEN_WORTE, fight) and who does not attack rolls the
     panel's Charisma check against the higher of FRIEDEN_SG[0] and FRIEDEN_SG[1] + the strongest foe's level, in place
     of the model's checks for it; once a fight (rd["kampf"]["frieden"], set in dungeon.apply), and the check gives no
     check's experience. Passed (apply), the fight ends in peace with half the experience of the foes still up (end)."""
@@ -1162,13 +1105,13 @@ def peace(dm, r, rd, proben, hits):
     hit = {x["pid"] for x in hits}
     if rd["kampf"].get("frieden"):               # tried once already this fight: words of peace are only words now
         for pid, a in (rd.get("offen") or {}).items():
-            if pid not in hit and intent(a.get("text")) == "frieden":
+            if pid not in hit and einordnung.fight(a.get("text")) == "frieden":
                 print("dungeon: kampf | frieden | schon versucht", flush=True)
                 return [p for p in proben if p["pid"] != pid]
         return proben
     for pid, a in (rd.get("offen") or {}).items():
         h = (rd["plaetze"].get(pid) or {}).get("held")
-        if pid in hit or not h or dm.zustand(h) or intent(a.get("text")) != "frieden":
+        if pid in hit or not h or dm.zustand(h) or einordnung.fight(a.get("text")) != "frieden":
             continue
         sg = max(FRIEDEN_SG[0], FRIEDEN_SG[1] + max(math.ceil((by.get(g["id"]) or {}).get("stufe", 0)) for g in up(rd)))
         li = 1 if rd.get("lang") == "en" else 0
@@ -1179,7 +1122,7 @@ def peace(dm, r, rd, proben, hits):
 
 
 def escape(dm, r, rd, proben, hits):
-    """Kampf-Audit M6: when most heroes who can act flee (intent "flucht", no attack), each of them rolls the panel's
+    """Kampf-Audit M6: when most heroes who can act flee (einordnung.fight "flucht", no attack), each of them rolls the panel's
     Geschick check against the higher of FLUCHT_SG[0] and FLUCHT_SG[1] + the strongest foe's level in place of the
     model's checks for it; at least half passed (dungeon.apply), the fight ends in flight (apply). The check gives no
     check's experience. Fewer: the words stay words and the fight goes on."""
@@ -1188,7 +1131,7 @@ def escape(dm, r, rd, proben, hits):
     hit = {x["pid"] for x in hits}
     offen = rd.get("offen") or {}
     frei = [pid for pid, p in dm.seated(rd) if not dm.zustand(p["held"])]
-    weg = [pid for pid in frei if pid not in hit and intent((offen.get(pid) or {}).get("text")) == "flucht"]
+    weg = [pid for pid in frei if pid not in hit and einordnung.fight((offen.get(pid) or {}).get("text")) == "flucht"]
     if not weg:
         return proben
     if 2 * len(weg) <= len(frei):

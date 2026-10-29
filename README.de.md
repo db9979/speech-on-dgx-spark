@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.241** KI-Dungeon-Master: eine Einordnung für jede getippte Aktion: alle Wortlisten in einem Modul, jede Aktion bekommt nach fester Reihenfolge genau eine Art; „Dann gehe ich los“, „Wir schlagen hier unser Lager auf“ und „We rest by the fire“ sind kein Angriff mehr
 - **V01.1.240** KI-Dungeon-Master: jede Angabe des Modells hängt an einer festen Regel (Anker-Tabelle), die Spielseite kennt jeden Wert des Panels, ein Protokoll-Prüfer prüft jede Erzählung noch einmal und macht kopierte Runden zu Prüffällen, der Erzähler-Prüfstand spielt 15 Züge am Stück; ein Ding oder Schriftstück zählt nur, wenn die Erzählung es zeigt
 - **V01.1.239** KI-Dungeon-Master: Satz-Prüfstand: rund 300 feste Spielersätze, die jede Wortliste richtig einordnen muss; „Ich schlage das Buch auf“, „Stab“ oder „Ich steche in See“ sind kein Angriff mehr, Fähigkeiten heißen nicht mehr wie Zauber
 - **V01.1.238** KI-Dungeon-Master: Zaubernamen eindeutig, Alltagswörter markiert
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.234** KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
 - **V01.1.233** Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
 - **V01.1.232** Fernzugang: Ordner für die Systeme (eine Ebene, Name und Symbol, auf- und zuklappbar, Ziehen, Verschieben nach, Ordner-Übersicht, Ordner beim Koppeln, iPhone)
-- **V01.1.231** Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
 
 
 

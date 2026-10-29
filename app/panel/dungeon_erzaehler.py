@@ -16,6 +16,7 @@ value. dungeon.py owns the rounds; this module only reads and changes the fields
 import asyncio
 import re
 import time
+import dungeon_einordnung as einordnung
 
 PERSONEN = (3, 6)          # people the model sets at the start of a chapter
 PERSONEN_MAX = 12          # people kept (the model's new NPCs join until then)
@@ -79,11 +80,8 @@ KOERPER = {"haar": ("haar", "haare", "haaren", "hair"), "augen": ("augen", "auge
 _TEIL = {w: k for k, ws in KOERPER.items() for w in ws}
 # the action's intent (Dominik 2026-10-25 „ich frage nach dem keller - es geht nach oben!?“: „frage den Kellner, ob du in den
 # Keller gehen kannst“ became a sneaking check and a walk upstairs without a word to the waiter): an action that only
-# asks or talks (FRAGT, no word of dungeon.RISIKO) must be told with a question or an answer (ANTWORT, or a quote of at
+# asks or talks (dungeon_einordnung.asks) must be told with a question or an answer (ANTWORT, or a quote of at
 # least ZITAT_WOERTER words), and a way down (UNTEN) never turns up (OBEN), nor the other way round
-FRAGT = re.compile(r"(?i)\b(frag(e|en|t|st)?|bitte(n|t|st)?|sag(e|en|t|st)?|erzähl(e|en|t|st)?|rede(n|t)?|sprech(e|en)|sprich(st|t)?|"
-                   r"überred\w*|verhandl\w*|verhandel\w*|erkundig\w*|ask(s|ed)?|tell(s)?|talk(s|ed)?|speak(s)?|persuad\w*|enquir\w*|inquir\w*)\b")
-SICH = re.compile(r"(?i)\b(frag(e|t|st)\s+(mich|sich|dich)|wonder)")
 ANTWORT = ("fragt", "frage", "erkundigt", "bittet", "antwort", "erwider", "entgegn", "sagt", "meint", "murmelt", "brummt",
            "nickt", "schüttelt", "zuckt mit", "flüstert", "knurrt", "lacht", "verneint", "bejaht", "asks", "answer", "repl",
            "says", "said", "nods", "shakes", "shrugs", "whispers", "mutters", "grunts")
@@ -958,15 +956,8 @@ def for_others(rd, text, ooc=()):
     return out[:3]
 
 
-def asks(action):
-    """An action that only asks or talks: a verb of FRAGT, not „frage mich“, no word of dungeon.RISIKO."""
-    import dungeon
-    low = str(action or "").lower()
-    return bool(FRAGT.search(low)) and not SICH.search(low) and not any(x in low for x in dungeon.RISIKO)
-
-
 def not_asked(rd, text, npc=()):
-    """Heroes whose action only asks or talks (asks) and whose narration has no question or answer: no word of ANTWORT,
+    """Heroes whose action only asks or talks (einordnung.asks) and whose narration has no question or answer: no word of ANTWORT,
     no quote of ZITAT_WOERTER words and no line of a person (npc, Review 27.10. Paket 7, T12) that long."""
     import dungeon_vorlesen
     low = str(text).lower()
@@ -974,7 +965,7 @@ def not_asked(rd, text, npc=()):
             or any(len(str(n.get("sagt") or "").split()) >= ZITAT_WOERTER for n in npc or ()):
         return []
     return [rd["plaetze"][pid]["held"]["name"] for pid, a in (rd.get("offen") or {}).items()
-            if pid in rd.get("plaetze", {}) and rd["plaetze"][pid].get("held") and asks(a.get("text"))][:3]
+            if pid in rd.get("plaetze", {}) and rd["plaetze"][pid].get("held") and einordnung.asks(a.get("text"))][:3]
 
 
 def _weg(x):

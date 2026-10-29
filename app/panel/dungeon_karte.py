@@ -120,7 +120,7 @@ GEHEN = ("geh", "ging", "reis", "lauf", "renn", "folg", "betret", "eintret", "hi
 GEHEN_WORT = ("go", "goes", "going", "went", "gone", "run", "runs", "ran", "ride", "rides", "rode", "back", "out",
               "weg", "wege", "weges")
 # Dungeon-Review 2026-10-27 Paket 5 (E4/T6, Dominik „ok“): a word of going counts only in a sentence without a verb of
-# asking (dungeon_erzaehler.asks); „weg“ not after WEG_VOR („nach dem Weg“); these starts of words („ziehe mein
+# asking (dungeon_einordnung.asks); „weg“ not after WEG_VOR („nach dem Weg“); these starts of words („ziehe mein
 # Schwert“, „breche die Tür auf“, „lese weiter“) and the word „rein“ („reinige“) only with DANACH right after them or a
 # direction or neighbour in the sentence; a sentence beginning with ANFANG and naming one goes too („Zur alten Mühle!“);
 # asking a person along (MIT) or ICH_MIT is going with the others (the majority counts them, Paket 5)
@@ -850,14 +850,14 @@ def geht(text, ziele=(frozenset(), ())):
     """Whether an action wants to go (Paket 5): a sentence without a verb of asking with a word of GEHEN or GEHEN_WORT,
     a word of VIELDEUTIG or „rein“ with DANACH right after it or a direction or neighbour (ziele from _ziele), or one
     beginning with ANFANG and naming one; or a word of MIT or ICH_MIT. Pure, the one rule of _move_asked and asked_ways."""
-    import dungeon_erzaehler
+    import dungeon_einordnung
     dirs, names = ziele
     low = " " + " ".join(_words(text)) + " "
     if any(f" {x} " in low for x in ICH_MIT) or any(f" {x}" in low for x in MIT):
         return True
     for satz in re.split(r"[.!?;:\n]+", str(text or "")):
         w = _words(satz)
-        if not w or dungeon_erzaehler.asks(satz):
+        if not w or dungeon_einordnung.asks(satz):
             continue
         hin = any(x in dirs for x in w) or any(_names(n, w) for n in names)
         if hin and w[0] in ANFANG:

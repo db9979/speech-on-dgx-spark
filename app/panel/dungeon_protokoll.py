@@ -12,7 +12,7 @@ Two halves, both by fixed rules, never the model:
               (read): the actions, the lines before and after the turn's header, the narration. text_faults finds by
               fixed rules what such a copy shows wrong (STUFE, PLATZHALTER, ZAUBER_TRIFFT, HAENDLER, PANEL_SATZ,
               FRAGE_GEHEN, ZAUBER_PROBE). A copy kept in tests/dungeon_protokolle/ with the findings it must give
-              (its header) is a test case: test_dungeon_protokoll reads every one; tools/protokoll.py prints the
+              (its header) is a test case: test_dungeon_protokoll reads every one, and run as a script prints the
               findings of a new copy and keeps it as a case.
 
 No switch of its own: a measurement inside the Dungeon Master and a test, no new behaviour at the table.
@@ -138,7 +138,7 @@ def text_faults(dm, turns, lang="de"):
                 add("haendler", z)             # a merchant the narration never shows
         if any(dm.panel_says({"lang": lang}, s) for s in dm.erz._saetze(t["erzaehlung"])):
             add("panel_satz", z)
-        if any(_GEHEN[li] in x for x in alle) and any(dm.erz.asks(a) for _, a in t["aktionen"]):
+        if any(_GEHEN[li] in x for x in alle) and any(dm.einordnung.asks(a) for _, a in t["aktionen"]):
             add("frage_gehen", z)              # a question told as „going needs no check“
         for name, a in t["aktionen"]:
             if dm._named(a, zauber) and any((_WUERFELT.match(x) or [None, ""])[1].lower() == name.lower() for x in t["vorher"]) \
