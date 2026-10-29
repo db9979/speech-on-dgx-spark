@@ -1,5 +1,5 @@
 /* Zustand → Live and the monitor page /live (live.js, live.py) */
-:root{--c1:#5b5bf0;--c2:#0ea5c6;--c3:#d9467a;--c4:#c27803;--c5:#16a34a;--c6:#8b5cf6}
+:root{--c1:#5b5bf0;--c2:#0ea5c6;--c3:#d9467a;--c4:var(--warn);--c5:var(--ok);--c6:#8b5cf6}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--c1:#8b8cff;--c2:#22d3ee;--c3:#f472b6;--c4:#fbbf24;--c5:#4ade80;--c6:#c084fc}}
 :root[data-theme=dark]{--c1:#8b8cff;--c2:#22d3ee;--c3:#f472b6;--c4:#fbbf24;--c5:#4ade80;--c6:#c084fc}
 .lv .card{overflow:hidden;min-width:0}
@@ -47,7 +47,7 @@
 .lv .hop .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:600}.lv .hop .nn{font-weight:700;font-size:13.5px;margin:2px 0}
 .lv .hop .d{font:10.5px/1.45 ui-monospace,Menlo,monospace;color:var(--mut)}
 .lv .gantt{position:relative;height:22px;margin-top:10px;border-radius:6px;background:var(--line);overflow:hidden}
-.lv .gantt i{position:absolute;top:0;bottom:0;border-right:1px solid var(--card)}.lv .gantt i span{position:absolute;left:4px;top:3px;font-size:10px;color:#fff;font-weight:600;white-space:nowrap}
+.lv .gantt i{position:absolute;top:0;bottom:0;border-right:1px solid var(--card)}.lv .gantt i span{position:absolute;left:4px;top:3px;font-size:10px;color:var(--on-acc);font-weight:600;white-space:nowrap}
 .lv .pill.net{background:color-mix(in srgb,var(--c4) 18%,transparent);color:var(--c4)}.lv .pill.lan{background:color-mix(in srgb,var(--c5) 15%,transparent);color:var(--c5)}
 .lv .pill.loc{background:color-mix(in srgb,var(--mut) 18%,transparent);color:var(--mut)}
 .lv .pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}.lv .pill.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
@@ -85,7 +85,7 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .kiosk .lv .way{margin:0}
 .kiosk .pairbox{max-width:520px;margin:12vh auto;display:flex;flex-direction:column;gap:14px;padding:0 16px}
 .kiosk .pairbox input{font:700 32px ui-monospace,Menlo,monospace;letter-spacing:.3em;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
-.kiosk .pairbox button{padding:12px;border-radius:12px;border:0;background:var(--acc);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.kiosk .pairbox button{padding:12px;border-radius:12px;border:0;background:var(--acc);color:var(--on-acc);font:inherit;font-weight:700;cursor:pointer}
 .kiosk .pairbox ul{margin:0;padding-left:18px;color:var(--mut);font-size:13px}
 @media (max-width:1100px){body.kiosk{height:auto;overflow:auto}.kiosk .lv{display:block;height:auto}.kiosk .lv>*{margin-bottom:14px}.kiosk .krot>.card{display:block;margin-bottom:14px}}
 /* Notaus (notaus.py): red band with the stage and what it holds off */
@@ -103,7 +103,7 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 /* Live-Log interaktiv (V01.0.4xx): event chips, selected row, node glow, sheet, rewind, way actions, monitor hold */
 .lv .evbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;align-items:center}
 .lv .chip{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:14px;padding:3px 10px;font:12px system-ui,sans-serif;cursor:pointer}
-.lv .chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.lv .chip.pause{margin-left:auto}
+.lv .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}.lv .chip.pause{margin-left:auto}
 .lv .evbar input{flex:1 1 120px;min-width:0;font:12px system-ui,sans-serif;padding:3px 10px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--fg)}
 .lv .ev .evr{cursor:pointer;border-radius:4px}.lv .ev .evr:hover{background:color-mix(in srgb,var(--acc) 8%,transparent)}
 .lv .ev .evr.sel{background:color-mix(in srgb,var(--warn) 16%,transparent)}

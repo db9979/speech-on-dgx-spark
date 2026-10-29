@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.246** Redesign Stufe 1: Design-Tokens als eine Quelle (`tokens.css`), Aussehen unverändert; Wächter `test_design_tokens`
 - **V01.1.245** Finden in allen Daten Stufe A: ein Suchindex über eigene Dokumente, NAS, reMarkable und Wissensbuch (Felder und Kategorien nach festen Regeln, eigene Schlagworte gehen vor, Marken je Profil), eigene Seite Finden, das Werkzeug fund_suche im Assistenten mit der Karte „In Finden ansehen“, Strg K
 - **V01.1.244** ROT-FIX: der Test der Spontanhilfe-Seite stellt beim Ablauf erst die Uhr des Panels, dann die der Seite (sonst holte das Nachladen alle 3 s die Nummer zurück)
 - **V01.1.243** https ohne TLS-Session-Tickets (`panel.tls_context`): etwa jede hundertste https-Verbindung zur asyncio-Schleife von Python 3.11 hing nach dem Handshake (Terminal im Fernzugang ging nie auf); Test-Server mit dem TLS des Panels samt Wächter, Fernzugang-Tests mit 60 s Handshake und Fristen statt Schleifen
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.239** KI-Dungeon-Master: Satz-Prüfstand: rund 300 feste Spielersätze, die jede Wortliste richtig einordnen muss; „Ich schlage das Buch auf“, „Stab“ oder „Ich steche in See“ sind kein Angriff mehr, Fähigkeiten heißen nicht mehr wie Zauber
 - **V01.1.238** KI-Dungeon-Master: Zaubernamen eindeutig, Alltagswörter markiert
 - **V01.1.237** Schnelltest: `tools/vorpush.py` installiert fehlende Systempakete von GitHub „Tests“ (guacd, x11vnc, Xvfb für test_fernbild) selbst oder hält vor dem ersten Test mit dem genauen Befehl an; ein Cloud-Container ohne x11vnc wurde mitten im Lauf rot
-- **V01.1.236** KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt
 
 
 

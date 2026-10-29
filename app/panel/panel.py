@@ -746,7 +746,7 @@ def _asset(request: Request, path, media):
 
 @app.get("/static/{name}")
 def static_file(name: str, request: Request):
-    if name in ("app.css", "appview.css", "live.css", "weiche.css", "technik.css", "spontanhilfe.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("tokens.css", "app.css", "appview.css", "live.css", "weiche.css", "technik.css", "spontanhilfe.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")

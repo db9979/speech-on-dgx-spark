@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.246** · 2026-10-29 · Redesign Stufe 1: Design-Tokens als eine Quelle in app/panel/static/tokens.css (Farben hell/dunkel, Schatten, Radius, Seitenrahmen), vor app.css geladen, app.css nimmt die Tokens statt fester Werte (pixelgleich, nichts sichtbar anders); neuer Wächter test_design_tokens (keine neue Hex-Farbe und keine Schriftgröße außerhalb der Skala, Altlastenliste schrumpft nur), Richtlinie „Farben, Schrift und Abstände nur aus den Tokens“
 - **V01.1.245** · 2026-10-29 · Finden in allen Daten Stufe A: ein Suchindex über eigene Dokumente, NAS, reMarkable und Wissensbuch (Felder und Kategorien nach festen Regeln, eigene Schlagworte gehen vor, Marken je Profil), eigene Seite Finden, das Werkzeug fund_suche im Assistenten mit der Karte „In Finden ansehen“, Strg K
 - **V01.1.244** · 2026-10-29 · ROT-FIX: der Test der Spontanhilfe-Seite stellt beim Ablauf erst die Uhr des Panels, dann die der Seite (sonst holte das Nachladen alle 3 s die Nummer zurück)
 - **V01.1.243** · 2026-10-29 · https ohne TLS-Session-Tickets (`panel.tls_context`): etwa jede hundertste https-Verbindung zur asyncio-Schleife von Python 3.11 hing nach dem Handshake (Terminal im Fernzugang ging nie auf); Test-Server mit dem TLS des Panels samt Wächter, Fernzugang-Tests mit 60 s Handshake und Fristen statt Schleifen

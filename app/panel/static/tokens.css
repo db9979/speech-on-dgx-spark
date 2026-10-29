@@ -1,0 +1,27 @@
+/* Design-Tokens: die eine Quelle für Farben, Schatten, Radien und den Seitenrahmen des Panels (Redesign Stufe 1,
+   Plan redesign/plan.md, Dominik 2026-10-29). Geladen vor app.css (index.html, live.html); app.css und die übrigen
+   Stile lesen nur var(--…). Neue Farben, Größen und Abstände kommen hierher, nie als fester Wert in eine andere Datei
+   (test_design_tokens). Stufe 1 bildet die heutigen Werte ab, das Aussehen bleibt gleich; die Werte von „Klar 2“
+   (Systemstil) folgen in den nächsten Stufen. Nur Variablen und color-scheme, keine Regeln für Bausteine. */
+
+/* Farben hell. Hell/Dunkel folgt dem System, außer <html data-theme="light|dark"> legt es fest (Kopfknopf, theme.js) */
+:root{--bg:#f4f6fb;--card:#fff;--fg:#141824;--mut:#5f6b85;--line:#e3e7f0;--acc:#5b5bf0;--acc2:#0ea5c6;--ok:#16a34a;--warn:#c27803;--bad:#dc2626;
+  /* text on a light tint of these colours (pills, marks): at least 4.5:1 (code check 19.10. D5) */
+  --okt:#166534;--warnt:#92400e;--badt:#b91c1c;--acct:#4343d6;
+  /* text on a coloured ground (accent, status, picture): the same in light and dark */
+  --on-acc:#fff;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.06);--r:16px;--visor:#151a2e}
+/* Farben dunkel */
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b0d14;--card:#131722;--fg:#e8ebf2;--mut:#8b95ab;--line:#242a3a;--acc:#8b8cff;--acc2:#22d3ee;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);--visor:#070912;color-scheme:dark;--okt:#4ade80;--warnt:#fbbf24;--badt:#f87171;--acct:#a5a6ff}}
+:root[data-theme=dark]{--bg:#0b0d14;--card:#131722;--fg:#e8ebf2;--mut:#8b95ab;--line:#242a3a;--acc:#8b8cff;--acc2:#22d3ee;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);--visor:#070912;color-scheme:dark;--okt:#4ade80;--warnt:#fbbf24;--badt:#f87171;--acct:#a5a6ff}
+:root[data-theme=light]{color-scheme:light}
+
+/* One frame for every page with a side menu (Dominik 2026-10-14 „alle Reiter wie Technik framen“): Zustand, Funktionen,
+   Personen und Geräte, Einstellungen and Ich use the same width and the same menu column, so nothing jumps when switching
+   (test_seitenrahmen) */
+:root{--frame:1800px;--sidecol:220px;--sidegap:24px}
+
+/* the memory bar's colors per kind, the tiles carry the same one as their legend (Dominik 2026-10-18) */
+:root{--mdf-bild:#ec4899;--mdf-musik:#f59e0b}

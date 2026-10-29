@@ -2,7 +2,7 @@
 anderen nach links und nutzt nicht den ganzen Platz“). Before, only Technik widened the page (body.intech, 1800 px)
 while the other Zustand tabs stayed at 1240 px in the middle: switching tabs moved the menu column and the content.
 Einstellungen (1040 px), Funktionen (1320 px) and Ich (1040 px, its own centre) each had their own frame too.
-Now one frame (--frame, --sidecol, --sidegap in app.css) holds every page with a side menu: the menu column and the
+Now one frame (--frame, --sidecol, --sidegap in tokens.css since V01.1.246, app.css before) holds every page with a side menu: the menu column and the
 content start at the same place and have the same width on every tab, on phones nothing is wider than the screen."""
 import asyncio
 import os
@@ -27,7 +27,10 @@ def read(*p):
 class Static(unittest.TestCase):
     def test_one_frame_defined_once(self):
         css = read("app.css")
-        self.assertEqual(len(re.findall(r"--frame:", css)), 1)
+        # the frame is a design token: defined once, in tokens.css, and in no other style (test_design_tokens)
+        self.assertEqual(len(re.findall(r"--frame:", read("tokens.css"))), 1)
+        for name in sorted(n for n in os.listdir(STATIC) if n.endswith(".css") and n != "tokens.css"):
+            self.assertIsNone(re.search(r"--(frame|sidecol|sidegap):", read(name)), name)
         self.assertIn("body.adm main{max-width:var(--frame)}", css)
         # no page widens or narrows the frame on its own any more (Technik did, so the others jumped)
         for name in ("app.css", "technik.css", "live.css", "weiche.css"):
