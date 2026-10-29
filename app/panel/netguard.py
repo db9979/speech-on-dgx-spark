@@ -120,6 +120,7 @@ DIRECT_OK = {
     "bilder": ("lokal", "eigener Bild-Dienst auf 127.0.0.1 (image.port), malt ohne Netz"),
     "musik": ("lokal", "eigener Musik-Dienst (music.port, beim Teilen über das TLS-Tor), macht Musik ohne Netz"),
     "fernbild": ("lokal", "guacd auf 127.0.0.1:4822 und ein eigener Port auf 127.0.0.1 für genau eine Verbindung von guacd zur Leitung des Ankers"),
+    "fernzugang": ("lokal", "nur die Route zur Heimnetz-Adresse eines koppelnden Ankers nachschlagen (UDP connect, es geht kein Paket hinaus)"),
     "bedarf": ("lokal", "die eigene Engine bei Bedarf (sd-server, ace-server) auf 127.0.0.1 (image.engine_port, music.engine_port), nur der Bild- und der Musik-Dienst fragen sie"),
     "llm_tor": ("lokal", "das LLM-Tor fragt nur die eigenen Engines auf 127.0.0.1 (llm.engine_port, llm.sehen_port)"),
     "tlstor": ("lokal", "das TLS-Tor reicht nur an die eigenen Dienste auf 127.0.0.1 weiter (asr, tts, llm, image.port, music.port)"),

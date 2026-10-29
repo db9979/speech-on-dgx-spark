@@ -1776,5 +1776,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Ordner im Fernzugang** (Funktionen → Zugang → „Ordner im Fernzugang“; baut auf „Fernzugang zu Servern“): Die Systeme links in Ordnern wie in Mail: eine Ebene, Name und Symbol frei wählbar, auf- und zuklappbar; zugeklappt zeigt der Ordner „● online / gesamt“.
 
+- **Große Dateien im Fernzugang** (Funktionen → Zugang → „Große Dateien im Fernzugang“; baut auf „Fernzugang zu Servern“): In „Dateien“ eines gekoppelten Systems drei Wege für große Dateien: „In Teilen hochladen“ schickt 8 MB auf einmal, jedes Stück mit Prüfsumme, mit „Pause“ und „Weiter“ (auch nach „Trennen“, mit derselben Datei); „Per Link holen“ lässt den …
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

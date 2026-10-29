@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.233** Remote access stage 3b: big files in pieces with SHA-256, pause and resume, by link (curl on the server) or from the NAS; at home the anchor (1.4.0) goes straight to the Spark
 - **V01.1.232** Remote access: folders for the systems (one level, name and symbol, collapsible, drag, move to, folder overview, folder at pairing, iPhone)
 - **V01.1.231** Remote access: notes per system (sealed, 10 versions, into the terminal, vault hint, search, iPhone)
 - **V01.1.230** Remote access: update anchors from the panel, „Update“ per system and „Update all“; the panel signs the anchor with a key of its own (Ed25519, in the vault), the anchor checks SHA-256 and signature, swaps atomically as root and goes back to the old version after 60 s without the panel, never a step back; anchors before 1.3.0 get a line to paste
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.226** Remote access keeps the line: a heartbeat every 20 s and SSH keepalive; when the line drops the shell stays open 2 minutes with its last output and the page reconnects quietly (a new one-time ticket, the same sign-in, unlocked); a countdown before the idle end, the unlock end and the Spontaneous help end with Keep working or Extend; every end message names the reason and offers Connect again
 - **V01.1.225** Remote access stage 4 screen: "Screen" shows the screen of a paired system in the browser (X11, GNOME on Wayland, other Wayland desktops, macOS), watching first, "Control" with one click; guacd as its own service only on 127.0.0.1 (install.sh --fernbild), at most 15 pictures/s, "Economical" with 16 bit and a hint on a slow line; and the command suggestions say what they do on hover, and the assistant's question field empties after sending
 - **V01.1.224** Spontanhilfe: the "By e-mail" invitation comes in the new "card" design (text and HTML, informal, German or English, no outside images) and only once per help and address: the button is off while sending (with a spinner), a second click gets "Invitation already sent", "Send again" only after 60 seconds with a confirm, and an incomplete invitation never goes out
-- **V01.1.223** Spontaneous help stage S3 one-time shell: for a server without a screen the person pastes one line (without sudo) into her terminal, types number and first name there and allows with "j"; then the admin works in her shell in the Spontaneous help tab, with her rights, and nothing is left behind
 
 
 

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "0cf6718759",
+        "stand": "d4369bd7db",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "e06726b06e",
+        "stand": "40ecf5dc08",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -800,9 +800,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "fea8d6d264",
+        "stand": "cd5794104d",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -861,14 +861,16 @@ SEITEN = {
               ("SSH · SFTP · guacd", "SSH · SFTP · guacd"),
               ("SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell {fernzugang.HALTEN_S} Sekunden. "
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
-               "{ferndateien.LINK_S} Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
+               "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
+               "(ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
                "{fernbild.FPS} Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
                "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System.",
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
-               "{ferndateien.LINK_S} seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
+               "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
+               "(ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
                "{fernbild.FPS} pictures a second. The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
                "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list "
@@ -904,6 +906,7 @@ SEITEN = {
             ("{fernbild.FPS}", ("Bilder je Sekunde höchstens", "pictures a second at most"), "fernbild.FPS"),
             ("{fernnotiz.FASSUNGEN}", ("Fassungen einer Notiz bleiben", "versions of a note stay"), "fernnotiz.FASSUNGEN"),
             ("{fernordner.MAX_ORDNER}", ("Ordner höchstens", "folders at most"), "fernordner.MAX_ORDNER"),
+            ("{ferngross.TEIL|mb} MB", ("ist ein Stück einer großen Datei", "is one piece of a big file"), "ferngross.TEIL"),
             ("{spontanhilfe.NUMMER_S|min} min", ("gilt eine Nummer der Spontanhilfe", "a number of spontaneous help is valid"), "spontanhilfe.NUMMER_S"),
         ],
         "einstellen": [
@@ -925,12 +928,13 @@ SEITEN = {
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
+            ("ferngross.upload_piece", ("große Datei: ein Stück nur ganz und mit passender SHA-256", "big file: a piece only whole and with a matching SHA-256")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross"],
         "heute": [],
     },
     "fernserver": {
-        "stand": "2e12fc459e",
+        "stand": "409535f02c",
         "bezug": {
             "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },
@@ -952,9 +956,11 @@ SEITEN = {
             S("s2", "schritt", ("Koppeln mit dem Einmal-Code", "Pairing with the one-time code"),
               ("fernzugang.anker_pair", "fernzugang.anker_pair"),
               ("Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das "
-               "Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name.",
+               "Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name. Im Heimnetz nennt das Panel dazu seine "
+               "eigene Adresse dort mit der SHA-256 seines Zertifikats; der Anker versucht sie zuerst.",
                "The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps "
-               "only its SHA-256, plus host key and name.")),
+               "only its SHA-256, plus host key and name. At home the panel also names its own address there with the "
+               "SHA-256 of its certificate; the anchor tries it first.")),
             S("s3", "frage", ("Schlüssel bekannt?", "Key known?"),
               ("fernzugang.by_key", "fernzugang.by_key"),
               ("Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt "

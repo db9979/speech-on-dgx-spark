@@ -543,6 +543,7 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 | `app/panel/fernanker.py` | Anker-Update: the panel brings its paired anchors to the program it hands out. |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
+| `app/panel/ferngross.py` | Fernzugang, große Dateien: three ways for a big file onto a paired server, inside the open „Dateien“ session (ferndateien.py: the same SSH connection, the sa … |
 | `app/panel/fernnotiz.py` | Notizen je System im Fernzugang: one note per paired system, written by the admin, for the admin. |
 | `app/panel/fernordner.py` | Ordner im Fernzugang: the paired systems in folders. |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
@@ -3909,7 +3910,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes. At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
 4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
-6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
 7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
 8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
 
@@ -3924,6 +3925,7 @@ flowchart TD
 - **15** pictures a second at most ([step 6](#kn-fernzugang-s6))
 - **10** versions of a note stay ([step 6](#kn-fernzugang-s6))
 - **30** folders at most ([step 6](#kn-fernzugang-s6))
+- **8 MB MB** is one piece of a big file ([step 6](#kn-fernzugang-s6))
 - **10 min** a number of spontaneous help is valid ([step 7](#kn-fernzugang-s7))
 
 #### Settings
@@ -3946,8 +3948,9 @@ flowchart TD
 - `app/panel/fernzugang.py` `notaus_close`: kill switch closes every line ([step 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: the note for the model only when ticked ([step 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: folders: only the order of the list ([step 6](#kn-fernzugang-s6))
+- `app/panel/ferngross.py` `upload_piece`: big file: a piece only whole and with a matching SHA-256 ([step 6](#kn-fernzugang-s6))
 
-Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`
+Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
 
 ### Remote servers
 
@@ -3977,7 +3980,7 @@ flowchart TD
 ```
 
 1. <a id="kn-fernserver-s1"></a>**One line on the server**: The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor from the own panel and sets it up as a system service of its own.
-2. <a id="kn-fernserver-s2"></a>**Pairing with the one-time code**: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name.
+2. <a id="kn-fernserver-s2"></a>**Pairing with the one-time code**: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name. At home the panel also names its own address there with the SHA-256 of its certificate; the anchor tries it first.
 3. <a id="kn-fernserver-s3"></a>**Key known?**: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit.
 4. <a id="kn-fernserver-s4"></a>**Line going out**: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes.
 5. <a id="kn-fernserver-s5"></a>**Channel to its own SSH**: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there.

@@ -62,6 +62,8 @@ FENSTER = {
     ".fzantwort": "Fernzugang: the assistant's answers in its column beside the terminal; the newest stays in view",
     ".fzlist": "Fernzugang: the list of systems beside the chosen one (like Mail and Kontakte); the page itself fits the window",
     ".fzdetail": "Fernzugang: the chosen system beside the list; the page itself fits the window, a phone shows it in full",
+    ".fznotizseite": "Fernzugang, Notizen: the note in the column beside the terminal (tab Notizen); the terminal keeps its place",
+    ".fzgnaslist": "Fernzugang, große Dateien: the files of one NAS folder to pick from, beside the transfer card",
     ".shchatlist": "Spontanhilfe: the chat with the person in its card beside the screen; the newest message stays in view",
     ".fzflist": "Fernzugang, Dateien: the entries of one remote folder (up to 1000) beside the upload card",
     ".cx-log": "Chats: the messages",

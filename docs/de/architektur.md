@@ -543,6 +543,7 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 | `app/panel/fernanker.py` | Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
+| `app/panel/ferngross.py` | Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen |
 | `app/panel/fernnotiz.py` | Fernzugang, Notizen je System: versiegelt, 10 Fassungen, Tresor-Hinweis, Assistent liest nur mit Haken |
 | `app/panel/fernordner.py` | Fernzugang, Ordner: eine Ebene, Name und Symbol, Reihenfolge per Ziehen, nur Ordnung, Rechte je System |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
@@ -3909,7 +3910,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig. Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
 4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich.
 5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
-6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System.
+6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System.
 7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur.
 8. <a id="kn-fernzugang-s8"></a>**Logs und Verlauf**: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).
 
@@ -3924,6 +3925,7 @@ flowchart TD
 - **15** Bilder je Sekunde höchstens ([Schritt 6](#kn-fernzugang-s6))
 - **10** Fassungen einer Notiz bleiben ([Schritt 6](#kn-fernzugang-s6))
 - **30** Ordner höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **8 MB MB** ist ein Stück einer großen Datei ([Schritt 6](#kn-fernzugang-s6))
 - **10 min** gilt eine Nummer der Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
 
 #### Einstellen
@@ -3946,8 +3948,9 @@ flowchart TD
 - `app/panel/fernzugang.py` `notaus_close`: Notaus schließt jede Leitung ([Schritt 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: die Notiz nur mit Haken für das Modell ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: Ordner: nur die Reihenfolge der Liste ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/ferngross.py` `upload_piece`: große Datei: ein Stück nur ganz und mit passender SHA-256 ([Schritt 6](#kn-fernzugang-s6))
 
-Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`
+Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
 
 ### Fern-Server
 
@@ -3977,7 +3980,7 @@ flowchart TD
 ```
 
 1. <a id="kn-fernserver-s1"></a>**Eine Zeile auf dem Server**: Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein.
-2. <a id="kn-fernserver-s2"></a>**Koppeln mit dem Einmal-Code**: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name.
+2. <a id="kn-fernserver-s2"></a>**Koppeln mit dem Einmal-Code**: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name. Im Heimnetz nennt das Panel dazu seine eigene Adresse dort mit der SHA-256 seines Zertifikats; der Anker versucht sie zuerst.
 3. <a id="kn-fernserver-s3"></a>**Schlüssel bekannt?**: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit.
 4. <a id="kn-fernserver-s4"></a>**Leitung nach draußen**: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes.
 5. <a id="kn-fernserver-s5"></a>**Kanal zum eigenen SSH**: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel des Panels, sudo nur, wenn der Admin es dort einträgt.

@@ -389,6 +389,8 @@
     "spontanhilfe_max_min": 180,
     "fernzugang_datei_mb": 100,
     "fernzugang_ki_zeilen": 80,
+    "fernzugang_gross": false,
+    "fernzugang_gross_mb": 20480,
     "fernbild": false,
     "fernbild_zwischenablage": false,
     "fernzugang_notizen": false,

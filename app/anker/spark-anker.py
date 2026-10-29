@@ -10,7 +10,9 @@
     sudo spark-anker bildschirm aus                                                         the screen off again
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - aktualisieren              this program anew (no code)
 
-It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here) and passes
+It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here; paired at
+home, first the panel's own address there for INTERN_S seconds, its certificate pinned, so big files do not go
+through a proxy in front of the panel) and passes
 bytes only between the panel and this server's own sshd on 127.0.0.1:22. SSH runs end to end between the panel and
 sshd: the anchor never sees a password, a key or a command. Only the Python standard library.
 
@@ -93,7 +95,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -110,6 +112,9 @@ SSHD = ("127.0.0.1", 22)
 HOSTKEY = "/etc/ssh/ssh_host_ed25519_key.pub"
 URL = re.compile(r"https://([A-Za-z0-9.\-]{1,253}|\[[0-9A-Fa-f:.]{2,45}\])(?::(\d{1,5}))?/?")
 FP = re.compile(r"[0-9a-f]{64}")
+# the panel's own address inside the home net (named by the panel at pairing from there): an IPv4 address, a port
+INTERN = re.compile(r"https://(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}):(\d{1,5})")
+INTERN_S = 3              # seconds the anchor tries the address inside the home net before the normal one
 MAX_MSG = 64 * 1024       # the panel takes no bigger message
 CHUNK = 32 * 1024
 PING_S = 25               # keeps the reverse proxy from closing a quiet connection
@@ -749,6 +754,30 @@ class Lauf:
                 self._close(n, False)
 
 
+def intern_ok(v):
+    """{"url", "fp"} of the panel inside the home net when the panel named a plain one (always with its certificate
+    pinned), else None."""
+    if not isinstance(v, dict):
+        return None
+    url, fp = str(v.get("url") or ""), str(v.get("fp") or "").lower()
+    m = INTERN.fullmatch(url)
+    if not m or not FP.fullmatch(fp) or not 0 < int(m.group(2)) < 65536 or any(int(x) > 255 for x in m.group(1).split(".")):
+        return None
+    return {"url": url, "fp": fp}
+
+
+def verbinden(conf):
+    """(WebSocket, "intern" | "extern"): the panel inside the home net first (its own address, its certificate pinned,
+    INTERN_S seconds), else the normal address the anchor was set up with."""
+    i = intern_ok(conf.get("intern"))
+    if i:
+        try:
+            return WS.open(i["url"], i["fp"], "/api/fernzugang/anker", conf["key"], INTERN_S), "intern"
+        except (OSError, EOFError, Fehler, ValueError):
+            pass
+    return WS.open(conf["url"], conf.get("fp") or "", "/api/fernzugang/anker", conf["key"]), "extern"
+
+
 def cmd_run(args):
     conf = load()
     if not conf:
@@ -757,8 +786,8 @@ def cmd_run(args):
     pause = 5
     while True:
         try:
-            ws = WS.open(conf["url"], conf.get("fp") or "", "/api/fernzugang/anker", conf["key"])
-            say("mit dem Panel verbunden")
+            ws, wo = verbinden(conf)
+            say("mit dem Panel verbunden" + (" (im Heimnetz)" if wo == "intern" else ""))
             pause = 5
             with contextlib.suppress(OSError):       # an update waits for this: the new version reached the panel
                 write_atomic(Ctx().path(Ctx().s.var + "/ok"), VERSION.encode(), 0o600)
@@ -1226,6 +1255,8 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
             **state}
     if _b64(d.get("sign_pub"), 32):            # the panel's signing key for updates, pinned with the pairing
         conf["sign_pub"] = d["sign_pub"]
+    if intern_ok(d.get("intern")):
+        conf["intern"] = intern_ok(d.get("intern"))   # paired at home: the panel's own address first (verbinden)
     user, runner = s.users(ctx, conf)
     ssh = ctx.path(os.path.join(user[2], ".ssh"))
     os.makedirs(ssh, mode=0o700, exist_ok=True)
@@ -1448,6 +1479,8 @@ def cmd_state(args):
         return 1
     say(f"eingerichtet für {conf['url']}" + (" (Zertifikat festgelegt)" if conf.get("fp") else "") + f", Version {VERSION}"
         + ("" if conf.get("sign_pub") else "; Aktualisieren aus dem Panel erst nach einmal `aktualisieren`"))
+    if intern_ok(conf.get("intern")):
+        say(f"im Heimnetz zuerst {conf['intern']['url']} (Zertifikat festgelegt)")
     return 0
 
 

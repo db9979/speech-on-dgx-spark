@@ -171,6 +171,8 @@ async def open_files(request: Request):
         raise HTTPException(502, "SFTP geht auf dem Server nicht (Subsystem sftp in der sshd_config).") from None
     s.home = home if isinstance(home, str) and home.startswith("/") and not BAD.search(home) else "/"
     s.tasks.append(asyncio.create_task(s._idle()))
+    import ferngross
+    s.tasks.append(asyncio.create_task(ferngross.sweep(s)))   # part files of big transfers left behind there
     fernzugang.log("dateien_auf", s.who, len(fernzugang.SITZUNG))
     fernzugang._live("Fern-Dateien geöffnet")
     return {"id": s.id, "pfad": s.home, "max_mb": _mb(), "leerlauf": fernzugang.leerlauf_s() // 60}

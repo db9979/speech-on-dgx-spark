@@ -80,6 +80,7 @@ def reset():
     fernzugang.SITZUNG.clear()
     fernzugang.ENTSPERRT.clear()
     fernzugang.STATS["hilfe"] = 0
+    fernzugang.STATS["uebertragungen"] = 0
     with contextlib.suppress(OSError):
         os.remove(fernzugang.VERLAUF)
     with contextlib.suppress(OSError):
@@ -1070,18 +1071,18 @@ class AnchorUpdateProgram(unittest.TestCase):
 
     def test_swap_restart_and_kept_when_it_came_back(self):
         p, root, ctx, ran, k = self.root()
-        new = b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n'
-        self.leave(p, root, new, "1.4.0", k)
+        new = b'#!/usr/bin/env python3\nVERSION = "9.9.0"\n'
+        self.leave(p, root, new, "9.9.0", k)
         real_run = ctx.run
 
         def run(c):                       # the new anchor reaches its panel after the restart: it writes „ok“
             if c[:2] == ["systemctl", "restart"]:
                 with open(p.here(root, p.VAR + "/ok"), "w") as f:
-                    f.write("1.4.0")
+                    f.write("9.9.0")
             return real_run(c)
         ctx.run = run
         rc, st = self.apply(p, ctx)
-        self.assertEqual((rc, st["stand"], st["version"]), (0, "ok", "1.4.0"))
+        self.assertEqual((rc, st["stand"], st["version"]), (0, "ok", "9.9.0"))
         self.assertEqual(self.installed(p, root), new)
         self.assertFalse(os.path.exists(p.here(root, p.PROG) + ".alt"))
         for n in ("neu.py", "neu.json", "aktualisieren"):
@@ -1091,7 +1092,7 @@ class AnchorUpdateProgram(unittest.TestCase):
     def test_back_to_the_one_before_when_it_does_not_come_back(self):
         p, root, ctx, ran, k = self.root()
         before = self.installed(p, root)
-        self.leave(p, root, b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n', "1.4.0", k)
+        self.leave(p, root, b'#!/usr/bin/env python3\nVERSION = "9.9.0"\n', "9.9.0", k)
         rc, st = self.apply(p, ctx)
         self.assertEqual((rc, st["stand"]), (1, "zurueck"))
         self.assertEqual(self.installed(p, root), before)
@@ -1103,22 +1104,22 @@ class AnchorUpdateProgram(unittest.TestCase):
         cases = []
         p, root, ctx, ran, k = self.root()
         _, _, other = _signed(b"", "0.0.0")
-        self.leave(p, root, b'VERSION = "1.4.0"\n', "1.4.0", other)                     # signed by another key
+        self.leave(p, root, b'VERSION = "9.9.0"\n', "9.9.0", other)                     # signed by another key
         cases.append((p, root, ctx, ran, "signatur"))
         p, root, ctx, ran, k = self.root()
-        sha, sig, _ = _signed(b'VERSION = "1.4.0"\n', "1.4.0", k)
-        self.leave(p, root, b'VERSION = "1.4.0"\nimport os\n', "1.4.0", k, sig=sig, sha=sha)      # changed after signing
+        sha, sig, _ = _signed(b'VERSION = "9.9.0"\n', "9.9.0", k)
+        self.leave(p, root, b'VERSION = "9.9.0"\nimport os\n', "9.9.0", k, sig=sig, sha=sha)      # changed after signing
         cases.append((p, root, ctx, ran, "pruefsumme"))
         p, root, ctx, ran, k = self.root(have="1.3.0")
         self.leave(p, root, b'VERSION = "1.2.0"\n', "1.2.0", k)                         # a step back
         cases.append((p, root, ctx, ran, "nicht_neuer"))
         p, root, ctx, ran, k = self.root(sign=False)
-        self.leave(p, root, b'VERSION = "1.4.0"\n', "1.4.0", k)                         # no pinned key
+        self.leave(p, root, b'VERSION = "9.9.0"\n', "9.9.0", k)                         # no pinned key
         cases.append((p, root, ctx, ran, "kein_schluessel"))
         p, root, ctx, ran, k = self.root()
         os.symlink("/etc/hostname", p.here(root, p.VAR + "/neu.py"))                    # never through a link
         with open(p.here(root, p.VAR + "/neu.json"), "w") as f:
-            json.dump({"version": "1.4.0", "sha256": "", "sig": ""}, f)
+            json.dump({"version": "9.9.0", "sha256": "", "sig": ""}, f)
         cases.append((p, root, ctx, ran, "unlesbar"))
         for p, root, ctx, ran, want in cases:
             before = self.installed(p, root)
@@ -1129,8 +1130,8 @@ class AnchorUpdateProgram(unittest.TestCase):
 
     def test_the_running_anchor_fetches_only_from_its_panel_and_checks_first(self):
         p, root, ctx, ran, k = self.root()
-        new = b'#!/usr/bin/env python3\nVERSION = "1.4.0"\n'
-        sha, sig, _ = _signed(new, "1.4.0", k)
+        new = b'#!/usr/bin/env python3\nVERSION = "9.9.0"\n'
+        sha, sig, _ = _signed(new, "9.9.0", k)
         sent, calls = [], []
 
         class W:
@@ -1140,14 +1141,14 @@ class AnchorUpdateProgram(unittest.TestCase):
             conf = json.load(f)
         lauf = p.Lauf(W(), "", conf, ctx)
         p.http_call = lambda base, fp, method, path, body=None, key=None, timeout=20: calls.append((base, method, path)) or (200, new)
-        self.assertIsNone(lauf._control({"typ": "update", "version": "1.4.0", "sha256": sha, "sig": sig}))
+        self.assertIsNone(lauf._control({"typ": "update", "version": "9.9.0", "sha256": sha, "sig": sig}))
         self.assertEqual(sent[-1], {"typ": "update_stand", "stand": "laeuft"})
         self.assertEqual(calls, [("https://spark.example.org", "GET", "/fernzugang/anker")])   # its own panel only
         with open(p.here(root, p.VAR + "/neu.py"), "rb") as f:
             self.assertEqual(f.read(), new)
         self.assertTrue(os.path.exists(p.here(root, p.VAR + "/aktualisieren")))
         os.remove(p.here(root, p.VAR + "/aktualisieren"))
-        lauf._control({"typ": "update", "version": "1.4.0", "sha256": sha, "sig": sig[:-4] + "AAA="})
+        lauf._control({"typ": "update", "version": "9.9.0", "sha256": sha, "sig": sig[:-4] + "AAA="})
         self.assertEqual(sent[-1]["stand"], "signatur")
         lauf._control({"typ": "update", "version": "1.3.0", "sha256": sha, "sig": sig})
         self.assertEqual(sent[-1]["stand"], "nicht_neuer")
@@ -1860,9 +1861,10 @@ class _Server:
     """A small SSH server with one fixed host key: lets in the user spark with the Pi's key, gives a shell that
     greets, echoes what comes and tells the terminal size."""
 
-    def __init__(self, allowed, sftp=None):
+    def __init__(self, allowed, sftp=None, run=None):
         import paramiko
-        self.paramiko, self.allowed, self.sftp = paramiko, allowed, sftp
+        self.paramiko, self.allowed, self.sftp, self.run = paramiko, allowed, sftp, run   # run(command, channel): exec
+        self.ok_sent = {}       # (transport, channel) -> set once the client has its „ok“ for an exec
         self.sock = socket.socket()
         self.sock.bind(("127.0.0.1", 0))
         self.sock.listen(4)
@@ -1895,6 +1897,17 @@ class _Server:
             def check_channel_window_change_request(self, ch, w, h, pw, ph):
                 outer.sizes.append((w, h))
                 return True
+
+            def check_channel_exec_request(self, ch, command):
+                if outer.run is None:
+                    return False
+                go = outer.ok_sent[(id(ch.transport), ch.remote_chanid)] = threading.Event()   # the „ok“ for this exec
+
+                def run():          # only after the client has its „ok“ for the command, like a real sshd
+                    if go.wait(30):
+                        outer.run(command.decode(), ch)
+                threading.Thread(target=run, daemon=True).start()
+                return True
         while True:
             try:
                 conn, _ = self.sock.accept()
@@ -1902,6 +1915,17 @@ class _Server:
                 return
             t = paramiko.Transport(conn)
             t.add_server_key(HOST)
+            if self.run is not None:
+                send = t._send_user_message
+
+                def sent(m, t=t, send=send):   # MSG_CHANNEL_SUCCESS (99) to a channel: its command may start
+                    send(m)
+                    raw = m.asbytes()
+                    if raw[:1] == bytes([99]) and len(raw) >= 5:
+                        go = self.ok_sent.pop((id(t), int.from_bytes(raw[1:5], "big")), None)
+                        if go:
+                            go.set()
+                t._send_user_message = sent
             if self.sftp:          # files: the SFTP subsystem in the same connection, no shell
                 t.set_subsystem_handler("sftp", paramiko.SFTPServer, self.sftp)
             try:
@@ -3565,13 +3589,17 @@ class _Files:
             def posix_rename(self, old, new):
                 os.replace(self._real(old), self._real(new))
                 return paramiko.SFTP_OK
+
+            def chattr(self, path, attr):
+                if attr.st_size is not None:      # truncate (ferngross: „Weiter“ cuts the part file back)
+                    os.truncate(self._real(path), attr.st_size)
+                return paramiko.SFTP_OK
         self.iface = Iface
 
 
-class FilesEndToEnd(EndToEnd):
-    """„Dateien“ the whole way: the anchor program, the panel's SSH client with SFTP in the same connection and a small
-    SFTP server; list, a one-time download, uploads (new, refused, replaced, too big), a folder the user may not read,
-    the counts, the journal without a name, and the Notaus ends it."""
+class _FilesBase(_EndToEndBase):
+    """The files' way: the anchor program, the panel's SSH client with SFTP in the same connection and a small SFTP
+    server on a folder (ferngross's tests too)."""
 
     def setUp(self):
         super().setUp()
@@ -3594,9 +3622,14 @@ class FilesEndToEnd(EndToEnd):
         ferndateien.LINKS.clear()
         super().tearDown()
 
-    def sftp_server(self, allowed):
-        sshd = _Server(allowed, sftp=_Files(self.root).iface)
+    def sftp_server(self, allowed, run=None):
+        sshd = _Server(allowed, sftp=_Files(self.root).iface, run=run)
         return sshd
+
+
+class FilesEndToEnd(_FilesBase, EndToEnd):
+    """„Dateien“ the whole way: list, a one-time download, uploads (new, refused, replaced, too big), a folder the user
+    may not read, the counts, the journal without a name, and the Notaus ends it."""
 
     def test_files_through_the_anchor(self):
         helpers.set_config(fernzugang_datei_mb=1)

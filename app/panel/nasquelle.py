@@ -34,6 +34,7 @@ Zustand → Live: target "Wissensordner" (live.py "nasquelle", numbers only), jo
 a file name.
 """
 import asyncio
+import contextlib
 import email.utils
 import hashlib
 import json
@@ -435,6 +436,25 @@ class _Dav:
         except (netguard.Blocked, httpx.HTTPError, OSError, ssl.SSLError, netguard.TooLarge, ValueError) as e:
             raise self._err(e)
 
+    async def pieces(self, rel, most, size=1 << 20):
+        """The file piece by piece (never more than size bytes at a time in memory, at most most bytes in all), for
+        streaming it on (ferngross.py: NAS → Fernzugang)."""
+        try:
+            async with self._client(3600 + most // (512 * 1024), most + 64 * 1024) as cl:
+                async with cl.stream("GET", self.base + "/" + quote(rel), auth=self.auth) as r:
+                    if r.status_code != 200:
+                        raise self._code(r.status_code)
+                    got = 0
+                    async for chunk in r.aiter_bytes(size):
+                        got += len(chunk)
+                        if got > most:
+                            raise SourceError("other", "too large")
+                        yield chunk
+        except SourceError:
+            raise
+        except (netguard.Blocked, httpx.HTTPError, OSError, ssl.SSLError, netguard.TooLarge, ValueError) as e:
+            raise self._err(e)
+
     async def close(self):
         pass
 
@@ -522,6 +542,26 @@ def _remote(c, path):
                 await self._run(copy, timeout=60 + most // (512 * 1024))
             except speicher.StoreError as e:
                 raise SourceError(e.kind if e.kind in WHY else "other")
+
+        async def pieces(self, rel, most, size=1 << 20):
+            """The file piece by piece (size bytes at a time at most, most in all), for streaming it on
+            (ferngross.py: NAS → Fernzugang)."""
+            src, f, got = self._at(rel), None, 0
+            try:
+                if await self._run(self._size, src) > most:
+                    raise SourceError("other", "too large")
+                f = await self._run(self._open, src, "rb")
+                while chunk := await self._run(f.read, size):
+                    got += len(chunk)
+                    if got > most:
+                        raise SourceError("other", "too large")
+                    yield chunk
+            except speicher.StoreError as e:
+                raise SourceError(e.kind if e.kind in WHY else "other")
+            finally:
+                if f is not None:
+                    with contextlib.suppress(Exception):
+                        await self._run(f.close)
     return Reader()
 
 

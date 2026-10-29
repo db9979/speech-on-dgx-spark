@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.233** Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
 - **V01.1.232** Fernzugang: Ordner für die Systeme (eine Ebene, Name und Symbol, auf- und zuklappbar, Ziehen, Verschieben nach, Ordner-Übersicht, Ordner beim Koppeln, iPhone)
 - **V01.1.231** Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
 - **V01.1.230** Fernzugang: Anker aktualisieren aus dem Panel, „Aktualisieren“ je System und „Alle aktualisieren“; das Panel unterschreibt den Anker mit einem eigenen Schlüssel (Ed25519, im Tresor), der Anker prüft SHA-256 und Unterschrift, tauscht als root atomar und geht nach 60 s ohne Panel zur alten Version zurück, nie ein Schritt zurück; Anker vor 1.3.0 bekommen eine Zeile zum Einfügen
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.226** Fernzugang hält die Verbindung: Lebenszeichen alle 20 s und SSH-Keepalive; reißt die Leitung ab, bleibt die Shell 2 Minuten mit ihrer letzten Ausgabe offen und die Seite verbindet sich still wieder (neues Einmal-Ticket, dieselbe Anmeldung, entsperrt); Countdown vor Leerlauf, Entsperrung und Spontanhilfe-Ende mit Weiterarbeiten oder Verlängern; jede End-Meldung nennt den Grund und bietet Neu verbinden
 - **V01.1.225** Fernzugang Stufe 4 Bildschirm: „Bildschirm“ zeigt den Bildschirm eines gekoppelten Systems im Browser (X11, GNOME auf Wayland, andere Wayland-Oberflächen, macOS), erst nur ansehen, „Steuern“ mit einem Klick; guacd als eigener Dienst nur auf 127.0.0.1 (install.sh --fernbild), höchstens 15 Bilder/s, „Sparsam“ mit 16 Bit und ein Hinweis bei langsamer Leitung; dazu sagen die Befehls-Vorschläge beim Zeigen, was sie tun, und das Fragefeld des Assistenten leert sich nach dem Senden
 - **V01.1.224** Spontanhilfe: die Einladung „Per E-Mail“ kommt im neuen Design „Karte“ (Text und HTML, per du, Deutsch oder Englisch, ohne Bilder von außen) und nur einmal je Hilfe und Adresse: der Knopf ist beim Senden aus (mit Kreisel), ein zweiter Klick bekommt „Einladung schon gesendet“, „Nochmal senden“ erst nach 60 Sekunden mit Rückfrage, und eine unvollständige Einladung geht nie hinaus
-- **V01.1.223** Spontanhilfe Stufe S3 Shell einmalig: für einen Server ohne Bildschirm fügt die Person eine Zeile (ohne sudo) in ihr Terminal ein, tippt dort Nummer und Vornamen und erlaubt mit „j“; dann arbeitet der Admin im Reiter Spontanhilfe in ihrer Shell, mit ihren Rechten, und nichts bleibt zurück
 
 
 

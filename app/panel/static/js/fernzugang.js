@@ -469,7 +469,7 @@ const fzKB=n=>n==null?'':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':n<1073
 async function fzDateien(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
   try{const r=await api('/api/admin/fernzugang/dateien',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id})});d=await r.json()}catch(e){fzFehler(e);return}
   FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null};FZ.sitz={name:g.name,seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
-  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(d.pfad)}
+  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(d.pfad);if(window.fgZeig)fgZeig()}
 function fzFInfo(){const dl=$('fzfinfo');dl.textContent='';const s=FZ.sitz||{},fs=FZ.fs||{};
   for(const [k,v] of [[t('System','System'),s.name||''],[t('Rechte','Permissions'),t('die des Benutzers spark auf dem Server','those of the user spark on the server')],[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
     [t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],[t('Aufgezeichnet','Recorded'),t('nur Anzahl und Größe, nie Namen oder Inhalte','only counts and sizes, never names or contents')]])dl.append(fzEl('dt','',k),fzEl('dd','',v));
@@ -501,7 +501,7 @@ async function fzHoch(){const fs=FZ.fs,f=$('fzffile').files[0];if(!fs)return;if(
       'X-Fz-Name':encodeURIComponent(f.name),'X-Fz-Ersetzen':$('fzfreplace').checked?'1':'0'},body:f});
     fzMsg(t('Hochgeladen: ','Uploaded: ')+fzKB(f.size));$('fzffile').value='';fzListe(fs.pfad)}catch(e){fzMsg(e.message,true)}finally{b.disabled=false;if(FZ.fs)FZ.fs.laeuft=false}}
 async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/api/admin/fernzugang/dateien/${fs.id}`,{method:'DELETE'})}catch{}fzFZu(typeof text==='string'?text:'')}
-function fzFZu(text){FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
+function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
   if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;

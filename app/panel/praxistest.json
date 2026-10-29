@@ -4384,6 +4384,27 @@
 "titel": "Fernzugang: Ordner",
 "text": "Funktionen → Fernzugang zu Servern → Ordner im Fernzugang an. Seite entsperren, links „+ Neuer Ordner“: zwei Ordner anlegen (z. B. 🏠 Zuhause, 🏢 Kunde). Ein System per Ziehen in einen Ordner legen, ein anderes über ⋯ → Verschieben nach …; am Handy lange auf ein System drücken. Einen Ordner zuklappen, Seite neu laden: er bleibt zu und zeigt ● online / gesamt. Nach einem System suchen: es erscheint auch im zugeklappten Ordner. Ordner anklicken: rechts Umbenennen, Symbol, Alle aktualisieren, Löschen; Löschen lässt die Systeme unter Ohne Ordner. Koppeln mit gewähltem Ordner: das neue System landet dort. iPhone: Spark verwalten → Fernzugang zeigt dieselben Ordner, Ordner verwalten ordnet und benennt um.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P651",
+"v": 1233,
+"titel": "Große Datei in Teilen mit Pause und Weiter",
+"text": "Funktionen → Fernzugang zu Servern → Große Dateien an. Fernzugang → Systeme → Dateien eines Linux-Systems, unter „Große Datei“ eine Datei von mehreren GB wählen und „In Teilen hochladen“. Nach etwa der Hälfte „Pause“, dann „Trennen“, Dateien neu öffnen, „Weiter“ und dieselbe Datei wählen. Erwartet: es geht beim letzten ganzen Stück weiter, Rate und Restzeit stehen da, am Ende „Fertig · SHA-256 …“, auf dem Server ergibt sha256sum dieselbe Summe und keine .spark-teil-Datei bleibt liegen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P652",
+"v": 1233,
+"titel": "Per Link holen und vom NAS übertragen",
+"text": "In derselben Dateien-Sitzung eine https-Adresse einer großen Datei (z. B. ein ISO mit bekannter SHA-256) unter „Per Link holen“ eintragen, die SHA-256 dazu, „Holen“. Dann unter „Vom NAS übertragen“ eine NAS-Verbindung wählen und eine Datei übertragen. Erwartet: beide landen im gezeigten Ordner, eine absichtlich falsche SHA-256 ergibt „Die Prüfsumme passt nicht“ und keine Datei; im Protokoll (Zustand → Logs, Bereich fernzugang) stehen nur holen, holen_fertig, nas_holen, nas_fertig mit KB, nie die Adresse oder ein Name.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P653",
+"v": 1233,
+"titel": "Interne Adresse beim Koppeln im Heimnetz",
+"text": "Ein System im Heimnetz neu koppeln (Anker 1.4.0). Auf dem System „spark-anker zustand“. Erwartet: „im Heimnetz zuerst https://<IP des Spark>:31443 (Zertifikat festgelegt)“; im Journal des Ankers „mit dem Panel verbunden (im Heimnetz)“. Eine große Datei in Teilen läuft zu Hause deutlich schneller als 1 MB/s, der Hinweis „Unter 1 MB/s“ erscheint nicht. Von unterwegs (Handy-Hotspot) verbindet der Anker nach 3 Sekunden über die normale Adresse.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

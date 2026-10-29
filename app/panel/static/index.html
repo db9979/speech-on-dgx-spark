@@ -278,6 +278,8 @@
         <label for="chat.fernzugang_verlauf_tage">Verlauf der Sitzungen behalten (Tage)</label><input class="num" id="chat.fernzugang_verlauf_tage" type="number" min="1" max="365"><div class="fh">1 bis 365, Standard 30. Nur Zeit, System, Admin, Art, Dauer und Zuhause oder Internet.</div>
         <label for="chat.fernzugang_entsperrt_min">Ein Code entsperrt die Seite für (Minuten)</label><input class="num" id="chat.fernzugang_entsperrt_min" type="number" min="5" max="120"><div class="fh">5 bis 120, Standard 60. Nur diese Anmeldung in diesem Browser; Koppeln und Entfernen fragen trotzdem jedes Mal.</div>
         <label for="chat.fernzugang_datei_mb">Größte Datei beim Laden und Hochladen (MB)</label><input class="num" id="chat.fernzugang_datei_mb" type="number" min="1" max="4096"><div class="fh">1 bis 4096, Standard 100.</div>
+        <div class="setrow"><div class="lbl"><b>Große Dateien</b><span>In Dateien: große Dateien in Teilen mit Prüfsumme (Pause und Weiter), per Link vom Server geholt oder vom NAS übertragen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_gross"><i></i></label></div>
+        <div data-show="chat.fernzugang_gross" style="margin-left:18px"><label for="chat.fernzugang_gross_mb">Größte große Datei (MB)</label><input class="num" id="chat.fernzugang_gross_mb" type="number" min="1" max="1048576"><div class="fh">1 bis 1048576, Standard 20480 (20 GB). Der Server braucht so viel Platz frei und 64 MB dazu.</div></div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
         <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
         <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
@@ -1208,6 +1210,10 @@
       <div class="card fzflist" id="fzflist"></div>
       <div class="fzside">
         <div class="card"><h3>Hochladen</h3><div class="fh" id="fzfmax"></div><input type="file" id="fzffile" aria-label="Datei zum Hochladen"><label class="chk"><input type="checkbox" id="fzfreplace"> Ersetzen, wenn es die Datei schon gibt</label><div class="row"><button class="b p" type="button" id="fzfsend">Hochladen</button></div></div>
+        <div class="card" id="fzgross" hidden><h3>Große Datei</h3><div class="fh" id="fzgmax"></div><input type="file" id="fzgfile" aria-label="Große Datei zum Hochladen"><label class="chk"><input type="checkbox" id="fzgreplace"> Ersetzen, wenn es die Datei schon gibt</label><div class="row"><button class="b p" type="button" id="fzgsend">In Teilen hochladen</button></div>
+          <h3>Per Link holen</h3><div class="fh">Der Server lädt eine https-Adresse selbst herunter, in den gezeigten Ordner. Mit Prüfsumme wird eine falsche Datei gleich gelöscht.</div><label for="fzglink">Adresse (https)</label><input id="fzglink" type="url" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="https://"><label for="fzglname">Name im Ordner</label><input id="fzglname" maxlength="255" autocomplete="off" spellcheck="false"><label for="fzglsha">SHA-256 (freiwillig)</label><input id="fzglsha" maxlength="64" autocomplete="off" spellcheck="false"><div class="row"><button class="b p" type="button" id="fzglgo">Holen</button></div>
+          <div id="fzgnasbox" hidden><h3>Vom NAS übertragen</h3><div class="fh">Eine Datei einer NAS-Verbindung (nur lesen) geht Stück für Stück über den Spark in den gezeigten Ordner.</div><label for="fzgnas">NAS-Verbindung</label><select id="fzgnas"></select><div class="fzcrumbs" id="fzgnaspfad"></div><div class="fzgnaslist" id="fzgnaslist"></div></div></div>
+        <div class="card" id="fzgjobs" hidden><h3>Übertragungen</h3><div id="fzgjoblist" aria-live="polite"></div><div class="note" id="fzglangsam" hidden>Unter 1 MB/s. Über den Proxy der Synology kommen oft nur 50 bis 70 KB/s an; im Heimnetz geht der Anker direkt zum Spark (interne Adresse beim Koppeln), von unterwegs ist der direkte https-Zugang schneller.</div></div>
         <div class="card"><h3>Diese Dateien-Sitzung</h3><dl class="fzfacts" id="fzfinfo"></dl><div class="row"><button class="b danger" type="button" id="fzfstop">Schließen</button></div></div>
       </div>
     </div>
@@ -1630,6 +1636,7 @@
 <script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
+<script src="/static/js/ferngross.js"></script>
 <script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>
 <script src="/static/js/seite.js"></script>

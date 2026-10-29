@@ -78,7 +78,7 @@ Rules (fixed, Sicherheits-Checkliste):
     (the screen, stage 4: POST /api/admin/fernzugang/bildschirm and WS /api/fernzugang/bildschirm in fernbild.py)
     anchor (no cookies):
     GET    /fernzugang/anker                             the program (public, no secrets; 404 while off)
-    POST   /api/fernzugang/anker/koppeln {code, hostkey, os, version}  -> {id, key, pi_key, user, anker_sha256}
+    POST   /api/fernzugang/anker/koppeln {code, hostkey, os, version}  -> {id, key, pi_key, user, anker_sha256, intern?}
     POST   /api/fernzugang/anker/abgebaut                (Bearer key) the anchor removed itself
     WS     /api/fernzugang/anker                         (Bearer key) the pipe; text: control, binary: channel byte + data
 
@@ -146,6 +146,7 @@ OFFLINE = (5, 1440)     # chat.fernzugang_offline_min: the Dienst-Wächter warns
 VERLAUF_TAGE = (1, 365)  # chat.fernzugang_verlauf_tage: how long the history keeps a session (default 30)
 ENTSPERRT_MIN = (5, 120)  # chat.fernzugang_entsperrt_min: how long one code unlocks the page (default 60)
 DATEI_MB = (1, 4096)    # chat.fernzugang_datei_mb: one upload or download at most (ferndateien.py)
+GROSS_MB = (1, 1048576)  # chat.fernzugang_gross_mb: one big file at most (ferngross.py, default 20480)
 VERLAUF_MAX = 2000       # entries at most
 ARTEN = {"shell": ("Shell", "Shell"), "dateien": ("Dateien", "Files"), "bildschirm": ("Bildschirm", "Screen")}   # what a session is
 CLIENTS = {"browser": ("Browser", "Browser"), "iphone": ("iPhone", "iPhone"), "android": ("Android", "Android"),
@@ -238,7 +239,9 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
-         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner")
+         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner",
+         "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
+         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -361,6 +364,9 @@ def datei_mb(c=None):
 def ki_zeilen(c=None):
     """chat.fernzugang_ki_zeilen: how many lines of the screen the drawer starts with (KI_ZEILEN, default 80)."""
     return _num("fernzugang_ki_zeilen", KI_ZEILEN, c) or 80
+def gross_mb(c=None):
+    """chat.fernzugang_gross_mb: one big file (in pieces, by link, from the NAS) at most, in MB (ferngross.py)."""
+    return _num("fernzugang_gross_mb", GROSS_MB, c) or 20480
 
 
 def offline_s(c=None):
@@ -372,7 +378,7 @@ def check(c):
     for key, (lo, hi) in (("fernzugang_leerlauf_min", LEERLAUF), ("fernzugang_sitzungen", SITZUNGEN),
                           ("fernzugang_offline_min", OFFLINE), ("fernzugang_verlauf_tage", VERLAUF_TAGE),
                           ("fernzugang_entsperrt_min", ENTSPERRT_MIN), ("fernzugang_datei_mb", DATEI_MB),
-                          ("fernzugang_ki_zeilen", KI_ZEILEN)):
+                          ("fernzugang_ki_zeilen", KI_ZEILEN), ("fernzugang_gross_mb", GROSS_MB)):
         if key in c and _num(key, (lo, hi), c) is None:
             return f"{key}: {lo} bis {hi}"
     return None
@@ -547,7 +553,17 @@ def counts(now=None):
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
             "gehalten": sum(1 for s in SITZUNG.values() if getattr(s, "browser", 1) is None and getattr(s, "verloren", 0)),
-            "uebertragungen": max(0, STATS["uebertragungen"])}
+            "uebertragungen": max(0, STATS["uebertragungen"]) + _gross_laufend()}
+
+
+
+def _gross_laufend():
+    """Big uploads between their pieces count as moving too (ferngross.laufend)."""
+    try:
+        import ferngross
+        return sum(1 for u in ferngross.UPLOADS.values() if time.time() - u.t < 60 and 0 < u.offset < u.groesse)
+    except Exception:
+        return 0
 
 
 def for_live(now=None):
@@ -1384,8 +1400,49 @@ async def anker_pair(request: Request):
     log("koppeln", "ok", 1)
     guard.log("fernzugang_paired", detail="Fern-Server gekoppelt")
     _live("Fern-Server gekoppelt")
-    return {"id": gid, "key": key, "pi_key": f"{pub} spark-fernzugang-{gid}", "user": USER,
-            "anker_sha256": _sum(PROGRAM), "sign_pub": sign_pub}
+    out = {"id": gid, "key": key, "pi_key": f"{pub} spark-fernzugang-{gid}", "user": USER,
+           "anker_sha256": _sum(PROGRAM), "sign_pub": sign_pub}
+    intern = _intern(request)
+    if intern:
+        out["intern"] = intern
+    return out
+
+
+
+def _cert_sha():
+    """SHA-256 of the panel certificate (DER), as the anchor pins it; "" when there is none."""
+    try:
+        import ssl as _ssl
+        from common import TLS_DIR
+        with open(os.path.join(TLS_DIR, "cert.pem")) as f:
+            return hashlib.sha256(_ssl.PEM_cert_to_DER_cert(f.read())).hexdigest()
+    except (OSError, ValueError, ImportError):
+        return ""
+
+
+def _intern(conn):
+    """The panel's own address inside the home net for an anchor paired from there (stage 3b, Dominik 2026-10-29): the
+    Spark's IPv4 address toward the anchor (only the route is looked up, no packet goes out) and the panel's https port,
+    with its certificate's SHA-256 for the anchor to pin. None from the internet, for a public or unknown address."""
+    import ipaddress
+    if _herkunft(conn) != "zuhause":
+        return None
+    try:
+        ip = ipaddress.ip_address(guard.client_ip(conn))
+    except ValueError:
+        return None
+    if ip.version != 4 or not ip.is_private or ip.is_loopback or ip.is_link_local:
+        return None
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect((str(ip), 9))
+            own = s.getsockname()[0]
+    except OSError:
+        return None
+    port, fp = load_config("panel").get("https_port"), _cert_sha()
+    if not fp or not isinstance(port, int) or not 0 < port < 65536 or not ipaddress.ip_address(own).is_private:
+        return None
+    return {"url": f"https://{own}:{port}", "fp": fp}
 
 
 @router.post("/api/fernzugang/anker/abgebaut")
