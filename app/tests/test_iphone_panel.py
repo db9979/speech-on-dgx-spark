@@ -242,6 +242,7 @@ class Things(unittest.TestCase):
              "bilder": ("GET", "/api/bilder", 200), "musik": ("GET", "/api/musik", 200),
              "wissensbuch": ("GET", "/api/profile/wissensbuch", 200), "wissenskarte": ("GET", "/api/profile/wissenskarte", 200),
              "fund": ("GET", "/api/profile/fund/stand", 200),
+             "wissensknoten": ("GET", "/api/profile/wissenskarte/knoten", 200),
              "calendar": ("GET", "/api/profile/calendar/view", 200), "mail": ("GET", "/api/profile/mail/inbox", 200),
              "mailmanage": ("GET", "/api/profile/mail/folders", 400), "mailsend": ("POST", "/api/profile/mail/send/preview", 400),
              "calserver": ("GET", "/api/profile/calserver", 200), "fuerdich": ("GET", "/api/profile/fuerdich", 200),
@@ -264,10 +265,10 @@ class Things(unittest.TestCase):
 
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
-                          "calendar", "mail", "mail_manage", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
+                          "knowledge_ents", "calendar", "mail", "mail_manage", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
                           "contacts", "contacts_edit", "mail_invites", "dungeon", "fund")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
-                           knowledge_book=True, knowledge_map=True, calendar=True, mail=True, mail_manage=True, mail_send=True,
+                           knowledge_book=True, knowledge_map=True, knowledge_ents=True, calendar=True, mail=True, mail_manage=True, mail_send=True,
                            calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
                            contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True)
         for name in ("image", "music"):     # the picture and music models count as installed

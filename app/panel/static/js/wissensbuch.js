@@ -5,6 +5,8 @@
 // value; „veraltet?“: „Stimmt noch“). „Karte“ (wissenskarte.py, own switch): the pages as points and their connections,
 // drawn here from the panel's JSON with own code; titles, details and sources come from documents and are only ever
 // text (textContent, esc), never markup. Drag a point to place it, drag a document onto the map to see its part.
+// With „Personen, Firmen und Fristen“ (Stufe 2, own switch) the points from documents ("k" and their number) come along,
+// each kind with its colour and a filter above the map; renaming, merging and deleting only by the owner's click.
 const WBART={Thema:['Themen','Topics'],Person:['Personen','People'],Firma:['Firmen','Companies'],Ding:['Dinge','Things'],Ort:['Orte','Places'],Antwort:['Abgelegte Antworten','Filed answers']};
 const WBWORD={eingearbeitet:['eingearbeitet','worked in'],nichts:['nichts Neues','nothing new'],fehler:['nicht eingearbeitet','not worked in'],
   geloescht:['Seite gelöscht','page deleted'],neu:['Seite neu geschrieben','page written again'],falsch:['Satz entfernt','sentence removed'],
@@ -13,7 +15,10 @@ const WBWORD={eingearbeitet:['eingearbeitet','worked in'],nichts:['nichts Neues'
   nas:['auf den NAS kopiert','copied to the NAS']};
 // the colour of a kind (app.css), named here in full so every class is found
 const WKACLS={Thema:'wk-Thema',Person:'wk-Person',Firma:'wk-Firma',Ding:'wk-Ding',Ort:'wk-Ort',Antwort:'wk-Antwort'};
+const WKKCLS={person:'wk-k-person',firma:'wk-k-firma',ort:'wk-k-ort',vertrag:'wk-k-vertrag',konto:'wk-k-konto',frist:'wk-k-frist'};
+const WKKPL={person:['Personen','People'],firma:['Firmen','Companies'],ort:['Orte','Places'],vertrag:['Verträge','Contracts'],konto:['Konten','Accounts'],frist:['Fristen','Deadlines']};
 const wkaCls=a=>WKACLS[a]||WKACLS.Thema;
+const wkaNodeCls=n=>n.ent?(WKKCLS[n.ent]||WKKCLS.person):wkaCls(n.art);
 const WB={data:null,sel:'',page:null,q:'',msg:'',err:false,seq:0};
 let WB_ON=false,WK_ON=false;
 const wbWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}):'';
@@ -87,19 +92,19 @@ async function wbFile(id,b){b.disabled=true;const r=await apiTry('/api/profile/w
   wbShow()}
 
 // ---------------------------------------------------------------- Karte (wissenskarte.py)
-const WKA={data:null,um:'',doc:'',tiefe:2,sel:null,pos:{},lay:'',seq:0,view:{x:0,y:0,k:1},q:'',more:false,msg:''};
+const WKA={data:null,um:'',doc:'',art:'',tiefe:2,sel:null,pos:{},lay:'',seq:0,view:{x:0,y:0,k:1},q:'',more:false,msg:'',same:null};
 const WK_SVG='http://www.w3.org/2000/svg';
 function wkaS(tag,attrs,text){const n=document.createElementNS(WK_SVG,tag);for(const [k,v] of Object.entries(attrs||{}))n.setAttribute(k,String(v));if(text!=null)n.textContent=String(text);return n}
 const wkaArt=k=>{const a=WKA.data&&WKA.data.arten[k];return a?(L==='en'?a[1]:a[0]):k};
-function wkaFocus(id){WKA.um=id;WKA.doc='';WKA.sel={k:'n',id};icTabSet('wbuch','karte');if(!$('wkview'))wbOpen();else wkaLoad()}
+function wkaFocus(id){WKA.um=id;WKA.doc='';WKA.art='';WKA.sel={k:'n',id};icTabSet('wbuch','karte');if(!$('wkview'))wbOpen();else wkaLoad()}
 function wkaBody(){const w=document.createElement('div');w.className='wk';w.id='wkview';
   w.innerHTML=`<div class="wktools"></div><div class="wkgrid"><div class="wkside"></div><div class="wkmap" tabindex="0" aria-label="${esc(t('Wissenskarte','Knowledge map'))}"></div><div class="wkdet"></div></div><div class="wkmsg mut" role="status"></div>`;
   wkaMapEvents(w.querySelector('.wkmap'));setTimeout(wkaLoad,0);return w}
-async function wkaLoad(){const seq=++WKA.seq,qs=new URLSearchParams();if(WKA.um){qs.set('um',WKA.um);qs.set('tiefe',String(WKA.tiefe))}else if(WKA.doc)qs.set('doc',WKA.doc);
+async function wkaLoad(){const seq=++WKA.seq,qs=new URLSearchParams();if(WKA.um){qs.set('um',WKA.um);qs.set('tiefe',String(WKA.tiefe))}else if(WKA.doc)qs.set('doc',WKA.doc);else if(WKA.art)qs.set('art',WKA.art);
   const {r,d}=await apiTry('/api/profile/wissenskarte'+(qs.toString()?'?'+qs:''));if(seq!==WKA.seq)return;
   if(!r.ok){WKA.msg=errSay(r.status,d.detail,'');wkaPaint();return}
-  WKA.data=d;WKA.msg='';if(WKA.um&&!d.um)WKA.um='';if(WKA.doc&&!d.doc)WKA.doc='';
-  const lay=[d.um,d.doc,WKA.tiefe].join('|'),fit=lay!==WKA.lay;if(fit){WKA.pos={};WKA.lay=lay}   // another part: placed anew; the same part keeps its places
+  WKA.data=d;WKA.msg='';if(WKA.um&&!d.um)WKA.um='';if(WKA.doc&&!d.doc)WKA.doc='';if(WKA.art&&!d.art)WKA.art='';
+  const lay=[d.um,d.doc,d.art,WKA.tiefe].join('|'),fit=lay!==WKA.lay;if(fit){WKA.pos={};WKA.lay=lay}   // another part: placed anew; the same part keeps its places
   wkaLayout();if(fit)wkaFit();wkaPaint()}
 // placing the points: around a page in rings (the page in the middle), else a force layout that always starts the same;
 // a point already placed (or dragged) keeps its place, so nothing jumps when more comes in
@@ -130,7 +135,9 @@ function wkaPaint(){const w=$('wkview');if(!w)return;const d=WKA.data;
   const tools=w.querySelector('.wktools');tools.textContent='';
   if(!d){tools.appendChild(icEl('span','mut',WKA.msg?'':t('Lade die Karte …','Loading the map …')));return}
   const um=d.nodes.find(n=>n.id===d.um),dc=d.docs.find(x=>x.id===d.doc);
-  const crumb=icEl('span','wkcrumb');crumb.appendChild(icChip(t('Alles','Everything'),!um&&!dc,()=>{WKA.um='';WKA.doc='';WKA.sel=null;wkaLoad()}));
+  const crumb=icEl('span','wkcrumb');crumb.appendChild(icChip(t('Alles','Everything'),!um&&!dc&&!d.art,()=>{WKA.um='';WKA.doc='';WKA.art='';WKA.sel=null;wkaLoad()}));
+  // the points from documents by kind (numbers only from the panel); a kind shows its points with their neighbours
+  if(d.ents)for(const [k,n] of Object.entries(d.knoten||{})){if(!n)continue;const c=icChip(t(...WKKPL[k])+' '+n,d.art===k,()=>{WKA.art=d.art===k?'':k;WKA.um='';WKA.doc='';WKA.sel=null;wkaLoad()},'wkk '+WKKCLS[k]);crumb.appendChild(c)}
   if(um){crumb.appendChild(icChip(t('Um ','Around ')+um.title,true,null));const seg=icEl('span','segc');
     for(const k of [1,2]){const b=icEl('button',WKA.tiefe===k?'on':'',k===1?t('1 Schritt','1 step'):t('2 Schritte','2 steps'));b.type='button';b.setAttribute('aria-pressed',String(WKA.tiefe===k));b.onclick=()=>{WKA.tiefe=k;wkaLoad()};seg.appendChild(b)}crumb.appendChild(seg)}
   if(dc)crumb.appendChild(icChip(t('Dokument ','Document ')+dc.name,true,null));
@@ -140,7 +147,7 @@ function wkaPaint(){const w=$('wkview');if(!w)return;const d=WKA.data;
   const zoom=icEl('span','wkzoom');for(const [lab,act,name] of [['−',()=>wkaZoom(1/1.25),t('Kleiner','Zoom out')],['+',()=>wkaZoom(1.25),t('Größer','Zoom in')],['⤢',()=>{wkaFit();wkaDraw()},t('Alles zeigen','Fit')]]){const b=icEl('button','b',lab);b.type='button';b.title=name;b.setAttribute('aria-label',name);b.onclick=act;zoom.appendChild(b)}
   tools.appendChild(zoom);
   const ex=document.createElement('details');ex.className='wkexp';ex.innerHTML=`<summary class="b">${esc(t('Exportieren','Export'))}</summary><div class="wkexpm"></div>`;
-  const m=ex.querySelector('.wkexpm'),qs=new URLSearchParams();if(d.um){qs.set('um',d.um);qs.set('tiefe',String(WKA.tiefe))}else if(d.doc)qs.set('doc',d.doc);qs.set('lang',L==='en'?'en':'de');
+  const m=ex.querySelector('.wkexpm'),qs=new URLSearchParams();if(d.um){qs.set('um',d.um);qs.set('tiefe',String(WKA.tiefe))}else if(d.doc)qs.set('doc',d.doc);else if(d.art)qs.set('art',d.art);qs.set('lang',L==='en'?'en':'de');
   for(const [fmt,lab] of [['mermaid','Mermaid'],['dot','Graphviz']]){const a=icEl('a','b',lab);a.href='/api/profile/wissenskarte/export?fmt='+fmt+'&'+qs;a.setAttribute('download','Wissenskarte.'+(fmt==='dot'?'dot':'mmd'));m.appendChild(a)}
   for(const [kind,lab] of [['svg',t('Bild (SVG)','Picture (SVG)')],['png',t('Bild (PNG)','Picture (PNG)')]]){const b=icEl('button','b',lab);b.type='button';b.onclick=()=>wkaSave(kind);m.appendChild(b)}
   tools.appendChild(ex);
@@ -151,7 +158,7 @@ function wkaSide(w){const d=WKA.data,side=w.querySelector('.wkside');side.textCo
   const qq=WKA.q.trim().toLowerCase(),ns=d.nodes.filter(n=>!qq||n.title.toLowerCase().includes(qq)).sort((a,b)=>b.deg-a.deg||a.title.localeCompare(b.title));
   side.appendChild(icEl('div','ld-grp',t('Dinge','Things')));
   for(const n of WKA.more?ns:ns.slice(0,12)){const r=icEl('div','ld-row'+(WKA.sel&&WKA.sel.k==='n'&&WKA.sel.id===n.id?' on':''));r.tabIndex=0;r.setAttribute('role','button');
-    const dot=icEl('span','wkdot '+wkaCls(n.art));const mid=icEl('span','ld-mid');mid.appendChild(icEl('b','',n.title));r.append(dot,mid,icEl('span','ld-right',String(n.deg)));
+    const dot=icEl('span','wkdot '+wkaNodeCls(n));const mid=icEl('span','ld-mid');mid.appendChild(icEl('b','',n.title));r.append(dot,mid,icEl('span','ld-right',String(n.deg)));
     const go=()=>{WKA.sel={k:'n',id:n.id};wkaDraw();wkaDetail(w);wkaSide(w)};r.onclick=go;r.ondblclick=()=>wkaFocus(n.id);r.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};side.appendChild(r)}
   if(ns.length>12)side.appendChild(icLink(WKA.more?t('Weniger zeigen','Show fewer'):t(`Weitere ${ns.length-12} zeigen`,`Show ${ns.length-12} more`),()=>{WKA.more=!WKA.more;wkaSide(w)}));
   if(!ns.length)side.appendChild(icEl('div','mut',d.total.edges?t('Nichts gefunden.','Nothing found.'):t('Noch keine Verbindungen. Sie entstehen in ruhigen Minuten nach dem Wissensbuch.','No connections yet. They are made in quiet minutes after the knowledge book.')));
@@ -181,8 +188,8 @@ function wkaDraw(){const box=document.querySelector('#wkview .wkmap'),d=WKA.data
       eg.appendChild(wkaS('rect',{x:mx-lw/2,y:my-9,width:lw,height:17,rx:8,class:'lab'}));eg.appendChild(wkaS('text',{x:mx,y:my+4,'text-anchor':'middle'},lab))}
     g.appendChild(eg)}
   for(const n of d.nodes){const [x,y]=WKA.pos[n.id],w=wkaW(n),on=sel&&sel.k==='n'&&sel.id===n.id;
-    const ng=wkaS('g',{class:'wkn '+wkaCls(n.art)+(on?' s':'')+(n.id===d.um?' um':'')+(sel&&sel.k==='n'&&!near.has(n.id)?' dim':''),'data-n':n.id,transform:`translate(${x},${y})`});
-    ng.appendChild(wkaS('rect',{x:-w/2,y:-WK_H/2,width:w,height:WK_H,rx:WK_H/2}));ng.appendChild(wkaS('circle',{cx:-w/2+16,cy:0,r:5}));
+    const ng=wkaS('g',{class:'wkn '+wkaNodeCls(n)+(n.ent?' k':'')+(on?' s':'')+(n.id===d.um?' um':'')+(sel&&sel.k==='n'&&!near.has(n.id)?' dim':''),'data-n':n.id,transform:`translate(${x},${y})`});
+    ng.appendChild(wkaS('rect',{x:-w/2,y:-WK_H/2,width:w,height:WK_H,rx:n.ent?6:WK_H/2}));ng.appendChild(wkaS('circle',{cx:-w/2+16,cy:0,r:5}));
     const tx=wkaS('text',{x:-w/2+28,y:4},n.title.length>30?n.title.slice(0,29)+'…':n.title);ng.appendChild(tx);g.appendChild(ng)}
   box.appendChild(svg);
   if(!d.nodes.length){const e=icEl('div','wkempty mut',d.total.edges?t('Hier gibt es keine Verbindungen.','No connections here.'):t('Noch keine Verbindungen. Sie entstehen in ruhigen Minuten aus den Seiten des Wissensbuchs.','No connections yet. They are made in quiet minutes from the pages of the knowledge book.'));box.appendChild(e)}}
@@ -218,11 +225,33 @@ function wkaDetail(w){const det=w.querySelector('.wkdet'),d=WKA.data;det.textCon
   if(!sel){det.appendChild(icEl('h3','',t('Ausgewählt','Selected')));det.appendChild(icEl('div','mut',t('Tippe einen Punkt oder eine Verbindung an. Doppelt tippen stellt den Punkt in die Mitte.','Tap a point or a connection. A double tap puts the point in the middle.')));
     det.appendChild(icEl('div','mut wklegend',t('Gestrichelt: Ursache und Wirkung, nur wenn die Quelle den Grund nennt.','Dashed: cause and effect, only when the source names the reason.')));return}
   if(sel.k==='e'){const e=d.edges.find(x=>x.id===sel.id);if(!e)return;det.appendChild(icEl('h3','',wkaArt(e.art)));const ul=icEl('ul','facts');ul.appendChild(wkaEdgeRow(e,byId));det.appendChild(ul);return}
-  const n=byId[sel.id];if(!n)return;const h=icEl('h3','');h.append(icEl('span','wkdot '+wkaCls(n.art)),document.createTextNode(n.title));det.appendChild(h);
-  det.appendChild(icEl('div','mut',t(...(WBART[n.art]||[n.art,n.art]))+' · '+t(`${n.n} Sätze · ${n.deg} Verbindungen`,`${n.n} sentences · ${n.deg} connections`)));
+  const n=byId[sel.id];if(!n)return;const h=icEl('h3','');h.append(icEl('span','wkdot '+wkaNodeCls(n)),document.createTextNode(n.title));det.appendChild(h);
+  const kind=n.ent?(d.ent_arten&&d.ent_arten[n.ent]?t(...d.ent_arten[n.ent]):n.art):t(...(WBART[n.art]||[n.art,n.art]));
+  det.appendChild(icEl('div','mut',kind+' · '+(n.ent?t(`${n.n} Stellen`,`${n.n} passages`):t(`${n.n} Sätze`,`${n.n} sentences`))+' · '+t(`${n.deg} Verbindungen`,`${n.deg} connections`)));
   const mine=d.edges.filter(e=>e.a===n.id||e.b===n.id);if(mine.length){det.appendChild(icEl('h4','',t('Verbindungen','Connections')));const ul=icEl('ul','facts');for(const e of mine)ul.appendChild(wkaEdgeRow(e,byId));det.appendChild(ul)}
-  const row=icEl('div','row');const op=icEl('button','b',t('Seite öffnen','Open page'));op.type='button';op.onclick=()=>{WB.sel=n.id;icTabSet('wbuch','show');wbOpen();wbPick(n.id)};
-  const mid=icEl('button','b p',t('In die Mitte','Into the middle'));mid.type='button';mid.onclick=()=>wkaFocus(n.id);row.append(mid,op);det.appendChild(row)}
+  const row=icEl('div','row');const mid=icEl('button','b p',t('In die Mitte','Into the middle'));mid.type='button';mid.onclick=()=>wkaFocus(n.id);row.appendChild(mid);
+  if(!n.ent){const op=icEl('button','b',t('Seite öffnen','Open page'));op.type='button';op.onclick=()=>{WB.sel=n.id;icTabSet('wbuch','show');wbOpen();wbPick(n.id)};row.appendChild(op)}
+  det.appendChild(row);if(n.ent)wkaOwn(det,n)}
+// a point from documents: only the owner renames, merges (same kind) or deletes it, each with the code of „Bestätigen“
+function wkaOwn(det,n){const kid=n.id.slice(1),box=icEl('div','wkown');
+  const nm=icEl('input','');nm.type='text';nm.maxLength=80;nm.value=n.title;nm.setAttribute('aria-label',t('Neuer Name','New name'));
+  const ren=icEl('button','b',t('Umbenennen','Rename'));ren.type='button';codeLock(ren,'confirm');
+  ren.onclick=()=>wkaAct(ren,'/api/profile/wissenskarte/knoten/'+kid+'/name',{method:'POST',body:JSON.stringify({name:nm.value.trim()})},t('Umbenannt; der alte Name findet ihn weiter.','Renamed; the old name still finds it.'));
+  const r1=icEl('div','row');r1.append(nm,ren);box.appendChild(r1);
+  const sel=icEl('select','');sel.setAttribute('aria-label',t('Zusammenführen mit','Merge with'));sel.appendChild(new Option(t('Zusammenführen mit …','Merge with …'),''));
+  const mg=icEl('button','b',t('Zusammenführen','Merge'));mg.type='button';mg.disabled=true;codeLock(mg,'confirm');sel.onchange=()=>{mg.disabled=!sel.value};
+  mg.onclick=()=>{if(!sel.value)return;const other=sel.options[sel.selectedIndex].text;if(!confirm(t(`„${n.title}“ in „${other}“ aufgehen lassen? Stellen und Verbindungen wandern mit.`,`Merge "${n.title}" into "${other}"? Passages and connections move along.`)))return;
+    wkaAct(mg,'/api/profile/wissenskarte/knoten/'+kid+'/zusammen',{method:'POST',body:JSON.stringify({mit:+sel.value})},t('Zusammengeführt.','Merged.'),'k'+sel.value)};
+  const r2=icEl('div','row');r2.append(sel,mg);box.appendChild(r2);
+  apiTry('/api/profile/wissenskarte/knoten?art='+encodeURIComponent(n.ent)).then(({r,d})=>{if(!r.ok)return;for(const x of d.knoten||[])if('k'+x.id!==n.id)sel.appendChild(new Option(x.name,String(x.id)))});
+  const del=icEl('button','b danger',t('Löschen','Delete'));del.type='button';codeLock(del,'confirm');
+  del.onclick=()=>{if(!confirm(t(`„${n.title}“ löschen? Aus diesen Dokumenten kommt der Punkt nicht wieder.`,`Delete "${n.title}"? The point does not come back from these documents.`)))return;
+    wkaAct(del,'/api/profile/wissenskarte/knoten/'+kid,{method:'DELETE'},t('Gelöscht; aus diesen Dokumenten kommt er nicht wieder.','Deleted; it does not come back from these documents.'),'')};
+  box.appendChild(del);det.appendChild(box)}
+async function wkaAct(b,path,opts,done,next){b.disabled=true;const {r,d}=await apiTry(path,Object.assign({headers:{'Content-Type':'application/json'}},opts));b.disabled=false;
+  if(!r.ok){WKA.msg=errSay(r.status,d.detail,'');wkaPaint();return}
+  if(next!==undefined){if(WKA.um===WKA.sel.id)WKA.um=next;WKA.sel=next?{k:'n',id:next}:null}
+  await wkaLoad();WKA.msg=done;wkaPaint()}
 async function wkaWrong(id,b){b.disabled=true;const r=await apiTry('/api/profile/wissenskarte/kante/'+encodeURIComponent(id),{method:'DELETE'});
   if(!r.r.ok){WKA.msg=errSay(r.status,r.d.detail,'');b.disabled=false;wkaPaint();return}WKA.sel=null;await wkaLoad();WKA.msg=t('Verbindung entfernt; aus diesem Dokument kommt sie nicht wieder.','Connection removed; it does not come back from this document.');wkaPaint()}
 // the picture as SVG or PNG: a copy of the drawn map with its colours written in, made here, nothing from outside

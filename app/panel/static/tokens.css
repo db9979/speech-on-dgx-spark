@@ -25,3 +25,6 @@
 
 /* the memory bar's colors per kind, the tiles carry the same one as their legend (Dominik 2026-10-18) */
 :root{--mdf-bild:#ec4899;--mdf-musik:#f59e0b}
+
+/* the knowledge map's points per kind (wissenskarte.ENT_ARTEN, plan wissensgraph Stufe 2): one colour each, the filter chips the same */
+:root{--wk-person:#be185d;--wk-firma:#0369a1;--wk-ort:#b45309;--wk-vertrag:#7c3aed;--wk-konto:#047857;--wk-frist:#dc2626}

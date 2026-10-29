@@ -62,7 +62,7 @@ DATEIEN = [
     profil("geteilt.json", "Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war",
            "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen"),
     profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
-    profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)", bereich="dokumente"),
+    profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen (SQLite)", "Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite)", bereich="dokumente"),
     profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),
     profil("fund.db", "Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte; SQLite)",
            "Find: search index over the own data (titles, fields, tags, own tags; SQLite)", bereich="dokumente",

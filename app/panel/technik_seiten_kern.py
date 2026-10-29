@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "becc65e521",
+        "stand": "2c40f3a8a9",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -258,6 +258,9 @@ SEITEN = {
             "wissenskarte.WEG_MOST": ["s13"], "wissenskarte.rund_um": ["s13"], "wissenskarte.weg": ["s13"],
             "wissensbuch.search_pages": ["s13"], "wissensbuch._fts_sync": ["s13"], "wissensbuch.liste": ["s13"], "documents._similar": ["s6"],
             "documents.VEC_BLOCK": ["s6"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
+            "wissenskarte.check_ent": ["s13"], "wissenskarte.finde_knoten": ["s13"], "wissenskarte.knoten_liste": ["s13"],
+            "wissenskarte.zusammen": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
+            "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
         },
@@ -445,6 +448,10 @@ SEITEN = {
             ("{wissenskarte.WEG_MOST}", ("Schritte, die wissenskarte.weg höchstens sucht", "steps wissenskarte.weg looks for at most"), "wissenskarte.WEG_MOST"),
             ("{documents.VEC_BLOCK}", ("Stellen je Block beim Vergleich der Vektoren", "passages per block when comparing vectors"), "documents.VEC_BLOCK"),
             ("{wissenskarte.DAY}", ("Dokumente am Tag für die Wissenskarte (Standard)", "documents a day for the knowledge map (default)"), "wissenskarte.DAY"),
+            ("{wissenskarte.ENT_PER_DOC}", ("Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf", "people, companies, places, contracts, accounts and deadlines one document may bring"), "wissenskarte.ENT_PER_DOC"),
+            ("{wissenskarte.MAX_ENT}", ("solche Punkte pro Profil", "such points per profile"), "wissenskarte.MAX_ENT"),
+            ("{wissenskarte.ENT_NAME_LEN}", ("Zeichen, die der Name eines solchen Punktes höchstens hat", "characters the name of such a point has at most"), "wissenskarte.ENT_NAME_LEN"),
+            ("{wissenskarte.ENT_DAY}", ("Dokumente am Tag für diese Punkte (Standard)", "documents a day for these points (default)"), "wissenskarte.ENT_DAY"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -465,6 +472,10 @@ SEITEN = {
              "Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).",
              "Features → Own documents → Knowledge book and below it Knowledge map on: connections between the "
              "pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit)."),
+            ("Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: "
+             "eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).",
+             "Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines "
+             "on: points of their own from the documents on the map, with how many documents a day (own limit)."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -566,6 +577,36 @@ SEITEN = {
                  "{wissenskarte.VIEW_EDGES} connections reach the panel. Two fixed queries with values only as "
                  "parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and "
                  "wissenskarte.weg (shortest way between two pages, at most {wissenskarte.WEG_MOST} steps)."),
+            ]),
+            (("Personen, Firmen und Fristen", "People, companies and deadlines"), [
+                ("Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle "
+                 "eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und "
+                 "Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die "
+                 "Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen "
+                 "zusammengezogen), 2 bis {wissenskarte.ENT_NAME_LEN} Zeichen ohne Link, Auszeichnung oder Befehl, eine "
+                 "Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens "
+                 "{wissenskarte.ENT_PER_DOC} je Dokument und {wissenskarte.MAX_ENT} je Profil. Verbindungen dieser "
+                 "Punkte prüft dieselbe Regel wie die der Seiten.",
+                 "When the switch below the knowledge map is on, the language model proposes only JSON per passage of a "
+                 "document after the connections: people, companies, places, contracts, accounts and deadlines with "
+                 "kind and the number of the passage. The panel keeps a name only by fixed rules "
+                 "(wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, "
+                 "without accents, spaces drawn together), 2 to {wissenskarte.ENT_NAME_LEN} characters without link, "
+                 "markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at "
+                 "most {wissenskarte.ENT_PER_DOC} per document and {wissenskarte.MAX_ENT} per profile. Connections of "
+                 "these points are checked by the same rule as those of the pages."),
+                ("Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere "
+                 "Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und "
+                 "wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen "
+                 "und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, "
+                 "nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine "
+                 "Stellen sofort mit, ein Punkt ohne Stelle verschwindet.",
+                 "Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts "
+                 "only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste "
+                 "(sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's "
+                 "click with the code of „Confirm“, never by the model; every change reports to "
+                 "wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a "
+                 "passage disappears."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
@@ -681,6 +722,10 @@ SEITEN = {
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
             ("wissenskarte.rund_um", ("Seiten um eine Seite, WITH RECURSIVE", "pages around a page, WITH RECURSIVE")),
             ("wissenskarte.weg", ("kürzester Weg zwischen zwei Seiten", "shortest way between two pages")),
+            ("wissenskarte.check_ent", ("feste Regeln für jede Person, Firma, Frist …", "fixed rules for every person, company, deadline …")),
+            ("wissenskarte.finde_knoten", ("Punkte genau über Name und andere Namen, nur lesend", "points exactly by name and other names, read only")),
+            ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
+            ("wissenskarte.zusammen", ("zwei Punkte zusammenführen, nur per Klick", "merge two points, only by click")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
@@ -692,7 +737,7 @@ SEITEN = {
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
-                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte"],
+                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten"],
         "heute": [],
     },
 

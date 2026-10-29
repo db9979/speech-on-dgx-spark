@@ -433,6 +433,10 @@ FEATURES = (
     # Wissenskarte (wissenskarte.py, plan wissensgraph): the pages of the Wissensbuch as a map with checked connections
     F("wissenskarte", "Wissenskarte", "Knowledge map", "data", ("knowledge_map",), parent="wissensbuch", me="wbbox",
       guide="wissenskarte"),
+    # Knoten aus Dokumenten (wissenskarte.py, plan wissensgraph Stufe 2): people, companies, places, contracts, accounts
+    # and deadlines of the documents as own points of the map; the panel's fixed rules decide, never the model
+    F("wissensknoten", "Personen, Firmen und Fristen", "People, companies and deadlines", "data", ("knowledge_ents",),
+      parent="wissenskarte", me="wbbox", guide="wissensknoten"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),

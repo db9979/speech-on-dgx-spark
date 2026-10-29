@@ -4517,6 +4517,13 @@
 "titel": "Auch das Gelernte versiegelt",
 "text": "Nach dem Update (Zustand → Logs, Bereich Profile): einmal „profiles: versiegelt | …“ mit fehler=0 und unter Einstellungen → Sicherung eine neue Sicherung „vor-siegel“. Unter Ich → Was ich über dich weiß stehen die Interessen wie vorher, das Spark-Tagebuch zeigt die alten Einträge. Im Gespräch einen Fernseher per Rückfrage wählen (gemerkte Zuordnung): beim nächsten Mal fragt der Spark nicht noch einmal. Zustand → Live, Kasten Gedächtnis: „🔒 n von n Dateien versiegelt“.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P670",
+"v": 1253,
+"titel": "Personen, Firmen und Fristen als Punkte der Wissenskarte",
+"text": "A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen an (ab Werk aus). B: Ein Dokument mit Name, Firma, Ort, IBAN und Kündigungsfrist hochladen; nach ruhigen Minuten zeigt Wissensbuch → Karte über der Karte Knöpfe wie „Personen 1“, „Firmen 1“, „Fristen 1“, die Punkte haben die Farbe ihrer Art. C: Einen Punkt antippen: „Umbenennen“, „Zusammenführen mit …“ (nur gleiche Art) und „Löschen“ gehen, mit zweitem Schritt erst nach dem Code. D: Das Dokument löschen: seine Punkte verschwinden, wenn kein anderes Dokument sie nennt. E: Zustand → Live, Wissenskarte: nur Anzahlen je Art, kein Name. F: iPhone: Wissensbuch → Karte zeigt die Punkte farbig, „Nach Art“ filtert, „Löschen“ geht.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

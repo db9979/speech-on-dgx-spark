@@ -2240,8 +2240,14 @@ def snapshot(view="admin", now=None):
                         + _pruefstand() + _erzaehlstand() + _abenteuerimport()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
+            kn = wkk.get("knoten") or {}      # Personen, Firmen und Fristen: per kind a number, never a name
+            if kn:
+                import wissenskarte
+                kinds = ", ".join(f"{wissenskarte.ENT_NAMEN[k][0]} {v}" for k, v in kn.items() if v and k in wissenskarte.ENT_NAMEN)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"
+                        + (f" · {sum(kn.values())} Knoten" + (f" ({kinds})" if kinds else "")
+                           + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten" if kn else "")
                         + (" · arbeitet" if wkk.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else

@@ -18460,6 +18460,46 @@
           }
         }
       }
+    },
+    "Nach Art": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By kind"
+          }
+        }
+      }
+    },
+    "Stellen in Dokumenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "passages in documents"
+          }
+        }
+      }
+    },
+    "Umbenennen und Zusammenführen gehen im Panel unter Wissensbuch → Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renaming and merging are in the panel under Knowledge book → Map."
+          }
+        }
+      }
+    },
+    "Diesen Punkt löschen? Aus diesen Dokumenten kommt er nicht wieder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this point? It does not come back from these documents."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

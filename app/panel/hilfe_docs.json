@@ -1565,7 +1565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "korb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own)."
+"text": "korb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own)."
 },
 {
 "lang": "de",
@@ -2267,6 +2267,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Personen, Firmen und Fristen",
+"title": "Personen, Firmen und Fristen",
+"text": "- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten. - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Erst lokal suchen",
 "title": "Erst lokal suchen",
 "text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort. - Von einer Stelle aus den Dokumenten bekommt das Modell höchstens 500 Zeichen, und zwar das Stück mit den Suchwörtern, nicht den Anfang (lokal.excerpt). Aus einer Tabelle sind das die Kopfzeile und die Zeilen mit den seltensten Suchwörtern: ein Wort, das in jeder Zeile steht („Karte“), zählt wenig, „Durchfall“ in einer Zeile viel; Zeilen mit weniger als halb so viel Gewicht wie die beste kommen nicht dazu."
@@ -2309,7 +2317,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
+"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13) - 40 Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf (Schritt 13) - 5000 solche Punkte pro Profil (Schritt 13) - 80 Zeichen, die der Name eines solchen Punktes höchstens hat (Schritt 13) - 200 Dokumente am Tag für diese Punkte (Standard) (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2317,7 +2325,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze)."
+"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze). - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze)."
 },
 {
 "lang": "de",
@@ -2341,7 +2349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
+"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissenskarte.py check_ent: feste Regeln für jede Person, Firma, Frist … (Schritt 13) - app/panel/wissenskarte.py finde_knoten: Punkte genau über Name und andere Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_liste: Punkte einer Art nach Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py zusammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint"
 },
 {
 "lang": "de",
@@ -2349,7 +2357,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte"
+"text": "_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten"
 },
 {
 "lang": "de",
@@ -5070,6 +5086,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": " Begleiter). Strg K bietet „In meinen Daten finden: …“. Endpunkte POST /api/profile/fund/suche, GET /api/profile/fund/eintrag/{id}, PUT …/schlagworte, GET /api/profile/fund/stand, POST /api/profile/fund/neu, DELETE /api/profile/fund (Anmeldung, eigenes Profil, CSRF, Größen- und Rate-Limit), GET /api/admin/fund (nur Zahlen). Log-Bereich *Finden* (fund: suche | 3 treffer | 41 ms | P1, fund: runde dokument | 12 neu | 0 weg), Live-Zeile *Finden* nur mit Zahlen. Selbsttests tests/test_fund.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Personen, Firmen und Fristen (V01.1.253, Plan *wissensgraph* Stufe 2, Schritt 2 von 4, Dominik 2026-10-29 „Empfehlung umsetzen“): Admin-Schalter *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen* (chat.knowledge_ents, ab Werk aus, Kind von wissenskarte; kein Profilschalter, Gäste nie), eigene Tagesgrenze *Punkte: Dokumente pro Tag und Profil* (chat.knowledge_ents_day, 5 bis 500, Standard 200). Nach den Verbindungen der Karte bekommt das Sprachmodell jedes Dokument (die Stellen [S1] … und die Seiten [K1] …, die das Panel anbietet) und schlägt nur JSON vor: dinge mit Art, Name und Nummer der Stelle, dazu verbindungen zwischen den Dingen (D1 …) und den Seiten. Das Panel entscheidet mit festen Regeln (wissenskarte.check_ent): Art aus der festen Liste wissenskarte.ENT_ARTEN (person, firma, ort, vertrag, konto, frist), der Name steht in der Stelle (verglichen klein, ohne Akzente, mit zusammengezogenen Leerzeichen, ent_norm), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehlswort, eine Frist nur mit einem Datum in der Stelle, ein Konto nur als IBAN oder Nummer mit mindestens fünf Ziffern; höchstens 40 Punkte je Dokument, 200 Stellen je Dokument "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "und 5000 Punkte je Profil. Verbindungen nur aus ARTEN mit derselben Prüfung wie check_edge; eine zwischen zwei Seiten bleibt Sache des Kartenschritts. Gespeichert in der wissen.db des Profils: wk_ent(id, art, name, norm, alias) mit eindeutigem Index auf (art, norm), Ids werden nie neu vergeben; wk_ment(ent, doc, chunk) mit den Stellen; derselbe Name derselben Art (auch ein früherer Name in alias) bekommt denselben Punkt. Auf der Karte heißen die Punkte k<Nummer>, haben die Farbe ihrer Art, und Knöpfe über der Karte zeigen eine Art mit ihren Nachbarn; view, rund_um und weg nehmen sie mit (Grenzen 150 Punkte und 400 Verbindungen bleiben). Andere Teile lesen nur: wissenskarte.finde_knoten(uid, name, art=None) (genau über Name und andere Namen) und wissenskarte.knoten_liste(uid, art, anfang=\"\", most=50) (nach Namen sortiert), beide über eine schreibgeschützte Verbindung und nur, solange der Schalter für das Profil gilt. Umbenennen (der alte Name wird ein anderer Name), Zusammenführen (nur gleiche Art; Stellen und Verbindungen wandern auf das Ziel) und Löschen (kommt aus diesen Dokumenten nie wieder) gehen nur per Klick der Besitzerin oder des Besitzers über POST /api/profile/wissenskar"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "te/knoten/{id}/name, …/zusammen und DELETE …/knoten/{id}, mit Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit und dem Code von „Bestätigen“ (stufen.LIST); das Modell entscheidet nie darüber. Jede Änderung ruft die Abonnenten von wissenskarte.GEAENDERT als fn(uid, alt_id, neu_id, was) (zusammen, weg mit neu_id None, name mit neu_id gleich alt_id); ein Fehler darin wird geloggt und stört nichts. Geht ein Dokument (documents.GONE), gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet und meldet weg. Live zeigt je Art nur die Anzahl, das Log nur feste Wörter und Zahlen (wissen: wissenskarte knoten erkannt | n knoten | n neu | n verworfen | n verbindungen | n weg). iPhone: die Punkte auf der Karte in der Farbe ihrer Art, „Nach Art“ und „Löschen“; Umbenennen und Zusammenführen im Panel. Selbsttest test_wissensknoten."
 },
 {
 "lang": "de",
@@ -13125,6 +13165,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Personen, Firmen und Fristen (Funktionen → Meine Daten → „Personen, Firmen und Fristen“; baut auf „Wissenskarte“; Wissensbuch → Einstellungen): Personen, Firmen, Orte, Verträge, Konten und Fristen aus deinen Dokumenten werden eigene Punkte der Wissenskarte, etwa „Nordstern Versicherung“, „José García“ oder „30.09.2026“, jeder mit den Stellen, an denen er steht, und mit Verbindun …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch (Mails, Termine, Kontakte, Listen und mehr folgen)."
 },
 {
@@ -14741,7 +14789,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "e Punkte selbst (die Seite in der Mitte, ihre Nachbarn im Ring, der Rest außen, Ursachen rot gestrichelt); ein Tippen zeigt die Verbindungen des Punktes mit Quelle, „In die Mitte“ nimmt ihn als Mitte, nach links wischen „Stimmt nicht“. „Alles“ zeigt wieder die am besten verbundenen Punkte. Der Spark prüft jede Änderung (iphone.THINGS „wissenskarte“); der Export bleibt im Browser. - Finden (seit V01.1.245, Plan *such-index* Stufe A, nur wenn der Admin „Finden in allen Daten“ freigegeben hat): die Seite Finden kommt über /api/features (pages) in die Ich-Liste und öffnet die Panel-Ansicht mit Suche, Schlagworten und Einstellungen; die Karte „In Finden ansehen“ unter einer Antwort führt dorthin. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mi"
+"text": "e Punkte selbst (die Seite in der Mitte, ihre Nachbarn im Ring, der Rest außen, Ursachen rot gestrichelt); ein Tippen zeigt die Verbindungen des Punktes mit Quelle, „In die Mitte“ nimmt ihn als Mitte, nach links wischen „Stimmt nicht“. „Alles“ zeigt wieder die am besten verbundenen Punkte. Der Spark prüft jede Änderung (iphone.THINGS „wissenskarte“); der Export bleibt im Browser. - Finden (seit V01.1.245, Plan *such-index* Stufe A, nur wenn der Admin „Finden in allen Daten“ freigegeben hat): die Seite Finden kommt über /api/features (pages) in die Ich-Liste und öffnet die Panel-Ansicht mit Suche, Schlagworten und Einstellungen; die Karte „In Finden ansehen“ unter einer Antwort führt dorthin. - Personen, Firmen und Fristen (seit V01.1.253, Plan *wissensgraph* Stufe 2, nur wenn der Admin sie freigegeben hat): Auf der Karte stehen Personen, Firmen, Orte, Verträge, Konten und Fristen aus den Dokumenten als eigene Punkte mit der Farbe ihrer Art; „Nach Art“ zeigt eine Art mit ihren Nachbarn. Ein Tippen auf so einen Punkt zeigt seine Art und Stellen und „Löschen“ (mit dem Code von „Bestätigen“, wenn das Profil den zweiten Schritt hat). Umbenennen und Zusammenführen bleiben im Panel (Wisse"
 },
 {
 "lang": "de",
@@ -14749,7 +14797,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "t oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
+"text": "nsbuch → Karte). Der Spark prüft jede Änderung (iphone.THINGS „wissensknoten“). - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
 },
 {
 "lang": "de",
@@ -15349,7 +15397,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "ry-ask.json, interessen.json, tagebuch.json), liegen ganz versiegelt (AES-256-GCM, ein eigener Schlüssel für den Zweck „profildaten“ aus secret.key über HKDF, Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben); welche Dateien, sagt siegel= im Datei-Register. Ältere offene Dateien versiegelt der Spark einmal beim Start, nach einer Sicherung „vor-siegel“, und öffnet jede danach zur Probe. Auf diesem Spark öffnet jede Sicherung sie wieder; auf einem anderen Spark nur mit der Umzugs-Sicherung (sie trägt secret.key). Ohne sie legt der Spark die Datei als <Name>.unlesbar beiseite, überschreibt nie etwas, das Profil beginnt leer, und die Admins sehen einen Hinweis mit Weg (Einstellungen → Sicherung); nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. Die „Kopie meiner Daten“ nimmt sie geöffnet in ihre eigene Verschlüsselung und ist damit der Rettungsweg. Neuer Schreibweg POST /api/profile/memory/einlesen (nur das eigene Profil, Rate-Limit, 256 Byte)."
+"text": "ry-ask.json, interessen.json, tagebuch.json), liegen ganz versiegelt (AES-256-GCM, ein eigener Schlüssel für den Zweck „profildaten“ aus secret.key über HKDF, Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben); welche Dateien, sagt siegel= im Datei-Register. Ältere offene Dateien versiegelt der Spark einmal beim Start, nach einer Sicherung „vor-siegel“, und öffnet jede danach zur Probe. Auf diesem Spark öffnet jede Sicherung sie wieder; auf einem anderen Spark nur mit der Umzugs-Sicherung (sie trägt secret.key). Ohne sie legt der Spark die Datei als <Name>.unlesbar beiseite, überschreibt nie etwas, das Profil beginnt leer, und die Admins sehen einen Hinweis mit Weg (Einstellungen → Sicherung); nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. Die „Kopie meiner Daten“ nimmt sie geöffnet in ihre eigene Verschlüsselung und ist damit der Rettungsweg. Neuer Schreibweg POST /api/profile/memory/einlesen (nur das eigene Profil, Rate-Limit, 256 Byte). - Personen, Firmen und Fristen in der Wissenskarte (seit V01.1.253, Schalter unter Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte, aus): Namen von Personen, Firmen, Orten"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Daten auf der Platte und neue Schreibwege",
+"title": "Daten auf der Platte und neue Schreibwege",
+"text": ", Verträgen, Konten (IBAN oder Nummer) und Fristen aus den eigenen Dokumenten liegen als Tabellen wk_ent und wk_ment in der wissen.db des Profils, nie anderswo, nie im Log oder in Live (dort nur Anzahl je Art). Andere Teile lesen sie nur (wissenskarte.finde_knoten, knoten_liste, schreibgeschützte Verbindung). Umbenennen, Zusammenführen und Löschen gehen nur per Klick der Person mit dem Code von „Bestätigen“ (stufen.LIST); geht ein Dokument, gehen seine Stellen sofort mit."
 },
 {
 "lang": "de",
@@ -18173,7 +18229,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONE"
+"text": " out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the c"
 },
 {
 "lang": "en",
@@ -18181,7 +18237,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "N); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own)."
+"text": "ode of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own)."
 },
 {
 "lang": "en",
@@ -18883,6 +18939,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "People, companies and deadlines",
+"title": "People, companies and deadlines",
+"text": "- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages. - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Look locally first",
 "title": "Look locally first",
 "text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer. - From a passage of the documents the model gets at most 500 characters, namely the part with the search words, not the start (lokal.excerpt). From a table that is the head row and the rows with the rarest search words: a word in every row („card“) counts little, „diarrhoea“ in one row a lot; rows with less than half the weight of the best are not added."
@@ -18917,7 +18981,15 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 400 connections the map shows at once (step 13) - 4 steps wissenskarte.weg looks for at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13)"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 400 connections the map shows at once (step 13) - 4 steps wissenskarte.weg looks for at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13) - 40 people, companies, "
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Numbers (from the code)",
+"title": "Numbers (from the code)",
+"text": "places, contracts, accounts and deadlines one document may bring (step 13) - 5000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13)"
 },
 {
 "lang": "en",
@@ -18925,7 +18997,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit)."
+"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit)."
 },
 {
 "lang": "en",
@@ -18949,7 +19021,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
+"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/pane"
 },
 {
 "lang": "en",
@@ -18957,7 +19029,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte"
+"text": "l/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten"
 },
 {
 "lang": "en",
@@ -21598,6 +21678,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ET /api/profile/fund/eintrag/{id}, PUT …/schlagworte, GET /api/profile/fund/stand, POST /api/profile/fund/neu, DELETE /api/profile/fund (login, own profile, CSRF, size and rate limit), GET /api/admin/fund (numbers only). Log area *Find* (fund: suche | 3 treffer | 41 ms | P1, fund: runde dokument | 12 neu | 0 weg), live line *Find* with numbers only. Self-tests tests/test_fund.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "People, companies and deadlines (V01.1.253, plan *wissensgraph* stage 2, step 2 of 4, Dominik 2026-10-29 \"Empfehlung umsetzen\"): admin switch *Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines* (chat.knowledge_ents, off by default, child of wissenskarte; no profile switch, never guests), own daily limit *Points: documents per day and profile* (chat.knowledge_ents_day, 5 to 500, default 200). After the map's connections the language model gets each document (the passages [S1] … and the pages [K1] … the panel offers) and proposes only JSON: dinge with kind, name and the number of the passage, plus verbindungen between the things (D1 …) and the pages. The panel decides by fixed rules (wissenskarte.check_ent): a kind from the fixed list wissenskarte.ENT_ARTEN (person, firma, ort, vertrag, konto, frist), the name stands in the passage (compared lower case, without accents, with spaces drawn together, ent_norm), 2 to 80 characters without link, markup or command word, a deadline only with a date in the passage, an account only as an IBAN or a number with at least five digits; at most 40 points per document, 200 passages per document and 5000 poin"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ts per profile. Connections only from ARTEN with the same check as check_edge; one between two pages stays the map step's job. Stored in the profile's wissen.db: wk_ent(id, art, name, norm, alias) with a unique index on (art, norm), ids are never given out again; wk_ment(ent, doc, chunk) with the passages; the same name of the same kind (also an earlier name in alias) gets the same point. On the map the points are called k<number>, carry the colour of their kind, and buttons above the map show one kind with its neighbours; view, rund_um and weg take them along (the limits of 150 points and 400 connections stay). Other parts only read: wissenskarte.finde_knoten(uid, name, art=None) (exactly by name and other names) and wissenskarte.knoten_liste(uid, art, anfang=\"\", most=50) (sorted by name), both through a read-only connection and only while the switch counts for the profile. Renaming (the old name becomes another name), merging (same kind only; passages and connections move to the target) and deleting (never comes back from these documents) happen only by the owner's click through POST /api/profile/wissenskarte/knoten/{id}/name, …/zusammen and DELETE …/knoten/{id}, with sign-in, pr"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ofile binding, CSRF, size limit, rate limit and the code of \"Confirm\" (stufen.LIST); the model never decides about it. Every change calls the subscribers of wissenskarte.GEAENDERT as fn(uid, alt_id, neu_id, was) (zusammen, weg with neu_id None, name with neu_id equal to alt_id); an error there is logged and disturbs nothing. When a document goes (documents.GONE), its passages go with it at once, a point without a passage disappears and reports weg. Live shows only the number per kind, the log only fixed words and numbers (wissen: wissenskarte knoten erkannt | n knoten | n neu | n verworfen | n verbindungen | n weg). iPhone: the points on the map in the colour of their kind, \"By kind\" and \"Delete\"; renaming and merging in the panel. Self-test test_wissensknoten."
 },
 {
 "lang": "en",
@@ -29373,6 +29477,14 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
+"text": "- People, companies and deadlines (Features → My data → \"People, companies and deadlines\"; builds on \"Knowledge map\"; Knowledge book → Settings): People, companies, places, contracts, accounts and deadlines from your documents become points of their own on the knowledge map, such as \"Nordstern Versicherung\", \"José García\" or \"30.09.2026\", each with the passages where it stands and …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
 "text": "- Find in all data (Features → My data → \"Find in all data\"; Find → Settings): A search index over your own things: documents, knowledge folders on the NAS, reMarkable and the knowledge book (mail, appointments, contacts, lists and more follow)."
 },
 {
@@ -30949,7 +31061,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "n the middle, its neighbours in a ring, the rest outside, causes as dashed red lines); a tap shows the point's connections with their source, \"To the middle\" takes it as the middle, swipe left for \"Wrong\". \"All\" shows the best connected points again. The Spark checks every change (iphone.THINGS \"wissenskarte\"); the export stays in the browser. - Find (since V01.1.245, plan *such-index* stage A, only when the admin released \"Find in all data\"): the page Find comes into the Me list through /api/features (pages) and opens the panel view with search, tags and settings; the card \"Show in Find\" below an answer leads there. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the lengt"
+"text": "n the middle, its neighbours in a ring, the rest outside, causes as dashed red lines); a tap shows the point's connections with their source, \"To the middle\" takes it as the middle, swipe left for \"Wrong\". \"All\" shows the best connected points again. The Spark checks every change (iphone.THINGS \"wissenskarte\"); the export stays in the browser. - Find (since V01.1.245, plan *such-index* stage A, only when the admin released \"Find in all data\"): the page Find comes into the Me list through /api/features (pages) and opens the panel view with search, tags and settings; the card \"Show in Find\" below an answer leads there. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, only when the admin released them): on the map, people, companies, places, contracts, accounts and deadlines from the documents stand as points of their own in the colour of their kind; \"By kind\" shows one kind with its neighbours. A tap on such a point shows its kind and passages and \"Delete\" (with the code of \"Confirm\" when the profile has the second step). Renaming and merging stay in the panel (Knowledge book → Map). The Spark checks every change (iphone.THINGS \"wissensknoten\"). - Made"
 },
 {
 "lang": "en",
@@ -30957,7 +31069,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "h to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
+"text": " by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",
@@ -31525,7 +31637,15 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "key through HKDF, the profile and the file name as associated data, a fresh nonce on every write); which files is said by siegel= in the file register. The Spark seals older open files once at the start, after a backup \"vor-siegel\", and opens each one again as a check. On this Spark every backup opens them again; on another Spark only with the move backup (it carries secret.key). Without it the Spark sets the file aside as <name>.unlesbar, never overwrites anything, the profile starts empty, and the admins see a hint with its way (Settings → Backup); after the move backup \"Read in again\" under Me → Memory brings it back. The \"Copy of my data\" takes them opened into its own encryption and so is the way to rescue them. New way to write POST /api/profile/memory/einlesen (only the own profile, rate limit, 256 bytes)."
+"text": "key through HKDF, the profile and the file name as associated data, a fresh nonce on every write); which files is said by siegel= in the file register. The Spark seals older open files once at the start, after a backup \"vor-siegel\", and opens each one again as a check. On this Spark every backup opens them again; on another Spark only with the move backup (it carries secret.key). Without it the Spark sets the file aside as <name>.unlesbar, never overwrites anything, the profile starts empty, and the admins see a hint with its way (Settings → Backup); after the move backup \"Read in again\" under Me → Memory brings it back. The \"Copy of my data\" takes them opened into its own encryption and so is the way to rescue them. New way to write POST /api/profile/memory/einlesen (only the own profile, rate limit, 256 bytes). - People, companies and deadlines in the knowledge map (since V01.1.253, switch under Features → Own documents → Knowledge book → Knowledge map, off): names of people, companies, places, contracts, accounts (IBAN or number) and deadlines from the own documents lie as the tables wk_ent and wk_ment in the profile's wissen.db, nowhere else, never in the log or in Live (there "
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Data on the disk and new ways to write",
+"title": "Data on the disk and new ways to write",
+"text": "only a number per kind). Other parts only read them (wissenskarte.finde_knoten, knoten_liste, a read-only connection). Renaming, merging and deleting happen only by the person's click with the code of \"Confirm\" (stufen.LIST); when a document goes, its passages go with it at once."
 },
 {
 "lang": "en",

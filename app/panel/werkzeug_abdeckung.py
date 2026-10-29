@@ -155,6 +155,7 @@ WITHOUT = {
     "suchpruefung": "misst im Hintergrund, wie gut die Suche trifft (Ich → Dokumente)",
     "wissensbuch": "arbeitet im Hintergrund, Fragen beantwortet document_search aus den Seiten",
     "wissenskarte": "arbeitet im Hintergrund, die Karte steht im Wissensbuch (Seite Karte)",
+    "wissensknoten": "arbeitet im Hintergrund, Personen, Firmen und Fristen stehen als Knoten auf der Karte im Wissensbuch",
     "dungeon": "dungeon.py: kein Werkzeug, ein Spiel auf seiner eigenen Seite (Erzählung nur als Daten, Werte vom Panel)",
     "dungeongold": "dungeon_gold.py: kein Werkzeug, Angebote der Siedlung mit festen Preisen des Panels, nie das Modell",
     "dungeongrenzen": "dungeon_grenzen.py: kein Werkzeug, Grenzen und X-Karte prüft das Panel mit festen Wortlisten, nie das Modell",

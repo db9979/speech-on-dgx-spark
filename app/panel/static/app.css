@@ -2226,6 +2226,12 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .wkdet{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
 .wkdet h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;overflow-wrap:anywhere}.wkdet h4{margin:12px 0 4px}
 .wkcause{color:var(--warn)}.wklegend{margin-top:8px;font-size:12.5px}
+/* Personen, Firmen und Fristen (Stufe 2): points from documents, each kind its colour, square corners and a filled dot */
+.wk-k-person{--wkc:var(--wk-person)}.wk-k-firma{--wkc:var(--wk-firma)}.wk-k-ort{--wkc:var(--wk-ort)}.wk-k-vertrag{--wkc:var(--wk-vertrag)}.wk-k-konto{--wkc:var(--wk-konto)}.wk-k-frist{--wkc:var(--wk-frist)}
+.wkn.k rect{fill:color-mix(in srgb,var(--wkc) 10%,var(--card))}
+.ic-chip.wkk{border-color:var(--wkc)}.ic-chip.wkk.on{background:var(--wkc);color:var(--on-acc)}
+.wkown{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.wkown .row{display:flex;gap:6px;flex-wrap:wrap}.wkown input,.wkown select{flex:1 1 140px;min-width:0}
 .wkempty{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;pointer-events:none}
 @media (max-width:1100px){.wkgrid{grid-template-columns:minmax(0,1fr) 280px}.wkside{grid-column:1/-1;order:3}}
 @media (max-width:760px){.wkgrid{grid-template-columns:minmax(0,1fr)}.wkmap{order:1;height:62vh;min-height:340px}.wkdet{order:2}.wkside{order:3}.wkzoom{margin-left:0}.wkzoom .b{min-width:44px;min-height:44px}}
