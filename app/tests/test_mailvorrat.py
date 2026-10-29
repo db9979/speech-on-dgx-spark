@@ -240,14 +240,14 @@ class AskRule(Base):
 
 class NoKey(Base):
     def test_without_the_key_nothing_is_written(self):
-        saved = vorrat._key
-        vorrat._key = lambda: None
+        saved = vorrat.key
+        vorrat.key = lambda zweck="vorrat": None
         try:
             mail.find(UID, "", 14, False, 50)
             mailvorrat.flush()
             self.assertFalse(os.path.exists(mailvorrat._file(UID)))
         finally:
-            vorrat._key = saved
+            vorrat.key = saved
 
     @unittest.skipUnless(vault.available(), "needs cryptography")
     def test_a_file_of_another_profile_does_not_open(self):

@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.251** Gedächtnis und Gespräche versiegelt: memory.json, convos.json, toollog.json und room-history.json liegen ganz versiegelt im Profil (AES-256-GCM, Schlüssel je Zweck aus secret.key, Profil und Dateiname als Zusatzdaten), einmalig nach einer Sicherung „vor-siegel“ und mit Probe je Datei; mit fremdem Schlüssel beiseite statt überschrieben, Hinweis an den Admin, „Wieder einlesen“ unter Ich → Gedächtnis (Plan nutzerwissen, Stufe 4b; test_siegel)
 - **V01.1.250** Ein Weg zu den eigenen Daten: Gedächtnis, Gespräche, Werkzeug-Log, Raummodus-Verlauf, Lesemarken, Zuordnungen, Interessen, Spark-Tagebuch und die offene Gedächtnis-Frage liest und schreibt das Panel nur noch über profiles.read_own/write_own/drop_own (Vorbereitung zum Versiegeln, für die Person ändert sich nichts)
 - **V01.1.249** Gemerkt-Hinweis: unter der Antwort „✓ Gemerkt: …“ mit „Rückgängig“; von selbst Gelerntes kommt als Karte mit „Stimmt“ und „Rückgängig“, Mitteilung und Telegram nennen nur die Zahl
 - **V01.1.248** Gedächtnis mit festen Themen (Wohnort, Arbeitgeber, Auto …): je Thema gilt der neueste gesagte Wert, der alte bleibt zum Zurückholen; von selbst Gelerntes ersetzt nie Bestätigtes, es kommt als Karte „Übernehmen / Verwerfen“; dazu „N von 200“
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.244** ROT-FIX: der Test der Spontanhilfe-Seite stellt beim Ablauf erst die Uhr des Panels, dann die der Seite (sonst holte das Nachladen alle 3 s die Nummer zurück)
 - **V01.1.243** https ohne TLS-Session-Tickets (`panel.tls_context`): etwa jede hundertste https-Verbindung zur asyncio-Schleife von Python 3.11 hing nach dem Handshake (Terminal im Fernzugang ging nie auf); Test-Server mit dem TLS des Panels samt Wächter, Fernzugang-Tests mit 60 s Handshake und Fristen statt Schleifen
 - **V01.1.242** Wissensspeicher schneller (Stufe 1 von 4, keine neue Funktion): Vektoren der Dokumentsuche als float16 im Speicher (halb so groß, gleiche Rangfolge), Wissensbuch sucht Seiten über einen FTS5-Index (Trigger pflegen ihn, einmaliger Aufbau, ohne FTS5 wie bisher), Wissenskarte wählt ihren Ausschnitt mit WITH RECURSIVE in SQLite, dazu feste Abfragen rund_um und weg und die Lesefunktion wissensbuch.liste (Seiten-Ids mit Rang)
-- **V01.1.241** KI-Dungeon-Master: eine Einordnung für jede getippte Aktion: alle Wortlisten in einem Modul, jede Aktion bekommt nach fester Reihenfolge genau eine Art; „Dann gehe ich los“, „Wir schlagen hier unser Lager auf“ und „We rest by the fire“ sind kein Angriff mehr
 
 
 

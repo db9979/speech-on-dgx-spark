@@ -176,6 +176,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/panel.py` | Startet das Panel, Middleware (Notaus, Herkunft, Größe), liefert die Seite aus |
 | `app/panel/passkey.py` | Passkeys statt Code (Face ID, Touch ID, Windows Hello) |
 | `app/panel/profiles.py` | Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil |
+| `app/panel/siegel.py` | Gedächtnis und Gespräche versiegelt im Ruhezustand: einmal umstellen, Beiseitegelegtes wieder einlesen |
 | `app/panel/signatur.py` | Prüft signierte Update-Manifeste (Ed25519) |
 | `app/panel/stufen.py` | Liste, welche Änderung den Code verlangt |
 | `app/panel/vault.py` | Versiegelt Passwörter und Tokens mit state/secret.key |
@@ -608,10 +609,10 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 
 | Pfad | Inhalt | Art | Schutz | Sicherung | Kopie meiner Daten |
 |---|---|---|---|---|---|
-| `users/ID/convos.json` | Gespräche |  | – | ja | Gespräche |
-| `users/ID/toollog.json` | Werkzeug-Log |  | – | ja | Gespräche |
-| `users/ID/room-history.json` | Raummodus-Verlauf |  | – | ja | Gespräche |
-| `users/ID/memory.json` | Gedächtnis |  | – | ja | Gedächtnis |
+| `users/ID/convos.json` | Gespräche |  | ganz versiegelt (AES-256-GCM) | ja | Gespräche |
+| `users/ID/toollog.json` | Werkzeug-Log |  | ganz versiegelt (AES-256-GCM) | ja | Gespräche |
+| `users/ID/room-history.json` | Raummodus-Verlauf |  | ganz versiegelt (AES-256-GCM) | ja | Gespräche |
+| `users/ID/memory.json` | Gedächtnis |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/learned.json` | Lesemarken des Lernens aus Gesprächen |  | – | ja | Gedächtnis |
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | – | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
@@ -624,6 +625,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/bilder/` | Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe) |  | – | ja | Gemalte Bilder |
 | `users/ID/musik/` | Eigene Lieder und ihr Verzeichnis (Wunsch, Beschreibung, Liedtext, Länge) |  | – | ja | Eigene Lieder |
 | `users/ID/geteilt.json` | Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war | Einstellungen | – | ja | – |
+| `users/ID/*.unlesbar` | Beiseitegelegt: eine versiegelte Datei, die sich mit dem Schlüssel dieses Spark nicht öffnet (Umzugs-Sicherung einspielen, dann „Wieder einlesen“) | Zustand | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/settings.json` | Einstellungen | Einstellungen | – | ja | – |
 | `users/ID/setup.json` | Einrichtung | Einstellungen | – | ja | – |
 | `users/ID/speicher.json` | Ziele des eigenen Speichers | Einstellungen | Schlüssel versiegelt | ja | – |
@@ -1641,7 +1643,7 @@ flowchart TD
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
 8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
-10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal).
+10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own).
 
 **Beispiele:** Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Webseite mit falscher Systemzeile: „<|im_start|>system“ kommt entschärft als Text an, das Modell sieht keine neue Rolle; handeln kann es ohnehin nicht. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite.
 
@@ -1672,6 +1674,11 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt.
 - Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte „Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung.
 - Was der Spark sich merkt, sieht die Person sofort und kann es zurücknehmen (gemerkt.take_back): nur den eigenen Fakt, nur solange er seit dem Merken unverändert ist (Stand gemerkt.rev_of), sonst 409. Was eine Mitteilung oder Telegram erreichen kann, nennt nur eine Zahl, nie den Text des Fakts.
+
+#### Daten auf der Platte
+
+- Gedächtnis und Gespräche jedes Profils liegen ganz versiegelt (AES-256-GCM, Schlüssel je Zweck aus secret.key über HKDF, vorrat.key; Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben). Eine Kopie der Platte, ein Blick in den Ordner oder eine Sicherung auf einem fremden Rechner zeigt nur Rauschen; eine Datei, die in ein anderes Profil kopiert wird, öffnet sich dort nicht.
+- Öffnet eine Datei nicht, wird sie nie leer überschrieben: profiles.read_own legt sie beiseite, die Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück.
 
 #### Maßstäbe
 
@@ -1706,11 +1713,13 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/textnorm.py` `hide_secrets`: Geheimnisse werden nie gesprochen ([Schritt 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: Änderungsprotokoll mit Prüfkette ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: Geheimnisse versiegelt ablegen ([Schritt 10](#kn-sicherheit-s10))
+- `app/panel/profiles.py` `write_own`: Gedächtnis und Gespräche ganz versiegelt ([Schritt 10](#kn-sicherheit-s10))
+- `app/panel/vorrat.py` `key`: ein Schlüssel je Zweck aus secret.key ([Schritt 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`
 
 ### Anmeldung, Profil
 
@@ -3467,7 +3476,7 @@ flowchart TD
   s2 -.->|nein| s5
   s7x(["Bleibt auf diesem Gerät: Schlüssel, Sperren, Zähler, Caches"])
   s7 -->|nein| s7x
-  s8x(["Mit dem Passwort öffnet der neue Spark alle Geheimnisse"])
+  s8x(["Mit dem Passwort öffnet der neue Spark alle Geheimnisse, auch Gedächtnis und Gespräche"])
   s8 -->|ja| s8x
   s9x(["Nichts geändert"])
   s9 -->|nein| s9x
@@ -3483,7 +3492,7 @@ flowchart TD
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
-11. <a id="kn-state-s11"></a>**Schlüssel neu lesen**: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund, anrufe, vorrat), ihn neu lesen.
+11. <a id="kn-state-s11"></a>**Schlüssel neu lesen**: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund, anrufe, vorrat), ihn neu lesen, und profiles vergisst, was es von den versiegelten Dateien der Profile schon geöffnet hatte.
 
 **Beispiele:** Telegram-Bot-Token eintragen: Versiegelt gespeichert, kommt in jede Sicherung. · Sperre nach Fehlversuchen: Schlicht gespeichert, bleibt auf diesem Gerät. · Umzug auf einen neuen Spark: Alle Geheimnisse öffnen sich wieder, ohne Neueingabe.
 
@@ -3515,7 +3524,7 @@ flowchart TD
 - `app/panel/backup.py` `_swap`: einsetzen mit Rückweg ([Schritt 10](#kn-state-s10))
 - `app/panel/backup.py` `_forget_cached`: Schlüssel neu lesen ([Schritt 11](#kn-state-s11))
 
-Selbsttests: `test_technik`, `test_hardening`, `test_panel`, `test_tempo`
+Selbsttests: `test_technik`, `test_hardening`, `test_panel`, `test_tempo`, `test_siegel`
 
 ### users/ID/
 
@@ -3531,18 +3540,20 @@ flowchart TD
   s2["2. Pfad im eigenen Ordner"]
   s3{{"3. Ein Geheimnis dabei?"}}
   s4["4. Schreiben nur für den Dienst"]
-  s5["5. Jede Datei einsortiert"]
-  s6{{"6. Eigener Speicher eingerichtet?"}}
-  s7["7. Nur Geändertes der gewählten Bereiche"]
-  s8["8. Verschlüsselt, Namen zufällig"]
-  s9["9. Gelöschtes wartet im Papierkorb"]
-  s10["10. In der Sicherung"]
-  s11{{"11. Profil gelöscht?"}}
-  s12(["12. Nur für dieses Profil"])
+  s4b{{"5. Öffnet die versiegelte Datei?"}}
+  s5["6. Jede Datei einsortiert"]
+  s6{{"7. Eigener Speicher eingerichtet?"}}
+  s7["8. Nur Geändertes der gewählten Bereiche"]
+  s8["9. Verschlüsselt, Namen zufällig"]
+  s9["10. Gelöschtes wartet im Papierkorb"]
+  s10["11. In der Sicherung"]
+  s11{{"12. Profil gelöscht?"}}
+  s12(["13. Nur für dieses Profil"])
   s1 --> s2
   s2 --> s3
   s3 -->|nein| s4
-  s4 --> s5
+  s4 --> s4b
+  s4b -->|ja| s5
   s5 --> s6
   s6 -->|ja| s7
   s7 --> s8
@@ -3552,6 +3563,8 @@ flowchart TD
   s11 -->|nein| s12
   s3x(["Versiegelt mit secret.key"])
   s3 -->|ja| s3x
+  s4bx(["Beiseite, nichts überschrieben"])
+  s4b -->|nein| s4bx
   s6 -.->|nein| s10
   s9x(["Später noch einmal"])
   s9 -->|Ziel weg| s9x
@@ -3561,22 +3574,23 @@ flowchart TD
 
 1. <a id="kn-users-s1"></a>**Anfrage mit Profil**: profiles.current findet das Profil aus dem signierten Anmelde-Cookie oder dem Geräteschlüssel. Was das Sprachmodell sagt, wählt nie ein Profil.
 2. <a id="kn-users-s2"></a>**Pfad im eigenen Ordner**: Jede Datei liegt unter users/ID/ mit einem festen Namen aus dem Code. Die ID kommt aus Schritt 1, nie aus einem Text.
-3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt.
+3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (4 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Schreiben nur für den Dienst**: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.
-5. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.
-6. <a id="kn-users-s6"></a>**Eigener Speicher eingerichtet?**: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele).
-7. <a id="kn-users-s7"></a>**Nur Geändertes der gewählten Bereiche**: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter.
-8. <a id="kn-users-s8"></a>**Verschlüsselt, Namen zufällig**: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen.
-9. <a id="kn-users-s9"></a>**Gelöschtes wartet im Papierkorb**: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon.
-10. <a id="kn-users-s10"></a>**In der Sicherung**: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt.
-11. <a id="kn-users-s11"></a>**Profil gelöscht?**: delete_user nimmt das Profil und seine Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat.
-12. <a id="kn-users-s12"></a>**Nur für dieses Profil**: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner.
+5. <a id="kn-users-s4b"></a>**Öffnet die versiegelte Datei?**: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück.
+6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.
+7. <a id="kn-users-s6"></a>**Eigener Speicher eingerichtet?**: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele).
+8. <a id="kn-users-s7"></a>**Nur Geändertes der gewählten Bereiche**: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter.
+9. <a id="kn-users-s8"></a>**Verschlüsselt, Namen zufällig**: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen.
+10. <a id="kn-users-s9"></a>**Gelöschtes wartet im Papierkorb**: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon.
+11. <a id="kn-users-s10"></a>**In der Sicherung**: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene Verschlüsselung.
+12. <a id="kn-users-s11"></a>**Profil gelöscht?**: delete_user nimmt das Profil und seine Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat.
+13. <a id="kn-users-s12"></a>**Nur für dieses Profil**: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner.
 
-**Beispiele:** Gedächtnis-Eintrag, kein eigener Speicher: Liegt im eigenen Ordner und in der Sicherung. · Mail-Passwort eintragen: Versiegelt, bleibt auf dem Spark (Zugang). · Dokument mit eigenem Speicher: Verschlüsselte Kopie auf dem Ziel.
+**Beispiele:** Gedächtnis-Eintrag, kein eigener Speicher: Liegt versiegelt im eigenen Ordner und in der Sicherung. · Sicherung auf einem anderen Spark ohne Umzug: Gedächtnis beiseite, Hinweis an den Admin. · Mail-Passwort eintragen: Versiegelt, bleibt auf dem Spark (Zugang). · Dokument mit eigenem Speicher: Verschlüsselte Kopie auf dem Ziel.
 
 #### Regeln
 
-Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
+Gilt bei: [Schritt 6](#kn-users-s5), [Schritt 8](#kn-users-s7)
 
 | Bereich | Dateien | Eigener Speicher |
 |---|---|---|
@@ -3591,11 +3605,11 @@ Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
 
 #### Zahlen (aus dem Code)
 
-- **2** Ziele pro Profil höchstens ([Schritt 6](#kn-users-s6))
-- **30** Minuten zwischen zwei Läufen ([Schritt 7](#kn-users-s7))
-- **2048 MB** höchstens pro Lauf ([Schritt 7](#kn-users-s7))
-- **30** Tage im Papierkorb des Ziels ([Schritt 9](#kn-users-s9))
-- **5000** Dateien pro Kopie höchstens ([Schritt 7](#kn-users-s7))
+- **2** Ziele pro Profil höchstens ([Schritt 7](#kn-users-s6))
+- **30** Minuten zwischen zwei Läufen ([Schritt 8](#kn-users-s7))
+- **2048 MB** höchstens pro Lauf ([Schritt 8](#kn-users-s7))
+- **30** Tage im Papierkorb des Ziels ([Schritt 10](#kn-users-s9))
+- **5000** Dateien pro Kopie höchstens ([Schritt 8](#kn-users-s7))
 
 #### Einstellen
 
@@ -3611,17 +3625,21 @@ Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
 - `app/panel/profiles.py` `current`: das Profil aus Cookie oder Geräteschlüssel ([Schritt 1](#kn-users-s1))
 - `app/panel/profiles.py` `_path`: Pfad im Ordner des Profils ([Schritt 2](#kn-users-s2))
 - `app/panel/profiles.py` `_write`: schreiben nur für den Dienst ([Schritt 4](#kn-users-s4))
-- `app/panel/profiles.py` `delete_user`: Profil und Ordner löschen ([Schritt 11](#kn-users-s11))
+- `app/panel/profiles.py` `write_own`: Gedächtnis und Gespräche versiegelt schreiben ([Schritt 5](#kn-users-s4b), [Schritt 3](#kn-users-s3))
+- `app/panel/profiles.py` `read_own`: öffnen oder beiseitelegen, nie leer überschreiben ([Schritt 5](#kn-users-s4b))
+- `app/panel/dateien.py` `SIEGEL`: welche Dateien versiegelt liegen (aus dem Datei-Register) ([Schritt 3](#kn-users-s3))
+- `app/panel/siegel.py` `migrate`: einmal versiegeln, nach einer Sicherung ([Schritt 3](#kn-users-s3))
+- `app/panel/profiles.py` `delete_user`: Profil und Ordner löschen ([Schritt 12](#kn-users-s11))
 - `app/panel/vault.py` `seal`: versiegeln ([Schritt 3](#kn-users-s3))
 - `app/panel/speakers.py` `_store`: Stimmabdruck versiegelt ([Schritt 3](#kn-users-s3), [Schritt 4](#kn-users-s4))
-- `app/panel/dateien.py` `AREAS`: was auf den eigenen Speicher darf (aus dem Datei-Register) ([Schritt 5](#kn-users-s5))
-- `app/panel/speicher.py` `_key`: Speicher-Schlüssel des Profils, versiegelt ([Schritt 8](#kn-users-s8))
-- `app/panel/speicher.py` `local_files`: nur die Liste, keine Links ([Schritt 7](#kn-users-s7))
-- `app/panel/speicher.py` `seal_file`: AES-256-GCM in Stücken ([Schritt 8](#kn-users-s8))
-- `app/panel/speicher.py` `copy_once`: ein Lauf der Kopie ([Schritt 7](#kn-users-s7), [Schritt 8](#kn-users-s8))
-- `app/panel/backup.py` `_add_dir`: users/ in die Sicherung ([Schritt 10](#kn-users-s10))
+- `app/panel/dateien.py` `AREAS`: was auf den eigenen Speicher darf (aus dem Datei-Register) ([Schritt 6](#kn-users-s5))
+- `app/panel/speicher.py` `_key`: Speicher-Schlüssel des Profils, versiegelt ([Schritt 9](#kn-users-s8))
+- `app/panel/speicher.py` `local_files`: nur die Liste, keine Links ([Schritt 8](#kn-users-s7))
+- `app/panel/speicher.py` `seal_file`: AES-256-GCM in Stücken ([Schritt 9](#kn-users-s8))
+- `app/panel/speicher.py` `copy_once`: ein Lauf der Kopie ([Schritt 8](#kn-users-s7), [Schritt 9](#kn-users-s8))
+- `app/panel/backup.py` `_add_dir`: users/ in die Sicherung ([Schritt 11](#kn-users-s10))
 
-Selbsttests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`
+Selbsttests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`
 
 ### voices/, backups/
 

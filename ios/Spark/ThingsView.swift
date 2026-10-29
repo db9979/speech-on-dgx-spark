@@ -1032,6 +1032,8 @@ final class MemoryModel: ObservableObject {
     @Published var places: [MemoryPlace] = []
     @Published var limit = 200
     @Published var warnAt = 180
+    @Published var aside = 0
+    @Published var back = 0
     @Published var loading = true
     @Published var asking = false
     @Published var error: String?
@@ -1040,7 +1042,7 @@ final class MemoryModel: ObservableObject {
         guard let api = SparkAPI.current else { return }
         do {
             let m = try await api.memory()
-            (facts, tidy, places, limit, warnAt) = (m.facts, m.tidy, m.places, m.max, m.warn)
+            (facts, tidy, places, limit, warnAt, aside, back) = (m.facts, m.tidy, m.places, m.max, m.warn, m.aside, m.back)
             error = nil
         } catch { self.error = error.localizedDescription }
         loading = false
@@ -1079,6 +1081,7 @@ struct MemoryView: View {
 
     var body: some View {
         List(selection: $picked) {
+            if m.aside > 0 { asideSection }
             if let t = m.tidy { tidySection(t) }
             if !m.places.isEmpty && !edit.isEditing { placesSection }
             Section {
@@ -1139,6 +1142,21 @@ struct MemoryView: View {
                 Task { await m.run { try await $0.changeFact(f.id, t) } }
             }
             Button("Abbrechen", role: .cancel) {}
+        }
+    }
+
+    /// Versiegeln: older memory sealed with another key lies aside (never overwritten); with the key back
+    /// „Wieder einlesen“ merges it in again (the same as Ich → Gedächtnis in the panel).
+    @ViewBuilder private var asideSection: some View {
+        Section {
+            if m.back > 0 {
+                Text("Der Schlüssel ist wieder da. „Wieder einlesen“ holt die beiseitegelegten Einträge und Gespräche zurück; was seitdem dazukam, bleibt.")
+                Button { Task { await m.run { try await $0.readInAgain() } } } label: { Label("Wieder einlesen", systemImage: "arrow.down.doc") }
+            } else {
+                Text(SparkAPI.way(String(localized: "Es liegt beiseite und wird nie überschrieben. Ein Admin spielt im Panel unter Einstellungen → Sicherung die Umzugs-Sicherung des alten Spark ein.")))
+            }
+        } header: {
+            Text(m.back > 0 ? LocalizedStringKey("Älteres Gedächtnis lässt sich wieder öffnen") : LocalizedStringKey("Älteres Gedächtnis ist mit einem anderen Schlüssel versiegelt"))
         }
     }
 

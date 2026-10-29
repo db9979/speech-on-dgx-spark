@@ -16,6 +16,9 @@ Encryption (point 6): every object is AES-256-GCM in 1 MiB pieces (numbered, the
 be cut, swapped or changed unnoticed) with a key of its own derived from the profile's storage key (HKDF over a
 random salt and the object's name: an object moved to another name does not open). Names on the storage are
 random; the list of what is where (the manifest) is an object like the others. The storage only ever sees noise.
+Files sealed at rest on the Spark (dateien.SIEGEL: memory, conversations) go in unsealed (profiles.own_bytes) under
+this encryption, so the copy opens with the storage key alone; „Fehlendes zurückholen“ writes them back sealed
+(profiles.write_own). One that does not open on the Spark (set aside) is never copied as empty.
 The profile's storage key is sealed with the Spark's vault key in the profile folder: a move backup (which
 carries the vault key) brings it along; without it the copy cannot be read any more.
 
@@ -494,8 +497,18 @@ class _Entry:
         return os.lstat(self.path)
 
 
-def _snapshot(path, dst):
-    """A consistent copy of one file: SQLite through its backup (the panel may be writing), else the bytes."""
+def _snapshot(path, dst, own=None):
+    """A consistent copy of one file: SQLite through its backup (the panel may be writing), a file sealed at rest
+    (own = (uid, name), dateien.SIEGEL) unsealed (the copy has its own encryption below), else the bytes."""
+    if own:
+        plain = profiles.own_bytes(*own)        # raises profiles.Unreadable: never an empty copy of it
+        if plain is None:
+            raise FileNotFoundError(path)
+        if len(plain) > MAX_FILE:
+            raise ValueError("file too large")
+        with open(dst, "wb") as b:
+            b.write(plain)
+        return
     if path.endswith(".db"):
         src = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=10)
         try:
@@ -1088,12 +1101,12 @@ def _quiet_hold():
         pass
 
 
-def _pack(path, key, obj):
+def _pack(path, key, obj, own=None):
     """Snapshot + encryption of one file in a worker thread: (temp file, plain bytes, SHA-256)."""
     _quiet_hold()
     plain, enc = _tmp(), _tmp(".enc")
     try:
-        _snapshot(path, plain)
+        _snapshot(path, plain, own)
         with open(plain, "rb") as a, open(enc, "wb") as b:
             size, sha = seal_file(a, b, key, obj)
         return enc, size, sha
@@ -1133,8 +1146,8 @@ async def copy_once(uid, tid, why="auto", now=None):
                 break   # the next run goes on
             obj = secrets.token_hex(12)
             try:
-                enc, plain, sha = await asyncio.to_thread(_pack, path, key, obj)
-            except (OSError, ValueError, sqlite3.Error):
+                enc, plain, sha = await asyncio.to_thread(_pack, path, key, obj, (uid, rel) if rel in dateien.SIEGEL else None)
+            except (OSError, ValueError, sqlite3.Error, profiles.Unreadable):
                 continue   # gone or locked just now: the next run
             try:
                 if old and old.get("sha") == sha:
@@ -1257,7 +1270,13 @@ async def restore_missing(uid, tid, now=None):
                             raise ValueError("checksum")
                         if os.path.lexists(dst):
                             raise ValueError("there now")
-                        os.replace(part, dst)
+                        if rel in dateien.SIEGEL:     # sealed again at rest, like every write of the panel
+                            with open(part, encoding="utf-8") as f:
+                                data = json.load(f)
+                            if not profiles.write_own(uid, rel, data):
+                                raise ValueError("not written")
+                        else:
+                            os.replace(part, dst)
                     finally:
                         _rm(part)
                 await asyncio.to_thread(unpack)

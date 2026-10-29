@@ -774,8 +774,7 @@ class SftpTarget(Base):
         os.remove(profiles._path(uid, "memory.json"))
         r = run(speicher.restore_missing(uid, tid))
         self.assertEqual(r["n"], 1)
-        with open(profiles._path(uid, "memory.json")) as f:
-            self.assertIn(SECRET_WORD, f.read())
+        self.assertEqual(profiles.read_own(uid, "memory.json", None), {"x": SECRET_WORD})   # back sealed (siegel.py)
 
     def test_wrong_password_and_a_server_that_is_gone(self):
         c, uid = self.ready("SpSftpFalsch")

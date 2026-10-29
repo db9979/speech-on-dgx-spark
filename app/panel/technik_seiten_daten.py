@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "state": {
-        "stand": "cac8125adc",
+        "stand": "65ee091008",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -82,8 +82,8 @@ SEITEN = {
                "in keiner Sicherung.",
                "secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the "
                "admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup."),
-              ("info", "ja", ("Mit dem Passwort öffnet der neue Spark alle Geheimnisse",
-                              "With the password the new Spark opens every secret"))),
+              ("info", "ja", ("Mit dem Passwort öffnet der neue Spark alle Geheimnisse, auch Gedächtnis und Gespräche",
+                              "With the password the new Spark opens every secret, memory and conversations too"))),
             S("s9", "frage", ("Beim Wiederherstellen in Ordnung?", "Fine when restoring?"),
               ("gültig, klein genug, eigener Schlüssel", "valid, small enough, own key"),
               ("_check_state prüft jede Datei der Sicherung: höchstens {backup.MAX_STATE_FILE|mb}, gültiges JSON, "
@@ -102,9 +102,11 @@ SEITEN = {
             S("s11", "ende", ("Schlüssel neu lesen", "Read the keys again"),
               ("kein alter Schlüssel im Speicher", "no old key in memory"),
               ("_forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
-               "verbund, anrufe, vorrat), ihn neu lesen.",
+               "verbund, anrufe, vorrat), ihn neu lesen, und profiles vergisst, was es von den versiegelten Dateien "
+               "der Profile schon geöffnet hatte.",
                "_forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, "
-               "anrufe, vorrat) read it again.")),
+               "anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed "
+               "files.")),
         ],
         "beispiele": [
             (("Telegram-Bot-Token eintragen", "Enter the Telegram bot token"),
@@ -148,15 +150,16 @@ SEITEN = {
             ("backup._swap", ("einsetzen mit Rückweg", "put in place with a way back")),
             ("backup._forget_cached", ("Schlüssel neu lesen", "read the keys again")),
         ],
-        "tests": ["test_technik", "test_hardening", "test_panel", "test_tempo"],
+        "tests": ["test_technik", "test_hardening", "test_panel", "test_tempo", "test_siegel"],
         "heute": [],
     },
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "d2a684d847",
+        "stand": "11f06abc8c",
         "bezug": {
-            "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
+            "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "profiles.write_own": ["s3", "s4b"],
+            "profiles.read_own": ["s4b"], "dateien.SIEGEL": ["s3"], "siegel.migrate": ["s3"], "speakers._store": ["s3", "s4"],
             "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],
             "speicher.copy_once": ["s7", "s8"], "backup._add_dir": ["s10"], "regeln": ["s5", "s7"],
             "regel:Zugänge, Schlüssel, Stimmabdruck": ["s3"],
@@ -188,10 +191,18 @@ SEITEN = {
               ("Passwort, Token, Stimmabdruck", "password, token, voiceprint"),
               ("Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel "
                "des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist "
-               "biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt.",
+               "biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis "
+               "und Gespräche ({dateien.SIEGEL|anzahl} Dateien, siegel= im Datei-Register) liegen ganz versiegelt: "
+               "AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also "
+               "weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt "
+               "siegel.migrate einmal, nach einer Sicherung „vor-siegel“.",
                "Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own "
                "storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed "
-               "whole; an older open file is sealed the first time it is read."),
+               "whole; an older open file is sealed the first time it is read. Memory and conversations "
+               "({dateien.SIEGEL|anzahl} files, siegel= in the file register) lie sealed whole: AES-256-GCM with a "
+               "key of their own from secret.key, the profile and the file name as associated data, so readable "
+               "neither in another profile nor under another name. siegel.migrate seals older open files once, "
+               "after a backup „vor-siegel“."),
               ("info", "ja", ("Versiegelt mit secret.key", "Sealed with secret.key"))),
             S("s4", "schritt", ("Schreiben nur für den Dienst", "Write for the service only"),
               ("profiles._write", "profiles._write"),
@@ -199,6 +210,17 @@ SEITEN = {
                "die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.",
                "profiles._write creates the folder so that only the service looks into it, writes a temporary file "
                "only the service can read and swaps it in one step.")),
+            S("s4b", "frage", ("Öffnet die versiegelte Datei?", "Does the sealed file open?"),
+              ("profiles.read_own, profiles.write_own", "profiles.read_own, profiles.write_own"),
+              ("Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder "
+               "Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), "
+               "nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der "
+               "Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück.",
+               "Only profiles.read_own and write_own read and write these files. If one does not open (another key, "
+               "another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and "
+               "the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under "
+               "Me → Memory brings it back."),
+              ("stop", "nein", ("Beiseite, nichts überschrieben", "Aside, nothing overwritten"))),
             S("s5", "schritt", ("Jede Datei einsortiert", "Every file sorted"),
               ("speicher.AREAS oder speicher.LOCAL", "speicher.AREAS or speicher.LOCAL"),
               ("Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich "
@@ -244,9 +266,14 @@ SEITEN = {
             S("s10", "schritt", ("In der Sicherung", "In the backup"),
               ("ohne Anmelde-Schlüssel und Nachrichten", "without login key and messages"),
               ("Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den "
-               "Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt.",
+               "Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und "
+               "Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit "
+               "der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene "
+               "Verschlüsselung.",
                "The daily backup takes users/ whole, except users/secret (signs the logins) and the messages "
-               "between profiles. SQLite files are packed as a consistent copy.")),
+               "between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it "
+               "sealed: on this Spark they open again, on another one only with the move backup. The own copy "
+               "(speicher.py) takes them opened into its own encryption.")),
             S("s11", "frage", ("Profil gelöscht?", "Profile deleted?"),
               ("nur der Admin", "only the admin"),
               ("delete_user nimmt das Profil und seine Geräte aus profiles.json und löscht den Ordner, aber nur wenn "
@@ -261,8 +288,11 @@ SEITEN = {
         ],
         "beispiele": [
             (("Gedächtnis-Eintrag, kein eigener Speicher", "Memory entry, no own storage"),
-             ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s10", "s11", "s12"],
-             ("Liegt im eigenen Ordner und in der Sicherung.", "Lies in its own folder and in the backup.")),
+             ["s1", "s2", "s3", "s3!", "s4", "s4b", "s5", "s6", "s6!", "s10", "s11", "s12"],
+             ("Liegt versiegelt im eigenen Ordner und in der Sicherung.", "Lies sealed in its own folder and in the backup.")),
+            (("Sicherung auf einem anderen Spark ohne Umzug", "Backup on another Spark without the move"),
+             ["s1", "s2", "s3", "s3!", "s4", "s4b", "s4b!"],
+             ("Gedächtnis beiseite, Hinweis an den Admin.", "Memory aside, a hint to the admin.")),
             (("Mail-Passwort eintragen", "Enter a mail password"),
              ["s1", "s2", "s3", "s3!", "s4", "s5", "s6", "s6!", "s10", "s11", "s12"],
              ("Versiegelt, bleibt auf dem Spark (Zugang).", "Sealed, stays on the Spark (account).")),
@@ -304,6 +334,10 @@ SEITEN = {
             ("profiles.current", ("das Profil aus Cookie oder Geräteschlüssel", "the profile from cookie or device key")),
             ("profiles._path", ("Pfad im Ordner des Profils", "path in the profile's folder")),
             ("profiles._write", ("schreiben nur für den Dienst", "write for the service only")),
+            ("profiles.write_own", ("Gedächtnis und Gespräche versiegelt schreiben", "write memory and conversations sealed")),
+            ("profiles.read_own", ("öffnen oder beiseitelegen, nie leer überschreiben", "open or set aside, never overwrite with empty")),
+            ("dateien.SIEGEL", ("welche Dateien versiegelt liegen (aus dem Datei-Register)", "which files lie sealed (from the file register)")),
+            ("siegel.migrate", ("einmal versiegeln, nach einer Sicherung", "seal once, after a backup")),
             ("profiles.delete_user", ("Profil und Ordner löschen", "delete profile and folder")),
             ("vault.seal", ("versiegeln", "seal")),
             ("speakers._store", ("Stimmabdruck versiegelt", "voiceprint sealed")),
@@ -315,7 +349,7 @@ SEITEN = {
             ("speicher.copy_once", ("ein Lauf der Kopie", "one run of the copy")),
             ("backup._add_dir", ("users/ in die Sicherung", "users/ into the backup")),
         ],
-        "tests": ["test_speicher", "test_technik", "test_stimmabdruck", "test_hardening"],
+        "tests": ["test_speicher", "test_technik", "test_stimmabdruck", "test_hardening", "test_siegel"],
         "heute": [],
     },
 

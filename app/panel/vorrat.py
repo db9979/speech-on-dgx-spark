@@ -45,8 +45,12 @@ import profiles
 import vault
 
 
-_vkey = None      # the AES-GCM key (backup._forget_cached drops it after a restore)
-_mkeys = (None, {})   # (the _vkey they belong to, {uid: HMAC key of the Blind-Index}): a restore makes them anew
+# one key per purpose (Sicherheits-Checkliste, Stand der Technik: "eigener Schlüssel pro Zweck"), all derived from the
+# Spark's secret key with HKDF and their own info: the Vorrat of the services, and the profile's own data at rest
+# (memory, conversations and what was learned about the person, profiles.write_own, plan nutzerwissen Stufe 4)
+ZWECKE = {"vorrat": b"speech-spark vorrat v1", "profildaten": b"speech-spark profildaten v1"}
+_vkeys = {}       # purpose -> the AES-GCM key (backup._forget_cached drops them after a restore)
+_mkeys = (None, {})   # (the "vorrat" key they belong to, {uid: HMAC key of the Blind-Index}): a restore makes them anew
 
 
 def _secret():
@@ -67,15 +71,18 @@ def _derive(base, info):
     return HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=info).derive(base)
 
 
-def _key():
-    global _vkey
-    if _vkey:
-        return _vkey
+def key(zweck="vorrat"):
+    """The AES-256-GCM key for one purpose of ZWECKE, None without cryptography or without the Spark's key."""
+    k = _vkeys.get(zweck)
+    if k:
+        return k
+    if zweck not in ZWECKE:
+        return None
     base = _secret()
     if not base:
         return None
-    _vkey = _derive(base, b"speech-spark vorrat v1")
-    return _vkey
+    k = _vkeys[zweck] = _derive(base, ZWECKE[zweck])
+    return k
 
 
 def marke(uid, wort):
@@ -84,7 +91,7 @@ def marke(uid, wort):
     plus the profile id), cut to 10 characters (50 bits). The same word gives another mark in another profile; None
     without a key (then Finden writes nothing that needs one)."""
     global _mkeys
-    v = _key()
+    v = key("vorrat")
     if not v or not uid:
         return None
     if _mkeys[0] is not v:
@@ -100,9 +107,9 @@ def marke(uid, wort):
     return base64.b32encode(hmac.new(k, str(wort).encode(), hashlib.sha256).digest()).decode()[:10].lower()
 
 
-def seal(data, ad):
-    """bytes -> text: "G1" + nonce + AES-GCM, base64; None without a key."""
-    k = _key()
+def seal(data, ad, zweck="vorrat"):
+    """bytes -> text: "G1" + nonce + AES-GCM, base64 (a fresh nonce from os.urandom for every call); None without a key."""
+    k = key(zweck)
     if not k:
         return None
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -110,9 +117,9 @@ def seal(data, ad):
     return base64.b64encode(b"G1" + nonce + AESGCM(k).encrypt(nonce, data, ad.encode())).decode()
 
 
-def unseal(text, ad):
-    """The bytes, or None (other key, other profile, changed file)."""
-    k = _key()
+def unseal(text, ad, zweck="vorrat"):
+    """The bytes, or None (other key, other profile or name, changed file): the check fails closed."""
+    k = key(zweck)
     try:
         raw = base64.b64decode(text or "", validate=True)
         if not k or raw[:2] != b"G1":

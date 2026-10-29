@@ -107,7 +107,7 @@ struct MemoryTidy {
 extension SparkAPI {
     static func id(_ s: String) -> Bool { s.range(of: #"^[0-9a-f]{1,16}$"#, options: .regularExpression) != nil }
 
-    func memory() async throws -> (facts: [Fact], tidy: MemoryTidy?, places: [MemoryPlace], max: Int, warn: Int) {
+    func memory() async throws -> (facts: [Fact], tidy: MemoryTidy?, places: [MemoryPlace], max: Int, warn: Int, aside: Int, back: Int) {
         let d = try await object("GET", "api/profile/memory")
         let facts = (d["facts"] as? [[String: Any]] ?? []).compactMap { f -> Fact? in
             guard let id = f["id"] as? String, Self.id(id) else { return nil }
@@ -125,7 +125,15 @@ extension SparkAPI {
             let fid = p["id"] as? String ?? ""
             return MemoryPlace(id: k, name: (en ? p["en"] : p["de"]) as? String ?? k, fact: Self.id(fid) ? fid : "")
         }
-        return (facts.reversed(), Self.tidy(d["tidy"]), places, (d["max"] as? Int) ?? 200, (d["warn"] as? Int) ?? 180)
+        // Versiegeln (siegel.py): how many files sealed with another key lie aside, how many open again (numbers only)
+        let sg = d["siegel"] as? [String: Any] ?? [:]
+        return (facts.reversed(), Self.tidy(d["tidy"]), places, (d["max"] as? Int) ?? 200, (d["warn"] as? Int) ?? 180,
+                (sg["aside"] as? Int) ?? 0, (sg["back"] as? Int) ?? 0)
+    }
+
+    /// „Wieder einlesen“: the files set aside come back once the key is there again (the panel merges, nothing goes)
+    func readInAgain() async throws {
+        _ = try await call("POST", "api/profile/memory/einlesen", body: [:])
     }
 
     /// Feste Themen: earlier version i becomes the fact's wording again (the wording so far is kept)

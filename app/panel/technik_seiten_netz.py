@@ -636,7 +636,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "4707cf9f92",
+        "stand": "7b48661066",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],

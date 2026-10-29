@@ -115,7 +115,7 @@ THINGS = {
                   (("GET", "POST", "DELETE"), r"/api/profile/auslassen")),
     # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen
     "memory": ((("GET",), r"/api/profile/memory"), (("DELETE", "PUT"), rf"/api/profile/memory/{_ID}"),
-               (("POST",), r"/api/profile/memory/(?:tidy|forget)"),
+               (("POST",), r"/api/profile/memory/(?:tidy|forget|einlesen)"),
                # Feste Themen (gedaechtnis.SLOTS): bring an earlier version back, take or drop a learned value; the
                # chip „Gemerkt“ under an answer: take back what memory_save just did (gemerkt.py)
                (("POST",), rf"/api/profile/memory/{_ID}/(?:restore|offer|undo)")),

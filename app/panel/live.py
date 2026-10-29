@@ -1358,7 +1358,12 @@ def snapshot(view="admin", now=None):
         gm = gemerkt.for_live(now)
     except Exception:
         gm = {"on": False}
-    if ged.get("on") or gm.get("on"):
+    try:   # Versiegeln (siegel.py): memory and conversations sealed n of m, set aside k (numbers only)
+        import siegel
+        sg = siegel.for_live(now)
+    except Exception:
+        sg = {"on": False}
+    if ged.get("on") or gm.get("on") or sg.get("aside") or sg.get("plain"):
         used.add("ged")
     try:
         import klaeren
@@ -1980,6 +1985,10 @@ def snapshot(view="admin", now=None):
                 x["sub"] += ((" · " if x["sub"] else "") + f"heute {gm.get('chip', 0)} gemerkt · {gm.get('karte', 0)} Karten"
                              f" · {gm.get('rueckgaengig', 0)} rückgängig · {gm.get('stimmt', 0)} bestätigt"
                              + (f" · {gm['abgelehnt']} abgelehnt" if gm.get("abgelehnt") else ""))
+            if sg.get("on") and sg.get("files"):   # Versiegeln: how many of the files lie sealed, how many aside
+                x["sub"] += ((" · " if x["sub"] else "") + f"🔒 {sg.get('sealed', 0)} von {sg.get('files', 0)} Dateien versiegelt"
+                             + (f" · {sg['aside']} unlesbar beiseite" if sg.get("aside") else "")
+                             + ("" if sg.get("crypto") else " · ohne cryptography"))
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")

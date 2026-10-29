@@ -28,8 +28,16 @@ ON.closeProf=()=>closeProf();
 let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null,FCHECK=false,FMONTHS=6,FOPEN=null,FTOP=null,FPLACES=null,FMAX=200,FWARN=180,FPOPEN=null;
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);FACTS=d.facts||[];FCHECK=!!d.check;FMONTHS=d.months||6;FTOP=d.topics||null;
-  FPLACES=d.places||null;FMAX=d.max||200;FWARN=d.warn||180;
+  FPLACES=d.places||null;FMAX=d.max||200;FWARN=d.warn||180;factSiegel(d.siegel);
   if(!FCHECK&&['ok','learned','stale'].includes(FF))FF='all';factDraw()}
+// Versiegeln (siegel.py, plan nutzerwissen Stufe 4): files sealed with another key lie aside, never overwritten; the
+// note says so and, once the key is back (the move backup), „Wieder einlesen“ merges them in again. Numbers only.
+function factSiegel(s){const box=$('factsiegel');if(!box)return;box.textContent='';box.hidden=!(s&&s.aside);if(box.hidden)return;
+  let b=null;if(s.back){b=icEl('button','b p',t('Wieder einlesen','Read in again'));b.type='button';
+    b.onclick=async()=>{b.disabled=true;try{await api('/api/profile/memory/einlesen',xjson('POST',{}));await showFacts()}catch(e){b.disabled=false;$('factmsg').textContent=e.message}}}
+  box.appendChild(icNote(s.back?t('Älteres Gedächtnis lässt sich wieder öffnen','Older memory opens again'):t('Älteres Gedächtnis ist mit einem anderen Schlüssel versiegelt','Older memory is sealed with another key'),
+    s.back?t('Der Schlüssel ist wieder da. „Wieder einlesen“ holt die beiseitegelegten Einträge und Gespräche zurück; was seitdem dazukam, bleibt.','The key is back. "Read in again" brings back the entries and conversations set aside; what came since stays.')
+      :t(`Es liegt beiseite und wird nie überschrieben. Ein Admin spielt die Umzugs-Sicherung des alten Spark ein: ${s.weg||'Einstellungen → Sicherung'}.`,'It lies aside and is never overwritten. An admin restores the move backup of the old Spark: Settings → Backup.'),[b].filter(Boolean)))}
 const fdate=x=>x?new Date(x*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
 const FMARK={ok:['ok',t('bestätigt','confirmed')],learned:['',t('gelernt','learned')],stale:['warn',t('veraltet?','outdated?')],contra:['bad',t('Widerspruch','contradiction')]};
 const FSRC={said:t('von dir im Gespräch','from you in a conversation'),fix:t('aus deiner Korrektur','from your correction'),auto:t('automatisch gelernt','learned automatically'),

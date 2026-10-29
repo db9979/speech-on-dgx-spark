@@ -18410,6 +18410,56 @@
           }
         }
       }
+    },
+    "Der Schlüssel ist wieder da. „Wieder einlesen“ holt die beiseitegelegten Einträge und Gespräche zurück; was seitdem dazukam, bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key is back. “Read in again” brings back the entries and conversations set aside; what came since stays."
+          }
+        }
+      }
+    },
+    "Wieder einlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read in again"
+          }
+        }
+      }
+    },
+    "Es liegt beiseite und wird nie überschrieben. Ein Admin spielt im Panel unter Einstellungen → Sicherung die Umzugs-Sicherung des alten Spark ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It lies aside and is never overwritten. An admin restores the move backup of the old Spark in the panel under Settings → Backup."
+          }
+        }
+      }
+    },
+    "Älteres Gedächtnis lässt sich wieder öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older memory opens again"
+          }
+        }
+      }
+    },
+    "Älteres Gedächtnis ist mit einem anderen Schlüssel versiegelt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older memory is sealed with another key"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

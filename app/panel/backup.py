@@ -10,7 +10,11 @@ daily/manual ones and the newest KEEP_EVENT of the others are kept, so a few upd
 the daily backups out. A backup holds
 users/ (without the messages between profiles), voices/, config.json, state/panel-password and the files in STATE_FILES. The key for the
 encrypted secrets (state/secret.key) is not in it: restored on this Spark everything works, restored
-on another one calendar and mail passwords, tokens and keys have to be entered again.
+on another one calendar and mail passwords, tokens and keys have to be entered again. Memory and conversations lie
+sealed with a key derived from it (dateien.SIEGEL, profiles.write_own): on this Spark they open, on another one only
+after a move backup; there, without it, profiles.read_own sets them aside (<name>.unlesbar, never overwritten) and the
+profile starts empty until the move backup brings the key (siegel.py: hint, „Wieder einlesen“). Plain copies of older
+versions stay in the backups made before the sealing (the newest KEEP, plus the one „vor-siegel“).
 
 A move backup ("Umzug", create(..., password=...)) also carries that key, sealed with a password the
 admin types (scrypt + Fernet, state/move-keys.json); restoring it needs the same password and then
@@ -353,9 +357,10 @@ def _check_state(work, key):
 
 
 def _forget_cached():
-    """Modules that keep a key in memory read it again."""
+    """Modules that keep a key in memory read it again (and profiles forgets the opened profile data it keeps)."""
     import sys
-    for mod, attr, empty in (("vault", "_fernet", None), ("push", "_key", None), ("apns", "_jwt", (0.0, "", "")), ("chats", "_ckey", None), ("verbund", "_pkey", None), ("anrufe", "_tkey", None), ("vorrat", "_vkey", None)):
+    for mod, attr, empty in (("vault", "_fernet", None), ("push", "_key", None), ("apns", "_jwt", (0.0, "", "")), ("chats", "_ckey", None), ("verbund", "_pkey", None), ("anrufe", "_tkey", None), ("vorrat", "_vkeys", {}),
+                              ("profiles", "_own", {})):
         m = sys.modules.get(mod)
         if m is not None and hasattr(m, attr):
             setattr(m, attr, empty)

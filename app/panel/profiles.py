@@ -43,29 +43,184 @@ def _write(path, data):
 
 # ---------------------------------------------------------------- the profile's own data (plan nutzerwissen, Stufe 4)
 # Memory, conversations and what the Spark learned about a person are read and written only here (read_own,
-# write_own, drop_own), never with open() or _write on their path (test_siegel): so they can be sealed at rest in one
-# place. Written without indenting: convos.json (up to 2 MB) is written on every saved turn (code check B6).
-def read_own(uid, name, default=None):
-    """The content of users/<uid>/<name>, else default (missing or broken file)."""
+# write_own, drop_own), never with open() or _write on their path (test_siegel). A file with siegel= in the register
+# (dateien.SIEGEL) is sealed whole at rest: {"v": 1, "data": base64("G1" + nonce + AES-256-GCM(json))}, the key
+# vorrat.key("profildaten") (HKDF from secret.key, its own purpose), "<uid>/<name>" as associated data (copied into
+# another profile or renamed, it does not open), a fresh nonce for every write. Plain JSON of older versions is still
+# read (siegel.migrate seals it once). A sealed file that does not open (another key, another profile, changed) is
+# never overwritten: read_own sets it aside once as <name>.unlesbar and the profile starts empty (siegel.py: hint and
+# „Wieder einlesen“). Without cryptography the files stay plain (siegel.alerts says so): losing the memory would be
+# worse. Opened plain bytes are kept in a small cache by mtime, size and inode (OWN_CACHE files, OWN_CACHE_BYTES,
+# OWN_CACHE_S seconds): convos.json (up to 2 MB) is read and written on every turn.
+OWN_CACHE, OWN_CACHE_BYTES, OWN_CACHE_S = 24, 24 * 1024 * 1024, 600
+ASIDE, ASIDE_MAX = ".unlesbar", 9      # <name>.unlesbar, then <name>.2.unlesbar … <name>.9.unlesbar
+_own = {}                     # path -> (stamp, plain bytes, when kept)
+_own_lock = threading.RLock()
+_own_blocked = set()          # paths whose unreadable file found no free place aside: never written over
+
+
+class Unreadable(Exception):
+    """A sealed profile file that does not open with this Spark's key."""
+
+
+def _sealed_name(name):
+    import dateien
+    return name in dateien.SIEGEL
+
+
+def _stamp(st):
+    return (st.st_mtime_ns, st.st_size, st.st_ino)
+
+
+def _keep(path, st, plain):
+    with _own_lock:
+        _own.pop(path, None)
+        if plain is None or len(plain) > OWN_CACHE_BYTES // 2:
+            return
+        now = time.monotonic()
+        for p in [p for p, x in _own.items() if now - x[2] > OWN_CACHE_S]:
+            del _own[p]
+        while _own and (len(_own) >= OWN_CACHE or sum(len(x[1]) for x in _own.values()) + len(plain) > OWN_CACHE_BYTES):
+            del _own[min(_own, key=lambda p: _own[p][2])]
+        _own[path] = (_stamp(st), plain, now)
+
+
+def _envelope(raw):
+    """The sealed text of a profile file's bytes ({"v": 1, "data": "…"} and nothing else), else None."""
+    if raw.lstrip()[:1] != b"{":
+        return None              # a list (plain memory, conversations): never parsed twice
     try:
-        with open(_path(uid, name), encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
+        d = json.loads(raw)
+    except ValueError:
+        return None
+    ok = isinstance(d, dict) and set(d) == {"v", "data"} and d["v"] == 1 and isinstance(d["data"], str)
+    return d["data"] if ok else None
+
+
+def is_sealed(raw):
+    """True for the bytes of a sealed profile file."""
+    return _envelope(raw) is not None
+
+
+def open_sealed(uid, name, raw):
+    """The plain bytes of a profile file as it lies on the disk: sealed ones opened, plain ones as they are. Raises
+    Unreadable when a sealed one does not open (the check fails closed)."""
+    text = _envelope(raw)
+    if text is None:
+        return raw
+    import vorrat
+    plain = vorrat.unseal(text, f"{uid}/{name}", "profildaten")
+    if plain is None:
+        raise Unreadable(name)
+    return plain
+
+
+def own_bytes(uid, name):
+    """The plain JSON bytes of users/<uid>/<name> (opened when sealed), None when there is none. Raises Unreadable."""
+    path = _path(uid, name)
+    try:
+        with open(path, "rb") as f:
+            st = os.fstat(f.fileno())
+            hit = _own.get(path)
+            if hit and hit[0] == _stamp(st):
+                return hit[1]
+            raw = f.read()
+    except FileNotFoundError:
+        return None
+    plain = open_sealed(uid, name, raw)
+    _keep(path, st, plain)
+    return plain
+
+
+def aside_names(uid, name):
+    """The places a file set aside may take: <name>.unlesbar, <name>.2.unlesbar … (ASIDE_MAX)."""
+    return [name + ASIDE] + [f"{name}.{i}{ASIDE}" for i in range(2, ASIDE_MAX + 1)]
+
+
+def _aside(uid, name):
+    """Puts an unreadable sealed file aside once, never deletes or overwrites anything; the journal gets one line."""
+    path = _path(uid, name)
+    with _own_lock:
+        _own.pop(path, None)
+        try:
+            with open(path, "rb") as f:
+                open_sealed(uid, name, f.read())
+            return True           # it opens now (or another thread put it aside): nothing to do
+        except FileNotFoundError:
+            return True
+        except Unreadable:
+            pass
+        free = next((n for n in aside_names(uid, name) if not os.path.lexists(_path(uid, n))), None)
+        if free:
+            os.rename(path, _path(uid, free))
+            _own_blocked.discard(path)
+        else:
+            _own_blocked.add(path)
+        print(f"profiles: unlesbar {log_name(by_id(uid))} | datei={name} beiseite={1 if free else 0}"
+              + ("" if free else " grund=voll"), flush=True)
+        return bool(free)
+
+
+def read_own(uid, name, default=None):
+    """The content of users/<uid>/<name>, else default (missing or broken file; an unreadable sealed one is set aside)."""
+    try:
+        plain = own_bytes(uid, name)
+    except Unreadable:
+        _aside(uid, name)
+        return default
+    except OSError:
+        return default
+    if plain is None:
+        return default
+    try:
+        return json.loads(plain)
+    except ValueError:
         return default
 
 
 def write_own(uid, name, data):
-    """users/<uid>/<name> atomically (common.write_json), only for the profile's service user."""
-    write_json(_path(uid, name), data, mode=0o600, ensure_ascii=False, dir_mode=0o700)
+    """users/<uid>/<name> atomically (common.write_json), only for the profile's service user; sealed when the register
+    says siegel= and the key is there. A file there that does not open is set aside first, never written over.
+    Returns False when nothing was written (no free place aside)."""
+    path = _path(uid, name)
+    plain = json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode()
+    with _own_lock:
+        try:
+            st = os.stat(path)
+            hit = _own.get(path)
+            if not hit or hit[0] != _stamp(st):
+                own_bytes(uid, name)           # what lies there must open (or be plain) before it is replaced
+        except FileNotFoundError:
+            pass
+        except Unreadable:
+            _aside(uid, name)
+        if path in _own_blocked:
+            print(f"profiles: nicht geschrieben {log_name(by_id(uid))} | datei={name} grund=unlesbar", flush=True)
+            return False
+        sealed = None
+        if _sealed_name(name):
+            import vorrat
+            sealed = vorrat.seal(plain, f"{uid}/{name}", "profildaten")
+        if sealed:
+            write_json(path, {"v": 1, "data": sealed}, mode=0o600, dir_mode=0o700)
+            _keep(path, os.stat(path), plain)
+        else:                                  # not a sealed file, or no cryptography (siegel.alerts)
+            write_json(path, data, mode=0o600, ensure_ascii=False, dir_mode=0o700)
+            _keep(path, os.stat(path), plain)
+    return True
 
 
 def drop_own(uid, name):
     """Deletes users/<uid>/<name>; True when there was one."""
-    try:
-        os.remove(_path(uid, name))
-        return True
-    except FileNotFoundError:
-        return False
+    path = _path(uid, name)
+    with _own_lock:
+        _own.pop(path, None)
+        _own_blocked.discard(path)
+        try:
+            os.remove(path)
+            return True
+        except FileNotFoundError:
+            return False
 
 
 # One proposal per profile and module waiting for a yes: USERS_DIR/<uid>/<name>-pending.json with "t" (when) and

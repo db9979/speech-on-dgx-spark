@@ -88,6 +88,7 @@ MODULE = {
     "notaus": ("zugang", "Notaus in drei Stufen, von außen nach innen"),
     "notzugang": ("zugang", "Wieder hinein nach einem Aussperren (nur per sudo am Spark)"),
     "vault": ("zugang", "Versiegelt Passwörter und Tokens mit state/secret.key"),
+    "siegel": ("zugang", "Gedächtnis und Gespräche versiegelt im Ruhezustand: einmal umstellen, Beiseitegelegtes wieder einlesen"),
     "signatur": ("zugang", "Prüft signierte Update-Manifeste (Ed25519)"),
     "zertpin": ("zugang", "Zertifikat eines Geräts im Heimnetz festpinnen"),
     "netguard": ("zugang", "Wächter: wohin eine Verbindung nach außen darf"),

@@ -396,6 +396,8 @@ def alerts():
     out += loopwacht.alerts()        # the panel's loop stood still (Hänge-Wächter): for an hour after it
     import offline
     out += offline.alerts()          # the model computer refuses because the clocks are too far apart (Ohne Internet)
+    import siegel
+    out += siegel.alerts()           # memory or conversations sealed with another key (set aside), or no cryptography
     return out
 
 

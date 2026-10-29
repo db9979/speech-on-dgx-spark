@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.251** Memory and conversations sealed: memory.json, convos.json, toollog.json and room-history.json lie sealed whole in the profile (AES-256-GCM, a key per purpose from secret.key, the profile and the file name as associated data), once after a backup "vor-siegel" with a check per file; with another key set aside instead of overwritten, a hint to the admin, "Read in again" under Me → Memory (plan nutzerwissen, stage 4b; test_siegel)
 - **V01.1.250** One way to the own data: memory, conversations, tool log, room mode history, read marks, matches, interests, Spark diary and the open memory question are read and written by the panel only through profiles.read_own/write_own/drop_own (preparing the seal, nothing changes for the person)
 - **V01.1.249** Remembered note: "✓ Remembered: …" with "Undo" under the answer; what was learned by itself comes as a card with "That's right" and "Undo", notifications and Telegram only name the number
 - **V01.1.248** Memory with fixed topics (home, employer, car …): per topic the newest value said counts, the old one stays to bring back; what was learned by itself never replaces what was confirmed, it comes as a card "Take it / Discard"; plus "N of 200"
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.244** RED FIX: the Spontanhilfe page test sets the panel's clock first at expiry, then the page's (otherwise the reload every 3 s brought the number back)
 - **V01.1.243** https without TLS session tickets (`panel.tls_context`): about one https connection in a hundred to Python 3.11's asyncio loop hung after the handshake (a Fernzugang terminal never opened); test servers with the panel's TLS plus a guard, Fernzugang tests with a 60 s handshake and deadlines instead of loops
 - **V01.1.242** Knowledge store faster (step 1 of 4, no new feature): document search vectors as float16 in memory (half the size, same ranking), the knowledge book finds pages through an FTS5 index (kept by triggers, built once, without FTS5 as before), the knowledge map picks its part with WITH RECURSIVE in SQLite, plus fixed queries rund_um and weg and the read function wissensbuch.liste (page ids with rank)
-- **V01.1.241** AI Dungeon Master: one sorting for every typed action: all word lists in one module, every action gets exactly one kind by a fixed order; "Dann gehe ich los", "Wir schlagen hier unser Lager auf" and "We rest by the fire" are no attack any more
 
 
 

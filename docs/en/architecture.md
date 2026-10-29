@@ -176,6 +176,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/panel.py` | Speech on DGX Spark: web panel for config and monitoring. |
 | `app/panel/passkey.py` | Passkeys (Face ID, Touch ID, Windows Hello; WebAuthn) instead of typing the six-digit code. |
 | `app/panel/profiles.py` | User profiles for the assistant: who is talking, and what the assistant remembers about them. |
+| `app/panel/siegel.py` | Versiegeln im Ruhezustand: memory, conversations and what the Spark learned about a person lie sealed in the profile's folder (dateien.SIEGEL, profiles.write … |
 | `app/panel/signatur.py` | Signed update manifests (Ed25519), optional until a key exists. |
 | `app/panel/stufen.py` | Wann fragt der Spark nach dem Code? |
 | `app/panel/vault.py` | Secrets at rest: calendar and mail passwords and Home Assistant tokens are stored encrypted, so a copy of the profile folders (a backup, a look into the file … |
@@ -608,10 +609,10 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 
 | Path | Content | Kind | Protection | Backup | Copy of my data |
 |---|---|---|---|---|---|
-| `users/ID/convos.json` | Conversations |  | – | yes | Conversations |
-| `users/ID/toollog.json` | Tool log |  | – | yes | Conversations |
-| `users/ID/room-history.json` | Room mode history |  | – | yes | Conversations |
-| `users/ID/memory.json` | Memory |  | – | yes | Memory |
+| `users/ID/convos.json` | Conversations |  | sealed whole (AES-256-GCM) | yes | Conversations |
+| `users/ID/toollog.json` | Tool log |  | sealed whole (AES-256-GCM) | yes | Conversations |
+| `users/ID/room-history.json` | Room mode history |  | sealed whole (AES-256-GCM) | yes | Conversations |
+| `users/ID/memory.json` | Memory |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/learned.json` | Read marks of learning from conversations |  | – | yes | Memory |
 | `users/ID/zuordnungen.json` | Remembered matches |  | – | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
@@ -624,6 +625,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
 | `users/ID/musik/` | Own songs and their index (wish, description, lyrics, length) |  | – | yes | Own songs |
 | `users/ID/geteilt.json` | Shared: which documents with which profiles, since when; when Me → Shared was last open | Settings | – | yes | – |
+| `users/ID/*.unlesbar` | Set aside: a sealed file that does not open with this Spark's key (restore the move backup, then "Read in again") | State | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/settings.json` | Settings | Settings | – | yes | – |
 | `users/ID/setup.json` | Setup | Settings | – | yes | – |
 | `users/ID/speicher.json` | Own storage targets | Settings | key sealed | yes | – |
@@ -1641,7 +1643,7 @@ flowchart TD
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
-10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal).
+10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own).
 
 **Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A web page with a fake system line: „<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
 
@@ -1672,6 +1674,11 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result.
 - What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version.
 - What the Spark remembers the person sees at once and can take back (gemerkt.take_back): only the own fact, only while it is unchanged since (state gemerkt.rev_of), otherwise 409. What a notification or Telegram can reach names only a number, never the text of the fact.
+
+#### Data on the disk
+
+- Memory and conversations of every profile lie sealed whole (AES-256-GCM, a key per purpose from secret.key through HKDF, vorrat.key; the profile and the file name as associated data, a fresh nonce on every write). A copy of the disk, a look into the folder or a backup on a foreign computer shows only noise; a file copied into another profile does not open there.
+- If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the admins see a hint, and after the move backup „Read in again“ brings it back.
 
 #### Standards
 
@@ -1706,11 +1713,13 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
+- `app/panel/profiles.py` `write_own`: memory and conversations sealed whole ([step 10](#kn-sicherheit-s10))
+- `app/panel/vorrat.py` `key`: a key per purpose from secret.key ([step 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`
 
 ### Login, profile
 
@@ -3467,7 +3476,7 @@ flowchart TD
   s2 -.->|no| s5
   s7x(["Stays on this device: keys, locks, counters, caches"])
   s7 -->|no| s7x
-  s8x(["With the password the new Spark opens every secret"])
+  s8x(["With the password the new Spark opens every secret, memory and conversations too"])
   s8 -->|yes| s8x
   s9x(["Nothing changed"])
   s9 -->|no| s9x
@@ -3483,7 +3492,7 @@ flowchart TD
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
-11. <a id="kn-state-s11"></a>**Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again.
+11. <a id="kn-state-s11"></a>**Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files.
 
 **Examples:** Enter the Telegram bot token: Stored sealed, goes into every backup. · Lock after failed attempts: Stored plain, stays on this device. · Move to a new Spark: Every secret opens again, nothing to enter.
 
@@ -3515,7 +3524,7 @@ flowchart TD
 - `app/panel/backup.py` `_swap`: put in place with a way back ([step 10](#kn-state-s10))
 - `app/panel/backup.py` `_forget_cached`: read the keys again ([step 11](#kn-state-s11))
 
-Self-tests: `test_technik`, `test_hardening`, `test_panel`, `test_tempo`
+Self-tests: `test_technik`, `test_hardening`, `test_panel`, `test_tempo`, `test_siegel`
 
 ### users/ID/
 
@@ -3531,18 +3540,20 @@ flowchart TD
   s2["2. Path in its own folder"]
   s3{{"3. A secret in it?"}}
   s4["4. Write for the service only"]
-  s5["5. Every file sorted"]
-  s6{{"6. Own storage set up?"}}
-  s7["7. Only changes of the chosen areas"]
-  s8["8. Encrypted, names random"]
-  s9["9. Deleted waits in the bin"]
-  s10["10. In the backup"]
-  s11{{"11. Profile deleted?"}}
-  s12(["12. Only for this profile"])
+  s4b{{"5. Does the sealed file open?"}}
+  s5["6. Every file sorted"]
+  s6{{"7. Own storage set up?"}}
+  s7["8. Only changes of the chosen areas"]
+  s8["9. Encrypted, names random"]
+  s9["10. Deleted waits in the bin"]
+  s10["11. In the backup"]
+  s11{{"12. Profile deleted?"}}
+  s12(["13. Only for this profile"])
   s1 --> s2
   s2 --> s3
   s3 -->|no| s4
-  s4 --> s5
+  s4 --> s4b
+  s4b -->|yes| s5
   s5 --> s6
   s6 -->|yes| s7
   s7 --> s8
@@ -3552,6 +3563,8 @@ flowchart TD
   s11 -->|no| s12
   s3x(["Sealed with secret.key"])
   s3 -->|yes| s3x
+  s4bx(["Aside, nothing overwritten"])
+  s4b -->|no| s4bx
   s6 -.->|no| s10
   s9x(["Again later"])
   s9 -->|target gone| s9x
@@ -3561,22 +3574,23 @@ flowchart TD
 
 1. <a id="kn-users-s1"></a>**A request with a profile**: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile.
 2. <a id="kn-users-s2"></a>**Path in its own folder**: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text.
-3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read.
+3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (4 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
-5. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes.
-6. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
-7. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
-8. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
-9. <a id="kn-users-s9"></a>**Deleted waits in the bin**: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes.
-10. <a id="kn-users-s10"></a>**In the backup**: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy.
-11. <a id="kn-users-s11"></a>**Profile deleted?**: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID.
-12. <a id="kn-users-s12"></a>**Only for this profile**: Every function reads only the folder of the signed-in profile. Guests have no folder.
+5. <a id="kn-users-s4b"></a>**Does the sealed file open?**: Only profiles.read_own and write_own read and write these files. If one does not open (another key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back.
+6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes.
+7. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
+8. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
+9. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
+10. <a id="kn-users-s9"></a>**Deleted waits in the bin**: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes.
+11. <a id="kn-users-s10"></a>**In the backup**: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it sealed: on this Spark they open again, on another one only with the move backup. The own copy (speicher.py) takes them opened into its own encryption.
+12. <a id="kn-users-s11"></a>**Profile deleted?**: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID.
+13. <a id="kn-users-s12"></a>**Only for this profile**: Every function reads only the folder of the signed-in profile. Guests have no folder.
 
-**Examples:** Memory entry, no own storage: Lies in its own folder and in the backup. · Enter a mail password: Sealed, stays on the Spark (account). · Document with own storage: Encrypted copy on the target.
+**Examples:** Memory entry, no own storage: Lies sealed in its own folder and in the backup. · Backup on another Spark without the move: Memory aside, a hint to the admin. · Enter a mail password: Sealed, stays on the Spark (account). · Document with own storage: Encrypted copy on the target.
 
 #### Rules
 
-Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
+Applies at: [step 6](#kn-users-s5), [step 8](#kn-users-s7)
 
 | Area | Files | Own storage |
 |---|---|---|
@@ -3591,11 +3605,11 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 
 #### Numbers (from the code)
 
-- **2** targets per profile at most ([step 6](#kn-users-s6))
-- **30** minutes between two runs ([step 7](#kn-users-s7))
-- **2048 MB** at most per run ([step 7](#kn-users-s7))
-- **30** days in the target's bin ([step 9](#kn-users-s9))
-- **5000** files per copy at most ([step 7](#kn-users-s7))
+- **2** targets per profile at most ([step 7](#kn-users-s6))
+- **30** minutes between two runs ([step 8](#kn-users-s7))
+- **2048 MB** at most per run ([step 8](#kn-users-s7))
+- **30** days in the target's bin ([step 10](#kn-users-s9))
+- **5000** files per copy at most ([step 8](#kn-users-s7))
 
 #### Settings
 
@@ -3611,17 +3625,21 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 - `app/panel/profiles.py` `current`: the profile from cookie or device key ([step 1](#kn-users-s1))
 - `app/panel/profiles.py` `_path`: path in the profile's folder ([step 2](#kn-users-s2))
 - `app/panel/profiles.py` `_write`: write for the service only ([step 4](#kn-users-s4))
-- `app/panel/profiles.py` `delete_user`: delete profile and folder ([step 11](#kn-users-s11))
+- `app/panel/profiles.py` `write_own`: write memory and conversations sealed ([step 5](#kn-users-s4b), [step 3](#kn-users-s3))
+- `app/panel/profiles.py` `read_own`: open or set aside, never overwrite with empty ([step 5](#kn-users-s4b))
+- `app/panel/dateien.py` `SIEGEL`: which files lie sealed (from the file register) ([step 3](#kn-users-s3))
+- `app/panel/siegel.py` `migrate`: seal once, after a backup ([step 3](#kn-users-s3))
+- `app/panel/profiles.py` `delete_user`: delete profile and folder ([step 12](#kn-users-s11))
 - `app/panel/vault.py` `seal`: seal ([step 3](#kn-users-s3))
 - `app/panel/speakers.py` `_store`: voiceprint sealed ([step 3](#kn-users-s3), [step 4](#kn-users-s4))
-- `app/panel/dateien.py` `AREAS`: what may go to the own storage (from the file register) ([step 5](#kn-users-s5))
-- `app/panel/speicher.py` `_key`: the profile's storage key, sealed ([step 8](#kn-users-s8))
-- `app/panel/speicher.py` `local_files`: only the list, no links ([step 7](#kn-users-s7))
-- `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces ([step 8](#kn-users-s8))
-- `app/panel/speicher.py` `copy_once`: one run of the copy ([step 7](#kn-users-s7), [step 8](#kn-users-s8))
-- `app/panel/backup.py` `_add_dir`: users/ into the backup ([step 10](#kn-users-s10))
+- `app/panel/dateien.py` `AREAS`: what may go to the own storage (from the file register) ([step 6](#kn-users-s5))
+- `app/panel/speicher.py` `_key`: the profile's storage key, sealed ([step 9](#kn-users-s8))
+- `app/panel/speicher.py` `local_files`: only the list, no links ([step 8](#kn-users-s7))
+- `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces ([step 9](#kn-users-s8))
+- `app/panel/speicher.py` `copy_once`: one run of the copy ([step 8](#kn-users-s7), [step 9](#kn-users-s8))
+- `app/panel/backup.py` `_add_dir`: users/ into the backup ([step 11](#kn-users-s10))
 
-Self-tests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`
+Self-tests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`, `test_siegel`
 
 ### voices/, backups/
 

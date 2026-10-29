@@ -15,24 +15,27 @@ from collections import namedtuple
 # sicherung: state/ the kind a backup checks ("json", "pem"), "" = stays out (lokal says why); users/ "ja" or "nein"
 # bereich: the area of „Kopie meiner Daten“ (BEREICHE) that may copy it; art: the kind of a profile file that stays
 # on the Spark; helfer: written through its own helper, not profiles._path; schutz: sealed or hashed (German,
-# English); sonst: written by the shell scripts or under another name (the scan in test_technik does not see it)
-Datei = namedtuple("Datei", "name ort de en sicherung lokal bereich art helfer schutz sonst")
+# English); sonst: written by the shell scripts or under another name (the scan in test_technik does not see it);
+# siegel: a profile file sealed whole at rest, read and written only through profiles.read_own / write_own (plan
+# nutzerwissen, Stufe 4: AES-256-GCM, its own key, the profile and the name as associated data)
+Datei = namedtuple("Datei", "name ort de en sicherung lokal bereich art helfer schutz sonst siegel")
+SIEGEL_SCHUTZ = ("ganz versiegelt (AES-256-GCM)", "sealed whole (AES-256-GCM)")
 
 
-def profil(name, de, en, bereich="", art="", helfer=False, schutz=None):
-    return Datei(name, "profil", de, en, "", "", bereich, art, helfer, schutz, False)
+def profil(name, de, en, bereich="", art="", helfer=False, schutz=None, siegel=False):
+    return Datei(name, "profil", de, en, "", "", bereich, art, helfer, SIEGEL_SCHUTZ if siegel else schutz, False, siegel)
 
 
 def users(name, de, en, sicherung, schutz=None):
-    return Datei(name, "users", de, en, sicherung, "", "", "", False, schutz, False)
+    return Datei(name, "users", de, en, sicherung, "", "", "", False, schutz, False, False)
 
 
 def state(name, de, en, sicherung="", lokal="", schutz=None, sonst=False):
-    return Datei(name, "state", de, en, sicherung, lokal, "", "", False, schutz, sonst)
+    return Datei(name, "state", de, en, sicherung, lokal, "", "", False, schutz, sonst, False)
 
 
 def anderswo(name, de, en):
-    return Datei(name, "anderswo", de, en, "", "", "", "", False, None, False)
+    return Datei(name, "anderswo", de, en, "", "", "", "", False, None, False, False)
 
 
 # the areas a profile may copy to its own storage: id -> (German, English). A fixed allowlist: keys, logins,
@@ -49,10 +52,10 @@ BEREICHE = {
 
 DATEIEN = [
     # users/<id>/: what the own storage may copy (speicher.AREAS), by area
-    profil("convos.json", "Gespräche", "Conversations", bereich="gespraeche"),
-    profil("toollog.json", "Werkzeug-Log", "Tool log", bereich="gespraeche"),
-    profil("room-history.json", "Raummodus-Verlauf", "Room mode history", bereich="gespraeche"),
-    profil("memory.json", "Gedächtnis", "Memory", bereich="gedaechtnis"),
+    profil("convos.json", "Gespräche", "Conversations", bereich="gespraeche", siegel=True),
+    profil("toollog.json", "Werkzeug-Log", "Tool log", bereich="gespraeche", siegel=True),
+    profil("room-history.json", "Raummodus-Verlauf", "Room mode history", bereich="gespraeche", siegel=True),
+    profil("memory.json", "Gedächtnis", "Memory", bereich="gedaechtnis", siegel=True),
     profil("learned.json", "Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations", bereich="gedaechtnis"),
     profil("zuordnungen.json", "Gemerkte Zuordnungen", "Remembered matches", bereich="gedaechtnis"),
     profil("tasks.json", "Aufgaben", "Tasks", bereich="alltag"),
@@ -68,6 +71,11 @@ DATEIEN = [
     profil("erstellt/", "Erstellte Dokumente", "Created documents", bereich="erstellt"),
     profil("bilder/", "Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe)", "Painted pictures and their index (prompt, wish, size)", bereich="bilder"),
     profil("musik/", "Eigene Lieder und ihr Verzeichnis (Wunsch, Beschreibung, Liedtext, Länge)", "Own songs and their index (wish, description, lyrics, length)", bereich="musik"),
+    # a sealed file that does not open with this Spark's key (another key, another profile, changed): set aside once by
+    # profiles.read_own instead of being overwritten, until „Wieder einlesen“ (siegel.py) takes it back
+    profil("*.unlesbar", "Beiseitegelegt: eine versiegelte Datei, die sich mit dem Schlüssel dieses Spark nicht öffnet (Umzugs-Sicherung einspielen, dann „Wieder einlesen“)",
+           "Set aside: a sealed file that does not open with this Spark's key (restore the move backup, then \"Read in again\")",
+           art="Zustand", schutz=SIEGEL_SCHUTZ),
     # users/<id>/: everything else stays on the Spark (speicher.LOCAL), with its kind: keys, logins, settings,
     # voiceprint, queues and marks (Richtlinie Teil 1, "Kopie meiner Daten")
     profil("settings.json", "Einstellungen", "Settings", art="Einstellungen"),
@@ -356,3 +364,5 @@ VERSCHLUESSELT = {schluessel(d): d.schutz for d in DATEIEN if d.schutz}
 USERS_SONST = {d.name: d.art for d in DATEIEN if d.helfer}
 USERS_GLOBAL = {d.name: d.sicherung for d in DATEIEN if d.ort == "users"}
 STATE_SONST = {d.name for d in DATEIEN if d.sonst}
+# profiles.read_own / write_own: the profile files sealed whole at rest (plan nutzerwissen, Stufe 4)
+SIEGEL = frozenset(d.name for d in DATEIEN if d.siegel)

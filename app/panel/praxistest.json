@@ -4503,6 +4503,13 @@
 "titel": "Gedächtnis und Gespräche wie vorher",
 "text": "Nach dem Update: unter Ich → Gedächtnis stehen alle Einträge wie vorher, die Gespräche im Assistenten sind alle da, Das Protokoll unter Ich, was der Assistent nachgeschlagen hat, zeigt die letzten Tage. Im Gespräch „Merk dir, ich trinke gern Tee.“: der Eintrag erscheint unter Ich → Gedächtnis; „Vergiss, dass ich gern Tee trinke.“: er ist weg. Ein neues Gespräch führen, die Seite neu laden: es ist noch da. Zustand → Logs: keine neuen Fehlerzeilen der Bereiche Gedächtnis oder Profile.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P668",
+"v": 1251,
+"titel": "Gedächtnis und Gespräche versiegelt",
+"text": "Nach dem Update (Zustand → Logs, Bereich Profile): einmal „profiles: versiegelt | profile=… dateien=…“ mit fehler=0, unter Einstellungen → Sicherung eine neue Sicherung „vor-siegel“. Unter Ich → Gedächtnis stehen alle Einträge wie vorher, die Gespräche im Assistenten sind alle da. Zustand → Live, Kasten Gedächtnis: „🔒 n von n Dateien versiegelt“, kein „unlesbar beiseite“. Nach einem Neustart des Panels: keine zweite Zeile „versiegelt“ und keine zweite Sicherung „vor-siegel“. Im Gespräch „Merk dir, ich trinke gern Tee.“: der Eintrag erscheint wie gewohnt.",
+"thread": "Nutzerwissen sicherer und sichtbarer"
 }
 ]
 }

@@ -621,13 +621,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "66b6409de6",
+        "stand": "0b855e950f",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
-            "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"],
+            "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
+            "vorrat.key": ["s10"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -755,10 +756,10 @@ SEITEN = {
               ("guard.log, Wachposten", "guard.log, Wachposten"),
               ("Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer "
                "SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault "
-               "(vault.seal).",
+               "(vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own).",
                "Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a "
                "SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
-               "(vault.seal).")),
+               "(vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own).")),
         ],
         "beispiele": [
             (("Mail verlangt eine Handlung", "A mail demands an action"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],
@@ -841,6 +842,20 @@ SEITEN = {
                  "fact, only while it is unchanged since (state gemerkt.rev_of), otherwise 409. What a notification or "
                  "Telegram can reach names only a number, never the text of the fact."),
             ]),
+            (("Daten auf der Platte", "Data on the disk"), [
+                ("Gedächtnis und Gespräche jedes Profils liegen ganz versiegelt (AES-256-GCM, Schlüssel je Zweck aus "
+                 "secret.key über HKDF, vorrat.key; Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem "
+                 "Schreiben). Eine Kopie der Platte, ein Blick in den Ordner oder eine Sicherung auf einem fremden "
+                 "Rechner zeigt nur Rauschen; eine Datei, die in ein anderes Profil kopiert wird, öffnet sich dort nicht.",
+                 "Memory and conversations of every profile lie sealed whole (AES-256-GCM, a key per purpose from "
+                 "secret.key through HKDF, vorrat.key; the profile and the file name as associated data, a fresh nonce "
+                 "on every write). A copy of the disk, a look into the folder or a backup on a foreign computer shows "
+                 "only noise; a file copied into another profile does not open there."),
+                ("Öffnet eine Datei nicht, wird sie nie leer überschrieben: profiles.read_own legt sie beiseite, die "
+                 "Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück.",
+                 "If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the "
+                 "admins see a hint, and after the move backup „Read in again“ brings it back."),
+            ]),
             (("Maßstäbe", "Standards"), [
                 ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
                  "die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt.",
@@ -868,12 +883,14 @@ SEITEN = {
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
+            ("profiles.write_own", ("Gedächtnis und Gespräche ganz versiegelt", "memory and conversations sealed whole")),
+            ("vorrat.key", ("ein Schlüssel je Zweck aus secret.key", "a key per purpose from secret.key")),
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
             ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
-                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt"],
+                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel"],
         "heute": [],
     },
 

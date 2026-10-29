@@ -30,6 +30,7 @@ import mail  # noqa: E402
 import vorwaermen  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
+import siegel  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
 import einordnen  # noqa: E402
@@ -793,7 +794,8 @@ def profile_memory(prof=Depends(own_profile)):
             "topics": {k: v for k, v in gedaechtnis.TOPICS.items()} if gedaechtnis.topics_on(prof["id"]) else None,
             # Feste Themen and „N von 200“ (plan nutzerwissen, Punkt 2 und 4.5)
             "places": gedaechtnis.places(prof["id"]) if check else None, "max": profiles.MAX_FACTS,
-            "warn": profiles.WARN_FACTS, "full": profiles.memory_full(prof["id"])}
+            "warn": profiles.WARN_FACTS, "full": profiles.memory_full(prof["id"]),
+            "siegel": siegel.view(prof["id"])}   # files sealed with another key, set aside (plan nutzerwissen, Stufe 4)
 
 
 @router.post("/api/profile/memory/{fact_id}/confirm", dependencies=[Depends(assistant)])
