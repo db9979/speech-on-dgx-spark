@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.231** · 2026-10-29 · Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
 - **V01.1.230** · 2026-10-29 · Fernzugang: Anker aktualisieren aus dem Panel, „Aktualisieren“ je System und „Alle aktualisieren“; das Panel unterschreibt den Anker mit einem eigenen Schlüssel (Ed25519, im Tresor), der Anker prüft SHA-256 und Unterschrift, tauscht als root atomar und geht nach 60 s ohne Panel zur alten Version zurück, nie ein Schritt zurück; Anker vor 1.3.0 bekommen eine Zeile zum Einfügen
 - **V01.1.229** · 2026-10-29 · Zustand → Technik, Überblick zeigt den Fernzugang: eigener Kasten „Fernzugang“ (Shell, Dateien, Bildschirm, Spontanhilfe) und „Fern-Server“ mit dem Anker, beide mit Knoten-Seite; dazu wartet der Test zum Herauslösen ohne feste Zeiten
 - **V01.1.228** · 2026-10-29 · Fernzugang Ziel-Modus: „Als Ziel verfolgen“ heftet die Frage an den Assistenten an; nach jedem eigenen Befehl schlägt das eigene Sprachmodell genau einen nächsten Befehl mit Grund vor, bis „Fertig“ oder „Ziel beenden“ (nur mit „Bildschirm mitschicken“, nie Enter, höchstens 6 je Minute, derselbe Bildschirm nicht zweimal); dazu wählt „Zeilen“ 80, 300 oder 1000 Zeilen (chat.fernzugang_ki_zeilen, höchstens 60 000 Zeichen, sonst „gekürzt“)

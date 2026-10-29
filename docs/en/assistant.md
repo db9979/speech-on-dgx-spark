@@ -1772,5 +1772,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Clipboard with the screen** (Features → Access → "Clipboard with the screen"; builds on "Screen in remote access"): Exchange text between your browser and the system while you have "Control": what you copy there lands in your clipboard; "Send clipboard" sends yours over.
 
+- **Notes in remote access** (Features → Access → "Notes in remote access"; builds on "Remote access to servers"): A note of its own for each system: in the box "Notes" below "Details" and in the tab "Notes" beside the assistant at the terminal, also in full screen.
+
 - **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

@@ -18060,6 +18060,166 @@
           }
         }
       }
+    },
+    "Die Notiz dieses Servers wird mit gelöscht. Vorher ansehen oder kopieren unter „Notiz“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server's note is deleted with it. View or copy it first under “Note”."
+          }
+        }
+      }
+    },
+    "Assistent darf lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assistant may read"
+          }
+        }
+      }
+    },
+    "# Überschrift, - Liste, Befehle zwischen ``` und ```. Nur das eigene Sprachmodell liest mit, wenn „Assistent darf lesen“ an ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# heading, - list, commands between ``` and ```. Only your own language model reads along when “Assistant may read” is on."
+          }
+        }
+      }
+    },
+    "Zeile entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove line"
+          }
+        }
+      }
+    },
+    "Ins Terminal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into the terminal"
+          }
+        }
+      }
+    },
+    "Befehle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commands"
+          }
+        }
+      }
+    },
+    "Kopiert die Zeile und öffnet den Fernzugang im Panel: dort die Shell öffnen und einfügen, Enter drückst du selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies the line and opens remote access in the panel: open the shell there and paste, you press Enter yourself."
+          }
+        }
+      }
+    },
+    "Fassungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versions"
+          }
+        }
+      }
+    },
+    "Wiederherstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        }
+      }
+    },
+    "Notiz löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete note"
+          }
+        }
+      }
+    },
+    "Diese Notiz mit allen Fassungen löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this note with all its versions?"
+          }
+        }
+      }
+    },
+    "Gespeichert %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %@"
+          }
+        }
+      }
+    },
+    "Zeile %lld sieht aus wie ein Passwort, ein Schlüssel oder ein Token. Das gehört in den Tresor, nicht in die Notiz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line %lld looks like a password, a key or a token. That belongs in the vault, not in the note."
+          }
+        }
+      }
+    },
+    "Fassung wiederhergestellt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version restored."
+          }
+        }
+      }
+    },
+    "Notiz gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note deleted."
+          }
+        }
+      }
+    },
+    "Kopiert. Im Panel die Shell öffnen und einfügen; Enter drückst du selbst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied. Open the shell in the panel and paste; you press Enter yourself."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

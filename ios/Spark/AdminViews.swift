@@ -1978,6 +1978,7 @@ struct FernServer: Identifiable {
     let hostkeyFalsch: Bool
     let fp: String
     let sitzungen: Int
+    let notiz: Bool
 }
 
 /// The cards of Fernzugang → Systeme in the app: status, online, „Trennen“, „Alle trennen“, „Darf sich verbinden“
@@ -2038,6 +2039,11 @@ struct FernzugangView: View {
                             Text("Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.").foregroundStyle(.red)
                         }
                         if g.stand != "abbau" {
+                            if d["notizen"] as? Bool == true {
+                                NavigationLink { FernNotizView(server: g) } label: {
+                                    LabeledContent("Notiz") { Text(g.notiz ? "📝" : "–") }
+                                }
+                            }
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } }))
                             Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt)
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
@@ -2066,6 +2072,8 @@ struct FernzugangView: View {
         .confirmationDialog("Diesen Server entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem Server alles ab, was er eingerichtet hat.",
                             isPresented: Binding(get: { askRemove != nil }, set: { if !$0 { askRemove = nil } }), titleVisibility: .visible) {
             Button("Entfernen", role: .destructive) { if let g = askRemove { Task { await remove(g) } } }
+        } message: {
+            if askRemove?.notiz == true { Text("Die Notiz dieses Servers wird mit gelöscht. Vorher ansehen oder kopieren unter „Notiz“.") }
         }
     }
 
@@ -2096,7 +2104,7 @@ struct FernzugangView: View {
                                   onlineSeit: Self.date(x["online_seit"]), weg: Self.date(x["weg"]), zuletzt: Self.date(x["zuletzt"]),
                                   stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true,
                                   hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
-                                  sitzungen: Self.num(x["sitzungen"]))
+                                  sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false)
             }
             error = nil
         } catch { self.error = error.localizedDescription }
@@ -2133,5 +2141,150 @@ struct FernzugangView: View {
             error = nil
         } catch { self.error = error.localizedDescription }
         await load()
+    }
+}
+
+
+// ---------------------------------------------------------------- Notizen je System (fernnotiz.py)
+
+/// The note of one remote server in the app (Dominik 2026-10-29): look, write, „Assistent darf lesen“, the last
+/// versions, delete. „Ins Terminal“ copies the line and opens the panel's page: the shell is there, Enter stays with
+/// the person. Sealed on the Spark; nothing of it is kept on the phone.
+struct FernNotizView: View {
+    let server: FernServer
+    @State private var text = ""
+    @State private var lesen = true
+    @State private var saved: Date?
+    @State private var versions: [(t: Int, n: Int)] = []
+    @State private var warn: [(line: Int, art: String)] = []
+    @State private var error: String?
+    @State private var note: String?
+    @State private var loaded = false
+    @State private var dirty = false
+    @State private var askDelete = false
+    @State private var open: PanelPlace?
+
+    private var codeLines: [String] {
+        var inCode = false, out: [String] = []
+        for line in text.components(separatedBy: "\n") {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") { inCode.toggle(); continue }
+            if inCode, !line.trimmingCharacters(in: .whitespaces).isEmpty { out.append(line) }
+        }
+        return Array(out.prefix(20))
+    }
+
+    var body: some View {
+        Form {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if !loaded { LadeZeilen(rows: 3) } else {
+                Section {
+                    TextEditor(text: $text).font(.system(.body, design: .monospaced)).frame(minHeight: 220)
+                        .onChange(of: text) { _, _ in dirty = true }
+                    Toggle("Assistent darf lesen", isOn: $lesen).onChange(of: lesen) { _, _ in Task { await save() } }
+                    Button("Sichern") { Task { await save() } }.disabled(!dirty)
+                } header: { Text(verbatim: server.name) } footer: {
+                    if let s = saved { Text("Gespeichert \(s.formatted(date: .omitted, time: .shortened))") }
+                    else { Text("# Überschrift, - Liste, Befehle zwischen ``` und ```. Nur das eigene Sprachmodell liest mit, wenn „Assistent darf lesen“ an ist.") }
+                }
+                ForEach(warn, id: \.line) { w in
+                    Section {
+                        Text("Zeile \(w.line) sieht aus wie ein Passwort, ein Schlüssel oder ein Token. Das gehört in den Tresor, nicht in die Notiz.").foregroundStyle(.orange)
+                        Button("Zeile entfernen") { removeLine(w.line) }
+                    }
+                }
+                if !codeLines.isEmpty {
+                    Section {
+                        ForEach(codeLines, id: \.self) { c in
+                            Button { intoTerminal(c) } label: {
+                                LabeledContent { Text("Ins Terminal") } label: { Text(verbatim: c).font(.system(.caption, design: .monospaced)) }
+                            }
+                        }
+                    } header: { Text("Befehle") } footer: {
+                        Text("Kopiert die Zeile und öffnet den Fernzugang im Panel: dort die Shell öffnen und einfügen, Enter drückst du selbst.")
+                    }
+                }
+                if !versions.isEmpty {
+                    Section("Fassungen") {
+                        ForEach(versions, id: \.t) { v in
+                            Button {
+                                Task { await restore(v.t) }
+                            } label: {
+                                LabeledContent {
+                                    Text("Wiederherstellen")
+                                } label: {
+                                    Text(Date(timeIntervalSince1970: TimeInterval(v.t)), format: .dateTime.day().month().hour().minute())
+                                }
+                            }
+                        }
+                    }
+                }
+                Section { Button("Notiz löschen", role: .destructive) { askDelete = true } }
+            }
+        }
+        .navigationTitle("Notiz")
+        .task { await load() }
+        .onDisappear { if dirty { Task { await save() } } }
+        .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
+        .confirmationDialog("Diese Notiz mit allen Fassungen löschen?", isPresented: $askDelete, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) { Task { await delete() } }
+        }
+    }
+
+    private func take(_ d: [String: Any]) {
+        if let t = d["text"] as? String { text = String(t.prefix(70_000)) }
+        if let l = d["lesen"] as? Bool { lesen = l }
+        if let t = d["t"] as? NSNumber, t.doubleValue > 0 { saved = Date(timeIntervalSince1970: t.doubleValue) }
+        versions = (d["fassungen"] as? [[String: Any]] ?? []).prefix(10).compactMap { f in
+            guard let t = (f["t"] as? NSNumber)?.intValue else { return nil }
+            return (t, (f["zeichen"] as? NSNumber)?.intValue ?? 0)
+        }
+        warn = (d["warnungen"] as? [[String: Any]] ?? []).prefix(20).compactMap { w in
+            guard let l = (w["zeile"] as? NSNumber)?.intValue else { return nil }
+            return (l, w["art"] as? String ?? "")
+        }
+    }
+
+    private func load() async {
+        defer { loaded = true }
+        do { take(try await AdminSession.shared.object("GET", "api/admin/fernzugang/notiz/\(server.id)")); dirty = false; error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func save() async {
+        do {
+            take(try await AdminSession.shared.object("PUT", "api/admin/fernzugang/notiz/\(server.id)", body: ["text": text, "lesen": lesen]))
+            dirty = false; error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func restore(_ t: Int) async {
+        if dirty { await save() }
+        do {
+            take(try await AdminSession.shared.object("POST", "api/admin/fernzugang/notiz/\(server.id)/wiederherstellen", body: ["t": t]))
+            dirty = false; note = String(localized: "Fassung wiederhergestellt."); error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func delete() async {
+        do {
+            _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/notiz/\(server.id)")
+            text = ""; versions = []; warn = []; saved = nil; dirty = false; note = String(localized: "Notiz gelöscht."); error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func removeLine(_ n: Int) {
+        var l = text.components(separatedBy: "\n")
+        guard n >= 1, n <= l.count else { return }
+        l.remove(at: n - 1)
+        text = l.joined(separator: "\n")
+        Task { await save() }
+    }
+
+    private func intoTerminal(_ line: String) {
+        let one = line.replacingOccurrences(of: "\r", with: " ").replacingOccurrences(of: "\n", with: " ")
+        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: one]], options: [.expirationDate: Date().addingTimeInterval(300), .localOnly: true])
+        note = String(localized: "Kopiert. Im Panel die Shell öffnen und einfügen; Enter drückst du selbst.")
+        if let url = SparkAPI.panelLink("go=fern") { open = PanelPlace(url: url) }
     }
 }

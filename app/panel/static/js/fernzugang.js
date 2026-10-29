@@ -18,7 +18,7 @@ const FZ={d:null,sel:'',tab:'systeme',timer:0,ws:null,term:null,sitz:null,code:n
 // „Dateien“ (ferndateien.py, stage 3): SFTP in the same SSH connection, on the unlocked page; names come as text only,
 // a download goes through a one-time link, an upload as the raw file (at most chat.fernzugang_datei_mb).
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
-const FZ_MIT=['chips','folge','erklaert','sudo_tip','hinweis','hilfe','gefahr','ki_zeilen','ki_zeilen_wahl','ki_zeichen','ziel_min','hilfe_befehle','vorschlag_s'];
+const FZ_MIT=['chips','folge','erklaert','sudo_tip','hinweis','hilfe','gefahr','ki_zeilen','ki_zeilen_wahl','ki_zeichen','ziel_min','hilfe_befehle','vorschlag_s','notizen','notiz_max'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
 const FZ_SPALTE=[280,520];   // the assistant's column: its width in pixels, dragged between these
 function fzEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
@@ -80,12 +80,14 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   if(!FZ.sel&&gs[0]&&!NARROW())FZ.sel=gs[0].id;
   const q=$('fzsuche').value.trim().toLowerCase(),list=$('fzlist');list.textContent='';
   if(!gs.length)list.appendChild(fzEl('div','mut fzleer',t('Noch kein System gekoppelt. „+ System koppeln“ zeigt den Befehl für das neue System.','No system paired yet. "+ Pair a system" shows the command for the new system.')));
-  const passt=gs.filter(g=>!q||(g.name+' '+(g.os||'')).toLowerCase().includes(q)),bereit=g=>g.online&&g.erlaubt&&!g.hostkey_falsch&&g.stand!=='abbau';
+  const tr=FZ.treffer&&FZ.treffer.q.toLowerCase()===q?FZ.treffer.t:{};
+  const passt=gs.filter(g=>!q||(g.name+' '+(g.os||'')).toLowerCase().includes(q)||!!tr[g.id]),bereit=g=>g.online&&g.erlaubt&&!g.hostkey_falsch&&g.stand!=='abbau';
   for(const [de,en,teil] of [['Online','Online',passt.filter(bereit)],['Offline oder gesperrt','Offline or blocked',passt.filter(g=>!bereit(g))]]){
     if(!teil.length)continue;list.appendChild(fzEl('div','fzgrp',t(de,en)+' · '+teil.length));
     for(const g of teil){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
-      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
+      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark','📝');n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
       tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
+      const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
       row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.auf=true;fzShow()};list.appendChild(row)}}
   if(q&&!passt.length)list.appendChild(fzEl('div','mut fzleer',t('Kein System passt.','No system matches.')));
   const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
@@ -129,6 +131,7 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   for(const [k,v] of [[t('Anmeldung','Sign-in'),t('ed25519 aus dem Tresor · Benutzer ','ed25519 from the vault · user ')+'spark'],[t('Gekoppelt','Paired'),fzZeit(g.seit)],
     [t('Leerlauf trennt','Idle ends'),t('nach ','after ')+d.leerlauf+' min']])dl.append(fzEl('dt','',k),fzEl('dd','',v));
   li.appendChild(dl);
+  const nz=fzNotizFuer(g.id);if(nz){const fo=nz.contains(document.activeElement)?document.activeElement:null;li.appendChild(nz);if(fo&&document.activeElement!==fo){const a=fo.selectionStart,b=fo.selectionEnd;fo.focus();if(a!=null)fo.setSelectionRange(a,b)}}
   const sw=fzEl('div','setrow');const lb=fzEl('div','lbl');lb.append(fzEl('b','',t('Darf sich verbinden','May connect')),fzEl('span','',t('Aus: der Anker wird abgewiesen.','Off: the anchor is refused.')));
   const tg=fzEl('label','tgl'),inp=document.createElement('input');inp.type='checkbox';inp.checked=!!g.erlaubt;inp.disabled=g.stand==='abbau';inp.setAttribute('aria-label',t('Darf sich verbinden','May connect'));tg.append(inp,fzEl('i'));
   inp.onchange=async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({erlaubt:inp.checked})});fzLoad()}catch(e){inp.checked=!inp.checked;fzFehler(e)}};
@@ -166,7 +169,8 @@ async function fzAktZeile(g,box,knopf){let d;try{const r=await api('/api/admin/f
 async function fzAktualisieren(ids){try{const r=await api('/api/admin/fernzugang/aktualisieren',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraete:ids})});const d=await r.json();
     const teile=[[d.gesendet,'gesendet','sent'],[d.aktuell,'schon aktuell','up to date'],[d.alt,'brauchen einmal die Zeile','need the line once'],[d.offline,'offline','offline'],[d.belegt,'mit offener Sitzung','with a session open']]
       .filter(x=>x[0]).map(x=>x[0]+' '+t(x[1],x[2]));fzMsg(t('Aktualisieren auf ','Update to ')+d.version+': '+teile.join(' · '),!d.gesendet);fzLoad()}catch(e){fzFehler(e)}}
-async function fzRemove(g){if(!confirm(t(`„${g.name}“ entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem System alles ab, was er eingerichtet hat (jetzt oder beim nächsten Kontakt). Danach fragt der Spark nach Code oder Passkey.`,`Remove "${g.name}"? The key stops at once; the anchor removes everything it set up on the system (now or at its next contact). Then the Spark asks for a code or passkey.`)))return;
+async function fzRemove(g){if(g.notiz&&confirm(t(`„${g.name}“ hat eine Notiz. Sie wird mit dem System gelöscht. Notiz vorher herunterladen?`,`"${g.name}" has a note. It is deleted with the system. Download the note first?`)))fzNotizLadenDatei(g);
+  if(!confirm(t(`„${g.name}“ entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem System alles ab, was er eingerichtet hat (jetzt oder beim nächsten Kontakt). Danach fragt der Spark nach Code oder Passkey.`,`Remove "${g.name}"? The key stops at once; the anchor removes everything it set up on the system (now or at its next contact). Then the Spark asks for a code or passkey.`)))return;
   try{const r=await api(`/api/admin/fernzugang/geraete/${g.id}`,{method:'DELETE'});const d=await r.json();
     fzMsg(d.stand==='abbau'?t('Entfernt. Der Anker baut sich ab; ist er offline, beim nächsten Kontakt. Von Hand auf dem System: sudo spark-anker entfernen','Removed. The anchor removes itself; when offline, at its next contact. By hand on the system: sudo spark-anker entfernen'):'');FZ.sel='';FZ.auf=false;fzLoad()}catch(e){fzFehler(e)}}
 // „Entsperren“, „Verlängern“ (a fresh code or passkey each time) and „Sperren“
@@ -342,7 +346,7 @@ function fzChip(c,was){c=String(c).replace(/[\r\n]+/g,' ').trim();const b=fzEl('
 function fzEinfuegen(c){if(!FZ.term)return;if(NARROW())fzBlatt(false);const i=c.search(/<[^<>]+>/),s=c.replace(/<[^<>]+>/g,'');FZ.term.paste(s);
   if(i>=0&&FZ.ws&&FZ.ws.readyState===1){const back=s.length-i;if(back>0)FZ.ws.send(new TextEncoder().encode('\x1b[D'.repeat(back)))}FZ.term.focus()}
 // the assistant: only while the switch is on; the commands only kept for it (the last hilfe_befehle, in this page)
-function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);fzZielEnde('');const h=$('fzhilfe');if(!h)return;h.hidden=!(FZ.d&&FZ.d.hilfe);$('fzview').classList.toggle('fzki',!h.hidden);
+function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);fzZielEnde('');const h=$('fzhilfe');if(!h)return;fzSeiteWahl(FZ.seite);$('fzview').classList.toggle('fzki',!!(FZ.d&&FZ.d.hilfe)||!$('fznotizseite').hidden);
   $('fzschirm').checked=false;$('fzantwort').textContent='';$('fzfrage').value='';$('fzgekuerzt').hidden=true;
   const sel=$('fzzeilen'),d=FZ.d||{},n=Number(d.ki_zeilen)||80;sel.textContent='';
   for(const z of [...new Set([...(d.ki_zeilen_wahl||[80,300,1000]),n])].sort((a,b)=>a-b)){const o=fzEl('option','',String(z));o.value=String(z);sel.appendChild(o)}sel.value=String(n)}
@@ -448,7 +452,7 @@ async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden(
 async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
   if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
 function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
-function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.nachher='';FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
+function fzZu(text){fzNotizSpeichern();const ws=FZ.ws;FZ.ws=null;FZ.nachher='';FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
   window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzNeuKnopf(text);fzLoad()}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
 function fzNeuKnopf(text){const g=FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
@@ -506,7 +510,7 @@ function fzFZu(text){FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true
   $('fzfup').onclick=()=>{if(FZ.fs&&FZ.fs.oben)fzListe(FZ.fs.oben)};$('fzfsend').onclick=fzHoch;$('fzfstop').onclick=fzFSchliessen;
   for(const b of $('fztabs').querySelectorAll('button'))b.onclick=()=>fzTab(b.dataset.tab);$('fzentsperren').onclick=fzEntsperren;$('fzverl').onclick=fzEntsperren;$('fzsperren').onclick=fzSperren;
   $('fzneu').onclick=fzKoppelnAuf;$('fzneu2').onclick=fzKoppelnAuf;$('fzkzu').onclick=()=>{$('fzkoppelnmodal').style.display='none'};$('fzvzu').onclick=()=>{$('fzverlaufmodal').style.display='none'};
-  $('fzallev').onclick=()=>fzVerlaufZeigen('');$('fzsuche').oninput=()=>fzShow();FZ.os='linux';for(const b of $('fzos').querySelectorAll('button'))b.onclick=()=>fzOsWahl(b.dataset.os);
+  $('fzallev').onclick=()=>fzVerlaufZeigen('');$('fzsuche').oninput=fzSucheNotiz;for(const b of $('fzsidetabs').querySelectorAll('button'))b.onclick=()=>fzSeiteWahl(b.dataset.w);FZ.os='linux';for(const b of $('fzos').querySelectorAll('button'))b.onclick=()=>fzOsWahl(b.dataset.os);
   for(const id of ['fzkoppelnmodal','fzverlaufmodal']){const m=$(id);m.addEventListener('click',e=>{if(e.target===m)m.style.display='none'});m.addEventListener('keydown',e=>{if(e.key==='Escape')m.style.display='none'})}new MutationObserver(()=>{if(FZ.d)fzChips()}).observe($('fzview'),{attributes:true,attributeFilter:['hidden']})}}
 // ---------------------------------------------------------------- layout A
 function fzZeigen(){$('fzview').hidden=false;$('fzmain').hidden=true;$('fzbox').classList.add('fzoffen');fzMenu();fzLayout();
@@ -549,6 +553,93 @@ function fzTastenreihe(){const v=$('fzview');v.classList.toggle('fzohnetasten');
 // whether the assistant is in sight: suggestions after Enter only then
 function fzSpalteOffen(){const v=$('fzview');if(!v||!v.classList.contains('fzki')||v.hidden)return false;
   if(document.fullscreenElement===v)return v.classList.contains('fzlade');if(NARROW())return v.classList.contains('fzblatt');return !v.classList.contains('fzzu')}
+// ---------------------------------------------------------------- Notizen je System (fernnotiz.py)
+// one note element at a time: in the detail under „Angaben“ or in the column beside the terminal (tab „Notizen“);
+// light markup (# heading, - list, **bold**, `code`, ``` blocks), every code line with „Ins Terminal“ (never Enter),
+// saved while typing, „gehört in den Tresor“ by the panel's fixed rules, the last versions with „Wiederherstellen“
+const FZ_GEHEIM={passwort:['ein Passwort','a password'],schluessel:['ein privater Schlüssel','a private key'],token:['ein Token','a token']};
+function fzNotizAn(){return !!(FZ.d&&FZ.d.notizen)}
+function fzNotizInline(el,text){const rx=/\*\*([^*]+)\*\*|`([^`]+)`/g;let last=0,m;
+  while((m=rx.exec(text))){if(m.index>last)el.appendChild(document.createTextNode(text.slice(last,m.index)));el.appendChild(m[1]!==undefined?fzEl('b','',m[1]):fzEl('code','',m[2]));last=rx.lastIndex}
+  if(last<text.length)el.appendChild(document.createTextNode(text.slice(last)))}
+function fzNotizBild(text,gid){const f=document.createDocumentFragment();let ul=null,code=false;
+  for(const raw of String(text||'').split('\n')){const line=raw.replace(/\s+$/,'');
+    if(/^```/.test(line.trim())){code=!code;ul=null;continue}
+    if(code){if(!line.trim())continue;const r=fzEl('div','fznzcode'),c=fzEl('code','',line);r.appendChild(c);
+      const b=fzEl('button','fznzins',t('Ins Terminal','Into the terminal'));b.type='button';b.onclick=()=>fzNotizTerminal(gid,line);r.appendChild(b);f.appendChild(r);continue}
+    const h=line.match(/^#{1,3}\s+(.*)$/),li=line.match(/^\s*[-*•]\s+(.*)$/);
+    if(li){if(!ul){ul=fzEl('ul','fznzliste');f.appendChild(ul)}const e=fzEl('li');fzNotizInline(e,li[1]);ul.appendChild(e);continue}
+    ul=null;if(!line.trim()){f.appendChild(fzEl('div','fznzleer'));continue}
+    const e=fzEl('div',h?'fznzh':'fznzp');fzNotizInline(e,h?h[1]:line);f.appendChild(e)}
+  return f}
+// „Ins Terminal“: into the open shell of this system, or a shell opens first; the line is typed in, Enter stays with the person
+function fzNotizTerminal(gid,line){line=String(line).replace(/[\r\n]+/g,' ').trim();if(!line)return;
+  if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid&&FZ.ws.readyState===1){fzEinfuegen(line);return}
+  if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
+  const g=((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===gid);if(!g)return;
+  if(!g.online||g.hostkey_falsch||!g.erlaubt||g.stand==='abbau'){fzMsg(t('Das System ist nicht bereit für eine Shell.','The system is not ready for a shell.'),true);return}
+  fzOpen(g).then(()=>{if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid)FZ.nachher=line})}
+async function fzNotizLaden(gid){const n={gid,text:'',lesen:true,t:null,fassungen:[],warnungen:[],edit:false,stand:'',offen:false};FZ.notiz=n;fzNotizZeigen();
+  try{const r=await api('/api/admin/fernzugang/notiz/'+gid);const d=await r.json();if(FZ.notiz!==n)return;Object.assign(n,d,{geladen:true})}
+  catch(e){if(FZ.notiz===n){n.fehler=true;fzFehler(e)}}fzNotizZeigen()}
+// where the note stands now: the column beside the terminal (its tab) or the detail of the selected system
+function fzNotizFuer(gid){if(!fzNotizAn()||!gid)return null;if(!FZ.notiz||FZ.notiz.gid!==gid){fzNotizSpeichern();fzNotizLaden(gid)}return FZ.notizEl||(FZ.notizEl=fzEl('div','fznotiz'))}
+function fzNotizZeigen(){const n=FZ.notiz,box=FZ.notizEl||(FZ.notizEl=fzEl('div','fznotiz'));if(!n)return;
+  const fo=box.contains(document.activeElement)&&document.activeElement.tagName==='TEXTAREA'?document.activeElement:null;
+  if(fo&&n.edit){fzNotizKopf(box,n);fzNotizWarn(box,n);return}       // typing: only head and hints change, the text stays as it is
+  box.textContent='';box.appendChild(fzEl('div','fznzkopf'));fzNotizKopf(box,n);
+  if(!n.geladen){box.appendChild(fzEl('div','mut',n.fehler?t('Nicht geladen.','Not loaded.'):t('Lädt …','Loading …')));return}
+  if(n.edit){const ta=fzEl('textarea','fznztext');ta.id='fznztext';ta.value=n.text;ta.rows=10;ta.spellcheck=false;ta.setAttribute('aria-label',t('Notiz','Note'));
+    ta.placeholder=t('# Überschrift\n- Punkt\n```\nsudo systemctl restart dienst\n```','# Heading\n- item\n```\nsudo systemctl restart service\n```');
+    ta.oninput=()=>{n.text=ta.value;n.stand='tippt';fzNotizKopf(box,n);clearTimeout(n.timer);n.timer=setTimeout(()=>fzNotizSpeichern(),1200)};ta.onblur=()=>fzNotizSpeichern();box.appendChild(ta)}
+  else{const v=fzEl('div','fznzbild');if(n.text.trim())v.appendChild(fzNotizBild(n.text,n.gid));else{v.appendChild(fzEl('div','mut',t('Noch keine Notiz. „Bearbeiten“ zum Schreiben: Dienste, Pfade, Ansprechpartner, Befehle in ```.','No note yet. "Edit" to write: services, paths, contacts, commands in ```.')))}
+    v.ondblclick=()=>fzNotizEdit(true);box.appendChild(v)}
+  box.appendChild(fzEl('div','fznzwarn'));fzNotizWarn(box,n);
+  const fuss=fzEl('label','fzchk fznzlesen'),cb=document.createElement('input');cb.type='checkbox';cb.checked=n.lesen!==false;
+  cb.onchange=()=>{n.lesen=cb.checked;fzNotizSpeichern(true)};fuss.append(cb,document.createTextNode(' '+t('Assistent darf lesen','Assistant may read')),fzEl('span','mut',' · '+t('nur eigenes Modell','own model only')));box.appendChild(fuss);
+  if(n.offen){const fl=fzEl('div','fznzfass');fl.appendChild(fzEl('div','fzgrp',t('Fassungen der Notiz','Versions of the note')));
+    fl.appendChild(fzEl('div','fznzfrow',(n.t?fzZeit(n.t):'–')+' · '+t('aktuell','current')));
+    for(const f of n.fassungen||[]){const r=fzEl('div','fznzfrow');r.append(fzEl('span','',fzZeit(f.t)+' · '+f.zeichen+t(' Zeichen',' characters')),fzEl('span','fzfill'));
+      const b=fzEl('button','fzlink',t('Wiederherstellen','Restore'));b.type='button';b.onclick=()=>fzNotizZurueck(f.t);r.appendChild(b);fl.appendChild(r)}
+    fl.appendChild(fzEl('div','fh',t('Die letzten 10 Fassungen bleiben erhalten; eine neue beginnt, wenn 10 Minuten nichts gespeichert wurde.','The last 10 versions are kept; a new one starts when nothing was saved for 10 minutes.')));box.appendChild(fl)}}
+function fzNotizKopf(box,n){const k=box.querySelector('.fznzkopf');if(!k)return;k.textContent='';
+  k.append(fzEl('b','','📝 '+t('Notizen','Notes')),fzEl('span','fznzstand'+(n.stand==='fehler'?' bad':''),n.stand==='tippt'?'…':n.stand==='speichert'?t('speichert …','saving …'):n.stand==='fehler'?t('nicht gespeichert','not saved'):n.t?'✓ '+t('gespeichert ','saved ')+fzUhr(n.t):''),fzEl('span','fzfill'));
+  if(n.edit)for(const [l,tip,fn] of [['B',t('Fett','Bold'),()=>fzNotizMark('**','**')],['•',t('Liste','List'),()=>fzNotizZeile('- ')],['</>',t('Code-Block','Code block'),()=>fzNotizMark('```\n','\n```')]]){
+    const b=fzEl('button','b fznzt',l);b.type='button';b.title=tip;b.setAttribute('aria-label',tip);b.onmousedown=e=>e.preventDefault();b.onclick=fn;k.appendChild(b)}
+  if(n.fassungen&&n.fassungen.length){const f=fzEl('button','b fznzt',t('Fassungen','Versions')+' ('+n.fassungen.length+')');f.type='button';f.setAttribute('aria-expanded',String(!!n.offen));f.onclick=()=>{n.offen=!n.offen;fzNotizZeigen()};k.appendChild(f)}
+  const e=fzEl('button','b fznzt'+(n.edit?' p':''),n.edit?t('Fertig','Done'):t('Bearbeiten','Edit'));e.type='button';e.onclick=()=>fzNotizEdit(!n.edit);e.disabled=!n.geladen;k.appendChild(e)}
+function fzNotizWarn(box,n){const w=box.querySelector('.fznzwarn');if(!w)return;w.textContent='';
+  for(const x of n.warnungen||[]){const r=fzEl('div','note warn fznzw'),was=FZ_GEHEIM[x.art]||FZ_GEHEIM.token;
+    r.appendChild(document.createTextNode('⚠ '+t(`Zeile ${x.zeile} sieht aus wie ${was[0]}. Das gehört in den Tresor, nicht in die Notiz. `,`Line ${x.zeile} looks like ${was[1]}. That belongs in the vault, not in the note. `)));
+    const b=fzEl('button','fzlink',t('Entfernen','Remove'));b.type='button';b.onclick=()=>fzNotizWeg(x.zeile);r.appendChild(b);w.appendChild(r)}}
+function fzNotizEdit(on){const n=FZ.notiz;if(!n)return;if(!on)fzNotizSpeichern();n.edit=!!on;fzNotizZeigen();if(on){const ta=$('fznztext');if(ta)ta.focus()}}
+function fzNotizMark(a,b){const ta=$('fznztext'),n=FZ.notiz;if(!ta||!n)return;const s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;
+  ta.value=v.slice(0,s)+a+v.slice(s,e)+b+v.slice(e);ta.setSelectionRange(s+a.length,e+a.length);ta.focus();ta.oninput()}
+function fzNotizZeile(p){const ta=$('fznztext');if(!ta)return;const s=ta.selectionStart,v=ta.value,i=v.lastIndexOf('\n',s-1)+1;
+  if(v.slice(i,i+p.length)!==p){ta.value=v.slice(0,i)+p+v.slice(i);ta.setSelectionRange(s+p.length,s+p.length)}ta.focus();ta.oninput()}
+// „Entfernen“ of a line the panel took for a secret: the line goes, the note is saved at once
+function fzNotizWeg(zeile){const n=FZ.notiz;if(!n)return;const l=n.text.split('\n');if(zeile<1||zeile>l.length)return;l.splice(zeile-1,1);n.text=l.join('\n');
+  const ta=$('fznztext');if(ta)ta.value=n.text;fzNotizSpeichern(true).then(()=>{if(!ta)fzNotizZeigen()})}
+async function fzNotizSpeichern(jetzt){const n=FZ.notiz;if(!n||!n.geladen)return;clearTimeout(n.timer);if(n.stand!=='tippt'&&!jetzt)return;
+  if(n.laeuft){n.nochmal=true;return}n.laeuft=true;n.stand='speichert';fzNotizKopf(FZ.notizEl,n);const text=n.text,lesen=n.lesen!==false;
+  try{const r=await api('/api/admin/fernzugang/notiz/'+n.gid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,lesen})});const d=await r.json();
+    n.t=d.t;n.fassungen=d.fassungen||[];n.warnungen=d.warnungen||[];n.stand=n.text===text?'':'tippt';
+    const g=((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===n.gid);if(g&&g.notiz!==!!text.trim()){g.notiz=!!text.trim();if(!FZ.ws)fzShow()}}
+  catch(e){n.stand='fehler';fzFehler(e)}
+  n.laeuft=false;if(FZ.notiz===n){fzNotizZeigen();if(n.nochmal||n.stand==='tippt'){n.nochmal=false;n.timer=setTimeout(()=>fzNotizSpeichern(true),400)}}}
+async function fzNotizZurueck(tt){const n=FZ.notiz;if(!n)return;await fzNotizSpeichern();
+  try{const r=await api(`/api/admin/fernzugang/notiz/${n.gid}/wiederherstellen`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:tt})});
+    Object.assign(n,await r.json(),{edit:false,stand:''});fzMsg(t('Fassung wiederhergestellt.','Version restored.'))}catch(e){fzFehler(e)}fzNotizZeigen()}
+function fzNotizLadenDatei(g){const a=document.createElement('a');a.href=`/api/admin/fernzugang/notiz/${g.id}/laden`;a.download='';document.body.appendChild(a);a.click();a.remove()}
+// the column beside the terminal: tabs „Assistent“ and „Notizen“ when both are there, else the one that is
+function fzSeiteWahl(w){const ki=!!(FZ.d&&FZ.d.hilfe),no=fzNotizAn()&&!!(FZ.sitz&&FZ.sitz.gid);FZ.seite=w==='notiz'&&no?'notiz':ki?'ki':no?'notiz':'ki';
+  $('fzsidetabs').hidden=!(ki&&no);for(const b of $('fzsidetabs').querySelectorAll('button')){const on=b.dataset.w===FZ.seite;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
+  $('fzhilfe').hidden=!ki||FZ.seite!=='ki';const p=$('fznotizseite');p.hidden=!no||FZ.seite!=='notiz';
+  if(!p.hidden){const el=fzNotizFuer(FZ.sitz.gid);if(el&&el.parentNode!==p){p.textContent='';p.appendChild(el)}}}
+// the search finds note text too: a snippet per system, asked once the typing pauses
+function fzSucheNotiz(){clearTimeout(FZ.qt);const q=$('fzsuche').value.trim();if(!fzNotizAn()||q.length<2){FZ.treffer=null;fzShow();return}
+  fzShow();FZ.qt=setTimeout(async()=>{try{const r=await api('/api/admin/fernzugang/notizen/suche?q='+encodeURIComponent(q));const d=await r.json();
+    if($('fzsuche').value.trim()===q){FZ.treffer={q,t:d.treffer||{}};fzShow()}}catch(e){fzFehler(e)}},300)}
 window.fzLoad=fzLoad;
 // the menu entry Fernzugang: only for an admin (never the Verwalter) while Funktionen → Fernzugang zu Servern is on (whoami)
 window.fzStart=who=>{const on=!!(who&&who.fernzugang);document.querySelectorAll('nav button[data-s=fern]').forEach(b=>b.hidden=!on)};

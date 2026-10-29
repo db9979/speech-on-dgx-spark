@@ -391,6 +391,7 @@
     "fernzugang_ki_zeilen": 80,
     "fernbild": false,
     "fernbild_zwischenablage": false,
+    "fernzugang_notizen": false,
     "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,

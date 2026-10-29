@@ -1772,5 +1772,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Zwischenablage beim Bildschirm** (Funktionen → Zugang → „Zwischenablage beim Bildschirm“; baut auf „Bildschirm im Fernzugang“): Text zwischen deinem Browser und dem System austauschen, während du „Steuern“ hast: kopierst du dort etwas, landet es in deiner Zwischenablage; „Zwischenablage senden“ schickt deine hinüber.
 
+- **Notizen im Fernzugang** (Funktionen → Zugang → „Notizen im Fernzugang“; baut auf „Fernzugang zu Servern“): Zu jedem System eine eigene Notiz: im Kasten „Notizen“ unter „Angaben“ und im Reiter „Notizen“ neben dem Assistenten am Terminal, auch im Vollbild.
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

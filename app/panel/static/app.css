@@ -2976,6 +2976,23 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzgriff:hover::after,.fzgriff:focus-visible::after,.fzgriff.zieht::after{background:var(--acc);top:0;bottom:0}
 .fzside{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .fzhilfe{display:flex;flex-direction:column;flex:1;min-height:0}.fzhilfe[hidden]{display:none}
+/* Notizen je System (fernnotiz.py): the box under „Angaben“ and the tab beside the assistant */
+.fzsidetabs{flex:none;display:flex;border-bottom:1px solid var(--line)}.fzsidetabs[hidden]{display:none}
+.fzsidetabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:9px 6px;color:var(--mut);font:inherit;cursor:pointer}
+.fzsidetabs button.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+.fznotizseite{flex:1;min-height:0;overflow:auto;padding:10px 12px}.fznotizseite[hidden]{display:none}.fznotizseite .fznotiz{border:0;padding:0;margin:0}
+.fznotiz{margin:12px 0 4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;min-width:0}
+.fznzkopf{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}.fznzstand{font-size:12px;color:var(--ok,#16a34a)}.fznzstand.bad{color:var(--bad,#dc2626)}
+.b.fznzt{padding:3px 9px;font-size:12px;min-height:0}
+.fznztext{width:100%;box-sizing:border-box;min-height:180px;resize:vertical;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+.fznzbild{overflow-wrap:anywhere;line-height:1.45}.fznzh{font-weight:700;margin:4px 0}.fznzp{margin:2px 0}.fznzleer{height:6px}.fznzliste{margin:2px 0;padding-left:20px}
+.fznzbild code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+.fznzcode{display:flex;align-items:center;gap:8px;margin:5px 0;padding:7px 8px 7px 10px;border-radius:8px;background:#0f172a;color:#e2e8f0}
+.fznzcode code{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;color:inherit}
+.fznzins{flex:none;border:0;border-radius:6px;padding:3px 8px;background:var(--acc);color:#fff;font:600 12px var(--font,system-ui);cursor:pointer}
+.fznzw{margin:6px 0;font-size:13px}.fznzlesen{margin-top:8px}.fznzfass{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+.fznzfrow{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px}.fznzmark{margin-left:4px;font-size:12px}
+.fznzsnip{display:block;color:var(--mut)}.fznzsnip mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}
 .fzshead{flex:none;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line)}.fzshead b{flex:1}
 .fzfrageform{flex:none;display:flex;gap:6px;align-items:flex-end;padding:8px 10px 0;border-top:1px solid var(--line)}.fzfrageform textarea{flex:1;min-width:0;resize:none}
 .fzsend{flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:var(--acc);color:#fff;cursor:pointer}.fzsend svg{width:18px;height:18px}

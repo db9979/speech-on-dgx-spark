@@ -4370,6 +4370,13 @@
 "titel": "Fernzugang: Anker aktualisieren",
 "text": "Auf einem gekoppelten System mit Anker vor 1.3.0: in der Zeile „Aktualisieren“, die Zeile mit „In die Shell einfügen“ in eine offene Shell setzen, Enter selbst drücken; danach zeigt das System die neue Version und bleibt gekoppelt. Später mit einem Anker ab 1.3.0: „Aktualisieren“ ohne offene Sitzung, nach etwa einer Minute steht die neue Version da; mit offener Sitzung sagt die Seite, dass erst getrennt werden muss. In den Logs „fernzugang: aktualisieren | ok“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P649",
+"v": 1231,
+"titel": "Fernzugang: Notizen je System",
+"text": "Funktionen → Fernzugang zu Servern → Notizen im Fernzugang an. Seite entsperren, ein System öffnen: unter Angaben erscheint der Kasten Notizen. Eine Überschrift, eine Liste und einen Code-Block mit uptime schreiben; nach einer Sekunde steht ✓ gespeichert. Shell öffnen, rechts den Reiter 📝 Notizen wählen und bei uptime auf Ins Terminal: der Befehl steht in der Zeile, ohne Enter. Eine Zeile passwort: geheim123 tippen: die Warnung gehört in den Tresor erscheint mit Zeile entfernen. Links nach einem Wort aus der Notiz suchen: das System zeigt 📝 mit Ausschnitt. Assistent fragen, was in der Notiz steht (Haken an), dann Haken aus und erneut fragen: er kennt sie nicht mehr. Fassungen: eine ältere wiederherstellen. iPhone: Spark verwalten → Fernzugang → System → Notiz zeigt dieselbe Notiz. Entfernen des Systems bietet zuerst den Download an.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

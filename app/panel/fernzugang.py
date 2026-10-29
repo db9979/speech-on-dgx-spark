@@ -238,7 +238,7 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
-         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren")
+         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -565,7 +565,9 @@ def for_live(now=None):
     offen = [{"art": ARTEN.get(x.art, ARTEN["shell"])[0], "system": sysname(x.gid),
               "admin": (x.admin_name if named else "Admin"), "herkunft": "Internet" if x.herkunft == "internet" else "Zuhause",
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
+    import fernnotiz
     return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
+            "notizen": fernnotiz.anzahl() if fernnotiz.on() else 0,
             "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
 
 
@@ -587,7 +589,8 @@ def live_sub(d):
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
-            + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else ""))
+            + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
+            + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else ""))
 
 
 # ---------------------------------------------------------------- Dienst-Wächter
@@ -1321,6 +1324,8 @@ def _forget(gid, why):
         if d["geraete"].pop(gid, None) is None:
             return
         _write(d)
+    import fernnotiz
+    fernnotiz.forget(gid)
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")
     _live("Fern-Server abgebaut")
@@ -1578,6 +1583,9 @@ def admin_get(request: Request):
            "ki_zeilen_wahl": sorted(set(KI_ZEILEN_WAHL) | {ki_zeilen(c)}), "ki_zeichen": KI_ZEICHEN, "ziel_min": ZIEL_MIN,
            "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c),
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
+    import fernnotiz
+    out["notizen"] = notizen = fernnotiz.on(c)
+    out["notiz_max"] = fernnotiz.MAX_BYTES
     rows = []
     now = time.time()
     import fernanker
@@ -1590,7 +1598,8 @@ def admin_get(request: Request):
                      "erlaubt": x.get("erlaubt", True), "hostkey_falsch": bool(x.get("hostkey_falsch")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
-                     "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv)})
+                     "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
+                     "notiz": notizen and fernnotiz.has(gid)})
     out["geraete"] = rows
     out["offen"] = [{"id": s.id, "geraet": s.gid, "seit": int(s.seit), "art": s.art, "admin": s.admin_name,
                      "client": s.client, "herkunft": s.herkunft, "ip": s.ip_kurz} for s in SITZUNG.values()]
@@ -1833,6 +1842,8 @@ async def admin_remove(gid: str, request: Request):
             x.pop(k, None)
         x.update(stand="abbau", abbau_seit=int(time.time()), erlaubt=False)
         _write(d)
+    import fernnotiz
+    fernnotiz.forget(gid)                    # the page offered to download it first
     guard.log("fernzugang_revoked", detail="Fern-Server entfernt")
     a = ANKER.get(gid)
     if a is None:
@@ -1912,8 +1923,9 @@ def _klar(x, n):
 
 
 def _material(s, befehle, schirm):
-    """What the model gets as data: the system's name and OS (the anchor's word), the own last commands and maybe the
-    screen, inside chat.wrap_outside's block (its markers broken up)."""
+    """What the model gets as data: the system's name and OS (the anchor's word), the own last commands, maybe the
+    screen and the admin's note on the system (fernnotiz, only with „Assistent darf lesen“), inside
+    chat.wrap_outside's block (its markers broken up)."""
     import chat
     g = _read()["geraete"].get(s.gid) or {}
     teile = [f"System: {_klar(g.get('name'), 40)}", f"Betriebssystem: {_klar(g.get('os'), 80) or 'unbekannt'}"]
@@ -1921,6 +1933,10 @@ def _material(s, befehle, schirm):
         teile.append("Letzte eigene Befehle, der neueste zuletzt:\n" + "\n".join(f"{i}. {b}" for i, b in enumerate(befehle, 1)))
     if schirm:
         teile.append("Bildschirm, die letzten Zeilen:\n" + schirm)
+    import fernnotiz
+    notiz = fernnotiz.fuer_modell(s.gid)        # only with „Assistent darf lesen“; data like the rest, never a command
+    if notiz.strip():
+        teile.append("Notiz des Admins zu diesem System:\n" + notiz)
     return chat.wrap_outside("\n\n".join(teile))
 
 

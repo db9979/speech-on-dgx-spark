@@ -281,6 +281,7 @@
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
         <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
         <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
+        <div class="setrow"><div class="lbl"><b>Notizen im Fernzugang</b><span>Je System eine Notiz mit Befehlen zum Einfügen, versiegelt gespeichert. Der Assistent liest sie nur mit „Assistent darf lesen“.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_notizen"><i></i></label></div>
         <div class="setrow"><div class="lbl"><b>Spontanhilfe</b><span>Einmal helfen: die Person teilt auf /hilfe ihren Bildschirm, ohne Installation. Nur Admins, im Reiter Spontanhilfe der entsperrten Seite.</span></div><label class="tgl"><input type="checkbox" id="chat.spontanhilfe"><i></i></label></div>
         <div data-show="chat.spontanhilfe"><label for="chat.spontanhilfe_max_min">Höchstdauer einer Hilfe (Minuten)</label><input class="num" id="chat.spontanhilfe_max_min" type="number" min="15" max="720"><div class="fh">15 bis 720, Standard 180. Eine Hilfe beginnt mit 60 Minuten, „Verlängern“ gibt je 60 mehr bis hierher.</div></div>
         <div class="fh">Koppeln, die Shell und den Bildschirm öffnen unter Fernzugang → Systeme, helfen unter Fernzugang → Spontanhilfe.</div>
@@ -1187,6 +1188,8 @@
     </div>
     <div class="fzgriff" id="fzgriff" role="separator" aria-orientation="vertical" aria-controls="fzside" tabindex="0" title="Ziehen ändert die Breite, Doppelklick klappt zu" aria-label="Breite des Assistenten"></div>
     <aside class="fzside" id="fzside">
+      <div class="fzsidetabs" id="fzsidetabs" role="tablist" aria-label="Spalte neben dem Terminal" hidden><button type="button" role="tab" data-w="ki" id="fzseiteki">✦ Assistent</button><button type="button" role="tab" data-w="notiz" id="fzseitenotiz">📝 Notizen</button></div>
+      <div class="fznotizseite" id="fznotizseite" hidden></div>
       <div class="fzhilfe" id="fzhilfe" hidden>
         <div class="fzshead"><b>✦ Assistent</b><button class="fzicon" type="button" id="fzspaltezu" title="Assistent zuklappen" aria-label="Assistent zuklappen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
         <div class="fzziel" id="fzziel" hidden><div class="fzzielkopf"><b>Ziel</b><span class="fzzieltext" id="fzzieltext"></span><button class="b" type="button" id="fzzielende">Ziel beenden</button></div><div class="fh" id="fzzielstand" aria-live="polite"></div><div class="fzzielchip" id="fzzielchip"></div></div>

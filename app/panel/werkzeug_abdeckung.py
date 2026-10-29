@@ -249,6 +249,7 @@ WITHOUT = {
     "fernbild": "fernbild.py: der Bildschirm eines Systems nur vom Admin im eigenen Browser, erst nur ansehen; das Modell bekommt kein Werkzeug und nie ein Bild",
     "fernbildablage": "fernbild.py: die Zwischenablage nur während „Steuern“ des Admins, nach festen Regeln im Panel; kein Werkzeug",
     "fernzuganghilfe": "fernzugang.py: der Assistent neben dem Terminal antwortet nur mit Text, jeder Befehl wird ein Vorschlag zum Einfügen, Enter drückt der Mensch; kein Werkzeug, er tippt nie",
+    "fernnotizen": "fernnotiz.py: Notizen je System schreibt nur der Admin auf der entsperrten Seite; das Modell liest sie nur als Daten mit „Assistent darf lesen“, kein Werkzeug",
     "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",
     "wachposten": "wachposten.py: feste Regeln auf dem Änderungsprotokoll melden den Admins, nichts zu fragen, kein Werkzeug",

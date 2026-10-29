@@ -800,9 +800,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "7854fa1ede",
+        "stand": "f8cb62f921",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -863,12 +863,14 @@ SEITEN = {
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
                "{fernbild.FPS} Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
-               "schlägt vor, getippt wird nie von selbst.",
+               "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
+               "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell).",
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
                "{fernbild.FPS} pictures a second. The assistant (fernzugang.admin_help) asks only the own model and "
-               "suggests, nothing is typed by itself.")),
+               "suggests, nothing is typed by itself. Notes per system are stored sealed, "
+               "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell).")),
             S("s7", "schritt", ("Spontanhilfe", "Spontaneous help"),
               ("Nummer {spontanhilfe.NUMMER_S|min} min", "number {spontanhilfe.NUMMER_S|min} min"),
               ("Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für {spontanhilfe.NUMMER_S|min} Minuten, nach "
@@ -898,11 +900,12 @@ SEITEN = {
             ("{fernzugang.HALTEN_S} s", ("wartet eine abgerissene Shell", "a dropped shell waits"), "fernzugang.HALTEN_S"),
             ("{fernzugang.MAX_ANKER}", ("gekoppelte Systeme höchstens", "paired systems at most"), "fernzugang.MAX_ANKER"),
             ("{fernbild.FPS}", ("Bilder je Sekunde höchstens", "pictures a second at most"), "fernbild.FPS"),
+            ("{fernnotiz.FASSUNGEN}", ("Fassungen einer Notiz bleiben", "versions of a note stay"), "fernnotiz.FASSUNGEN"),
             ("{spontanhilfe.NUMMER_S|min} min", ("gilt eine Nummer der Spontanhilfe", "a number of spontaneous help is valid"), "spontanhilfe.NUMMER_S"),
         ],
         "einstellen": [
-            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm und Spontanhilfe.",
-             "Features → Remote access to servers: switch on, pair systems, screen and spontaneous help."),
+            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Spontanhilfe und Notizen.",
+             "Features → Remote access to servers: switch on, pair systems, screen, spontaneous help and notes."),
         ],
         "sehen": [
             ("Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt.",
@@ -917,6 +920,7 @@ SEITEN = {
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
+            ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
         ],
         "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe"],
         "heute": [],
