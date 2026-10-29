@@ -3266,11 +3266,13 @@ class ShellForReal(_ShellPage):
             await pg.click("#shwlink")
             await pg.click("#shkopie")
             await pg.wait_for_function("$('updtoast').style.display==='block'", timeout=5000)   # copied or not: a toast
-            # 0:00: the number goes, „Abgelaufen – Neue Nummer“ comes; the panel moves it to the history
-            await pg.evaluate("SH.nbis=SH.lbis=Date.now()/1000-1")
-            await pg.wait_for_function(f"({shown})('shabgelaufen')&&!({shown})('shnummer')&&!({shown})('shwtabsbox')", timeout=5000)
+            # 0:00: the number goes, „Abgelaufen – Neue Nummer“ comes; the panel moves it to the history. The panel's
+            # clock first: at 0:00 the page asks the panel again (and every 3 s anyway), and a panel that still
+            # counted would bring the number back (red on GitHub with V01.1.243)
             h = sh.current()
             h.nummer_bis = h.link_bis = time.time() - 1
+            await pg.evaluate("SH.nbis=SH.lbis=Date.now()/1000-1")
+            await pg.wait_for_function(f"({shown})('shabgelaufen')&&!({shown})('shnummer')&&!({shown})('shwtabsbox')", timeout=15000)
             await pg.evaluate("shLoad()")
             await pg.wait_for_function("$('shverlauflist').textContent.includes('Nummer verfallen')&&$('shlaeufth').textContent==='Läuft · 0'", timeout=15000)
             self.assertTrue(await pg.evaluate(f"({shown})('shabgelaufen')"))
