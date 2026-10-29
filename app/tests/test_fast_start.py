@@ -71,8 +71,8 @@ class LargeMemory(unittest.TestCase):
         facts = [{"id": "old1", "text": "Der Zahnarzt heißt Doktor Wurzelbaum", "created": 1, "src": "said"}]
         facts += [{"id": f"f{i}", "text": f"Notiz {i}: ein langer Satz, damit das Gedächtnis groß genug wird",
                    "created": 2 + i, "src": "said"} for i in range(150)]
-        chat.profiles._write(chat.profiles._path(uid, "memory.json"), facts)
-        self.addCleanup(chat.profiles._write, chat.profiles._path(uid, "memory.json"), [])
+        chat.profiles.write_own(uid, "memory.json", facts)
+        self.addCleanup(chat.profiles.write_own, uid, "memory.json", [])
         ask(p, [{"role": "user", "content": "Wie heißt mein Zahnarzt?"}])
         call = streamed()[0]
         self.assertNotIn("Wurzelbaum", system_of(call))            # not in the fixed core ...

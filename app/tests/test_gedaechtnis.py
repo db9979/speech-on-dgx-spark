@@ -170,7 +170,7 @@ class Panel(unittest.TestCase):
         c, uid = profile("Gedc")
         helpers.set_config(memory=True, memory_check=True)
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), [
+            profiles.write_own(uid, "memory.json", [
                 {"id": "f1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True},
                 {"id": "f2", "text": "Bruder heißt Tim.", "created": int(time.time()) - 5 * DAY}])
         d = c.get("/api/profile/memory").json()
@@ -203,7 +203,7 @@ class Panel(unittest.TestCase):
         c, uid = profile("Gedd")
         helpers.set_config(memory=True, memory_check=True)
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), [
+            profiles.write_own(uid, "memory.json", [
                 {"id": "f1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True}])
 
         def system():
@@ -232,7 +232,7 @@ class Versions(unittest.TestCase):
         profiles.remember(uid, "Wohnt in Karlsruhe.", src="fix", version="fix")       # switch off: a second fact
         self.assertEqual(len(profiles.memory(uid)), 2)
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), [])
+            profiles.write_own(uid, "memory.json", [])
         helpers.set_config(memory=True, memory_check=True)
         profiles.remember(uid, "Wohnt in Pforzheim.", src="said")
         profiles.remember(uid, "Mag Tee.", src="said")
@@ -289,14 +289,10 @@ class Ask(unittest.TestCase):
         c, uid = profile(name)
         helpers.set_config(memory=True, memory_check=True, memory_ask=True)
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), [
+            profiles.write_own(uid, "memory.json", [
                 {"id": "g1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True},
                 {"id": "g2", "text": "Mag Tee.", "created": int(time.time()) - 5 * DAY}])
-            try:
-                import os
-                os.remove(profiles._path(uid, "memory-ask.json"))
-            except OSError:
-                pass
+            profiles.drop_own(uid, "memory-ask.json")
         return c, uid
 
     def say(self, c, text, convo):
@@ -324,7 +320,7 @@ class Ask(unittest.TestCase):
         with profiles._lock:
             facts = profiles.memory(uid) + [{"id": "g3", "text": "Fährt einen Golf GTI.", "created": int(time.time()) - 400 * DAY,
                                              "auto": True}]
-            profiles._write(profiles._path(uid, "memory.json"), facts)
+            profiles.write_own(uid, "memory.json", facts)
         self.assertNotIn("Stimmt das noch", self.say(c, "Wie spät ist es?", "f2"))
         self.assertIn("Stimmt das noch", self.say(c, "Mein Golf GTI?", "f3"))
         self.say(c, "Nein", "f3")                                   # bare no: nothing changes
@@ -332,7 +328,7 @@ class Ask(unittest.TestCase):
         # three a day at most
         d = g._ask_read(uid)
         d["asked"], d["days"] = {}, {time.strftime("%Y-%m-%d"): g.ASK_DAY}
-        profiles._write(g._ask_file(uid), d)
+        profiles.write_own(uid, "memory-ask.json", d)
         self.assertNotIn("Stimmt das noch", self.say(c, "Mein Golf GTI?", "f4"))
 
     def test_a_correction_becomes_a_version(self):
@@ -376,7 +372,7 @@ class Topics(unittest.TestCase):
         c, uid = profile("Gedt")
         helpers.set_config(memory=True, memory_check=True, memory_topics=True)
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), [
+            profiles.write_own(uid, "memory.json", [
                 {"id": "t1", "text": "Arbeitet bei Bosch.", "created": int(time.time())},
                 {"id": "t2", "text": "Mag Tee.", "created": int(time.time())}])
         r = c.post("/api/profile/memory/t1/topic", json={"topic": "arbeit"})
@@ -565,7 +561,7 @@ class FullCard(unittest.TestCase):
         facts = [{"id": f"{i:08x}", "text": f"Gesagt {i}.", "created": 1_760_000_000 + i, "src": "said",
                   "confirmed": 1_760_000_000 + i} for i in range(profiles.MAX_FACTS)]
         with profiles._lock:
-            profiles._write(profiles._path(uid, "memory.json"), facts)
+            profiles.write_own(uid, "memory.json", facts)
         profiles._full_said.pop(uid, None)
         self.assertIs(profiles.remember(uid, "Noch etwas.", src="said"), profiles.FULL)
         card = next(x for x in vorgaenge.view(uid)["items"] if x["art"] == g.FULL_CARD)

@@ -100,8 +100,7 @@ class RoomLive(unittest.TestCase):
         room.ROOMS[(uid, "page0001")] = dict(room._room(uid, "page0001"), lines=[(NOW[0], "geheim gesagt")])
         a.post("/api/room/stop", json={"room": "page0001"})
         self.assertEqual(a.get("/api/room/active").json()["rooms"], [])
-        with open(roomlive._hist_file(uid)) as f:
-            self.assertNotIn("geheim", f.read())
+        self.assertNotIn("geheim", json.dumps(profiles.read_own(uid, "room-history.json", [])))
 
     def test_end_from_elsewhere_reaches_the_page(self):
         a, uid = profile("Rl Clara")

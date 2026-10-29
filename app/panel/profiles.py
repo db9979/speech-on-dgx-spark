@@ -37,13 +37,35 @@ def _path(*parts):
     return os.path.join(USERS_DIR, *parts)
 
 
-def _write_convos(uid, items):
-    """convos.json without indenting: up to 2 MB written on every saved turn, a third less to write (code check B6)."""
-    write_json(_path(uid, "convos.json"), items, mode=0o600, ensure_ascii=False, dir_mode=0o700)
-
-
 def _write(path, data):
     write_json(path, data, indent=1, mode=0o600, ensure_ascii=False, dir_mode=0o700)
+
+
+# ---------------------------------------------------------------- the profile's own data (plan nutzerwissen, Stufe 4)
+# Memory, conversations and what the Spark learned about a person are read and written only here (read_own,
+# write_own, drop_own), never with open() or _write on their path (test_siegel): so they can be sealed at rest in one
+# place. Written without indenting: convos.json (up to 2 MB) is written on every saved turn (code check B6).
+def read_own(uid, name, default=None):
+    """The content of users/<uid>/<name>, else default (missing or broken file)."""
+    try:
+        with open(_path(uid, name), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def write_own(uid, name, data):
+    """users/<uid>/<name> atomically (common.write_json), only for the profile's service user."""
+    write_json(_path(uid, name), data, mode=0o600, ensure_ascii=False, dir_mode=0o700)
+
+
+def drop_own(uid, name):
+    """Deletes users/<uid>/<name>; True when there was one."""
+    try:
+        os.remove(_path(uid, name))
+        return True
+    except FileNotFoundError:
+        return False
 
 
 # One proposal per profile and module waiting for a yes: USERS_DIR/<uid>/<name>-pending.json with "t" (when) and
@@ -1093,11 +1115,7 @@ MAX_CONVOS, MAX_MSGS, MAX_MSG_LEN = 50, 60, 20000
 
 
 def convos(uid):
-    try:
-        with open(_path(uid, "convos.json")) as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return []
+    return read_own(uid, "convos.json", [])
 
 
 def save_convo(uid, c):
@@ -1207,7 +1225,7 @@ def _clean_convo(c, uid=None):
 
 def _store_convo(uid, item):
     rest = [x for x in convos(uid) if x["id"] != item["id"]]
-    _write_convos(uid, sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+    write_own(uid, "convos.json", sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
     _tell(uid, item["id"])
 
 
@@ -1233,7 +1251,7 @@ def append_convo(uid, cid, title, msgs):
 
 def delete_convo(uid, cid):
     with _lock:
-        _write_convos(uid, [x for x in convos(uid) if x["id"] != cid])
+        write_own(uid, "convos.json", [x for x in convos(uid) if x["id"] != cid])
     _tell(uid, cid, gone=True)
 
 
@@ -1329,11 +1347,7 @@ def remove_reminders(uid, ids):
 
 # ---------------------------------------------------------------- memory
 def memory(uid):
-    try:
-        with open(_path(uid, "memory.json")) as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return []
+    return read_own(uid, "memory.json", [])
 
 
 MAX_PREV = 5   # earlier wordings kept per fact (gedaechtnis.py, Fassungen)
@@ -1432,7 +1446,7 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
         if item is not None and src == "auto" and gedaechtnis.confirmed(item):
             # learned by itself against a value the person said or confirmed: only an offer, never a replacement
             if gedaechtnis.offer(item, text, convo, now, name):
-                _write(_path(uid, "memory.json"), facts)
+                write_own(uid, "memory.json", facts)
                 res = ("offer", dict(item))
         elif item is not None:
             if item["text"] != text:
@@ -1447,7 +1461,7 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
                 item["convo"] = convo
             # the same sentence twice would be noise: an older twin goes
             facts = [x for x in facts if x is item or x["text"].lower() != text.lower()]
-            _write(_path(uid, "memory.json"), facts)
+            write_own(uid, "memory.json", facts)
             res = ("place", closed)
         else:
             facts = [x for x in facts if x["text"].lower() != text.lower()]
@@ -1466,7 +1480,7 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
                     _full_said[uid] = now
                 res = ("full", log)
             else:
-                _write(_path(uid, "memory.json"), facts)
+                write_own(uid, "memory.json", facts)
                 res = ("new", gone)
     if res is None:          # learned by itself, the same value as the confirmed one or asked before: nothing new
         return None
@@ -1509,7 +1523,7 @@ def change_fact(uid, fact_id, text):
         item["src"] = "hand"
         # the same sentence twice would be noise: an older twin goes
         facts = [x for x in facts if x is item or x["text"].lower() != text.lower()]
-        _write(_path(uid, "memory.json"), facts)
+        write_own(uid, "memory.json", facts)
     return text
 
 
@@ -1528,7 +1542,7 @@ def restore_fact(uid, fact_id, i):
         item["text"], item["src"], item["changed"] = back["text"][:MAX_FACT_LEN], "hand", now
         item["confirmed"] = now
         item.pop("auto", None)
-        _write(_path(uid, "memory.json"), facts)
+        write_own(uid, "memory.json", facts)
     return item
 
 
@@ -1550,7 +1564,7 @@ def undo_fact(uid, fact_id, ok):
         if not item.get("changed"):
             was_full = memory_full(uid, facts)
             facts = [x for x in facts if x is not item]
-            _write(_path(uid, "memory.json"), facts)
+            write_own(uid, "memory.json", facts)
             how = "geloescht"
         elif prev and prev[0].get("until") == item["changed"]:
             back = prev.pop(0)
@@ -1566,7 +1580,7 @@ def undo_fact(uid, fact_id, ok):
                 item["auto"] = True
             else:
                 item.pop("auto", None)
-            _write(_path(uid, "memory.json"), facts)
+            write_own(uid, "memory.json", facts)
             how = "zurueckgeholt"
         else:
             return "gleich"
@@ -1589,7 +1603,7 @@ def forget(uid, fact_id=None, text=None):
             keep = [x for x in facts if t not in x["text"].lower()]
         else:
             keep = []
-        _write(_path(uid, "memory.json"), keep)
+        write_own(uid, "memory.json", keep)
     if len(keep) < len(facts) and memory_full(uid, facts):   # room again: the card „Gedächtnis voll“ closes
         import gedaechtnis
         gedaechtnis.full_card(uid, False)
@@ -1605,11 +1619,7 @@ TOOL_LOG_DAYS, TOOL_LOG_MAX = 7, 200
 
 
 def tool_log(uid):
-    try:
-        with open(_path(uid, "toollog.json")) as f:
-            items = json.load(f)
-    except (OSError, ValueError):
-        return []
+    items = read_own(uid, "toollog.json", [])
     cut = (time.time() - TOOL_LOG_DAYS * 86400) * 1000
     return [x for x in items if isinstance(x, dict) and x.get("t", 0) >= cut] if isinstance(items, list) else []
 
@@ -1619,9 +1629,9 @@ def tool_log_add(uid, question, calls, answer):
             "calls": [{"name": str(c["name"])[:60], "args": str(c["args"])[:300], "result": str(c["result"])[:600]}
                       for c in calls[:12]]}
     with _lock:
-        _write(_path(uid, "toollog.json"), (tool_log(uid) + [item])[-TOOL_LOG_MAX:])
+        write_own(uid, "toollog.json", (tool_log(uid) + [item])[-TOOL_LOG_MAX:])
 
 
 def tool_log_clear(uid):
     with _lock:
-        _write(_path(uid, "toollog.json"), [])
+        write_own(uid, "toollog.json", [])

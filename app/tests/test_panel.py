@@ -989,7 +989,7 @@ class ToolLog(unittest.TestCase):
         uid = a.get("/api/whoami").json()["profile"]["id"]
         old = profiles.tool_log(uid)
         old[0]["t"] -= 8 * 86400 * 1000
-        profiles._write(profiles._path(uid, "toollog.json"), old)
+        profiles.write_own(uid, "toollog.json", old)
         self.assertEqual(len(a.get("/api/profile/toollog").json()["items"]), 1)
         a.delete("/api/profile/toollog")
         self.assertEqual(a.get("/api/profile/toollog").json()["items"], [])

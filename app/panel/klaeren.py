@@ -16,7 +16,6 @@ mapping is checked against the tool's data each time it is used. Never for guest
 chat.klaeren, off, then for every profile the admin did not block; remembering has its own (chat.klaeren_merken). The
 journal has fixed words and numbers only, never names of devices, contacts or words people said.
 """
-import json
 import re
 import threading
 import time
@@ -332,23 +331,15 @@ def drop(uid):
 
 
 # ---------------------------------------------------------------- mappings (users/<id>/zuordnungen.json)
-def _file(uid):
-    return profiles._path(uid, "zuordnungen.json")
-
-
 def load(uid):
-    try:
-        with open(_file(uid)) as f:
-            rows = json.load(f)
-        return [r for r in rows if isinstance(r, dict) and r.get("area") in AREAS and r.get("words") and r.get("id")] \
-            if isinstance(rows, list) else []
-    except (OSError, ValueError):
-        return []
+    rows = profiles.read_own(uid, "zuordnungen.json", [])
+    return [r for r in rows if isinstance(r, dict) and r.get("area") in AREAS and r.get("words") and r.get("id")] \
+        if isinstance(rows, list) else []
 
 
 def _save(uid, rows):
     rows.sort(key=lambda r: -r.get("last", r.get("since", 0)))
-    profiles._write(_file(uid), rows[:MAX_MAPS])
+    profiles.write_own(uid, "zuordnungen.json", rows[:MAX_MAPS])
 
 
 def lookup(uid, area, ws, touch=True):

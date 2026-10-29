@@ -105,12 +105,8 @@ LEARN_PROMPT = (
 
 
 def learned(uid):
-    try:
-        with open(profiles._path(uid, "learned.json")) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    d = profiles.read_own(uid, "learned.json", {})
+    return d if isinstance(d, dict) else {}
 
 
 def _seen(uid, cid):
@@ -129,7 +125,7 @@ def mark(uid, convo):
         d = learned(uid)
         d[convo["id"]] = [len(convo.get("msgs", [])), convo.get("updated", 0)]
         ids = {c["id"] for c in profiles.convos(uid)}
-        profiles._write(profiles._path(uid, "learned.json"), {k: v for k, v in d.items() if k in ids})
+        profiles.write_own(uid, "learned.json", {k: v for k, v in d.items() if k in ids})
 
 
 def learn_messages(prof, convo):

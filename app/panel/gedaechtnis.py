@@ -409,7 +409,7 @@ def _decide(uid, fact_id, take, now=None):
         else:
             kv = slot_of(off["text"], _name(uid))
             f["declined"] = ([kv[1]] if kv else []) + [d for d in f.get("declined") or [] if not kv or d != kv[1]][:DECLINED - 1]
-        profiles._write(profiles._path(uid, "memory.json"), facts)
+        profiles.write_own(uid, "memory.json", facts)
     close_card(uid, fact_id, "erledigt" if take else "abgelehnt")
     print(f"gedaechtnis: angebot {'uebernommen' if take else 'verworfen'} {profiles.log_name(profiles.by_id(uid))}",
           flush=True)
@@ -521,7 +521,7 @@ def confirm(uid, fact_id, now=None):
             return None
         f["src"] = source(f)
         f["confirmed"] = now
-        profiles._write(profiles._path(uid, "memory.json"), facts)
+        profiles.write_own(uid, "memory.json", facts)
     return f
 
 
@@ -592,18 +592,9 @@ def ask_on(uid, c=None):
     return bool(uid) and features.allowed("gedpruefen", uid, c) and features.allowed("gedfragen", uid, c)
 
 
-def _ask_file(uid):
-    return profiles._path(uid, "memory-ask.json")
-
-
 def _ask_read(uid):
-    try:
-        import json
-        with open(_ask_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    d = profiles.read_own(uid, "memory-ask.json", {})
+    return d if isinstance(d, dict) else {}
 
 
 def _terms(text):
@@ -647,7 +638,7 @@ def ask(uid, f, convo, src="", en=False, now=None):
     asked = {k: v for k, v in (d.get("asked") or {}).items() if now - v < ASK_AGAIN_S}
     asked[f["id"]] = now
     convos = ([c for c in d.get("convos") or [] if c != convo] + ([convo] if clean_convo(convo) else []))[-ASK_CONVOS:]
-    profiles._write(_ask_file(uid), {"pending": {"fact": f["id"], "convo": convo if clean_convo(convo) else "",
+    profiles.write_own(uid, "memory-ask.json", {"pending": {"fact": f["id"], "convo": convo if clean_convo(convo) else "",
                                                  "src": str(src)[:120], "t": now},
                                      "asked": asked, "days": days, "convos": convos})
     print(f"gedaechtnis: nachfrage {profiles.log_name(profiles.by_id(uid))} | regel={check([f], now, months())[f['id']]['rule'] or 'widerspruch'}",
@@ -665,7 +656,7 @@ def drop_pending(uid):
     d = _ask_read(uid)
     if d.get("pending"):
         d.pop("pending")
-        profiles._write(_ask_file(uid), d)
+        profiles.write_own(uid, "memory-ask.json", d)
 
 
 def reply_kind(text):
@@ -735,7 +726,7 @@ def set_topics(uid, topics, by="model"):
                 f["topic"], f["topic_by"] = t, by
                 n += 1
         if n:
-            profiles._write(profiles._path(uid, "memory.json"), facts)
+            profiles.write_own(uid, "memory.json", facts)
     return n
 
 

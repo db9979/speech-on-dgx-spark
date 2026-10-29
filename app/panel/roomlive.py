@@ -22,7 +22,6 @@ voice, i.e. when somebody else in the house may have started it; not in quiet ho
 per hour. The profile's history (users/<id>/room-history.json, last HIST_MAX times within HIST_DAYS days)
 keeps when and where, how it ended and how many sentences it heard, said and overheard; never text.
 """
-import json
 import re
 import secrets
 import time
@@ -256,16 +255,8 @@ async def tell(uid, device, name, mins):
 
 
 # ---------------------------------------------------------------- the history (no text)
-def _hist_file(uid):
-    return profiles._path(uid, "room-history.json")
-
-
 def load_history(uid):
-    try:
-        with open(_hist_file(uid)) as f:
-            d = json.load(f)
-    except (OSError, ValueError):
-        d = []
+    d = profiles.read_own(uid, "room-history.json", [])
     now = clock()
     return [x for x in (d if isinstance(d, list) else []) if isinstance(x, dict) and now - float(x.get("end") or 0) < HIST_DAYS * 86400][-HIST_MAX:]
 
@@ -278,7 +269,7 @@ def history(e, why, r=None):
     item = {"name": e["name"], "kind": e["kind"], "start": int(e["since"]), "end": int(clock()), "why": why if why in WHY else "off",
             "heard": int(c.get("heard") or 0), "ignored": int(c.get("ignored") or 0), "said": len((r or {}).get("done") or [])}
     with profiles._lock:
-        profiles._write(_hist_file(uid), (load_history(uid) + [item])[-HIST_MAX:])
+        profiles.write_own(uid, "room-history.json", (load_history(uid) + [item])[-HIST_MAX:])
 
 
 # ---------------------------------------------------------------- API

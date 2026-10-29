@@ -34,8 +34,6 @@ import asyncio
 import datetime
 import hashlib
 import imaplib
-import json
-import os
 import re
 import threading
 import time
@@ -206,10 +204,6 @@ _rec = {}                       # uid -> (time, [recurring])
 _day = DayCounter(angesehen=0, bestaetigt=0, abgelehnt=0, erinnerung=0, netztipp=0, thema=0)   # Zustand → Live, numbers only
 
 
-def _file(uid):
-    return profiles._path(uid, "interessen.json")
-
-
 def norm(name):
     return re.sub(r"\s+", " ", str(name or "").strip().lower())[:NAME_MAX]
 
@@ -221,11 +215,7 @@ def clean(name):
 
 
 def load(uid):
-    try:
-        with open(_file(uid)) as f:
-            d = json.load(f)
-    except (OSError, ValueError):
-        d = {}
+    d = profiles.read_own(uid, "interessen.json", {})
     d = d if isinstance(d, dict) else {}
     items = {}
     for k, v in (d.get("items") or {}).items():
@@ -244,7 +234,7 @@ def _save(uid, d):
         if len(d["items"]) > MAX_INTERESTS:      # the oldest refusals go first
             keep = sorted(d["items"].items(), key=lambda kv: (kv[1]["state"] == "yes", kv[1]["t"]))[-MAX_INTERESTS:]
             d["items"] = dict(keep)
-        profiles._write(_file(uid), d)
+        profiles.write_own(uid, "interessen.json", d)
 
 
 def count(uid):
@@ -252,10 +242,7 @@ def count(uid):
 
 
 def forget(uid):
-    try:
-        os.remove(_file(uid))
-    except OSError:
-        pass
+    profiles.drop_own(uid, "interessen.json")
     _rec.pop(uid, None)
 
 

@@ -42,7 +42,7 @@ def learned(i, **kw):
 
 def put(uid, facts):
     with profiles._lock:
-        profiles._write(profiles._path(uid, "memory.json"), facts)
+        profiles.write_own(uid, "memory.json", facts)
 
 
 def journal(fn, *a, **kw):

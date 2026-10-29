@@ -42,17 +42,9 @@ OUTSIDE = ("web", "mail")
 _lock = threading.Lock()
 
 
-def _file(uid):
-    return profiles._path(uid, "tagebuch.json")
-
-
 def _load(uid):
-    try:
-        with open(_file(uid)) as f:
-            d = json.load(f)
-        return [x for x in d.get("items", []) if isinstance(x, dict)] if isinstance(d, dict) else []
-    except (OSError, ValueError):
-        return []
+    d = profiles.read_own(uid, "tagebuch.json", {})
+    return [x for x in d.get("items", []) if isinstance(x, dict)] if isinstance(d, dict) else []
 
 
 def _clean(s, n):
@@ -76,7 +68,7 @@ def note(uid, art, title, ref="", before=None, src="", now=None):
             row["before"] = b
         with _lock:
             items = [x for x in _load(uid) if now - float(x.get("t", 0)) < KEEP_S] + [row]
-            profiles._write(_file(uid), {"items": items[-MAX:]})
+            profiles.write_own(uid, "tagebuch.json", {"items": items[-MAX:]})
         print(f"tagebuch: {art} notiert", flush=True)
         return True
     except Exception as e:

@@ -10660,6 +10660,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Ein Weg zu den eigenen Daten (V01.1.250, Plan *nutzerwissen*, Stufe 4a)",
+"text": "Ein Weg zu den eigenen Daten (V01.1.250, Plan *nutzerwissen*, Stufe 4a): Gedächtnis, Gespräche, Werkzeug-Log, Raummodus-Verlauf, die Lesemarken des Lernens, gemerkte Zuordnungen, Interessen, das Spark-Tagebuch und die offene Frage zum Gedächtnis liest und schreibt das Panel nur noch über profiles.read_own, write_own und drop_own, nie ein Modul selbst; so lassen sie sich an einer Stelle versiegeln (Stufe 4b). Für die Person ändert sich nichts. Selbsttest test_siegel (OnlyThroughTheHelpers)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einstellungen für das Sprachmodell (V01.0.121)",
 "text": "Einstellungen für das Sprachmodell (V01.0.121): Unter Einstellungen → Sprachmodell → Erweitert stellt der Admin ein: Verlaufslänge (4000–64000 Zeichen, Standard 24000), Websuchen pro Antwort (1–3, Standard 2), Zeitlimit einer Antwort (60–600 s), top_p und presence_penalty (0 = Standard des Servers) sowie eigene Stichwörter für die Werkzeugpflicht (eine Zeile pro Werkzeug, z. B. web_search: elfmeter, aufstellung; nur ganze Wörter, höchstens 20 pro Werkzeug, die eingebauten Wörter bleiben immer). „Standard wiederherstellen“ setzt die mitgelieferte Systemanweisung ein, „Ganzen Prompt ansehen“ zeigt alle Teile in ihrer Reihenfolge und markiert, welche fest sind. Mit dem Schalter Funktionen → „Eigener Gesprächsstil“ (aus) kann jedes Profil unter Ich → Gespräch → Antwort in höchstens 500 Zeichen sagen, wie der Assistent mit ihm reden soll; der Text steht unter der Systemanweisung und über den festen Regeln, gilt nie für Gäste oder eine fremde Stimme und lässt sich nicht über einen Geräteschlüssel ändern. Fest bleiben: Werkzeugregeln, der Umgang mit Text von außen, Codewort, Sperren und die Werte der Hintergrundaufgaben (Lernen, Briefing, Mail-Einordnen, Raum)."
 },
@@ -26894,6 +26902,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "fakten=N; never a value. Live: the node \"Memory\" with \"heute N gemerkt · N Karten · N rückgängig · N bestätigt\". Self-test test_gemerkt."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "One way to the own data (V01.1.250, plan *nutzerwissen*, stage 4a)",
+"text": "One way to the own data (V01.1.250, plan *nutzerwissen*, stage 4a): memory, conversations, tool log, room mode history, the read marks of learning, remembered matches, interests, the Spark diary and the open question about the memory are read and written by the panel only through profiles.read_own, write_own and drop_own, never by a module itself; so they can be sealed in one place (stage 4b). Nothing changes for the person. Self-test test_siegel (OnlyThroughTheHelpers)."
 },
 {
 "lang": "en",

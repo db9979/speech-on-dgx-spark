@@ -166,6 +166,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Codewörter gehen nie ans Modell, nie in den Verlauf, die Diagnose oder das Journal. (C)
 - **Änderungsprotokoll nur über `guard.log`** (Dominik 2026-10-18, Plan `sicheres-ki-system`): Jede Zeile trägt die Prüfkette (`p`, SHA-256 der Zeile davor); kein anderer Code schreibt oder kürzt `audit.log`, auch Aufräumen nicht. Geprüft wird täglich (`guard.chain_daily`, Hinweis oben auf den Admin-Seiten) und mit „Protokoll prüfen“ unter Zustand → Logs → Änderungen gegen die versiegelte Kopie auf dem NAS (`offsite.compare_audit`). Ein neues Protokoll-Ereignis, das Anmeldung, Zugänge oder Schutz betrifft, kommt im selben Commit in eine Regel des Wachpostens (`wachposten.EVENTS`, Wörter aus `guard.LIVE_WORDS`). (🧪 test_protokoll, test_wachposten)
 - Passwörter und Schlüssel werden nur ins Formular getippt, nie in den Chat. (P funktionen-entdecken)
+- **Profildaten nur über einen Weg** (Dominik 2026-10-29, Plan *nutzerwissen*, Stufe 4): Was ein Profil über sich preisgibt (Gedächtnis, Gespräche, Gelerntes über die Person), liest und schreibt nur `profiles.read_own`, `write_own` und `drop_own`; kein Modul öffnet eine solche Datei selbst mit `open()` oder `profiles._write`. (🧪 test_siegel)
 
 ### 2.8 root-Grenze, Update, Lieferkette
 - root folgt keinen Symlinks in Ordnern von `speech`. Schreiben nur über `put_file` bzw. `as_svc`. (C; 🧪 test_hardening)
