@@ -31,14 +31,6 @@ import panel  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 
-def until(test, s=10):
-    for _ in range(int(s * 20)):
-        if test():
-            return True
-        time.sleep(0.05)
-    return False
-
-
 class FbBase(Base):
     def setUp(self):
         super().setUp()
@@ -358,13 +350,14 @@ class EndToEnd(FbBase):
         cf, kf, self.fp = _tls_files(self.tmp)
         self.port = helpers._port()
         server = uvicorn.Server(uvicorn.Config(only, host="127.0.0.1", port=self.port, log_level="error",
-                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2))
+                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2,
+                                              ssl_context_factory=panel.tls_context))   # the panel's own TLS
         server.install_signal_handlers = lambda: None
         sock = helpers.take_port(self.port)
         self.th = threading.Thread(target=lambda: asyncio.run(server.serve(sockets=[sock])), daemon=True)
         self.th.start()
         self.server = server
-        until(lambda: server.started, 20)
+        helpers.until(lambda: server.started, 20)
         self.base = f"https://localhost:{self.port}"
         self.patches = [unittest.mock.patch.object(fernzugang, "is_admin_browser", lambda c: True),
                         unittest.mock.patch.object(fernzugang, "_login", lambda c: "L")]
@@ -393,7 +386,7 @@ class EndToEnd(FbBase):
         for n in range(91, 140):
             if not os.path.exists(f"/tmp/.X11-unix/X{n}") and not os.path.exists(f"/tmp/.X{n}-lock"):
                 self.start(["Xvfb", f":{n}", "-screen", "0", "800x600x24", "-nolisten", "tcp"])
-                if until(lambda: os.path.exists(f"/tmp/.X11-unix/X{n}"), 10):
+                if helpers.until(lambda: os.path.exists(f"/tmp/.X11-unix/X{n}"), 10):
                     return n
         self.fail("no X display")
 
@@ -407,13 +400,13 @@ class EndToEnd(FbBase):
                     "-forever", "-shared", "-quiet", "-noxdamage", "-nolookup"])
         gd = _free(helpers._port())
         self.start([shutil.which("guacd") or "/usr/sbin/guacd", "-f", "-b", "127.0.0.1", "-l", str(gd), "-L", "error"])
-        self.assertTrue(until(lambda: _open(vnc) and _open(gd), 20), "x11vnc or guacd did not start")
+        self.assertTrue(helpers.until(lambda: _open(vnc) and _open(gd), 20), "x11vnc or guacd did not start")
         p = program()
         p.BILD["x11vnc"] = vnc
         ws = p.WS.open(self.base, self.fp, "/api/fernzugang/anker", d["key"])
         run = p.Lauf(ws, "x11vnc")
         threading.Thread(target=run.run, daemon=True).start()
-        self.assertTrue(until(lambda: d["id"] in fernzugang.ANKER and fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
+        self.assertTrue(helpers.until(lambda: d["id"] in fernzugang.ANKER and fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
         ctx = ssl.create_default_context()
         ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
         with unittest.mock.patch.object(fernbild, "GUACD", ("127.0.0.1", gd)), \
@@ -423,7 +416,7 @@ class EndToEnd(FbBase):
             self.assertEqual(r.status_code, 200, r.text)
             b = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/bildschirm?t={r.json()['ticket']}", ssl=ctx,
                             subprotocols=["guacamole"], additional_headers={"Origin": self.base}, max_size=2 ** 24,
-                            open_timeout=30)
+                            open_timeout=helpers.WS_OPEN_S)
             first = b.recv(timeout=30)
             self.assertRegex(first, r"^0\.,8\.[0-9a-f]{8};$")                      # the tunnel's id first
             seen = set()
@@ -444,11 +437,11 @@ class EndToEnd(FbBase):
             self.assertEqual(m, fernbild.enc("", "ping", "42"))
             b.send(fernbild.enc(fernbild.STEUERN, "1"))
             b.send(fernbild.enc("mouse", "10", "10", "0"))
-            self.assertTrue(until(lambda: "fernzugang: bild_steuern | an | 1" in j.getvalue()))
+            self.assertTrue(helpers.until(lambda: "fernzugang: bild_steuern | an | 1" in j.getvalue()))
             b.send("x" * (fernbild.MAX_IN + 1))                                     # too big: the session ends
-            self.assertTrue(until(lambda: not fernzugang.SITZUNG, 15))
+            self.assertTrue(helpers.until(lambda: not fernzugang.SITZUNG, 15))
             # the session leaves SITZUNG first and writes its last lines after closing everything
-            self.assertTrue(until(lambda: "fernzugang: bild_rate | kb_s |" in j.getvalue(), 15))
+            self.assertTrue(helpers.until(lambda: "fernzugang: bild_rate | kb_s |" in j.getvalue(), 15))
             with contextlib.suppress(Exception):
                 b.close()
         out = j.getvalue()
@@ -473,12 +466,12 @@ class EndToEnd(FbBase):
                     "-forever", "-shared", "-quiet", "-noxdamage", "-nolookup"])
         gd = _free(helpers._port())
         self.start([shutil.which("guacd") or "/usr/sbin/guacd", "-f", "-b", "127.0.0.1", "-l", str(gd), "-L", "error"])
-        self.assertTrue(until(lambda: _open(vnc) and _open(gd), 20), "x11vnc or guacd did not start")
+        self.assertTrue(helpers.until(lambda: _open(vnc) and _open(gd), 20), "x11vnc or guacd did not start")
         p = program()
         p.BILD["x11vnc"] = vnc
         ws = p.WS.open(self.base, self.fp, "/api/fernzugang/anker", d["key"])
         threading.Thread(target=p.Lauf(ws, "x11vnc").run, daemon=True).start()
-        self.assertTrue(until(lambda: fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
+        self.assertTrue(helpers.until(lambda: fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
 
         async def go():
             async with async_playwright() as pl:
@@ -505,8 +498,8 @@ class EndToEnd(FbBase):
                 return errors
         with unittest.mock.patch.object(fernbild, "GUACD", ("127.0.0.1", gd)), journal() as j:
             errors = asyncio.run(go())
-            self.assertTrue(until(lambda: not fernzugang.SITZUNG, 15))
-            self.assertTrue(until(lambda: "fernzugang: bild_zu |" in j.getvalue(), 15))
+            self.assertTrue(helpers.until(lambda: not fernzugang.SITZUNG, 15))
+            self.assertTrue(helpers.until(lambda: "fernzugang: bild_zu |" in j.getvalue(), 15))
         self.assertEqual(errors, [])
         ws.sock.shutdown(socket.SHUT_RDWR)
 
@@ -516,7 +509,7 @@ class EndToEnd(FbBase):
         p = program()
         ws = p.WS.open(self.base, self.fp, "/api/fernzugang/anker", d["key"])
         threading.Thread(target=p.Lauf(ws, "x11vnc").run, daemon=True).start()
-        self.assertTrue(until(lambda: fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
+        self.assertTrue(helpers.until(lambda: fernzugang._read()["geraete"][d["id"]].get("anker") == p.VERSION))
         dead = _free(helpers._port())
         ctx = ssl.create_default_context()
         ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
@@ -524,9 +517,9 @@ class EndToEnd(FbBase):
                 unittest.mock.patch.object(fernbild, "_start_guacd", lambda: None), journal() as j:
             r = ADMIN.post("/api/admin/fernzugang/bildschirm", json={"geraet": d["id"]})
             b = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/bildschirm?t={r.json()['ticket']}", ssl=ctx,
-                            subprotocols=["guacamole"], additional_headers={"Origin": self.base}, open_timeout=30)
+                            subprotocols=["guacamole"], additional_headers={"Origin": self.base}, open_timeout=helpers.WS_OPEN_S)
             self.assertEqual(b.recv(timeout=30), fernbild.enc("error", "guacd", "519"))
-            self.assertTrue(until(lambda: not fernzugang.SITZUNG))
+            self.assertTrue(helpers.until(lambda: not fernzugang.SITZUNG))
         self.assertIn("fernzugang: bild_guacd | fehlt | 0", j.getvalue())
         ws.sock.shutdown(socket.SHUT_RDWR)
 
@@ -540,7 +533,7 @@ class EndToEnd(FbBase):
         for origin, ticket in (("https://evil.example", "x" * 40), (self.base, t)):
             with self.assertRaises(Exception):
                 c = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/bildschirm?t={ticket}", ssl=ctx,
-                                subprotocols=["guacamole"], additional_headers={"Origin": origin}, open_timeout=10)
+                                subprotocols=["guacamole"], additional_headers={"Origin": origin}, open_timeout=helpers.WS_OPEN_S)
                 c.recv(timeout=10)
 
 

@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 import datetime
 import io
+import os
 import unittest
 from unittest import mock
 
@@ -32,6 +33,28 @@ class OnePoller(unittest.TestCase):
         cfg = panel.https_config({"host": "127.0.0.1", "https_port": 31443}, "c.pem", "k.pem")
         ctx = cfg.ssl_context_factory(cfg, lambda: ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER))
         self.assertGreaterEqual(ctx.minimum_version, ssl.TLSVersion.TLSv1_2)
+
+    def test_https_sends_no_session_tickets(self):
+        """V01.1.243: TLS 1.3 session tickets let about one https connection in a hundred hang on Python 3.11's
+        asyncio loop (the request never reached the app): the panel's context sends none."""
+        import ssl
+        cfg = panel.https_config({"host": "127.0.0.1", "https_port": 31443}, "c.pem", "k.pem")
+        ctx = cfg.ssl_context_factory(cfg, lambda: ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER))
+        self.assertEqual(ctx.num_tickets, 0)
+
+    def test_test_servers_with_tls_take_the_panels_context(self):
+        """A test's uvicorn with TLS uses panel.tls_context: a context of its own hid the hang above for weeks."""
+        import glob
+        import re
+        here = os.path.dirname(os.path.abspath(__file__))
+        bad = []
+        for f in sorted(glob.glob(os.path.join(here, "test_*.py"))):
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            for m in re.finditer(r"uvicorn\.Config\((?:[^()]|\([^()]*\))*\)", text):
+                if "ssl_certfile" in m.group(0) and "ssl_context_factory=panel.tls_context" not in m.group(0):
+                    bad.append(os.path.basename(f))
+        self.assertEqual(bad, [])
 
     def test_second_loop_returns_at_once(self):
         out = io.StringIO()

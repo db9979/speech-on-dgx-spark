@@ -289,7 +289,8 @@ class BigFiles(tz._FilesBase):
                                       "x-fz-sha256": sha or hashlib.sha256(data).hexdigest()})
 
     def wait(self, sid, jid, want=("fertig", "fehler")):
-        for _ in range(400):
+        end = time.monotonic() + 60
+        while time.monotonic() < end:
             r = self.http.get(f"/api/admin/fernzugang/gross/{sid}/stand")
             self.assertEqual(r.status_code, 200, r.text)
             j = next(x for x in r.json()["jobs"] if x["id"] == jid)
@@ -426,10 +427,7 @@ class BigFiles(tz._FilesBase):
             # „Abbrechen“ hangs up the command there; the part file goes
             r = self.http.post(g + "/holen", json={**base, "url": "https://downloads.example.org/langsam", "name": "e.iso"})
             jid = r.json()["id"]
-            for _ in range(200):
-                if self.leftovers("/home/spark"):
-                    break
-                time.sleep(0.05)
+            helpers.until(lambda: self.leftovers("/home/spark"))
             self.assertEqual(self.http.delete(f"{g}/job/{jid}").status_code, 200)
             self.assertEqual(self.wait(sid, jid)["grund"], "abgebrochen")
             self.assertEqual(self.leftovers("/home/spark"), [])

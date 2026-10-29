@@ -62,6 +62,19 @@ def take_port(port):
     return s
 
 
+WS_OPEN_S = 60   # a test's WebSocket handshake under load (the hangs of V01.1.233 were TLS tickets: panel.tls_context)
+
+
+def until(test, s=60):
+    """Polls test() until it holds or s seconds have passed (a deadline, never a fixed wait); True when it held."""
+    end = time.monotonic() + s
+    while time.monotonic() < end:
+        if test():
+            return True
+        time.sleep(0.05)
+    return bool(test())
+
+
 LLM_PORT, TTS_PORT, HA_PORT, CAL_PORT = _port(), _port(), _port(), _port()
 HA_TOKEN = "t" * 40
 

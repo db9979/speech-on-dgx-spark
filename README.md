@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.243** https without TLS session tickets (`panel.tls_context`): about one https connection in a hundred to Python 3.11's asyncio loop hung after the handshake (a Fernzugang terminal never opened); test servers with the panel's TLS plus a guard, Fernzugang tests with a 60 s handshake and deadlines instead of loops
 - **V01.1.242** Knowledge store faster (step 1 of 4, no new feature): document search vectors as float16 in memory (half the size, same ranking), the knowledge book finds pages through an FTS5 index (kept by triggers, built once, without FTS5 as before), the knowledge map picks its part with WITH RECURSIVE in SQLite, plus fixed queries rund_um and weg and the read function wissensbuch.liste (page ids with rank)
 - **V01.1.241** AI Dungeon Master: one sorting for every typed action: all word lists in one module, every action gets exactly one kind by a fixed order; "Dann gehe ich los", "Wir schlagen hier unser Lager auf" and "We rest by the fire" are no attack any more
 - **V01.1.240** AI Dungeon Master: every value the model gives hangs on a fixed rule (anchor table), the game page knows every value of the panel, a protocol checker checks every narration once more and turns copied rounds into test cases, the narrator bench plays 15 turns in a row; a thing or a writing counts only when the narration shows it
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.236** AI Dungeon Master: faults of the round in the Old Library: the dice bar names the same difficulty as the card, a damage spell claims no hit, sentences about the panel leave the story, "enter" is walking, a merchant only when the story shows one
 - **V01.1.235** AI Dungeon Master: a word for "no name" such as "keine", "nobody" or "unknown" never becomes a person, such a card of a running round goes away
 - **V01.1.234** AI Dungeon Master: in the settlement window a house's picture stands whole as a square beside name and line instead of cut off as a band
-- **V01.1.233** Remote access stage 3b: big files in pieces with SHA-256, pause and resume, by link (curl on the server) or from the NAS; at home the anchor (1.4.0) goes straight to the Spark
 
 
 

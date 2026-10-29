@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.243** https ohne TLS-Session-Tickets (`panel.tls_context`): etwa jede hundertste https-Verbindung zur asyncio-Schleife von Python 3.11 hing nach dem Handshake (Terminal im Fernzugang ging nie auf); Test-Server mit dem TLS des Panels samt Wächter, Fernzugang-Tests mit 60 s Handshake und Fristen statt Schleifen
 - **V01.1.242** Wissensspeicher schneller (Stufe 1 von 4, keine neue Funktion): Vektoren der Dokumentsuche als float16 im Speicher (halb so groß, gleiche Rangfolge), Wissensbuch sucht Seiten über einen FTS5-Index (Trigger pflegen ihn, einmaliger Aufbau, ohne FTS5 wie bisher), Wissenskarte wählt ihren Ausschnitt mit WITH RECURSIVE in SQLite, dazu feste Abfragen rund_um und weg und die Lesefunktion wissensbuch.liste (Seiten-Ids mit Rang)
 - **V01.1.241** KI-Dungeon-Master: eine Einordnung für jede getippte Aktion: alle Wortlisten in einem Modul, jede Aktion bekommt nach fester Reihenfolge genau eine Art; „Dann gehe ich los“, „Wir schlagen hier unser Lager auf“ und „We rest by the fire“ sind kein Angriff mehr
 - **V01.1.240** KI-Dungeon-Master: jede Angabe des Modells hängt an einer festen Regel (Anker-Tabelle), die Spielseite kennt jeden Wert des Panels, ein Protokoll-Prüfer prüft jede Erzählung noch einmal und macht kopierte Runden zu Prüffällen, der Erzähler-Prüfstand spielt 15 Züge am Stück; ein Ding oder Schriftstück zählt nur, wenn die Erzählung es zeigt
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.236** KI-Dungeon-Master: Fehler aus der Runde in der Alten Bibliothek: die Würfelleiste nennt dieselbe Schwierigkeit wie die Karte, ein Schadenszauber behauptet keinen Treffer, Sätze über das Panel fallen aus der Erzählung, „betreten“ ist Gehen, ein Händler nur, wenn die Erzählung ihn zeigt
 - **V01.1.235** KI-Dungeon-Master: ein Wort für „kein Name“ wie „keine“, „niemand“ oder „unknown“ wird nie eine Person, eine solche Karte aus einer laufenden Runde verschwindet
 - **V01.1.234** KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
-- **V01.1.233** Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
 
 
 

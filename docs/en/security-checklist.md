@@ -99,7 +99,7 @@ Every change is checked not only against the traps above, but also against wheth
 - [ ] Signatures with Ed25519; checks fail closed.
 
 **Connections**
-- [ ] Only TLS 1.2 or newer, TLS 1.3 preferred; certificate verification never off; no fallback to http.
+- [ ] Only TLS 1.2 or newer, TLS 1.3 preferred; certificate verification never off; no fallback to http; the own https server without session tickets (`panel.tls_context`, V01.1.243).
 - [ ] HSTS on https.
 
 **Login and session**

@@ -1984,16 +1984,14 @@ class _EndToEndBase(Base):
         cf, kf, self.fp = _tls_files(self.tmp)
         self.port = helpers._port()
         server = uvicorn.Server(uvicorn.Config(only, host="127.0.0.1", port=self.port, log_level="error",
-                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2))
+                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2,
+                                              ssl_context_factory=panel.tls_context))   # the panel's own TLS
         server.install_signal_handlers = lambda: None
         sock = helpers.take_port(self.port)
         self.th = threading.Thread(target=lambda: asyncio.run(server.serve(sockets=[sock])), daemon=True)
         self.th.start()
         self.server = server
-        for _ in range(400):
-            if server.started:
-                break
-            time.sleep(0.05)
+        helpers.until(lambda: server.started)
         self.base = f"https://localhost:{self.port}"
         # the browser side: the login check and its hash are tested above (Ticket); here the whole way through
         self.patches = [unittest.mock.patch.object(fernzugang, "is_admin_browser", lambda c: True),
@@ -2016,10 +2014,7 @@ class _EndToEndBase(Base):
         run = p.Lauf(ws)
         th = threading.Thread(target=run.run, daemon=True)
         th.start()
-        for _ in range(200):
-            if fernzugang.ANKER:
-                break
-            time.sleep(0.05)
+        helpers.until(lambda: fernzugang.ANKER)
         return ws, th
 
     def browser(self, gid, cols=100, rows=30):
@@ -2028,7 +2023,7 @@ class _EndToEndBase(Base):
         ctx = ssl.create_default_context()
         ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
         return wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
-                           additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=10)
+                           additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=helpers.WS_OPEN_S)
 
     def read_until(self, conn, want, limit=200):
         got, states = b"", []
@@ -2065,20 +2060,14 @@ class EndToEnd(_EndToEndBase):
             got, _ = self.read_until(conn, b"echo:uptime")
             self.assertIn(b"echo:uptime", got)
             conn.send(json.dumps({"typ": "groesse", "cols": 120, "rows": 40}))
-            for _ in range(100):
-                if (120, 40) in sshd.sizes:
-                    break
-                time.sleep(0.05)
+            helpers.until(lambda: (120, 40) in sshd.sizes)
             self.assertIn((120, 40), sshd.sizes)
             self.assertEqual(fernzugang.counts()["sitzungen"], 1)
             conn.send(b"x" * (fernzugang.MAX_MSG + 1))          # too big: the session ends
             got, states = self.read_until(conn, b"\x00never")
             self.assertEqual(states[-1], {"typ": "zu", "grund": "zu_gross"})
             conn.close()
-            for _ in range(100):
-                if not fernzugang.SITZUNG:
-                    break
-                time.sleep(0.05)
+            helpers.until(lambda: not fernzugang.SITZUNG)
         out = j.getvalue()
         self.assertIn("fernzugang: sitzung_auf | admin | 1", out)
         self.assertIn("fernzugang: sitzung_zu | zu_gross | 0", out)
@@ -2112,7 +2101,7 @@ class EndToEnd(_EndToEndBase):
             ctx = ssl.create_default_context()
             ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
             win = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
-                              additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=40)
+                              additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=helpers.WS_OPEN_S)
             tab_states = []
             end = time.monotonic() + 90                                   # no timing assumed (a slow Pi): until closed
             with contextlib.suppress(Exception):                          # the tab hears „weg“, then it is closed
@@ -2129,7 +2118,7 @@ class EndToEnd(_EndToEndBase):
             self.assertEqual(len(fernzugang.SITZUNG), 1)                  # still one session
             with self.assertRaises(Exception):                            # the ticket works once
                 wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
-                            additional_headers={"Origin": self.base}, open_timeout=40).recv(timeout=40)
+                            additional_headers={"Origin": self.base}, open_timeout=helpers.WS_OPEN_S).recv(timeout=40)
             win.close()
             end = time.monotonic() + 60
             while "sitzung_zu" not in j.getvalue() and time.monotonic() < end:
@@ -2201,7 +2190,7 @@ class Comeback(_EndToEndBase):
         ctx = ssl.create_default_context()
         ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
         return wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
-                           additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=30)
+                           additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=helpers.WS_OPEN_S)
 
     def open(self):
         tab = self.browser(self.gid)
@@ -2215,12 +2204,8 @@ class Comeback(_EndToEndBase):
         with contextlib.suppress(OSError):     # only shut down: the library closes its own socket (one owner)
             conn.socket.shutdown(socket.SHUT_RDWR)
 
-    def wait(self, cond, n=200):
-        for _ in range(n):
-            if cond():
-                return True
-            time.sleep(0.05)
-        return cond()
+    def wait(self, cond):
+        return helpers.until(cond)
 
     def test_heartbeat_and_ssh_keepalive(self):
         with unittest.mock.patch.object(fernzugang, "PULS_S", 0.3):
@@ -2574,9 +2559,14 @@ class InBrowser(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("[$('fzkordnerrow').hidden,[...$('fzkordner').options].map(o=>o.textContent),$('fzkordner').value]"),
                                      [False, ["Ohne Ordner", "🏠 Zuhause", "🏢 Kleiberit"], "o_00000001"])
                     await pg.evaluate("$('fzkoppelnmodal').style.display='none'")
-                    # nothing of a folder in the page's text without folders on
-                    await pg.evaluate("FZ.d.ordner_an=false;fzShow()")
-                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#fzlist .fzordner').length"), 0)
+                    # nothing of a folder in the page's text without folders on (the panel says so; a reload still
+                    # under way from the steps above brings the same state, never the old one back)
+                    state["ordner_an"] = False
+                    await pg.evaluate("fzLoad()")
+                    await pg.wait_for_function("FZ.d&&FZ.d.ordner_an===false", timeout=15000)
+                    await pg.wait_for_function("document.querySelectorAll('#fzlist .fzordner').length===0", timeout=15000)
+                    self.assertEqual(await pg.evaluate(names), ["speech", "tars", "kleiberit-test", "mac"])
+                    state["ordner_an"] = True
                     await ctx.close()
                 await br.close()
         asyncio.run(go())
@@ -2854,10 +2844,7 @@ class _ShellPage(Base):
         p.tls_connect = plain
         self.ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
         threading.Thread(target=p.Lauf(self.ws).run, daemon=True).start()
-        for _ in range(200):
-            if d["id"] in fernzugang.ANKER:
-                break
-            time.sleep(0.05)
+        helpers.until(lambda: d["id"] in fernzugang.ANKER)
         self.assertIn(d["id"], fernzugang.ANKER)
 
     def tearDown(self):

@@ -53,14 +53,6 @@ def program():
     return mod
 
 
-def until(test, s=10):
-    for _ in range(int(s * 20)):
-        if test():
-            return True
-        time.sleep(0.05)
-    return False
-
-
 @contextlib.contextmanager
 def journal():
     buf = io.StringIO()
@@ -346,7 +338,7 @@ class Sockets(Base):
     def ws(self, path, origin=None):
         import websockets.sync.client as wsc
         return wsc.connect(f"ws://127.0.0.1:{self.port}{path}", additional_headers={"Origin": origin or self.origin},
-                           open_timeout=10)
+                           open_timeout=helpers.WS_OPEN_S)
 
     def refused(self, path, origin=None, first=None):
         """The socket never opens or closes before a word: both are a refusal."""
@@ -457,7 +449,7 @@ class Sockets(Base):
     def shell(self, nummer, name="Helga"):
         """The program's socket: no Origin header (a program, no page)."""
         import websockets.sync.client as wsc
-        c = wsc.connect(f"ws://127.0.0.1:{self.port}/api/hilfe/shell", open_timeout=10)
+        c = wsc.connect(f"ws://127.0.0.1:{self.port}/api/hilfe/shell", open_timeout=helpers.WS_OPEN_S)
         c.send(json.dumps({"typ": "hallo", "nummer": nummer, "name": name, "os": "Debian 13"}))
         return c
 
@@ -487,7 +479,7 @@ class Sockets(Base):
             self.assertEqual(a.recv(timeout=10), b"notes.txt\r\n")
             p.send(b"x" * (sh.MAX_MSG + 1))                                     # too big: the help ends
             self.assertEqual(self.recv(a)["stand"], "zu")
-            self.assertTrue(until(lambda: sh.verlauf_read()))
+            self.assertTrue(helpers.until(lambda: sh.verlauf_read()))
         out = j.getvalue()
         for line in ("spontanhilfe: wartet | shell | 1", "spontanhilfe: sitzung_auf | shell | 1",
                      "spontanhilfe: erlaubt | ja | 1", "spontanhilfe: abgewiesen | zu gross | 0"):
@@ -507,7 +499,7 @@ class Sockets(Base):
         with journal() as j:
             p.send(json.dumps({"typ": "erlaubt", "an": False}))
             self.assertEqual(self.recv(a)["stand"], "zu")
-            self.assertTrue(until(lambda: sh.verlauf_read()))
+            self.assertTrue(helpers.until(lambda: sh.verlauf_read()))
         self.assertIn("spontanhilfe: erlaubt | nein | 0", j.getvalue())
         self.assertEqual(sh.verlauf_read()[0]["ende"], "abgelehnt")
         self.assertIsNone(sh.current())
@@ -545,13 +537,14 @@ class ShellEndToEnd(Base):
         cf, kf, self.fp = _tls_files(self.tmp)
         self.port = helpers._port()
         server = uvicorn.Server(uvicorn.Config(only, host="127.0.0.1", port=self.port, log_level="error",
-                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2))
+                                              ssl_certfile=cf, ssl_keyfile=kf, timeout_graceful_shutdown=2,
+                                              ssl_context_factory=panel.tls_context))   # the panel's own TLS
         server.install_signal_handlers = lambda: None
         sock = helpers.take_port(self.port)
         self.th = threading.Thread(target=lambda: asyncio.run(server.serve(sockets=[sock])), daemon=True)
         self.th.start()
         self.server = server
-        until(lambda: server.started, 20)
+        helpers.until(lambda: server.started, 20)
         self.base = f"https://localhost:{self.port}"
         self.patches = [unittest.mock.patch.object(fernzugang, "is_admin_browser", lambda c: True),
                         unittest.mock.patch.object(fernzugang, "_login", lambda c: "L")]
@@ -588,14 +581,14 @@ class ShellEndToEnd(Base):
         anchor = threading.Thread(target=lambda: got.setdefault("rc", p.cmd_help(args, tty=p.Tty(r_in, w_out), shell="/bin/sh")),
                                   daemon=True)
         anchor.start()
-        self.assertTrue(until(lambda: sh.current() is not None and sh.current().stand == "wartet"))
+        self.assertTrue(helpers.until(lambda: sh.current() is not None and sh.current().stand == "wartet"))
         r = ADMIN.post("/api/admin/spontanhilfe/annehmen", headers=CODE)
         ctx = ssl.create_default_context()
         ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
         a = wsc.connect(f"wss://localhost:{self.port}/api/spontanhilfe/admin?t=" + r.json()["ticket"], ssl=ctx,
-                        additional_headers={"Origin": self.base}, open_timeout=10)
+                        additional_headers={"Origin": self.base}, open_timeout=helpers.WS_OPEN_S)
         self.assertEqual(json.loads(a.recv(timeout=10))["art"], "shell")
-        self.assertTrue(until(lambda: b"Erlauben? [j/n]" in shown))
+        self.assertTrue(helpers.until(lambda: b"Erlauben? [j/n]" in shown))
         a.send(b"echo too-early\n")                                             # before her „j“: never in a shell
         os.write(w_in, b"j\n")
         self.assertEqual(json.loads(a.recv(timeout=10)), {"typ": "erlaubt", "an": True})
@@ -611,7 +604,7 @@ class ShellEndToEnd(Base):
         self.assertIn(b"spark42", out)
         self.assertIn(b"30 100", out)                                            # the admin's size
         self.assertNotIn(b"too-early", out)
-        self.assertTrue(until(lambda: b"spark42" in shown))                     # she sees it all on her terminal
+        self.assertTrue(helpers.until(lambda: b"spark42" in shown))                     # she sees it all on her terminal
         pid = int(out.split(b"pid=")[-1].split()[0])
         a.send(json.dumps({"typ": "ende"}))
         anchor.join(15)

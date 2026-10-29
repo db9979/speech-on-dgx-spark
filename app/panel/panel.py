@@ -852,10 +852,17 @@ class Server(uvicorn.Server):
 
 def tls_context(config, default):
     """uvicorn's TLS context with TLS 1.2 as the floor (V01.0.825, code check 19.10. C8: security checklist "only
-    TLS 1.2 or newer"; Python's default floor depends on the system's OpenSSL settings)."""
+    TLS 1.2 or newer"; Python's default floor depends on the system's OpenSSL settings).
+
+    No TLS 1.3 session tickets (V01.1.243): with them, about one https connection in a hundred to the stock asyncio
+    loop of Python 3.11 hung after the handshake (the request never reached the app, the browser waited; a
+    terminal of the Fernzugang never opened). uvicorn, TLS and one WebSocket alone, 800 handshakes: 9 hung with
+    tickets, none without. The panel never resumes a session, so nothing is lost; without tickets there is also no
+    ticket key in memory that could open recorded connections later."""
     import ssl
     ctx = default()
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.num_tickets = 0
     return ctx
 
 

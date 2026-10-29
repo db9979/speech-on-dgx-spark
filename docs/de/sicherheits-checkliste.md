@@ -99,7 +99,7 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 - [ ] Signaturen mit Ed25519; Prüfungen scheitern geschlossen.
 
 **Verbindungen**
-- [ ] Nur TLS 1.2 oder neuer, TLS 1.3 bevorzugt; Zertifikatsprüfung nie aus; kein Rückfall auf http.
+- [ ] Nur TLS 1.2 oder neuer, TLS 1.3 bevorzugt; Zertifikatsprüfung nie aus; kein Rückfall auf http; der eigene https-Server ohne Session-Tickets (`panel.tls_context`, V01.1.243).
 - [ ] HSTS auf https.
 
 **Anmeldung und Sitzung**
