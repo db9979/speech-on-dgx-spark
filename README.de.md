@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.255** Alle meine Daten herunterladen: unter Ich → Sicherheit → Meine Daten eine ZIP mit allem vom eigenen Profil (versiegelte Dateien geöffnet, Einstellungen ohne Geheimnisse, aus Chats nur die eigenen Nachrichten, LIESMICH de+en mit dem, was draußen bleibt und warum), jedes Mal nach frischem Code oder Passkey, 3 je Stunde, höchstens 2 GB, Abhol-Link 10 Minuten und einmal; kein Schalter (Auskunftsrecht), auch in der iPhone- und Android-App
 - **V01.1.254** Fernzugang: die iPhone-App ist wie die Seite erst gesperrt und wird mit Code oder Passkey entsperrt (Verlängern, Sperren); das Koppeln-Blatt zeigt einen Einmal-Link mit Kopieren, Teilen, E-Mail und QR-Code, der auf dem neuen System nur die eine Zeile zeigt, nie den Code
 - **V01.1.253** Personen, Firmen und Fristen als Punkte der Wissenskarte (Stufe 2 von 4, eigener Schalter unter Wissenskarte, aus): das Sprachmodell schlägt je Stelle nur Namen vor, das Panel prüft nach festen Regeln (Art aus fester Liste, Name steht in der Stelle, Frist nur mit Datum, Konto nur als IBAN oder Nummer, Grenzen je Dokument, Profil und Tag); Farben und Filter nach Art auf der Karte, Umbenennen, Zusammenführen und Löschen nur per Klick mit Code, Ereignis GEAENDERT und Lesefunktionen finde_knoten/knoten_liste für andere Teile; iPhone zeigt und löscht
 - **V01.1.252** Auch das Gelernte versiegelt: Lesemarken des Lernens, gemerkte Zuordnungen, offene Gedächtnis-Frage, Interessen („Was ich über dich weiß“) und Spark-Tagebuch liegen jetzt ebenso versiegelt, einmal nach einer Sicherung „vor-siegel“; jede Datei aus Gedächtnis und Gesprächen muss versiegelt sein (Plan nutzerwissen, Stufe 4c; test_siegel)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.248** Gedächtnis mit festen Themen (Wohnort, Arbeitgeber, Auto …): je Thema gilt der neueste gesagte Wert, der alte bleibt zum Zurückholen; von selbst Gelerntes ersetzt nie Bestätigtes, es kommt als Karte „Übernehmen / Verwerfen“; dazu „N von 200“
 - **V01.1.247** Gedächtnis ohne stilles Wegwerfen: über 200 Einträgen machen nur die ältesten von selbst gelernten, nie bestätigten Platz; Gesagtes, Korrigiertes und Bestätigtes fällt nie, sonst lehnt der Spark den neuen Eintrag mit Hinweis auf Ich → Gedächtnis ab (auch beim Aufräumen); „Gedächtnis prüfen“ ab Werk an
 - **V01.1.246** Redesign Stufe 1: Design-Tokens als eine Quelle (`tokens.css`), Aussehen unverändert; Wächter `test_design_tokens`
-- **V01.1.245** Finden in allen Daten Stufe A: ein Suchindex über eigene Dokumente, NAS, reMarkable und Wissensbuch (Felder und Kategorien nach festen Regeln, eigene Schlagworte gehen vor, Marken je Profil), eigene Seite Finden, das Werkzeug fund_suche im Assistenten mit der Karte „In Finden ansehen“, Strg K
 
 
 

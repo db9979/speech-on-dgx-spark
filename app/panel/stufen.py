@@ -49,6 +49,7 @@ LIST = {
     # ------------------------------------------------------------------ all data in or out
     ("POST", "/api/backups/move"): (PROTECT, "Daten", "Sicherungen umziehen", "Move backups"),
     ("POST", "/api/backups/{name}/ticket"): (PROTECT, "Daten", "Sicherung herunterladen", "Download a backup"),
+    ("POST", "/api/profile/export"): (PROTECT, "Daten", "Alle meine Daten herunterladen", "Download all my data"),
     ("POST", "/api/backups/{name}/restore"): (PROTECT, "Daten", "Sicherung einspielen", "Restore a backup"),
     ("POST", "/api/backups-upload"): (PROTECT, "Daten", "Sicherung hochladen", "Upload a backup"),
     ("PUT", "/api/admin/offsite"): (PROTECT, "Daten", "Ziel der Sicherung nach außen", "Offsite backup target"),

@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "23b27f4c68",
+        "stand": "2676dc187b",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -621,14 +621,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "0b855e950f",
+        "stand": "7735496c09",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
-            "vorrat.key": ["s10"],
+            "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -650,11 +650,13 @@ SEITEN = {
               ("Browser, App, Lautsprecher, Telegram, MCP", "browser, app, speaker, Telegram, MCP"),
               ("Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen "
                "Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, "
-               "MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe) steht mit seinem "
+               "MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, "
+               "der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem "
                "Schutz in der Sicherheits-Doku unter „Wege hinein“.",
                "At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or "
                "signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, "
-               "phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page) stands with its protection in the security "
+               "phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of "
+               "\"Download all my data\") stands with its protection in the security "
                "docs under \"Ways in\".")),
             S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
               ("notaus.blocks", "notaus.blocks"),
@@ -859,6 +861,17 @@ SEITEN = {
                  "Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück.",
                  "If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the "
                  "admins see a hint, and after the move backup „Read in again“ brings it back."),
+                ("„Alle meine Daten herunterladen“ (meinedaten.py, kein Schalter: Auskunftsrecht) packt nur, was das "
+                 "Datei-Register mit export= hineinlässt, Versiegeltes geöffnet über profiles.read_own, ohne Geheimnisse, "
+                 "Stimmabdruck und Vorräte fremder Server, aus Chats nur die eigenen Nachrichten. Vorher jedes Mal ein "
+                 "frischer Code oder Passkey (ohne zweiten Schritt die PIN), höchstens {meinedaten.JE_STUNDE} je Stunde, "
+                 "höchstens {meinedaten.GRENZE|mb}; abgeholt wird einmal mit einem Code, von dem nur der Hash liegt "
+                 "({meinedaten.ABHOLEN_S|min} Minuten).",
+                 "„Download all my data“ (meinedaten.py, no switch: right of access) packs only what the file register "
+                 "lets in with export=, sealed files opened through profiles.read_own, without secrets, voiceprint and "
+                 "supplies of foreign servers, from chats only the own messages. Before it every time a fresh code or "
+                 "passkey (without a second step the PIN), at most {meinedaten.JE_STUNDE} per hour, at most "
+                 "{meinedaten.GRENZE|mb}; it is picked up once with a code of which only the hash is kept ({meinedaten.ABHOLEN_S|min} minutes)."),
             ]),
             (("Maßstäbe", "Standards"), [
                 ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
@@ -889,12 +902,15 @@ SEITEN = {
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
             ("profiles.write_own", ("Gedächtnis und Gespräche ganz versiegelt", "memory and conversations sealed whole")),
             ("vorrat.key", ("ein Schlüssel je Zweck aus secret.key", "a key per purpose from secret.key")),
+            ("meinedaten.api_export", ("eigene Daten nur nach frischem Code, Passkey oder PIN", "own data only after a fresh code, passkey or PIN")),
+            ("meinedaten.build", ("die ZIP nur aus dem Datei-Register, ohne Geheimnisse", "the ZIP only from the file register, without secrets")),
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
             ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
-                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel"],
+                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel",
+                  "test_meinedaten"],
         "heute": [],
     },
 

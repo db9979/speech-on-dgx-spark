@@ -183,6 +183,11 @@ BENCH = [
     ("was kannst du mir zur frauenkirche in dresden alles mitteilen. schaue im archiv oder kiwix.", "archiv"),
     ("was kannst du mir zur Frauen kirche in dresden erzählen?", ""),
     ("Schalte die Websuche ein", "spark"),
+    # Alle meine Daten herunterladen (meinedaten.py): the way to Ich → Sicherheit → Meine Daten, never documents or memory
+    ("Wie lade ich alle meine Daten herunter?", "spark"),
+    ("Lade meine Daten herunter", "spark"),
+    ("Ich möchte einen Datenexport", "spark"),
+    ("How do I download all my data?", "spark"),
     ("Öffne eine Shell auf dem VPS", "spark"),
     ("Wie richte ich den Fernzugang ein?", "spark"),
     ("Mach das Wetter aus", "spark"),

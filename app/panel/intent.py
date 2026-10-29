@@ -99,6 +99,9 @@ SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|pane
                          r"wie stelle ich|wo stelle ich|wo schalte ich|wo finde ich (die|den|das) (einstellung|schalter)|"
                          r"(beim|im|am|vom|den|dem|der) spark\b|spark-\w+|zweiten? anmeldeschritt\w*|weiche\b|"
                          r"ich-seite|funktionen-seite|zustand-seite|live-übersicht|"
+                         # Alle meine Daten herunterladen (meinedaten.py): only leads to Ich → Sicherheit → Meine Daten
+                         r"(alle )?meine (eigenen )?daten (\w+ ){0,2}(herunter|runter)\w*|lade (alle )?meine (eigenen )?daten\b|"
+                         r"datenexport\w*|daten-?auskunft\w*|(download|export) (all )?my data|"
                          # Fernzugang (fernzugang.py): „Öffne eine Shell auf dem VPS“ only leads to the page, never runs anything
                          r"fernzugang\w*|fern-?server\w*|(öffne|starte|zeig)\w* (mir )?(eine |die )?(shell|konsole|ssh)\b|(ssh|shell) auf\b)")
 PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*|"

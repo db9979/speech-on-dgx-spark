@@ -645,6 +645,9 @@ final class SecurityModel: ObservableObject {
     @Published var recovery: [String] = []
     @Published var note: String?
     @Published var error: String?
+    /// Meine Daten (meinedaten.py): the ZIP of „Alle meine Daten herunterladen“ once it is here, for the share sheet
+    @Published var exportFile: URL?
+    @Published var exporting = false
 
     func load() async {
         guard let api = SparkAPI.current else { return }
@@ -688,6 +691,42 @@ final class SecurityModel: ObservableObject {
             if step == "disable" { note = String(localized: "Der zweite Anmeldeschritt ist aus.") }
             await load()
         } catch { self.error = error.localizedDescription }
+    }
+
+    /// „Alle meine Daten herunterladen“: the Spark packs the ZIP after a fresh code (SparkAPI.confirmed), the app
+    /// fetches it once with the one-time pickup code and keeps it only in its own protected temporary folder.
+    func export(code: String) async {
+        guard let api = SparkAPI.current else { return }
+        exporting = true
+        defer { exporting = false }
+        do {
+            let d = try await api.object("POST", "api/profile/export", body: [:], code: code, timeout: 900)
+            guard let pick = d["code"] as? String, pick.range(of: #"^[A-Za-z0-9_-]{22}$"#, options: .regularExpression) != nil else {
+                throw SparkError(message: String(localized: "Der Spark hat keinen Abhol-Code geschickt."))
+            }
+            var r = api.request("api/profile/export/\(pick)")
+            r.timeoutInterval = 900
+            let (tmp, response) = try await URLSession.shared.download(for: r)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                try? FileManager.default.removeItem(at: tmp)
+                throw SparkError(message: String(localized: "Herunterladen hat nicht geklappt. Bitte noch einmal."))
+            }
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("meine-daten", isDirectory: true)
+            try? FileManager.default.removeItem(at: dir)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
+                                                    attributes: [.protectionKey: FileProtectionType.complete])
+            let url = dir.appendingPathComponent("spark-meine-daten.zip")
+            try FileManager.default.moveItem(at: tmp, to: url)
+            exportFile = url
+            note = String(localized: "Fertig: über „Teilen oder sichern“ in Dateien ablegen.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    /// The ZIP goes from the iPhone once the page closes: it holds everything of the profile.
+    func dropExport() {
+        if let f = exportFile { try? FileManager.default.removeItem(at: f.deletingLastPathComponent()) }
+        exportFile = nil
     }
 
     static func label(_ event: String) -> String {
@@ -752,8 +791,23 @@ struct SecurityView: View {
                     LabeledContent(SecurityModel.label(e.event)) { Text(e.at, format: .dateTime.day().month().hour().minute()) }
                 }
             } header: { Text("Letzte Anmeldungen") }
+            Section {
+                if m.mfaOn {
+                    Button("Alle meine Daten herunterladen") { ask = CodeRequest { c in await m.export(code: c) } }
+                        .disabled(m.exporting)
+                    if m.exporting { ProgressView() }
+                    if let f = m.exportFile {
+                        ShareLink(item: f) { Label("Teilen oder sichern", systemImage: "square.and.arrow.up") }
+                    }
+                } else if let url = SparkAPI.panelLink(Self.setUp) {
+                    Link("Im Panel herunterladen", destination: url)
+                }
+            } header: { Text("Meine Daten") } footer: {
+                Text("Eine ZIP mit allem, was der Spark von dir hat. Passwörter, Schlüssel und Stimmabdruck bleiben draußen. Fragt jedes Mal nach deinem Code, höchstens 3 Mal je Stunde.")
+            }
         }
         .navigationTitle("Sicherheit")
+        .onDisappear { m.dropExport() }
         .refreshable { await m.load() }
         .task { await m.load() }
         .codeAlert($ask)

@@ -393,6 +393,25 @@ class Live(Base):
             clear(uid)
         self.assertEqual(count(uid), 0)
 
+    def test_export_readable_without_marks(self):
+        # „Alle meine Daten herunterladen“ (meinedaten.LESER["fund.db"]): titles, fields, tags and the own tags, never a mark
+        _, uid = self.fresh("Fundexport")
+        self.assertEqual(fund.export(uid), {"eintraege": [], "eigene_schlagworte": []})
+        self.doc(uid, "Rechnung.txt", INVOICE, {"titel": "Rechnung Thomann", "art": "Rechnung", "absender": "Thomann GmbH"})
+        self.index(uid)
+        iid = fund.suche(uid, "Thomann", now=NOW)[0]["id"]
+        with quiet():
+            self.assertIsNotNone(fund.set_hand(uid, iid, [("person", "Dominik")], [("firma", "Thomann GmbH")], now=NOW))
+        out = fund.export(uid)
+        self.assertEqual([e["titel"] for e in out["eintraege"]], ["Rechnung Thomann"])
+        tags = {(x["typ"], x["wert"]) for x in out["eintraege"][0]["tags"]}
+        self.assertIn(("person", "Dominik"), tags)
+        self.assertNotIn(("firma", "Thomann GmbH"), tags)
+        self.assertEqual(out["eigene_schlagworte"][0]["plus"], [("person", "Dominik")])
+        text = json.dumps(out, ensure_ascii=False)
+        self.assertNotIn(vorrat.marke(uid, fund.norm("Thomann GmbH")), text)
+        self.assertNotIn("marke", text)
+
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):

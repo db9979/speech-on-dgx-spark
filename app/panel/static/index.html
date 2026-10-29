@@ -1531,6 +1531,13 @@
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
       <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div>
       <h3>Verlauf</h3><ul class="facts small" id="secev"></ul>
+      <h3>Meine Daten</h3>
+      <div class="setrow"><div class="lbl"><b>Alle meine Daten herunterladen</b><span>Eine ZIP mit allem, was der Spark von dir hat. Passwörter, Schlüssel und Stimmabdruck bleiben draußen.</span></div><button class="b" id="mydopen" type="button">Auswählen …</button></div>
+      <div id="mydbox" hidden><ul class="facts" id="mydareas"></ul>
+        <details id="mydout"><summary>Was draußen bleibt und warum</summary><ul class="facts small" id="mydoutlist"></ul></details>
+        <div class="row" id="mydpinrow" hidden style="margin-top:6px"><input type="password" id="mydpin" inputmode="numeric" autocomplete="off" maxlength="64" placeholder="PIN" aria-label="PIN"></div>
+        <div class="row" style="margin-top:6px"><button class="b p" id="mydgo" type="button">Packen und herunterladen</button><span id="mydmsg" class="fh"></span></div>
+        <div class="fh" id="mydnote">Fragt jedes Mal nach deinem Code (ohne zweiten Schritt nach der PIN). Höchstens 3 Mal je Stunde; der Link gilt einmal und 10 Minuten.</div></div>
       <div class="ic-tabend"></div>
       <label>Mein Notaus</label><div class="mynabox" id="mynabox">
         <div class="fh" id="mynatext">Legt nur dein Profil still: alle anderen Anmeldungen und Geräte-Schlüssel, MCP und Telegram sind zu, und in deinem Namen passiert nichts mehr (Smart Home, Mail, Termine, Nachrichten, Aufträge, Von selbst). Lesen und Fragen gehen in diesem Browser weiter. Die anderen Profile merken nichts.</div>
@@ -1621,6 +1628,7 @@
 <script src="/static/js/mitschreib.js"></script>
 <script src="/static/js/offen.js"></script>
 <script src="/static/js/gemerkt.js"></script>
+<script src="/static/js/meinedaten.js"></script>
 <script src="/static/js/mitteilung.js"></script>
 <script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>

@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,6 +12,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
 import android.text.InputType
 import android.view.Gravity
@@ -20,6 +22,7 @@ import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.webkit.CookieManager
 import android.webkit.PermissionRequest
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -322,13 +325,37 @@ class MainActivity : Activity() {
                 }
             }
         }
-        // a new app version (Ich → Android-App) and other files: the browser downloads, Android installs
-        w.setDownloadListener { url, _, _, _, _ -> outside(Uri.parse(url)) }
+        // a new app version (Ich → Android-App) and other files: the browser downloads, Android installs; the ZIP of
+        // Ich → Sicherheit → Meine Daten needs the page's sign-in: Android's download manager fetches it with it
+        w.setDownloadListener { url, _, disposition, mime, _ -> download(Uri.parse(url), disposition, mime) }
         return w
     }
 
     private fun androidPermission(resource: String) =
         if (resource == PermissionRequest.RESOURCE_VIDEO_CAPTURE) Manifest.permission.CAMERA else Manifest.permission.RECORD_AUDIO
+
+    /** „Alle meine Daten herunterladen“ (meinedaten.py): the one-time pickup of the own Spark, with the page's cookie,
+     *  into Downloads; only that path of the Spark's own address (nothing else ever gets the cookie), the rest goes out. */
+    private fun download(uri: Uri, disposition: String?, mime: String?) {
+        val base = store.base?.let { Uri.parse(it) }
+        if (base == null || uri.scheme != base.scheme || uri.authority != base.authority ||
+            uri.path?.matches(Regex("/api/profile/export/[A-Za-z0-9_-]{22}")) != true) {
+            outside(uri)
+            return
+        }
+        val cookie = CookieManager.getInstance().getCookie(uri.toString()) ?: return
+        val name = URLUtil.guessFileName(uri.toString(), disposition, mime ?: "application/zip")
+        val r = DownloadManager.Request(uri)
+            .addRequestHeader("Cookie", cookie)
+            .setMimeType("application/zip")
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
+        try {
+            (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).enqueue(r)
+        } catch (_: Exception) {
+            outside(uri)
+        }
+    }
 
     private fun outside(uri: Uri) {
         if (uri.scheme != "https" && uri.scheme != "http" && uri.scheme != "mailto" && uri.scheme != "tel") return

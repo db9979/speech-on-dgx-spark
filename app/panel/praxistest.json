@@ -4538,6 +4538,13 @@
 "titel": "Koppeln mit Einmal-Link und QR-Code",
 "text": "Fernzugang → Systeme entsperren, „+ System koppeln“, Name und Linux wählen, „Koppeln (Code)“. A: Unter dem Code stehen ein Einmal-Link mit „Kopieren“, „Teilen“ (wo der Browser es kann), „Per E-Mail“ und ein QR-Code. B: Den Link (oder den QR-Code mit dem Handy) auf dem neuen System öffnen: die Seite „System koppeln“ zeigt nur die eine Zeile mit „Kopieren“, nie den Code; die Adresszeile verliert den Teil hinter „#“. C: Die Zeile im Terminal einfügen, den Code aus dem Panel tippen: das System erscheint. D: Den Link danach noch einmal öffnen: „Dieser Link gilt nicht mehr“. E: Mit macOS gewählt zeigt der Link die Zeile mit /usr/bin/python3.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P673",
+"v": 1255,
+"titel": "Alle meine Daten herunterladen",
+"text": "Unter Ich → Sicherheit → Meine Daten auf „Auswählen …“: die Bereiche stehen mit Anzahl und Größe da, aufgeklappt „Was draußen bleibt und warum“ (Stimmabdruck, Anmeldung, Vorräte …). Einen Bereich abwählen, „Packen und herunterladen“: der Spark fragt den Code (ohne zweiten Schritt die PIN), dann lädt der Browser „spark-meine-daten-….zip“. In der ZIP: LIESMICH.txt (Deutsch und Englisch), uebersicht.json, das Gedächtnis lesbar, der abgewählte Bereich fehlt, keine voice.json, kein Passwort. Den Link aus dem Netzwerk-Tab ein zweites Mal öffnen: „Dieser Abhol-Code gilt nicht mehr“. Viermal in einer Stunde: beim vierten Mal „Höchstens 3 Mal je Stunde“. Zustand → Logs ohne Filter: die Zeile „GET /api/profile/export/…“ zeigt den Code nicht. Zustand → Logs, Bereich Speicher: „meinedaten: export … dateien=… mb=…“ ohne Namen; Zustand → Live, Kasten Gedächtnis: „Meine Daten: heute 1 gepackt · 1 abgeholt“. iPhone: Ich → Sicherheit → Meine Daten → Herunterladen, dann „Teilen oder sichern“. Android: im Panel derselbe Knopf, die ZIP liegt unter Downloads.",
+"thread": "Nutzerwissen sicherer und sichtbarer"
 }
 ]
 }

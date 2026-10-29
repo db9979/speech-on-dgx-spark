@@ -1702,6 +1702,33 @@ def unread_total(uid):
     return sum(int((c.get("unread") or {}).get(uid) or 0) for c in mine(uid).values())
 
 
+def own_messages(uid, now=None, most=20000):
+    """„Alle meine Daten herunterladen“ (meinedaten.py, Dominik 2026-10-29: from chats between profiles only the person's
+    own messages): [{"chat", "art", "t", "text" | "medium"}] of what this profile wrote, opened, never a word or a name
+    of anybody else. Private chats (sealed on the devices, chatsec.py), taken back, deleted for me and gone by „selbst
+    löschen“ are left out; a photo, file or voice message only as its kind."""
+    now = time.time() if now is None else now
+    out = []
+    with _lock:
+        chats = _index()
+    for cid, c in sorted(chats.items()):
+        if uid not in c["members"] or c.get("kind") == "priv":
+            continue
+        cleared = float((c.get("cleared") or {}).get(uid) or 0)
+        for x in _chat(cid, c, now)["items"]:
+            if x.get("from") != uid or x.get("gone") or x.get("kind") == "sys" or float(x.get("t") or 0) <= cleared:
+                continue
+            item = {"chat": cid, "art": "gruppe" if c.get("kind") == "group" else "zwei", "t": x.get("t")}
+            if x.get("kind") in MEDIA:
+                item["medium"] = x["kind"]
+            else:
+                item["text"] = unseal(x.get("text"), cid, x["id"])
+            out.append(item)
+            if len(out) >= most:
+                return out
+    return out
+
+
 def for_live(now=None):
     """Zustand → Live: numbers only (never a text, a name or a group's name)."""
     if not admin_on():

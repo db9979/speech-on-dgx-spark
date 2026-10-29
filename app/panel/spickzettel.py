@@ -199,6 +199,8 @@ TIPPS = (
      "<b>Ask “What can you do?”</b> or look under Me → What I can do."),
     ("<b>„Gemerkt: …“ unter der Antwort</b> zeigt, was sich der Spark gerade gemerkt hat; „Rückgängig“ nimmt es zurück.",
      "<b>“Remembered: …” under the answer</b> shows what the Spark just kept; “Undo” takes it back."),
+    ("<b>Alle deine Daten</b> als eine ZIP: Ich → Sicherheit → Meine Daten (mit deinem Code).",
+     "<b>All your data</b> as one ZIP: Me → Security → My data (with your code)."),
 )
 EN_NOTE = ("The Spark's fixed word rules are mostly German. An English sentence without one of these words still "
            "works: then the language model picks the tool itself.")

@@ -1541,7 +1541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur"
+"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten"
 },
 {
 "lang": "de",
@@ -1549,7 +1549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer "
+"text": ", fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und "
 },
 {
 "lang": "de",
@@ -1557,7 +1557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papier"
+"text": "nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowl"
 },
 {
 "lang": "de",
@@ -1565,7 +1565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "korb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own)."
+"text": "ist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own)."
 },
 {
 "lang": "de",
@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Daten auf der Platte",
 "title": "Daten auf der Platte",
-"text": "- Gedächtnis und Gespräche jedes Profils liegen ganz versiegelt (AES-256-GCM, Schlüssel je Zweck aus secret.key über HKDF, vorrat.key; Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben). Eine Kopie der Platte, ein Blick in den Ordner oder eine Sicherung auf einem fremden Rechner zeigt nur Rauschen; eine Datei, die in ein anderes Profil kopiert wird, öffnet sich dort nicht. - Öffnet eine Datei nicht, wird sie nie leer überschrieben: profiles.read_own legt sie beiseite, die Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück."
+"text": "- Gedächtnis und Gespräche jedes Profils liegen ganz versiegelt (AES-256-GCM, Schlüssel je Zweck aus secret.key über HKDF, vorrat.key; Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben). Eine Kopie der Platte, ein Blick in den Ordner oder eine Sicherung auf einem fremden Rechner zeigt nur Rauschen; eine Datei, die in ein anderes Profil kopiert wird, öffnet sich dort nicht. - Öffnet eine Datei nicht, wird sie nie leer überschrieben: profiles.read_own legt sie beiseite, die Admins sehen einen Hinweis, und nach der Umzugs-Sicherung holt „Wieder einlesen“ sie zurück. - „Alle meine Daten herunterladen“ (meinedaten.py, kein Schalter: Auskunftsrecht) packt nur, was das Datei-Register mit export= hineinlässt, Versiegeltes geöffnet über profiles.read_own, ohne Geheimnisse, Stimmabdruck und Vorräte fremder Server, aus Chats nur die eigenen Nachrichten. Vorher jedes Mal ein frischer Code oder Passkey (ohne zweiten Schritt die PIN), höchstens 3 je Stunde, höchstens 2048 MB; abgeholt wird einmal mit einem Code, von dem nur der Hash liegt (10 Minuten)."
 },
 {
 "lang": "de",
@@ -1629,7 +1629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1637,7 +1637,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel"
+"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten"
 },
 {
 "lang": "de",
@@ -1917,7 +1917,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (180) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (184) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1933,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 24 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 180 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 24 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 184 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -3253,7 +3253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 99). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 100). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3261,7 +3261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "erbund, anrufe, vorrat), ihn neu lesen, und profiles vergisst, was es von den versiegelten Dateien der Profile schon geöffnet hatte."
+"text": "verbund, anrufe, vorrat), ihn neu lesen, und profiles vergisst, was es von den versiegelten Dateien der Profile schon geöffnet hatte."
 },
 {
 "lang": "de",
@@ -3277,7 +3277,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 99 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 100 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3341,7 +3341,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ie versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht wei"
+"text": "ie versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (33 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche: "
 },
 {
 "lang": "de",
@@ -3349,7 +3349,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ter. 9. Verschlüsselt, Namen zufällig: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen. 10. Gelöschtes wartet im Papierkorb: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon. 11. In der Sicherung: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene Verschlüsselung. 12. Profil gelöscht?: delete_user nimmt das Profil und seine Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat. 13. Nur für dieses Profil: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner."
+"text": "local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter. 9. Verschlüsselt, Namen zufällig: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen. 10. Gelöschtes wartet im Papierkorb: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon. 11. In der Sicherung: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene Verschlüsselung. 12. Profil gelöscht?: delete_user nimmt das Profil und sei"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ne Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat. 13. Nur für dieses Profil: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner."
 },
 {
 "lang": "de",
@@ -3373,7 +3381,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Ich → Speicher: eigene Ziele (NAS, WebDAV, SFTP, SMB) und welche Bereiche dorthin gehen."
+"text": "- Ich → Speicher: eigene Ziele (NAS, WebDAV, SFTP, SMB) und welche Bereiche dorthin gehen. - Ich → Sicherheit → Meine Daten: alles Eigene als eine ZIP herunterladen, mit frischem Code."
 },
 {
 "lang": "de",
@@ -3397,7 +3405,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Kopie (Schritt 8, Schritt 9) - app/panel/backup.py _add_dir: users/ in die Sicherung (Schritt 11)"
+"text": "Kopie (Schritt 8, Schritt 9) - app/panel/backup.py _add_dir: users/ in die Sicherung (Schritt 11) - app/panel/dateien.py EXPORT: was in „Alle meine Daten herunterladen“ geht (aus dem Datei-Register) (Schritt 6) - app/panel/meinedaten.py build: die ZIP der eigenen Daten, ohne Geheimnisse (Schritt 6)"
 },
 {
 "lang": "de",
@@ -3405,7 +3413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_speicher, test_technik, test_stimmabdruck, test_hardening, test_siegel"
+"text": "Selbsttests: test_speicher, test_technik, test_stimmabdruck, test_hardening, test_siegel, test_meinedaten"
 },
 {
 "lang": "de",
@@ -10748,6 +10756,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Alle meine Daten herunterladen (V01.1.255, Plan *nutzerwissen*, Stufe 5, kein Schalter: Auskunftsrecht): Unter Ich → Sicherheit → Meine Daten zeigt „Auswählen …“ die Bereiche mit Anzahl und Größe (jeder lässt sich abwählen) und eingeklappt, was draußen bleibt und warum. „Packen und herunterladen“ fragt jedes Mal einen frischen Code oder Passkey (ohne zweiten Schritt die PIN) und lädt eine ZIP mit allem, was zum eigenen Profil gehört: Gedächtnis, Gespräche und das Gelernte geöffnet, Dokumente, Listen, Kalender, Einstellungen ohne Geheimnisse und aus Chats mit anderen nur die eigenen Nachrichten; dazu LIESMICH.txt (de+en) und uebersicht.json. Draußen bleiben Anmeldung und Schlüssel, der Stimmabdruck, Warteschlangen, gelesene Mails und die Vorräte fremder Server. Höchstens 3 je Stunde und 2 GB; der Abhol-Link gilt 10 Minuten und genau einmal. In der iPhone-App unter Ich → Sicherheit → Meine Daten (mit zweitem Schritt) zum Teilen oder Sichern, in der Android-App über den Download. Live zeigt am Kasten Gedächtnis nur Zahlen. Selbsttest test_meinedaten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einstellungen für das Sprachmodell (V01.0.121)",
 "text": "Einstellungen für das Sprachmodell (V01.0.121): Unter Einstellungen → Sprachmodell → Erweitert stellt der Admin ein: Verlaufslänge (4000–64000 Zeichen, Standard 24000), Websuchen pro Antwort (1–3, Standard 2), Zeitlimit einer Antwort (60–600 s), top_p und presence_penalty (0 = Standard des Servers) sowie eigene Stichwörter für die Werkzeugpflicht (eine Zeile pro Werkzeug, z. B. web_search: elfmeter, aufstellung; nur ganze Wörter, höchstens 20 pro Werkzeug, die eingebauten Wörter bleiben immer). „Standard wiederherstellen“ setzt die mitgelieferte Systemanweisung ein, „Ganzen Prompt ansehen“ zeigt alle Teile in ihrer Reihenfolge und markiert, welche fest sind. Mit dem Schalter Funktionen → „Eigener Gesprächsstil“ (aus) kann jedes Profil unter Ich → Gespräch → Antwort in höchstens 500 Zeichen sagen, wie der Assistent mit ihm reden soll; der Text steht unter der Systemanweisung und über den festen Regeln, gilt nie für Gäste oder eine fremde Stimme und lässt sich nicht über einen Geräteschlüssel ändern. Fest bleiben: Werkzeugregeln, der Umgang mit Text von außen, Codewort, Sperren und die Werte der Hintergrundaufgaben (Lernen, Briefing, Mail-Einordnen, Raum)."
 },
@@ -15413,7 +15429,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": ", Verträgen, Konten (IBAN oder Nummer) und Fristen aus den eigenen Dokumenten liegen als Tabellen wk_ent und wk_ment in der wissen.db des Profils, nie anderswo, nie im Log oder in Live (dort nur Anzahl je Art). Andere Teile lesen sie nur (wissenskarte.finde_knoten, knoten_liste, schreibgeschützte Verbindung). Umbenennen, Zusammenführen und Löschen gehen nur per Klick der Person mit dem Code von „Bestätigen“ (stufen.LIST); geht ein Dokument, gehen seine Stellen sofort mit."
+"text": ", Verträgen, Konten (IBAN oder Nummer) und Fristen aus den eigenen Dokumenten liegen als Tabellen wk_ent und wk_ment in der wissen.db des Profils, nie anderswo, nie im Log oder in Live (dort nur Anzahl je Art). Andere Teile lesen sie nur (wissenskarte.finde_knoten, knoten_liste, schreibgeschützte Verbindung). Umbenennen, Zusammenführen und Löschen gehen nur per Klick der Person mit dem Code von „Bestätigen“ (stufen.LIST); geht ein Dokument, gehen seine Stellen sofort mit. - Alle meine Daten herunterladen (seit V01.1.255, Plan *nutzerwissen*, Stufe 5, kein Schalter: Auskunftsrecht, Ausnahme in Richtlinie Teil 3, app/panel/meinedaten.py): Unter Ich → Sicherheit → Meine Daten packt der Spark nach einem frischen Code oder Passkey (ohne zweiten Schritt nach der PIN) alles, was zum eigenen Profil gehört, in eine ZIP mit LIESMICH.txt (de+en) und uebersicht.json. Was hineinkommt, sagt nur export= im Datei-Register; versiegelte Dateien öffnet profiles.read_own, versiegelte Werte in offenen Dateien fallen weg, Datenbanken kommen als Kopie über das SQLite-Backup, der Suchindex von Finden (fund.db) lesbar über fund.export (Titel, Felder, Schlagworte und die eigenen, nie die Marken), Links werd"
 },
 {
 "lang": "de",
@@ -18221,7 +18237,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page) stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every t"
+"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of \"Download all my data\") stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill swi"
 },
 {
 "lang": "en",
@@ -18229,7 +18245,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ime. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content"
+"text": "tch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, trans"
 },
 {
 "lang": "en",
@@ -18237,7 +18253,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the c"
+"text": "it), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or dele"
 },
 {
 "lang": "en",
@@ -18245,7 +18261,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ode of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own)."
+"text": "tes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own)."
 },
 {
 "lang": "en",
@@ -18277,7 +18293,7 @@
 "file": "Architecture and data flow",
 "head": "Data on the disk",
 "title": "Data on the disk",
-"text": "- Memory and conversations of every profile lie sealed whole (AES-256-GCM, a key per purpose from secret.key through HKDF, vorrat.key; the profile and the file name as associated data, a fresh nonce on every write). A copy of the disk, a look into the folder or a backup on a foreign computer shows only noise; a file copied into another profile does not open there. - If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the admins see a hint, and after the move backup „Read in again“ brings it back."
+"text": "- Memory and conversations of every profile lie sealed whole (AES-256-GCM, a key per purpose from secret.key through HKDF, vorrat.key; the profile and the file name as associated data, a fresh nonce on every write). A copy of the disk, a look into the folder or a backup on a foreign computer shows only noise; a file copied into another profile does not open there. - If a file does not open, it is never overwritten with empty: profiles.read_own sets it aside, the admins see a hint, and after the move backup „Read in again“ brings it back. - „Download all my data“ (meinedaten.py, no switch: right of access) packs only what the file register lets in with export=, sealed files opened through profiles.read_own, without secrets, voiceprint and supplies of foreign servers, from chats only the own messages. Before it every time a fresh code or passkey (without a second step the PIN), at most 3 per hour, at most 2048 MB; it is picked up once with a code of which only the hash is kept (10 minutes)."
 },
 {
 "lang": "en",
@@ -18309,7 +18325,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8)"
 },
 {
 "lang": "en",
@@ -18317,7 +18333,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel"
+"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten"
 },
 {
 "lang": "en",
@@ -18597,7 +18613,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (180) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (184) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -18613,7 +18629,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 24 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 180 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 24 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 184 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -19909,7 +19925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 99). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 100). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -19925,7 +19941,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 99 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 100 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -19989,7 +20005,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nother key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise. 10. Deleted waits in the bi"
+"text": "nother key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (33 entries, sealed ones opened through read_own) and why the rest stays out. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in "
 },
 {
 "lang": "en",
@@ -19997,7 +20013,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "n: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes. 11. In the backup: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it sealed: on this Spark they open again, on another one only with the move backup. The own copy (speicher.py) takes them opened into its own encryption. 12. Profile deleted?: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID. 13. Only for this profile: Every function reads only the folder of the signed-in profile. Guests have no folder."
+"text": "numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise. 10. Deleted waits in the bin: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes. 11. In the backup: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it sealed: on this Spark they open again, on another one only with the move backup. The own copy (speicher.py) takes them opened into its own encryption. 12. Profile deleted?: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID. 13. Only for this profile: Every function reads only the folder of the signed-in profile. Guests have no folder."
 },
 {
 "lang": "en",
@@ -20021,7 +20037,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Me → Storage: own targets (NAS, WebDAV, SFTP, SMB) and which areas go there."
+"text": "- Me → Storage: own targets (NAS, WebDAV, SFTP, SMB) and which areas go there. - Me → Security → My data: download everything of one's own as one ZIP, with a fresh code."
 },
 {
 "lang": "en",
@@ -20037,7 +20053,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/profiles.py current: the profile from cookie or device key (step 1) - app/panel/profiles.py _path: path in the profile's folder (step 2) - app/panel/profiles.py _write: write for the service only (step 4) - app/panel/profiles.py write_own: write memory and conversations sealed (step 5, step 3) - app/panel/profiles.py read_own: open or set aside, never overwrite with empty (step 5) - app/panel/dateien.py SIEGEL: which files lie sealed (from the file register) (step 3) - app/panel/siegel.py migrate: seal once, after a backup (step 3) - app/panel/profiles.py delete_user: delete profile and folder (step 12) - app/panel/vault.py seal: seal (step 3) - app/panel/speakers.py _store: voiceprint sealed (step 3, step 4) - app/panel/dateien.py AREAS: what may go to the own storage (from the file register) (step 6) - app/panel/speicher.py _key: the profile's storage key, sealed (step 9) - app/panel/speicher.py local_files: only the list, no links (step 8) - app/panel/speicher.py seal_file: AES-256-GCM in pieces (step 9) - app/panel/speicher.py copy_once: one run of the copy (step 8, step 9) - app/panel/backup.py _add_dir: users/ into the backup (step 11)"
+"text": "- app/panel/profiles.py current: the profile from cookie or device key (step 1) - app/panel/profiles.py _path: path in the profile's folder (step 2) - app/panel/profiles.py _write: write for the service only (step 4) - app/panel/profiles.py write_own: write memory and conversations sealed (step 5, step 3) - app/panel/profiles.py read_own: open or set aside, never overwrite with empty (step 5) - app/panel/dateien.py SIEGEL: which files lie sealed (from the file register) (step 3) - app/panel/siegel.py migrate: seal once, after a backup (step 3) - app/panel/profiles.py delete_user: delete profile and folder (step 12) - app/panel/vault.py seal: seal (step 3) - app/panel/speakers.py _store: voiceprint sealed (step 3, step 4) - app/panel/dateien.py AREAS: what may go to the own storage (from the file register) (step 6) - app/panel/speicher.py _key: the profile's storage key, sealed (step 9) - app/panel/speicher.py local_files: only the list, no links (step 8) - app/panel/speicher.py seal_file: AES-256-GCM in pieces (step 9) - app/panel/speicher.py copy_once: one run of the copy (step 8, step 9) - app/panel/backup.py _add_dir: users/ into the backup (step 11) - app/panel/dateien.py EXPOR"
 },
 {
 "lang": "en",
@@ -20045,7 +20061,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_speicher, test_technik, test_stimmabdruck, test_hardening, test_siegel"
+"text": "T: what goes into „Download all my data“ (from the file register) (step 6) - app/panel/meinedaten.py build: the ZIP of the own data, without secrets (step 6)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_speicher, test_technik, test_stimmabdruck, test_hardening, test_siegel, test_meinedaten"
 },
 {
 "lang": "en",
@@ -27100,6 +27124,14 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Download all my data (V01.1.255, plan *nutzerwissen*, stage 5, no switch: right of access): under Me → Security → My data \"Choose …\" shows the areas with count and size (each can be left out) and, folded, what stays out and why. \"Pack and download\" asks a fresh code or passkey every time (without a second step the PIN) and downloads a ZIP with everything that belongs to the own profile: memory, conversations and what was learned opened, documents, lists, calendars, settings without secrets and from chats with others only the own messages; with LIESMICH.txt (de+en) and uebersicht.json. Login and keys, the voiceprint, queues, read mails and the supplies of foreign servers stay out. At most 3 per hour and 2 GB; the pickup link holds 10 minutes and exactly once. In the iPhone app under Me → Security → My data (with a second step) to share or save, in the Android app through the download. Live shows only counts at the Memory box. Self-test test_meinedaten."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Language model settings (V01.0.121)",
 "text": "Language model settings (V01.0.121): Under Settings → Language model → Advanced the admin sets the history length (4000–64000 characters, default 24000), web searches per answer (1–3, default 2), the time limit for an answer (60–600 s), top_p and presence_penalty (0 = the server's default) and own keywords that require a tool (one line per tool, e.g. web_search: elfmeter, aufstellung; whole words only, at most 20 per tool, the built-in words always stay). \"Restore default\" fills in the shipped system prompt, \"Show the whole prompt\" lists all parts in order and marks the fixed ones. With Features → \"Own conversation style\" (off) each profile can say under Me → Conversation → Answer, in at most 500 characters, how the assistant should talk to it; the text sits below the system prompt and above the fixed rules, never applies to guests or another voice and cannot be changed with a device key. Fixed: tool rules, handling of outside text, code word, locks and the values of background jobs (learning, briefing, mail sorting, room)."
 },
@@ -31653,7 +31685,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "only a number per kind). Other parts only read them (wissenskarte.finde_knoten, knoten_liste, a read-only connection). Renaming, merging and deleting happen only by the person's click with the code of \"Confirm\" (stufen.LIST); when a document goes, its passages go with it at once."
+"text": "only a number per kind). Other parts only read them (wissenskarte.finde_knoten, knoten_liste, a read-only connection). Renaming, merging and deleting happen only by the person's click with the code of \"Confirm\" (stufen.LIST); when a document goes, its passages go with it at once. - Download all my data (since V01.1.255, plan *nutzerwissen*, stage 5, no switch: right of access, exception in guideline part 3, app/panel/meinedaten.py): under Me → Security → My data the Spark packs, after a fresh code or passkey (without a second step after the PIN), everything that belongs to the own profile into a ZIP with LIESMICH.txt (de+en) and uebersicht.json. What goes in is said only by export= in the file register; profiles.read_own opens sealed files, sealed values in open files are dropped, databases come as a copy through the SQLite backup, the search index of Find (fund.db) readable through fund.export (titles, fields, tags and the own ones, never the marks), links are never followed. Staying out with a reason: login and keys (password, passkeys, phone key), the voiceprint, queues, read mails and the supplies of foreign servers; from chats between profiles only the own messages (media only"
 },
 {
 "lang": "en",

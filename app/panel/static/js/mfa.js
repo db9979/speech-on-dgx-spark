@@ -148,7 +148,7 @@ window.pkLoginOffer=pkLoginOffer;window.confirmAsk=confirmAsk;
 // Buttons that ask for the code carry a lock beforehand (stufen.py): 🔒 Bestätigen (the code then counts 10 minutes),
 // 🔒🔒 Schutz ändern (asked every time). Buttons made later mark themselves with codeLock(button, level).
 const CODE_LOCKS={confirm:['gehein','gehaus','gehneu','tgsave','telsave','tgdel','apnssave','apnsdel','pushgo','voicego','calsave','mailsave','hasave','offnow','dadd','updprev'],
-  protect:['pwset','hacodesave','bakup','bakmove','offsave','dlsave']};
+  protect:['pwset','hacodesave','bakup','bakmove','offsave','dlsave','mydgo']};
 function codeLock(b,level){if(!b)return;b.classList.add(level==='protect'?'needcode2':'needcode');
   b.title=level==='protect'?t('Fragt jedes Mal nach dem Code','Asks for the code every time'):t('Fragt nach dem Code (gilt dann 10 Minuten)','Asks for the code (then counts 10 minutes)')}
 for(const [lv,ids] of Object.entries(CODE_LOCKS))for(const id of ids)codeLock(document.getElementById(id),lv);
