@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.248** Memory with fixed topics (home, employer, car …): per topic the newest value said counts, the old one stays to bring back; what was learned by itself never replaces what was confirmed, it comes as a card "Take it / Discard"; plus "N of 200"
 - **V01.1.247** Memory without silent throwing away: above 200 entries only the oldest ones learned by itself and never confirmed make room; what was said, corrected or confirmed never goes, otherwise the Spark refuses the new entry and points to Me → Memory (also when tidying up); "Memory check" on by default
 - **V01.1.246** Redesign stage 1: design tokens as one source (`tokens.css`), look unchanged; guard `test_design_tokens`
 - **V01.1.245** Find in all data stage A: one search index over the own documents, NAS, reMarkable and knowledge book (fields and categories by fixed rules, own tags first, marks per profile), a page Find of its own, the tool fund_suche in the assistant with the card "Show in Find", Ctrl K
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.241** AI Dungeon Master: one sorting for every typed action: all word lists in one module, every action gets exactly one kind by a fixed order; "Dann gehe ich los", "Wir schlagen hier unser Lager auf" and "We rest by the fire" are no attack any more
 - **V01.1.240** AI Dungeon Master: every value the model gives hangs on a fixed rule (anchor table), the game page knows every value of the panel, a protocol checker checks every narration once more and turns copied rounds into test cases, the narrator bench plays 15 turns in a row; a thing or a writing counts only when the narration shows it
 - **V01.1.239** AI Dungeon Master: sentence bench: about 300 fixed player sentences every word list must sort right; "I open the book", "staff" or "I set sail" are no attack any more, abilities are no longer named like spells
-- **V01.1.238** AI Dungeon Master: unique spell names, everyday words marked
 
 
 

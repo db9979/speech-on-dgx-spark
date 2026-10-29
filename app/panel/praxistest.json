@@ -4482,6 +4482,13 @@
 "titel": "Gedächtnis voll: nichts Gesagtes geht verloren",
 "text": "Funktionen → Gedächtnis prüfen steht ab Werk an. Ein Testprofil mit 200 vorbereiteten Einträgen im Gedächtnis, darunter ein paar von selbst gelernte, nie bestätigte: im Gespräch „Merk dir, der Ersatzschlüssel liegt im Schuppen.“ Der Eintrag steht danach unter Ich → Gedächtnis, es sind weiter 200, und nur der älteste gelernte (Kennzeichen „gelernt“) ist weg; jeder selbst gesagte bleibt. Dann alle gelernten mit „Stimmt noch“ bestätigen und noch etwas merken lassen: der Assistent sagt, dass das Gedächtnis voll ist, und nennt Ich → Gedächtnis zum Aufräumen; nichts ist verschwunden. Zustand → Live: Knoten „Gedächtnis“ mit „1 Profil voll“; Zustand → Logs (Gedächtnis): „gedaechtnis: platz frei … entfernt=1 grund=alt-gelernt“ und einmal „gedaechtnis: voll … abgelehnt=said“, nie der Text.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P665",
+"v": 1248,
+"titel": "Feste Themen: neuester Wert gewinnt, Gelerntes fragt erst",
+"text": "Funktionen → Gedächtnis prüfen steht ab Werk an, Funktionen → Alles Offene im Assistenten ist an. Im Gespräch „Merk dir, ich wohne in Pforzheim.“, danach „Merk dir, ich wohne jetzt in Bad Wildbad.“: unter Ich → Gedächtnis steht im Kasten „Feste Themen“ bei Wohnort nur Bad Wildbad mit „1 frühere“; Antippen zeigt Pforzheim mit „Zurückholen“, das holt Pforzheim zurück. Leere Themen (Beruf, Auto …) stehen als „–“ da. Dann in einem Gespräch nebenbei einen anderen Wohnort erzählen und 10 Minuten warten, bis der Spark von selbst lernt: der bestätigte Wohnort bleibt, unter Offen kommt eine Karte „Wohnort: neu gelernt – übernehmen?“ mit Bisher und Neu gelernt; „Verwerfen“ lässt alles, wie es ist, und dieselbe Stelle fragt nicht wieder; beim nächsten Mal „Übernehmen“: der neue Wert gilt, der alte steht als frühere Fassung. Oben in Ich → Gedächtnis steht „N von 200“ (ab 180 gelb). Fragt man „Wo wohne ich?“, nennt der Assistent nur den aktuellen Wert. Dasselbe in der iPhone-App unter Meine Sachen → Gedächtnis. Zustand → Logs (Gedächtnis): „gedaechtnis: fassung … grund=platz“ und „gedaechtnis: angebot … platz=wohnort“, nie ein Ort.",
+"thread": "Nutzerwissen sicherer und sichtbarer"
 }
 ]
 }

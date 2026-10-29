@@ -18300,6 +18300,46 @@
           }
         }
       }
+    },
+    "Feste Themen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed topics"
+          }
+        }
+      }
+    },
+    "Neu gelernt:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newly learned:"
+          }
+        }
+      }
+    },
+    "Frühere Fassungen: lange drücken und „Zurückholen“ wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier versions: press and hold, then pick “Bring back”."
+          }
+        }
+      }
+    },
+    "%lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld of %2$lld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

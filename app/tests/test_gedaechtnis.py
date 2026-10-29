@@ -1,6 +1,8 @@
 """Gedächtnis mit Beleg und Prüfung (gedaechtnis.py): every fact keeps where it came from, fixed rules (never a
 model) mark what may be out of date, nothing is deleted, the model gets the facts in three blocks, shipped on
 (features.DEFAULT_ON, plan nutzerwissen Frage 1)."""
+import contextlib
+import io
 import time
 import unittest
 
@@ -399,3 +401,177 @@ class Topics(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---------------------------------------------------------------- Feste Plätze (plan nutzerwissen, Stufe 2)
+# sentences and the place they fill (None: no place); wrong grabs are the risk of fixed patterns (plan, Risiko 4)
+BENCH = (("Wohnt in Pforzheim.", ("wohnort:", "pforzheim")), ("Ina wohnt jetzt in Bad Wildbad.", ("wohnort:", "bad wildbad")),
+         ("Sein Bruder wohnt in Berlin.", ("wohnort:bruder", "berlin")), ("Lives in London.", ("wohnort:", "london")),
+         ("Wohnt in der Nähe von Ulm.", None), ("Anna wohnt in Ulm.", None),          # no value / someone else by name
+         ("Arbeitet bei Bosch.", ("arbeit:", "bosch")), ("Arbeitet als Lehrerin.", ("beruf:", "lehrerin")),
+         ("Ist verheiratet mit Eva.", ("partner:", "eva")), ("Hat zwei Kinder.", ("kinder:", "zwei")),
+         ("Hat am 14.11. Geburtstag.", ("geburtstag:", "14 11")), ("Ist Vegetarier.", ("ernaehrung:", "vegetarier")),
+         ("Hat einen Hund.", ("haustierhund:", "einen")), ("Hat zwei Hunde.", ("haustierhund:", "zwei")),
+         ("Hat eine Katze.", ("haustierkatze:", "eine")),                           # a dog and a cat: two places
+         ("Fährt jetzt einen Skoda Enyaq.", ("auto:", "skoda enyaq")), ("Bruder heißt Tim.", ("name:bruder", "tim")),
+         ("Seine Lieblingsfarbe ist Blau.", ("lieblingsfarbe:", "blau")), ("Mag Tee.", None),
+         ("Ist allergisch gegen Nüsse.", None))                                     # allergies add up: no place
+
+
+def places_of(uid):
+    return {p["place"]: p for p in g.places(uid)}
+
+
+class Places(unittest.TestCase):
+    """Feste Plätze: fixed patterns of the panel say which place a fact fills; per place the newest value said or
+    corrected wins, the old one is an earlier version (at most 5, grund platz); a learned value never replaces a
+    confirmed one, it waits as an offer with a card „Übernehmen / Verwerfen“; the model gets only the newest value."""
+
+    def setUp(self):
+        helpers.keep_chat(self, "memory", "memory_check", "reminders", "vorgaenge", "deny")
+        helpers.set_config(memory=True, memory_check=True)
+
+    def test_bench(self):
+        for text, want in BENCH:
+            self.assertEqual(g.slot_of(text, "Ina"), want, text)
+        self.assertEqual([k for k, _, _ in g.SLOTS if k in g.ME], list(g.ME))     # every own place is a slot
+        self.assertFalse(hasattr(g, "KEYS") or hasattr(g, "key_of"))             # one source: the old list is gone
+        self.assertEqual(g.slot_label("wohnort:bruder"), "Wohnort · Bruder")
+        self.assertEqual(g.slot_label("lieblingsfarbe:", en=True), "Favourite farbe")
+        self.assertEqual(g.slot_base("lieblingsirgendwas:"), "lieblings")      # a log line never takes the rest
+
+    def test_newest_said_value_wins_and_keeps_five(self):
+        c, uid = profile("Platz Paula")
+        profiles.remember(uid, "Wohnt in Pforzheim.", src="said")
+        profiles.remember(uid, "Mag Tee.", src="said")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for town in ("Karlsruhe", "Ulm", "Bonn", "Kiel", "Jena", "Gera"):
+                self.assertEqual(profiles.remember(uid, f"Wohnt in {town}.", src="said"), f"Wohnt in {town}.")
+        facts = profiles.memory(uid)
+        self.assertEqual(len(facts), 2)                                            # one fact holds the place
+        f = next(x for x in facts if x["text"].startswith("Wohnt"))
+        self.assertEqual(f["text"], "Wohnt in Gera.")
+        self.assertEqual(len(f["prev"]), profiles.MAX_PREV)
+        self.assertEqual((f["prev"][0]["text"], f["prev"][0]["why"]), ("Wohnt in Jena.", "platz"))
+        self.assertIn("gedaechtnis: fassung", out.getvalue())
+        self.assertIn("grund=platz", out.getvalue())
+        self.assertNotIn("Gera", out.getvalue())                                   # never the fact in the journal
+        # someone else's place is a place of its own
+        profiles.remember(uid, "Sein Bruder wohnt in Berlin.", src="said")
+        self.assertEqual(len(profiles.memory(uid)), 3)
+        # the model gets only the value that holds the place, never an earlier version
+        hint = g.hint_lines({"id": uid, "name": "Platz Paula"})
+        self.assertIn("Wohnt in Gera.", hint)
+        self.assertNotIn("Jena", hint)
+        # Feste Themen: the own places stand there even while empty, the held one with its versions
+        p = places_of(uid)
+        self.assertEqual(list(p)[:len(g.ME)], [k + ":" for k in g.ME])
+        self.assertEqual((p["wohnort:"]["id"], p["wohnort:"]["prev"]), (f["id"], profiles.MAX_PREV))
+        self.assertNotIn("id", p["beruf:"])
+        self.assertIn("wohnort:bruder", p)
+        # switch off: a second fact beside it as before
+        helpers.set_config(memory_check=False)
+        profiles.remember(uid, "Wohnt in Gotha.", src="said")
+        self.assertEqual(len(profiles.memory(uid)), 4)
+
+    def test_older_contradicting_facts_never_reach_the_model(self):
+        prof = {"id": "x-places", "name": "Ina"}
+        text = g.hint_lines(prof, [fact("old", "Wohnt in Pforzheim.", 400, "auto"), fact("new", "Wohnt in Calw.", 10)], NOW)
+        self.assertIn("Wohnt in Calw.", text)
+        self.assertNotIn("Pforzheim", text)
+
+    def test_learned_value_never_replaces_a_confirmed_one(self):
+        helpers.set_config(reminders=True, vorgaenge=True)
+        import vorgaenge
+        c, uid = profile("Platz Pia")
+        profiles.remember(uid, "Wohnt in Pforzheim.", src="said")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertIsNone(profiles.remember(uid, "Wohnt in Bad Wildbad.", auto=True, convo="c1"))
+        facts = profiles.memory(uid)
+        self.assertEqual([x["text"] for x in facts], ["Wohnt in Pforzheim."])     # the said value stays
+        self.assertEqual(facts[0]["offer"]["text"], "Wohnt in Bad Wildbad.")
+        self.assertRegex(out.getvalue(), r"gedaechtnis: angebot \S.* \| platz=wohnort\n")
+        self.assertNotIn("Wildbad", out.getvalue())
+        self.assertNotIn("Wildbad", g.hint_lines({"id": uid, "name": "Platz Pia"}))   # an offer never goes to the model
+        self.assertEqual(places_of(uid)["wohnort:"]["offer"], "Wohnt in Bad Wildbad.")
+        # the card under Offen with Übernehmen / Verwerfen
+        card = next(x for x in vorgaenge.view(uid)["items"] if x["art"] == g.CARD)
+        self.assertEqual({a["k"] for a in card["acts"]} >= {"gp_nehmen", "gp_weg"}, True)
+        self.assertIn(["Neu gelernt", "Wohnt in Bad Wildbad."], card["felder"])
+        # the same learned value again: no second card, nothing changes
+        self.assertIsNone(profiles.remember(uid, "Wohnt in Bad Wildbad.", auto=True))
+        self.assertEqual(len([x for x in vorgaenge.view(uid)["items"] if x["art"] == g.CARD]), 1)
+        # Übernehmen on the card: the learned value holds the place, the said one is an earlier version
+        r = c.post("/api/profile/vorgaenge/act", json={"id": card["id"], "act": "gp_nehmen", "rev": card["rev"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        f = profiles.memory(uid)[0]
+        self.assertEqual((f["text"], f["src"], f["prev"][0]["why"]), ("Wohnt in Bad Wildbad.", "hand", "gelernt"))
+        self.assertNotIn("offer", f)
+        self.assertEqual(next(x for x in vorgaenge.view(uid)["items"] if x["art"] == g.CARD)["zustand"], "erledigt")
+        # Verwerfen in Ich → Gedächtnis: the value goes and never asks again
+        profiles.remember(uid, "Wohnt in Calw.", auto=True)
+        self.assertEqual(c.post(f"/api/profile/memory/{f['id']}/offer", json={"do": "drop"}).status_code, 200)
+        self.assertNotIn("offer", profiles.memory(uid)[0])
+        self.assertIsNone(profiles.remember(uid, "Wohnt in Calw.", auto=True))
+        self.assertNotIn("offer", profiles.memory(uid)[0])
+        self.assertEqual(c.post(f"/api/profile/memory/{f['id']}/offer", json={"do": "drop"}).status_code, 404)
+        # a learned value over a learned one: the newest wins (nothing the person said is touched)
+        profiles.remember(uid, "Fährt einen VW Golf.", auto=True)
+        profiles.remember(uid, "Fährt einen Skoda Enyaq.", auto=True)
+        car = [x for x in profiles.memory(uid) if x["text"].startswith("Fährt")]
+        self.assertEqual([x["text"] for x in car], ["Fährt einen Skoda Enyaq."])
+        # something said closes a waiting offer and its card
+        profiles.remember(uid, "Wohnt in Ulm.", auto=True)
+        profiles.remember(uid, "Wohnt in Tübingen.", src="said")
+        f = profiles.memory(uid)[0]
+        self.assertEqual((f["text"], "offer" in f), ("Wohnt in Tübingen.", False))
+
+    def test_offer_endpoint_checks(self):
+        c, uid = profile("Platz Pit")
+        profiles.remember(uid, "Arbeitet bei Bosch.", src="said")
+        profiles.remember(uid, "Arbeitet bei Siemens.", auto=True)
+        fid = profiles.memory(uid)[0]["id"]
+        for bad in ({"do": "x"}, {}, {"do": 1}):
+            self.assertEqual(c.post(f"/api/profile/memory/{fid}/offer", json=bad).status_code, 400)
+        self.assertEqual(TestClient(panel.app).post(f"/api/profile/memory/{fid}/offer", json={"do": "take"}).status_code, 401)
+        c2, _ = profile("Platz Pat")
+        self.assertEqual(c2.post(f"/api/profile/memory/{fid}/offer", json={"do": "take"}).status_code, 404)
+        helpers.set_config(deny={"gedpruefen": [uid]})
+        self.assertEqual(c.post(f"/api/profile/memory/{fid}/offer", json={"do": "take"}).status_code, 403)
+        helpers.set_config(deny={})
+        self.assertEqual(c.post(f"/api/profile/memory/{fid}/offer", content="x" * 4000,
+                                headers={"Content-Type": "application/json"}).status_code, 413)
+        r = c.post(f"/api/profile/memory/{fid}/offer", json={"do": "take"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(profiles.memory(uid)[0]["text"], "Arbeitet bei Siemens.")
+        d = c.get("/api/profile/memory").json()
+        self.assertEqual((d["max"], d["warn"], d["full"]), (profiles.MAX_FACTS, profiles.WARN_FACTS, False))
+        self.assertEqual(next(p for p in d["places"] if p["place"] == "arbeit:")["text"], "Arbeitet bei Siemens.")
+
+
+class FullCard(unittest.TestCase):
+    """Stufe-1-Rest: „Gedächtnis voll – aufräumen“ as a card under Offen while only protected facts are left; it goes
+    by itself when there is room again."""
+
+    def setUp(self):
+        helpers.keep_chat(self, "memory", "reminders", "vorgaenge")
+        helpers.set_config(memory=True, reminders=True, vorgaenge=True)
+
+    def test_card_comes_and_goes(self):
+        import vorgaenge
+        c, uid = profile("Voll Vera")
+        facts = [{"id": f"{i:08x}", "text": f"Gesagt {i}.", "created": 1_760_000_000 + i, "src": "said",
+                  "confirmed": 1_760_000_000 + i} for i in range(profiles.MAX_FACTS)]
+        with profiles._lock:
+            profiles._write(profiles._path(uid, "memory.json"), facts)
+        profiles._full_said.pop(uid, None)
+        self.assertIs(profiles.remember(uid, "Noch etwas.", src="said"), profiles.FULL)
+        card = next(x for x in vorgaenge.view(uid)["items"] if x["art"] == g.FULL_CARD)
+        self.assertEqual((card["zustand"], card["daten"]["weg"]), ("offen", "Ich → Gedächtnis"))
+        self.assertEqual([a["k"] for a in card["acts"]][0], "oeffnen")
+        self.assertTrue(c.get("/api/profile/memory").json()["full"])
+        profiles.forget(uid, fact_id=facts[0]["id"])
+        card = next(x for x in vorgaenge.view(uid)["items"] if x["art"] == g.FULL_CARD)
+        self.assertEqual(card["zustand"], "erledigt")

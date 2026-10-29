@@ -22,9 +22,13 @@ ON.closeProf=()=>closeProf();
 // Gedächtnis prüfen (gedaechtnis.py, plan gedaechtnis-pruefen): with the switches on every row shows its mark
 // (bestätigt, gelernt, veraltet?, Widerspruch) set by the panel's fixed rules; a click opens where the fact came from,
 // why it is marked and "Stimmt noch". Nothing is deleted by the rules.
-let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null,FCHECK=false,FMONTHS=6,FOPEN=null,FTOP=null;
+// Feste Themen (gedaechtnis.SLOTS, plan nutzerwissen Stufe 2): one row per fixed place with the value that holds it
+// (empty own places stand as „–“), a click shows its earlier versions with „Zurückholen“; a value learned by itself
+// that waits beside a confirmed one carries „Übernehmen / Verwerfen“. Above the list „N von 200“, yellow from 180.
+let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null,FCHECK=false,FMONTHS=6,FOPEN=null,FTOP=null,FPLACES=null,FMAX=200,FWARN=180,FPOPEN=null;
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);FACTS=d.facts||[];FCHECK=!!d.check;FMONTHS=d.months||6;FTOP=d.topics||null;
+  FPLACES=d.places||null;FMAX=d.max||200;FWARN=d.warn||180;
   if(!FCHECK&&['ok','learned','stale'].includes(FF))FF='all';factDraw()}
 const fdate=x=>x?new Date(x*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
 const FMARK={ok:['ok',t('bestätigt','confirmed')],learned:['',t('gelernt','learned')],stale:['warn',t('veraltet?','outdated?')],contra:['bad',t('Widerspruch','contradiction')]};
@@ -36,7 +40,21 @@ function factWhy(f){const by=f.by&&FACTS.find(x=>x.id===f.by);
     f.rule==='zeitwort'?t('Es klingt nach „gerade“ oder „nächste Woche“ und ist schon älter.','It sounds like "right now" or "next week" and is older than that.'):
     f.rule==='alt'?t(`Automatisch gelernt und seit mehr als ${FMONTHS} Monaten nicht bestätigt.`,`Learned automatically and not confirmed for more than ${FMONTHS} months.`):
     f.rule==='widerspruch'?t('Ein neuerer Eintrag sagt etwas anderes','A newer entry says something else')+(by?': „'+by.text+'“':'.'):''}
-const FWHY={fix:t('Korrektur im Gespräch','correction in a conversation'),nachfrage:t('Nachfrage im Gespräch','question in a conversation'),hand:t('von dir geändert','changed by you'),zurueck:t('zurückgeholt','brought back')};
+const FWHY={fix:t('Korrektur im Gespräch','correction in a conversation'),nachfrage:t('Nachfrage im Gespräch','question in a conversation'),hand:t('von dir geändert','changed by you'),zurueck:t('zurückgeholt','brought back'),
+  platz:t('neuer Wert für dasselbe Thema','new value for the same topic'),gelernt:t('gelernten Wert übernommen','learned value taken')};
+function factPlaces(){const E=icEl,box=$('factplaces');if(!box)return;box.textContent='';box.hidden=!FPLACES||!!FSEL;if(box.hidden)return;
+  const rows=[];FPLACES.forEach(p=>{const f=p.id&&FACTS.find(x=>x.id===p.id);const name=t(p.de,p.en);
+    if(!f){rows.push(icRow(name,'–',[]));return}
+    const prev=(f.prev||[]).filter(x=>x&&x.text).length;
+    const meta=(FSRC[f.src]||'')+(f.changed||f.created?' · '+t('seit ','since ')+fdate(f.changed||f.created):'')+(prev?' · '+t(`${prev} frühere`,`${prev} earlier`):'');
+    const r=icRow(name+': '+f.text,meta,[]);r.classList.add('click');r.querySelector('.ic-rmid').onclick=()=>{FPOPEN=FPOPEN===f.id?null:f.id;factPlaces()};
+    if(FPOPEN===f.id)r.classList.add('on');rows.push(r);
+    const off=f.offer&&f.offer.text;if(off){const take=E('button','b p',t('Übernehmen','Take it')),drop=E('button','b',t('Verwerfen','Discard'));take.type=drop.type='button';
+      const go=async what=>{take.disabled=drop.disabled=true;try{await api('/api/profile/memory/'+encodeURIComponent(f.id)+'/offer',xjson('POST',{do:what}));await showFacts()}catch(e){take.disabled=drop.disabled=false;$('factmsg').textContent=e.message}};
+      take.onclick=()=>go('take');drop.onclick=()=>go('drop');
+      rows.push(icNote(t('Neu gelernt: ','Newly learned: ')+off,t('Aus einem Gespräch gelernt. Bisher gilt, was du gesagt oder bestätigt hast; erst „Übernehmen“ ändert es.','Learned from a conversation. What you said or confirmed stays until you pick "Take it".'),[take,drop]))}
+    if(FPOPEN===f.id)rows.push(factDetail(f))});
+  box.append(icGroup(t('Feste Themen','Fixed topics'),FPLACES.filter(p=>p.id).length),icList(rows))}
 function factDetail(f){const E=icEl,d=E('div','ic-row factdet');const m=E('div','ic-rmid');
   if(fstale(f)){const w=E('div','factwhy');w.textContent='⚑ '+factWhy(f)+' '+t('Der Assistent nennt es nur vorsichtig, nie als Tatsache.','The assistant only mentions it carefully, never as a fact.');m.appendChild(w)}
   const dl=E('dl','ld-facts');const add=(k,v)=>{dl.append(E('dt','',k));const dd=E('dd');if(typeof v==='string')dd.textContent=v;else dd.appendChild(v);dl.appendChild(dd)};
@@ -71,6 +89,9 @@ function factDraw(){const E=icEl,tools=$('facttools'),box=$('factlist');if(!tool
     :[['all',t(`Alle ${FACTS.length}`,`All ${FACTS.length}`)],['own',t(`Von dir ${FACTS.length-nAuto}`,`From you ${FACTS.length-nAuto}`)],['auto',t(`Automatisch ${nAuto}`,`Automatic ${nAuto}`)]];
   tools.append(s,...chips.map(([k,l])=>icChip(l,FF===k,()=>{FF=k;FMORE=false;factDraw()},k==='stale'&&n('stale')?'warn':'')));
   if(FACTS.length){const pick=E('button','b',FSEL?t('Fertig','Done'):t('Auswählen','Select'));pick.type='button';pick.id='factpick';pick.onclick=()=>{FSEL=FSEL?null:new Set();factDraw()};tools.appendChild(pick)}
+  const full=FACTS.length>=FMAX,cnt=E('span','ic-badge'+(full?' bad':FACTS.length>=FWARN?' warn':''),t(`${FACTS.length} von ${FMAX}`,`${FACTS.length} of ${FMAX}`));cnt.id='factcount';
+  cnt.title=t('Darüber machen nur alte, von selbst gelernte, nie bestätigte Einträge Platz; was du gesagt oder bestätigt hast, bleibt.','Above that only old entries learned by itself and never confirmed make room; what you said or confirmed stays.');tools.appendChild(cnt);
+  factPlaces();
   const note=$('factcheck');if(note){note.textContent='';const ns=FCHECK?n('stale'):0;note.hidden=!ns;
     if(ns){const b=E('button','b p',t('Durchgehen','Go through'));b.type='button';b.onclick=()=>{FF='stale';FMORE=false;factDraw()};
       note.appendChild(icNote(t(`${ns} ${ns===1?'Eintrag ist':'Einträge sind'} vielleicht veraltet`,`${ns} ${ns===1?'entry is':'entries are'} maybe out of date`),

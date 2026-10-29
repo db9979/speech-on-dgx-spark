@@ -790,7 +790,10 @@ def profile_memory(prof=Depends(own_profile)):
     check = features.allowed("gedpruefen", prof["id"])
     return {"profile": prof, "facts": gedaechtnis.view(prof["id"]), "tidy": memtidy.pending(prof["id"]),
             "check": check, "months": gedaechtnis.months() if check else None,
-            "topics": {k: v for k, v in gedaechtnis.TOPICS.items()} if gedaechtnis.topics_on(prof["id"]) else None}
+            "topics": {k: v for k, v in gedaechtnis.TOPICS.items()} if gedaechtnis.topics_on(prof["id"]) else None,
+            # Feste Themen and „N von 200“ (plan nutzerwissen, Punkt 2 und 4.5)
+            "places": gedaechtnis.places(prof["id"]) if check else None, "max": profiles.MAX_FACTS,
+            "warn": profiles.WARN_FACTS, "full": profiles.memory_full(prof["id"])}
 
 
 @router.post("/api/profile/memory/{fact_id}/confirm", dependencies=[Depends(assistant)])
@@ -819,6 +822,23 @@ async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(brow
         raise HTTPException(404, "Eintrag oder Fassung nicht gefunden")
     gedaechtnis.log_version(prof["id"], "zurueck")
     return {"facts": gedaechtnis.view(prof["id"])}
+
+
+@router.post("/api/profile/memory/{fact_id}/offer", dependencies=[Depends(assistant)])
+async def profile_fact_offer(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    """Feste Themen: {"do": "take" | "drop"} for a value learned by itself that waits beside a confirmed one
+    (gedaechtnis.take_offer/drop_offer, the same as the card's „Übernehmen / Verwerfen“)."""
+    guard.limit(request, "memory", uid=prof["id"])
+    body = await json_body(request, 256)
+    if not features.allowed("gedpruefen", prof["id"]):
+        raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
+    do = body.get("do") if isinstance(body, dict) else None
+    if do not in ("take", "drop"):
+        raise HTTPException(400, "do must be take or drop")
+    fn = gedaechtnis.take_offer if do == "take" else gedaechtnis.drop_offer
+    if not fn(prof["id"], str(fact_id)[:40]):
+        raise HTTPException(404, "Kein neu gelernter Wert mehr da")
+    return {"facts": gedaechtnis.view(prof["id"]), "places": gedaechtnis.places(prof["id"])}
 
 
 @router.post("/api/profile/memory/{fact_id}/topic", dependencies=[Depends(assistant)])

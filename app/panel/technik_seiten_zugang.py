@@ -621,12 +621,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "01e465d025",
+        "stand": "dff5dc96b8",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
+            "gedaechtnis.offer": ["s8"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -827,6 +828,12 @@ SEITEN = {
                  "A cap never takes what the person said or confirmed: in the memory, above {profiles.MAX_FACTS} facts "
                  "only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new "
                  "fact is refused with a fixed result."),
+                ("Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein "
+                 "gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte "
+                 "„Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung.",
+                 "What the Spark learned by itself never replaces what the person said or confirmed: a learned value for "
+                 "a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only "
+                 "their button changes the entry, the old one stays as an earlier version."),
             ]),
             (("Maßstäbe", "Standards"), [
                 ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
@@ -856,6 +863,7 @@ SEITEN = {
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
+            ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
                   "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze"],

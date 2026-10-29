@@ -51,17 +51,63 @@ WHO = ("bruder", "schwester", "mutter", "vater", "mama", "papa", "sohn", "tochte
        "onkel", "tante", "cousin", "cousine", "nachbar", "nachbarin", "hund", "katze", "kind", "kinder", "enkel",
        "enkelin", "neffe", "nichte", "schwager", "schwägerin", "brother", "sister", "mother", "father", "son",
        "daughter", "wife", "husband", "friend", "boss", "dog", "cat")
-KEYS = (("name", re.compile(r"(?i)\b(\w+)\s+heißt\s+([\w\-]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-]+))?)")),
-        ("name", re.compile(r"(?i)\b(\w+)'?s? name is\s+([\w\-]+)")),
-        ("wohnort", re.compile(r"(?i)\bwohnt\s+(?:jetzt\s+|seit \S+ )?in\s+([\w\-]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-]+))?)")),
-        ("wohnort", re.compile(r"(?i)\blives in\s+([\w\-]+(?:\s+(?-i:[A-Z][\w\-]+))?)")),
-        ("arbeit", re.compile(r"(?i)\barbeitet\s+(?:jetzt\s+)?(?:bei|für)\s+([\w\-&]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-&]+))?)")),
-        ("beruf", re.compile(r"(?i)\barbeitet\s+(?:jetzt\s+)?als\s+([\w\-]+)")),
-        ("beruf", re.compile(r"(?i)\bworks as an?\s+([\w\-]+)")),
-        ("auto", re.compile(r"(?i)\bfährt\s+(?:jetzt\s+)?(?:einen|ein|eine)\s+([\w\-]+(?:\s+(?-i:[A-ZÄÖÜ0-9][\w\-]*))?)")),
-        ("auto", re.compile(r"(?i)\bdrives an?\s+([\w\-]+(?:\s+(?-i:[A-Z0-9][\w\-]*))?)")),
-        ("partner", re.compile(r"(?i)\bist verheiratet mit\s+([\w\-]+)")),
-        ("lieblings", re.compile(r"(?i)\blieblings(\w+)\s+ist\s+([\w\-]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-]+))?)")))
+# Feste Plätze (plan nutzerwissen, Punkt 2, Dominik 2026-10-29 „a“): what a fact is about, recognized only by these
+# fixed patterns of the panel, never by a model. A place is the slot and who it is about („Bruder wohnt in …“ is the
+# place wohnort:bruder, „Wohnt in …“ wohnort:); per place the newest value said or corrected wins and the old wording
+# is kept as an earlier version (profiles.remember, grund „platz“); a value learned by itself never replaces a
+# confirmed one, it waits as an offer (card „Übernehmen / Verwerfen“, take_offer/drop_offer). R4 reads the same list.
+# Each pattern: (?P<v>…) the value, (?P<who>…) whom it is about when the sentence says it (name), (?P<sub>…) the
+# kind of a favourite („Lieblingsfarbe“). Shown in this order in Ich → Gedächtnis (Feste Themen); ME the places
+# of the person's own that stand there as „–“ while empty (Regel „Werte stehen still“).
+_V = r"[\w\-]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-]+))?"
+SLOTS = (
+    ("wohnort", ("Wohnort", "Home"), (
+        re.compile(r"(?i)\b(?:wohnt|wohne|lebt|lebe)\s+(?:jetzt\s+|inzwischen\s+|seit \S+ )?in\s+(?P<v>" + _V + ")"),
+        re.compile(r"(?i)\b(?:lives|live)\s+(?:now\s+)?in\s+(?P<v>[\w\-]+(?:\s+(?-i:[A-Z][\w\-]+))?)"))),
+    ("arbeit", ("Arbeitgeber", "Employer"), (
+        re.compile(r"(?i)\b(?:arbeitet|arbeite)\s+(?:jetzt\s+|inzwischen\s+)?(?:bei|für)\s+(?P<v>[\w\-&]+(?:\s+(?-i:[A-ZÄÖÜ][\w\-&]+))?)"),
+        re.compile(r"(?i)\b(?:works|work)\s+(?:now\s+)?(?:at|for)\s+(?P<v>[\w\-&]+(?:\s+(?-i:[A-Z][\w\-&]+))?)"))),
+    ("beruf", ("Beruf", "Job"), (
+        re.compile(r"(?i)\b(?:arbeitet|arbeite)\s+(?:jetzt\s+|inzwischen\s+)?als\s+(?P<v>[\w\-]+)"),
+        re.compile(r"(?i)\b(?:ist|bin)\s+von beruf\s+(?P<v>[\w\-]+)"),
+        re.compile(r"(?i)\b(?:works|work)\s+as an?\s+(?P<v>[\w\-]+)"))),
+    ("partner", ("Partner", "Partner"), (
+        re.compile(r"(?i)\b(?:ist|bin)\s+(?:seit \S+ )?verheiratet mit\s+(?P<v>[\w\-]+)"),
+        re.compile(r"(?i)\b(?:ist|bin)\s+(?:seit \S+ )?(?:zusammen|liiert)\s+mit\s+(?P<v>[\w\-]+)"),
+        re.compile(r"(?i)\b(?:is|am)\s+married to\s+(?P<v>[\w\-]+)"))),
+    ("kinder", ("Kinder", "Children"), (
+        re.compile(r"(?i)\b(?:hat|habe)\s+(?P<v>keine|kein|ein|zwei|drei|vier|fünf|sechs|\d)\s+(?:kind|kinder)\b"),
+        re.compile(r"(?i)\b(?:has|have)\s+(?P<v>no|one|two|three|four|five|six|\d)\s+(?:child|children|kids)\b"))),
+    ("geburtstag", ("Geburtstag", "Birthday"), (
+        re.compile(r"(?i)\b(?:hat|habe)\s+am\s+(?P<v>[0-3]?\d\.\s?(?:1[0-2]|0?[1-9])\.)\s*geburtstag"),
+        re.compile(r"(?i)\bgeburtstag\s+(?:ist\s+)?am\s+(?P<v>[0-3]?\d\.\s?(?:1[0-2]|0?[1-9])\.)"),
+        re.compile(r"(?i)\bbirthday\s+is\s+(?:on\s+)?(?P<v>[A-Za-z]+\s+\d{1,2}|\d{1,2}\s+[A-Za-z]+)"))),
+    # what the person eats; allergies and intolerances add up (nuts and pollen), so they are no place of their own
+    ("ernaehrung", ("Ernährung", "Diet"), (
+        re.compile(r"(?i)\b(?:ist|bin|lebt|lebe|isst|esse)\s+(?:jetzt\s+|inzwischen\s+|seit \S+ )?"
+                   r"(?P<v>vegetarisch|vegetarier\w*|vegan\w*|pescetarisch|flexitarisch|wieder fleisch)"),
+        re.compile(r"(?i)\b(?:is|am)\s+(?:now\s+)?(?P<v>vegetarian|vegan|pescatarian|flexitarian)"))),
+    # one place per kind of animal (a dog and a cat at once is no contradiction): the value is how many
+    ("haustier", ("Haustier", "Pet"), (
+        re.compile(r"(?i)\b(?:hat|habe)\s+(?:jetzt\s+)?(?P<v>keinen|keine|kein|einen|eine|ein|zwei|drei|vier)\s+"
+                   r"(?P<sub>hund|hunde|katze|katzen|kater|hasen|kaninchen|meerschweinchen|pferd|pferde)\b"),
+        re.compile(r"(?i)\b(?:has|have)\s+(?P<v>no|an?|one|two|three|four)\s+(?P<sub>dog|dogs|cat|cats|rabbit|rabbits|horse|horses)\b"))),
+    ("auto", ("Auto", "Car"), (
+        re.compile(r"(?i)\b(?:fährt|fahre)\s+(?:jetzt\s+|inzwischen\s+)?(?:einen|ein|eine)\s+(?P<v>[\w\-]+(?:\s+(?-i:[A-ZÄÖÜ0-9][\w\-]*))?)"),
+        re.compile(r"(?i)\b(?:drives|drive)\s+an?\s+(?P<v>[\w\-]+(?:\s+(?-i:[A-Z0-9][\w\-]*))?)"))),
+    ("name", ("Name", "Name"), (
+        re.compile(r"(?i)\b(?P<who>\w+)\s+heißt\s+(?P<v>" + _V + ")"),
+        re.compile(r"(?i)\b(?P<who>\w+)'?s? name is\s+(?P<v>[\w\-]+)"))),
+    ("lieblings", ("Lieblings", "Favourite "), (
+        re.compile(r"(?i)\blieblings(?P<sub>\w+)\s+ist\s+(?P<v>" + _V + ")"),
+        re.compile(r"(?i)\bfavou?rite\s+(?P<sub>\w+)\s+is\s+(?P<v>[\w\-]+(?:\s+(?-i:[A-Z][\w\-]+))?)"))),
+)
+SLOT = {k: names for k, names, _ in SLOTS}
+ME = ("wohnort", "arbeit", "beruf", "partner", "kinder", "geburtstag", "ernaehrung", "auto")
+# the kinds of animal of one pet place (haustier): the same animal in other words is the same place
+ANIMAL = {"hunde": "hund", "katzen": "katze", "kater": "katze", "hasen": "kaninchen", "pferde": "pferd", "dog": "hund",
+          "dogs": "hund", "cat": "katze", "cats": "katze", "rabbit": "kaninchen", "rabbits": "kaninchen", "horse": "pferd",
+          "horses": "pferd"}
 
 _lock = threading.Lock()
 _counts = {}              # uid -> (time, counts) for the Live page and Logs → Anfragen
@@ -135,21 +181,65 @@ def _who(before):
     return next((w for w in reversed(words) if w in WHO), "")
 
 
-def key_of(text):
-    """(key, value) for R4, or None: what the fact is about and the value it gives it."""
-    for k, rx in KEYS:
-        m = rx.search(text or "")
-        if not m:
-            continue
-        if k == "name":
-            subj = m.group(1).lower()
-            if subj not in WHO:
-                continue
-            return f"name:{subj}", m.group(2).lower()
-        if k == "lieblings":
-            return f"lieblings{m.group(1).lower()}:{_who(text[:m.start()])}", m.group(2).lower()
-        return f"{k}:{_who(text[:m.start()])}", m.group(1).lower()
+# who a sentence is about when it names nobody of WHO: the person (no subject, ich/er/sie, „der Nutzer“, a possessive or
+# the profile's own name); another capitalized name before the verb („Anna wohnt in Ulm“) is someone else: no place
+OWN = {"ich", "er", "sie", "nutzer", "nutzerin", "benutzer", "user", "mein", "meine", "sein", "seine", "ihr", "ihre",
+       "i", "he", "she", "my", "his", "her"}
+
+
+def slot_of(text, name=""):
+    """(place, value) or None: which fixed place the fact fills (SLOTS, „wohnort:bruder“) and the value it gives it.
+    Pure, fixed patterns only; name is the profile's name (a sentence about it is about the person)."""
+    text = str(text or "")
+    for k, _, rxs in SLOTS:
+        for rx in rxs:
+            for m in rx.finditer(text):
+                v = _val(m.group("v"))
+                if not v:          # „wohnt in der Nähe von …“: no value, no place
+                    continue
+                d = m.groupdict()
+                if d.get("who") is not None:
+                    who = d["who"].lower()
+                    if who not in WHO:
+                        continue
+                else:
+                    who = _who(text[:m.start()])
+                    last = re.findall(r"\w+", text[:m.start()])[-1:]
+                    if not who and last and last[0][:1].isupper() and last[0].lower() not in OWN \
+                            and last[0].lower() != str(name or "").lower():
+                        continue   # someone else by name
+                sub = (d.get("sub") or "").lower()
+                sub = ANIMAL.get(sub, sub) if k == "haustier" else sub
+                return f"{k}{sub}:{who}", v
     return None
+
+
+def slot_base(place):
+    """The fixed word of a place („lieblings“ for „lieblingsfarbe:“): what a log line may say, never the rest."""
+    head = str(place).partition(":")[0]
+    return next((x for x, _, _ in SLOTS if head.startswith(x)), "")
+
+
+def slot_label(place, en=False):
+    """The place's name for Ich → Gedächtnis: „Wohnort“, „Lieblingsfarbe“, „Name · Bruder“."""
+    head, _, who = str(place).partition(":")
+    k = slot_base(place)
+    if not k:
+        return head
+    base, sub = SLOT[k][1 if en else 0], head[len(k):]
+    text = base + sub if k == "lieblings" else f"{base} ({sub.capitalize()})" if sub else base
+    return text + (" · " + who.capitalize() if who else "")
+
+
+def _wins(f):
+    """The order of the facts of one place: a confirmed one before a learned one, then the newest (R4, holder)."""
+    return bool(confirmed(f)), since(f)
+
+
+def holder(facts, place, name=""):
+    """The fact that holds a place now (the one R4 keeps), or None."""
+    have = [f for f in facts if (slot_of(f.get("text"), name) or ("",))[0] == place]
+    return max(have, key=_wins) if have else None
 
 
 STOP = {"und", "mit", "seit", "bei", "im", "in", "am", "an", "als", "auf", "aus", "von", "zu", "zum", "zur", "ist", "hat",
@@ -170,7 +260,7 @@ def _differ(a, b):
     return bool(a and b) and a != b
 
 
-def check(facts, now=None, stale_months=STALE_MONTHS):
+def check(facts, now=None, stale_months=STALE_MONTHS, name=""):
     """{fact id: {"mark": "ok" | "learned" | "stale" | "contra", "rule": "", "by": id of the newer fact}} by fixed
     rules. Pure: reads nothing and writes nothing, now is given (tests set it)."""
     now = time.time() if now is None else now
@@ -190,12 +280,13 @@ def check(facts, now=None, stale_months=STALE_MONTHS):
             rule = "alt"
         mark = "stale" if rule else "ok" if conf else "learned"
         out[f["id"]] = {"mark": mark, "rule": rule, "by": ""}
-    # R4: per key the fact said last wins, every older one with another value is contradicted
+    # R4: per place (SLOTS) the fact said last wins, a confirmed one before a learned one (a value learned by itself
+    # never replaces a confirmed one); every other one with another value is contradicted
     newest = {}
     for f in facts:
-        kv = key_of(f.get("text") or "")
+        kv = slot_of(f.get("text") or "", name)
         if kv:
-            newest.setdefault(kv[0], []).append((since(f), f["id"], kv[1]))
+            newest.setdefault(kv[0], []).append((_wins(f), f["id"], kv[1]))
     for rows in newest.values():
         rows.sort()
         last_t, last_id, last_v = rows[-1]
@@ -212,11 +303,15 @@ def count(marks):
     return n
 
 
+def _name(uid):
+    return str((profiles.by_id(uid) or {}).get("name") or "")
+
+
 def marks_of(uid, facts=None, now=None, c=None):
     """The marks of a profile's facts; keeps the counts for the Live page."""
     facts = profiles.memory(uid) if facts is None else facts
     now = time.time() if now is None else now
-    m = check(facts, now, months(c))
+    m = check(facts, now, months(c), _name(uid))
     n = count(m)
     with _lock:
         before = _counts.get(uid)
@@ -236,6 +331,154 @@ def view(uid, now=None):
                  by=m[f["id"]]["by"]) for f in facts]
 
 
+def places(uid, facts=None, name=None):
+    """Ich → Gedächtnis, box Feste Themen: every fixed place of the person (ME, „–“ while empty) and every other place a
+    fact holds, with the holding fact's id, text, since, source, number of earlier versions and a learned offer."""
+    facts = profiles.memory(uid) if facts is None else facts
+    name = _name(uid) if name is None else name
+    held = {}
+    for f in facts:
+        kv = slot_of(f.get("text"), name)
+        if kv and (kv[0] not in held or _wins(f) > _wins(held[kv[0]])):
+            held[kv[0]] = f
+    out = []
+    for place in [k + ":" for k in ME] + sorted(p for p in held if p not in {k + ":" for k in ME}):
+        f = held.get(place)
+        row = {"place": place, "de": slot_label(place), "en": slot_label(place, True)}
+        if f:
+            off = f.get("offer") if isinstance(f.get("offer"), dict) else None
+            row.update(id=f["id"], text=f["text"], since=since(f), src=source(f), confirmed=confirmed(f),
+                       prev=len([p for p in f.get("prev") or [] if isinstance(p, dict)]),
+                       offer=str(off.get("text") or "") if off else "")
+        out.append(row)
+    return out
+
+
+# ---------------------------------------------------------------- a learned value against a confirmed one
+# Dominik 2026-10-29 (plan nutzerwissen, Frage 2 „a“): a value the Spark learned by itself never replaces one the
+# person said or confirmed. It waits on the holding fact as "offer" ({"text", "t", "convo"}, one at a time, the newest)
+# and becomes a card „Übernehmen / Verwerfen“ (vorgaenge.py, kind gedplatz) and a line in Ich → Gedächtnis.
+# „Verwerfen“ keeps the value in "declined" (at most DECLINED), so the same learned value never asks again.
+DECLINED = 5
+CARD, FULL_CARD = "gedplatz", "gedvoll"
+
+
+def offer(item, text, convo, now, name=""):
+    """Under profiles._lock: keeps text as the learned offer of the holding fact item. False when there is nothing
+    to ask (the same value, declined before, the same offer again)."""
+    kv, have = slot_of(text, name), slot_of(item.get("text"), name)
+    if not kv or not have or not _differ(kv[1], have[1]):
+        return False
+    old = item.get("offer") if isinstance(item.get("offer"), dict) else {}
+    if kv[1] in (item.get("declined") or []) or _val(old.get("text") or "") == kv[1]:
+        return False
+    item["offer"] = {"text": text, "t": int(now), **({"convo": convo} if clean_convo(convo) else {})}
+    return True
+
+
+def offer_card(uid, f):
+    """The card for a waiting offer (vorgaenge, only under Offen: not urgent); nothing while Offen is off."""
+    import vorgaenge
+    off = f.get("offer") or {}
+    place = slot_of(f.get("text"), _name(uid))
+    # the title may go out with a push („Wieder da“): only fixed words, never a word from the fact (Lieblings-…)
+    label = ("Lieblings-…" if slot_base(place[0]) == "lieblings" else slot_label(place[0])) if place else "Eintrag"
+    vorgaenge.put(uid, CARD, f"{CARD}:{f['id']}", f"{label}: neu gelernt – übernehmen?",
+                  "Gelernt aus einem Gespräch. Bisher gilt, was du gesagt oder bestätigt hast.",
+                  felder=[("Bisher", f.get("text", "")), ("Neu gelernt", off.get("text", ""))],
+                  daten={"weg": "Ich → Gedächtnis"}, wieder=True)
+
+
+def _decide(uid, fact_id, take, now=None):
+    """„Übernehmen“: the offer becomes the place's wording (the old one an earlier version, grund gelernt), confirmed
+    by the person now. „Verwerfen“: the offer goes, its value is not asked again. Returns the fact or None."""
+    now = int(time.time() if now is None else now)
+    with profiles._lock:
+        facts = profiles.memory(uid)
+        f = next((x for x in facts if x["id"] == fact_id), None)
+        off = f.get("offer") if f and isinstance(f.get("offer"), dict) else None
+        if not off or not off.get("text"):
+            return None
+        f.pop("offer")
+        if take:
+            profiles._keep_prev(f, "gelernt", now)
+            f["text"], f["src"], f["changed"], f["confirmed"] = str(off["text"])[:profiles.MAX_FACT_LEN], "hand", now, now
+            f.pop("auto", None)
+            if clean_convo(off.get("convo")):
+                f["convo"] = off["convo"]
+        else:
+            kv = slot_of(off["text"], _name(uid))
+            f["declined"] = ([kv[1]] if kv else []) + [d for d in f.get("declined") or [] if not kv or d != kv[1]][:DECLINED - 1]
+        profiles._write(profiles._path(uid, "memory.json"), facts)
+    close_card(uid, fact_id, "erledigt" if take else "abgelehnt")
+    print(f"gedaechtnis: angebot {'uebernommen' if take else 'verworfen'} {profiles.log_name(profiles.by_id(uid))}",
+          flush=True)
+    if take:
+        log_version(uid, "gelernt")
+    return f
+
+
+def take_offer(uid, fact_id, now=None):
+    return _decide(uid, fact_id, True, now)
+
+
+def drop_offer(uid, fact_id, now=None):
+    return _decide(uid, fact_id, False, now)
+
+
+def close_card(uid, fact_id, wie="erledigt"):
+    import vorgaenge
+    vorgaenge.done(uid, f"{CARD}:{fact_id}", wie)
+
+
+def full_card(uid, full):
+    """Stage-1 leftover (plan Punkt 4.3): „Gedächtnis voll – aufräumen“ once while only protected facts are left (put
+    again at most when remember writes its daily line), closed by itself once there is room again."""
+    import vorgaenge
+    if full:
+        vorgaenge.put(uid, FULL_CARD, f"{FULL_CARD}:voll", "Gedächtnis voll – aufräumen",
+                      f"{profiles.MAX_FACTS} Einträge, die du gesagt oder bestätigt hast. Neues merkt sich der Spark erst "
+                      "wieder, wenn du unter Ich → Gedächtnis aufräumst oder Einträge löschst.",
+                      daten={"weg": "Ich → Gedächtnis"}, wieder=True)
+    else:
+        vorgaenge.done(uid, f"{FULL_CARD}:voll", "erledigt")
+
+
+def _card_acts(uid, x):
+    """The buttons the rules allow now: Übernehmen / Verwerfen only while the offer still waits on its fact."""
+    if x["art"] == FULL_CARD:
+        return {"oeffnen"}
+    fid = x["key"].split(":", 1)[1]
+    f = next((y for y in profiles.memory(uid) if y["id"] == fid), None)
+    ok = f is not None and isinstance(f.get("offer"), dict) and features.allowed("gedpruefen", uid)
+    return {"gp_nehmen", "gp_weg", "oeffnen"} if ok else {"oeffnen"}
+
+
+def _card_run(uid, x, name):
+    """A button of the card: the same take/drop as Ich → Gedächtnis; the card closes through close_card."""
+    import vorgaenge
+    if name not in ("gp_nehmen", "gp_weg"):
+        return None
+    if not features.allowed("gedpruefen", uid):
+        raise vorgaenge.HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben.")
+    if not _decide(uid, x["key"].split(":", 1)[1], name == "gp_nehmen"):
+        raise vorgaenge.HTTPException(404, "Diesen Vorschlag gibt es nicht mehr.")
+    return {"text": "Übernommen." if name == "gp_nehmen" else "Verworfen, ich frage dazu nicht mehr."}
+
+
+def _register():
+    import vorgaenge
+    vorgaenge.ARTEN[CARD] = {"de": "Gelernt", "en": "Learned", "sym": "check", "mail": False, "dringend": False,
+                             "acts": ("gp_nehmen", "gp_weg", "oeffnen")}
+    vorgaenge.ARTEN[FULL_CARD] = {"de": "Gedächtnis voll", "en": "Memory full", "sym": "warn", "mail": False,
+                                  "dringend": False, "acts": ("oeffnen",)}
+    vorgaenge.AKTIONEN.update(gp_nehmen={"de": "Übernehmen", "en": "Take it", "stufe": "direkt"},
+                              gp_weg={"de": "Verwerfen", "en": "Discard", "stufe": "direkt"})
+    vorgaenge.QUELLEN[CARD] = {"acts": _card_acts, "run": _card_run}
+    vorgaenge.QUELLEN[FULL_CARD] = {"acts": _card_acts, "run": lambda uid, x, name: None}
+    vorgaenge.OFFEN_STUNDEN[CARD] = 7 * 24
+
+
 # ---------------------------------------------------------------- what the model gets
 HEAD = {"ok": "Was du sicher über {name} weißt:",
         "learned": "Aus Gesprächen gelernt, von {name} nicht bestätigt (Monat in Klammern):",
@@ -244,13 +487,15 @@ HEAD = {"ok": "Was du sicher über {name} weißt:",
 
 
 def hint_lines(prof, facts=None, now=None):
-    """The facts for the model in three blocks; the panel decides which fact goes where."""
+    """The facts for the model in three blocks; the panel decides which fact goes where. Per fixed place only the value
+    that holds it; earlier versions (prev) and a learned offer waiting for „Übernehmen“ never go to the model."""
     facts = profiles.memory(prof["id"]) if facts is None else facts
     m = marks_of(prof["id"], facts, now)
     blocks = {"ok": [], "learned": [], "stale": []}
     for f in facts:
         k = m[f["id"]]["mark"]
-        k = "stale" if k == "contra" else k
+        if k == "contra":   # a fixed place gives the model only its newest value, never an older one (SLOTS)
+            continue
         line = "- " + f["text"]
         if k == "learned" and f.get("created"):
             line += time.strftime(" (%m/%Y)", time.localtime(int(f["created"])))
@@ -290,7 +535,7 @@ def for_live(now=None):
     now = time.time() if now is None else now
     if _live[1] is not None and now - _live[0] < LIVE_S:
         return dict(_live[1])
-    total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0, "full": 0}
+    total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0, "full": 0, "offer": 0}
     for uid in profiles.user_ids():
         if not features.allowed("gedpruefen", uid, c):
             continue
@@ -300,13 +545,16 @@ def for_live(now=None):
         for k in n:
             total[k] += n[k]
         total["ask"] += bool(pending(uid))
-        total["full"] += profiles.memory_full(uid)   # profiles that refuse new facts (profiles._cap)
+        facts = profiles.memory(uid)
+        total["full"] += profiles.memory_full(uid, facts)   # profiles that refuse new facts (profiles._cap)
+        total["offer"] += sum(isinstance(f.get("offer"), dict) for f in facts)   # learned values waiting (SLOTS)
         total["untagged"] += len(untagged(uid)) if topics_on(uid, c) else 0
     _live[:] = [now, dict(total, on=True)]
     return dict(_live[1])
 
 
-WHY = {"fix": "korrektur", "nachfrage": "nachfrage", "hand": "von-hand", "zurueck": "zurueckgeholt"}
+WHY = {"fix": "korrektur", "nachfrage": "nachfrage", "hand": "von-hand", "zurueck": "zurueckgeholt", "platz": "platz",
+       "gelernt": "gelernt-uebernommen"}
 
 
 def log_version(uid, why):
@@ -376,7 +624,7 @@ def pick(uid, question, convo, facts=None, now=None):
     if (d.get("days") or {}).get(day, 0) >= ASK_DAY:
         return None
     facts = profiles.memory(uid) if facts is None else facts
-    m = check(facts, now, months())
+    m = check(facts, now, months(), _name(uid))
     asked = d.get("asked") or {}
     q = _terms(question)
     best = None
@@ -524,3 +772,6 @@ async def topics_once():
             await assign_topics(uid)
             return uid
     return None
+
+
+_register()

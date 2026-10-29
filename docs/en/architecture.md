@@ -1669,6 +1669,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 #### Caps without data loss
 
 - A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result.
+- What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version.
 
 #### Standards
 
@@ -1704,6 +1705,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
+- `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
 
 Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`
 
@@ -2400,6 +2402,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt.
 - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day.
+- Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer.
 
 #### Numbers (from the code)
 
@@ -2465,6 +2468,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
+- `app/panel/gedaechtnis.py` `slot_of`: a fact's fixed topic place by fixed patterns ([step 13](#kn-wissen-s13))
 
 Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`
 

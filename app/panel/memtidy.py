@@ -137,6 +137,9 @@ def apply(uid):
         profiles._write(profiles._path(uid, "memory.json"), keep)
     profiles.log_freed(uid, gone)
     drop(uid)
+    if profiles.memory_full(uid, facts) and not profiles.memory_full(uid, keep):   # room again
+        import gedaechtnis
+        gedaechtnis.full_card(uid, False)
     return len(facts) - len(keep)
 
 

@@ -27,6 +27,7 @@ USERS_DIR = os.environ.get("SPEECH_SPARK_USERS", "/var/lib/speech-spark/users")
 COOKIE = "speech_spark_user"
 DEVICE_HEADER = "x-speech-device"
 MAX_FACTS, MAX_FACT_LEN = 200, 300
+WARN_FACTS = 180   # Ich → Gedächtnis shows „N von MAX_FACTS“ in yellow from here on (plan nutzerwissen, Punkt 4.5)
 _lock = threading.Lock()
 # the assistant's faces (static/js/face.js): the admin picks the Spark's (chat.face), each profile may pick its own
 FACES = ("robot", "comic", "comic_woman")
@@ -1403,47 +1404,81 @@ def log_freed(uid, gone):
 def remember(uid, text, auto=False, src=None, convo=None, version=None):
     """Keeps a fact with its evidence (gedaechtnis.py): src said (memory_save in a conversation), fix (a confirmed
     correction), auto (learned from a quiet conversation), the conversation it came from and, when the person said
-    it, the time it counts as confirmed. version (fix, nachfrage): with „Gedächtnis prüfen“ on, a fact about the same
-    thing (the same fixed key, e.g. „wohnt in“) gets the new wording and keeps the old one as an earlier version,
-    instead of a second fact beside it. Returns the text kept, None (nothing to keep) or FULL (only protected facts
-    left at MAX_FACTS: nothing is thrown away, the new fact is refused, _cap)."""
+    it, the time it counts as confirmed. With „Gedächtnis prüfen“ on, a fact about a fixed place (gedaechtnis.SLOTS,
+    „wohnt in“, „Bruder heißt“) gives the fact that holds it the new wording and keeps the old one as an earlier
+    version (why: version or „platz“), instead of a second fact beside it; a value learned by itself (auto) never
+    replaces one the person said or confirmed: it waits there as an offer (card „Übernehmen / Verwerfen“). Returns the
+    text kept, None (nothing to keep, or only offered) or FULL (only protected facts left at MAX_FACTS: nothing is
+    thrown away, the new fact is refused, _cap)."""
     import features
     import gedaechtnis
     text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
     if not text:
         return None
     src = src if src in gedaechtnis.SRC else "auto" if auto else "said"
-    kv = gedaechtnis.key_of(text) if version in ("fix", "nachfrage") and features.allowed("gedpruefen", uid) else None
+    name = str((by_id(uid) or {}).get("name") or "")
+    kv = gedaechtnis.slot_of(text, name) if features.allowed("gedpruefen", uid) else None
+    res = None    # what happened: ("offer", fact), ("place", id of a closed offer), ("new", how many went), ("full", log)
     with _lock:
-        facts = [x for x in memory(uid) if x["text"].lower() != text.lower()]
+        facts = memory(uid)
         now = int(time.time())
-        same = [x for x in facts if kv and (gedaechtnis.key_of(x["text"]) or ("",))[0] == kv[0]]
-        if same:
-            item = max(same, key=gedaechtnis.since)
-            _keep_prev(item, version, now)
-            item["text"], item["src"], item["changed"], item["confirmed"] = text, src, now, now
-            item.pop("auto", None)
+        item = gedaechtnis.holder(facts, kv[0], name) if kv else None
+        if item is not None and src == "auto" and gedaechtnis.confirmed(item):
+            # learned by itself against a value the person said or confirmed: only an offer, never a replacement
+            if gedaechtnis.offer(item, text, convo, now, name):
+                _write(_path(uid, "memory.json"), facts)
+                res = ("offer", dict(item))
+        elif item is not None:
+            if item["text"] != text:
+                _keep_prev(item, version or "platz", now)
+            item["text"], item["src"], item["changed"] = text, src, now
+            closed = None
+            if src != "auto":
+                item["confirmed"] = now
+                item.pop("auto", None)
+                closed = item["id"] if item.pop("offer", None) else None
             if gedaechtnis.clean_convo(convo):
                 item["convo"] = convo
+            # the same sentence twice would be noise: an older twin goes
+            facts = [x for x in facts if x is item or x["text"].lower() != text.lower()]
             _write(_path(uid, "memory.json"), facts)
-            gedaechtnis.log_version(uid, version)
-            return text
-        item = {"id": secrets.token_hex(4), "text": text, "created": now, "src": src}
-        if src == "auto":  # learned from a conversation, not asked for
-            item["auto"] = True
+            res = ("place", closed)
         else:
-            item["confirmed"] = now
-        if gedaechtnis.clean_convo(convo):
-            item["convo"] = convo
-        facts.append(item)
-        facts, gone = _cap(facts, keep=item)
-        if len(facts) > MAX_FACTS:   # only protected facts left: refuse the new one rather than lose an old one
-            if now - _full_said.get(uid, 0) >= FULL_LOG_S:   # once a day per profile (Richtlinie Teil 4: no log flood)
-                _full_said[uid] = now
-                _log_full(log_name(by_id(uid)), src)
-            return FULL
-        _write(_path(uid, "memory.json"), facts)
-    log_freed(uid, gone)
+            facts = [x for x in facts if x["text"].lower() != text.lower()]
+            item = {"id": secrets.token_hex(4), "text": text, "created": now, "src": src}
+            if src == "auto":  # learned from a conversation, not asked for
+                item["auto"] = True
+            else:
+                item["confirmed"] = now
+            if gedaechtnis.clean_convo(convo):
+                item["convo"] = convo
+            facts.append(item)
+            facts, gone = _cap(facts, keep=item)
+            if len(facts) > MAX_FACTS:   # only protected facts left: refuse the new one rather than lose an old one
+                log = now - _full_said.get(uid, 0) >= FULL_LOG_S   # once a day per profile (Richtlinie Teil 4)
+                if log:
+                    _full_said[uid] = now
+                res = ("full", log)
+            else:
+                _write(_path(uid, "memory.json"), facts)
+                res = ("new", gone)
+    if res is None:          # learned by itself, the same value as the confirmed one or asked before: nothing new
+        return None
+    if res[0] == "offer":
+        gedaechtnis.offer_card(uid, res[1])
+        print(f"gedaechtnis: angebot {log_name(by_id(uid))} | platz={gedaechtnis.slot_base(kv[0])}", flush=True)
+        return None
+    if res[0] == "full":
+        if res[1]:
+            _log_full(log_name(by_id(uid)), src)
+            gedaechtnis.full_card(uid, True)   # „Gedächtnis voll – aufräumen“ (at most with the daily line)
+        return FULL
+    if res[0] == "place":
+        if res[1]:
+            gedaechtnis.close_card(uid, res[1])
+        gedaechtnis.log_version(uid, version or "platz")
+        return text
+    log_freed(uid, res[1])
     print(f"gedaechtnis: fact saved | {src} | {log_name(by_id(uid))}", flush=True)   # never the fact itself
     return text
 
@@ -1506,6 +1541,9 @@ def forget(uid, fact_id=None, text=None):
         else:
             keep = []
         _write(_path(uid, "memory.json"), keep)
+    if len(keep) < len(facts) and memory_full(uid, facts):   # room again: the card „Gedächtnis voll“ closes
+        import gedaechtnis
+        gedaechtnis.full_card(uid, False)
     print(f"gedaechtnis: {len(facts) - len(keep)} fact(s) forgotten | {log_name(by_id(uid))}", flush=True)
     return len(facts) - len(keep)
 

@@ -1589,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Obergrenzen ohne Datenverlust",
 "title": "Obergrenzen ohne Datenverlust",
-"text": "- Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt."
+"text": "- Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über 200 Fakten nur alte, von selbst gelernte, nie bestätigte Platz (profiles._cap); sonst wird der neue Fakt mit festem Ergebnis abgelehnt. - Was der Spark von selbst gelernt hat, ersetzt nie, was die Person gesagt oder bestätigt hat: ein gelernter Wert für einen festen Themen-Platz wartet nur als Angebot (gedaechtnis.offer) mit Karte „Übernehmen / Verwerfen“; erst ihr Knopf ändert den Eintrag, der alte bleibt als frühere Fassung."
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2277,7 +2277,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Gedächtnis",
 "title": "Gedächtnis",
-"text": "- Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt. - Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag."
+"text": "- Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke (sicher, gelernt, vielleicht veraltet) und gibt sie dem Modell im Systemprompt. - Höchstens 200 Fakten je Profil, ohne stilles Wegwerfen (profiles._cap, auch beim Aufräumen): darüber gehen zuerst die ältesten von selbst gelernten, nie bestätigten. Gesagtes, Korrigiertes, von Hand Geändertes, Aufgeräumtes und Bestätigtes geht nie; bleibt nur solches, wird der neue Fakt abgelehnt (memory_save: „Not done“ mit dem Weg Ich → Gedächtnis), eine Zeile „gedaechtnis: voll“ je Tag. - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot."
 },
 {
 "lang": "de",
@@ -2325,7 +2325,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13)"
+"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13)"
 },
 {
 "lang": "de",
@@ -10604,6 +10604,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Feste Themen (V01.1.248, Plan *nutzerwissen*, Stufe 2, Dominik 2026-10-29 „a“)",
+"text": "Feste Themen (V01.1.248, Plan *nutzerwissen*, Stufe 2, Dominik 2026-10-29 „a“): Mit Gedächtnis prüfen kennt das Panel feste Themen-Plätze (gedaechtnis.SLOTS, eine Liste, sie ersetzt die frühere KEYS; R4 liest dieselbe): Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung (vegetarisch, vegan …), Auto, Haustier (je Tierart ein Platz), Namen („Bruder heißt …“) und Lieblings-…, jeweils getrennt danach, um wen es geht (WHO: „Bruder wohnt in …“ ist der Platz wohnort:bruder). Erkannt wird nur mit festen Mustern des Panels (gedaechtnis.slot_of), nie vom Modell; ein Satz über eine andere Person mit Namen („Anna wohnt in Ulm“) oder ohne Wert („wohnt in der Nähe von …“) füllt keinen Platz. Allergien zählen zusammen (Nüsse und Pollen) und sind darum kein Platz. Je Platz hält ein Eintrag den Wert: was die Person sagt (memory_save), korrigiert oder von Hand ändert, gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „neuer Wert für dasselbe Thema“, grund=platz im Journal). Ein von selbst gelernter Wert ersetzt nie einen gesagten oder bestätigten: er wartet am Eintrag als Angebot und kommt als Karte „Gelernt“ unter Offen (vorgaenge, Art gedplatz, n"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Feste Themen (V01.1.248, Plan *nutzerwissen*, Stufe 2, Dominik 2026-10-29 „a“)",
+"text": "icht dringend, nur unter Offen) mit „Übernehmen“ und „Verwerfen“; derselbe Knopf steht unter Ich → Gedächtnis bei „Feste Themen“ (POST /api/profile/memory/{id}/offer mit {\"do\": \"take\"|\"drop\"}, Anmeldung, Profilbindung, CSRF, 256 Bytes, Rate-Limit „memory“; auch die iPhone-App). „Übernehmen“ macht den gelernten Wert zum Wortlaut (der alte wird frühere Fassung, Grund „gelernten Wert übernommen“), „Verwerfen“ merkt sich den Wert, damit dasselbe nie wieder fragt; sagt die Person vorher selbst etwas zum Thema, geht das Angebot mit seiner Karte. Gelerntes über Gelerntem: der neuere gewinnt, der alte bleibt als Fassung. Das Modell bekommt je Platz nur den Wert, der ihn hält; ältere widersprechende Einträge, frühere Fassungen und Angebote nie. Ich → Gedächtnis zeigt oben den Kasten „Feste Themen“: jeden eigenen Platz (leer als „–“) und jeden weiteren belegten mit Wert, Herkunft, „seit“ und „n frühere“; Antippen öffnet die Fassungen mit „Zurückholen“. Dazu oben „N von 200“, ab 180 gelb (profiles.WARN_FACTS), bei 200 rot; ist das Gedächtnis voll, kommt einmal eine Karte „Gedächtnis voll – aufräumen“ unter Offen (mit „Ansehen“ nach Ich → Gedächtnis, Art gedvoll; höchstens einmal am Tag wieder"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Feste Themen (V01.1.248, Plan *nutzerwissen*, Stufe 2, Dominik 2026-10-29 „a“)",
+"text": "), sie geht von selbst, sobald wieder Platz ist. iPhone: Meine Sachen → Gedächtnis mit „Feste Themen“, Übernehmen/Verwerfen, „Zurückholen“ (lange drücken) und „N von 200“; Android zeigt das Panel. Journal (Bereich Gedächtnis): gedaechtnis: angebot … | platz=wohnort, gedaechtnis: angebot uebernommen|verworfen …, gedaechtnis: fassung … | grund=platz|gelernt-uebernommen; nie ein Wert. Live: Knoten „Gedächtnis“ zusätzlich „N gelernt, wartet auf Übernehmen“. Selbsttest test_gedaechtnis (Places, FullCard)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einstellungen für das Sprachmodell (V01.0.121)",
 "text": "Einstellungen für das Sprachmodell (V01.0.121): Unter Einstellungen → Sprachmodell → Erweitert stellt der Admin ein: Verlaufslänge (4000–64000 Zeichen, Standard 24000), Websuchen pro Antwort (1–3, Standard 2), Zeitlimit einer Antwort (60–600 s), top_p und presence_penalty (0 = Standard des Servers) sowie eigene Stichwörter für die Werkzeugpflicht (eine Zeile pro Werkzeug, z. B. web_search: elfmeter, aufstellung; nur ganze Wörter, höchstens 20 pro Werkzeug, die eingebauten Wörter bleiben immer). „Standard wiederherstellen“ setzt die mitgelieferte Systemanweisung ein, „Ganzen Prompt ansehen“ zeigt alle Teile in ihrer Reihenfolge und markiert, welche fest sind. Mit dem Schalter Funktionen → „Eigener Gesprächsstil“ (aus) kann jedes Profil unter Ich → Gespräch → Antwort in höchstens 500 Zeichen sagen, wie der Assistent mit ihm reden soll; der Text steht unter der Systemanweisung und über den festen Regeln, gilt nie für Gäste oder eine fremde Stimme und lässt sich nicht über einen Geräteschlüssel ändern. Fest bleiben: Werkzeugregeln, der Umgang mit Text von außen, Codewort, Sperren und die Werte der Hintergrundaufgaben (Lernen, Briefing, Mail-Einordnen, Raum)."
 },
@@ -18093,7 +18117,7 @@
 "file": "Architecture and data flow",
 "head": "Caps without data loss",
 "title": "Caps without data loss",
-"text": "- A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result."
+"text": "- A cap never takes what the person said or confirmed: in the memory, above 200 facts only old facts learned by itself and never confirmed make room (profiles._cap); otherwise the new fact is refused with a fixed result. - What the Spark learned by itself never replaces what the person said or confirmed: a learned value for a fixed topic place only waits as an offer (gedaechtnis.offer) with the card „Take it / Discard“; only their button changes the entry, the old one stays as an earlier version."
 },
 {
 "lang": "en",
@@ -18125,7 +18149,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8)"
 },
 {
 "lang": "en",
@@ -18781,7 +18805,7 @@
 "file": "Architecture and data flow",
 "head": "Memory",
 "title": "Memory",
-"text": "- The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt. - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day."
+"text": "- The memory is not searched. The panel sorts the facts by fixed rules into three blocks (sure, learned, maybe out of date) and gives them to the model in the system prompt. - At most 200 facts per profile, without silent throwing away (profiles._cap, also when tidying): above that the oldest facts learned by itself and never confirmed go first. What was said, corrected, changed by hand, tidied or confirmed never goes; when only such facts are left, the new fact is refused (memory_save: „Not done“ with the way Me → Memory), one line „gedaechtnis: voll“ a day. - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer."
 },
 {
 "lang": "en",
@@ -18821,7 +18845,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13)"
+"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13)"
 },
 {
 "lang": "en",
@@ -26774,6 +26798,30 @@
 "head": "Voice chat",
 "title": "Cap without silent throwing away (V01.1.247, plan *nutzerwissen*, stage 1)",
 "text": "Profile voll\". Self-test test_gedaechtnis_grenze."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Fixed topics (V01.1.248, plan *nutzerwissen*, stage 2, Dominik 2026-10-29 \"a\")",
+"text": "Fixed topics (V01.1.248, plan *nutzerwissen*, stage 2, Dominik 2026-10-29 \"a\"): with Memory check the panel knows fixed topic places (gedaechtnis.SLOTS, one list, it replaces the former KEYS; R4 reads the same): home, employer, job, partner, children, birthday, diet (vegetarian, vegan …), car, pet (one place per kind of animal), names (\"brother is called …\") and favourites, each apart by whom it is about (WHO: \"brother lives in …\" is the place wohnort:bruder). Only fixed patterns of the panel recognize them (gedaechtnis.slot_of), never the model; a sentence about another person by name (\"Anna lives in Ulm\") or without a value (\"lives near …\") fills no place. Allergies add up (nuts and pollen) and are therefore no place. Per place one entry holds the value: what the person says (memory_save), corrects or changes by hand gives it the new wording, the old one stays as an earlier version (at most 5, reason \"new value for the same topic\", grund=platz in the journal). A value learned by itself never replaces one that was said or confirmed: it waits on the entry as an offer and comes as a card \"Learned\" under Open (vorgaenge, kind gedplatz, not urgent, only under Open) with \"Take it\" and "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Fixed topics (V01.1.248, plan *nutzerwissen*, stage 2, Dominik 2026-10-29 \"a\")",
+"text": "\"Discard\"; the same buttons are under Me → Memory at \"Fixed topics\" (POST /api/profile/memory/{id}/offer with {\"do\": \"take\"|\"drop\"}, login, profile binding, CSRF, 256 bytes, rate limit \"memory\"; also the iPhone app). \"Take it\" makes the learned value the wording (the old one becomes an earlier version, reason \"learned value taken\"), \"Discard\" keeps the value so the same one never asks again; if the person says something about the topic first, the offer goes with its card. Learned over learned: the newer wins, the old one stays as a version. The model gets per place only the value that holds it; older contradicting entries, earlier versions and offers never. Me → Memory shows the box \"Fixed topics\" on top: every own place (empty as \"–\") and every other place held, with value, source, \"since\" and \"n earlier\"; tapping opens the versions with \"Bring back\". On top also \"N of 200\", yellow from 180 (profiles.WARN_FACTS), red at 200; when the memory is full, a card \"Gedächtnis voll – aufräumen\" comes once under Open (with \"Show\" to Me → Memory, kind gedvoll; at most once a day again), it goes by itself as soon as there is room again. iPhone: My things → Memory with \"Fixed topics\", Take it/"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Fixed topics (V01.1.248, plan *nutzerwissen*, stage 2, Dominik 2026-10-29 \"a\")",
+"text": "Discard, \"Bring back\" (press and hold) and \"N of 200\"; Android shows the panel. Journal (area Memory): gedaechtnis: angebot … | platz=wohnort, gedaechtnis: angebot uebernommen|verworfen …, gedaechtnis: fassung … | grund=platz|gelernt-uebernommen; never a value. Live: the node \"Memory\" also shows \"N gelernt, wartet auf Übernehmen\". Self-test test_gedaechtnis (Places, FullCard)."
 },
 {
 "lang": "en",

@@ -113,9 +113,11 @@ THINGS = {
                   (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
                   (("POST",), r"/api/profile/wissen/(?:batch|search)"), (("DELETE",), rf"/api/profile/docs/{_DOC}"),
                   (("GET", "POST", "DELETE"), r"/api/profile/auslassen")),
-    # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal
+    # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen
     "memory": ((("GET",), r"/api/profile/memory"), (("DELETE", "PUT"), rf"/api/profile/memory/{_ID}"),
-               (("POST",), r"/api/profile/memory/(?:tidy|forget)")),
+               (("POST",), r"/api/profile/memory/(?:tidy|forget)"),
+               # Feste Themen (gedaechtnis.SLOTS): bring an earlier version back, take or drop a learned value
+               (("POST",), rf"/api/profile/memory/{_ID}/(?:restore|offer)")),
     # Bilder (bilder.py): look, paint from a wish, delete one or all; change an own picture (FLUX or a quick
     # button) and upload an own photo to change only with Bilder ändern (bilder.EDIT_KEY, checked there)
     "bilder": ((("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),

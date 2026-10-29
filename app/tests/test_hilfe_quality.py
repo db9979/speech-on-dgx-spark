@@ -26,6 +26,7 @@ CASES = (
     ("Was bedeutet Vorab holen bei Rückfrage?", None, "Vorab holen", "spark"),
     ("Wie stelle ich die Stimme um?", None, "Stimme", "spark"),
     ("Was ist der Notaus?", None, "Notaus", "spark"),
+    ("Was bedeutet Feste Themen bei Gedächtnis prüfen?", None, "Gedächtnis prüfen", "spark"),
     ("Was ist Mein Notaus?", None, "Mein Notaus", "spark"),
     ("Wie bekomme ich Mails vorgelesen?", None, "E-Mail", "spark"),
     ("Wie mache ich ein Backup?", None, "Sicherung", "spark"),

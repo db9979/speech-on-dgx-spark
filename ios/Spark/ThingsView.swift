@@ -1029,6 +1029,9 @@ struct SongEditView: View {
 final class MemoryModel: ObservableObject {
     @Published var facts: [Fact] = []
     @Published var tidy: MemoryTidy?
+    @Published var places: [MemoryPlace] = []
+    @Published var limit = 200
+    @Published var warnAt = 180
     @Published var loading = true
     @Published var asking = false
     @Published var error: String?
@@ -1036,7 +1039,8 @@ final class MemoryModel: ObservableObject {
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
-            (facts, tidy) = try await api.memory()
+            let m = try await api.memory()
+            (facts, tidy, places, limit, warnAt) = (m.facts, m.tidy, m.places, m.max, m.warn)
             error = nil
         } catch { self.error = error.localizedDescription }
         loading = false
@@ -1076,6 +1080,7 @@ struct MemoryView: View {
     var body: some View {
         List(selection: $picked) {
             if let t = m.tidy { tidySection(t) }
+            if !m.places.isEmpty && !edit.isEditing { placesSection }
             Section {
                 if !m.loading && m.facts.isEmpty { Text("Noch nichts gemerkt.").foregroundStyle(.secondary) }
                 ForEach(shown) { f in
@@ -1095,7 +1100,9 @@ struct MemoryView: View {
                     }
                 }
             } header: {
-                if !m.facts.isEmpty { Text(verbatim: String(shown.count)) }
+                // „N von 200“, yellow from 180 (the panel's numbers): over it only old learned entries make room
+                Text("\(m.facts.count) von \(m.limit)")
+                    .foregroundStyle(m.facts.count >= m.limit ? .red : m.facts.count >= m.warnAt ? .orange : .secondary)
             } footer: {
                 if m.tidy == nil && !m.facts.isEmpty {
                     Button { Task { await m.tidyStep("check") } } label: {
@@ -1132,6 +1139,39 @@ struct MemoryView: View {
                 Task { await m.run { try await $0.changeFact(f.id, t) } }
             }
             Button("Abbrechen", role: .cancel) {}
+        }
+    }
+
+    /// Feste Themen: the value that holds each fixed place („–“ while empty), its earlier versions with
+    /// „Zurückholen“ and a learned value waiting with „Übernehmen / Verwerfen“ (the same as Ich → Gedächtnis).
+    @ViewBuilder private var placesSection: some View {
+        Section("Feste Themen") {
+            ForEach(m.places) { p in
+                let f = m.facts.first { $0.id == p.fact }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: p.name).font(.caption.bold()).foregroundStyle(.secondary)
+                    // what the assistant noted: plain text, nothing in it is a link or a command
+                    Text(verbatim: f?.text ?? "–")
+                    if let f, !f.offer.isEmpty {
+                        Text("Neu gelernt:").font(.caption.bold())
+                        Text(verbatim: f.offer).font(.caption)
+                        HStack {
+                            Button("Übernehmen") { Task { await m.run { try await $0.factOffer(f.id, take: true) } } }.buttonStyle(.borderedProminent)
+                            Button("Verwerfen") { Task { await m.run { try await $0.factOffer(f.id, take: false) } } }.buttonStyle(.bordered)
+                        }
+                    }
+                }
+                .contextMenu {
+                    if let f {
+                        ForEach(Array(f.prev.enumerated()), id: \.offset) { i, old in
+                            Button { Task { await m.run { try await $0.restoreFact(f.id, i) } } } label: {
+                                Label(old, systemImage: "arrow.uturn.backward")
+                            }
+                        }
+                    }
+                }
+            }
+            Text("Frühere Fassungen: lange drücken und „Zurückholen“ wählen.").font(.caption).foregroundStyle(.secondary)
         }
     }
 

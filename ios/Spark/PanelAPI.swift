@@ -85,6 +85,17 @@ struct Fact: Identifiable, Hashable {
     let text: String
     let learned: Bool
     var created = Date(timeIntervalSince1970: 0)
+    /// earlier versions, newest first („Zurückholen“ brings number i back)
+    var prev: [String] = []
+    /// a value learned by itself that waits beside a confirmed one („Übernehmen / Verwerfen“)
+    var offer = ""
+}
+
+/// Ich → Gedächtnis → Feste Themen: one fixed place of the panel (gedaechtnis.SLOTS) and the fact that holds it.
+struct MemoryPlace: Identifiable, Hashable {
+    let id: String          // the place, e.g. "wohnort:bruder"
+    let name: String
+    let fact: String        // "" while the place is empty („–“)
 }
 
 /// The assistant's proposal to tidy up the memory: facts to merge and facts to drop.
@@ -96,15 +107,37 @@ struct MemoryTidy {
 extension SparkAPI {
     static func id(_ s: String) -> Bool { s.range(of: #"^[0-9a-f]{1,16}$"#, options: .regularExpression) != nil }
 
-    func memory() async throws -> (facts: [Fact], tidy: MemoryTidy?) {
+    func memory() async throws -> (facts: [Fact], tidy: MemoryTidy?, places: [MemoryPlace], max: Int, warn: Int) {
         let d = try await object("GET", "api/profile/memory")
         let facts = (d["facts"] as? [[String: Any]] ?? []).compactMap { f -> Fact? in
             guard let id = f["id"] as? String, Self.id(id) else { return nil }
+            let prev = (f["prev"] as? [[String: Any]] ?? []).compactMap { $0["text"] as? String }.map { String($0.prefix(600)) }
             return Fact(id: id, text: String((f["text"] as? String ?? "").prefix(600)),
                         learned: f["auto"] as? Bool ?? (f["src"] as? String == "auto"),
-                        created: Date(timeIntervalSince1970: (f["created"] as? NSNumber)?.doubleValue ?? 0))
+                        created: Date(timeIntervalSince1970: (f["created"] as? NSNumber)?.doubleValue ?? 0),
+                        prev: Array(prev.prefix(5)),
+                        offer: String(((f["offer"] as? [String: Any])?["text"] as? String ?? "").prefix(600)))
         }
-        return (facts.reversed(), Self.tidy(d["tidy"]))
+        let en = Locale.current.language.languageCode?.identifier == "en"
+        // Feste Themen (only with „Gedächtnis prüfen“ released): the panel's own list and names, never one of the app's
+        let places = (d["places"] as? [[String: Any]] ?? []).compactMap { p -> MemoryPlace? in
+            guard let k = p["place"] as? String else { return nil }
+            let fid = p["id"] as? String ?? ""
+            return MemoryPlace(id: k, name: (en ? p["en"] : p["de"]) as? String ?? k, fact: Self.id(fid) ? fid : "")
+        }
+        return (facts.reversed(), Self.tidy(d["tidy"]), places, (d["max"] as? Int) ?? 200, (d["warn"] as? Int) ?? 180)
+    }
+
+    /// Feste Themen: earlier version i becomes the fact's wording again (the wording so far is kept)
+    func restoreFact(_ id: String, _ i: Int) async throws {
+        guard Self.id(id), (0..<5).contains(i) else { return }
+        _ = try await call("POST", "api/profile/memory/\(id)/restore", body: ["i": i])
+    }
+
+    /// Feste Themen: "take" or "drop" the value learned by itself that waits beside a confirmed one
+    func factOffer(_ id: String, take: Bool) async throws {
+        guard Self.id(id) else { return }
+        _ = try await call("POST", "api/profile/memory/\(id)/offer", body: ["do": take ? "take" : "drop"])
     }
 
     static func tidy(_ any: Any?) -> MemoryTidy? {
