@@ -4342,6 +4342,13 @@
 "titel": "Fernzugang: Vorschläge erklären sich",
 "text": "Eine Shell öffnen, mit der Maus auf „screen -x“ zeigen: sofort erscheint „an die laufende screen-Sitzung anhängen, gemeinsam mit dem anderen“. Auf „sudo ls -la /run/screen/“: dazu „braucht sudo …“. „systemctl status ssh“ tippen, dann auf „systemctl restart ssh“ zeigen: „diesen Dienst neu starten“. Mit der Tab-Taste auf einen Vorschlag: dasselbe Feld. Am Handy lange auf einen Vorschlag drücken. Bei schmalem Fenster lässt sich die Zeile seitwärts schieben, rechts wird sie weich. Mit offenem Assistenten: ein ✦-Vorschlag zeigt „Vorschlag des Assistenten: …“ oder „Vom Assistenten vorgeschlagen“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P645",
+"v": 1226,
+"titel": "Fernsitzung übersteht kurzen Abbruch",
+"text": "Auf dem Laptop eine Shell öffnen, etwas mit Ausgabe tippen (z. B. ls -la), dann WLAN 30 Sekunden aus oder den Deckel zu. Erwartet: oben „Verbindung wird wiederhergestellt …“, nach dem Zurückkommen dieselbe Shell mit dem letzten Bildschirm, ohne neuen Code. Dasselbe länger als 2 Minuten: „Verbindung verloren“ mit „Neu verbinden“. Leerlauf auf 3 Minuten stellen und warten: „Sitzung endet in m:ss“, eine Taste lässt ihn verschwinden. Hinter dem Synology-Proxy eine Stunde offen lassen ohne Tippen (mit langem Leerlauf): bleibt verbunden. Logs: nur „verbindung | verloren“ und „wieder verbunden“, nie Inhalte.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

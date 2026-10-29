@@ -65,6 +65,7 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   $('fzoff').hidden=!!d.on;$('fznotaus').hidden=!d.notaus;$('fzsperrmin').textContent=d.entsperrt_min||60;
   $('fzgesperrt').hidden=!zu||busy||!!d.notaus;$('fzneu').hidden=!d.on||zu||!!d.notaus;
   $('fzlock').hidden=!d.on||zu||!d.entsperrt_bis;clearTimeout(FZ.st);
+  fzSperreBald();
   if(d.entsperrt_bis){$('fzlockbis').textContent=t('Entsperrt bis ','Unlocked until ')+fzUhr(d.entsperrt_bis);
     FZ.st=setTimeout(fzLoad,Math.max(1000,d.entsperrt_bis*1000-Date.now()+1500))}   // its minutes are over: locked at once
   if(zu||!d.on)fzLeeren();
@@ -186,26 +187,53 @@ async function fzOpen(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offen
   fzZeigen();const [cols,rows]=fzGroesse();let tk;
   try{const r=await api('/api/admin/fernzugang/sitzung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,cols,rows})});tk=(await r.json()).ticket}
   catch(e){fzZu(e.message);return}
-  fzTerm(tk,{name:g.name,gid:g.id,art:g.art||'linux',seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
+  FZ.letzt=g;fzTerm(tk,{name:g.name,gid:g.id,art:g.art||'linux',seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
 // the terminal for one ticket: a new session, or one this window takes over (its own window, or back into the tab)
 function fzTerm(tk,sitz,cols,rows){
   const term=new window.Terminal({cursorBlink:true,fontSize:14,cols,rows,scrollback:2000,theme:{background:'#0b1020'}});
   $('fzterm').textContent='';term.open($('fzterm'));term.attachCustomKeyEventHandler(fzFang);term.focus();FZ.term=term;
   FZ.sitz=sitz;FZ.fp='';fzBanner();fzInfo('');fzHilfeNeu();$('fztname').textContent=sitz.name;fzLayout();
-  const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
-  ws.binaryType='arraybuffer';FZ.ws=ws;const enc=new TextEncoder();
-  term.write(t('Verbinde mit ','Connecting to ')+sitz.name+' …\r\n');
-  term.onData(x=>{if(ws.readyState!==1)return;if(FZ.ctrl&&x.length===1){const c=x.toUpperCase().charCodeAt(0);if(c>=64&&c<96)x=String.fromCharCode(c-64);FZ.ctrl=false;fzKeys()}
-    if(FZ.alt&&x.length===1){x='\x1b'+x;FZ.alt=false;fzKeys()}fzZeile(x);ws.send(enc.encode(x))});
-  ws.onmessage=ev=>{if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data));return}let m;try{m=JSON.parse(ev.data)}catch{return}
-    if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';fzResize();term.write('\x1b[2m'+t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
+  term.write(t('Verbinde mit ','Connecting to ')+sitz.name+' …\r\n');const enc=new TextEncoder();
+  term.onData(x=>{const ws=FZ.ws;if(!ws||ws.readyState!==1)return;if(FZ.ctrl&&x.length===1){const c=x.toUpperCase().charCodeAt(0);if(c>=64&&c<96)x=String.fromCharCode(c-64);FZ.ctrl=false;fzKeys()}
+    if(FZ.alt&&x.length===1){x='\x1b'+x;FZ.alt=false;fzKeys()}fzZeile(x);if(FZ.bald)fzBald(0);ws.send(enc.encode(x))});
+  fzVerbinde(tk,term);window.addEventListener('resize',fzResize)}
+// one WebSocket for the terminal (the first, or after a drop with a fresh ticket of the same login): the panel's
+// heartbeat comes every 20 s; nothing for 50 s counts as a dropped line
+function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
+  ws.binaryType='arraybuffer';FZ.ws=ws;FZ.grund='';FZ.zuletzt=Date.now();clearInterval(FZ.pt);
+  FZ.pt=setInterval(()=>{if(FZ.ws===ws&&ws.readyState===1&&Date.now()-FZ.zuletzt>50000)ws.close(4000)},5000);
+  ws.onmessage=ev=>{FZ.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data));return}let m;try{m=JSON.parse(ev.data)}catch{return}
+    if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(m.wieder)term.reset();fzResize();
+      term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
+    if(m.typ==='bald')fzBald(Number(m.s)||0);
     if(m.typ==='fehler'||m.typ==='zu')FZ.grund=m.grund;if(m.typ==='weg')FZ.grund='weg'};
-  ws.onclose=()=>{if(FZ.ws!==ws)return;if(FZ.grund==='weg'){fzWeg();return}if(FZ_FENSTER){window.close();return}fzZu(fzGrund(FZ.grund))};
-  window.addEventListener('resize',fzResize)}
+  ws.onclose=()=>{if(FZ.ws!==ws)return;clearInterval(FZ.pt);if(FZ.grund==='weg'){fzWeg();return}
+    if(!FZ.grund&&FZ.sid){fzWieder(term);return}if(FZ_FENSTER){window.close();return}fzZu(fzGrund(FZ.grund))}}
+// the line dropped without a reason from the panel: the panel holds the shell (2 minutes); a fresh ticket of the same
+// login (the page still unlocked) takes it again and the screen comes back; else „Verbindung verloren“
+async function fzWieder(term){const sid=FZ.sid,bis=Date.now()+115000;FZ.wieder={sid};fzWiederZeigen();
+  while(FZ.wieder&&FZ.wieder.sid===sid&&Date.now()<bis){
+    try{const r=await api(`/api/admin/fernzugang/sitzung/${sid}/wieder`,{method:'POST'});const d=await r.json();if(!FZ.wieder)return;fzVerbinde(d.ticket,term);return}
+    catch(e){if(e.status===404||e.status===423||e.status===503)break}
+    await new Promise(ok=>setTimeout(ok,3000))}
+  if(!FZ.wieder||FZ.wieder.sid!==sid)return;FZ.wieder=null;fzWiederZeigen();FZ.ws=null;if(FZ_FENSTER){window.close();return}fzZu(fzGrund('verloren'))}
+function fzWiederZeigen(){const b=$('fzwieder');if(b){b.hidden=!FZ.wieder;fzTopLine()}}
+// „Sitzung endet in m:ss“ (the panel says so BALD_S before the idle end): any key or „Weiterarbeiten“ counts
+function fzBald(sek){clearInterval(FZ.baldt);FZ.bald=sek>0?Date.now()+sek*1000:0;const b=$('fzbald');if(!b)return;
+  const tick=()=>{const rest=Math.max(0,Math.round((FZ.bald-Date.now())/1000));$('fzbaldtext').textContent=t('Sitzung endet in ','Session ends in ')+Math.floor(rest/60)+':'+String(rest%60).padStart(2,'0')};
+  b.hidden=!FZ.bald;fzTopLine();if(FZ.bald){tick();FZ.baldt=setInterval(tick,1000)}}
+function fzWeiter(){if(FZ.ws&&FZ.ws.readyState===1)FZ.ws.send(JSON.stringify({typ:'weiter'}));fzBald(0);if(FZ.term)FZ.term.focus()}
+// the page's unlock: 2 minutes before its end the line says so, with „Verlängern“ (a fresh code or passkey)
+function fzSperreBald(){clearInterval(FZ.sbt);const b=$('fzsperrbald');if(!b)return;const bis=FZ.d&&!FZ.d.gesperrt&&FZ.d.entsperrt_bis;
+  const tick=()=>{const rest=bis?Math.round(bis-Date.now()/1000):0;const an=rest>0&&rest<=120;b.hidden=!an;fzTopLine();
+    if(an)$('fzsperrtext').textContent=t('Entsperrung endet in ','Unlock ends in ')+Math.floor(rest/60)+':'+String(rest%60).padStart(2,'0')};
+  tick();if(bis)FZ.sbt=setInterval(tick,1000)}
 const FZ_GRUND={leerlauf:['Leerlauf: die Sitzung ist zu.','Idle: the session is closed.'],notaus:['Notaus: alle Sitzungen sind zu.','Emergency stop: every session is closed.'],
   hostkey:['Der Host-Schlüssel passt nicht zur Kopplung: keine Verbindung.','The host key does not match the pairing: no connection.'],ssh:['SSH-Anmeldung ging nicht (Benutzer spark, Schlüssel des Panels).','SSH sign-in failed (user spark, the panel key).'],
   zu_gross:['Zu viel auf einmal eingefügt (höchstens 64 KB).','Too much pasted at once (64 KB at most).'],sshd:['Auf dem Server hört kein sshd auf 127.0.0.1:22.','No sshd listens on 127.0.0.1:22 on the server.'],
-  anker:['Der Anker hat nicht geantwortet.','The anchor did not answer.'],server:['Der Server hat die Sitzung beendet.','The server ended the session.'],getrennt:['Getrennt.','Disconnected.'],alle:['Alle getrennt.','All disconnected.']};
+  anker:['Der Anker hat nicht geantwortet.','The anchor did not answer.'],server:['Der Server hat die Sitzung beendet.','The server ended the session.'],getrennt:['Getrennt.','Disconnected.'],alle:['Alle getrennt.','All disconnected.'],
+  verloren:['Verbindung verloren: die Sitzung ist zu.','Connection lost: the session is closed.'],shell:['Die Shell auf dem Server ist zu Ende.','The shell on the server has ended.'],
+  browser:['Das Fenster wurde geschlossen.','The window was closed.'],aus:['Der Fernzugang wurde ausgeschaltet.','Remote access was switched off.'],abmelden:['Abgemeldet: die Sitzung ist zu.','Signed out: the session is closed.']};
 function fzGrund(g){return g&&FZ_GRUND[g]?t(...FZ_GRUND[g]):t('Sitzung beendet.','Session ended.')}
 function fzResize(){if(!FZ.term||!FZ.ws||FZ.ws.readyState!==1)return;const [c,r]=fzGroesse();if(c===FZ.term.cols&&r===FZ.term.rows)return;FZ.term.resize(c,r);FZ.ws.send(JSON.stringify({typ:'groesse',cols:c,rows:r}))}
 function fzTopBar(){let top=0;for(const h of [document.querySelector('header'),$('apbar')]){if(!h)continue;const cs=getComputedStyle(h);
@@ -216,7 +244,7 @@ if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fztop');if
   for(const h of [document.querySelector('header'),$('apbar')])if(h)ro.observe(h)}
 // the slim lines at the top of the content (a remote session, a Spontanhilfe): below the bar that stays on top (the
 // header, or the app view's bar on a phone); one place for both, the second line under the first
-function fzTopLine(){const top=$('fztop');top.hidden=$('fzbanner').hidden&&$('shbanner').hidden;if(!top.hidden)top.style.setProperty('--fzbtop',fzTopBar()+'px')}
+function fzTopLine(){const top=$('fztop');top.hidden=['fzbanner','shbanner','fzwieder','fzbald','fzsperrbald'].every(id=>!$(id)||$(id).hidden);if(!top.hidden)top.style.setProperty('--fzbtop',fzTopBar()+'px')}
 function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');fzInfoPop(false);fzTopLine();return}b.hidden=false;document.body.classList.add('fzaktiv');fzTopLine();
   $('fzbtext').textContent=$('fzvolltext').textContent=(FZ.sitz.art==='dateien'?t('Fern-Dateien offen · ','Remote files open · '):FZ.sitz.art==='bildschirm'?t('Fern-Bildschirm offen · ','Remote screen open · '):t('Fernsitzung aktiv · ','Remote session active · '))+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   $('fzbleer').textContent=FZ.sitz.leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+FZ.sitz.leer+' min':'';$('fzbinfo').hidden=!FZ.ws;
@@ -354,17 +382,19 @@ addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typ
     try{await fzLaden()}catch(x){fzMsg(x.message,true);return}
     document.title=String(sitz.name||'')+' · '+t('Fernzugang','Remote access');fzChips();const [c,r]=fzGroesse();
     fzTerm(e.data.ticket,{name:String(sitz.name||''),gid:String(sitz.gid||''),art:['windows','macos'].includes(sitz.art)?sitz.art:'linux',seit:Number(sitz.seit)||Date.now()/1000,max:Number(sitz.max)||1,leer:Number(sitz.leer)||15},c,r)}});
-function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);
+function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);clearInterval(FZ.pt);fzBald(0);
   if(FZ_FENSTER){window.close();return}
-  FZ.weg={sid:FZ.sid,sitz};FZ.sitz=sitz;fzBanner();$('fzview').hidden=true;fzVerbergen();fzWegZeigen();if(ws&&ws.readyState<2)ws.close()}
+  FZ.weg={sid:FZ.sid,sitz};FZ.sitz=sitz;fzBanner();$('fzview').hidden=true;fzVerbergen();fzWegZeigen();if(ws&&ws.readyState<2)ws.close(1000)}
 function fzWegZeigen(){const b=$('fzweg');if(!b)return;b.hidden=!FZ.weg;if(FZ.weg)$('fzwegname').textContent=FZ.weg.sitz?FZ.weg.sitz.name:'';if(!FZ.weg&&FZ.d)fzShow()}
 async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden();tk=await fzFensterTicket(w.sid,false)}catch(e){fzMsg(e.message,true);return}
   FZ.weg=null;fzWegZeigen();fzZeigen();const [c,r]=fzGroesse();fzTerm(tk,w.sitz,c,r)}
 async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
   if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
-function fzTrennen(){if(FZ.ws)FZ.ws.close();else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
-function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(ws&&ws.readyState<2)ws.close();if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
-  window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzMsg(text,true);fzLoad()}
+function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
+function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
+  window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text){fzMsg(text,true);fzNeuKnopf()}fzLoad()}
+// every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
+function fzNeuKnopf(){const g=FZ.letzt,m=$('fzmsg');if(!g||!m)return;const b=fzBtn(t('Neu verbinden','Connect again'),'p',()=>{m.textContent='';fzOpen(g)});b.id='fzwiederneu';m.append(' ',b)}
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
   try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);if(FZ.ws||FZ.fb)fzTrennen();if(FZ.fs)fzFZu('');fzLoad()}catch(e){fzMsg(e.message,true)}}
 // ---------------------------------------------------------------- the files (SFTP)
@@ -407,7 +437,7 @@ async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/
 function fzFZu(text){FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
-  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzalle2').onclick=fzAlle;
+  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
   $('fzbinfo').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzinfobtn').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzkeycopy').onclick=e=>{if(FZ.fp)copyString(FZ.fp,e.currentTarget)};
   $('fzmenu').onclick=()=>fzMenu(!FZ.menuAus);$('fzspalte').onclick=()=>fzSpalte($('fzview').classList.contains('fzzu'));$('fztasten').onclick=fzTastenreihe;
   $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();

@@ -390,7 +390,7 @@ MODULE = {
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
     "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
     "spontanhilfe": ("zugang", "Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker"),
-    "fernzugang": ("zugang", "Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel"),
+    "fernzugang": ("zugang", "Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel, eine abgerissene Shell 2 Minuten gehalten"),
     "fernbild": ("zugang", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
     "ferndateien": ("zugang", "Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze"),
     "wachposten": ("zugang", "Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz"),

@@ -275,7 +275,8 @@ async def login(request: Request):
 
 
 def _fern_sperren(request=None):
-    """Logging out locks an unlocked Fernzugang page (fernzugang.ENTSPERRT, rule „Bereich entsperren“)."""
+    """Logging out locks an unlocked Fernzugang page (fernzugang.ENTSPERRT, rule „Bereich entsperren“) and ends the
+    login's remote sessions, a held one too (fernzugang.HALTEN_S)."""
     try:
         import fernzugang
         fernzugang.sperren(request, "abmelden") if request is not None else fernzugang.sperren_alle("abmelden")

@@ -127,6 +127,11 @@ XTERM = {"xterm.js": "1f991ac3b4b283ebf96e60ae23a00a52765dd3a2e46fa6fdda9f1aab03
 
 CODE_S = 600            # a pairing code works this long, once
 TICKET_S = 30           # a ticket opens the terminal this long after „Shell“, once
+HALTEN_S = 120          # a shell whose window dropped (not closed) waits this long for the same login to come back
+PUFFER = 256 * 1024     # the shell's last output kept in memory to draw the screen again after coming back (never stored)
+PULS_S = 20             # a heartbeat to the window and SSH keepalive this often (a proxy closes a quiet line)
+BALD_S = 120            # the window hears this long before the idle end that the session ends soon
+GEWOLLT = (1000, 4001)  # WebSocket close codes of a window that closed on purpose (Trennen) or was taken over
 MAX_ANKER = 10          # paired systems at most
 MAX_MSG = 64 * 1024     # bytes per WebSocket message, both ways
 MAX_BODY = 4096         # JSON bodies of the HTTP doors
@@ -232,7 +237,7 @@ WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
-         "bild_steuern", "bild_passwort", "bild_guacd")
+         "bild_steuern", "bild_passwort", "bild_guacd", "verbindung")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -515,13 +520,14 @@ def same_origin(conn):
 
 def counts(now=None):
     """Numbers only (Live, Zustand, the app, the Steuerzentrale): paired, online, sessions (of them file sessions),
-    waiting for removal, wrong host keys, transfers running."""
+    held for a comeback (HALTEN_S), waiting for removal, wrong host keys, transfers running."""
     g = _read(now)["geraete"]
     ok = [k for k, x in g.items() if x.get("stand") != "abbau"]
     return {"gekoppelt": len(ok), "online": sum(1 for k in ok if k in ANKER), "sitzungen": len(SITZUNG),
             "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch")),
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
+            "gehalten": sum(1 for s in SITZUNG.values() if getattr(s, "browser", 1) is None and getattr(s, "verloren", 0)),
             "uebertragungen": max(0, STATS["uebertragungen"])}
 
 
@@ -556,7 +562,8 @@ def live_sub(d):
     offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
     return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
             + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "")
-            + (f" · davon {d['bildschirm']} Bildschirm" if d.get("bildschirm") else "") + offen
+            + (f" · davon {d['bildschirm']} Bildschirm" if d.get("bildschirm") else "")
+            + (f" · {d['gehalten']} wartet auf Rückkehr" if d.get("gehalten") else "") + offen
             + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
@@ -632,6 +639,9 @@ class Sitzung:
         self.bild_bytes = 0    # the screen: what went to the page (for the rate at the end, KB/s)
         self.sftp_lock = threading.Lock()   # one SFTP call at a time per session (ferndateien._sftp)
         self.fenster = False   # the terminal runs in its own window („Herauslösen“)
+        self.puffer = bytearray()   # the last PUFFER bytes of output (memory only), sent again after a comeback
+        self.verloren = 0.0    # when the window dropped (0: it is there); HALTEN_S later the session ends
+        self.bald = False      # the window was told the idle end is near
         self.art = art if art in ARTEN else "shell"   # ARTEN
         self.admin_name = "Admin"   # the admin profile's name (the panel password: „Admin“), shown per live_names
         self.herkunft, self.ip_kurz, self.client = "zuhause", "", "browser"   # where from (never the whole address)
@@ -680,6 +690,7 @@ class Sitzung:
             self.transport = t   # end() closes it, after the browser got the reason
             return "hostkey"
         t.auth_publickey(USER, paramiko.Ed25519Key.from_private_key(io.StringIO(priv)))
+        t.set_keepalive(PULS_S)   # SSH's own keepalive through the anchor: a quiet session keeps its line
         if self.art == "dateien":
             self.transport, self.sftp = t, paramiko.SFTPClient.from_transport(t)
             return ""
@@ -716,27 +727,68 @@ class Sitzung:
                 return
 
     async def _to_browser(self, q):
+        """The shell's output to the window, and into the ring buffer (PUFFER) for a comeback; while the window is
+        gone (held, HALTEN_S) only into the buffer."""
         while True:
             data = await q.get()
             if not data:
                 break
+            self.puffer += data
+            if len(self.puffer) > PUFFER:
+                del self.puffer[:len(self.puffer) - PUFFER]
             ws = self.browser
+            if ws is None:
+                continue
             try:
                 await ws.send_bytes(data)
             except Exception:
-                if ws is self.browser:     # the window was taken over meanwhile: the output goes on to the new one
-                    break
+                if ws is self.browser:     # the window dropped: held for a comeback (_terminal_loop's end decides)
+                    await self.halten(ws)
         await self.end("shell")
+
+    async def halten(self, ws):
+        """The window dropped without closing (network, proxy, sleep): the SSH session waits HALTEN_S for the same
+        login to come back (POST …/wieder, the page unlocked); then it ends with „verloren“."""
+        if self.ende.is_set() or self.browser is not ws:
+            return
+        self.browser, self.verloren = None, time.time()
+        log("verbindung", "verloren", len(SITZUNG))
+        _live("Fernsitzung: Verbindung verloren")
+
+        async def wait():
+            t0 = self.verloren
+            with contextlib.suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(self.ende.wait(), HALTEN_S)
+            if not self.ende.is_set() and self.browser is None and self.verloren == t0:
+                await self.end("verloren")
+        self.tasks.append(asyncio.create_task(wait()))
+
+    async def _puls(self):
+        """A heartbeat to the window every PULS_S seconds (the page knows the line is alive, a proxy sees traffic)."""
+        while not self.ende.is_set():
+            with contextlib.suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(self.ende.wait(), PULS_S)
+            if not self.ende.is_set() and self.browser is not None:
+                await self._say({"typ": "puls"})
 
     async def _idle(self):
         while not self.ende.is_set():
             with contextlib.suppress(asyncio.TimeoutError):
                 await asyncio.wait_for(self.ende.wait(), 10)
-            if time.time() - self.zuletzt > leerlauf_s():
+            rest = leerlauf_s() - (time.time() - self.zuletzt)
+            if rest <= 0:
                 await self._say({"typ": "zu", "grund": "leerlauf"})
                 await self.end("leerlauf")
+            elif rest <= BALD_S and not self.bald:
+                self.bald = True                 # the window counts down; any key or „Weiterarbeiten“ counts
+                await self._say({"typ": "bald", "s": int(rest)})
+            elif rest > BALD_S and self.bald:
+                self.bald = False
+                await self._say({"typ": "bald", "s": 0})
 
     async def _say(self, d):
+        if self.browser is None:
+            return
         if self.art == "bildschirm":     # the screen's page speaks the Guacamole protocol: only the end, as „error“
             if d.get("typ") in ("zu", "fehler") and self.browser is not None:
                 import fernbild
@@ -1009,7 +1061,7 @@ async def terminal_ws(ws: WebSocket):
     s.tasks.append(asyncio.create_task(_melden(s, g)))
     q = asyncio.Queue()
     threading.Thread(target=s._reader, args=(q,), name="fernzugang-lesen", daemon=True).start()
-    s.tasks += [asyncio.create_task(s._to_browser(q)), asyncio.create_task(s._idle())]
+    s.tasks += [asyncio.create_task(s._to_browser(q)), asyncio.create_task(s._idle()), asyncio.create_task(s._puls())]
     await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g["hostkey"]), "leerlauf": leerlauf_s() // 60,
                   "id": s.id})
     await _terminal_loop(s, ws)
@@ -1020,29 +1072,45 @@ async def _take_over(ws, tk):
     stays, the window before hears „weg“ and closes without ending it. Counts as the same one session."""
     s = SITZUNG.get(tk["sid"])
     if s is None or s.ende.is_set() or not hmac.compare_digest(s.login, tk["login"]):
+        if tk.get("wieder"):
+            log("verbindung", "zu spaet", 0)
         return await _refuse(ws, "keine sitzung", 4404)
     await ws.accept()
-    old, s.browser, s.fenster = s.browser, ws, bool(tk.get("fenster"))
+    wieder = bool(tk.get("wieder"))
+    old, s.browser, s.verloren = s.browser, ws, 0.0
+    if not wieder:
+        s.fenster = bool(tk.get("fenster"))
     _wo(s, ws)
-    with contextlib.suppress(Exception):
-        await old.send_text(json.dumps({"typ": "weg", "fenster": s.fenster}))
-    with contextlib.suppress(Exception):
-        await old.close(4001)
+    if old is not None:
+        with contextlib.suppress(Exception):
+            await old.send_text(json.dumps({"typ": "weg", "fenster": s.fenster}))
+        with contextlib.suppress(Exception):
+            await old.close(4001)
     s.zuletzt = time.time()
-    log("sitzung_auf", "fenster" if s.fenster else "zurueck", len(SITZUNG))
-    _live("Fernsitzung im eigenen Fenster" if s.fenster else "Fernsitzung zurückgeholt")
+    if wieder:
+        log("verbindung", "wieder verbunden", len(SITZUNG))
+        _live("Fernsitzung wieder verbunden")
+    else:
+        log("sitzung_auf", "fenster" if s.fenster else "zurueck", len(SITZUNG))
+        _live("Fernsitzung im eigenen Fenster" if s.fenster else "Fernsitzung zurückgeholt")
     g = _read()["geraete"].get(s.gid) or {}
     await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g.get("hostkey", "")), "leerlauf": leerlauf_s() // 60,
-                  "id": s.id})
+                  "id": s.id, "wieder": wieder})
+    if s.puffer:          # the screen again: what the shell wrote last (also while the window was gone)
+        with contextlib.suppress(Exception):
+            await ws.send_bytes(bytes(s.puffer))
     await _terminal_loop(s, ws)
 
 
 async def _terminal_loop(s, ws):
-    """Keys and sizes from this window into the shell, until it closes, the session ends or another window takes it."""
+    """Keys and sizes from this window into the shell, until it closes, the session ends or another window takes it.
+    A window that drops without closing on purpose (GEWOLLT) leaves the session held for a comeback (halten)."""
+    gewollt = False
     try:
         while not s.ende.is_set() and s.browser is ws:
             msg = await ws.receive()
             if msg.get("type") == "websocket.disconnect":
+                gewollt = msg.get("code") in GEWOLLT
                 break
             data = msg.get("bytes")
             text = msg.get("text")
@@ -1064,13 +1132,24 @@ async def _terminal_loop(s, ws):
                 if isinstance(m, dict) and m.get("typ") == "groesse":
                     c, r = _size(m.get("cols"), m.get("rows"))
                     await asyncio.to_thread(s.chan.resize_pty, c, r)
-    except (WebSocketDisconnect, RuntimeError, OSError, EOFError):
+                elif isinstance(m, dict) and m.get("typ") == "ende":
+                    gewollt = True       # „Trennen“ in the page
+                    break
+                if s.bald:              # a key, a size or „Weiterarbeiten“: the countdown goes away
+                    s.bald = False
+                    await s._say({"typ": "bald", "s": 0})
+    except WebSocketDisconnect as e:
+        gewollt = e.code in GEWOLLT
+    except (RuntimeError, OSError, EOFError):
         pass
     except Exception as e:
         log("sitzung_zu", "fehler " + type(e).__name__[:20])
     finally:
-        if s.browser is ws:        # a window that was taken over leaves the session open
-            await s.end(s.grund or ("fenster" if s.fenster else "browser"))
+        if s.browser is ws or (gewollt and s.browser is None and s.verloren):   # taken over: the session stays
+            if not gewollt and not s.ende.is_set() and s.art == "shell" and not _notaus() and admin_on():
+                await s.halten(ws)
+            else:
+                await s.end(s.grund or ("fenster" if s.fenster else "browser"))
 
 
 def _size(cols, rows):
@@ -1326,8 +1405,18 @@ def _herkunft(conn):
         return "internet"
 
 
+def _ende_login(login, why):
+    """Every session of this login (or of every login with None) ends; also from a thread (logout runs in one)."""
+    for s in list(SITZUNG.values()):
+        if login is None or (s.login and hmac.compare_digest(s.login, login)):
+            with contextlib.suppress(Exception):
+                asyncio.run_coroutine_threadsafe(s.end(why), s.loop)
+
+
 def sperren_alle(why):
-    """Every unlocked page locked at once (Notaus, logout everywhere)."""
+    """Every unlocked page locked at once (Notaus, logout everywhere); logging out everywhere ends every session."""
+    if why == "abmelden":
+        _ende_login(None, why)
     n = len(ENTSPERRT)
     ENTSPERRT.clear()
     if n:
@@ -1335,7 +1424,9 @@ def sperren_alle(why):
 
 
 def sperren(conn, why):
-    """This login's page locked (Sperren, logout)."""
+    """This login's page locked (Sperren, logout); logging out also ends this login's sessions (a held one too)."""
+    if why == "abmelden":
+        _ende_login(_login(conn), why)
     if ENTSPERRT.pop(_login(conn), None) is not None:
         log("gesperrt", why, 1)
         return True
@@ -1581,6 +1672,29 @@ async def admin_window(sid: str, request: Request):
                                                        "who": s.who, "uid": s.uid, "cols": 80, "rows": 24}
     log("ticket", "fenster" if body.get("fenster") is True else "zurueck", 1)
     return {"ticket": t, "gilt_s": TICKET_S}
+
+
+@router.post("/api/admin/fernzugang/sitzung/{sid}/wieder", dependencies=[Depends(auth)])
+async def admin_comeback(sid: str, request: Request):
+    """After the window dropped: a one-time ticket (TICKET_S, once) for the same login to take its held shell again
+    (HALTEN_S), only while the page is unlocked; the screen comes back from the buffer. Notaus, Trennen, logout and
+    the switch end a held session at once."""
+    _on(request)
+    _frei(request)
+    guard.limit(request, "fernzugang_sitzung", admin=True)
+    s = SITZUNG.get(str(sid))
+    if s is None or s.ende.is_set() or s.art != "shell" or not s.login or not hmac.compare_digest(s.login, _login(request)):
+        log("verbindung", "zu spaet", 0)
+        raise HTTPException(404, "no such session")
+    t = secrets.token_urlsafe(32)
+    now = time.time()
+    for k in [k for k, v in TICKETS.items() if v["until"] < now]:
+        TICKETS.pop(k, None)
+    TICKETS[hashlib.sha256(t.encode()).hexdigest()] = {"gid": s.gid, "login": s.login, "until": now + TICKET_S,
+                                                       "sid": s.id, "wieder": True, "fenster": s.fenster,
+                                                       "who": s.who, "uid": s.uid, "cols": 80, "rows": 24}
+    log("ticket", "wieder", 1)
+    return {"ticket": t, "gilt_s": TICKET_S, "halten_s": HALTEN_S}
 
 
 @router.post("/api/admin/fernzugang/sitzung/{sid}/trennen", dependencies=[Depends(auth)])

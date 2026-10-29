@@ -1074,7 +1074,7 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "uebertragungen"})
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen"})
         self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
@@ -1093,7 +1093,7 @@ class Pieces(Base):
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
         self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
-                              "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1})
+                              "gehalten": 0, "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()
@@ -1525,7 +1525,7 @@ def _tls_files(folder):
     return cf, kf, hashlib.sha256(cert.public_bytes(serialization.Encoding.DER)).hexdigest()
 
 
-class EndToEnd(Base):
+class _EndToEndBase(Base):
     """The anchor program (its own WebSocket client, TLS pinned) → the panel's two sockets on one uvicorn → paramiko
     over the pipe → the SSH server; the browser side with the websockets library like a page would."""
 
@@ -1603,6 +1603,10 @@ class EndToEnd(Base):
                 if states[-1].get("typ") in ("fehler", "zu"):
                     return got, states
         return got, states
+
+
+class EndToEnd(_EndToEndBase):
+    """A whole session, „Herauslösen“ and the host key, through the anchor (_EndToEndBase)."""
 
     def test_a_whole_session_through_the_anchor(self):
         d = self.pair(hostkey=HOST_PUB)
@@ -1729,6 +1733,150 @@ Object.defineProperty(Navigator.prototype,'keyboard',{configurable:true,get(){re
   {lock(){window.__locked++;return Promise.resolve()},unlock(){}}}});
 """
 TICKET = "T" * 43
+
+
+class Comeback(_EndToEndBase):
+    """A window that drops without closing (network, proxy, sleep): the shell is held HALTEN_S with its last output
+    (PUFFER, memory only); the same login, unlocked, comes back with a fresh one-time ticket and sees the screen
+    again. A heartbeat every PULS_S both ways; Trennen, Notaus and logout end a held shell at once."""
+
+    def setUp(self):
+        super().setUp()
+        import core
+        self.server.config.app.dependency_overrides[core.auth] = lambda: None   # the login is tested above
+        import httpx
+        self.http = httpx.Client(base_url=self.base, verify=False, timeout=30)
+        d = self.pair(hostkey=HOST_PUB)
+        self.sshd = _Server(d["pi_key"].split()[1])
+        self.ws, _ = self.anchor(d["key"], self.sshd.port)
+        self.gid = d["id"]
+
+    def tearDown(self):
+        self.http.close()
+        self.ws.sock.shutdown(socket.SHUT_RDWR)
+        super().tearDown()
+
+    def connect(self, t):
+        import websockets.sync.client as wsc
+        ctx = ssl.create_default_context()
+        ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
+        return wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
+                           additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=30)
+
+    def open(self):
+        tab = self.browser(self.gid)
+        got, states = self.read_until(tab, b"hallo vom server")
+        self.assertIn(b"hallo vom server", got, states)
+        return tab, next(x["id"] for x in states if x.get("stand") == "offen")
+
+    @staticmethod
+    def drop(conn):
+        """The line goes away without a close frame (what a sleeping laptop or a proxy does)."""
+        with contextlib.suppress(OSError):     # only shut down: the library closes its own socket (one owner)
+            conn.socket.shutdown(socket.SHUT_RDWR)
+
+    def wait(self, cond, n=200):
+        for _ in range(n):
+            if cond():
+                return True
+            time.sleep(0.05)
+        return cond()
+
+    def test_heartbeat_and_ssh_keepalive(self):
+        with unittest.mock.patch.object(fernzugang, "PULS_S", 0.3):
+            tab, sid = self.open()
+            s = fernzugang.SITZUNG[sid]
+            self.assertEqual(s.transport.packetizer._Packetizer__keepalive_interval, 0.3)   # SSH's own keepalive
+            seen = []
+            for _ in range(20):
+                m = tab.recv(timeout=10)
+                if isinstance(m, str):
+                    seen.append(json.loads(m))
+                    if {"typ": "puls"} in seen:
+                        break
+            self.assertIn({"typ": "puls"}, seen)
+            tab.close()
+        self.assertTrue(self.wait(lambda: not fernzugang.SITZUNG))
+
+    def test_comeback_within_the_window_same_login_unlocked_with_the_screen(self):
+        with journal() as j:
+            tab, sid = self.open()
+            tab.send(b"uptime")
+            self.read_until(tab, b"echo:uptime")
+            self.drop(tab)
+            self.assertTrue(self.wait(lambda: "verbindung | verloren" in j.getvalue()))
+            self.assertIn(sid, fernzugang.SITZUNG)                         # held, not ended
+            self.assertIsNone(fernzugang.SITZUNG[sid].browser)
+            self.assertEqual(fernzugang.counts()["gehalten"], 1)              # Live: kind and number only
+            self.assertIn("1 wartet auf Rückkehr", fernzugang.live_sub(fernzugang.for_live()))
+            fernzugang.ENTSPERRT["M"] = dict(fernzugang.ENTSPERRT["L"])
+            with unittest.mock.patch.object(fernzugang, "_login", lambda c: "M"):   # another login gets nothing
+                self.assertEqual(self.http.post(f"/api/admin/fernzugang/sitzung/{sid}/wieder").status_code, 404)
+            fernzugang.ENTSPERRT.pop("M")
+            saved = dict(fernzugang.ENTSPERRT)
+            fernzugang.ENTSPERRT.clear()                                   # a locked page gets nothing
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/sitzung/{sid}/wieder").status_code, 423)
+            fernzugang.ENTSPERRT.update(saved)
+            r = self.http.post(f"/api/admin/fernzugang/sitzung/{sid}/wieder")
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["halten_s"], fernzugang.HALTEN_S)
+            t = r.json()["ticket"]
+            back = self.connect(t)
+            first = json.loads(back.recv(timeout=30))
+            self.assertEqual((first["stand"], first["id"], first["wieder"]), ("offen", sid, True))
+            screen = back.recv(timeout=30)                                 # the buffer: the screen as it was
+            self.assertIn(b"echo:uptime", screen)
+            back.send(b"date")
+            got, _ = self.read_until(back, b"echo:date")
+            self.assertIn(b"echo:date", got)
+            self.assertEqual(len(fernzugang.SITZUNG), 1)                   # still the one session
+            with self.assertRaises(Exception):                             # the ticket works once
+                self.connect(t).recv(timeout=10)
+            back.close()                                                   # closed on purpose (1000): ends at once
+            self.assertTrue(self.wait(lambda: "sitzung_zu" in j.getvalue()))
+        out = j.getvalue()
+        self.assertEqual(fernzugang.SITZUNG, {})
+        self.assertIn("fernzugang: verbindung | verloren | 1", out)
+        self.assertIn("fernzugang: ticket | wieder | 1", out)
+        self.assertIn("fernzugang: verbindung | wieder verbunden | 1", out)
+        self.assertIn("fernzugang: sitzung_zu | browser | 0", out)
+        for secret in (t, "uptime", "echo:date"):
+            self.assertNotIn(secret, out)
+
+    def test_after_the_window_the_shell_is_gone_and_coming_back_fails(self):
+        with unittest.mock.patch.object(fernzugang, "HALTEN_S", 0.5), journal() as j:
+            tab, sid = self.open()
+            self.drop(tab)
+            self.assertTrue(self.wait(lambda: "sitzung_zu" in j.getvalue()))
+            self.assertEqual(fernzugang.SITZUNG, {})
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/sitzung/{sid}/wieder").status_code, 404)
+        out = j.getvalue()
+        self.assertIn("fernzugang: sitzung_zu | verloren | 0", out)
+        self.assertIn("fernzugang: verbindung | zu spaet | 0", out)
+
+    def test_trennen_notaus_and_logout_end_a_held_shell_at_once(self):
+        with journal() as j:
+            tab, sid = self.open()                                         # „Trennen“: the page says „ende“ first
+            tab.send(json.dumps({"typ": "ende"}))
+            self.assertTrue(self.wait(lambda: not fernzugang.SITZUNG))
+            self.assertNotIn("verbindung | verloren", j.getvalue())
+            tab, sid = self.open()
+            self.drop(tab)
+            self.assertTrue(self.wait(lambda: "verbindung | verloren" in j.getvalue()))
+            fernzugang.sperren(None, "abmelden")                            # account._fern_sperren, from its thread
+            self.assertTrue(self.wait(lambda: not fernzugang.SITZUNG))
+            self.assertNotIn("L", fernzugang.ENTSPERRT)                     # locked again too
+            self.unlock()
+            tab, sid = self.open()
+            loop = fernzugang.SITZUNG[sid].loop
+            self.drop(tab)
+            self.assertTrue(self.wait(lambda: j.getvalue().count("verbindung | verloren") == 2))
+            asyncio.run_coroutine_threadsafe(fernzugang.notaus_close(), loop).result(30)   # notaus.after_change
+            self.assertEqual(fernzugang.SITZUNG, {})
+        out = j.getvalue()
+        self.assertIn("fernzugang: sitzung_zu | browser | 0", out)
+        self.assertIn("fernzugang: sitzung_zu | notaus | 0", out)
+        self.assertIn("fernzugang: sitzung_zu | abmelden | 0", out)
 
 
 class InBrowser(unittest.TestCase):
@@ -1861,6 +2009,72 @@ class InBrowser(unittest.TestCase):
                 self.assertEqual(out["hint"], [False, "Strg+A D = abkoppeln (die Sitzung dort läuft weiter)"])
                 self.assertTrue(out["tmux"].startswith("Strg+B D"))
                 self.assertEqual(out["sudo"], ["sudo ls -la /run/screen/", "sudo -u <benutzer> screen -x <name>"])
+                await br.close()
+        asyncio.run(go())
+
+    def test_countdowns_and_a_reason_with_connect_again(self):
+        """Dominik 2026-10-29 09:20: two minutes before the idle end „Sitzung endet in m:ss“ with „Weiterarbeiten“ and
+        „Jetzt beenden“; the same for the unlock (Verlängern) and the Spontanhilfe at its most; while the line comes
+        back „Verbindung wird wiederhergestellt …“; every end message says why and offers „Neu verbinden“."""
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                pg = await ctx.new_page()
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.remove())")
+                shown = "id=>{const e=$(id);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle($('fztop')).display!=='none'}"
+                # the idle end: what the panel sends ({typ:'bald', s}) counts down; „Weiterarbeiten“ tells the panel
+                await pg.evaluate("window._sent=[];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
+                self.assertTrue(await pg.evaluate(f"({shown})('fzbald')"))
+                self.assertRegex(await pg.evaluate("$('fzbaldtext').textContent"), r"^Sitzung endet in 1:3[45]$")
+                self.assertEqual(await pg.evaluate("[$('fzweiter').textContent,$('fzbaldende').textContent]"), ["Weiterarbeiten", "Jetzt beenden"])
+                await pg.click("#fzweiter")
+                self.assertFalse(await pg.evaluate(f"({shown})('fzbald')"))
+                self.assertIn('{"typ":"weiter"}', await pg.evaluate("window._sent"))
+                await pg.evaluate("fzBald(0);FZ.ws=null")
+                # the unlock: only in its last two minutes, with „Verlängern“
+                await pg.evaluate("FZ.d=Object.assign({},FZ.d||{},{gesperrt:false,entsperrt_bis:Date.now()/1000+600});fzSperreBald()")
+                self.assertFalse(await pg.evaluate(f"({shown})('fzsperrbald')"))
+                await pg.evaluate("FZ.d.entsperrt_bis=Date.now()/1000+90;fzSperreBald()")
+                self.assertTrue(await pg.evaluate(f"({shown})('fzsperrbald')"))
+                self.assertRegex(await pg.evaluate("$('fzsperrtext').textContent"), r"^Entsperrung endet in 1:(29|30)$")
+                self.assertEqual(await pg.evaluate("$('fzsperrplus').textContent"), "Verlängern")
+                await pg.evaluate("clearInterval(FZ.sbt);$('fzsperrbald').hidden=true;fzTopLine()")
+                # the Spontanhilfe at its most: its line says when it ends, „Verlängern“ only while it can
+                hilfe = """(kann,rest)=>{SH.d={on:true,notaus:false,max_min:180,hinweis_s:600,verlauf:[],
+                    hilfe:{stand:'offen',name:'Anna',admin:'Dominik',herkunft:'internet',ip:'',seit:Date.now()/1000-60,
+                           bis:Date.now()/1000+rest,kann_verlaengern:kann}};shShow()}"""
+                await pg.evaluate(f"({hilfe})(true,100)")
+                self.assertRegex(await pg.evaluate("$('shbtext').textContent"), r"^Spontanhilfe endet in 1:(39|40)$")
+                self.assertTrue(await pg.evaluate(f"({shown})('shbplus')"))
+                await pg.evaluate(f"({hilfe})(false,100)")
+                self.assertFalse(await pg.evaluate(f"({shown})('shbplus')"))
+                await pg.evaluate(f"({hilfe})(true,1500)")
+                self.assertFalse(await pg.evaluate(f"({shown})('shbplus')"))
+                self.assertTrue((await pg.evaluate("$('shbtext').textContent")).startswith("Spontanhilfe aktiv · Anna"))
+                await pg.evaluate("clearInterval(SH.clock);SH.d=null;$('shbanner').hidden=true;fzTopLine()")
+                # the line comes back: its own strip; the end says why and offers „Neu verbinden“
+                await pg.evaluate("FZ.wieder={sid:'x'};fzWiederZeigen()")
+                self.assertTrue(await pg.evaluate(f"({shown})('fzwieder')"))
+                self.assertEqual(await pg.evaluate("$('fzwieder').textContent"), "Verbindung wird wiederhergestellt …")
+                await pg.evaluate("FZ.letzt={id:'g_0123456789ab',name:'vps-1'};fzZu(fzGrund('verloren'))")
+                self.assertFalse(await pg.evaluate("!!$('fzwieder')&&!$('fzwieder').hidden"))
+                for _ in range(20):
+                    msg = await pg.evaluate("[$('fzmsg').textContent,!!$('fzwiederneu')]")
+                    if msg[1]:
+                        break
+                    await pg.wait_for_timeout(100)
+                self.assertIn("Verbindung verloren", msg[0])
+                self.assertTrue(msg[1], msg)
+                self.assertEqual(await pg.evaluate("$('fzwiederneu').textContent"), "Neu verbinden")
                 await br.close()
         asyncio.run(go())
 

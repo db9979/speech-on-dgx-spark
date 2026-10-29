@@ -37,7 +37,8 @@ function shUhr(bis,kann){SH.bis=bis;SH.kann=kann;clearInterval(SH.clock);const t
     $('shuhrtext').textContent=t(`noch ${shRest(rest)} · höchstens ${SH.d?SH.d.max_min:180} Minuten`,`${shRest(rest)} left · at most ${SH.d?SH.d.max_min:180} minutes`);
     const warn=rest<=(SH.d?SH.d.hinweis_s:600);$('shuhr').classList.toggle('warn',warn);$('shplus').hidden=!SH.kann;
     $('shhinweis').hidden=!warn;
-    const n=SH.d&&SH.d.hilfe;$('shbtext').textContent=t(`Spontanhilfe aktiv · ${n?n.name:''} · noch ${shRest(rest)}`,`Spontaneous help active · ${n?n.name:''} · ${shRest(rest)} left`)}; tick();SH.clock=setInterval(tick,1000)}
+    const bald=rest>0&&rest<=120;$('shbanner').classList.toggle('fzwarn',bald);$('shbplus').hidden=!(bald&&SH.kann);
+    const n=SH.d&&SH.d.hilfe;$('shbtext').textContent=bald?t(`Spontanhilfe endet in ${shRest(rest)}`,`Spontaneous help ends in ${shRest(rest)}`):t(`Spontanhilfe aktiv · ${n?n.name:''} · noch ${shRest(rest)}`,`Spontaneous help active · ${n?n.name:''} · ${shRest(rest)} left`)}; tick();SH.clock=setInterval(tick,1000)}
 function shJetzt(){const d=SH.d,h=d&&d.hilfe,box=$('shjetzt'),list=$('shjetztlist');if(!box)return;list.textContent='';
   box.hidden=!(h&&h.stand!=='neu');if(box.hidden)return;
   const r=fzEl('div','fzjrow'),tx=fzEl('div');
@@ -110,7 +111,7 @@ function shZeigen(e){if(!SH.zeig)return;const v=$('shvideo'),r=v.getBoundingClie
   const x=(e.clientX-x0)/w,y=(e.clientY-y0)/h;if(x<0||x>1||y<0||y>1)return;shSend({typ:'zeig',x,y});
   const dot=$('shzeigdot');dot.style.left=(e.clientX-r.left)+'px';dot.style.top=(e.clientY-r.top)+'px';dot.hidden=false;clearTimeout(SH.dot);SH.dot=setTimeout(()=>dot.hidden=true,2500)}
 {const g=$('shgo');if(g){g.onclick=shNeu;$('shweg').onclick=shEnde;$('shkopie').onclick=shKopie;$('shbefehlkopie').onclick=()=>shBefehlKopie(SH.befehl);$('shbefehlmackopie').onclick=()=>shBefehlKopie(SH.befehlMac);$('shteilen').onclick=shTeilen;$('shqr').onclick=shQr;$('shmailgo').onclick=shMail;$('shan').oninput=shMailFrei;
-  $('shannehmen').onclick=shAnnehmen;$('shablehnen').onclick=shEnde;$('shende').onclick=shEnde;$('shbende').onclick=shEnde;$('shplus').onclick=shPlus;
+  $('shannehmen').onclick=shAnnehmen;$('shablehnen').onclick=shEnde;$('shende').onclick=shEnde;$('shbende').onclick=shEnde;$('shbplus').onclick=shPlus;$('shplus').onclick=shPlus;
   $('shzeig').onclick=()=>{SH.zeig=!SH.zeig;$('shzeig').classList.toggle('on',SH.zeig)};$('shvideo').onclick=shZeigen;
   $('shvoll').onclick=()=>{const v=$('shview');if(v.requestFullscreen)v.requestFullscreen().catch(()=>{})};
   $('shchatin').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();shChatSend()}};$('shchatgo').onclick=shChatSend;
