@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.234** KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
 - **V01.1.233** Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
 - **V01.1.232** Fernzugang: Ordner für die Systeme (eine Ebene, Name und Symbol, auf- und zuklappbar, Ziehen, Verschieben nach, Ordner-Übersicht, Ordner beim Koppeln, iPhone)
 - **V01.1.231** Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.227** Spontanhilfe-Seite aufgeräumt (Variante A): Liste links wie bei Systeme (Läuft, Verlauf), rechts nur der nächste Schritt mit vier Punkten, Nummer mit Countdown-Ring, Neue Nummer und Verwerfen, die Wege Link, E-Mail und Shell als Reiter mit nur einer Zeile; Zeigepfeil und Vollbild erst beim Teilen, bei 0:00 Abgelaufen – Neue Nummer; Meldungen als Einblendung statt Textzeile, auch bei Systeme
 - **V01.1.226** Fernzugang hält die Verbindung: Lebenszeichen alle 20 s und SSH-Keepalive; reißt die Leitung ab, bleibt die Shell 2 Minuten mit ihrer letzten Ausgabe offen und die Seite verbindet sich still wieder (neues Einmal-Ticket, dieselbe Anmeldung, entsperrt); Countdown vor Leerlauf, Entsperrung und Spontanhilfe-Ende mit Weiterarbeiten oder Verlängern; jede End-Meldung nennt den Grund und bietet Neu verbinden
 - **V01.1.225** Fernzugang Stufe 4 Bildschirm: „Bildschirm“ zeigt den Bildschirm eines gekoppelten Systems im Browser (X11, GNOME auf Wayland, andere Wayland-Oberflächen, macOS), erst nur ansehen, „Steuern“ mit einem Klick; guacd als eigener Dienst nur auf 127.0.0.1 (install.sh --fernbild), höchstens 15 Bilder/s, „Sparsam“ mit 16 Bit und ein Hinweis bei langsamer Leitung; dazu sagen die Befehls-Vorschläge beim Zeigen, was sie tun, und das Fragefeld des Assistenten leert sich nach dem Senden
-- **V01.1.224** Spontanhilfe: die Einladung „Per E-Mail“ kommt im neuen Design „Karte“ (Text und HTML, per du, Deutsch oder Englisch, ohne Bilder von außen) und nur einmal je Hilfe und Adresse: der Knopf ist beim Senden aus (mit Kreisel), ein zweiter Klick bekommt „Einladung schon gesendet“, „Nochmal senden“ erst nach 60 Sekunden mit Rückfrage, und eine unvollständige Einladung geht nie hinaus
 
 
 

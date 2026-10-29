@@ -4405,6 +4405,13 @@
 "titel": "Interne Adresse beim Koppeln im Heimnetz",
 "text": "Ein System im Heimnetz neu koppeln (Anker 1.4.0). Auf dem System „spark-anker zustand“. Erwartet: „im Heimnetz zuerst https://<IP des Spark>:31443 (Zertifikat festgelegt)“; im Journal des Ankers „mit dem Panel verbunden (im Heimnetz)“. Eine große Datei in Teilen läuft zu Hause deutlich schneller als 1 MB/s, der Hinweis „Unter 1 MB/s“ erscheint nicht. Von unterwegs (Handy-Hotspot) verbindet der Anker nach 3 Sekunden über die normale Adresse.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P654",
+"v": 1234,
+"titel": "Dungeon-Master: Hausbild ganz",
+"text": "Voraussetzung: Admin: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber sowie Gold mit Zweck an, Hausbilder gemalt. A: In einer Siedlung das Fenster öffnen: Das Bild des Hauses steht ganz als Quadrat links neben dem Namen, nichts abgeschnitten. B: Am Handy dasselbe, kleiner.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.234** · 2026-10-29 · KI-Dungeon-Master: im Siedlung-Fenster steht das Bild eines Hauses ganz als Quadrat neben Name und Zeile statt abgeschnitten als Band
 - **V01.1.233** · 2026-10-29 · Fernzugang Stufe 3b: große Dateien in Teilen mit SHA-256, Pause und Weiter, per Link (curl auf dem Server) oder vom NAS; im Heimnetz geht der Anker (1.4.0) direkt zum Spark
 - **V01.1.232** · 2026-10-29 · Fernzugang: Ordner für die Systeme (eine Ebene, Name und Symbol, auf- und zuklappbar, Ziehen, Verschieben nach, Ordner-Übersicht, Ordner beim Koppeln, iPhone)
 - **V01.1.231** · 2026-10-29 · Fernzugang: Notizen je System (versiegelt, 10 Fassungen, Ins Terminal, Tresor-Hinweis, Suche, iPhone)
